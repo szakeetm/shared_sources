@@ -97,6 +97,9 @@ private:
   GLButton	*facetNYbutton;
   GLButton	*facetNXbutton;
   GLButton	*facetNZbutton;
+  GLLabel	*label30;
+  GLLabel	*label29;
+  GLTextField	*curveTotalLengthText;
 	
   int baseId, dirId;
   void EnableDisableControls();

@@ -322,6 +322,7 @@ void Geometry::CreateDifference() {
 	//set selection
 	UnSelectAll();
 	facets[sh.nbFacet - 1]->selected = TRUE;
+	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	nbSelected = 1;
 	//one circle on first facet
 	int counter = 0;
@@ -451,6 +452,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 
 		}
 		f->selected = TRUE;
+		if (viewStruct != -1) f->sh.superIdx = viewStruct;
 		facets[sh.nbFacet + i] = f;
 	}
 	sh.nbFacet += nbNewFacets;
@@ -883,6 +885,7 @@ void Geometry::Extrude(int mode, VERTEX3D radiusBase, VERTEX3D offsetORradiusdir
 			int endCap = sh.nbFacet + nbNewFacets - 1; //last facet
 			facets[endCap] = new Facet(facets[sourceFacet]->sh.nbIndex);
 			facets[endCap]->selected = TRUE;
+			if (viewStruct != -1) facets[endCap]->sh.superIdx = viewStruct;
 			for (int j = 0; j < facets[sourceFacet]->sh.nbIndex; j++)
 				facets[endCap]->indices[facets[sourceFacet]->sh.nbIndex - 1 - j] = sh.nbVertex + j + ((mode == 3) ? (steps - 1)*facets[sourceFacet]->sh.nbIndex : 0); //assign new vertices to new facet in inverse order
 
@@ -897,6 +900,7 @@ void Geometry::Extrude(int mode, VERTEX3D radiusBase, VERTEX3D offsetORradiusdir
 					facets[sh.nbFacet + step*facets[sourceFacet]->sh.nbIndex + j]->indices[2] = sh.nbVertex + (j + 1) % facets[sourceFacet]->sh.nbIndex + (step)*facets[sourceFacet]->sh.nbIndex;
 					facets[sh.nbFacet + step*facets[sourceFacet]->sh.nbIndex + j]->indices[3] = (step == 0) ? facets[sourceFacet]->GetIndex(j + 1) : sh.nbVertex + (j + 1) % facets[sourceFacet]->sh.nbIndex + (step - 1)*facets[sourceFacet]->sh.nbIndex;
 					facets[sh.nbFacet + step*facets[sourceFacet]->sh.nbIndex + j]->selected = TRUE;
+					if (viewStruct != -1) facets[sh.nbFacet + step*facets[sourceFacet]->sh.nbIndex + j]->sh.superIdx = viewStruct;
 				}
 			}
 			sh.nbVertex += nbNewVertices; //update number of vertices
@@ -1218,11 +1222,11 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, BOOL doNotDe
 }
 
 void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, BOOL toEnd) {
-	size_t nbNew = 0;
+	//size_t nbNew = 0;
 	std::vector<int> newRefs(sh.nbFacet, -1);
-	for (auto restoreFacet : deletedFacetList)
-		if (restoreFacet.ori_pos >= sh.nbFacet || toEnd) nbNew++;
-	Facet** tempFacets = (Facet**)malloc(sizeof(Facet*)*(sh.nbFacet + nbNew));
+	/*for (auto restoreFacet : deletedFacetList)
+		if (restoreFacet.ori_pos >= sh.nbFacet || toEnd) nbNew++;*/
+	Facet** tempFacets = (Facet**)malloc(sizeof(Facet*)*(sh.nbFacet + /*nbNew*/ deletedFacetList.size()));
 	size_t pos = 0;
 	size_t nbInsert = 0;
 	if (toEnd) { //insert to end
@@ -1237,11 +1241,10 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, BOOL to
 		}
 	}
 	else { //Insert to original locations
-
 		for (auto restoreFacet : deletedFacetList) {
 			for (size_t insertPos = pos;insertPos < restoreFacet.ori_pos;insertPos++) {
 				tempFacets[insertPos] = facets[insertPos - nbInsert];
-				newRefs[insertPos - nbInsert] = newRefs[insertPos];
+				newRefs[insertPos - nbInsert] = insertPos;
 				pos++;
 			}
 			//if (restoreFacet.replaceOri) pos--;
@@ -1253,17 +1256,17 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, BOOL to
 		//Remaining facets
 		for (size_t insertPos = pos;insertPos < (sh.nbFacet + nbInsert);insertPos++) {
 			tempFacets[insertPos] = facets[insertPos - nbInsert];
-			newRefs[insertPos - nbInsert] = newRefs[insertPos];
+			newRefs[insertPos - nbInsert] = insertPos;
 		}
+		_ASSERTE(_CrtCheckMemory());
 		//Renumber things;
 		RenumberNeighbors(newRefs);
 		mApp->RenumberFormulas(&newRefs);
 		mApp->RenumberSelections(newRefs);
 	}
-
-
-
+	
 	sh.nbFacet += nbInsert;
+	SAFE_FREE(facets);
 	facets = tempFacets;
 	InitializeGeometry();
 }
@@ -2894,6 +2897,7 @@ void Geometry::CreateLoft() {
 			newFacet->indices[1] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 			newFacet->indices[2] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
 			newFacet->selected = TRUE;
+			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 			newFacet->SwapNormal();
 			newFacets.push_back(newFacet);
 		}
@@ -2905,6 +2909,7 @@ void Geometry::CreateLoft() {
 			newFacet->indices[1] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
 			newFacet->indices[2] = f2->indices[(i2 + 1) % f2->sh.nbIndex];closestIndices2[(i2 + 1) % f2->sh.nbIndex].visited = TRUE;
 			newFacet->selected = TRUE;
+			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 			newFacet->SwapNormal();
 			newFacets.push_back(newFacet);
 		}
@@ -2942,6 +2947,7 @@ void Geometry::CreateLoft() {
 		}
 		newFacet->SwapNormal();
 		newFacet->selected = TRUE;
+		if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 		newFacets.push_back(newFacet);
 	}
 	//Go through leftover vertices on facet 2
@@ -2956,6 +2962,7 @@ void Geometry::CreateLoft() {
 				newFacet->indices[1] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
 				newFacet->indices[2] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 				newFacet->selected = TRUE;
+				if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 				newFacets.push_back(newFacet);
 				i2 = Remainder(i2 + 1, f2->sh.nbIndex);
 			} while (closestIndices2[i2].visited == FALSE);
@@ -2966,6 +2973,7 @@ void Geometry::CreateLoft() {
 			newFacet->indices[1] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
 			newFacet->indices[2] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 			newFacet->selected = TRUE;
+			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 			newFacets.push_back(newFacet);
 		}
 	}

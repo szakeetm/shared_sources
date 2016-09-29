@@ -40,8 +40,8 @@ extern SynRad*mApp;
 
 ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 
-	int wD = 312;
-	int hD = 575;
+	int wD = 315;
+	int hD = 595;
 	groupBox1 = new GLTitledPanel("Towards / against normal");
 	groupBox1->SetBounds(5, 3, 305, 68);
 	Add(groupBox1);
@@ -49,7 +49,7 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox2->SetBounds(5, 73, 305, 110);
 	Add(groupBox2);
 	groupBox3 = new GLTitledPanel("Along curve");
-	groupBox3->SetBounds(5, 189, 305, 328);
+	groupBox3->SetBounds(5, 189, 305, 356);
 	Add(groupBox3);
 	offsetCheckbox = new GLToggle(0, "Direction vector:");
 	groupBox2->SetCompBounds(offsetCheckbox, 10, 18, 104, 17);
@@ -92,7 +92,7 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox2->Add(dzText);
 
 	extrudeButton = new GLButton(0, "Extrude");
-	extrudeButton->SetBounds(113, 523, 90, 21);
+	extrudeButton->SetBounds(111, 551, 90, 21);
 	Add(extrudeButton);
 
 	getBaseButton = new GLButton(0, "Get Base Vertex");
@@ -179,8 +179,8 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox3->SetCompBounds(label17, 206, 103, 23, 13);
 	groupBox3->Add(label17);
 
-	label23 = new GLLabel("Radius length:");
-	groupBox3->SetCompBounds(label23, 16, 246, 75, 13);
+	label23 = new GLLabel("Radius:");
+	groupBox3->SetCompBounds(label23, 16, 246, 43, 13);
 	groupBox3->Add(label23);
 
 	curveRadiusLengthText = new GLTextField(0, "");
@@ -236,11 +236,11 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox3->Add(curveTotalAngleDegText);
 
 	label25 = new GLLabel("Steps:");
-	groupBox3->SetCompBounds(label25, 16, 300, 37, 13);
+	groupBox3->SetCompBounds(label25, 16, 325, 37, 13);
 	groupBox3->Add(label25);
 
 	curveStepsText = new GLTextField(0, "");
-	groupBox3->SetCompBounds(curveStepsText, 134, 297, 40, 20);
+	groupBox3->SetCompBounds(curveStepsText, 134, 322, 40, 20);
 	groupBox3->Add(curveStepsText);
 
 	label26 = new GLLabel("deg");
@@ -263,11 +263,11 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox3->SetCompBounds(label9, 13, 130, 86, 13);
 	groupBox3->Add(label9);
 
-	curveFacetVButton = new GLButton(0, "Facet \202");
+	curveFacetVButton = new GLButton(0, "Facet V");
 	groupBox3->SetCompBounds(curveFacetVButton, 111, 152, 90, 21);
 	groupBox3->Add(curveFacetVButton);
 
-	curveFacetUButton = new GLButton(0, "Facet \201");
+	curveFacetUButton = new GLButton(0, "Facet U");
 	groupBox3->SetCompBounds(curveFacetUButton, 13, 152, 90, 21);
 	groupBox3->Add(curveFacetUButton);
 
@@ -303,6 +303,18 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 	groupBox3->SetCompBounds(facetNZbutton, 207, 178, 90, 21);
 	groupBox3->Add(facetNZbutton);
 
+	label30 = new GLLabel("cm");
+	groupBox3->SetCompBounds(label30, 175, 299, 21, 13);
+	groupBox3->Add(label30);
+
+	label29 = new GLLabel("Total length:");
+	groupBox3->SetCompBounds(label29, 16, 299, 66, 13);
+	groupBox3->Add(label29);
+
+	curveTotalLengthText = new GLTextField(0, "");
+	groupBox3->SetCompBounds(curveTotalLengthText, 134, 296, 40, 20);
+	groupBox3->Add(curveTotalLengthText);
+
 	SetTitle("Extrude Facet");
 	// Center dialog
 	int wS, hS;
@@ -328,7 +340,7 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 }
 
 void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
-	double x0, y0, z0, dX, dY, dZ, dist, radiusLength, totalAngle;
+	double x0, y0, z0, dX, dY, dZ, dist, radiusLength, totalAngle, totalLength;
 	int noSteps;
 
 	switch(message) {
@@ -403,6 +415,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			if ((curveTowardsNormalCheckbox->GetState() == 1 || curveAgainstNormalCheckbox->GetState() == 1)
 				&& !curveTotalAngleDegText->GetNumber(&totalAngle)) {
 				GLMessageBox::Display("Invalid total angle (deg) value", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			if ((curveTowardsNormalCheckbox->GetState() == 1 || curveAgainstNormalCheckbox->GetState() == 1)
+				&& !curveTotalLengthText->GetNumber(&totalLength)) {
+				GLMessageBox::Display("Invalid total length value", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			if ((curveTowardsNormalCheckbox->GetState() == 1 || curveAgainstNormalCheckbox->GetState() == 1)
@@ -612,11 +629,31 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			double deg;
 			if (curveTotalAngleDegText->GetNumber(&deg)) {
 				curveTotalAngleRadText->SetText(deg/180.0*PI);
+				double radius;
+				if (curveRadiusLengthText->GetNumber(&radius)) {
+					curveTotalLengthText->SetText(deg / 180.0*PI*radius);
+				}
 			}
 		} else if (src == curveTotalAngleRadText) {
 			double rad;
 			if (curveTotalAngleRadText->GetNumber(&rad)) {
 				curveTotalAngleDegText->SetText(rad / PI*180.0);
+				double radius;
+				if (curveRadiusLengthText->GetNumber(&radius)) {
+					curveTotalLengthText->SetText(rad * radius);
+				}
+			}
+		} else if (src == curveTotalLengthText) {
+			double len,radius;
+			if (curveTotalLengthText->GetNumber(&len) && curveRadiusLengthText->GetNumber(&radius)) {
+				curveTotalAngleDegText->SetText(len / radius * 180.0 / PI);
+				curveTotalAngleRadText->SetText(len / radius);
+			}
+		} else if (src == curveRadiusLengthText) {
+			double rad, radius;
+			if (curveRadiusLengthText->GetNumber(&radius) && curveTotalAngleRadText->GetNumber(&rad)) {
+				curveTotalAngleDegText->SetText(rad * 180.0 / PI);
+				curveTotalLengthText->SetText(rad * radius);
 			}
 		}
 	}
@@ -644,6 +681,7 @@ void ExtrudeFacet::EnableDisableControls() {
 	curveRadiusLengthText->SetEditable(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 	curveTotalAngleDegText->SetEditable(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 	curveTotalAngleRadText->SetEditable(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
+	curveTotalLengthText->SetEditable(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 	curveStepsText->SetEditable(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 	curveFacetCenterButton->SetEnabled(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 	curveFacetIndex1Button->SetEnabled(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());

@@ -204,6 +204,7 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 					if (unselect) {
 						if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
 							facets[i]->selected = FALSE;
+							found = FALSE; //Continue looking for facets
 						}
 						else { //Smart selection
 							double maxAngleDiff = mApp->smartSelection->GetMaxAngle();

@@ -124,9 +124,6 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, BOOL askConf
 			sprintf(tmp, "Cannot open file for writing %s", fileName);
 			throw Error(tmp);
 
-
-
-
 		}
 		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected);
 		fclose(f);
