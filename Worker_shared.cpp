@@ -460,6 +460,7 @@ DWORD Worker::GetPID(int prIdx) {
 
 void Worker::RebuildTextures() {
 	if (!dpHit) return;
+	if (needsReload) RealReload();
 	if (AccessDataport(dpHit)) {
 		BYTE *buffer = (BYTE *)dpHit->buff;
 		if (mApp->needsTexture) try{ geom->BuildFacetTextures(buffer); }
