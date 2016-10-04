@@ -128,6 +128,7 @@ BOOL Facet::SetTexture(double width, double height, BOOL useMesh) {
 	for (size_t i = 0; i < meshvectorsize; i++)
 		SAFE_FREE(meshvector[i].points);
 	SAFE_FREE(meshvector);
+	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
 	DELETE_TEX(glTex);
 	DELETE_LIST(glList);
