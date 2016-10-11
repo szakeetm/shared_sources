@@ -721,16 +721,16 @@ int Facet::GetIndex(int idx) {
 
 }
 
-float Facet::GetMeshArea(int index) {
+float Facet::GetMeshArea(int index,BOOL correct2sides) {
 	if (!cellPropertiesIds) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
-		return 1.0f / (tRatio*tRatio);
+		return ((correct2sides && sh.is2sided) ? 2.0f : 1.0f) / (tRatio*tRatio);
 	}
 	else if (cellPropertiesIds[index] == -2) {
 		return 0.0f;
 	}
 	else {
-		return meshvector[cellPropertiesIds[index]].area;
+		return ((correct2sides && sh.is2sided) ? 2.0f : 1.0f) * meshvector[cellPropertiesIds[index]].area;
 	}
 }
 
@@ -845,4 +845,8 @@ VERTEX2D Facet::GetMeshCenter(int index)
 		result.v = (float)(v0 + v1) / 2.0f;
 		return result;
 	}
+}
+
+double Facet::GetArea() {
+	return sh.area*(sh.is2sided ? 2.0 : 1.0);
 }

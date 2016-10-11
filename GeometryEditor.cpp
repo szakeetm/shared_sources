@@ -2489,35 +2489,40 @@ void Geometry::Collapse(double vT, double fT, double lT, BOOL doSelectedOnly, Wo
 		CollapseVertex(work, prg, totalWork, vT);
 		InitializeGeometry(); //Find collinear facets
 		if (RemoveCollinear() || RemoveNullFacet()) InitializeGeometry(); //If  facets were removed, update geom.
-
 	}
 
 
 	if (fT > 0.0 && !work->abortRequested) {
 
 		// Collapse facets
-		int i = 0;
 		prg->SetMessage("Collapsing facets...");
-		std::vector<int> newRef(sh.nbFacet, -1);
-		while (!work->abortRequested && i < sh.nbFacet) {
+		std::vector<int> newRef(sh.nbFacet);
+		for (int i = 0;i < sh.nbFacet;i++) {
+			newRef[i] = i; //Default: reference doesn't change
+		}
+		for (int i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
 			prg->SetProgress((1.0 + ((double)i / (double)sh.nbFacet)) / totalWork);
-			mApp->DoEvents();
+			mApp->DoEvents(); //To catch eventual abort button click
 			fi = facets[i];
 			// Search a coplanar facet
 			int j = i + 1;
 			while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
 				fj = facets[j];
 				merged = NULL;
-				if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
+				if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT))  {
 					// Collapse
 					merged = MergeFacet(fi, fj);
+					
 					if (merged) {
 						// Replace the old 2 facets by the new one
 						SAFE_DELETE(fi);
 						SAFE_DELETE(fj);
+						newRef[i] = newRef[j] = -1;
 						for (int k = j; k < sh.nbFacet - 1; k++) {
 							facets[k] = facets[k + 1];
-							newRef[k + 1] = k;
+						}
+						for (int k = j + 1; k < newRef.size(); k++) {
+							newRef[k] --; //Renumber references
 						}
 						sh.nbFacet--;
 						facets[i] = merged;
@@ -2530,7 +2535,6 @@ void Geometry::Collapse(double vT, double fT, double lT, BOOL doSelectedOnly, Wo
 				}
 				if (!merged) j++;
 			}
-			i++;
 		}
 		mApp->RenumberSelections(newRef);
 		mApp->RenumberFormulas(&newRef);
