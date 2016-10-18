@@ -7,6 +7,7 @@
 #include "GLApp/GLMatrix.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
+#include "Interface.h"
 #endif
 
 #ifdef SYNRAD

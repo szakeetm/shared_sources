@@ -915,7 +915,7 @@ void GeometryViewer::Paint() {
 	//Background gradient
 	int x, y, width, height;
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
-	if (!mApp->whiteBg) {
+	if (!(mApp->whiteBg)) {
 		glBegin(GL_QUADS);
 		#ifdef MOLFLOW
 		glColor3f(0.3f, 0.5f, 0.7f); //blue top
