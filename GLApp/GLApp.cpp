@@ -164,10 +164,10 @@ int GLApplication::ToggleFullscreen() {
 
 // -------------------------------------------
 
-void GLApplication::SetTitle(char *title) {
+void GLApplication::SetTitle(std::string title) {
 
   m_strWindowTitle = title;
-  SDL_WM_SetCaption( m_strWindowTitle, NULL );
+  SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
 
 }
 
@@ -191,7 +191,7 @@ int GLApplication::Create(int width, int height, BOOL bFullScreen ) {
   SDL_EnableUNICODE( 1 );
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
     
-  SDL_WM_SetCaption( m_strWindowTitle, NULL );
+  SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
 
   return setUpSDL(TRUE);
 

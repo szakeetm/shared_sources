@@ -343,7 +343,7 @@ void Geometry::CreateDifference() {
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, FALSE);
 }
 
-void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type) {
+void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, BOOL reverseOrder) {
 	if (nbSelected != 2) {
 		char errMsg[512];
 		sprintf(errMsg, "Select exactly 2 facets.");
@@ -360,7 +360,8 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type) {
 			else (secondFacet = i);
 		}
 	}
-	ClipPolygon(firstFacet, secondFacet, type);
+	if (!reverseOrder) ClipPolygon(firstFacet, secondFacet, type);
+	else ClipPolygon(secondFacet , firstFacet , type);
 }
 
 

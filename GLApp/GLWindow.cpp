@@ -162,7 +162,7 @@ void GLWindow::SetMaster(BOOL master) {
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetTitle(char *title) {
+void GLWindow::SetTitle(char* title) {
   if(title) {
 
     strcpy(this->title,title);

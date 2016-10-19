@@ -24,6 +24,7 @@ extern long long	  nbHitStart;
 #include "GLWindow.h"
 #include "GLComponent.h"
 #include "GLFont.h"
+#include <string>
 
 #ifndef _GLAPPH_
 #define _GLAPPH_
@@ -34,7 +35,7 @@ protected:
 
     // Internal variables for the state of the app
     BOOL      m_bWindowed;
-    char*     m_strWindowTitle;
+    std::string     m_strWindowTitle;
     int       m_minScreenWidth;
     int       m_minScreenHeight;
     int       m_screenWidth;
@@ -46,7 +47,7 @@ protected:
 
     // Top level window methods
     int ToggleFullscreen();
-    void SetTitle(char *title);
+    void SetTitle(std::string title);
 
     // Overridable variables for the app
 

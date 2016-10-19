@@ -98,9 +98,10 @@
 #define MENU_FACET_ALIGN       334
 
 #define MENU_FACET_CREATE_DIFFERENCE 3360
-#define MENU_FACET_CREATE_UNION 3361
-#define MENU_FACET_CREATE_INTERSECTION 3362
-#define MENU_FACET_CREATE_XOR 3363
+#define MENU_FACET_CREATE_DIFFERENCE2 3361
+#define MENU_FACET_CREATE_UNION 3362
+#define MENU_FACET_CREATE_INTERSECTION 3363
+#define MENU_FACET_CREATE_XOR 3364
 #define MENU_FACET_EXTRUDE 337
 #define MENU_FACET_SPLIT   338
 #define MENU_FACET_LOFT          339
@@ -176,7 +177,8 @@ protected:
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetParams(BOOL updateSelection) {}
 	virtual void UpdateFacetHits(BOOL allRows) {}
-	virtual void UpdateFormula() {}
+	//virtual void UpdateFormula() {}
+	virtual BOOL EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return FALSE; }
 	virtual BOOL AskToReset(Worker *work = NULL) { return FALSE; }
 public:
 	// Simulation state
@@ -248,7 +250,15 @@ public:
 	GLButton      *facetMoreBtn;
 	GLTitledPanel *facetPanel;
 	GLList        *facetList;
+	GLLabel       *facetSideLabel;
 	GLTitledPanel *togglePanel;
+	GLCombo       *facetSideType;
+	GLLabel       *facetTLabel;
+	GLLabel       *facetTempLabel;
+	GLTextField   *facetOpacity;
+	GLLabel       *facetAreaLabel;
+	GLTextField   *facetTemperature;
+	GLTextField   *facetArea;
 
 	GLToggle      *autoFrameMoveToggle;
 	GLButton      *forceFrameMoveButton;
@@ -290,6 +300,13 @@ public:
 	void RebuildSelectionMenus();
 
 	virtual void SaveConfig() {};
+
+	void UpdateFacetlistSelected();
+	int  GetVariable(char * name, char * prefix);
+	void UpdateFormula();
+	void CreateOfTwoFacets(ClipperLib::ClipType type,BOOL reverseOrder=FALSE);
+	void UpdateMeasurements();
+	BOOL AskToSave();
 
 	void AddStruct();
 	void DeleteStruct();
