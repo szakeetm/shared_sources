@@ -771,8 +771,8 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Tools")->Add("Add formula ...", MENU_EDIT_ADDFORMULA);
 	menu->GetSubMenu("Tools")->Add("Update formulas now!", MENU_EDIT_UPDATEFORMULAS, SDLK_f, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
-	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_FACET_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
-	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_FACET_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
@@ -816,10 +816,10 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_SWAPNORMAL, 191, 24);
 	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_SHIFTVERTEX, 90, 77);
 	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_COORDINATES, 209, 24);
-	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_PROFPLOTTER, 227, 24);
+	menu->GetSubMenu("Facet")->SetIcon(MENU_TOOLS_PROFPLOTTER, 227, 24);
 	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_DETAILS, 54, 77);
 	//menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_MESH,72,77);
-	menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_TEXPLOTTER, 108, 77);
+	menu->GetSubMenu("Facet")->SetIcon(MENU_TOOLS_TEXPLOTTER, 108, 77);
 
 	menu->Add("Vertex");
 	menu->GetSubMenu("Vertex")->Add("Create Facet from Selected");
@@ -1068,8 +1068,671 @@ int Interface::InvalidateDeviceObjects_shared() {
 	return GL_OK;
 }
 
-void Interface::ProcessMessage_shared(GLComponent *src, int message) {
-	
+BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
+	Geometry *geom = worker.GetGeometry();
+	char *input;
+	char tmp[128];
+
+	switch (message) {
+
+	//MENU --------------------------------------------------------------------
+	case MSG_MENU:
+		switch (src->GetId()) {
+		case MENU_FILE_LOAD:
+			if (AskToSave()) {
+				if (worker.running) worker.Stop_Public();
+				LoadFile();
+			}
+			return TRUE;
+		case MENU_FILE_INSERTGEO:
+			if (geom->IsLoaded()) {
+				if (worker.running) worker.Stop_Public();
+				InsertGeometry(FALSE);
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FILE_INSERTGEO_NEWSTR:
+			if (geom->IsLoaded()) {
+				if (worker.running) worker.Stop_Public();
+				InsertGeometry(TRUE);
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FILE_SAVEAS:
+			if (geom->IsLoaded()) {
+				SaveFileAs();
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FILE_EXPORT_SELECTION:
+			ExportSelection();
+			return TRUE;
+		case MENU_FILE_SAVE:
+			if (geom->IsLoaded()) SaveFile();
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FILE_EXIT:
+			if (AskToSave()) Exit();
+			return TRUE;
+
+		case MENU_EDIT_ADDFORMULA:
+			if (!formulaSettings) formulaSettings = new FormulaSettings();
+			AddFormula(formulaSettings->NewFormula());
+			return TRUE;
+		case MENU_EDIT_UPDATEFORMULAS:
+			UpdateFormula();
+			return TRUE;
+
+		case MENU_FACET_COLLAPSE:
+			if (geom->IsLoaded()) {
+				DisplayCollapseDialog();
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FACET_SWAPNORMAL:
+			if (AskToReset()) {
+				geom->SwapNormal();
+				// Send to sub process
+				try { worker.Reload(); }
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				}
+			}
+			return TRUE;
+		case MENU_FACET_EXTRUDE:
+			if (!extrudeFacet || !extrudeFacet->IsVisible()) {
+				SAFE_DELETE(extrudeFacet);
+				extrudeFacet = new ExtrudeFacet(geom, &worker);
+			}
+			extrudeFacet->SetVisible(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SHIFTVERTEX:
+			if (AskToReset()) {
+				geom->ShiftVertex();
+				// Send to sub process
+				worker.Reload();
+			}
+			return TRUE;
+		case MENU_FACET_COORDINATES:
+
+			if (!facetCoordinates) facetCoordinates = new FacetCoordinates();
+			facetCoordinates->Display(&worker);
+			return TRUE;
+		case MENU_FACET_MOVE:
+			if (!moveFacet || !moveFacet->IsVisible()) {
+				SAFE_DELETE(moveFacet);
+				moveFacet = new MoveFacet(geom, &worker);
+			}
+			moveFacet->SetVisible(TRUE);
+			return TRUE;
+		case MENU_FACET_SCALE:
+			if (geom->IsLoaded()) {
+				if (!scaleFacet) scaleFacet = new ScaleFacet(geom, &worker);
+
+				scaleFacet->SetVisible(TRUE);
+
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_FACET_MIRROR:
+			if (!mirrorFacet) mirrorFacet = new MirrorFacet(geom, &worker);
+			mirrorFacet->SetVisible(TRUE);
+			return TRUE;
+		case MENU_FACET_SPLIT:
+			if (!splitFacet || !splitFacet->IsVisible()) {
+				SAFE_DELETE(splitFacet);
+				splitFacet = new SplitFacet(geom, &worker);
+				splitFacet->SetVisible(TRUE);
+			}
+			return TRUE;
+		case MENU_FACET_ROTATE:
+			if (!rotateFacet) rotateFacet = new RotateFacet(geom, &worker);
+			rotateFacet->SetVisible(TRUE);
+			return TRUE;
+		case MENU_FACET_ALIGN:
+			if (!alignFacet) alignFacet = new AlignFacet(geom, &worker);
+			alignFacet->MemorizeSelection();
+			alignFacet->SetVisible(TRUE);
+			return TRUE;
+
+		case MENU_FACET_EXPLODE:
+			if (GLMessageBox::Display("Explode selected facet?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+				if (AskToReset()) {
+					int err;
+					try {
+						err = geom->ExplodeSelected();
+					}
+					catch (Error &e) {
+						GLMessageBox::Display((char *)e.GetMsg(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
+					}
+					if (err == -1) {
+						GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					}
+					else if (err == -2) {
+						GLMessageBox::Display("All selected facets must have a mesh with boudary correction enabled", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					}
+					else if (err == 0) {
+
+						UpdateModelParams();
+						UpdateFacetParams(TRUE);
+						// Send to sub process
+						try { worker.Reload(); }
+						catch (Error &e) {
+							GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+						}
+					}
+				}
+			}
+			return TRUE;
+
+		case MENU_SELECTION_SMARTSELECTION:
+			if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
+			smartSelection->SetVisible(TRUE);
+			return TRUE;
+		case MENU_FACET_SELECTALL:
+			geom->SelectAll();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_FACET_SELECTTRANS:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_FACET_SELECT2SIDE:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->sh.is2sided)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_FACET_SELECTTEXT:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->sh.isTextured != NULL)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_FACET_SELECTPROF:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->sh.isProfile != NULL)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTNONPLANAR:
+
+			sprintf(tmp, "%g", planarityThreshold);
+			//sprintf(title,"Pipe L/R = %g",L/R);
+			input = GLInputBox::GetInput(tmp, "Planarity larger than:", "Select non planar facets");
+			if (!input) return TRUE;
+			if (!sscanf(input, "%lf", &planarityThreshold)) {
+				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return TRUE;
+			}
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->err >= planarityThreshold)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+
+		case MENU_FACET_SELECTERR:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+
+				if (geom->GetFacet(i)->sh.sign == 0.0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTDEST:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+
+				if (geom->GetFacet(i)->sh.superDest != 0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTTELEPORT:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+
+				if (geom->GetFacet(i)->sh.teleportDest != 0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTABS:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->counterCache.hit.nbAbsorbed > 0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTHITS:
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+
+				if (geom->GetFacet(i)->counterCache.hit.nbHit > 0)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+
+		case MENU_FACET_SELECTNOHITS_AREA:
+
+			sprintf(tmp, "%g", largeArea);
+			//sprintf(title,"Pipe L/R = %g",L/R);
+			input = GLInputBox::GetInput(tmp, "Min.area (cm\262)", "Select large facets without hits");
+			if (!input) return TRUE;
+			if ((sscanf(input, "%lf", &largeArea) <= 0) || (largeArea <= 0.0)) {
+				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return TRUE;
+			}
+			geom->UnselectAll();
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				if (geom->GetFacet(i)->counterCache.hit.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeArea)
+					geom->Select(i);
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_FACET_INVERTSEL:
+			for (int i = 0; i < geom->GetNbFacet(); i++)
+				geom->GetFacet(i)->selected = !geom->GetFacet(i)->selected;
+			geom->UpdateSelection();
+			UpdateFacetParams(TRUE);
+			return TRUE;
+		case MENU_SELECTION_SELECTFACETNUMBER:
+			if (!selectDialog) selectDialog = new SelectDialog(&worker);
+			selectDialog->SetVisible(TRUE);
+			return TRUE;
+		case MENU_FACET_SAVESEL:
+			SaveSelection();
+			return TRUE;
+		case MENU_FACET_LOADSEL:
+			LoadSelection();
+			return TRUE;
+		case MENU_SELECTION_ADDNEW:
+			AddSelection();
+			return TRUE;
+			return TRUE;
+		case  MENU_SELECTION_CLEARALL:
+			if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+				ClearAllSelections();
+			}
+			return TRUE;
+		case MENU_VERTEX_UNSELECTALL:
+			geom->UnselectAllVertex();
+			return TRUE;
+		case MENU_VERTEX_SELECTALL:
+			geom->SelectAllVertex();
+			return TRUE;
+		case MENU_SELECTION_ISOLATED_VERTEX:
+			geom->SelectIsolatedVertices();
+			return TRUE;
+		case MENU_VERTEX_CLEAR_ISOLATED:
+			geom->DeleteIsolatedVertices(FALSE);
+			UpdateModelParams();
+			return TRUE;
+		case MENU_VERTEX_CREATE_POLY_CONVEX:
+			if (AskToReset()) {
+				try {
+					geom->CreatePolyFromVertices_Convex();
+				}
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+				}
+				//UpdateModelParams();
+				try {
+					worker.Reload();
+				}
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+				}
+			}
+			return TRUE;
+		case MENU_VERTEX_CREATE_POLY_ORDER:
+			if (AskToReset()) {
+				try {
+					geom->CreatePolyFromVertices_Order();
+				}
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+				}
+				//UpdateModelParams();
+				try {
+					worker.Reload();
+				}
+				catch (Error &e) {
+
+					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+				}
+			}
+			return TRUE;
+		case MENU_FACET_CREATE_DIFFERENCE:
+			CreateOfTwoFacets(ClipperLib::ctDifference);
+			return TRUE;
+		case MENU_FACET_CREATE_DIFFERENCE2:
+			CreateOfTwoFacets(ClipperLib::ctDifference, TRUE);
+			return TRUE;
+		case MENU_FACET_CREATE_UNION:
+			CreateOfTwoFacets(ClipperLib::ctUnion);
+			return TRUE;
+		case MENU_FACET_CREATE_INTERSECTION:
+			CreateOfTwoFacets(ClipperLib::ctIntersection);
+			return TRUE;
+		case MENU_FACET_CREATE_XOR:
+			CreateOfTwoFacets(ClipperLib::ctXor);
+			return TRUE;
+		case MENU_FACET_LOFT:
+			if (geom->GetNbSelected() != 2) {
+				GLMessageBox::Display("Select exactly 2 facets", "Can't create loft", GLDLG_OK, GLDLG_ICONERROR);
+				return TRUE;
+			}
+			if (AskToReset()) {
+				geom->CreateLoft();
+			}
+			worker.Reload();
+			UpdateModelParams();
+			UpdateFacetlistSelected();
+			UpdateViewers();
+			return TRUE;
+		case MENU_FACET_INTERSECT:
+			if (!buildIntersection || !buildIntersection->IsVisible()) {
+				SAFE_DELETE(buildIntersection);
+				buildIntersection = new BuildIntersection(geom, &worker);
+				buildIntersection->SetVisible(TRUE);
+			}
+			return TRUE;
+
+		case MENU_VERTEX_SELECT_COPLANAR:
+			char *input;
+			if (geom->IsLoaded()) {
+				if (geom->GetNbSelectedVertex() != 3) {
+					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
+					return TRUE;
+				}
+				sprintf(tmp, "%g", tolerance);
+				//sprintf(title,"Pipe L/R = %g",L/R);
+				input = GLInputBox::GetInput(tmp, "Tolerance (cm)", "Select coplanar vertices");
+				if (!input) return TRUE;
+				if ((sscanf(input, "%lf", &tolerance) <= 0) || (tolerance <= 0.0)) {
+					GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					return TRUE;
+				}
+				try { viewer[curViewer]->SelectCoplanar(tolerance); }
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
+				}
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_VERTEX_MOVE:
+			if (geom->IsLoaded()) {
+				if (!moveVertex) moveVertex = new MoveVertex(geom, &worker);
+
+				//moveVertex->DoModal();
+				moveVertex->SetVisible(TRUE);
+
+				/*
+				UpdateModelParams();
+				try { worker.Reload(); } catch(Error &e) {
+				GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
+				*/
+
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_VERTEX_SCALE:
+			if (geom->IsLoaded()) {
+				if (!scaleVertex) scaleVertex = new ScaleVertex(geom, &worker);
+
+				scaleVertex->SetVisible(TRUE);
+
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_VERTEX_COORDINATES:
+
+			if (!vertexCoordinates) vertexCoordinates = new VertexCoordinates();
+			vertexCoordinates->Display(&worker);
+			return TRUE;
+
+		case MENU_VERTEX_ADD:
+			if (geom->IsLoaded()) {
+				if (!addVertex) addVertex = new AddVertex(geom, &worker);
+				addVertex->SetVisible(TRUE);
+			}
+			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+
+		case MENU_VIEW_FULLSCREEN:
+			if (m_bWindowed) {
+				ToggleFullscreen();
+				PlaceComponents();
+			}
+			else {
+				Resize(1024, 768, TRUE);
+			}
+			menu->GetSubMenu("View")->SetState(MENU_VIEW_FULLSCREEN, !m_bWindowed);
+			return TRUE;
+
+		case MENU_VIEW_ADDNEW:
+			AddView();
+			return TRUE;
+			return TRUE;
+		case  MENU_VIEW_CLEARALL:
+			if (GLMessageBox::Display("Clear all views ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+				ClearAllViews();
+			}
+			return TRUE;
+		case MENU_TEST_PIPE0001:
+			if (AskToSave()) BuildPipe(0.0001);
+			return TRUE;
+		case MENU_TEST_PIPE1:
+			if (AskToSave()) BuildPipe(1.0);
+			return TRUE;
+		case MENU_TEST_PIPE10:
+			if (AskToSave()) BuildPipe(10.0);
+			return TRUE;
+		case MENU_TEST_PIPE100:
+			if (AskToSave()) BuildPipe(100.0);
+			return TRUE;
+		case MENU_TEST_PIPE1000:
+			if (AskToSave()) BuildPipe(1000.0);
+			return TRUE;
+		case MENU_TEST_PIPE10000:
+			if (AskToSave()) BuildPipe(10000.0);
+			return TRUE;
+		case MENU_QUICKPIPE:
+			if (AskToSave()) BuildPipe(5.0,5);
+			return TRUE;
+		}
+		// Load recent menu
+		if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + nbRecent) {
+			if (AskToSave()) {
+				if (worker.running) worker.Stop_Public();
+				LoadFile(recents[src->GetId() - MENU_FILE_LOADRECENT]);
+			}
+			return TRUE;
+		}
+
+		// Show structure menu
+		else if (src->GetId() >= MENU_VIEW_STRUCTURE && src->GetId() <= MENU_VIEW_STRUCTURE + geom->GetNbStructure()) {
+			geom->viewStruct = src->GetId() - MENU_VIEW_STRUCTURE - 1;
+			if (src->GetId() > MENU_VIEW_STRUCTURE) geom->UnselectAll();
+			UpdateStructMenu();
+			return TRUE;
+		}
+		else if (src->GetId() == MENU_VIEW_NEWSTRUCT) {
+			AddStruct();
+			UpdateStructMenu();
+			return TRUE;
+		}
+		else if (src->GetId() == MENU_VIEW_DELSTRUCT) {
+			DeleteStruct();
+			UpdateStructMenu();
+			return TRUE;
+		}
+		else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
+			geom->viewStruct = Remainder(geom->viewStruct - 1, geom->GetNbStructure());
+			geom->UnselectAll();
+			UpdateStructMenu();
+			return TRUE;
+		}
+		else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
+			geom->viewStruct = Remainder(geom->viewStruct + 1, geom->GetNbStructure());
+			geom->UnselectAll();
+			UpdateStructMenu();
+			return TRUE;
+		}
+
+		// Select selection
+		else if (MENU_SELECTION_SELECTIONS + nbSelection > src->GetId() && src->GetId() >= MENU_SELECTION_SELECTIONS) { //Choose selection by number
+			SelectSelection(src->GetId() - MENU_SELECTION_SELECTIONS);
+			return TRUE;
+		}
+		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + nbSelection)) { //Previous selection
+			SelectSelection(Remainder(idSelection - 1, nbSelection));
+			return TRUE;
+		}
+		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + nbSelection + 1)) { //Next selection
+			SelectSelection(Remainder(idSelection + 1, nbSelection));
+			return TRUE;
+		}
+
+		// Clear selection
+		else if (src->GetId() >= MENU_SELECTION_CLEARSELECTIONS && src->GetId() < MENU_SELECTION_CLEARSELECTIONS + nbSelection) {
+			char tmpname[256];
+			sprintf(tmpname, "Clear %s?", selections[src->GetId() - MENU_SELECTION_CLEARSELECTIONS].name);
+			if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+				ClearSelection(src->GetId() - MENU_SELECTION_CLEARSELECTIONS);
+			}
+			return TRUE;
+		}
+
+		// Memorize selection
+		else if (src->GetId() >= MENU_SELECTION_MEMORIZESELECTIONS && src->GetId() < MENU_SELECTION_MEMORIZESELECTIONS + nbSelection) {
+			OverWriteSelection(src->GetId() - MENU_SELECTION_MEMORIZESELECTIONS);
+			return TRUE;
+		}
+
+		// Select view
+		else if (src->GetId() >= MENU_VIEW_VIEWS && src->GetId() < MENU_VIEW_VIEWS + nbView) {
+			SelectView(src->GetId() - MENU_VIEW_VIEWS);
+			return TRUE;
+		}
+		// Clear view
+		else if (src->GetId() >= MENU_VIEW_CLEARVIEWS && src->GetId() < MENU_VIEW_CLEARVIEWS + nbView) {
+			char tmpname[256];
+			sprintf(tmpname, "Clear %s?", views[src->GetId() - MENU_VIEW_CLEARVIEWS].name);
+			if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+				ClearView(src->GetId() - MENU_VIEW_CLEARVIEWS);
+			}
+			return TRUE;
+		}
+		// Memorize view
+		else if (src->GetId() >= MENU_VIEW_MEMORIZEVIEWS && src->GetId() < MENU_VIEW_MEMORIZEVIEWS + nbView) {
+			OverWriteView(src->GetId() - MENU_VIEW_MEMORIZEVIEWS);
+			return TRUE;
+		}
+		break;
+
+		//LIST --------------------------------------------------------------------
+	case MSG_LIST:
+		if (src == facetList && geom->IsLoaded()) {
+			int *sels = (int *)malloc((geom->GetNbFacet()) * sizeof(int));
+			int nbSel;
+			facetList->GetSelectedRows(&sels, &nbSel, TRUE);
+			geom->UnselectAll();
+			for (int i = 0; i < nbSel; i++)
+				geom->Select(sels[i]);
+			geom->UpdateSelection();
+			UpdateFacetParams();
+			SAFE_FREE(sels);
+			return TRUE;
+		}
+		break;
+
+		//GEOMVIEWER ------------------------------------------------------------------
+	case MSG_GEOMVIEWER_MAXIMISE:
+	{
+		if (src == viewer[0]) {
+			AnimateViewerChange(0);
+		}
+		else if (src == viewer[1]) {
+			AnimateViewerChange(1);
+		}
+		else if (src == viewer[2]) {
+			AnimateViewerChange(2);
+		}
+		else if (src == viewer[3]) {
+			AnimateViewerChange(3);
+		}
+		Place3DViewer();
+
+		BOOL neededTexture = needsTexture;
+
+		BOOL neededMesh = needsMesh;
+		CheckNeedsTexture();
+
+		if (!needsTexture && neededTexture) { //We just disabled textures
+			worker.GetGeometry()->ClearFacetTextures();
+		}
+		else if (needsTexture && !neededTexture) { //We just enabled textures
+			worker.RebuildTextures();
+		}
+
+		if (!needsMesh && neededMesh) { //We just disabled mesh
+			geom->ClearFacetMeshLists();
+		}
+		else if (needsMesh && !neededMesh) { //We just enabled mesh
+			geom->BuildFacetMeshLists();
+		}
+
+		return TRUE;
+	}
+	case MSG_GEOMVIEWER_SELECT: {
+		SelectViewer(src->GetId());
+		return TRUE;
+	}
+
+		//BUTTON ------------------------------------------------------------------
+	case MSG_BUTTON:
+		if (src == resetSimu) {
+			changedSinceSave = TRUE;
+			ResetSimulation();
+			return TRUE;
+		}
+		else if (src == forceFrameMoveButton) {
+			frameMoveRequested = TRUE;
+			FrameMove();
+			return TRUE;
+		}
+		break;
+
+		//Panel open/close ---------------------------------------------------------
+	case MSG_PANELR:
+		PlaceComponents();
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void Interface::CheckNeedsTexture()

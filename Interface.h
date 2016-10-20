@@ -65,10 +65,10 @@
 #define MENU_FACET_SWAPNORMAL  301
 #define MENU_FACET_SHIFTVERTEX 302
 #define MENU_FACET_COORDINATES 303
-#define MENU_FACET_PROFPLOTTER 304
+#define MENU_TOOLS_PROFPLOTTER 304
 #define MENU_FACET_DETAILS     305
 
-#define MENU_FACET_TEXPLOTTER  307
+#define MENU_TOOLS_TEXPLOTTER  307
 #define MENU_FACET_REMOVESEL   308
 #define MENU_FACET_EXPLODE     309
 #define MENU_FACET_SELECTALL   310
@@ -175,12 +175,20 @@ class Interface : public GLApplication {
 protected:
 	Interface();
 	virtual void PlaceComponents() {}
-	virtual void UpdateFacetParams(BOOL updateSelection) {}
 	virtual void UpdateFacetHits(BOOL allRows) {}
 	//virtual void UpdateFormula() {}
 	virtual BOOL EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return FALSE; }
 	virtual BOOL AskToReset(Worker *work = NULL) { return FALSE; }
+
+	virtual void BuildPipe(double ratio, int steps = 0) {}
+	virtual void LoadFile(char *fName = NULL) {}
+	virtual void InsertGeometry(BOOL newStr, char *fName = NULL) {}
+	virtual void SaveFile() {}
+	virtual void SaveFileAs() {}
+
 public:
+	virtual void UpdateFacetParams(BOOL updateSelection=TRUE) {}
+
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
 	double   hps;          // Hit per second
@@ -339,6 +347,7 @@ public:
 	LoadStatus       *loadStatus;
 	FacetCoordinates *facetCoordinates;
 	VertexCoordinates *vertexCoordinates;
+	SmartSelection   *smartSelection;
 
 	// Current directory
 	void UpdateCurrentDir(char *fileName);
@@ -358,7 +367,7 @@ public:
 	void ExportSelection();
 	void UpdateModelParams();
 	void UpdateViewerFlags();
-	void ResetSimulation(BOOL askConfirm);
+	void ResetSimulation(BOOL askConfirm=TRUE);
 	void UpdateStructMenu();
 	void UpdateTitle();
 
@@ -399,6 +408,6 @@ protected:
 	int OneTimeSceneInit_shared();
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
-	void ProcessMessage_shared(GLComponent *src, int message);
+	BOOL ProcessMessage_shared(GLComponent *src, int message);
 	int  OnExit();
 };
