@@ -93,8 +93,6 @@ char *Worker::GetShortFileName(char* longFileName) {
 
 }
 
-// -------------------------------------------------------------
-
 void Worker::SetFileName(char *fileName) {
 
 	strcpy(fullFileName,fileName);
@@ -125,7 +123,12 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, BOOL askConf
 			throw Error(tmp);
 
 		}
+#ifdef MOLFLOW
 		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected);
+#endif
+#ifdef SYNRAD
+		geom->ExportTextures(f, grouping, mode, no_scans, dpHit, saveSelected);
+#endif
 		fclose(f);
 	}
 
@@ -141,8 +144,6 @@ void Worker::GetLeak(LEAK *buffer,int *nb) {
 	}
 
 }
-
-// -------------------------------------------------------------
 
 void Worker::SetLeak(LEAK *buffer,int *nb,SHGHITS *gHits) { //When loading from file
 
@@ -162,8 +163,6 @@ void Worker::GetHHit(HIT *buffer, int *nb) {
 		*nb = nbHHit;
 	}
 }
-
-// -------------------------------------------------------------
 
 void Worker::SetHHit(HIT *buffer, int *nb, SHGHITS *gHits) {
 
@@ -391,8 +390,6 @@ void Worker::KillAll() {
 
 }
 
-// -------------------------------------------------------------
-
 void Worker::Exit() {
 	//exiting = TRUE;
 
@@ -402,7 +399,7 @@ void Worker::Exit() {
 
 	}*/
 	//Subprocesses will commit suicide if host is missing
-
+	if (dpControl) CLOSEDP(dpControl);
 }
 
 void Worker::SetProcNumber(int n) {
@@ -448,11 +445,6 @@ void Worker::SetProcNumber(int n) {
 
 
 }
-
-
-
-// -------------------------------------------------------------
-
 
 DWORD Worker::GetPID(int prIdx) {
 	return pID[prIdx];

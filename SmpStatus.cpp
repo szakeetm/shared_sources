@@ -60,7 +60,7 @@ SmpStatus::SmpStatus():GLWindow() {
   nbProcText->SetBounds(210,hD-43,30,19);
   Add(nbProcText);
 
-  maxButton = new GLButton(0,"Change MAX generated photons");
+  maxButton = new GLButton(0,"Change MAX generated");
   maxButton->SetBounds(wD-280,hD-43,180,19);
   Add(maxButton);
 

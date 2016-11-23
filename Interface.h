@@ -175,7 +175,7 @@ class Interface : public GLApplication {
 protected:
 	Interface();
 	virtual void PlaceComponents() {}
-	virtual void UpdateFacetHits(BOOL allRows) {}
+	virtual void UpdateFacetHits(BOOL allRows=FALSE) {}
 	//virtual void UpdateFormula() {}
 	virtual BOOL EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return FALSE; }
 	virtual BOOL AskToReset(Worker *work = NULL) { return FALSE; }
@@ -184,10 +184,11 @@ protected:
 	virtual void LoadFile(char *fName = NULL) {}
 	virtual void InsertGeometry(BOOL newStr, char *fName = NULL) {}
 	virtual void SaveFile() {}
-	virtual void SaveFileAs() {}
+	virtual void ResetAutoSaveTimer() {}
 
 public:
-	virtual void UpdateFacetParams(BOOL updateSelection=TRUE) {}
+	virtual void UpdateFacetParams(BOOL updateSelection=FALSE) {}
+	virtual void SaveConfig() {}
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
@@ -250,22 +251,20 @@ public:
 	GLTextField   *desNumber;
 	GLTextField   *leakNumber;
 	GLTextField   *sTime;
-	GLMenu        *facetMenu;
+	//GLMenu        *facetMenu;
 
 	GLButton      *facetApplyBtn;
 	GLButton      *facetDetailsBtn;
 	GLButton      *facetCoordBtn;
-	GLButton      *facetMoreBtn;
+	GLButton      *facetMoreBtn; // <<Adv, used by Molflow only
 	GLTitledPanel *facetPanel;
 	GLList        *facetList;
 	GLLabel       *facetSideLabel;
 	GLTitledPanel *togglePanel;
 	GLCombo       *facetSideType;
 	GLLabel       *facetTLabel;
-	GLLabel       *facetTempLabel;
 	GLTextField   *facetOpacity;
 	GLLabel       *facetAreaLabel;
-	GLTextField   *facetTemperature;
 	GLTextField   *facetArea;
 
 	GLToggle      *autoFrameMoveToggle;
@@ -306,18 +305,17 @@ public:
 	void OverWriteSelection(int idOvr);
 	void ClearSelection(int idClr);
 	void RebuildSelectionMenus();
-
-	virtual void SaveConfig() {};
-
+	
 	void UpdateFacetlistSelected();
+	
 	int  GetVariable(char * name, char * prefix);
-	void UpdateFormula();
 	void CreateOfTwoFacets(ClipperLib::ClipType type,BOOL reverseOrder=FALSE);
 	void UpdateMeasurements();
 	BOOL AskToSave();
-
 	void AddStruct();
 	void DeleteStruct();
+
+	void SaveFileAs();
 
 	AVIEW   views[MAX_VIEW];
 	int     nbView;
@@ -372,7 +370,7 @@ public:
 	void UpdateTitle();
 
 	void AnimateViewerChange(int next);
-	void UpdateViewerParams();
+	void UpdateViewerPanel();
 
 	void SelectViewer(int s);
 
@@ -382,7 +380,6 @@ public:
 
 	void DisplayCollapseDialog();
 	void RenumberSelections(const std::vector<int> &newRefs);
-	void RenumberFormulas(std::vector<int> *newRefs);
 	int  Resize(DWORD width, DWORD height, BOOL forceWindowed);
 
 	// Formula management
@@ -390,19 +387,25 @@ public:
 	FORMULA formulas[MAX_FORMULA];
 	void ProcessFormulaButtons(GLComponent *src);
 	BOOL OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
+	void UpdateFormula();
+	void RenumberFormulas(std::vector<int> *newRefs);
 	void AddFormula(GLParser *f, BOOL doUpdate = TRUE);
 	void AddFormula(const char *fName, const char *formula);
 	void ClearFormula();
+
+	void ExportTextures(int grouping, int mode);
 	
 	// Recent files
 	char *recents[MAX_RECENT];
 	int  nbRecent;
 	void AddRecent(char *fileName);
 	void RemoveRecent(char *fileName);
+	void UpdateRecentMenu();
 
 	BOOL needsMesh;    //At least one viewer displays mesh
 	BOOL needsTexture; //At least one viewer displays textures
 	void CheckNeedsTexture();
+	void DoEvents(BOOL forced = FALSE); //Used to catch button presses (check if an abort button was pressed during an operation)
 
 protected:
 	int OneTimeSceneInit_shared();

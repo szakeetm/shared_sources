@@ -456,14 +456,6 @@ void Geometry::SelectAll() {
 
 
 
-void Geometry::UnSelectAll() {
-	for (int i = 0; i < sh.nbFacet; i++)
-		facets[i]->selected = FALSE;
-	UpdateSelection();
-}
-
-
-
 int Geometry::GetNbSelected() {
 	return nbSelected;
 }
@@ -1103,9 +1095,9 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 		glPolygonOffset(1.0f, 3.0f);
 		for (int i = 0;i < sh.nbFacet && renderTexture;i++) {
 			Facet *f = facets[i];
-			BOOL paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countDes || f->sh.countRefl || f->sh.countTrans);
+			BOOL paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #ifdef MOLFLOW
-			paintRegularTexture = paintRegularTexture || f->sh.countACD;
+			paintRegularTexture = paintRegularTexture || f->sh.countACD || f->sh.countDes;
 #endif
 			if (paintRegularTexture) {
 
@@ -1181,9 +1173,9 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 							float zc = (float)(f->sh.O.z + f->sh.U.z*uC + f->sh.V.z*vC);
 
 							RenderArrow(matView,
-								(float)f->dirCache[add].sumDir.x,
-								(float)f->dirCache[add].sumDir.y,
-								(float)f->dirCache[add].sumDir.z,
+								(float)f->dirCache[add].dir.x,
+								(float)f->dirCache[add].dir.y,
+								(float)f->dirCache[add].dir.z,
 								xc, yc, zc, (float)rw);
 						}
 					}

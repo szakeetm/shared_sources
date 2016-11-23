@@ -104,7 +104,7 @@ void SelectDialog::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Invalid number","Error",GLDLG_OK,GLDLG_ICONERROR);
 			  return;
 		  }
-		  if (rCode == GLDLG_SELECT) geom->UnSelectAll();
+		  if (rCode == GLDLG_SELECT) geom->UnselectAll();
 		  geom->GetFacet(facetnumber-1)->selected = (rCode == GLDLG_SELECT || rCode == GLDLG_SELECT_ADD);
 		  geom->UpdateSelection();
 		  mApp->UpdateFacetParams(TRUE);

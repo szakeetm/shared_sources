@@ -17,8 +17,8 @@
 */
 
 #include "File.h"
-#include "GLApp\GLTypes.h"
 #include <string.h>
+#include "GLApp\GLTypes.h"
 
 #ifdef WIN
 #include <direct.h>
@@ -424,6 +424,10 @@ void FileWriter::WriteDouble(const double &v,char *sep) {
   if( !fprintf(file,"%.14E",v) )
     throw Error("Error while writing to file");
   if(sep) fprintf(file,"%s",sep);
+}
+
+void FileWriter::Write(std::string str) {
+	Write(str.c_str()); 
 }
 
 void FileWriter::Write(const char *s) {

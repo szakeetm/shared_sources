@@ -31,7 +31,7 @@ int main(int argc,char* argv[]) {
 	fileName = argv[1];
 	std::cout<<"\nargv0: "<<argv[0];
 	std::cout<<"\nargv1: "<<argv[1];
-	std::cout<<"\nargv2: "<<argv[2];
+	std::cout<<"\nargv2: "<<argv[2]<<"\n";
 	//sprintf_s(fileNameWith7z,"%s7z",fileName);
 	fileNameWith7z = fileName + "7z";
 	if (!Exist("7za.exe")) {

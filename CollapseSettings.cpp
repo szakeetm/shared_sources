@@ -173,8 +173,13 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 				if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
 				if (mApp->profilePlotter) mApp->profilePlotter->Refresh();
+#ifdef MOLFLOW
 				if (mApp->pressureEvolution) mApp->pressureEvolution->Refresh();
 				if (mApp->timewisePlotter) mApp->timewisePlotter->Refresh();
+#endif
+#ifdef SYNRAD
+				if (mApp->spectrumPlotter) mApp->spectrumPlotter->Refresh();
+#endif
 				// Send to sub process
 				try { work->Reload(); }
 				catch (Error &e) {

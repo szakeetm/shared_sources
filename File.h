@@ -46,7 +46,7 @@ public:
   // Utils functions
 	static int Exist(std::string fileName);
 	static int Exist(const char *fileName);
-	static std::string GetPath(const std::string &str); //Extracts string up to to last "\", including the "\"
+	static std::string GetPath(const std::string &str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
 	static std::string GetFilename(const std::string &str); //Extracts string after the last "\"
 	static std::string GetExtension(const std::string &str); //Extracts string after the last "."
 };
@@ -116,12 +116,14 @@ public:
   void WriteInt(const int &v,char *sep=NULL);
   void WriteDouble(const double &v,char *sep=NULL);
   void Write(const char *s);
+  void Write(std::string str);
+  
 
 private:
 
   FILE *file;
   char fileName[2048];
-
+  
 };
 
 #endif /* FILERWH */

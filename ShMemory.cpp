@@ -192,7 +192,8 @@ BOOL AccessDataport(Dataport *dp)
 BOOL AccessDataportTimed(Dataport *dp,DWORD timeout)
 {
   // 1ms timeout
-  if (WaitForSingleObject(dp->sema,timeout)==WAIT_OBJECT_0)
+	DWORD retVal = WaitForSingleObject(dp->sema, timeout);
+  if (retVal==WAIT_OBJECT_0)
 	return TRUE;
   else
 	return FALSE;

@@ -1598,16 +1598,12 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 		}
 		else if (src == selVxBtn) {
 			UpdateMouseCursor(MODE_SELECTVERTEX);
-
-
-
-
-
 		}
-		#ifdef SYNRAD
+#ifdef SYNRAD
 		else if (src == selTrajBtn) {
 			UpdateMouseCursor(MODE_SELECTTRAJ);
-		#endif
+		}
+#endif
 		else if (src == autoBtn) {
 			autoScaleOn = !autoScaleOn;
 			//autoBtn->SetState(autoScaleOn);

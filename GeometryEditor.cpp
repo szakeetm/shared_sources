@@ -4,12 +4,13 @@
 #include "GLApp\GLMessageBox.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
-#include "ASELoader.h"
+
 #endif
 
 #ifdef SYNRAD
 #include "SynRad.h"
 #endif
+#include "ASELoader.h"
 #include <algorithm>
 #include <list>
 
@@ -242,7 +243,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	//facets[sh.nbFacet - 1]->sh.sticking = DES_NONE;
 	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	//set selection
-	UnSelectAll();
+	UnselectAll();
 	facets[sh.nbFacet - 1]->selected = TRUE;
 	nbSelected = 1;
 	for (int i = 0; i < loopLength; i++) {
@@ -273,7 +274,7 @@ void Geometry::CreatePolyFromVertices_Order() {
 	//facets[sh.nbFacet - 1]->sh.sticking = DES_NONE;
 	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	//set selection
-	UnSelectAll();
+	UnselectAll();
 	facets[sh.nbFacet - 1]->selected = TRUE;
 	nbSelected = 1;
 	for (size_t i = 0; i < selectedVertexList.size(); i++) {
@@ -320,7 +321,7 @@ void Geometry::CreateDifference() {
 	facets[sh.nbFacet - 1]->sh.sticking = 0.0;
 	facets[sh.nbFacet - 1]->sh.sticking = DES_NONE;
 	//set selection
-	UnSelectAll();
+	UnselectAll();
 	facets[sh.nbFacet - 1]->selected = TRUE;
 	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	nbSelected = 1;
@@ -394,7 +395,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	size_t nbNewFacets = solution.ChildCount();
 	facets = (Facet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(Facet *));
 	//set selection
-	UnSelectAll();
+	UnselectAll();
 	std::vector<VERTEX3D> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		BOOL hasHole = solution.Childs[i]->ChildCount() > 0;
@@ -976,33 +977,6 @@ void Geometry::Merge(int nbV, int nbF, VERTEX3D *nV, Facet **nF) {
 
 }
 
-void Geometry::RemoveLinkFacet() { //unused
-
-	// Remove facet used as link for superstructure (not needed)
-	int nb = 0;
-	for (int i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->IsLinkFacet()) nb++;
-
-	if (nb == 0) return;
-
-	Facet **f = (Facet **)malloc((sh.nbFacet - nb) * sizeof(Facet *));
-
-	nb = 0;
-	for (int i = 0; i < sh.nbFacet; i++) {
-		if (facets[i]->IsLinkFacet()) {
-			delete facets[i];
-		}
-		else {
-			f[nb++] = facets[i];
-		}
-	}
-
-	SAFE_FREE(facets);
-	facets = f;
-	sh.nbFacet = nb;
-
-}
-
 int Geometry::HasIsolatedVertices() {
 
 	// Check if there are unused vertices
@@ -1333,12 +1307,17 @@ int Geometry::ExplodeSelected(BOOL toMap, int desType, double exponent, double *
 	// Update facet
 	Facet   **f = (Facet **)malloc((sh.nbFacet + FtoAdd - nbSelected) * sizeof(Facet *));
 
+	int nbS = nbSelected; //to remember it after RemveSelected() routine
 	// Delete selected facets
 	RemoveSelected();
 
+	//Fill old facets
+	for (nb = 0; nb < sh.nbFacet; nb++)
+		f[nb] = facets[nb];
+
 	// Add new facets
 	int count = 0;
-	for (int i = 0; i < nbSelected; i++) {
+	for (int i = 0; i < nbS; i++) {
 		for (int j = 0; j < blocks[i].nbF; j++) {
 			f[nb++] = blocks[i].facets[j];
 			#ifdef MOLFLOW
@@ -1357,9 +1336,11 @@ int Geometry::ExplodeSelected(BOOL toMap, int desType, double exponent, double *
 			#endif
 		}
 	}
+	
+	
 
 	// Free allocated memory
-	for (int i = 0; i < nbSelected; i++) {
+	for (int i = 0; i < nbS; i++) {
 		SAFE_FREE(blocks[i].facets);
 	}
 	SAFE_FREE(blocks);
@@ -1814,7 +1795,7 @@ void Geometry::GetSelection(int **selection, int *nbSel) {
 }
 
 void Geometry::SetSelection(int **selection, int *nbSel, BOOL isShiftDown, BOOL isCtrlDown) {
-	if (!isShiftDown && !isCtrlDown) UnSelectAll(); //Set selection
+	if (!isShiftDown && !isCtrlDown) UnselectAll(); //Set selection
 	for (int i = 0; i < *nbSel; i++) {
 		int toSelect = (*selection)[i];
 		if (toSelect < sh.nbFacet) facets[toSelect]->selected = !isCtrlDown;
@@ -1928,7 +1909,7 @@ BOOL operator<(const std::list<ClippingVertex>::iterator& a, const std::list<Cli
 	return (a->distance < b->distance);
 }
 
-BOOL Geometry::IntersectingPlaneWithLine(const VERTEX3D &P0, const VERTEX3D &u, const VERTEX3D &V0, const VERTEX3D &n, VERTEX3D *intersectPoint, BOOL withinSection = FALSE) {
+BOOL Geometry::IntersectingPlaneWithLine(const VERTEX3D &P0, const VERTEX3D &u, const VERTEX3D &V0, const VERTEX3D &n, VERTEX3D *intersectPoint, BOOL withinSection) {
 	//Notations from http://geomalgorithms.com/a05-_intersect-1.html
 	//At this point, intersecting ray is L=P0+s*u
 	if (IS_ZERO(Dot(n, u))) return FALSE; //Check for parallelness
@@ -2049,7 +2030,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 		//result.push_back(sh.nbVertex);
 		sh.nbVertex++;
 	}
-	UnSelectAll();
+	UnselectAll();
 	for (size_t facetId = 0;facetId < selectedFacets.size();facetId++) {
 		std::vector<std::vector<EdgePoint>> clipPaths;
 		Facet *f = selectedFacets[facetId].f;
@@ -3734,7 +3715,7 @@ void Geometry::LoadTXTGeom(FileReader *file,size_t *nbV,size_t *nbF,VERTEX3D **V
 
 void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,VERTEX3D **vertices3,Facet ***facets,size_t strIdx,BOOL newStruct) {
 
-	UnSelectAll();
+	UnselectAll();
 
 	//tNbHit = file->ReadLLong();
 	//tNbLeak = file->ReadInt();
@@ -3795,7 +3776,7 @@ void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,V
 
 void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet, VERTEX3D **vertices3, Facet ***facets, size_t strIdx, BOOL newStruct) {
 
-	UnSelectAll();
+	UnselectAll();
 
 
 	file->ReadKeyword("version"); file->ReadKeyword(":");
@@ -4057,7 +4038,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 void Geometry::InsertSTLGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,VERTEX3D **vertices3,Facet ***facets,size_t strIdx,double scaleFactor,BOOL newStruct) {
 
-	UnSelectAll();
+	UnselectAll();
 	char *w;
 
 	int nbNewFacets=0;

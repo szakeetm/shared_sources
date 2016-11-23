@@ -1693,11 +1693,11 @@ void GLList::UpdateAllRows() {//Fetch non-visible values too
 			}
 			sprintf(tmp,"%d",index+1);
 			SetValueAt(0,i,tmp);
-			sprintf(tmp,"%I64d",f->sh.counter[worker->displayedMoment].hit.nbHit);
+			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbHit);
 			SetValueAt(1,i,tmp);
-			sprintf(tmp,"%I64d",f->sh.counter[worker->displayedMoment].hit.nbDesorbed);
+			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbDesorbed);
 			SetValueAt(2,i,tmp);
-			sprintf(tmp,"%I64d",f->sh.counter[worker->displayedMoment].hit.nbAbsorbed);
+			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbAbsorbed);
 			SetValueAt(3,i,tmp);
 		}
 		//geom=geom;

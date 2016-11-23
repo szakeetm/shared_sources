@@ -114,7 +114,6 @@ BOOL Facet::SetTexture(double width, double height, BOOL useMesh) {
 		dimOK = (sh.texWidth > 0 && sh.texHeight > 0);
 	}
 	else {
-
 		sh.texWidth = 0;
 		sh.texHeight = 0;
 		sh.texWidthD = 0.0;
@@ -278,7 +277,6 @@ BOOL Facet::BuildMesh() {
 						BOOL fullElem = IS_ZERO(fA - A);
 						if (!fullElem) {
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
-
 							cellprop.uCenter = uC;
 							cellprop.vCenter = vC;
 							cellprop.nbPoints = 0;
@@ -289,7 +287,6 @@ BOOL Facet::BuildMesh() {
 						else {
 							cellPropertiesIds[i + j*sh.texWidth] = -1;
 						}
-
 
 						//cellprop.full = IS_ZERO(fA - A);
 
@@ -305,11 +302,6 @@ BOOL Facet::BuildMesh() {
 							//cellprop.full = IS_ZERO(fA - A);
 							//cellprop.elemId = nbElem;
 
-
-
-
-
-
 							// Mesh coordinates
 							cellprop.points = (VERTEX2D*)malloc(nbv * sizeof(VERTEX2D));
 							cellprop.nbPoints = nbv;
@@ -323,21 +315,10 @@ BOOL Facet::BuildMesh() {
 							meshvector[meshvectorsize++] = cellprop;
 							//nbElem++;
 
-
-
-
-
-
-
 						}
-
-
-
 						else {
 							cellPropertiesIds[i + j*sh.texWidth] = -1;
-
 						}
-
 
 					}
 
@@ -418,7 +399,6 @@ void Facet::BuildMeshList() {
 			size_t nbPts = GetMeshNbPoint(i);
 			for (size_t n = 0; n < nbPts; n++) {
 				glEdgeFlag(TRUE);
-
 				VERTEX2D pt = GetMeshPoint(i, n);
 				glVertex2u(pt.u, pt.v);
 			}
@@ -530,10 +510,6 @@ void Facet::Explode(FACETGROUP *group) {
 		}
 	}
 
-
-
-
-
 	if (!(group->facets = (Facet **)malloc(nonZeroElems * sizeof(Facet *))))
 		throw Error("Not enough memory to create new facets");
 	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
@@ -553,12 +529,6 @@ void Facet::Explode(FACETGROUP *group) {
 			nb += GetMeshNbPoint(i);
 		}
 
-
-
-
-
-
-
 	}
 
 	group->nbF = nonZeroElems;
@@ -575,9 +545,9 @@ void Facet::FillVertexArray(VERTEX3D *v) {
 		if (cellPropertiesIds[i] != -2) {
 			for (size_t j = 0; j < GetMeshNbPoint(i); j++) {
 				VERTEX2D p = GetMeshPoint(i, j);
-				v[nb].x = sh.O.x + sh.U.x*p.u + p.v;
-				v[nb].y = sh.O.y + sh.U.y*p.u + p.v;
-				v[nb].z = sh.O.z + sh.U.z*p.u + p.v;
+				v[nb].x = sh.O.x + sh.U.x*p.u + sh.V.x*p.v;
+				v[nb].y = sh.O.y + sh.U.y*p.u + sh.V.y*p.v;
+				v[nb].z = sh.O.z + sh.U.z*p.u + sh.V.z*p.v;
 				nb++;
 			}
 		}
@@ -610,7 +580,7 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, BOOL useColor) {
 		int tDim = GetPower2(m);
 		if (tDim < 16) tDim = 16;
 		size_t tSize = tDim*tDim;
-		if (useColor) tSize = tSize *= 4;
+		if (useColor) tSize *= 4;
 		return tSize;
 
 	}
@@ -851,4 +821,8 @@ VERTEX2D Facet::GetMeshCenter(int index)
 
 double Facet::GetArea() {
 	return sh.area*(sh.is2sided ? 2.0 : 1.0);
+}
+
+BOOL Facet::IsTXTLinkFacet() {
+	return ((sh.opacity == 0.0) && (sh.sticking >= 1.0));
 }

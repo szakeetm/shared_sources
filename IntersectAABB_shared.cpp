@@ -370,9 +370,22 @@ void IntersectTree(struct AABBNODE *node) {
 								// Now check intersection with the facet polygon (in the u,v space)
 								// This check could be avoided on rectangular facet.
 								if (IsInFacet(f, u, v)) {
-
+									BOOL hardHit;
+#ifdef MOLFLOW
 									double time = sHandle->flightTimeCurrentParticle + d / 100.0 / sHandle->velocityCurrentParticle;
-									if ((GetOpacityAt(f, time) == 1.0) || (rnd()<GetOpacityAt(f, time))) {
+									double currentOpacity = GetOpacityAt(f, time);
+									hardHit = ((currentOpacity == 1.0) || (rnd()<currentOpacity));
+#endif
+
+#ifdef SYNRAD
+									hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
+										&& rnd()>f->sh.opacity)
+										|| (f->sh.reflectType > 10 //Material reflection
+										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
+										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->energy,
+										acos(DOT3(sHandle->pDir.x, sHandle->pDir.y, sHandle->pDir.z, f->sh.N.x, f->sh.N.y, f->sh.N.z)) - PI / 2, rnd()) == REFL_TRANS));
+#endif
+									if (hardHit) {
 
 										// Hard hit
 										if (d < intMinLgth) {
@@ -387,13 +400,13 @@ void IntersectTree(struct AABBNODE *node) {
 									else {
 
 										// Pass on partial transparent facet
-										if (f->sh.isProfile || f->hits) {
+										//if (f->sh.isProfile || f->hits) {
 											f->colDist = d;
 											f->colU = u;
 											f->colV = v;
 											if (intNbTHits<MAX_THIT)
 												THits[intNbTHits++] = f;
-										}
+										//}
 									}
 								} // IsInFacet
 							} // d range
@@ -412,7 +425,7 @@ void IntersectTree(struct AABBNODE *node) {
 
 }
 
-BOOL IsInFacet(FACET *f, double u, double v) {
+BOOL IsInFacet(FACET *f, const double &u, const double &v) {
 
 	// 2D polygon "is inside" solving
 	// Using the "Jordan curve theorem" (we intersect in v direction here)
