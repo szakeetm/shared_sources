@@ -1,10 +1,13 @@
 #include "Interface.h"
 #include <direct.h> //_getcwd()
+#include <io.h> // Check for recovery
 
 #include "GLApp/GLFileBox.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
+#include "RecoveryDialog.h"
+
 
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;
@@ -132,6 +135,7 @@ void Interface::ResetSimulation(BOOL askConfirm) {
 		nbDesStart = 0;
 		nbHitStart = 0;
 	}
+	UpdatePlotters();
 }
 
 void Interface::UpdateStructMenu() {
@@ -837,7 +841,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Vertex")->Add("Select all vertex", MENU_VERTEX_SELECTALL);
 	menu->GetSubMenu("Vertex")->Add("Unselect all vertex", MENU_VERTEX_UNSELECTALL);
 	menu->GetSubMenu("Vertex")->Add("Select coplanar vertex (visible on screen)", MENU_VERTEX_SELECT_COPLANAR);
-	menu->GetSubMenu("Vertex")->Add("Select isolated vertex", MENU_SELECTION_ISOLATED_VERTEX);
+	menu->GetSubMenu("Vertex")->Add("Select isolated vertex", MENU_VERTEX_SELECT_ISOLATED);
 
 	menu->Add("View");
 
@@ -1388,7 +1392,7 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_VERTEX_SELECTALL:
 			geom->SelectAllVertex();
 			return TRUE;
-		case MENU_SELECTION_ISOLATED_VERTEX:
+		case MENU_VERTEX_SELECT_ISOLATED:
 			geom->SelectIsolatedVertices();
 			return TRUE;
 		case MENU_VERTEX_CLEAR_ISOLATED:
@@ -2448,3 +2452,232 @@ void Interface::DoEvents(BOOL forced)
 		lastExec = time;
 	}
 }
+
+BOOL Interface::AskToReset(Worker *work) {
+	if (work == NULL) work = &worker;
+	if (work->nbHit > 0) {
+		int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+		if (rep == GLDLG_OK) {
+			work->ResetStatsAndHits(m_fTime);
+			nbDesStart = 0;
+			nbHitStart = 0;
+
+			//resetSimu->SetEnabled(FALSE);
+			UpdatePlotters();
+			return TRUE;
+		}
+		else return FALSE;
+	}
+	else return TRUE;
+}
+
+int Interface::FrameMove()
+{
+	char tmp[256];
+	Geometry *geom = worker.GetGeometry();
+
+	//Autosave routines
+	BOOL timeForAutoSave = FALSE;
+	if (geom->IsLoaded()) {
+		if (autoSaveSimuOnly) {
+			if (worker.running) {
+				if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >= (float)autoSaveFrequency*60.0f) {
+					timeForAutoSave = TRUE;
+				}
+			}
+		}
+		else {
+			if ((m_fTime - lastSaveTime) >= (float)autoSaveFrequency*60.0f) {
+				timeForAutoSave = TRUE;
+			}
+		}
+	}
+
+	if (worker.running) {
+		if (frameMoveRequested || autoFrameMove && (m_fTime - lastUpdate >= 1.0f)) {
+			forceFrameMoveButton->SetEnabled(FALSE);
+			forceFrameMoveButton->SetText("Updating...");
+			//forceFrameMoveButton->Paint();
+			GLWindowManager::Repaint();
+			frameMoveRequested = FALSE;
+
+			// Update hits
+			try {
+				worker.Update(m_fTime);
+			}
+			catch (Error &e) {
+				GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+			}
+			// Simulation monitoring
+			UpdatePlotters();
+
+			// Formulas
+			if (autoUpdateFormulas) UpdateFormula();
+
+			//lastUpdate = GetTick(); //changed from m_fTime: include update duration
+			lastUpdate = m_fTime;
+
+			// Update timing measurements
+			if (worker.nbHit != lastNbHit || worker.nbDesorption != lastNbDes) {
+				double dTime = (double)(m_fTime - lastMeasTime);
+				hps = (double)(worker.nbHit - lastNbHit) / dTime;
+				dps = (double)(worker.nbDesorption - lastNbDes) / dTime;
+				if (lastHps != 0.0) {
+					hps = 0.2*(hps)+0.8*lastHps;
+					dps = 0.2*(dps)+0.8*lastDps;
+				}
+				lastHps = hps;
+				lastDps = dps;
+				lastNbHit = worker.nbHit;
+				lastNbDes = worker.nbDesorption;
+				lastMeasTime = m_fTime;
+			}
+
+		}
+
+
+		sTime->SetText(tmp);
+
+		forceFrameMoveButton->SetEnabled(!autoFrameMove);
+		forceFrameMoveButton->SetText("Update");
+	}
+	else {
+		if (worker.simuTime > 0.0) {
+			hps = (double)(worker.nbHit - nbHitStart) / worker.simuTime;
+			dps = (double)(worker.nbDesorption - nbDesStart) / worker.simuTime;
+		}
+		else {
+			hps = 0.0;
+			dps = 0.0;
+		}
+		sprintf(tmp, "Stopped: %s", FormatTime(worker.simuTime));
+		sTime->SetText(tmp);
+	}
+
+	// Facet parameters and hits
+	if (viewer[0]->SelectionChanged() ||
+		viewer[1]->SelectionChanged() ||
+		viewer[2]->SelectionChanged() ||
+		viewer[3]->SelectionChanged()) {
+		UpdateFacetParams(TRUE);
+	}
+	UpdateFacetHits();
+
+	//Autosave
+	if (timeForAutoSave) AutoSave();
+
+	if (worker.nbLeakTotal) {
+		sprintf(tmp, "%g (%.4f%%)", (double)worker.nbLeakTotal, (double)(worker.nbLeakTotal)*100.0 / (double)worker.nbDesorption);
+		leakNumber->SetText(tmp);
+	}
+	else {
+		leakNumber->SetText("None");
+	}
+	resetSimu->SetEnabled(!worker.running&&worker.nbDesorption > 0);
+
+	if (worker.running) {
+		startSimu->SetText("Pause");
+		//startSimu->SetFontColor(255, 204, 0);
+	}
+	else if (worker.nbHit > 0) {
+		startSimu->SetText("Resume");
+		//startSimu->SetFontColor(0, 140, 0);
+	}
+	else {
+		startSimu->SetText("Begin");
+		//startSimu->SetFontColor(0, 140, 0);
+	}
+
+	// Sleep a bit to avoid unwanted CPU load
+	if (viewer[0]->IsDragging() ||
+		viewer[1]->IsDragging() ||
+		viewer[2]->IsDragging() ||
+		viewer[3]->IsDragging() || !worker.running)
+		SDL_Delay(32);
+	else
+		SDL_Delay(60);
+
+	return GL_OK;
+}
+
+void Interface::ResetAutoSaveTimer() {
+	if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTime + (m_fTime - worker.startTime);
+	else lastSaveTime = m_fTime;
+}
+
+BOOL Interface::AutoSave(BOOL crashSave) {
+	if (!changedSinceSave) return TRUE;
+	GLProgress *progressDlg2 = new GLProgress("Peforming autosave...", "Please wait");
+	progressDlg2->SetProgress(0.0);
+	progressDlg2->SetVisible(TRUE);
+	//GLWindowManager::Repaint();
+	char CWD[MAX_PATH];
+	_getcwd(CWD, MAX_PATH);
+
+	std::string shortFn(worker.GetShortFileName());
+#ifdef MOLFLOW
+	std::string newAutosaveFilename = "Molflow_Autosave";
+	if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";
+	newAutosaveFilename += ".zip";
+#endif
+#ifdef SYNRAD
+	std::string newAutosaveFilename = "Synrad_Autosave";
+	if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";
+	newAutosaveFilename += ".syn7z";
+#endif
+	char fn[1024];
+	strcpy(fn, newAutosaveFilename.c_str());
+	try {
+		worker.SaveGeometry(fn, progressDlg2, FALSE, FALSE, TRUE, crashSave);
+		//Success:
+		if (autosaveFilename != "" && autosaveFilename != newAutosaveFilename) remove(autosaveFilename.c_str());
+		autosaveFilename = newAutosaveFilename;
+		ResetAutoSaveTimer(); //deduct saving time from interval
+	}
+	catch (Error &e) {
+		//delete fn;
+		char errMsg[512];
+		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn);
+		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
+		progressDlg2->SetVisible(FALSE);
+		SAFE_DELETE(progressDlg2);
+		ResetAutoSaveTimer();
+		return FALSE;
+	}
+	//lastSaveTime=(worker.simuTime+(m_fTime-worker.startTime));
+	progressDlg2->SetVisible(FALSE);
+	SAFE_DELETE(progressDlg2);
+	return TRUE;
+}
+
+void Interface::CheckForRecovery() {
+	// Check for autosave files in current dir.
+	intptr_t file;
+	_finddata_t filedata;
+#ifdef MOLFLOW
+	file = _findfirst("Molflow_Autosave*.zip", &filedata);
+#endif
+
+#ifdef SYNRAD
+	file = _findfirst("Synrad_Autosave*.syn*", &filedata);
+#endif
+
+	if (file != -1)
+	{
+		do
+		{
+			std::ostringstream msg;
+			msg << "Autosave file found:\n" << filedata.name << "\n";
+			int rep = RecoveryDialog::Display(msg.str().c_str(), "Autosave recovery", GLDLG_LOAD | GLDLG_SKIP, GLDLG_DELETE);
+			if (rep == GLDLG_LOAD) {
+				LoadFile(filedata.name);
+				RemoveRecent(filedata.name);
+			}
+			else if (rep == GLDLG_CANCEL) return;
+			else if (rep == GLDLG_SKIP) continue;
+			else if (rep == GLDLG_DELETE) remove(filedata.name);
+		} while (_findnext(file, &filedata) == 0);
+	}
+	_findclose(file);
+}
+

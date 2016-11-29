@@ -177,8 +177,6 @@ void Worker::Stop_Public() {
 	try {
 		Stop();
 		Update(m_fTime);
-
-
 	}
 	catch (Error &e) {
 		GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
@@ -186,9 +184,7 @@ void Worker::Stop_Public() {
 }
 
 void  Worker::ReleaseHits() {
-
 	ReleaseDataport(dpHit);
-
 }
 
 // -------------------------------------------------------------
