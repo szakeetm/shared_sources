@@ -2535,6 +2535,17 @@ int Interface::FrameMove()
 
 		}
 
+#ifdef MOLFLOW
+		if (worker.calcAC) {
+			sprintf(tmp, "Calc AC: %s (%d %%)", FormatTime(worker.simuTime + (m_fTime - worker.startTime)),
+				worker.calcACprg);
+		}
+		else {
+#endif
+			sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
+#ifdef MOLFLOW
+		}
+#endif
 
 		sTime->SetText(tmp);
 
