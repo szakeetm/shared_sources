@@ -870,7 +870,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   /** Gets all dataViews displayed on this axis.
    * Do not modify the returned vector (Use as read only).
-   * @return Vector of GLDataView.
+   * @return Vector3d of GLDataView.
    * @see addDataView
    * @see removeDataView
    * @see clearDataView

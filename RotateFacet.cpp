@@ -217,7 +217,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 			//Calculate the plane
-			VERTEX3D AXIS_P0,AXIS_DIR;
+			Vector3d AXIS_P0,AXIS_DIR;
 			int nbSelectedVertex;
 			int *vIdx = (int *)malloc(geom->GetNbVertex()*sizeof(int));
 			memset(vIdx,0xFF,geom->GetNbVertex()*sizeof(int));
@@ -272,7 +272,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				nbSelectedVertex = 0;
 
 				for(int i=0;i<geom->GetNbVertex()&&nbSelectedVertex<geom->GetNbSelectedVertex();i++ ) {
-					//VERTEX3D *v = GetVertex(i);
+					//Vector3d *v = GetVertex(i);
 					if( geom->GetVertex(i)->selected ) {
 						vIdx[nbSelectedVertex] = i;
 						nbSelectedVertex++;

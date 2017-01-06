@@ -3,7 +3,6 @@
 #include "GeometryViewer.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLMatrix.h"
-#include "Utils.h"
 #include <math.h>
 #include <malloc.h>
 #ifdef MOLFLOW
@@ -439,7 +438,7 @@ void GeometryViewer::UpdateMatrix() {
 	view.camAngleOz = RoundAngle(view.camAngleOz);
 
 	// Convert polar coordinates
-	VERTEX3D org = geom->GetCenter();
+	Vector3d org = geom->GetCenter();
 
 	/*
 	camDir.x  = -cos(view.camAngleOx) * sin(view.camAngleOy);
@@ -462,7 +461,7 @@ void GeometryViewer::UpdateMatrix() {
 
 	//Rotate(&camLeft,org,camDir,ToDeg(view.camAngleOz));
 
-	Cross(&camUp, &camDir, &camLeft);
+	camUp = CrossProduct(camDir, camLeft);
 
 	glMatrixMode(GL_MODELVIEW);
 
@@ -618,7 +617,7 @@ void GeometryViewer::DrawIndex() {
 		glBegin(GL_POINTS);
 		for (int i = 0;i < nbVertex;i++) {
 			if (vIdx[i] >= 0) {
-				VERTEX3D *v = geom->GetVertex(i);
+				Vector3d *v = geom->GetVertex(i);
 				glVertex3d(v->x, v->y, v->z);
 			}
 		}
@@ -641,7 +640,7 @@ void GeometryViewer::DrawIndex() {
 				else {
 					sprintf(tmp, "%d ", i + 1);
 				}
-				VERTEX3D *v = geom->GetVertex(i);
+				Vector3d *v = geom->GetVertex(i);
 				GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 			}
 		}
@@ -690,8 +689,8 @@ void GeometryViewer::DrawNormal() {
 		for (int i = 0;i < geom->GetNbFacet();i++) {
 			Facet *f = geom->GetFacet(i);
 			if (f->selected) {
-				VERTEX3D v1 = geom->GetFacetCenter(i);
-				VERTEX3D v2 = f->sh.N;
+				Vector3d v1 = geom->GetFacetCenter(i);
+				Vector3d v2 = f->sh.N;
 				GLToolkit::SetMaterial(&blueMaterial);
 				glLineWidth(2.0f);
 				GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
@@ -715,9 +714,9 @@ void GeometryViewer::DrawUV() {
 		for (int i = 0;i < geom->GetNbFacet();i++) {
 			Facet *f = geom->GetFacet(i);
 			if (f->selected) {
-				VERTEX3D O = f->sh.O;
-				VERTEX3D U = f->sh.U;
-				VERTEX3D V = f->sh.V;
+				Vector3d O = f->sh.O;
+				Vector3d U = f->sh.U;
+				Vector3d V = f->sh.V;
 				GLToolkit::SetMaterial(&blueMaterial);
 				if (mApp->antiAliasing) {
 					glEnable(GL_LINE_SMOOTH);
@@ -769,8 +768,8 @@ void GeometryViewer::DrawLeak() {
 			glEnable(GL_LINE_SMOOTH);
 			for (int i = 0;i < dispNumLeaks;i++) {
 
-				VERTEX3D p = pLeak[i].pos;
-				VERTEX3D d = pLeak[i].dir;
+				Vector3d p = pLeak[i].pos;
+				Vector3d d = pLeak[i].dir;
 
 				glColor3f(0.9f, 0.2f, 0.5f);
 				glBegin(GL_POINTS);
@@ -795,7 +794,7 @@ void GeometryViewer::AutoScale(BOOL reUpdateMouseCursor) {
 	if (!geom) return;
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
-	VERTEX3D org = geom->GetCenter();
+	Vector3d org = geom->GetCenter();
 
 	// Reset offset, zoom
 	view.camOffset.x = 0.0;
@@ -807,11 +806,11 @@ void GeometryViewer::AutoScale(BOOL reUpdateMouseCursor) {
 	// Get geometry transformed BB
 	ComputeBB(FALSE);
 
-	VERTEX3D v;
+	Vector3d v;
 	v.x = xMax - org.x;
 	v.y = yMax - org.y;
 	v.z = zFar - org.z;
-	camDistInc = Norme(v) / 100.0;
+	camDistInc = v.Norme() / 100.0;
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;
@@ -858,7 +857,7 @@ void GeometryViewer::Zoom() {
 		double aspect = (double)width / (double)(height - DOWN_MARGIN);
 		double x0, y0, w0, h0;
 		double dx = 0.0, dy = 0.0, dz = 0.0;
-		VERTEX3D org = work->GetGeometry()->GetCenter();
+		Vector3d org = work->GetGeometry()->GetCenter();
 		double z;
 
 		if (hS > wS) {
@@ -946,7 +945,7 @@ void GeometryViewer::Paint() {
 	sideBtn->SetState(FALSE);
 	if (view.performXY) {
 		// Draw coordinates on screen when aligned
-		VERTEX3D org = geom->GetCenter();
+		Vector3d org = geom->GetCenter();
 		double x, y, z;
 		switch (view.performXY) {
 		case XYZ_TOP: // TopView
@@ -1749,7 +1748,7 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 	if (geom->viewStruct < 0 || getAll) {
 
 		for (int i = 0;i < nbV;i++) {
-			VERTEX3D *p = geom->GetVertex(i);
+			Vector3d *p = geom->GetVertex(i);
 			TRANSFORMVERTEX(p->x, p->y, p->z);
 		}
 
@@ -1784,7 +1783,7 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 		// Transform vertex
 		for (int i = 0;i < nbV;i++) {
 			if (refIdx[i]) {
-				VERTEX3D *p = geom->GetVertex(i);
+				Vector3d *p = geom->GetVertex(i);
 				TRANSFORMVERTEX(p->x, p->y, p->z);
 			}
 		}

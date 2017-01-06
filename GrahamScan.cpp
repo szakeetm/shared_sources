@@ -2,7 +2,7 @@
 GRpoint* GRfirstPoint; //GLOBAL POINTER TO MIN GRpoint IN DOUBLELY LINKED LIST
 int pubNbPoints;
 int *pubReturnList;
-VERTEX2D *pubProjectedPoints;
+Vector2d *pubProjectedPoints;
 
 class GRpoint
 {
@@ -15,7 +15,7 @@ public:
     double angle; //INTERMEDIATE ANGLE VALUE STORAGE
 };
 
-void grahamMain(VERTEX2D *projectedPoints,int nbPoints,int *returnList)
+void grahamMain(Vector2d *projectedPoints,int nbPoints,int *returnList)
 {
 	pubNbPoints = nbPoints;
 	pubProjectedPoints = projectedPoints;

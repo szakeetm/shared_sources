@@ -37,7 +37,7 @@ private:
   int         nbMemo;
   int         nbSelected;
 
-  VERTEX3D    **oriPos;
+  Vector3d    **oriPos;
 
   GLButton    *memoSel;
   GLLabel     *numFacetSel;

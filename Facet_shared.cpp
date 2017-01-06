@@ -6,12 +6,12 @@
 #include "SynRad.h"
 #endif
 #include "Facet.h"
-#include "Utils.h"
 #include <malloc.h>
 
 #include <string.h>
 #include <math.h>
 #include "GLApp/GLToolkit.h"
+#include "GLApp\MathTools.h"
 #include <sstream>
 
 
@@ -48,7 +48,7 @@ void Facet::DetectOrientation() {
 	BOOL convexFound = FALSE;
 	int i = 0;
 	while (i < p.nbPts && !convexFound) {
-		VERTEX2D c;
+		Vector2d c;
 		BOOL empty = EmptyTriangle(&p, i - 1, i, i + 1, &c);
 		if (empty || sh.nbIndex == 3) {
 			int _i1 = IDX(i - 1, p.nbPts);
@@ -193,7 +193,7 @@ BOOL Facet::BuildMesh() {
 		return FALSE;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	meshvector = (CELLPROPERTIES *)malloc(sh.texWidth * sh.texHeight * sizeof(CELLPROPERTIES)); //will shrink at the end
+	meshvector = (CellProperties *)malloc(sh.texWidth * sh.texHeight * sizeof(CellProperties)); //will shrink at the end
 	if (!meshvector) {
 		//Couldn't allocate memory
 		return FALSE;
@@ -206,19 +206,19 @@ BOOL Facet::BuildMesh() {
 	//memset(mesh, 0, sh.texWidth * sh.texHeight * sizeof(SHELEM));
 	//memset(meshPts, 0, sh.texWidth * sh.texHeight * sizeof(MESH));
 	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
-	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CELLPROPERTIES));
+	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
 
 	POLYGON P1, P2;
 	double sx, sy, A/*,tA*/;
 	double iw = 1.0 / (double)sh.texWidthD;
 	double ih = 1.0 / (double)sh.texHeightD;
-	double rw = Norme(sh.U) * iw;
-	double rh = Norme(sh.V) * ih;
+	double rw = sh.U.Norme() * iw;
+	double rh = sh.V.Norme() * ih;
 	double *vList;
 	double fA = iw*ih;
 	int    nbv;
 
-	P1.pts = (VERTEX2D *)malloc(4 * sizeof(VERTEX2D));
+	P1.pts = (Vector2d *)malloc(4 * sizeof(Vector2d));
 
 	if (!P1.pts) {
 		throw Error("Couldn't allocate memory for texture mesh points.");
@@ -255,7 +255,7 @@ BOOL Facet::BuildMesh() {
 			}
 
 			if (!allInside) {
-				CELLPROPERTIES cellprop;
+				CellProperties cellprop;
 
 				// Intersect element with the facet (facet boundaries)
 				P1.pts[0].u = u0;
@@ -303,10 +303,10 @@ BOOL Facet::BuildMesh() {
 							//cellprop.elemId = nbElem;
 
 							// Mesh coordinates
-							cellprop.points = (VERTEX2D*)malloc(nbv * sizeof(VERTEX2D));
+							cellprop.points = (Vector2d*)malloc(nbv * sizeof(Vector2d));
 							cellprop.nbPoints = nbv;
 							for (int n = 0; n < nbv; n++) {
-								VERTEX2D newPoint;
+								Vector2d newPoint;
 								newPoint.u = vList[2 * n];
 								newPoint.v = vList[2 * n + 1];
 								cellprop.points[n] = (newPoint);
@@ -339,7 +339,7 @@ BOOL Facet::BuildMesh() {
 
 				// Mesh coordinates
 				meshPts[nbElem].nbPts = 4;
-				meshPts[nbElem].pts = (VERTEX2D *)malloc(4 * sizeof(VERTEX2D));
+				meshPts[nbElem].pts = (Vector2d *)malloc(4 * sizeof(Vector2d));
 
 				if (!meshPts[nbElem].pts) {
 					throw Error("Couldn't allocate memory for texture mesh points.");
@@ -361,7 +361,7 @@ BOOL Facet::BuildMesh() {
 		}
 	}
 	//Shrink mesh vector
-	meshvector = (CELLPROPERTIES*)realloc(meshvector, sizeof(CELLPROPERTIES)*meshvectorsize);
+	meshvector = (CellProperties*)realloc(meshvector, sizeof(CellProperties)*meshvectorsize);
 
 	// Check meshing accuracy (TODO)
 	/*
@@ -399,7 +399,7 @@ void Facet::BuildMeshList() {
 			size_t nbPts = GetMeshNbPoint(i);
 			for (size_t n = 0; n < nbPts; n++) {
 				glEdgeFlag(TRUE);
-				VERTEX2D pt = GetMeshPoint(i, n);
+				Vector2d pt = GetMeshPoint(i, n);
 				glVertex2u(pt.u, pt.v);
 			}
 			glEnd();
@@ -444,7 +444,7 @@ void Facet::BuildSelElemList() {
 						glVertex2u(meshPts[elId].pts[n].u, meshPts[elId].pts[n].v);
 					}*/
 					for (size_t p = 0;p < GetMeshNbPoint(add);p++) {
-						VERTEX2D point = GetMeshPoint(add, p);
+						Vector2d point = GetMeshPoint(add, p);
 						glEdgeFlag(TRUE);
 						glVertex2u(point.u, point.v);
 					}
@@ -538,13 +538,13 @@ void Facet::Explode(FACETGROUP *group) {
 
 // -----------------------------------------------------------
 
-void Facet::FillVertexArray(VERTEX3D *v) {
+void Facet::FillVertexArray(Vector3d *v) {
 
 	int nb = 0;
 	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
 		if (cellPropertiesIds[i] != -2) {
 			for (size_t j = 0; j < GetMeshNbPoint(i); j++) {
-				VERTEX2D p = GetMeshPoint(i, j);
+				Vector2d p = GetMeshPoint(i, j);
 				v[nb].x = sh.O.x + sh.U.x*p.u + sh.V.x*p.v;
 				v[nb].y = sh.O.y + sh.U.y*p.u + sh.V.y*p.v;
 				v[nb].z = sh.O.z + sh.U.z*p.u + sh.V.z*p.v;
@@ -565,8 +565,8 @@ size_t Facet::GetTexSwapSize(BOOL useColormap) {
 
 size_t Facet::GetTexSwapSizeForRatio(double ratio, BOOL useColor) {
 
-	double nU = Norme(sh.U);
-	double nV = Norme(sh.V);
+	double nU = sh.U.Norme();
+	double nV = sh.V.Norme();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -601,8 +601,8 @@ size_t Facet::GetNbCell() {
 
 size_t Facet::GetNbCellForRatio(double ratio) {
 
-	double nU = Norme(sh.U);
-	double nV = Norme(sh.V);
+	double nU = sh.U.Norme();
+	double nV = sh.V.Norme();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -715,9 +715,9 @@ size_t Facet::GetMeshNbPoint(int index)
 	return nbPts;
 }
 
-VERTEX2D Facet::GetMeshPoint(int index, int pointId)
+Vector2d Facet::GetMeshPoint(int index, int pointId)
 {
-	VERTEX2D result;
+	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
 		result.v = 0.0;
@@ -784,9 +784,9 @@ VERTEX2D Facet::GetMeshPoint(int index, int pointId)
 }
 
 
-VERTEX2D Facet::GetMeshCenter(int index)
+Vector2d Facet::GetMeshCenter(int index)
 {
-	VERTEX2D result;
+	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
 		result.v = 0.0;

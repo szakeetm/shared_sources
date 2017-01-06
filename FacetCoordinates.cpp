@@ -22,7 +22,6 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "Utils.h"
 #include "GLApp/GLInputBox.h"
 
 #ifdef MOLFLOW
@@ -354,8 +353,8 @@ void FacetCoordinates::ApplyChanges(){
 			SAFE_FREE(selFacet->visible);
 			selFacet->sh.nbIndex = (int)lines.size();
 			selFacet->indices = (int *)malloc(selFacet->sh.nbIndex*sizeof(int));
-			selFacet->vertices2 = (VERTEX2D *)malloc(selFacet->sh.nbIndex*sizeof(VERTEX2D));
-			memset(selFacet->vertices2,0,selFacet->sh.nbIndex * sizeof(VERTEX2D));
+			selFacet->vertices2 = (Vector2d *)malloc(selFacet->sh.nbIndex*sizeof(Vector2d));
+			memset(selFacet->vertices2,0,selFacet->sh.nbIndex * sizeof(Vector2d));
 			selFacet->visible = (BOOL *)malloc(selFacet->sh.nbIndex*sizeof(BOOL));
 			memset(selFacet->visible,0xFF,selFacet->sh.nbIndex*sizeof(BOOL));
 

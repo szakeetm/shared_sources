@@ -233,7 +233,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			for (int i=0;i<nbSelected;i++) {
 				Facet *f=geom->GetFacet(selection[i]);
 				for (int j=0;j<f->sh.nbIndex;j++) {
-					*(geom->GetVertex(f->indices[j]))=this->oriPos[i][j];
+					geom->GetVertex(f->indices[j])->SetLocation(this->oriPos[i][j]);
 				}
 			}
 			geom->InitializeGeometry();
@@ -257,14 +257,14 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 void AlignFacet::MemorizeSelection() {
 	nbSelected=geom->GetNbSelected();
 	selection = (int*)malloc(nbSelected*sizeof(int));
-	//oriPos=new VERTEX3D *[nbSelected];
-	oriPos=(VERTEX3D**)malloc(nbSelected*sizeof(VERTEX3D*));
+	//oriPos=new Vector3d *[nbSelected];
+	oriPos=(Vector3d**)malloc(nbSelected*sizeof(Vector3d*));
 	int sel=0;
 	for (int i=0;i<geom->GetNbFacet();i++) {
 		Facet *f=geom->GetFacet(i);
 		if (f->selected) {
 			selection[sel++]=i;
-			oriPos[sel-1]=(VERTEX3D*)malloc(f->sh.nbIndex*sizeof(VERTEX3D));
+			oriPos[sel-1]=(Vector3d*)malloc(f->sh.nbIndex*sizeof(Vector3d));
 			for (int j=0;j<f->sh.nbIndex;j++) 
 				oriPos[sel-1][j]=*(geom->GetVertex(f->indices[j]));
 		}

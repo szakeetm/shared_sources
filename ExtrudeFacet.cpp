@@ -20,6 +20,8 @@ GNU General Public License for more details.
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp/MathTools.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -460,7 +462,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 
 			if (mApp->AskToReset()){
 				
-				VERTEX3D radiusBase, offsetORradiusdir;
+				Vector3d radiusBase, offsetORradiusdir;
 				radiusBase.x = x0;
 				radiusBase.y = y0;
 				radiusBase.z = z0;

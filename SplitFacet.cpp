@@ -215,7 +215,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			return;
 		}
 			//Calculate the plane
-			VERTEX3D P0,N;
+			Vector3d P0,N;
 			int nbSelectedVertex;
 			double nN2;
 			int *vIdx = (int *)malloc(geom->GetNbVertex()*sizeof(int));
@@ -230,36 +230,34 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				N=geom->GetFacet(facetNum-1)->sh.N;
 				break;
 			case VERTEX_MODE:
-				if (geom->GetNbSelectedVertex()!=3) {
-						        GLMessageBox::Display("Select exactly 3 vertices","Can't define plane",GLDLG_OK,GLDLG_ICONERROR);
-								return;
+			{
+				if (geom->GetNbSelectedVertex() != 3) {
+					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
+					return;
 				}
 				nbSelectedVertex = 0;
 
-				for(int i=0;i<geom->GetNbVertex()&&nbSelectedVertex<geom->GetNbSelectedVertex();i++ ) {
-				//VERTEX3D *v = GetVertex(i);
-					if( geom->GetVertex(i)->selected ) {
+				for (int i = 0; i < geom->GetNbVertex() && nbSelectedVertex < geom->GetNbSelectedVertex(); i++) {
+					//Vector3d *v = GetVertex(i);
+					if (geom->GetVertex(i)->selected) {
 						vIdx[nbSelectedVertex] = i;
 						nbSelectedVertex++;
-				 }
+					}
 				}
 
-				VERTEX3D U2 = *geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[1]);
-				Normalize(&U2); // Normalize U2
-
-				VERTEX3D V2 = *geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[2]);
-				Normalize(&V2); // Normalize V2
-
-				VERTEX3D N2 = CrossProduct(V2,U2); //We have a normal vector
-				nN2 = Norme(N2);
-				if (nN2<1e-8) {
-					GLMessageBox::Display("The 3 selected vertices are on a line.","Can't define plane",GLDLG_OK,GLDLG_ICONERROR);
+				Vector3d U2 = (*geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[1])).Normalized();
+				Vector3d V2 = (*geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[2])).Normalized();
+				Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
+				nN2 = N2.Norme();
+				if (nN2 < 1e-8) {
+					GLMessageBox::Display("The 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				; // Normalize N2
-				N=N2*(1.0/nN2);
-				P0=*(geom->GetVertex(vIdx[0]));
+				N = N2*(1.0 / nN2);
+				P0 = *(geom->GetVertex(vIdx[0]));
 				break;
+			}
 			case PLANEEQ_MODE:
 				if( !(aTextbox->GetNumber(&a)) ) {
 					GLMessageBox::Display("Invalid A coefficient","Error",GLDLG_OK,GLDLG_ICONERROR);

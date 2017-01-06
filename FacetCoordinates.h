@@ -27,7 +27,7 @@
 
 struct line {
 	  int vertexId;
-	  VERTEX3D coord;
+	  Vector3d coord;
   };
 
 class FacetCoordinates : public GLWindow {

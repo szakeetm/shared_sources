@@ -5,6 +5,7 @@
 #include <math.h>
 #include "Simulation.h"
 #include "Random.h"
+#include "GLApp/MathTools.h"
 
 // -----------------------------------------------------------
 // AABB tree stuff
@@ -19,8 +20,8 @@
 // Global variables for intersection
 double    intMinLgth;
 BOOL      intFound;
-VERTEX3D  intD;
-VERTEX3D  intZ;
+Vector3d  intD;
+Vector3d  intZ;
 int       intNbTHits;
 double    iRx;
 double    iRy;
@@ -28,8 +29,8 @@ double    iRz;
 BOOL      nullRx;
 BOOL      nullRy;
 BOOL      nullRz;
-VERTEX3D *rayPos;
-VERTEX3D *rayDir;
+Vector3d *rayPos;
+Vector3d *rayDir;
 FACET   **iFacet;
 FACET    *fLast;
 double    tNear;
@@ -241,9 +242,9 @@ void DestroyAABB(struct AABBNODE *node) {
 lab:
 
 
-BOOL Visible(VERTEX3D *c1, VERTEX3D *c2, FACET *f1, FACET *f2) {
+BOOL Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
 
-	VERTEX3D r;
+	Vector3d r;
 	FACET *iF;
 
 	// Check if there is an obstacle between c1 and c2
@@ -281,19 +282,19 @@ BOOL Visible(VERTEX3D *c1, VERTEX3D *c2, FACET *f1, FACET *f2) {
 }
 
 // -----------------------------------------------------------
-BOOL RaySphereIntersect(VERTEX3D *center, double radius, VERTEX3D *rPos, VERTEX3D *rDir, double *dist) {
+BOOL RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
 
 	// Perform ray-sphere intersection
 	double B, C, D;
-	VERTEX3D s;
+	Vector3d s;
 	s.x = (rPos->x - center->x);
 	s.y = (rPos->y - center->y);
 	s.z = (rPos->z - center->z);
 
 	//|rDir|=1 => A=1
 	//A = DOT3(rDir->x,rDir->y,rDir->z,rDir->x,rDir->y,rDir->z);
-	B = 2.0 * DOT3(rDir->x, rDir->y, rDir->z, s.x, s.y, s.z);
-	C = DOT3(s.x, s.y, s.z, s.x, s.y, s.z) - radius*radius;
+	B = 2.0 * Dot(*rDir, s);
+	C = Dot(s, s) - radius*radius;
 	D = B*B - 4 * C;
 
 	if (D >= 0.0) {
@@ -334,7 +335,7 @@ void IntersectTree(struct AABBNODE *node) {
 				continue;
 
 			// Eliminate "back facet"
-			if ((f->sh.is2sided) || (DOT3(f->sh.N.x, f->sh.N.y, f->sh.N.z, rayDir->x, rayDir->y, rayDir->z) < 0.0)) {
+			if ((f->sh.is2sided) || (Dot(f->sh.N, *rayDir) < 0.0)) {
 
 				double u, v, d;
 
@@ -342,7 +343,7 @@ void IntersectTree(struct AABBNODE *node) {
 				// Ray/rectange instersection. Find (u,v,dist) and check 0<=u<=1, 0<=v<=1, dist>=0
 				// ---------------------------------------------------------------------------------
 
-				double det = DOT3(f->sh.Nuv.x, f->sh.Nuv.y, f->sh.Nuv.z, intD.x, intD.y, intD.z);
+				double det = Dot(f->sh.Nuv, intD);
 
 				if (det != 0.0) {
 
@@ -363,7 +364,7 @@ void IntersectTree(struct AABBNODE *node) {
 
 						if (v >= 0.0 && v <= 1.0) {
 
-							d = iDet * DOT3(f->sh.Nuv.x, f->sh.Nuv.y, f->sh.Nuv.z, intZ.x, intZ.y, intZ.z);
+							d = iDet * Dot(f->sh.Nuv, intZ);
 
 							if (d>0.0) {
 
@@ -383,7 +384,7 @@ void IntersectTree(struct AABBNODE *node) {
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->energy,
-										acos(DOT3(sHandle->pDir.x, sHandle->pDir.y, sHandle->pDir.z, f->sh.N.x, f->sh.N.y, f->sh.N.z)) - PI / 2, rnd()) == REFL_TRANS));
+										acos(Dot(sHandle->pDir, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 

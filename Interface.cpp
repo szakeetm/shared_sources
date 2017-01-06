@@ -1600,13 +1600,13 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return TRUE;
 		}
 		else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-			geom->viewStruct = Remainder(geom->viewStruct - 1, geom->GetNbStructure());
+			geom->viewStruct = IDX(geom->viewStruct - 1, geom->GetNbStructure());
 			geom->UnselectAll();
 			UpdateStructMenu();
 			return TRUE;
 		}
 		else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
-			geom->viewStruct = Remainder(geom->viewStruct + 1, geom->GetNbStructure());
+			geom->viewStruct = IDX(geom->viewStruct + 1, geom->GetNbStructure());
 			geom->UnselectAll();
 			UpdateStructMenu();
 			return TRUE;
@@ -1618,11 +1618,11 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return TRUE;
 		}
 		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + nbSelection)) { //Previous selection
-			SelectSelection(Remainder(idSelection - 1, nbSelection));
+			SelectSelection(IDX(idSelection - 1, nbSelection));
 			return TRUE;
 		}
 		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + nbSelection + 1)) { //Next selection
-			SelectSelection(Remainder(idSelection + 1, nbSelection));
+			SelectSelection(IDX(idSelection + 1, nbSelection));
 			return TRUE;
 		}
 
@@ -2691,4 +2691,5 @@ void Interface::CheckForRecovery() {
 	}
 	_findclose(file);
 }
+
 

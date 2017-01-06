@@ -196,7 +196,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 
-			VERTEX3D invariant;
+			Vector3d invariant;
 			BOOL found;
 
 			switch (invariantMode) {

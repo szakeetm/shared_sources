@@ -20,10 +20,14 @@
 #ifndef _RANDOMH_
 #define _RANDOMH_
 
+
+#include <TruncatedGaussian\rtnorm.hpp>
+
 // Initialise the random generator with the specified seed
 extern void   rseed(unsigned long seed);
-
 // Returns a uniform distributed double value in the interval ]0,1[
 extern double rnd();
+double Gaussian(const double &sigma);
+double TruncatedGaussian(gsl_rng *gen, const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
 
 #endif /* _RANDOMH_ */

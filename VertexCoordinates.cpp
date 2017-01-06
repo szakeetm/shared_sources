@@ -22,7 +22,7 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "Utils.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -161,7 +161,7 @@ void VertexCoordinates::Update() {
 		  vertexListC->SetValueAt(0,count,tmp);
 		  //sprintf(tmp,"%d",idx+1);
 		  //vertexListC->SetValueAt(1,i,tmp);
-		  VERTEX3D *v = s->GetVertex(i);
+		  Vector3d *v = s->GetVertex(i);
 		  sprintf(tmp,"%.10g",v->x);
 		  vertexListC->SetValueAt(1,count,tmp);
 		  sprintf(tmp,"%.10g",v->y);

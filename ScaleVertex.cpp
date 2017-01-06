@@ -163,7 +163,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 
-			VERTEX3D invariant;
+			Vector3d invariant;
 
 			switch (invariantMode) {
 			case XYZMODE:

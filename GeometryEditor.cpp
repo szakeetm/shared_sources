@@ -1,6 +1,7 @@
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry.h"
+#include "GLApp\MathTools.h"
 #include "GLApp\GLMessageBox.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -151,7 +152,7 @@ int Geometry::GetNbVertex() {
 	return sh.nbVertex;
 }
 
-VERTEX3D Geometry::GetFacetCenter(int facet) {
+Vector3d Geometry::GetFacetCenter(int facet) {
 
 	return facets[facet]->sh.center;
 
@@ -174,7 +175,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	int *vIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(vIdx, 0xFF, sh.nbVertex * sizeof(int));
 	for (int i = 0; i < sh.nbVertex; i++) {
-		//VERTEX3D *v = GetVertex(i);
+		//Vector3d *v = GetVertex(i);
 		if (vertices3[i].selected) {
 			vIdx[nbSelectedVertex] = i;
 			nbSelectedVertex++;
@@ -188,40 +189,28 @@ void Geometry::CreatePolyFromVertices_Convex() {
 		return;
 	}//at least three vertices
 
-	VERTEX3D U, V, N;
-	U.x = vertices3[vIdx[0]].x - vertices3[vIdx[1]].x;
-	U.y = vertices3[vIdx[0]].y - vertices3[vIdx[1]].y;
-	U.z = vertices3[vIdx[0]].z - vertices3[vIdx[1]].z;
-	double nU = Norme(U);
-	ScalarMult(&U, 1.0 / nU); // Normalize U
+	Vector3d U, V, N;
+	U = (vertices3[vIdx[0]] - vertices3[vIdx[1]]).Normalized();
 
 	int i2 = 2;
 	double nV;
 	do {
-		V.x = vertices3[vIdx[0]].x - vertices3[vIdx[i2]].x;
-		V.y = vertices3[vIdx[0]].y - vertices3[vIdx[i2]].y;
-		V.z = vertices3[vIdx[0]].z - vertices3[vIdx[i2]].z;
-		nV = Norme(V);
-		ScalarMult(&V, 1.0 / nV); // Normalize V
+		V = (vertices3[vIdx[0]] - vertices3[vIdx[i2]]).Normalized();
 		i2++;
-	} while (Dot(&U, &V) > 0.99 && i2 < nbSelectedVertex); //if U and V are almost the same, the projection would be inaccurate
+	} while (Dot(U, V) > 0.99 && i2 < nbSelectedVertex); //if U and V are almost the same, the projection would be inaccurate
 
 
 	//Now we have the U,V plane, let's define it by computing the normal vector:
-	Cross(&N, &V, &U); //We have a normal vector
-	double nN = Norme(N);
-	ScalarMult(&N, 1.0 / nN); // Normalize N
+	N = CrossProduct(V, U).Normalized(); //We have a normal vector
 
-	Cross(&V, &N, &U); //Make V perpendicular to U and N (and still in the U,V plane)
-	nV = Norme(V);
-	ScalarMult(&V, 1.0 / nV); // Normalize V
+	V = CrossProduct(N, U).Normalized(); //Make V perpendicular to U and N (and still in the U,V plane)
 
-	VERTEX2D *projected = (VERTEX2D *)malloc(nbSelectedVertex * sizeof(VERTEX2D));
-	VERTEX2D *debug = (VERTEX2D *)malloc(nbSelectedVertex * sizeof(VERTEX2D));
+	Vector2d *projected = (Vector2d *)malloc(nbSelectedVertex * sizeof(Vector2d));
+	Vector2d *debug = (Vector2d *)malloc(nbSelectedVertex * sizeof(Vector2d));
 
 	//Get coordinates in the U,V system
 	for (int i = 0; i < nbSelectedVertex; i++) {
-		ProjectVertex(&(vertices3[vIdx[i]]), &(projected[i]), &U, &V, &vertices3[vIdx[0]]);
+		projected[i] = ProjectVertex(vertices3[vIdx[i]], U, V, vertices3[vIdx[0]]);
 	}
 
 	//Graham scan here on the projected[] array
@@ -381,7 +370,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 		for (size_t i2 = 0;i2 < clippingPaths[i3].size();i2++) {
 			ProjectedPoint proj;
 			proj.globalId = clippingPaths[i3][i2];
-			ProjectVertex(&vertices3[clippingPaths[i3][i2]], &proj.vertex2d, &facets[id1]->sh.U, &facets[id1]->sh.V, &facets[id1]->sh.O);
+			proj.vertex2d = ProjectVertex(vertices3[clippingPaths[i3][i2]], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
 			clip[0] << ClipperLib::IntPoint(proj.vertex2d.u*1E6, proj.vertex2d.v*1E6);
 			projectedPoints.push_back(proj);
 		}
@@ -396,21 +385,21 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	facets = (Facet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(Facet *));
 	//set selection
 	UnselectAll();
-	std::vector<VERTEX3D> newVertices;
+	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		BOOL hasHole = solution.Childs[i]->ChildCount() > 0;
 		size_t closestIndexToChild, closestIndexToParent;
 		double minDist = 9E99;
 		if (hasHole) {
 			for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) { //Find closest parent point
-				VERTEX2D vert;
+				Vector2d vert;
 				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
 				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
 				for (size_t k = 0;k < solution.Childs[i]->Childs[0]->Contour.size();k++) {//Find closest child point
-					VERTEX2D childVert;
+					Vector2d childVert;
 					childVert.u = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[k].X;
 					childVert.v = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[k].Y;
-					double dist = pow(Norme(facets[id1]->sh.U) * (vert.u - childVert.u), 2) + pow(Norme(facets[id1]->sh.V) * (vert.v - childVert.v), 2);
+					double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
 					if (dist < minDist) {
 						minDist = dist;
 						closestIndexToChild = j;
@@ -427,7 +416,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 			nbVertex = solution.Childs[i]->Contour.size() + 2 + solution.Childs[i]->Childs[0]->Contour.size();
 		Facet *f = new Facet(nbVertex);
 		for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) {
-			VERTEX2D vert;
+			Vector2d vert;
 			if (hasHole && j == closestIndexToChild) { //Create hole
 				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
 				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
@@ -458,8 +447,8 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 		facets[sh.nbFacet + i] = f;
 	}
 	sh.nbFacet += nbNewFacets;
-	vertices3 = (VERTEX3D*)realloc(vertices3, sizeof(VERTEX3D)*(sh.nbVertex + newVertices.size()));
-	for (VERTEX3D newVert : newVertices)
+	vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(sh.nbVertex + newVertices.size()));
+	for (InterfaceVertex newVert : newVertices)
 		vertices3[sh.nbVertex++] = newVert;
 
 
@@ -480,20 +469,20 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 	ClipPolygon(id1, clippingPaths, type);
 }
 
-void Geometry::RegisterVertex(Facet *f, const VERTEX2D &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<VERTEX3D> &newVertices, size_t registerLocation) {
+void Geometry::RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
 	int foundId = -1;
 	for (size_t k = 0;foundId == -1 && k < facets[id1]->sh.nbIndex;k++) { //Check if part of facet 1
-		double dist = Norme(vert - facets[id1]->vertices2[k]);
+		double dist = (vert - facets[id1]->vertices2[k]).Norme();
 		foundId = (dist < 1E-5) ? facets[id1]->indices[k] : -1;
 	}
 	for (size_t k = 0;foundId == -1 && k < projectedPoints.size();k++) { //Check if part of facet 2
-		double dist = Norme(vert - projectedPoints[k].vertex2d);
+		double dist = (vert - projectedPoints[k].vertex2d).Norme();
 		foundId = (dist < 1E-5) ? projectedPoints[k].globalId : -1;
 	}
 	if (foundId == -1) { //Create new vertex
-		VERTEX3D newVertex;
+		InterfaceVertex newVertex;
 		newVertex.selected = TRUE;
-		newVertex = facets[id1]->sh.O + vert.u*facets[id1]->sh.U + vert.v*facets[id1]->sh.V;
+		newVertex.SetLocation(facets[id1]->sh.O + vert.u*facets[id1]->sh.U + vert.v*facets[id1]->sh.V);
 		f->indices[registerLocation] = sh.nbVertex + newVertices.size();
 		newVertices.push_back(newVertex);
 	}
@@ -510,40 +499,29 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	int *vIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(vIdx, 0xFF, sh.nbVertex * sizeof(int));
 	for (int i = 0; i < sh.nbVertex; i++) {
-		//VERTEX3D *v = GetVertex(i);
+		//Vector3d *v = GetVertex(i);
 		if (vertices3[i].selected) {
 			vIdx[nbSelectedVertex] = i;
 			nbSelectedVertex++;
 		}
 	}
 
-	VERTEX3D U, V, N;
-	U.x = vertices3[vIdx[0]].x - vertices3[vIdx[1]].x;
-	U.y = vertices3[vIdx[0]].y - vertices3[vIdx[1]].y;
-	U.z = vertices3[vIdx[0]].z - vertices3[vIdx[1]].z;
-	double nU = Norme(U);
-	ScalarMult(&U, 1.0 / nU); // Normalize U
-
-	V.x = vertices3[vIdx[0]].x - vertices3[vIdx[2]].x;
-	V.y = vertices3[vIdx[0]].y - vertices3[vIdx[2]].y;
-	V.z = vertices3[vIdx[0]].z - vertices3[vIdx[2]].z;
-	double nV = Norme(V);
-	ScalarMult(&V, 1.0 / nV); // Normalize V
-
-	Cross(&N, &V, &U); //We have a normal vector
-	double nN = Norme(N);
+	Vector3d U = (vertices3[vIdx[0]] - vertices3[vIdx[1]]).Normalized();
+	Vector3d V = (vertices3[vIdx[0]] - vertices3[vIdx[2]]).Normalized();
+	Vector3d N = CrossProduct(V, U);
+	double nN = N.Norme();
 	if (nN < 1e-8) {
 		GLMessageBox::Display("Sorry, the 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}
-	ScalarMult(&N, 1.0 / nN); // Normalize N
+	N = 1.0 / nN * N; // Normalize N
 
 	// Plane equation
 	double A = N.x;
 	double B = N.y;
 	double C = N.z;
-	VERTEX3D p0 = vertices3[vIdx[0]];
-	double D = -Dot(&N, &p0);
+	Vector3d p0 = vertices3[vIdx[0]];
+	double D = -Dot(N, p0);
 
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
@@ -551,7 +529,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	int outX, outY;
 
 	for (int i = 0; i < sh.nbVertex; i++) {
-		VERTEX3D *v = GetVertex(i);
+		Vector3d *v = GetVertex(i);
 		BOOL onScreen = GLToolkit::Get2DScreenCoord((float)v->x, (float)v->y, (float)v->z, &outX, &outY); //To improve
 		onScreen = (onScreen && outX >= 0 && outY >= 0 && outX <= (width) && (outY <= height));
 		if (onScreen) {
@@ -572,7 +550,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	SAFE_FREE(vIdx);
 }
 
-VERTEX3D *Geometry::GetVertex(int idx) {
+InterfaceVertex *Geometry::GetVertex(int idx) {
 	return vertices3 + idx;
 }
 
@@ -614,7 +592,7 @@ AABB Geometry::GetBB() {
 			Facet *f = facets[i];
 			if (f->sh.superIdx == viewStruct) {
 				for (int j = 0; j < f->sh.nbIndex; j++) {
-					VERTEX3D p = vertices3[f->indices[j]];
+					Vector3d p = vertices3[f->indices[j]];
 					if (p.x < sbb.min.x) sbb.min.x = p.x;
 					if (p.y < sbb.min.y) sbb.min.y = p.y;
 					if (p.z < sbb.min.z) sbb.min.z = p.z;
@@ -632,7 +610,7 @@ AABB Geometry::GetBB() {
 
 }
 
-VERTEX3D Geometry::GetCenter() {
+Vector3d Geometry::GetCenter() {
 
 	if (viewStruct < 0) {
 
@@ -641,7 +619,7 @@ VERTEX3D Geometry::GetCenter() {
 	}
 	else {
 
-		VERTEX3D r;
+		Vector3d r;
 		AABB sbb = GetBB();
 		r.x = (sbb.max.x + sbb.min.x) / 2.0;
 		r.y = (sbb.max.y + sbb.min.y) / 2.0;
@@ -652,11 +630,11 @@ VERTEX3D Geometry::GetCenter() {
 	}
 }
 
-int Geometry::AddRefVertex(VERTEX3D *p, VERTEX3D *refs, int *nbRef, double vT) {
+int Geometry::AddRefVertex(Vector3d *p, Vector3d *refs, int *nbRef, double vT) {
 
 	BOOL found = FALSE;
 	int i = 0;
-	//VERTEX3D n;
+	//Vector3d n;
 	double v2 = vT*vT;
 
 	while (i < *nbRef && !found) {
@@ -688,7 +666,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	mApp->changedSinceSave = TRUE;
 	if (!isLoaded) return;
 	// Collapse neighbor vertices
-	VERTEX3D *refs = (VERTEX3D *)malloc(sh.nbVertex * sizeof(VERTEX3D));
+	Vector3d *refs = (Vector3d *)malloc(sh.nbVertex * sizeof(Vector3d));
 	if (!refs) throw Error("Out of memory: CollapseVertex");
 	int      *idx = (int *)malloc(sh.nbVertex * sizeof(int));
 	if (!idx) throw Error("Out of memory: CollapseVertex");
@@ -710,11 +688,11 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 
 	// Create the new vertex array
 	SAFE_FREE(vertices3);
-	vertices3 = (VERTEX3D *)malloc(nbRef * sizeof(VERTEX3D));
+	vertices3 = (InterfaceVertex *)malloc(nbRef * sizeof(InterfaceVertex));
 	if (!vertices3) throw Error("Out of memory: CollapseVertex");
 	//UnselectAllVertex();
 
-	memcpy(vertices3, refs, nbRef * sizeof(VERTEX3D));
+	memcpy(vertices3, refs, nbRef * sizeof(InterfaceVertex));
 	sh.nbVertex = nbRef;
 
 	// Update facets indices
@@ -824,7 +802,7 @@ void Geometry::SwapNormal() {
 
 }
 
-void Geometry::Extrude(int mode, VERTEX3D radiusBase, VERTEX3D offsetORradiusdir, BOOL againstNormal, double distanceORradius, double totalAngle, int steps) {
+void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, BOOL againstNormal, double distanceORradius, double totalAngle, int steps) {
 
 	//creates facet from selected vertices
 
@@ -837,28 +815,25 @@ void Geometry::Extrude(int mode, VERTEX3D radiusBase, VERTEX3D offsetORradiusdir
 			int sourceFacet = i;
 			facets[sourceFacet]->selected = FALSE;
 			//Update direction if necessary
-			VERTEX3D dir2, axisBase, axis;
+			Vector3d dir2, axisBase, axis;
 
 			if (mode == 1) { //Use facet normal to determine offset
-				dir2 = facets[sourceFacet]->sh.N;
-				ScalarMult(&dir2, distanceORradius);
-				if (againstNormal) ScalarMult(&dir2, -1.0);
+				dir2 = facets[sourceFacet]->sh.N * distanceORradius;
+				if (againstNormal) dir2 = -1.0 * dir2;
 			}
 			else if (mode == 2) { //Use provided offset
 				dir2 = offsetORradiusdir;
 			}
 			else if (mode == 3) {
-				Normalize(&offsetORradiusdir);
-				ScalarMult(&offsetORradiusdir, distanceORradius);
-				Add(&axisBase, &radiusBase, &offsetORradiusdir);
-				Cross(&axis, &facets[sourceFacet]->sh.N, &offsetORradiusdir);
-				Normalize(&axis);
+				offsetORradiusdir = offsetORradiusdir.Normalized();
+				axisBase = radiusBase + offsetORradiusdir * distanceORradius;
+				axis = CrossProduct(facets[sourceFacet]->sh.N, offsetORradiusdir).Normalized();
 			}
 
 			//Resize vertex and facet arrays
 			size_t nbNewVertices = facets[sourceFacet]->sh.nbIndex;
 			if (mode == 3) nbNewVertices *= (steps);
-			vertices3 = (VERTEX3D*)realloc(vertices3, (sh.nbVertex + nbNewVertices) * sizeof(VERTEX3D));
+			vertices3 = (InterfaceVertex*)realloc(vertices3, (sh.nbVertex + nbNewVertices) * sizeof(InterfaceVertex));
 
 			size_t nbNewFacets = facets[sourceFacet]->sh.nbIndex;
 			if (mode == 3) nbNewFacets *= (steps);
@@ -868,15 +843,16 @@ void Geometry::Extrude(int mode, VERTEX3D radiusBase, VERTEX3D offsetORradiusdir
 			//create new vertices
 			if (mode == 1 || mode == 2) {
 				for (int j = 0; j < facets[sourceFacet]->sh.nbIndex; j++) {
-					Add(&vertices3[sh.nbVertex + j], &vertices3[facets[sourceFacet]->indices[j]], &dir2);
+					vertices3[sh.nbVertex + j].SetLocation(vertices3[facets[sourceFacet]->indices[j]] + dir2);
 					vertices3[sh.nbVertex + j].selected = FALSE;
 				}
 			}
 			else if (mode == 3) {
 				for (int step = 0;step < steps;step++) {
 					for (int j = 0; j < facets[sourceFacet]->sh.nbIndex; j++) {
-						vertices3[sh.nbVertex + step*facets[sourceFacet]->sh.nbIndex + j] = vertices3[facets[sourceFacet]->indices[j]]; //Copy original vertex
-						Rotate(&vertices3[sh.nbVertex + step*facets[sourceFacet]->sh.nbIndex + j], axisBase, axis, (step + 1)*totalAngle*(againstNormal ? -1.0 : 1.0) / (double)steps); //Rotate into place
+						vertices3[sh.nbVertex + step*facets[sourceFacet]->sh.nbIndex + j].SetLocation(
+								Rotate(vertices3[facets[sourceFacet]->indices[j]], axisBase, axis, (step + 1)*totalAngle*(againstNormal ? -1.0 : 1.0) / (double)steps)
+							);
 						vertices3[sh.nbVertex + step*facets[sourceFacet]->sh.nbIndex + j].selected = FALSE;
 					}
 				}
@@ -943,21 +919,21 @@ void Geometry::ShiftVertex() {
 	BuildGLList();
 }
 
-void Geometry::Merge(int nbV, int nbF, VERTEX3D *nV, Facet **nF) {
+void Geometry::Merge(int nbV, int nbF, Vector3d *nV, Facet **nF) {
 	mApp->changedSinceSave = TRUE;
 	// Merge the current geometry with the specified one
 	if (!nbV || !nbF) return;
 
 	// Reallocate mem
 	Facet   **nFacets = (Facet **)malloc((sh.nbFacet + nbF) * sizeof(Facet *));
-	VERTEX3D *nVertices3 = (VERTEX3D *)malloc((sh.nbVertex + nbV) * sizeof(VERTEX3D));
+	InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((sh.nbVertex + nbV) * sizeof(InterfaceVertex));
 
 
 	if (sh.nbFacet) memcpy(nFacets, facets, sizeof(Facet *) * sh.nbFacet);
 	memcpy(nFacets + sh.nbFacet, nF, sizeof(Facet *) * nbF);
 
-	if (sh.nbVertex) memcpy(nVertices3, vertices3, sizeof(VERTEX3D) * sh.nbVertex);
-	memcpy(nVertices3 + sh.nbVertex, nV, sizeof(VERTEX3D) * nbV);
+	if (sh.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertex) * sh.nbVertex);
+	memcpy(nVertices3 + sh.nbVertex, nV, sizeof(InterfaceVertex) * nbV);
 
 	SAFE_FREE(facets);
 	SAFE_FREE(vertices3);
@@ -1047,7 +1023,7 @@ void  Geometry::DeleteIsolatedVertices(BOOL selectedOnly) {
 
 
 
-	VERTEX3D *nVert = (VERTEX3D *)malloc(nbVert * sizeof(VERTEX3D));
+	InterfaceVertex *nVert = (InterfaceVertex *)malloc(nbVert * sizeof(InterfaceVertex));
 
 	for (int i = 0, n = 0; i < sh.nbVertex; i++) {
 		if (check[i] || (selectedOnly && !vertices3[i].selected)) {
@@ -1131,8 +1107,8 @@ void Geometry::RemoveSelectedVertex() {
 		SAFE_FREE(f->vertices2);
 		SAFE_FREE(f->visible);
 		f->sh.nbIndex -= nbRemove;
-		f->vertices2 = (VERTEX2D *)malloc(f->sh.nbIndex * sizeof(VERTEX2D));
-		memset(f->vertices2, 0, f->sh.nbIndex * sizeof(VERTEX2D));
+		f->vertices2 = (Vector2d *)malloc(f->sh.nbIndex * sizeof(Vector2d));
+		memset(f->vertices2, 0, f->sh.nbIndex * sizeof(Vector2d));
 		f->visible = (BOOL *)malloc(f->sh.nbIndex * sizeof(BOOL));
 		_ASSERTE(f->visible);
 		memset(f->visible, 0xFF, f->sh.nbIndex * sizeof(BOOL));
@@ -1277,10 +1253,10 @@ int Geometry::ExplodeSelected(BOOL toMap, int desType, double exponent, double *
 	}
 
 	// Update vertex array
-	VERTEX3D *ptrVert;
+	InterfaceVertex *ptrVert;
 	int       vIdx;
-	VERTEX3D *nVert = (VERTEX3D *)malloc((sh.nbVertex + VtoAdd) * sizeof(VERTEX3D));
-	memcpy(nVert, vertices3, sh.nbVertex * sizeof(VERTEX3D));
+	InterfaceVertex *nVert = (InterfaceVertex *)malloc((sh.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
+	memcpy(nVert, vertices3, sh.nbVertex * sizeof(InterfaceVertex));
 
 	ptrVert = nVert + sh.nbVertex;
 	vIdx = sh.nbVertex;
@@ -1397,8 +1373,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		Aligner_dest = Anchor_dest;
 		Anchor_dest = temp;
 	}
-	VERTEX3D Translation;
-	Sub(&Translation, GetVertex(Anchor_dest), GetVertex(Anchor_source));
+	Vector3d Translation = vertices3[Anchor_dest] - vertices3[Anchor_source];
 
 	int nb = 0;
 	for (int i = 0; i < nbSelected; i++) {
@@ -1406,9 +1381,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		prgAlign->SetProgress(counter / selected);
 		for (int j = 0; j < facets[selection[i]]->sh.nbIndex; j++) {
 			if (!alreadyMoved[facets[selection[i]]->indices[j]]) {
-				vertices3[facets[selection[i]]->indices[j]].x += Translation.x;
-				vertices3[facets[selection[i]]->indices[j]].y += Translation.y;
-				vertices3[facets[selection[i]]->indices[j]].z += Translation.z;
+				vertices3[facets[selection[i]]->indices[j]].SetLocation(vertices3[facets[selection[i]]->indices[j]] + Translation);
 				alreadyMoved[facets[selection[i]]->indices[j]] = TRUE;
 			}
 		}
@@ -1417,31 +1390,28 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 	SAFE_FREE(alreadyMoved);
 
 	//Rotating to match normal vectors
-	VERTEX3D Axis;
-	VERTEX3D Normal;
+	Vector3d Axis;
+	Vector3d Normal;
 	double angle;
 	Normal = facets[Facet_dest]->sh.N;
-	if (invertNormal) ScalarMult(&Normal, -1.0);
-	Cross(&Axis, &(facets[Facet_source]->sh.N), &Normal);
-	if (Norme(Axis) < 1e-5) { //The two normals are either collinear or the opposite
-		if ((Dot(&(facets[Facet_dest]->sh.N), &(facets[Facet_source]->sh.N)) > 0.99999 && (!invertNormal)) ||
-			(Dot(&(facets[Facet_dest]->sh.N), &(facets[Facet_source]->sh.N)) < 0.00001 && invertNormal)) { //no rotation needed
+	if (invertNormal) Normal = Normal * -1.0;
+	Axis = CrossProduct(facets[Facet_source]->sh.N, Normal);
+	if (Axis.Norme() < 1e-5) { //The two normals are either collinear or the opposite
+		if ((Dot(facets[Facet_dest]->sh.N, facets[Facet_source]->sh.N) > 0.99999 && (!invertNormal)) ||
+			(Dot(facets[Facet_dest]->sh.N, facets[Facet_source]->sh.N) < 0.00001 && invertNormal)) { //no rotation needed
 			Axis.x = 1.0;
 			Axis.y = 0.0;
 			Axis.z = 0.0;
 			angle = 0.0;
 		}
 		else { //180deg rotation needed
-			Cross(&Axis, &(facets[Facet_source]->sh.U), &(facets[Facet_source]->sh.N));
-			Normalize(&Axis);
+			Axis = CrossProduct(facets[Facet_source]->sh.U, facets[Facet_source]->sh.N).Normalized();
 			angle = 180.0;
 		}
 	}
 	else {
-		Normalize(&Axis);
-		angle = Dot(&(facets[Facet_source]->sh.N), &(facets[Facet_dest]->sh.N)) / Norme(facets[Facet_source]->sh.N) / Norme(facets[Facet_dest]->sh.N);
-		//BOOL opposite=(angle<0.0);
-		angle = acos(angle);
+		Axis=Axis.Normalized();
+		angle = acos(Dot(facets[Facet_source]->sh.N, facets[Facet_dest]->sh.N) / (facets[Facet_source]->sh.N.Norme() * facets[Facet_dest]->sh.N.Norme()));
 		angle = angle / PI * 180;
 		if (invertNormal) angle = 180.0 - angle;
 	}
@@ -1458,7 +1428,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		for (int j = 0; j < facets[selection[i]]->sh.nbIndex; j++) {
 			if (!alreadyRotated[facets[selection[i]]->indices[j]]) {
 				//rotation comes here
-				Rotate(&(vertices3[facets[selection[i]]->indices[j]]), *(GetVertex(Anchor_dest)), Axis, angle);
+				vertices3[facets[selection[i]]->indices[j]].SetLocation(Rotate(vertices3[facets[selection[i]]->indices[j]], vertices3[Anchor_dest], Axis, angle));
 				alreadyRotated[facets[selection[i]]->indices[j]] = TRUE;
 			}
 		}
@@ -1468,12 +1438,11 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 
 	//Rotating to match direction points
 
-	VERTEX3D Dir1, Dir2;
-	Sub(&Dir1, GetVertex(Aligner_dest), GetVertex(Anchor_dest));
-	Sub(&Dir2, GetVertex(Aligner_source), GetVertex(Anchor_source));
-	Cross(&Axis, &Dir2, &Dir1);
-	if (Norme(Axis) < 1e-5) { //The two directions are either collinear or the opposite
-		if (Dot(&Dir1, &Dir2) > 0.99999) { //no rotation needed
+	Vector3d Dir1 = vertices3[Aligner_dest] - vertices3[Anchor_dest];
+	Vector3d Dir2 = vertices3[Aligner_source] - vertices3[Anchor_source];
+	Axis = CrossProduct(Dir2, Dir1);
+	if (Axis.Norme() < 1e-5) { //The two directions are either collinear or the opposite
+		if (Dot(Dir1, Dir2) > 0.99999) { //no rotation needed
 			Axis.x = 1.0;
 			Axis.y = 0.0;
 			Axis.z = 0.0;
@@ -1481,14 +1450,13 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		}
 		else { //180deg rotation needed
 			//construct a vector perpendicular to the normal
-			Axis = facets[Facet_source]->sh.N;
-			Normalize(&Axis);
+			Axis = facets[Facet_source]->sh.N.Normalized();
 			angle = 180.0;
 		}
 	}
 	else {
-		Normalize(&Axis);
-		angle = Dot(&Dir1, &Dir2) / Norme(Dir1) / Norme(Dir2);
+		Axis = Axis.Normalized();
+		angle = Dot(Dir1, Dir2) / (Dir1.Norme() * Dir2.Norme());
 		//BOOL opposite=(angle<0.0);
 		angle = acos(angle);
 		angle = angle / PI * 180;
@@ -1506,7 +1474,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		for (int j = 0; j < facets[selection[i]]->sh.nbIndex; j++) {
 			if (!alreadyRotated2[facets[selection[i]]->indices[j]]) {
 				//rotation comes here
-				Rotate(&(vertices3[facets[selection[i]]->indices[j]]), *(GetVertex(Anchor_dest)), Axis, angle);
+				vertices3[facets[selection[i]]->indices[j]].SetLocation(Rotate(vertices3[facets[selection[i]]->indices[j]], vertices3[Anchor_dest], Axis, angle));
 				alreadyRotated2[facets[selection[i]]->indices[j]] = TRUE;
 			}
 		}
@@ -1577,7 +1545,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, BOOL copy, Wo
 	SAFE_DELETE(prgMove);
 }
 
-void Geometry::MirrorSelectedFacets(VERTEX3D P0, VERTEX3D N, BOOL copy, Worker *worker) {
+void Geometry::MirrorSelectedFacets(Vector3d P0, Vector3d N, BOOL copy, Worker *worker) {
 
 	double selected = (double)GetNbSelected();
 	double counter = 0.0;
@@ -1602,7 +1570,7 @@ void Geometry::MirrorSelectedFacets(VERTEX3D P0, VERTEX3D N, BOOL copy, Worker *
 			for (int j = 0; j < facets[i]->sh.nbIndex; j++) {
 				if (!alreadyMirrored[facets[i]->indices[j]]) {
 					//mirroring comes here
-					Mirror(&(vertices3[facets[i]->indices[j]]), P0, N);
+					vertices3[facets[i]->indices[j]].SetLocation(Mirror(vertices3[facets[i]->indices[j]], P0, N));
 					alreadyMirrored[facets[i]->indices[j]] = TRUE;
 				}
 			}
@@ -1626,7 +1594,7 @@ void Geometry::MirrorSelectedFacets(VERTEX3D P0, VERTEX3D N, BOOL copy, Worker *
 	SAFE_DELETE(prgMirror);
 }
 
-void Geometry::RotateSelectedFacets(const VERTEX3D &AXIS_P0, const VERTEX3D &AXIS_DIR, double theta, BOOL copy, Worker *worker) {
+void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, BOOL copy, Worker *worker) {
 
 	double selected = (double)GetNbSelected();
 	double counter = 0.0;
@@ -1650,7 +1618,7 @@ void Geometry::RotateSelectedFacets(const VERTEX3D &AXIS_P0, const VERTEX3D &AXI
 				for (int j = 0; j < facets[i]->sh.nbIndex; j++) {
 					if (!alreadyRotated[facets[i]->indices[j]]) {
 						//rotation comes here
-						Rotate(&(vertices3[facets[i]->indices[j]]), AXIS_P0, AXIS_DIR, theta);
+						vertices3[facets[i]->indices[j]].SetLocation(Rotate(vertices3[facets[i]->indices[j]], AXIS_P0, AXIS_DIR, theta));
 						alreadyRotated[facets[i]->indices[j]] = TRUE;
 					}
 				}
@@ -1696,14 +1664,14 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 		}
 	}
 	/*
-	VERTEX3D *newVertices=(VERTEX3D*)malloc((nb+1)*sizeof(VERTEX3D*));
-	memcpy(newVertices,vertices3,sh.nbVertex*sizeof(VERTEX3D));
+	Vector3d *newVertices=(Vector3d*)malloc((nb+1)*sizeof(Vector3d*));
+	memcpy(newVertices,vertices3,sh.nbVertex*sizeof(Vector3d));
 	SAFE_FREE(vertices3);
 	*/
-	//vertices3=(VERTEX3D *)realloc(vertices3,(nb+1)*sizeof(VERTEX3D));
-	VERTEX3D *tmp_vertices3 = (VERTEX3D *)malloc((nb + 1) * sizeof(VERTEX3D)); //create new, extended vertex array
-	memmove(tmp_vertices3, vertices3, (sh.nbVertex) * sizeof(VERTEX3D)); //copy old vertices
-	memset(tmp_vertices3 + sh.nbVertex, 0, (nb + 1 - sh.nbVertex) * sizeof(VERTEX3D));  //zero out remaining bits (not necessary, will be overwritten anyway)
+	//vertices3=(Vector3d *)realloc(vertices3,(nb+1)*sizeof(Vector3d));
+	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nb + 1) * sizeof(InterfaceVertex)); //create new, extended vertex array
+	memmove(tmp_vertices3, vertices3, (sh.nbVertex) * sizeof(InterfaceVertex)); //copy old vertices
+	memset(tmp_vertices3 + sh.nbVertex, 0, (nb + 1 - sh.nbVertex) * sizeof(InterfaceVertex));  //zero out remaining bits (not necessary, will be overwritten anyway)
 
 	SAFE_FREE(vertices3); //delete old array
 	vertices3 = tmp_vertices3; //make new array the official vertex holder
@@ -1772,8 +1740,8 @@ void Geometry::AddVertex(double X, double Y, double Z) {
 
 	//a new vertex
 	sh.nbVertex++;
-	VERTEX3D *verticesNew = (VERTEX3D *)malloc(sh.nbVertex * sizeof(VERTEX3D));
-	memcpy(verticesNew, vertices3, (sh.nbVertex - 1) * sizeof(VERTEX3D)); //copy old vertices
+	InterfaceVertex *verticesNew = (InterfaceVertex *)malloc(sh.nbVertex * sizeof(InterfaceVertex));
+	memcpy(verticesNew, vertices3, (sh.nbVertex - 1) * sizeof(InterfaceVertex)); //copy old vertices
 	SAFE_FREE(vertices3);
 	verticesNew[sh.nbVertex - 1].x = X;
 	verticesNew[sh.nbVertex - 1].y = Y;
@@ -1828,7 +1796,7 @@ void Geometry::DelStruct(int numToDel) {
 	BuildGLList();
 }
 
-void Geometry::ScaleSelectedVertices(VERTEX3D invariant, double factor, BOOL copy, Worker *worker) {
+void Geometry::ScaleSelectedVertices(Vector3d invariant, double factor, BOOL copy, Worker *worker) {
 
 
 
@@ -1856,7 +1824,7 @@ void Geometry::ScaleSelectedVertices(VERTEX3D invariant, double factor, BOOL cop
 	InitializeGeometry();
 }
 
-void Geometry::ScaleSelectedFacets(VERTEX3D invariant, double factorX, double factorY, double factorZ, BOOL copy, Worker *worker) {
+void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, BOOL copy, Worker *worker) {
 
 
 	GLProgress *prgMove = new GLProgress("Scaling selected facets...", "Please wait");
@@ -1909,11 +1877,11 @@ BOOL operator<(const std::list<ClippingVertex>::iterator& a, const std::list<Cli
 	return (a->distance < b->distance);
 }
 
-BOOL Geometry::IntersectingPlaneWithLine(const VERTEX3D &P0, const VERTEX3D &u, const VERTEX3D &V0, const VERTEX3D &n, VERTEX3D *intersectPoint, BOOL withinSection) {
+BOOL Geometry::IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, BOOL withinSection) {
 	//Notations from http://geomalgorithms.com/a05-_intersect-1.html
 	//At this point, intersecting ray is L=P0+s*u
 	if (IS_ZERO(Dot(n, u))) return FALSE; //Check for parallelness
-	VERTEX3D w = P0 - V0;
+	Vector3d w = P0 - V0;
 	if (IS_ZERO(Dot(n, w))) return FALSE; //Check for inclusion
 	//Intersection point: P(s_i)-V0=w+s_i*u -> s_i=(-n*w)/(n*u)
 	double s_i = -Dot(n, w) / Dot(n, u);
@@ -1946,7 +1914,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	mApp->changedSinceSave = TRUE;
 	//UnselectAllVertex();
 	//std::vector<size_t> result;
-	std::vector<VERTEX3D> newVertices;
+	std::vector<InterfaceVertex> newVertices;
 	std::vector<IntersectFacet> selectedFacets;
 	std::vector<DeletedFacet> deletedFacetList;
 	*nbCreated = 0; //Total number of new facets created
@@ -1970,9 +1938,9 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 				int c1, c2, l;
 				if (!GetCommonEdges(f1, f2, &c1, &c2, &l)) {
 					for (size_t index = 0;index < f1->sh.nbIndex;index++) { //Go through all indexes of edge-finding facet
-						VERTEX3D intersectionPoint;
-						VERTEX3D base = vertices3[f1->indices[index]];
-						VERTEX3D side = vertices3[f1->GetIndex(index + 1)] - base;
+						InterfaceVertex intersectionPoint;
+						InterfaceVertex base = vertices3[f1->indices[index]];
+						Vector3d side = vertices3[f1->GetIndex(index + 1)] - base;
 
 						/*
 						//Check if this edge was already checked
@@ -1990,8 +1958,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 						*/
 						//selectedFacets[i].visitedFromThisIndice[index].push_back(f1->GetIndex(index + 1));
 						if (IntersectingPlaneWithLine(base, side, f2->sh.O, f2->sh.N, &intersectionPoint, TRUE)) {
-							VERTEX2D projected;
-							ProjectVertex(&intersectionPoint, &projected, &f2->sh.U, &f2->sh.V, &f2->sh.O);
+							Vector2d projected = ProjectVertex(intersectionPoint, f2->sh.U, f2->sh.V, f2->sh.O);
 							BOOL inPoly = IsInPoly(projected.u, projected.v, f2->vertices2, f2->sh.nbIndex);
 							BOOL onEdge = IsOnPolyEdge(projected.u, projected.v, f2->vertices2, f2->sh.nbIndex, 1E-6);
 							//onEdge = FALSE;
@@ -1999,7 +1966,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 								//Intersection found. First check if we already created this point
 								int foundId = -1;
 								for (size_t v = 0;foundId == -1 && v < newVertices.size();v++) {
-									if (IS_ZERO(Norme(newVertices[v] - intersectionPoint)))
+									if (IS_ZERO((newVertices[v] - intersectionPoint).Norme()))
 										foundId = v;
 								}
 								size_t vertexGlobalId;
@@ -2024,8 +1991,8 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 			}
 		}
 	}
-	vertices3 = (VERTEX3D*)realloc(vertices3, sizeof(VERTEX3D)*(sh.nbVertex + newVertices.size()));
-	for (VERTEX3D vertex : newVertices) {
+	vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(sh.nbVertex + newVertices.size()));
+	for (InterfaceVertex vertex : newVertices) {
 		vertices3[sh.nbVertex] = vertex;
 		//result.push_back(sh.nbVertex);
 		sh.nbVertex++;
@@ -2135,7 +2102,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 
 						for (size_t i = 0; i < clipPaths.size(); i++) {
 							if (clipPaths[i].front().onEdge == currentVertex && clipPaths[i].back().onEdge != -1) { //If a full clipping path is found on the scanned edge, go through it
-								double d = Norme(vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].front().vertexId]);
+								double d = (vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].front().vertexId]).Norme();
 								if (d < minDist) {
 									minDist = d;
 									clipId = i;
@@ -2143,7 +2110,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 								}
 							}
 							if (clipPaths[i].back().onEdge == currentVertex && clipPaths[i].front().onEdge != -1) { //If a full clipping path is found on the scanned edge, go through it
-								double d = Norme(vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].back().vertexId]);
+								double d = (vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].back().vertexId]).Norme();
 								if (d < minDist) {
 									minDist = d;
 									clipId = i;
@@ -2203,7 +2170,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	/*
 	f->sh.nbIndex = (int)testPath.size();
 	f->indices = (int*)realloc(f->indices, sizeof(int)*testPath.size());
-	f->vertices2 = (VERTEX2D*)realloc(f->vertices2, sizeof(VERTEX2D)*testPath.size());
+	f->vertices2 = (Vector2d*)realloc(f->vertices2, sizeof(Vector2d)*testPath.size());
 	f->visible = (BOOL*)realloc(f->visible, sizeof(BOOL)*testPath.size());
 	for (size_t i = 0; i < testPath.size(); i++)
 		f->indices[i] = testPath[i];
@@ -2218,7 +2185,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	return deletedFacetList;
 }
 
-std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const VERTEX3D &base, const VERTEX3D &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg) {
+std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg) {
 	mApp->changedSinceSave = TRUE;
 	std::vector<DeletedFacet> deletedFacetList;
 	int oldNbFacets = sh.nbFacet;
@@ -2226,7 +2193,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const VERTEX3D &base, co
 		Facet *f = facets[i];
 		if (f->selected) {
 			if (prg) prg->SetProgress(double(i) / double(sh.nbFacet));
-			VERTEX3D intersectionPoint, intersectLineDir;
+			Vector3d intersectionPoint, intersectLineDir;
 			if (!IntersectingPlaneWithLine(f->sh.O, f->sh.U, base, normal, &intersectionPoint))
 				if (!IntersectingPlaneWithLine(f->sh.O, f->sh.V, base, normal, &intersectionPoint))
 					if (!IntersectingPlaneWithLine(f->sh.O + f->sh.U, -1.0*f->sh.U, base, normal, &intersectionPoint)) //If origin on cutting plane
@@ -2236,8 +2203,8 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const VERTEX3D &base, co
 							continue;
 						}
 			//Reduce to a 2D problem in the facet's plane
-			VERTEX2D intPoint2D, intDir2D, intDirOrt2D;
-			ProjectVertex(&intersectionPoint, &intPoint2D, &f->sh.U, &f->sh.V, &f->sh.O);
+			Vector2d intPoint2D, intDir2D, intDirOrt2D;
+			intPoint2D = ProjectVertex(intersectionPoint, f->sh.U, f->sh.V, f->sh.O);
 			intersectLineDir = CrossProduct(normal, f->sh.N);
 			intDir2D.u = Dot(f->sh.U, intersectLineDir) / Dot(f->sh.U, f->sh.U);
 			intDir2D.v = Dot(f->sh.V, intersectLineDir) / Dot(f->sh.V, f->sh.V);
@@ -2304,8 +2271,8 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const VERTEX3D &base, co
 					else  //New vertex
 					{
 						//Compute location of intersection point P
-						VERTEX2D v = N->vertex - V->vertex;
-						VERTEX2D w = intPoint2D - V->vertex;
+						Vector2d v = N->vertex - V->vertex;
+						Vector2d w = intPoint2D - V->vertex;
 						double s_i = (v.v*w.u - v.u*w.v) / (v.u*intDir2D.v - v.v*intDir2D.u);
 						ClippingVertex P;
 						P.vertex = intPoint2D + intDir2D*s_i;
@@ -2320,15 +2287,16 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const VERTEX3D &base, co
 			//Register new vertices and calc distance from clipping line
 			if (createdList.size() > 0) { //If there was a cut
 				_ASSERTE(createdList.size() % 2 == 0);
-				if (nbNewPoints) vertices3 = (VERTEX3D*)realloc(vertices3, sizeof(VERTEX3D)*(sh.nbVertex + nbNewPoints));
+				if (nbNewPoints) vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(sh.nbVertex + nbNewPoints));
 				for (std::list<std::list<ClippingVertex>::iterator>::iterator newVertexIterator = createdList.begin();newVertexIterator != createdList.end();newVertexIterator++) {
 					if ((*newVertexIterator)->globalId >= sh.nbVertex) {
-						VERTEX3D newCoord3D = f->sh.O + f->sh.U*(*newVertexIterator)->vertex.u + f->sh.V*(*newVertexIterator)->vertex.v;
+						InterfaceVertex newCoord3D;
+						newCoord3D.SetLocation(f->sh.O + f->sh.U*(*newVertexIterator)->vertex.u + f->sh.V*(*newVertexIterator)->vertex.v);
 						newCoord3D.selected = FALSE;
 						vertices3[sh.nbVertex] = newCoord3D;
 						sh.nbVertex++;
 					}
-					VERTEX2D diff = (*newVertexIterator)->vertex - intPoint2D;
+					Vector2d diff = (*newVertexIterator)->vertex - intPoint2D;
 					(*newVertexIterator)->distance = Dot(diff,intDir2D);
 				}
 				createdList.sort();
@@ -2538,16 +2506,16 @@ void Geometry::Collapse(double vT, double fT, double lT, BOOL doSelectedOnly, Wo
 
 		// Revert orientation if normal has been swapped
 		// This happens when the second vertex is no longer convex
-		VERTEX3D n, v1, v2;
+		Vector3d n, v1, v2;
 		double   d;
 		int i0 = facets[i]->indices[0];
 		int i1 = facets[i]->indices[1];
 		int i2 = facets[i]->indices[2];
 
-		Sub(&v1, vertices3 + i1, vertices3 + i0); // v1 = P0P1
-		Sub(&v2, vertices3 + i2, vertices3 + i1); // v2 = P1P2
-		Cross(&n, &v1, &v2);                      // Cross product
-		d = Dot(&n, &(f->sh.N));
+		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
+		v1 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
+		n = CrossProduct(v1, v2);           // Cross product
+		d = Dot(n, f->sh.N);
 		if (d < 0.0) f->SwapNormal();
 
 	}
@@ -2593,13 +2561,11 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 			int p0 = f->indices[k];
 			int p1 = f->indices[(k + 1) % f->sh.nbIndex];
 			int p2 = f->indices[(k + 2) % f->sh.nbIndex]; //to compare last side with first too
-			VERTEX3D p0p1;
-			VERTEX3D p0p2;
-			Sub(&p0p1, &vertices3[p1], &vertices3[p0]);
-			Sub(&p0p2, &vertices3[p2], &vertices3[p1]);
-			Normalize(&p0p1);
-			Normalize(&p0p2);
-			collinear = (Dot(&p0p1, &p0p2) >= linTreshold);
+			Vector3d p0p1;
+			Vector3d p0p2;
+			p0p1 = (vertices3[p1] - vertices3[p0]).Normalized();
+			p0p2 = (vertices3[p2] - vertices3[p1]).Normalized();
+			collinear = (Dot(p0p1, p0p2) >= linTreshold);
 			if (collinear&&f->sh.nbIndex > 3) { //collinear
 				for (int l = (k + 1) % f->sh.nbIndex; l < f->sh.nbIndex - 1; l++) {
 					f->indices[l] = f->indices[l + 1];
@@ -2613,9 +2579,9 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 void Geometry::CalculateFacetParam_geometry(Facet *f) {
 
 	// Calculate facet normal
-	VERTEX3D p0 = vertices3[f->indices[0]];
-	VERTEX3D v1;
-	VERTEX3D v2;
+	Vector3d p0 = vertices3[f->indices[0]];
+	Vector3d v1;
+	Vector3d v2;
 	BOOL consecutive = TRUE;
 	int ind = 2;
 
@@ -2625,13 +2591,13 @@ void Geometry::CalculateFacetParam_geometry(Facet *f) {
 	while (ind < f->sh.nbIndex && consecutive) {
 		int i2 = f->indices[ind++];
 
-		Sub(&v1, vertices3 + i1, vertices3 + i0); // v1 = P0P1
-		Sub(&v2, vertices3 + i2, vertices3 + i1); // v2 = P1P2
-		Cross(&(f->sh.N), &v1, &v2);              // Cross product
-		consecutive = (Norme(f->sh.N) < 1e-11);
+		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
+		v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
+		f->sh.N = CrossProduct(v1, v2);              // Cross product
+		consecutive = (f->sh.N.Norme() < 1e-11);
 	}
 	f->collinear = consecutive; //mark for later that this facet was on a line
-	Normalize(&(f->sh.N));                  // Normalize
+	f->sh.N = f->sh.N.Normalized();                  // Normalize
 
 											// Calculate Axis Aligned Bounding Box
 	f->sh.bb.min.x = 1e100;
@@ -2642,7 +2608,7 @@ void Geometry::CalculateFacetParam_geometry(Facet *f) {
 	f->sh.bb.max.z = -1e100;
 
 	for (int i = 0; i < f->sh.nbIndex; i++) {
-		VERTEX3D p = vertices3[f->indices[i]];
+		Vector3d p = vertices3[f->indices[i]];
 		if (p.x < f->sh.bb.min.x) f->sh.bb.min.x = p.x;
 		if (p.y < f->sh.bb.min.y) f->sh.bb.min.y = p.y;
 		if (p.z < f->sh.bb.min.z) f->sh.bb.min.z = p.z;
@@ -2662,13 +2628,13 @@ void Geometry::CalculateFacetParam_geometry(Facet *f) {
 	double A = f->sh.N.x;
 	double B = f->sh.N.y;
 	double C = f->sh.N.z;
-	double D = -Dot(&(f->sh.N), &p0);
+	double D = -Dot(f->sh.N, p0);
 
 	// Facet planeity
 	int nb = f->sh.nbIndex;
 	double max = 0.0;
 	for (int i = 1; i < nb; i++) {
-		VERTEX3D p = vertices3[f->indices[i]];
+		Vector3d p = vertices3[f->indices[i]];
 		double d = A * p.x + B * p.y + C * p.z + D;
 		if (fabs(d) > fabs(max)) max = d;
 	}
@@ -2682,34 +2648,31 @@ void Geometry::CalculateFacetParam_geometry(Facet *f) {
 
 	//new part copied from InitGeometry
 
-	//VERTEX3D p0 = vertices3[f->indices[0]];
-	VERTEX3D p1 = vertices3[f->indices[1]];
+	//Vector3d p0 = vertices3[f->indices[0]];
+	Vector3d p1 = vertices3[f->indices[1]];
 
-	VERTEX3D U, V;
+	Vector3d U, V;
 
 	U.x = p1.x - p0.x;
 	U.y = p1.y - p0.y;
 	U.z = p1.z - p0.z;
 
-	double nU = Norme(U);
-	ScalarMult(&U, 1.0 / nU); // Normalize U
-
-							  // Construct a normal vector V
-	Cross(&V, &(f->sh.N), &U); // |U|=1 and |N|=1 => |V|=1
+	U = U.Normalized();
+	// Construct a normal vector V:
+	V=CrossProduct(f->sh.N, U); // |U|=1 and |N|=1 => |V|=1
 
 							   // u,v vertices (we start with p0 at 0,0)
 	f->vertices2[0].u = 0.0;
 	f->vertices2[0].v = 0.0;
-	VERTEX2D BBmin; BBmin.u = 0.0; BBmin.v = 0.0;
-	VERTEX2D BBmax; BBmax.u = 0.0; BBmax.v = 0.0;
+	Vector2d BBmin; BBmin.u = 0.0; BBmin.v = 0.0;
+	Vector2d BBmax; BBmax.u = 0.0; BBmax.v = 0.0;
 
 	for (int j = 1; j < f->sh.nbIndex; j++) {
 
-		VERTEX3D p = vertices3[f->indices[j]];
-		VERTEX3D v;
-		Sub(&v, &p, &p0); // v = p0p
-		f->vertices2[j].u = Dot(&U, &v);  // Project p on U along the V direction
-		f->vertices2[j].v = Dot(&V, &v);  // Project p on V along the U direction
+		Vector3d p = vertices3[f->indices[j]];
+		Vector3d v = p - p0;
+		f->vertices2[j].u = Dot(U, v);  // Project p on U along the V direction
+		f->vertices2[j].v = Dot(V, v);  // Project p on V along the U direction
 
 										  // Bounds
 		if (f->vertices2[j].u > BBmax.u) BBmax.u = f->vertices2[j].u;
@@ -2738,25 +2701,24 @@ void Geometry::CalculateFacetParam_geometry(Facet *f) {
 
 	// Rescale U and V vector
 	f->sh.nU = U;
-	ScalarMult(&U, uD);
+	U = U * uD;
 	f->sh.U = U;
 
 	f->sh.nV = V;
-	ScalarMult(&V, vD);
+	V = V * vD;
 	f->sh.V = V;
 
 	//Center might not be on the facet's plane
-	VERTEX2D projectedCenter;
-	ProjectVertex(&f->sh.center, &projectedCenter, &f->sh.U, &f->sh.V, &f->sh.O);
+	Vector2d projectedCenter = ProjectVertex(f->sh.center, f->sh.U, f->sh.V, f->sh.O);
 	f->sh.center = f->sh.O + projectedCenter.u*f->sh.U + projectedCenter.v*f->sh.V;
 
 
-	Cross(&(f->sh.Nuv), &U, &V);
+	f->sh.Nuv = CrossProduct(U, V);
 
 	// Rescale u,v coordinates
 	for (int j = 0; j < f->sh.nbIndex; j++) {
 
-		VERTEX2D p = f->vertices2[j];
+		Vector2d p = f->vertices2[j];
 		f->vertices2[j].u = (p.u - BBmin.u) / uD;
 		f->vertices2[j].v = (p.v - BBmin.v) / vD;
 
@@ -2798,24 +2760,21 @@ void Geometry::CreateLoft() {
 	for (auto closest : closestIndices2)
 		closest.visited = FALSE;
 
-	double u1Length = Norme(f1->sh.U);
-	double v1Length = Norme(f1->sh.V);
-	double u2Length = Norme(f2->sh.U);
-	double v2Length = Norme(f2->sh.V);
+	double u1Length = f1->sh.U.Norme();
+	double v1Length = f1->sh.V.Norme();
+	double u2Length = f2->sh.U.Norme();
+	double v2Length = f2->sh.V.Norme();
 
-	VERTEX2D center2Pos;
-	ProjectVertex(&f2->sh.center, &center2Pos, &f1->sh.U, &f1->sh.V, &f1->sh.O);
-	VERTEX2D center1Pos;
-	ProjectVertex(&f1->sh.center, &center1Pos, &f1->sh.U, &f1->sh.V, &f1->sh.O);
-	VERTEX2D centerOffset = center1Pos - center2Pos; //aligns centers
+	Vector2d center2Pos = ProjectVertex(f2->sh.center, f1->sh.U, f1->sh.V, f1->sh.O);
+	Vector2d center1Pos = ProjectVertex(f1->sh.center, f1->sh.U, f1->sh.V, f1->sh.O);
+	Vector2d centerOffset = center1Pos - center2Pos; //aligns centers
 
 	for (size_t i1 = 0;i1 < f1->sh.nbIndex;i1++) {
 		//Find closest point on other facet
 		double min = 9E99;
 		size_t minPos;
 		for (size_t i2 = 0;i2 < f2->sh.nbIndex;i2++) {
-			VERTEX2D projection;
-			ProjectVertex(&vertices3[f2->indices[i2]], &projection, &f1->sh.U, &f1->sh.V, &f1->sh.O);
+			Vector2d projection = ProjectVertex(vertices3[f2->indices[i2]], f1->sh.U, f1->sh.V, f1->sh.O);
 			projection = projection + centerOffset;
 			double dist = pow(u1Length*(projection.u - f1->vertices2[i1].u), 2.0) + pow(v1Length*(projection.v - f1->vertices2[i1].v), 2.0); //We need the absolute distance
 			if (dist < min) {
@@ -2836,8 +2795,8 @@ void Geometry::CreateLoft() {
 		closestIndices1[i].boundary = (closestIndices1[i].index != closestIndices1[nextId].index) || (closestIndices1[i].index != closestIndices1[previousId].index);
 	}
 
-	ProjectVertex(&f2->sh.center, &center2Pos, &f2->sh.U, &f2->sh.V, &f2->sh.O);
-	ProjectVertex(&f1->sh.center, &center1Pos, &f2->sh.U, &f2->sh.V, &f2->sh.O);
+	center2Pos=ProjectVertex(f2->sh.center, f2->sh.U, f2->sh.V, f2->sh.O);
+	center1Pos=ProjectVertex(f1->sh.center, f2->sh.U, f2->sh.V, f2->sh.O);
 	centerOffset = center2Pos - center1Pos;
 
 	//Revisit those on f2 without a link
@@ -2847,8 +2806,7 @@ void Geometry::CreateLoft() {
 			double min = 9E99;
 			size_t minPos;
 			for (size_t i1 = 0;i1 < f1->sh.nbIndex;i1++) {
-				VERTEX2D projection;
-				ProjectVertex(&vertices3[f1->indices[i1]], &projection, &f2->sh.U, &f2->sh.V, &f2->sh.O);
+				Vector2d projection = ProjectVertex(vertices3[f1->indices[i1]], f2->sh.U, f2->sh.V, f2->sh.O);
 				projection = projection + centerOffset;
 				double dist = pow(u2Length*(projection.u - f2->vertices2[i2].u), 2.0) + pow(v2Length*(projection.v - f2->vertices2[i2].v), 2.0); //We need the absolute distance
 				if (!closestIndices1[i1].boundary) dist += 1E6; //penalty -> try to connect with boundaries
@@ -2880,7 +2838,7 @@ void Geometry::CreateLoft() {
 			//Create triangle
 			Facet *newFacet = new Facet(3);
 			newFacet->indices[0] = f1->indices[i1];
-			newFacet->indices[1] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
+			newFacet->indices[1] = f2->indices[IDX(i2 - 1, f2->sh.nbIndex)];closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 			newFacet->indices[2] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
 			newFacet->selected = TRUE;
 			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
@@ -2888,7 +2846,7 @@ void Geometry::CreateLoft() {
 			newFacets.push_back(newFacet);
 		}
 		//Look for smaller points in decreasing direction
-		for (size_t i2 = Remainder(closestIndices1[i1].index - 1, f2->sh.nbIndex);closestIndices2[i2].index == i1;i2 = Remainder(i2 - 1, f2->sh.nbIndex)) {
+		for (size_t i2 = IDX(closestIndices1[i1].index - 1, f2->sh.nbIndex);closestIndices2[i2].index == i1;i2 = IDX(i2 - 1, f2->sh.nbIndex)) {
 			//Create triangle
 			Facet *newFacet = new Facet(3);
 			newFacet->indices[0] = f1->indices[i1];
@@ -2906,9 +2864,9 @@ void Geometry::CreateLoft() {
 		newFacet->indices[1] = f1->indices[(i1 + 1) % f1->sh.nbIndex];
 		//Find last vertex on other facet that's closest to us
 		size_t increment;
-		for (increment = 0;closestIndices2[Remainder(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment + incrementDir, f2->sh.nbIndex)].index == ((i1 + 1) % f1->sh.nbIndex);increment += incrementDir);
-		newFacet->indices[2] = f2->indices[Remainder(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)];closestIndices2[Remainder(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)].visited = TRUE;
-		if (!triangle) newFacet->indices[3] = f2->indices[Remainder(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)];closestIndices2[Remainder(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)].visited = TRUE;
+		for (increment = 0;closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment + incrementDir, f2->sh.nbIndex)].index == ((i1 + 1) % f1->sh.nbIndex);increment += incrementDir);
+		newFacet->indices[2] = f2->indices[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)];closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)].visited = TRUE;
+		if (!triangle) newFacet->indices[3] = f2->indices[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)];closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)].visited = TRUE;
 		if (incrementDir == -1) newFacet->SwapNormal();
 		CalculateFacetParam_geometry(newFacet);
 		if (abs(newFacet->err) > 1E-5) {
@@ -2916,9 +2874,9 @@ void Geometry::CreateLoft() {
 			int ind4[] = { newFacet->indices[0],newFacet->indices[1], newFacet->indices[2], newFacet->indices[3] };
 			delete newFacet;
 			newFacet = new Facet(3);
-			VERTEX3D diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
-			VERTEX3D diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
-			BOOL connect_0_2 = Norme(diff_0_2) < Norme(diff_1_3); //Split rectangle to two triangles along shorter side
+			Vector3d diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
+			Vector3d diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
+			BOOL connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side
 			newFacet->indices[0] = ind4[0];
 			newFacet->indices[1] = ind4[1];
 			newFacet->indices[2] = ind4[connect_0_2 ? 2 : 3];
@@ -2939,25 +2897,25 @@ void Geometry::CreateLoft() {
 	//Go through leftover vertices on facet 2
 	for (size_t i2 = 0;i2 < f2->sh.nbIndex;i2++) {
 		if (closestIndices2[i2].visited == FALSE) {
-			int targetIndex = closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].index; //Previous node
+			int targetIndex = closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].index; //Previous node
 
 			do {
 				//Connect with previous
 				Facet *newFacet = new Facet(3);
 				newFacet->indices[0] = f1->indices[targetIndex];
 				newFacet->indices[1] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
-				newFacet->indices[2] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
+				newFacet->indices[2] = f2->indices[IDX(i2 - 1, f2->sh.nbIndex)];closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 				newFacet->selected = TRUE;
 				if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 				newFacets.push_back(newFacet);
-				i2 = Remainder(i2 + 1, f2->sh.nbIndex);
+				i2 = IDX(i2 + 1, f2->sh.nbIndex);
 			} while (closestIndices2[i2].visited == FALSE);
 			//last
 				//Connect with next for the last unvisited
 			Facet *newFacet = new Facet(3);
 			newFacet->indices[0] = f1->indices[targetIndex];
 			newFacet->indices[1] = f2->indices[i2];closestIndices2[i2].visited = TRUE;
-			newFacet->indices[2] = f2->indices[Remainder(i2 - 1, f2->sh.nbIndex)];closestIndices2[Remainder(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
+			newFacet->indices[2] = f2->indices[IDX(i2 - 1, f2->sh.nbIndex)];closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].visited = TRUE;
 			newFacet->selected = TRUE;
 			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 			newFacets.push_back(newFacet);
@@ -3075,7 +3033,7 @@ void Geometry::BuildShapeList() {
 	for(int i=0;i<=nbTetha;i++) {
 		for(int j=0;j<nbPhi;j++) {
 
-			VERTEX3D v1,v2,v3,v4;
+			Vector3d v1,v2,v3,v4;
 
 			v1.x = sin(dtetha*(double)i)*cos(dphi*(double)j);
 			v1.y = sin(dtetha*(double)i)*sin(dphi*(double)j);
@@ -3333,8 +3291,8 @@ void Geometry::BuildFacetList(Facet *f) {
 void Geometry::SetFacetTexture(int facet, double ratio, BOOL mesh) {
 
 	Facet *f = facets[facet];
-	double nU = Norme(f->sh.U);
-	double nV = Norme(f->sh.V);
+	double nU = f->sh.U.Norme();
+	double nV = f->sh.V.Norme();
 
 	if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
 		char errMsg[512];
@@ -3364,10 +3322,9 @@ void Geometry::AdjustProfile() {
 	for(int i=0;i<sh.nbFacet;i++) {
 		Facet *f = facets[i];
 		if( f->sh.profileType==REC_PRESSUREU ) {
-			VERTEX3D v0;
-			Sub(&v0 , vertices3+(f->indices[1]) , vertices3+(f->indices[0])); // v0 = P0P1
-			double n0 = Norme(v0);
-			double nU = Norme((f->sh.U));
+			Vector3d v0=vertices3[f->indices[1]]-vertices3[f->indices[0]];
+			double n0 = v0.Norme();
+			double nU = f->sh.U.Norme();
 			if(IS_ZERO(n0-nU)) f->sh.profileType = REC_PRESSUREU; // Select U
 			else               f->sh.profileType = REC_PRESSUREV; // Select V
 		}
@@ -3394,17 +3351,17 @@ void Geometry::LoadASE(FileReader *file,GLProgress *prg) {
 	sh.nbVertex = 3*sh.nbFacet;
 	facets = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
 	memset(facets,0,sh.nbFacet * sizeof(Facet *));
-	vertices3 = (VERTEX3D *)malloc(sh.nbVertex * sizeof(VERTEX3D));
-	memset(vertices3,0,sh.nbVertex * sizeof(VERTEX3D));
+	vertices3 = (InterfaceVertex *)malloc(sh.nbVertex * sizeof(InterfaceVertex));
+	memset(vertices3,0,sh.nbVertex * sizeof(InterfaceVertex));
 
 	// Fill 
 	int nb = 0;
 	for(int i=0;i<ase.nbObj;i++) {
 
 		for(int j=0;j<ase.OBJ[i].nb_face;j++ ) {
-			vertices3[3*nb+0] = ase.OBJ[i].pts[ase.OBJ[i].face[j].v1];
-			vertices3[3*nb+1] = ase.OBJ[i].pts[ase.OBJ[i].face[j].v2];
-			vertices3[3*nb+2] = ase.OBJ[i].pts[ase.OBJ[i].face[j].v3];
+			vertices3[3*nb+0].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v1]);
+			vertices3[3*nb+1].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v2]);
+			vertices3[3*nb+2].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v3]);
 			facets[nb] = new Facet(3);
 			facets[nb]->indices[0]=3*nb+0;
 			facets[nb]->indices[1]=3*nb+1;
@@ -3433,7 +3390,7 @@ void Geometry::LoadSTR(FileReader *file,GLProgress *prg) {
 	char sName[512];
 	size_t nF,nV;
 	Facet **F;
-	VERTEX3D *V;
+	InterfaceVertex *V;
 	FileReader *fr;
 
 	Clear();
@@ -3520,9 +3477,9 @@ void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
 	facets = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
 	if (!facets) throw Error("Out of memory: LoadSTL");
 	memset(facets, 0, sh.nbFacet * sizeof(Facet *));
-	vertices3 = (VERTEX3D *)malloc(sh.nbVertex * sizeof(VERTEX3D));
+	vertices3 = (InterfaceVertex *)malloc(sh.nbVertex * sizeof(InterfaceVertex));
 	if (!vertices3) throw Error("Out of memory: LoadSTL");
-	memset(vertices3, 0, sh.nbVertex * sizeof(VERTEX3D));
+	memset(vertices3, 0, sh.nbVertex * sizeof(InterfaceVertex));
 
 	// Second pass
 	prg->SetMessage("Reading facets...");
@@ -3662,7 +3619,7 @@ void Geometry::InsertGEO(FileReader *file,GLProgress *prg,BOOL newStr) {
 }
 
 
-void Geometry::LoadTXTGeom(FileReader *file,size_t *nbV,size_t *nbF,VERTEX3D **V,Facet ***F,size_t strIdx) {
+void Geometry::LoadTXTGeom(FileReader *file,size_t *nbV,size_t *nbF, InterfaceVertex **V,Facet ***F,size_t strIdx) {
 
 	file->ReadInt(); // Unused
 	tNbHit = file->ReadLLong();
@@ -3676,8 +3633,8 @@ void Geometry::LoadTXTGeom(FileReader *file,size_t *nbV,size_t *nbF,VERTEX3D **V
 	// Allocate memory
 	Facet   **f = (Facet **)malloc(nF * sizeof(Facet *));
 	memset(f,0,nF * sizeof(Facet *));
-	VERTEX3D *v = (VERTEX3D *)malloc(nV * sizeof(VERTEX3D));
-	memset(v,0,nV * sizeof(VERTEX3D)); //avoid selected flag
+	InterfaceVertex *v = (InterfaceVertex *)malloc(nV * sizeof(InterfaceVertex));
+	memset(v,0,nV * sizeof(InterfaceVertex)); //avoid selected flag
 
 	// Read geometry vertices
 	for(int i=0;i<nV;i++) {
@@ -3713,7 +3670,7 @@ void Geometry::LoadTXTGeom(FileReader *file,size_t *nbV,size_t *nbF,VERTEX3D **V
 
 }
 
-void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,VERTEX3D **vertices3,Facet ***facets,size_t strIdx,BOOL newStruct) {
+void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet, InterfaceVertex **vertices3,Facet ***facets,size_t strIdx,BOOL newStruct) {
 
 	UnselectAll();
 
@@ -3729,10 +3686,10 @@ void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,V
 	// Allocate memory
 	*facets = (Facet **)realloc(*facets,(nbNewFacets+*nbFacet) * sizeof(Facet **));
 	memset(*facets+*nbFacet,0,nbNewFacets * sizeof(Facet *));
-	//*vertices3 = (VERTEX3D*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(VERTEX3D));
-	VERTEX3D *tmp_vertices3 = (VERTEX3D *)malloc((nbNewVertex+*nbVertex) * sizeof(VERTEX3D));
-	memmove(tmp_vertices3,*vertices3,(*nbVertex)*sizeof(VERTEX3D));
-	memset(tmp_vertices3+*nbVertex,0,nbNewVertex * sizeof(VERTEX3D));
+	//*vertices3 = (Vector3d*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
+	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex+*nbVertex) * sizeof(InterfaceVertex));
+	memmove(tmp_vertices3,*vertices3,(*nbVertex)*sizeof(InterfaceVertex));
+	memset(tmp_vertices3+*nbVertex,0,nbNewVertex * sizeof(InterfaceVertex));
 	SAFE_FREE(*vertices3);
 	*vertices3=tmp_vertices3;
 
@@ -3774,7 +3731,7 @@ void Geometry::InsertTXTGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,V
 
 }
 
-void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet, VERTEX3D **vertices3, Facet ***facets, size_t strIdx, BOOL newStruct) {
+void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet, InterfaceVertex **vertices3, Facet ***facets, size_t strIdx, BOOL newStruct) {
 
 	UnselectAll();
 
@@ -3939,11 +3896,11 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 	// Reallocate memory
 	*facets = (Facet **)realloc(*facets, (nbNewFacets + *nbFacet) * sizeof(Facet **));
 	memset(*facets + *nbFacet, 0, nbNewFacets * sizeof(Facet *));
-	//*vertices3 = (VERTEX3D*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(VERTEX3D));
-	VERTEX3D *tmp_vertices3 = (VERTEX3D *)malloc((nbNewVertex + *nbVertex) * sizeof(VERTEX3D));
+	//*vertices3 = (Vector3d*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
+	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertex));
 	if (!tmp_vertices3) throw Error("Out of memory: InsertGEOGeom");
-	memmove(tmp_vertices3, *vertices3, (*nbVertex)*sizeof(VERTEX3D));
-	memset(tmp_vertices3 + *nbVertex, 0, nbNewVertex * sizeof(VERTEX3D));
+	memmove(tmp_vertices3, *vertices3, (*nbVertex)*sizeof(InterfaceVertex));
+	memset(tmp_vertices3 + *nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
 	SAFE_FREE(*vertices3);
 	*vertices3 = tmp_vertices3;
 
@@ -4036,7 +3993,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 }
 
-void Geometry::InsertSTLGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,VERTEX3D **vertices3,Facet ***facets,size_t strIdx,double scaleFactor,BOOL newStruct) {
+void Geometry::InsertSTLGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet, InterfaceVertex **vertices3,Facet ***facets,size_t strIdx,double scaleFactor,BOOL newStruct) {
 
 	UnselectAll();
 	char *w;
@@ -4057,10 +4014,10 @@ void Geometry::InsertSTLGeom(FileReader *file,size_t *nbVertex,size_t *nbFacet,V
 	int nbNewVertex=3*nbNewFacets;
 	*facets = (Facet **)realloc(*facets,(nbNewFacets+*nbFacet) * sizeof(Facet **));
 	memset(*facets+*nbFacet,0,nbNewFacets * sizeof(Facet *));
-	//*vertices3 = (VERTEX3D*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(VERTEX3D));
-	VERTEX3D *tmp_vertices3 = (VERTEX3D *)malloc((nbNewVertex+*nbVertex) * sizeof(VERTEX3D));
-	memmove(tmp_vertices3,*vertices3,(*nbVertex)*sizeof(VERTEX3D));
-	memset(tmp_vertices3+*nbVertex,0,nbNewVertex * sizeof(VERTEX3D));
+	//*vertices3 = (Vector3d*)realloc(*vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
+	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex+*nbVertex) * sizeof(InterfaceVertex));
+	memmove(tmp_vertices3,*vertices3,(*nbVertex)*sizeof(InterfaceVertex));
+	memset(tmp_vertices3+*nbVertex,0,nbNewVertex * sizeof(InterfaceVertex));
 	SAFE_FREE(*vertices3);
 	*vertices3=tmp_vertices3;
 

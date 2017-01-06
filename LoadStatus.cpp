@@ -16,7 +16,6 @@ GNU General Public License for more details.
 
 #include "LoadStatus.h"
 #include "GLApp/GLToolkit.h"
-#include "Utils.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif

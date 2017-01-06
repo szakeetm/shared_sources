@@ -17,7 +17,6 @@ GNU General Public License for more details.
 #include "GLList.h"
 #include "GLMessageBox.h"
 #include "GLToolkit.h"
-#include "Utils.h"
 #include <malloc.h>
 #include  <math.h>
 #include <algorithm>

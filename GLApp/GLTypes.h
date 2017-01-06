@@ -16,6 +16,7 @@
 #ifndef _GLTYPESH_
 #define _GLTYPESH_
 
+#include "MathTools.h" //Min, Max, PI, Saturate, ...
 // Messages
 
 #define MSG_NULL     0    // No message
@@ -48,24 +49,17 @@
 #define SDL_MOUSEBUTTONDBLCLICK SDL_USEREVENT + 0
 
 // Macros
-
-#define MAX(x,y) (((x)<(y))?(y):(x))
-#define MIN(x,y) (((x)<(y))?(x):(y))
-#define SATURATE(x,min,max) {if(x<(min)) x=(min); if(x>(max)) x=(max);}
 #define DELETE_LIST(l) if(l) { glDeleteLists(l,1);l=0; }
 #define DELETE_TEX(t)  if(t) { glDeleteTextures(1,&t);t=0; }
-#define WEIGH(a,b,weigh) a+(b-a)*weigh
 #define SAFE_DELETE(x) if(x) { delete x;x=NULL; }
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
-#define NEXT_OF(list,elementIterator) (std::next(element)==list.end())?list.begin():std::next(element);
 
 // Constants
 
 #define GL_OK   1
 #define GL_FAIL 0
-#define PI 3.14159265358979323846
 #define TRUE  1
 #define FALSE 0
 

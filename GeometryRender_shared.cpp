@@ -1,6 +1,5 @@
 #include "Geometry.h"
 #include "Worker.h"
-#include "Utils.h"
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
@@ -328,7 +327,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL
 
 	for (int i = 0; i < sh.nbVertex; i++) {
 
-		VERTEX3D *v = GetVertex(i);
+		Vector3d *v = GetVertex(i);
 		//if(viewStruct==-1 || f->sh.superIdx==viewStruct) {
 		if (true) {
 
@@ -617,7 +616,7 @@ void Geometry::PaintSelectedVertices(BOOL hiddenVertex) {
 	int *vIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(vIdx, 0xFF, sh.nbVertex * sizeof(int));
 	for (int i = 0; i < sh.nbVertex; i++) {
-		//VERTEX3D *v = GetVertex(i);
+		//Vector3d *v = GetVertex(i);
 		if (vertices3[i].selected) {
 			vIdx[nbSelectedVertex] = i;
 			nbSelectedVertex++;
@@ -639,7 +638,7 @@ void Geometry::PaintSelectedVertices(BOOL hiddenVertex) {
 
 	glBegin(GL_POINTS);
 	for (int i = 0; i < nbSelectedVertex; i++) {
-		VERTEX3D *v = GetVertex(vIdx[i]);
+		Vector3d *v = GetVertex(vIdx[i]);
 		glVertex3d(v->x, v->y, v->z);
 	}
 	glEnd();
@@ -654,7 +653,7 @@ void Geometry::PaintSelectedVertices(BOOL hiddenVertex) {
 	glEnable(GL_BLEND);
 	for (int i = 0; i < nbSelectedVertex; i++) {
 		sprintf(tmp, "%d ", vIdx[i] + 1);
-		VERTEX3D *v = GetVertex(vIdx[i]);
+		Vector3d *v = GetVertex(vIdx[i]);
 		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 
 	}
@@ -889,7 +888,7 @@ int Geometry::FindEar(POLYGON *p) {
 
 
 
-void Geometry::AddTextureCoord(Facet *f, VERTEX2D *p) {
+void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -925,10 +924,10 @@ void Geometry::FillFacet(Facet *f, BOOL addTextureCoord) {
 
 void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, BOOL addTextureCoord) {
 
-	VERTEX3D  p3D;
-	VERTEX2D *p1;
-	VERTEX2D *p2;
-	VERTEX2D *p3;
+	Vector3d  p3D;
+	Vector2d *p1;
+	Vector2d *p2;
+	Vector2d *p3;
 
 	// Follow orientation
 	if (p->sign > 0.0) {
@@ -980,8 +979,8 @@ void Geometry::Triangulate(Facet *f, BOOL addTextureCoord) {
 	// Build a POLYGON
 	POLYGON p;
 	p.nbPts = f->sh.nbIndex;
-	p.pts = (VERTEX2D *)malloc(p.nbPts * sizeof(VERTEX2D));
-	memcpy(p.pts, f->vertices2, p.nbPts * sizeof(VERTEX2D));
+	p.pts = (Vector2d *)malloc(p.nbPts * sizeof(Vector2d));
+	memcpy(p.pts, f->vertices2, p.nbPts * sizeof(Vector2d));
 	p.sign = f->sh.sign;
 
 	if (f->sh.sign == 0.0) {
@@ -1161,7 +1160,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 			if (f->sh.countDirection && f->dirCache) {
 				double iw = 1.0 / (double)f->sh.texWidthD;
 				double ih = 1.0 / (double)f->sh.texHeightD;
-				double rw = Norme(f->sh.U) * iw;
+				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {
 						int add = x + y*f->sh.texWidth;

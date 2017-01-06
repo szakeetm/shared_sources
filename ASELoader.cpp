@@ -529,7 +529,7 @@ void ASELoader::Load()
       break;
     case MESH_NUMVERTEX_KW:
       OBJ[nbObj].nb_pts= f->ReadInt();
-      OBJ[nbObj].pts = (VERTEX3D *)malloc( OBJ[nbObj].nb_pts * sizeof(VERTEX3D) );
+      OBJ[nbObj].pts = (Vector3d *)malloc( OBJ[nbObj].nb_pts * sizeof(Vector3d) );
       break;
     case MESH_NUMFACES_KW:
       OBJ[nbObj].nb_face= f->ReadInt();
@@ -777,7 +777,7 @@ void ASELoader::Load()
       nbObj++;
       if( nbObj>=MAX_NUMBER_OF_OBJECT )
       {
-        sprintf(err_str,"Too much object."
+        sprintf(err_str,"Too many objects.\n%s"
           ,w,OBJ[nbObj].name);
         throw Error(err_str);
 

@@ -64,8 +64,9 @@ void FormulaSettings::DisplayError(GLParser *f) {
     memset(tmp2,' ',512);
     tmp2[nbSpace]=0;
     sprintf(tmp,"%s\n%s^\n%s",f->GetExpression(),tmp2,f->GetErrorMsg());
+	GLMessageBox::Display(tmp, "Formula error", GLDLG_OK, GLDLG_ICONINFO);
   } else {
-    GLMessageBox::Display(f->GetErrorMsg(),"Error",GLDLG_OK,GLDLG_ICONERROR);
+    GLMessageBox::Display(f->GetErrorMsg(),"Formula error",GLDLG_OK,GLDLG_ICONINFO);
   }
 
 }

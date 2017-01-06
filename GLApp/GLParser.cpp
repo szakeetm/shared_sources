@@ -401,6 +401,11 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
 						  elem.variable = AddVar(tmpVName,var_list);
 						  AddNode( TVARIABLE , elem , &l_t , NULL , NULL);
 
+						  if ((i2-i1) > 2000) {
+							  SetError("sum of more than 2000 facets", current);
+							  break;
+						  }
+
 						  for(i=i1+1;i<=i2;i++) {
 							  sprintf(tmpVName,"%s%d",v_name,i);
 							  elem.variable = AddVar(tmpVName,var_list);
@@ -414,6 +419,10 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
 					  //SUM of a selection Group
 					  if (i1 < 0 || i1 >= mApp->nbSelection) {
 						  SetError("invalid selection group", current);
+						  break;
+					  }
+					  if (mApp->selections[i1].nbSel > 2000) {
+						  SetError("sum of more than 2000 facets", current);
 						  break;
 					  }
 					  for (int j = 0; j < mApp->selections[i1].nbSel; j++) {
@@ -963,7 +972,7 @@ BOOL GLParser::Evaluate(double *result)
   {
     *result=EvalTree(evalTree);
   } else {
-    sprintf(errMsg,"Parsing failed");
+    //sprintf(errMsg,"Parsing failed"); //Already has an error message
     error=TRUE;
   }
 

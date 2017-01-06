@@ -17,6 +17,8 @@
   GNU General Public License for more details.
 */
 #include <stdlib.h>
+#include "Random.h"
+#include "GLApp\MathTools.h"
 
 #define  RK_STATE_LEN 624
 
@@ -112,4 +114,26 @@ void rseed(unsigned long seed) {
 double rnd() {
   return rk_double(&localState);
   //return (double)rand()/(double)RAND_MAX;
+}
+
+double Gaussian(const double &sigma) {
+
+	//Box-Muller transform
+	//return sigma*sqrt(-2 * log(rnd()))*cos(2 * PI*rnd());
+
+	//Generates a random number following the Gaussian distribution around 0 with 'sigma' standard deviation
+	double v1, v2, r, fac;
+	do {
+		v1 = 2.0*rnd() - 1.0;
+		v2 = 2.0*rnd() - 1.0;
+		r = Sqr(v1) + Sqr(v2);
+	} while (r >= 1.0);
+	fac = sqrt(-2.0*log(r) / r);
+	return v2*fac*sigma;
+}
+
+double TruncatedGaussian(gsl_rng *gen, const double &mean, const double &sigma, const double &lowerBound, const double &upperBound) {
+	std::pair<double, double> s;  // Output argument of rtnorm
+	s = rtnorm(gen, lowerBound, upperBound, mean, sigma);
+	return s.first;
 }
