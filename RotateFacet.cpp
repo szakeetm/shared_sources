@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "RotateFacet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp\MathTools.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #ifdef MOLFLOW
@@ -47,15 +48,13 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-int    axisMode;
-
 RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	axisMode = 0;
 	int wD = 350;
 	int hD = 375;
 
-	SetTitle("Rotate selected facets around an axis");
+	SetTitle("Rotate selected facets");
 
 	iPanel = new GLTitledPanel("Axis definiton mode");
 	iPanel->SetBounds(5,5,wD-10,290);
@@ -90,13 +89,18 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 	facetPanel->Add(l6);
 
 	lNum = new GLLabel("of facet #");
-	lNum->SetBounds(100,120,80,18);
+	lNum->SetBounds(100,130,80,18);
 	iPanel->Add(lNum);
 
 	facetNumber = new GLTextField(0,"0");
-	facetNumber->SetBounds(160,120,60,18);
+	facetNumber->SetBounds(160,130,60,18);
 	facetNumber->SetEditable(FALSE);
 	iPanel->Add(facetNumber);
+	
+	getSelFacetButton = new GLButton(0,"<-Get selected");
+	getSelFacetButton->SetBounds(225, 130, 80, 18);
+	getSelFacetButton->SetEnabled(FALSE);
+	iPanel->Add(getSelFacetButton);
 
 	l7 = new GLToggle(0,"Define by 2 selected vertex");
 	l7->SetBounds(10,190,100,18);
@@ -106,79 +110,104 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 	l8->SetBounds(10,215,100,18);
 	iPanel->Add(l8);
 
-	aLabel = new GLLabel("Point: a:");
-	aLabel->SetBounds(10,240,100,18);
+	GLLabel *pLabel = new GLLabel("Point:");
+	pLabel->SetBounds(10,240,50,18);
+	iPanel->Add(pLabel);
+
+	aLabel = new GLLabel("a:");
+	aLabel->SetBounds(70, 240, 10, 18);
 	iPanel->Add(aLabel);
 	
 	aText = new GLTextField(0,"0");
-	aText->SetBounds(120,240,30,18);
+	aText->SetBounds(85,240,40,18);
 	aText->SetEditable(FALSE);
 	iPanel->Add(aText);
 		
 	bLabel = new GLLabel("b:");
-	bLabel->SetBounds(160,240,20,18);
+	bLabel->SetBounds(135,240,10,18);
 	iPanel->Add(bLabel);
 	
 	bText = new GLTextField(0,"0");
-	bText->SetBounds(190,240,30,18);
+	bText->SetBounds(150,240,40,18);
 	bText->SetEditable(FALSE);
 	iPanel->Add(bText);
 
 	cLabel = new GLLabel("c:");
-	cLabel->SetBounds(230,240,20,18);
+	cLabel->SetBounds(200,240,10,18);
 	iPanel->Add(cLabel);
 
 	cText = new GLTextField(0,"0");
-	cText->SetBounds(260,240,30,18);
+	cText->SetBounds(215,240,40,18);
 	cText->SetEditable(FALSE);
 	iPanel->Add(cText);
 
-	uLabel = new GLLabel("Direction: u:");
-	uLabel->SetBounds(10,265,100,18);
+	getBaseVertexButton = new GLButton(0, "<-Get base");
+	getBaseVertexButton->SetBounds(270, 240, 60, 18);
+	iPanel->Add(getBaseVertexButton);
+
+	GLLabel *dLabel = new GLLabel("Direction:");
+	dLabel->SetBounds(10,265,50,18);
+	iPanel->Add(dLabel);
+
+	uLabel = new GLLabel("u:");
+	uLabel->SetBounds(70, 265, 10, 18);
 	iPanel->Add(uLabel);
 
 	uText = new GLTextField(0,"0");
-	uText->SetBounds(120,265,30,18);
+	uText->SetBounds(85,265,40,18);
 	uText->SetEditable(FALSE);
 	iPanel->Add(uText);
 
 	vLabel = new GLLabel("v");
-	vLabel->SetBounds(160,265,20,18);
+	vLabel->SetBounds(135,265,10,18);
 	iPanel->Add(vLabel);
 
 	vText = new GLTextField(0,"0");
-	vText->SetBounds(190,265,30,18);
+	vText->SetBounds(150,265,40,18);
 	vText->SetEditable(FALSE);
 	iPanel->Add(vText);
 
 	wLabel = new GLLabel("w");
-	wLabel->SetBounds(230,265,20,18);
+	wLabel->SetBounds(200,265,10,18);
 	iPanel->Add(wLabel);
 
 	wText = new GLTextField(0,"0");
-	wText->SetBounds(260,265,30,18);
+	wText->SetBounds(215,265,40,18);
 	wText->SetEditable(FALSE);
 	iPanel->Add(wText);
 
+	getDirVertexButton = new GLButton(0, "<-Calc diff");
+	getDirVertexButton->SetBounds(270, 265, 60, 18);
+	iPanel->Add(getDirVertexButton);
+
 	degLabel = new GLLabel("Degrees:");
-	degLabel->SetBounds(10,300,100,18);
+	degLabel->SetBounds(10,300,60,18);
 	Add(degLabel);
 
 	degText = new GLTextField(0,"0");
-	degText->SetBounds(105,300,60,18);
+	degText->SetBounds(65,300,80,18);
 	degText->SetEditable(TRUE);
 	Add(degText);
 
-	moveButton = new GLButton(0,"Rotate");
-	moveButton->SetBounds(5,hD-44,85,21);
+	radLabel = new GLLabel("Radians:");
+	radLabel->SetBounds(170, 300, 60, 18);
+	Add(radLabel);
+
+	radText = new GLTextField(0, "0");
+	radText->SetBounds(225, 300, 80, 18);
+	radText->SetEditable(TRUE);
+	Add(radText);
+
+	moveButton = new GLButton(0,"Rotate facet");
+	moveButton->SetBounds(25,hD-44,85,21);
 	Add(moveButton);
 
-	copyButton = new GLButton(0,"Copy");
-	copyButton->SetBounds(95,hD-44,85,21);
+	copyButton = new GLButton(0,"Copy facet");
+	copyButton->SetBounds(115,hD-44,85,21);
 	Add(copyButton);
 
 	cancelButton = new GLButton(0,"Dismiss");
-	cancelButton->SetBounds(185,hD-44,85,21);
+	cancelButton->SetBounds(205,hD-44,85,21);
 	Add(cancelButton);
 
 	// Center dialog
@@ -196,7 +225,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 }
 
 void RotateFacet::ProcessMessage(GLComponent *src,int message) {
-	double a,b,c,u,v,w,deg;
+	double a,b,c,u,v,w,deg,rad;
 	int facetNum;
 
 	switch(message) {
@@ -219,26 +248,25 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			//Calculate the plane
 			Vector3d AXIS_P0,AXIS_DIR;
 			int nbSelectedVertex;
-			int *vIdx = (int *)malloc(geom->GetNbVertex()*sizeof(int));
-			memset(vIdx,0xFF,geom->GetNbVertex()*sizeof(int));
+			int selVert1id, selVert2id;
 
-			if (!(degText->GetNumber(&deg))) {
-				GLMessageBox::Display("Invalid degree","Error",GLDLG_OK,GLDLG_ICONERROR);
+			if (!(radText->GetNumber(&rad))) {
+				GLMessageBox::Display("Invalid angle (radians field)","Error",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
 
 			switch (axisMode) {
 			case XMODE:
-				AXIS_P0.x=0.0;AXIS_P0.y=0.0;AXIS_P0.z=0.0;
-				AXIS_DIR.x=1.0;AXIS_DIR.y=0.0;AXIS_DIR.z=0.0;
+				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3d(1.0, 0.0, 0.0);
 				break;
 			case YMODE:
-				AXIS_P0.x=0.0;AXIS_P0.y=0.0;AXIS_P0.z=0.0;
-				AXIS_DIR.x=0.0;AXIS_DIR.y=1.0;AXIS_DIR.z=0.0;
+				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3d(0.0, 1.0, 0.0);
 				break;
 			case ZMODE:
-				AXIS_P0.x=0.0;AXIS_P0.y=0.0;AXIS_P0.z=0.0;
-				AXIS_DIR.x=0.0;AXIS_DIR.y=0.0;AXIS_DIR.z=1.0;
+				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3d(0.0, 0.0, 1.0);
 				break;
 			case FACETUMODE:
 				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>geom->GetNbFacet() ) {
@@ -269,23 +297,21 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display("Select exactly 2 vertices","Can't define axis",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				nbSelectedVertex = 0;
+				selVert1id = selVert2id = -1;
 
-				for(int i=0;i<geom->GetNbVertex()&&nbSelectedVertex<geom->GetNbSelectedVertex();i++ ) {
-					//Vector3d *v = GetVertex(i);
+				for(int i=0;selVert2id == -1 && i<geom->GetNbVertex();i++ ) {
 					if( geom->GetVertex(i)->selected ) {
-						vIdx[nbSelectedVertex] = i;
-						nbSelectedVertex++;
+						if (selVert1id == -1) {
+							selVert1id = i;
+						}
+						else {
+							selVert2id = i;
+						}
 					}
 				}
 
-				AXIS_DIR.x = geom->GetVertex(vIdx[1])->x - geom->GetVertex(vIdx[0])->x;
-				AXIS_DIR.y = geom->GetVertex(vIdx[1])->y - geom->GetVertex(vIdx[0])->y;
-				AXIS_DIR.z = geom->GetVertex(vIdx[1])->z - geom->GetVertex(vIdx[0])->z;
-
-				AXIS_P0.x = geom->GetVertex(vIdx[0])->x;
-				AXIS_P0.y = geom->GetVertex(vIdx[0])->y;
-				AXIS_P0.z = geom->GetVertex(vIdx[0])->z;
+				AXIS_DIR = *(geom->GetVertex(selVert2id)) - *(geom->GetVertex(selVert1id));
+				AXIS_P0 = *(geom->GetVertex(selVert1id));
 
 				break;
 			case EQMODE:
@@ -319,16 +345,15 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 					return;
 				}
 
-				AXIS_P0.x=a;AXIS_P0.y=b;AXIS_P0.z=c;
-				AXIS_DIR.x=u;AXIS_DIR.y=v;AXIS_DIR.z=w;
+				AXIS_P0  = Vector3d(a,b,c);
+				AXIS_DIR = Vector3d(u,v,w);
 				break;
 			default:
 				GLMessageBox::Display("Select an axis definition mode.","Error",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-			SAFE_FREE(vIdx);
 			if (mApp->AskToReset()) {
-				geom->RotateSelectedFacets(AXIS_P0,AXIS_DIR,deg,src==copyButton,work);
+				geom->RotateSelectedFacets(AXIS_P0,AXIS_DIR,rad,src==copyButton,work);
 				//mApp->UpdateModelParams();
 				work->Reload();
 				mApp->UpdateFacetlistSelected();
@@ -337,6 +362,77 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				mApp->changedSinceSave = TRUE;
 			}
 		}
+		 else if (src == getSelFacetButton) {
+			 if (geom->GetNbSelected() != 1) {
+				 GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 int selFacetId = -1;
+			 for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
+				 if (geom->GetFacet(i)->selected) {
+					 selFacetId = i;
+				 }
+			 }
+			 facetNumber->SetText(selFacetId + 1);
+		 }
+		 else if (src == getBaseVertexButton) {
+			 if (geom->GetNbSelectedVertex()!=1) {
+				 GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 UpdateToggle(l8);
+			 int selVertexId = 1;
+			 for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
+				 if (geom->GetVertex(i)->selected) {
+					 selVertexId = i;
+				 }
+			 }
+			 Vector3d *selVertex = geom->GetVertex(selVertexId);
+			 aText->SetText(selVertex->x);
+			 bText->SetText(selVertex->y);
+			 cText->SetText(selVertex->z);
+		}
+		 else if (src == getDirVertexButton) {
+			 if (geom->GetNbSelectedVertex() != 1) {
+				 GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 if (!(aText->GetNumber(&a))) {
+				 GLMessageBox::Display("Invalid a coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 if (!(bText->GetNumber(&b))) {
+				 GLMessageBox::Display("Invalid b coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 if (!(cText->GetNumber(&c))) {
+				 GLMessageBox::Display("Invalid c coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				 return;
+			 }
+			 UpdateToggle(l8);
+			 int selVertexId = -1;
+			 for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
+				 if (geom->GetVertex(i)->selected) {
+					 selVertexId = i;
+				 }
+			 }
+			 Vector3d *selVertex = geom->GetVertex(selVertexId);
+			 uText->SetText(selVertex->x-a);
+			 vText->SetText(selVertex->y-b);
+			 wText->SetText(selVertex->z-c);
+		 }
+		break;
+		case MSG_TEXT_UPD:
+			if (src == degText) {
+				if (degText->GetNumber(&deg)) {
+					radText->SetText(deg / 180.0*PI);
+				}
+			}
+			else if (src == radText){
+				if (radText->GetNumber(&rad)) {
+					degText->SetText(rad / PI * 180.0);
+				}
+			}
 		break;
 	}
 
@@ -356,7 +452,9 @@ void RotateFacet::UpdateToggle(GLComponent *src) {
 	GLToggle *toggle=(GLToggle*)src;
 	toggle->SetState(TRUE);
 
-	facetNumber->SetEditable(src==l4||src==l5||src==l6);
+	facetNumber->SetEditable(src == l4 || src == l5 || src == l6);
+	getSelFacetButton->SetEnabled(src == l4 || src == l5 || src == l6);
+
 	aText->SetEditable(src==l8);
 	bText->SetEditable(src==l8);
 	cText->SetEditable(src==l8);

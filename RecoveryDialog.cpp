@@ -18,6 +18,7 @@
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLIcon.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp/MathTools.h" // MAX
 
 // Construct a message dialog box
 RecoveryDialog::RecoveryDialog(const char *message, char *title, int mode, int icon) :GLWindow() {

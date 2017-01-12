@@ -19,6 +19,7 @@
 #include "GLLabel.h"
 #include "GLTextField.h"
 #include "GLToolkit.h"
+#include "MathTools.h"
 
 static char ret[1024];
 

@@ -17,9 +17,10 @@ GNU General Public License for more details.
 #include "GLList.h"
 #include "GLMessageBox.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Min max
 #include <malloc.h>
 #include  <math.h>
-#include <algorithm>
+#include <algorithm> //Sort
 #include "Geometry.h"
 #include "GLWindowManager.h"
 #ifdef MOLFLOW

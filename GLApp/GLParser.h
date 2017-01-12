@@ -14,7 +14,7 @@
   GNU General Public License for more details.
 */
 
-/* Supported gramar :                                           */
+/* Supported grammar :                                           */
 /*                                                              */
 /* <expr>   ::= <factor> [ <oper1> <factor> ]*                  */
 /* <factor> ::= <power>  [ <oper2> <power> ]*                   */

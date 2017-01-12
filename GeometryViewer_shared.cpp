@@ -2,6 +2,7 @@
 #include "GLApp/GLWindowManager.h"
 #include "GeometryViewer.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp/MathTools.h" //
 #include "GLApp/GLMatrix.h"
 #include <math.h>
 #include <malloc.h>

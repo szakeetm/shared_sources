@@ -18,6 +18,7 @@
 #include "GLMenuBar.h"
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
+#include "MathTools.h" //Saturate
 
 #include <malloc.h>
 

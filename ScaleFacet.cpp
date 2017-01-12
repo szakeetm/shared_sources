@@ -148,11 +148,11 @@ ScaleFacet::ScaleFacet(Geometry *g,Worker *w):GLWindow() {
 	factorNumberZ->SetEditable(FALSE);
 	Add(factorNumberZ);
 
-	scaleButton = new GLButton(0,"Scale");
+	scaleButton = new GLButton(0,"Scale facet");
 	scaleButton->SetBounds(5,hD-44,85,21);
 	Add(scaleButton);
 
-	copyButton = new GLButton(0,"Copy");
+	copyButton = new GLButton(0,"Copy facet");
 	copyButton->SetBounds(95,hD-44,85,21);
 	Add(copyButton);
 

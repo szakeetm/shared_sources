@@ -21,6 +21,24 @@
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 
+#ifdef MOLFLOW
+#include "MolFlow.h"
+#endif
+
+#ifdef SYNRAD
+#include "SynRad.h"
+#endif
+
+extern GLApplication *theApp;
+
+#ifdef MOLFLOW
+extern MolFlow *mApp;
+#endif
+
+#ifdef SYNRAD
+extern SynRad *mApp;
+#endif
+
 MoveVertex::MoveVertex(Geometry *g,Worker *w):GLWindow() {
 
   int wD = 300;
@@ -109,14 +127,13 @@ void MoveVertex::ProcessMessage(GLComponent *src,int message) {
         GLMessageBox::Display("Invalid Z offset value","Error",GLDLG_OK,GLDLG_ICONERROR);
         return;
       }
-		if (work->running) work->Stop_Public();
-      
-			geom->MoveSelectedVertex(dX,dY,dZ,src==copyButton,work);
-			try { work->Reload(); } catch(Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-			}
-      //GLWindowManager::FullRepaint();
+				  if (mApp->AskToReset()) {
+					  if (work->running) work->Stop_Public();
 
+					  geom->MoveSelectedVertex(dX, dY, dZ, src == copyButton, work);
+					  work->Reload();
+					  mApp->changedSinceSave = TRUE;
+				  }
     }
     break;
   }

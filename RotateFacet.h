@@ -2,6 +2,7 @@
   File:        RotateFacet.h
   Description: Rotate facet around axis dialog
 */
+#pragma once
 
 #include "GLApp/GLWindow.h"
 #include "GLApp/GLButton.h"
@@ -13,8 +14,7 @@
 #include "Geometry.h"
 #include "Worker.h"
 
-#ifndef _ROTATEFACETH_
-#define _ROTATEFACETH_
+
 
 class RotateFacet : public GLWindow {
 
@@ -29,9 +29,7 @@ private:
   void UpdateToggle(GLComponent *src);
   
   GLTitledPanel *iPanel;
-  GLButton     *moveButton;
-  GLButton    *copyButton;
-  GLButton    *cancelButton;
+  GLButton     *moveButton,*copyButton,*cancelButton,*getSelFacetButton,*getBaseVertexButton,*getDirVertexButton;
   GLToggle     *l1;
   GLToggle     *l2;
   GLToggle     *l3;
@@ -48,16 +46,17 @@ private:
   GLTextField *vText;
   GLTextField *wText;
   GLTextField *facetNumber;
-  GLTextField *degText;
+  GLTextField *degText,*radText;
   GLLabel		*aLabel;
   GLLabel		*bLabel;
   GLLabel		*cLabel;
   GLLabel		*uLabel;
   GLLabel		*vLabel;
   GLLabel		*wLabel;
-  GLLabel		*degLabel;
+  GLLabel		*degLabel,*radLabel;
 
   int nbFacetS;
+  int    axisMode;
 
   Geometry     *geom;
   Worker	   *work;
@@ -65,4 +64,3 @@ private:
 
 };
 
-#endif /* _RotateFacetH_ */

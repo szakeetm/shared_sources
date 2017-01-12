@@ -17,6 +17,7 @@
 #include "GLWindow.h"
 #include "GLTextField.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Min max
 
 // ------------------------------------------------------
 

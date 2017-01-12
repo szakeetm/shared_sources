@@ -16,6 +16,7 @@
 #include "GLWindow.h"
 #include "GLGradient.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Saturate
 #include <math.h>
 
 // Rainbow

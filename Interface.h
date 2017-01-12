@@ -25,6 +25,7 @@
 #include "SplitFacet.h"
 #include "BuildIntersection.h"
 #include "RotateFacet.h"
+#include "RotateVertex.h"
 #include "FacetCoordinates.h"
 #include "VertexCoordinates.h"
 #include "SmartSelection.h"
@@ -127,8 +128,9 @@
 #define MENU_VERTEX_MOVE   608
 #define MENU_VERTEX_ADD	   609
 #define MENU_VERTEX_SCALE  610
-#define MENU_VERTEX_REMOVE 611
-#define MENU_VERTEX_COORDINATES 612
+#define MENU_VERTEX_ROTATE  611
+#define MENU_VERTEX_REMOVE 612
+#define MENU_VERTEX_COORDINATES 613
 
 #define MENU_VIEW_STRUCTURE       700
 #define MENU_VIEW_STRUCTURE_P     730
@@ -332,24 +334,25 @@ public:
 	int idSelection;
 
 	//Dialog
-	FormulaSettings  *formulaSettings;
-	CollapseSettings *collapseSettings;
-	MoveVertex		 *moveVertex;
-	ScaleFacet       *scaleFacet;
-	ScaleVertex      *scaleVertex;
-	SelectDialog     *selectDialog;
-	ExtrudeFacet	 *extrudeFacet;
-	MoveFacet		 *moveFacet;
-	MirrorFacet	     *mirrorFacet;
-	SplitFacet       *splitFacet;
-	BuildIntersection *buildIntersection;
-	RotateFacet      *rotateFacet;
-	AlignFacet       *alignFacet;
-	AddVertex		 *addVertex;
-	LoadStatus       *loadStatus;
-	FacetCoordinates *facetCoordinates;
-	VertexCoordinates *vertexCoordinates;
-	SmartSelection   *smartSelection;
+	FormulaSettings    *formulaSettings;
+	CollapseSettings   *collapseSettings;
+	MoveVertex		   *moveVertex;
+	ScaleFacet         *scaleFacet;
+	ScaleVertex        *scaleVertex;
+	SelectDialog       *selectDialog;
+	ExtrudeFacet	   *extrudeFacet;
+	MoveFacet	  	   *moveFacet;
+	MirrorFacet	       *mirrorFacet;
+	SplitFacet         *splitFacet;
+	BuildIntersection  *buildIntersection;
+	RotateFacet        *rotateFacet;
+	RotateVertex	   *rotateVertex;
+	AlignFacet         *alignFacet;
+	AddVertex		   *addVertex;
+	LoadStatus         *loadStatus;
+	FacetCoordinates   *facetCoordinates;
+	VertexCoordinates  *vertexCoordinates;
+	SmartSelection     *smartSelection;
 
 	// Current directory
 	void UpdateCurrentDir(char *fileName);

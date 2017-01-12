@@ -12,7 +12,7 @@
 #include "SynRad.h"
 #endif
 #include "ASELoader.h"
-#include <algorithm>
+//#include <algorithm>
 #include <list>
 
 
@@ -148,7 +148,7 @@ std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double ma
 	}
 	return connectedFacets;
 }
-int Geometry::GetNbVertex() {
+size_t Geometry::GetNbVertex() {
 	return sh.nbVertex;
 }
 
@@ -158,7 +158,7 @@ Vector3d Geometry::GetFacetCenter(int facet) {
 
 }
 
-int Geometry::GetNbStructure() {
+size_t Geometry::GetNbStructure() {
 	return sh.nbSuper;
 }
 
@@ -193,7 +193,6 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	U = (vertices3[vIdx[0]] - vertices3[vIdx[1]]).Normalized();
 
 	int i2 = 2;
-	double nV;
 	do {
 		V = (vertices3[vIdx[0]] - vertices3[vIdx[i2]]).Normalized();
 		i2++;
@@ -550,7 +549,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	SAFE_FREE(vIdx);
 }
 
-InterfaceVertex *Geometry::GetVertex(int idx) {
+InterfaceVertex* Geometry::GetVertex(int idx) {
 	return vertices3 + idx;
 }
 
@@ -565,7 +564,7 @@ Facet *Geometry::GetFacet(int facet) {
 	return facets[facet];
 }
 
-int Geometry::GetNbFacet() {
+size_t Geometry::GetNbFacet() {
 	return sh.nbFacet;
 }
 
@@ -1406,14 +1405,14 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		}
 		else { //180deg rotation needed
 			Axis = CrossProduct(facets[Facet_source]->sh.U, facets[Facet_source]->sh.N).Normalized();
-			angle = 180.0;
+			angle = PI;
 		}
 	}
 	else {
 		Axis=Axis.Normalized();
 		angle = acos(Dot(facets[Facet_source]->sh.N, facets[Facet_dest]->sh.N) / (facets[Facet_source]->sh.N.Norme() * facets[Facet_dest]->sh.N.Norme()));
-		angle = angle / PI * 180;
-		if (invertNormal) angle = 180.0 - angle;
+		//angle = angle / PI * 180;
+		if (invertNormal) angle = PI - angle;
 	}
 
 
@@ -1451,7 +1450,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		else { //180deg rotation needed
 			//construct a vector perpendicular to the normal
 			Axis = facets[Facet_source]->sh.N.Normalized();
-			angle = 180.0;
+			angle = PI;
 		}
 	}
 	else {
@@ -1459,7 +1458,7 @@ void Geometry::AlignFacets(int* selection, int nbSelected, int Facet_source, int
 		angle = Dot(Dir1, Dir2) / (Dir1.Norme() * Dir2.Norme());
 		//BOOL opposite=(angle<0.0);
 		angle = acos(angle);
-		angle = angle / PI * 180;
+		//angle = angle / PI * 180;
 		//if (invertNormal) angle=180.0-angle;
 	}
 
@@ -1642,6 +1641,28 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 	SAFE_DELETE(prgRotate);
 }
 
+void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, BOOL copy, Worker *worker) {
+
+		if (!copy) { //move
+			for (int i = 0; i < sh.nbVertex; i++) {
+				if (vertices3[i].selected) {
+					vertices3[i].SetLocation(Rotate(vertices3[i], AXIS_P0, AXIS_DIR, theta));
+				}
+			}
+			InitializeGeometry();
+		}
+
+		else { //copy
+			int nbVertexOri = sh.nbVertex;
+			for (int i = 0; i < nbVertexOri; i++) {
+				if (vertices3[i].selected) {
+					AddVertex(Rotate(vertices3[i], AXIS_P0, AXIS_DIR, theta));
+				}
+			}
+		}
+}
+
+
 void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	double counter = 0.0;
 	double selected = (double)GetNbSelected();
@@ -1734,8 +1755,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, BOOL copy, Wo
 	}
 }
 
-void Geometry::AddVertex(double X, double Y, double Z) {
-
+void Geometry::AddVertex(const Vector3d& location, BOOL selected) {
 	mApp->changedSinceSave = TRUE;
 
 	//a new vertex
@@ -1743,14 +1763,13 @@ void Geometry::AddVertex(double X, double Y, double Z) {
 	InterfaceVertex *verticesNew = (InterfaceVertex *)malloc(sh.nbVertex * sizeof(InterfaceVertex));
 	memcpy(verticesNew, vertices3, (sh.nbVertex - 1) * sizeof(InterfaceVertex)); //copy old vertices
 	SAFE_FREE(vertices3);
-	verticesNew[sh.nbVertex - 1].x = X;
-	verticesNew[sh.nbVertex - 1].y = Y;
-	verticesNew[sh.nbVertex - 1].z = Z;
-	verticesNew[sh.nbVertex - 1].selected = TRUE;
+	verticesNew[sh.nbVertex - 1].SetLocation(location);
+	verticesNew[sh.nbVertex - 1].selected = selected;
 	vertices3 = verticesNew;
+}
 
-	//InitializeGeometry();
-
+void Geometry::AddVertex(double X, double Y, double Z, BOOL selected) {
+	AddVertex(Vector3d(X, Y, Z), selected);
 }
 
 void Geometry::GetSelection(int **selection, int *nbSel) {

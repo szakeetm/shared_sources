@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include "GLTypes.h" //BOOL, TRUE, FALSE
 
 int    IsEqual(const double &a, const double &b, double tolerance=1E-8);
 double RoundAngle(double a);
@@ -10,13 +12,23 @@ int    GetPower2(int n);
 #define NEXT_OF(list,elementIterator) (std::next(element)==list.end())?list.begin():std::next(element);
 #define WEIGH(a,b,weigh) a+(b-a)*weigh
 #define IS_ZERO(x) (fabs((x))<1e-10)
-#define Sqr(a) a*a
+#define Sqr(a) (a)*(a)
 #define PI 3.14159265358979323846
 #define DET22(_11,_12,_21,_22) ( (_11)*(_22) - (_21)*(_12) )
 #define DET33(_11,_12,_13,_21,_22,_23,_31,_32,_33)  \
   ((_11)*( (_22)*(_33) - (_32)*(_23) ) +            \
    (_12)*( (_23)*(_31) - (_33)*(_21) ) +            \
    (_13)*( (_21)*(_32) - (_31)*(_22) ))
+#define VERY_SMALL 1.0E-30
+#define MY_INFINITY 1.e100
 
 char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
+
+int my_binary_search(const double& key, double* A, const size_t& size);
+int my_binary_search(const double& key, std::vector<double> A, const size_t& size);
+
+double my_erf(double x);
+double InterpolateY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE, BOOL logarithmic = FALSE);
+double InterpolateX(double y, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE);
+double FastLookupY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE);

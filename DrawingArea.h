@@ -18,7 +18,7 @@
 
 #include "GLApp/GLComponent.h"
 #include "Types.h"
-#include "Utils.h"
+#include "Polygon.h"
 
 class DrawingArea : public GLComponent {
 

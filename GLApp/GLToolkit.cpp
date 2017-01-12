@@ -15,6 +15,7 @@
 */
 
 #include "GLToolkit.h"
+#include "MathTools.h" //Min max saturate
 #include "GLApp.h"
 #include "GLWindow.h"
 #include "GLMatrix.h"

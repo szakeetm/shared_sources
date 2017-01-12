@@ -18,6 +18,7 @@
 #include "GLButton.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
+#include "MathTools.h" //SATURATE
 #include <malloc.h>
 #include <Cimage.h>
 

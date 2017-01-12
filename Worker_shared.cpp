@@ -3,6 +3,7 @@
 #include "Worker.h"
 #include "GLApp/GLApp.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\MathTools.h" //Min max
 #include <math.h>
 #include <stdlib.h>
 #include <Process.h>
@@ -15,7 +16,6 @@
 #include "SynRad.h"
 #endif
 #include <direct.h>
-#include "Distributions.h"
 
 #include "ZipUtils/zip.h"
 #include "ZipUtils/unzip.h"

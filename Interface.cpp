@@ -6,6 +6,7 @@
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
+#include "GLApp/MathTools.h" //IDX
 #include "RecoveryDialog.h"
 
 
@@ -83,6 +84,7 @@ Interface::Interface() {
 	splitFacet = NULL;
 	buildIntersection = NULL;
 	rotateFacet = NULL;
+	rotateVertex = NULL;
 	alignFacet = NULL;
 	addVertex = NULL;
 	loadStatus = NULL;
@@ -834,8 +836,9 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Vertex")->Add("Clear isolated", MENU_VERTEX_CLEAR_ISOLATED);
 	menu->GetSubMenu("Vertex")->Add("Remove selected", MENU_VERTEX_REMOVE);
 	menu->GetSubMenu("Vertex")->Add("Vertex coordinates...", MENU_VERTEX_COORDINATES);
-	menu->GetSubMenu("Vertex")->Add("Move selected...", MENU_VERTEX_MOVE);
-	menu->GetSubMenu("Vertex")->Add("Scale selected...", MENU_VERTEX_SCALE);
+	menu->GetSubMenu("Vertex")->Add("Move...", MENU_VERTEX_MOVE);
+	menu->GetSubMenu("Vertex")->Add("Scale...", MENU_VERTEX_SCALE);
+	menu->GetSubMenu("Vertex")->Add("Rotate...", MENU_VERTEX_ROTATE);
 	menu->GetSubMenu("Vertex")->Add("Add new...", MENU_VERTEX_ADD);
 	menu->GetSubMenu("Vertex")->Add(NULL); // Separator
 	menu->GetSubMenu("Vertex")->Add("Select all vertex", MENU_VERTEX_SELECTALL);
@@ -1021,6 +1024,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(splitFacet);
 	RVALIDATE_DLG(buildIntersection);
 	RVALIDATE_DLG(rotateFacet);
+	RVALIDATE_DLG(rotateVertex);
 	RVALIDATE_DLG(alignFacet);
 	RVALIDATE_DLG(addVertex);
 	RVALIDATE_DLG(loadStatus);
@@ -1050,6 +1054,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(mirrorFacet);
 	IVALIDATE_DLG(splitFacet);
 	IVALIDATE_DLG(buildIntersection);
+	IVALIDATE_DLG(rotateFacet);
 	IVALIDATE_DLG(rotateFacet);
 	IVALIDATE_DLG(alignFacet);
 	IVALIDATE_DLG(addVertex);
@@ -1511,11 +1516,13 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_VERTEX_SCALE:
 			if (geom->IsLoaded()) {
 				if (!scaleVertex) scaleVertex = new ScaleVertex(geom, &worker);
-
 				scaleVertex->SetVisible(TRUE);
-
 			}
 			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+			return TRUE;
+		case MENU_VERTEX_ROTATE:
+			if (!rotateVertex) rotateVertex = new RotateVertex(geom, &worker);
+			rotateVertex->SetVisible(TRUE);
 			return TRUE;
 		case MENU_VERTEX_COORDINATES:
 

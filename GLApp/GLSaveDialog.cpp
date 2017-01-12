@@ -18,6 +18,7 @@
 #include "GLLabel.h"
 #include "GLIcon.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Min max
 
 // Construct a message dialog box
 GLSaveDialog::GLSaveDialog(char *message,char *title,int mode,int icon):GLWindow() {

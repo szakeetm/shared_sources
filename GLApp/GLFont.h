@@ -52,7 +52,7 @@ public:
   void SetVariableWidth(BOOL variable);
 
   // Get string size
-  int GetTextWidth(char *text);
+  int GetTextWidth(const char *text);
   int GetTextHeight();
 
   // Adapat orthographic projection on viewport change

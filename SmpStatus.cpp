@@ -19,6 +19,7 @@
 #include "SmpStatus.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp/MathTools.h" //FormatMemory
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 

@@ -476,7 +476,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				geom->Extrude(mode, radiusBase, offsetORradiusdir, 
 					againstNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState(), 
 					(mode==1)?dist:radiusLength,
-					totalAngle, noSteps);
+					totalAngle/180*PI, noSteps);
 
 				work->Reload(); 
 				mApp->changedSinceSave = TRUE;

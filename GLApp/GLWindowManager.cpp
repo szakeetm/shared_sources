@@ -18,6 +18,7 @@
 #include "GLMessageBox.h"
 #include "GLApp.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Saturate
 #include "GLApp.h"
 #include "GLWindow.h"
 #ifdef MOLFLOW

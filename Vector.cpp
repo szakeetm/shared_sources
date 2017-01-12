@@ -100,18 +100,11 @@ Vector2d Vector2d::Normalized() const {
 }
 
 Vector3d Mirror(const Vector3d& P, const Vector3d& P0, const Vector3d& N) {
-	/*Vector3d P0_P, P_copy, N_copy;
-	P_copy = P; N_copy = N;
-	Normalize(&N_copy);
-	P0_P  =P_copy - P0;
-	double n_dot_p = Dot(N_copy, P0_P);
-	N_copy = N_copy*2.0*n_dot_p;
-	return P_copy - N_copy;*/
 	return P - 2*Dot(P-P0,N)*N;
 }
 
-Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, double theta) {
-	theta = theta / 180 * PI; //degree->radians
+Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta) {
+	//theta = theta / 180 * PI; //degree->radians
 	Vector3d dir = AXIS_DIR.Normalized();
 	double x, y, z, a, b, c, u, v, w, costh, sinth, precalc1;
 	x = P.x;

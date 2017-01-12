@@ -16,6 +16,7 @@
 */
 
 #include "GLChart.h"
+#include "../MathTools.h" //PI
 #include <malloc.h>
 #include <float.h>
 #include <math.h>

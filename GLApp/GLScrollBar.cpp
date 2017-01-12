@@ -16,7 +16,7 @@
 #include "GLWindow.h"
 #include "GLScrollBar.h"
 #include "GLToolkit.h"
-
+#include "MathTools.h" //Saturate
 
 // Minimum slider width
 #define MIN_SWIDTH 10

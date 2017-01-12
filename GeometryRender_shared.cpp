@@ -1,5 +1,6 @@
 #include "Geometry.h"
 #include "Worker.h"
+#include "GLApp/MathTools.h" //Min max
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
@@ -742,8 +743,10 @@ void Geometry::ClearFacetTextures()
 {
 	GLProgress *prg = new GLProgress("Building texture", "Frame update");
 	prg->SetBounds(5, 28, 300, 90);
+	int startTime = SDL_GetTicks();
 	prg->SetVisible(TRUE);
-	for (int i = 0;i < sh.nbFacet;i++) {
+	for (int i = 0; i<sh.nbFacet; i++) {
+		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) prg->SetVisible(TRUE);
 		prg->SetProgress((double)i / (double)sh.nbFacet);
 		DELETE_TEX(facets[i]->glTex);
 		glGenTextures(1, &facets[i]->glTex);

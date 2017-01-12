@@ -167,7 +167,7 @@ void GLFont2D::SetTextSize(int width,int height) {
   cWidth  = width;
 }
 
-int GLFont2D::GetTextWidth(char *text) {
+int GLFont2D::GetTextWidth(const char *text) {
   int lgth = (int)strlen(text);
   int w = 0;
 

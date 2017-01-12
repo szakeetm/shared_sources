@@ -19,6 +19,7 @@
 #include "GLApp/GLApp.h"
 #include "DrawingArea.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp\MathTools.h" //IDX
 #include <math.h>
 #include <malloc.h>
 
@@ -27,7 +28,7 @@
 DrawingArea::DrawingArea():GLComponent(0) {
 
   p1.nbPts = 4;
-  p1.pts   = (VERTEX2D *)malloc( p1.nbPts* sizeof(VERTEX2D) );
+  p1.pts   = (Vector2d *)malloc( p1.nbPts* sizeof(Vector2d) );
   p1.pts[0].u = 50.0;
   p1.pts[0].v = 50.0;
   p1.pts[1].u = 150.0;
@@ -40,7 +41,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 1
   p21.nbPts = 7;
-  p21.pts   = (VERTEX2D *)malloc( p21.nbPts* sizeof(VERTEX2D) );
+  p21.pts   = (Vector2d *)malloc( p21.nbPts* sizeof(Vector2d) );
   p21.pts[0].u = 80.0;
   p21.pts[0].v = 30.0;
   p21.pts[1].u = 100.0;
@@ -61,7 +62,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 2
   p22.nbPts = 4;
-  p22.pts   = (VERTEX2D *)malloc( p22.nbPts* sizeof(VERTEX2D) );
+  p22.pts   = (Vector2d *)malloc( p22.nbPts* sizeof(Vector2d) );
   p22.pts[0].u = 70.0;
   p22.pts[0].v = 50.0;
   p22.pts[1].u = 150.0;
@@ -76,7 +77,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 3
   p23.nbPts = 4;
-  p23.pts   = (VERTEX2D *)malloc( p23.nbPts* sizeof(VERTEX2D) );
+  p23.pts   = (Vector2d *)malloc( p23.nbPts* sizeof(Vector2d) );
   p23.pts[0].u = 50.0;
   p23.pts[0].v = 50.0;
   p23.pts[1].u = 150.0;
@@ -91,7 +92,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 4
   p24.nbPts = 4;
-  p24.pts   = (VERTEX2D *)malloc( p24.nbPts* sizeof(VERTEX2D) );
+  p24.pts   = (Vector2d *)malloc( p24.nbPts* sizeof(Vector2d) );
   p24.pts[0].u = 70.0;
   p24.pts[0].v = 50.0;
   p24.pts[1].u = 140.0;
@@ -106,7 +107,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 5
   p25.nbPts = 4;
-  p25.pts   = (VERTEX2D *)malloc( p25.nbPts* sizeof(VERTEX2D) );
+  p25.pts   = (Vector2d *)malloc( p25.nbPts* sizeof(Vector2d) );
   p25.pts[0].u = 50.0;
   p25.pts[0].v = 50.0;
   p25.pts[1].u = 140.0;
@@ -121,7 +122,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 6
   p26.nbPts = 8;
-  p26.pts   = (VERTEX2D *)malloc( p26.nbPts* sizeof(VERTEX2D) );
+  p26.pts   = (Vector2d *)malloc( p26.nbPts* sizeof(Vector2d) );
   p26.pts[0].u = 70.0;
   p26.pts[0].v = 150.0;
   p26.pts[1].u = 90.0;
@@ -144,7 +145,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 7
   p27.nbPts = 4;
-  p27.pts   = (VERTEX2D *)malloc( p27.nbPts* sizeof(VERTEX2D) );
+  p27.pts   = (Vector2d *)malloc( p27.nbPts* sizeof(Vector2d) );
   p27.pts[0].u = 160.0;
   p27.pts[0].v = 40.0;
   p27.pts[1].u = 160.0;
@@ -159,7 +160,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 8
   p28.nbPts = 4;
-  p28.pts   = (VERTEX2D *)malloc( p28.nbPts* sizeof(VERTEX2D) );
+  p28.pts   = (Vector2d *)malloc( p28.nbPts* sizeof(Vector2d) );
   p28.pts[0].u = 150.0;
   p28.pts[0].v = 70.0;
   p28.pts[1].u = 190.0;
@@ -174,7 +175,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test 9
   p29.nbPts = 3;
-  p29.pts   = (VERTEX2D *)malloc( p29.nbPts* sizeof(VERTEX2D) );
+  p29.pts   = (Vector2d *)malloc( p29.nbPts* sizeof(Vector2d) );
   p29.pts[0].u = 170.0;
   p29.pts[0].v = 70.0;
   p29.pts[1].u = 190.0;
@@ -187,7 +188,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test A
   p2A.nbPts = 3;
-  p2A.pts   = (VERTEX2D *)malloc( p2A.nbPts* sizeof(VERTEX2D) );
+  p2A.pts   = (Vector2d *)malloc( p2A.nbPts* sizeof(Vector2d) );
   p2A.pts[0].u = 150.0;
   p2A.pts[0].v = 50.0;
   p2A.pts[1].u = 180.0;
@@ -200,7 +201,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test B
   p2B.nbPts = 4;
-  p2B.pts   = (VERTEX2D *)malloc( p2B.nbPts* sizeof(VERTEX2D) );
+  p2B.pts   = (Vector2d *)malloc( p2B.nbPts* sizeof(Vector2d) );
   p2B.pts[0].u = 160.0;
   p2B.pts[0].v = 50.0;
   p2B.pts[1].u = 160.0;
@@ -215,7 +216,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test C
   p2C.nbPts = 4;
-  p2C.pts   = (VERTEX2D *)malloc( p2C.nbPts* sizeof(VERTEX2D) );
+  p2C.pts   = (Vector2d *)malloc( p2C.nbPts* sizeof(Vector2d) );
   p2C.pts[0].u = 50.0;
   p2C.pts[0].v = 50.0;
   p2C.pts[1].u = 150.0;
@@ -230,7 +231,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test D
   p2D.nbPts = 6;
-  p2D.pts   = (VERTEX2D *)malloc( p2D.nbPts* sizeof(VERTEX2D) );
+  p2D.pts   = (Vector2d *)malloc( p2D.nbPts* sizeof(Vector2d) );
   p2D.pts[0].u = 150.0;
   p2D.pts[0].v = 50.0;
   p2D.pts[1].u = 170.0;
@@ -249,7 +250,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test E
   p2E.nbPts = 3;
-  p2E.pts   = (VERTEX2D *)malloc( p2E.nbPts* sizeof(VERTEX2D) );
+  p2E.pts   = (Vector2d *)malloc( p2E.nbPts* sizeof(Vector2d) );
   p2E.pts[0].u = 120.0;
   p2E.pts[0].v = 70.0;
   p2E.pts[1].u = 140.0;
@@ -262,7 +263,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test F
   p2F.nbPts = 3;
-  p2F.pts   = (VERTEX2D *)malloc( p2F.nbPts* sizeof(VERTEX2D) );
+  p2F.pts   = (Vector2d *)malloc( p2F.nbPts* sizeof(Vector2d) );
   p2F.pts[0].u = 50.0;
   p2F.pts[0].v = 50.0;
   p2F.pts[1].u = 140.0;
@@ -275,7 +276,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test G
   p2G.nbPts = 10;
-  p2G.pts   = (VERTEX2D *)malloc( p2G.nbPts* sizeof(VERTEX2D) );
+  p2G.pts   = (Vector2d *)malloc( p2G.nbPts* sizeof(Vector2d) );
   p2G.pts[0].u = 40.0;
   p2G.pts[0].v = 60.0;
   p2G.pts[1].u = 160.0;
@@ -302,7 +303,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test H
   p2H.nbPts = 10;
-  p2H.pts   = (VERTEX2D *)malloc( p2H.nbPts* sizeof(VERTEX2D) );
+  p2H.pts   = (Vector2d *)malloc( p2H.nbPts* sizeof(Vector2d) );
   int vH[] = {1,1,1,0,1,1,1,1,0,1};
   p2H.pts[0].u = 40.0;
   p2H.pts[0].v = 60.0;
@@ -330,7 +331,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test I
   p2I.nbPts = 14;
-  p2I.pts   = (VERTEX2D *)malloc( p2I.nbPts* sizeof(VERTEX2D) );
+  p2I.pts   = (Vector2d *)malloc( p2I.nbPts* sizeof(Vector2d) );
   int vI[] = {1,1,1,0,1,1,1,1,1,1,1,1,0,1};
   p2I.pts[0].u = 40.0;
   p2I.pts[0].v = 40.0;
@@ -366,7 +367,7 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
   // Test J
   p2J.nbPts = 10;
-  p2J.pts   = (VERTEX2D *)malloc( p2J.nbPts* sizeof(VERTEX2D) );
+  p2J.pts   = (Vector2d *)malloc( p2J.nbPts* sizeof(Vector2d) );
   p2J.pts[0].u = 40.0;
   p2J.pts[0].v = 40.0;
   p2J.pts[1].u = 160.0;

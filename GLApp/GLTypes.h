@@ -16,7 +16,6 @@
 #ifndef _GLTYPESH_
 #define _GLTYPESH_
 
-#include "MathTools.h" //Min, Max, PI, Saturate, ...
 // Messages
 
 #define MSG_NULL     0    // No message

@@ -17,6 +17,7 @@
 #include "GLWindow.h"
 #include "GLSpinner.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Saturate
 
 // -----------------------------------------------------------------
 

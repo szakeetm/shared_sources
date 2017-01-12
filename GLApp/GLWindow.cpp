@@ -16,6 +16,7 @@
 #include "GLWindow.h"
 #include "GLComponent.h"
 #include "GLToolkit.h"
+#include "MathTools.h" //Saturate
 #include "GLWindowManager.h"
 #include "GLApp.h"
 #include <malloc.h>
@@ -160,9 +161,11 @@ void GLWindow::SetMaster(BOOL master) {
   isMaster = master;
 }
 
-// ---------------------------------------------------------------
+void GLWindow::SetTitle(std::string title) {
+	SetTitle(title.c_str());
+}
 
-void GLWindow::SetTitle(char* title) {
+void GLWindow::SetTitle(const char* title) {
   if(title) {
 
     strcpy(this->title,title);

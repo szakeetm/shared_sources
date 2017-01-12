@@ -21,6 +21,7 @@
 #include "GLContainer.h"
 #include "GLFont.h"
 #include "GLMenu.h"
+#include <string>
 
 class GLWindow : public GLContainer {
 
@@ -36,7 +37,8 @@ public:
   int  GetHeight();
   int  GetWidth();
   void GetClientArea(int *x,int *y,int *w,int *h);
-  void SetTitle(char *title);
+  void SetTitle(const char *title);
+  void SetTitle(std::string title);
   void SetBorder(BOOL b);
   void SetBackgroundColor(int r,int g,int b);
   void GetBackgroundColor(int *r,int *g,int *b);
