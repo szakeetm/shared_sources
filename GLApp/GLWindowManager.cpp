@@ -659,7 +659,7 @@ BOOL GLWindowManager::ManageEvent(SDL_Event *evt) {
   if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP ) {
     if( !ProcessKey(evt,TRUE) ) {
       // Process key event
-      if(nbWindow) allWin[keyFocus]->ManageEvent(evt);
+      if(keyFocus<nbWindow) allWin[keyFocus]->ManageEvent(evt);
       return (keyFocus==0);
     } else {
       // Give keyboard focus to main on accelerator
@@ -718,7 +718,8 @@ BOOL GLWindowManager::ManageEvent(SDL_Event *evt) {
 
   if( evt->type == SDL_MOUSEBUTTONDOWN ) {
     // Keboard focus
-    keyFocus = i;
+    //keyFocus = i;
+	keyFocus = (i==0) ? 0 : (nbWindow - 1); //Always to top window, unless nothing's selected
   }
   return (i==0); // Processed by top level
 

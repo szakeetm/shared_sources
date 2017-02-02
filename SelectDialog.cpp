@@ -14,6 +14,7 @@
 */
 
 #include "SelectDialog.h"
+#include "Facet.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
@@ -108,7 +109,7 @@ void SelectDialog::ProcessMessage(GLComponent *src,int message) {
 		  geom->GetFacet(facetnumber-1)->selected = (rCode == GLDLG_SELECT || rCode == GLDLG_SELECT_ADD);
 		  geom->UpdateSelection();
 		  mApp->UpdateFacetParams(TRUE);
-		  mApp->facetList->SetSelectedRow(facetnumber-1);
+		  mApp->UpdateFacetlistSelected();
 		  mApp->facetList->ScrollToVisible(facetnumber-1,1,TRUE);
   }
   GLWindow::ProcessMessage(src,message);

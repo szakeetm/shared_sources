@@ -86,7 +86,7 @@ public:
 	  const BOOL &shadow,const BOOL &iShadow,const BOOL &isEtched);
   static void DrawStringInit();
   static void DrawStringRestore();
-  static void DrawString(float x,float y,float z,char *str,GLFont2D *fnt,int offx=0,int offy=0);
+  static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0);
   static void DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,int nbPoint,int *pointX,int *pointY);
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
   static void DrawRule(double length,BOOL invertX=FALSE,BOOL invertY=FALSE,BOOL invertZ=FALSE,double n=1.0);

@@ -54,6 +54,8 @@
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
+#define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
+#define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
 
 // Constants
 
@@ -66,6 +68,7 @@
 
 typedef int BOOL;
 typedef unsigned char BYTE;
+typedef unsigned __int64 llong;
 
 typedef struct {
 
@@ -94,5 +97,6 @@ typedef struct {
   int height;
 
 } GLVIEWPORT;
+
 
 #endif /* _GLTYPESH_ */

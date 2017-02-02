@@ -103,9 +103,7 @@ void LoadStatus::SMPUpdate() {
 				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
 				processList->SetValueAt(1, i+1, tmp);
 				// State/Status
-				char status[128];
 				_snprintf(tmp,127,"%s: %s",prStates[states[i]],statusStr[i]);
-				status[127]=0;
 
 				//if (states[i] == PROCESS_ERROR) processList->SetFontColor(255, 0, 0);
 				//else if (states[i] == PROCESS_READY) processList->SetFontColor(0, 150, 0);

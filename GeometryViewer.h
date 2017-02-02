@@ -21,7 +21,9 @@
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp\GLGradient.h"
-#include "Worker.h"
+#include "Vector.h"
+
+class Worker;
 
 #ifndef _GEOMETRYVIEWERH_
 #define _GEOMETRYVIEWERH_
@@ -151,6 +153,8 @@ public:
   BOOL bigDots;
   BOOL showDir;
   BOOL autoScaleOn;
+  int  hideLot;
+
   #ifdef  MOLFLOW
   BOOL showTime;
   #endif
@@ -185,6 +189,7 @@ private:
   void ComputeBB(BOOL getAll);
   void UpdateLight();
 
+
   //void DrawBB();
   //void DrawBB(AABBNODE *node);
 
@@ -196,7 +201,6 @@ private:
   GLButton      *topBtn;
   GLButton      *sideBtn;
   GLCombo       *projCombo;
-  GLLabel       *capsLockLabel;
   GLButton      *zoomBtn;
   GLButton      *autoBtn;
   GLButton      *selBtn;
@@ -204,6 +208,9 @@ private:
   GLButton      *sysBtn;
   GLButton      *handBtn;
   GLLabel       *coordLab;
+
+  GLLabel       *capsLockLabel;
+  GLLabel       *hideLotlabel;
 
   #ifdef MOLFLOW
   GLOverlayLabel *timeLabel;

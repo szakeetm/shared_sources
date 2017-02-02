@@ -2459,7 +2459,7 @@ void GLList::PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, i
 				tmp[0]=NULL;
 			}
 			else if (c=='\r') {
-				cursor++; //Anticipating \n after \r
+				if (((cursor+1)<length) && content[cursor+1]=='\n') cursor++; //Anticipating \n after \r
 				if (col<nbCol && row< nbRow) SetValueAt(col,row,tmp);
 				row++;
 				tmp[0]=NULL;

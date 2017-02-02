@@ -756,6 +756,3 @@ double GetInterAreaBF(POLYGON *inP1,double u0,double v0,double u1,double v1,floa
   return (u1-u0)*(v1-v0)*((double)nbHit/(double)(step*step));
 
 }
-
-
-

@@ -17,12 +17,14 @@
 */
 
 #include "FacetCoordinates.h"
+#include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
+#include <vector>
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

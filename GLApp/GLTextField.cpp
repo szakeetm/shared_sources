@@ -123,7 +123,7 @@ void GLTextField::SetText(std::string string) {
 
 void GLTextField::SetText(const double &val) {
 	char tmp[256];
-	sprintf(tmp, "%g", val);
+	sprintf(tmp, "%.10g", val);
 	SetText(tmp);
 }
 
@@ -412,8 +412,15 @@ void GLTextField::PasteClipboardText() {
     if(hMem = GetClipboardData(CF_TEXT)) {
       LPVOID ds = GlobalLock(hMem);
       if (ds) {
-        InsertString((char *)ds); 
-        GlobalUnlock(hMem);
+		  char* text = (char*)ds;
+		  //Cut trailing whitespace characters (Paste from Excel, for example)
+		  for (int cursorPos = strlen(text); cursorPos >= 0; cursorPos--) {
+			  if (text[cursorPos] == '\t' || text[cursorPos] == '\r' || text[cursorPos] == '\n') {
+				  text[cursorPos] = NULL;
+			  }
+		  }
+          InsertString(text);
+          GlobalUnlock(hMem);
       }
     }
     CloseClipboard();

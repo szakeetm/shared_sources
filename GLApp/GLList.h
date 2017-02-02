@@ -15,7 +15,7 @@
 */
 #include "GLScrollbar.h"
 #include "GLTextField.h"
-#include "Worker.h"
+class Worker;
 
 #ifndef _GLLISTH_
 #define _GLLISTH_

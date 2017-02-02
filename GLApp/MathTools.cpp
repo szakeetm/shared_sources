@@ -3,6 +3,8 @@
 #include <math.h>
 #include <cstdio>
 #include <algorithm> //std::Lower_bound
+#include <sstream>
+#include <iterator>
 
 int IsEqual(const double &a, const double &b, double tolerance) {
 	return fabs(a - b) < tolerance;
@@ -239,4 +241,14 @@ double FastLookupY(double x, const std::vector<std::pair<double, double>>& table
 	}
 	double result = lower->second + (upper->second - lower->second)*(x - lower->first) / (upper->first - lower->first);
 	return result;
+}
+
+std::vector<std::string> SplitString(std::string const &input) {
+	std::istringstream buffer(input);
+	std::vector<std::string> ret;
+
+	std::copy(std::istream_iterator<std::string>(buffer),
+		std::istream_iterator<std::string>(),
+		std::back_inserter(ret));
+	return ret;
 }

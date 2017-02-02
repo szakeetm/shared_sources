@@ -16,6 +16,7 @@ GNU General Public License for more details.
 */
 
 #include "ExtrudeFacet.h"
+#include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
@@ -524,9 +525,10 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %d center", foundId + 1);
 				curveBaseLabel->SetText(tmp);
-				curveX0Text->SetText(geom->GetFacet(foundId)->sh.center.x);
-				curveY0Text->SetText(geom->GetFacet(foundId)->sh.center.y);
-				curveZ0Text->SetText(geom->GetFacet(foundId)->sh.center.z);
+				Vector3d center3d = geom->GetFacet(foundId)->sh.center;
+				curveX0Text->SetText(center3d.x);
+				curveY0Text->SetText(center3d.y);
+				curveZ0Text->SetText(center3d.z);
 			}
 		}
 		else if (src == curveFacetIndex1Button) {

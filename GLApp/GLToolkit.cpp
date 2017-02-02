@@ -943,7 +943,7 @@ void GLToolkit::DrawStringInit() {
 
 }
 
-void GLToolkit::DrawString(float x,float y,float z,char *str,GLFont2D *fnt,int offx,int offy) {
+void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy) {
 
   // Compute location on screen
   float rx,ry,rz,rw;

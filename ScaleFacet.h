@@ -33,6 +33,7 @@ private:
   GLButton     *scaleButton;
   GLButton    *copyButton;
   GLButton    *cancelButton;
+  GLButton	  *getSelFacetButton;
   GLToggle     *l1;
   GLToggle     *l2;
   GLToggle     *l3;
@@ -41,6 +42,7 @@ private:
   GLTextField *zText;
   GLTextField *facetNumber;
   GLTextField *factorNumber;
+  GLTextField *OnePerFactor;
   GLTextField *factorNumberX;
   GLTextField *factorNumberY;
   GLTextField *factorNumberZ;

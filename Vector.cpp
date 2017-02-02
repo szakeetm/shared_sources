@@ -103,6 +103,10 @@ Vector3d Mirror(const Vector3d& P, const Vector3d& P0, const Vector3d& N) {
 	return P - 2*Dot(P-P0,N)*N;
 }
 
+Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N) {
+	return P - Dot(P - P0, N)*N;
+}
+
 Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta) {
 	//theta = theta / 180 * PI; //degree->radians
 	Vector3d dir = AXIS_DIR.Normalized();

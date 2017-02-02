@@ -22,6 +22,7 @@
 #include "MoveFacet.h"
 #include "ExtrudeFacet.h"
 #include "MirrorFacet.h"
+#include "MirrorVertex.h"
 #include "SplitFacet.h"
 #include "BuildIntersection.h"
 #include "RotateFacet.h"
@@ -31,6 +32,7 @@
 #include "SmartSelection.h"
 #include "LoadStatus.h"
 #include "SelectDialog.h"
+#include "SelectTextureType.h"
 #include "AlignFacet.h"
 #include "AddVertex.h"
 
@@ -66,7 +68,6 @@
 #define MENU_FACET_SWAPNORMAL  302
 #define MENU_FACET_SHIFTVERTEX 303
 #define MENU_FACET_COORDINATES 304
-#define MENU_TOOLS_PROFPLOTTER 305
 #define MENU_FACET_DETAILS     306
 #define MENU_FACET_REMOVESEL   307
 #define MENU_FACET_EXPLODE     308
@@ -107,6 +108,7 @@
 #define MENU_FACET_INTERSECT     353
 
 #define MENU_TOOLS_TEXPLOTTER  401
+#define MENU_TOOLS_PROFPLOTTER 402
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -117,6 +119,7 @@
 
 #define MENU_SELECTION_SELECTFACETNUMBER 581
 #define MENU_SELECTION_SMARTSELECTION 582
+#define MENU_SELECTION_TEXTURETYPE    583
 
 #define MENU_VERTEX_SELECTALL   601
 #define MENU_VERTEX_UNSELECTALL 602
@@ -128,9 +131,10 @@
 #define MENU_VERTEX_MOVE   608
 #define MENU_VERTEX_ADD	   609
 #define MENU_VERTEX_SCALE  610
-#define MENU_VERTEX_ROTATE  611
-#define MENU_VERTEX_REMOVE 612
-#define MENU_VERTEX_COORDINATES 613
+#define MENU_VERTEX_MIRROR 611
+#define MENU_VERTEX_ROTATE  612
+#define MENU_VERTEX_REMOVE 613
+#define MENU_VERTEX_COORDINATES 614
 
 #define MENU_VIEW_STRUCTURE       700
 #define MENU_VIEW_STRUCTURE_P     730
@@ -169,8 +173,6 @@ typedef struct {
 	GLButton    *setBtn;
 	GLParser    *parser;
 } FORMULA;
-
-
 
 class Interface : public GLApplication {
 protected:
@@ -340,9 +342,11 @@ public:
 	ScaleFacet         *scaleFacet;
 	ScaleVertex        *scaleVertex;
 	SelectDialog       *selectDialog;
+	SelectTextureType  *selectTextureType;
 	ExtrudeFacet	   *extrudeFacet;
 	MoveFacet	  	   *moveFacet;
 	MirrorFacet	       *mirrorFacet;
+	MirrorVertex       *mirrorVertex;
 	SplitFacet         *splitFacet;
 	BuildIntersection  *buildIntersection;
 	RotateFacet        *rotateFacet;
@@ -411,6 +415,7 @@ public:
 
 	BOOL needsMesh;    //At least one viewer displays mesh
 	BOOL needsTexture; //At least one viewer displays textures
+	BOOL needsDirection; //At least one viewer displays direction vectors
 	void CheckNeedsTexture();
 	void DoEvents(BOOL forced = FALSE); //Used to catch button presses (check if an abort button was pressed during an operation)
 

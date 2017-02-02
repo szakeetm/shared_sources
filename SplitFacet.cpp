@@ -19,6 +19,7 @@
 #define FACET_MODE 1
 #define VERTEX_MODE 2
 
+#include "Facet.h"
 #include "SplitFacet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
@@ -148,6 +149,7 @@ void SplitFacet::ClearUndoFacets() {
 		delete delFacet.f;
 	deletedFacetList.clear();
 	resultLabel->SetText("");
+	undoButton->SetEnabled(FALSE);
 }
 
 void SplitFacet::ProcessMessage(GLComponent *src,int message) {

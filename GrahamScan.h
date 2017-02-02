@@ -23,8 +23,9 @@
 #include <math.h>
 #include <iostream>
 #include <time.h>
-#include "Types.h"
 using namespace std;
+
+#include "Vector.h"
 
 //--------------------GRpoint DATA STRUCTURE---------------------------
 class GRpoint;

@@ -6,8 +6,10 @@
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
+#include "GLApp\GLToolkit.h"
 #include "GLApp/MathTools.h" //IDX
 #include "RecoveryDialog.h"
+#include "Facet.h"
 
 
 extern Worker worker;
@@ -78,9 +80,11 @@ Interface::Interface() {
 	scaleVertex = NULL;
 	scaleFacet = NULL;
 	selectDialog = NULL;
+	selectTextureType = NULL;
 	moveFacet = NULL;
 	extrudeFacet = NULL;
 	mirrorFacet = NULL;
+	mirrorVertex = NULL;
 	splitFacet = NULL;
 	buildIntersection = NULL;
 	rotateFacet = NULL;
@@ -669,7 +673,6 @@ void Interface::Place3DViewer() {
 		viewer[2]->SetBounds(3, 6 + Height2, Width2, Height2);
 		viewer[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
 	}
-
 }
 
 void Interface::UpdateViewers() {
@@ -742,6 +745,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Selection")->Add("Select Transparent", MENU_FACET_SELECTTRANS);
 	menu->GetSubMenu("Selection")->Add("Select 2 sided", MENU_FACET_SELECT2SIDE);
 	menu->GetSubMenu("Selection")->Add("Select Texture", MENU_FACET_SELECTTEXT);
+	menu->GetSubMenu("Selection")->Add("Select by Texture type...", MENU_SELECTION_TEXTURETYPE);
 	menu->GetSubMenu("Selection")->Add("Select Profile", MENU_FACET_SELECTPROF);
 
 	menu->GetSubMenu("Selection")->Add(NULL); // Separator
@@ -796,11 +800,11 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->Add("Edit coordinates ...", MENU_FACET_COORDINATES);
 	menu->GetSubMenu("Facet")->Add("Move ...", MENU_FACET_MOVE);
 	menu->GetSubMenu("Facet")->Add("Scale ...", MENU_FACET_SCALE);
-	menu->GetSubMenu("Facet")->Add("Mirror ...", MENU_FACET_MIRROR);
+	menu->GetSubMenu("Facet")->Add("Mirror / Project ...", MENU_FACET_MIRROR);
 	menu->GetSubMenu("Facet")->Add("Rotate ...", MENU_FACET_ROTATE);
 	menu->GetSubMenu("Facet")->Add("Align ...", MENU_FACET_ALIGN);
 	menu->GetSubMenu("Facet")->Add("Extrude ...", MENU_FACET_EXTRUDE);
-	menu->GetSubMenu("Facet")->Add("Split ...", MENU_FACET_SPLIT);
+	menu->GetSubMenu("Facet")->Add("Split by plane ...", MENU_FACET_SPLIT);
 	menu->GetSubMenu("Facet")->Add("Remove selected", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Explode selected", MENU_FACET_EXPLODE);
 	menu->GetSubMenu("Facet")->Add("Create two facets' ...");
@@ -812,7 +816,6 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("XOR", MENU_FACET_CREATE_XOR);
 	menu->GetSubMenu("Facet")->Add("Transition between 2", MENU_FACET_LOFT);
 	menu->GetSubMenu("Facet")->Add("Build intersection...", MENU_FACET_INTERSECT);
-	menu->GetSubMenu("Facet")->Add(NULL); // Separator
 
 	//menu->GetSubMenu("Facet")->Add("Facet Details ...", MENU_FACET_DETAILS);
 	//menu->GetSubMenu("Facet")->Add("Facet Mesh ...",MENU_FACET_MESH);
@@ -838,6 +841,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Vertex")->Add("Vertex coordinates...", MENU_VERTEX_COORDINATES);
 	menu->GetSubMenu("Vertex")->Add("Move...", MENU_VERTEX_MOVE);
 	menu->GetSubMenu("Vertex")->Add("Scale...", MENU_VERTEX_SCALE);
+	menu->GetSubMenu("Vertex")->Add("Mirror / Project ...", MENU_VERTEX_MIRROR);
 	menu->GetSubMenu("Vertex")->Add("Rotate...", MENU_VERTEX_ROTATE);
 	menu->GetSubMenu("Vertex")->Add("Add new...", MENU_VERTEX_ADD);
 	menu->GetSubMenu("Vertex")->Add(NULL); // Separator
@@ -1018,9 +1022,11 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(scaleVertex);
 	RVALIDATE_DLG(scaleFacet);
 	RVALIDATE_DLG(selectDialog);
+	RVALIDATE_DLG(selectTextureType);
 	RVALIDATE_DLG(moveFacet);
 	RVALIDATE_DLG(extrudeFacet);
 	RVALIDATE_DLG(mirrorFacet);
+	RVALIDATE_DLG(mirrorVertex);
 	RVALIDATE_DLG(splitFacet);
 	RVALIDATE_DLG(buildIntersection);
 	RVALIDATE_DLG(rotateFacet);
@@ -1049,9 +1055,11 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(scaleVertex);
 	IVALIDATE_DLG(scaleFacet);
 	IVALIDATE_DLG(selectDialog);
+	IVALIDATE_DLG(selectTextureType);
 	IVALIDATE_DLG(moveFacet);
 	IVALIDATE_DLG(extrudeFacet);
 	IVALIDATE_DLG(mirrorFacet);
+	IVALIDATE_DLG(mirrorVertex);
 	IVALIDATE_DLG(splitFacet);
 	IVALIDATE_DLG(buildIntersection);
 	IVALIDATE_DLG(rotateFacet);
@@ -1377,6 +1385,10 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			if (!selectDialog) selectDialog = new SelectDialog(&worker);
 			selectDialog->SetVisible(TRUE);
 			return TRUE;
+		case MENU_SELECTION_TEXTURETYPE:
+			if (!selectTextureType) selectTextureType = new SelectTextureType(&worker);
+			selectTextureType->SetVisible(TRUE);
+			return TRUE;
 		case MENU_FACET_SAVESEL:
 			SaveSelection();
 			return TRUE;
@@ -1520,10 +1532,15 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			}
 			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 			return TRUE;
+		case MENU_VERTEX_MIRROR:
+			if (!mirrorVertex) mirrorVertex = new MirrorVertex(geom, &worker);
+			mirrorVertex->SetVisible(TRUE);
+			return TRUE;
 		case MENU_VERTEX_ROTATE:
 			if (!rotateVertex) rotateVertex = new RotateVertex(geom, &worker);
 			rotateVertex->SetVisible(TRUE);
 			return TRUE;
+		
 		case MENU_VERTEX_COORDINATES:
 
 			if (!vertexCoordinates) vertexCoordinates = new VertexCoordinates();
@@ -1604,6 +1621,11 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		else if (src->GetId() == MENU_VIEW_DELSTRUCT) {
 			DeleteStruct();
 			UpdateStructMenu();
+
+			#ifdef MOLFLOW
+				worker.CalcTotalOutgassing();
+			#endif
+
 			return TRUE;
 		}
 		else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
@@ -1753,10 +1775,11 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 
 void Interface::CheckNeedsTexture()
 {
-	needsMesh = needsTexture = FALSE;
+	needsMesh = needsTexture = needsDirection = FALSE;
 	for (int i = 0;i < MAX_VIEWER;i++) {
 		needsMesh = needsMesh || (viewer[i]->IsVisible() && viewer[i]->showMesh);
 		needsTexture = needsTexture || (viewer[i]->IsVisible() && viewer[i]->showTexture);
+		needsDirection = needsDirection || (viewer[i]->IsVisible() && viewer[i]->showDir);
 	}
 }
 
@@ -2062,9 +2085,6 @@ void Interface::DeleteStruct() {
 	}
 	if (!AskToReset()) return;
 	geom->DelStruct(structNumInt - 1);
-#ifdef MOLFLOW
-	geom->CalcTotalOutGassing();
-#endif
 	// Send to sub process
 	try { worker.Reload(); }
 	catch (Error &e) {
@@ -2611,10 +2631,13 @@ int Interface::FrameMove()
 		viewer[1]->IsDragging() ||
 		viewer[2]->IsDragging() ||
 		viewer[3]->IsDragging() || !worker.running)
-		SDL_Delay(32);
+	{
+		SDL_Delay(22);
+	}
 	else
+	{
 		SDL_Delay(60);
-
+	}
 	return GL_OK;
 }
 

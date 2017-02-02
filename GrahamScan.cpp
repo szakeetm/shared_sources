@@ -1,4 +1,5 @@
 #include "GrahamScan.h"
+
 GRpoint* GRfirstPoint; //GLOBAL POINTER TO MIN GRpoint IN DOUBLELY LINKED LIST
 int pubNbPoints;
 int *pubReturnList;

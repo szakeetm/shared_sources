@@ -14,7 +14,6 @@
   GNU General Public License for more details.
 */
 
-#include "Worker.h"
 #include "GLApp/GLWindow.h"
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
@@ -23,6 +22,8 @@
 
 #ifndef _LOADSTATUSH_
 #define _LOADSTATUSH_
+
+class Worker;
 
 class LoadStatus : public GLWindow {
 

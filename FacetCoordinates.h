@@ -20,15 +20,19 @@
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLList.h"
 #include "GLApp/GLButton.h"
-#include "Worker.h"
+#include "Vector.h"
+#include <vector>
 
 #ifndef _FACETCOORDINATESH_
 #define _FACETCOORDINATESH_
 
+class Worker;
+class Facet;
+
 struct line {
 	  int vertexId;
 	  Vector3d coord;
-  };
+};
 
 class FacetCoordinates : public GLWindow {
 

@@ -1,6 +1,7 @@
 #include <Windows.h>
 
 #include "Worker.h"
+
 #include "GLApp/GLApp.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp\MathTools.h" //Min max
@@ -10,11 +11,14 @@
 #include "GLApp/GLUnitDialog.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
+#include "MolflowGeometry.h"
 #endif
 
 #ifdef SYNRAD
 #include "SynRad.h"
+#include "SynradGeometry.h"
 #endif
+
 #include <direct.h>
 
 #include "ZipUtils/zip.h"
@@ -451,7 +455,7 @@ void Worker::RebuildTextures() {
 	if (needsReload) RealReload();
 	if (AccessDataport(dpHit)) {
 		BYTE *buffer = (BYTE *)dpHit->buff;
-		if (mApp->needsTexture) try{ geom->BuildFacetTextures(buffer); }
+		if (mApp->needsTexture || mApp->needsDirection) try{ geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection); }
 		catch (Error &e) {
 			ReleaseDataport(dpHit);
 			throw e;

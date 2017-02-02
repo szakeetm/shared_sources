@@ -16,7 +16,7 @@
 #include "GLButton.h"
 #include "GLLabel.h"
 #include "GLCombo.h"
-
+#include <vector>
 #include <time.h>
 
 #ifndef _GLFILEBOXH_

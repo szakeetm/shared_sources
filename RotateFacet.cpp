@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #define EQMODE 8
 
 #include "RotateFacet.h"
+#include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp\MathTools.h"
@@ -247,7 +248,6 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 			//Calculate the plane
 			Vector3d AXIS_P0,AXIS_DIR;
-			int nbSelectedVertex;
 			int selVert1id, selVert2id;
 
 			if (!(radText->GetNumber(&rad))) {

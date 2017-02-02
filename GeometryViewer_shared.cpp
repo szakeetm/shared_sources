@@ -6,6 +6,8 @@
 #include "GLApp/GLMatrix.h"
 #include <math.h>
 #include <malloc.h>
+#include "Facet.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -86,6 +88,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	showBack = SHOW_FRONTANDBACK;
 	showFilter = FALSE;
 	showColormap = TRUE;
+	hideLot = 500;
 
 	showTP = TRUE;
 	#ifdef MOLFLOW
@@ -108,8 +111,6 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	arrowLength = 1.0;
 	dispNumHits = 2048;
 	dispNumLeaks = 2048;
-
-
 
 	// GL Component default
 	SetBorder(BORDER_NONE);
@@ -148,10 +149,6 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	projCombo->SetSelectedIndex(1);
 	Add(projCombo);
 
-	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
-	capsLockLabel->SetTextColor(255, 0, 0);
-	Add(capsLockLabel);
-
 	#ifdef MOLFLOW
 	timeLabel = new GLOverlayLabel("");
 	timeLabel->SetTextColor(255, 255, 255);
@@ -184,15 +181,17 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	selVxBtn->SetIcon("images/icon_vertex_select.png");
 	Add(selVxBtn);
 
-
-
-
-
-
 	autoBtn = new GLButton(0, "");
 	autoBtn->SetIcon("images/icon_autoscale.png");
 	autoBtn->SetToggle(TRUE);
 	Add(autoBtn);
+
+	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
+	hideLotlabel->SetTextColor(255, 255, 255);
+	Add(hideLotlabel);
+	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
+	capsLockLabel->SetTextColor(255, 255, 255);
+	Add(capsLockLabel);
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -586,8 +585,6 @@ void GeometryViewer::DrawIndex() {
 	char tmp[256];
 
 	// Draw index number
-	if (showIndex || showVertex) {
-
 		// Get selected vertex
 		Geometry *geom = work->GetGeometry();
 		int nbVertex = geom->GetNbVertex();
@@ -649,9 +646,6 @@ void GeometryViewer::DrawIndex() {
 		//Restore
 		GLToolkit::DrawStringRestore();
 		free(vIdx);
-
-	}
-
 }
 
 
@@ -681,11 +675,58 @@ void GeometryViewer::DrawRule() {
 
 }
 
+void GeometryViewer::PaintSelectedVertices(BOOL hiddenVertex) {
+	Geometry *geom = work->GetGeometry();
+	std::vector<size_t> selectedVertexIds;
 
+	//Populate selected vertices
+	for (size_t i = 0; i < geom->GetNbVertex(); i++) {
+		if (geom->GetVertex(i)->selected) {
+			selectedVertexIds.push_back(i);
+		}
+	}
+
+	// Draw dot
+	if (!mApp->whiteBg) glPointSize(6.0f);
+	else glPointSize(7.0f);
+	glEnable(GL_POINT_SMOOTH);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	if (hiddenVertex) glDisable(GL_DEPTH_TEST);
+	else glEnable(GL_DEPTH_TEST);
+	if (!mApp->whiteBg) glColor3f(1.0f, 0.9f, 0.2f);
+	else glColor3f(1.0f, 0.5f, 0.2f);
+
+	glBegin(GL_POINTS);
+	for (size_t i : selectedVertexIds) {
+		Vector3d *v = geom->GetVertex(i);
+		glVertex3d(v->x, v->y, v->z);
+	}
+	glEnd();
+
+	// Save contexct
+	GLToolkit::DrawStringInit();
+	if (!mApp->whiteBg) GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.9f, 0.2f);
+	else GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.2f, 0.0f);
+
+
+	// Draw Labels
+	glEnable(GL_BLEND);
+	for (size_t i : selectedVertexIds) {
+		Vector3d *v = geom->GetVertex(i);
+		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, std::to_string(i + 1).c_str(), GLToolkit::GetDialogFont(), 2, 2);
+	}
+	glDisable(GL_BLEND);
+	//Restore
+	GLToolkit::DrawStringRestore();
+	if (hiddenVertex) glEnable(GL_DEPTH_TEST);
+
+}
 
 void GeometryViewer::DrawNormal() {
 
-	if (showNormal) {
 		Geometry *geom = work->GetGeometry();
 		for (int i = 0;i < geom->GetNbFacet();i++) {
 			Facet *f = geom->GetFacet(i);
@@ -702,15 +743,11 @@ void GeometryViewer::DrawNormal() {
 				glEnd();
 			}
 		}
-	}
-
 }
 
 
 
 void GeometryViewer::DrawUV() {
-
-	if (showUV) {
 		Geometry *geom = work->GetGeometry();
 		for (int i = 0;i < geom->GetNbFacet();i++) {
 			Facet *f = geom->GetFacet(i);
@@ -744,8 +781,6 @@ void GeometryViewer::DrawUV() {
 				//glDisable(GL_BLEND);
 			}
 		}
-	}
-
 }
 
 
@@ -1019,19 +1054,21 @@ if( showVolume || showTexture ) {
 
 	DrawLinesAndHits();
 
-
 	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
 	#ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render(dispNumTraj, &blueMaterial, vectorLength);
 	#endif
 
-	DrawIndex();
-	DrawNormal();
-	DrawUV();
+	BOOL detailsSuppressed = hideLot!=-1 && (geom->GetNbSelected() > hideLot);
+	BOOL displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
+	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
+	if (showNormal && (!detailsSuppressed)) DrawNormal();
+	if (showUV && (!detailsSuppressed)) DrawUV();
+
 	DrawLeak();
 	DrawRule();
-	geom->PaintSelectedVertices(showHiddenVertex);
+	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
 
 	// Restore old transformation/viewport
@@ -1087,6 +1124,8 @@ if( showVolume || showTexture ) {
 	PaintCompAndBorder();
 
 	capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
+	hideLotlabel->SetVisible(displayWarning);
+
 	#ifdef MOLFLOW
 	if (work->displayedMoment)
 		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1]);
@@ -1096,6 +1135,8 @@ if( showVolume || showTexture ) {
 	timeLabel->SetVisible(showTime);
 	#endif
 }
+
+
 
 void GeometryViewer::PaintCompAndBorder() {
 

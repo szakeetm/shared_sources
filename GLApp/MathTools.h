@@ -2,7 +2,7 @@
 #include <vector>
 #include "GLTypes.h" //BOOL, TRUE, FALSE
 
-int    IsEqual(const double &a, const double &b, double tolerance=1E-8);
+BOOL    IsEqual(const double &a, const double &b, double tolerance=1E-8);
 double RoundAngle(double a);
 int    GetPower2(int n);
 #define MAX(x,y) (((x)<(y))?(y):(x))
@@ -25,6 +25,8 @@ int    GetPower2(int n);
 char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
+
+
 int my_binary_search(const double& key, double* A, const size_t& size);
 int my_binary_search(const double& key, std::vector<double> A, const size_t& size);
 
@@ -32,3 +34,9 @@ double my_erf(double x);
 double InterpolateY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE, BOOL logarithmic = FALSE);
 double InterpolateX(double y, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE);
 double FastLookupY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds = FALSE);
+
+template <typename TYPE> BOOL Contains(std::vector<TYPE> vec, const TYPE& value) {
+	return (std::find(vec.begin(), vec.end(), value) != vec.end());
+}
+
+std::vector<std::string> SplitString(std::string const &input);

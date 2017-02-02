@@ -162,7 +162,7 @@ void GLMenu::Clear() {
 
 // -----------------------------------------------------------
 
-void GLMenu::Add(char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
+void GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
 
   if(nbItem>=MAX_MENU_ITEM) return;
 

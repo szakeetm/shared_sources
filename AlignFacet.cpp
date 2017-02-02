@@ -16,6 +16,7 @@ GNU General Public License for more details.
 */
 
 #include "AlignFacet.h"
+#include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
@@ -98,7 +99,7 @@ AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 	copyButton = new GLButton(0,"Copy");
 	copyButton->SetBounds(78,295,63,21);
-	step3->Add(copyButton);
+	//step3->Add(copyButton);
 
 	undoButton = new GLButton(0,"Undo");
 	undoButton->SetBounds(146,295,63,21);
@@ -216,7 +217,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				geom->AlignFacets(selection,nbMemo,Facet_source,Facet_dest,Anchor_source,Anchor_dest,Dir_source,Dir_dest,
 					invertNormal->GetState(),invertDir1->GetState(),invertDir2->GetState(),src==copyButton,work);
 				#ifdef MOLFLOW
-				if (src == copyButton) geom->CalcTotalOutGassing();
+				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
 				try { work->Reload(); } catch(Error &e) {
@@ -240,11 +241,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			//for(int i=0;i<nbSelected;i++)
 
 			//	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
-			try { work->Reload(); } catch(Error &e) {
-
-					GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-			}  
-			 
+			work->Reload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();
 		}

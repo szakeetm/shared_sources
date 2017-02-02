@@ -826,3 +826,7 @@ double Facet::GetArea() {
 BOOL Facet::IsTXTLinkFacet() {
 	return ((sh.opacity == 0.0) && (sh.sticking >= 1.0));
 }
+
+Vector3d Facet::GetRealCenter() {
+	return Project(sh.center, sh.O, sh.N);
+}

@@ -24,6 +24,8 @@ GNU General Public License for more details.
 //#define TWOVERTEXMODE 7
 #define EQMODE 8
 
+#include "Geometry.h"
+#include "Facet.h"
 #include "RotateVertex.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
@@ -212,7 +214,6 @@ RotateVertex::RotateVertex(Geometry *g, Worker *w) :GLWindow() {
 
 void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 	double a, b, c, u, v, w, deg, rad;
-	int facetNum;
 
 	switch (message) {
 		// -------------------------------------------------------------
@@ -228,14 +229,12 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == moveButton || src == copyButton) {
-			if (geom->GetNbSelected() == 0) {
-				GLMessageBox::Display("No facets selected", "Nothing to mirror", GLDLG_OK, GLDLG_ICONERROR);
+			if (geom->GetNbSelectedVertex() == 0) {
+				GLMessageBox::Display("No vertices selected", "Nothing to rotate", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			//Calculate the plane
 			Vector3d AXIS_P0, AXIS_DIR;
-			int nbSelectedVertex;
-			int selVert1id, selVert2id;
 
 			if (!(radText->GetNumber(&rad))) {
 				GLMessageBox::Display("Invalid angle (radians field)", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -257,7 +256,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 				break;
 			case FACETUMODE:
 			{
-				if (!geom->GetNbSelected() == 1) {
+				if (geom->GetNbSelected() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -274,7 +273,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 			case FACETVMODE:
 			{
-				if (!geom->GetNbSelected() == 1) {
+				if (geom->GetNbSelected() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -291,7 +290,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 			case FACETNMODE:
 			{
-				if (!geom->GetNbSelected() == 1) {
+				if (geom->GetNbSelected() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -358,7 +357,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 			UpdateToggle(l8);
-			int selVertexId = 1;
+			int selVertexId = -1;
 			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
 				if (geom->GetVertex(i)->selected) {
 					selVertexId = i;

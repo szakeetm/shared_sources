@@ -16,6 +16,7 @@
 */
 
 #include "BuildIntersection.h"
+#include "Facet.h" //DeletedFacet
 #include "GLApp/GLTitledPanel.h"
 //#include "GLApp/GLToolkit.h"
 //#include "GLApp/GLWindowManager.h"
@@ -84,15 +85,13 @@ BuildIntersection::~BuildIntersection() {
 
 void BuildIntersection::ClearUndoFacets() {
 	//Destroy old undo facets
-	for (auto delFacet : deletedFacetList)
+	for (DeletedFacet delFacet : deletedFacetList)
 		SAFE_DELETE(delFacet.f);
 	deletedFacetList.clear();
 	resultLabel->SetText("");
 }
 
 void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
-	double a, b, c, d;
-	int facetNum;
 
 	switch (message) {
 

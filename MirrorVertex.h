@@ -1,6 +1,6 @@
 /*
-  File:        MirrorFacet.h
-  Description: Mirror facet to plane dialog
+  File:        MirrorVertex.h
+  Description: Mirror vertex to plane dialog
 */
 
 #include "GLApp/GLWindow.h"
@@ -13,14 +13,14 @@
 #include "Geometry.h"
 #include "Worker.h"
 
-#ifndef _MIRRORFACETH_
-#define _MIRRORFACETH_
+#ifndef _MirrorVertexH_
+#define _MirrorVertexH_
 
-class MirrorFacet : public GLWindow {
+class MirrorVertex : public GLWindow {
 
 public:
   // Construction
-  MirrorFacet(Geometry *geom,Worker *work);
+  MirrorVertex(Geometry *geom,Worker *work);
   void ClearUndoVertices();
   void ProcessMessage(GLComponent *src,int message);
 
@@ -30,21 +30,19 @@ private:
   void UpdateToggle(GLComponent *src);
   
   GLTitledPanel *iPanel;
-  GLButton     *mirrorButton,*mirrorCopyButton;
-  GLButton    *projectButton,*projectCopyButton,*undoProjectButton;
+  GLButton     *mirrorButton, *mirrorCopyButton;
+  GLButton    *projectButton, *projectCopyButton, *undoProjectButton;
   GLButton    *cancelButton;
-  GLButton	  *getSelFacetButton;
+  GLButton	  *getPlaneButton;
   GLToggle     *l1;
   GLToggle     *l2;
   GLToggle     *l3;
   GLToggle     *l4;
-  GLToggle     *l5;
   GLToggle     *l6;
   GLTextField *aText;
   GLTextField *bText;
   GLTextField *cText;
   GLTextField *dText;
-  GLTextField *facetNumber;
   GLLabel		*aLabel;
   GLLabel		*bLabel;
   GLLabel		*cLabel;
@@ -57,7 +55,6 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-
 };
 
-#endif /* _MirrorFacetH_ */
+#endif /* _MirrorVertexH_ */

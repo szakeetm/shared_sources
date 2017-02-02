@@ -36,7 +36,7 @@ public:
   // Draw a 2D text (in viewport coordinates)
   void DrawText(const int &x,const int &y,char *text,const BOOL &loadMatrix=TRUE);
   void DrawLargeText(int x,int y,char *text,float sizeFactor,BOOL loadMatrix=TRUE);
-  void DrawTextFast(int cx,int cy,char *text);
+  void DrawTextFast(int cx,int cy,const char *text);
   void DrawTextV(int x,int y,char *text,BOOL loadMatrix=TRUE);
 
   // Release any allocated resource

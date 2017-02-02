@@ -328,7 +328,7 @@ void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const BOOL &loadM
 
 // -------------------------------------------
 
-void GLFont2D::DrawTextFast(int cx,int cy,char *text) {
+void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;

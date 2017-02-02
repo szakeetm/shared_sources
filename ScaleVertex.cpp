@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #define DISTORTMODE 1
 
 #include "ScaleVertex.h"
+#include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
@@ -99,11 +100,15 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 	vertexNumber->SetEditable(FALSE);
 	iPanel->Add(vertexNumber);
 
+	getSelVertexButton = new GLButton(0, "<-Get selected");
+	getSelVertexButton->SetBounds(170, 45, 80, 18);
+	iPanel->Add(getSelVertexButton);
+
 	l3 = new GLToggle(0, "Center of selected facet");
 	l3->SetBounds(10, 70, 100, 18);
 	iPanel->Add(l3);	
 
-	sPanel = new GLTitledPanel("Scale factor");
+	sPanel = new GLTitledPanel("Scale factor");	
 	sPanel->SetBounds(5, 101, wD - 10, 65);
 	Add(sPanel);
 
@@ -113,9 +118,17 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 	Add(uniform);
 
 	factorNumber = new GLTextField(0, "1");
-	factorNumber->SetBounds(115, 115, 40, 18);
+	factorNumber->SetBounds(115, 115, 60, 18);
 	//factorNumber->SetEditable(FALSE);
 	Add(factorNumber);
+
+	GLLabel *onePerLabel = new GLLabel("(= 1/                )");
+	onePerLabel->SetBounds(190, 115, 90, 18);
+	Add(onePerLabel);
+
+	OnePerFactor = new GLTextField(0, "");
+	OnePerFactor->SetBounds(215, 115, 60, 18);
+	Add(OnePerFactor);
 
 	distort = new GLToggle(0, "Distorted");
 	distort->SetBounds(10, 140, 100, 18);
@@ -191,9 +204,23 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 
 		}
+		else if (src == getSelVertexButton) {
+			if (geom->GetNbSelectedVertex() != 1) {
+				GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			UpdateToggle(l2);
+			int selVertexId = -1;
+			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
+				if (geom->GetVertex(i)->selected) {
+					selVertexId = i;
+				}
+			}
+			vertexNumber->SetText(selVertexId + 1);
+		}
 		else if (src == scaleButton || src == copyButton) {
-			if (geom->GetNbSelected() == 0) {
-				GLMessageBox::Display("No facets selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
+			if (geom->GetNbSelectedVertex() == 0) {
+				GLMessageBox::Display("No vertices selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 
@@ -223,10 +250,12 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-
+				found = FALSE;
 				for (int i = 0; !found && i<geom->GetNbFacet(); i++) {
-					if (geom->GetFacet(i)->selected)
+					if (geom->GetFacet(i)->selected) {
 						invariant = geom->GetFacet(i)->sh.center;
+						found = TRUE;
+					}
 				}
 				break;
 			case VERTEXMODE:
@@ -266,7 +295,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 			if (mApp->AskToReset()) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
-				geom->ScaleSelectedFacets(invariant, factorX, factorY, factorZ, src == copyButton, work);
+				geom->ScaleSelectedVertices(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
 				try { work->Reload(); }
 				catch (Error &e) {
@@ -276,6 +305,20 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				mApp->UpdateViewers();
 				mApp->changedSinceSave = TRUE;
 				//GLWindowManager::FullRepaint();
+			}
+		}
+		break;
+	case MSG_TEXT_UPD:
+		if (src == factorNumber) {
+			double factor;
+			if (factorNumber->GetNumber(&factor)) {
+				OnePerFactor->SetText(1.0 / factor);
+			}
+		}
+		else if (src == OnePerFactor) {
+			double onePerFactor;
+			if (OnePerFactor->GetNumber(&onePerFactor)) {
+				factorNumber->SetText(1.0 / onePerFactor);
 			}
 		}
 		break;
@@ -305,6 +348,7 @@ void ScaleVertex::UpdateToggle(GLComponent *src) {
 		distort->SetState(src == distort);
 
 		factorNumber->SetEditable(src == uniform);
+		OnePerFactor->SetEditable(src == uniform);
 		factorNumberX->SetEditable(src == distort);
 		factorNumberY->SetEditable(src == distort);
 		factorNumberZ->SetEditable(src == distort);

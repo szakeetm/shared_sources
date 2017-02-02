@@ -27,6 +27,13 @@ public:
 	void SetLocation(const Vector3d& v);
 };
 
+typedef struct {
+
+	Vector3d min;
+	Vector3d max;
+
+} AABB;
+
 Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
 Vector3d operator*(const Vector3d &v1, const double& mult);
@@ -44,6 +51,7 @@ Vector2d ProjectVertex(const Vector3d& v, const Vector3d& U, const Vector3d& V, 
 int Intersect2D(Vector2d *p1, Vector2d *p2, Vector2d *p3, Vector2d *p4, Vector2d *I);
 
 Vector3d Mirror(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
+Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
 Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta);
 
 double GetOrientedAngle(Vector2d *v1, Vector2d *v2);

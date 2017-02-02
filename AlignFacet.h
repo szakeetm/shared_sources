@@ -9,9 +9,10 @@
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLToggle.h"
 #include "GLApp/GLTitledPanel.h"
+#include "Vector.h"
 
-#include "Geometry.h"
-#include "Worker.h"
+class Geometry;
+class Worker;
 
 #ifndef _AlignFacetH_
 #define _AlignFacetH_

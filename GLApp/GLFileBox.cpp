@@ -119,7 +119,7 @@ GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nb
   Add(fileText);
 
   // Path name combo
-  pathLabel = new GLLabel("Directoy");
+  pathLabel = new GLLabel("Directory");
   pathLabel->SetBounds(5,5,40,19);
   Add(pathLabel);
 

@@ -20,7 +20,7 @@
 #define _ASELOADERH_
 
 #include "File.h"
-#include "Types.h"
+#include "Vector.h"
 
 //--- Definitions -----------------------------------------------------------------
 
@@ -220,7 +220,7 @@ typedef struct {
   int tv1;
   int tv2;
   int tv3;
- 	Vector3d  n0;
+  Vector3d  n0;
   Vector3d  n1;
   Vector3d  n2;
   Vector3d  n3;

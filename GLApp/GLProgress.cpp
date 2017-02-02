@@ -133,8 +133,7 @@ void GLProgress::SetMessage(std::string msg) {
 void GLProgress::SetMessage(const char *msg) {
 
     label->SetText(msg);
-	//GLWindowManager::Repaint();
-	this->Paint();
-	
-  SDL_GL_SwapBuffers();
+	GLWindowManager::Repaint();
+	//this->Paint();
+	//SDL_GL_SwapBuffers();
 }

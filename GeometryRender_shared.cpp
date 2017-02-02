@@ -1,6 +1,7 @@
 #include "Geometry.h"
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
+#include "GLApp\GLToolkit.h"
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
@@ -15,7 +16,7 @@
 #endif
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-
+#include "Facet.h"
 
 
 #ifdef MOLFLOW
@@ -609,65 +610,6 @@ void Geometry::DrawFacet(Facet *f, BOOL offset, BOOL showHidden, BOOL selOffset)
 
 
 
-void Geometry::PaintSelectedVertices(BOOL hiddenVertex) {
-
-	nbSelectedVertex = 0;
-
-	char tmp[256];
-	int *vIdx = (int *)malloc(sh.nbVertex * sizeof(int));
-	memset(vIdx, 0xFF, sh.nbVertex * sizeof(int));
-	for (int i = 0; i < sh.nbVertex; i++) {
-		//Vector3d *v = GetVertex(i);
-		if (vertices3[i].selected) {
-			vIdx[nbSelectedVertex] = i;
-			nbSelectedVertex++;
-		}
-	}
-
-	// Draw dot
-	if (!mApp->whiteBg) glPointSize(6.0f);
-	else glPointSize(7.0f);
-	glEnable(GL_POINT_SMOOTH);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	if (hiddenVertex) glDisable(GL_DEPTH_TEST);
-	else glEnable(GL_DEPTH_TEST);
-	if (!mApp->whiteBg) glColor3f(1.0f, 0.9f, 0.2f);
-	else glColor3f(1.0f, 0.5f, 0.2f);
-
-	glBegin(GL_POINTS);
-	for (int i = 0; i < nbSelectedVertex; i++) {
-		Vector3d *v = GetVertex(vIdx[i]);
-		glVertex3d(v->x, v->y, v->z);
-	}
-	glEnd();
-
-	// Save contexct
-	GLToolkit::DrawStringInit();
-	if (!mApp->whiteBg) GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.9f, 0.2f);
-	else GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.2f, 0.0f);
-
-
-	// Draw Labels
-	glEnable(GL_BLEND);
-	for (int i = 0; i < nbSelectedVertex; i++) {
-		sprintf(tmp, "%d ", vIdx[i] + 1);
-		Vector3d *v = GetVertex(vIdx[i]);
-		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
-
-	}
-	glDisable(GL_BLEND);
-	//Restore
-	GLToolkit::DrawStringRestore();
-	free(vIdx);
-	if (hiddenVertex) glEnable(GL_DEPTH_TEST);
-
-}
-
-
-
 void Geometry::DrawPolys() {
 
 	int *f3 = (int *)malloc(sh.nbFacet * sizeof(int));
@@ -741,12 +683,13 @@ void Geometry::SetCullMode(int mode) {
 
 void Geometry::ClearFacetTextures()
 {
-	GLProgress *prg = new GLProgress("Building texture", "Frame update");
+	GLProgress *prg = new GLProgress("Clearing texture", "Frame update");
 	prg->SetBounds(5, 28, 300, 90);
 	int startTime = SDL_GetTicks();
-	prg->SetVisible(TRUE);
 	for (int i = 0; i<sh.nbFacet; i++) {
-		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) prg->SetVisible(TRUE);
+		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) {
+			prg->SetVisible(TRUE);
+		}
 		prg->SetProgress((double)i / (double)sh.nbFacet);
 		DELETE_TEX(facets[i]->glTex);
 		glGenTextures(1, &facets[i]->glTex);
@@ -971,8 +914,6 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, BOOL addTextureCoord) {
 
 }
 
-
-
 void Geometry::Triangulate(Facet *f, BOOL addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
@@ -1139,9 +1080,6 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 			if (f->cellPropertiesIds  && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshList();
 
-
-
-
 				glEnable(GL_POLYGON_OFFSET_LINE);
 				glPolygonOffset(1.0f, 2.0f);
 				glCallList(f->glElem);
@@ -1203,12 +1141,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 			glEnable(GL_DEPTH_TEST);
 		}
 		else {
-
-			//if( renderVolume || renderTexture ) {
 			glCallList(selectList3);
-			//} else {
-			//   glCallList(selectList3);
-			//}
 		}
 		if (mApp->antiAliasing) {
 			glDisable(GL_LINE_SMOOTH);

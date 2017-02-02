@@ -20,8 +20,8 @@
 #define FILERWH
 
 #include <stdio.h>
-#include "Types.h"
 #include <string>
+#include "GLApp\GLTypes.h"
 
 #define READ_BUFFSIZE 4096
 

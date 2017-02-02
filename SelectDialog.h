@@ -23,10 +23,21 @@
 #define _GLSELECTDIALOGH_
 
 // Buttons
-#define GLDLG_CANCEL_SEL    0x0001
-#define GLDLG_SELECT		0x0002
-#define GLDLG_SELECT_ADD	0x0004
-#define GLDLG_SELECT_REM    0x0008
+#ifndef GLDLG_CANCEL
+#define GLDLG_CANCEL		0x0002
+#endif
+
+#ifndef GLDLG_SELECT
+#define GLDLG_SELECT		0x0004
+#endif
+
+#ifndef GLDLG_SELECT_ADD
+#define GLDLG_SELECT_ADD	0x0008
+#endif
+
+#ifndef GLDLG_SELECT_REM
+#define GLDLG_SELECT_REM	0x0016
+#endif
 
 class SelectDialog : public GLWindow {
 

@@ -49,3 +49,4 @@ int   IsOnSection(const double & u, const double & v, const double & baseU, cons
 int   IntersectPoly(POLYGON *p1,POLYGON *p2,int *visible2,POLYGON **result);
 double GetInterArea(POLYGON *inP1,POLYGON *inP2,int *edgeVisible,float *uC,float *vC,int *nbV,double **lList);
 double GetInterAreaBF(POLYGON *inP1,double u0,double v0,double u1,double v1,float *uC,float *vC);
+
