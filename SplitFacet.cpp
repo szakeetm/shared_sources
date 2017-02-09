@@ -45,8 +45,8 @@ extern SynRad*mApp;
 
 SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
 	
-	int wD = 356;
-	int hD = 276;
+	int wD = 353;
+	int hD = 260;
 	planeDefPanel = new GLTitledPanel("Plane definition mode");
 	planeDefPanel->SetBounds(12, 12, 326, 179);
 	Add(planeDefPanel);
@@ -59,15 +59,15 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
 	planeDefPanel->Add(eqmodeCheckbox);
 
 	XZplaneButton = new GLButton(0, "XZ plane");
-	planeDefPanel->SetCompBounds(XZplaneButton, 168, 68, 75, 23);
+	planeDefPanel->SetCompBounds(XZplaneButton, 182, 68, 82, 23);
 	planeDefPanel->Add(XZplaneButton);
 
 	YZplaneButton = new GLButton(0, "YZ plane");
-	planeDefPanel->SetCompBounds(YZplaneButton, 87, 68, 75, 23);
+	planeDefPanel->SetCompBounds(YZplaneButton, 94, 68, 82, 23);
 	planeDefPanel->Add(YZplaneButton);
 
 	XYplaneButton = new GLButton(0, "XY plane");
-	planeDefPanel->SetCompBounds(XYplaneButton, 6, 68, 75, 23);
+	planeDefPanel->SetCompBounds(XYplaneButton, 6, 68, 82, 23);
 	planeDefPanel->Add(XYplaneButton);
 
 	dTextbox = new GLTextField(0, "");
@@ -103,7 +103,7 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
 	planeDefPanel->Add(vertexModeCheckbox);
 
 	facetIdTextbox = new GLTextField(0, "");
-	planeDefPanel->SetCompBounds(facetIdTextbox, 107, 111, 55, 20);
+	planeDefPanel->SetCompBounds(facetIdTextbox, 107, 111, 61, 20);
 	planeDefPanel->Add(facetIdTextbox);
 
 	facetmodeCheckbox = new GLToggle(0, "Plane of facet:");
@@ -115,12 +115,16 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
 	Add(resultLabel);
 
 	splitButton = new GLButton(0, "Split");
-	splitButton->SetBounds(18, 221, 129, 23);
+	splitButton->SetBounds(12, 210, 129, 23);
 	Add(splitButton);
 
 	undoButton = new GLButton(0, "Undo");
-	undoButton->SetBounds(200, 221, 129, 23);
+	undoButton->SetBounds(202, 210, 129, 23);
 	Add(undoButton);
+
+	getSelectedFacetButton = new GLButton(0, "<- Get selected");
+	planeDefPanel->SetCompBounds(getSelectedFacetButton, 174, 109, 90, 22);
+	planeDefPanel->Add(getSelectedFacetButton);
 
 	SetTitle("SplitFacet");
 	// Center dialog
@@ -133,7 +137,7 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
 	
   resultLabel->SetText("");
   undoButton->SetEnabled(FALSE);
-  planeMode = PLANEEQ_MODE;
+  planeMode = -1;
   geom = g;
   work = w;
 
@@ -190,6 +194,20 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		dTextbox->SetText(0);
 		planeMode = PLANEEQ_MODE;
 		EnableDisableControls(planeMode);
+	}
+	else if (src == getSelectedFacetButton) {
+		if (geom->GetNbSelected() != 1) {
+			GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			return;
+		}
+		int selFacetId = -1;
+		for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
+			if (geom->GetFacet(i)->selected) {
+				selFacetId = i;
+			}
+		}
+		facetIdTextbox->SetText(selFacetId + 1);
+		EnableDisableControls(planeMode = FACET_MODE);
 	}
     else if(src==undoButton) {
 		if (nbFacet == geom->GetNbFacet()) { //Assume no change since the split operation

@@ -52,7 +52,7 @@ extern SynRad*mApp;
 
 RotateVertex::RotateVertex(Geometry *g, Worker *w) :GLWindow() {
 
-	axisMode = 0;
+	
 	int wD = 350;
 	int hD = 375;
 
@@ -209,7 +209,7 @@ RotateVertex::RotateVertex(Geometry *g, Worker *w) :GLWindow() {
 
 	geom = g;
 	work = w;
-
+	axisMode = -1;
 }
 
 void RotateVertex::ProcessMessage(GLComponent *src, int message) {

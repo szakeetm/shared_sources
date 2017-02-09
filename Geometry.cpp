@@ -2085,7 +2085,9 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 	if (!mApp->AskToReset(worker)) return;
 	mApp->changedSinceSave = TRUE;
 
-	for (int i = 0; i < sh.nbVertex; i++) {
+	int nbVertexOri = sh.nbVertex;
+
+	for (int i = 0; i < nbVertexOri; i++) {
 		if (vertices3[i].selected) {
 			Vector3d newPosition;
 			newPosition.x = invariant.x + factorX*(vertices3[i].x - invariant.x);
@@ -3447,8 +3449,7 @@ void Geometry::BuildSelectList() {
 		Facet *f = facets[i];
 		if (f->selected) {
 			//DrawFacet(f,FALSE,TRUE,TRUE);
-			//DrawFacet(f, 1, 1, 1);
-			DrawFacet(f,0,0,0); //Faster than TRUE TRUE TRUE, without noticeable glitches
+			DrawFacet(f,FALSE,TRUE,FALSE); //Faster than TRUE TRUE TRUE, without noticeable glitches
 			nbSelected++;
 		}
 	}
@@ -3477,7 +3478,7 @@ void Geometry::BuildGLList() {
 		glNewList(lineList[j], GL_COMPILE);
 		for (int i = 0; i < sh.nbFacet; i++) {
 			if (facets[i]->sh.superIdx == j)
-				DrawFacet(facets[i]);
+				DrawFacet(facets[i],FALSE,TRUE,FALSE);
 		}
 		glEndList();
 	}

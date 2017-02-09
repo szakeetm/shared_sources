@@ -148,7 +148,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
   geom = g;
   work = w;
-
+  planeMode = -1;
 }
 
 void MirrorVertex::ClearUndoVertices() {

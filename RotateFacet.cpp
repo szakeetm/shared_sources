@@ -51,7 +51,6 @@ extern SynRad*mApp;
 
 RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
-	axisMode = 0;
 	int wD = 350;
 	int hD = 375;
 
@@ -222,7 +221,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	geom = g;
 	work = w;
-
+	axisMode = -1;
 }
 
 void RotateFacet::ProcessMessage(GLComponent *src,int message) {

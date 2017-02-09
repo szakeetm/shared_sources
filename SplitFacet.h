@@ -49,6 +49,7 @@ private:
   GLLabel	*resultLabel;
   GLButton	*splitButton;
   GLButton	*undoButton;
+  GLButton	*getSelectedFacetButton;
 
   int planeMode;
   std::vector<DeletedFacet> deletedFacetList;
