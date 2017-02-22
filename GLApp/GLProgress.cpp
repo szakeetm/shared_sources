@@ -98,7 +98,7 @@ void GLProgress::ProcessMessage(GLComponent *src,int message) {
 void GLProgress::SetProgress(double value) {
 
   Uint32 now = SDL_GetTicks();
-  if(value<0.99 && now-lastUpd < 200 ) return;
+  if((now-lastUpd) < 200 ) return;
   lastUpd = now;
   
   char tmp[128];

@@ -118,13 +118,10 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
         GLMessageBox::Display("Invalid Z coordinate","Error",GLDLG_OK,GLDLG_ICONERROR);
         return;
       }
-		if (work->running) work->Stop_Public();
-      geom->AddVertex(X,Y,Z);
-	  	  try { work->Reload(); } catch(Error &e) {
-
-				GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-	  }    
-	  mApp->changedSinceSave = TRUE;
+	  //if (work->running) work->Stop_Public();
+		  geom->AddVertex(X,Y,Z);
+	  //work->Reload();
+	  //mApp->changedSinceSave = TRUE; //Adding a vertex doesn't modify the simulation whatsoever
 
 
       GLWindowManager::FullRepaint();

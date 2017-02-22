@@ -127,8 +127,11 @@ BOOL compare_second(const std::pair<double, double>& lhs, const std::pair<double
 	return (lhs.second<rhs.second);
 }
 
+BOOL compare_first(const std::pair<double, std::vector<double>>& lhs,const double& rhs) {
+	return (lhs.first<rhs);
+}
 
-double InterpolateY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds, BOOL logarithmic) {
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds, const BOOL& logarithmic) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -167,7 +170,59 @@ double InterpolateY(double x, const std::vector<std::pair<double, double>>& tabl
 
 }
 
-double InterpolateX(double y, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds) {
+std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const BOOL& limitToBounds, const BOOL& logarithmic) {
+	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
+	_ASSERTE(table.size());
+	if (table.size() == 1) return table[0].second; //constant value
+												   // Assumes that "table" is sorted by .first
+												   // Check if x is out of bound
+	std::vector<std::pair<double, std::vector<double>> >::const_iterator lower, upper;
+	bool outOfLimits = false;
+
+	if (x >= table.back().first) {
+		if (limitToBounds) return table.back().second;
+		else {
+			outOfLimits = true;
+			lower = upper = table.end() - 1;
+			lower--;
+		}
+	}
+	else if (x < table[0].first) {
+		if (limitToBounds) return table[0].second;
+		else {
+			outOfLimits = true;
+			lower = upper = table.begin();
+			upper++;
+		}
+	}
+
+	// INFINITY is defined in math.h in the glibc implementation
+	if (!outOfLimits) {
+		lower = upper = std::lower_bound(table.begin(), table.end(), x , compare_first);
+		// Corner case
+		if (upper == table.begin()) return upper->second;
+		lower--;
+	}
+
+	if (logarithmic) {
+		double overShoot = (log(x) - log(lower->first)) / (log(upper->first) - log(lower->first));
+		std::vector<double> returnValues;
+		for (size_t i = 0; i < lower->second.size(); i++) {
+			returnValues.push_back(exp(WEIGH(log(lower->second[i]), log(upper->second[i]), overShoot)));
+		}
+		return returnValues;
+	}
+	else {
+		double overShoot = (x - lower->first) / (upper->first - lower->first);
+		std::vector<double> returnValues;
+		for (size_t i = 0; i < lower->second.size(); i++) {
+			returnValues.push_back(WEIGH(lower->second[i], upper->second[i], overShoot));
+		}
+		return returnValues;
+	}
+}
+
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -204,7 +259,7 @@ double InterpolateX(double y, const std::vector<std::pair<double, double>>& tabl
 	return lower->first + (upper->first - lower->first)*(y - lower->second) / (upper->second - lower->second);
 }
 
-double FastLookupY(double x, const std::vector<std::pair<double, double>>& table, BOOL limitToBounds) {
+double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value

@@ -1057,7 +1057,7 @@ if( showVolume || showTexture ) {
 	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
 	#ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
-		work->regions[i].Render(dispNumTraj, &blueMaterial, vectorLength);
+		work->regions[i].Render((int)i,dispNumTraj, &blueMaterial, vectorLength);
 	#endif
 
 	BOOL detailsSuppressed = hideLot!=-1 && (geom->GetNbSelected() > hideLot);
