@@ -194,7 +194,10 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 	  } else if (src==removePosButton) {
 		  RemoveRow(facetListC->GetSelectedRow());
 	  } else if(src==updateButton) {
-		  ApplyChanges();
+		  int rep = GLMessageBox::Display("Apply geometry changes ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+		  if (rep == GLDLG_OK) {
+			  ApplyChanges();
+		  }
 		  break;
 	  }
 	  else if (src == setXbutton) {
@@ -329,6 +332,12 @@ void FacetCoordinates::ApplyChanges(){
 	//validate user inputs
 	for (int row=0;row<(int)lines.size();row++) {
 		double x,y,z;
+		if (!(lines[row].vertexId >= 0 && lines[row].vertexId<geom->GetNbVertex())) { //wrong coordinates at row
+			char tmp[128];
+			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", row + 1, lines[row].vertexId + 1);
+			GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
+			return;
+		}
 		BOOL success = (1==sscanf(facetListC->GetValueAt(2,row),"%lf",&x));
 		success = success && (1==sscanf(facetListC->GetValueAt(3,row),"%lf",&y));
 		success = success && (1==sscanf(facetListC->GetValueAt(4,row),"%lf",&z));

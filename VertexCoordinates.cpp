@@ -236,6 +236,12 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 				double x,y,z;
 				int id;
 				id=vertexListC->GetValueInt(i,0)-1;
+				if (!(id>=0 && id<geom->GetNbVertex())) { //wrong coordinates at row
+					char tmp[128];
+					sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", i + 1, id+1);
+					GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
+					return;
+				}
 				BOOL success = (1==sscanf(vertexListC->GetValueAt(1,i),"%lf",&x));
 				success = success && (1==sscanf(vertexListC->GetValueAt(2,i),"%lf",&y));
 				success = success && (1==sscanf(vertexListC->GetValueAt(3,i),"%lf",&z));

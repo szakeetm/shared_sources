@@ -98,9 +98,10 @@
 
 #define MENU_FACET_CREATE_DIFFERENCE 340
 #define MENU_FACET_CREATE_DIFFERENCE2 341
-#define MENU_FACET_CREATE_UNION 342
-#define MENU_FACET_CREATE_INTERSECTION 343
-#define MENU_FACET_CREATE_XOR 344
+#define MENU_FACET_CREATE_DIFFERENCE_AUTO 342
+#define MENU_FACET_CREATE_UNION 343
+#define MENU_FACET_CREATE_INTERSECTION 344
+#define MENU_FACET_CREATE_XOR 345
 
 #define MENU_FACET_EXTRUDE 350
 #define MENU_FACET_SPLIT   351
@@ -313,7 +314,7 @@ public:
 	void UpdateFacetlistSelected();
 	
 	int  GetVariable(char * name, char * prefix);
-	void CreateOfTwoFacets(ClipperLib::ClipType type,BOOL reverseOrder=FALSE);
+	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	void UpdateMeasurements();
 	BOOL AskToSave();
 	BOOL AskToReset(Worker *work = NULL);

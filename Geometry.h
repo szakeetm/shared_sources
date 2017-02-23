@@ -110,9 +110,10 @@ public:
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
 	void CreateDifference(); //creates the difference from 2 selected facets
-	void ClipSelectedPolygons(ClipperLib::ClipType type, BOOL reverseOrder);
+	void ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder);
 	void ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type);
 	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type);
+	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree & solution, ClipperLib::ClipType& type);
 	void RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
 	void SelectCoplanar(int width, int height, double tolerance);
 	Facet    *GetFacet(int facet);

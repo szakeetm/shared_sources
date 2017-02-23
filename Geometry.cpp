@@ -474,7 +474,7 @@ void Geometry::CreateDifference() {
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, FALSE);
 }
 
-void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, BOOL reverseOrder) {
+void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder) {
 	if (nbSelected != 2) {
 		char errMsg[512];
 		sprintf(errMsg, "Select exactly 2 facets.");
@@ -491,8 +491,36 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, BOOL reverseOrder
 			else (secondFacet = i);
 		}
 	}
-	if (!reverseOrder) ClipPolygon(firstFacet, secondFacet, type);
-	else ClipPolygon(secondFacet, firstFacet, type);
+	if (reverseOrder == 0) ClipPolygon(firstFacet, secondFacet, type);
+	else if (reverseOrder == 1) ClipPolygon(secondFacet, firstFacet, type);
+	else {
+		//Auto
+		ClipperLib::PolyTree solution;
+		std::vector<ProjectedPoint> projectedPoints;
+
+		std::vector<size_t> facet2path;
+		for (size_t i = 0; i < facets[secondFacet]->sh.nbIndex; i++) {
+			facet2path.push_back(facets[secondFacet]->indices[i]);
+		}
+		std::vector<std::vector<size_t>> clippingPaths;
+		clippingPaths.push_back(facet2path);
+		size_t id = (int)firstFacet;
+		if (ExecuteClip(id, clippingPaths, projectedPoints, solution, type) > 0) {
+			ClipPolygon(firstFacet, secondFacet, type);
+		}
+		else {
+			facet2path.clear();
+			for (size_t i = 0; i < facets[firstFacet]->sh.nbIndex; i++) {
+				facet2path.push_back(facets[firstFacet]->indices[i]);
+			}
+			clippingPaths.clear();
+			clippingPaths.push_back(facet2path);
+			id = (int)secondFacet;
+			if (ExecuteClip(id, clippingPaths, projectedPoints, solution, type) > 0) {
+				ClipPolygon(secondFacet , firstFacet , type);
+			}
+		}
+	}
 }
 
 
@@ -501,25 +529,9 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	mApp->changedSinceSave = TRUE;
 	nbSelectedVertex = 0;
 
-	ClipperLib::Paths subj(1), clip(clippingPaths.size());
 	ClipperLib::PolyTree solution;
-	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
-		subj[0] << ClipperLib::IntPoint(facets[id1]->vertices2[i1].u*1E6, facets[id1]->vertices2[i1].v*1E6);
-	}
 	std::vector<ProjectedPoint> projectedPoints;
-	for (size_t i3 = 0; i3 < clippingPaths.size(); i3++) {
-		for (size_t i2 = 0; i2 < clippingPaths[i3].size(); i2++) {
-			ProjectedPoint proj;
-			proj.globalId = clippingPaths[i3][i2];
-			proj.vertex2d = ProjectVertex(vertices3[clippingPaths[i3][i2]], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
-			clip[0] << ClipperLib::IntPoint(proj.vertex2d.u*1E6, proj.vertex2d.v*1E6);
-			projectedPoints.push_back(proj);
-		}
-	}
-	ClipperLib::Clipper c;
-	c.AddPaths(subj, ClipperLib::ptSubject, true);
-	c.AddPaths(clip, ClipperLib::ptClip, true);
-	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
+	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type);
 
 	//a new facet
 	size_t nbNewFacets = solution.ChildCount();
@@ -596,6 +608,29 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	InitializeGeometry();
 	mApp->UpdateFacetParams(TRUE);
 	UpdateSelection();
+}
+
+size_t Geometry::ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree& solution, ClipperLib::ClipType& type) {
+	ClipperLib::Paths subj(1), clip(clippingPaths.size());
+
+	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
+		subj[0] << ClipperLib::IntPoint(facets[id1]->vertices2[i1].u*1E6, facets[id1]->vertices2[i1].v*1E6);
+	}
+	
+	for (size_t i3 = 0; i3 < clippingPaths.size(); i3++) {
+		for (size_t i2 = 0; i2 < clippingPaths[i3].size(); i2++) {
+			ProjectedPoint proj;
+			proj.globalId = clippingPaths[i3][i2];
+			proj.vertex2d = ProjectVertex(vertices3[clippingPaths[i3][i2]], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
+			clip[0] << ClipperLib::IntPoint(proj.vertex2d.u*1E6, proj.vertex2d.v*1E6);
+			projectedPoints.push_back(proj);
+		}
+	}
+	ClipperLib::Clipper c;
+	c.AddPaths(subj, ClipperLib::ptSubject, true);
+	c.AddPaths(clip, ClipperLib::ptClip, true);
+	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
+	return solution.ChildCount();
 }
 
 
@@ -1191,12 +1226,6 @@ void  Geometry::DeleteIsolatedVertices(BOOL selectedOnly) {
 
 	SAFE_FREE(check);
 	SAFE_FREE(newId);
-
-	// Delete old resources
-	//DeleteGLLists(TRUE,TRUE);
-
-	//InitializeGeometry();
-
 }
 
 void Geometry::Clear() {

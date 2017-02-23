@@ -809,6 +809,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->Add("Explode selected", MENU_FACET_EXPLODE);
 	menu->GetSubMenu("Facet")->Add("Create two facets' ...");
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Difference");
+	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Auto (non-zero)", MENU_FACET_CREATE_DIFFERENCE_AUTO);
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("First - Second", MENU_FACET_CREATE_DIFFERENCE);
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Second - First", MENU_FACET_CREATE_DIFFERENCE2);
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Union", MENU_FACET_CREATE_UNION);
@@ -1415,6 +1416,8 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_VERTEX_CLEAR_ISOLATED:
 			geom->DeleteIsolatedVertices(FALSE);
 			UpdateModelParams();
+			if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+			if (vertexCoordinates) vertexCoordinates->Update();
 			return TRUE;
 		case MENU_VERTEX_CREATE_POLY_CONVEX:
 			if (AskToReset()) {
@@ -1452,10 +1455,13 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			}
 			return TRUE;
 		case MENU_FACET_CREATE_DIFFERENCE:
-			CreateOfTwoFacets(ClipperLib::ctDifference);
+			CreateOfTwoFacets(ClipperLib::ctDifference, 0);
 			return TRUE;
 		case MENU_FACET_CREATE_DIFFERENCE2:
-			CreateOfTwoFacets(ClipperLib::ctDifference, TRUE);
+			CreateOfTwoFacets(ClipperLib::ctDifference, 1);
+			return TRUE;
+		case MENU_FACET_CREATE_DIFFERENCE_AUTO:
+			CreateOfTwoFacets(ClipperLib::ctDifference, 2);
 			return TRUE;
 		case MENU_FACET_CREATE_UNION:
 			CreateOfTwoFacets(ClipperLib::ctUnion);
@@ -2369,7 +2375,7 @@ BOOL Interface::AskToSave() {
 	return FALSE;
 }
 
-void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, BOOL reverseOrder) {
+void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
 	Geometry *geom = worker.GetGeometry();
 	if (geom->IsLoaded()) {
 		try {
