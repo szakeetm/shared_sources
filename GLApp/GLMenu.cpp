@@ -87,7 +87,7 @@ int GLMenu::GetNbItem() {
 
 // -----------------------------------------------------------
 
-void GLMenu::SetState(int itemId,BOOL checked) {
+void GLMenu::SetCheck(int itemId,BOOL checked) {
 
   int i = GetMenu(itemId);
   if( i>=0 ) items[i].checked = checked;
@@ -162,9 +162,9 @@ void GLMenu::Clear() {
 
 // -----------------------------------------------------------
 
-void GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
+GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
 
-  if(nbItem>=MAX_MENU_ITEM) return;
+  if(nbItem>=MAX_MENU_ITEM) return NULL;
 
   if(!items) {
     // Allocate
@@ -205,7 +205,7 @@ void GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifi
   items[i].enabled = TRUE;
 
   nbItem++;
-
+  return items[i].subMenu;
 }
 
 // -----------------------------------------------------------

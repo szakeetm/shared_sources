@@ -3955,10 +3955,10 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, BOOL newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	tNbHit = file->ReadLLong();
-	tNbLeak = file->ReadLLong();
-	tNbDesorption = file->ReadLLong();
-	tNbDesorptionMax = file->ReadLLong();
+	loaded_nbHit = file->ReadLLong();
+	loaded_nbLeak = file->ReadLLong();
+	loaded_nbDesorption = file->ReadLLong();
+	loaded_desorptionLimit = file->ReadLLong();
 
 	int nV = file->ReadInt();
 	int nF = file->ReadInt();
@@ -4007,10 +4007,10 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 	UnselectAll();
 
-	//tNbHit = file->ReadLLong();
-	//tNbLeak = file->ReadInt();
-	//tNbDesorption = file->ReadLLong();
-	//tNbDesorptionMax = file->ReadLLong(); 
+	//loaded_nbHit = file->ReadLLong();
+	//loaded_nbLeak = file->ReadInt();
+	//loaded_nbDesorption = file->ReadLLong();
+	//loaded_desorptionLimit = file->ReadLLong(); 
 	for (int i = 0; i < 5; i++) file->ReadInt(); //leading lines
 
 	int nbNewVertex = file->ReadInt();
@@ -4412,14 +4412,14 @@ void Geometry::SaveSTR(Dataport *dpHit, BOOL saveSelected) {
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
 
 	// Block dpHit during the whole disc writting
-	AccessDataport(dpHit);
+	
 	for (int i = 0; i < sh.nbSuper; i++)
-		SaveSuper(dpHit, i);
-	ReleaseDataport(dpHit);
+		SaveSuper( i);
+	
 
 }
 
-void Geometry::SaveSuper(Dataport *dpHit, int s) {
+void Geometry::SaveSuper(int s) {
 
 	char fName[512];
 	sprintf(fName, "%s/%s", strPath, strFileName[s]);
@@ -4427,10 +4427,6 @@ void Geometry::SaveSuper(Dataport *dpHit, int s) {
 
 	// Unused
 	file->WriteInt(0, "\n");
-
-	// Globals
-	BYTE *buffer = (BYTE *)dpHit->buff;
-	SHGHITS *gHits = (SHGHITS *)buffer;
 
 	//Extract data of the specified super structure
 	llong totHit = 0;
@@ -4495,8 +4491,6 @@ void Geometry::SaveSuper(Dataport *dpHit, int s) {
 		// Update facet hits from shared mem
 		Facet *f = facets[i];
 		if (f->sh.superIdx == s) {
-			SHHITS *shF = (SHHITS *)(buffer + f->sh.hitOffset);
-			memcpy(&(f->counterCache), shF, sizeof(SHHITS));
 			f->SaveTXT(file);
 		}
 

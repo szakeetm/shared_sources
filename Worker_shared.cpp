@@ -138,41 +138,30 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, BOOL askConf
 
 }
 
-
-void Worker::GetLeak(LEAK *buffer,int *nb) {
-
-	*nb=0;
-	if( dpHit ) {
-		memcpy(buffer,leakCache,sizeof(LEAK)*NBHLEAK);
-		*nb = (int)MIN(nbLastLeaks,NBHLEAK);
-	}
-
-}
-
-void Worker::SetLeak(LEAK *buffer,int *nb,SHGHITS *gHits) { //When loading from file
-
-	if( nb>0 ) {
-		memcpy(leakCache,buffer,sizeof(LEAK)*MIN(NBHLEAK,*nb));
-		memcpy(gHits->pLeak,buffer,sizeof(LEAK)*MIN(NBHLEAK,*nb));
-		gHits->nbLastLeaks = *nb;
-	}
-
-}
-
-void Worker::GetHHit(HIT *buffer, int *nb) {
-
-	*nb = 0;
+void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When loading from file
 	if (dpHit) {
-		memcpy(buffer, hhitCache, sizeof(HIT)*NBHHIT);
-		*nb = nbHHit;
+		AccessDataport(dpHit);
+		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
+		size_t nbCopy = MIN(LEAKCACHESIZE, *nb);
+		memcpy(leakCache, buffer, sizeof(LEAK)*nbCopy);
+		memcpy(gHits->leakCache, buffer, sizeof(LEAK)*nbCopy);
+		gHits->lastLeakIndex = nbCopy % LEAKCACHESIZE;
+		gHits->leakCacheSize = nbCopy;
+		ReleaseDataport(dpHit);
 	}
 }
 
-void Worker::SetHHit(HIT *buffer, int *nb, SHGHITS *gHits) {
-
-	memcpy(hhitCache, buffer, sizeof(HIT)*MIN(*nb, NBHHIT));
-	memcpy(gHits->pHits, buffer, sizeof(HIT)*MIN(*nb, NBHHIT));
-	gHits->nbHHit = *nb;
+void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
+	if (dpHit) {
+		AccessDataport(dpHit);
+		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
+		size_t nbCopy = MIN(HITCACHESIZE, *nb);
+		memcpy(hitCache, buffer, sizeof(HIT)*nbCopy);
+		memcpy(gHits->hitCache, buffer, sizeof(HIT)*nbCopy);
+		gHits->lastHitIndex = nbCopy % HITCACHESIZE;
+		gHits->hitCacheSize = nbCopy;
+		ReleaseDataport(dpHit);
+	}
 }
 
 void Worker::Stop_Public() {
@@ -229,7 +218,7 @@ void Worker::SetMaxDesorption(llong max) {
 	try {
 		ResetStatsAndHits(0.0);
 
-		maxDesorption = max;
+		desorptionLimit = max;
 		Reload();
 
 

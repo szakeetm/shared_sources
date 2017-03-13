@@ -140,7 +140,7 @@ public:
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, BOOL newStr);
 
 	void SaveSTR(Dataport *dhHit, BOOL saveSelected);
-	void SaveSuper(Dataport *dpHit, int s);
+	void SaveSuper(int s);
 	void SaveProfileTXT(FileWriter *file);
 	void UpdateSelection();
 	void SwapNormal();
@@ -280,12 +280,12 @@ protected:
 	GLint sphereList;             // Compiled geometry of sphere used for direction field
 
 	public:
-		llong tNbHit;
-		llong tNbDesorption;
-		llong tNbDesorptionMax;
-		llong   tNbLeak;
-		llong tNbAbsorption;
-		double distTraveledTotal;
+		llong loaded_nbHit;
+		llong loaded_nbDesorption;
+		llong loaded_desorptionLimit;
+		llong   loaded_nbLeak;
+		llong loaded_nbAbsorption;
+		double loaded_distTraveledTotal;
 
 		BOOL  texAutoScale;  // Autoscale flag
 		BOOL  texColormap;   // Colormap flag

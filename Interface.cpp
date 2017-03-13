@@ -166,7 +166,7 @@ void Interface::UpdateStructMenu() {
 			structMenu->Add(tmp, MENU_VIEW_STRUCTURE + (i + 1));
 	}
 
-	structMenu->SetState(MENU_VIEW_STRUCTURE + geom->viewStruct + 1, TRUE);
+	structMenu->SetCheck(MENU_VIEW_STRUCTURE + geom->viewStruct + 1, TRUE);
 
 	UpdateTitle();
 }
@@ -1569,7 +1569,7 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			else {
 				Resize(1024, 800, TRUE);
 			}
-			menu->GetSubMenu("View")->SetState(MENU_VIEW_FULLSCREEN, !m_bWindowed);
+			menu->GetSubMenu("View")->SetCheck(MENU_VIEW_FULLSCREEN, !m_bWindowed);
 			return TRUE;
 
 		case MENU_VIEW_ADDNEW:

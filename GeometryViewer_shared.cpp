@@ -91,14 +91,14 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	hideLot = 500;
 
 	showTP = TRUE;
-	#ifdef MOLFLOW
+#ifdef MOLFLOW
 	showTime = FALSE;
-	#endif
+#endif
 
-	#ifdef SYNRAD
+#ifdef SYNRAD
 	shadeLines = TRUE;
 	dispNumTraj = 500;
-	#endif
+#endif
 	camDistInc = 1.0;
 	transStep = 1.0;
 	angleStep = 0.005;
@@ -149,17 +149,17 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	projCombo->SetSelectedIndex(1);
 	Add(projCombo);
 
-	#ifdef MOLFLOW
+#ifdef MOLFLOW
 	timeLabel = new GLOverlayLabel("");
 	timeLabel->SetTextColor(255, 255, 255);
 	Add(timeLabel);
-	#endif
+#endif
 
-	#ifdef SYNRAD
+#ifdef SYNRAD
 	selTrajBtn = new GLButton(0, "");
 	selTrajBtn->SetIcon("images/icon_traj_select.png");
 	Add(selTrajBtn);
-	#endif
+#endif
 
 
 
@@ -295,7 +295,7 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 				break;
 
-			#ifdef SYNRAD
+#ifdef SYNRAD
 			case MODE_SELECTTRAJ:
 				if (GetWindow()->IsAltDown()) {
 					SetCursor(CURSOR_HAND);
@@ -305,7 +305,7 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 				}
 
 				break;
-			#endif
+#endif
 
 			case MODE_ZOOM:
 				SetCursor(CURSOR_ZOOM);
@@ -586,66 +586,66 @@ void GeometryViewer::DrawIndex() {
 
 	// Draw index number
 		// Get selected vertex
-		Geometry *geom = work->GetGeometry();
-		int nbVertex = geom->GetNbVertex();
-		int nbFacet = geom->GetNbFacet();
-		if (nbVertex <= 0) return;
+	Geometry *geom = work->GetGeometry();
+	int nbVertex = geom->GetNbVertex();
+	int nbFacet = geom->GetNbFacet();
+	if (nbVertex <= 0) return;
 
-		int *vIdx = (int *)malloc(nbVertex * sizeof(int));
-		memset(vIdx, 0xFF, nbVertex * sizeof(int));
-		for (int i = 0;i < nbFacet;i++) {
-			Facet *f = geom->GetFacet(i);
-			if (f->selected) {
-				int nb = f->sh.nbIndex;
-				for (int i = 0;i < nb;i++) {
-					vIdx[f->indices[i]] = i;
-				}
+	int *vIdx = (int *)malloc(nbVertex * sizeof(int));
+	memset(vIdx, 0xFF, nbVertex * sizeof(int));
+	for (int i = 0; i < nbFacet; i++) {
+		Facet *f = geom->GetFacet(i);
+		if (f->selected) {
+			int nb = f->sh.nbIndex;
+			for (int i = 0; i < nb; i++) {
+				vIdx[f->indices[i]] = i;
 			}
 		}
+	}
 
-		// Draw dot
-		glPointSize(4.0f);
-		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_LIGHTING);
-		glDisable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
+	// Draw dot
+	glPointSize(4.0f);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
 
-		glColor3f(1.0f, 0.2f, 0.2f);
+	glColor3f(1.0f, 0.2f, 0.2f);
 
-		glBegin(GL_POINTS);
-		for (int i = 0;i < nbVertex;i++) {
-			if (vIdx[i] >= 0) {
-				Vector3d *v = geom->GetVertex(i);
-				glVertex3d(v->x, v->y, v->z);
-			}
+	glBegin(GL_POINTS);
+	for (int i = 0; i < nbVertex; i++) {
+		if (vIdx[i] >= 0) {
+			Vector3d *v = geom->GetVertex(i);
+			glVertex3d(v->x, v->y, v->z);
 		}
-		glEnd();
+	}
+	glEnd();
 
-		// Save context
-		GLToolkit::DrawStringInit();
-		GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.9f, 0.9f);
+	// Save context
+	GLToolkit::DrawStringInit();
+	GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.9f, 0.9f);
 
-		// Draw Labels
-		for (int i = 0;i < nbVertex;i++) {
-			int idx = vIdx[i];
-			if (idx >= 0) {
-				if (showIndex && showVertex) {
-					sprintf(tmp, "%d,%d ", idx + 1, i + 1);
-				}
-				else if (showIndex && !showVertex) {
-					sprintf(tmp, "%d ", idx + 1);
-				}
-				else {
-					sprintf(tmp, "%d ", i + 1);
-				}
-				Vector3d *v = geom->GetVertex(i);
-				GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
+	// Draw Labels
+	for (int i = 0; i < nbVertex; i++) {
+		int idx = vIdx[i];
+		if (idx >= 0) {
+			if (showIndex && showVertex) {
+				sprintf(tmp, "%d,%d ", idx + 1, i + 1);
 			}
+			else if (showIndex && !showVertex) {
+				sprintf(tmp, "%d ", idx + 1);
+			}
+			else {
+				sprintf(tmp, "%d ", i + 1);
+			}
+			Vector3d *v = geom->GetVertex(i);
+			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 		}
+	}
 
-		//Restore
-		GLToolkit::DrawStringRestore();
-		free(vIdx);
+	//Restore
+	GLToolkit::DrawStringRestore();
+	free(vIdx);
 }
 
 
@@ -727,60 +727,60 @@ void GeometryViewer::PaintSelectedVertices(BOOL hiddenVertex) {
 
 void GeometryViewer::DrawNormal() {
 
-		Geometry *geom = work->GetGeometry();
-		for (int i = 0;i < geom->GetNbFacet();i++) {
-			Facet *f = geom->GetFacet(i);
-			if (f->selected) {
-				Vector3d v1 = geom->GetFacetCenter(i);
-				Vector3d v2 = f->sh.N;
-				GLToolkit::SetMaterial(&blueMaterial);
-				glLineWidth(2.0f);
-				GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
-				glPointSize(3.0f);
-				glColor3f(1.0f, 0.0f, 0.0f);
-				glBegin(GL_POINTS);
-				glVertex3d(v1.x, v1.y, v1.z);
-				glEnd();
-			}
+	Geometry *geom = work->GetGeometry();
+	for (int i = 0; i < geom->GetNbFacet(); i++) {
+		Facet *f = geom->GetFacet(i);
+		if (f->selected) {
+			Vector3d v1 = geom->GetFacetCenter(i);
+			Vector3d v2 = f->sh.N;
+			GLToolkit::SetMaterial(&blueMaterial);
+			glLineWidth(2.0f);
+			GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
+			glPointSize(3.0f);
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glBegin(GL_POINTS);
+			glVertex3d(v1.x, v1.y, v1.z);
+			glEnd();
 		}
+	}
 }
 
 
 
 void GeometryViewer::DrawUV() {
-		Geometry *geom = work->GetGeometry();
-		for (int i = 0;i < geom->GetNbFacet();i++) {
-			Facet *f = geom->GetFacet(i);
-			if (f->selected) {
-				Vector3d O = f->sh.O;
-				Vector3d U = f->sh.U;
-				Vector3d V = f->sh.V;
-				GLToolkit::SetMaterial(&blueMaterial);
-				if (mApp->antiAliasing) {
-					glEnable(GL_LINE_SMOOTH);
-					//glEnable(GL_BLEND);
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					//glColor4f(0.0f,0.0f,1.0f,0.5f);
-					glEnable(GL_DEPTH_TEST);
-				}
-				glLineWidth(1.0f);
-				GLToolkit::DrawVector(O.x, O.y, O.z, O.x + U.x, O.y + U.y, O.z + U.z, arrowLength);
-				GLToolkit::DrawVector(O.x, O.y, O.z, O.x + V.x, O.y + V.y, O.z + V.z, arrowLength);
-				if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
-				glPointSize(3.0f);
-				glColor3f(0.5f, 1.0f, 1.0f);
-				glBegin(GL_POINTS);
-				glVertex3d(O.x, O.y, O.z);
-				glEnd();
+	Geometry *geom = work->GetGeometry();
+	for (int i = 0; i < geom->GetNbFacet(); i++) {
+		Facet *f = geom->GetFacet(i);
+		if (f->selected) {
+			Vector3d O = f->sh.O;
+			Vector3d U = f->sh.U;
+			Vector3d V = f->sh.V;
+			GLToolkit::SetMaterial(&blueMaterial);
+			if (mApp->antiAliasing) {
+				glEnable(GL_LINE_SMOOTH);
 				//glEnable(GL_BLEND);
-				GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.6f, 1.0f);
-				GLToolkit::DrawStringInit();
-				GLToolkit::DrawString((float)(O.x + U.x), (float)(O.y + U.y), (float)(O.z + U.z), "\201", GLToolkit::GetDialogFont());
-				GLToolkit::DrawString((float)(O.x + V.x), (float)(O.y + V.y), (float)(O.z + V.z), "\202", GLToolkit::GetDialogFont());
-				GLToolkit::DrawStringRestore();
-				//glDisable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				//glColor4f(0.0f,0.0f,1.0f,0.5f);
+				glEnable(GL_DEPTH_TEST);
 			}
+			glLineWidth(1.0f);
+			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + U.x, O.y + U.y, O.z + U.z, arrowLength);
+			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + V.x, O.y + V.y, O.z + V.z, arrowLength);
+			if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
+			glPointSize(3.0f);
+			glColor3f(0.5f, 1.0f, 1.0f);
+			glBegin(GL_POINTS);
+			glVertex3d(O.x, O.y, O.z);
+			glEnd();
+			//glEnable(GL_BLEND);
+			GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.6f, 1.0f);
+			GLToolkit::DrawStringInit();
+			GLToolkit::DrawString((float)(O.x + U.x), (float)(O.y + U.y), (float)(O.z + U.z), "\201", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(O.x + V.x), (float)(O.y + V.y), (float)(O.z + V.z), "\202", GLToolkit::GetDialogFont());
+			GLToolkit::DrawStringRestore();
+			//glDisable(GL_BLEND);
 		}
+	}
 }
 
 
@@ -790,35 +790,27 @@ void GeometryViewer::DrawLeak() {
 	// Draw leak
 	if (showLeak) {
 
-		// Retreive leak data
-		LEAK pLeak[NBHLEAK];
-		int nbLeak;
-		work->GetLeak(pLeak, &nbLeak);
-		if (nbLeak) {
+		glPointSize(4.0f);
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_LINE_SMOOTH);
+		for (int i = 0; i < MIN(dispNumLeaks,mApp->worker.leakCacheSize); i++) {
 
-			glPointSize(4.0f);
-			glDisable(GL_TEXTURE_2D);
-			glDisable(GL_LIGHTING);
-			glDisable(GL_BLEND);
-			glDisable(GL_CULL_FACE);
-			glEnable(GL_LINE_SMOOTH);
-			for (int i = 0;i < dispNumLeaks;i++) {
+			Vector3d p = mApp->worker.leakCache[i].pos;
+			Vector3d d = mApp->worker.leakCache[i].dir;
 
-				Vector3d p = pLeak[i].pos;
-				Vector3d d = pLeak[i].dir;
+			glColor3f(0.9f, 0.2f, 0.5f);
+			glBegin(GL_POINTS);
+			glVertex3d(p.x, p.y, p.z);
+			glEnd();
 
-				glColor3f(0.9f, 0.2f, 0.5f);
-				glBegin(GL_POINTS);
-				glVertex3d(p.x, p.y, p.z);
-				glEnd();
+			GLToolkit::DrawVector(p.x, p.y, p.z,
+				p.x + d.x*vectorLength, p.y + d.y*vectorLength, p.z + d.z*vectorLength, arrowLength);
 
-				GLToolkit::DrawVector(p.x, p.y, p.z,
-					p.x + d.x*vectorLength, p.y + d.y*vectorLength, p.z + d.z*vectorLength, arrowLength);
-
-			}
-			glDisable(GL_LINE_SMOOTH);
 		}
-
+		glDisable(GL_LINE_SMOOTH);
 	}
 
 }
@@ -952,13 +944,13 @@ void GeometryViewer::Paint() {
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
 	if (!(mApp->whiteBg)) {
 		glBegin(GL_QUADS);
-		#ifdef MOLFLOW
+#ifdef MOLFLOW
 		glColor3f(0.3f, 0.5f, 0.7f); //blue top
-		#endif
-		
-		#ifdef SYNRAD
+#endif
+
+#ifdef SYNRAD
 		glColor3f(0.7f, 0.4f, 0.3f); //red top
-		#endif
+#endif
 		glVertex2i(x, y);
 		glVertex2i(x + width, y);
 		glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
@@ -1055,12 +1047,12 @@ if( showVolume || showTexture ) {
 	DrawLinesAndHits();
 
 	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
-	#ifdef SYNRAD
+#ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
-		work->regions[i].Render((int)i,dispNumTraj, &blueMaterial, vectorLength);
-	#endif
+		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
+#endif
 
-	BOOL detailsSuppressed = hideLot!=-1 && (geom->GetNbSelected() > hideLot);
+	BOOL detailsSuppressed = hideLot != -1 && (geom->GetNbSelected() > hideLot);
 	BOOL displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
 	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
@@ -1110,7 +1102,7 @@ if( showVolume || showTexture ) {
 			float DEG2RAD = (float)(3.14159 / 180.0);
 			float radius = sqrt(pow((float)(selX1 - selX2), 2) + pow((float)(selY1 - selY2), 2));
 
-			for (int i = 0;i <= 360;i += 2) {
+			for (int i = 0; i <= 360; i += 2) {
 				float degInRad = i*DEG2RAD;
 				glVertex2f(selX1 + cos(degInRad)*radius, selY1 + sin(degInRad)*radius);
 			}
@@ -1126,14 +1118,14 @@ if( showVolume || showTexture ) {
 	capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
 	hideLotlabel->SetVisible(displayWarning);
 
-	#ifdef MOLFLOW
+#ifdef MOLFLOW
 	if (work->displayedMoment)
 		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1]);
 	else
 		sprintf(tmp, "Const. flow");
 	timeLabel->SetText(tmp);
 	timeLabel->SetVisible(showTime);
-	#endif
+#endif
 }
 
 
@@ -1373,9 +1365,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			selY1 = selY2 = mY;
 			if (mode == MODE_SELECT || mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
 			else if (mode == MODE_SELECTVERTEX) draggMode = DRAGG_SELECTVERTEX;
-			#ifdef SYNRAD
+#ifdef SYNRAD
 			else if (mode == MODE_SELECTTRAJ) draggMode = DRAGG_SELECTTRAJ;
-			#endif
+#endif
 			else if (mode == MODE_MOVE) draggMode = DRAGG_MOVE;
 
 		}
@@ -1423,9 +1415,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		case DRAGG_SELECT:
 		case DRAGG_SELECTVERTEX:
-		#ifdef SYNRAD
+#ifdef SYNRAD
 		case DRAGG_SELECTTRAJ:
-		#endif
+#endif
 
 
 			switch (mode) {
@@ -1472,17 +1464,17 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown());
 				}
 				break;
-			#ifdef SYNRAD
+#ifdef SYNRAD
 			case MODE_SELECTTRAJ:
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
-				for (int i = 0;i < (int)work->regions.size();i++)
+				for (int i = 0; i < (int)work->regions.size(); i++)
 					work->regions[i].SelectTrajPoint(mX - posX, mY - posY, i);
 				break;
-			#endif
+#endif
 			}
 			break;
 
@@ -1789,7 +1781,7 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 
 	if (geom->viewStruct < 0 || getAll) {
 
-		for (int i = 0;i < nbV;i++) {
+		for (int i = 0; i < nbV; i++) {
 			Vector3d *p = geom->GetVertex(i);
 			TRANSFORMVERTEX(p->x, p->y, p->z);
 		}
@@ -1815,15 +1807,15 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 
 		// Get facet of the selected structure
 		int nbF = geom->GetNbFacet();
-		for (int i = 0;i < nbF;i++) {
+		for (int i = 0; i < nbF; i++) {
 			Facet *f = geom->GetFacet(i);
 			if (f->sh.superIdx == geom->viewStruct) {
-				for (int j = 0;j < f->sh.nbIndex;j++) refIdx[f->indices[j]] = 1;
+				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = 1;
 			}
 		}
 
 		// Transform vertex
-		for (int i = 0;i < nbV;i++) {
+		for (int i = 0; i < nbV; i++) {
 			if (refIdx[i]) {
 				Vector3d *p = geom->GetVertex(i);
 				TRANSFORMVERTEX(p->x, p->y, p->z);
@@ -1842,7 +1834,7 @@ void Geometry::ClearFacetMeshLists()
 	GLProgress *prg = new GLProgress("Please wait...", "Clearing facet meshes...");
 	prg->SetVisible(TRUE);
 	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (int i = 0;i < nbFacet;i++) {
+	for (int i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
 		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
 	}
@@ -1857,7 +1849,7 @@ void Geometry::BuildFacetMeshLists()
 	GLProgress *prg = new GLProgress("Please wait...", "Building facet meshes...");
 	prg->SetVisible(TRUE);
 	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (int i = 0;i < nbFacet;i++) {
+	for (int i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
 		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshList();
 
