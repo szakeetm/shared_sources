@@ -1,7 +1,7 @@
 #include <Windows.h>
 
 #include "Worker.h"
-
+#include "Facet.h"
 #include "GLApp/GLApp.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp\MathTools.h" //Min max
@@ -456,3 +456,96 @@ void Worker::RebuildTextures() {
 int Worker::GetProcNumber() {
 	return nbProcess;
 }
+
+void Worker::Update(float appTime) {
+	if (needsReload) RealReload();
+
+	// Check calculation ending
+	BOOL done = TRUE;
+	BOOL error = TRUE;
+	if (dpControl) {
+		if (AccessDataport(dpControl)) {
+			int i = 0;
+			SHCONTROL *master = (SHCONTROL *)dpControl->buff;
+			for (int i = 0; i<nbProcess && done; i++) {
+				done = done && (master->states[i] == PROCESS_DONE);
+				error = error && (master->states[i] == PROCESS_ERROR);
+#ifdef MOLFLOW
+				if (master->states[i] == PROCESS_RUNAC) calcACprg = master->cmdParam[i];
+#endif
+			}
+			ReleaseDataport(dpControl);
+		}
+	}
+
+	// End of simulation reached (Stop GUI)
+	if ((error || done) && running && appTime != 0.0f) {
+		InnerStop(appTime);
+		if (error) ThrowSubProcError();
+	}
+
+	// Retrieve hit count recording from the shared memory
+	if (dpHit) {
+
+		if (AccessDataport(dpHit)) {
+			BYTE *buffer = (BYTE *)dpHit->buff;
+
+			mApp->changedSinceSave = TRUE;
+			// Globals
+			SHGHITS *gHits = (SHGHITS *)buffer;
+
+// Global hits and leaks
+#ifdef MOLFLOW
+			nbHit = gHits->total.hit.nbHit;
+			nbAbsorption = gHits->total.hit.nbAbsorbed;
+			nbDesorption = gHits->total.hit.nbDesorbed;
+			distTraveledTotal_total = gHits->distTraveledTotal_total;
+			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
+#endif
+
+#ifdef SYNRAD
+			
+			nbHit = gHits->total.nbHit;
+			nbAbsorption = gHits->total.nbAbsorbed;
+			nbDesorption = gHits->total.nbDesorbed;
+			totalFlux = gHits->total.fluxAbs;
+			totalPower = gHits->total.powerAbs;
+			distTraveledTotal = gHits->distTraveledTotal;
+
+			if (nbDesorption && nbTrajPoints) {
+				no_scans = (double)nbDesorption / (double)nbTrajPoints;
+			}
+			else {
+				no_scans = 1.0;
+			}
+#endif
+			nbLeakTotal = gHits->nbLeakTotal;
+			hitCacheSize = gHits->hitCacheSize;
+			memcpy(hitCache, gHits->hitCache, sizeof(HIT)*hitCacheSize);
+			leakCacheSize = gHits->leakCacheSize;
+			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
+
+			// Refresh local facet hit cache for the displayed moment
+			int nbFacet = geom->GetNbFacet();
+			for (int i = 0; i<nbFacet; i++) {
+				Facet *f = geom->GetFacet(i);
+#ifdef SYNRAD
+				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(SHHITS));
+#endif
+#ifdef MOLFLOW
+				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(SHHITS), sizeof(SHHITS));
+#endif
+			}
+			try {
+				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);
+			}
+			catch (Error &e) {
+				GLMessageBox::Display((char *)e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
+				ReleaseDataport(dpHit);
+				return;
+			}
+			ReleaseDataport(dpHit);
+		}
+	}
+}
+

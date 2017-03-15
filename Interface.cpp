@@ -2648,6 +2648,7 @@ int Interface::FrameMove()
 }
 
 void Interface::ResetAutoSaveTimer() {
+	UpdateStats(); //updates m_fTime
 	if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTime + (m_fTime - worker.startTime);
 	else lastSaveTime = m_fTime;
 }
