@@ -16,6 +16,10 @@ int main(int argc,char* argv[]) {
 	//__debugbreak();
 	char key;
 	std::string result;
+	for (int i = 0; i < argc; i++) {
+		std::cout << argv[i] << " ";
+	}
+	std::cout << "\n\n";
 	if (argc<3) {
 		std::cout<<"Usage: compress.exe FILE_TO_COMPRESS RENAMED_FILENAME {include_file1 include_file2 ...}";
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );

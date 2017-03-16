@@ -2548,6 +2548,7 @@ int Interface::FrameMove()
 			if (autoUpdateFormulas) UpdateFormula();
 
 			//lastUpdate = GetTick(); //changed from m_fTime: include update duration
+			UpdateStats(); //Update m_fTime
 			lastUpdate = m_fTime;
 
 			// Update timing measurements

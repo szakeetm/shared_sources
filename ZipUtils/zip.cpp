@@ -2321,10 +2321,14 @@ ZRESULT TZip::Create(void *z,unsigned int len,DWORD flags)
     if (size==0) return ZR_MEMSIZE;
     if (z!=0) obuf=(char*)z;
     else
-    { hmapout = CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,size,NULL);
-      if (hmapout==NULL) return ZR_NOALLOC;
-      obuf = (char*)MapViewOfFile(hmapout,FILE_MAP_ALL_ACCESS,0,0,size);
-      if (obuf==0) {CloseHandle(hmapout); hmapout=0; return ZR_NOALLOC;}
+    { 
+		// 2^32 = 4294967296      DWORD is 32-bit unsigned
+		DWORD sizeHighOrder = size >> 32;
+		DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+		hmapout = CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE, sizeHighOrder, sizeLowOrder,NULL);
+		if (hmapout==NULL) return ZR_NOALLOC;
+		obuf = (char*)MapViewOfFile(hmapout,FILE_MAP_ALL_ACCESS,0,0,size);
+		if (obuf==0) {CloseHandle(hmapout); hmapout=0; return ZR_NOALLOC;}
     }
     ocanseek=true;
     opos=0; mapsize=size;

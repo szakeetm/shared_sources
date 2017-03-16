@@ -50,12 +50,17 @@ Dataport *CreateDataport(char *name,size_t size)
    /* ------------------- Create shared memory ------------------- */
 
    SetLastError (ERROR_SUCCESS);
+   
+   // 2^32 = 4294967296      DWORD is 32-bit unsigned
+   DWORD sizeHighOrder = size >> 32;
+   DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+
    dp->mem = CreateFileMapping(
 	            INVALID_HANDLE_VALUE,   // to create a memory file
 			      	NULL,                   // no security 
-				      PAGE_READWRITE,         // to allow read & write access
-				      0,     
-				      (DWORD)size,                   // file size     
+				    PAGE_READWRITE,         // to allow read & write access
+					sizeHighOrder,
+					sizeLowOrder,                   // file size     
 				      name);                  // object name      
 
    if( GetLastError()==ERROR_ALREADY_EXISTS ) {
@@ -128,12 +133,16 @@ Dataport *OpenDataport(char *name,size_t size)
 
    /* ------------------- Link to the share memory ------------------- */
 
+   // 2^32 = 4294967296      DWORD is 32-bit unsigned
+   DWORD sizeHighOrder = size >> 32;
+   DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+
    dp->mem = CreateFileMapping(
 	            INVALID_HANDLE_VALUE,   // to create a memory file
 		       		NULL,                   // no security 
 			      	PAGE_READWRITE,         // to allow read & write access
-		      		0,     
-		      		(DWORD)size,                   // file size     
+		      		sizeHighOrder,     
+		      		sizeLowOrder,                   // file size      
 			      	name);                  // object name      
    
    if( GetLastError()!=ERROR_ALREADY_EXISTS ) {
@@ -180,8 +189,8 @@ Dataport *OpenDataport(char *name,size_t size)
 
 BOOL AccessDataport(Dataport *dp)
 {
-  // 1sec timeout 
-  if (WaitForSingleObject(dp->sema,8000)==WAIT_OBJECT_0)
+  // 20 sec timeout 
+  if (WaitForSingleObject(dp->sema,20000)==WAIT_OBJECT_0)
 	return TRUE;
   else
 	return FALSE;
