@@ -56,6 +56,7 @@
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
 #define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
 #define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
+#define ZEROVECTOR(_vector) memset(&(_vector[0]),0,_vector.size()*sizeof(_vector[0]))
 
 // Constants
 

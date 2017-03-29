@@ -21,14 +21,18 @@ GNU General Public License for more details.
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "ProfilePlotter.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
+#include "TimewisePlotter.h"
+#include "PressureEvolution.h"
 #endif
 
 #ifdef SYNRAD
 #include "SynRad.h"
 #endif
-
 
 
 #ifdef MOLFLOW

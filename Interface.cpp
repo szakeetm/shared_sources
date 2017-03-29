@@ -456,60 +456,9 @@ void Interface::UpdateModelParams() {
 
 }
 
-//-----------------------------------------------------------------------------
-// Name: AddFormula()
-// Desc: Add a formula
-//-----------------------------------------------------------------------------
-void Interface::AddFormula(GLParser *f, BOOL doUpdate) {
 
-	if (f) {
-		if (nbFormula < MAX_FORMULA) {
-			formulas[nbFormula].parser = f;
-			std::string formulaName = f->GetName();
-			if (formulaName.empty()) formulaName = f->GetExpression();
-			formulas[nbFormula].name = new GLLabel(formulaName.c_str());
-			Add(formulas[nbFormula].name);
-			formulas[nbFormula].value = new GLTextField(0, "");
-			formulas[nbFormula].value->SetEditable(FALSE);
-			Add(formulas[nbFormula].value);
-			formulas[nbFormula].setBtn = new GLButton(0, "...");
-			Add(formulas[nbFormula].setBtn);
-			nbFormula++;
-			PlaceComponents();
-			if (doUpdate) UpdateFormula();
-		}
-		else {
-			SAFE_DELETE(f);
-		}
-	}
 
-}
 
-void Interface::ClearFormula() {
-
-	for (int i = 0; i < nbFormula; i++) {
-		wnd->PostDelete(formulas[i].name);
-		wnd->PostDelete(formulas[i].value);
-		wnd->PostDelete(formulas[i].setBtn);
-		formulas[i].name = NULL;
-		formulas[i].value = NULL;
-		formulas[i].setBtn = NULL;
-		SAFE_DELETE(formulas[i].parser);
-	}
-	nbFormula = 0;
-	PlaceComponents();
-
-}
-
-void Interface::AddFormula(const char *fName, const char *formula) {
-
-	GLParser *f = new GLParser();
-	f->SetExpression(formula);
-	f->SetName(fName);
-	f->Parse();
-	AddFormula(f, FALSE);
-
-}
 
 void Interface::AnimateViewerChange(int next) {
 
@@ -690,7 +639,6 @@ void Interface::SetFacetSearchPrg(BOOL visible, char *text) {
 
 int Interface::OnExit() {
 	SaveConfig();
-	worker.Exit();
 	remove(autosaveFilename.c_str());
 	//empty TMP directory
 	char tmp[1024];
@@ -1125,7 +1073,8 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 
 		case MENU_EDIT_ADDFORMULA:
 			if (!formulaSettings) formulaSettings = new FormulaSettings();
-			AddFormula(formulaSettings->NewFormula());
+			formulaSettings->Update(NULL, -1);
+			formulaSettings->SetVisible(TRUE);
 			return TRUE;
 		case MENU_EDIT_UPDATEFORMULAS:
 			UpdateFormula();
@@ -2155,14 +2104,72 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 	}
 	if (found) {
 		if (!formulaSettings) formulaSettings = new FormulaSettings();
-		if (formulaSettings->EditFormula(formulas[i].parser)) {
-			// Apply change
-			std::string formulaName = formulas[i].parser->GetName();
-			if (formulaName.empty()) formulaName = formulas[i].parser->GetExpression();
-			formulas[i].name->SetText(formulaName.c_str());
-			UpdateFormula();
+		formulaSettings->Update(formulas[i].parser, i);
+		formulaSettings->SetVisible(TRUE);
+	}
+}
+
+void Interface::AddFormula(GLParser *f, BOOL doUpdate) {
+
+	if (f) {
+		if (nbFormula < MAX_FORMULA) {
+			formulas[nbFormula].parser = f;
+			std::string formulaName = f->GetName();
+			if (formulaName.empty()) formulaName = f->GetExpression();
+			formulas[nbFormula].name = new GLLabel(formulaName.c_str());
+			Add(formulas[nbFormula].name);
+			formulas[nbFormula].value = new GLTextField(0, "");
+			formulas[nbFormula].value->SetEditable(FALSE);
+			Add(formulas[nbFormula].value);
+			formulas[nbFormula].setBtn = new GLButton(0, "...");
+			Add(formulas[nbFormula].setBtn);
+			nbFormula++;
+			PlaceComponents();
+			if (doUpdate) UpdateFormula();
 		}
 		else {
+			SAFE_DELETE(f);
+		}
+	}
+
+}
+
+
+void Interface::AddFormula(const char *fName, const char *formula) {
+
+	GLParser *f = new GLParser();
+	f->SetExpression(formula);
+	f->SetName(fName);
+	f->Parse();
+	AddFormula(f, FALSE);
+
+}
+
+
+void Interface::ClearFormula() {
+
+	for (int i = 0; i < nbFormula; i++) {
+		wnd->PostDelete(formulas[i].name);
+		wnd->PostDelete(formulas[i].value);
+		wnd->PostDelete(formulas[i].setBtn);
+		formulas[i].name = NULL;
+		formulas[i].value = NULL;
+		formulas[i].setBtn = NULL;
+		SAFE_DELETE(formulas[i].parser);
+	}
+	nbFormula = 0;
+	PlaceComponents();
+
+}
+
+void Interface::UpdateFormulaName(int i) {
+		std::string formulaName = formulas[i].parser->GetName();
+		if (formulaName.empty()) formulaName = formulas[i].parser->GetExpression();
+		formulas[i].name->SetText(formulaName.c_str());
+		UpdateFormula();
+}
+
+void Interface::DeleteFormula(int i) {
 			// Delete
 			wnd->PostDelete(formulas[i].name);
 			wnd->PostDelete(formulas[i].value);
@@ -2171,14 +2178,13 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 			formulas[i].value = NULL;
 			formulas[i].setBtn = NULL;
 			SAFE_DELETE(formulas[i].parser);
-			for (int j = i; j < nbFormula - 1; j++)
+			for (int j = i; j < nbFormula - 1; j++) {
 				formulas[j] = formulas[j + 1];
+			}
 			nbFormula--;
 			PlaceComponents();
-			UpdateFormula();
-		}
-	}
-
+			wnd->DoPostDelete(); //forces redraw
+			//UpdateFormula(); //no new values needed
 }
 
 BOOL Interface::OffsetFormula(char *expression, int offset, int filter, std::vector<int> *newRefs) {

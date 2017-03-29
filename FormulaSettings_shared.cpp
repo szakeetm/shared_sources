@@ -2,50 +2,31 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLMessageBox.h"
 
-BOOL FormulaSettings::EditFormula(GLParser *f) {
+#ifdef MOLFLOW
+#include "MolFlow.h"
+extern MolFlow *mApp;
+#endif
 
-  createButton->SetText("Apply");
-  deleteButton->SetEnabled(TRUE);
-  nameT->SetText(f->GetName());
-  exprT->SetText(f->GetExpression());
-  rCode = 0;
-  DoModal();
+#ifdef SYNRAD
+#include "SynRad.h"
+extern SynRad*mApp;
+#endif
 
-  if( rCode==2 ) {
-    // Delete
-    return FALSE;
-  } else if (rCode==1) {
-    // Apply
-    f->SetExpression(exprT->GetText());
-    f->SetName(nameT->GetText());
-    if( !f->Parse() ) 
-      DisplayError(f);
-  }
+void FormulaSettings::Update(GLParser *f,int id) {
 
-  return TRUE;
-}
-
-GLParser *FormulaSettings::NewFormula() {
-
-  createButton->SetText("Create");
-  deleteButton->SetEnabled(FALSE);
-  nameT->SetText("");
-  exprT->SetText("");
-  rCode = 0;
-  DoModal();
-
-  if (rCode==1) {
-    // Create
-    GLParser *f = new GLParser();
-    f->SetExpression(exprT->GetText());
-    f->SetName(nameT->GetText());
-    if( !f->Parse() )
-      DisplayError(f);
-    return f;
-  }
-
-  return NULL;
-
+	if (f == NULL) { //New formula
+	  applyButton->SetText("Create");
+	  deleteButton->SetEnabled(FALSE);
+	  nameT->SetText("");
+	  exprT->SetText("");
+	}
+	else { //Edit formula
+		applyButton->SetText("Apply");
+		deleteButton->SetEnabled(TRUE);
+		nameT->SetText(f->GetName());
+		exprT->SetText(f->GetExpression());
+	}
+	formulaId = id;
 }
 
 void FormulaSettings::DisplayError(GLParser *f) {
@@ -75,14 +56,33 @@ void FormulaSettings::ProcessMessage(GLComponent *src,int message) {
 
   switch(message) {
     case MSG_BUTTON:
-    if(src==createButton) {
-      rCode = 1;
-      GLWindow::ProcessMessage(NULL,MSG_CLOSE);
-    } else if(src==deleteButton) {
-      rCode = 2;
+    if(src==applyButton) {
+		// Apply
+		GLParser* f=new GLParser();
+		f->SetExpression(exprT->GetText());
+		f->SetName(nameT->GetText());
+		if (!f->Parse()) {
+			DisplayError(f);
+			SAFE_DELETE(f);
+		}
+		else {
+			//add to interface
+			if (formulaId == -1) { //New formula
+				mApp->AddFormula(f);
+			}
+			else { //Update formula
+				SAFE_DELETE(mApp->formulas[formulaId].parser);
+				mApp->formulas[formulaId].parser = f;
+				mApp->UpdateFormulaName(formulaId);
+			}
+			GLWindow::ProcessMessage(NULL,MSG_CLOSE);
+		}
+		
+	} else if(src==deleteButton) {
+		//delete from interface
+		mApp->DeleteFormula(formulaId);
       GLWindow::ProcessMessage(NULL,MSG_CLOSE);
     } else if(src==cancelButton) {
-      rCode = 0;
       GLWindow::ProcessMessage(NULL,MSG_CLOSE);
     }
     break;

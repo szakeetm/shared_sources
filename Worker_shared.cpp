@@ -47,7 +47,7 @@ extern SynRad*mApp;
 
 Worker::~Worker() {
 	CLOSEDP(dpHit);
-	Exit();
+	CLOSEDP(dpControl);
 	delete geom;
 }
 
@@ -304,7 +304,7 @@ BOOL Worker::Wait(int waitState,LoadStatus *statusWindow) {
 
 }
 
-BOOL Worker::ExecuteAndWait(int command,int waitState,int param) {
+BOOL Worker::ExecuteAndWait(int command,int readyState,int param) {
 
 	if(!dpControl) return FALSE;
 
@@ -321,7 +321,7 @@ BOOL Worker::ExecuteAndWait(int command,int waitState,int param) {
 
 	LoadStatus *statusWindow = NULL;
 	statusWindow = new LoadStatus(this);
-	BOOL result= Wait(waitState,statusWindow);
+	BOOL result= Wait(readyState,statusWindow);
 	SAFE_DELETE(statusWindow);
 	return result;
 }
@@ -379,18 +379,6 @@ void Worker::KillAll() {
 
 }
 
-void Worker::Exit() {
-	//exiting = TRUE;
-
-	/*if( dpControl && nbProcess>0 ) {
-		KillAll();
-		CLOSEDP(dpControl);
-
-	}*/
-	//Subprocesses will commit suicide if host is missing
-	if (dpControl) CLOSEDP(dpControl);
-}
-
 void Worker::SetProcNumber(int n) {
 
 	char cmdLine[512];
@@ -431,8 +419,6 @@ void Worker::SetProcNumber(int n) {
 	SAFE_DELETE(statusWindow);
 	if( !result )
 		ThrowSubProcError("Sub process(es) starting failure");
-
-
 }
 
 DWORD Worker::GetPID(int prIdx) {

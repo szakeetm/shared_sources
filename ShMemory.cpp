@@ -55,8 +55,11 @@ Dataport *CreateDataport(char *name,size_t size)
    DWORD sizeHighOrder = size >> 32;
    DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
 
+   //Debug:
+   //dp->file = CreateFile(name, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
    dp->mem = CreateFileMapping(
-	            INVALID_HANDLE_VALUE,   // to create a memory file
+	            INVALID_HANDLE_VALUE /*dp->file*/,   // to create a memory file
 			      	NULL,                   // no security 
 				    PAGE_READWRITE,         // to allow read & write access
 					sizeHighOrder,
@@ -137,8 +140,10 @@ Dataport *OpenDataport(char *name,size_t size)
    DWORD sizeHighOrder = size >> 32;
    DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
 
+   //dp->file = CreateFile(name, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
    dp->mem = CreateFileMapping(
-	            INVALID_HANDLE_VALUE,   // to create a memory file
+	            INVALID_HANDLE_VALUE /*dp->file*/,   // to create a memory file
 		       		NULL,                   // no security 
 			      	PAGE_READWRITE,         // to allow read & write access
 		      		sizeHighOrder,     
@@ -185,30 +190,23 @@ Dataport *OpenDataport(char *name,size_t size)
    return (dp);
 }
 
-// --------------------------------------------------------------------------
-
 BOOL AccessDataport(Dataport *dp)
 {
-  // 20 sec timeout 
-  if (WaitForSingleObject(dp->sema,20000)==WAIT_OBJECT_0)
-	return TRUE;
-  else
-	return FALSE;
-}
-
-// --------------------------------------------------------------------------
-
-BOOL AccessDataportTimed(Dataport *dp,DWORD timeout)
-{
-  // 1ms timeout
-	DWORD retVal = WaitForSingleObject(dp->sema, timeout);
+	DWORD retVal = WaitForSingleObject(dp->sema, 8000);
   if (retVal==WAIT_OBJECT_0)
 	return TRUE;
   else
 	return FALSE;
 }
 
-// --------------------------------------------------------------------------
+BOOL AccessDataportTimed(Dataport *dp,DWORD timeout)
+{
+	DWORD retVal = WaitForSingleObject(dp->sema, timeout);
+  if (retVal==WAIT_OBJECT_0)
+	return TRUE;
+  else
+	return FALSE;
+}
 
 BOOL ReleaseDataport(Dataport *dp)
 {
@@ -218,14 +216,14 @@ BOOL ReleaseDataport(Dataport *dp)
 	  return FALSE;
 }
 
-// --------------------------------------------------------------------------
-
 BOOL CloseDataport(Dataport *dp)
 {
 
 	UnmapViewOfFile(dp->buff);
 	CloseHandle(dp->mem);
 	CloseHandle(dp->sema);
+	//CloseHandle(dp->file); //Debug
+	//DeleteFile(dp->name); //Debug: will only succeed if all handles released
 	free(dp);
 	return TRUE;
 

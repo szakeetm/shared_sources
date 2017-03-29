@@ -398,11 +398,14 @@ public:
 	int nbFormula;
 	FORMULA formulas[MAX_FORMULA];
 	void ProcessFormulaButtons(GLComponent *src);
+	void AddFormula(GLParser *f, BOOL doUpdate = TRUE);
+	void AddFormula(const char *fName, const char *formula); //file loading
+	void UpdateFormulaName(int i);
+	void DeleteFormula(int id);
 	BOOL OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
 	void UpdateFormula();
 	void RenumberFormulas(std::vector<int> *newRefs);
-	void AddFormula(GLParser *f, BOOL doUpdate = TRUE);
-	void AddFormula(const char *fName, const char *formula);
+	
 	void ClearFormula();
 
 	void ExportTextures(int grouping, int mode);

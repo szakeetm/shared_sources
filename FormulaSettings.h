@@ -33,8 +33,7 @@ public:
   FormulaSettings();
 
   // Components method
-  BOOL EditFormula(GLParser *f);
-  GLParser *NewFormula();
+  void Update(GLParser *f,int id);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message);
@@ -49,11 +48,11 @@ private:
   GLTextField *exprT;
   GLLabel     *descL;
 
-  GLButton    *createButton;
+  GLButton    *applyButton;
   GLButton    *deleteButton;
   GLButton    *cancelButton;
 
-  int rCode;
+  int formulaId;
 
 };
 

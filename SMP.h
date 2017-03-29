@@ -37,6 +37,7 @@ extern "C" {
 	 char              semaname[32];
    HANDLE            sema;
 	 HANDLE            mem;
+	 HANDLE file; //Debug
 	 void              *buff;
  } Dataport;
 
@@ -64,17 +65,17 @@ typedef struct {
 } PROCESS_INFO;
 
 // Shared memory
-extern Dataport *CreateDataport(char *, size_t);
-extern Dataport *OpenDataport(char *, size_t);
-extern BOOL AccessDataport(Dataport *);
-extern BOOL AccessDataportTimed(Dataport *,DWORD timeout);
-extern BOOL ReleaseDataport(Dataport *);
-extern BOOL CloseDataport(Dataport *);
+Dataport *CreateDataport(char *name, size_t size);
+Dataport *OpenDataport(char *name, size_t size);
+BOOL AccessDataport(Dataport *dp);
+BOOL AccessDataportTimed(Dataport *dp, DWORD timeout);
+BOOL ReleaseDataport(Dataport *dp);
+BOOL CloseDataport(Dataport *dp);
 
 // Process management
-extern BOOL          KillProc(DWORD pID);
-extern BOOL          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-extern DWORD         StartProc(char *pname,int mode);
+BOOL          KillProc(DWORD pID);
+BOOL          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
+DWORD         StartProc(char *pname,int mode);
 BOOL IsProcessRunning(DWORD pID);
 
 /*extern DWORD         StartProc_background(char *pname);
