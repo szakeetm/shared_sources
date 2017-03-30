@@ -1112,11 +1112,8 @@ if( showVolume || showTexture ) {
 		glDisable(GL_LINE_STIPPLE);
 
 	}
-
-	PaintCompAndBorder();
-
-	capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
-	hideLotlabel->SetVisible(displayWarning);
+		capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
+		hideLotlabel->SetVisible(displayWarning);
 
 #ifdef MOLFLOW
 	if (work->displayedMoment)
@@ -1126,6 +1123,8 @@ if( showVolume || showTexture ) {
 	timeLabel->SetText(tmp);
 	timeLabel->SetVisible(showTime);
 #endif
+	
+	PaintCompAndBorder();
 }
 
 
