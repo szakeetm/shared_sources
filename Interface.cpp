@@ -630,11 +630,16 @@ void Interface::UpdateViewers() {
 }
 
 void Interface::SetFacetSearchPrg(BOOL visible, char *text) {
-	for (int i = 0; i < MAX_VIEWER; i++) {
-		viewer[i]->facetSearchState->SetVisible(visible);
-		viewer[i]->facetSearchState->SetText(text);
+	static Uint32 lastUpd = 0;
+	Uint32 now = SDL_GetTicks();
+	if (!visible || (now - lastUpd > 500)) {
+		for (int i = 0; i < MAX_VIEWER; i++) {
+			viewer[i]->facetSearchState->SetVisible(visible);
+			viewer[i]->facetSearchState->SetText(text);
+		}
+		GLWindowManager::Repaint();
+		lastUpd = now;
 	}
-	GLWindowManager::Repaint();
 }
 
 int Interface::OnExit() {
@@ -1714,7 +1719,7 @@ BOOL Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return TRUE;
 		}
 		else if (src == forceFrameMoveButton) {
-			frameMoveRequested = TRUE;
+			updateRequested = TRUE;
 			FrameMove();
 			return TRUE;
 		}
@@ -2475,9 +2480,10 @@ void Interface::ExportTextures(int grouping, int mode) {
 
 void Interface::DoEvents(BOOL forced)
 {
-	static float lastExec = 0;
+	static float lastChkEvent = 0;
+	static float lastRepaint = 0;
 	int time = SDL_GetTicks();
-	if (forced || (time - lastExec > 333)) { //Don't check for inputs more than 3 times a second
+	if (forced || (time - lastChkEvent > 200)) { //Don't check for inputs more than 5 times a second
 		SDL_Event sdlEvent;
 		SDL_PollEvent(&sdlEvent);
 		UpdateEventCount(&sdlEvent);
@@ -2486,10 +2492,14 @@ void Interface::DoEvents(BOOL forced)
 		mApp->EventProc(&sdlEvent);
 		}*/
 		GLWindowManager::ManageEvent(&sdlEvent);
+		lastChkEvent = time;
+	}
+	if (forced || (time - lastRepaint > 500)) { //Don't redraw more than every 500 msec
 		GLWindowManager::Repaint();
 		GLToolkit::CheckGLErrors("GLApplication::Paint()");
-		lastExec = time;
+		lastRepaint = time;
 	}
+
 }
 
 BOOL Interface::AskToReset(Worker *work) {
@@ -2533,46 +2543,56 @@ int Interface::FrameMove()
 	}
 
 	if (worker.running) {
-		if (frameMoveRequested || autoFrameMove && (m_fTime - lastUpdate >= 1.0f)) {
-			forceFrameMoveButton->SetEnabled(FALSE);
-			forceFrameMoveButton->SetText("Updating...");
-			//forceFrameMoveButton->Paint();
-			GLWindowManager::Repaint();
-			frameMoveRequested = FALSE;
+		if (m_fTime - lastUpdate >= 1.0f) {
 
-			// Update hits
-			try {
-				worker.Update(m_fTime);
-			}
-			catch (Error &e) {
-				GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
-			}
-			// Simulation monitoring
-			UpdatePlotters();
+			sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
+			sTime->SetText(tmp);
+			wereEvents = TRUE; //Will repaint
 
-			// Formulas
-			if (autoUpdateFormulas) UpdateFormula();
-
-			//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 			UpdateStats(); //Update m_fTime
 			lastUpdate = m_fTime;
 
-			// Update timing measurements
-			if (worker.nbHit != lastNbHit || worker.nbDesorption != lastNbDes) {
-				double dTime = (double)(m_fTime - lastMeasTime);
-				hps = (double)(worker.nbHit - lastNbHit) / dTime;
-				dps = (double)(worker.nbDesorption - lastNbDes) / dTime;
-				if (lastHps != 0.0) {
-					hps = 0.2*(hps)+0.8*lastHps;
-					dps = 0.2*(dps)+0.8*lastDps;
-				}
-				lastHps = hps;
-				lastDps = dps;
-				lastNbHit = worker.nbHit;
-				lastNbDes = worker.nbDesorption;
-				lastMeasTime = m_fTime;
-			}
+			if (updateRequested || autoFrameMove) {
 
+				forceFrameMoveButton->SetEnabled(FALSE);
+				forceFrameMoveButton->SetText("Updating...");
+				//forceFrameMoveButton->Paint();
+				//GLWindowManager::Repaint();
+
+				updateRequested = FALSE;
+
+				// Update hits
+				try {
+					worker.Update(m_fTime);
+				}
+				catch (Error &e) {
+					GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+				}
+				// Simulation monitoring
+				UpdatePlotters();
+
+				// Formulas
+				if (autoUpdateFormulas) UpdateFormula();
+
+				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
+
+
+				// Update timing measurements
+				if (worker.nbHit != lastNbHit || worker.nbDesorption != lastNbDes) {
+					double dTime = (double)(m_fTime - lastMeasTime);
+					hps = (double)(worker.nbHit - lastNbHit) / dTime;
+					dps = (double)(worker.nbDesorption - lastNbDes) / dTime;
+					if (lastHps != 0.0) {
+						hps = 0.2*(hps)+0.8*lastHps;
+						dps = 0.2*(dps)+0.8*lastDps;
+					}
+					lastHps = hps;
+					lastDps = dps;
+					lastNbHit = worker.nbHit;
+					lastNbDes = worker.nbDesorption;
+					lastMeasTime = m_fTime;
+				}
+			}
 		}
 
 #ifdef MOLFLOW
@@ -2582,12 +2602,12 @@ int Interface::FrameMove()
 		}
 		else {
 #endif
-			sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
+			
 #ifdef MOLFLOW
 		}
 #endif
 
-		sTime->SetText(tmp);
+		
 
 		forceFrameMoveButton->SetEnabled(!autoFrameMove);
 		forceFrameMoveButton->SetText("Update");

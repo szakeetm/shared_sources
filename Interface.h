@@ -225,7 +225,7 @@ public:
 	float    lastSaveTimeSimu;
 	std::string autosaveFilename; //only delete files that this instance saved
 	BOOL     autoFrameMove; //Refresh scene every 1 second
-	BOOL     frameMoveRequested; //Force frame move
+	BOOL     updateRequested; //Force frame move
 
 	HANDLE compressProcessHandle;
 	

@@ -934,7 +934,7 @@ void GeometryViewer::Zoom() {
 
 
 void GeometryViewer::Paint() {
-
+	
 	char tmp[256];
 
 	if (!parent) return;

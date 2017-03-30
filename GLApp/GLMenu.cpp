@@ -370,6 +370,10 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   // Replay event to sub
   if(sub) sub->ManageEvent(evt);
 
+  if (IsVisible()) {
+	  GLWindowManager::Repaint();
+	  Sleep(30);
+  }
 }
 
 // -----------------------------------------------------------
@@ -598,7 +602,7 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
       if( unicode == SDLK_ESCAPE ) SetVisible(FALSE);
     }
 
-    if( IsVisible() ) {
+	if( IsVisible() ) {
       GLWindowManager::Repaint();
       Sleep(30);
     }

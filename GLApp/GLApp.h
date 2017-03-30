@@ -86,6 +86,8 @@ public:
     float             m_fFPS;              // Instanteous frame rate
     double            GetTick();           // Number of second since app startup (WIN32 only)
 
+	BOOL wereEvents;
+
 #ifdef _DEBUG
     // Debugging stuff
     int  nbPoly;

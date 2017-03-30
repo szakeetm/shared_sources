@@ -396,6 +396,7 @@ void GLApplication::Run() {
   lastTick  = firstTick = SDL_GetTicks();
 
   mApp->CheckForRecovery();
+  wereEvents = FALSE;
 
   //Wait for user exit
   while( !quit )
@@ -404,6 +405,9 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
+
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=NULL) wereEvents = TRUE;
+
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
 
@@ -442,7 +446,7 @@ void GLApplication::Run() {
 
      UpdateStats();
 
-     if( SDL_GetAppState()&SDL_APPACTIVE ) {
+     if( SDL_GetAppState()&SDL_APPACTIVE ) { //Application visible
 
 #ifdef _DEBUG
        t0 = GetTick();
@@ -461,7 +465,10 @@ void GLApplication::Run() {
        }
 
        // Repaint
-       GLWindowManager::Repaint();
+	   if (wereEvents) {
+		   GLWindowManager::Repaint();
+		   wereEvents = FALSE;
+	   }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      

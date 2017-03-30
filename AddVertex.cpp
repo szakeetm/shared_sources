@@ -124,7 +124,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 	  //mApp->changedSinceSave = TRUE; //Adding a vertex doesn't modify the simulation whatsoever
 
 
-      GLWindowManager::FullRepaint();
+      //GLWindowManager::FullRepaint();
 
     }
     break;

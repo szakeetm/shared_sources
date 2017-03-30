@@ -96,10 +96,6 @@ void GLProgress::ProcessMessage(GLComponent *src,int message) {
 // -------------------------------------------------
 
 void GLProgress::SetProgress(double value) {
-
-  Uint32 now = SDL_GetTicks();
-  if((now-lastUpd) < 200 ) return;
-  lastUpd = now;
   
   char tmp[128];
   int nW;
@@ -112,7 +108,12 @@ void GLProgress::SetProgress(double value) {
     scrollText->SetText(tmp);
     nW = (int)((double)wP*v+0.5);
     scroll->SetBounds(xP,yP,nW,hP);
-    GLWindowManager::Repaint();
+
+	Uint32 now = SDL_GetTicks();
+	if (IsVisible() && (now - lastUpd) > 500) {
+		GLWindowManager::Repaint();
+		lastUpd = now;
+	}
 	//this->Paint();
 	//SDL_GL_SwapBuffers();
   }
