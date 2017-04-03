@@ -469,9 +469,6 @@ void GLApplication::Run() {
 		   GLWindowManager::Repaint();
 		   wereEvents = FALSE;
 	   }
-	   else {
-		   fPaintTime = 0.0;
-	   }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      

@@ -2673,7 +2673,7 @@ int Interface::FrameMove()
 		SDL_Delay(60); //was 60
 	}
 	*/
-	double delayTime = 0.03 - fPaintTime - fMoveTime;
+	double delayTime = 0.03 - (wereEvents?fPaintTime:0.0) - fMoveTime;
 	if (delayTime > 0) SDL_Delay((int)(1000.0*delayTime)); //Limits framerate at about 60fps
 
 	return GL_OK;
