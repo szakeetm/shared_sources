@@ -88,14 +88,14 @@ public:
 
 	BOOL wereEvents;
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
     // Debugging stuff
     int  nbPoly;
     int  nbLine;
     int  nbRestore;
     double fMoveTime;
     double fPaintTime;
-#endif
+//#endif
 
 private:
 

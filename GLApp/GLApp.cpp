@@ -371,9 +371,9 @@ void GLApplication::Run() {
   BOOL   quit = FALSE;
   int    ok;
   GLenum glError;
-#ifdef _DEBUG
+//#ifdef _DEBUG
   double t1,t0;
-#endif
+//#endif
 
   // Stats
   m_fTime        = 0.0f;
@@ -448,15 +448,15 @@ void GLApplication::Run() {
 
      if( SDL_GetAppState()&SDL_APPACTIVE ) { //Application visible
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
        t0 = GetTick();
-#endif
+//#endif
        // Call FrameMove
        ok = FrameMove();
-#ifdef _DEBUG
+//#ifdef _DEBUG
        t1 = GetTick();
-       fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0);
-#endif
+       fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0); //Moving average over 10 FrameMoves
+//#endif
        glError = glGetError();
        if( !ok || glError!=GL_NO_ERROR ) {
          GLToolkit::Log("GLApplication::FrameMove() failed.");
@@ -468,6 +468,9 @@ void GLApplication::Run() {
 	   if (wereEvents) {
 		   GLWindowManager::Repaint();
 		   wereEvents = FALSE;
+	   }
+	   else {
+		   fPaintTime = 0.0;
 	   }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");

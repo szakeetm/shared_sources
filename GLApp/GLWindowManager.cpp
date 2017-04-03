@@ -426,7 +426,8 @@ void GLWindowManager::Resize() {
 
   for(int i=1;i<nbWindow;i++) 
     allWin[i]->UpdateOnResize();
-  	#ifdef MOLFLOW
+/*  	
+#ifdef MOLFLOW
 	extern MolFlow *mApp;
 	#endif
 
@@ -438,6 +439,8 @@ void GLWindowManager::Resize() {
   } catch(Error &e) {
 	  GLMessageBox::Display((char *)e.GetMsg(),"Error (Worker::Update)",GLDLG_OK,GLDLG_ICONERROR);
   }
+  */
+  Repaint();
 }
 
 // ---------------------------------------------------------------
@@ -445,16 +448,15 @@ void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
   SDL_GL_SwapBuffers();
-
 }
 
 // ---------------------------------------------------------------
 
 void GLWindowManager::RepaintNoSwap() {
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
   double t0 = theApp->GetTick();
-#endif
+//#endif
 
   // Search maximized window
   BOOL found = FALSE;
@@ -487,9 +489,9 @@ void GLWindowManager::RepaintNoSwap() {
   }
   for(int i=0;i<nbWindow;i++) allWin[i]->PaintMenu();
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
-#endif
+//#endif
 
 }
 
@@ -497,18 +499,18 @@ void GLWindowManager::RepaintNoSwap() {
 
 void GLWindowManager::RepaintRange(int w0,int w1) {
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
   double t0 = theApp->GetTick();
-#endif
+//#endif
 
   if (!(w0<64 && w1<64)) throw Error("Buffer overrun: GLWindowManager::RepaintRange, array allWin");
   SetDefault();
   for(int i=w0;i<w1;i++) allWin[i]->Paint();  
   for(int i=w0;i<w1;i++) allWin[i]->PaintMenu();
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
-#endif
+//#endif
 
   DrawStats();
   SDL_GL_SwapBuffers();

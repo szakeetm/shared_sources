@@ -2659,18 +2659,23 @@ int Interface::FrameMove()
 		//startSimu->SetFontColor(0, 140, 0);
 	}
 
+	/*
 	// Sleep a bit to avoid unwanted CPU load
 	if (viewer[0]->IsDragging() ||
 		viewer[1]->IsDragging() ||
 		viewer[2]->IsDragging() ||
 		viewer[3]->IsDragging() || !worker.running)
 	{
-		SDL_Delay(22);
+		SDL_Delay(22); //was 22
 	}
 	else
 	{
-		SDL_Delay(60);
+		SDL_Delay(60); //was 60
 	}
+	*/
+	double delayTime = 0.03 - fPaintTime - fMoveTime;
+	if (delayTime > 0) SDL_Delay((int)(1000.0*delayTime)); //Limits framerate at about 60fps
+
 	return GL_OK;
 }
 
