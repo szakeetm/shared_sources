@@ -1,6 +1,7 @@
 #pragma once
 
 //Shared functions of the Molflow and Synrad interface
+#include <thread>
 
 #include "GLApp/GLApp.h"
 #include "GLApp/GLTextField.h"
@@ -192,7 +193,7 @@ protected:
 
 public:
 	virtual void UpdateFacetParams(BOOL updateSelection=FALSE) {}
-	virtual void SaveConfig() {}
+	virtual void SaveConfig(BOOL increaseSessionCount=FALSE) {}
 	virtual void UpdatePlotters() {}
 
 	// Simulation state
@@ -214,7 +215,14 @@ public:
 	double   tolerance; //Select coplanar tolerance
 	double   largeArea; //Selection filter
 	double   planarityThreshold; //Planarity threshold
+	
 	int      checkForUpdates;
+	int      appLaunchesWithoutAsking; //Number of app launches before asking if user wants to check for updates. 0: default (shipping) value, -1: user already answered
+	std::string		 installId;
+	int      skipUpdatesUntilThisId;
+	int		 latestVersionId;
+	std::thread updateThread;
+
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
 	int      autoSaveSimuOnly;
@@ -226,6 +234,7 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	BOOL     autoFrameMove; //Refresh scene every 1 second
 	BOOL     updateRequested; //Force frame move
+	
 
 	HANDLE compressProcessHandle;
 	
@@ -315,7 +324,7 @@ public:
 	
 	int  GetVariable(char * name, char * prefix);
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
-	void UpdateMeasurements();
+	//void UpdateMeasurements();
 	BOOL AskToSave();
 	BOOL AskToReset(Worker *work = NULL);
 	void AddStruct();
@@ -325,6 +334,10 @@ public:
 	BOOL AutoSave(BOOL crashSave = FALSE);
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
+
+	void CheckUpdates();
+	void AppUpdater();
+	void DownloadInstallUpdate(std::string zipurl, std::string zipName, std::string folderName, std::string configName, BOOL copyCfg);
 
 	AVIEW   views[MAX_VIEW];
 	int     nbView;

@@ -30,7 +30,6 @@
 #endif
 
 extern GLApplication *theApp;
-extern float      m_fTime;             // Current time in seconds
 
 // Definitition
 typedef struct {
@@ -160,7 +159,7 @@ void GLWindowManager::DrawStats() {
     GLToolkit::GetDialogFont()->DrawTextFast(7,h-83,polys);
     GLToolkit::GetDialogFont()->DrawTextFast(7,h-65,theApp->m_strEventStats);
     GLToolkit::GetDialogFont()->DrawTextFast(7,h-48,theApp->m_strFrameStats);
-	sprintf(polys,"m_fTime:%4.2f",m_fTime);
+	sprintf(polys,"m_fTime:%4.2f",theApp->m_fTime);
 	GLToolkit::GetDialogFont()->DrawTextFast(150,h-48,polys);
   }
   

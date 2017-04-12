@@ -166,10 +166,10 @@ void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
 
 void Worker::Stop_Public() {
 	// Stop
-	InnerStop(m_fTime);
+	InnerStop(mApp->m_fTime);
 	try {
 		Stop();
-		Update(m_fTime);
+		Update(mApp->m_fTime);
 	}
 	catch (Error &e) {
 		GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);

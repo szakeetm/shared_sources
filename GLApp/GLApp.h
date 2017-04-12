@@ -14,7 +14,6 @@
   GNU General Public License for more details.
 */
 
-extern float      m_fTime;             // Current time in seconds
 extern long long	  nbDesStart;
 extern long long	  nbHitStart;
 
@@ -84,7 +83,8 @@ public:
   
     //float             m_fElapsedTime;      // Time elapsed since last frame
     float             m_fFPS;              // Instanteous frame rate
-    double            GetTick();           // Number of second since app startup (WIN32 only)
+	float			  m_fTime;             // Number of second since app startup (WIN32 only)
+    double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	BOOL wereEvents;
 
