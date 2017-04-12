@@ -1161,7 +1161,7 @@ void GLList::Paint() {
 		_glVertex2i(x,y);
 		glEnd();
 	}
-
+	GLToolkit::CheckGLErrors("GLList::Paint()");
 }
 
 // ---------------------------------------------------------------

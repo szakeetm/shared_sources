@@ -152,7 +152,7 @@ void GLButton::Paint() {
     }
 
   }
-
+  GLToolkit::CheckGLErrors("GLButton::Paint()");
 }
 
 // ---------------------------------------------------------------------

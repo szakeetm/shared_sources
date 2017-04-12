@@ -344,7 +344,7 @@ void GLColorBox::Paint() {
 #endif
     }
   }
-
+  GLToolkit::CheckGLErrors("GLColorBox::Paint()");
 }
 
 // -------------------------------------------------

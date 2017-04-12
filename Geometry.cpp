@@ -147,12 +147,13 @@ void Geometry::InitializeGeometry(int facet_number) {
 		}
 	}
 
-	isLoaded = TRUE;
-	if (facet_number == -1) {
+		if (facet_number == -1) {
 		BuildGLList();
 		mApp->UpdateModelParams();
 		mApp->UpdateFacetParams();
 	}
+	isLoaded = TRUE;
+
 	//initGeoPrg->SetVisible(FALSE);
 	//SAFE_DELETE(initGeoPrg);
 	_ASSERTE(_CrtCheckMemory());
@@ -3710,7 +3711,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3778,7 +3779,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 	UpdateName(file);
 	InitializeGeometry();
 	AdjustProfile();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3872,7 +3873,7 @@ void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
 	if (e) *e = 0;
 	prg->SetMessage("Initializing geometry...");
 	InitializeGeometry();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3891,7 +3892,7 @@ void Geometry::LoadTXT(FileReader *file, GLProgress *prg) {
 	if (e) *e = 0;
 	InitializeGeometry();
 	AdjustProfile();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3911,7 +3912,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, BOOL newStr) {
 	if (e) *e = 0;
 	InitializeGeometry();
 	AdjustProfile();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3929,7 +3930,7 @@ void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, 
 	if (e) *e = 0;
 	InitializeGeometry();
 	//AdjustProfile();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 
@@ -3947,7 +3948,7 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, BOOL newStr) {
 	if (e) *e = 0;
 	InitializeGeometry();
 	//AdjustProfile();
-	isLoaded = TRUE;
+	//isLoaded = TRUE; //InitializeGeometry() sets to TRUE
 
 }
 

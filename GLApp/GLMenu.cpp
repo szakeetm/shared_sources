@@ -519,7 +519,7 @@ void GLMenu::Paint() {
     }
 
   }
-
+  GLToolkit::CheckGLErrors("GLMenu::Paint()");
 }
 
 // -----------------------------------------------------------

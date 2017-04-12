@@ -407,12 +407,10 @@ void GLContainer::ProcessMessage(GLComponent *src,int message) {
 // ---------------------------------------------------------------
 
 void GLContainer::PaintComponents() {
-  
   COMPLINK *node = list;
   while(node!=NULL) {
     if(node->comp->IsVisible()) node->comp->Paint();
-	GLToolkit::CheckGLErrors("GLContainer::PaintComponents()");
+	GLToolkit::CheckGLErrors("GLComponent:Paint()");
     node = node->next;
   }
-
 }

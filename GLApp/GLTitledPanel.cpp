@@ -180,5 +180,4 @@ void GLTitledPanel::Paint() {
   }
 
   if(!closed) GLComponent::PaintComponents();
-
 }

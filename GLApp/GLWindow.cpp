@@ -1081,6 +1081,7 @@ void GLWindow::Paint() {
     glEnd();
   }
 
+  GLToolkit::CheckGLErrors("GLWindow::Paint()");
   // Components
   ClipToWindow();
   PaintComponents();

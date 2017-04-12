@@ -966,7 +966,6 @@ void GeometryViewer::Paint() {
 		PaintCompAndBorder();
 		return;
 	}
-
 	sprintf(tmp, "");
 	topBtn->SetState(FALSE);
 	frontBtn->SetState(FALSE);
@@ -998,7 +997,6 @@ void GeometryViewer::Paint() {
 	}
 	coordLab->SetText(tmp);
 
-
 	// Clipping and projection matrix
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -1013,7 +1011,6 @@ void GeometryViewer::Paint() {
 	glClearDepth(1.0);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
-
 	/*// Draw geometry
 if( showVolume || showTexture ) {
 
@@ -1043,9 +1040,7 @@ if( showVolume || showTexture ) {
 
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
-
 	DrawLinesAndHits();
-
 	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
 #ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
@@ -1057,18 +1052,17 @@ if( showVolume || showTexture ) {
 	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
-
 	DrawLeak();
 	DrawRule();
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
-
+	
 	// Restore old transformation/viewport
 	GetWindow()->ClipToWindow();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	GLWindowManager::SetDefault();
-
+	
 	// Draw selection rectangle or circle
 	if ((draggMode == DRAGG_SELECT || draggMode == DRAGG_SELECTVERTEX) && (mode == MODE_SELECT || mode == MODE_SELECTVERTEX || mode == MODE_ZOOM)) {
 		BOOL circleMode = GetWindow()->IsAltDown();
@@ -1114,7 +1108,7 @@ if( showVolume || showTexture ) {
 	}
 		capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
 		hideLotlabel->SetVisible(displayWarning);
-
+		
 #ifdef MOLFLOW
 	if (work->displayedMoment)
 		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1]);
@@ -1133,7 +1127,6 @@ void GeometryViewer::PaintCompAndBorder() {
 
 	// Components
 	PaintComponents();
-	GLToolkit::CheckGLErrors("Geometryviewer::PaintCompandBorder()");
 
 	// Border
 	glDisable(GL_TEXTURE_2D);

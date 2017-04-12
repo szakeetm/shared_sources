@@ -121,15 +121,14 @@ void GLLabel::GetTextBounds(int *w,int *h) {
 // ---------------------------------------------------------------------
 
 void GLLabel::Paint() {
-
   if(!parent) return;
-
+  
   GLComponent::Paint();
-
   //Message
   font->SetTextColor(rText,gText,bText);
-  for(int i=0;i<nbLine;i++)
-    font->DrawText(posX,posY+14*i+2,lines[i],FALSE);
+  for (int i = 0; i < nbLine; i++) {
+	  font->DrawText(posX, posY + 14 * i + 2, lines[i], FALSE);
+  }
   GLToolkit::CheckGLErrors("GLLabel::Paint()");
 }
 

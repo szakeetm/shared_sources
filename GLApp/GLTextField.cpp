@@ -300,7 +300,7 @@ void GLTextField::Paint() {
 
   // Restore clip
   GetWindow()->ClipToWindow();
-
+  GLToolkit::CheckGLErrors("GLTextField::Paint()");
 }
 
 // ------------------------------------------------------

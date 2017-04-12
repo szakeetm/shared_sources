@@ -191,7 +191,7 @@ void GLCombo::Paint() {
     //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,TRUE);
     font->DrawText(posX+width-12,posY+3,"\211",FALSE);
   }
-
+  GLToolkit::CheckGLErrors("GLCombo::Paint()");
 }
 
 // -----------------------------------------------------------------

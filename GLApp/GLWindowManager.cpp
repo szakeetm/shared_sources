@@ -474,7 +474,6 @@ void GLWindowManager::RepaintNoSwap() {
   } else {
     allWin[0]->Paint();
   }
-  GLToolkit::CheckGLErrors("GLWindowManager::RepaintNoSwap()");
 
 
   for(int i=1;i<nbWindow;i++) {

@@ -957,8 +957,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 	// Render the geometry
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
-
-
+	
 	// Render Volume
 	if (renderVolume) {
 		glPolygonOffset(1.0f, 4.0f);
@@ -974,6 +973,8 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		GLToolkit::SetMaterial(&whiteMaterial);
 		glDisable(GL_LIGHTING);
+		//gldebug
+		GLToolkit::CheckGLErrors("GLContainer::PaintComponents()");
 	}
 	else {
 
@@ -1026,7 +1027,6 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 				glDisable(GL_LINE_SMOOTH);
 			}
 		}
-
 	}
 
 	// Paint texture
@@ -1040,10 +1040,9 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 			Facet *f = facets[i];
 			BOOL paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #ifdef MOLFLOW
-			paintRegularTexture = paintRegularTexture || f->sh.countACD || f->sh.countDes;
+			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
 #endif
 			if (paintRegularTexture) {
-
 				if (f->sh.is2sided)   glDisable(GL_CULL_FACE);
 				else                   SetCullMode(showMode);
 				glBindTexture(GL_TEXTURE_2D, f->glTex);
@@ -1056,6 +1055,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				}
+				
 				glCallList(f->glList);
 			}
 		}

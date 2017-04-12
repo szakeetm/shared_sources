@@ -71,7 +71,7 @@ void GLToggle::Paint() {
 	  font->SetTextColor(0.7f, 0.7f, 0.7f);
 	  font->DrawText(posX + 5, posY + 1, "\215", FALSE);
   }
-
+  GLToolkit::CheckGLErrors("GLToggle::Paint()");
 }
 
 // ---------------------------------------------------------------------

@@ -156,7 +156,7 @@ BOOL GLComponent::IsVisible() {
 // ----------------------------------------------------------
 
 void GLComponent::Paint() {
-	GLToolkit::CheckGLErrors("GLComponent::Paint()");
+	
   // Paint background
   if(parent && width>0 && height>0 && opaque) {
     switch(border) {
@@ -174,7 +174,6 @@ void GLComponent::Paint() {
         break;
     }
   }
-
 }
 
 // ---------------------------------------------------------------

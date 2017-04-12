@@ -162,7 +162,7 @@ void GLMenuBar::Paint() {
     }
 
   }
-
+  GLToolkit::CheckGLErrors("GLMenuBar::Paint()");
 }
 
 // -----------------------------------------------------------------
