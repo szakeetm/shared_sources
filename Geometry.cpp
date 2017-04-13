@@ -147,12 +147,13 @@ void Geometry::InitializeGeometry(int facet_number) {
 		}
 	}
 
-		if (facet_number == -1) {
+	isLoaded = TRUE;
+	if (facet_number == -1) {
 		BuildGLList();
 		mApp->UpdateModelParams();
 		mApp->UpdateFacetParams();
 	}
-	isLoaded = TRUE;
+	
 
 	//initGeoPrg->SetVisible(FALSE);
 	//SAFE_DELETE(initGeoPrg);
@@ -518,7 +519,7 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 			clippingPaths.push_back(facet2path);
 			id = (int)secondFacet;
 			if (ExecuteClip(id, clippingPaths, projectedPoints, solution, type) > 0) {
-				ClipPolygon(secondFacet , firstFacet , type);
+				ClipPolygon(secondFacet, firstFacet, type);
 			}
 		}
 	}
@@ -611,13 +612,13 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	UpdateSelection();
 }
 
-size_t Geometry::ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree& solution, ClipperLib::ClipType& type) {
+size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree& solution, ClipperLib::ClipType& type) {
 	ClipperLib::Paths subj(1), clip(clippingPaths.size());
 
 	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
 		subj[0] << ClipperLib::IntPoint(facets[id1]->vertices2[i1].u*1E6, facets[id1]->vertices2[i1].v*1E6);
 	}
-	
+
 	for (size_t i3 = 0; i3 < clippingPaths.size(); i3++) {
 		for (size_t i2 = 0; i2 < clippingPaths[i3].size(); i2++) {
 			ProjectedPoint proj;
@@ -1862,30 +1863,30 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &A
 	std::vector<UndoPoint> undoPoints;
 	int nbVertexOri = sh.nbVertex;
 	for (int i = 0; i < nbVertexOri; i++) {
-			if (vertices3[i].selected) {
-				Vector3d newPosition;
-				if (!project) {
-					newPosition = Mirror(vertices3[i], AXIS_P0, AXIS_DIR);
-				}
-				else {
-					newPosition = Project(vertices3[i], AXIS_P0, AXIS_DIR);
-					if (!copy) {
-						UndoPoint oriPoint;
-						oriPoint.oriPos = vertices3[i];
-						oriPoint.oriId = i;
-						undoPoints.push_back(oriPoint);
-					}
-				}
+		if (vertices3[i].selected) {
+			Vector3d newPosition;
+			if (!project) {
+				newPosition = Mirror(vertices3[i], AXIS_P0, AXIS_DIR);
+			}
+			else {
+				newPosition = Project(vertices3[i], AXIS_P0, AXIS_DIR);
 				if (!copy) {
-					vertices3[i].SetLocation(newPosition);
-				}
-				else {
-					AddVertex(newPosition);
+					UndoPoint oriPoint;
+					oriPoint.oriPos = vertices3[i];
+					oriPoint.oriId = i;
+					undoPoints.push_back(oriPoint);
 				}
 			}
+			if (!copy) {
+				vertices3[i].SetLocation(newPosition);
+			}
+			else {
+				AddVertex(newPosition);
+			}
 		}
-		InitializeGeometry();
-		return undoPoints;
+	}
+	InitializeGeometry();
+	return undoPoints;
 }
 
 void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, BOOL copy, Worker *worker) {
@@ -3479,7 +3480,7 @@ void Geometry::BuildSelectList() {
 		Facet *f = facets[i];
 		if (f->selected) {
 			//DrawFacet(f,FALSE,TRUE,TRUE);
-			DrawFacet(f,FALSE,TRUE,FALSE); //Faster than TRUE TRUE TRUE, without noticeable glitches
+			DrawFacet(f, FALSE, TRUE, FALSE); //Faster than TRUE TRUE TRUE, without noticeable glitches
 			nbSelected++;
 		}
 	}
@@ -3508,7 +3509,7 @@ void Geometry::BuildGLList() {
 		glNewList(lineList[j], GL_COMPILE);
 		for (int i = 0; i < sh.nbFacet; i++) {
 			if (facets[i]->sh.superIdx == j)
-				DrawFacet(facets[i],FALSE,TRUE,FALSE);
+				DrawFacet(facets[i], FALSE, TRUE, FALSE);
 		}
 		glEndList();
 	}
@@ -4413,10 +4414,10 @@ void Geometry::SaveSTR(Dataport *dpHit, BOOL saveSelected) {
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
 
 	// Block dpHit during the whole disc writting
-	
+
 	for (int i = 0; i < sh.nbSuper; i++)
-		SaveSuper( i);
-	
+		SaveSuper(i);
+
 
 }
 
