@@ -1196,9 +1196,9 @@ int  GLList::FindIndex(int index,int inColumn) {
 	for (int row=0;row<nbRow;row++) {
 		if (GetValueInt(row,inColumn)==(index+1)) return row;
 	}
-	char errmsg[512];
-	sprintf(errmsg,"Facetlist FindIndex(facet %d in column %d)\nFacet not found in list!",index+1,inColumn+1);
-	GLMessageBox::Display(errmsg,"Molflow Bug",GLDLG_OK,GLDLG_ICONERROR);
+	std::stringstream errmsg;
+	errmsg << "Facetlist FindIndex(facet " << index+1 <<" in column " << inColumn + 1 << ")\nFacet not found in list!";
+	GLMessageBox::Display(errmsg.str().c_str(),"Molflow Bug",GLDLG_OK,GLDLG_ICONERROR);
 	return -1;
 }
 

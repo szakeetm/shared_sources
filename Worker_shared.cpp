@@ -443,6 +443,7 @@ int Worker::GetProcNumber() {
 	return nbProcess;
 }
 
+
 void Worker::Update(float appTime) {
 	if (needsReload) RealReload();
 
@@ -520,6 +521,28 @@ void Worker::Update(float appTime) {
 #endif
 #ifdef MOLFLOW
 				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(SHHITS), sizeof(SHHITS));
+				
+				if (f->sh.recordAngleMap) {
+					if (!f->sh.hasRecordedAngleMap) { //It was released by the user maybe
+						//Initialize angle map
+						f->angleMapCache = (size_t*)malloc(f->sh.angleMapPhiWidth * f->sh.angleMapThetaHeight * sizeof(size_t));
+						if (!f->angleMapCache) {
+							std::stringstream tmp;
+							tmp << "Not enough memory for incident angle map on facet " << i + 1;
+							throw Error(tmp.str().c_str());
+						}
+						f->sh.hasRecordedAngleMap = TRUE;
+					}
+					BYTE* angleMapAddress = buffer
+					+ f->sh.hitOffset
+					+ (1 + moments.size()) * sizeof(SHHITS)
+					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(APROFILE) *(1 + moments.size()) : 0)
+					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(AHIT) *(1 + moments.size()) : 0)
+					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(VHIT)*(1 + moments.size()) : 0);
+					memcpy(f->angleMapCache, angleMapAddress, f->sh.angleMapPhiWidth*f->sh.angleMapThetaHeight * sizeof(size_t));	
+					angleMapAddress = 0;
+				}
+				
 #endif
 			}
 			try {

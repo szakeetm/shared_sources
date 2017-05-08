@@ -48,6 +48,7 @@ public:
 	static int Exist(const char *fileName);
 	static std::string GetPath(const std::string &str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
 	static std::string GetFilename(const std::string &str); //Extracts string after the last "\"
+	static std::string StripExtension(const std::string & str);
 	static std::string GetExtension(const std::string &str); //Extracts string after the last "."
 };
 
