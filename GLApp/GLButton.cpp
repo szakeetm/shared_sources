@@ -19,7 +19,7 @@
 
 // ---------------------------------------------------------------------
 
-GLButton::GLButton(int compId,char *text):GLComponent(compId) {
+GLButton::GLButton(int compId,const char *text):GLComponent(compId) {
   SetText(text);
   state=0;
   toggle=FALSE;
@@ -76,7 +76,7 @@ void GLButton::RestoreDeviceObjects() {
 
 }
 
-void GLButton::SetText(char *text) {
+void GLButton::SetText(const char *text) {
   if(text) 
     strcpy(this->text,text);
   else

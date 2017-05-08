@@ -443,6 +443,13 @@ std::string FileUtils::GetFilename(const std::string& str)
 	return str.substr(found + 1);
 }
 
+std::string FileUtils::StripExtension(const std::string& str)
+{
+	size_t lastdot = str.find_last_of(".");
+	if (lastdot == std::string::npos) return str;
+	return str.substr(0, lastdot);
+}
+
 std::string FileUtils::GetPath(const std::string& str)
 {
 	size_t found = str.find_last_of("/\\");

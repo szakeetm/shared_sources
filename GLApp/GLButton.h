@@ -24,10 +24,10 @@ class GLButton : public GLComponent {
 public:
 
   // Construction
-  GLButton(int compId,char *text);
+  GLButton(int compId,const char *text);
 
   // Components method
-  void SetText(char *text);
+  void SetText(const char *text);
   void SetIcon(char *fileName);
   void SetDisabledIcon(char *fileName);
   void SetToggle(BOOL toggle);

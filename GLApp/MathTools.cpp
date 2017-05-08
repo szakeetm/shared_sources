@@ -62,44 +62,6 @@ char* FormatMemoryLL(long long size) {
 
 }
 
-int my_binary_search(const double& key, double* A, const size_t& size)
-//"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
-//key: searched value
-//A: ordered arrray of lookup values
-//size: array length
-//returns index of last lower value, or -1 if key not found
-
-{
-	int imin = 0;
-	int imax = size - 1;
-	// continue searching while [imin,imax] is not empty
-	while (imin <= imax)
-	{
-		// calculate the midpoint for roughly equal partition
-		int imid = (imin + imax) / 2;
-		if (imid == size - 1 || imid == 0 || (A[imid] <= key && key < A[imid + 1])) {
-			// key found at index imid
-			return imid;
-		}
-		// determine which subarray to search
-		else if (A[imid] < key) {
-			// change min index to search upper subarray
-			imin = imid + 1;
-		}
-		else
-		{
-			// change max index to search lower subarray
-			imax = imid - 1;
-		}
-	}
-	// key was not found
-	return -1;
-}
-
-int my_binary_search(const double& key, std::vector<double> A, const size_t& size) {
-	return my_binary_search(key, &(A[0]), size);
-}
-
 double my_erf(double x)
 {
 	// constants

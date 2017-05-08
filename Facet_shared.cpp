@@ -538,7 +538,7 @@ void Facet::Explode(FACETGROUP *group) {
 
 // -----------------------------------------------------------
 
-void Facet::FillVertexArray(Vector3d *v) {
+void Facet::FillVertexArray(InterfaceVertex *v) {
 
 	int nb = 0;
 	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
