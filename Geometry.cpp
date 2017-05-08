@@ -3528,9 +3528,11 @@ void Geometry::Rebuild() {
 	// Rebuild internal structure on geometry change
 
 	// Remove texture (improvement TODO)
+	/*
 	for (int i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->sh.isTextured)
 			facets[i]->SetTexture(0.0, 0.0, FALSE);
+	*/
 
 	// Delete old resources
 	DeleteGLLists(TRUE, TRUE);
