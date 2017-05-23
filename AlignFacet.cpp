@@ -19,8 +19,15 @@ GNU General Public License for more details.
 #include "Facet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
+#include "GLApp\GLToggle.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\GLLabel.h"
+#include "GlApp\GLButton.h"
+#include "GLApp\MathTools.h" //Contains
+
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -39,20 +46,10 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-AlignFacet::~AlignFacet() {
-	SAFE_FREE(selection);
-	for( int i = 0 ; i < nbSelected ; i++ )
-		SAFE_FREE(oriPos[i]) ;
-	SAFE_FREE(oriPos);
-}
-
 AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 	int wD = 290;
 	int hD = 355;
-	oriPos=NULL;
-
-	nbMemo=0;
 
 	SetTitle("Align selected facets to an other");
 
@@ -82,7 +79,7 @@ AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 	invertNormal = new GLToggle(0,"Invert normal");
 	invertNormal->SetBounds(10,220,150,21);
-	invertNormal->SetState(TRUE);
+	invertNormal->SetState(true);
 	step3->Add(invertNormal);
 
 	invertDir1 = new GLToggle(0,"Swap anchor/direction vertices on source");
@@ -133,36 +130,42 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 		} else if (src==memoSel) {
 			MemorizeSelection();
 		} else if (src==alignButton || src==copyButton) {
-			if (nbMemo==0) {
+			if (memorizedSelection.size()==0) {
 				GLMessageBox::Display("No facets memorized","Nothing to align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-			int nbSelected=geom->GetNbSelected();
-			if (nbSelected!=2) {
+			std::vector<size_t> appSelectedFacets = geom->GetSelectedFacets();
+			if (appSelectedFacets.size()!=2) {
 				GLMessageBox::Display("Two facets (source and destination) must be selected","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-			int Facet_source=-1;
-			for (int i=0;i<nbMemo;i++) { //find source facet
-				if (geom->GetFacet(selection[i])->selected) {
-					if (Facet_source==-1) {
-						Facet_source=selection[i];
+			bool foundSource = false;
+			size_t sourceFacetId;
+			for (auto mem:memorizedSelection) { //find source facet
+				if ( Contains(appSelectedFacets,mem)) {
+					if (!foundSource) {
+						foundSource = true;
+						sourceFacetId=mem;
 					} else {
 						GLMessageBox::Display("Both selected facets are on the source object. One must be on the destination.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
 					}
 				}
 			}
-			if (Facet_source==-1) {
+			
+			if (!foundSource) {
 				GLMessageBox::Display("No facet selected on source object.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-
-			int Facet_dest=-1;
-			for (int i=0;i<geom->GetNbFacet()&&Facet_dest==-1;i++) { //find destination facet
-				if (geom->GetFacet(i)->selected && i!=Facet_source) Facet_dest=i;
+			bool foundDest = false;
+			size_t destFacetId;
+			for (int i=0;i<appSelectedFacets.size()&&(!foundDest);i++) { //find destination facet
+				if (appSelectedFacets[i] != sourceFacetId) {
+					destFacetId = appSelectedFacets[i];
+					foundDest = true;
+				}
 			}
-			if (Facet_dest==-1) {
+			if (!foundDest) {
 				GLMessageBox::Display("Can't find destination facet","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
@@ -172,16 +175,16 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 
-			int Anchor_source,Anchor_dest,Dir_source,Dir_dest;
-			Anchor_source=Anchor_dest=Dir_source=Dir_dest=-1;
+			size_t anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,dirDestVertexId;
+			anchorSourceVertexId=anchorDestVertexId=dirSourceVertexId=dirDestVertexId=-1;
 
 			//find source anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(Facet_source)->sh.nbIndex;j++) {
-				if (geom->GetVertex(geom->GetFacet(Facet_source)->indices[j])->selected) {
-					if (Anchor_source==-1 && Dir_source==-1) {
-						Anchor_source=geom->GetFacet(Facet_source)->indices[j];
-					} else if (Dir_source==-1) {
-						Dir_source=geom->GetFacet(Facet_source)->indices[j];
+			for (int j=0;j<geom->GetFacet(sourceFacetId)->sh.nbIndex;j++) {
+				if (geom->GetVertex(geom->GetFacet(sourceFacetId)->indices[j])->selected) {
+					if (anchorSourceVertexId==-1 && dirSourceVertexId==-1) {
+						anchorSourceVertexId=geom->GetFacet(sourceFacetId)->indices[j];
+					} else if (dirSourceVertexId==-1) {
+						dirSourceVertexId=geom->GetFacet(sourceFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the source facet. Two must be on the destination.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
@@ -189,18 +192,18 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				}
 			}
 
-			if (Anchor_source==-1 || Dir_source==-1) {
+			if (anchorSourceVertexId==-1 || dirSourceVertexId==-1) {
 				GLMessageBox::Display("Less than two selected vertices found on source facet. Select two (anchor, direction).","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
 
 			//find destination anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(Facet_dest)->sh.nbIndex;j++) {
-				if (geom->GetVertex(geom->GetFacet(Facet_dest)->indices[j])->selected) {
-					if (Anchor_dest==-1 && Dir_dest==-1) {
-						Anchor_dest=geom->GetFacet(Facet_dest)->indices[j];
-					} else if (Dir_dest==-1) {
-						Dir_dest=geom->GetFacet(Facet_dest)->indices[j];
+			for (int j=0;j<geom->GetFacet(destFacetId)->sh.nbIndex;j++) {
+				if (geom->GetVertex(geom->GetFacet(destFacetId)->indices[j])->selected) {
+					if (anchorDestVertexId==-1 && dirDestVertexId==-1) {
+						anchorDestVertexId=geom->GetFacet(destFacetId)->indices[j];
+					} else if (dirDestVertexId==-1) {
+						dirDestVertexId=geom->GetFacet(destFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the destination facet. Two must be on the source.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
@@ -208,13 +211,14 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				}
 
 			}
-			if (Anchor_dest==-1 || Dir_dest==-1) {
+			if (anchorDestVertexId==-1 || dirDestVertexId==-1) {
 				GLMessageBox::Display("Less than two selected vertices found on destination facet. Select two (anchor, direction).","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
 
 			if (mApp->AskToReset()){
-				geom->AlignFacets(selection,nbMemo,Facet_source,Facet_dest,Anchor_source,Anchor_dest,Dir_source,Dir_dest,
+				geom->AlignFacets(memorizedSelection,sourceFacetId, destFacetId,anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,
+dirDestVertexId,
 					invertNormal->GetState(),invertDir1->GetState(),invertDir2->GetState(),src==copyButton,work);
 				#ifdef MOLFLOW
 				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
@@ -224,23 +228,20 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 
 					GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
 				}
-				mApp->changedSinceSave = TRUE;
+				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();
 				//GLWindowManager::FullRepaint();
 			}
 		} else if (src==undoButton) {
 			if (!mApp->AskToReset(work)) return;
-			for (int i=0;i<nbSelected;i++) {
-				Facet *f=geom->GetFacet(selection[i]);
-				for (int j=0;j<f->sh.nbIndex;j++) {
-					geom->GetVertex(f->indices[j])->SetLocation(this->oriPos[i][j]);
+			for (size_t i=0;i<memorizedSelection.size();i++) {
+				Facet *f=geom->GetFacet(memorizedSelection[i]);
+				for (size_t j=0;j<f->sh.nbIndex;j++) {
+					geom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
 				}
 			}
 			geom->InitializeGeometry();
-			//for(int i=0;i<nbSelected;i++)
-
-			//	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
 			work->Reload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();
@@ -252,22 +253,15 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 }
 
 void AlignFacet::MemorizeSelection() {
-	nbSelected=geom->GetNbSelected();
-	selection = (int*)malloc(nbSelected*sizeof(int));
-	//oriPos=new Vector3d *[nbSelected];
-	oriPos=(Vector3d**)malloc(nbSelected*sizeof(Vector3d*));
-	int sel=0;
-	for (int i=0;i<geom->GetNbFacet();i++) {
-		Facet *f=geom->GetFacet(i);
-		if (f->selected) {
-			selection[sel++]=i;
-			oriPos[sel-1]=(Vector3d*)malloc(f->sh.nbIndex*sizeof(Vector3d));
-			for (int j=0;j<f->sh.nbIndex;j++) 
-				oriPos[sel-1][j]=*(geom->GetVertex(f->indices[j]));
-		}
+	memorizedSelection = geom->GetSelectedFacets();
+	oriPositions.clear();
+	for (auto sel : memorizedSelection) {
+		std::vector<Vector3d> op;
+		for (size_t ind = 0; ind < geom->GetFacet(sel)->sh.nbIndex; ind++)
+			op.push_back(*geom->GetVertex(geom->GetFacet(sel)->indices[ind]));
+		oriPositions.push_back(op);
 	}
-	char tmp[256];
-	sprintf(tmp,"%d facets will be aligned.",nbSelected);
-	numFacetSel->SetText(tmp);
-	nbMemo=nbSelected;
+	std::stringstream msg;
+	msg << memorizedSelection.size() << " facets will be aligned.";
+	numFacetSel->SetText(msg.str());
 }

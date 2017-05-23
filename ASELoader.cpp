@@ -17,9 +17,11 @@
 */
 
 #include "ASELoader.h"
+#include "File.h"
+//#include "Vector.h"
 #include <math.h>
 #include <string.h>
-#include <malloc.h>
+//#include <malloc.h>
 
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
 
@@ -37,7 +39,7 @@ ASELoader::ASELoader(FileReader *f) {
 
 ASELoader::~ASELoader() {
 
-  for(int i=0;i<nbObj;i++) {
+  for(size_t i=0;i<nbObj;i++) {
     SAFE_FREE(OBJ[i].pts);
     SAFE_FREE(OBJ[i].face);
     SAFE_FREE(OBJ[i].map);
@@ -777,7 +779,7 @@ void ASELoader::Load()
       nbObj++;
       if( nbObj>=MAX_NUMBER_OF_OBJECT )
       {
-        sprintf(err_str,"Too many objects.\n%s"
+        sprintf(err_str,"Too many objects.\nkeyword %s\nobject name %s"
           ,w,OBJ[nbObj].name);
         throw Error(err_str);
 

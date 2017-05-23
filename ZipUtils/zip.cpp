@@ -2172,7 +2172,7 @@ ZRESULT GetFileInfo(HANDLE hf, ulg *attr, long *size, iztimes *times, ulg *times
   // high bytes unix attr, and two low bytes a mapping of that to DOS attr.
   //struct stat s; int res=stat(fn,&s); if (res!=0) return false;
   // translate windows file attributes into zip ones.
-  BY_HANDLE_FILE_INFORMATION bhi; BOOL res=GetFileInformationByHandle(hf,&bhi);
+  BY_HANDLE_FILE_INFORMATION bhi; bool res=GetFileInformationByHandle(hf,&bhi);
   if (!res) return ZR_NOFILE;
   DWORD fa=bhi.dwFileAttributes; ulg a=0;
   // Zip uses the lower word for its interpretation of windows stuff
@@ -2239,8 +2239,8 @@ class TZip
   unsigned writ;            // how far have we written. This is maintained by Add, not write(), to avoid confusion over seeks
   bool ocanseek;            // can we seek?
   char *obuf;               // this is where we've locked mmap to view.
-  unsigned int opos;        // current pos in the mmap
-  unsigned int mapsize;     // the size of the map we created
+  size_t opos;        // current pos in the mmap
+  size_t mapsize;     // the size of the map we created
   bool hasputcen;           // have we yet placed the central directory?
   bool encwriting;          // if true, then we'll encrypt stuff using 'keys' before we write it to disk
   unsigned long keys[3];    // keys are initialised inside Add()
@@ -2250,7 +2250,7 @@ class TZip
   TZipFileInfo *zfis;       // each file gets added onto this list, for writing the table at the end
   TState *state;            // we use just one state object per zip, because it's big (500k)
 
-  ZRESULT Create(void *z,unsigned int len,DWORD flags);
+  ZRESULT Create(void *z, size_t len,DWORD flags);
   static unsigned sflush(void *param,const char *buf, unsigned *size);
   static unsigned swrite(void *param,const char *buf, unsigned size);
   unsigned int write(const char *buf,unsigned int size);
@@ -2290,14 +2290,14 @@ class TZip
 
 
 
-ZRESULT TZip::Create(void *z,unsigned int len,DWORD flags)
+ZRESULT TZip::Create(void *z, size_t len,DWORD flags)
 { if (hfout!=0 || hmapout!=0 || obuf!=0 || writ!=0 || oerr!=ZR_OK || hasputcen) return ZR_NOTINITED;
   //
   if (flags==ZIP_HANDLE)
   { HANDLE hf = (HANDLE)z;
     hfout=hf; mustclosehfout=false;
 #ifdef DuplicateHandle
-    BOOL res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&hfout,0,FALSE,DUPLICATE_SAME_ACCESS);
+    bool res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&hfout,0,false,DUPLICATE_SAME_ACCESS);
     if (res) mustclosehandle=true;
 #endif
     // now we have hfout. Either we duplicated the handle and we close it ourselves
@@ -2317,14 +2317,14 @@ ZRESULT TZip::Create(void *z,unsigned int len,DWORD flags)
     return ZR_OK;
   }
   else if (flags==ZIP_MEMORY)
-  { unsigned int size = len;
+  { size_t size = len;
     if (size==0) return ZR_MEMSIZE;
     if (z!=0) obuf=(char*)z;
     else
     { 
 		// 2^32 = 4294967296      DWORD is 32-bit unsigned
 		DWORD sizeHighOrder = size >> 32;
-		DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+		DWORD sizeLowOrder = (DWORD)(size - (size >> 32) * 4294967296);
 		hmapout = CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE, sizeHighOrder, sizeLowOrder,NULL);
 		if (hmapout==NULL) return ZR_NOALLOC;
 		obuf = (char*)MapViewOfFile(hmapout,FILE_MAP_ALL_ACCESS,0,0,size);
@@ -2497,7 +2497,7 @@ unsigned TZip::read(char *buf, unsigned size)
   }
   else if (hfin!=0)
   { DWORD red;
-    BOOL ok = ReadFile(hfin,buf,size,&red,NULL);
+    bool ok = ReadFile(hfin,buf,size,&red,NULL);
     if (!ok) return 0;
     ired += red;
     crc = crc32(crc, (uch*)buf, red);
@@ -2529,7 +2529,7 @@ ZRESULT TZip::ideflate(TZipFileInfo *zfi)
   state->ds.window_size=0;
   //  I think that covers everything that needs to be initted.
   //
-  bi_init(*state,buf, sizeof(buf), TRUE); // it used to be just 1024-size, not 16384 as here
+  bi_init(*state,buf, sizeof(buf), true); // it used to be just 1024-size, not 16384 as here
   ct_init(*state,&zfi->att);
   lm_init(*state,state->level, &zfi->flg);
   ulg sz = deflate(*state);

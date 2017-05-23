@@ -13,12 +13,13 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLList.h"
-#include "GLTextField.h"
 
 #ifndef _GLCOMBOH_
 #define _GLCOMBOH_
 
+#include "GLComponent.h"
+class GLList;
+class GLTextField;
 class GLComboPopup;
 
 class GLCombo : public GLComponent {
@@ -30,24 +31,24 @@ public:
 
   // Component methods
   void Clear();
-  void SetSize(int nbRow);
-  void SetValueAt(int row,const char *value,int userValue=0);
-  int  GetUserValueAt(int row);
+  void SetSize(size_t nbRow);
+  void SetValueAt(size_t row,const char *value,int userValue=0);
+  int  GetUserValueAt(size_t row);
   void SetSelectedValue(char *value);
   void ScrollTextToEnd();
   void SetSelectedIndex(int idx);
   int  GetSelectedIndex();
   char *GetSelectedValue();
-  void SetEditable(BOOL editable);
-  char *GetValueAt(int row);
-  int  GetNbRow();
+  void SetEditable(bool editable);
+  char *GetValueAt(size_t row);
+  size_t  GetNbRow();
 
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
   void SetBounds(int x,int y,int width,int height);
   void SetParent(GLContainer *parent);
-  void SetFocus(BOOL focus);
+  void SetFocus(bool focus);
 
   // Expert usage
   GLList *GetList();
@@ -61,8 +62,8 @@ private:
   GLTextField  *text;
 
   int   selectedRow;
-  BOOL  m_Editable;
-  BOOL  dropped;
+  bool  m_Editable;
+  bool  dropped;
 
 };
 

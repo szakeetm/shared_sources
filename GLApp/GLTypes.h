@@ -1,3 +1,4 @@
+#pragma once
 /*
    File:        GLTypes.h
   Description: SDL/OpenGL OpenGL application framework
@@ -13,8 +14,6 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#ifndef _GLTYPESH_
-#define _GLTYPESH_
 
 // Messages
 
@@ -62,14 +61,22 @@
 
 #define GL_OK   1
 #define GL_FAIL 0
-#define TRUE  1
-#define FALSE 0
 
 // Type definitions
 
-typedef int BOOL;
 typedef unsigned char BYTE;
 typedef unsigned __int64 llong;
+
+class Error {
+
+public:
+	Error(const char *message);
+	const char *GetMsg();
+
+private:
+	char msg[1024];
+
+};
 
 typedef struct {
 
@@ -98,6 +105,3 @@ typedef struct {
   int height;
 
 } GLVIEWPORT;
-
-
-#endif /* _GLTYPESH_ */

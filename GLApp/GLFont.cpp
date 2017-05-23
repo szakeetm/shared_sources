@@ -18,7 +18,7 @@
 #include "GLToolkit.h"
 #include "GLApp.h"
 #include <cimage.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <stdio.h>
 
 extern GLApplication *theApp;
@@ -29,14 +29,14 @@ GLFont2D::GLFont2D() {
   strcpy(fileName,"images/font.png");
   cHeight = 15;
   cWidth  = 9;
-  isVariable = FALSE;
+  isVariable = false;
 }
 
 GLFont2D::GLFont2D(char *imgFileName) {
   strcpy(fileName,imgFileName);
   cHeight = 15;
   cWidth  = 9;
-  isVariable = FALSE;
+  isVariable = false;
 }
 
 // -------------------------------------------
@@ -75,7 +75,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
       int yO = ((i / 16) * 16    );
 
       //scan columns
-      BOOL black = TRUE;
+      bool black = true;
       while(black && xO<img.Width()) {
         for(int j=0;j<cHeight && black;j++)
           black = (data[(xO)*3 + (yO+j)*3*fWidth] == 0);
@@ -83,9 +83,9 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
         xO++;
       }
 
-      BOOL white = TRUE;
+      bool white = true;
       while(white && xO<img.Width()) {
-        black = TRUE;
+        black = true;
         for(int j=0;j<cHeight && black;j++)
           black = (data[(xO)*3 + (yO+j)*3*fWidth] == 0);
         white = !black;
@@ -158,7 +158,7 @@ void GLFont2D::ChangeViewport(GLVIEWPORT *g) {
 
 // -------------------------------------------
 
-void GLFont2D::SetVariableWidth(BOOL variable) {
+void GLFont2D::SetVariableWidth(bool variable) {
   isVariable = variable;
 }
 
@@ -203,7 +203,7 @@ void GLFont2D::SetTextColor(const float &r,const float &g,const float &b) {
 
 // -------------------------------------------
 
-void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,BOOL loadMatrix) {
+void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,bool loadMatrix) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;
@@ -247,11 +247,11 @@ void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,BOOL load
 
     } else {
       float cW   = (float)cVarWidth[c] / (float)fWidth;
-      glTexCoord2f(xPos   ,yPos   );glVertex2f(xcPos             ,y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2f(xcPos+cVarWidth[c]*sizeFactor,y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2f(xcPos+cVarWidth[c]*sizeFactor,y+cHeight*sizeFactor);
-      glTexCoord2f(xPos   ,yPos+cH);glVertex2f(xcPos             ,y+cHeight*sizeFactor);
-      xcPos += cVarWidth[c]*sizeFactor;
+      glTexCoord2f(xPos   ,yPos   );glVertex2f((float)xcPos             , (float)y   );
+      glTexCoord2f(xPos+cW,yPos   );glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y+cHeight*sizeFactor);
+      glTexCoord2f(xPos   ,yPos+cH);glVertex2f((float)xcPos             , (float)y+cHeight*sizeFactor);
+      xcPos += (int)(cVarWidth[c]*sizeFactor);
 
     }
 
@@ -266,7 +266,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,BOOL load
 }
 
 
-void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const BOOL &loadMatrix) {
+void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const bool &loadMatrix) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;
@@ -377,7 +377,7 @@ void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 
 }
 
-void GLFont2D::DrawTextV(int x,int y,char *text,BOOL loadMatrix) {
+void GLFont2D::DrawTextV(int x,int y,char *text,bool loadMatrix) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;

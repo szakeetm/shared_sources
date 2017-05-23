@@ -101,14 +101,14 @@ std::pair<double, double> rtnorm(
   else
   {
     // Compute ka
-    i = I0 + floor(a*INVH);
+    i = I0 + int(floor(a*INVH));
     ka = Rtnorm::ncell[i];
 
     // Compute kb
     (b>=xmax) ?
     kb = N :
     (
-      i = I0 + floor(b*INVH),
+      i = I0 + int(floor(b*INVH)),
       kb = Rtnorm::ncell[i]
     );
 
@@ -122,7 +122,7 @@ std::pair<double, double> rtnorm(
     while(!stop)
     {
       // Sample integer between ka and kb
-      k = floor(gsl_rng_uniform(gen) * (kb-ka+1)) + ka;
+      k = int(floor(gsl_rng_uniform(gen)) * (kb-ka+1)) + ka;
     
       if(k == N)
       {    

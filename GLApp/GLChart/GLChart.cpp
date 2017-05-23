@@ -16,10 +16,12 @@ GNU General Public License for more details.
 */
 
 #include "GLChart.h"
+#include "..\GLMenu.h"
 #include "..\GLToolkit.h"
 #include "..\GLFileBox.h"
 #include "..\GLMessageBox.h"
-#include <malloc.h>
+#include "..\GLButton.h"
+//#include <malloc.h>
 #include <math.h>
 
 double NaN;
@@ -37,16 +39,16 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	defColor.b = 240;
 	SetBackgroundColor(240,240,240);
 	SetChartBackground(defColor);
-	SetOpaque(TRUE);
+	SetOpaque(true);
 	headerColor.r = 0;
 	headerColor.g = 0;
 	headerColor.b = 0;
 	strcpy(header,"");
-	headerVisible = FALSE;
-	labelVisible = TRUE;
+	headerVisible = false;
+	labelVisible = true;
 	labelMode = LABEL_ROW;
-	ipanelVisible = FALSE;
-	paintAxisFirst = TRUE;
+	ipanelVisible = false;
+	paintAxisFirst = true;
 	margin.width = 5;
 	margin.height = 5;
 	memset(&headerR,0,sizeof(GLCRectangle));
@@ -55,14 +57,14 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 
 	xAxis = new GLAxis(this, HORIZONTAL_DOWN);
 	xAxis->SetAnnotation(TIME_ANNO);
-	xAxis->SetAutoScale(TRUE);
+	xAxis->SetAutoScale(true);
 	y1Axis = new GLAxis(this, VERTICAL_LEFT);
 	y2Axis = new GLAxis(this, VERTICAL_RIGHT);
 	displayDuration = 3600;
 
 	nbLabel = 0;
-	zoomDrag = FALSE;
-	zoomDragAllowed = FALSE;
+	zoomDrag = false;
+	zoomDragAllowed = false;
 
 	chartMenu = new GLMenu();
 	chartMenu->Add("Chart properties",MENU_CHARTPROP);
@@ -78,7 +80,7 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 
 
 	zoomButton = new GLButton(0,"Zoom back");
-	zoomButton->SetVisible(FALSE);
+	zoomButton->SetVisible(false);
 	Add(zoomButton);
 
 	chartOptions = NULL;
@@ -174,7 +176,7 @@ GLCColor GLChart::GetChartBackground() {
 * Paints axis under curve when true
 * @param b Painting order
 */
-void GLChart::SetPaintAxisFirst(BOOL b) {
+void GLChart::SetPaintAxisFirst(bool b) {
 	paintAxisFirst = b;
 }
 
@@ -182,7 +184,7 @@ void GLChart::SetPaintAxisFirst(BOOL b) {
 * Return painting order between axis and curve
 * @return true if axis are painted under curve
 */
-BOOL GLChart::IsPaintAxisFirst() {
+bool GLChart::IsPaintAxisFirst() {
 	return paintAxisFirst;
 }
 
@@ -191,7 +193,7 @@ BOOL GLChart::IsPaintAxisFirst() {
 * @param b true if the header is visible, false otherwise
 * @see setHeader
 */
-void GLChart::SetHeaderVisible(BOOL b) {
+void GLChart::SetHeaderVisible(bool b) {
 	headerVisible = b;
 }
 
@@ -241,7 +243,7 @@ double GLChart::GetDisplayDuration() {
 */
 void GLChart::SetHeaderColor(GLCColor c) {
 	headerColor = c;
-	SetHeaderVisible(TRUE);
+	SetHeaderVisible(true);
 }
 
 /**
@@ -249,7 +251,7 @@ void GLChart::SetHeaderColor(GLCColor c) {
 * @param b true if labels are visible, false otherwise
 * @see isLabelVisible
 */
-void GLChart::SetLabelVisible(BOOL b) {
+void GLChart::SetLabelVisible(bool b) {
 	labelVisible = b;
 }
 
@@ -257,7 +259,7 @@ void GLChart::SetLabelVisible(BOOL b) {
 * Determines wether labels are visivle or not.
 * @return true if labels are visible, false otherwise
 */
-BOOL GLChart::IsLabelVisible() {
+bool GLChart::IsLabelVisible() {
 	return labelVisible;
 }
 
@@ -308,7 +310,7 @@ void GLChart::ShowDataOptionDialog(GLDataView *v) {
 * Determines wether the graph is zoomed.
 * @return true if the , false otherwise
 */
-BOOL GLChart::IsZoomed() {
+bool GLChart::IsZoomed() {
 	return xAxis->IsZoomed() || y1Axis->IsZoomed() || y2Axis->IsZoomed();
 }
 
@@ -318,7 +320,7 @@ BOOL GLChart::IsZoomed() {
 */
 void GLChart::EnterZoom() {
 	if (!zoomDragAllowed) {
-		zoomDragAllowed = TRUE;
+		zoomDragAllowed = true;
 	}
 }
 
@@ -329,8 +331,8 @@ void GLChart::ExitZoom() {
 	xAxis->Unzoom();
 	y1Axis->Unzoom();
 	y2Axis->Unzoom();
-	zoomButton->SetVisible(FALSE);
-	zoomDragAllowed = FALSE;
+	zoomButton->SetVisible(false);
+	zoomDragAllowed = false;
 }
 
 /**
@@ -374,7 +376,7 @@ void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
 	GLAxis::DrawSampleLine(posX+xm,posY+ym + labelHeight/2 + 1, v);
 	GLCColor c = v->GetLabelColor();
 	GLToolkit::GetDialogFont()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-	GLToolkit::GetDialogFont()->DrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),FALSE);
+	GLToolkit::GetDialogFont()->DrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
 	labelRect[nbLabel].rect.x = xm;
 	labelRect[nbLabel].rect.y = ym;
 	labelRect[nbLabel].rect.width  = labelWidth;
@@ -395,7 +397,7 @@ void GLChart::paintLabelAndHeader() {
 		int xpos = ((headerR.width - headerWidth) / 2);
 		GLCColor c = headerColor;
 		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-		GLToolkit::GetDialogFontBold()->DrawText(posX+xpos,posY+headerR.y + 1,header,FALSE);
+		GLToolkit::GetDialogFontBold()->DrawText(posX+xpos,posY+headerR.y + 1,header,false);
 	}
 
 	// Draw labels
@@ -612,7 +614,7 @@ void GLChart::paintZoomButton(int x,int y) {
 		zoomButton->SetBounds(posX+x+7,posY+y+5,80,19);
 		zoomButton->SetVisible(80<(axisWidth-7) && 19<(axisHeight-5));
 	} else {
-		zoomButton->SetVisible(FALSE);
+		zoomButton->SetVisible(false);
 	}
 
 	if( zoomButton->IsVisible() )
@@ -699,9 +701,9 @@ void GLChart::Paint() {
 		y1Axis->PaintAxis(posX+xOrgY1, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y2Axis->IsVisible() || nbv2==0);
 		y2Axis->PaintAxis(posX+xOrgY2, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y1Axis->IsVisible() || nbv1==0);
 		if( xAxis->GetPosition()==HORIZONTAL_ORG2)
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),TRUE);
+			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),true);
 		else
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),TRUE);
+			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),true);
 
 		//Draw data
 		y1Axis->PaintDataViews(xAxis, xOrg, yOrg);
@@ -719,9 +721,9 @@ void GLChart::Paint() {
 		y1Axis->PaintAxis(posX+xOrgY1, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y2Axis->IsVisible() || nbv2==0);
 		y2Axis->PaintAxis(posX+xOrgY2, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y1Axis->IsVisible() || nbv1==0);
 		if (xAxis->GetPosition() == HORIZONTAL_ORG2)
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),TRUE);
+			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),true);
 		else
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),TRUE);
+			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),true);
 
 	}
 
@@ -777,7 +779,7 @@ void GLChart::ManageEvent(SDL_Event *evt) {
 
 }
 
-BOOL GLChart::insideRect(LabelRect *r,int x,int y) {
+bool GLChart::insideRect(LabelRect *r,int x,int y) {
 	return (x >= r->rect.x) && (x <= (r->rect.width + r->rect.x)) &&
 		(y >= r->rect.y) && (y <= (r->rect.height + r->rect.y));
 }
@@ -796,12 +798,12 @@ void GLChart::mouseReleased(SDL_Event *evt) {
 	int ey = GetWindow()->GetY(this,evt);
 	if (zoomDrag) {
 		GLCRectangle r = buildRect(zoomX, zoomY, ex, ey);
-		zoomDrag = FALSE;
+		zoomDrag = false;
 		xAxis->Zoom(r.x+posX, r.x+r.width+posX);
 		y1Axis->Zoom(r.y+posY, r.y + r.height+posY);
 		y2Axis->Zoom(r.y+posY, r.y + r.height+posY);
 	}
-	ipanelVisible = FALSE;
+	ipanelVisible = false;
 }
 
 void GLChart::showChartMenu(int x,int y) {
@@ -837,7 +839,7 @@ void GLChart::mousePressed(SDL_Event *evt) {
 
 		// Zoom management
 		if (GetWindow()->IsCtrlDown() || zoomDragAllowed) {
-			zoomDrag = TRUE;
+			zoomDrag = true;
 			zoomX = ex;
 			zoomY = ey;
 			lastX = ex;
@@ -859,7 +861,7 @@ void GLChart::mousePressed(SDL_Event *evt) {
 
 		// Click on label
 		int i = 0;
-		BOOL found = FALSE;
+		bool found = false;
 		while (i < nbLabel && !found) {
 			LabelRect *r = labelRect + i;
 			found = insideRect(r,ex,ey);
@@ -1011,10 +1013,10 @@ void GLChart::SaveFile() {
 			}
 			fprintf(f,"\n");
 
-			BOOL eof = FALSE;
+			bool eof = false;
 			while(!eof) {
-				eof = TRUE;
-				for(int i=0;i<nbView;i++) if( ptr[i] ) eof = FALSE;
+				eof = true;
+				for(int i=0;i<nbView;i++) if( ptr[i] ) eof = false;
 				if( !eof ) {
 					for(int i=0;i<nbView;i++) {
 						if( ptr[i] ) {
@@ -1071,10 +1073,10 @@ void GLChart::CopyAllToClipboard() {
 	}
 	totalLength+=strlen("\n");
 
-	BOOL eof = FALSE;
+	bool eof = false;
 	while(!eof) {
-		eof = TRUE;
-		for(int i=0;i<nbView;i++) if( ptr[i] ) eof = FALSE;
+		eof = true;
+		for(int i=0;i<nbView;i++) if( ptr[i] ) eof = false;
 		if( !eof ) {
 			for(int i=0;i<nbView;i++) {
 				if( ptr[i] ) {
@@ -1140,10 +1142,10 @@ void GLChart::CopyAllToClipboard() {
 	}
 	*lpszText++ = '\n';
 
-	eof = FALSE;
+	eof = false;
 	while(!eof) {
-		eof = TRUE;
-		for(int i=0;i<nbView;i++) if( ptr[i] ) eof = FALSE;
+		eof = true;
+		for(int i=0;i<nbView;i++) if( ptr[i] ) eof = false;
 		if( !eof ) {
 			for(int i=0;i<nbView;i++) {
 				if( ptr[i] ) {
@@ -1300,20 +1302,20 @@ void GLChart::showPanel(SearchInfo *si) {
 	}
 
 	// Draw panel
-	GLToolkit::DrawBox(x0, y0, maxw, maxh,255,255,255,FALSE,FALSE,TRUE);
+	GLToolkit::DrawBox(x0, y0, maxw, maxh,255,255,255,false,false,true);
 
 	//Draw info
 	GLToolkit::GetDialogFontBold()->SetTextColor(0.0f,0.0f,0.0f);
 	GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
-	GLToolkit::GetDialogFontBold()->DrawText(x0 + 4, y0 + 3 ,str[0],FALSE);
+	GLToolkit::GetDialogFontBold()->DrawText(x0 + 4, y0 + 3 ,str[0],false);
 	y0 += 3;
 	for (int i = 1; i < 4; i++) {
 		if( str[i] )
-			GLToolkit::GetDialogFont()->DrawText(x0 + 5, y0 + 3 + i*h,str[i],FALSE);
+			GLToolkit::GetDialogFont()->DrawText(x0 + 5, y0 + 3 + i*h,str[i],false);
 	}
 
 	lastSearch = *si;
-	ipanelVisible = TRUE;
+	ipanelVisible = true;
 	for (int i = 0; i < 4; i++) if(str[i]) free(str[i]);
 
 }

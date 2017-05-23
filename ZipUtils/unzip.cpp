@@ -2619,7 +2619,7 @@ LUFILE *lufopen(void *z,unsigned int len,DWORD flags,ZRESULT *err)
     { HANDLE hf = z;
       h=hf; mustclosehandle=false;
 #ifdef DuplicateHandle
-      BOOL res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&h,0,FALSE,DUPLICATE_SAME_ACCESS);
+      bool res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&h,0,false,DUPLICATE_SAME_ACCESS);
       if (!res) mustclosehandle=true;
 #endif
     }
@@ -2690,7 +2690,7 @@ int lufseek(LUFILE *stream, long offset, int whence)
 size_t lufread(void *ptr,size_t size,size_t n,LUFILE *stream)
 { unsigned int toread = (unsigned int)(size*n);
   if (stream->is_handle)
-  { DWORD red; BOOL res = ReadFile(stream->h,ptr,toread,&red,NULL);
+  { DWORD red; bool res = ReadFile(stream->h,ptr,toread,&red,NULL);
     if (!res) stream->herr=true;
     return red/size;
   }
@@ -4026,7 +4026,7 @@ ZRESULT TUnzip::Unzip(int index,void *dst,unsigned int len,DWORD flags)
     int res = unzReadCurrentFile(uf,unzbuf,16384,&reached_eof);
     if (res==UNZ_PASSWORD) {haderr=ZR_PASSWORD; break;}
     if (res<0) {haderr=ZR_FLATE; break;}
-    if (res>0) {DWORD writ; BOOL bres=WriteFile(h,unzbuf,res,&writ,NULL); if (!bres) {haderr=ZR_WRITE; break;}}
+    if (res>0) {DWORD writ; bool bres=WriteFile(h,unzbuf,res,&writ,NULL); if (!bres) {haderr=ZR_WRITE; break;}}
     if (reached_eof) break;
     if (res==0) {haderr=ZR_FLATE; break;}
   }

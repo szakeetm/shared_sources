@@ -13,11 +13,15 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include "GLSprite.h"
-
 #ifndef _GLBUTTONH_
 #define _GLBUTTONH_
+
+#include "GLComponent.h"
+//#include "GLSprite.h"
+class Sprite2D;
+class GLFont2D;
+
+
 
 class GLButton : public GLComponent {
 
@@ -30,9 +34,9 @@ public:
   void SetText(const char *text);
   void SetIcon(char *fileName);
   void SetDisabledIcon(char *fileName);
-  void SetToggle(BOOL toggle);
-  BOOL GetState();
-  void SetState(BOOL checked);
+  void SetToggle(bool toggle);
+  bool GetState();
+  void SetState(bool checked);
 
   // Implementation
   void Paint();
@@ -50,8 +54,8 @@ private:
   int  state; // 0=>Released 1=>Pressed
   char iconName[256];
   char iconNameDisa[256];
-  BOOL toggle;
-  BOOL toggleState;
+  bool toggle;
+  bool toggleState;
   GLFont2D *font;
   float r, g, b;
 };

@@ -18,7 +18,17 @@
 #ifndef _GLCHARTOPTIONSH_
 #define _GLCHARTOPTIONSH_
 
-#include "AxisPanel.h"
+//#include "AxisPanel.h"
+#include "..\GLTabWindow.h"
+
+class GLTitledPanel;
+class GLChart;
+class GLComponent;
+class GLToggle;
+class GLCombo;
+class AxisPanel;
+class GLLabel;
+class GLTextField;
 
 class GLChartOptions : public GLTabWindow {
 
@@ -35,7 +45,6 @@ private:
 
   void error(char *m);
   void commit();
-  void setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h);
 
   GLChart    *chart;
   GLButton   *closeBtn;

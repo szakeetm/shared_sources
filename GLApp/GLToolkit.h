@@ -13,14 +13,14 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#ifndef _GLTOOLKITH_
+#define _GLTOOLKITH_
 
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include "GLTypes.h"
 #include "GLFont.h"
-
-#ifndef _GLTOOLKITH_
-#define _GLTOOLKITH_
+//class GLFont2D;
 
 // Dashed line style
 #define DASHSTYLE_NONE      0
@@ -64,8 +64,8 @@ public:
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
-  static BOOL Get2DScreenCoord(float x,float y,float z,int *xe,int *ye);
-  static BOOL IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const int &nbPts);
+  static bool Get2DScreenCoord(float x,float y,float z,int *xe,int *ye);
+  static bool IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts);
   static void LookAtLH(double xEye,double yEye,double zEye,double xAt,double yAt,double zAt,double xUp,double uUp,double zUp);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z);
@@ -80,16 +80,16 @@ public:
 
   // Drawing functions
   static void DrawBox(const int &x,const int &y,const int &width,const int &height,
-	  const int &r,const int &g,const int &b,const BOOL &shadow=FALSE,const BOOL &iShadow=FALSE,
-	  const BOOL &isEtched=FALSE);
+	  const int &r,const int &g,const int &b,const bool &shadow=false,const bool &iShadow=false,
+	  const bool &isEtched=false);
   static void DrawBorder(const int &x,const int &y,const int &width,const int &height,
-	  const BOOL &shadow,const BOOL &iShadow,const BOOL &isEtched);
+	  const bool &shadow,const bool &iShadow,const bool &isEtched);
   static void DrawStringInit();
   static void DrawStringRestore();
   static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0);
   static void DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,int nbPoint,int *pointX,int *pointY);
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
-  static void DrawRule(double length,BOOL invertX=FALSE,BOOL invertY=FALSE,BOOL invertZ=FALSE,double n=1.0);
+  static void DrawRule(double length,bool invertX=false,bool invertY=false,bool invertZ=false,double n=1.0);
   static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2,double nr=1.0);
   static void DrawButtonBack(const int &x,const int &y,const int &width,
 	  const int &height,const int &state);
@@ -99,15 +99,15 @@ public:
   static void DrawBar(int x,int y,int width,int height);
   static void DrawTextBack(const int &x,const int &y,const int &width,
 	  const int &height,const int &rBack,const int &gBack,const int &bBack);
-  static void DrawVGradientBox(int x,int y,int width,int height,BOOL shadow=FALSE,BOOL iShadow=FALSE,BOOL isEtched=FALSE);
-  static void DrawHGradientBox(int x,int y,int width,int height,BOOL shadow=FALSE,BOOL iShadow=FALSE,BOOL isEtched=FALSE);
-  static void DrawHIGradientBox(int x,int y,int width,int height,BOOL shadow=FALSE,BOOL iShadow=FALSE,BOOL isEtched=FALSE);
+  static void DrawVGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
+  static void DrawHGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
+  static void DrawHIGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
   static void DrawHScroll(int x,int y,int width,int height,int state);
   static void DrawVScroll(int x,int y,int width,int height,int state);
   static void Draw16x16(int x,int y,int xt,int yt);
 
   // Initialisation
-  static BOOL RestoreDeviceObjects(const int &width,const int &height);
+  static bool RestoreDeviceObjects(const int &width,const int &height);
   static void InvalidateDeviceObjects();
 
 };

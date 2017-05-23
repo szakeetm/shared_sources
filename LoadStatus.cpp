@@ -24,6 +24,11 @@ GNU General Public License for more details.
 #include "SynRad.h"
 #endif
 
+#include "GLApp/GLButton.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLTitledPanel.h"
+#include "GLApp\GLList.h"
+
 extern GLApplication *theApp;
 
 #ifdef MOLFLOW
@@ -43,19 +48,19 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 
 	worker = w;
 	int wD = 450;
-	int hD = 100+worker->GetProcNumber()*15;
+	int hD = 100+(int)worker->GetProcNumber()*15;
 
 	SetTitle("Waiting for subprocesses...");
-	SetIconfiable(TRUE);
+	SetIconfiable(true);
 
 	processList = new GLList(0);
-	processList->SetHScrollVisible(FALSE);
-	processList->SetVScrollVisible(FALSE);
+	processList->SetHScrollVisible(false);
+	processList->SetVScrollVisible(false);
 	processList->SetSize(5,worker->GetProcNumber()+1);
 	processList->SetColumnWidths((int*)plWidth);
 	processList->SetColumnLabels((char **)plName);
 	processList->SetColumnAligns((int *)plAligns);
-	processList->SetColumnLabelVisible(TRUE);
+	processList->SetColumnLabelVisible(true);
 	processList->SetBounds(7,8,wD-17,hD-55);
 	Add(processList);
 
@@ -92,9 +97,9 @@ void LoadStatus::SMPUpdate() {
 		sprintf(tmp, "%.0f MB", (double)pInfo.mem_use/(1024.0*1024.0));
 		processList->SetValueAt(1, 0, tmp);
 
-		for(int i=0;i<worker->GetProcNumber();i++) {
+		for(size_t i=0;i<worker->GetProcNumber();i++) {
 			DWORD pid = worker->GetPID(i);
-			sprintf(tmp,"Subproc.%d",i+1);
+			sprintf(tmp,"Subproc.%zd",i+1);
 			processList->SetValueAt(0,i+1,tmp);
 			if( !GetProcInfo(pid,&pInfo) ) {
 				processList->SetValueAt(1,i+1,"0 MB");
@@ -121,8 +126,8 @@ void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 	case MSG_BUTTON:
 		if (src == cancelButton) {
 			cancelButton->SetText("Stopping...");
-			cancelButton->SetEnabled(FALSE);
-			worker->abortRequested = TRUE;
+			cancelButton->SetEnabled(false);
+			worker->abortRequested = true;
 		}
 	}
 }

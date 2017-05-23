@@ -18,6 +18,11 @@
 #include "GLMessageBox.h"
 #include "GLToolkit.h"
 
+#include "GLCombo.h"
+#include "GLList.h"
+#include "GLLabel.h"
+#include "GLButton.h"
+
 #include <math.h>
 #include <string>
 #include <vector>
@@ -66,7 +71,7 @@ using namespace std;
 
 // --------------------------------------------------------------
 
-GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,BOOL openMode):GLWindow() {
+GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,bool openMode):GLWindow() {
 
   char tmp[256];
   int wD = 450;
@@ -109,7 +114,7 @@ GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nb
   Add(fileLabel);
 
   fileText = new GLCombo(FILE_TEXT);
-  fileText->SetEditable(TRUE);
+  fileText->SetEditable(true);
   fileText->SetBounds(55,282,wD-150,19);
   fileText->SetSize(nbFile);
   for(int i=0;i<nbFile;i++) {
@@ -126,7 +131,7 @@ GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nb
   pathText = new GLCombo(PATH_TEXT);
   AddToPathHist(path);
   pathText->SetSelectedIndex(0);
-  pathText->SetEditable(TRUE);
+  pathText->SetEditable(true);
   pathText->SetBounds(50,5,wD-150,19);
   Add(pathText);
 
@@ -259,16 +264,16 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
         int row = fileList->GetSelectedRow();
         if( row>=0 ) {
           char *fName = fileList->GetValueAt(0,row);
-          BOOL isDir = (strncmp(fName,":B:",3)==0);
+          bool isDir = (strncmp(fName,":B:",3)==0);
           if( isDir ) {
             if(mode) {
               fileText->SetSelectedValue("");
-              okButton->SetEnabled(FALSE);
+              okButton->SetEnabled(false);
             }
           } else {
             strcpy(curFile,fName);
             fileText->SetSelectedValue(curFile);
-            okButton->SetEnabled(TRUE);
+            okButton->SetEnabled(true);
           }
         }
       }break;
@@ -278,12 +283,12 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
 
 // --------------------------------------------------------------
 
-BOOL GLFileBox::CheckDirectory(char *dirName) {
+bool GLFileBox::CheckDirectory(char *dirName) {
 
 #ifdef WIN
 
   if(strcmp(dirName,":B:My Computer")==0)
-    return TRUE;
+    return true;
 
   struct _finddata_t seqfile;
   intptr_t f;
@@ -293,21 +298,21 @@ BOOL GLFileBox::CheckDirectory(char *dirName) {
   if( f==-1L ) {
     sprintf(errMsg,"%s\nDirectory not found",dirName);
     GLMessageBox::Display(errMsg,"Error",GLDLG_OK,GLDLG_ICONERROR);
-    return FALSE;
+    return false;
   }
 
   if((seqfile.attrib & _A_SUBDIR)==0) {
      sprintf(errMsg,"%s\nNot a directory",dirName);
      GLMessageBox::Display(errMsg,"Error",GLDLG_OK,GLDLG_ICONERROR);
      _findclose(f);
-     return FALSE;
+     return false;
   }
 
   _findclose(f);
 
 #endif
 
-  return TRUE;
+  return true;
 
 }
 
@@ -358,7 +363,7 @@ FILENAME *GLFileBox::OpenFile(char *path,char *fileName,char *title,const char *
 
   FILENAME *ret = NULL;
 
-  GLFileBox *f = new GLFileBox(path,fileName,title,filters,nbFilter,TRUE);
+  GLFileBox *f = new GLFileBox(path,fileName,title,filters,nbFilter,true);
   f->DoModal();
 
   if( f->rCode == OK_BTN ) {
@@ -409,9 +414,9 @@ std::vector<FILENAME> GLFileBox::OpenMultipleFiles(const char *filters, const ch
 		char* str = ofn.lpstrFile;
 		std::string directory = str;
 		str += (directory.length() + 1);
-		BOOL moreThanOne = FALSE;
+		bool moreThanOne = false;
 		while (*str) {
-			moreThanOne = TRUE;
+			moreThanOne = true;
 			std::string filename = str;
 			str += (filename.length() + 1);
 			// use the filename, e.g. add it to a vector
@@ -476,7 +481,7 @@ FILENAME *GLFileBox::SaveFile(char *path,char *fileName,char *title,const char *
 
   FILENAME *ret = NULL;
 
-  GLFileBox *f = new GLFileBox(path,fileName,title,filters,nbFilter,FALSE);
+  GLFileBox *f = new GLFileBox(path,fileName,title,filters,nbFilter,false);
   f->DoModal();
 
   if( f->rCode == OK_BTN ) {
@@ -579,7 +584,7 @@ void GLFileBox::AddToFileHist(char *file) {
     nbFile--;
   }
   //Search insertion pos
-  BOOL found = FALSE;
+  bool found = false;
   int i=0,cmp=-1;
   while(!found && i<nbFile) {
     cmp = _stricmp(fileHistory[i],file);
@@ -618,7 +623,7 @@ void GLFileBox::AddToPathHist(char *path) {
   }
 
   //Search insertion pos
-  BOOL found = FALSE;
+  bool found = false;
   int i=0,cmp=-1;
   while(!found && i<nbPath) {
     cmp = _stricmp(pathHistory[i],path);
@@ -656,10 +661,10 @@ void GLFileBox::AddToPathHist(char *path) {
 
 // --------------------------------------------------------------
 
-BOOL GLFileBox::MatchFilters(char *fileName) {
+bool GLFileBox::MatchFilters(char *fileName) {
 
-  if( nbFilter==0 ) return TRUE;
-  if( strcmp(filterExt[curFilter],"*.*")==0 ) return TRUE;
+  if( nbFilter==0 ) return true;
+  if( strcmp(filterExt[curFilter],"*.*")==0 ) return true;
 
   char *ext  = GetExtension(fileName);
   char *extF = GetExtension(filterExt[curFilter]);
@@ -814,7 +819,7 @@ void GLFileBox::UpdateFileList(char *path) {
   fileList->SetColumnAligns(cAligns);
   fileList->SetColumnWidths(cWidths);
   fileList->SetColumnLabels(cNames);
-  fileList->SetColumnLabelVisible(TRUE);
+  fileList->SetColumnLabelVisible(true);
 
   pathText->SetSelectedValue(curPath);
   pathText->ScrollTextToEnd();

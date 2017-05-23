@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        CollapseSettings.h
   Description: Collapse settings dialog
@@ -17,16 +18,16 @@
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
+class GLWindow;
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
 
-#include "Geometry.h"
-#include "Worker.h"
-
-#ifndef _COLLAPSESETTINGSH_
-#define _COLLAPSESETTINGSH_
+//#include "Geometry.h"
+//#include "Worker.h"
+class Geometry;
+class Worker;
 
 class CollapseSettings : public GLWindow {
 
@@ -57,13 +58,10 @@ private:
   GLToggle *l2;
   GLToggle *l3;
 
-  BOOL isRunning;
+  bool isRunning;
 
-  int nbVertexS;
-  int nbFacetS;
-  int nbFacetSS;
+  size_t nbVertexS;
+  size_t nbFacetS;
+  size_t nbFacetSS;
 
 };
-
-#endif /* _COLLAPSESETTINGSH_ */
-

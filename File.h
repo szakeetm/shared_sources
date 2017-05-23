@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        File.h
   Description: File management class
@@ -25,27 +26,12 @@
 
 #define READ_BUFFSIZE 4096
 
-// -------------------------------------------------------
-
-class Error {
-
-public:
-  Error(const char *message);
-  const char *GetMsg();
-
-private:
-  char msg[1024];
-
-};
-
-// -------------------------------------------------------
-
 class FileUtils {
 
 public:
   // Utils functions
-	static int Exist(std::string fileName);
-	static int Exist(const char *fileName);
+	static bool Exist(std::string fileName);
+	static bool Exist(const char *fileName);
 	static std::string GetPath(const std::string &str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
 	static std::string GetFilename(const std::string &str); //Extracts string after the last "\"
 	static std::string StripExtension(const std::string & str);
@@ -113,9 +99,9 @@ public:
   char *GetName();
 
   // Write function
-  void WriteLLong(const llong &v,char *sep=NULL);
-  void WriteInt(const int &v,char *sep=NULL);
-  void WriteDouble(const double &v,char *sep=NULL);
+  void Write(const size_t &v, char *sep = NULL);
+  void Write(const int &v,char *sep=NULL);
+  void Write(const double &v,char *sep=NULL);
   void Write(const char *s);
   void Write(std::string str);
   

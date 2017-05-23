@@ -16,8 +16,9 @@
 */
 
 #include "GLChart.h"
+#include "../GLTypes.h"
 #include "../MathTools.h" //PI
-#include <malloc.h>
+//#include <malloc.h>
 #include <float.h>
 #include <math.h>
 
@@ -57,8 +58,8 @@ GLDataView::GLDataView() {
   A1 = 1;
   A2 = 0;
   parentAxis = NULL;
-  clickable=TRUE;
-  labelVisible=TRUE;
+  clickable=true;
+  labelVisible=true;
   userFormat = NULL;
   interpMethod = INTERPOLATE_NONE;
   interpStep = 10;
@@ -202,7 +203,7 @@ GLCColor GLDataView::GetColor() {
  * @see setFillStyle
  * @return true if the view is filled, false otherwise
  */
-BOOL GLDataView::IsFill() {
+bool GLDataView::IsFill() {
   return fillStyle!=FILL_STYLE_NONE;
 }
 
@@ -211,7 +212,7 @@ BOOL GLDataView::IsFill() {
  * @param b true if the view is filled, false otherwise
  * @see setFillStyle
  */
-void GLDataView::SetFill(BOOL b) {
+void GLDataView::SetFill(bool b) {
   if( !b ) {
     SetFillStyle(FILL_STYLE_NONE);
   } else {
@@ -225,7 +226,7 @@ void GLDataView::SetFill(BOOL b) {
  * chart. Default is true.
  * @param b Clickable state
  */
-void GLDataView::SetClickable(BOOL b) {
+void GLDataView::SetClickable(bool b) {
   clickable=b;
 }
 
@@ -233,7 +234,7 @@ void GLDataView::SetClickable(BOOL b) {
  * Returns the clickable state.
  * @see setClickable
  */
-BOOL GLDataView::IsClickable() {
+bool GLDataView::IsClickable() {
   return clickable;
 }
 
@@ -243,14 +244,14 @@ BOOL GLDataView::IsClickable() {
  * @param b visible state
  * @see JLChart#setLabelVisible
  */
-void GLDataView::SetLabelVisible(BOOL b) {
+void GLDataView::SetLabelVisible(bool b) {
   labelVisible=b;
 }
 
 /** Returns true when the label is visible.
  * @see setLabelVisible
  */
-BOOL GLDataView::IsLabelVisible() {
+bool GLDataView::IsLabelVisible() {
   return labelVisible;
 }
 
@@ -714,7 +715,7 @@ void GLDataView::SetA2(double d) {
  * Determines wether this views has a transformation.
  * @return false when A0=A2=0 and A1=1, true otherwise
  */
-BOOL GLDataView::HasTransform() {
+bool GLDataView::HasTransform() {
   return !(A0 == 0 && A1 == 1 && A2 == 0);
 }
 
@@ -726,7 +727,7 @@ BOOL GLDataView::HasTransform() {
  * @see #setSmoothingMethod
  * @see #setMathFunction
  */
-BOOL GLDataView::HasFilter() {
+bool GLDataView::HasFilter() {
   return (interpMethod!=INTERPOLATE_NONE) || (smoothMethod!=SMOOTH_NONE) || (mathFunction!=MATH_NONE);
 }
 
@@ -811,7 +812,7 @@ double GLDataView::GetPositiveMinXValue() {
 double GLDataView::GetPositiveMinTime() {
   DataList *e = theData;
   if(HasFilter()) e = theFilteredData;
-  BOOL found = false;
+  bool found = false;
   while (e != NULL && !found) {
     found = (e->x > 0);
     if (!found) e = e->next;
@@ -903,7 +904,7 @@ void GLDataView::Add(double x, double y) {
  * @see JLChart#addData
  * @see JLChart#setDisplayDuration
  */
-void GLDataView::Add(double x, double y,BOOL updateFilter) {
+void GLDataView::Add(double x, double y,bool updateFilter) {
 
 	DataList *newData = (DataList *)malloc(sizeof(DataList));
 	_ASSERTE(newData);
@@ -940,7 +941,7 @@ void GLDataView::SetData(double *x,double *y,int nbData) {
 
   Reset();
   for(int i=0;i<nbData;i++)
-    Add(x[i],y[i],FALSE);
+    Add(x[i],y[i],false);
   updateFilters();
 
 }
@@ -952,7 +953,7 @@ void GLDataView::SetData(double *x,double *y,int nbData) {
  */
 int GLDataView::GarbagePointTime(double garbageLimit) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int nbr = 0;
   DataList *old;
 
@@ -1275,9 +1276,9 @@ char *GLDataView::FormatValue(double v) {
  * Returns whether data is supposed to be sorted on x or not
  * @return a boolean value
  */
-BOOL GLDataView::IsXDataSorted () {
+bool GLDataView::IsXDataSorted () {
   // return xDataSorted;
-  return TRUE; // TODO
+  return true; // TODO
 }
 
 /**
@@ -1285,7 +1286,7 @@ BOOL GLDataView::IsXDataSorted () {
  * <code>false</code> by default
  * @param dataSorted a boolean value
  */
-void GLDataView::SetXDataSorted (BOOL dataSorted) {
+void GLDataView::SetXDataSorted (bool dataSorted) {
   //if (xDataSorted && !dataSorted) computeDataBounds();
   //xDataSorted = dataSorted;
   //TODO
@@ -1318,7 +1319,7 @@ void GLDataView::addPts(Point2D *p,APoint2D pt) {
  * @param nbExtra Number of extrapolated point
  * @param interpNan Interpolate NaN values when true, remove them otherwise
  */
-Point2D GLDataView::getSource(DataList *src,int nbExtra,BOOL interpNan) {
+Point2D GLDataView::getSource(DataList *src,int nbExtra,bool interpNan) {
 
   DataList *f = src;
 

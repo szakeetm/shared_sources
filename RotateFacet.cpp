@@ -26,11 +26,18 @@ GNU General Public License for more details.
 
 #include "RotateFacet.h"
 #include "Facet.h"
-#include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp\MathTools.h"
-#include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTitledPanel.h"
+
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -94,12 +101,12 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	facetNumber = new GLTextField(0,"0");
 	facetNumber->SetBounds(160,130,60,18);
-	facetNumber->SetEditable(FALSE);
+	facetNumber->SetEditable(false);
 	iPanel->Add(facetNumber);
 	
 	getSelFacetButton = new GLButton(0,"<-Get selected");
 	getSelFacetButton->SetBounds(225, 130, 80, 18);
-	getSelFacetButton->SetEnabled(FALSE);
+	getSelFacetButton->SetEnabled(false);
 	iPanel->Add(getSelFacetButton);
 
 	l7 = new GLToggle(0,"Define by 2 selected vertex");
@@ -120,7 +127,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 	
 	aText = new GLTextField(0,"0");
 	aText->SetBounds(85,240,40,18);
-	aText->SetEditable(FALSE);
+	aText->SetEditable(false);
 	iPanel->Add(aText);
 		
 	bLabel = new GLLabel("b:");
@@ -129,7 +136,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 	
 	bText = new GLTextField(0,"0");
 	bText->SetBounds(150,240,40,18);
-	bText->SetEditable(FALSE);
+	bText->SetEditable(false);
 	iPanel->Add(bText);
 
 	cLabel = new GLLabel("c:");
@@ -138,7 +145,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	cText = new GLTextField(0,"0");
 	cText->SetBounds(215,240,40,18);
-	cText->SetEditable(FALSE);
+	cText->SetEditable(false);
 	iPanel->Add(cText);
 
 	getBaseVertexButton = new GLButton(0, "<-Get base");
@@ -155,7 +162,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	uText = new GLTextField(0,"0");
 	uText->SetBounds(85,265,40,18);
-	uText->SetEditable(FALSE);
+	uText->SetEditable(false);
 	iPanel->Add(uText);
 
 	vLabel = new GLLabel("v");
@@ -164,7 +171,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	vText = new GLTextField(0,"0");
 	vText->SetBounds(150,265,40,18);
-	vText->SetEditable(FALSE);
+	vText->SetEditable(false);
 	iPanel->Add(vText);
 
 	wLabel = new GLLabel("w");
@@ -173,7 +180,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	wText = new GLTextField(0,"0");
 	wText->SetBounds(215,265,40,18);
-	wText->SetEditable(FALSE);
+	wText->SetEditable(false);
 	iPanel->Add(wText);
 
 	getDirVertexButton = new GLButton(0, "<-Calc diff");
@@ -186,7 +193,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	degText = new GLTextField(0,"0");
 	degText->SetBounds(65,300,80,18);
-	degText->SetEditable(TRUE);
+	degText->SetEditable(true);
 	Add(degText);
 
 	radLabel = new GLLabel("Radians:");
@@ -195,7 +202,7 @@ RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
 
 	radText = new GLTextField(0, "0");
 	radText->SetBounds(225, 300, 80, 18);
-	radText->SetEditable(TRUE);
+	radText->SetEditable(true);
 	Add(radText);
 
 	moveButton = new GLButton(0,"Rotate facet");
@@ -241,7 +248,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			GLWindow::ProcessMessage(NULL,MSG_CLOSE);
 
 		} else if (src==moveButton || src==copyButton) {
-			if (geom->GetNbSelected()==0) {
+			if (geom->GetNbSelectedFacets()==0) {
 				GLMessageBox::Display("No facets selected","Nothing to mirror",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
@@ -358,11 +365,11 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 				//GLWindowManager::FullRepaint();
-				mApp->changedSinceSave = TRUE;
+				mApp->changedSinceSave = true;
 			}
 		}
 		 else if (src == getSelFacetButton) {
-			 if (geom->GetNbSelected() != 1) {
+			 if (geom->GetNbSelectedFacets() != 1) {
 				 GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				 return;
 			 }
@@ -439,17 +446,17 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 }
 
 void RotateFacet::UpdateToggle(GLComponent *src) {
-	l1->SetState(FALSE);
-	l2->SetState(FALSE);
-	l3->SetState(FALSE);
-	l4->SetState(FALSE);
-	l5->SetState(FALSE);
-	l6->SetState(FALSE);
-	l7->SetState(FALSE);
-	l8->SetState(FALSE);
+	l1->SetState(false);
+	l2->SetState(false);
+	l3->SetState(false);
+	l4->SetState(false);
+	l5->SetState(false);
+	l6->SetState(false);
+	l7->SetState(false);
+	l8->SetState(false);
 
 	GLToggle *toggle=(GLToggle*)src;
-	toggle->SetState(TRUE);
+	toggle->SetState(true);
 
 	facetNumber->SetEditable(src == l4 || src == l5 || src == l6);
 	getSelFacetButton->SetEnabled(src == l4 || src == l5 || src == l6);

@@ -1,16 +1,19 @@
+#pragma once
 /*
   File:        BuildIntersection.h
   Description: Build intersection dialog
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLLabel.h"
+//#include "GLApp/GLButton.h"
+//#include "GLApp/GLLabel.h"
+class GLButton;
+class GLLabel;
 
-#include "Geometry.h"
-#include "Worker.h"
-
-#pragma once
+//#include "Geometry.h"
+//#include "Worker.h"
+class Geometry;
+class Worker;
 
 class BuildIntersection : public GLWindow {
 

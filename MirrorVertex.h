@@ -2,19 +2,20 @@
   File:        MirrorVertex.h
   Description: Mirror vertex to plane dialog
 */
-
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _MirrorVertexH_
 #define _MirrorVertexH_
+
+#include "GLApp/GLWindow.h"
+#include "Geometry.h" //UndoPoint
+#include <vector>
+
+class Geometry;
+class Worker;
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
 
 class MirrorVertex : public GLWindow {
 

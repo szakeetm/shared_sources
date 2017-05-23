@@ -22,6 +22,11 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLList.h"
+
+#include "Geometry.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -52,38 +57,38 @@ VertexCoordinates::VertexCoordinates():GLWindow() {
 
   int wD = 405;
   int hD = 350;
-  SetIconfiable(TRUE);
-  SetResizable(FALSE);
+  SetIconfiable(true);
+  SetResizable(false);
   /*
   GLTitledPanel *p = new GLTitledPanel("Facet index");
   p->SetBounds(5,hD-145,wD-10,95);
   //Add(p);
 
   //insert1Button = new GLButton(0,"Insert (New vertex)");
-  //setBounds(p,insert1Button,5,20,120,19);
+  //SetBounds(p,insert1Button,5,20,120,19);
   //Add(insert1Button);
 
   insert2Button = new GLButton(0,"Insert (Existing vertex)");
-  setBounds(p,insert2Button,5,45,120,19);
+  SetBounds(p,insert2Button,5,45,120,19);
   //Add(insert2Button);
 
   removeButton = new GLButton(0,"Remove");;
-  setBounds(p,removeButton,5,70,120,19);
+  SetBounds(p,removeButton,5,70,120,19);
   //Add(removeButton);
 
   GLLabel *l1 = new GLLabel("Insertion position");
-  setBounds(p,l1,130,20,90,19);
+  SetBounds(p,l1,130,20,90,19);
   //Add(l1);
 
   insertPosText = new GLTextField(0,"");
-  setBounds(p,insertPosText,220,20,30,19);
+  SetBounds(p,insertPosText,220,20,30,19);
   //Add(insertPosText);
 
   // TODO
-  insert1Button->SetEnabled(FALSE);
-  insert2Button->SetEnabled(FALSE);
-  removeButton->SetEnabled(FALSE);
-  insertPosText->SetEnabled(FALSE);
+  insert1Button->SetEnabled(false);
+  insert2Button->SetEnabled(false);
+  removeButton->SetEnabled(false);
+  insertPosText->SetEnabled(false);
   */
   setXbutton = new GLButton(0, "X");
   setXbutton->SetBounds(5, hD - 43, 16, 19);
@@ -105,8 +110,8 @@ VertexCoordinates::VertexCoordinates():GLWindow() {
 
   vertexListC = new GLList(0);
   vertexListC->SetBounds(5,5,wD-10,hD-60);
-  vertexListC->SetColumnLabelVisible(TRUE);
-  vertexListC->SetGrid(TRUE);
+  vertexListC->SetColumnLabelVisible(true);
+  vertexListC->SetGrid(true);
   Add(vertexListC);
 
   // Center dialog
@@ -155,9 +160,9 @@ void VertexCoordinates::Update() {
   vertexListC->SetColumnLabels((char **)flName);
   vertexListC->SetColumnAligns((int *)flAligns);
   vertexListC->SetColumnEditable((int *)fEdits);
-  for(int i=0;i<s->GetNbVertex();i++) {
+  for(size_t i=0;i<s->GetNbVertex();i++) {
 	  if(s->GetVertex(i)->selected) {
-		  sprintf(tmp,"%d",i+1);
+		  sprintf(tmp,"%zd",i+1);
 		  vertexListC->SetValueAt(0,count,tmp);
 		  //sprintf(tmp,"%d",idx+1);
 		  //vertexListC->SetValueAt(1,i,tmp);
@@ -177,7 +182,7 @@ void VertexCoordinates::Update() {
 void VertexCoordinates::Display(Worker *w) {
   SetTitle("Vertex coordinates");
   worker = w;
-  SetVisible(TRUE);
+  SetVisible(true);
   Update();
 
 }
@@ -188,7 +193,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {
-        SetVisible(FALSE);
+        SetVisible(false);
 	  }
 	  else if (src == setXbutton) {
 		  double coordValue;
@@ -231,23 +236,23 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
         if( rep == GLDLG_OK ) {
 			if (mApp->AskToReset(worker)) {
 			//if (worker->running) worker->Stop_Public();
-			mApp->changedSinceSave=TRUE;
-			for(int i=0;i<vertexListC->GetNbRow();i++) {
+			mApp->changedSinceSave=true;
+			for(size_t i=0;i<vertexListC->GetNbRow();i++) {
 				double x,y,z;
-				int id;
+				size_t id;
 				id=vertexListC->GetValueInt(i,0)-1;
 				if (!(id>=0 && id<geom->GetNbVertex())) { //wrong coordinates at row
 					char tmp[128];
-					sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", i + 1, id+1);
+					sprintf(tmp, "Invalid vertex id in row %zd\n Vertex %zd doesn't exist.", i + 1, id+1);
 					GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
 					return;
 				}
-				BOOL success = (1==sscanf(vertexListC->GetValueAt(1,i),"%lf",&x));
+				bool success = (1==sscanf(vertexListC->GetValueAt(1,i),"%lf",&x));
 				success = success && (1==sscanf(vertexListC->GetValueAt(2,i),"%lf",&y));
 				success = success && (1==sscanf(vertexListC->GetValueAt(3,i),"%lf",&z));
 				if (!success) { //wrong coordinates at row
 					char tmp[128];
-					sprintf(tmp,"Invalid coordinates in row %d",i+1);
+					sprintf(tmp,"Invalid coordinates in row %zd",i+1);
 					GLMessageBox::Display(tmp,"Incorrect vertex",GLDLG_OK,GLDLG_ICONWARNING);
 				return;	
 				}
@@ -278,10 +283,4 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 
   GLWindow::ProcessMessage(src,message);
 
-}
-
-void VertexCoordinates::setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h) {
-  int xc,yc,wc,hc;
-  org->GetBounds(&xc,&yc,&wc,&hc);
-  src->SetBounds(xc+x,yc+y,w,h);
 }

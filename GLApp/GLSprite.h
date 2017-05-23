@@ -13,11 +13,10 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-#include <SDL_opengl.h>
-
 #ifndef _SPRITE2DH_
 #define _SPRITE2DH_
+
+#include <SDL_opengl.h>
 
 class Sprite2D {
 
@@ -38,8 +37,8 @@ public:
   void SetColor(const float &r,const float &g,const float &b);
   
   // Draw a 2D sprite (in screen coordinates)
-  void Render(const BOOL &doLinear);
-  void Render90(BOOL doLinear);
+  void Render(const bool &doLinear);
+  void Render90(bool doLinear);
 
   // Release any allocated resource
   void InvalidateDeviceObjects();

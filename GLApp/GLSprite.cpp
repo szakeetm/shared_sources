@@ -18,7 +18,7 @@
 #include "GLToolkit.h"
 #include "GLApp.h"
 #include <cimage.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <stdio.h>
 
 extern GLApplication *theApp;
@@ -195,7 +195,7 @@ void Sprite2D::InvalidateDeviceObjects() {
 
 // -------------------------------------------
 
-void Sprite2D::Render(const BOOL &doLinear) {
+void Sprite2D::Render(const bool &doLinear) {
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D,texId);
@@ -236,7 +236,7 @@ void Sprite2D::Render(const BOOL &doLinear) {
 
 // -------------------------------------------
 
-void Sprite2D::Render90(BOOL doLinear) {
+void Sprite2D::Render90(bool doLinear) {
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D,texId);

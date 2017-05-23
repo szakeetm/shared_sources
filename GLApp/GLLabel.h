@@ -13,11 +13,13 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include "GLFont.h"
-
 #ifndef _GLLABELH_
 #define _GLLABELH_
+
+#include "GLComponent.h"
+#include <string>
+
+class GLFont2D;
 
 class GLLabel : public GLComponent {
 
@@ -28,9 +30,10 @@ public:
   ~GLLabel();
 
   // Component method
+  void SetText(std::string text);
   void SetText(const char *text);
   void SetTextColor(int r,int g,int b);
-  void GetTextBounds(int *w,int *h);
+  void GetTextBounds(int *w, int *h);
   void Clear();
   char* GetText();
 
@@ -58,7 +61,7 @@ public:
 	void SetBackgroundColor(float r,float g,float b);
 	void Paint();
 	void SetTextSize(float s);
-	BOOL paintBg;
+	bool paintBg;
 private:
 	float rBack;
 	float gBack;

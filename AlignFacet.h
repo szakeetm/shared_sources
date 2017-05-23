@@ -1,21 +1,24 @@
+#pragma once
 /*
   File:        AlignFacet.h
   Description: Move facet by offset dialog
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
-#include "Vector.h"
+
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
+class Vector3d;
+
+#include <vector> //Std vectors
 
 class Geometry;
 class Worker;
 
-#ifndef _AlignFacetH_
-#define _AlignFacetH_
+
 
 class AlignFacet : public GLWindow {
 
@@ -23,7 +26,6 @@ public:
 
   // Construction
   AlignFacet(Geometry *geom,Worker *work);
-  ~AlignFacet();
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message);
@@ -34,11 +36,8 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-  int*        selection;
-  int         nbMemo;
-  int         nbSelected;
-
-  Vector3d    **oriPos;
+  std::vector<size_t> memorizedSelection;
+  std::vector<std::vector<Vector3d>> oriPositions;
 
   GLButton    *memoSel;
   GLLabel     *numFacetSel;
@@ -57,8 +56,4 @@ private:
   GLTitledPanel *step2;
   GLTitledPanel *step3;
 
-  int nbFacetS;
-
 };
-
-#endif /* _AlignFacetH_ */

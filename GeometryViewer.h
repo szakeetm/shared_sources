@@ -16,19 +16,19 @@
   GNU General Public License for more details.
 */
 
-#include "GLApp/GLComponent.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLCombo.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp\GLGradient.h"
-#include "Vector.h"
-
-class Worker;
-
 #ifndef _GEOMETRYVIEWERH_
 #define _GEOMETRYVIEWERH_
 
-#define MAX_VIEWER  4
+#include "GLApp/GLComponent.h"
+#include "GLApp\GLTypes.h"
+#include "Vector.h"
+#include <vector>
+
+class Worker;
+class GLButton;
+class GLLabel;
+class GLCombo;
+class GLOverlayLabel;
 
 #define DRAGG_NONE   0
 #define DRAGG_SELECT 1
@@ -94,12 +94,10 @@ typedef struct {
 
 typedef struct {
 
-  char    *name;       // Selection name
+  std::string    name;       // Selection name
+  std::vector<size_t> selection; // List of facets
 
-  int      nbSel;   
-  int      *selection; // List of facets
-
-} ASELECTION;
+} SelectionGroup;
 
 class GeometryViewer : public GLComponent {
 
@@ -115,52 +113,52 @@ public:
   void ToTopView();
   void ToSideView();
   void ToFrontView();
-  BOOL SelectionChanged();
-  BOOL IsDragging();
+  bool SelectionChanged();
+  bool IsDragging();
   AVIEW GetCurrentView();
   void  SetCurrentView(AVIEW v);
-  BOOL IsSelected();
-  void SetSelected(BOOL s);
+  bool IsSelected();
+  void SetSelected(bool s);
 
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
   void SetBounds(int x,int y,int width,int height);
   void ProcessMessage(GLComponent *src,int message);
-  void SetFocus(BOOL focus);
+  void SetFocus(bool focus);
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();
 
   // Flag view
-  BOOL showIndex;
-  BOOL showVertex;
-  BOOL showNormal;
-  BOOL showRule;
-  BOOL showUV;
-  BOOL showLeak;
-  BOOL showHit;
-  BOOL showLine;
-  BOOL showVolume;
-  BOOL showTexture;
+  bool showIndex;
+  bool showVertex;
+  bool showNormal;
+  bool showRule;
+  bool showUV;
+  bool showLeak;
+  bool showHit;
+  bool showLine;
+  bool showVolume;
+  bool showTexture;
   int  showBack;
-  BOOL showFilter;
-  BOOL showColormap;
-  BOOL showTP;
-  BOOL showHidden;
-  BOOL showHiddenVertex;
-  BOOL showMesh;
-  BOOL bigDots;
-  BOOL showDir;
-  BOOL autoScaleOn;
+  bool showFilter;
+ // bool showColormap;
+  bool showTP;
+  bool showHidden;
+  bool showHiddenVertex;
+  bool showMesh;
+  bool bigDots;
+  bool showDir;
+  bool autoScaleOn;
   int  hideLot;
 
   #ifdef  MOLFLOW
-  BOOL showTime;
+  bool showTime;
   #endif
 
   #ifdef  SYNRAD
-  BOOL shadeLines;
+  bool shadeLines;
   int dispNumTraj;  // displayed number of trajectory points
   #endif
   
@@ -184,9 +182,9 @@ private:
   void UpdateMouseCursor(int mode);
   void TranslateScale(double diff);
   void PaintCompAndBorder();
-  void PaintSelectedVertices(BOOL hiddenVertex);
-  void AutoScale(BOOL reUpdateMouseCursor=TRUE);
-  void ComputeBB(BOOL getAll);
+  void PaintSelectedVertices(bool hiddenVertex);
+  void AutoScale(bool reUpdateMouseCursor=true);
+  void ComputeBB(bool getAll);
   void UpdateLight();
 
 
@@ -223,7 +221,7 @@ private:
   // Viewer mode
   int      draggMode;
   int      mode;
-  BOOL     selected;
+  bool     selected;
 
   // View parameters
   AVIEW    view;
@@ -255,7 +253,7 @@ private:
   int      selY2;
 
   // Selection change
-  BOOL selectionChange;
+  bool selectionChange;
 
   // SDL/OpenGL stuff
   GLfloat matView[16];

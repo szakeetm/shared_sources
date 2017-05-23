@@ -3,18 +3,19 @@
   Description: Split facet by plane dialog
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _SPLITFACETH_
 #define _SPLITFACETH_
+
+#include "GLApp/GLWindow.h"
+
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
+
+class Geometry;
+class Worker;
 
 class SplitFacet : public GLWindow {
 

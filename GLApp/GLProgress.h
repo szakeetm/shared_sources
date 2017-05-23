@@ -14,13 +14,14 @@
   GNU General Public License for more details.
 */
 
-#include <SDL_opengl.h>
-#include "GLWindow.h"
-#include "GLLabel.h"
-#include <string>
-
 #ifndef _GLPROGESSH_
 #define _GLPROGESSH_
+
+//#include <SDL_opengl.h>
+#include "GLWindow.h"
+#include <string>
+
+class GLLabel;
 
 class GLProgress : public GLWindow {
 

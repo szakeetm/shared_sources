@@ -13,11 +13,11 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include <string>
-
 #ifndef _GLTOGGLEH_
 #define _GLTOGGLEH_
+
+#include "GLComponent.h"
+#include <string>
 
 class GLToggle : public GLComponent {
 
@@ -31,8 +31,8 @@ public:
   void SetText(std::string txt);
   void SetState(int setState);
   void SetTextColor(int r,int g,int b);
-  void SetEnabled(BOOL enable); //override GLComponent for text color change
-  void AllowMixedState(BOOL setAllow);
+  void SetEnabled(bool enable); //override GLComponent for text color change
+  void AllowMixedState(bool setAllow);
 
   // Implementation
   void Paint();
@@ -45,7 +45,7 @@ private:
   float rText;
   float gText;
   float bText;
-  BOOL allowMixedState; //Allow "multiple" state
+  bool allowMixedState; //Allow "multiple" state
 
 };
 

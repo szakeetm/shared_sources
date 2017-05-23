@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <math.h>
 #include <errno.h>
 #include "GLParser.h"
@@ -149,14 +149,14 @@ void GLParser::AV()
 // Set global error
 void GLParser::SetError( char *err,int p) {
   sprintf(errMsg,"%s at %d",err,p);
-  error=TRUE;
+  error=true;
 }
 
 // -------------------------------------------------------
-VLIST *GLParser::FindVar(char *var_name,VLIST *l) {
+VLIST *GLParser::FindVar(const char *var_name,VLIST *l) {
 
   VLIST *p = l;
-  BOOL found = FALSE;
+  bool found = false;
   while(!found && p) {
     found = (_stricmp(p->name,var_name)==0);
     if(!found) p=p->next;
@@ -168,7 +168,7 @@ VLIST *GLParser::FindVar(char *var_name,VLIST *l) {
 
 // -------------------------------------------------------
 // Add variables into the chained list
-VLIST *GLParser::AddVar(char *var_name,VLIST **l)
+VLIST *GLParser::AddVar(const char *var_name,VLIST **l)
 {
   // Search if already added
   VLIST *a = FindVar(var_name,*l);
@@ -226,10 +226,10 @@ void GLParser::ReadDouble(double *R)
 
   if (EC=='E' || EC=='e') {
     AV();
-    nega=FALSE;
+    nega=false;
 
     if (EC=='-') {
-      nega=TRUE;
+      nega=true;
       AV();
     }
 
@@ -264,8 +264,9 @@ void GLParser::ReadVariable( char *name ) {
      (EC>='A' && EC<='Z') || 
      (EC>='a' && EC<='z') ||
      (EC>='0' && EC<='9') ||
-     (EC=='_')));
-
+     (EC=='_') ||
+	 (EC=='[') ||
+	 (EC==']')));
 }
 
 void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
@@ -338,7 +339,19 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
                 AddNode( OPER_ATAN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else{
+              }
+			  else if (_stricmp(Extract(4), "AVG(") == 0) {
+				  std::string avgExpression;
+				  avgExpression += EC;
+				  while (EC != ')') {
+					  AV();
+					  avgExpression += EC;
+				  };
+				  AV();
+				  elem.variable = AddVar(avgExpression.c_str(), var_list);
+				  AddNode(TVARIABLE, elem, node, NULL, NULL);
+			  }
+			  else{
                 ReadVariable(v_name);
                 elem.variable=AddVar(v_name,var_list);
                 AddNode( TVARIABLE , elem , node , NULL , NULL);
@@ -364,104 +377,28 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
                 AddNode( OPER_SINH , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(4),"sum(")==0 ) {
-                AV();AV();AV();AV();
-                if( (EC>='A' && EC<='Z') || 
-                    (EC>='a' && EC<='z') ||
-                    (EC=='_')) 
-                {
-                  char tmpVName[64];
-                  double d1,d2;
-                  int i,i1,i2;
-
-                  ReadVariable(v_name);
-                  if (EC!=',') SetError(", expected",current);AV();
-                  bool selectionGroup,selectedFacets;
-				  selectionGroup=(EC=='S');
-				  if (selectionGroup) AV();
-				  selectedFacets = (EC == ')');
-				  if (!selectedFacets) ReadDouble(&d1);
-                  if (!selectionGroup) {
-					  if (EC!=',') SetError(", expected",current);AV();
-					  ReadDouble(&d2);
-				  }
-                  if (EC!=')') SetError(") expected",current);AV();
-
-                  // Add all variables
-                  if (!selectedFacets) i1 = (int)(d1+0.5);
-                  if (!selectionGroup) 
-					  {//ordinary SUM
-						  i2 = (int)(d2+0.5);
-
-						  // 1st
-						  sprintf(tmpVName,"%s%d",v_name,i1);
-						  elem.variable = AddVar(tmpVName,var_list);
-						  AddNode( TVARIABLE , elem , &l_t , NULL , NULL);
-
-						  if ((i2-i1) > 2000) {
-							  SetError("sum of more than 2000 facets", current);
-							  break;
-						  }
-
-						  for(i=i1+1;i<=i2;i++) {
-							  sprintf(tmpVName,"%s%d",v_name,i);
-							  elem.variable = AddVar(tmpVName,var_list);
-							  AddNode( TVARIABLE , elem , &r_t , NULL , NULL);
-							  AddNode( OPER_PLUS , elem , &l_t , l_t , r_t );
-						  }
-						  
-				  }
-					else if (!selectedFacets) { //Regular selection group
-					  i1--; //selection indexes start from 0
-					  //SUM of a selection Group
-					  if (i1 < 0 || i1 >= mApp->nbSelection) {
-						  SetError("invalid selection group", current);
-						  break;
-					  }
-					  if (mApp->selections[i1].nbSel > 2000) {
-						  SetError("sum of more than 2000 facets", current);
-						  break;
-					  }
-					  for (int j = 0; j < mApp->selections[i1].nbSel; j++) {
-						  if (mApp->selections[i1].selection[j] >= mApp->worker.GetGeometry()->GetNbFacet()) { //if invalid facet
-							  SetError("invalid facet", current);
-							  break;
-						  }
-							  sprintf(tmpVName, "%s%d", v_name, mApp->selections[i1].selection[j] + 1);
-							  elem.variable = AddVar(tmpVName, var_list);
-							  if (j == 0) AddNode(TVARIABLE, elem, &l_t, NULL, NULL);
-							  else {
-								  AddNode(TVARIABLE, elem, &r_t, NULL, NULL);
-								  AddNode(OPER_PLUS, elem, &l_t, l_t, r_t);
-							  }
-						  }
-					  
-				  }
-				  else  { //Currently selected facets
-					  int nbSel;
-					  int *selectedFacets;
-					  mApp->worker.GetGeometry()->GetSelection(&selectedFacets, &nbSel);
-
-					  if (nbSel==0) {
-						  SetError("no facets selected", current);
-						  break;
-					  }
-					  for (int j = 0; j < nbSel; j++) {
-						  sprintf(tmpVName, "%s%d", v_name, selectedFacets[j] + 1);
-						  elem.variable = AddVar(tmpVName, var_list);
-						  if (j == 0) AddNode(TVARIABLE, elem, &l_t, NULL, NULL);
-						  else {
-							  AddNode(TVARIABLE, elem, &r_t, NULL, NULL);
-							  AddNode(OPER_PLUS, elem, &l_t, l_t, r_t);
-						  }
-					  }
-
-				  }
-				  if (!error) *node = l_t;
-                } else {
-                  SetError("variable prefix name expected",current);
-                }
-              } else {
+			  }
+			  else if (_stricmp(Extract(4), "SUM(") == 0) {
+				  std::string sumExpression;
+				  sumExpression+= EC;
+				  while (EC != ')') {
+					  AV();
+					  sumExpression += EC;
+				  } ;
+				  AV();
+				  elem.variable = AddVar(sumExpression.c_str(), var_list);
+				  AddNode(TVARIABLE, elem, node, NULL, NULL);
+			  } else if (_stricmp(Extract(4), "SUM(") == 0) {
+				  std::string sumExpression;
+				  sumExpression+= EC;
+				  while (EC != ')') {
+					  AV();
+					  sumExpression += EC;
+				  } ;
+				  AV();
+				  elem.variable = AddVar(sumExpression.c_str(), var_list);
+				  AddNode(TVARIABLE, elem, node, NULL, NULL);
+			  } else {
                 ReadVariable(v_name);
                 elem.variable=AddVar(v_name,var_list);
                 AddNode( TVARIABLE , elem , node , NULL , NULL);
@@ -710,16 +647,16 @@ char *GLParser::GetErrorMsg() {
   return errMsg;
 }
 
-BOOL GLParser::Parse()
+bool GLParser::Parse()
 {
   if( strlen(expr)==0 ) {
     sprintf(errMsg,"Empty expression");
-    return FALSE;
+    return false;
   }
 
   current=0;
   EC=expr[0];
-  error=FALSE;
+  error=false;
   strcpy(errMsg,"No error");
 
   safe_free_tree(&evalTree);
@@ -775,7 +712,7 @@ double GLParser::EvalTree(ETREE *t) {
         a=EvalTree(t->left);
         b=EvalTree(t->right);
         if(b==0.0) {
-          error=TRUE;
+          error=true;
           sprintf(errMsg,"Divide by 0");
         } else {
           r=a/b;
@@ -786,7 +723,7 @@ double GLParser::EvalTree(ETREE *t) {
        b=EvalTree(t->right);
        r=pow(a,b);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
@@ -794,7 +731,7 @@ double GLParser::EvalTree(ETREE *t) {
        a=EvalTree(t->left);
        r=cos(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
@@ -811,76 +748,76 @@ double GLParser::EvalTree(ETREE *t) {
    case OPER_FACT:  a=EvalTree(t->left);
        r=fact(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_ACOS:  a=EvalTree(t->left);
        r=acos(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_SIN:  a=EvalTree(t->left);
        r=sin(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_ASIN:  a=EvalTree(t->left);
        r=asin(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_COSH:  a=EvalTree(t->left);
        r=cosh(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_SINH:  a=EvalTree(t->left);
        r=sinh(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_EXP:   a=EvalTree(t->left);
        r=exp(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_LN:   a=EvalTree(t->left);
        r=log(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_LOG10:   a=EvalTree(t->left);
        r=log10(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_LOG2:   a=EvalTree(t->left);
        r=log(a)/log(2.0);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_INV:  a=EvalTree(t->left);
        if(a==0.0) {
-         error=TRUE;
+         error=true;
          sprintf(errMsg,"Divide by 0");
        } else {
          r=1/a;
@@ -889,28 +826,28 @@ double GLParser::EvalTree(ETREE *t) {
    case OPER_SQRT: a=EvalTree(t->left);
        r=sqrt(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_TAN:  a=EvalTree(t->left);
        r=tan(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_ATAN:  a=EvalTree(t->left);
        r=atan(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
    case OPER_TANH:  a=EvalTree(t->left);
        r=tanh(a);
        if( errno!=0 ) {
-          error=TRUE;
+          error=true;
           strcpy(errMsg,strerror(errno));
        }
        break;
@@ -958,9 +895,9 @@ int GLParser::GetCurrentPos() {
   return current;
 }
 
-BOOL GLParser::Evaluate(double *result)
+bool GLParser::Evaluate(double *result)
 {
-  error=FALSE;
+  error=false;
   errno=0;
 
   /* Evaluate expression */
@@ -970,7 +907,7 @@ BOOL GLParser::Evaluate(double *result)
     *result=EvalTree(evalTree);
   } else {
     //sprintf(errMsg,"Parsing failed"); //Already has an error message
-    error=TRUE;
+    error=true;
   }
 
   return !error;

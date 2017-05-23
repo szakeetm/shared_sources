@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        ASELoader.h
   Description: Simple ASE file loader (ASCII Scene Export 3DS Max)
@@ -16,10 +17,9 @@
   GNU General Public License for more details.
 */
 
-#ifndef _ASELOADERH_
-#define _ASELOADERH_
 
-#include "File.h"
+//#include "File.h"
+class FileReader;
 #include "Vector.h"
 
 //--- Definitions -----------------------------------------------------------------
@@ -292,7 +292,7 @@ public:
   // Load an ASE file (throw Error in case of failure)
   void Load();
 
-  int          nbObj;
+  size_t          nbObj;
   ASEOBJECT   *OBJ;
 
 private:
@@ -303,6 +303,3 @@ private:
   int   class_lex(char *word);
 
 };
-
-
-#endif // _ASELOADERH_

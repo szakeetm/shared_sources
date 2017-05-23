@@ -17,6 +17,8 @@
 #include "GLGradient.h"
 #include "GLToolkit.h"
 #include "MathTools.h" //Saturate
+#include "GLChart\GLChart.h"
+#include "GLLabel.h"
 #include <math.h>
 
 // Rainbow
@@ -25,8 +27,8 @@ COLORREF rainbowCol[] = { 0x000000,   //Black
 	                        0xFF8030,   //Orange
                           0xF8F800,   //Yellow
                           0x28FF28,   //Green
-										    	0x0040FF,   //Light Blue
-										    	0x0000B0,   //Dark Blue
+						0x0040FF,   //Light Blue
+						0x0000B0,   //Dark Blue
                           0x800090,   //Purple 1
                           0xF00080};  //Purple 2
 
@@ -38,10 +40,10 @@ GLGradient::GLGradient(int compId):GLComponent(compId) {
 
   colorTex = 0;
   gType = GRADIENT_BW;
-  mouseCursor = FALSE;
+  mouseCursor = false;
   axis = new GLAxis(this,HORIZONTAL_DOWN);
   axis->SetAnnotation(VALUE_ANNO);
-  axis->SetAutoScale(FALSE);
+  axis->SetAutoScale(false);
   axis->SetMinimum(0.0);
   axis->SetMaximum(100.0);
   mouseValue = new GLLabel("---");
@@ -79,7 +81,7 @@ GLGradient::~GLGradient() {
 
 // ----------------------------------------------------------
 
-void GLGradient::SetMouseCursor(BOOL enable) {
+void GLGradient::SetMouseCursor(bool enable) {
   mouseCursor = enable;
 }
 

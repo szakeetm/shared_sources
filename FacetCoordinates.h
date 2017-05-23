@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        FacetCoordinates.h
   Description: Facet coordinates window
@@ -17,22 +18,16 @@
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLList.h"
-#include "GLApp/GLButton.h"
-#include "Vector.h"
-#include <vector>
+class GLTextField;
+class GLList;
+class GLButton;
 
-#ifndef _FACETCOORDINATESH_
-#define _FACETCOORDINATESH_
+#include <vector>
 
 class Worker;
 class Facet;
 
-struct line {
-	  int vertexId;
-	  Vector3d coord;
-};
+struct line;
 
 class FacetCoordinates : public GLWindow {
 
@@ -52,9 +47,8 @@ public:
 private:
 
   void GetSelected();
-  void InsertVertex(int rowId,int vertexId);
-  void RemoveRow(int rowId);
-  void setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h);
+  void InsertVertex(size_t rowId,size_t vertexId);
+  void RemoveRow(size_t rowId);
   void RebuildList();
   void ApplyChanges();
   
@@ -73,5 +67,3 @@ private:
   std::vector<line> lines;
 
 };
-
-#endif /* _FACETCOORDINATESH_ */

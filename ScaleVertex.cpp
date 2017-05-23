@@ -23,11 +23,21 @@ GNU General Public License for more details.
 #define DISTORTMODE 1
 
 #include "ScaleVertex.h"
+
 #include "Facet.h"
+
+#include "GLApp\GLToolkit.h"
+#include "GLApp\GLMessageBox.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
 #include "GLApp/GLTitledPanel.h"
-#include "GLApp/GLToolkit.h"
-#include "GLApp/GLWindowManager.h"
-#include "GLApp/GLMessageBox.h"
+
+#include "Geometry.h"
+#include "Worker.h"
+
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -61,7 +71,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	l1 = new GLToggle(0, "");
 	l1->SetBounds(10, 20, 20, 18);
-	l1->SetState(TRUE);
+	l1->SetState(true);
 	iPanel->Add(l1);
 
 	GLLabel *xLabel = new GLLabel("X=");
@@ -70,7 +80,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	xText = new GLTextField(0, "0");
 	xText->SetBounds(45, 20, 50, 18);
-	//xText->SetEditable(FALSE);
+	//xText->SetEditable(false);
 	iPanel->Add(xText);
 
 	GLLabel *yLabel = new GLLabel("Y=");
@@ -79,7 +89,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	yText = new GLTextField(0, "0");
 	yText->SetBounds(115, 20, 50, 18);
-	//yText->SetEditable(FALSE);
+	//yText->SetEditable(false);
 	iPanel->Add(yText);
 
 	GLLabel* zLabel = new GLLabel("Z=");
@@ -88,7 +98,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	zText = new GLTextField(0, "0");
 	zText->SetBounds(185, 20, 50, 18);
-	//zText->SetEditable(FALSE);
+	//zText->SetEditable(false);
 	iPanel->Add(zText);
 
 	l2 = new GLToggle(0, "Vertex #");
@@ -97,7 +107,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 	
 	vertexNumber = new GLTextField(0, "0");
 	vertexNumber->SetBounds(115, 45, 50, 18);
-	vertexNumber->SetEditable(FALSE);
+	vertexNumber->SetEditable(false);
 	iPanel->Add(vertexNumber);
 
 	getSelVertexButton = new GLButton(0, "<-Get selected");
@@ -114,12 +124,12 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	uniform = new GLToggle(0, "Uniform");
 	uniform->SetBounds(10, 115, 100, 18);
-	uniform->SetState(TRUE);
+	uniform->SetState(true);
 	Add(uniform);
 
 	factorNumber = new GLTextField(0, "1");
 	factorNumber->SetBounds(115, 115, 60, 18);
-	//factorNumber->SetEditable(FALSE);
+	//factorNumber->SetEditable(false);
 	Add(factorNumber);
 
 	GLLabel *onePerLabel = new GLLabel("(= 1/                )");
@@ -140,7 +150,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	factorNumberX = new GLTextField(0, "1");
 	factorNumberX->SetBounds(115, 140, 40, 18);
-	factorNumberX->SetEditable(FALSE);
+	factorNumberX->SetEditable(false);
 	Add(factorNumberX);
 
 	GLLabel* y2Label = new GLLabel("Y:");
@@ -149,7 +159,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	factorNumberY = new GLTextField(0, "1");
 	factorNumberY->SetBounds(175, 140, 40, 18);
-	factorNumberY->SetEditable(FALSE);
+	factorNumberY->SetEditable(false);
 	Add(factorNumberY);
 
 	GLLabel* z2Label = new GLLabel("Z:");
@@ -158,7 +168,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	factorNumberZ = new GLTextField(0, "1");
 	factorNumberZ->SetBounds(235, 140, 40, 18);
-	factorNumberZ->SetEditable(FALSE);
+	factorNumberZ->SetEditable(false);
 	Add(factorNumberZ);
 
 	scaleButton = new GLButton(0, "Scale vertex");
@@ -225,7 +235,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 
 			Vector3d invariant;
-			BOOL found;
+			bool found;
 
 			switch (invariantMode) {
 			case XYZMODE:
@@ -246,15 +256,15 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				invariant.z = z;
 				break;
 			case FACETMODE:
-				if (!(geom->GetNbSelected() == 1)) {
+				if (!(geom->GetNbSelectedFacets() == 1)) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				found = FALSE;
+				found = false;
 				for (int i = 0; !found && i<geom->GetNbFacet(); i++) {
 					if (geom->GetFacet(i)->selected) {
 						invariant = geom->GetFacet(i)->sh.center;
-						found = TRUE;
+						found = true;
 					}
 				}
 				break;
@@ -303,7 +313,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				}
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
-				mApp->changedSinceSave = TRUE;
+				mApp->changedSinceSave = true;
 				//GLWindowManager::FullRepaint();
 			}
 		}

@@ -20,6 +20,13 @@ GNU General Public License for more details.
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -106,7 +113,7 @@ void MoveFacet::ProcessMessage(GLComponent *src,int message) {
 			GLWindow::ProcessMessage(NULL,MSG_CLOSE);
 
 		} else if (src==moveButton || src==copyButton) {
-			if (geom->GetNbSelected()==0) {
+			if (geom->GetNbSelectedFacets()==0) {
 				GLMessageBox::Display("No facets selected","Nothing to move",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
@@ -130,7 +137,7 @@ void MoveFacet::ProcessMessage(GLComponent *src,int message) {
 
 					GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
 				}  
-				mApp->changedSinceSave = TRUE;
+				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();
 

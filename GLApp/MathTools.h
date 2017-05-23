@@ -1,14 +1,14 @@
 #pragma once
 #include <vector>
-#include "GLTypes.h" //BOOL, TRUE, FALSE
 
-BOOL    IsEqual(const double &a, const double &b, double tolerance=1E-8);
+bool    IsEqual(const double &a, const double &b, double tolerance=1E-8);
 double RoundAngle(double a);
-int    GetPower2(int n);
+size_t    GetPower2(size_t n);
 #define MAX(x,y) (((x)<(y))?(y):(x))
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #define SATURATE(x,min,max) {if((x)<(min)) x=(min); if(x>(max)) x=(max);}
-#define IDX(i,nb) (((i)<0)?(nb)+(i):(i)%(nb))
+size_t  IDX(int i, size_t nb);
+size_t IDX(size_t i, size_t nb);
 #define NEXT_OF(list,elementIterator) (std::next(element)==list.end())?list.begin():std::next(element);
 #define WEIGH(a,b,weigh) a + (b-a)*weigh
 #define IS_ZERO(x) (fabs((x))<1e-10)
@@ -27,16 +27,25 @@ char  *FormatMemoryLL(long long size);
 
 
 double my_erf(double x);
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds = FALSE, const BOOL& logarithmic = FALSE);
-std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const BOOL& limitToBounds = FALSE, const BOOL& logarithmic = FALSE);
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds = FALSE);
-double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds = FALSE);
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds = false, const bool& logarithmic = false);
+std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& limitToBounds = false, const bool& logarithmic = false);
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds = false);
+double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds = false);
 
-template <typename TYPE> BOOL Contains(std::vector<TYPE> vec, const TYPE& value) {
+template <typename TYPE> bool Contains(std::vector<TYPE> vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) != vec.end());
 }
 
+template <typename TYPE> size_t FirstIndex(std::vector<TYPE> vec, const TYPE& value) {
+	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
+}
+
 std::vector<std::string> SplitString(std::string const &input);
+std::vector<std::string> SplitString(std::string const &input,const char &delimiter);
+
+bool endsWith(std::string const & fullString, std::string const & ending);
+
+bool beginsWith(std::string const & fullString, std::string const & ending);
 
 template <class K, class T> int my_lower_bound(const K& key, T* A, const size_t& size)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
@@ -46,8 +55,9 @@ template <class K, class T> int my_lower_bound(const K& key, T* A, const size_t&
 //returns index of last lower value, or -1 if key not found
 
 {
+	if (size == 0) return -1;
 	int L = 0;
-	int R = size - 1;
+	int R = (int)(size - 1);
 	// continue searching while [imin,imax] is not empty
 	while (true)
 	{

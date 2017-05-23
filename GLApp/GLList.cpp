@@ -14,15 +14,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #include "GLWindow.h"
+#include "GLComponent.h"
+#include "GLScrollBar.h"
 #include "GLList.h"
 #include "GLMessageBox.h"
+#include "GLMenu.h"
 #include "GLToolkit.h"
+#include "GLTextField.h"
 #include "MathTools.h" //Min max
-#include <malloc.h>
+//#include <malloc.h>
 #include  <math.h>
 #include <algorithm> //Sort
 #include "Geometry.h"
 #include "GLWindowManager.h"
+#include <Vector.h>
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -37,8 +42,8 @@ GNU General Public License for more details.
 #define LABEL_HEIGHT     16
 
 template<class T> int cmp_column(const void *lhs_, const void *rhs_);
-int clickedCol;
-BOOL sortDescending;
+size_t clickedCol;
+bool sortDescending;
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -51,11 +56,10 @@ extern SynRad *mApp;
 
 GLList::GLList(int compId):GLComponent(compId) {
 
-	Sortable = FALSE;
+	Sortable = false;
 	worker = NULL;
 	nbCol = 0;
 	nbRow = 0;
-	nbSelectedRow = 0;
 	selectionMode = SINGLE_ROW;
 	cHeight = 15;
 	cWidths = NULL;
@@ -68,8 +72,8 @@ GLList::GLList(int compId):GLComponent(compId) {
 	uValues = NULL;
 	edit = NULL;
 	cornerLabel = NULL;
-	isEditing = FALSE;
-	gridVisible = FALSE;
+	isEditing = false;
+	gridVisible = false;
 	SetBorder(BORDER_BEVEL_IN);
 	SetBackgroundColor(240,240,240);
 	SetFontColor(0, 0, 0);
@@ -79,24 +83,24 @@ GLList::GLList(int compId):GLComponent(compId) {
 	sbV = new GLScrollBar(compId);
 	sbV->SetRange(10,10,1);
 	sbV->SetOrientation(SB_VERTICAL);
-	selectedRows = NULL;
+	selectedRows.clear();
 	selectedCol = -1;
-	sbDragged = FALSE;
-	motionSelection = FALSE;
-	showCLabel = FALSE;
-	autoColumnName = FALSE;
-	showRLabel = FALSE;
-	autoRowName = FALSE;
+	sbDragged = false;
+	motionSelection = false;
+	showCLabel = false;
+	autoColumnName = false;
+	showRLabel = false;
+	autoRowName = false;
 	rowLabelAlign = ALIGN_CENTER;
 	labWidth = 0;
 	labHeight = 0;
 	labelRowMargin = 10;
 	lastColSel = -1;
 	lastRowSel = -1;
-	selDragged = FALSE;
-	colDragged = FALSE;
-	SetVScrollVisible(TRUE);
-	SetHScrollVisible(TRUE);
+	selDragged = false;
+	colDragged = false;
+	SetVScrollVisible(true);
+	SetHScrollVisible(true);
 
 	menu = new GLMenu();
 
@@ -116,13 +120,13 @@ GLList::~GLList() {
 
 // ---------------------------------------------------------------
 
-void GLList::Clear(BOOL keepColumns,BOOL showProgress) {
+void GLList::Clear(bool keepColumns,bool showProgress) {
 	GLProgress *prgList=NULL;
 	double all=(double)nbCol*nbRow;
 	if (showProgress) {
 		prgList = new GLProgress("Clearing facet hits list...","Please wait");
 		prgList->SetProgress(0.0);
-		prgList->SetVisible(TRUE);
+		prgList->SetVisible(true);
 	}
 	if (!keepColumns) {
 		for (int i = 0;i < nbCol;i++)
@@ -149,17 +153,12 @@ void GLList::Clear(BOOL keepColumns,BOOL showProgress) {
 
 	SAFE_FREE(values);
 	SAFE_FREE(uValues);
-
-	SAFE_FREE(selectedRows);
-
-
 	
 	nbRow = 0;
 	labWidth = 0; //Row labels
-	nbSelectedRow = 0;
 
-	isEditing = FALSE;
-	if (showProgress) prgList->SetVisible(FALSE);
+	isEditing = false;
+	if (showProgress) prgList->SetVisible(false);
 	SAFE_DELETE(prgList);
 }
 
@@ -200,7 +199,7 @@ void GLList::SetColumnEditable(int *editables) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetGrid(BOOL visible) {
+void GLList::SetGrid(bool visible) {
 	gridVisible = visible;
 }
 
@@ -224,7 +223,7 @@ void GLList::SetParent(GLContainer *parent) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetColumnLabelVisible(BOOL visible) {
+void GLList::SetColumnLabelVisible(bool visible) {
 	showCLabel = visible;
 	labHeight = (showCLabel?LABEL_HEIGHT:0);
 }
@@ -237,56 +236,56 @@ void GLList::SetRowLabelAlign(int align) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetFocus(BOOL focus) {
+void GLList::SetFocus(bool focus) {
 	if(!focus) CancelEdit();
 	GLComponent::SetFocus(focus);
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetHScrollVisible(BOOL visible) {
+void GLList::SetHScrollVisible(bool visible) {
 	hScrollVisible = visible;
 	sbHeight = (visible?SB_WIDTH:0);
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetVScrollVisible(BOOL visible) {
+void GLList::SetVScrollVisible(bool visible) {
 	vScrollVisible = visible;
 	sbWidth = (visible?SB_WIDTH:0);
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetAutoRowLabel(BOOL enable) {
+void GLList::SetAutoRowLabel(bool enable) {
 	autoRowName = enable;
 }
 
-void GLList::SetRowLabelVisible(BOOL visible) {
+void GLList::SetRowLabelVisible(bool visible) {
 	showRLabel = visible;
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetAutoColumnLabel(BOOL enable) {
+void GLList::SetAutoColumnLabel(bool enable) {
 	autoColumnName = enable;
 }
 
 // ---------------------------------------------------------------
 
-int GLList::GetNbRow() {
+size_t GLList::GetNbRow() {
 	return nbRow;
 }
 
-int  GLList::GetNbColumn() {
+size_t  GLList::GetNbColumn() {
 	return nbCol;
 }
 
-int  GLList::GetSelectedRow(BOOL searchIndex) {
-	if( nbSelectedRow==0 ) {
+int  GLList::GetSelectedRow(bool searchIndex) {
+	if( selectedRows.size()==0 ) {
 		return -1;
 	} else {
-		return (searchIndex)?GetValueInt(selectedRows[0],0)-1:selectedRows[0];
+		return (searchIndex)?GetValueInt(selectedRows[0],0)-1:(int)selectedRows[0];
 	}
 }
 
@@ -296,13 +295,13 @@ int  GLList::GetSelectedColumn() {
 
 // ---------------------------------------------------------------
 
-void GLList::SetMotionSelection(BOOL enable) {
+void GLList::SetMotionSelection(bool enable) {
 	motionSelection = enable;
 }
 
 // ---------------------------------------------------------------
 
-int GLList::GetUserValueAt(int col,int row) {
+int GLList::GetUserValueAt(size_t col, size_t row) {
 	_ASSERTE(col<nbCol);_ASSERTE(row<nbRow);
 	if(uValues)
 		return uValues[row*nbCol+col];
@@ -312,7 +311,7 @@ int GLList::GetUserValueAt(int col,int row) {
 
 // ---------------------------------------------------------------
 
-char *GLList::GetValueAt(int col,int row) {
+char *GLList::GetValueAt(size_t col, size_t row) {
 	_ASSERTE(!values || col<nbCol);_ASSERTE(!values || row<nbRow);
 	if(values)
 		return values[row*nbCol+col];
@@ -322,13 +321,13 @@ char *GLList::GetValueAt(int col,int row) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetBounds(int x,int y,int width,int height) {
+void GLList::SetBounds(int x,int y, int width, int height) {
 
 	int mx = (sbWidth)?sbWidth-1:1;
 	int my = (sbHeight)?sbHeight:2;
 
-	sbV->SetBounds(x+width-(sbWidth-2),y+1,sbWidth-3,height-my);
-	sbH->SetBounds(x,y+height-(sbHeight-2),width-mx,sbHeight-3);
+	sbV->SetBounds(x+width-(sbWidth-2),y+1, sbWidth-3, height-my);
+	sbH->SetBounds(x,y+ height-(sbHeight-2),width-mx,sbHeight-3);
 	GLComponent::SetBounds(x,y,width,height);
 	UpdateSBRange();
 
@@ -336,39 +335,36 @@ void GLList::SetBounds(int x,int y,int width,int height) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetSize(int nbColumn,int nbR, BOOL keepData,BOOL showProgress) {
+void GLList::SetSize(size_t nbColumn,size_t nbR, bool keepData,bool showProgress) {
 
 	if( nbColumn==nbCol && nbR==this->nbRow )
 		// Already the good size
 		return;
 
-
-	
 	if( nbColumn==0 ) return;
 
 	if (!keepData) {
 		//Clear & reallocate
-		Clear(FALSE,showProgress);
+		Clear(false,showProgress);
 		nbCol = nbColumn;
 		this->nbRow = nbR;
 		cEdits = (int *)malloc(nbCol * sizeof(int));
 		memset(cEdits, 0, nbCol * sizeof(int));
 		cWidths = (int *)malloc(nbCol * sizeof(int));
-		for (int i = 0;i < nbCol;i++) cWidths[i] = 50;
+		for (size_t i = 0;i < nbCol;i++) cWidths[i] = 50;
 		cAligns = (int *)malloc(nbCol * sizeof(int));
 		memset(cAligns, 0, nbCol * sizeof(int));
 		cColors = (int *)malloc(nbCol * sizeof(int));
 		memset(cColors, 0, nbCol * sizeof(int));
 		cNames = (char **)malloc(nbCol * sizeof(char *));
 		memset(cNames, 0, nbCol * sizeof(char *));
-
 	}
 	else { //reallocate, keeping data
 		if (nbCol != nbColumn) {
 			cEdits = (int *)realloc(cEdits, nbColumn * sizeof(int));
 			if (nbColumn > nbCol) memset(cEdits+nbCol, 0, (nbColumn - nbCol) * sizeof(int)); //Init new area
 			cWidths = (int *)realloc(cWidths, nbColumn * sizeof(int));
-			for (int i = nbCol;i < nbColumn;i++) cWidths[i] = 50; //Init new area
+			for (size_t i = nbCol;i < nbColumn;i++) cWidths[i] = 50; //Init new area
 			cAligns = (int *)realloc(cAligns, nbCol * sizeof(int));
 			if (nbColumn > nbCol) memset(cAligns+nbCol, 0, (nbColumn - nbCol) * sizeof(int));
 			cColors = (int *)realloc(cColors, nbCol * sizeof(int));
@@ -378,7 +374,7 @@ void GLList::SetSize(int nbColumn,int nbR, BOOL keepData,BOOL showProgress) {
 			nbCol = nbColumn;
 		}
 	}
-	if		(nbR) {
+	if	(nbR) {
 		if (!keepData) {
 			this->nbRow = nbR;
 			rNames = (char **)malloc(nbR * sizeof(char *));
@@ -453,7 +449,7 @@ void GLList::UpdateSBRange() {
 		int my = (sbHeight)?sbHeight+labHeight:2+labHeight;
 		int lw = GetColumnStart(nbCol);
 
-		sbV->SetRange(nbRow*cHeight,height-my,cHeight);
+		sbV->SetRange((int)nbRow*cHeight,height-my,cHeight);
 		int w = (showRLabel)?labWidth+labelRowMargin:0;
 		sbH->SetRange(lw,width-mx-w,10);
 
@@ -497,14 +493,14 @@ void GLList::SetRowLabels(char **names) {
 
 void GLList::SetColumnWidths(int *widths) {
 	if(cWidths)
-		for(int i=0;i<nbCol;i++) cWidths[i] = widths[i];
+		for(size_t i=0;i<nbCol;i++) cWidths[i] = widths[i];
 	UpdateSBRange();
 }
 
 
 void GLList::SetColumnWidthForAll(int width) {
 	if(cWidths)
-		for(int i=0;i<nbCol;i++) cWidths[i] = width;
+		for(size_t i=0;i<nbCol;i++) cWidths[i] = width;
 	UpdateSBRange();
 }
 
@@ -550,7 +546,7 @@ void GLList::SetAllColumnColors(int color) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetColumnLabel(int colId,char *name) {
+void GLList::SetColumnLabel(size_t colId,char *name) {
 	if( cNames && colId<nbCol ) {
 		SAFE_FREE(cNames[colId]);
 		if(  name ) cNames[colId] = _strdup(name);
@@ -559,7 +555,7 @@ void GLList::SetColumnLabel(int colId,char *name) {
 
 // ---------------------------------------------------------------
 
-void GLList::SetRowLabel(int rowId,char *name) {
+void GLList::SetRowLabel(size_t rowId,char *name) {
 	if( rNames && rowId<nbRow ) {
 		SAFE_FREE(rNames[rowId]);
 		if(  name ) {      
@@ -572,7 +568,7 @@ void GLList::SetRowLabel(int rowId,char *name) {
 
 
 
-void GLList::SetColumnWidth(int colId,int width) {
+void GLList::SetColumnWidth(size_t colId, int width) {
 	if(cWidths && colId<nbCol ) {
 		cWidths[colId] = width;
 	}
@@ -581,31 +577,31 @@ void GLList::SetColumnWidth(int colId,int width) {
 
 
 
-void GLList::SetColumnAlign(int colId,int align) {
+void GLList::SetColumnAlign(size_t colId,int align) {
 	if(cAligns && colId<nbCol ) {
 		cAligns[colId] = align;
 	}
 }
 
 
-void GLList::SetColumnColor(int colId,int color) {
+void GLList::SetColumnColor(size_t colId,int color) {
 	if(cColors && colId<nbCol ) {
 		cColors[colId] = color;
 	}
 }
 
-void GLList::SetRow(int row,char **vals) {
+void GLList::SetRow(size_t row,char **vals) {
 	for(int i=0;i<nbCol;i++) 
 		SetValueAt(i,row,vals[i]);
 }
 
 
 
-void GLList::SetValueAt(int col,int row,const char *value,int userData,BOOL searchIndex) {
+void GLList::SetValueAt(size_t col, size_t row,const char *value,int userData,bool searchIndex) {
 	_ASSERTE(col<nbCol);_ASSERTE(row<nbRow);
 	if(this->values) {
 		if(col>=0 && col<this->nbCol && row>=0 && row<this->nbRow) {
-			int rowIndex=row;
+			size_t rowIndex=row;
 			if (searchIndex) rowIndex= FindIndex(row,0);
 
 			char *cell = this->values[(rowIndex*this->nbCol) + col];
@@ -628,12 +624,12 @@ void GLList::SetValueAt(int col,int row,const char *value,int userData,BOOL sear
 
 // ---------------------------------------------------------------
 
-void GLList::ScrollToVisible(int row,int col,BOOL searchIndex) {
+void GLList::ScrollToVisible(size_t row, size_t col,bool searchIndex) {
 
 	// Vertical scroll ------------------
 	int rowIndex;
 	if (searchIndex) rowIndex=FindIndex(row,0);
-	else rowIndex = row;
+	else rowIndex = (int)row;
 	if (rowIndex>=0 && rowIndex<nbRow) {
 		int sy = rowIndex*cHeight;
 		int pos = sbV->GetPosition();
@@ -688,7 +684,7 @@ void GLList::ScrollToVisible(int row,int col,BOOL searchIndex) {
 // ---------------------------------------------------------------
 
 void GLList::ScrollToVisible() {
-	if(nbSelectedRow<1) return; //was !=
+	if(!selectedRows.size()) return; //was !=
 	ScrollToVisible(lastRowSel,selectedCol); //was selected[0]
 }
 
@@ -700,7 +696,7 @@ void GLList::ScrollUp() {
 	int start,end;
 	GetVisibleRows(&start,&end);
 	if(start>0) { 
-		int sy = (start-1)*cHeight;
+		int sy = ((int)start-1)*cHeight;
 		sbV->SetPosition(sy);
 	}
 
@@ -712,7 +708,7 @@ void GLList::ScrollDown() {
 	int start,end;
 	GetVisibleRows(&start,&end);
 	if(end<nbRow-1) {
-		int sy = (start+1)*cHeight;
+		int sy = ((int)start+1)*cHeight;
 		sbV->SetPosition(sy);
 	} else {
 		sbV->SetPositionMax();
@@ -723,141 +719,102 @@ void GLList::ScrollDown() {
 // ---------------------------------------------------------------
 
 void GLList::ClearSelection() {
-	SetSelectedRows(NULL,0);
+	SetSelectedRows(std::vector<size_t>());
 	selectedCol = -1;
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetSelectedRow(int row,BOOL searchIndex) {
+void GLList::SetSelectedRow(size_t row,bool searchIndex) {
 	_ASSERTE(row<nbRow);
 
 	if(row<0) {
 		ClearSelection();
 	} else if(row<nbRow) {
-		int rowIndex;
+		size_t rowIndex;
 		if (searchIndex) rowIndex= FindIndex(row,0);
 		else rowIndex=row;
-		int sel[1];
-		sel[0]=rowIndex;
-		SetSelectedRows(sel,1);
-		lastRowSel=rowIndex;
+		SetSelectedRows({ rowIndex });
+		lastRowSel=(int)rowIndex;
 	}
 
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetSelectedCell(int column,int row) {
+void GLList::SetSelectedCell(size_t column,size_t row) {
 
 	if(row<0) {
 		ClearSelection();
 	} else if(row<nbRow) {
-		int sel[1];
-		sel[0]=row;
-		SetSelectedRows(sel,1);
-		lastRowSel=row;
+		SetSelectedRows({ row });
+		lastRowSel=(int)row;
 		if (column<nbCol) {
-			selectedCol=column;
-			lastColSel=column;
+			selectedCol=(int)column;
+			lastColSel=(int)column;
 		}
 		ScrollToVisible();
 
 	}
 }
 
-// ---------------------------------------------------------------
-
-int GLList::GetNbSelectedRow() {
-	return nbSelectedRow;
-}
-
-// ---------------------------------------------------------------
-
-void GLList::GetSelectedRows(int **rows,int *nbRow,BOOL searchIndex) {
-	if (!searchIndex) *rows = selectedRows;
+std::vector<size_t> GLList::GetSelectedRows(bool searchIndex) {
+	if (!searchIndex) return selectedRows;
 	else {
-		for (int i=0;i<nbSelectedRow;i++)
-			(*rows)[i]=GetValueInt(selectedRows[i],0)-1;
+		std::vector<size_t> ret;
+		for (auto sel:selectedRows)
+			ret.push_back(GetValueInt(sel,0)-1);
+		return ret;
 	}
-	*nbRow = nbSelectedRow;
 }
 
 // ---------------------------------------------------------------
 
-void GLList::AddSelectedRow(int row,BOOL searchIndex) {
+void GLList::AddSelectedRow(size_t row,bool searchIndex) {
 
 	if( row<0 || row>nbRow-1 || selectionMode!=MULTIPLE_ROW )
 		return;
 
 	// Check if already added
-	int found = FALSE;
-	int i = 0;
-	int rowIndex;
-	if (searchIndex) rowIndex= FindIndex(row,0);
-	else rowIndex=row;
-	while( i<nbSelectedRow && !found ) {
-		found = selectedRows[i]==rowIndex;
-		if(!found) i++;
-	}
+	size_t rowIndex = searchIndex?FindIndex(row,0):row;
+	bool found = Contains(selectedRows, rowIndex);
 
 	if( found && !GetWindow()->IsShiftDown()) {
 
-		if( nbSelectedRow<2 && rowIndex!=lastRowSel) {
+		if( selectedRows.size()<2 && rowIndex!=lastRowSel) {
 			ClearSelection();
 			return;
 		} 
 
-		// Remove from selection
-		int *nSel = (int *)malloc((nbSelectedRow-1)*sizeof(int));
-		for(int j=0,k=0;j<nbSelectedRow;j++)
-			if(i!=j) nSel[k++] = selectedRows[j];
-
-		SAFE_FREE(selectedRows);
-		selectedRows = nSel;
-		nbSelectedRow--;
+		// Remove i from selection
+		selectedRows.erase(std::find(selectedRows.begin(), selectedRows.end(), rowIndex));
 		if (lastRowSel==row) lastRowSel=-1;
 
 	}
 
 	if (!found) {
-		int *nSel = (int *)malloc((nbSelectedRow+1)*sizeof(int));
-		memcpy(nSel,selectedRows,nbSelectedRow*sizeof(int));
-		nSel[nbSelectedRow]=rowIndex;
-		SAFE_FREE(selectedRows);
-		selectedRows = nSel;
-		nbSelectedRow++;
+		selectedRows.push_back(rowIndex);
 	} 
-	lastRowSel=rowIndex;
+	lastRowSel=(int)rowIndex;
 }
 
 // ---------------------------------------------------------------
 
-void GLList::SetSelectedRows(int *rows,int nbRowToSet,BOOL searchIndex) {
-	SAFE_FREE(selectedRows);
-	if( nbRowToSet<=0 ) {
-		this->nbSelectedRow = 0;
-	} else {
-		this->selectedRows = (int *)malloc(nbRowToSet*sizeof(int));
-		if (searchIndex) {
-			for (int i=0;i<nbRowToSet;i++) 
-				this->selectedRows[i]=FindIndex(rows[i],0);
-		} else
-			memcpy(this->selectedRows,rows,nbRowToSet*sizeof(int));
-		this->nbSelectedRow = nbRowToSet;
+void GLList::SetSelectedRows(std::vector<size_t> selection,bool searchIndex) {
+	if (searchIndex) {
+		selectedRows.clear();
+		for (auto sel : selection)
+			selectedRows.push_back((size_t)FindIndex(sel, 0));
 	}
+	else
+		this->selectedRows = selection;
 }
 
 void GLList::SelectAllRows() {
-	SAFE_FREE(selectedRows);
-	if( nbRow<=0 ) {
-		nbSelectedRow = 0;
-	} else {
-		selectedRows = (int *)malloc(nbRow*sizeof(int));
-		for(int i=0;i<nbRow;i++) selectedRows[i]=i;
-		nbSelectedRow = nbRow;
-		ScrollToVisible();
-	}
+	selectedRows.clear();
+	for(int i=0;i<nbRow;i++)
+		selectedRows.push_back(i);
+	ScrollToVisible();
 }
 
 // ---------------------------------------------------------------
@@ -915,7 +872,7 @@ void GLList::Paint() {
 	if( showCLabel && showRLabel && cornerLabel ) {    
 		int wT = GLToolkit::GetDialogFont()->GetTextWidth(cornerLabel);
 		int px = (labW - wT) / 2;
-		GLToolkit::GetDialogFont()->DrawText(posX+px,posY+2,cornerLabel,FALSE);
+		GLToolkit::GetDialogFont()->DrawText(posX+px,posY+2,cornerLabel,false);
 	}
 
 	// Column labels
@@ -929,7 +886,7 @@ void GLList::Paint() {
 		sx = -sX;
 		for(int i=0;i<nbCol && sx<_width-1;i++) {
 			if( sx+cWidths[i]>0 ) {
-				GLToolkit::DrawBox(sx,1,cWidths[i]-1,14,200,200,200,TRUE);
+				GLToolkit::DrawBox(sx,1,cWidths[i]-1,14,200,200,200,true);
 			}
 			sx += cWidths[i];
 		}
@@ -950,7 +907,7 @@ void GLList::Paint() {
 				}
 				int wT = GLToolkit::GetDialogFont()->GetTextWidth(cNames[i]);
 				int xT = (cWidths[i]-wT)/2;
-				GLToolkit::GetDialogFont()->DrawText(xT+dx,2,cNames[i],FALSE);
+				GLToolkit::GetDialogFont()->DrawText(xT+dx,2,cNames[i],false);
 			}
 			sx += cWidths[i];
 		}
@@ -963,28 +920,28 @@ void GLList::Paint() {
 
 	case SINGLE_ROW:
 	case MULTIPLE_ROW:
-		for(int i=0;i<nbSelectedRow;i++) {
-			if( (selectedRows[i]+1)*cHeight>=sY && selectedRows[i]*cHeight<=sY+_height ) {
+		for(auto sel:selectedRows) {
+			if( (sel+1)*cHeight>=sY && sel*cHeight<=sY+_height ) {
 				int mu=(showCLabel?labHeight:1);
 				GetWindow()->Clip(this,1+labW,mu,(sbWidth?sbWidth:1),MIN(mb,this->GetHeight()-mu-1)); //maintain minimum height to avoid SetViewPort error
-				GLToolkit::DrawBox(0,selectedRows[i]*cHeight-sY,maxX-1,cHeight,160,160,255);
+				GLToolkit::DrawBox(0,(int)sel*cHeight-sY,maxX-1,cHeight,160,160,255);
 			}
 		}
-		if( nbSelectedRow && (lastRowSel+1)*cHeight>=sY && lastRowSel*cHeight<=sY+_height ) {
+		if( selectedRows.size() && (lastRowSel+1)*cHeight>=sY && lastRowSel*cHeight<=sY+_height ) {
 			GLToolkit::DrawBox(0,lastRowSel*cHeight-sY,maxX-1,cHeight,100,100,255);
 		}
 		break;
 
 	case BOX_CELL:
-		int selR,selC,lgthR,lgthC;
+		size_t selR,selC,lgthR,lgthC;
 		if( GetSelectionBox(&selR,&selC,&lgthR,&lgthC) ) {
-			for(int i=selR;i<selR+lgthR;i++) {
+			for(size_t i=selR;i<selR+lgthR;i++) {
 				if( (i+1)*cHeight>=sY && i*cHeight<=sY+_height ) {
 					sx = GetColumnStart(selC) - sbH->GetPosition() - 1;
 					int wS = GetColsWidth(selC , lgthC);
 					if( sx+wS>0 && sx<_width ) {
 						GetWindow()->Clip(this,1+labW,(showCLabel?labHeight:1),(sbWidth?sbWidth:1),mb);
-						GLToolkit::DrawBox(sx,i*cHeight-sY,wS,cHeight,160,160,255);
+						GLToolkit::DrawBox(sx,(int)i*cHeight-sY,wS,cHeight,160,160,255);
 					}
 				}
 			}
@@ -992,12 +949,12 @@ void GLList::Paint() {
 		break;
 
 	case SINGLE_CELL:
-		if( nbSelectedRow==1 && selectedCol>=0 ) {
+		if( selectedRows.size()==1 && selectedCol>=0 ) {
 			if( (selectedRows[0]+1)*cHeight>=sY && selectedRows[0]*cHeight<=sY+_height ) {
 				sx = GetColumnStart(selectedCol) - sbH->GetPosition() - 1;
 				if( sx+cWidths[selectedCol]>0 && sx<_width ) {
 					GetWindow()->Clip(this,1+labW,(showCLabel?labHeight:1),(sbWidth?sbWidth:1),mb);
-					GLToolkit::DrawBox(sx,selectedRows[0]*cHeight-sY,cWidths[selectedCol],cHeight,160,160,255);
+					GLToolkit::DrawBox(sx,(int)(selectedRows[0])*cHeight-sY,cWidths[selectedCol],cHeight,160,160,255);
 				}
 			}
 		}
@@ -1034,15 +991,7 @@ void GLList::Paint() {
 						GLFont2D* font;
 						if(ISBOLD(value)) {
 
-
 							font = GLToolkit::GetDialogFontBold();
-
-
-
-
-
-
-
 
 							offset = 3;
 						} else {
@@ -1059,7 +1008,6 @@ void GLList::Paint() {
 							px = cWidths[i] - wT - 2;
 							break;
 
-
 						}
 						switch (cColors[i]) {
 						case COLOR_RED:
@@ -1075,7 +1023,7 @@ void GLList::Paint() {
 							font->SetTextColor(0.0f, 0.0f, 0.0f);
 							break;
 						}
-						font->DrawText(px+dx,j*cHeight-sY+(showCLabel?1:2),value+offset,FALSE);
+						font->DrawText(px+dx,j*cHeight-sY+(showCLabel?1:2),value+offset,false);
 					}
 				} // End if row visible
 			} // End row loop
@@ -1120,7 +1068,7 @@ void GLList::Paint() {
 	GetWindow()->ClipRect(this,1,labHeight,labW,hc);
 	for(int j=0;j<nbRow && showRLabel && rNames;j++) {
 		if( (j+1)*cHeight>=sY && (j)*cHeight<=sY+_height ) {
-			GLToolkit::DrawBox(1,j*cHeight-sY+(showCLabel?0:1),labW-2,14,200,200,200,TRUE);
+			GLToolkit::DrawBox(1,j*cHeight-sY+(showCLabel?0:1),labW-2,14,200,200,200,true);
 			char *value = rNames[j];
 			if( value ) {
 				int px = 1;int wT;
@@ -1134,12 +1082,11 @@ void GLList::Paint() {
 					px = labW-wT-2;
 					break;
 				}
-				GLToolkit::GetDialogFont()->DrawText(px,j*cHeight-sY+(showCLabel?1:2),value,FALSE);
+				GLToolkit::GetDialogFont()->DrawText(px,j*cHeight-sY+(showCLabel?1:2),value,false);
 			}
 		}
 	}
 
-	
 	// Restore clip
 	GetWindow()->ClipToWindow();
 
@@ -1165,20 +1112,19 @@ void GLList::Paint() {
 }
 
 // ---------------------------------------------------------------
-int GLList::GetValueInt(int row, int column) {
+int GLList::GetValueInt(size_t row, size_t column) {
 	try {int cmp;
 	if (!(this->values[row*nbCol+column])) return -1;
 	sscanf((this->values[row*nbCol+column]),"%d",&cmp);
 	return cmp;
 	} catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg,"%s\nWhile finding:%d",e.GetMsg(),row);
+			sprintf(errMsg,"%s\nWhile finding:%zd",e.GetMsg(),row);
 			GLMessageBox::Display(errMsg,"Error",GLDLG_OK,GLDLG_ICONERROR);
 		}
 }
 
-
-double GLList::GetValueDouble(int row, int column) {
+double GLList::GetValueDouble(size_t row, size_t column) {
 	try {
 		float cmp;
 		if (!(this->values[row*nbCol + column])) return -1;
@@ -1187,29 +1133,29 @@ double GLList::GetValueDouble(int row, int column) {
 	}
 	catch (Error &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%d", e.GetMsg(), row);
+		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 }
 // ---------------------------------------------------------------
-int  GLList::FindIndex(int index,int inColumn) {
-	for (int row=0;row<nbRow;row++) {
-		if (GetValueInt(row,inColumn)==(index+1)) return row;
+int  GLList::FindIndex(size_t index,size_t inColumn) {
+	for (size_t row=0;row<nbRow;row++) {
+		if (GetValueInt(row,inColumn)==((int)index+1)) return (int)row;
 	}
 	std::stringstream errmsg;
 	errmsg << "Facetlist FindIndex(facet " << index+1 <<" in column " << inColumn + 1 << ")\nFacet not found in list!";
 	GLMessageBox::Display(errmsg.str().c_str(),"Molflow Bug",GLDLG_OK,GLDLG_ICONERROR);
-	return -1;
+	return -1; //invalid flag
 }
 
 // ---------------------------------------------------------------
 
-void GLList::GetVisibleRows(int *start,int *end) {
+void GLList::GetVisibleRows(int *start, int *end) {
 
 	int pos = sbV->GetPosition();
 	int sidx = pos/cHeight;
 	int eidx = sidx + height/cHeight;
-	if( eidx>=nbRow ) eidx = nbRow-1;
+	if( eidx>=(int)nbRow ) eidx = (int)nbRow-1;
 	*start = sidx;
 	*end   = eidx;
 
@@ -1217,7 +1163,7 @@ void GLList::GetVisibleRows(int *start,int *end) {
 
 // ---------------------------------------------------------------
 
-int GLList::GetRowForLocation(int x,int y) {
+size_t GLList::GetRowForLocation(int x,int y) {
 
 	int pos = (y+sbV->GetPosition()-labHeight);
 	int idx = pos/cHeight;
@@ -1231,25 +1177,25 @@ int GLList::GetRowForLocation(int x,int y) {
 
 // ---------------------------------------------------------------
 
-int GLList::GetRowForLocationSat(int x,int y) {
+size_t GLList::GetRowForLocationSat(int x,int y) {
 
 	int pos = (y+sbV->GetPosition()-labHeight);
 	int idx = pos/cHeight;
 
 	if(pos<0) return 0;
-	if(idx>=nbRow) return nbRow-1;
+	if(idx>=nbRow) return (nbRow-1);
 	return idx;
 
 }
 
 // ---------------------------------------------------------------
 
-int GLList::GetColForLocation(int x,int y) {
+size_t GLList::GetColForLocation(int x,int y) {
 
 	int labW = (showRLabel)?labWidth+labelRowMargin:0;
 	int sx = -sbH->GetPosition()+labW;
 	int i = 0;
-	BOOL found = FALSE;
+	bool found = false;
 
 	while( !found && sx<width-sbWidth && i<nbCol ) {
 		found = (x>=sx) && (x<=sx+cWidths[i]);
@@ -1269,12 +1215,12 @@ int GLList::GetColForLocation(int x,int y) {
 
 // ---------------------------------------------------------------
 
-int GLList::GetColForLocationSat(int x,int y) {
+size_t GLList::GetColForLocationSat(int x,int y) {
 
 	int labW = (showRLabel)?labWidth+labelRowMargin:0;
 	int sx = -sbH->GetPosition()+labW;
 	int i = 0;
-	BOOL found = FALSE;
+	bool found = false;
 
 	if( x<sx ) return 0;
 
@@ -1296,10 +1242,10 @@ int GLList::GetColForLocationSat(int x,int y) {
 
 // ---------------------------------------------------------------
 
-int GLList::GetColsWidth(int c,int lgth) {
+int GLList::GetColsWidth(size_t c, size_t lgth) {
 
 	int sum = 0;
-	int i = c;
+	size_t i = c;
 	while(i<nbCol && (i-c)<lgth) {
 		sum += cWidths[i];
 		i++;
@@ -1314,7 +1260,7 @@ int GLList::GetColumnEdge(int x,int y) {
 
 	int sx = -sbH->GetPosition();
 	int i = 0;
-	BOOL found = FALSE;
+	bool found = false;
 
 	while( !found && sx<width-15 && i<nbCol ) {
 		found = (x>=sx-3) && (x<=sx+3) ;
@@ -1360,7 +1306,7 @@ int GLList::GetDraggedCol() {
 
 // ---------------------------------------------------------------
 
-int GLList::GetColWidth(int col) {
+int GLList::GetColWidth(size_t col) {
 	if( col>=0 && col<nbCol )
 		return cWidths[col];
 	else
@@ -1369,10 +1315,10 @@ int GLList::GetColWidth(int col) {
 
 // ---------------------------------------------------------------
 
-int GLList::GetColumnStart(int colIdx) {
+int GLList::GetColumnStart(size_t colIdx) {
 
 	int sum = 0;
-	int i=0;
+	size_t i=0;
 	while(i<nbCol && i<colIdx) { sum += cWidths[i];i++; }
 	return sum;
 
@@ -1382,12 +1328,12 @@ int GLList::GetColumnStart(int colIdx) {
 
 void GLList::MapEditText() {
 
-	if( edit && selectedRows) {
+	if( edit && selectedRows.size()>0) {
 
-		ScrollToVisible(selectedRows[0],selectedCol,FALSE);
+		ScrollToVisible(selectedRows[0],selectedCol,false);
 		//int sx = GetColumnStart(selectedCol) - sbH->GetPosition() + labWidth+ labelRowMargin;
 		int sx = GetColumnStart(selectedCol) - sbH->GetPosition() +  labWidth+showRLabel*labelRowMargin;
-		int sy = selectedRows[0]*cHeight - sbV->GetPosition() + labHeight ;
+		int sy = (int)(selectedRows[0])*cHeight - sbV->GetPosition() + labHeight ;
 
 		// Clip text on column
 		int _width = sbWidth?(width - sbWidth):width - 2;
@@ -1407,7 +1353,7 @@ void GLList::MapEditText() {
 			edit->SetBounds(posX+sx,posY+sy,wText,cHeight+2);
 			edit->SetText(GetValueAt(selectedCol,selectedRows[0]));
 			edit->SelectAll();
-			edit->SetFocus(TRUE);
+			edit->SetFocus(true);
 		} else {
 			// Abort
 			CancelEdit();
@@ -1429,9 +1375,9 @@ void GLList::UpdateCell() {
 		double val;
 		if( sscanf(edit->GetText(),"%lf",&val)<=0 ) {
 			if( cNames ) {
-				sprintf(tmp,"Wrong number format at line %d (%s)",selectedRows[0]+1,cNames[selectedCol]);
+				sprintf(tmp,"Wrong number format at line %zd (%s)",selectedRows[0]+1,cNames[selectedCol]);
 			} else {
-				sprintf(tmp,"Wrong number format at line %d (%d)",selectedRows[0]+1,selectedCol+1);
+				sprintf(tmp,"Wrong number format at line %zd (%d)",selectedRows[0]+1,selectedCol+1);
 			}
 			GLMessageBox::Display(tmp,"Error",GLDLG_OK,GLDLG_ICONWARNING);
 		} else {
@@ -1450,8 +1396,8 @@ void GLList::CancelEdit() {
 
 	if(edit) {
 		UpdateCell();
-		edit->SetFocus(FALSE);
-		isEditing = FALSE;
+		edit->SetFocus(false);
+		isEditing = false;
 		//SetSelectedRow(-1);
 		//selectedCol = -1;
 	}
@@ -1510,20 +1456,20 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		case SDLK_RETURN:
 			if( selectedRows[0]<nbRow-1 ) {
 				UpdateCell();
-				selectedRows[0]++;lastRowSel=selectedRows[0];
+				selectedRows[0]++;lastRowSel=(int)selectedRows[0];
 				parent->ProcessMessage(this,MSG_LIST);
 				MapEditText();
-				//ScrollToVisible(selectedRows[0],0,FALSE);
+				//ScrollToVisible(selectedRows[0],0,false);
 				return EDIT_IGNORE;
 			}
 			break;
 		case SDLK_UP:
 			if( selectedRows[0]>0 ) {
 				UpdateCell();
-				selectedRows[0]--;lastRowSel=selectedRows[0];
+				selectedRows[0]--;lastRowSel= (int)selectedRows[0];
 				parent->ProcessMessage(this,MSG_LIST);
 				MapEditText();
-				//ScrollToVisible(selectedRows[0],0,FALSE);
+				//ScrollToVisible(selectedRows[0],0,false);
 				return EDIT_IGNORE;
 			}
 			break;
@@ -1560,20 +1506,17 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 
 // ---------------------------------------------------------------
 
-BOOL GLList::GetSelectionBox(int *row,int *col,int *rowLength,int *colLength) {
+bool GLList::GetSelectionBox(size_t *row, size_t *col, size_t *rowLength, size_t *colLength) {
 
-	//if( selectionMode==BOX_CELL && nbSelectedRow==1 && selectedCol!=-1 ) {
-	if( nbSelectedRow==1 && selectedCol!=-1 ) {
+	//if( selectionMode==BOX_CELL && selectedRows.size()==1 && selectedCol!=-1 ) {
+	if( selectedRows.size()==1 && selectedCol!=-1 ) {
 		*row = MIN(selectedRows[0],lastRowSel);
 		*col = MIN(selectedCol,lastColSel);
-		*rowLength = abs(lastRowSel-selectedRows[0])+1;
-		*colLength = abs(lastColSel-selectedCol)+1;
+		*rowLength = MAX(lastRowSel,selectedRows[0])-MIN(lastRowSel,selectedRows[0])+1;
+		*colLength = MAX(lastColSel,selectedCol)-MIN(lastColSel,selectedCol)+1;
 		return *rowLength>0 && colLength>0;
-
 	}
-
-	return FALSE;
-
+	return false;
 }
 
 // ---------------------------------------------------------------
@@ -1584,9 +1527,9 @@ void GLList::HandleWheel(SDL_Event *evt) {
 	int my = GetWindow()->GetY(this,evt);
 
 	if( evt->button.button==SDL_BUTTON_WHEELUP ) {
-		if( nbSelectedRow==1 && selectedRows[0]>0 ) {
+		if( selectedRows.size()==1 && selectedRows[0]>0 ) {
 			selectedRows[0]--;
-			lastRowSel = selectedRows[0];
+			lastRowSel = (int)selectedRows[0];
 			parent->ProcessMessage(this,MSG_LIST);
 			ScrollToVisible();
 		} else {
@@ -1595,9 +1538,9 @@ void GLList::HandleWheel(SDL_Event *evt) {
 	}
 
 	if (evt->button.button==SDL_BUTTON_WHEELDOWN) {
-		if( nbSelectedRow==1 && selectedRows[0]>=0 && selectedRows[0]<nbRow-1 ) {
+		if( selectedRows.size()==1 && selectedRows[0]>=0 && selectedRows[0]<nbRow-1 ) {
 			selectedRows[0]++;
-			lastRowSel = selectedRows[0];
+			lastRowSel = (int)selectedRows[0];
 			parent->ProcessMessage(this,MSG_LIST);
 			ScrollToVisible();
 		} else {
@@ -1610,12 +1553,12 @@ void GLList::HandleWheel(SDL_Event *evt) {
 // ------------------------------------------------------------
 // ---------------------------------------------------------------
 
-void GLList::CopyToClipboard(int row,int col,int rowLght,int colLgth) {
-	if (this == mApp->facetList) mApp->UpdateFacetHits(TRUE);
+void GLList::CopyToClipboard(size_t row, size_t col, size_t rowLght, size_t colLgth) {
+	if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 	// Compute data length
 	size_t totalLength = 0;
-	for(int i=row;i<row+rowLght;i++) {
-		for(int j=col;j<col+colLgth;j++) {
+	for(size_t i=row;i<row+rowLght;i++) {
+		for(size_t j=col;j<col+colLgth;j++) {
 			char *v = GetValueAt(j,i);
 			if( v ) totalLength += strlen(v);
 			if( j<col+colLgth-1 ) totalLength++;
@@ -1644,8 +1587,8 @@ void GLList::CopyToClipboard(int row,int col,int rowLght,int colLgth) {
 		return;
 	}
 
-	for(int i=row;i<row+rowLght;i++) {
-		for(int j=col;j<col+colLgth;j++) {
+	for(size_t i=row;i<row+rowLght;i++) {
+		for(size_t j=col;j<col+colLgth;j++) {
 			char *v = GetValueAt(j,i);
 			if( v ) {
 				strcpy(lpszText,v);
@@ -1709,7 +1652,7 @@ void GLList::UpdateAllRows() {//Fetch non-visible values too
 // ---------------------------------------------------------------
 
 void GLList::CopyAllToClipboard() {
-	if (this == mApp->facetList) mApp->UpdateFacetHits(TRUE);
+	if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 	// Compute data length
 	size_t totalLength = 0;
 	for(int i=0;i<nbRow;i++) {
@@ -1772,10 +1715,10 @@ void GLList::CopyAllToClipboard() {
 void GLList::CopySelectionToClipboard() {
 	std::stringstream clipboardData;
 	if (selectionMode == MULTIPLE_ROW) { //Most probably facet hit list
-		if (this==mApp->facetList) mApp->UpdateFacetHits(TRUE);
+		if (this==mApp->facetList) mApp->UpdateFacetHits(true);
 		// Compute data length
 
-		for(int s=0;s<nbSelectedRow;s++) {
+		for(int s=0;s<selectedRows.size();s++) {
 			for(int j=0;j<nbCol;j++) {
 				clipboardData << GetValueAt(j, selectedRows[s]);
 
@@ -1788,10 +1731,10 @@ void GLList::CopySelectionToClipboard() {
 	}
 
 	else if (selectionMode == BOX_CELL) {  //Texture plotter, for example
-		int rowStart, colStart, rowNb, colNb;
+		size_t rowStart, colStart, rowNb, colNb;
 		GetSelectionBox(&rowStart, &colStart, &rowNb, &colNb);
-		for (int r = rowStart; r < (rowStart + rowNb); r++) {
-			for (int c = colStart; c < (colStart + colNb); c++) {
+		for (size_t r = rowStart; r < (rowStart + rowNb); r++) {
+			for (size_t c = colStart; c < (colStart + colNb); c++) {
 				clipboardData << GetValueAt(c,r);
 				if (c<(colStart + colNb - 1)) clipboardData	<< '\t';
 			}
@@ -1823,7 +1766,7 @@ void GLList::CopySelectionToClipboard() {
 	}
 
 	/*
-	for(int s=0;s<nbSelectedRow;s++) {
+	for(int s=0;s<selectedRows.size();s++) {
 		for(int j=0;j<nbCol;j++) {
 			char *v = GetValueAt(j,selectedRows[s]);
 			if( v ) {
@@ -1898,8 +1841,8 @@ void GLList::ManageEvent(SDL_Event *evt) {
 		return;
 	}
 	if( selDragged && evt->type == SDL_MOUSEMOTION ) {
-		lastColSel = GetColForLocationSat(mx,my);
-		lastRowSel = GetRowForLocationSat(mx,my);
+		lastColSel = (int)GetColForLocationSat(mx,my);
+		lastRowSel = (int)GetRowForLocationSat(mx,my);
 		ScrollToVisible(lastRowSel,lastColSel);
 		return;
 	}
@@ -1911,13 +1854,13 @@ void GLList::ManageEvent(SDL_Event *evt) {
 		case SB_HORIZONTAL:sbH->ManageEvent(evt);break;
 		}
 		sbDragged = 0;
-		colDragged=FALSE;
+		colDragged=false;
 		if( selDragged ) {
-			lastColSel = GetColForLocationSat(mx,my);
-			lastRowSel = GetRowForLocationSat(mx,my);
+			lastColSel = (int)GetColForLocationSat(mx,my);
+			lastRowSel = (int)GetRowForLocationSat(mx,my);
 			parent->ProcessMessage(this,MSG_LIST);
 		}
-		selDragged = FALSE;
+		selDragged = false;
 		return;
 	}
 
@@ -1949,14 +1892,14 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( Sortable && evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_LEFT &&  nbRow>1  && !(GetColumnEdge(mx-labW,my)>=0)) {
 				GLToolkit::SetCursor(CURSOR_BUSY);
 				menu->Clear();
-				int sCol = GetColForLocation(mx,my);
+				size_t sCol = GetColForLocation(mx,my);
 				if( sCol>=0 ) {
 					if ( this->Sortable ) {
-						int clickedColTmp = sCol;
+						size_t clickedColTmp = sCol;
 						if (clickedColTmp == clickedCol)
 							sortDescending = !sortDescending;
 						clickedCol = clickedColTmp;
-						if (this == mApp->facetList) mApp->UpdateFacetHits(TRUE);
+						if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 						//define sort variable type
 						#ifdef MOLFLOW
 						typedef int SORTVAR;
@@ -1987,15 +1930,13 @@ void GLList::ManageEvent(SDL_Event *evt) {
 							}
 						}
 
-						int *selFacets = new int[nbSelectedRow];
-						for (int i=0;i<nbSelectedRow;i++)
-							selFacets[i] = GetValueInt(selectedRows[i],0)-1;
+						std::vector<size_t> selFacetIds;
+						for (auto sel:selectedRows)
+							selFacetIds.push_back(GetValueInt(sel,0)-1);
 
 						std::qsort(table, nbRow,sizeof(SORTVAR*), cmp_column<SORTVAR>);
 
-
 						lastRowSel=-1;
-
 
 						char tmp[256];
 						for (int i = 0; i < nbRow; i++) {
@@ -2005,14 +1946,13 @@ void GLList::ManageEvent(SDL_Event *evt) {
 							//}
 						}
 
-						//if (nbSelectedRow<1000) SetSelectedRows(selFacets,nbSelectedRow,TRUE); //TOFIX
-						if (nbSelectedRow>1000) {
+						//if (selectedRows.size()<1000) SetSelectedRows(selFacets,selectedRows.size(),true); //TOFIX
+						if (selectedRows.size()>1000) {
 							ReOrder();
-							SetSelectedRows(selFacets,nbSelectedRow,FALSE);
+							SetSelectedRows(selectedRows,false);
 						} else {
-							SetSelectedRows(selFacets,nbSelectedRow,TRUE);
+							SetSelectedRows(selFacetIds,true);
 						}
-						SAFE_DELETE(selFacets);
 						// Step 4) Release the memory
 						for (int i = 0; i < nbRow; i++)
 							delete[] table[i];
@@ -2028,18 +1968,18 @@ void GLList::ManageEvent(SDL_Event *evt) {
 				draggedColIdx = GetColumnEdge(mx-labW,my);
 				if(draggedColIdx>=0) {
 					SetCursor(CURSOR_SIZEHS);
-					colDragged = TRUE;
+					colDragged = true;
 					lastColX = mx;
 					lastColY = my;
 				} else {
-					int sCol = GetColForLocation(mx,my);
+					size_t sCol = GetColForLocation(mx,my);
 					ClearSelection();
 					if( selectionMode==BOX_CELL && sCol>=0 ) {
 						// Select column
-						selectedCol = sCol;
-						lastColSel = sCol;
+						selectedCol = (int)sCol;
+						lastColSel = (int)sCol;
 						SetSelectedRow(0);
-						lastRowSel = nbRow - 1;
+						lastRowSel = (int)nbRow - 1;
 					}
 					parent->ProcessMessage(this,MSG_LIST);
 				}
@@ -2049,10 +1989,10 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_RIGHT ) {
 				char tmp[256];
 				menu->Clear();
-				int sCol = GetColForLocation(mx,my);
+				size_t sCol = GetColForLocation(mx,my);
 				if( sCol>=0 ) {
 					if(cNames) sprintf(tmp,"Copy column %s",cNames[sCol]);
-					else       sprintf(tmp,"Copy column #%d",sCol);
+					else       sprintf(tmp,"Copy column #%zd",sCol);
 					menu->Add(tmp,0);
 					int menuId = menu->Track(GetWindow(),posX+mx,posY+my);
 					if( menuId==0 ) {
@@ -2077,19 +2017,19 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					ClearSelection();
 					break;
 				case SINGLE_ROW:
-					SetSelectedRow( GetRowForLocation(mx,my) );
+					SetSelectedRow( GetRowForLocation(mx,my));
 					break;
 				case MULTIPLE_ROW:
 					if( GetWindow()->IsCtrlDown() )
 						AddSelectedRow( GetRowForLocation(mx,my) );
 					else
-						SetSelectedRow( GetRowForLocation(mx,my) );
+						SetSelectedRow( GetRowForLocation(mx,my));
 					break;
 				case BOX_CELL:
 					selectedCol = 0;
-					lastColSel = nbCol-1;
-					SetSelectedRow( GetRowForLocation(mx,my) );
-					if(nbSelectedRow>0) lastRowSel = selectedRows[0];
+					lastColSel = (int)nbCol-1;
+					SetSelectedRow( GetRowForLocation(mx,my));
+					if (selectedRows.size() > 0) lastRowSel = (int)(selectedRows[0]);
 					break;
 
 				}
@@ -2100,10 +2040,10 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_RIGHT ) {
 				char tmp[256];
 				menu->Clear();
-				int sRow = GetRowForLocation(mx,my);
+				size_t sRow = GetRowForLocation(mx,my);
 				if( sRow>=0 ) {
 					if(rNames) sprintf(tmp,"Copy row %s",rNames[sRow]);
-					else       sprintf(tmp,"Copy row #%d",sRow);
+					else       sprintf(tmp,"Copy row #%zd",sRow);
 					menu->Add(tmp,0);
 					int menuId = menu->Track(GetWindow(),posX+mx,posY+my);
 					if( menuId==0 ) {
@@ -2126,7 +2066,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 		switch( selectionMode ) {
 		case SINGLE_ROW:
 			if(my<height-3) {
-				SetSelectedRow( GetRowForLocation(mx,my) );
+				SetSelectedRow( GetRowForLocation(mx,my));
 			}
 			break;
 		}
@@ -2143,8 +2083,8 @@ void GLList::ManageEvent(SDL_Event *evt) {
 		if( evt->button.button == SDL_BUTTON_LEFT && motionSelection ) {
 			switch( selectionMode ) {
 			case SINGLE_ROW:
-				SetSelectedRow( GetRowForLocation(mx,my) );
-				if(nbSelectedRow>0) parent->ProcessMessage(this,MSG_LIST);
+				SetSelectedRow( GetRowForLocation(mx,my));
+				if(selectedRows.size()>0) parent->ProcessMessage(this,MSG_LIST);
 				break;
 			}
 		}
@@ -2155,18 +2095,18 @@ void GLList::ManageEvent(SDL_Event *evt) {
 
 			case BOX_CELL:
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = GetColForLocation(mx,my);
-					SetSelectedRow( GetRowForLocation(mx,my) );
-					if( selectedCol!=-1 && nbSelectedRow>0 ) {
-						selDragged = TRUE;
+					selectedCol = (int)GetColForLocation(mx,my);
+					SetSelectedRow( GetRowForLocation(mx,my));
+					if( selectedCol!=-1 && selectedRows.size()>0 ) {
+						selDragged = true;
 						lastColSel = selectedCol;
-						lastRowSel = selectedRows[0];
+						lastRowSel = (int)(selectedRows[0]);
 					}
 				}
 				if( evt->button.button == SDL_BUTTON_RIGHT ) {
 					menu->Clear();
 					menu->Add("Copy all",0);
-					int selR,selC,lgthR,lgthC;
+					size_t selR,selC,lgthR,lgthC;
 					if( GetSelectionBox(&selR,&selC,&lgthR,&lgthC) )
 						menu->Add("Copy selection",1);
 					int menuId = menu->Track( GetWindow() , mx+posX , my+posY );
@@ -2183,12 +2123,12 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			case SINGLE_CELL:
 
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = lastColSel = GetColForLocation(mx,my);
-					SetSelectedRow( GetRowForLocation(mx,my) );
+					selectedCol = lastColSel = (int)GetColForLocation(mx,my);
+					SetSelectedRow( GetRowForLocation(mx,my));
 					parent->ProcessMessage(this,MSG_LIST);
 					ScrollToVisible();
 					if(selectedCol>=0 && cEdits[selectedCol]) {
-						isEditing = (nbSelectedRow==1);        
+						isEditing = (selectedRows.size() ==1);
 						if( isEditing ) {
 							if( !edit ) {
 								edit = new GLTextField(0,"");
@@ -2203,7 +2143,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 				if( evt->button.button == SDL_BUTTON_RIGHT ) {
 					menu->Clear();
 					menu->Add("Copy all",0);
-					if( nbSelectedRow==1 && selectedCol>0 ) 
+					if(selectedRows.size() ==1 && selectedCol>0 )
 						menu->Add("Copy selection",1);
 					int menuId = menu->Track( GetWindow() , mx+posX , my+posY );
 					if( menuId==0 ) {
@@ -2222,11 +2162,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			case MULTIPLE_ROW:
 
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = GetColForLocation(mx,my);
+					selectedCol = (int)GetColForLocation(mx,my);
 					if( GetWindow()->IsCtrlDown() )
 						AddSelectedRow( GetRowForLocation(mx,my) );
 					else {
-						SetSelectedRow( GetRowForLocation(mx,my) );
+						SetSelectedRow( GetRowForLocation(mx,my));
 						//ScrollToVisible();
 					}
 					parent->ProcessMessage(this,MSG_LIST);
@@ -2237,7 +2177,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					menu->Clear();
 					menu->Add("Copy all",0);
 					// TODO: Improve me
-					if( nbSelectedRow>0 ) menu->Add("Copy selection",1);
+					if(selectedRows.size()>0 ) menu->Add("Copy selection",1);
 					int menuId = menu->Track( GetWindow() , mx+posX , my+posY );
 					if( menuId==0 ) {
 						CopyAllToClipboard();
@@ -2256,15 +2196,15 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( evt->button.button == SDL_BUTTON_LEFT ) {
 				switch( selectionMode ) {
 				case SINGLE_ROW:
-					SetSelectedRow( GetRowForLocation(mx,my) );
-					if(nbSelectedRow>0) parent->ProcessMessage(this,MSG_LIST_DBL);
+					SetSelectedRow( GetRowForLocation(mx,my));
+					if(selectedRows.size()>0) parent->ProcessMessage(this,MSG_LIST_DBL);
 					break;
 				case MULTIPLE_ROW:
 					if( GetWindow()->IsCtrlDown() )
 						AddSelectedRow( GetRowForLocation(mx,my) );
 					else
-						SetSelectedRow( GetRowForLocation(mx,my) );
-					if(nbSelectedRow>0) parent->ProcessMessage(this,MSG_LIST_DBL);
+						SetSelectedRow( GetRowForLocation(mx,my));
+					if(selectedRows.size()>0) parent->ProcessMessage(this,MSG_LIST_DBL);
 					break;
 				}
 			}
@@ -2282,7 +2222,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					switch( selectionMode ) {
 					case SINGLE_CELL:
 					case BOX_CELL:
-						if(selectedCol>0 && nbSelectedRow==1) {
+						if(selectedCol>0 && selectedRows.size() ==1) {
 							selectedCol--;
 							lastColSel = selectedCol;
 							parent->ProcessMessage(this,MSG_LIST);
@@ -2297,7 +2237,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					switch( selectionMode ) {
 					case SINGLE_CELL:
 					case BOX_CELL:
-						if(selectedCol>=0 && selectedCol<nbCol-1 && nbSelectedRow==1) {
+						if(selectedCol>=0 && selectedCol<nbCol-1 && selectedRows.size()==1) {
 							selectedCol++;
 							lastColSel = selectedCol;
 							parent->ProcessMessage(this,MSG_LIST);
@@ -2312,25 +2252,24 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					switch( selectionMode ) {
 					case SINGLE_CELL:
 					case BOX_CELL:
-						if(nbSelectedRow==1 && selectedRows[0]<nbRow-1 && selectedCol>=0) {
+						if(selectedRows.size()==1 && selectedRows[0]<nbRow-1 && selectedCol>=0) {
 							selectedRows[0]++;
-							lastRowSel = selectedRows[0];
+							lastRowSel = (int)(selectedRows[0]);
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();
 						}
 						break;
 					case SINGLE_ROW:
 					case MULTIPLE_ROW:
-						//if(nbSelectedRow==1 && selectedRows[0]<nbRow-1) {
+						//if(selectedRows.size()==1 && selectedRows[0]<nbRow-1) {
 						if(lastRowSel<nbRow-1) {
 							if (GetWindow()->IsShiftDown()) {
 								AddSelectedRow(lastRowSel+1);
-								//lastRowSel=selectedRows[nbSelectedRow-1];
+								//lastRowSel=selectedRows[selectedRows.size()-1];
 							} else
 							{
-								nbSelectedRow=1;
-								selectedRows[0]=lastRowSel+1;
-								lastRowSel = selectedRows[0];
+								selectedRows = { (size_t)lastRowSel + 1 };
+								lastRowSel = (int)(selectedRows[0]);
 							}
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();
@@ -2343,9 +2282,9 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					switch( selectionMode ) {
 					case SINGLE_CELL:
 					case BOX_CELL:
-						if(nbSelectedRow==1 && selectedRows[0]>0 && selectedCol>=0) {
+						if(selectedRows.size()==1 && selectedRows[0]>0 && selectedCol>=0) {
 							selectedRows[0]--;
-							lastRowSel = selectedRows[0];
+							lastRowSel = (int)(selectedRows[0]);
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();
 						}
@@ -2355,12 +2294,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						if(lastRowSel>0) {
 							if (GetWindow()->IsShiftDown()) {
 								AddSelectedRow(lastRowSel-1);
-								//lastRowSel=selectedRows[nbSelectedRow-1];
+								//lastRowSel=selectedRows[selectedRows.size()-1];
 							} else
 							{
-								nbSelectedRow=1;
-								selectedRows[0]=lastRowSel-1;
-								lastRowSel = selectedRows[0];
+								selectedRows = { (size_t)lastRowSel - 1 };
+								lastRowSel = (int)(selectedRows[0]);
 							}
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();
@@ -2396,7 +2334,7 @@ void GLList::ReOrder(){
 	}
 }
 
-void GLList::PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, int extraRowsAtEnd) {
+void GLList::PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, int extraRowsAtEnd) {
 
 #ifdef WIN
 
@@ -2408,15 +2346,14 @@ void GLList::PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, i
         char *content=(char *)ds;
 
 		//Get selection and initialize variables
-		int row=0;
-		int col=0;
-		int colBegin=0;
-		int u,v,wu,wv;
+		size_t row=0;
+		size_t col=0;
+		size_t colBegin=0;
+		size_t u,v,wu,wv;
         if( GetSelectionBox(&v,&u,&wv,&wu) ) {
 			row=v;
 			col=colBegin=u;
 		}
-
 
 		//Count clipboard table size
 		int clipboardRows = 0;
@@ -2434,17 +2371,14 @@ void GLList::PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, i
 					clipboardRows++;
 				}
 			}
-			BOOL needsMoreRows = allowExpandRows && (row + clipboardRows + extraRowsAtEnd > nbRow);
-			BOOL needsMoreCols = allowExpandColumns && (col + clipboardCols > nbCol);
-			BOOL ok = TRUE;
+			bool needsMoreRows = allowExpandRows && (row + clipboardRows + extraRowsAtEnd > nbRow);
+			bool needsMoreCols = allowExpandColumns && (col + clipboardCols > nbCol);
+			bool ok = true;
 			if (MAX(needsMoreRows * (row + clipboardRows  - nbRow), needsMoreCols*(col + clipboardCols - nbCol)) >= 20)
 				ok = GLMessageBox::Display("Increase list size by more than 20 rows/columns?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
-			if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns?MAX(nbCol, col + clipboardCols):nbCol, allowExpandRows?MAX(nbRow, row + clipboardRows + extraRowsAtEnd):nbRow,TRUE,FALSE);
+			if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns?MAX(nbCol, col + clipboardCols):nbCol, allowExpandRows?MAX(nbRow, row + clipboardRows + extraRowsAtEnd):nbRow,true,false);
 		}
 		
-
-
-
 		size_t cursor = 0;
 		
 		size_t length=strlen(content);
@@ -2471,7 +2405,6 @@ void GLList::PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, i
 			}
 			cursor++;
 		}
-
 
         GlobalUnlock(hMem);
       }

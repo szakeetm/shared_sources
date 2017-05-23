@@ -16,10 +16,18 @@
 */
 
 #include "../GLChart/GLChart.h"
+#include "AxisPanel.h"
 #include "../GLMessageBox.h"
 #include "../GLColorBox.h"
-#include "../GLToolkit.h"
+//#include "../GLToolkit.h"
+#include "../GLToggle.h"
+#include "../GLCombo.h"
+#include "../GLButton.h"
 #include "../GLWindowManager.h"
+#include "../GLTitledPanel.h"
+#include "../GLLabel.h"
+#include "../GLTextField.h"
+#include "../GLTypes.h" //MSG_TEXT
 
 static int textCR = 0;
 static int textCG = 0;
@@ -40,9 +48,9 @@ AxisPanel::AxisPanel(GLAxis *a,int axisType,GLChart *parentChart)  {
     type   = axisType;
 
     scalePanel = new GLTitledPanel("Scale");
-    scalePanel->SetBold(TRUE);
+    scalePanel->SetBold(true);
     settingPanel = new GLTitledPanel("Axis settings");
-    settingPanel->SetBold(TRUE);
+    settingPanel->SetBold(true);
 
     MinLabel = new GLLabel("Min");
     MinText = new GLTextField(0,"");
@@ -50,7 +58,7 @@ AxisPanel::AxisPanel(GLAxis *a,int axisType,GLChart *parentChart)  {
     MinLabel->SetEnabled(!a->IsAutoScale());
     sprintf(tmp,"%g",a->GetMinimum());
     MinText->SetText(tmp);
-    MinText->SetEditable(TRUE);
+    MinText->SetEditable(true);
     MinText->SetEnabled(!a->IsAutoScale());
 
     MaxLabel = new GLLabel("Max");
@@ -59,7 +67,7 @@ AxisPanel::AxisPanel(GLAxis *a,int axisType,GLChart *parentChart)  {
     MaxLabel->SetEnabled(!a->IsAutoScale());
     sprintf(tmp,"%g",a->GetMaximum());
     MaxText->SetText(tmp);
-    MaxText->SetEditable(TRUE);
+    MaxText->SetEditable(true);
     MaxText->SetEnabled(!a->IsAutoScale());
 
     AutoScaleCheck = new GLToggle(0,"Auto scale");
@@ -104,13 +112,13 @@ AxisPanel::AxisPanel(GLAxis *a,int axisType,GLChart *parentChart)  {
     TitleLabel = new GLLabel("Title");
     TitleLabel->SetTextColor(textCR,textCG,textCB);
     TitleText = new GLTextField(0,"");
-    TitleText->SetEditable(TRUE);
+    TitleText->SetEditable(true);
     TitleText->SetText(a->GetName());
 
     ColorLabel = new GLLabel("Color");
     ColorLabel->SetTextColor(textCR,textCG,textCB);
     ColorView = new GLLabel("");
-    ColorView->SetOpaque(TRUE);
+    ColorView->SetOpaque(true);
     ColorView->SetBorder(BORDER_ETCHED);
     GLCColor aColor = a->GetAxisColor();
     ColorView->SetBackgroundColor(aColor.r,aColor.g,aColor.b);
@@ -173,27 +181,27 @@ void AxisPanel::AddToPanel(GLTabWindow *parent,int pIdx) {
     parent->Add(pIdx,PositionCombo);
 
     scalePanel->SetBounds(5,10,290,100);
-    setBounds(scalePanel,MinLabel,10, 20, 35, 19);
-    setBounds(scalePanel,MinText,50, 20, 90, 19);
-    setBounds(scalePanel,MaxLabel,145, 20, 40, 19);
-    setBounds(scalePanel,MaxText,190, 20, 90, 19);
-    setBounds(scalePanel,ScaleLabel,10, 45, 100, 19);
-    setBounds(scalePanel,ScaleCombo,115, 45, 165, 19);
-    setBounds(scalePanel,AutoScaleCheck,7, 70, 275, 19);
+	scalePanel->SetCompBounds(MinLabel,10, 20, 35, 19);
+	scalePanel->SetCompBounds(MinText,50, 20, 90, 19);
+	scalePanel->SetCompBounds(MaxLabel,145, 20, 40, 19);
+	scalePanel->SetCompBounds(MaxText,190, 20, 90, 19);
+	scalePanel->SetCompBounds(ScaleLabel,10, 45, 100, 19);
+	scalePanel->SetCompBounds(ScaleCombo,115, 45, 165, 19);
+	scalePanel->SetCompBounds(AutoScaleCheck,7, 70, 275, 19);
 
     settingPanel->SetBounds(5,120,290,170);
-    setBounds(settingPanel,FormatLabel,10, 20, 100, 19);
-    setBounds(settingPanel,FormatCombo,115, 20, 165, 19);
-    setBounds(settingPanel,TitleLabel,10, 45, 100, 19);
-    setBounds(settingPanel,TitleText,115, 45, 165, 19);
-    setBounds(settingPanel,ColorLabel,10, 70, 100, 19);
-    setBounds(settingPanel,ColorView,115, 70, 140, 19);
-    setBounds(settingPanel,ColorBtn,260, 70, 20, 19);
-    setBounds(settingPanel,PositionLabel,10, 95, 100, 19);
-    setBounds(settingPanel,PositionCombo,115, 95, 165, 19);
-    setBounds(settingPanel,SubGridCheck,7, 120, 130, 19);
-    setBounds(settingPanel,OppositeCheck,120, 120, 130, 19);
-    setBounds(settingPanel,VisibleCheck,7, 145, 280, 19);
+	settingPanel->SetCompBounds(FormatLabel,10, 20, 100, 19);
+	settingPanel->SetCompBounds(FormatCombo,115, 20, 165, 19);
+	settingPanel->SetCompBounds(TitleLabel,10, 45, 100, 19);
+	settingPanel->SetCompBounds(TitleText,115, 45, 165, 19);
+	settingPanel->SetCompBounds(ColorLabel,10, 70, 100, 19);
+	settingPanel->SetCompBounds(ColorView,115, 70, 140, 19);
+	settingPanel->SetCompBounds(ColorBtn,260, 70, 20, 19);
+	settingPanel->SetCompBounds(PositionLabel,10, 95, 100, 19);
+	settingPanel->SetCompBounds(PositionCombo,115, 95, 165, 19);
+	settingPanel->SetCompBounds(SubGridCheck,7, 120, 130, 19);
+	settingPanel->SetCompBounds(OppositeCheck,120, 120, 130, 19);
+	settingPanel->SetCompBounds(VisibleCheck,7, 145, 280, 19);
 
 }
 
@@ -201,7 +209,7 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
 
     if (src == AutoScaleCheck) {
 
-      BOOL b = AutoScaleCheck->GetState();
+      bool b = AutoScaleCheck->GetState();
 
       pAxis->SetAutoScale(b);
 
@@ -340,10 +348,4 @@ void AxisPanel::commit() {
 
 void AxisPanel::error(char *m) {
   GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
-}
-
-void AxisPanel::setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h) {
-  int xc,yc,wc,hc;
-  org->GetBounds(&xc,&yc,&wc,&hc);
-  src->SetBounds(xc+x,yc+y,w,h);
 }

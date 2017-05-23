@@ -13,14 +13,18 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLButton.h"
-#include "GLLabel.h"
-#include "GLCombo.h"
-#include <vector>
-#include <time.h>
 
 #ifndef _GLFILEBOXH_
 #define _GLFILEBOXH_
+
+#include <vector>
+#include <time.h>
+#include "GLWindow.h"
+
+class GLButton;
+class GLList;
+class GLLabel;
+class GLCombo;
 
 #define MAX_FILTER 256
 
@@ -42,7 +46,7 @@ private:
 
   static void InitDrivePaths();
 
-  GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,BOOL openMode);
+  GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,bool openMode);
   ~GLFileBox();
   void ProcessMessage(GLComponent *src,int message);
   void UpdateFileList(char *path);
@@ -51,10 +55,10 @@ private:
   char *GetTimeStr(time_t time);
   char *GetExtension(char *fileName);
   char *GetName(char *fileName);
-  BOOL  MatchFilters(char *fileName);
+  bool  MatchFilters(char *fileName);
   void  AddToPathHist(char *path);
   void  AddToFileHist(char *file);
-  BOOL CheckDirectory(char *dirName);
+  bool CheckDirectory(char *dirName);
 
   GLList      *fileList;
   GLLabel     *filterLabel;
@@ -74,7 +78,7 @@ private:
   char         curPath[MAX_PATH];
   char         curFile[MAX_PATH];
   int          rCode;
-  BOOL         mode;
+  bool         mode;
 
 };
 

@@ -17,6 +17,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#pragma once
+
 //#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +42,7 @@ const int NumPoints = 15; // n<1000
 //--------------------GRAHAM'S SCAN FUNCTIONS---------------------------
 void grahamInit(); //INITIALIZE VARIABLES, RANDOMLY GENERATE POINTS,
                    //LOCATE MIN GRpoint, AND SORT POINTS BY RELATIVE ANGLES
-void grahamMain(Vector2d *projectedPoints,int nbPoints,int *returnList); //SETUP, RUN GRAHAM'S SCAN, AND DISPLAY RESULTS
+void grahamMain(Vector2d *projectedPoints,size_t nbPoints,int *returnList); //SETUP, RUN GRAHAM'S SCAN, AND DISPLAY RESULTS
 void grahamScan(GRpoint *P); //ACTUAL GRAHAM'S SCAN PROCEDURE
 void constructReturnList();
 bool isConvexPoint(GRpoint *P); //TEST GRpoint FOR CONVEXITY

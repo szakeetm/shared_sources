@@ -2,19 +2,20 @@
   File:        ScaleFacet.h
   Description: Mirror facet to plane dialog
 */
-
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _ScaleFacetH_
 #define _ScaleFacetH_
+
+#include "GLApp/GLWindow.h"
+
+
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
+
+class Geometry;
+class Worker;
 
 class ScaleFacet : public GLWindow {
 

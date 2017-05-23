@@ -17,6 +17,7 @@
 #include "GLWindow.h"
 #include "GLSpinner.h"
 #include "GLToolkit.h"
+#include "GLFont.h"
 #include "MathTools.h" //Saturate
 
 // -----------------------------------------------------------------
@@ -69,16 +70,16 @@ void GLSpinner::Paint() {
 
   int xPos = posX+width - GLToolkit::GetDialogFont()->GetTextWidth(valueStr) - 20;
   font->SetTextColor(0.0f,0.0f,0.0f);
-  font->DrawText(xPos,posY+3,valueStr,FALSE);
+  font->DrawText(xPos,posY+3,valueStr,false);
 
   // Draw up button
   int h2 = (height/2) - 1;
-  GLToolkit::DrawBox(posX+width-16,posY+1,15,h2,208,208,208,TRUE,(state==1));
-  font->DrawText(posX+width-13,posY-2,"\212",FALSE);
+  GLToolkit::DrawBox(posX+width-16,posY+1,15,h2,208,208,208,true,(state==1));
+  font->DrawText(posX+width-13,posY-2,"\212",false);
 
   // Draw down button
-  GLToolkit::DrawBox(posX+width-16,posY+2+h2,15,h2,208,208,208,TRUE,(state==2));
-  font->DrawText(posX+width-13,posY+h2-1,"\211",FALSE);
+  GLToolkit::DrawBox(posX+width-16,posY+2+h2,15,h2,208,208,208,true,(state==2));
+  font->DrawText(posX+width-13,posY+h2-1,"\211",false);
 
 }
 

@@ -27,6 +27,13 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTitledPanel.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -82,7 +89,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
   aText = new GLTextField(0,"0");
   aText->SetBounds(15,145,30,18);
-  aText->SetEditable(FALSE);
+  aText->SetEditable(false);
   iPanel->Add(aText);
 
   aLabel = new GLLabel("*X +");
@@ -91,7 +98,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
     bText = new GLTextField(0,"0");
   bText->SetBounds(75,145,30,18);
-  bText->SetEditable(FALSE);
+  bText->SetEditable(false);
   iPanel->Add(bText);
 
     bLabel = new GLLabel("*Y +");
@@ -100,7 +107,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
     cText = new GLTextField(0,"0");
   cText->SetBounds(135,145,30,18);
-  cText->SetEditable(FALSE);
+  cText->SetEditable(false);
   iPanel->Add(cText);
 
     cLabel = new GLLabel("*Z +");
@@ -109,7 +116,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
     dText = new GLTextField(0,"0");
   dText->SetBounds(195,145,30,18);
-  dText->SetEditable(FALSE);
+  dText->SetEditable(false);
   iPanel->Add(dText);
 
     dLabel = new GLLabel("= 0");
@@ -134,7 +141,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
   undoProjectButton = new GLButton(0, "Undo projection");
   undoProjectButton->SetBounds(205, hD - 45, 90, 21);
-  undoProjectButton->SetEnabled(FALSE);
+  undoProjectButton->SetEnabled(false);
   Add(undoProjectButton);
 
   // Center dialog
@@ -153,7 +160,7 @@ MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
 
 void MirrorVertex::ClearUndoVertices() {
 	undoPoints.clear();
-	undoProjectButton->SetEnabled(FALSE);
+	undoProjectButton->SetEnabled(false);
 }
 
 void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
@@ -193,7 +200,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 				break;
 			case FACETNMODE:
 			{
-				if (geom->GetNbSelected() != 1) {
+				if (geom->GetNbSelectedFacets() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -295,7 +302,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 			 for (UndoPoint oriPoint : undoPoints) {
 				 if (oriPoint.oriId < geom->GetNbVertex()) geom->GetVertex(oriPoint.oriId)->SetLocation(oriPoint.oriPos);
 			 }
-			 undoProjectButton->SetEnabled(FALSE);
+			 undoProjectButton->SetEnabled(false);
 			 geom->InitializeGeometry();
 			 //for(int i=0;i<nbSelected;i++)
 			 //	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
@@ -310,14 +317,14 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 }
 
 void MirrorVertex::UpdateToggle(GLComponent *src) {
-	l1->SetState(FALSE);
-	l2->SetState(FALSE);
-	l3->SetState(FALSE);
-	l4->SetState(FALSE);
-	l6->SetState(FALSE);
+	l1->SetState(false);
+	l2->SetState(false);
+	l3->SetState(false);
+	l4->SetState(false);
+	l6->SetState(false);
 
 	GLToggle *toggle=(GLToggle*)src;
-	toggle->SetState(TRUE);
+	toggle->SetState(true);
 
 	aText->SetEditable(src==l6);
 	bText->SetEditable(src==l6);

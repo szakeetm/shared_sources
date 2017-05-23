@@ -16,15 +16,16 @@
   GNU General Public License for more details.
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLtextField.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLList.h"
-#include "GLApp/GLButton.h"
-#include "Worker.h"
-
 #ifndef _VERTEXCOORDINATESH_
 #define _VERTEXCOORDINATESH_
+
+#include "GLApp/GLWindow.h"
+
+class GLTextField;
+class GLButton;
+class GLList;
+
+class Worker;
 
 class VertexCoordinates : public GLWindow {
 
@@ -43,7 +44,6 @@ public:
 private:
 
   //void GetSelected();
-  void setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h);
 
   Worker       *worker;
   //Facet        *selFacet;

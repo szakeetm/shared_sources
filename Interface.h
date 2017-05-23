@@ -3,43 +3,58 @@
 //Shared functions of the Molflow and Synrad interface
 #include <thread>
 
-#include "GLApp/GLApp.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTitledPanel.h"
-#include "GLApp/GLList.h"
-#include "GLApp/GLCombo.h"
-#include "GLApp/GLMenuBar.h"
-#include "GLApp/GLWindowManager.h"
-
+#include "Worker.h"
 #include "GeometryViewer.h"
-#include "FormulaSettings.h"
-#include "CollapseSettings.h"
-#include "MoveVertex.h"
-#include "ScaleVertex.h"
-#include "ScaleFacet.h"
-#include "MoveFacet.h"
-#include "ExtrudeFacet.h"
-#include "MirrorFacet.h"
-#include "MirrorVertex.h"
-#include "SplitFacet.h"
-#include "BuildIntersection.h"
-#include "RotateFacet.h"
-#include "RotateVertex.h"
-#include "FacetCoordinates.h"
-#include "VertexCoordinates.h"
-#include "SmartSelection.h"
-#include "LoadStatus.h"
-#include "SelectDialog.h"
-#include "SelectTextureType.h"
-#include "AlignFacet.h"
-#include "AddVertex.h"
 
+#include "GLApp/GLApp.h"
+#include "GLApp\GLParser.h"
+#include "Clipper\clipper.hpp"
+class GLTextField;
+class GLToggle;
+class GLLabel;
+class GLButton;
+class GLTitledPanel;
+class GLList;
+class GLCombo;
+class GLMenuBar;
+class GLParser;
+class GLMenu;
+
+class GeometryViewer;
+class FormulaSettings;
+class CollapseSettings;
+class MoveVertex;
+class ScaleVertex;
+class ScaleFacet;
+class MoveFacet;
+class ExtrudeFacet;
+class MirrorFacet;
+class MirrorVertex;
+class SplitFacet;
+class BuildIntersection;
+class RotateFacet;
+class RotateVertex;
+class FacetCoordinates;
+class VertexCoordinates;
+class SmartSelection;
+class LoadStatus;
+class SelectDialog;
+class SelectTextureType;
+class AlignFacet;
+class AddVertex;
+
+class Geometry;
+
+typedef struct {
+	GLLabel     *name;
+	GLTextField *value;
+	GLButton    *setBtn;
+	GLParser    *parser;
+} FORMULA;
+
+#define MAX_VIEWER  4
 #define MAX_FORMULA 10
 #define MAX_VIEW    19
-#define MAX_SELECTION 19
 #define MAX_RECENT  10
 
 //GeometryViewer stuff
@@ -169,31 +184,24 @@ static const char *fileSelFilters = "Selection files\0*.sel\0All files\0*.*\0";
 static const char *fileTexFilters = "Text files\0*.txt\0All files\0*.*\0";
 static const char *fileProfFilters = "CSV file\0*.csv\0Text files\0*.txt\0All files\0*.*\0";
 
-typedef struct {
-	GLLabel     *name;
-	GLTextField *value;
-	GLButton    *setBtn;
-	GLParser    *parser;
-} FORMULA;
-
 class Interface : public GLApplication {
 protected:
 	Interface();
 	virtual void PlaceComponents() {}
-	virtual void UpdateFacetHits(BOOL allRows=FALSE) {}
+	virtual void UpdateFacetHits(bool allRows=false) {}
 	//virtual void UpdateFormula() {}
-	virtual BOOL EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return FALSE; }
-	//virtual BOOL AskToReset(Worker *work = NULL) { return FALSE; }
+	virtual bool EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return false; }
+	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
 	virtual void BuildPipe(double ratio, int steps = 0) {}
 	virtual void LoadFile(char *fName = NULL) {}
-	virtual void InsertGeometry(BOOL newStr, char *fName = NULL) {}
+	virtual void InsertGeometry(bool newStr, char *fName = NULL) {}
 	virtual void SaveFile() {}
 	int FrameMove();
 
 public:
-	virtual void UpdateFacetParams(BOOL updateSelection=FALSE) {}
-	virtual void SaveConfig(BOOL increaseSessionCount=FALSE) {}
+	virtual void UpdateFacetParams(bool updateSelection=false) {}
+	virtual void SaveConfig(bool increaseSessionCount=false) {}
 	virtual void UpdatePlotters() {}
 
 	// Simulation state
@@ -209,8 +217,8 @@ public:
 	int      nbProc;       // Temporary var (use Worker::GetProcNumber)
 	int      numCPU;
 	float    lastAppTime;
-	BOOL     antiAliasing;
-	BOOL     whiteBg;
+	bool     antiAliasing;
+	bool     whiteBg;
 	float    lastMeasTime; // Last measurement time (for hps and dps)
 	double   tolerance; //Select coplanar tolerance
 	double   largeArea; //Selection filter
@@ -227,13 +235,13 @@ public:
 	int      compressSavedFiles;
 	int      autoSaveSimuOnly;
 
-	BOOL     changedSinceSave; //For saving and autosaving
+	bool     changedSinceSave; //For saving and autosaving
 	double   autoSaveFrequency; //autosave period, in minutes
 	float    lastSaveTime;
 	float    lastSaveTimeSimu;
 	std::string autosaveFilename; //only delete files that this instance saved
-	BOOL     autoFrameMove; //Refresh scene every 1 second
-	BOOL     updateRequested; //Force frame move
+	bool     autoFrameMove; //Refresh scene every 1 second
+	bool     updateRequested; //Force frame move
 	
 
 	HANDLE compressProcessHandle;
@@ -311,13 +319,13 @@ public:
 	void RebuildViewMenus();
 
 	// Selections
-	void SelectSelection(int v);
-	void AddSelection(char *selectionName, ASELECTION s);
+	void SelectSelection(size_t v);
+	void AddSelection(SelectionGroup s);
 	void AddSelection();
 	void ClearSelectionMenus();
 	void ClearAllSelections();
-	void OverWriteSelection(int idOvr);
-	void ClearSelection(int idClr);
+	void OverWriteSelection(size_t idOvr);
+	void ClearSelection(size_t idClr);
 	void RebuildSelectionMenus();
 	
 	void UpdateFacetlistSelected();
@@ -325,19 +333,19 @@ public:
 	int  GetVariable(char * name, char * prefix);
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
-	BOOL AskToSave();
-	BOOL AskToReset(Worker *work = NULL);
+	bool AskToSave();
+	bool AskToReset(Worker *work = NULL);
 	void AddStruct();
 	void DeleteStruct();
 
 	void SaveFileAs();
-	BOOL AutoSave(BOOL crashSave = FALSE);
+	bool AutoSave(bool crashSave = false);
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
 
 	void CheckUpdates();
 	void AppUpdater();
-	void DownloadInstallUpdate(std::string zipurl, std::string zipName, std::string folderName, std::string configName, BOOL copyCfg);
+	void DownloadInstallUpdate(std::string zipurl, std::string zipName, std::string folderName, std::string configName, bool copyCfg);
 
 	AVIEW   views[MAX_VIEW];
 	int     nbView;
@@ -345,9 +353,8 @@ public:
 	int     curViewer;
 	int     modeSolo;
 
-	ASELECTION selections[MAX_SELECTION];
-	int nbSelection;
-	int idSelection;
+	std::vector<SelectionGroup> selections;
+	size_t idSelection; //Allows "select next" / "select previous" commands
 
 	//Dialog
 	FormulaSettings    *formulaSettings;
@@ -379,7 +386,7 @@ public:
 	char currentSelDir[1024];
 
 	// Util functions
-	//void SendHeartBeat(BOOL forced=FALSE);
+	//void SendHeartBeat(bool forced=false);
 	char *FormatInt(llong v, char *unit);
 	char *FormatPS(double v, char *unit);
 	char *FormatSize(DWORD size);
@@ -390,7 +397,7 @@ public:
 	void ExportSelection();
 	void UpdateModelParams();
 	void UpdateViewerFlags();
-	void ResetSimulation(BOOL askConfirm=TRUE);
+	void ResetSimulation(bool askConfirm=true);
 	void UpdateStructMenu();
 	void UpdateTitle();
 
@@ -401,21 +408,21 @@ public:
 
 	void Place3DViewer();
 	void UpdateViewers();
-	void SetFacetSearchPrg(BOOL visible, char *text);
+	void SetFacetSearchPrg(bool visible, char *text);
 
 	void DisplayCollapseDialog();
 	void RenumberSelections(const std::vector<int> &newRefs);
-	int  Resize(DWORD width, DWORD height, BOOL forceWindowed);
+	int  Resize(DWORD width, DWORD height, bool forceWindowed);
 
 	// Formula management
 	int nbFormula;
 	FORMULA formulas[MAX_FORMULA];
 	void ProcessFormulaButtons(GLComponent *src);
-	void AddFormula(GLParser *f, BOOL doUpdate = TRUE);
+	void AddFormula(GLParser *f, bool doUpdate = true);
 	void AddFormula(const char *fName, const char *formula); //file loading
 	void UpdateFormulaName(int i);
 	void DeleteFormula(int id);
-	BOOL OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
+	bool OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
 	void UpdateFormula();
 	void RenumberFormulas(std::vector<int> *newRefs);
 	
@@ -430,16 +437,16 @@ public:
 	void RemoveRecent(char *fileName);
 	void UpdateRecentMenu();
 
-	BOOL needsMesh;    //At least one viewer displays mesh
-	BOOL needsTexture; //At least one viewer displays textures
-	BOOL needsDirection; //At least one viewer displays direction vectors
+	bool needsMesh;    //At least one viewer displays mesh
+	bool needsTexture; //At least one viewer displays textures
+	bool needsDirection; //At least one viewer displays direction vectors
 	void CheckNeedsTexture();
-	void DoEvents(BOOL forced = FALSE); //Used to catch button presses (check if an abort button was pressed during an operation)
+	void DoEvents(bool forced = false); //Used to catch button presses (check if an abort button was pressed during an operation)
 
 protected:
 	int OneTimeSceneInit_shared();
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
-	BOOL ProcessMessage_shared(GLComponent *src, int message);
+	bool ProcessMessage_shared(GLComponent *src, int message);
 	int  OnExit();
 };

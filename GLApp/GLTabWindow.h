@@ -14,9 +14,11 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#pragma once
 
-#include "GLApp.h"
-#include <malloc.h>
+//#include "GLApp.h"
+#include "GLWindow.h"
+class GLComponent;
 
 typedef struct {
 
@@ -24,7 +26,7 @@ typedef struct {
   int           width;
   GLComponent **comp;
   int           nbComp;
-  BOOL          selected;
+  bool          selected;
 
 } APANEL;
 

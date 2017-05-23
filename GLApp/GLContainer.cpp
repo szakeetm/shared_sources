@@ -18,9 +18,9 @@
 #include "GLWindow.h"
 #include "GLComponent.h"
 #include "GLToolkit.h"
-#include "GLWindowManager.h"
+//#include "GLWindowManager.h"
 #include "GLApp.h"
-#include <malloc.h>
+//#include <malloc.h>
 
 // --------------------------------------------------------
 
@@ -30,8 +30,8 @@ GLContainer::GLContainer() {
   lastFocus = NULL;
   draggedComp = NULL;
   lastClick = 0;
-  evtProcessed = FALSE;
-  evtCanceled = FALSE;
+  evtProcessed = false;
+  evtCanceled = false;
   parentWin = NULL;
   redirect = NULL;
 
@@ -81,19 +81,19 @@ GLWindow *GLContainer::GetWindow() {
 
 // ---------------------------------------------------------------
 
-BOOL GLContainer::IsEventProcessed() {
+bool GLContainer::IsEventProcessed() {
   return evtProcessed;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLContainer::IsEventCanceled() {
+bool GLContainer::IsEventCanceled() {
   return evtCanceled;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLContainer::IsDragging() {
+bool GLContainer::IsDragging() {
   return (draggedComp!=NULL);
 }
 
@@ -142,8 +142,8 @@ void GLContainer::InvalidateDeviceObjects() {
 // ---------------------------------------------------------------
 
 void GLContainer::SetFocus(GLComponent *src) {
-  if( lastFocus ) lastFocus->SetFocus(FALSE);
-  src->SetFocus(TRUE);
+  if( lastFocus ) lastFocus->SetFocus(false);
+  src->SetFocus(true);
   lastFocus = src;
 }
 
@@ -153,13 +153,13 @@ void GLContainer::PostDelete(GLComponent *comp) {
 
   // Mark for post deletion
   COMPLINK *node = list;
-  BOOL found = FALSE;
+  bool found = false;
   while(!found && node) {
     found = (node->comp == comp);
     if( !found ) node=node->next;
   }
 
-  if( found ) node->postDelete = TRUE;
+  if( found ) node->postDelete = true;
 
 }
 
@@ -170,7 +170,7 @@ void GLContainer::Remove(GLComponent *comp) {
   COMPLINK *node = list;
   COMPLINK *prevNode = NULL;
 
-  BOOL found = FALSE;
+  bool found = false;
   while(!found && node) {
     found = (node->comp == comp);
     if( !found ) {
@@ -199,13 +199,13 @@ void GLContainer::Add(GLComponent *comp) {
   GLContainer *cParent = comp->GetParent();
 
   // Already added
-  BOOL found = FALSE;
+  bool found = false;
   while(!found && node) {
     found = (node->comp == comp);
     if( !found ) node=node->next;
   }
   if( found ) {
-    node->canProcess = TRUE;
+    node->canProcess = true;
     return;
   }
 
@@ -218,8 +218,8 @@ void GLContainer::Add(GLComponent *comp) {
     node = (COMPLINK *)malloc(sizeof(COMPLINK));
     node->next = list;
     node->comp = comp;
-    node->canProcess = TRUE;
-    node->postDelete = FALSE;
+    node->canProcess = true;
+    node->postDelete = false;
     node->comp->SetParent(this);
     list = node;
   } else {
@@ -228,20 +228,24 @@ void GLContainer::Add(GLComponent *comp) {
     node->next = (COMPLINK *)malloc(sizeof(COMPLINK));
     node->next->next = NULL;
     node->next->comp = comp;
-    node->next->postDelete = FALSE;
-    node->next->canProcess = TRUE;
+    node->next->postDelete = false;
+    node->next->canProcess = true;
     node->next->comp->SetParent(this);
   }
 
 }
 
-// ---------------------------------------------------------------
+void GLContainer::SetCompBoundsRelativeTo(GLComponent * org, GLComponent * src, int dx, int dy, int w, int h) {
+	int xc, yc, wc, hc;
+	org->GetBounds(&xc, &yc, &wc, &hc);
+	src->SetBounds(xc + dx, yc + dy, w, h);
+}
 
 void GLContainer::FreezeComp() {
 
   COMPLINK *node = list;
   while(node) {
-    node->canProcess = FALSE;
+    node->canProcess = false;
     node=node->next;
   }
 
@@ -253,7 +257,7 @@ void GLContainer::UnfreezeComp() {
 
   COMPLINK *node = list;
   while(node) {
-    node->canProcess = TRUE;
+    node->canProcess = true;
     node=node->next;
   }
 
@@ -263,8 +267,8 @@ void GLContainer::UnfreezeComp() {
 
 void GLContainer::ManageEvent(SDL_Event *evt) {
 
-  evtProcessed = FALSE;
-  evtCanceled = FALSE;
+  evtProcessed = false;
+  evtCanceled = false;
 
   // Cancel dragging
   if( evt->type == SDL_MOUSEBUTTONUP ) {
@@ -335,7 +339,7 @@ void GLContainer::ManageComp(GLComponent *comp,SDL_Event *evt) {
 
   comp->ManageEvent(evt);
   if(!comp->IsEventProcessed()) GLToolkit::SetCursor(comp->GetCursor());
-  evtProcessed = TRUE;
+  evtProcessed = true;
 
 }
 
@@ -349,8 +353,8 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
     if( evt->type == SDL_MOUSEBUTTONDOWN ) {
       if(parentWin->IsInComp(comp,evt->button.x+ox,evt->button.y+oy) && comp->IsFocusable()) {
         if( comp != lastFocus ) {
-          comp->SetFocus(TRUE);
-          if( lastFocus ) lastFocus->SetFocus(FALSE);
+          comp->SetFocus(true);
+          if( lastFocus ) lastFocus->SetFocus(false);
           lastFocus = comp;
           lastClick = SDL_GetTicks();
         } else {

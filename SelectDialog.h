@@ -13,14 +13,17 @@
   GNU General Public License for more details.
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLLabel.h"
-#include "Worker.h"
-
 #ifndef _GLSELECTDIALOGH_
 #define _GLSELECTDIALOGH_
+
+#include "GLApp/GLWindow.h"
+
+class GLTextField;
+class GLButton;
+class GLLabel;
+
+class Geometry;
+class Worker;
 
 // Buttons
 #ifndef GLDLG_CANCEL

@@ -4,8 +4,14 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/MathTools.h" //
 #include "GLApp/GLMatrix.h"
+#include "GLApp\GLCombo.h"
+#include "GLApp\GLLabel.h"
+#include "GLApp\GLButton.h"
+
+#include "Geometry.h"
+
 #include <math.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include "Facet.h"
 
 #ifdef MOLFLOW
@@ -50,7 +56,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 
 	/// Default values
 	draggMode = DRAGG_NONE;
-	selected = FALSE;
+	selected = false;
 	view.projMode = ORTHOGRAPHIC_PROJ;
 	view.camAngleOx = 0.0;
 	view.camAngleOy = 0.0;
@@ -69,34 +75,34 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.vBottom = 0.0;
 	view.name = NULL;
 	view.performXY = XYZ_NONE;
-	showIndex = FALSE;
-	showVertex = FALSE;
-	showNormal = FALSE;
-	showUV = FALSE;
-	showRule = FALSE;
-	showLeak = FALSE;
-	showHit = FALSE;
-	showLine = FALSE;
-	showVolume = FALSE;
-	showTexture = FALSE;
-	showHidden = FALSE;
-	showHiddenVertex = TRUE;
-	showMesh = FALSE;
-	showDir = TRUE;
-	autoScaleOn = FALSE;
+	showIndex = false;
+	showVertex = false;
+	showNormal = false;
+	showUV = false;
+	showRule = false;
+	showLeak = false;
+	showHit = false;
+	showLine = false;
+	showVolume = false;
+	showTexture = false;
+	showHidden = false;
+	showHiddenVertex = true;
+	showMesh = false;
+	showDir = true;
+	autoScaleOn = false;
 	mode = MODE_SELECT;
 	showBack = SHOW_FRONTANDBACK;
-	showFilter = FALSE;
-	showColormap = TRUE;
+	showFilter = false;
+	//showColormap = true;
 	hideLot = 500;
 
-	showTP = TRUE;
+	showTP = true;
 #ifdef MOLFLOW
-	showTime = FALSE;
+	showTime = false;
 #endif
 
 #ifdef SYNRAD
-	shadeLines = TRUE;
+	shadeLines = true;
 	dispNumTraj = 500;
 #endif
 	camDistInc = 1.0;
@@ -106,7 +112,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	selY1 = 0;
 	selX2 = 0;
 	selY2 = 0;
-	selectionChange = FALSE;
+	selectionChange = false;
 	vectorLength = 5.0f;
 	arrowLength = 1.0;
 	dispNumHits = 2048;
@@ -120,7 +126,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	// Components
 	toolBack = new GLLabel("");
 	toolBack->SetBackgroundColor(220, 220, 220);
-	toolBack->SetOpaque(TRUE);
+	toolBack->SetOpaque(true);
 	toolBack->SetBorder(BORDER_BEVEL_IN);
 	Add(toolBack);
 	coordLab = new GLLabel("");
@@ -129,17 +135,17 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 
 	facetSearchState = new GLLabel("");
 	//facetSearchState->SetBackgroundColor(220,220,220);
-	facetSearchState->SetVisible(FALSE);
+	facetSearchState->SetVisible(false);
 	Add(facetSearchState);
 
 	frontBtn = new GLButton(0, "Front");
-	frontBtn->SetToggle(TRUE);
+	frontBtn->SetToggle(true);
 	Add(frontBtn);
 	topBtn = new GLButton(0, "Top");
-	topBtn->SetToggle(TRUE);
+	topBtn->SetToggle(true);
 	Add(topBtn);
 	sideBtn = new GLButton(0, "Side");
-	sideBtn->SetToggle(TRUE);
+	sideBtn->SetToggle(true);
 	Add(sideBtn);
 
 	projCombo = new GLCombo(0);
@@ -166,7 +172,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	zoomBtn = new GLButton(0, "");
 	zoomBtn->SetIcon("images/icon_zoom.png");
 	zoomBtn->SetDisabledIcon("images/icon_zoomd.png");
-	zoomBtn->SetEnabled(FALSE);
+	zoomBtn->SetEnabled(false);
 	Add(zoomBtn);
 	sysBtn = new GLButton(0, "");
 	sysBtn->SetIcon("images/icon_winup.png");
@@ -183,7 +189,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 
 	autoBtn = new GLButton(0, "");
 	autoBtn->SetIcon("images/icon_autoscale.png");
-	autoBtn->SetToggle(TRUE);
+	autoBtn->SetToggle(true);
 	Add(autoBtn);
 
 	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
@@ -238,16 +244,16 @@ void GeometryViewer::ToOrigo() {
 	view.vBottom = 0.0;
 }
 
-BOOL GeometryViewer::IsSelected() {
+bool GeometryViewer::IsSelected() {
 	return selected;
 }
 
-void GeometryViewer::SetSelected(BOOL s) {
+void GeometryViewer::SetSelected(bool s) {
 	selected = s;
 }
 
 
-void GeometryViewer::SetFocus(BOOL focus) {
+void GeometryViewer::SetFocus(bool focus) {
 	if (focus && parent)  parent->ProcessMessage(this, MSG_GEOMVIEWER_SELECT);
 	GLComponent::SetFocus(focus);
 }
@@ -324,7 +330,7 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 
 
-BOOL GeometryViewer::IsDragging() {
+bool GeometryViewer::IsDragging() {
 	return draggMode != DRAGG_NONE;
 }
 
@@ -490,7 +496,7 @@ void GeometryViewer::UpdateMatrix() {
 	// Projection matrix ---------------------------------------------------
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
-	ComputeBB(TRUE);
+	ComputeBB(true);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -519,9 +525,9 @@ double GeometryViewer::ToDeg(double radians) {
 	return (radians / PI)*180.0f;
 }
 
-BOOL GeometryViewer::SelectionChanged() {
-	BOOL ret = selectionChange;
-	selectionChange = FALSE;
+bool GeometryViewer::SelectionChanged() {
+	bool ret = selectionChange;
+	selectionChange = false;
 	return ret;
 }
 
@@ -587,17 +593,17 @@ void GeometryViewer::DrawIndex() {
 	// Draw index number
 		// Get selected vertex
 	Geometry *geom = work->GetGeometry();
-	int nbVertex = geom->GetNbVertex();
-	int nbFacet = geom->GetNbFacet();
+	size_t nbVertex = geom->GetNbVertex();
+	size_t nbFacet = geom->GetNbFacet();
 	if (nbVertex <= 0) return;
 
-	int *vIdx = (int *)malloc(nbVertex * sizeof(int));
-	memset(vIdx, 0xFF, nbVertex * sizeof(int));
+	size_t *vIdx = (size_t *)malloc(nbVertex * sizeof(size_t));
+	memset(vIdx, 0xFF, nbVertex * sizeof(size_t));
 	for (int i = 0; i < nbFacet; i++) {
 		Facet *f = geom->GetFacet(i);
 		if (f->selected) {
-			int nb = f->sh.nbIndex;
-			for (int i = 0; i < nb; i++) {
+			size_t nb = f->sh.nbIndex;
+			for (size_t i = 0; i < nb; i++) {
 				vIdx[f->indices[i]] = i;
 			}
 		}
@@ -626,17 +632,17 @@ void GeometryViewer::DrawIndex() {
 	GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.9f, 0.9f);
 
 	// Draw Labels
-	for (int i = 0; i < nbVertex; i++) {
-		int idx = vIdx[i];
+	for (size_t i = 0; i < nbVertex; i++) {
+		size_t idx = vIdx[i];
 		if (idx >= 0) {
 			if (showIndex && showVertex) {
-				sprintf(tmp, "%d,%d ", idx + 1, i + 1);
+				sprintf(tmp, "%zd,%zd ", idx + 1, i + 1);
 			}
 			else if (showIndex && !showVertex) {
-				sprintf(tmp, "%d ", idx + 1);
+				sprintf(tmp, "%zd ", idx + 1);
 			}
 			else {
-				sprintf(tmp, "%d ", i + 1);
+				sprintf(tmp, "%zd ", i + 1);
 			}
 			Vector3d *v = geom->GetVertex(i);
 			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
@@ -664,7 +670,7 @@ void GeometryViewer::DrawRule() {
 		}
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawRule(vectorLength, FALSE, FALSE, FALSE, arrowLength);
+		GLToolkit::DrawRule(vectorLength, false, false, false, arrowLength);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
 		GLToolkit::DrawString((float)vectorLength, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
@@ -675,7 +681,7 @@ void GeometryViewer::DrawRule() {
 
 }
 
-void GeometryViewer::PaintSelectedVertices(BOOL hiddenVertex) {
+void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	Geometry *geom = work->GetGeometry();
 	std::vector<size_t> selectedVertexIds;
 
@@ -815,7 +821,7 @@ void GeometryViewer::DrawLeak() {
 
 }
 
-void GeometryViewer::AutoScale(BOOL reUpdateMouseCursor) {
+void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 	if (!work) return;
 	Geometry *geom = work->GetGeometry();
@@ -832,7 +838,7 @@ void GeometryViewer::AutoScale(BOOL reUpdateMouseCursor) {
 	UpdateMatrix();
 
 	// Get geometry transformed BB
-	ComputeBB(FALSE);
+	ComputeBB(false);
 
 	Vector3d v;
 	v.x = xMax - org.x;
@@ -967,9 +973,9 @@ void GeometryViewer::Paint() {
 		return;
 	}
 	sprintf(tmp, "");
-	topBtn->SetState(FALSE);
-	frontBtn->SetState(FALSE);
-	sideBtn->SetState(FALSE);
+	topBtn->SetState(false);
+	frontBtn->SetState(false);
+	sideBtn->SetState(false);
 	if (view.performXY) {
 		// Draw coordinates on screen when aligned
 		Vector3d org = geom->GetCenter();
@@ -979,19 +985,19 @@ void GeometryViewer::Paint() {
 			x = -view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist;
 			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z)*view.camDist;
 			sprintf(tmp, "X=%g, Z=%g", -x / view.camDist, z / view.camDist);
-			topBtn->SetState(TRUE);
+			topBtn->SetState(true);
 			break;
 		case XYZ_SIDE: // Side View
 			z = -view.vLeft - ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z)*view.camDist;
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
 			sprintf(tmp, "Z=%g, Y=%g", z / view.camDist, y / view.camDist);
-			sideBtn->SetState(TRUE);
+			sideBtn->SetState(true);
 			break;
 		case XYZ_FRONT: // Front View
 			x = -view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist;
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
 			sprintf(tmp, "X=%g, Y=%g", x / view.camDist, y / view.camDist);
-			frontBtn->SetState(TRUE);
+			frontBtn->SetState(true);
 			break;
 		}
 	}
@@ -1047,8 +1053,8 @@ if( showVolume || showTexture ) {
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
-	BOOL detailsSuppressed = hideLot != -1 && (geom->GetNbSelected() > hideLot);
-	BOOL displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
+	bool detailsSuppressed = hideLot != -1 && (geom->GetNbSelectedFacets() > hideLot);
+	bool displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
 	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
@@ -1065,7 +1071,7 @@ if( showVolume || showTexture ) {
 	
 	// Draw selection rectangle or circle
 	if ((draggMode == DRAGG_SELECT || draggMode == DRAGG_SELECTVERTEX) && (mode == MODE_SELECT || mode == MODE_SELECTVERTEX || mode == MODE_ZOOM)) {
-		BOOL circleMode = GetWindow()->IsAltDown();
+		bool circleMode = GetWindow()->IsAltDown();
 		GLushort dashPattern = 0xCCCC;
 
 		glDisable(GL_TEXTURE_2D);
@@ -1227,8 +1233,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				}
 			}
 			UpdateMatrix();
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 		}
 
 		if (unicode == SDLK_DOWN) {
@@ -1257,8 +1263,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				}
 			}
 			UpdateMatrix();
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 		}
 
 		if (unicode == SDLK_LEFT) {
@@ -1287,8 +1293,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				view.camOffset.z -= transStep * camLeft.z;
 			}
 			UpdateMatrix();
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 		}
 
 		if (unicode == SDLK_LCTRL || unicode == SDLK_RCTRL) {
@@ -1383,8 +1389,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			else {
 				TranslateScale(-20.0);
 			}
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 		}
 		if (evt->button.button == SDL_BUTTON_WHEELDOWN) {
 			if (GetWindow()->IsShiftDown()) {
@@ -1396,8 +1402,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			else {
 				TranslateScale(20.0);
 			}
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 		}
 		UpdateMouseCursor(mode);
 	}
@@ -1415,8 +1421,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			switch (mode) {
 			case MODE_ZOOM:
 				Zoom();
-				autoScaleOn = FALSE;
-				autoBtn->SetState(FALSE);
+				autoScaleOn = false;
+				autoBtn->SetState(false);
 				break;
 			case MODE_SELECT:
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
@@ -1424,7 +1430,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glLoadMatrixf(matProj);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
-				selectionChange = TRUE;
+				selectionChange = true;
 				if (abs(selX1 - selX2) <= 1 && abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect facet
 					//SetCursor(CURSOR_BUSY);
@@ -1444,7 +1450,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glLoadMatrixf(matProj);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
-				//selectionChange = TRUE;
+				//selectionChange = true;
 				if (abs(selX1 - selX2) <= 1 && abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
 					geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown());
@@ -1463,7 +1469,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glLoadMatrixf(matProj);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
-				for (int i = 0; i < (int)work->regions.size(); i++)
+				for (size_t i = 0; i < work->regions.size(); i++)
 					work->regions[i].SelectTrajPoint(mX - posX, mY - posY, i);
 				break;
 #endif
@@ -1536,8 +1542,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			}
 
 			UpdateMatrix();
-			autoScaleOn = FALSE;
-			autoBtn->SetState(FALSE);
+			autoScaleOn = false;
+			autoBtn->SetState(false);
 			break;
 
 		case DRAGG_ROTATE:
@@ -1569,10 +1575,10 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					}
 				}
 				view.performXY = XYZ_NONE;
-				zoomBtn->SetEnabled(FALSE);
+				zoomBtn->SetEnabled(false);
 				if (mode == MODE_ZOOM) UpdateMouseCursor(MODE_SELECT);
 				UpdateMatrix();
-				if (autoScaleOn) (AutoScale(FALSE));
+				if (autoScaleOn) (AutoScale(false));
 
 
 			}
@@ -1593,7 +1599,7 @@ void GeometryViewer::SelectCoplanar(double tolerance) {
 	glLoadMatrixf(matProj);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(matView);
-	selectionChange = TRUE;
+	selectionChange = true;
 	geom->SelectCoplanar(this->width, this->height, tolerance);
 }
 
@@ -1632,7 +1638,7 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 		else if (src == autoBtn) {
 			autoScaleOn = !autoScaleOn;
 			//autoBtn->SetState(autoScaleOn);
-			if (autoScaleOn) AutoScale(FALSE);
+			if (autoScaleOn) AutoScale(false);
 		}
 		else if (src == handBtn) {
 			UpdateMouseCursor(MODE_MOVE);
@@ -1742,7 +1748,7 @@ DrawBB(node->right);
 
 
 
-void GeometryViewer::ComputeBB(BOOL getAll) {
+void GeometryViewer::ComputeBB(bool getAll) {
 
 	Geometry *geom = work->GetGeometry();
 
@@ -1769,7 +1775,7 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 	//TRANSFORMBB(max.x,max.y,max.z);
 	//TRANSFORMBB(min.x,max.y,max.z);
 
-	int nbV = geom->GetNbVertex();
+	size_t nbV = geom->GetNbVertex();
 
 	if (geom->viewStruct < 0 || getAll) {
 
@@ -1794,20 +1800,20 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 	}
 	else {
 
-		int *refIdx = (int *)malloc(nbV * sizeof(int));
-		memset(refIdx, 0, nbV * sizeof(int));
+		bool *refIdx = (bool *)malloc(nbV * sizeof(bool));
+		memset(refIdx, 0, nbV * sizeof(bool));
 
 		// Get facet of the selected structure
-		int nbF = geom->GetNbFacet();
+		size_t nbF = geom->GetNbFacet();
 		for (int i = 0; i < nbF; i++) {
 			Facet *f = geom->GetFacet(i);
 			if (f->sh.superIdx == geom->viewStruct) {
-				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = 1;
+				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
 			}
 		}
 
 		// Transform vertex
-		for (int i = 0; i < nbV; i++) {
+		for (size_t i = 0; i < nbV; i++) {
 			if (refIdx[i]) {
 				Vector3d *p = geom->GetVertex(i);
 				TRANSFORMVERTEX(p->x, p->y, p->z);
@@ -1824,13 +1830,13 @@ void GeometryViewer::ComputeBB(BOOL getAll) {
 void Geometry::ClearFacetMeshLists()
 {
 	GLProgress *prg = new GLProgress("Please wait...", "Clearing facet meshes...");
-	prg->SetVisible(TRUE);
-	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (int i = 0; i < nbFacet; i++) {
+	prg->SetVisible(true);
+	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
+	for (size_t i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
 		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
 	}
-	prg->SetVisible(FALSE);
+	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 }
 
@@ -1839,14 +1845,14 @@ void Geometry::ClearFacetMeshLists()
 void Geometry::BuildFacetMeshLists()
 {
 	GLProgress *prg = new GLProgress("Please wait...", "Building facet meshes...");
-	prg->SetVisible(TRUE);
-	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (int i = 0; i < nbFacet; i++) {
+	prg->SetVisible(true);
+	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
+	for (size_t i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
 		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshList();
 
 	}
-	prg->SetVisible(FALSE);
+	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 
 }

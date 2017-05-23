@@ -17,6 +17,7 @@
 #include "GLScrollBar.h"
 #include "GLToolkit.h"
 #include "MathTools.h" //Saturate
+#include "GLFont.h"
 
 // Minimum slider width
 #define MIN_SWIDTH 10
@@ -145,13 +146,13 @@ void GLScrollBar::Paint() {
       GLToolkit::DrawVScroll(posX,posY+15-d1,width-1,height-28+d2,2);
 
       // Draw up button
-      font->DrawText(posX+3,posY+1-d1/2,"\212",FALSE);
+      font->DrawText(posX+3,posY+1-d1/2,"\212",false);
 
       // Draw Slider
       GLToolkit::DrawVScroll(posX,posY+ss-d1,width-1,ws+(d1+d2)+2,m_Drag);
 
       // Draw down button
-      font->DrawText(posX+3,posY+height-14+d2/2,"\211",FALSE);
+      font->DrawText(posX+3,posY+height-14+d2/2,"\211",false);
       break;
 
     case SB_HORIZONTAL:
@@ -161,13 +162,13 @@ void GLScrollBar::Paint() {
       GLToolkit::DrawHScroll(posX+15-d1,posY+1,width-29+d2,height,2);
 
       // Draw left button
-      font->DrawText(posX+6-d1/2,posY,"\214",FALSE);
+      font->DrawText(posX+6-d1/2,posY,"\214",false);
 
       // Draw Slider
       GLToolkit::DrawHScroll(posX+ss-d1,posY+1,ws+(d1+d2)+2,height,m_Drag);
 
       // Draw right button
-      font->DrawText(posX+width-10+d2/2,posY,"\213",FALSE);
+      font->DrawText(posX+width-10+d2/2,posY,"\213",false);
       break;
 
   }

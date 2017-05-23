@@ -16,8 +16,15 @@
 #include "SelectDialog.h"
 #include "Facet.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp/GLWindowManager.h"
+#include "GLApp/GLList.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLLabel.h"
+
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -108,9 +115,9 @@ void SelectDialog::ProcessMessage(GLComponent *src,int message) {
 		  if (rCode == GLDLG_SELECT) geom->UnselectAll();
 		  geom->GetFacet(facetnumber-1)->selected = (rCode == GLDLG_SELECT || rCode == GLDLG_SELECT_ADD);
 		  geom->UpdateSelection();
-		  mApp->UpdateFacetParams(TRUE);
+		  mApp->UpdateFacetParams(true);
 		  mApp->UpdateFacetlistSelected();
-		  mApp->facetList->ScrollToVisible(facetnumber-1,1,TRUE);
+		  mApp->facetList->ScrollToVisible(facetnumber-1,1,true);
   }
   GLWindow::ProcessMessage(src,message);
 }

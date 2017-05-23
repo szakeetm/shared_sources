@@ -13,10 +13,12 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
+
 
 #ifndef _GLMENUH_
 #define _GLMENUH_
+
+#include "GLComponent.h"
 
 #define MAX_MENU_ITEM 64
 #define MAX_ITEM_LGTH 128
@@ -34,9 +36,9 @@ typedef struct {
   int          y;
   int          width;
   int          height;
-  BOOL         isSeparator;
-  BOOL         checked;
-  BOOL         enabled;
+  bool         isSeparator;
+  bool         checked;
+  bool         enabled;
   char         shortcut;
   int          sctPos;
   int          sctWidth;
@@ -62,9 +64,9 @@ public:
   GLMenu* Add(const char *itemName,int itemId=0,int accKeyCode=0,int accKeyModifier=0);
   int     GetNbItem();
   GLMenu *GetSubMenu(char *itemName);
-  void    SetCheck(int itemId,BOOL checked);
-  BOOL    GetCheck(int itemId);
-  void    SetEnabled(int itemId,BOOL enabled);
+  void    SetCheck(int itemId,bool checked);
+  bool    GetCheck(int itemId);
+  void    SetEnabled(int itemId,bool enabled);
   void    SetIcon(int itemId,int x,int y);
   void    Clear();
 
@@ -82,14 +84,14 @@ public:
 
 private:
 
-  BOOL  IsInItem(MENUITEM *p,int mx,int my);
+  bool  IsInItem(MENUITEM *p,int mx,int my);
   int   GetMenu(int mx,int my);
   int   GetMenu(int id);
-  void  CloseSub(BOOL resetSel=TRUE);
+  void  CloseSub(bool resetSel=true);
   void  DropSub(int m);
-  BOOL  HasSub(int s);
+  bool  HasSub(int s);
   void  ProcessMenuItem(int m);
-  BOOL  ProcessShortcut(SDL_Event *evt);
+  bool  ProcessShortcut(SDL_Event *evt);
 
   GLMenuBar *pBar;     // Parent menubar
 
@@ -100,7 +102,7 @@ private:
   int       rCode;
   GLMenu   *pMenu;
 
-  BOOL      hasAcc;
+  bool      hasAcc;
 
 };
 

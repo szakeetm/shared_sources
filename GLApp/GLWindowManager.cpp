@@ -79,7 +79,7 @@ void GLWindowManager::RegisterWindow(GLWindow *wnd) {
 
 void GLWindowManager::BringToFront(GLWindow *wnd) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int i=0;
 
   while(!found && i<nbWindow) {
@@ -106,7 +106,7 @@ GLWindow *GLWindowManager::GetTopLevelWindow() {
 
 void GLWindowManager::UnRegisterWindow(GLWindow *wnd) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int i=0;
 
   while(!found && i<nbWindow) {
@@ -362,7 +362,7 @@ void GLWindowManager::AnimateDeIconify(GLWindow *src) {
 
   int iPos = allWin[0]->GetWidth();
   int iIdx = 0;
-  BOOL found = FALSE;
+  bool found = false;
   while(!found && iIdx<nbWindow) {
     found = (src==allWin[iIdx]);
     if( allWin[iIdx]->IsIconic() )
@@ -458,7 +458,7 @@ void GLWindowManager::RepaintNoSwap() {
 //#endif
 
   // Search maximized window
-  BOOL found = FALSE;
+  bool found = false;
   int maxIdx = nbWindow-1;
   while(maxIdx>=0 && !found) {
     found = allWin[maxIdx]->IsMaximized() && !allWin[maxIdx]->IsIconic();
@@ -529,36 +529,36 @@ void GLWindowManager::InvalidateDeviceObjects() {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::IsCtrlDown() {
+bool GLWindowManager::IsCtrlDown() {
   return (modState & CTRL_MODIFIER)!=0;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::IsShiftDown() {
+bool GLWindowManager::IsShiftDown() {
   return (modState & SHIFT_MODIFIER)!=0;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::IsAltDown() {
+bool GLWindowManager::IsAltDown() {
   return (modState & ALT_MODIFIER)!=0;
 }
 
-BOOL GLWindowManager::IsSpaceDown() {
+bool GLWindowManager::IsSpaceDown() {
   return (modState & SPACE_MODIFIER)!=0;
 }
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::IsCapsLockOn() {
+bool GLWindowManager::IsCapsLockOn() {
  return (modState & CAPSLOCK_MODIFIER)!=0;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::ProcessKey(SDL_Event *evt,BOOL processAcc) {
+bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 
-  BOOL accFound = FALSE;
+  bool accFound = false;
 
   // Handle key modifier
   int unicode = (evt->key.keysym.unicode & 0x7F);
@@ -631,7 +631,7 @@ BOOL GLWindowManager::ProcessKey(SDL_Event *evt,BOOL processAcc) {
 void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int accId) {
 
   // Search if already exists
-  BOOL accFound = FALSE;
+  bool accFound = false;
   int i = 0;
   while(i<nbAcc && !accFound) {
     accFound = (allAcc[i].keyCode == keyCode) && (allAcc[i].modifier == modifier);
@@ -654,22 +654,22 @@ void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int 
 
 // ---------------------------------------------------------------
 
-BOOL GLWindowManager::ManageEvent(SDL_Event *evt) {
+bool GLWindowManager::ManageEvent(SDL_Event *evt) {
 
   if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP ) {
-    if( !ProcessKey(evt,TRUE) ) {
+    if( !ProcessKey(evt,true) ) {
       // Process key event
       if(keyFocus<nbWindow) allWin[keyFocus]->ManageEvent(evt);
       return (keyFocus==0);
     } else {
       // Give keyboard focus to main on accelerator
       keyFocus=0;
-      return TRUE;
+      return true;
     }
   }
 
   // Searh for dragged window
-  BOOL draggFound = FALSE;
+  bool draggFound = false;
   int i = 0;
   while(i<nbWindow && !draggFound) {
     draggFound = allWin[i]->IsDragging();
@@ -689,7 +689,7 @@ BOOL GLWindowManager::ManageEvent(SDL_Event *evt) {
     GLWindow *wins[MAX_WIN];
     memcpy(wins,allWin,nbWindow*sizeof(GLWindow *));
 
-    BOOL processed = FALSE;
+    bool processed = false;
 
     // Menus
     i = nbWindow-1;

@@ -16,16 +16,17 @@
   GNU General Public License for more details.
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #pragma once
+
+#include "GLApp/GLWindow.h"
+
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+
+class Geometry;
+class Worker;
 
 class SmartSelection : public GLWindow {
 
@@ -33,7 +34,7 @@ public:
 
   // Construction
   SmartSelection(Geometry *g,Worker *w);
-  BOOL IsSmartSelection();
+  bool IsSmartSelection();
   double GetMaxAngle();
   // Implementation
   void ProcessMessage(GLComponent *src,int message);
@@ -48,6 +49,6 @@ private:
   GLTextField *angleThreshold;
   GLToggle    *enableToggle;
 
-  BOOL isRunning;
+  bool isRunning;
 };
 

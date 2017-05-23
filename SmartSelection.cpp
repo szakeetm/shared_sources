@@ -21,6 +21,14 @@ GNU General Public License for more details.
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
+
+#include "Geometry.h"
+//#include "Worker.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -64,8 +72,8 @@ SmartSelection::SmartSelection(Geometry *g,Worker *w):GLWindow() {
 
 	enableToggle = new GLToggle(0,"Enable smart selection");
 	enableToggle->SetBounds(55,80,170,18);
-	enableToggle->SetState(FALSE);
-	enableToggle->SetEnabled(FALSE);
+	enableToggle->SetState(false);
+	enableToggle->SetEnabled(false);
 	Add(enableToggle);
 
 	SetBounds(10,60,wD,hD);
@@ -74,12 +82,12 @@ SmartSelection::SmartSelection(Geometry *g,Worker *w):GLWindow() {
 
 	geom = g;
 	work = w;
-	isRunning = FALSE;
+	isRunning = false;
 }
 
-BOOL SmartSelection::IsSmartSelection()
+bool SmartSelection::IsSmartSelection()
 {
-	if (!IsVisible()) return FALSE;
+	if (!IsVisible()) return false;
 	else return (enableToggle->GetState()==1);
 }
 
@@ -107,27 +115,27 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 					return;
 				}
 				analyzeButton->SetText("Stop analyzing");
-				isRunning = TRUE;
+				isRunning = true;
 				GLProgress *progressDlg = new GLProgress("Analyzing facets", "Please wait");
 				progressDlg->SetProgress(0.0);
-				progressDlg->SetVisible(TRUE);
+				progressDlg->SetVisible(true);
 
 				size_t nbAnalyzed = geom->AnalyzeNeighbors(work,progressDlg);
 
-				progressDlg->SetVisible(FALSE);
+				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);
 				analyzeButton->SetText("Analyze");
-				isRunning = FALSE;
+				isRunning = false;
 				std::stringstream tmp;
 				tmp << "Analyzed " << nbAnalyzed << " facets.";
 				resultLabel->SetText(tmp.str().c_str());
-				enableToggle->SetEnabled(TRUE);
+				enableToggle->SetEnabled(true);
 				enableToggle->SetState(1);
 			}
 			else {
 				analyzeButton->SetText("Analyze");
-				isRunning = FALSE;
-				work->abortRequested = TRUE;
+				isRunning = false;
+				work->abortRequested = true;
 			}
 		}
 		break;

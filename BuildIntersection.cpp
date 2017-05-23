@@ -15,12 +15,15 @@
   GNU General Public License for more details.
 */
 
+#include "Geometry.h"
 #include "BuildIntersection.h"
 #include "Facet.h" //DeletedFacet
 #include "GLApp/GLTitledPanel.h"
 //#include "GLApp/GLToolkit.h"
 //#include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\GLLabel.h"
+#include "GLApp\GLButton.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -73,7 +76,7 @@ BuildIntersection::BuildIntersection(Geometry *g, Worker *w) :GLWindow() {
 	RestoreDeviceObjects();
 
 	resultLabel->SetText("");
-	undoButton->SetEnabled(FALSE);
+	undoButton->SetEnabled(false);
 	geom = g;
 	work = w;
 
@@ -104,14 +107,14 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 					newlyCreatedList.push_back(index);
 				}
 				geom->RemoveFacets(newlyCreatedList);
-				geom->RestoreFacets(deletedFacetList, FALSE); //Restore to original position
+				geom->RestoreFacets(deletedFacetList, false); //Restore to original position
 			}
 			else {
 				int answer = GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-				geom->RestoreFacets(deletedFacetList, TRUE); //Restore to end
+				geom->RestoreFacets(deletedFacetList, true); //Restore to end
 			}
 			deletedFacetList.clear();
-			undoButton->SetEnabled(FALSE);
+			undoButton->SetEnabled(false);
 			resultLabel->SetText("");
 			//Renumberformula
 			work->Reload();
@@ -120,7 +123,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 			mApp->UpdateViewers();
 		}
 		else if (src == buildButton) {
-			if (geom->GetNbSelected() < 2) {
+			if (geom->GetNbSelectedFacets() < 2) {
 			GLMessageBox::Display("Select at least 2 facets", "Can't create intersection", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 			}
@@ -132,7 +135,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets intersected, creating " << nbCreated << " new.";
 				resultLabel->SetText(tmp.str().c_str());
-				if (deletedFacetList.size() > 0) undoButton->SetEnabled(TRUE);
+				if (deletedFacetList.size() > 0) undoButton->SetEnabled(true);
 				work->Reload();
 				mApp->UpdateModelParams();
 				mApp->UpdateFacetlistSelected();

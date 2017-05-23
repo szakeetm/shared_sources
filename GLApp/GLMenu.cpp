@@ -20,7 +20,7 @@
 #include "GLWindowManager.h"
 #include "MathTools.h" //Saturate
 
-#include <malloc.h>
+//#include <malloc.h>
 
 #define SIDE_MARGIN 24
 
@@ -33,11 +33,11 @@ GLMenu::GLMenu():GLComponent(0) {
   pBar = NULL;
   pMenu = NULL;
   rCode = -1;
-  hasAcc = FALSE;
+  hasAcc = false;
 
   SetBorder(BORDER_BEVEL_OUT);
-  SetVisible(FALSE);
-  SetFocusable(FALSE);
+  SetVisible(false);
+  SetFocusable(false);
   SetBackgroundColor(225,220,220);
 }
 
@@ -56,7 +56,7 @@ GLMenu::~GLMenu() {
 
 int GLMenu::GetMenu(int mx,int my) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
     if(!items[i].isSeparator) found = IsInItem(items+i,mx,my);
@@ -87,7 +87,7 @@ int GLMenu::GetNbItem() {
 
 // -----------------------------------------------------------
 
-void GLMenu::SetCheck(int itemId,BOOL checked) {
+void GLMenu::SetCheck(int itemId,bool checked) {
 
   int i = GetMenu(itemId);
   if( i>=0 ) items[i].checked = checked;
@@ -104,15 +104,15 @@ void GLMenu::SetIcon(int itemId,int x,int y) {
 
 }
 
-BOOL GLMenu::GetCheck(int itemId) {
+bool GLMenu::GetCheck(int itemId) {
 
   int i = GetMenu(itemId);
   if( i>=0 )  return items[i].checked;
-  else        return FALSE;
+  else        return false;
 
 }
 
-void  GLMenu::SetEnabled(int itemId,BOOL enabled) {
+void  GLMenu::SetEnabled(int itemId,bool enabled) {
 
   int i = GetMenu(itemId);
   if( i>=0 ) items[i].enabled = enabled;
@@ -123,7 +123,7 @@ void  GLMenu::SetEnabled(int itemId,BOOL enabled) {
 
 int GLMenu::GetMenu(int id) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int i=0;
   while(!found && i<nbItem) {
     found = (items[i].itemId == id);
@@ -136,7 +136,7 @@ int GLMenu::GetMenu(int id) {
 
 // -----------------------------------------------------------
 
-BOOL GLMenu::IsInItem(MENUITEM *p,int mx,int my) {
+bool GLMenu::IsInItem(MENUITEM *p,int mx,int my) {
     return mx>(p->x) && mx<=(p->x)+width &&
            my>(p->y) && my<=(p->y)+(p->height);
 }
@@ -156,7 +156,7 @@ void GLMenu::Clear() {
   int size = sizeof(MENUITEM)*MAX_MENU_ITEM;
   if(items) memset(items,0,size);
   nbItem = 0;
-  hasAcc = FALSE;
+  hasAcc = false;
 
 }
 
@@ -182,7 +182,7 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
   if( accKeyCode ) {
 
     GLWindowManager::RegisterAcc(this,accKeyCode,accKeyModifier,nbItem);
-    hasAcc = TRUE;
+    hasAcc = true;
     items[i].accName = _strdup( GLWindowManager::GetAccStr(accKeyCode,accKeyModifier) );
     items[i].accWidth = GLToolkit::GetDialogFont()->GetTextWidth(items[i].accName);
 
@@ -198,11 +198,11 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
     items[i].subMenu = new GLMenu();
   } else {
     items[i].height = 5;
-    items[i].isSeparator = TRUE;
+    items[i].isSeparator = true;
   }
   items[i].x = sx;
   items[i].y = sy;
-  items[i].enabled = TRUE;
+  items[i].enabled = true;
 
   nbItem++;
   return items[i].subMenu;
@@ -216,7 +216,7 @@ GLMenu *GLMenu::GetSubMenu(char *itemName) {
   strcpy(tmpName,itemName);
   GLWindowManager::RemoveAccFromStr(tmpName);
 
-  BOOL found = FALSE;
+  bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
     if(!items[i].isSeparator) found = (strcmp(tmpName,items[i].itemName)==0);
@@ -233,12 +233,12 @@ GLMenu *GLMenu::GetSubMenu(char *itemName) {
 
 // -----------------------------------------------------------
 
-BOOL GLMenu::HasSub(int s) {
+bool GLMenu::HasSub(int s) {
   if(s>=0 && s<nbItem) {
     GLMenu *sub = items[s].subMenu;
     if(sub) return (sub->GetNbItem()>0);
   }
-  return FALSE;
+  return false;
 }
 
 // -----------------------------------------------------------
@@ -321,7 +321,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
         if( !(sub && sub->IsVisible()) ) {
           selMenu++;
           if(selMenu>=nbItem) selMenu=0;
-          CloseSub(FALSE);
+          CloseSub(false);
           return;
         }
         break;
@@ -329,7 +329,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
         if( !(sub && sub->IsVisible()) ) {
           selMenu--;
           if(selMenu<0) selMenu=nbItem-1;
-          CloseSub(FALSE);
+          CloseSub(false);
           return;
         }
         break;
@@ -357,7 +357,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
         break;
       case SDLK_LEFT:
         if(HasSub(selMenu) && sub->IsVisible() ) {
-          CloseSub(FALSE);
+          CloseSub(false);
         } else {
           if(pBar) pBar->GoLeft();
         }
@@ -394,13 +394,13 @@ void GLMenu::ProcessAcc(int accId) {
 
 // -----------------------------------------------------------
 
-BOOL GLMenu::ProcessShortcut(SDL_Event *evt) {
+bool GLMenu::ProcessShortcut(SDL_Event *evt) {
 
   int unicode = (evt->key.keysym.unicode & 0x7F);
   if( !unicode ) unicode = evt->key.keysym.sym;
-  if( unicode==0 ) return FALSE;
+  if( unicode==0 ) return false;
 
-  BOOL found = FALSE;
+  bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
     found = (unicode==items[i].shortcut);
@@ -418,7 +418,7 @@ BOOL GLMenu::ProcessShortcut(SDL_Event *evt) {
 void GLMenu::Close() {
 
   CloseSub();
-  SetVisible(FALSE);
+  SetVisible(false);
 
 }
 
@@ -475,7 +475,7 @@ void GLMenu::Paint() {
         } else {
           font->SetTextColor(0.0f,0.0f,0.0f);
         }
-        font->DrawText(posX+4+p->x+SIDE_MARGIN,posY+p->y+3,p->itemName,FALSE);
+        font->DrawText(posX+4+p->x+SIDE_MARGIN,posY+p->y+3,p->itemName,false);
 
         // Underline shortcut char
         if( p->shortcut ) {
@@ -490,26 +490,26 @@ void GLMenu::Paint() {
       } else {
 
         font->SetTextColor(1.0f,1.0f,1.0f);
-        font->DrawText(posX+p->x+SIDE_MARGIN+5,posY+p->y+4,p->itemName,FALSE);
+        font->DrawText(posX+p->x+SIDE_MARGIN+5,posY+p->y+4,p->itemName,false);
         font->SetTextColor(0.4f,0.4f,0.4f);
-        font->DrawText(posX+p->x+SIDE_MARGIN+4,posY+p->y+3,p->itemName,FALSE);
+        font->DrawText(posX+p->x+SIDE_MARGIN+4,posY+p->y+3,p->itemName,false);
 
       }
 
       GLMenu *sub = p->subMenu;
       if( sub && sub->GetNbItem() ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+p->x+width-15,posY+p->y+2,"\213",FALSE);
+        font->DrawText(posX+p->x+width-15,posY+p->y+2,"\213",false);
       }
 
       if( !HasSub(i) && p->accName ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+p->x+width-items[i].accWidth-10,posY+p->y+3,p->accName,FALSE);
+        font->DrawText(posX+p->x+width-items[i].accWidth-10,posY+p->y+3,p->accName,false);
       }
 
       if( p->checked ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+SIDE_MARGIN-1,posY+p->y+3,"\215",FALSE);
+        font->DrawText(posX+SIDE_MARGIN-1,posY+p->y+3,"\215",false);
       }
 
       if( p->iconX || p->iconY ) {
@@ -538,7 +538,7 @@ void GLMenu::DropSub(int s) {
 
 // -----------------------------------------------------------
 
-void GLMenu::CloseSub(BOOL resetSel) {
+void GLMenu::CloseSub(bool resetSel) {
 
   for(int i=0;i<nbItem;i++) {
     GLMenu *sub = items[i].subMenu;
@@ -573,7 +573,7 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
   parent->FreezeComp();
   parent->AddMenu(this);
   SetParentMenu(this);
-  SetVisible(TRUE);
+  SetVisible(true);
   rCode = -1;
 
   // Modal Loop
@@ -599,7 +599,7 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
     if( evt.type == SDL_KEYDOWN ) {
       int unicode = (evt.key.keysym.unicode & 0x7F);
       if( !unicode ) unicode = evt.key.keysym.sym;
-      if( unicode == SDLK_ESCAPE ) SetVisible(FALSE);
+      if( unicode == SDLK_ESCAPE ) SetVisible(false);
     }
 
 	if( IsVisible() ) {
@@ -635,7 +635,7 @@ void GLMenu::Drop(GLContainer *parent,int x,int y) {
 
   SetBounds(x,y,menuWidth,menuHeight);
   parent->GetWindow()->AddMenu(this);
-  SetVisible(TRUE);
+  SetVisible(true);
 
 }
 

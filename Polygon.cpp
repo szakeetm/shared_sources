@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <string.h> //memcpy
 
-int IsConvex(POLYGON *p,int idx) {
+bool IsConvex(POLYGON *p,size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
 
-  int i1 = IDX(idx-1,p->nbPts);
-  int i2 = IDX(idx  ,p->nbPts);
-  int i3 = IDX(idx+1,p->nbPts);
+  size_t i1 = IDX(idx-1,p->nbPts);
+  size_t i2 = IDX(idx  ,p->nbPts);
+  size_t i3 = IDX(idx+1,p->nbPts);
 
   double d = DET22(p->pts[i1].u - p->pts[i2].u,p->pts[i3].u - p->pts[i2].u,
                    p->pts[i1].v - p->pts[i2].v,p->pts[i3].v - p->pts[i2].v);
@@ -20,7 +20,7 @@ int IsConvex(POLYGON *p,int idx) {
 
 }
 
-int IsInsideTri(Vector2d *p,Vector2d *p1,Vector2d *p2,Vector2d *p3)
+bool IsInsideTri(Vector2d *p,Vector2d *p1,Vector2d *p2,Vector2d *p3)
 {
 
   // Check if p is inside the triangle p1 p2 p3
@@ -32,13 +32,13 @@ int IsInsideTri(Vector2d *p,Vector2d *p1,Vector2d *p2,Vector2d *p3)
 
 }
 
-int ContainsConcave(POLYGON *p,int i1,int i2,int i3)
+bool ContainsConcave(POLYGON *p,int i1,int i2,int i3)
 {
 
   // Determine if the specified triangle contains or not a concave point
-  int _i1 = IDX(i1,p->nbPts);
-  int _i2 = IDX(i2,p->nbPts);
-  int _i3 = IDX(i3,p->nbPts);
+  size_t _i1 = IDX(i1,p->nbPts);
+  size_t _i2 = IDX(i2,p->nbPts);
+  size_t _i3 = IDX(i3,p->nbPts);
 
   Vector2d *p1 = p->pts + _i1;
   Vector2d *p2 = p->pts + _i2;
@@ -59,20 +59,20 @@ int ContainsConcave(POLYGON *p,int i1,int i2,int i3)
 
 }
 
-int EmptyTriangle(POLYGON *p,int i1,int i2,int i3,Vector2d *center)
+bool EmptyTriangle(POLYGON *p,int i1,int i2,int i3,Vector2d *center)
 {
 
   // Determine if the specified triangle contains or not an other point of the poly
-  int _i1 = IDX(i1,p->nbPts);
-  int _i2 = IDX(i2,p->nbPts);
-  int _i3 = IDX(i3,p->nbPts);
+	size_t _i1 = IDX(i1,p->nbPts);
+	size_t _i2 = IDX(i2,p->nbPts);
+	size_t _i3 = IDX(i3,p->nbPts);
 
   Vector2d *p1 = p->pts + _i1;
   Vector2d *p2 = p->pts + _i2;
   Vector2d *p3 = p->pts + _i3;
 
-  int found = 0;
-  int i = 0;
+  bool found = false;
+  size_t i = 0;
   while(!found && i<p->nbPts) {
     if( i!=_i1 && i!=_i2 && i!=_i3 ) { 
       Vector2d *pt = p->pts + i;
@@ -87,7 +87,7 @@ int EmptyTriangle(POLYGON *p,int i1,int i2,int i3,Vector2d *center)
 
 }
 
-int IsInPoly(double u,double v,Vector2d *pts,int nbPts)
+bool IsInPoly(double u,double v,Vector2d *pts,size_t nbPts)
 {
 
    // 2D polygon "is inside" solving
@@ -99,7 +99,7 @@ int IsInPoly(double u,double v,Vector2d *pts,int nbPts)
    n_updown=0;
    n_found=0;
 
-   for (j = 0; j < nbPts-1; j++) {
+   for (j = 0; j < (int)nbPts-1; j++) {
 
      x1 = pts[j].u;
      y1 = pts[j].v;
@@ -145,7 +145,7 @@ int IsInPoly(double u,double v,Vector2d *pts,int nbPts)
 
 }
 
-int IsOnPolyEdge(const double & u, const double & v, Vector2d * pts, const int & nbPts, const double & tolerance)
+bool IsOnPolyEdge(const double & u, const double & v, Vector2d * pts, const size_t & nbPts, const double & tolerance)
 {
 	bool onEdge = false;
 	for (int i = 0;!onEdge && i < nbPts;i++) {
@@ -158,7 +158,7 @@ int IsOnPolyEdge(const double & u, const double & v, Vector2d * pts, const int &
 	return onEdge;
 }
 
-int IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance)
+bool IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance)
 {
 	//Notation from https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 	//u=x0
@@ -201,7 +201,7 @@ int GetNode(POLYGRAPH *g,Vector2d *p)
 
   int found = 0;
   int i = 0;
-  int nb = g->nbNode;
+  size_t nb = g->nbNode;
 
   while(i<nb && !found) {
     found = VertexEqual(&(g->nodes[i].p),p);
@@ -236,7 +236,7 @@ int SearchFirst(POLYGRAPH *g,POLYVERTEX **s)
 
 }
 
-int AddNode(POLYGRAPH *g,Vector2d *p)
+size_t AddNode(POLYGRAPH *g,Vector2d *p)
 {
   
   // Add a node to the polygraph and returns its id
@@ -245,7 +245,7 @@ int AddNode(POLYGRAPH *g,Vector2d *p)
 
   if(i<0) {
     // New node
-    int nb = g->nbNode;
+	size_t nb = g->nbNode;
     g->nodes[nb].p = *p;
     g->nodes[nb].VI[0] = -1;
     g->nodes[nb].VI[1] = -1;
@@ -259,14 +259,14 @@ int AddNode(POLYGRAPH *g,Vector2d *p)
 
 }
 
-int AddArc(POLYGRAPH *g,const int &i1,const int &i2,const int &source)
+size_t AddArc(POLYGRAPH *g,const size_t &i1,const size_t &i2,const size_t &source)
 {
 
   // Add an arc to the polygraph and returns its id
 
   int found = 0;
-  int i = 0;
-  int nb = g->nbArc;
+  size_t i = 0;
+  size_t nb = g->nbArc;
 
   while(i<nb && !found) {
     found = (g->arcs[i].i1==i1 && g->arcs[i].i2==i2);
@@ -285,12 +285,12 @@ int AddArc(POLYGRAPH *g,const int &i1,const int &i2,const int &source)
 
 }
 
-void CutArc(POLYGRAPH *g,int idx,int ni)
+void CutArc(POLYGRAPH *g, size_t idx, size_t ni)
 {
 
   // Cut the arc idx by inserting ni
   if( g->arcs[idx].i1!=ni && g->arcs[idx].i2!=ni ) {
-    int tmp = g->arcs[idx].i2;
+	  size_t tmp = g->arcs[idx].i2;
     g->arcs[idx].i2 = ni;
     AddArc(g,ni,tmp,1);
   }
@@ -307,8 +307,8 @@ void InsertEdge(POLYGRAPH *g,Vector2d *p1,Vector2d *p2,const int &a0)
     return;
 
   // Insert nodes
-  int n1 = AddNode(g,p1);
-  int n2 = AddNode(g,p2);
+  size_t n1 = AddNode(g,p1);
+  size_t n2 = AddNode(g,p2);
 
   // Check intersection of the new arc with the arcs of the first polygon.
   int itFound = 0;
@@ -322,7 +322,7 @@ void InsertEdge(POLYGRAPH *g,Vector2d *p1,Vector2d *p2,const int &a0)
       Vector2d I;
 
       if( Intersect2D(p1,p2,e1,e2,&I) ) {
-        int ni = AddNode(g,&I);
+		size_t ni = AddNode(g,&I);
         InsertEdge(g,p1,&I,i+1);
         InsertEdge(g,&I,p2,i+1);
         CutArc(g,i,ni);
@@ -357,13 +357,13 @@ POLYGON *CopyPoly(POLYGON *p)
 
 }
 
-void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
+void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,bool *visible2)
 {
 
   // Create the polygraph which represent the 2 intersected polygons
   // with their oriented edges.
 
-  int MAXEDGE = inP1->nbPts * inP2->nbPts + 1;
+	size_t MAXEDGE = inP1->nbPts * inP2->nbPts + 1;
 
   g->nodes = (POLYVERTEX *)malloc( MAXEDGE * sizeof(POLYVERTEX) );
   memset(g->nodes, 0, MAXEDGE * sizeof(POLYVERTEX) );
@@ -374,7 +374,7 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
   g->nbArc = inP1->nbPts;
   g->nbNode = inP1->nbPts;
 
-  for(int i=0;i<inP1->nbPts;i++) {
+  for(size_t i=0;i<inP1->nbPts;i++) {
     g->nodes[i].p = inP1->pts[i];
     g->nodes[i].VI[0] = -1;
     g->nodes[i].VI[1] = -1;
@@ -386,8 +386,8 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
   }
 
   // Intersect with 2nd polygon
-  for(int i=0;i<inP2->nbPts;i++)  {
-    int i2 = IDX(i+1,inP2->nbPts);
+  for(size_t i=0;i<inP2->nbPts;i++)  {
+	  size_t i2 = IDX(i+1,inP2->nbPts);
     if( (!visible2 || (visible2 && visible2[i])) ) {
       if( inP2->sign < 0.0 ) {
         InsertEdge(g,inP2->pts+i2,inP2->pts+i,0);
@@ -398,10 +398,10 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
   }
 
   // Remove tangent edge
-  for(int i=0;i<g->nbArc;i++) {    
+  for(size_t i=0;i<g->nbArc;i++) {
     if( (g->arcs[i].s>0) ) {
-      int j = i+1;
-      int found = 0;
+		size_t j = i+1;
+      bool found = false;
       while(j<g->nbArc && !found) {
         if( (g->arcs[j].s>0) &&
             (g->arcs[j].i1 == g->arcs[i].i2) &&
@@ -409,7 +409,7 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
         {
           g->arcs[i].s = 0;
           g->arcs[j].s = 0;
-		  //found=TRUE??
+		  //found=true??
         }
         if(!found) j++;
       }
@@ -419,10 +419,10 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
   // Fill up successor in the polyvertex array to speed up search
   // of next vertices
 
-  for(int i=0;i<g->nbArc;i++) {    
+  for(size_t i=0;i<g->nbArc;i++) {
     if(g->arcs[i].s>0) {
-      int idxO = g->arcs[i].i1;
-      int idxI = g->arcs[i].i2;
+		size_t idxO = g->arcs[i].i1;
+		size_t idxI = g->arcs[i].i2;
       if( g->nodes[idxI].nbIn<2 ) {
         g->nodes[idxI].VI[ g->arcs[i].s-1 ]=g->arcs[i].i1;
         g->nodes[idxI].nbIn++;
@@ -436,7 +436,7 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,int *visible2)
 
   // Mark starting points (2 outgoing arcs)
 
-  for(int i=0;i<g->nbNode;i++) {
+  for(size_t i=0;i<g->nbNode;i++) {
     if( g->nodes[i].nbOut>=2 ) {
       if( g->nodes[i].nbIn>=2 ) {
         
@@ -500,17 +500,17 @@ int CheckLoop(POLYGRAPH *g)
 
 }
 
-void FreePolys(POLYGON **polys,int nbPoly)
+void FreePolys(POLYGON **polys,size_t nbPoly)
 {
 
   POLYGON *p = *polys;
-  for(int i=0;i<nbPoly;i++) free(p[i].pts);
+  for(size_t i=0;i<nbPoly;i++) free(p[i].pts);
   free(p);
   *polys=NULL;
 
 }
 
-int IntersectPoly(POLYGON *inP1,POLYGON *inP2,int *visible2,POLYGON **result)
+int IntersectPoly(POLYGON *inP1,POLYGON *inP2,bool *visible2,POLYGON **result)
 {
 
   // Computes the polygon intersection between p1 and p2.
@@ -520,7 +520,7 @@ int IntersectPoly(POLYGON *inP1,POLYGON *inP2,int *visible2,POLYGON **result)
 
   POLYGRAPH graph;
   POLYGRAPH *g=&graph;
-  int MAXEDGE = inP1->nbPts * inP2->nbPts + 1;
+  size_t MAXEDGE = inP1->nbPts * inP2->nbPts + 1;
 
   // Create polygraph
   CreateGraph(g,inP1,inP2,visible2);
@@ -548,8 +548,8 @@ int IntersectPoly(POLYGON *inP1,POLYGON *inP2,int *visible2,POLYGON **result)
 
     ClearGraph(g);
     int i;
-    int insideP1 = 0;
-    int insideP2 = 0;
+	bool insideP1 = false;
+	bool insideP2 = false;
 
     i=0;
     while( i<inP1->nbPts && !insideP2 ) {
@@ -674,10 +674,10 @@ int IntersectPoly(POLYGON *inP1,POLYGON *inP2,int *visible2,POLYGON **result)
 
 }
 
-double GetInterArea(POLYGON *inP1,POLYGON *inP2,int *edgeVisible,float *uC,float *vC,int *nbV,double **lList)
+double GetInterArea(POLYGON *inP1,POLYGON *inP2,bool *edgeVisible,float *uC,float *vC,size_t *nbV,double **lList)
 {
 
-  int nbPoly;
+  size_t nbPoly;
   double A0;
   POLYGON *polys;
   *nbV = 0;
@@ -692,18 +692,18 @@ double GetInterArea(POLYGON *inP1,POLYGON *inP2,int *edgeVisible,float *uC,float
     return 0.0;
 
   // Count number of pts
-  int nbE = 0;
-  for(int i=0;i<nbPoly;i++) nbE += polys[i].nbPts;
+  size_t nbE = 0;
+  for(size_t i=0;i<nbPoly;i++) nbE += polys[i].nbPts;
   *lList = (double *)malloc(nbE*2*sizeof(double));
   *nbV = nbE;
 
   // Area
   nbE = 0;
   double sum = 0.0;
-  for(int i=0;i<nbPoly;i++) {
+  for(size_t i=0;i<nbPoly;i++) {
     double A = 0.0;
-    for(int j=0;j<polys[i].nbPts;j++) {
-      int j1 = IDX(j+1,polys[i].nbPts);
+    for(size_t j=0;j<polys[i].nbPts;j++) {
+      size_t j1 = IDX(j+1,polys[i].nbPts);
       A += polys[i].pts[j].u*polys[i].pts[j1].v - polys[i].pts[j1].u*polys[i].pts[j].v;
       (*lList)[nbE++] = polys[i].pts[j].u;
       (*lList)[nbE++] = polys[i].pts[j].v;
@@ -716,7 +716,7 @@ double GetInterArea(POLYGON *inP1,POLYGON *inP2,int *edgeVisible,float *uC,float
   double xC = 0.0;
   double yC = 0.0;
   for(int j=0;j<polys[0].nbPts;j++) {
-    int j1 = IDX(j+1,polys[0].nbPts);
+    size_t j1 = IDX(j+1,polys[0].nbPts);
     double d = polys[0].pts[j].u*polys[0].pts[j1].v - polys[0].pts[j1].u*polys[0].pts[j].v;
     xC += ( polys[0].pts[j].u + polys[0].pts[j1].u )*d;
     yC += ( polys[0].pts[j].v + polys[0].pts[j1].v )*d;

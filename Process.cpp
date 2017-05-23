@@ -22,13 +22,13 @@
 #include <stdio.h>
 #include "SMP.h"
 
-static BOOL privilegeEnabled = FALSE;
+static bool privilegeEnabled = false;
 
 //-----------------------------------------------------------------------------
 // Enable required process privilege for system tasks
 //-----------------------------------------------------------------------------
 
-static BOOL EnablePrivilege() {
+static bool EnablePrivilege() {
 
   HANDLE  hToken;
   LUID    DebugValue;
@@ -42,14 +42,14 @@ static BOOL EnablePrivilege() {
     if (!OpenProcessToken(GetCurrentProcess(),
             TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
             &hToken)) {
-	     return FALSE;
+	     return false;
     }
 
     if (!LookupPrivilegeValue((LPSTR) NULL,
             SE_DEBUG_NAME,
             &DebugValue)) {
       CloseHandle(hToken);
-  	  return FALSE;
+  	  return false;
     }
 
     tkp.PrivilegeCount = 1;
@@ -57,7 +57,7 @@ static BOOL EnablePrivilege() {
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     AdjustTokenPrivileges(hToken,
-        FALSE,
+        false,
         &tkp,
         sizeof(TOKEN_PRIVILEGES),
         (PTOKEN_PRIVILEGES) NULL,
@@ -67,10 +67,10 @@ static BOOL EnablePrivilege() {
 
     /*if (err_code != ERROR_SUCCESS) {
       CloseHandle(hToken);
-  	  return FALSE;
+  	  return false;
     }*/ //Caused privilege error codes when didn't run as administrator
 
-    privilegeEnabled = TRUE;
+    privilegeEnabled = true;
 
   }
 
@@ -82,19 +82,19 @@ static BOOL EnablePrivilege() {
 // Kill a process
 //-----------------------------------------------------------------------------
 
-BOOL KillProc(DWORD pID) {
+bool KillProc(DWORD pID) {
 
   HANDLE p;
 
-  if( !EnablePrivilege() ) return FALSE;
-	p = OpenProcess(PROCESS_ALL_ACCESS,FALSE,pID);
-  if( p == NULL ) return FALSE;
+  if( !EnablePrivilege() ) return false;
+	p = OpenProcess(PROCESS_ALL_ACCESS,false,pID);
+  if( p == NULL ) return false;
   if( !TerminateProcess( p, 1 ) ) {
     CloseHandle(p);
-    return FALSE;
+    return false;
   }
   CloseHandle(p);
-  return TRUE;
+  return true;
 
 }
 
@@ -118,13 +118,13 @@ static DWORD  dwProcessMempTitle;
 static DWORD  dwProcessMemTitle;
 static DWORD  dwProcessTimeTitle;
 static CHAR   keyPerfName[1024];
-static BOOL   counterInited = FALSE;
+static bool   counterInited = false;
 
 //-----------------------------------------------------------------------------
 // Search performance counter
 //-----------------------------------------------------------------------------
 
-/*BOOL InitCounter() {
+/*bool InitCounter() {
 
   if( !counterInited ) {
 
@@ -157,7 +157,7 @@ static BOOL   counterInited = FALSE;
                      );
 
     if (rc != ERROR_SUCCESS) {
-      return FALSE;
+      return false;
     }
 
     //
@@ -173,7 +173,7 @@ static BOOL   counterInited = FALSE;
 
     if (rc != ERROR_SUCCESS) {
       RegCloseKey( hKeyNames );
-      return FALSE;
+      return false;
     }
 
     //
@@ -182,7 +182,7 @@ static BOOL   counterInited = FALSE;
     buf = (LPBYTE) malloc( dwSize );
     if (buf == NULL) {
       RegCloseKey( hKeyNames );
-      return FALSE;
+      return false;
     }
     memset( buf, 0, dwSize );
 
@@ -200,7 +200,7 @@ static BOOL   counterInited = FALSE;
     if (rc != ERROR_SUCCESS) {
       free(buf);
       RegCloseKey( hKeyNames );
-      return FALSE;
+      return false;
     }
 
     //
@@ -244,7 +244,7 @@ static BOOL   counterInited = FALSE;
     //
     free( buf );
     RegCloseKey( hKeyNames );
-    counterInited = TRUE;
+    counterInited = true;
 
   }
   return counterInited;
@@ -252,7 +252,7 @@ static BOOL   counterInited = FALSE;
 }*/
 
 /*
-BOOL GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
+bool GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
 
     DWORD                        rc;
     DWORD                        dwType;
@@ -269,11 +269,11 @@ BOOL GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
     DWORD                        dwProcessMemCounter;
     DWORD                        dwProcessTimeCounter;
 
-    BOOL                         pFound = FALSE;
+    bool                         pFound = false;
     DWORD                        dwProcessId;
 
-    if( !EnablePrivilege() ) return FALSE;
-    if( !InitCounter() )     return FALSE;
+    if( !EnablePrivilege() ) return false;
+    if( !InitCounter() )     return false;
 
     //
     // allocate the initial buffer for the performance data
@@ -281,11 +281,11 @@ BOOL GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
     dwSize = INITIAL_SIZE;
     buf = (LPBYTE)malloc( dwSize );
     if (buf == NULL) 
-      return FALSE;
+      return false;
     memset( buf, 0, dwSize );
 
 
-    while (TRUE) {
+    while (true) {
 
         rc = RegQueryValueEx( HKEY_PERFORMANCE_DATA,
                               keyPerfName,
@@ -318,7 +318,7 @@ BOOL GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
           memset( buf, 0, dwSize );
         } else {
           free( buf );
-          return FALSE;
+          return false;
         }
 
     }
@@ -437,7 +437,7 @@ DWORD StartProc(char *pname,int mode) { //minimized in Debug mode, hidden in Rel
 		pname,            // pointer to command line string
 		NULL,             // process security attributes
 		NULL,             // thread security attributes
-		FALSE,            // handle inheritance flag
+		false,            // handle inheritance flag
 		launchMode | BELOW_NORMAL_PRIORITY_CLASS, // creation flags
 		NULL,             // pointer to new environment block
 		NULL,             // pointer to current directory name
@@ -473,7 +473,7 @@ DWORD StartProc_background(char *pname) { //always starts minimized
 		      pname,            // pointer to command line string
           NULL,             // process security attributes
           NULL,             // thread security attributes
-	        FALSE,            // handle inheritance flag
+	        false,            // handle inheritance flag
           CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS, // creation flags
           NULL,             // pointer to new environment block
 		      NULL,             // pointer to current directory name
@@ -510,7 +510,7 @@ DWORD StartProc_foreground(char *pname) { //always starts minimized
 		      pname,            // pointer to command line string
           NULL,             // process security attributes
           NULL,             // thread security attributes
-	        FALSE,            // handle inheritance flag
+	        false,            // handle inheritance flag
           CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS, // creation flags
           NULL,             // pointer to new environment block
 		      NULL,             // pointer to current directory name
@@ -529,18 +529,18 @@ DWORD StartProc_foreground(char *pname) { //always starts minimized
 }
 */
 
-BOOL GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
+bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 	HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;
 
-	HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, processID);
+	HANDLE process = OpenProcess(SYNCHRONIZE, false, processID);
 	DWORD ret = WaitForSingleObject(process, 0);
 	CloseHandle(process);
-	if (ret != WAIT_TIMEOUT) return FALSE;
+	if (ret != WAIT_TIMEOUT) return false;
 
 	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
 		PROCESS_VM_READ,
-		FALSE, processID);
+		false, processID);
 
 	if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
 	{
@@ -586,15 +586,15 @@ BOOL GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 	}
 	else {
 		CloseHandle(hProcess);
-		return FALSE;
+		return false;
 	}
 	CloseHandle(hProcess);
-	return TRUE;
+	return true;
 }
 
-BOOL IsProcessRunning(DWORD pid)
+bool IsProcessRunning(DWORD pid)
 {
-	HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+	HANDLE process = OpenProcess(SYNCHRONIZE, false, pid);
 	DWORD ret = WaitForSingleObject(process, 0);
 	CloseHandle(process);
 	return ret == WAIT_TIMEOUT;

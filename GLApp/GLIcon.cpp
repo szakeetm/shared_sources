@@ -32,7 +32,7 @@ void GLIcon::Paint() {
 
   if(icon) {
     icon->UpdateSprite(posX,posY,posX+width,posY+height);
-    icon->Render(FALSE);
+    icon->Render(false);
   }
 
 }

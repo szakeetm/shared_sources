@@ -12,13 +12,11 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-
-#include <SDL_opengl.h>
-#include "GLWindow.h"
-
 #ifndef _GLUNITDIALOGH_
 #define _GLUNITDIALGOH_
+
+//#include <SDL_opengl.h>
+#include "GLWindow.h"
 
 // Buttons
 #define GLDLG_MM		1

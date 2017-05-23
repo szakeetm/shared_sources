@@ -54,7 +54,7 @@
 #ifndef _GLPARSERH_
 #define _GLPARSERH_
 
-#include "GLTypes.h" // For BOOL typedef
+#include "GLTypes.h" // For bool typedef
 
 // Evaluation tree node type
 #define OPER_PLUS   1
@@ -120,7 +120,7 @@ public:
   // Expression management
   void SetExpression(const char *expr);  // Set formula expression
   char *GetExpression();           // Get the expression
-  BOOL Parse();                    // Compile expression
+  bool Parse();                    // Compile expression
   char *GetErrorMsg();             // Return error message
   int   GetCurrentPos();           // Current parsing cursor position
 
@@ -130,7 +130,7 @@ public:
   void   SetVariable(char *name,double value); // Set the variable value
 
   // Evaluation
-  BOOL   Evaluate(double *result); // Evaluate the expression
+  bool   Evaluate(double *result); // Evaluate the expression
 
 private:
 
@@ -142,8 +142,8 @@ private:
   void   ReadVariable( char *name );
   void   ReadDouble(double *R);
   void   AddNode(int type,ETREE_NODE info,ETREE **t,ETREE *left,ETREE *right);
-  VLIST *AddVar(char *var_name,VLIST **l);
-  VLIST *FindVar(char *var_name,VLIST *l);
+  VLIST *AddVar(const char *var_name,VLIST **l);
+  VLIST *FindVar(const char *var_name,VLIST *l);
   void   SetError( char *err,int p);
   void   AV();
   char  *Extract(int lg);
@@ -153,7 +153,7 @@ private:
   char expr[4096];  // Expression
   char EC;          // Current char
   int  current;     // Current char index
-  BOOL error;       // Error flag
+  bool error;       // Error flag
 
   VLIST *varList;
   ETREE *evalTree;

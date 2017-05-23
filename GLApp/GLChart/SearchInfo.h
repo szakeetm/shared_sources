@@ -24,7 +24,7 @@ class SearchInfo {
 public:
 
    /** True when a point has been found */
-   BOOL     found;
+   bool     found;
    /** X pixel coordinates of the point found */
    int         x;
    /** Y pixel coordinates of the point found */
@@ -75,7 +75,7 @@ public:
 
    SearchInfo() 
    {
-     this->found=FALSE;
+     this->found=false;
      this->dist=1e100;
      this->clickIdx=-1;
    }

@@ -14,18 +14,21 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-#include "..\GLWindow.h"
-#include "..\GLComponent.h"
-#include "..\GLMenu.h"
-#include "..\GLButton.h"
-
 #ifndef _GLCHARTH_
 #define _GLCHARTH_
+
+//#include "..\GLWindow.h"
+#include "..\GLComponent.h"
+//#include "..\GLMenu.h"
+//#include "..\GLButton.h"
+
+
 
 class GLChart;
 class GLAxis;
 class SearchInfo;
+class GLMenu;
+class GLButton;
 
 #include "GLChartConst.h"
 #include "DataList.h"
@@ -60,16 +63,16 @@ public:
   GLCColor GetBackground();
   void SetChartBackground(GLCColor c);
   GLCColor GetChartBackground();
-  void SetPaintAxisFirst(BOOL b);
-  BOOL IsPaintAxisFirst();
-  void SetHeaderVisible(BOOL b);
+  void SetPaintAxisFirst(bool b);
+  bool IsPaintAxisFirst();
+  void SetHeaderVisible(bool b);
   void SetHeader(char *s);
   char *GetHeader();
   void SetDisplayDuration(double v);
   double GetDisplayDuration();
   void SetHeaderColor(GLCColor c);
-  void SetLabelVisible(BOOL b);
-  BOOL IsLabelVisible();
+  void SetLabelVisible(bool b);
+  bool IsLabelVisible();
   void SetLabelPlacement(int p);
   int GetLabelPlacement();
   void ShowOptionDialog();
@@ -77,7 +80,7 @@ public:
   void SaveFile();
   void LoadFile();
   void CopyAllToClipboard();
-  BOOL IsZoomed();
+  bool IsZoomed();
   void EnterZoom();
   void ExitZoom();
   void UnselectAll();
@@ -108,15 +111,15 @@ private:
   int  garbageData(GLDataView *v);
   void setRect(GLCRectangle *r,int x,int y,int w,int h);
   void paintChartBackground(int xOrg,int yOrg);
-  BOOL insideRect(LabelRect *r,int x,int y);
+  bool insideRect(LabelRect *r,int x,int y);
   void showChartMenu(int x,int y);
 
   char header[256];
-  BOOL headerVisible;
+  bool headerVisible;
   GLCColor headerColor;
 
-  BOOL ipanelVisible;
-  BOOL paintAxisFirst;
+  bool ipanelVisible;
+  bool paintAxisFirst;
   GLCColor chartBackground;
 
   double displayDuration;
@@ -125,8 +128,8 @@ private:
   GLMenu *dvMenuY1;
   GLMenu *dvMenuY2;
 
-  BOOL zoomDrag;
-  BOOL zoomDragAllowed;
+  bool zoomDrag;
+  bool zoomDragAllowed;
   int zoomX;
   int zoomY;
   GLButton *zoomButton;
@@ -143,7 +146,7 @@ private:
 
   // Label placement
   LabelRect labelRect[MAX_VIEWS];
-  BOOL labelVisible;
+  bool labelVisible;
   int  labelMode;
   int labelHeight;
   int labelWidth;

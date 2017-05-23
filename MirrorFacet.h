@@ -2,19 +2,20 @@
   File:        MirrorFacet.h
   Description: Mirror facet to plane dialog
 */
-
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _MIRRORFACETH_
 #define _MIRRORFACETH_
+
+#include "GLApp/GLWindow.h"
+#include "Geometry.h" //UndoPoint
+#include <vector>
+
+class Geometry;
+class Worker;
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
 
 class MirrorFacet : public GLWindow {
 

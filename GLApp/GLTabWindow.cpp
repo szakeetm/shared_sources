@@ -17,6 +17,8 @@
 
 #include "GLTabWindow.h"
 #include "GLToolkit.h"
+#include "GLComponent.h"
+#include "GLFont.h"
 
 // ------------------------------------------------------
 // Tab bar component
@@ -34,7 +36,7 @@ public:
     selected = 0;
     nbLine = 1;
     SetTextColor(0,0,0);
-    if(nbPanel>0) panels[0].selected = TRUE;
+    if(nbPanel>0) panels[0].selected = true;
   }
 
   int GetSelected() {
@@ -82,7 +84,7 @@ public:
       int ey = evt->button.y - posY;
       int sx = 0;
       int sy = (nbLine-1)*TABHEIGHT;
-      BOOL found = FALSE;
+      bool found = false;
       int s=0;
 
       while(s<nbPanel && !found) {

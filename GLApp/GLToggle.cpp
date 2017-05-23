@@ -16,6 +16,7 @@
 #include "GLWindow.h"
 #include "GLToggle.h"
 #include "GLToolkit.h"
+#include "GLFont.h"
 
 // ---------------------------------------------------------------------
 
@@ -25,18 +26,18 @@ GLToggle::GLToggle(int compId,char *text):GLComponent(compId) {
   else
     strcpy(this->text,"");
   state=0;
-  allowMixedState = FALSE;
+  allowMixedState = false;
   SetBorder(BORDER_NONE);
   SetTextColor(0,0,0);
 }
 
 // ---------------------------------------------------------------------
 
-BOOL GLToggle::GetState() {
+int GLToggle::GetState() {
   return state;
 }
 
-void GLToggle::AllowMixedState(BOOL setAllow) {
+void GLToggle::AllowMixedState(bool setAllow) {
 	allowMixedState = setAllow;
 }
 
@@ -60,16 +61,16 @@ void GLToggle::Paint() {
   GLComponent::Paint();
 
   font->SetTextColor(rText,gText,bText);
-  font->DrawText(posX+16,posY+2,text,FALSE);
+  font->DrawText(posX+16,posY+2,text,false);
 
   GLToolkit::DrawToggle(posX+2,posY+3);
   if(state==1) {
     font->SetTextColor(0.0f,0.0f,0.0f);
-    font->DrawText(posX+5,posY+1,"\215",FALSE);
+    font->DrawText(posX+5,posY+1,"\215",false);
   }
   else if (state == 2) {
 	  font->SetTextColor(0.7f, 0.7f, 0.7f);
-	  font->DrawText(posX + 5, posY + 1, "\215", FALSE);
+	  font->DrawText(posX + 5, posY + 1, "\215", false);
   }
   GLToolkit::CheckGLErrors("GLToggle::Paint()");
 }
@@ -82,7 +83,7 @@ void GLToggle::SetTextColor(int r,int g,int b) {
   bText = b/255.0f;
 }
 
-void GLToggle::SetEnabled(BOOL enable) { //GLComponent override
+void GLToggle::SetEnabled(bool enable) { //GLComponent override
 	enabled = enable;
 	int color = enable ? 0 : 120;
 	SetTextColor(color, color, color);

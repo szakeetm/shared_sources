@@ -5,16 +5,15 @@ Description: Rotate vertex around axis dialog
 #pragma once
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
 
-#include "Geometry.h"
-#include "Worker.h"
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
 
-
+class Geometry;
+class Worker;
 
 class RotateVertex : public GLWindow {
 

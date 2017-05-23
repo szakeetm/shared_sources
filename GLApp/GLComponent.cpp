@@ -26,17 +26,17 @@ GLComponent::GLComponent(int compId):GLContainer() {
   height=0;
   posX=0;
   posY=0;
-  opaque=TRUE;
+  opaque=true;
   border=BORDER_NONE;
   rBack = 212;
   gBack = 208;
   bBack = 200;
   id = compId;
   parent = NULL;
-  focus = FALSE;
-  enabled = TRUE;
-  visible = TRUE;
-  focusable = TRUE;
+  focus = false;
+  enabled = true;
+  visible = true;
+  focusable = true;
   cursor = CURSOR_DEFAULT;
 
 }
@@ -80,11 +80,11 @@ int GLComponent::GetCursor() {
 }
 
 // ----------------------------------------------------------
-void GLComponent::SetFocusable(BOOL acceptFocus) {
+void GLComponent::SetFocusable(bool acceptFocus) {
   focusable = acceptFocus;
 }
 
-BOOL GLComponent::IsFocusable() {
+bool GLComponent::IsFocusable() {
   return focusable;
 }
 
@@ -97,16 +97,16 @@ void GLComponent::SetBorder(int border) {
   this->border = border;
 }
 
-void GLComponent::SetOpaque(BOOL opaque) {
+void GLComponent::SetOpaque(bool opaque) {
   this->opaque = opaque;
 }
 
-void GLComponent::SetSize(int width,int height) {
+void GLComponent::SetSize(int width, int height) {
   this->width = width;
   this->height = height;
 }
 
-void GLComponent::SetBounds(int x,int y,int width,int height) {
+void GLComponent::SetBounds(int x,int y, int width, int height) {
   SetSize(width,height);
   SetPosition(x,y);
 }
@@ -127,27 +127,27 @@ int GLComponent::GetId() {
   return id;
 }
 
-void GLComponent::SetFocus(BOOL focus) {
+void GLComponent::SetFocus(bool focus) {
   this->focus = focus;
 }
 
-BOOL GLComponent::HasFocus() {
+bool GLComponent::HasFocus() {
   return focus;
 }
 
-void GLComponent::SetEnabled(BOOL enable) {
+void GLComponent::SetEnabled(bool enable) {
   enabled = enable;
 }
 
-BOOL GLComponent::IsEnabled() {
+bool GLComponent::IsEnabled() {
   return enabled;
 }
 
-void GLComponent::SetVisible(BOOL visible) {
+void GLComponent::SetVisible(bool visible) {
   this->visible = visible;
 }
 
-BOOL GLComponent::IsVisible() {
+bool GLComponent::IsVisible() {
   return visible;
 }
 
@@ -164,13 +164,13 @@ void GLComponent::Paint() {
         GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack);
         break;
       case BORDER_BEVEL_IN:
-        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,TRUE,TRUE);
+        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,true,true);
         break;
       case BORDER_BEVEL_OUT:
-        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,TRUE,FALSE);
+        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,true,false);
         break;
       case BORDER_ETCHED:
-        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,FALSE,FALSE,TRUE);
+        GLToolkit::DrawBox(posX,posY,width,height,rBack,gBack,bBack,false,false,true);
         break;
     }
   }
@@ -178,7 +178,7 @@ void GLComponent::Paint() {
 
 // ---------------------------------------------------------------
 
-void GLComponent::GetBounds(int *x,int *y,int *w,int *h) {
+void GLComponent::GetBounds(int *x,int *y, int *w, int *h) {
   *x = posX;
   *y = posY;
   *h = height;

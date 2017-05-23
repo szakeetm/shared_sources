@@ -2,7 +2,7 @@
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
 #include "GLApp\GLToolkit.h"
-#include <malloc.h>
+//#include <malloc.h>
 #include <string.h>
 #include <math.h>
 #include "GLApp/GLMatrix.h"
@@ -16,6 +16,10 @@
 #endif
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\GLList.h"
+#include "SmartSelection.h"
+#include "FacetCoordinates.h"
+#include "VertexCoordinates.h"
 #include "Facet.h"
 
 
@@ -27,19 +31,16 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-void Geometry::Select(Facet *f) {
+void Geometry::SelectFacet(size_t facetId) {
+	if (!isLoaded) return;
+	Facet *f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx);
 	if (!f->selected) f->UnselectElem();
-}
-
-void Geometry::Select(int facet) {
-	if (!isLoaded) return;
-	Select(facets[facet]);
 	nbSelectedHist = 0;
-	AddToSelectionHist(facet);
+	AddToSelectionHist(facetId);
 }
 
-void Geometry::SelectArea(int x1, int y1, int x2, int y2, BOOL clear, BOOL unselect, BOOL vertexBound, BOOL circularSelection) {
+void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -79,19 +80,19 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, BOOL clear, BOOL unsel
 			if ((i - lastPaintedProgress) > paintStep) {
 				lastPaintedProgress = i;;
 				sprintf(tmp, "Facet search: %d%%", (int)(i*100.0 / (double)sh.nbFacet));
-				mApp->SetFacetSearchPrg(TRUE, tmp);
+				mApp->SetFacetSearchPrg(true, tmp);
 			}
 		}
 		Facet *f = facets[i];
 		if (viewStruct == -1 || f->sh.superIdx == viewStruct) {
 
-			int nb = facets[i]->sh.nbIndex;
-			BOOL isInside = TRUE;
-			int j = 0;
-			BOOL hasSelectedVertex = FALSE;
+			size_t nb = facets[i]->sh.nbIndex;
+			bool isInside = true;
+			size_t j = 0;
+			bool hasSelectedVertex = false;
 			while (j < nb && isInside) {
 
-				int idx = f->indices[j];
+				size_t idx = f->indices[j];
 				m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
 					&rx, &ry, &rz, &rw);
 
@@ -102,11 +103,11 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, BOOL clear, BOOL unsel
 						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
 					else //circular selection
 						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
-					if (vertices3[idx].selected) hasSelectedVertex = TRUE;
+					if (vertices3[idx].selected) hasSelectedVertex = true;
 				}
 				else {
 
-					isInside = FALSE;
+					isInside = false;
 				}
 				j++;
 
@@ -124,11 +125,11 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, BOOL clear, BOOL unsel
 
 		}
 	}
-	mApp->SetFacetSearchPrg(FALSE, NULL);
+	mApp->SetFacetSearchPrg(false, NULL);
 	UpdateSelection();
 }
 
-void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound, int width, int height) {
+void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
 
 	int i;
 	if (!isLoaded) return;
@@ -142,18 +143,18 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 	int *allYe = (int *)malloc(sh.nbVertex * sizeof(int));
 
 	// Transform points to screen coordinates
-	BOOL *ok = (BOOL *)malloc(sh.nbVertex * sizeof(BOOL));
-	BOOL *onScreen = (BOOL *)malloc(sh.nbVertex * sizeof(BOOL));
+	bool *ok = (bool *)malloc(sh.nbVertex * sizeof(bool));
+	bool *onScreen = (bool *)malloc(sh.nbVertex * sizeof(bool));
 	for (i = 0; i < sh.nbVertex; i++) {//here we could speed up by choosing visible vertices only?
 		ok[i] = GLToolkit::Get2DScreenCoord((float)vertices3[i].x, (float)vertices3[i].y, (float)vertices3[i].z, allXe + i, allYe + i);
 		onScreen[i] = (ok[i] && (*(allXe + i) >= 0) && (*(allYe + i) >= 0) && (*(allXe + i) <= width) && (*(allYe + i) <= height));
 	}
 
 	// Check facets
-	BOOL found = FALSE;
-	BOOL clipped;
-	BOOL hasVertexOnScreen;
-	BOOL hasSelectedVertex;
+	bool found = false;
+	bool clipped;
+	bool hasVertexOnScreen;
+	bool hasSelectedVertex;
 	i = 0;
 	char tmp[256];
 	int lastFound = -1;
@@ -165,34 +166,34 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 			if ((i - lastPaintedProgress) > paintStep) {
 				lastPaintedProgress = i;;
 				sprintf(tmp, "Facet search: %d%%", (int)(i*100.0 / (double)sh.nbFacet));
-				mApp->SetFacetSearchPrg(TRUE, tmp);
+				mApp->SetFacetSearchPrg(true, tmp);
 			}
 		}
 		if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct) {
 
-			clipped = FALSE;
-			hasVertexOnScreen = FALSE;
-			hasSelectedVertex = FALSE;
-			int nb = facets[i]->sh.nbIndex;
+			clipped = false;
+			hasVertexOnScreen = false;
+			hasSelectedVertex = false;
+			size_t nb = facets[i]->sh.nbIndex;
 			// Build array of 2D points
 			int *xe = (int *)malloc(nb * sizeof(int));
 			int *ye = (int *)malloc(nb * sizeof(int));
 			for (int j = 0; j < nb && !clipped; j++) {
-				int idx = facets[i]->indices[j];
+				size_t idx = facets[i]->indices[j];
 				if (ok[idx]) {
 					xe[j] = allXe[idx];
 					ye[j] = allYe[idx];
-					if (onScreen[idx]) hasVertexOnScreen = TRUE;
+					if (onScreen[idx]) hasVertexOnScreen = true;
 				}
 				else {
 
-					clipped = TRUE;
+					clipped = true;
 				}
 			}
 			if (vertexBound) { //CAPS LOCK on, select facets onyl with at least one seleted vertex
-				for (int j = 0; j < nb && (!hasSelectedVertex); j++) {
-					int idx = facets[i]->indices[j];
-					if (vertices3[idx].selected) hasSelectedVertex = TRUE;
+				for (size_t j = 0; j < nb && (!hasSelectedVertex); j++) {
+					size_t idx = facets[i]->indices[j];
+					if (vertices3[idx].selected) hasSelectedVertex = true;
 				}
 			}
 
@@ -205,17 +206,17 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 				if (found) {
 					if (unselect) {
 						if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
-							facets[i]->selected = FALSE;
-							found = FALSE; //Continue looking for facets
+							facets[i]->selected = false;
+							found = false; //Continue looking for facets
 						}
 						else { //Smart selection
 							double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 							std::vector<size_t> connectedFacets;
-							mApp->SetFacetSearchPrg(TRUE, "Smart selecting...");
+							mApp->SetFacetSearchPrg(true, "Smart selecting...");
 							if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
 							for (auto ind : connectedFacets)
-								facets[ind]->selected = FALSE;
-							mApp->SetFacetSearchPrg(FALSE, "");
+								facets[ind]->selected = false;
+							mApp->SetFacetSearchPrg(false, "");
 						}
 					} //end unselect
 
@@ -223,7 +224,7 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 					if (AlreadySelected(i)) {
 
 						lastFound = i;
-						found = FALSE; //Continue looking for facets
+						found = false; //Continue looking for facets
 
 					}
 				} //end found
@@ -235,7 +236,7 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 		if (!found) i++;
 
 	}
-	mApp->SetFacetSearchPrg(FALSE, "");
+	mApp->SetFacetSearchPrg(false, "");
 	if (clear && !unselect) UnselectAll();
 
 	if (!found && lastFound >= 0) {
@@ -245,7 +246,7 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 			AddToSelectionHist(lastFound);
 		}
 		facets[lastFound]->selected = !unselect;
-		if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, TRUE); //scroll to selected facet
+		if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
 	}
 	else {
 
@@ -257,13 +258,13 @@ void Geometry::Select(int x, int y, BOOL clear, BOOL unselect, BOOL vertexBound,
 			else { //Smart selection
 				double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 				std::vector<size_t> connectedFacets;
-				mApp->SetFacetSearchPrg(TRUE, "Smart selecting...");
+				mApp->SetFacetSearchPrg(true, "Smart selecting...");
 				if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
 				for (auto ind : connectedFacets)
 					facets[ind]->selected = !unselect;
-				mApp->SetFacetSearchPrg(FALSE, "");
+				mApp->SetFacetSearchPrg(false, "");
 			}
-			if (!unselect) mApp->facetList->ScrollToVisible(i, 0, TRUE); //scroll to selected facet
+			if (!unselect) mApp->facetList->ScrollToVisible(i, 0, true); //scroll to selected facet
 		}
 		else {
 
@@ -284,12 +285,10 @@ void Geometry::SelectVertex(int vertexId) {
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
 	if (!isLoaded) return;
-	vertices3[vertexId].selected = TRUE;
-	//nbSelectedHistVertex = 0;
-	//AddToSelectionHistVertex(vertexId);
+	vertices3[vertexId].selected = true;
 }
 
-void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL ctrlDown, BOOL circularSelection) {
+void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection) {
 
 	// Select a set of vertices according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -333,8 +332,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL
 		//if(viewStruct==-1 || f->sh.superIdx==viewStruct) {
 		if (true) {
 
-
-			BOOL isInside;
+			bool isInside;
 			int idx = i;
 			m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
 				&rx, &ry, &rz, &rw);
@@ -349,11 +347,8 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL
 			}
 			else {
 
-				isInside = FALSE;
+				isInside = false;
 			}
-
-
-
 
 			if (isInside) {
 				vertices3[i].selected = !ctrlDown;
@@ -363,7 +358,6 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL
 					if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(i);
 				}
 			}
-
 		}
 	}
 
@@ -371,7 +365,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, BOOL shiftDown, BOOL
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::SelectVertex(int x, int y, BOOL shiftDown, BOOL ctrlDown) {
+void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown) {
 	int i;
 	if (!isLoaded) return;
 
@@ -384,7 +378,7 @@ void Geometry::SelectVertex(int x, int y, BOOL shiftDown, BOOL ctrlDown) {
 	int *allYe = (int *)malloc(sh.nbVertex * sizeof(int));
 
 	// Transform points to screen coordinates
-	BOOL *ok = (BOOL *)malloc(sh.nbVertex * sizeof(BOOL));
+	bool *ok = (bool *)malloc(sh.nbVertex * sizeof(bool));
 	for (i = 0; i < sh.nbVertex; i++)
 		ok[i] = GLToolkit::Get2DScreenCoord((float)vertices3[i].x, (float)vertices3[i].y, (float)vertices3[i].z, allXe + i, allYe + i);
 
@@ -424,7 +418,7 @@ void Geometry::SelectVertex(int x, int y, BOOL shiftDown, BOOL ctrlDown) {
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::AddToSelectionHist(int f) {
+void Geometry::AddToSelectionHist(size_t f) {
 
 	if (nbSelectedHist < SEL_HISTORY) {
 		selectHist[nbSelectedHist] = f;
@@ -433,12 +427,11 @@ void Geometry::AddToSelectionHist(int f) {
 
 }
 
-
-BOOL Geometry::AlreadySelected(int f) {
+bool Geometry::AlreadySelected(size_t f) {
 
 	// Check if the facet has already been selected
-	BOOL found = FALSE;
-	int i = 0;
+	bool found = false;
+	size_t i = 0;
 	while (!found && i < nbSelectedHist) {
 		found = (selectHist[i] == f);
 		if (!found) i++;
@@ -447,57 +440,22 @@ BOOL Geometry::AlreadySelected(int f) {
 
 }
 
-
-
 void Geometry::SelectAll() {
 	for (int i = 0; i < sh.nbFacet; i++)
-		Select(facets[i]);
+		SelectFacet(i);
 	UpdateSelection();
 }
 
-
-
-int Geometry::GetNbSelected() {
-	return nbSelected;
-}
-
-void Geometry::AddToSelectionHistVertex(int f) {
-
-	if (nbSelectedHistVertex < SEL_HISTORY) {
-		selectHistVertex[nbSelectedHistVertex] = f;
-		nbSelectedHistVertex++;
-	}
-
-}
-
-
-
-BOOL Geometry::AlreadySelectedVertex(int idx) {
-
-
-	// Check if the vertex is in the selection history
-	BOOL found = FALSE;
-	int i = 0;
-	while (!found && i < nbSelectedHistVertex) {
-		found = (selectHistVertex[i] == idx);
-		if (!found) i++;
-	}
-	return found;
-
-}
-
 void Geometry::EmptySelectedVertexList() {
-	selectedVertexList = std::vector<int>();
+	selectedVertexList_ordered.clear();
 }
 
-void Geometry::RemoveFromSelectedVertexList(int vertexId) {
-	for (size_t j = 0; j < selectedVertexList.size(); j++)
-		if (selectedVertexList[j] == vertexId)
-			selectedVertexList.erase(selectedVertexList.begin() + j);
+void Geometry::RemoveFromSelectedVertexList(size_t vertexId) {
+	selectedVertexList_ordered.erase(std::remove(selectedVertexList_ordered.begin(), selectedVertexList_ordered.end(), vertexId), selectedVertexList_ordered.end());
 }
 
-void Geometry::AddToSelectedVertexList(int vertexId) {
-	selectedVertexList.push_back(vertexId);
+void Geometry::AddToSelectedVertexList(size_t vertexId) {
+	selectedVertexList_ordered.push_back(vertexId);
 }
 
 
@@ -511,8 +469,8 @@ void Geometry::SelectAllVertex() {
 
 
 
-int Geometry::GetNbSelectedVertex() {
-	nbSelectedVertex = 0;
+size_t Geometry::GetNbSelectedVertex() {
+	size_t nbSelectedVertex = 0;
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (vertices3[i].selected) nbSelectedVertex++;
 	}
@@ -522,7 +480,7 @@ int Geometry::GetNbSelectedVertex() {
 
 void Geometry::UnselectAll() {
 	for (int i = 0; i < sh.nbFacet; i++) {
-		facets[i]->selected = FALSE;
+		facets[i]->selected = false;
 		facets[i]->UnselectElem();
 	}
 	UpdateSelection();
@@ -532,19 +490,27 @@ void Geometry::UnselectAll() {
 
 void Geometry::UnselectAllVertex() {
 	for (int i = 0; i < sh.nbVertex; i++) {
-		vertices3[i].selected = FALSE;
+		vertices3[i].selected = false;
 		//facets[i]->UnselectElem(); //what is this?
 	}
 	//UpdateSelectionVertex();
 }
 
+std::vector<size_t> Geometry::GetSelectedVertices()
+{
+	std::vector<size_t> sel;
+	for (size_t i = 0; i < sh.nbVertex; i++)
+		if (vertices3[i].selected) sel.push_back(i);
+	return sel;
+}
 
 
-void Geometry::DrawFacet(Facet *f, BOOL offset, BOOL showHidden, BOOL selOffset) {
+
+void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
-	int nb = f->sh.nbIndex;
-	int i1;
+	size_t nb = f->sh.nbIndex;
+	size_t i1;
 
 	if (offset) {
 
@@ -585,7 +551,7 @@ void Geometry::DrawFacet(Facet *f, BOOL offset, BOOL showHidden, BOOL selOffset)
 		else {
 
 			glBegin(GL_LINES);
-			int i1, i2, j;
+			size_t i1, i2, j;
 			for (j = 0; j < nb - 1; j++) {
 				if (f->visible[j] || showHidden) {
 					i1 = f->indices[j];
@@ -612,16 +578,16 @@ void Geometry::DrawFacet(Facet *f, BOOL offset, BOOL showHidden, BOOL selOffset)
 
 void Geometry::DrawPolys() {
 
-	int *f3 = (int *)malloc(sh.nbFacet * sizeof(int));
-	int *f4 = (int *)malloc(sh.nbFacet * sizeof(int));
-	int *fp = (int *)malloc(sh.nbFacet * sizeof(int));
-	int nbF3 = 0;
-	int nbF4 = 0;
-	int nbFP = 0;
+	size_t *f3 = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
+	size_t *f4 = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
+	size_t *fp = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
+	size_t nbF3 = 0;
+	size_t nbF4 = 0;
+	size_t nbFP = 0;
 
 	// Group TRI,QUAD and POLY
-	for (int i = 0; i < sh.nbFacet; i++) {
-		int nb = facets[i]->sh.nbIndex;
+	for (size_t i = 0; i < sh.nbFacet; i++) {
+		size_t nb = facets[i]->sh.nbIndex;
 		if (facets[i]->volumeVisible) {
 			if (nb == 3) {
 				f3[nbF3++] = i;
@@ -642,18 +608,18 @@ void Geometry::DrawPolys() {
 
 	// Triangle
 	for (int i = 0; i < nbF3; i++)
-		FillFacet(facets[f3[i]], FALSE);
+		FillFacet(facets[f3[i]], false);
 
 	// Triangulate polygon
 	for (int i = 0; i < nbFP; i++)
-		Triangulate(facets[fp[i]], FALSE);
+		Triangulate(facets[fp[i]], false);
 
 	glEnd();
 
 	// Quads
 	glBegin(GL_QUADS);
 	for (int i = 0; i < nbF4; i++)
-		FillFacet(facets[f4[i]], FALSE);
+		FillFacet(facets[f4[i]], false);
 	glEnd();
 
 	free(f3);
@@ -688,13 +654,13 @@ void Geometry::ClearFacetTextures()
 	int startTime = SDL_GetTicks();
 	for (int i = 0; i<sh.nbFacet; i++) {
 		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) {
-			prg->SetVisible(TRUE);
+			prg->SetVisible(true);
 		}
 		prg->SetProgress((double)i / (double)sh.nbFacet);
 		DELETE_TEX(facets[i]->glTex);
 		glGenTextures(1, &facets[i]->glTex);
 	}
-	prg->SetVisible(FALSE);
+	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 }
 
@@ -815,7 +781,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 int Geometry::FindEar(POLYGON *p) {
 
 	int i = 0;
-	BOOL earFound = FALSE;
+	bool earFound = false;
 	while (i < p->nbPts && !earFound) {
 		if (IsConvex(p, i))
 			earFound = !ContainsConcave(p, i - 1, i, i + 1);
@@ -855,10 +821,10 @@ void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 
 
 
-void Geometry::FillFacet(Facet *f, BOOL addTextureCoord) {
+void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 
 	for (int i = 0; i < f->sh.nbIndex; i++) {
-		int idx = f->indices[i];
+		size_t idx = f->indices[i];
 		glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 		if (addTextureCoord) AddTextureCoord(f, f->vertices2 + i);
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
@@ -868,7 +834,7 @@ void Geometry::FillFacet(Facet *f, BOOL addTextureCoord) {
 
 
 
-void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, BOOL addTextureCoord) {
+void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 
 	Vector3d  p3D;
 	Vector2d *p1;
@@ -914,7 +880,7 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, BOOL addTextureCoord) {
 
 }
 
-void Geometry::Triangulate(Facet *f, BOOL addTextureCoord) {
+void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -950,7 +916,7 @@ void Geometry::Triangulate(Facet *f, BOOL addTextureCoord) {
 
 }
 
-void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, int showMode, BOOL filter, BOOL showHidden, BOOL showMesh, BOOL showDir) {
+void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 
 	if (!isLoaded) return;
 
@@ -1038,7 +1004,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 		glPolygonOffset(1.0f, 3.0f);
 		for (int i = 0;i < sh.nbFacet && renderTexture;i++) {
 			Facet *f = facets[i];
-			BOOL paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
+			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #ifdef MOLFLOW
 			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
 #endif
@@ -1104,7 +1070,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {
-						int add = x + y*f->sh.texWidth;
+						size_t add = x + y*f->sh.texWidth;
 						if (f->GetMeshArea(add) > 0.0) {
 							double uC = ((double)x + 0.5) * iw;
 							double vC = ((double)y + 0.5) * ih;
@@ -1128,7 +1094,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 	}
 
 	// Paint selection
-	if (nbSelected) {
+	if (GetNbSelectedFacets()>0) {
 		if (mApp->antiAliasing) {
 			glEnable(GL_BLEND);
 			glEnable(GL_LINE_SMOOTH);
@@ -1158,7 +1124,7 @@ void Geometry::Render(GLfloat *matView, BOOL renderVolume, BOOL renderTexture, i
 
 }
 
-void Geometry::DeleteGLLists(BOOL deletePoly, BOOL deleteLine) {
+void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deleteLine) {
 		for (int i = 0; i < sh.nbSuper; i++)
 			DELETE_LIST(lineList[i]);

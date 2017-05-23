@@ -16,11 +16,11 @@
 #ifndef _GLWINDOWH_
 #define _GLWINDOWH_
 
-#include <SDL.h>
-#include <SDL_opengl.h>
+//#include <SDL.h>
+//#include <SDL_opengl.h>
 #include "GLContainer.h"
-#include "GLFont.h"
-#include "GLMenu.h"
+//#include "GLMenu.h"
+class GLMenu;
 #include <string>
 
 class GLWindow : public GLContainer {
@@ -39,39 +39,39 @@ public:
   void GetClientArea(int *x,int *y,int *w,int *h);
   void SetTitle(const char *title);
   void SetTitle(std::string title);
-  void SetBorder(BOOL b);
+  void SetBorder(bool b);
   void SetBackgroundColor(int r,int g,int b);
   void GetBackgroundColor(int *r,int *g,int *b);
-  BOOL IsCtrlDown();
-  BOOL IsShiftDown();
-  BOOL IsAltDown();
-  BOOL IsSpaceDown();
-  BOOL IsCapsLockOn();
+  bool IsCtrlDown();
+  bool IsShiftDown();
+  bool IsAltDown();
+  bool IsSpaceDown();
+  bool IsCapsLockOn();
   int  GetX(GLComponent *src,SDL_Event *evt);
   int  GetY(GLComponent *src,SDL_Event *evt);
   int  GetScreenX(GLComponent *src);
   int  GetScreenY(GLComponent *src);
   void DoModal();
-  void SetVisible(BOOL visible);
-  BOOL IsVisible();
-  void SetResizable(BOOL sizable);
-  void SetIconfiable(BOOL iconifiable);
+  void SetVisible(bool visible);
+  bool IsVisible();
+  void SetResizable(bool sizable);
+  void SetIconfiable(bool iconifiable);
   void SetMinimumSize(int width,int height);
-  void Iconify(BOOL iconify);
-  void Maximise(BOOL max);
-  BOOL IsIconic();
-  BOOL IsMaximized();
-  void SetAnimatedFocus(BOOL animate);
+  void Iconify(bool iconify);
+  void Maximise(bool max);
+  bool IsIconic();
+  bool IsMaximized();
+  void SetAnimatedFocus(bool animate);
 
   // Expert usage
   void Clip(GLComponent *src,int lMargin,int uMargin,int rMargin,int bMargin);
   void ClipRect(GLComponent *src,int x,int y,int width,int height);
   void ClipToWindow();
   void ClipWindowExtent();
-  BOOL IsMoving();
-  BOOL IsInComp(GLComponent *src,int mx,int my);
-  void SetMaster(BOOL master);
-  BOOL IsDragging();
+  bool IsMoving();
+  bool IsInComp(GLComponent *src,int mx,int my);
+  void SetMaster(bool master);
+  bool IsDragging();
   int  GetIconWidth();
   void PaintTitle(int width,int height);
   void PaintMenuBar();
@@ -105,8 +105,8 @@ protected:
 private:
 
   int  GetUpMargin();
-  BOOL IsInWindow(int mx,int my);
-  BOOL IsInSysButton(SDL_Event *evt,int witch);
+  bool IsInWindow(int mx,int my);
+  bool IsInSysButton(SDL_Event *evt,int witch);
   void UpdateSize(int newWidht,int newHeight,int cursor);
 
   int  draggMode;
@@ -117,24 +117,24 @@ private:
   int  closeState;
   int  maxState;
   int  iconState;
-  BOOL iconifiable;
-  BOOL iconified;
-  BOOL maximized;
-  BOOL border;
-  BOOL animateFocus;
+  bool iconifiable;
+  bool iconified;
+  bool maximized;
+  bool border;
+  bool animateFocus;
   int  rBack;
   int  gBack;
   int  bBack;
-  BOOL isMaster;
+  bool isMaster;
   GLComponent *menuBar;
-  BOOL visible;
-  BOOL isResizable;
+  bool visible;
+  bool isResizable;
   int  minWidth;
   int  minHeight;
   int  orgWidth;
   int  orgHeight;
   GLContainer *menus;
-  BOOL isModal;
+  bool isModal;
   int  iconWidth;
   int  posXSave;
   int  posYSave;

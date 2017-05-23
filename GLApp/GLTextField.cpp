@@ -18,10 +18,11 @@
 #include "GLTextField.h"
 #include "GLToolkit.h"
 #include "MathTools.h" //Min max
+#include "GLFont.h"
 
 // ------------------------------------------------------
 
-GLTextField::GLTextField(int compId,char *text):GLComponent(compId) {
+GLTextField::GLTextField(int compId,const char *text):GLComponent(compId) {
 
   SetBorder(BORDER_BEVEL_IN);
   strcpy(m_Text,"!!!Don't remove this default value!!!");
@@ -29,7 +30,7 @@ GLTextField::GLTextField(int compId,char *text):GLComponent(compId) {
   SetBackgroundColor(240,240,240);
   SetTextColor(0.0f, 0.0f, 0.0f);
   m_CursorState=0;
-  m_Editable=TRUE;
+  m_Editable=true;
   SetCursor(CURSOR_TEXT);
 }
 
@@ -71,7 +72,7 @@ int GLTextField::GetTextLength() {
 
 // ------------------------------------------------------
 
-void GLTextField::SetEditable(BOOL editable) {
+void GLTextField::SetEditable(bool editable) {
   m_Editable = editable;
   if( m_Editable ) {
 	  SetCursor(CURSOR_TEXT);
@@ -83,13 +84,13 @@ void GLTextField::SetEditable(BOOL editable) {
   }
 }
 
-BOOL GLTextField::IsEditable() {
+bool GLTextField::IsEditable() {
 	return m_Editable;
 }
 
 // ------------------------------------------------------
 
-void GLTextField::SetEditable_NoBG(BOOL editable) { //for combo boxes
+void GLTextField::SetEditable_NoBG(bool editable) { //for combo boxes
   m_Editable = editable;
   if( m_Editable ) {
 	  SetCursor(CURSOR_TEXT);
@@ -101,7 +102,7 @@ void GLTextField::SetEditable_NoBG(BOOL editable) { //for combo boxes
 
 // ------------------------------------------------------
 
-BOOL GLTextField::IsCaptured() {
+bool GLTextField::IsCaptured() {
   return m_Captured;
 }
 
@@ -133,6 +134,12 @@ void GLTextField::SetText(const int &val) {
 	SetText(tmp);
 }
 
+void GLTextField::SetText(const size_t &val) {
+	char tmp[256];
+	sprintf(tmp, "%zd", val);
+	SetText(tmp);
+}
+
 // ------------------------------------------------------
 
 void GLTextField::UpdateText(const char *text) {
@@ -146,7 +153,7 @@ void GLTextField::UpdateText(const char *text) {
 
 // ------------------------------------------------------
 
-BOOL GLTextField::GetNumber(double *num) {
+bool GLTextField::GetNumber(double *num) {
 
   int conv = sscanf(m_Text,"%lf",num);
   return (conv==1);
@@ -154,7 +161,7 @@ BOOL GLTextField::GetNumber(double *num) {
 }
 
 // ------------------------------------------------------
-BOOL GLTextField::GetNumberInt(int *num) {
+bool GLTextField::GetNumberInt(int *num) {
 
   int conv = sscanf(m_Text,"%d",num);
   return (conv==1);
@@ -283,7 +290,7 @@ void GLTextField::Paint() {
   x = 1;
   
   GLToolkit::GetDialogFont()->SetTextColor(rText,gText,bText);
-  GLToolkit::GetDialogFont()->DrawText(x,y,m_Text+m_Zero,FALSE);
+  GLToolkit::GetDialogFont()->DrawText(x,y,m_Text+m_Zero,false);
 
   // Draw cursor
   if( m_CursorState && m_Editable ) {
@@ -414,7 +421,7 @@ void GLTextField::PasteClipboardText() {
       if (ds) {
 		  char* text = (char*)ds;
 		  //Cut trailing whitespace characters (Paste from Excel, for example)
-		  for (int cursorPos = strlen(text); cursorPos >= 0; cursorPos--) {
+		  for (int cursorPos = (int)strlen(text); cursorPos >= 0; cursorPos--) {
 			  if (text[cursorPos] == '\t' || text[cursorPos] == '\r' || text[cursorPos] == '\n') {
 				  text[cursorPos] = NULL;
 			  }
@@ -432,7 +439,7 @@ void GLTextField::PasteClipboardText() {
 
 // ------------------------------------------------------
 
-void GLTextField::SetFocus(BOOL focus) {
+void GLTextField::SetFocus(bool focus) {
 
   if(focus) {
     m_CursorState=1;

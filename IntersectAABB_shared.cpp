@@ -1,6 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <string.h>
 #include <math.h>
 #include "Simulation.h"
@@ -19,16 +19,16 @@
 
 // Global variables for intersection
 double    intMinLgth;
-BOOL      intFound;
+bool      intFound;
 Vector3d  intD;
 Vector3d  intZ;
 int       intNbTHits;
 double    iRx;
 double    iRy;
 double    iRz;
-BOOL      nullRx;
-BOOL      nullRy;
-BOOL      nullRz;
+bool      nullRx;
+bool      nullRy;
+bool      nullRz;
 Vector3d *rayPos;
 Vector3d *rayDir;
 FACET   **iFacet;
@@ -36,7 +36,7 @@ FACET    *fLast;
 double    tNear;
 double    tFar;
 double    it1, it2;
-BOOL      AABBHit;
+bool      AABBHit;
 
 int FindBestCuttingPlane(struct AABBNODE *node, int *left, int *right) {
 
@@ -190,7 +190,7 @@ void DestroyAABB(struct AABBNODE *node) {
 
 #define IntersectBB(n,lab)                                                   \
 	\
-	AABBHit = FALSE;                                                           \
+	AABBHit = false;                                                           \
 	\
 	if( nullRx ) {                                                             \
 	if( rayPos->x < (n)->bb.min.x || rayPos->x > (n)->bb.max.x ) goto lab;   \
@@ -238,18 +238,18 @@ void DestroyAABB(struct AABBNODE *node) {
 	}                                                                        \
 	}                                                                          \
 	if( tNear>tFar || tFar<0.0 ) goto lab;                                     \
-	AABBHit = TRUE;                                                            \
+	AABBHit = true;                                                            \
 lab:
 
 
-BOOL Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
+bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
 
 	Vector3d r;
 	FACET *iF;
 
 	// Check if there is an obstacle between c1 and c2
 	intMinLgth = 1e100;
-	intFound = FALSE;
+	intFound = false;
 	intNbTHits = 0;
 	rayPos = c1;
 	r.x = (c2->x - c1->x);
@@ -273,16 +273,16 @@ BOOL Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
 	if (intFound) {
 		if (iF != f2) {
 			// Obstacle found
-			return FALSE;
+			return false;
 		}
 	}
 
-	return TRUE;
+	return true;
 
 }
 
 // -----------------------------------------------------------
-BOOL RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
+bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
 
 	// Perform ray-sphere intersection
 	double B, C, D;
@@ -305,7 +305,7 @@ BOOL RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 		return (*dist >= 0.0);
 	}
 
-	return FALSE;
+	return false;
 
 }
 
@@ -315,7 +315,7 @@ void IntersectTree(struct AABBNODE *node) {
 	// Returns the intersection between an oriented ray and
 	// the geometry. If several intersection occurs, the
 	// closest to rayPos is returned.
-	// Returns TRUE is a collision occurs, FALSE otherwise.
+	// Returns true is a collision occurs, false otherwise.
 
 
 	// Method: 3x3 Sytem solving for ray/rectangle intersection. 
@@ -371,7 +371,7 @@ void IntersectTree(struct AABBNODE *node) {
 								// Now check intersection with the facet polygon (in the u,v space)
 								// This check could be avoided on rectangular facet.
 								if (IsInFacet(f, u, v)) {
-									BOOL hardHit;
+									bool hardHit;
 #ifdef MOLFLOW
 									double time = sHandle->flightTimeCurrentParticle + d / 100.0 / sHandle->velocityCurrentParticle;
 									double currentOpacity = GetOpacityAt(f, time);
@@ -391,7 +391,7 @@ void IntersectTree(struct AABBNODE *node) {
 										// Hard hit
 										if (d < intMinLgth) {
 											*iFacet = f;
-											intFound = TRUE;
+											intFound = true;
 											intMinLgth = d;
 											f->colU = u;
 											f->colV = v;
@@ -426,7 +426,7 @@ void IntersectTree(struct AABBNODE *node) {
 
 }
 
-BOOL IsInFacet(FACET *f, const double &u, const double &v) {
+bool IsInFacet(FACET *f, const double &u, const double &v) {
 
 	// 2D polygon "is inside" solving
 	// Using the "Jordan curve theorem" (we intersect in v direction here)

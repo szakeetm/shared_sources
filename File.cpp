@@ -48,17 +48,17 @@ const char *Error::GetMsg() {
 // FileUtils class
 // -------------------------------------------------
 
-BOOL FileUtils::Exist(std::string fileName) {
+bool FileUtils::Exist(std::string fileName) {
 	return Exist(fileName.c_str());
 }
 
-BOOL FileUtils::Exist(const char *fileName) {
+bool FileUtils::Exist(const char *fileName) {
 
 	if (FILE *file = fopen(fileName, "r")) {
 		fclose(file);
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 // -------------------------------------------------
@@ -401,23 +401,24 @@ FileWriter::~FileWriter() {
   fclose(file);
 }
 
-void FileWriter::WriteInt(const int &v,char *sep) {
+void FileWriter::Write(const int &v,char *sep) {
   if( !fprintf(file,"%d",v) )
     throw Error("Error while writing to file");
   if(sep) fprintf(file,"%s",sep);
 }
 
-void FileWriter::WriteLLong(const llong &v,char *sep) {
+void FileWriter::Write(const size_t & v, char * sep)
+{
 #ifdef WIN
-  if( !fprintf(file,"%I64d",v) )
-    throw Error("Error while writing to file");
+	if (!fprintf(file, "%zd", v))
+		throw Error("Error while writing to file");
 #else
-  throw Error("FileWriter::WriteLLong() not implemented");
+	throw Error("FileWriter::Write() not implemented");
 #endif
-  if(sep) fprintf(file,"%s",sep);
+	if (sep) fprintf(file, "%s", sep);
 }
 
-void FileWriter::WriteDouble(const double &v,char *sep) {
+void FileWriter::Write(const double &v,char *sep) {
 
   //if(v>=0.0) fprintf(file," ");
 	fprintf(file," ");

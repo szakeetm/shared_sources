@@ -52,8 +52,8 @@ Dataport *CreateDataport(char *name,size_t size)
    SetLastError (ERROR_SUCCESS);
    
    // 2^32 = 4294967296      DWORD is 32-bit unsigned
-   DWORD sizeHighOrder = size >> 32;
-   DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+   DWORD sizeHighOrder = DWORD(size >> 32);
+   DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
 
    //Debug:
    //dp->file = CreateFile(name, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -83,7 +83,7 @@ Dataport *CreateDataport(char *name,size_t size)
    /* ------------------- Create the semaphore ------------------- */
 
    SetLastError (ERROR_SUCCESS);
-   dp->sema = CreateMutex (NULL, FALSE, dp->semaname);
+   dp->sema = CreateMutex (NULL, false, dp->semaname);
 
    if( dp->sema == INVALID_HANDLE_VALUE ) {
    
@@ -137,8 +137,8 @@ Dataport *OpenDataport(char *name,size_t size)
    /* ------------------- Link to the share memory ------------------- */
 
    // 2^32 = 4294967296      DWORD is 32-bit unsigned
-   DWORD sizeHighOrder = size >> 32;
-   DWORD sizeLowOrder = size - (size >> 32) * 4294967296;
+   DWORD sizeHighOrder = DWORD(size >> 32);
+   DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
 
    //dp->file = CreateFile(name, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -163,7 +163,7 @@ Dataport *OpenDataport(char *name,size_t size)
    /* ------------------- Link to the semaphore ------------------- */
 
    SetLastError (ERROR_SUCCESS);
-   dp->sema = CreateMutex (NULL, FALSE, dp->semaname);
+   dp->sema = CreateMutex (NULL, false, dp->semaname);
 
    if( GetLastError()!=ERROR_ALREADY_EXISTS ) {
 
@@ -190,33 +190,33 @@ Dataport *OpenDataport(char *name,size_t size)
    return (dp);
 }
 
-BOOL AccessDataport(Dataport *dp)
+bool AccessDataport(Dataport *dp)
 {
 	DWORD retVal = WaitForSingleObject(dp->sema, 8000);
   if (retVal==WAIT_OBJECT_0)
-	return TRUE;
+	return true;
   else
-	return FALSE;
+	return false;
 }
 
-BOOL AccessDataportTimed(Dataport *dp,DWORD timeout)
+bool AccessDataportTimed(Dataport *dp,DWORD timeout)
 {
 	DWORD retVal = WaitForSingleObject(dp->sema, timeout);
   if (retVal==WAIT_OBJECT_0)
-	return TRUE;
+	return true;
   else
-	return FALSE;
+	return false;
 }
 
-BOOL ReleaseDataport(Dataport *dp)
+bool ReleaseDataport(Dataport *dp)
 {
   if( ReleaseMutex(dp->sema)==0 )
-	  return TRUE;
+	  return true;
   else
-	  return FALSE;
+	  return false;
 }
 
-BOOL CloseDataport(Dataport *dp)
+bool CloseDataport(Dataport *dp)
 {
 
 	UnmapViewOfFile(dp->buff);
@@ -225,7 +225,7 @@ BOOL CloseDataport(Dataport *dp)
 	//CloseHandle(dp->file); //Debug
 	//DeleteFile(dp->name); //Debug: will only succeed if all handles released
 	free(dp);
-	return TRUE;
+	return true;
 
 }
 
@@ -353,14 +353,14 @@ long size;
 /* Get shared memory and semaphore */
 
 	full_size = size + sizeof(Dataport);
-   dp = (Dataport *)get_shared(full_size,key,TRUE,&shmid);
+   dp = (Dataport *)get_shared(full_size,key,true,&shmid);
    if (dp==(Dataport *)(-1))
    	return (NULL);
    dp->shar = shmid;
 
 /* Get semaphore to protect the shared memory */
 
-   semid = define_sema(1,key,TRUE);
+   semid = define_sema(1,key,true);
 	if (semid == -1)
 		return(NULL);
 	dp->sema = semid;
@@ -406,14 +406,14 @@ long size;
 
 /* Link the process to the dataport shared memory */
 
-   dp = (Dataport *)get_shared (size, key, FALSE, &shmid);
+   dp = (Dataport *)get_shared (size, key, false, &shmid);
    if (dp==(Dataport *)(-1))
     	return (NULL); 
    dp->shar = shmid;
 
 /* Link the process to the dataport semaphore */
 
-   semid = define_sema (1, key, FALSE);
+   semid = define_sema (1, key, false);
 	if (semid == -1)
    {
 		release_shared(dp);

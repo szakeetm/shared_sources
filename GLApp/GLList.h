@@ -13,12 +13,17 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLScrollbar.h"
-#include "GLTextField.h"
-class Worker;
-
 #ifndef _GLLISTH_
 #define _GLLISTH_
+
+#include <vector>
+#include "GLComponent.h"
+class Worker;
+class GLMenu;
+class GLTextField;
+class GLScrollBar;
+
+
 
 // Cell alignment
 #define ALIGN_LEFT   0
@@ -51,101 +56,99 @@ public:
 
   // Component methods
   void SetWorker(Worker *w);
-  void SetSize(int nbColumn,int nbRow,BOOL keepData=FALSE,BOOL showProgress=FALSE);
+  void SetSize(size_t nbColumn,size_t nbRow,bool keepData=false,bool showProgress=false);
   void SetColumnLabels(char **names);
-  void SetColumnLabel(int colId,char *name);
-  void SetAutoColumnLabel(BOOL enable);
-  void SetColumnLabelVisible(BOOL visible);
+  void SetColumnLabel(size_t colId,char *name);
+  void SetAutoColumnLabel(bool enable);
+  void SetColumnLabelVisible(bool visible);
   void SetRowLabels(char **names);
-  void SetRowLabel(int rowId,char *name);
+  void SetRowLabel(size_t rowId,char *name);
   void SetRowLabelAlign(int align);
-  void SetAutoRowLabel(BOOL enable);
+  void SetAutoRowLabel(bool enable);
   void SetRowLabelMargin(int margin);
-  void SetRowLabelVisible(BOOL visible);
+  void SetRowLabelVisible(bool visible);
   void SetColumnWidths(int *widths);
-  void SetColumnWidth(int colId,int width);
+  void SetColumnWidth(size_t colId, int width);
   void SetColumnWidthForAll(int width);
   void AutoSizeColumn();
   void SetColumnAligns(int *aligns);
-  void SetColumnAlign(int colId,int align);
+  void SetColumnAlign(size_t colId,int align);
   void SetAllColumnAlign(int align);
   void SetColumnColors(int *aligns);
-  void SetColumnColor(int colId, int align);
+  void SetColumnColor(size_t colId, int align);
   void SetAllColumnColors(int align);
   void SetColumnEditable(int *editables);
-  BOOL GetSelectionBox(int *row,int *col,int *rowLength,int *colLength);
-  void SetVScrollVisible(BOOL visible);
-  void SetHScrollVisible(BOOL visible);
+  bool GetSelectionBox(size_t *row, size_t *col, size_t *rowLength, size_t *colLength);
+  void SetVScrollVisible(bool visible);
+  void SetHScrollVisible(bool visible);
   void SetSelectionMode(int mode);
-  void GLList::SetSelectedCell(int column,int row);
+  void SetSelectedCell(size_t column,size_t row);
   void SetCornerLabel(char *text);
-  void Clear(BOOL keepColumns=FALSE,BOOL showProgress=FALSE);
+  void Clear(bool keepColumns=false,bool showProgress=false);
   void ResetValues();
-  int  GetNbRow();
-  int  GetNbColumn();
-  void SetRow(int row,char **values);
+  size_t  GetNbRow();
+  size_t  GetNbColumn();
+  void SetRow(size_t row,char **values);
   void ScrollToVisible();
-  void ScrollToVisible(int row,int col,BOOL searchIndex=FALSE);
+  void ScrollToVisible(size_t row, size_t col,bool searchIndex=false);
   void ScrollUp();
   void ScrollDown();
-  char *GetValueAt(int col,int row);
-  int  GetUserValueAt(int col,int row);
-  void SetValueAt(int col,int row,const char *value,int userData=0,BOOL searchIndex=FALSE);
-  int  GetRowForLocation(int x,int y);
-  int  GetColForLocation(int x,int y);
-  void SetMotionSelection(BOOL enable);
-  int  GetSelectedRow(BOOL searchIndex=FALSE);
+  char *GetValueAt(size_t col, size_t row);
+  int  GetUserValueAt(size_t col, size_t row);
+  void SetValueAt(size_t col,size_t row,const char *value,int userData=0,bool searchIndex=false);
+  size_t  GetRowForLocation(int x,int y);
+  size_t  GetColForLocation(int x,int y);
+  void SetMotionSelection(bool enable);
+  int  GetSelectedRow(bool searchIndex=false);
   int  GetSelectedColumn();
-  void SetSelectedRow(int row,BOOL searchIndex=FALSE);
-  void AddSelectedRow(int row,BOOL searchIndex=FALSE);
-  void SetSelectedRows(int *rows,int nbRow,BOOL searchIndex=FALSE);
+  void SetSelectedRow(size_t row,bool searchIndex=false);
+  void AddSelectedRow(size_t row,bool searchIndex=false);
+  void SetSelectedRows(std::vector<size_t> selection,bool searchIndex=false);
   void SelectAllRows();
-  int  GetNbSelectedRow();
-  void GetSelectedRows(int **rows,int *nbRow,BOOL searchIndex=FALSE);
+  std::vector<size_t> GetSelectedRows(bool searchIndex=false);
   void ClearSelection();
   int  GetDraggedCol();
-  int  GetColWidth(int col);
-  void GetVisibleRows(int *start,int *end);
-  void SetGrid(BOOL visible);
-  void CopyToClipboard(int row,int col,int rowLght,int colLgth);
+  int  GetColWidth(size_t col);
+  void GetVisibleRows(int *start, int *end);
+  void SetGrid(bool visible);
+  void CopyToClipboard(size_t row, size_t col, size_t rowLght, size_t colLgth);
   void CopyAllToClipboard();
   void CopySelectionToClipboard();
-  int  FindIndex(int index,int inColumn);
-  int GetValueInt(int row, int column);
-  double GetValueDouble(int row, int column);
+  int  FindIndex(size_t index,size_t inColumn);
+  int GetValueInt(size_t row, size_t column);
+  double GetValueDouble(size_t row, size_t column);
   //void UpdateAllRows();
   void ReOrder();
-  void PasteClipboardText(BOOL allowExpandRows, BOOL allowExpandColumns, int extraRowsAtEnd=0);
+  void PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, int extraRowsAtEnd=0);
   void SetFontColor(int r, int g, int b);
 
-  
-  int   lastRowSel;
-  BOOL Sortable;
   int  *cEdits;
+  int   lastRowSel;
+  bool Sortable;
 
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
-  void SetBounds(int x,int y,int width,int height);
+  void SetBounds(int x,int y, int width, int height);
   void SetParent(GLContainer *parent);
-  void SetFocus(BOOL focus);
+  void SetFocus(bool focus);
 
 private:
 
   Worker       *worker;
   void UpdateSBRange();
   void CreateAutoLabel();
-  int  GetRowForLocationSat(int x,int y);
-  int  GetColForLocationSat(int x,int y);
-  int  GetColsWidth(int c,int lgth);
+  size_t  GetRowForLocationSat(int x,int y);
+  size_t  GetColForLocationSat(int x,int y);
+  int  GetColsWidth(size_t c, size_t lgth);
   void HandleWheel(SDL_Event *evt);
 
   GLScrollBar *sbH;
   GLScrollBar *sbV;
   GLTextField *edit;
   GLMenu      *menu;
-  int   nbCol;
-  int   nbRow;
+  size_t   nbCol;
+  size_t   nbRow;
   int  *cWidths;
   int   cHeight;
   int  *cAligns;
@@ -156,29 +159,28 @@ private:
   int  *uValues;
   
   int   sbDragged;
-  BOOL  colDragged;
-  BOOL  motionSelection;
-  BOOL  showCLabel;
-  BOOL  showRLabel;
+  bool  colDragged;
+  bool  motionSelection;
+  bool  showCLabel;
+  bool  showRLabel;
   int   rowLabelAlign;
-  BOOL  autoColumnName;
-  BOOL  autoRowName;
-  BOOL  vScrollVisible;
-  BOOL  hScrollVisible;
-  BOOL  isEditable;
-  BOOL  isEditing;
+  bool  autoColumnName;
+  bool  autoRowName;
+  bool  vScrollVisible;
+  bool  hScrollVisible;
+  bool  isEditable;
+  bool  isEditing;
   int   sbWidth;
   int   sbHeight; //selection band height?
   int   labHeight; //label spacrholder height
   int   labWidth;
-  BOOL  gridVisible;
+  bool  gridVisible;
 
   int   selectionMode;
-  int   nbSelectedRow;
-  int   *selectedRows;
+  std::vector<size_t> selectedRows;
   int   selectedCol;
   int   lastColSel;
-  BOOL  selDragged;
+  bool  selDragged;
   int   labelRowMargin;
   char  *cornerLabel;
 
@@ -192,7 +194,7 @@ private:
   void  MoveColumn(int x,int y);
   int   GetColumnEdge(int x,int y);
   void  MapEditText();
-  int   GetColumnStart(int colIdx);
+  int   GetColumnStart(size_t colIdx);
   int   RelayToEditText(SDL_Event *evt);
   void  UpdateCell();
   void  CancelEdit();

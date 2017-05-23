@@ -1,16 +1,24 @@
 #include "MathTools.h"
-#include "GLTypes.h" //BOOL
+#include "GLTypes.h" //bool
 #include <math.h>
 #include <cstdio>
 #include <algorithm> //std::Lower_bound
 #include <sstream>
 #include <iterator>
 
-int IsEqual(const double &a, const double &b, double tolerance) {
+bool IsEqual(const double &a, const double &b, double tolerance) {
 	return fabs(a - b) < tolerance;
 }
 
-int GetPower2(int n) {
+size_t  IDX(int i, size_t nb) {
+	return (i < 0) ? (nb + i) : (i%nb);
+}
+
+size_t IDX(size_t i, size_t nb) {
+	return i%nb;
+}
+
+size_t GetPower2(size_t n) {
 // Return a power of 2 which is greater or equal than n
   if((n & (n-1))==0) {
     // already a power of 2
@@ -19,7 +27,7 @@ int GetPower2(int n) {
     // Get the power of 2 above
     int p = 0;
     while(n!=0) { n = n >> 1; p++; }
-    return 1 << p;
+    return 1i64 << p;
   }
 
 }
@@ -85,15 +93,15 @@ double my_erf(double x)
 	return sign*y;
 }
 
-BOOL compare_second(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
+bool compare_second(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
 	return (lhs.second<rhs.second);
 }
 
-BOOL compare_first(const std::pair<double, std::vector<double>>& lhs,const double& rhs) {
+bool compare_first(const std::pair<double, std::vector<double>>& lhs,const double& rhs) {
 	return (lhs.first<rhs);
 }
 
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds, const BOOL& logarithmic) {
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds, const bool& logarithmic) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -132,7 +140,7 @@ double InterpolateY(const double& x, const std::vector<std::pair<double, double>
 
 }
 
-std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const BOOL& limitToBounds, const BOOL& logarithmic) {
+std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& limitToBounds, const bool& logarithmic) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -184,7 +192,7 @@ std::vector<double> InterpolateVector(const double& x, const std::vector<std::pa
 	}
 }
 
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds) {
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -192,12 +200,12 @@ double InterpolateX(const double& y, const std::vector<std::pair<double, double>
 												   // Assumes that "table" is sorted by .second
 												   // Check if y is out of bound
 	std::vector<std::pair<double, double> >::const_iterator lower, upper;
-	BOOL outOfLimits = FALSE;
+	bool outOfLimits = false;
 
 	if (y >= table.back().second) {
 		if (limitToBounds) return table.back().first;
 		else {
-			outOfLimits = TRUE;
+			outOfLimits = true;
 			lower = upper = table.end() - 1;
 			lower--;
 		}
@@ -205,7 +213,7 @@ double InterpolateX(const double& y, const std::vector<std::pair<double, double>
 	else if (y < table[0].second) {
 		if (limitToBounds) return table[0].first;
 		else {
-			outOfLimits = TRUE;
+			outOfLimits = true;
 			lower = upper = table.begin();
 			upper++;
 		}
@@ -221,7 +229,7 @@ double InterpolateX(const double& y, const std::vector<std::pair<double, double>
 	return lower->first + (upper->first - lower->first)*(y - lower->second) / (upper->second - lower->second);
 }
 
-double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const BOOL& limitToBounds) {
+double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
 	if (table.size() == 1) return table[0].second; //constant value
@@ -229,12 +237,12 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 												   // Assumes that table .first is SORTED AND EQUIDISTANT
 												   // Check if x is out of bound
 	std::vector<std::pair<double, double> >::const_iterator lower, upper;
-	BOOL outOfLimits = FALSE;
+	bool outOfLimits = false;
 
 	if (x >= table.back().first) {
 		if (limitToBounds) return table.back().second;
 		else {
-			outOfLimits = TRUE;
+			outOfLimits = true;
 			lower = upper = table.end() - 1;
 			lower--;
 		}
@@ -242,7 +250,7 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 	else if (x < table[0].first) {
 		if (limitToBounds) return table[0].second;
 		else {
-			outOfLimits = TRUE;
+			outOfLimits = true;
 			lower = upper = table.begin();
 			upper++;
 		}
@@ -261,6 +269,7 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 }
 
 std::vector<std::string> SplitString(std::string const &input) {
+	//Split string by whitespaces
 	std::istringstream buffer(input);
 	std::vector<std::string> ret;
 
@@ -268,4 +277,32 @@ std::vector<std::string> SplitString(std::string const &input) {
 		std::istream_iterator<std::string>(),
 		std::back_inserter(ret));
 	return ret;
+}
+
+std::vector<std::string> SplitString(std::string const & input, const char & delimiter)
+{
+		std::vector<std::string> result;
+		const char* str = _strdup(input.c_str());
+		do
+		{
+			const char *begin = str;
+			while (*str != delimiter && *str)
+				str++;
+
+			result.push_back(std::string(begin, str));
+		} while (0 != *str++);
+		return result;
+}
+
+bool endsWith(std::string const &fullString, std::string const &ending) {
+	if (fullString.length() >= ending.length()) {
+		return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+	}
+	else {
+		return false;
+	}
+}
+
+bool beginsWith(std::string const &fullString, std::string const &ending) {
+	return (fullString.compare(0, ending.length(), ending) == 0);
 }

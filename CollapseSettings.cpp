@@ -15,14 +15,21 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+#include "GLApp\GLToggle.h"
 
 #include "CollapseSettings.h"
+#include "GLApp\GLTextField.h"
 #include "GLApp/GLTitledPanel.h"
+#include "GLApp\GLLabel.h"
+#include "GLApp\GLTextField.h"
+#include "GLApp\GLButton.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-
+#include "VertexCoordinates.h"
+#include "FacetCoordinates.h"
 #include "ProfilePlotter.h"
+#include "Geometry.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -52,7 +59,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 	l1 = new GLToggle(0,"Vertices closer than (cm):");
 	l1->SetBounds(5,5,170,18);
-	l1->SetState(TRUE);
+	l1->SetState(true);
 	Add(l1);
 
 	vThreshold = new GLTextField(0,"1E-5");
@@ -61,7 +68,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 	l2 = new GLToggle(0,"Facets more coplanar than:");
 	l2->SetBounds(5,30,170,18);
-	l2->SetState(TRUE);
+	l2->SetState(true);
 	Add(l2);
 
 	pThreshold = new GLTextField(0,"1E-5");
@@ -70,7 +77,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 	l3 = new GLToggle(0,"Sides more collinear than (degrees):");
 	l3->SetBounds(5,55,170,18);
-	l3->SetState(TRUE);
+	l3->SetState(true);
 	Add(l3);
 
 	lThreshold = new GLTextField(0,"1E-3");
@@ -106,24 +113,24 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 	RestoreDeviceObjects();
 
-	isRunning = FALSE;
+	isRunning = false;
 	geom = NULL;
 
 }
 
-void CollapseSettings::SetGeometry(Geometry *s,Worker *w) {
+void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
 
 	char tmp[512];
 
-	geom = s;
+	geom = geom;
 	work = w;
 
-	nbVertexS = s->GetNbVertex();
-	nbFacetS = s->GetNbFacet();
-	nbFacetSS = s->GetNbSelected();
+	nbVertexS = geom->GetNbVertex();
+	nbFacetS = geom->GetNbFacet();
+	nbFacetSS = geom->GetNbSelectedFacets();
 
-	sprintf(tmp,"Selected: %d\nVertex:    %d\nFacet:     %d",
-		s->GetNbSelected(),s->GetNbVertex(),s->GetNbFacet());
+	sprintf(tmp,"Selected: %zd\nVertex:    %zd\nFacet:     %zd",
+		geom->GetNbSelectedFacets(),geom->GetNbVertex(),geom->GetNbFacet());
 	resultLabel->SetText(tmp);
 
 }
@@ -155,19 +162,19 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (!mApp->AskToReset(work)) return;
 				GLProgress *progressDlg = new GLProgress("Collapse", "Please wait");
 				progressDlg->SetProgress(0.0);
-				progressDlg->SetVisible(TRUE);
+				progressDlg->SetVisible(true);
 				if (!l1->GetState()) vT = 0.0;
 				if (!l2->GetState()) fT = 0.0;
 				if (!l3->GetState()) lT = 0.0;
 
 				((GLButton*)src)->SetText("Stop collapse");
-				isRunning = TRUE;
+				isRunning = true;
 
 				geom->Collapse(vT, fT, lT, (src == goSelectedButton), work,progressDlg);
 
 				if (src == goButton) goButton->SetText("Collapse");
 				else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
-				isRunning = FALSE;
+				isRunning = false;
 
 				geom->CheckCollinear();
 				geom->CheckNonSimple();
@@ -190,13 +197,13 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 				}
 
-				progressDlg->SetVisible(FALSE);
+				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);
 
 				// Update result
 				char tmp[512];
-				sprintf(tmp, "Selected: %d\nVertex:    %d/%d\nFacet:    %d/%d\n\nLast action: Collapse all",
-					geom->GetNbSelected(), geom->GetNbVertex(), nbVertexS, geom->GetNbFacet(), nbFacetS);
+				sprintf(tmp, "Selected: %zd\nVertex:    %zd/%zd\nFacet:    %zd/%zd\n\nLast action: Collapse all",
+					geom->GetNbSelectedFacets(), geom->GetNbVertex(), nbVertexS, geom->GetNbFacet(), nbFacetS);
 				resultLabel->SetText(tmp);
 
 
@@ -205,8 +212,8 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 			else {
 				if (src == goButton) goButton->SetText("Collapse");
 				else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
-				isRunning = FALSE;
-				work->abortRequested = TRUE;
+				isRunning = false;
+				work->abortRequested = true;
 			}
 		}
 		break;

@@ -13,10 +13,12 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLMenu.h"
+
 
 #ifndef _GLMENUBARH_
 #define _GLMENUBARH_
+
+#include "GLMenu.h" //MENUITEM
 
 class GLMenuBar : public GLComponent {
 
@@ -34,7 +36,7 @@ public:
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
-  void SetFocus(BOOL focus);
+  void SetFocus(bool focus);
   void ProcessAcc(int accId);
 
   // Expert usage
@@ -43,7 +45,7 @@ public:
 
 private:
 
-  BOOL  IsInItem(MENUITEM *p,int mx,int my);
+  bool  IsInItem(MENUITEM *p,int mx,int my);
   int   GetMenu(int mx,int my);
   void  Drop(int sel);
 
@@ -51,7 +53,7 @@ private:
   int nbItem;
 
   int  selMenu;   // Selected menu
-  BOOL autoDrop; // auto drop flag
+  bool autoDrop; // auto drop flag
 
 };
 

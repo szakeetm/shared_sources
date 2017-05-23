@@ -57,7 +57,7 @@ GLProgress::GLProgress(char *message,char *title):GLWindow() {
   Add(scroll);
 
   scrollText = new GLLabel("100%");
-  scrollText->SetOpaque(FALSE);
+  scrollText->SetOpaque(false);
   scrollText->SetBounds(xP+wP/2-10,yP,20,hP);
   Add(scrollText);
 

@@ -28,6 +28,13 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTitledPanel.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -75,7 +82,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	facetNumber = new GLTextField(0, "0");
 	facetNumber->SetBounds(110, 95, 55, 18);
-	facetNumber->SetEditable(FALSE);
+	facetNumber->SetEditable(false);
 	iPanel->Add(facetNumber);
 
 	getSelFacetButton = new GLButton(0, "<-Get selected");
@@ -92,7 +99,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	aText = new GLTextField(0, "0");
 	aText->SetBounds(15, 170, 30, 18);
-	aText->SetEditable(FALSE);
+	aText->SetEditable(false);
 	iPanel->Add(aText);
 
 	aLabel = new GLLabel("*X +");
@@ -101,7 +108,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	bText = new GLTextField(0, "0");
 	bText->SetBounds(75, 170, 30, 18);
-	bText->SetEditable(FALSE);
+	bText->SetEditable(false);
 	iPanel->Add(bText);
 
 	bLabel = new GLLabel("*Y +");
@@ -110,7 +117,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	cText = new GLTextField(0, "0");
 	cText->SetBounds(135, 170, 30, 18);
-	cText->SetEditable(FALSE);
+	cText->SetEditable(false);
 	iPanel->Add(cText);
 
 	cLabel = new GLLabel("*Z +");
@@ -119,7 +126,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	dText = new GLTextField(0, "0");
 	dText->SetBounds(195, 170, 30, 18);
-	dText->SetEditable(FALSE);
+	dText->SetEditable(false);
 	iPanel->Add(dText);
 
 	dLabel = new GLLabel("= 0");
@@ -144,7 +151,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 	
 	undoProjectButton = new GLButton(0, "Undo projection");
 	undoProjectButton->SetBounds(200, hD - 45, 95, 21);
-	undoProjectButton->SetEnabled(FALSE);
+	undoProjectButton->SetEnabled(false);
 	Add(undoProjectButton);
 
 	/*cancelButton = new GLButton(0,"Dismiss");
@@ -167,7 +174,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 void MirrorFacet::ClearUndoVertices() {
 	undoPoints.clear();
-	undoProjectButton->SetEnabled(FALSE);
+	undoProjectButton->SetEnabled(false);
 }
 
 void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
@@ -188,7 +195,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == mirrorButton || src == mirrorCopyButton || src == projectButton || src == projectCopyButton) {
-			if (geom->GetNbSelected() == 0) {
+			if (geom->GetNbSelectedFacets() == 0) {
 				GLMessageBox::Display("No facets selected", "Nothing to mirror", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -294,7 +301,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == getSelFacetButton) {
-			if (geom->GetNbSelected() != 1) {
+			if (geom->GetNbSelectedFacets() != 1) {
 				GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -312,7 +319,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 			for (UndoPoint oriPoint : undoPoints) {
 				if (oriPoint.oriId < geom->GetNbVertex()) geom->GetVertex(oriPoint.oriId)->SetLocation(oriPoint.oriPos);
 			}
-			undoProjectButton->SetEnabled(FALSE);
+			undoProjectButton->SetEnabled(false);
 			geom->InitializeGeometry();
 			//for(int i=0;i<nbSelected;i++)
 			//	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
@@ -327,15 +334,15 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 }
 
 void MirrorFacet::UpdateToggle(GLComponent *src) {
-	l1->SetState(FALSE);
-	l2->SetState(FALSE);
-	l3->SetState(FALSE);
-	l4->SetState(FALSE);
-	l5->SetState(FALSE);
-	l6->SetState(FALSE);
+	l1->SetState(false);
+	l2->SetState(false);
+	l3->SetState(false);
+	l4->SetState(false);
+	l5->SetState(false);
+	l6->SetState(false);
 
 	GLToggle *toggle = (GLToggle*)src;
-	toggle->SetState(TRUE);
+	toggle->SetState(true);
 
 	facetNumber->SetEditable(src == l4);
 	aText->SetEditable(src == l6);

@@ -13,19 +13,19 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-#include <SDL_opengl.h>
-#include "GLWindow.h"
-#include "GLTextField.h"
-
 #ifndef _GLINPUTBOXH_
 #define _GLINPUTBOXH_
+
+//#include <SDL_opengl.h>
+#include "GLWindow.h"
+
+class GLTextField;
 
 class GLInputBox : private GLWindow {
 
 public:
   // Display a modal dialog and return the entered string (NULL on cancel)
-  static char *GetInput(char *initMessage=NULL,char *label=NULL,char *title=NULL);
+  static char *GetInput(const char *initMessage=NULL,char *label=NULL,char *title=NULL);
 
   char *rValue;
  
@@ -33,7 +33,7 @@ private:
 
   GLTextField *text;
 
-  GLInputBox(char *message,char *label,char *title);
+  GLInputBox(const char *message,char *label,char *title);
   void ProcessMessage(GLComponent *src,int message);
 
 };

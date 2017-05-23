@@ -14,10 +14,10 @@
   GNU General Public License for more details.
 */
 
-#include <SDL_opengl.h>
-
 #ifndef _GLMATRIXH_
 #define _GLMATRIXH_
+
+#include <SDL_opengl.h>
 
 class GLMatrix {
 

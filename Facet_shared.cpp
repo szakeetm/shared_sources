@@ -6,7 +6,8 @@
 #include "SynRad.h"
 #endif
 #include "Facet.h"
-#include <malloc.h>
+#include "Polygon.h"
+//#include <malloc.h>
 
 #include <string.h>
 #include <math.h>
@@ -45,17 +46,17 @@ void Facet::DetectOrientation() {
 	p.pts = vertices2;
 	p.sign = 1.0;
 
-	BOOL convexFound = FALSE;
+	bool convexFound = false;
 	int i = 0;
 	while (i < p.nbPts && !convexFound) {
 		Vector2d c;
-		BOOL empty = EmptyTriangle(&p, i - 1, i, i + 1, &c);
+		bool empty = EmptyTriangle(&p, i - 1, i, i + 1, &c);
 		if (empty || sh.nbIndex == 3) {
-			int _i1 = IDX(i - 1, p.nbPts);
-			int _i2 = IDX(i, p.nbPts);
-			int _i3 = IDX(i + 1, p.nbPts);
+			size_t _i1 = IDX(i - 1, p.nbPts);
+			size_t _i2 = IDX(i, p.nbPts);
+			size_t _i3 = IDX(i + 1, p.nbPts);
 			if (IsInPoly(c.u, c.v, p.pts, p.nbPts)) {
-				convexFound = TRUE;
+				convexFound = true;
 				// Orientation
 				if (IsConvex(&p, i)) p.sign = 1.0;
 				else                 p.sign = -1.0;
@@ -78,7 +79,7 @@ void Facet::DetectOrientation() {
 int Facet::RestoreDeviceObjects() {
 
 	// Initialize scene objects (OpenGL)
-	if (sh.isTextured > 0) {
+	if (sh.isTextured) {
 		glGenTextures(1, &glTex);
 		glList = glGenLists(1);
 	}
@@ -102,9 +103,9 @@ int Facet::InvalidateDeviceObjects() {
 }
 
 
-BOOL Facet::SetTexture(double width, double height, BOOL useMesh) {
+bool Facet::SetTexture(double width, double height, bool useMesh) {
 
-	BOOL dimOK = (width*height > 0.0000001);
+	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
 		sh.texWidthD = width;
@@ -122,7 +123,7 @@ BOOL Facet::SetTexture(double width, double height, BOOL useMesh) {
 
 	texDimW = 0;
 	texDimH = 0;
-	hasMesh = FALSE;
+	hasMesh = false;
 	//SAFE_FREE(mesh);
 	for (size_t i = 0; i < meshvectorsize; i++)
 		SAFE_FREE(meshvector[i].points);
@@ -152,17 +153,17 @@ BOOL Facet::SetTexture(double width, double height, BOOL useMesh) {
 		glGenTextures(1, &glTex);
 		glList = glGenLists(1);
 		if (useMesh)
-			if (!BuildMesh()) return FALSE;
+			if (!BuildMesh()) return false;
 		if (sh.countDirection) {
 			dirCache = (VHIT *)calloc(sh.texWidth*sh.texHeight, sizeof(VHIT));
-			if (!dirCache) return FALSE;
+			if (!dirCache) return false;
 			//memset(dirCache,0,dirSize); //already done by calloc
 		}
 
 	}
 
-	UpdateFlags(); //set hasMesh to TRUE if everything was OK
-	return TRUE;
+	UpdateFlags(); //set hasMesh to true if everything was OK
+	return true;
 
 }
 
@@ -175,34 +176,34 @@ void Facet::glVertex2u(double u, double v) {
 }
 
 
-BOOL Facet::BuildMesh() {
+bool Facet::BuildMesh() {
 
 	/*mesh = (SHELEM *)malloc(sh.texWidth * sh.texHeight * sizeof(SHELEM));
 	if (!mesh) {
 		//Couldn't allocate memory
-		return FALSE;
+		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
 	meshPts = (MESH *)malloc(sh.texWidth * sh.texHeight * sizeof(MESH));
 	if (!meshPts) {
-		return FALSE;
+		return false;
 	}*/
 	cellPropertiesIds = (int *)malloc(sh.texWidth * sh.texHeight * sizeof(int));
 	if (!cellPropertiesIds) {
 		//Couldn't allocate memory
-		return FALSE;
+		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
 	meshvector = (CellProperties *)malloc(sh.texWidth * sh.texHeight * sizeof(CellProperties)); //will shrink at the end
 	if (!meshvector) {
 		//Couldn't allocate memory
-		return FALSE;
+		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 
 
 	}
 	meshvectorsize = 0;
-	hasMesh = TRUE;
+	hasMesh = true;
 	//memset(mesh, 0, sh.texWidth * sh.texHeight * sizeof(SHELEM));
 	//memset(meshPts, 0, sh.texWidth * sh.texHeight * sizeof(MESH));
 	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
@@ -216,7 +217,7 @@ BOOL Facet::BuildMesh() {
 	double rh = sh.V.Norme() * ih;
 	double *vList;
 	double fA = iw*ih;
-	int    nbv;
+	size_t    nbv;
 
 	P1.pts = (Vector2d *)malloc(4 * sizeof(Vector2d));
 
@@ -236,7 +237,7 @@ BOOL Facet::BuildMesh() {
 		for (int i = 0;i < sh.texWidth;i++) {
 			sx = (double)i;
 
-			BOOL allInside = FALSE;
+			bool allInside = false;
 			double u0 = sx * iw;
 			double v0 = sy * ih;
 			double u1 = (sx + 1.0) * iw;
@@ -274,14 +275,14 @@ BOOL Facet::BuildMesh() {
 						// Polyon intersection error !
 						// Switch back to brute force
 						A = GetInterAreaBF(&P2, u0, v0, u1, v1, &uC, &vC);
-						BOOL fullElem = IS_ZERO(fA - A);
+						bool fullElem = IS_ZERO(fA - A);
 						if (!fullElem) {
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
 							cellprop.uCenter = uC;
 							cellprop.vCenter = vC;
 							cellprop.nbPoints = 0;
 							cellprop.points = NULL;
-							cellPropertiesIds[i + j*sh.texWidth] = meshvectorsize;
+							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
 						}
 						else {
@@ -293,7 +294,7 @@ BOOL Facet::BuildMesh() {
 					}
 					else {
 
-						BOOL fullElem = IS_ZERO(fA - A);
+						bool fullElem = IS_ZERO(fA - A);
 						if (!fullElem) {
 							// !! P1 and P2 are in u,v coordinates !!
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
@@ -311,7 +312,7 @@ BOOL Facet::BuildMesh() {
 								newPoint.v = vList[2 * n + 1];
 								cellprop.points[n] = (newPoint);
 							}
-							cellPropertiesIds[i + j*sh.texWidth] = meshvectorsize;
+							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
 							//nbElem++;
 
@@ -334,7 +335,7 @@ BOOL Facet::BuildMesh() {
 				/*mesh[i + j*sh.texWidth].area = (float)(rw*rh);
 				mesh[i + j*sh.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
 				mesh[i + j*sh.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
-				mesh[i + j*sh.texWidth].full = TRUE;
+				mesh[i + j*sh.texWidth].full = true;
 				mesh[i + j*sh.texWidth].elemId = nbElem;
 
 				// Mesh coordinates
@@ -373,7 +374,7 @@ BOOL Facet::BuildMesh() {
 
 	free(P1.pts);
 	if (mApp->needsMesh) BuildMeshList();
-	return TRUE;
+	return true;
 
 }
 
@@ -398,7 +399,7 @@ void Facet::BuildMeshList() {
 			glBegin(GL_POLYGON);
 			size_t nbPts = GetMeshNbPoint(i);
 			for (size_t n = 0; n < nbPts; n++) {
-				glEdgeFlag(TRUE);
+				glEdgeFlag(true);
 				Vector2d pt = GetMeshPoint(i, n);
 				glVertex2u(pt.u, pt.v);
 			}
@@ -429,10 +430,9 @@ void Facet::BuildSelElemList() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1.0f, -1.0f);
-		for (int i = 0; i < selectedElem.width; i++) {
-			for (int j = 0; j < selectedElem.height; j++) {
-
-				int add = (selectedElem.u + i) + (selectedElem.v + j)*sh.texWidth;
+		for (size_t i = 0; i < selectedElem.width; i++) {
+			for (size_t j = 0; j < selectedElem.height; j++) {
+				size_t add = (selectedElem.u + i) + (selectedElem.v + j)*sh.texWidth;
 				//int elId = mesh[add].elemId;
 
 				//if (cellPropertiesIds[add]!=-1 && meshvector[cellPropertiesIds[add]].elemId>=0) {
@@ -440,12 +440,12 @@ void Facet::BuildSelElemList() {
 
 					glBegin(GL_POLYGON);
 					/*for (int n = 0; n < meshPts[elId].nbPts; n++) {
-						glEdgeFlag(TRUE);
+						glEdgeFlag(true);
 						glVertex2u(meshPts[elId].pts[n].u, meshPts[elId].pts[n].v);
 					}*/
 					for (size_t p = 0;p < GetMeshNbPoint(add);p++) {
 						Vector2d point = GetMeshPoint(add, p);
-						glEdgeFlag(TRUE);
+						glEdgeFlag(true);
 						glVertex2u(point.u, point.v);
 					}
 					glEnd();
@@ -455,7 +455,6 @@ void Facet::BuildSelElemList() {
 			}
 		}
 
-
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_POLYGON_OFFSET_LINE);
 		glDisable(GL_LINE_SMOOTH);
@@ -463,9 +462,7 @@ void Facet::BuildSelElemList() {
 
 		// Empty selection
 		if (nbSel == 0) UnselectElem();
-
 	}
-
 }
 
 void Facet::UnselectElem() {
@@ -478,14 +475,14 @@ void Facet::UnselectElem() {
 
 // -----------------------------------------------------------
 
-void Facet::SelectElem(int u, int v, int width, int height) {
+void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 
 	UnselectElem();
 
 	if (cellPropertiesIds && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
 
-		int maxW = sh.texWidth - u;
-		int maxH = sh.texHeight - v;
+		size_t maxW = sh.texWidth - u;
+		size_t maxH = sh.texHeight - v;
 		selectedElem.u = u;
 		selectedElem.v = v;
 		selectedElem.width = MIN(maxW, width);
@@ -517,7 +514,7 @@ void Facet::Explode(FACETGROUP *group) {
 		if (cellPropertiesIds[i] != -2) {
 			try {
 				Facet *f = new Facet(GetMeshNbPoint(i));
-				f->Copy(this);
+				f->CopyFacetProperties(this);
 				group->facets[i] = f;
 
 			}
@@ -555,7 +552,7 @@ void Facet::FillVertexArray(InterfaceVertex *v) {
 
 }
 
-size_t Facet::GetTexSwapSize(BOOL useColormap) {
+size_t Facet::GetTexSwapSize(bool useColormap) {
 
 	size_t tSize = texDimW*texDimH;
 	if (useColormap) tSize = tSize * 4;
@@ -563,21 +560,21 @@ size_t Facet::GetTexSwapSize(BOOL useColormap) {
 
 }
 
-size_t Facet::GetTexSwapSizeForRatio(double ratio, BOOL useColor) {
+size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
-	BOOL dimOK = (width*height > 0.0000001);
+	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
 
 		int iwidth = (int)ceil(width);
 		int iheight = (int)ceil(height);
 		int m = MAX(iwidth, iheight);
-		int tDim = GetPower2(m);
+		size_t tDim = GetPower2(m);
 		if (tDim < 16) tDim = 16;
 		size_t tSize = tDim*tDim;
 		if (useColor) tSize *= 4;
@@ -585,12 +582,8 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, BOOL useColor) {
 
 	}
 	else {
-
-
 		return 0;
-
 	}
-
 }
 
 size_t Facet::GetNbCell() {
@@ -606,7 +599,7 @@ size_t Facet::GetNbCellForRatio(double ratio) {
 	double width = nU*ratio;
 	double height = nV*ratio;
 
-	BOOL dimOK = (width*height > 0.0000001);
+	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
 		int iwidth = (int)ceil(width);
@@ -624,9 +617,9 @@ void Facet::SwapNormal() {
 
 	// Revert vertex order (around the second point)
 
-	int *tmp = (int *)malloc(sh.nbIndex * sizeof(int));
-	for (int i = sh.nbIndex, j = 0; i > 0; i--, j++)
-		tmp[(i + 1) % sh.nbIndex] = GetIndex(j + 1);
+	size_t* tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
+	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++)
+		tmp[(i + 1) % sh.nbIndex] = GetIndex((int)j + 1);
 	free(indices);
 	indices = tmp;
 
@@ -644,9 +637,9 @@ void Facet::ShiftVertex() {
 
 	// Shift vertex
 
-	int *tmp = (int *)malloc(sh.nbIndex * sizeof(int));
-	for (int i = 0; i < sh.nbIndex; i++)
-		tmp[i] = GetIndex(i + 1);
+	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
+	for (size_t i = 0; i < sh.nbIndex; i++)
+		tmp[i] = GetIndex((int)i + 1);
 	free(indices);
 	indices = tmp;
 
@@ -657,22 +650,22 @@ void Facet::ShiftVertex() {
 void Facet::InitVisibleEdge() {
 
 	// Detect non visible edge (for polygon which contains holes)
-	memset(visible, 0xFF, sh.nbIndex * sizeof(BOOL));
+	memset(visible, 0xFF, sh.nbIndex * sizeof(bool));
 
 	for (int i = 0;i < sh.nbIndex;i++) {
 
-		int p11 = GetIndex(i);
-		int p12 = GetIndex(i + 1);
+		size_t p11 = GetIndex(i);
+		size_t p12 = GetIndex(i + 1);
 
-		for (int j = i + 1;j < sh.nbIndex;j++) {
+		for (size_t j = i + 1;j < sh.nbIndex;j++) {
 
-			int p21 = GetIndex(j);
-			int p22 = GetIndex(j + 1);
+			size_t p21 = GetIndex((int)j);
+			size_t p22 = GetIndex((int)j + 1);
 
 			if ((p11 == p22 && p12 == p21) || (p11 == p21 && p12 == p22)) {
 				// Invisible edge found
-				visible[i] = FALSE;
-				visible[j] = FALSE;
+				visible[i] = false;
+				visible[j] = false;
 			}
 
 		}
@@ -681,22 +674,23 @@ void Facet::InitVisibleEdge() {
 
 }
 
-int Facet::GetIndex(int idx) {
-
+size_t Facet::GetIndex(int idx) {
 	if (idx < 0) {
 		return indices[(sh.nbIndex + idx) % sh.nbIndex];
 	}
 	else {
-
 		return indices[idx % sh.nbIndex];
 	}
-
 }
 
-float Facet::GetMeshArea(int index,BOOL correct2sides) {
+size_t Facet::GetIndex(size_t idx) {
+		return indices[idx % sh.nbIndex];
+}
+
+float Facet::GetMeshArea(size_t index,bool correct2sides) {
 	if (!cellPropertiesIds) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
-		return ((correct2sides && sh.is2sided) ? 2.0f : 1.0f) / (tRatio*tRatio);
+		return (float)(((correct2sides && sh.is2sided) ? 2.0f : 1.0f) / (tRatio*tRatio));
 	}
 	else if (cellPropertiesIds[index] == -2) {
 		return 0.0f;
@@ -706,7 +700,7 @@ float Facet::GetMeshArea(int index,BOOL correct2sides) {
 	}
 }
 
-size_t Facet::GetMeshNbPoint(int index)
+size_t Facet::GetMeshNbPoint(size_t index)
 {
 	size_t nbPts;
 	if (cellPropertiesIds[index] == -1) nbPts = 4;
@@ -715,7 +709,7 @@ size_t Facet::GetMeshNbPoint(int index)
 	return nbPts;
 }
 
-Vector2d Facet::GetMeshPoint(int index, int pointId)
+Vector2d Facet::GetMeshPoint(size_t index, size_t pointId)
 {
 	Vector2d result;
 	if (!cellPropertiesIds) {
@@ -784,7 +778,7 @@ Vector2d Facet::GetMeshPoint(int index, int pointId)
 }
 
 
-Vector2d Facet::GetMeshCenter(int index)
+Vector2d Facet::GetMeshCenter(size_t index)
 {
 	Vector2d result;
 	if (!cellPropertiesIds) {
@@ -823,7 +817,7 @@ double Facet::GetArea() {
 	return sh.area*(sh.is2sided ? 2.0 : 1.0);
 }
 
-BOOL Facet::IsTXTLinkFacet() {
+bool Facet::IsTXTLinkFacet() {
 	return ((sh.opacity == 0.0) && (sh.sticking >= 1.0));
 }
 

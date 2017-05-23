@@ -14,11 +14,7 @@
   GNU General Public License for more details.
 */
 
-#include <SDL_opengl.h>
-#include "GLWindow.h"
-#include "GLLabel.h"
-#include "GLTitledPanel.h"
-#include "GLTextField.h"
+//#include <SDL_opengl.h>
 
 #ifndef _GLCOLORBOXH_
 #define _GLCOLORBOXH_
@@ -56,7 +52,7 @@ private:
   float          curH;
   float          curS;
   float          curV;
-  BOOL           draggV;
+  bool           draggV;
 
   GLColorBox(char *title,int *r,int *g,int *b);
   ~GLColorBox();
@@ -65,7 +61,7 @@ private:
   void ManageEvent(SDL_Event *evt);
 
   void rgb_to_hsv( int ri,int gi,int bi, float *h,float *s,float *v);
-  DWORD hsv_to_rgb( float h,float s,float v,BOOL swap=FALSE );
+  DWORD hsv_to_rgb( float h,float s,float v,bool swap=false );
   float get_red( DWORD c );
   float get_green( DWORD c );
   float get_blue( DWORD c );

@@ -20,6 +20,13 @@
 #include "../GLColorBox.h"
 #include "../GLToolkit.h"
 #include "../GLWindowManager.h"
+#include "../GLTitledPanel.h"
+#include "../GLToggle.h"
+#include "../GLButton.h"
+#include "../GLCombo.h"
+#include "../GLLabel.h"
+#include "../GLTextField.h"
+#include "AxisPanel.h"
 
 static int textCR = 0;
 static int textCG = 0;
@@ -42,18 +49,18 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     // **********************************************
 
     gLegendPanel = new GLTitledPanel("Legends");
-    gLegendPanel->SetBold(TRUE);
+    gLegendPanel->SetBold(true);
     gColorFontPanel= new GLTitledPanel("Colors & Fonts");
-    gColorFontPanel->SetBold(TRUE);
+    gColorFontPanel->SetBold(true);
     gGridPanel= new GLTitledPanel("Axis grid");
-    gGridPanel->SetBold(TRUE);
+    gGridPanel->SetBold(true);
     gMiscPanel= new GLTitledPanel("Misc");
-    gMiscPanel->SetBold(TRUE);
+    gMiscPanel->SetBold(true);
 
     generalLegendLabel = new GLLabel("Chart title");
     generalLegendLabel->SetTextColor(textCR,textCG,textCB);
     generalLegendText = new GLTextField(0,"");
-    generalLegendText->SetEditable(TRUE);
+    generalLegendText->SetEditable(true);
     generalLegendText->SetText(chart->GetHeader());
 
     generalLabelVisibleCheck = new GLToggle(0,"Visible");
@@ -63,7 +70,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     generalBackColorLabel = new GLLabel("Chart background");
     generalBackColorLabel->SetTextColor(textCR,textCG,textCB);
     generalBackColorView = new GLLabel("");
-    generalBackColorView->SetOpaque(TRUE);
+    generalBackColorView->SetOpaque(true);
     generalBackColorView->SetBorder(BORDER_ETCHED);
     GLCColor bColor = chart->GetChartBackground();
     generalBackColorView->SetBackgroundColor(bColor.r,bColor.g,bColor.b);
@@ -90,9 +97,9 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     generalGridCombo->SetValueAt(4,"On X and Y1");
     generalGridCombo->SetValueAt(5,"On X and Y2");
 
-    BOOL vx = chart->GetXAxis()->IsGridVisible();
-    BOOL vy1 = chart->GetY1Axis()->IsGridVisible();
-    BOOL vy2 = chart->GetY2Axis()->IsGridVisible();
+    bool vx = chart->GetXAxis()->IsGridVisible();
+    bool vy1 = chart->GetY1Axis()->IsGridVisible();
+    bool vy2 = chart->GetY2Axis()->IsGridVisible();
 
     int sel = 0;
     if (vx && !vy1 && !vy2) sel = 1;
@@ -118,7 +125,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     generalDurationLabel = new GLLabel("Display duration (s)");
     generalDurationLabel->SetTextColor(textCR,textCG,textCB);
     generalDurationText = new GLTextField(0,"");
-    generalDurationText->SetEditable(TRUE);
+    generalDurationText->SetEditable(true);
 
     double d = chart->GetDisplayDuration();
     if(d==MAX_VALUE) sprintf(tmp,"Infinity");
@@ -129,14 +136,14 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     generalFontHeaderLabel->SetTextColor(textCR,textCG,textCB);
     generalFontHeaderSampleLabel = new GLLabel("Sample text");
     generalFontHeaderSampleLabel->SetTextColor(textCR,textCG,textCB);
-    generalFontHeaderSampleLabel->SetOpaque(FALSE);
+    generalFontHeaderSampleLabel->SetOpaque(false);
     generalFontHeaderBtn = new GLButton(0,"...");
 
     generalFontLabelLabel = new GLLabel("Label font");
     generalFontLabelLabel->SetTextColor(textCR,textCG,textCB);
     generalFontLabelSampleLabel = new GLLabel("Sample 0123456789");
     generalFontLabelSampleLabel->SetTextColor(textCR,textCG,textCB);
-    generalFontLabelSampleLabel->SetOpaque(FALSE);
+    generalFontLabelSampleLabel->SetOpaque(false);
     generalFontLabelBtn = new GLButton(0,"...");
 
     // Global frame construction
@@ -175,31 +182,31 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     Add(0,generalDurationText);
 
     gLegendPanel->SetBounds(5,10,290,50);
-    setBounds(gLegendPanel,generalLabelVisibleCheck,5, 20, 80, 19);
-    setBounds(gLegendPanel,generalLabelPLabel,120, 20, 65, 19);
-    setBounds(gLegendPanel,generalLabelPCombo,190, 20, 95, 19);
+	SetCompBoundsRelativeTo(gLegendPanel,generalLabelVisibleCheck,5, 20, 80, 19);
+	SetCompBoundsRelativeTo(gLegendPanel,generalLabelPLabel,120, 20, 65, 19);
+	SetCompBoundsRelativeTo(gLegendPanel,generalLabelPCombo,190, 20, 95, 19);
 
     gColorFontPanel->SetBounds(5,70,290,100);
-    setBounds(gColorFontPanel,generalBackColorLabel,10, 20, 140, 19);
-    setBounds(gColorFontPanel,generalBackColorView,155, 20, 105, 19);
-    setBounds(gColorFontPanel,generalBackColorBtn,265, 20, 20, 19);
-    setBounds(gColorFontPanel,generalFontHeaderLabel,10, 45, 90, 19);
-    setBounds(gColorFontPanel,generalFontHeaderSampleLabel,105, 45, 145, 19);
-    setBounds(gColorFontPanel,generalFontHeaderBtn,265, 45, 20, 19);
-    setBounds(gColorFontPanel,generalFontLabelLabel,10, 70, 90, 19);
-    setBounds(gColorFontPanel,generalFontLabelSampleLabel,105, 70, 145, 19);
-    setBounds(gColorFontPanel,generalFontLabelBtn,265, 70, 20, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalBackColorLabel,10, 20, 140, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalBackColorView,155, 20, 105, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalBackColorBtn,265, 20, 20, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontHeaderLabel,10, 45, 90, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontHeaderSampleLabel,105, 45, 145, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontHeaderBtn,265, 45, 20, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontLabelLabel,10, 70, 90, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontLabelSampleLabel,105, 70, 145, 19);
+	SetCompBoundsRelativeTo(gColorFontPanel,generalFontLabelBtn,265, 70, 20, 19);
 
     gGridPanel->SetBounds(5,178,290,50);
-    setBounds(gGridPanel,generalGridCombo,10, 20, 120, 19);
-    setBounds(gGridPanel,generalGridStyleLabel,135, 20, 45, 19);
-    setBounds(gGridPanel,generalGridStyleCombo,185, 20, 100, 19);
+	SetCompBoundsRelativeTo(gGridPanel,generalGridCombo,10, 20, 120, 19);
+	SetCompBoundsRelativeTo(gGridPanel,generalGridStyleLabel,135, 20, 45, 19);
+	SetCompBoundsRelativeTo(gGridPanel,generalGridStyleCombo,185, 20, 100, 19);
 
     gMiscPanel->SetBounds(5,238,290,75);
-    setBounds(gMiscPanel,generalLegendLabel,10, 20, 70, 19);
-    setBounds(gMiscPanel,generalLegendText,85, 20, 200, 19);
-    setBounds(gMiscPanel,generalDurationLabel,10, 45, 120, 19);
-    setBounds(gMiscPanel,generalDurationText,135, 45, 150, 19);
+	SetCompBoundsRelativeTo(gMiscPanel,generalLegendLabel,10, 20, 70, 19);
+	SetCompBoundsRelativeTo(gMiscPanel,generalLegendText,85, 20, 200, 19);
+	SetCompBoundsRelativeTo(gMiscPanel,generalDurationLabel,10, 45, 120, 19);
+	SetCompBoundsRelativeTo(gMiscPanel,generalDurationText,135, 45, 150, 19);
 
     // **********************************************
     // Axis panel construction
@@ -248,7 +255,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
     // ------------------------------
     if (src == closeBtn) {
-      SetVisible(FALSE);
+      SetVisible(false);
     } else if (src == generalBackColorBtn) {
 
       GLCColor c = chart->GetChartBackground();
@@ -293,34 +300,34 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
       switch (sel) {
         case 1: // On X
-          chart->GetXAxis()->SetGridVisible(TRUE);
-          chart->GetY1Axis()->SetGridVisible(FALSE);
-          chart->GetY2Axis()->SetGridVisible(FALSE);
+          chart->GetXAxis()->SetGridVisible(true);
+          chart->GetY1Axis()->SetGridVisible(false);
+          chart->GetY2Axis()->SetGridVisible(false);
           break;
         case 2: // On Y1
-          chart->GetXAxis()->SetGridVisible(FALSE);
-          chart->GetY1Axis()->SetGridVisible(TRUE);
-          chart->GetY2Axis()->SetGridVisible(FALSE);
+          chart->GetXAxis()->SetGridVisible(false);
+          chart->GetY1Axis()->SetGridVisible(true);
+          chart->GetY2Axis()->SetGridVisible(false);
           break;
         case 3: // On Y2
-          chart->GetXAxis()->SetGridVisible(FALSE);
-          chart->GetY1Axis()->SetGridVisible(FALSE);
-          chart->GetY2Axis()->SetGridVisible(TRUE);
+          chart->GetXAxis()->SetGridVisible(false);
+          chart->GetY1Axis()->SetGridVisible(false);
+          chart->GetY2Axis()->SetGridVisible(true);
           break;
         case 4: // On X,Y1
-          chart->GetXAxis()->SetGridVisible(TRUE);
-          chart->GetY1Axis()->SetGridVisible(TRUE);
-          chart->GetY2Axis()->SetGridVisible(FALSE);
+          chart->GetXAxis()->SetGridVisible(true);
+          chart->GetY1Axis()->SetGridVisible(true);
+          chart->GetY2Axis()->SetGridVisible(false);
           break;
         case 5: // On X,Y2
-          chart->GetXAxis()->SetGridVisible(TRUE);
-          chart->GetY1Axis()->SetGridVisible(FALSE);
-          chart->GetY2Axis()->SetGridVisible(TRUE);
+          chart->GetXAxis()->SetGridVisible(true);
+          chart->GetY1Axis()->SetGridVisible(false);
+          chart->GetY2Axis()->SetGridVisible(true);
           break;
         default: // None
-          chart->GetXAxis()->SetGridVisible(FALSE);
-          chart->GetY1Axis()->SetGridVisible(FALSE);
-          chart->GetY2Axis()->SetGridVisible(FALSE);
+          chart->GetXAxis()->SetGridVisible(false);
+          chart->GetY1Axis()->SetGridVisible(false);
+          chart->GetY2Axis()->SetGridVisible(false);
           break;
       }
       commit();
@@ -380,9 +387,3 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
   void GLChartOptions::error(char *m) {
     GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
   }
-
-void GLChartOptions::setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h) {
-  int xc,yc,wc,hc;
-  org->GetBounds(&xc,&yc,&wc,&hc);
-  src->SetBounds(xc+x,yc+y,w,h);
-}

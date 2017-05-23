@@ -20,6 +20,13 @@
 #include "../GLColorBox.h"
 #include "../GLToolkit.h"
 #include "../GLWindowManager.h"
+#include "../GLCombo.h"
+#include "../GLButton.h"
+#include "../GLSpinner.h"
+#include "../GLToggle.h"
+#include "../GLLabel.h"
+#include "../GLTitledPanel.h"
+#include "../GLTextField.h"
 
 static int textCR = 0;
 static int textCG = 0;
@@ -57,14 +64,14 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     viewTypeCombo->SetValueAt(1,"Bar graph");
 
     lineColorView = new GLLabel("");
-    lineColorView->SetOpaque(TRUE);
+    lineColorView->SetOpaque(true);
     lineColorView->SetBorder(BORDER_ETCHED);
     lineColorBtn = new GLButton(0,"...");
     lineColorLabel = new GLLabel("Line Color");
     lineColorLabel->SetTextColor(textCR,textCG,textCB);
 
     fillColorView = new GLLabel("");
-    fillColorView->SetOpaque(TRUE);
+    fillColorView->SetOpaque(true);
     fillColorView->SetBorder(BORDER_ETCHED);
     fillColorBtn = new GLButton(0,"...");
     fillColorLabel = new GLLabel("Fill Color");
@@ -105,7 +112,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     lineNameLabel = new GLLabel("Name");
     lineNameLabel->SetTextColor(textCR,textCG,textCB);
     lineNameText = new GLTextField(0,"");
-    lineNameText->SetEditable(TRUE);
+    lineNameText->SetEditable(true);
 
     Add(0,viewTypeLabel);
     Add(0,viewTypeCombo);
@@ -175,7 +182,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     // Marker panel construction
     markerColorView = new GLLabel("");
-    markerColorView->SetOpaque(TRUE);
+    markerColorView->SetOpaque(true);
     markerColorView->SetBorder(BORDER_ETCHED);
 
     markerColorBtn = new GLButton(0,"...");
@@ -238,17 +245,17 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     transformA0Label = new GLLabel("A0");
     transformA0Label->SetTextColor(textCR,textCG,textCB);
     transformA0Text = new GLTextField(0,"");
-    transformA0Text->SetEditable(TRUE);
+    transformA0Text->SetEditable(true);
 
     transformA1Label = new GLLabel("A1");
     transformA1Label->SetTextColor(textCR,textCG,textCB);
     transformA1Text = new GLTextField(0,"");
-    transformA1Text->SetEditable(TRUE);
+    transformA1Text->SetEditable(true);
 
     transformA2Label = new GLLabel("A2");
     transformA2Label->SetTextColor(textCR,textCG,textCB);
     transformA2Text = new GLTextField(0,"");
-    transformA2Text->SetEditable(TRUE);
+    transformA2Text->SetEditable(true);
 
     Add(3,transformHelpLabel);
     Add(3,transformA0Label);
@@ -290,14 +297,14 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     GLLabel *tensionLabel = new GLLabel("Tension");
     tensionLabel->SetTextColor(textCR,textCG,textCB);
     tensionText = new GLTextField(0,"");
-    tensionText->SetEditable(TRUE);
-    tensionText->SetEnabled(FALSE);
+    tensionText->SetEditable(true);
+    tensionText->SetEnabled(false);
 
     GLLabel *biasLabel = new GLLabel("Bias");
     biasLabel->SetTextColor(textCR,textCG,textCB);
     biasText = new GLTextField(0,"");
-    biasText->SetEditable(TRUE);
-    biasText->SetEnabled(FALSE);
+    biasText->SetEditable(true);
+    biasText->SetEnabled(false);
 
     noInterpBtn->SetBounds(8,10,90,19);
     linearBtn->SetBounds(8,35,90,19);
@@ -346,11 +353,11 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     GLLabel *sigmaLabel = new GLLabel("Sigma");
     sigmaLabel->SetTextColor(textCR,textCG,textCB);
     sigmaText = new GLTextField(0,"");
-    sigmaText->SetEditable(TRUE);
-    sigmaText->SetEnabled(FALSE);
+    sigmaText->SetEditable(true);
+    sigmaText->SetEnabled(false);
 
     GLTitledPanel *bPanel = new GLTitledPanel("Boundary extrapolation");
-    bPanel->SetBold(TRUE);
+    bPanel->SetBold(true);
 
     noExtBtn = new GLToggle(0,"None");
     noExtBtn->SetTextColor(textCR,textCG,textCB);
@@ -370,9 +377,9 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     sigmaLabel->SetBounds(140,35,50,19);
     sigmaText->SetBounds(190,35,50,19);
     bPanel->SetBounds(5,110,235,70);
-    setBounds(bPanel,noExtBtn,5,20,90,19);
-    setBounds(bPanel,flatExtBtn,5,45,90,19);
-    setBounds(bPanel,linearExtBtn,120,20,90,19);
+    bPanel->SetCompBounds(noExtBtn,5,20,90,19);
+    bPanel->SetCompBounds(flatExtBtn,5,45,90,19);
+    bPanel->SetCompBounds(linearExtBtn,120,20,90,19);
 
     Add(5,noSmoothBtn);
     Add(5,flatSmoothBtn);
@@ -481,114 +488,114 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     transformA2Text->SetText(tmp);
     stepSpinner->SetValue(dataView->GetInterpolationStep());
 
-    noInterpBtn->SetState(FALSE);
-    linearBtn->SetState(FALSE);
-    cubicBtn->SetState(FALSE);
-    cosineBtn->SetState(FALSE);
-    hermiteBtn->SetState(FALSE);
+    noInterpBtn->SetState(false);
+    linearBtn->SetState(false);
+    cubicBtn->SetState(false);
+    cosineBtn->SetState(false);
+    hermiteBtn->SetState(false);
 
     switch(dataView->GetInterpolationMethod()) {
       case INTERPOLATE_NONE:
-        noInterpBtn->SetState(TRUE);
+        noInterpBtn->SetState(true);
         break;
       case INTERPOLATE_LINEAR:
-        linearBtn->SetState(TRUE);
+        linearBtn->SetState(true);
         break;
       case INTERPOLATE_CUBIC:
-        cubicBtn->SetState(TRUE);
+        cubicBtn->SetState(true);
         break;
       case INTERPOLATE_COSINE:
-        cosineBtn->SetState(TRUE);
+        cosineBtn->SetState(true);
         break;
       case INTERPOLATE_HERMITE:
-        hermiteBtn->SetState(TRUE);
+        hermiteBtn->SetState(true);
         break;
     }
 
-    noExtBtn->SetState(FALSE);
-    flatExtBtn->SetState(FALSE);
-    linearExtBtn->SetState(FALSE);
+    noExtBtn->SetState(false);
+    flatExtBtn->SetState(false);
+    linearExtBtn->SetState(false);
 
     switch(dataView->GetSmoothingExtrapolation()) {
       case SMOOTH_EXT_NONE:
-        noExtBtn->SetState(TRUE);
+        noExtBtn->SetState(true);
         break;
       case SMOOTH_EXT_FLAT:
-        flatExtBtn->SetState(TRUE);
+        flatExtBtn->SetState(true);
         break;
       case SMOOTH_EXT_LINEAR:
-        linearExtBtn->SetState(TRUE);
+        linearExtBtn->SetState(true);
         break;
     }
 
-    noSmoothBtn->SetState(FALSE);
-    flatSmoothBtn->SetState(FALSE);
-    triangularSmoothBtn->SetState(FALSE);
-    gaussianSmoothBtn->SetState(FALSE);
+    noSmoothBtn->SetState(false);
+    flatSmoothBtn->SetState(false);
+    triangularSmoothBtn->SetState(false);
+    gaussianSmoothBtn->SetState(false);
 
     switch(dataView->GetSmoothingMethod()) {
       case SMOOTH_NONE:
-        noSmoothBtn->SetState(TRUE);
+        noSmoothBtn->SetState(true);
         break;
       case SMOOTH_FLAT:
-        flatSmoothBtn->SetState(TRUE);
+        flatSmoothBtn->SetState(true);
         break;
       case SMOOTH_TRIANGULAR:
-        triangularSmoothBtn->SetState(TRUE);
+        triangularSmoothBtn->SetState(true);
         break;
       case SMOOTH_GAUSSIAN:
-        gaussianSmoothBtn->SetState(TRUE);
+        gaussianSmoothBtn->SetState(true);
         break;
     }
 
-    noMathBtn->SetState(FALSE);
-    derivativeBtn->SetState(FALSE);
-    integralBtn->SetState(FALSE);
-    fftModBtn->SetState(FALSE);
-    fftPhaseBtn->SetState(FALSE);
+    noMathBtn->SetState(false);
+    derivativeBtn->SetState(false);
+    integralBtn->SetState(false);
+    fftModBtn->SetState(false);
+    fftPhaseBtn->SetState(false);
 
     switch(dataView->GetMathFunction()) {
       case MATH_NONE:
-        noMathBtn->SetState(TRUE);
+        noMathBtn->SetState(true);
         break;
       case MATH_DERIVATIVE:
-        derivativeBtn->SetState(TRUE);
+        derivativeBtn->SetState(true);
         break;
       case MATH_INTEGRAL:
-        integralBtn->SetState(TRUE);
+        integralBtn->SetState(true);
         break;
       case MATH_FFT_MODULUS:
-        fftModBtn->SetState(TRUE);
+        fftModBtn->SetState(true);
         break;
       case MATH_FFT_PHASE:
-        fftPhaseBtn->SetState(TRUE);
+        fftPhaseBtn->SetState(true);
         break;
     }
 
     sprintf(tmp,"%g",dataView->GetHermiteTension());
     tensionText->SetText(tmp);
-    tensionText->SetEnabled(FALSE);
+    tensionText->SetEnabled(false);
 
     sprintf(tmp,"%g",dataView->GetHermiteBias());
     biasText->SetText(tmp);
-    biasText->SetEnabled(FALSE);
+    biasText->SetEnabled(false);
 
     neighborSpinner->SetValue(dataView->GetSmoothingNeighbors());
 
     sprintf(tmp,"%g",dataView->GetSmoothingGaussSigma());
     sigmaText->SetText(tmp);
-    sigmaText->SetEnabled(FALSE);
+    sigmaText->SetEnabled(false);
 
     switch(dataView->GetInterpolationMethod()) {
       case INTERPOLATE_HERMITE:
-        biasText->SetEnabled(TRUE);
-        tensionText->SetEnabled(TRUE);
+        biasText->SetEnabled(true);
+        tensionText->SetEnabled(true);
         break;
     }
 
     switch(dataView->GetSmoothingMethod()) {
       case SMOOTH_GAUSSIAN:
-        sigmaText->SetEnabled(TRUE);
+        sigmaText->SetEnabled(true);
         break;
     }
 
@@ -608,7 +615,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     double d;
 
     if (src == closeBtn) {
-      SetVisible(FALSE);
+      SetVisible(false);
     } else if (src == lineColorBtn) {
 
       GLCColor c = dataView->GetColor();
@@ -810,10 +817,4 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 // Error message
 void GLDataViewOptions::error(char *m) {
   GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
-}
-
-void GLDataViewOptions::setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h) {
-  int xc,yc,wc,hc;
-  org->GetBounds(&xc,&yc,&wc,&hc);
-  src->SetBounds(xc+x,yc+y,w,h);
 }

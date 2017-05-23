@@ -25,6 +25,15 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTitledPanel.h"
+
+#include "Geometry.h"
+
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -136,7 +145,7 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
   RestoreDeviceObjects();
 	
   resultLabel->SetText("");
-  undoButton->SetEnabled(FALSE);
+  undoButton->SetEnabled(false);
   planeMode = -1;
   geom = g;
   work = w;
@@ -153,7 +162,7 @@ void SplitFacet::ClearUndoFacets() {
 		delete delFacet.f;
 	deletedFacetList.clear();
 	resultLabel->SetText("");
-	undoButton->SetEnabled(FALSE);
+	undoButton->SetEnabled(false);
 }
 
 void SplitFacet::ProcessMessage(GLComponent *src,int message) {
@@ -196,7 +205,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		EnableDisableControls(planeMode);
 	}
 	else if (src == getSelectedFacetButton) {
-		if (geom->GetNbSelected() != 1) {
+		if (geom->GetNbSelectedFacets() != 1) {
 			GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}
@@ -216,13 +225,13 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				newlyCreatedList.push_back(index);
 			}
 			geom->RemoveFacets(newlyCreatedList);
-			geom->RestoreFacets(deletedFacetList,FALSE); //Restore to original position
+			geom->RestoreFacets(deletedFacetList,false); //Restore to original position
 		} else {
 			int answer = GLMessageBox::Display("Geometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-			geom->RestoreFacets(deletedFacetList, TRUE); //Restore to end
+			geom->RestoreFacets(deletedFacetList, true); //Restore to end
 		}
 		deletedFacetList.clear();
-		undoButton->SetEnabled(FALSE);
+		undoButton->SetEnabled(false);
 		resultLabel->SetText("");
 		//Renumberformula
 		work->Reload();
@@ -230,7 +239,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		mApp->UpdateFacetlistSelected();
 		mApp->UpdateViewers();
     } else if (src==splitButton) {
-		if (geom->GetNbSelected()==0) {
+		if (geom->GetNbSelectedFacets()==0) {
 			GLMessageBox::Display("No facets selected","Nothing to split",GLDLG_OK,GLDLG_ICONERROR);
 			return;
 		}
@@ -321,7 +330,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets split, creating " << nbCreated <<" new.";
 				resultLabel->SetText(tmp.str().c_str());
-				if (deletedFacetList.size() > 0) undoButton->SetEnabled(TRUE);
+				if (deletedFacetList.size() > 0) undoButton->SetEnabled(true);
 				work->Reload();
 				mApp->UpdateModelParams();
 				mApp->UpdateFacetlistSelected();

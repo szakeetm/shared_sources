@@ -1,7 +1,7 @@
 #include "GrahamScan.h"
 
 GRpoint* GRfirstPoint; //GLOBAL POINTER TO MIN GRpoint IN DOUBLELY LINKED LIST
-int pubNbPoints;
+size_t pubNbPoints;
 int *pubReturnList;
 Vector2d *pubProjectedPoints;
 
@@ -16,7 +16,7 @@ public:
     double angle; //INTERMEDIATE ANGLE VALUE STORAGE
 };
 
-void grahamMain(Vector2d *projectedPoints,int nbPoints,int *returnList)
+void grahamMain(Vector2d *projectedPoints,size_t nbPoints,int *returnList)
 {
 	pubNbPoints = nbPoints;
 	pubProjectedPoints = projectedPoints;

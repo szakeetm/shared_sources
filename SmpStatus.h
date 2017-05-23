@@ -16,15 +16,18 @@
   GNU General Public License for more details.
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLList.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLCombo.h"
-#include "Worker.h"
-
 #ifndef _SMPSTATUSH_
 #define _SMPSTATUSH_
+
+#include "GLApp/GLWindow.h"
+
+
+class GLList;
+class GLTextField;
+class GLButton;
+class GLCombo;
+
+class Worker;
 
 class SmpStatus : public GLWindow {
 

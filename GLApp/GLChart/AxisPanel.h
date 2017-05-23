@@ -18,13 +18,16 @@
 #ifndef _GLCHARTAXISPANELH_
 #define _GLCHARTAXISPANELH_
 
-#include "../GLTabWindow.h"
-#include "../GLTitledPanel.h"
-#include "../GLButton.h"
-#include "../GLCombo.h"
-#include "../GLToggle.h"
-#include "../GLLabel.h"
-#include "../GLTextField.h"
+class GLAxis;
+class GLTitledPanel;
+class GLButton;
+class GLComponent;
+class GLCombo;
+class GLToggle;
+class GLTextField;
+class GLTabWindow;
+class GLLabel;
+class GLChart;
 
 class AxisPanel {
 
@@ -38,7 +41,6 @@ private:
 
   void commit();
   void error(char *m);
-  void setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h);
 
   GLAxis  *pAxis;
   GLChart *pChart;

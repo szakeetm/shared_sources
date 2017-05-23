@@ -16,14 +16,16 @@
 #include "GLWindow.h"
 #include "GLButton.h"
 #include "GLToolkit.h"
+#include "GLSprite.h"
+#include "GLFont.h"
 
 // ---------------------------------------------------------------------
 
 GLButton::GLButton(int compId,const char *text):GLComponent(compId) {
   SetText(text);
   state=0;
-  toggle=FALSE;
-  toggleState=FALSE;
+  toggle=false;
+  toggleState=false;
   icon = NULL;
   iconD = NULL;
   strcpy(iconName,"");
@@ -85,22 +87,22 @@ void GLButton::SetText(const char *text) {
 
 // ---------------------------------------------------------------------
 
-void GLButton::SetToggle(BOOL toggle) {
+void GLButton::SetToggle(bool toggle) {
   this->toggle = toggle;
-  if( !toggle ) toggleState = FALSE;
+  if( !toggle ) toggleState = false;
 }
 
 // ---------------------------------------------------------------------
 
-BOOL GLButton::GetState() {
+bool GLButton::GetState() {
   return toggleState;
 }
 
 // ---------------------------------------------------------------------
 
-void GLButton::SetState(BOOL checked) {
+void GLButton::SetState(bool checked) {
   toggleState = checked;
-  toggle = TRUE;
+  toggle = true;
 }
 
 // ---------------------------------------------------------------------
@@ -123,9 +125,9 @@ void GLButton::Paint() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if( !enabled && iconD ) 
-      iconD->Render(FALSE);
+      iconD->Render(false);
     else
-      icon->Render(FALSE);
+      icon->Render(false);
 
   } else {
 
@@ -137,17 +139,17 @@ void GLButton::Paint() {
     if( !enabled ) {
 
       font->SetTextColor(1.0f,1.0f,1.0f);
-      font->DrawText(sw+1,posY+4,text,FALSE);
+      font->DrawText(sw+1,posY+4,text,false);
       font->SetTextColor(0.4f,0.4f,0.4f);
-      font->DrawText(sw,posY+3,text,FALSE);
+      font->DrawText(sw,posY+3,text,false);
 
     } else {
 
       font->SetTextColor(r,g,b);
       if(state || toggleState)
-        font->DrawText(sw+1,posY+4,text,FALSE);
+        font->DrawText(sw+1,posY+4,text,false);
       else
-        font->DrawText(sw,posY+3,text,FALSE);
+        font->DrawText(sw,posY+3,text,false);
 
     }
 

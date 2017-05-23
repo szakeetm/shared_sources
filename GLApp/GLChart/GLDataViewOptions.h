@@ -18,7 +18,8 @@
 #ifndef _GLCHARTDVOPTIONSH_
 #define _GLCHARTDVOPTIONSH_
 
-#include "../GLSpinner.h"
+#include "..\GLTabWindow.h"
+class GLSpinner;
 
 class GLDataViewOptions : public GLTabWindow {
 
@@ -39,7 +40,6 @@ private:
   void updateControls();
   void error(char *m);
   void commit();
-  void setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h);
 
   // Global
   GLDataView *dataView;

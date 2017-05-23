@@ -13,13 +13,13 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include "GLTypes.h"
-#include "GLFont.h"
-
 #ifndef _GLWINDOWMANAGERH_
 #define _GLWINDOWMANAGERH_
+
+#include <SDL.h>
+//#include <SDL_opengl.h>
+//#include "GLTypes.h"
+//#include "GLFont.h"
 
 #define NO_MODIFIER    0
 #define ALT_MODIFIER   1
@@ -48,11 +48,11 @@ public:
   static void      SetDefault();
 
   // Key info
-  static BOOL      IsCtrlDown();
-  static BOOL      IsShiftDown();
-  static BOOL      IsAltDown();
-  static BOOL      IsCapsLockOn();
-  static BOOL      IsSpaceDown();
+  static bool      IsCtrlDown();
+  static bool      IsShiftDown();
+  static bool      IsAltDown();
+  static bool      IsCapsLockOn();
+  static bool      IsSpaceDown();
 
   // Registering
   static void RegisterWindow(GLWindow *wnd);
@@ -60,9 +60,9 @@ public:
   static void RegisterAcc(GLComponent *src,int keyCode,int modifier,int accId);
 
   // Processing
-  static BOOL RestoreDeviceObjects(int width,int height);
-  static BOOL ManageEvent(SDL_Event *evt);
-  static BOOL ProcessKey(SDL_Event *evt,BOOL processAcc);
+  static bool RestoreDeviceObjects(int width,int height);
+  static bool ManageEvent(SDL_Event *evt);
+  static bool ProcessKey(SDL_Event *evt,bool processAcc);
   static void RestoreDeviceObjects();
   static void InvalidateDeviceObjects();
   static void Resize();

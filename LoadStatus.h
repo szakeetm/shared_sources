@@ -13,17 +13,16 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLTitledPanel.h"
-#include "GLApp\GLList.h"
-
 #ifndef _LOADSTATUSH_
 #define _LOADSTATUSH_
 
+#include "GLApp/GLWindow.h"
+
 class Worker;
+class GLButton;
+class GLLabel;
+class GLTitledPanel;
+class GLList;
 
 class LoadStatus : public GLWindow {
 

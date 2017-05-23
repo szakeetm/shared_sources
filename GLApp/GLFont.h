@@ -13,12 +13,13 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#ifndef _GLFONT2DH_
+#define _GLFONT2DH_
 
 #include <SDL_opengl.h>
 #include "GLTypes.h"
 
-#ifndef _GLFONT2DH_
-#define _GLFONT2DH_
+
 class GLFont2D {
 
 public:
@@ -34,10 +35,10 @@ public:
   int RestoreDeviceObjects(int srcWidth,int scrHeight);
   
   // Draw a 2D text (in viewport coordinates)
-  void DrawText(const int &x,const int &y,char *text,const BOOL &loadMatrix=TRUE);
-  void DrawLargeText(int x,int y,char *text,float sizeFactor,BOOL loadMatrix=TRUE);
+  void DrawText(const int &x,const int &y,char *text,const bool &loadMatrix=true);
+  void DrawLargeText(int x,int y,char *text,float sizeFactor,bool loadMatrix=true);
   void DrawTextFast(int cx,int cy,const char *text);
-  void DrawTextV(int x,int y,char *text,BOOL loadMatrix=TRUE);
+  void DrawTextV(int x,int y,char *text,bool loadMatrix=true);
 
   // Release any allocated resource
   void InvalidateDeviceObjects();
@@ -49,7 +50,7 @@ public:
   void SetTextSize(int width,int height);
 
   // Set variable font width (Must be called before RestoreDeviceObject)
-  void SetVariableWidth(BOOL variable);
+  void SetVariableWidth(bool variable);
 
   // Get string size
   int GetTextWidth(const char *text);
@@ -71,7 +72,7 @@ private:
   float   bC;
   GLfloat pMatrix[16];
   int     cVarWidth[256];
-  BOOL    isVariable;
+  bool    isVariable;
 
 };
 

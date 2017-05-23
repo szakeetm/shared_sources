@@ -13,27 +13,31 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#ifndef _GLAPPH_
+#define _GLAPPH_
 
 extern long long	  nbDesStart;
 extern long long	  nbHitStart;
 
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include "GLTypes.h"
-#include "GLWindow.h"
-#include "GLComponent.h"
-#include "GLFont.h"
+#include "GLTypes.h"  //GL_OK
+//#include "GLWindow.h"
+//#include "GLComponent.h"
+//class GLWindow;
+class GLComponent;
+class GLWindow;
+//#include "GLFont.h"
 #include <string>
 
-#ifndef _GLAPPH_
-#define _GLAPPH_
+
 
 class GLApplication {
 
 protected:
 
     // Internal variables for the state of the app
-    BOOL      m_bWindowed;
+    bool      m_bWindowed;
     std::string     m_strWindowTitle;
     int       m_minScreenWidth;
     int       m_minScreenHeight;
@@ -41,7 +45,7 @@ protected:
     int       m_screenHeight;
     int       m_fscreenWidth;
     int       m_fscreenHeight;
-    BOOL      m_bResizable;
+    bool      m_bResizable;
     GLWindow  *wnd;
 
     // Top level window methods
@@ -60,9 +64,9 @@ protected:
 public:
 	virtual int EventProc(SDL_Event *event)                { return GL_OK; }
     // Functions to create, run, pause, and clean up the application
-    virtual int  Create(int width, int height, BOOL bFullScreen);
-    virtual void Pause(BOOL bPause);
-    virtual int  Resize(DWORD width, DWORD height, BOOL forceWindowed=FALSE);
+    virtual int  Create(int width, int height, bool bFullScreen);
+    virtual void Pause(bool bPause);
+    virtual int  Resize(DWORD width, DWORD height, bool forceWindowed=false);
     void  Run();
     void  Exit();
 
@@ -86,7 +90,7 @@ public:
 	float			  m_fTime;             // Number of second since app startup (WIN32 only)
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
-	BOOL wereEvents;
+	bool wereEvents;
 
 //#ifdef _DEBUG
     // Debugging stuff
@@ -99,7 +103,7 @@ public:
 
 private:
 
-   int setUpSDL(BOOL doFirstInit=FALSE);
+   int setUpSDL(bool doFirstInit=false);
 
    int m_bitsPerPixel;
    char errMsg[512];

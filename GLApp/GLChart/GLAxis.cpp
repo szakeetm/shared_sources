@@ -17,7 +17,8 @@
 
 #include "GLChart.h"
 #include "..\GLToolkit.h"
-#include <malloc.h>
+#include "..\GLApp.h"
+//#include <malloc.h>
 #include <float.h>
 #include <math.h>
 #include <time.h>
@@ -85,7 +86,7 @@ public:
   }
 
 
-  BOOL isValid() {
+  bool isValid() {
     return (d1 != NULL && d2 != NULL);
   }
 
@@ -100,14 +101,14 @@ GLAxis::GLAxis(GLComponent *parent,int orientation) {
   max = 100.0;
   minimum = 0.0;
   maximum = 100.0;
-  autoScale = FALSE;
+  autoScale = false;
   scale = LINEAR_SCALE;
   csize.width = 0;
   csize.height = 0;
   annotation = VALUE_ANNO;
   axisDuration = MAX_VALUE;
-  zeroAlwaysVisible = FALSE;
-  autoLabeling = TRUE;
+  zeroAlwaysVisible = false;
+  autoLabeling = true;
   dateFormat = (char *)FR_DATE_FORMAT;
   nbLabel = 0;
   labelColor.r = 0;
@@ -119,22 +120,22 @@ GLAxis::GLAxis(GLComponent *parent,int orientation) {
   inverted = !IsHorizontal();
   nbView = 0;
   ln10 = log(10.0);
-  gridVisible = FALSE;
-  subGridVisible = FALSE;
+  gridVisible = false;
+  subGridVisible = false;
   gridStyle = STYLE_DOT;
   labelFormat = AUTO_FORMAT;
-  subtickVisible = TRUE;
+  subtickVisible = true;
   memset(&boundRect,0,sizeof(GLCRectangle));
-  isZoomed = FALSE;
+  isZoomed = false;
   percentScrollback = 0.0;
-  visible = TRUE;
-  drawOpposite = TRUE;
+  visible = true;
+  drawOpposite = true;
   tickLength = 6;
   subtickLength = tickLength/2;
   fontOverWidth = 0;
   minTickStep = 50.0;
-  fitXAxisToDisplayDuration = TRUE;
-  autoLabeling = TRUE;
+  fitXAxisToDisplayDuration = true;
+  autoLabeling = true;
 
 }
 
@@ -270,7 +271,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param b true to make the grid visible; false to hide it
    * @see  isGridVisible
    */
-  void GLAxis::SetGridVisible(BOOL b) {
+  void GLAxis::SetGridVisible(bool b) {
     gridVisible = b;
   }
 
@@ -278,14 +279,14 @@ GLuint GLAxis::initMarker(char *name) {
    * Fit the x axis to display duration (Horizontal axis only).
    * @param b true to fit x axis false otherwise
    */
-  void GLAxis::SetFitXAxisToDisplayDuration(BOOL b) {
+  void GLAxis::SetFitXAxisToDisplayDuration(bool b) {
     fitXAxisToDisplayDuration = b;
   }
 
   /**
    * Return true if the x axis fit to display duration.
    */
-  BOOL GLAxis::IsFitXAxisToDisplayDuration() {
+  bool GLAxis::IsFitXAxisToDisplayDuration() {
     return fitXAxisToDisplayDuration;
   }
 
@@ -294,7 +295,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @return true if the grid is visible, false otherwise
    * @see  setGridVisible
    */
-  BOOL GLAxis::IsGridVisible() {
+  bool GLAxis::IsGridVisible() {
     return gridVisible;
   }
 
@@ -302,7 +303,7 @@ GLuint GLAxis::initMarker(char *name) {
    * Draw a second axis at the opposite side.
    * @param b true to enable the opposite axis.
    */
-  void GLAxis::SetDrawOpposite(BOOL b) {
+  void GLAxis::SetDrawOpposite(bool b) {
     drawOpposite = b;
   }
 
@@ -311,7 +312,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @return true if opposite axis is visible.
    * @see setDrawOpposite
    */
-  BOOL GLAxis::IsDrawOpposite() {
+  bool GLAxis::IsDrawOpposite() {
     return drawOpposite;
   }
 
@@ -320,7 +321,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param b true to make the subgrid visible; false to hide it
    * @see  isSubGridVisible
    */
-  void GLAxis::SetSubGridVisible(BOOL b) {
+  void GLAxis::SetSubGridVisible(bool b) {
     subGridVisible = b;
   }
 
@@ -328,7 +329,7 @@ GLuint GLAxis::initMarker(char *name) {
    *  @return true if the subgrid is visible, false otherwise
    *  @see setSubGridVisible
    */
-  BOOL GLAxis::IsSubGridVisible() {
+  bool GLAxis::IsSubGridVisible() {
     return subGridVisible;
   }
 
@@ -376,14 +377,14 @@ GLuint GLAxis::initMarker(char *name) {
    * Display or hide the axis.
    * @param b True to make the axis visible.
    */
-  void GLAxis::SetVisible(BOOL b) {
+  void GLAxis::SetVisible(bool b) {
     visible = b;
   }
 
   /**
    * Returns true if the axis is visble, false otherwise
    */
-  BOOL GLAxis::IsVisible() {
+  bool GLAxis::IsVisible() {
     return visible;
   }
 
@@ -391,7 +392,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @return true if the axis is zoomed, false otherwise
    * @see zoom
    */
-  BOOL GLAxis::IsZoomed() {
+  bool GLAxis::IsZoomed() {
     return isZoomed;
   }
 
@@ -399,7 +400,7 @@ GLuint GLAxis::initMarker(char *name) {
    *  @return true if the axis is in XY mode, false otherwise
    *  @see addDataView
    */
-  BOOL GLAxis::IsXY() {
+  bool GLAxis::IsXY() {
     return (nbView > 0);
   }
 
@@ -479,7 +480,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @return true if the axis is autoscaled, false otherwise
    * @see setAutoScale
    */
-  BOOL GLAxis::IsAutoScale() {
+  bool GLAxis::IsAutoScale() {
     return autoScale;
   }
 
@@ -488,7 +489,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param b true if the axis is autoscaled, false otherwise
    * @see isAutoScale
    */
-  void GLAxis::SetAutoScale(BOOL b) {
+  void GLAxis::SetAutoScale(bool b) {
     autoScale = b;
   }
 
@@ -606,8 +607,8 @@ GLuint GLAxis::initMarker(char *name) {
 
     }
 
-    autoScale = FALSE;
-    isZoomed = TRUE;
+    autoScale = false;
+    isZoomed = true;
 
   }
 
@@ -621,7 +622,7 @@ GLuint GLAxis::initMarker(char *name) {
       SetMinimum(GetMinimum());
       SetMaximum(GetMaximum());
     }
-    isZoomed = FALSE;
+    isZoomed = false;
   }
 
   /**
@@ -721,7 +722,7 @@ GLuint GLAxis::initMarker(char *name) {
   }
 
   int GLAxis::getDV(GLDataView *v) {
-    BOOL found = FALSE;
+    bool found = false;
     int i=0;
     while(i<nbView && !found) {
       found = (dataViews[i] == v);
@@ -834,7 +835,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @see clearDataView
    * @see getViews
    */
-  BOOL GLAxis::CheckRemoveDataView(GLDataView *v)
+  bool GLAxis::CheckRemoveDataView(GLDataView *v)
   {
 
     int idx = getDV(v);
@@ -849,9 +850,9 @@ GLuint GLAxis::initMarker(char *name) {
 	      SetAnnotation(TIME_ANNO);
 	      if (scale != LINEAR_SCALE) SetScale(LINEAR_SCALE);
 	    }
-      return TRUE;
+      return true;
     }
-    return FALSE;
+    return false;
 
   }
 
@@ -891,14 +892,14 @@ GLuint GLAxis::initMarker(char *name) {
    * Invert this axis.
    * @param i true to invert the axis
    */
-  void GLAxis::SetInverted(BOOL i) {
+  void GLAxis::SetInverted(bool i) {
     inverted = i;
   }
 
   /**
    * Returns true if this axis is inverted.
    */
-  BOOL GLAxis::IsInverted() {
+  bool GLAxis::IsInverted() {
     return inverted;
   }
 
@@ -1002,7 +1003,7 @@ GLuint GLAxis::initMarker(char *name) {
   void GLAxis::computeDateformat(int maxLab) {
 
     //find optimal precision
-    BOOL found = FALSE;
+    bool found = false;
     int i = 0;
     while (i < nbTimeF && !found) {
       int n = (int) ((max - min) / timePrecs[i]);
@@ -1029,7 +1030,7 @@ GLuint GLAxis::initMarker(char *name) {
   char *GLAxis::suppressZero(char *n) {
 
     static char ret[64];
-    BOOL hasDecimal = (strrchr(n,'.') != NULL);
+    bool hasDecimal = (strrchr(n,'.') != NULL);
 
     if(hasDecimal) {
 
@@ -1069,7 +1070,7 @@ GLuint GLAxis::initMarker(char *name) {
     // TODO: rounding in LOG_SCALE
     if (prec != 0 && scale == LINEAR_SCALE) {
 
-      BOOL isNegative = (vt < 0.0);
+      bool isNegative = (vt < 0.0);
       if(isNegative) vt = -vt;
 
       // Find multiple
@@ -1152,7 +1153,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   }
 
-  BOOL GLAxis::IsHorizontal() {
+  bool GLAxis::IsHorizontal() {
     return (dOrientation == HORIZONTAL_DOWN) ||
       (dOrientation == HORIZONTAL_UP);
   }
@@ -1559,7 +1560,7 @@ GLuint GLAxis::initMarker(char *name) {
     return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
   }
 
-  BOOL GLAxis::insideRect(GLCRectangle *r,GLCPoint *p) {
+  bool GLAxis::insideRect(GLCRectangle *r,GLCPoint *p) {
     return (p->x >= r->x) && (p->x <= (r->width + r->x)) &&
            (p->y >= r->y) && (p->y <= (r->height + r->y));
   }
@@ -1853,7 +1854,7 @@ GLuint GLAxis::initMarker(char *name) {
 
         double fontAscent = (double) (GLToolkit::GetDialogFont()->GetTextHeight());
         prec = computeLowTen(max - min);
-        BOOL extractLabel = FALSE;
+        bool extractLabel = false;
 
         // Anticipate label overlap
 
@@ -1991,7 +1992,7 @@ GLuint GLAxis::initMarker(char *name) {
               step=10;
               prec=prec/5.0;
             }
-            extractLabel = TRUE;
+            extractLabel = true;
           }
 
           // Compute tick sapcing
@@ -2356,7 +2357,7 @@ GLuint GLAxis::initMarker(char *name) {
   void GLAxis::PaintDataViews(GLAxis *xAxis, int xOrg, int yOrg) {
 
     int k;
-    BOOL isXY = xAxis->IsXY();
+    bool isXY = xAxis->IsXY();
     GLDataView *vx = NULL;
 
     //-------- Clipping
@@ -2536,7 +2537,7 @@ GLuint GLAxis::initMarker(char *name) {
       ly = getLength();
 
       int j = 0;
-      BOOL valid = TRUE;
+      bool valid = true;
 
       // Compute zero vertical offset
       switch (v->GetFillMethod()) {
@@ -2609,7 +2610,7 @@ GLuint GLAxis::initMarker(char *name) {
         j = 0;
         if (!valid) {
           l = l->next;
-          valid = TRUE;
+          valid = true;
         }
 
       } // End (while l!=null)
@@ -2660,7 +2661,7 @@ GLuint GLAxis::initMarker(char *name) {
       int y0;
 
       int j = 0;
-      BOOL valid = TRUE;
+      bool valid = true;
 
       // Compute zero vertical offset
       switch (v->GetFillMethod()) {
@@ -2739,7 +2740,7 @@ GLuint GLAxis::initMarker(char *name) {
         if (!valid) {
           // Go to next pos
           l.toNextXYPoint();
-          valid = TRUE;
+          valid = true;
         }
 
       } // End (while l!=null)
@@ -2753,7 +2754,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint sub tick outside label limit
   // Expert usage
-  void GLAxis::paintYOutTicks(GLCColor c,int x0, double ys, int y0, int la, int tr,int off,BOOL grid) {
+  void GLAxis::paintYOutTicks(GLCColor c,int x0, double ys, int y0, int la, int tr,int off,bool grid) {
 
     int j,h;
 
@@ -2793,7 +2794,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint sub tick outside label limit
   // Expert usage
-  void GLAxis::paintXOutTicks(GLCColor c,int y0, double xs, int x0, int la,int tr,int off,BOOL grid) {
+  void GLAxis::paintXOutTicks(GLCColor c,int y0, double xs, int x0, int la,int tr,int off,bool grid) {
 
     int j,w;
 
@@ -2890,7 +2891,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint Y sub tick and return tick spacing
   // Expert usage
-  void GLAxis::paintYTicks(GLCColor c,int i, int x0, double y, int la, int tr,int off,BOOL grid) {
+  void GLAxis::paintYTicks(GLCColor c,int i, int x0, double y, int la, int tr,int off,bool grid) {
 
     int j,h;
 
@@ -2927,7 +2928,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint X sub tick and return tick spacing
   // Expert usage
-  void GLAxis::paintXTicks(GLCColor c,int i, int y0, double x, int la, int tr,int off,BOOL grid) {
+  void GLAxis::paintXTicks(GLCColor c,int i, int y0, double x, int la, int tr,int off,bool grid) {
 
     int j,w;
 
@@ -2988,7 +2989,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param oppositeVisible Oposite axis is visible.
    *
    */
-  void GLAxis::PaintAxis(int x0, int y0, GLAxis *xAxis, int xOrg, int yOrg, GLCColor back,BOOL oppositeVisible) {
+  void GLAxis::PaintAxis(int x0, int y0, GLAxis *xAxis, int xOrg, int yOrg, GLCColor back,bool oppositeVisible) {
 
     int la = 0;
     int tr = 0;
@@ -3116,8 +3117,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels+ (nbLabel-1);
-          paintYOutTicks(subgridColor, x0 + csize.width, (double)y0 + lis->pos - tickStep, y0, la, tr,subTickOff,TRUE);
-          paintYOutTicks(subgridColor, x0 + csize.width, (double)y0 + lie->pos, y0, la, tr,subTickOff,TRUE);
+          paintYOutTicks(subgridColor, x0 + csize.width, (double)y0 + lis->pos - tickStep, y0, la, tr,subTickOff,true);
+          paintYOutTicks(subgridColor, x0 + csize.width, (double)y0 + lie->pos, y0, la, tr,subTickOff,true);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3128,7 +3129,7 @@ GLuint GLAxis::initMarker(char *name) {
           x = x0 + (csize.width - 4) - li->size.width;
           y = (int)(li->pos + 0.5) + y0;
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawText(x + tr + li->offsetX, y + li->offsetY - li->size.height / 2,li->value,FALSE);
+          GLToolkit::GetDialogFont()->DrawText(x + tr + li->offsetX, y + li->offsetY - li->size.height / 2,li->value,false);
 
           //Draw the grid
           if (gridVisible) {
@@ -3137,7 +3138,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           //Draw sub tick
           if(autoLabeling) {
-            paintYTicks(subgridColor, i, x0 + csize.width,li->pos + (double)y0, la, tr,subTickOff,TRUE);
+            paintYTicks(subgridColor, i, x0 + csize.width,li->pos + (double)y0, la, tr,subTickOff,true);
           }
 
           //Draw tick
@@ -3152,7 +3153,7 @@ GLuint GLAxis::initMarker(char *name) {
           // Draw vertical label
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawTextV(x0, y0+csize.height/2+w/2,name,FALSE);
+          GLToolkit::GetDialogFont()->DrawTextV(x0, y0+csize.height/2+w/2,name,false);
         }
         break;
 
@@ -3162,8 +3163,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels + (nbLabel-1);
-          paintYOutTicks(subgridColor, x0, (double)y0 + lis->pos - tickStep, y0, -la, tr,subTickOff,TRUE);
-          paintYOutTicks(subgridColor, x0, (double)y0 + lie->pos, y0, -la, tr,subTickOff,TRUE);
+          paintYOutTicks(subgridColor, x0, (double)y0 + lis->pos - tickStep, y0, -la, tr,subTickOff,true);
+          paintYOutTicks(subgridColor, x0, (double)y0 + lie->pos, y0, -la, tr,subTickOff,true);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3173,7 +3174,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           y = (int)(li->pos + 0.5) + y0;
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawText(x0 + tr + li->offsetX + 6, y + li->offsetY - li->size.height / 2,li->value,FALSE);
+          GLToolkit::GetDialogFont()->DrawText(x0 + tr + li->offsetX + 6, y + li->offsetY - li->size.height / 2,li->value,false);
 
           //Draw the grid
           if (gridVisible) {
@@ -3182,7 +3183,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           //Draw sub tick
           if(autoLabeling) {
-            paintYTicks(subgridColor, i, x0, li->pos + (double)y0, -la, tr,subTickOff,TRUE);
+            paintYTicks(subgridColor, i, x0, li->pos + (double)y0, -la, tr,subTickOff,true);
           }
 
           //Draw tick
@@ -3197,7 +3198,7 @@ GLuint GLAxis::initMarker(char *name) {
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
           int h = GLToolkit::GetDialogFont()->GetTextHeight();
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawTextV(x0+csize.width-h+2, y0+csize.height/2+w/2,name,FALSE);
+          GLToolkit::GetDialogFont()->DrawTextV(x0+csize.width-h+2, y0+csize.height/2+w/2,name,false);
         }
 
         break;
@@ -3219,8 +3220,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels + (nbLabel-1);
-          paintXOutTicks(subgridColor, y0, (double)x0 + lis->pos - tickStep,  x0, -la, tr,subTickOff,TRUE);
-          paintXOutTicks(subgridColor, y0, (double)x0 + lie->pos,  x0, -la, tr,subTickOff,TRUE);
+          paintXOutTicks(subgridColor, y0, (double)x0 + lis->pos - tickStep,  x0, -la, tr,subTickOff,true);
+          paintXOutTicks(subgridColor, y0, (double)x0 + lie->pos,  x0, -la, tr,subTickOff,true);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3232,15 +3233,15 @@ GLuint GLAxis::initMarker(char *name) {
           y = y0;
           if (orientation==HORIZONTAL_UP) {
             GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr - 2 - li->size.height,li->value,FALSE);
+            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr - 2 - li->size.height,li->value,false);
           } else {
             GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr + li->offsetY + 2,li->value,FALSE);
+            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr + li->offsetY + 2,li->value,false);
           }
 
           //Draw sub tick
           if(autoLabeling) {
-            paintXTicks(subgridColor, i, y, li->pos+(double)x0, -la, tr,subTickOff,TRUE);
+            paintXTicks(subgridColor, i, y, li->pos+(double)x0, -la, tr,subTickOff,true);
           }
 
           //Draw the grid
@@ -3260,7 +3261,7 @@ GLuint GLAxis::initMarker(char *name) {
           int h = GLToolkit::GetDialogFont()->GetTextHeight();
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
           GLToolkit::GetDialogFont()->DrawText(x0 + ((csize.width)-w) / 2,
-            y0 + (labelShift-1) * h,name,FALSE);
+            y0 + (labelShift-1) * h,name,false);
         }
 
         break;
@@ -3287,8 +3288,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels + (nbLabel-1);
-          paintYOutTicks(subgridColor, nX0 + csize.width, (double)y0 + lis->pos - tickStep, y0, la, tr,subTickOff,FALSE);
-          paintYOutTicks(subgridColor, nX0 + csize.width, (double)y0 + lie->pos, y0, la, tr,subTickOff,FALSE);
+          paintYOutTicks(subgridColor, nX0 + csize.width, (double)y0 + lis->pos - tickStep, y0, la, tr,subTickOff,false);
+          paintYOutTicks(subgridColor, nX0 + csize.width, (double)y0 + lie->pos, y0, la, tr,subTickOff,false);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3299,7 +3300,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           //Draw sub tick
           if(autoLabeling) {
-            paintYTicks(subgridColor, i, nX0 + csize.width, li->pos + (double)y0, la, tr,subTickOff,FALSE);
+            paintYTicks(subgridColor, i, nX0 + csize.width, li->pos + (double)y0, la, tr,subTickOff,false);
           }
 
           //Draw tick
@@ -3319,8 +3320,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels + (nbLabel-1);
-          paintYOutTicks(subgridColor, x, (double)y0 + lis->pos - tickStep, y0, -la, tr,subTickOff,FALSE);
-          paintYOutTicks(subgridColor, x, (double)y0 + lie->pos, y0, -la, tr,subTickOff,FALSE);
+          paintYOutTicks(subgridColor, x, (double)y0 + lis->pos - tickStep, y0, -la, tr,subTickOff,false);
+          paintYOutTicks(subgridColor, x, (double)y0 + lie->pos, y0, -la, tr,subTickOff,false);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3330,7 +3331,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           //Draw sub tick
           if(autoLabeling) {
-            paintYTicks(subgridColor, i, x, li->pos + (double)y0, -la, tr,subTickOff,FALSE);
+            paintYTicks(subgridColor, i, x, li->pos + (double)y0, -la, tr,subTickOff,false);
           }
 
           //Draw tick
@@ -3351,8 +3352,8 @@ GLuint GLAxis::initMarker(char *name) {
         if (nbLabel>0 && autoLabeling) {
           LabelInfo *lis = labels;
           LabelInfo *lie = labels + (nbLabel-1);
-          paintXOutTicks(subgridColor, y0, (double)x0 + lis->pos - tickStep, x0, -la, tr,subTickOff,FALSE);
-          paintXOutTicks(subgridColor, y0, (double)x0 + lie->pos, x0, -la, tr,subTickOff,FALSE);
+          paintXOutTicks(subgridColor, y0, (double)x0 + lis->pos - tickStep, x0, -la, tr,subTickOff,false);
+          paintXOutTicks(subgridColor, y0, (double)x0 + lie->pos, x0, -la, tr,subTickOff,false);
         }
 
         for (i = 0; i < nbLabel; i++) {
@@ -3363,7 +3364,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           //Draw sub tick
           if(autoLabeling) {
-            paintXTicks(subgridColor, i, y, li->pos + (double)x0, -la, tr,subTickOff,FALSE);
+            paintXTicks(subgridColor, i, y, li->pos + (double)x0, -la, tr,subTickOff,false);
           }
 
           //Draw tick
@@ -3426,7 +3427,7 @@ GLuint GLAxis::initMarker(char *name) {
    * Allaws user to know if the 0 value will always be visible in case of auto scale
    * @return a boolean value
    */
-  BOOL GLAxis::IsZeroAlwaysVisible()
+  bool GLAxis::IsZeroAlwaysVisible()
   {
     return zeroAlwaysVisible;
   }
@@ -3435,7 +3436,7 @@ GLuint GLAxis::initMarker(char *name) {
    * Sets if 0 must always be visible in case of auto scale or not
    * @param zeroAlwaysVisible a boolean value. True for always visible, false otherwise.
    */
-  void GLAxis::SetZeroAlwaysVisible(BOOL zeroAlwaysVisible)
+  void GLAxis::SetZeroAlwaysVisible(bool zeroAlwaysVisible)
   {
     this->zeroAlwaysVisible = zeroAlwaysVisible;
   }

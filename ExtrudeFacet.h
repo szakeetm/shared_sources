@@ -1,20 +1,20 @@
+#pragma once
 /*
   File:        ExtrudeFacet.h
   Description: Extrude facet by offset dialog
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLToggle.h"
-#include "GLApp/GLTitledPanel.h"
+class GLButton;
+class GLTextField;
+class GLLabel;
+class GLToggle;
+class GLTitledPanel;
 
-#include "Geometry.h"
-#include "Worker.h"
-
-#ifndef _EXTRUDEFACETH_
-#define _EXTRUDEFACETH_
+//#include "Geometry.h"
+//#include "Worker.h"
+class Geometry;
+class Worker;
 
 class ExtrudeFacet : public GLWindow {
 
@@ -101,11 +101,9 @@ private:
   GLLabel	*label29;
   GLTextField	*curveTotalLengthText;
 	
-  int baseId, dirId;
+  size_t baseId, dirId;
   void EnableDisableControls();
   void ClearToggles(GLToggle* leaveChecked=NULL);
-  int AssertOneVertexSelected();
-  int AssertOneFacetSelected();
+  std::tuple<bool,size_t> AssertOneVertexSelected();
+  std::tuple<bool, size_t> AssertOneFacetSelected();
 };
-
-#endif /* _EXTRUDEFACETH_ */

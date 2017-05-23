@@ -4,7 +4,12 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp\GLTitledPanel.h"
+#include "GLApp\GLToggle.h"
+#include "GLApp\GLTextField.h"
 #include "GLApp\MathTools.h" //IsEqual
+#include "GLApp\GLButton.h"
+
+#include "Geometry.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -31,7 +36,7 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 
 	resolutionpanel = new GLTitledPanel("Texture resolution");
 	resolutionpanel->SetBounds(5, 5, wD - 10, 70);
-	resolutionpanel->SetClosable(FALSE);
+	resolutionpanel->SetClosable(false);
 	Add(resolutionpanel);
 
 	ratioToggle = new GLToggle(0, "Exactly                   /cm");
@@ -56,35 +61,35 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 
 	textureTypePanel = new GLTitledPanel("Texture type");
 	textureTypePanel->SetBounds(5, 80, wD - 10, 80);
-	textureTypePanel->SetClosable(FALSE);
+	textureTypePanel->SetClosable(false);
 	Add(textureTypePanel);
 
 	desorbToggle = new GLToggle(0, "Count desorbtion");
-	desorbToggle->AllowMixedState(TRUE);
+	desorbToggle->AllowMixedState(true);
 	desorbToggle->SetState(2);
 	textureTypePanel->Add(desorbToggle);
 	textureTypePanel->SetCompBounds(desorbToggle, 5, 15, 90, 18);
 
 	absorbToggle = new GLToggle(0, "Count absorbtion");
-	absorbToggle->AllowMixedState(TRUE);
+	absorbToggle->AllowMixedState(true);
 	absorbToggle->SetState(2);
 	textureTypePanel->Add(absorbToggle);
 	textureTypePanel->SetCompBounds(absorbToggle, 5, 35, 90, 18);
 
 	reflectToggle = new GLToggle(0, "Count reflection");
-	reflectToggle->AllowMixedState(TRUE);
+	reflectToggle->AllowMixedState(true);
 	reflectToggle->SetState(2);
 	textureTypePanel->Add(reflectToggle);
 	textureTypePanel->SetCompBounds(reflectToggle, 130, 15, 90, 18);
 
 	transparentToggle = new GLToggle(0, "Count transp. pass");
-	transparentToggle->AllowMixedState(TRUE);
+	transparentToggle->AllowMixedState(true);
 	transparentToggle->SetState(2);
 	textureTypePanel->Add(transparentToggle);
 	textureTypePanel->SetCompBounds(transparentToggle, 130, 35, 80, 18);
 
 	directionToggle = new GLToggle(0, "Count direction");
-	directionToggle->AllowMixedState(TRUE);
+	directionToggle->AllowMixedState(true);
 	directionToggle->SetState(2);
 	textureTypePanel->Add(directionToggle);
 	textureTypePanel->SetCompBounds(directionToggle, 130, 55, 80, 18);
@@ -128,14 +133,14 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 	if (message == MSG_BUTTON) {
 		double ratio, minRatio, maxRatio;
-		BOOL exactRatio = FALSE;
-		BOOL minmaxRatio = FALSE;
+		bool exactRatio = false;
+		bool minmaxRatio = false;
 		if (ratioToggle->GetState()) {
 			if (!ratioText->GetNumber(&ratio) || ratio <= 0.0) {
 				GLMessageBox::Display("Invalid ratio", "Error", GLDLG_OK, GLDLG_ICONINFO);
 				return;
 			}
-			exactRatio = TRUE;
+			exactRatio = true;
 		}
 		else if (ratioMinMaxToggle->GetState()) {
 			if (!ratioMinText->GetNumber(&minRatio) || minRatio <= 0.0) {
@@ -150,31 +155,31 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 				GLMessageBox::Display("Max. ratio must be larger than min. ratio", "Error", GLDLG_OK, GLDLG_ICONINFO);
 				return;
 			}
-			minmaxRatio = TRUE;
+			minmaxRatio = true;
 		}
 		if (src == selectButton) geom->UnselectAll();
 		for (size_t i = 0; i < geom->GetNbFacet(); i++) {
 			Facet* f = geom->GetFacet(i);
-			BOOL match = f->sh.isTextured;
+			bool match = f->sh.isTextured;
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatio);
 			if (minmaxRatio) match = match && (minRatio <= f->tRatio) && (f->tRatio <= maxRatio);
 #ifdef MOLFLOW
 			if (desorbToggle->GetState() != 2) match = match && f->sh.countDes;
 #endif
-			if (absorbToggle->GetState() != 2) match = match && absorbToggle->GetState() == f->sh.countAbs;
-			if (reflectToggle->GetState() != 2) match = match && reflectToggle->GetState() == f->sh.countRefl;
-			if (transparentToggle->GetState() != 2) match = match && transparentToggle->GetState() == f->sh.countTrans;
-			if (directionToggle->GetState() != 2) match = match && directionToggle->GetState() && f->sh.countDirection;
+			if (absorbToggle->GetState() != 2) match = match && (absorbToggle->GetState()==1) == f->sh.countAbs;
+			if (reflectToggle->GetState() != 2) match = match && (reflectToggle->GetState()==1) == f->sh.countRefl;
+			if (transparentToggle->GetState() != 2) match = match && (transparentToggle->GetState()==1) == f->sh.countTrans;
+			if (directionToggle->GetState() != 2) match = match && (directionToggle->GetState()==1) && f->sh.countDirection;
 
 			if (match) f->selected = (src != remSelectButton);
 		}
 		geom->UpdateSelection();
-		mApp->UpdateFacetParams(TRUE);
+		mApp->UpdateFacetParams(true);
 		mApp->UpdateFacetlistSelected();
 	}
 	else if (message == MSG_TOGGLE) {
-		if (src == ratioToggle) ratioMinMaxToggle->SetState(FALSE);
-		if (src == ratioMinMaxToggle) ratioToggle->SetState(FALSE);
+		if (src == ratioToggle) ratioMinMaxToggle->SetState(false);
+		if (src == ratioMinMaxToggle) ratioToggle->SetState(false);
 	}
 	else if (message == MSG_TEXT_UPD) {
 		if (src == ratioText) {

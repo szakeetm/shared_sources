@@ -16,18 +16,19 @@
 #include "GLWindow.h"
 #include "GLTitledPanel.h"
 #include "GLToolkit.h"
+#include "GLFont.h"
 
 // ---------------------------------------------------------------------
 
 GLTitledPanel::GLTitledPanel(char *title):GLComponent(0) {
 
-  isBold = TRUE;
+  isBold = true;
   SetTitle(title);
-  opaque = FALSE;
+  opaque = false;
   SetTextColor(140,140,140);
-  closeAble = FALSE;
+  closeAble = false;
   closeState = 0;
-  closed = FALSE;
+  closed = false;
   wOrg = 100;
   hOrg = 30;
 
@@ -63,7 +64,7 @@ void GLTitledPanel::SetBounds(int x,int y,int width,int height) {
 
 // ---------------------------------------------------------------------
 
-void GLTitledPanel::SetBold(BOOL b) {
+void GLTitledPanel::SetBold(bool b) {
   isBold = b;
   if( isBold ) txtWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(title);
   else         txtWidth = GLToolkit::GetDialogFont()->GetTextWidth(title);
@@ -71,25 +72,25 @@ void GLTitledPanel::SetBold(BOOL b) {
 
 // ---------------------------------------------------------------------
 
-void GLTitledPanel::SetClosable(BOOL c) {
+void GLTitledPanel::SetClosable(bool c) {
   closeAble = c;
 }
 
 // ---------------------------------------------------------------------
 
 void GLTitledPanel::Close() {
-  closed = TRUE;
+  closed = true;
 }
 
 // ---------------------------------------------------------------------
 
 void GLTitledPanel::Open() {
-  closed = FALSE;
+  closed = false;
 }
 
 // ---------------------------------------------------------------------
 
-BOOL GLTitledPanel::IsClosed() {
+bool GLTitledPanel::IsClosed() {
   return closed;
 }
 
@@ -149,12 +150,12 @@ void GLTitledPanel::Paint() {
   if(!parent) return;
 
   if( opaque ) {
-    GLToolkit::DrawBox(posX,posY+6,width,height-6,rBack,gBack,bBack,FALSE,FALSE,TRUE);
+    GLToolkit::DrawBox(posX,posY+6,width,height-6,rBack,gBack,bBack,false,false,true);
   } else {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
     glLineWidth(1.0f);
-    GLToolkit::DrawBorder(posX,posY+6,width,height-6,FALSE,FALSE,TRUE);
+    GLToolkit::DrawBorder(posX,posY+6,width,height-6,false,false,true);
   }
 
   if( strlen(title) ) {
@@ -162,19 +163,19 @@ void GLTitledPanel::Paint() {
     if( isBold ) {
       GLToolkit::DrawBox(posX+5+cw,posY,txtWidth+10,15,rBack,gBack,bBack);
       GLToolkit::GetDialogFontBold()->SetTextColor(rText,gText,bText);
-      GLToolkit::GetDialogFontBold()->DrawText(posX+10+cw,posY,title,FALSE);
+      GLToolkit::GetDialogFontBold()->DrawText(posX+10+cw,posY,title,false);
     } else {
       GLToolkit::DrawBox(posX+5+cw,posY,txtWidth+10,15,rBack,gBack,bBack);
       GLToolkit::GetDialogFont()->SetTextColor(rText,gText,bText);
-      GLToolkit::GetDialogFont()->DrawText(posX+10+cw,posY,title,FALSE);
+      GLToolkit::GetDialogFont()->DrawText(posX+10+cw,posY,title,false);
     }
     if( closeAble ) {
       GLToolkit::DrawTinyButton(posX+7,posY+1,closeState);
       GLToolkit::GetDialogFont()->SetTextColor(0,0,0);
       if( closed ) {
-        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"+",FALSE);
+        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"+",false);
       } else {
-        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"-",FALSE);
+        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"-",false);
       }
     }
   }

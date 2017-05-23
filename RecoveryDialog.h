@@ -13,12 +13,12 @@
   GNU General Public License for more details.
 */
 
-
-#include <SDL_opengl.h>
-#include "GLApp/GLWindow.h"
-
 #ifndef _GLRECOVERYDIALOGH_
 #define _GLRECOVERYDIALGOH_
+
+//#include <SDL_opengl.h>
+#include "GLApp/GLWindow.h"
+
 
 // Buttons
 #define GLDLG_LOAD		0x0001

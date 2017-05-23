@@ -2,17 +2,21 @@
   File:        AddVertex.h
   Description: Add new vertex dialog
 */
-
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _ADDVERTEXH_
 #define _ADDVERTEXH_
+
+#include "GLApp/GLWindow.h"
+class GLWindow;
+class GLButton;
+class GLTextField;
+class GLLabel;
+
+//#include "Geometry.h"
+//#include "Worker.h"
+class Geometry;
+class Worker;
+
+
 
 class AddVertex : public GLWindow {
 

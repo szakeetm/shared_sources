@@ -18,7 +18,7 @@
 #include "GLToolkit.h"
 #include "MathTools.h" //Min max
 
-#include <malloc.h>
+//#include <malloc.h>
 
 // ---------------------------------------------------------------------
 
@@ -44,15 +44,15 @@ void GLLabel::Clear() {
 
 }
 
-// --------------------------------------------------------------------
 char* GLLabel::GetText() {
 	return mText;
 }
 
-// ---------------------------------------------------------------------
+void GLLabel::SetText(std::string text) {
+	SetText(text.c_str());
+}
 
 void GLLabel::SetText(const char *text) {
-
 
   if( !text ) {
     Clear();
@@ -127,7 +127,7 @@ void GLLabel::Paint() {
   //Message
   font->SetTextColor(rText,gText,bText);
   for (int i = 0; i < nbLine; i++) {
-	  font->DrawText(posX, posY + 14 * i + 2, lines[i], FALSE);
+	  font->DrawText(posX, posY + 14 * i + 2, lines[i], false);
   }
   GLToolkit::CheckGLErrors("GLLabel::Paint()");
 }
@@ -135,7 +135,7 @@ void GLLabel::Paint() {
 GLOverlayLabel::GLOverlayLabel(char *text):GLLabel(text) {
 
   sizeFactor=3.0f;
-  paintBg=FALSE;
+  paintBg=false;
 }
 
 void GLOverlayLabel::SetBackgroundColor(float r,float g,float b) {
@@ -154,7 +154,7 @@ void GLOverlayLabel::Paint() {
 	font->SetTextColor(rText,gText,bText);
 	//font->SetTextSize((int)(size*0.6),size);
 	for(int i=0;i<nbLine;i++)
-		font->DrawLargeText(posX,posY+14*i+2,lines[i],sizeFactor,FALSE);
+		font->DrawLargeText(posX,posY+14*i+2,lines[i],sizeFactor,false);
 	//font->SetTextSize(9,15);
 	GLToolkit::CheckGLErrors("GLOverlayLabel::Paint()");
 }

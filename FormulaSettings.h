@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        FormulaSettings.h
   Description: Formula edition dialog
@@ -17,13 +18,10 @@
 */
 
 #include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLLabel.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLParser.h"
-
-#ifndef _FORMULASETTINGSH_
-#define _FORMULASETTINGSH_
+class GLButton;
+class GLLabel;
+class GLTextField;
+class GLParser;
 
 class FormulaSettings : public GLWindow {
 
@@ -55,5 +53,3 @@ private:
   int formulaId;
 
 };
-
-#endif /* _FORMULASETTINGSH_ */

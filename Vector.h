@@ -23,7 +23,7 @@ public:
 
 class InterfaceVertex : public Vector3d { //For Interface
 public:
-	int selected;
+	bool selected;
 	void SetLocation(const Vector3d& v);
 };
 

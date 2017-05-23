@@ -13,11 +13,11 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include <string>
-
 #ifndef _GLTEXTFIELDH_
 #define _GLTEXTFIELDH_
+
+#include "GLComponent.h"
+#include <string>
 
 #define MAX_TEXT_SIZE 1024
 
@@ -26,35 +26,36 @@ class GLTextField : public GLComponent {
 public:
 
   // Construction
-  GLTextField(int compId,char *text);
+  GLTextField(int compId,const char *text);
 
   // Component methods
   void SetText(const char *text);
   void SetText(std::string string);
   void SetText(const double &val);
   void SetText(const int &val);
+  void SetText(const size_t &val);
   char *GetText();
   void ScrollToVisible();
   void SetCursorPos(int pos);
   int  GetCursorPos();
   int  GetTextLength();
-  void SetEditable(BOOL editable);
-  BOOL IsEditable();
-  void SetEditable_NoBG(BOOL editable);
+  void SetEditable(bool editable);
+  bool IsEditable();
+  void SetEditable_NoBG(bool editable);
   void SetTextColor(float r, float g, float b);
   void Clear();
   // ------------------------------------------------------
 
 
-  BOOL GetNumber(double *num);
-  BOOL GetNumberInt(int *num);
+  bool GetNumber(double *num);
+  bool GetNumberInt(int *num);
   void SelectAll();
-  BOOL IsCaptured();
+  bool IsCaptured();
 
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
-  void SetFocus(BOOL focus);
+  void SetFocus(bool focus);
 
 private:
 
@@ -81,7 +82,7 @@ private:
   int      m_Captured;
   int      m_LastPos;
   int     m_Zero;
-  BOOL    m_Editable;
+  bool    m_Editable;
   float   rText, gText, bText;
 
 };

@@ -59,7 +59,7 @@ GLMessageBox::GLMessageBox(const std::string & message, const std::string & titl
 	}
 
 	// Buttons
-	int totalBW = buttonList.size() * 80;
+	int totalBW = (int)buttonList.size() * 80;
 	wD = MAX(txtWidth + iconWidth + 30, totalBW);
 	hD = 50 + MAX(txtHeight, iconWidth);
 	int startX = (wD - totalBW) / 2;

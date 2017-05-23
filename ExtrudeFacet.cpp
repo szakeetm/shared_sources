@@ -22,6 +22,12 @@ GNU General Public License for more details.
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/MathTools.h"
+#include "GLApp\GLToggle.h"
+#include "GLApp\GLTextField.h"
+#include "GLApp\GLLabel.h"
+#include "GLApp\GLButton.h"
+
+#include "Geometry.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -350,13 +356,13 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 	case MSG_BUTTON:
 
 		if (src==extrudeButton) {
-			if (geom->GetNbSelected()==0) {
+			if (geom->GetNbSelectedFacets()==0) {
 				GLMessageBox::Display("No facets selected","Nothing to move",GLDLG_OK,GLDLG_ICONINFO);
 				return;
 			}
-			else if (geom->GetNbSelected() > 1) {
+			else if (geom->GetNbSelectedFacets() > 1) {
 				char warningMsg[512];
-				sprintf(warningMsg, "Extrude %d facets at once?", geom->GetNbSelected());
+				sprintf(warningMsg, "Extrude %zd facets at once?", geom->GetNbSelectedFacets());
 				int rep = GLMessageBox::Display(warningMsg, "Extrusion of more than one facet", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 				if (rep != GLDLG_OK) {
 					return;
@@ -480,20 +486,21 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 					totalAngle/180*PI, noSteps);
 
 				work->Reload(); 
-				mApp->changedSinceSave = TRUE;
+				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();
 			}
 		}
 		else if (src == getBaseButton) {
-			int foundId = AssertOneVertexSelected();
-			if (foundId>=0) {
+			bool exists; size_t foundId;
+			std::tie(exists,foundId) = AssertOneVertexSelected();
+			if (exists) {
 				ClearToggles(offsetCheckbox);
 				EnableDisableControls();
 
 				baseId = foundId;
 				char tmp[32];
-				sprintf(tmp, "Vertex %d",baseId+1);
+				sprintf(tmp, "Vertex %zd",baseId+1);
 				baseLabel->SetText(tmp);
 				if (dirId>0 && dirId < geom->GetNbVertex()) {
 					dxText->SetText(geom->GetVertex(dirId)->x - geom->GetVertex(baseId)->x);
@@ -503,15 +510,16 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == getDirButton) {
-			int foundId = AssertOneVertexSelected();
-			if (foundId>=0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneVertexSelected();
+			if (exists) {
 
 				ClearToggles(offsetCheckbox);
 				EnableDisableControls();
 
 				dirId = foundId;
 				char tmp[32];
-				sprintf(tmp, "Vertex %d", dirId + 1);
+				sprintf(tmp, "Vertex %zd", dirId + 1);
 				dirLabel->SetText(tmp);
 				if (baseId>0 && baseId < geom->GetNbVertex()) {
 					dxText->SetText(geom->GetVertex(dirId)->x - geom->GetVertex(baseId)->x);
@@ -520,10 +528,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				}
 			}
 		} else if (src==curveFacetCenterButton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists,foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d center", foundId + 1);
+				sprintf(tmp, "Facet %zd center", foundId + 1);
 				curveBaseLabel->SetText(tmp);
 				Vector3d center3d = geom->GetFacet(foundId)->sh.center;
 				curveX0Text->SetText(center3d.x);
@@ -532,11 +541,12 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == curveFacetIndex1Button) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
-				int vertexId = geom->GetFacet(foundId)->indices[0];
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
+				size_t vertexId = geom->GetFacet(foundId)->indices[0];
 				char tmp[32];
-				sprintf(tmp, "Facet %d index1: Vertex %d", foundId + 1, vertexId+1);
+				sprintf(tmp, "Facet %zd index1: Vertex %zd", foundId + 1, vertexId+1);
 				curveBaseLabel->SetText(tmp);
 				curveX0Text->SetText(geom->GetVertex(vertexId)->x);
 				curveY0Text->SetText(geom->GetVertex(vertexId)->y);
@@ -544,10 +554,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == curveGetBaseButton) {
-			int foundId = AssertOneVertexSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneVertexSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Vertex %d", foundId + 1);
+				sprintf(tmp, "Vertex %zd", foundId + 1);
 				curveBaseLabel->SetText(tmp);
 				curveX0Text->SetText(geom->GetVertex(foundId)->x);
 				curveY0Text->SetText(geom->GetVertex(foundId)->y);
@@ -555,10 +566,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == curveFacetUButton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d \201", foundId + 1);
+				sprintf(tmp, "Facet %zd \201", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(geom->GetFacet(foundId)->sh.U.x);
 				curvedYText->SetText(geom->GetFacet(foundId)->sh.U.y);
@@ -566,10 +578,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == curveFacetVButton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d \202", foundId + 1);
+				sprintf(tmp, "Facet %zd \202", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(geom->GetFacet(foundId)->sh.V.x);
 				curvedYText->SetText(geom->GetFacet(foundId)->sh.V.y);
@@ -577,12 +590,13 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == curveGetDirButton) {
-			int foundId = AssertOneVertexSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneVertexSelected();
+			if (exists) {
 				double x0, y0, z0;
 				if (curveX0Text->GetNumber(&x0) && curveY0Text->GetNumber(&y0) && curveZ0Text->GetNumber(&z0)) {
 					char tmp[32];
-					sprintf(tmp, "Vertex %d", foundId + 1);
+					sprintf(tmp, "Vertex %zd", foundId + 1);
 					curveDirLabel->SetText(tmp);
 					curvedXText->SetText(geom->GetVertex(foundId)->x-x0);
 					curvedYText->SetText(geom->GetVertex(foundId)->y-y0);
@@ -591,10 +605,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == facetNXbutton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x X", foundId + 1);
+				sprintf(tmp, "Facet %zd N x X", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(0);
 				curvedYText->SetText(geom->GetFacet(foundId)->sh.N.z);
@@ -602,10 +617,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == facetNYbutton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x X", foundId + 1);
+				sprintf(tmp, "Facet %zd N x X", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(-geom->GetFacet(foundId)->sh.N.z);
 				curvedYText->SetText(0);
@@ -613,10 +629,11 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == facetNZbutton) {
-			int foundId = AssertOneFacetSelected();
-			if (foundId >= 0) {
+			bool exists; size_t foundId;
+			std::tie(exists, foundId) = AssertOneFacetSelected();
+			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x X", foundId + 1);
+				sprintf(tmp, "Facet %zd N x X", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(geom->GetFacet(foundId)->sh.N.y);
 				curvedYText->SetText(-geom->GetFacet(foundId)->sh.N.x);
@@ -698,42 +715,28 @@ void ExtrudeFacet::EnableDisableControls() {
 	facetNZbutton->SetEnabled(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 }
 
-int ExtrudeFacet::AssertOneVertexSelected() {
-	int nbFound = 0; int foundId;
-	for (int i = 0; i < geom->GetNbVertex() && nbFound<2; i++) {
-		if (geom->GetVertex(i)->selected) {
-			nbFound++;
-			foundId = i;
-		}
-	}
-	if (nbFound == 0) {
+std::tuple<bool, size_t> ExtrudeFacet::AssertOneVertexSelected() {
+	auto selectedVertices = geom->GetSelectedVertices();
+	if (selectedVertices.size()==0) {
 		GLMessageBox::Display("No vertex selected", "Can't define direction", GLDLG_OK, GLDLG_ICONINFO);
-		return -1;
+		return std::make_tuple(false,0);
 	}
-	else if (nbFound > 1) {
+	else if (selectedVertices.size() > 1) {
 		GLMessageBox::Display("More than one vertex is selected", "Can't define direction", GLDLG_OK, GLDLG_ICONINFO);
-		return -1;
+		return std::make_tuple(false, 0);
 	}
-	else return foundId;
-
+	else return std::make_tuple(true,selectedVertices[0]);
 }
 
-int ExtrudeFacet::AssertOneFacetSelected() {
-	int nbFound = 0; int foundId;
-	for (int i = 0; i < geom->GetNbFacet() && nbFound<2; i++) {
-		if (geom->GetFacet(i)->selected) {
-			nbFound++;
-			foundId = i;
-		}
-	}
-	if (nbFound == 0) {
+std::tuple<bool, size_t> ExtrudeFacet::AssertOneFacetSelected() {
+	auto selectedFacets = geom->GetSelectedFacets();
+	if (selectedFacets.size() == 0) {
 		GLMessageBox::Display("No facet selected", "Can't define source", GLDLG_OK, GLDLG_ICONINFO);
-		return -1;
+		return std::make_tuple(false, 0);
 	}
-	else if (nbFound > 1) {
+	else if (selectedFacets.size() > 1) {
 		GLMessageBox::Display("More than one facet is selected", "Can't define source", GLDLG_OK, GLDLG_ICONINFO);
-		return -1;
+		return std::make_tuple(false, 0);
 	}
-	else return foundId;
-
+	else return std::make_tuple(true, selectedFacets[0]);
 }

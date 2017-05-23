@@ -14,12 +14,12 @@
   GNU General Public License for more details.
 */
 
-#include <SDL_opengl.h>
-#include "GLWindow.h"
-#include <vector>
-
 #ifndef _GLMESSAGEBOXH_
 #define _GLMESSAGEBOXH_
+
+//#include <SDL_opengl.h>
+#include "GLWindow.h"
+#include <vector>
 
 // Buttons
 #define GLDLG_OK          0x0001

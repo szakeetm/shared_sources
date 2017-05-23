@@ -3,16 +3,16 @@
   Description: Move facet by offset dialog
 */
 
-#include "GLApp/GLWindow.h"
-#include "GLApp/GLButton.h"
-#include "GLApp/GLTextField.h"
-#include "GLApp/GLLabel.h"
-
-#include "Geometry.h"
-#include "Worker.h"
-
 #ifndef _MOVEFACETH_
 #define _MOVEFACETH_
+
+#include "GLApp/GLWindow.h"
+
+class GLButton;
+class GLTextField;
+class GLLabel;
+class Geometry;
+class Worker;
 
 class MoveFacet : public GLWindow {
 

@@ -12,6 +12,7 @@
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #include "MolflowGeometry.h"
+#include "LoadStatus.h"
 #endif
 
 #ifdef SYNRAD
@@ -57,7 +58,7 @@ Geometry *Worker::GetGeometry() {
 	return geom;
 }
 
-BOOL Worker::IsDpInitialized(){
+bool Worker::IsDpInitialized(){
 
 	return (dpHit != NULL);
 }
@@ -103,7 +104,7 @@ void Worker::SetFileName(char *fileName) {
 }
 
 
-void Worker::ExportTextures(char *fileName, int grouping, int mode, BOOL askConfirm, BOOL saveSelected) {
+void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
 
 	char tmp[512];
 
@@ -112,7 +113,7 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, BOOL askConf
 
 
 
-	BOOL ok = TRUE;
+	bool ok = true;
 	if (askConfirm) {
 		if (FileUtils::Exist(fileName)) {
 			sprintf(tmp, "Overwrite existing file ?\n%s", fileName);
@@ -260,27 +261,27 @@ char *Worker::GetErrorDetails() {
 	return err;
 }
 
-BOOL Worker::Wait(int waitState,LoadStatus *statusWindow) {
+bool Worker::Wait(int waitState,LoadStatus *statusWindow) {
 	
-	abortRequested = FALSE;
-	BOOL finished = FALSE;
-	BOOL error = FALSE;
+	abortRequested = false;
+	bool finished = false;
+	bool error = false;
 
 	int waitTime = 0;
-	allDone = TRUE;
+	allDone = true;
 
 	// Wait for completion
 	while(!finished && !abortRequested) {
 
-		finished = TRUE;
+		finished = true;
 		AccessDataport(dpControl);
 		SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
 
-		for(int i=0;i<nbProcess;i++) {
+		for(size_t i=0;i<nbProcess;i++) {
 
 			finished = finished & (shMaster->states[i]==waitState || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
 			if( shMaster->states[i]==PROCESS_ERROR ) {
-				error = TRUE;
+				error = true;
 
 			}
 			allDone = allDone & (shMaster->states[i]==PROCESS_DONE);
@@ -290,7 +291,7 @@ BOOL Worker::Wait(int waitState,LoadStatus *statusWindow) {
 		if (!finished) {
 
 			if (statusWindow) {
-				if (waitTime >= 500) statusWindow->SetVisible(TRUE);
+				if (waitTime >= 500) statusWindow->SetVisible(true);
 				statusWindow->SMPUpdate();
 				mApp->DoEvents();
 			}
@@ -299,19 +300,19 @@ BOOL Worker::Wait(int waitState,LoadStatus *statusWindow) {
 		}
 	}
 
-	if (statusWindow) statusWindow->SetVisible(FALSE);
+	if (statusWindow) statusWindow->SetVisible(false);
 	return finished && !error;
 
 }
 
-BOOL Worker::ExecuteAndWait(int command,int readyState,int param) {
+bool Worker::ExecuteAndWait(int command,int readyState,size_t param) {
 
-	if(!dpControl) return FALSE;
+	if(!dpControl) return false;
 
 	// Send command
 	AccessDataport(dpControl);
 	SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-	for(int i=0;i<nbProcess;i++) {
+	for(size_t i=0;i<nbProcess;i++) {
 		shMaster->states[i]=command;
 		shMaster->cmdParam[i]=param;
 	}
@@ -321,7 +322,7 @@ BOOL Worker::ExecuteAndWait(int command,int readyState,int param) {
 
 	LoadStatus *statusWindow = NULL;
 	statusWindow = new LoadStatus(this);
-	BOOL result= Wait(readyState,statusWindow);
+	bool result= Wait(readyState,statusWindow);
 	SAFE_DELETE(statusWindow);
 	return result;
 }
@@ -335,7 +336,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 	stopTime = 0.0f;
 	startTime = 0.0f;
 	simuTime = 0.0f;
-	running = FALSE;
+	running = false;
 	if (nbProcess == 0)
 		return;
 
@@ -343,7 +344,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 		ResetWorkerStats();
 		if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
 			ThrowSubProcError();
-		ClearHits(FALSE);
+		ClearHits(false);
 		Update(appTime);
 	}
 	catch (Error &e) {
@@ -366,11 +367,11 @@ void Worker::KillAll() {
 		if( !ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED) ) {
 			AccessDataport(dpControl);
 			SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-			for(int i=0;i<nbProcess;i++) 
+			for(size_t i=0;i<nbProcess;i++)
 				if(shMaster->states[i]==PROCESS_KILLED) pID[i]=0;
 			ReleaseDataport(dpControl);
 			// Force kill
-			for(int i=0;i<nbProcess;i++)
+			for(size_t i=0;i<nbProcess;i++)
 				if(pID[i]) KillProc(pID[i]);
 		}
 		CLOSEDP(dpHit);
@@ -379,7 +380,7 @@ void Worker::KillAll() {
 
 }
 
-void Worker::SetProcNumber(int n) {
+void Worker::SetProcNumber(size_t n) {
 
 	char cmdLine[512];
 
@@ -396,9 +397,9 @@ void Worker::SetProcNumber(int n) {
 	ReleaseDataport(dpControl);
 
 	// Launch n subprocess
-	for(int i=0;i<n;i++) {
+	for(size_t i=0;i<n;i++) {
 		#ifdef MOLFLOW
-		sprintf(cmdLine,"molflowSub.exe %d %d",pid,i);
+		sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
 		#endif
 		#ifdef SYNRAD
 		sprintf(cmdLine,"synradSub.exe %d %d",pid,i);
@@ -415,13 +416,13 @@ void Worker::SetProcNumber(int n) {
 
 	LoadStatus *statusWindow = NULL;
 	statusWindow = new LoadStatus(this);
-	BOOL result = Wait(PROCESS_READY, statusWindow);
+	bool result = Wait(PROCESS_READY, statusWindow);
 	SAFE_DELETE(statusWindow);
 	if( !result )
 		ThrowSubProcError("Sub process(es) starting failure");
 }
 
-DWORD Worker::GetPID(int prIdx) {
+DWORD Worker::GetPID(size_t prIdx) {
 	return pID[prIdx];
 }
 
@@ -439,7 +440,7 @@ void Worker::RebuildTextures() {
 	}
 }
 
-int Worker::GetProcNumber() {
+size_t Worker::GetProcNumber() {
 	return nbProcess;
 }
 
@@ -448,8 +449,8 @@ void Worker::Update(float appTime) {
 	if (needsReload) RealReload();
 
 	// Check calculation ending
-	BOOL done = TRUE;
-	BOOL error = TRUE;
+	bool done = true;
+	bool error = true;
 	if (dpControl) {
 		if (AccessDataport(dpControl)) {
 			int i = 0;
@@ -477,7 +478,7 @@ void Worker::Update(float appTime) {
 		if (AccessDataport(dpHit)) {
 			BYTE *buffer = (BYTE *)dpHit->buff;
 
-			mApp->changedSinceSave = TRUE;
+			mApp->changedSinceSave = true;
 			// Globals
 			SHGHITS *gHits = (SHGHITS *)buffer;
 
@@ -513,8 +514,8 @@ void Worker::Update(float appTime) {
 			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
 
 			// Refresh local facet hit cache for the displayed moment
-			int nbFacet = geom->GetNbFacet();
-			for (int i = 0; i<nbFacet; i++) {
+			size_t nbFacet = geom->GetNbFacet();
+			for (size_t i = 0; i<nbFacet; i++) {
 				Facet *f = geom->GetFacet(i);
 #ifdef SYNRAD
 				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(SHHITS));
@@ -531,7 +532,7 @@ void Worker::Update(float appTime) {
 							tmp << "Not enough memory for incident angle map on facet " << i + 1;
 							throw Error(tmp.str().c_str());
 						}
-						f->sh.hasRecordedAngleMap = TRUE;
+						f->sh.hasRecordedAngleMap = true;
 					}
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset

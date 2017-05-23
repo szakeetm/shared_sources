@@ -23,6 +23,11 @@
 #include "GLApp/MathTools.h" //FormatMemory
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
+#include "GLApp/GLList.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLCombo.h"
+#include "Worker.h"
 
 static const int   plWidth[] = {40,70,70,50,345};
 static const char *plName[] = {"PID","Mem Usage","Mem Peak","CPU","Status"};
@@ -36,15 +41,15 @@ SmpStatus::SmpStatus():GLWindow() {
   int hD = 300;
 
   SetTitle("Process status");
-  SetIconfiable(TRUE);
+  SetIconfiable(true);
 
   processList = new GLList(0);
-  processList->SetHScrollVisible(TRUE);
+  processList->SetHScrollVisible(true);
   processList->SetSize(5,MAX_PROCESS);
   processList->SetColumnWidths((int*)plWidth);
   processList->SetColumnLabels((char **)plName);
   processList->SetColumnAligns((int *)plAligns);
-  processList->SetColumnLabelVisible(TRUE);
+  processList->SetColumnLabelVisible(true);
   processList->SetBounds(5,5,wD-10,hD-55);
   Add(processList);
 
@@ -57,7 +62,7 @@ SmpStatus::SmpStatus():GLWindow() {
   Add(l1);
 
   nbProcText = new GLTextField(0,"");
-  nbProcText->SetEditable(TRUE);
+  nbProcText->SetEditable(true);
   nbProcText->SetBounds(210,hD-43,30,19);
   Add(nbProcText);
 
@@ -90,10 +95,10 @@ SmpStatus::SmpStatus():GLWindow() {
 void SmpStatus::Display(Worker *w) {
   char tmp[64];
   worker = w;
-  int nb = worker->GetProcNumber();
-  sprintf(tmp,"%d",nb);
+  size_t nb = worker->GetProcNumber();
+  sprintf(tmp,"%zd",nb);
   nbProcText->SetText(tmp);
-  SetVisible(TRUE);
+  SetVisible(true);
 }
 
 // ----------------------------------------------------------------
@@ -101,7 +106,7 @@ void SmpStatus::Display(Worker *w) {
 void SmpStatus::Update(float appTime) {
 
   if(!IsVisible() || IsIconic()) return;  
-  int nb = worker->GetProcNumber();
+  size_t nb = worker->GetProcNumber();
 
   if( appTime-lastUpdate>1.0 && nb>0 ) {
 
@@ -114,7 +119,7 @@ void SmpStatus::Update(float appTime) {
     worker->GetProcStatus(states,(char **)statusStr);
 
     processList->ResetValues();
-    for(int i=0;i<nb;i++) {
+    for(size_t i=0;i<nb;i++) {
       DWORD pid = worker->GetPID(i);
       sprintf(tmp,"%d",pid);
       processList->SetValueAt(0,i,tmp);
@@ -191,7 +196,7 @@ void SmpStatus::ProcessMessage(GLComponent *src,int message) {
 
     case MSG_BUTTON:
       if(src==dismissButton) {
-        SetVisible(FALSE);
+        SetVisible(false);
       } else if (src==restartButton) {
         RestartProc();
       } else if (src==maxButton) {

@@ -22,9 +22,15 @@
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
+#include "GLApp\GLTextField.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
+#include "GLApp\GLComponent.h"
+#include "GLApp\GLButton.h"
+#include "GLApp\GLList.h"
 #include <vector>
+
+#include "Geometry.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -49,37 +55,42 @@ static const char *flName[] = {"#","Vertex","X","Y","Z"};
 static const int   flAligns[] = { ALIGN_CENTER,ALIGN_CENTER,ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { 0,0,EDIT_NUMBER,EDIT_NUMBER,EDIT_NUMBER };
 
+struct line {
+	size_t vertexId;
+	Vector3d coord;
+};
+
 FacetCoordinates::FacetCoordinates():GLWindow() {
 
   int wD = 405;
   int hD = 400;
-  SetIconfiable(TRUE);
-  SetResizable(FALSE);
+  SetIconfiable(true);
+  SetResizable(false);
 
   GLTitledPanel *p = new GLTitledPanel("Insert / Remove vertex");
   p->SetBounds(5,hD-120,wD-10,70);
   Add(p);
 
   GLLabel *l1 = new GLLabel("Vertex Id to insert:");
-  setBounds(p,l1,20,20,120,19);
+  SetCompBoundsRelativeTo(p,l1,20,20,120,19);
   Add(l1);
 
   insertIdText = new GLTextField(0,"0");
-  setBounds(p,insertIdText,135,20,40,19);
+  SetCompBoundsRelativeTo(p,insertIdText,135,20,40,19);
   Add(insertIdText);
 
   insertLastButton = new GLButton(0,"Insert as last vertex");
-  setBounds(p,insertLastButton,5,45,120,19);
+  SetCompBoundsRelativeTo(p,insertLastButton,5,45,120,19);
   Add(insertLastButton);
 
   insertBeforeButton = new GLButton(0,"Insert before sel. row");
-  setBounds(p,insertBeforeButton,135,45,120,19);
-  insertBeforeButton->SetEnabled(FALSE);
+  SetCompBoundsRelativeTo(p,insertBeforeButton,135,45,120,19);
+  insertBeforeButton->SetEnabled(false);
   Add(insertBeforeButton);
 
   removePosButton = new GLButton(0,"Remove selected row");;
-  setBounds(p,removePosButton,265,45,120,19);
-  removePosButton->SetEnabled(FALSE);
+  SetCompBoundsRelativeTo(p,removePosButton,265,45,120,19);
+  removePosButton->SetEnabled(false);
   Add(removePosButton);
   
   updateButton = new GLButton(0,"Apply");
@@ -103,10 +114,10 @@ FacetCoordinates::FacetCoordinates():GLWindow() {
   facetListC = new GLList(0);
   facetListC->SetSize(5,1);
   facetListC->SetBounds(5,5,wD-10,hD-130);
-  facetListC->SetColumnLabelVisible(TRUE);
-  facetListC->SetGrid(TRUE);
+  facetListC->SetColumnLabelVisible(true);
+  facetListC->SetGrid(true);
   //facetListC->SetSelectionMode(SINGLE_CELL);
-  //facetListC->Sortable=TRUE;
+  //facetListC->Sortable=true;
   Add(facetListC);
 
   // Center dialog
@@ -123,16 +134,16 @@ FacetCoordinates::FacetCoordinates():GLWindow() {
 void FacetCoordinates::GetSelected() {
 
   selFacet = NULL;
-  int i = 0;
+  size_t i = 0;
   Geometry *g = worker->GetGeometry();
-  int nb = g->GetNbFacet();
+  size_t nb = g->GetNbFacet();
   while(!selFacet && i<nb) {
     if( g->GetFacet(i)->selected ) selFacet = g->GetFacet(i);
     if(!selFacet) i++;
   }
 
   char tmp[32];
-  sprintf(tmp,"Facets coordinates #%d",i+1);
+  sprintf(tmp,"Facets coordinates #%zd",i+1);
   SetTitle(tmp);
 
 }
@@ -146,11 +157,11 @@ void FacetCoordinates::UpdateFromSelection() {
 
   Geometry *geom = worker->GetGeometry();
 
-  int nbIndex = selFacet->sh.nbIndex;
+  size_t nbIndex = selFacet->sh.nbIndex;
 
   lines=std::vector<line>();
 
-  for (size_t i=0;(int)i<nbIndex;i++) {
+  for (size_t i=0;i<nbIndex;i++) {
 	  line newLine;
 	  newLine.coord=*geom->GetVertex(newLine.vertexId=selFacet->indices[i]);
 	  lines.push_back(newLine);
@@ -163,7 +174,7 @@ void FacetCoordinates::UpdateFromSelection() {
 void FacetCoordinates::Display(Worker *w) {
 
   worker = w;
-  SetVisible(TRUE);
+  SetVisible(true);
   UpdateFromSelection();
 
 }
@@ -174,10 +185,10 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {
-        SetVisible(FALSE);
+        SetVisible(false);
 	  } else if (src==insertLastButton) {
 		  int vertexId;
-		  int rowId=facetListC->GetNbRow();
+		  size_t rowId=facetListC->GetNbRow();
 		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=geom->GetNbVertex())) {
 			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
 			  break;
@@ -253,12 +264,6 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 
 }
 
-void FacetCoordinates::setBounds(GLComponent *org,GLComponent *src,int x,int y,int w,int h) {
-  int xc,yc,wc,hc;
-  org->GetBounds(&xc,&yc,&wc,&hc);
-  src->SetBounds(xc+x,yc+y,w,h);
-}
-
 void FacetCoordinates::UpdateId(int vertexId) {
 	char tmp[64];
 	sprintf(tmp,"%d",vertexId+1);
@@ -275,12 +280,12 @@ void FacetCoordinates::RebuildList() {
 	
 	char tmp[128];
 
-	for(int i=0;i<(int)lines.size();i++) {
+	for(size_t i=0;i<lines.size();i++) {
 		
-		sprintf(tmp,"%d",i+1);
+		sprintf(tmp,"%zd",i+1);
 		facetListC->SetValueAt(0,i,tmp);
 		
-		sprintf(tmp,"%d",lines[i].vertexId+1);
+		sprintf(tmp,"%zd",lines[i].vertexId+1);
 		facetListC->SetValueAt(1,i,tmp);
     
 		sprintf(tmp,"%.10g",lines[i].coord.x);
@@ -297,7 +302,7 @@ void FacetCoordinates::RebuildList() {
 		removePosButton->SetEnabled(selRow);
 }
 
-void FacetCoordinates::RemoveRow(int rowId){
+void FacetCoordinates::RemoveRow(size_t rowId){
  lines.erase(lines.begin()+rowId);
  RebuildList();
  if (rowId<facetListC->GetNbRow()) facetListC->SetSelectedRow(rowId);
@@ -306,7 +311,7 @@ void FacetCoordinates::RemoveRow(int rowId){
  removePosButton->SetEnabled(selRow);
 }
 
-void FacetCoordinates::InsertVertex(int rowId,int vertexId){
+void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 	line newLine;
 	newLine.vertexId=vertexId;
 	newLine.coord=*(worker->GetGeometry()->GetVertex(vertexId));
@@ -334,11 +339,11 @@ void FacetCoordinates::ApplyChanges(){
 		double x,y,z;
 		if (!(lines[row].vertexId >= 0 && lines[row].vertexId<geom->GetNbVertex())) { //wrong coordinates at row
 			char tmp[128];
-			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", row + 1, lines[row].vertexId + 1);
+			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %zd doesn't exist.", row + 1, lines[row].vertexId + 1);
 			GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
 			return;
 		}
-		BOOL success = (1==sscanf(facetListC->GetValueAt(2,row),"%lf",&x));
+		bool success = (1==sscanf(facetListC->GetValueAt(2,row),"%lf",&x));
 		success = success && (1==sscanf(facetListC->GetValueAt(3,row),"%lf",&y));
 		success = success && (1==sscanf(facetListC->GetValueAt(4,row),"%lf",&z));
 		if (!success) { //wrong coordinates at row
@@ -356,18 +361,18 @@ void FacetCoordinates::ApplyChanges(){
 	//if( rep == GLDLG_OK ) {
 
 		if (mApp->AskToReset(worker)) {
-			mApp->changedSinceSave=TRUE;
+			mApp->changedSinceSave=true;
 
 			//Change number of vertices
 			SAFE_FREE(selFacet->indices);
 			SAFE_FREE(selFacet->vertices2);
 			SAFE_FREE(selFacet->visible);
 			selFacet->sh.nbIndex = (int)lines.size();
-			selFacet->indices = (int *)malloc(selFacet->sh.nbIndex*sizeof(int));
+			selFacet->indices = (size_t *)malloc(selFacet->sh.nbIndex*sizeof(size_t));
 			selFacet->vertices2 = (Vector2d *)malloc(selFacet->sh.nbIndex*sizeof(Vector2d));
 			memset(selFacet->vertices2,0,selFacet->sh.nbIndex * sizeof(Vector2d));
-			selFacet->visible = (BOOL *)malloc(selFacet->sh.nbIndex*sizeof(BOOL));
-			memset(selFacet->visible,0xFF,selFacet->sh.nbIndex*sizeof(BOOL));
+			selFacet->visible = (bool *)malloc(selFacet->sh.nbIndex*sizeof(bool));
+			memset(selFacet->visible,0xFF,selFacet->sh.nbIndex*sizeof(bool));
 
 			for(size_t i=0;i<lines.size();i++) {
 				geom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);

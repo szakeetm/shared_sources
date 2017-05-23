@@ -16,9 +16,6 @@
 #ifndef _GLCOMPONENTH_
 #define _GLCOMPONENTH_
 
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include "GLTypes.h"
 #include "GLContainer.h"
 
 #define BORDER_NONE      0
@@ -35,20 +32,20 @@ public:
 
   // Component methods
   void SetPosition(int x,int y);
-  void SetSize(int width,int height);
-  void GetBounds(int *x,int *y,int *w,int *h);
+  void SetSize(int width, int height);
+  void GetBounds(int *x,int *y, int *w, int *h);
   void SetBorder(int border);
-  void SetOpaque(BOOL opaque);
+  void SetOpaque(bool opaque);
   void SetBackgroundColor(int r,int g,int b);
   void GetBackgroundColor(int *r,int *g,int *b);
   int  GetId();
-  BOOL HasFocus();
-  void SetFocusable(BOOL acceptFocus);
-  BOOL IsFocusable();
-  void SetEnabled(BOOL enable);
-  BOOL IsEnabled();
-  void SetVisible(BOOL visible);
-  BOOL IsVisible();
+  bool HasFocus();
+  void SetFocusable(bool acceptFocus);
+  bool IsFocusable();
+  void SetEnabled(bool enable);
+  bool IsEnabled();
+  void SetVisible(bool visible);
+  bool IsVisible();
   GLContainer *GetParent();
   void SetCursor(int cursor);
   int GetCursor();
@@ -57,27 +54,27 @@ public:
 
   // Implementation
   virtual void Paint();
-  virtual void SetFocus(BOOL focus);
-  virtual void SetBounds(int x,int y,int width,int height);
+  virtual void SetFocus(bool focus);
+  virtual void SetBounds(int x,int y, int width, int height);
   virtual void SetParent(GLContainer *parent);
 
 protected:
 
-  int  width;
-  int  height;
+	int  width;
+	int  height;
   int  posX;
   int  posY;
-  BOOL opaque;
+  bool opaque;
   int  border;
   int  rBack;
   int  gBack;
   int  bBack;
   int  id;
   int  cursor;
-  BOOL focus;
-  BOOL enabled;
-  BOOL visible;
-  BOOL focusable;
+  bool focus;
+  bool enabled;
+  bool visible;
+  bool focusable;
   GLContainer *parent;
 
 };

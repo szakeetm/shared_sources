@@ -15,13 +15,12 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#ifndef _SMPH_
+#define _SMPH_
+
 #define STARTPROC_NORMAL 0
 #define STARTPROC_BACKGROUND 1
 #define STARTPROC_FOREGROUND 2
-
-
-#ifndef _SMPH_
-#define _SMPH_
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,24 +58,24 @@ extern "C" {
 typedef struct {
 
   double cpu_time; // CPU time         (in second)
-  DWORD  mem_use;  // Memory usage     (in byte)
-  DWORD  mem_peak; // MAx Memory usage (in byte)
+  size_t  mem_use;  // Memory usage     (in byte)
+  size_t  mem_peak; // MAx Memory usage (in byte)
 
 } PROCESS_INFO;
 
 // Shared memory
 Dataport *CreateDataport(char *name, size_t size);
 Dataport *OpenDataport(char *name, size_t size);
-BOOL AccessDataport(Dataport *dp);
-BOOL AccessDataportTimed(Dataport *dp, DWORD timeout);
-BOOL ReleaseDataport(Dataport *dp);
-BOOL CloseDataport(Dataport *dp);
+bool AccessDataport(Dataport *dp);
+bool AccessDataportTimed(Dataport *dp, DWORD timeout);
+bool ReleaseDataport(Dataport *dp);
+bool CloseDataport(Dataport *dp);
 
 // Process management
-BOOL          KillProc(DWORD pID);
-BOOL          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
+bool          KillProc(DWORD pID);
+bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
 DWORD         StartProc(char *pname,int mode);
-BOOL IsProcessRunning(DWORD pID);
+bool IsProcessRunning(DWORD pID);
 
 /*extern DWORD         StartProc_background(char *pname);
 extern DWORD         StartProc_foreground(char *pname); //TODO: unite these three*/

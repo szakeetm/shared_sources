@@ -17,6 +17,8 @@
 #include "GLCombo.h"
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
+#include "GLList.h"
+#include "GLTextField.h"
 
 // Popup -----------------------------------------------------------
 
@@ -26,7 +28,7 @@ public:
 
   GLComboPopup(GLCombo *parent):GLWindow() {
     this->parent = parent;
-    SetAnimatedFocus(FALSE);
+    SetAnimatedFocus(false);
     rCode=0;
   }
 
@@ -64,13 +66,13 @@ GLCombo::GLCombo(int compId):GLComponent(compId) {
 
   wnd = new GLComboPopup(this);
   list = new GLList(compId);
-  list->SetMotionSelection(TRUE);
+  list->SetMotionSelection(true);
   wnd->Add(list);
   text = new GLTextField(compId,"");
   selectedRow = -1;
-  m_Editable = FALSE;
+  m_Editable = false;
   text->SetEditable_NoBG(m_Editable);
-  dropped = FALSE;
+  dropped = false;
   SetBorder(BORDER_BEVEL_IN);
   text->SetBorder(BORDER_NONE);
   Add(text);
@@ -91,7 +93,7 @@ GLList *GLCombo::GetList() {
 
 // -----------------------------------------------------------------
 
-void GLCombo::SetSize(int nbRow) {
+void GLCombo::SetSize(size_t nbRow) {
   if( nbRow==0 )
     list->Clear();
   else
@@ -100,25 +102,25 @@ void GLCombo::SetSize(int nbRow) {
 
 // -----------------------------------------------------------------
 
-void GLCombo::SetValueAt(int row,const char *value,int userValue) {
+void GLCombo::SetValueAt(size_t row,const char *value,int userValue) {
   list->SetValueAt(0,row,value,userValue);
 }
 
 // -----------------------------------------------------------------
 
-int GLCombo::GetUserValueAt(int row) {
+int GLCombo::GetUserValueAt(size_t row) {
   return list->GetUserValueAt(0,row);
 }
 
 // -----------------------------------------------------------------
 
-char *GLCombo::GetValueAt(int row) {
+char *GLCombo::GetValueAt(size_t row) {
   return list->GetValueAt(0,row);
 }
 
 // -----------------------------------------------------------------
 
-int GLCombo::GetNbRow() {
+size_t GLCombo::GetNbRow() {
   return list->GetNbRow();
 }
 
@@ -164,7 +166,7 @@ int GLCombo::GetSelectedIndex() {
 
 // -----------------------------------------------------------------
 
-void GLCombo::SetEditable(BOOL editable) {
+void GLCombo::SetEditable(bool editable) {
   m_Editable = editable;
   SetEnabled(editable);
   text->SetEditable(m_Editable);
@@ -185,11 +187,11 @@ void GLCombo::Paint() {
   else                    font->SetTextColor(0.5f,0.5f,0.5f);
   GLToolkit::DrawSmallButton(posX+width-16,posY+1,dropped);
   if(dropped) {
-    //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,TRUE,TRUE);
-    font->DrawText(posX+width-11,posY+4,"\211",FALSE);
+    //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,true,true);
+    font->DrawText(posX+width-11,posY+4,"\211",false);
   } else {
-    //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,TRUE);
-    font->DrawText(posX+width-12,posY+3,"\211",FALSE);
+    //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,true);
+    font->DrawText(posX+width-12,posY+3,"\211",false);
   }
   GLToolkit::CheckGLErrors("GLCombo::Paint()");
 }
@@ -198,7 +200,7 @@ void GLCombo::Paint() {
 
 void GLCombo::Drop() {
 
-  dropped = TRUE;
+  dropped = true;
   Paint();
 
   // Old clipping
@@ -209,16 +211,16 @@ void GLCombo::Drop() {
 
   int x = GetWindow()->GetScreenX(this);
   int y = GetWindow()->GetScreenY(this);
-  int h = list->GetNbRow()*15+4;
-  BOOL needScroll = FALSE;
-  if( h>116 ) { h=116;needScroll=TRUE; }
+  int h = (int)list->GetNbRow()*15+4;
+  bool needScroll = false;
+  if( h>116 ) { h=116;needScroll=true; }
 
   int ws[] = { width-4 };
   list->SetColumnWidths(ws);
   list->SetVScrollVisible(needScroll);
-  list->SetHScrollVisible(FALSE);
+  list->SetHScrollVisible(false);
   list->SetBounds(1,1,width-2,h-2);
-  list->SetFocus(TRUE);
+  list->SetFocus(true);
 
   // Place drop list
   int wScr,hScr;
@@ -248,15 +250,15 @@ void GLCombo::Drop() {
   glLoadMatrixf(old_m);
   glViewport(old_v[0],old_v[1],old_v[2],old_v[3]);
 
-  dropped = FALSE;
+  dropped = false;
 
 }
 
 // -----------------------------------------------------------------
 
-void GLCombo::SetFocus(BOOL focus) {
+void GLCombo::SetFocus(bool focus) {
   if(!focus) {
-    dropped=FALSE;
+    dropped=false;
   }
   text->SetFocus(focus);
   GLComponent::SetFocus(focus);
@@ -273,7 +275,7 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
 
   if( mx>=width-16 || !m_Editable ) {
     if( evt->type == SDL_MOUSEBUTTONDOWN ) {
-      int nbRow = list->GetNbRow();
+      size_t nbRow = list->GetNbRow();
       if( evt->button.button==SDL_BUTTON_WHEELUP ) {
         if( nbRow>0 && selectedRow>0 ) {
           SetSelectedIndex(selectedRow-1);

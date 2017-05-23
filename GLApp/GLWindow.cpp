@@ -19,7 +19,8 @@
 #include "MathTools.h" //Saturate
 #include "GLWindowManager.h"
 #include "GLApp.h"
-#include <malloc.h>
+#include "GLMenu.h"
+//#include <malloc.h>
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -56,21 +57,21 @@ GLWindow::GLWindow():GLContainer() {
   rBack=212;
   gBack=208;
   bBack=200;
-  border = TRUE;
-  isMaster = FALSE;
-  visible = FALSE;
+  border = true;
+  isMaster = false;
+  visible = false;
   menuBar = NULL;
-  isResizable = FALSE;
+  isResizable = false;
   minWidth = 30;
   minHeight = 0;
   menus = NULL;
-  isModal = FALSE;
+  isModal = false;
   SetWindow(this);
-  iconifiable = FALSE;
-  iconified = FALSE;
-  maximized = FALSE;
+  iconifiable = false;
+  iconified = false;
+  maximized = false;
   lastClick = 0;
-  animateFocus = TRUE;
+  animateFocus = true;
 
 }
 
@@ -92,7 +93,7 @@ GLWindow::~GLWindow() {
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetAnimatedFocus(BOOL animate) {
+void GLWindow::SetAnimatedFocus(bool animate) {
   animateFocus = animate;
 }
 
@@ -150,14 +151,14 @@ void GLWindow::CloseMenu() {
       draggedComp=NULL;
       draggMode=DRAGG_NONE;
     }
-    menuBar->SetFocus(FALSE);
+    menuBar->SetFocus(false);
   }
 
 }
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetMaster(BOOL master) {
+void GLWindow::SetMaster(bool master) {
   isMaster = master;
 }
 
@@ -213,28 +214,26 @@ void GLWindow::SetBounds(int x,int y,int w,int h) {
   height = h;
 }
 
-// ---------------------------------------------------------------
-
-void GLWindow::SetMinimumSize(int width,int height) {
+void GLWindow::SetMinimumSize(int width, int height) {
   minWidth = width;
   minHeight = height;
 }
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetIconfiable(BOOL iconifiable) {
+void GLWindow::SetIconfiable(bool iconifiable) {
   this->iconifiable = iconifiable;
 }
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetBorder(BOOL b) {
+void GLWindow::SetBorder(bool b) {
   border = b;
 }
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetResizable(BOOL sizable) {
+void GLWindow::SetResizable(bool sizable) {
   isResizable = sizable;
 }
 
@@ -263,34 +262,34 @@ void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsCtrlDown() {
+bool GLWindow::IsCtrlDown() {
   return GLWindowManager::IsCtrlDown();
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsShiftDown() {
+bool GLWindow::IsShiftDown() {
   return GLWindowManager::IsShiftDown();
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsAltDown() {
+bool GLWindow::IsAltDown() {
   return GLWindowManager::IsAltDown();
 }
 
-BOOL GLWindow::IsSpaceDown() {
+bool GLWindow::IsSpaceDown() {
   return GLWindowManager::IsSpaceDown();
 }
 
-BOOL GLWindow::IsCapsLockOn() {
+bool GLWindow::IsCapsLockOn() {
   return GLWindowManager::IsCapsLockOn();
 }
 
 // ---------------------------------------------------------------
 
 int GLWindow::GetUpMargin() {
-  BOOL hasTitle = strlen(title)!=0;
+  bool hasTitle = strlen(title)!=0;
   int mUp = 0;
   if( hasTitle ) mUp+=19;
   if( menuBar ) {
@@ -303,11 +302,11 @@ int GLWindow::GetUpMargin() {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsInWindow(int mx,int my) {
+bool GLWindow::IsInWindow(int mx,int my) {
   return (mx>=posX && mx<=posX+width && my>=posY && my<=posY+height);  
 }
 
-BOOL GLWindow::IsInSysButton(SDL_Event *evt,int witch) {
+bool GLWindow::IsInSysButton(SDL_Event *evt,int witch) {
 
  int mX = evt->button.x;
  int mY = evt->button.y;
@@ -322,13 +321,13 @@ BOOL GLWindow::IsInSysButton(SDL_Event *evt,int witch) {
      return (mX>=posX+_width-52 && mX<posX+_width-39 && mY>=posY+4 && mY<=posY+15);
  }
 
- return FALSE;
+ return false;
 
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsInComp(GLComponent *src,int mx,int my) {
+bool GLWindow::IsInComp(GLComponent *src,int mx,int my) {
   int x,y,w,h;
   src->GetBounds(&x,&y,&w,&h);
   int u = GetUpMargin();
@@ -366,7 +365,7 @@ void GLWindow::ProcessMessage(GLComponent *src,int message) {
       Maximise(!maximized);
       break;
     case MSG_CLOSE:
-      SetVisible(FALSE);
+      SetVisible(false);
       break;
   }
 
@@ -386,7 +385,7 @@ void GLWindow::UpdateOnResize() {
 
 // ---------------------------------------------------------------
 
-void GLWindow::Maximise(BOOL max) {
+void GLWindow::Maximise(bool max) {
 
   if(!isResizable) return;
 
@@ -401,11 +400,11 @@ void GLWindow::Maximise(BOOL max) {
     widthSave  = width;
     heightSave = height;
     GLWindowManager::AnimateMaximize(this,1,u,nW,nH);
-    maximized = TRUE;
+    maximized = true;
 
   } else if( maximized && !max ) {
 
-    maximized = FALSE;
+    maximized = false;
     GLWindowManager::AnimateMaximize(this,posXSave,posYSave,widthSave,heightSave);
 
   }
@@ -414,7 +413,7 @@ void GLWindow::Maximise(BOOL max) {
 
 // ---------------------------------------------------------------
 
-void GLWindow::Iconify(BOOL iconify) {
+void GLWindow::Iconify(bool iconify) {
 
   if(!iconifiable) return;
 
@@ -437,13 +436,13 @@ void GLWindow::Iconify(BOOL iconify) {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsIconic() {
+bool GLWindow::IsIconic() {
   return iconified;
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsMaximized() {
+bool GLWindow::IsMaximized() {
   return maximized;
 }
 
@@ -455,7 +454,7 @@ int GLWindow::GetIconWidth() {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsMoving() {
+bool GLWindow::IsMoving() {
   return draggMode!=DRAGG_NONE;
 }
 
@@ -514,23 +513,23 @@ int GLWindow::GetY(GLComponent *src,SDL_Event *evt) {
 
 // ---------------------------------------------------------------
 
-void GLWindow::SetVisible(BOOL v) {
+void GLWindow::SetVisible(bool v) {
  
   if( !visible ) {
     if( v ) {
       GLWindowManager::RegisterWindow(this);
-      visible = TRUE;
-      iconified = FALSE;
+      visible = true;
+      iconified = false;
       if(maximized) UpdateOnResize();
 	  
     }
   } else {
     if( !v ) {
-      visible = FALSE;
-      if( iconified ) Iconify(FALSE);
+      visible = false;
+      if( iconified ) Iconify(false);
       GLWindowManager::UnRegisterWindow(this);
     } else {
-      if( iconified ) Iconify(FALSE);
+      if( iconified ) Iconify(false);
       GLWindowManager::BringToFront(this);
     }
   }
@@ -539,7 +538,7 @@ void GLWindow::SetVisible(BOOL v) {
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsVisible() {
+bool GLWindow::IsVisible() {
   return visible;
 }
 
@@ -547,37 +546,37 @@ BOOL GLWindow::IsVisible() {
 
 void GLWindow::DoModal() {
   GLWindowManager::FullRepaint();
-  SetVisible(TRUE);
+  SetVisible(true);
   int nbRegistered = GLWindowManager::GetNbWindow();
-  isModal = TRUE;
-  BOOL appActive = TRUE;
-  SetResizable(FALSE);
-  SetIconfiable(FALSE);
+  isModal = true;
+  bool appActive = true;
+  SetResizable(false);
+  SetIconfiable(false);
 
   // Modal Loop
   SDL_Event evt;
   while( visible )
   {
 
-    BOOL needRedraw = FALSE;
+    bool needRedraw = false;
     
     // Get activation
-    BOOL active = (SDL_GetAppState()&SDL_APPACTIVE) != 0;
-    if( !appActive && active ) needRedraw = TRUE;
+    bool active = (SDL_GetAppState()&SDL_APPACTIVE) != 0;
+    if( !appActive && active ) needRedraw = true;
     appActive = active;
 
     //While there are events to handle
     while( SDL_PollEvent( &evt ) ) {
       
 		theApp->UpdateEventCount(&evt);
-      GLWindowManager::ProcessKey(&evt,FALSE);
+      GLWindowManager::ProcessKey(&evt,false);
       if(evt.type == SDL_VIDEORESIZE) {
         theApp->Resize(evt.resize.w,evt.resize.h);
-        needRedraw = TRUE;
+        needRedraw = true;
       }
       ManageEvent(&evt);
       if(!evtProcessed && evt.type==SDL_MOUSEBUTTONDOWN && animateFocus) GLWindowManager::AnimateFocus(this);
-      if(evt.type == SDL_VIDEOEXPOSE) needRedraw = TRUE;
+      if(evt.type == SDL_VIDEOEXPOSE) needRedraw = true;
     }
 
     theApp->UpdateStats();
@@ -586,7 +585,7 @@ void GLWindow::DoModal() {
     if( evt.type == SDL_KEYDOWN ) {
       int unicode = (evt.key.keysym.unicode & 0x7F);
       if( !unicode ) unicode = evt.key.keysym.sym;
-      if( unicode == SDLK_ESCAPE ) SetVisible(FALSE);
+      if( unicode == SDLK_ESCAPE ) SetVisible(false);
 	  if( unicode == SDLK_RETURN ) {
 		//Press Apply button
 		  GLComponent *child=GetFirstChildComp();
@@ -619,15 +618,15 @@ void GLWindow::DoModal() {
 
   }
 
-  SetVisible(FALSE);
+  SetVisible(false);
   GLWindowManager::FullRepaint();
-  isModal = FALSE;
+  isModal = false;
 
 }
 
 // ---------------------------------------------------------------
 
-BOOL GLWindow::IsDragging() {
+bool GLWindow::IsDragging() {
   return (draggedComp!=NULL) || draggMode;
 }
 
@@ -651,7 +650,7 @@ void GLWindow::CancelDrag(SDL_Event *evt) {
 
 void GLWindow::ManageMenu(SDL_Event *evt) {
 
-  evtProcessed = FALSE;
+  evtProcessed = false;
   if( menus ) {
     menus->ManageEvent(evt);
     menus->RelayEvent(evt);
@@ -670,9 +669,9 @@ void GLWindow::UpdateSize(int newWidht,int newHeight,int cursor) {
   SATURATE(newWidht,minWidth,srcW);
   SATURATE(newHeight,minHeight+uMargin,srcW);
   if( newWidht!=width || newHeight!=height ) {
-    maximized = FALSE;
+    maximized = false;
     SetBounds(posX,posY,newWidht,newHeight);
-    evtProcessed = TRUE;
+    evtProcessed = true;
   }
   GLToolkit::SetCursor(cursor);
 
@@ -692,13 +691,13 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
      int mY = evt->motion.y;
      if( mX>=posX+width-10 && mX<=posX+width+2 &&  mY>=posY+height-10 && mY<=posY+height+2 ) {
        GLToolkit::SetCursor(CURSOR_SIZE);
-       evtProcessed = TRUE;
+       evtProcessed = true;
      } else if ( mX>=posX+width-2 && mX<=posX+width+2 && mY>=posY && mY<=posY+height ) {
        GLToolkit::SetCursor(CURSOR_SIZEH);
-       evtProcessed = TRUE;
+       evtProcessed = true;
      } else if ( mX>=posX && mX<=posX+width && mY>=posY+height-2 && mY<=posY+height+2 ) {
        GLToolkit::SetCursor(CURSOR_SIZEV);
-       evtProcessed = TRUE;
+       evtProcessed = true;
      }
 
    }
@@ -712,9 +711,9 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
         mXOrg = mX;
         mYOrg = mY;
         if( (diffX || diffY) ) {
-          maximized = FALSE;
+          maximized = false;
           SetBounds(posX+diffX,posY+diffY,width,height);
-          evtProcessed = TRUE;
+          evtProcessed = true;
           GLToolkit::SetCursor(CURSOR_DEFAULT);
         }
         return;
@@ -760,7 +759,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
 
       if( mX>=posX+2 && mX<=posX+_width-2 && mY>=posY && mY<=posY+17) {
 
-        evtProcessed = TRUE;
+        evtProcessed = true;
         GLToolkit::SetCursor(CURSOR_DEFAULT);
 
         if( IsInSysButton(evt,CLOSE_SYSBTN) ) {
@@ -829,7 +828,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
       if( isResizable && !iconified && !maximized) {
         if( mX>=posX+width-10 && mX<=posX+width+2 &&  mY>=posY+height-10 && mY<=posY+height+2 ) {
 
-          evtProcessed = TRUE;
+          evtProcessed = true;
           if( evt->type == SDL_MOUSEBUTTONDOWN ) {
             mXOrg = mX;
             mYOrg = mY;
@@ -841,7 +840,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
 
         } else if ( mX>=posX+width-2 && mX<=posX+width+2 && mY>=posY && mY<=posY+height ) {
 
-          evtProcessed = TRUE;
+          evtProcessed = true;
           if( evt->type == SDL_MOUSEBUTTONDOWN ) {
             mXOrg = mX;
             mYOrg = mY;
@@ -853,7 +852,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
 
         } else if ( mX>=posX && mX<=posX+width && mY>=posY+height-2 && mY<=posY+height+2 ) {
 
-          evtProcessed = TRUE;
+          evtProcessed = true;
           if( evt->type == SDL_MOUSEBUTTONDOWN ) {
             mXOrg = mX;
             mYOrg = mY;
@@ -880,9 +879,9 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
   // Pump non processed mouse event
   if( evt->type == SDL_MOUSEBUTTONUP || evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEMOTION ) {
     if( !evtProcessed && IsInWindow(evt->button.x,evt->button.y) ) {
-      evtProcessed = TRUE;
+      evtProcessed = true;
       // Cancel event (for menu closing)
-      if( evt->type == SDL_MOUSEBUTTONUP || evt->type == SDL_MOUSEBUTTONDOWN ) evtCanceled = TRUE;
+      if( evt->type == SDL_MOUSEBUTTONUP || evt->type == SDL_MOUSEBUTTONDOWN ) evtCanceled = true;
       GLToolkit::SetCursor(CURSOR_DEFAULT);
     }
   }
@@ -985,52 +984,52 @@ void GLWindow::PaintTitle(int _width,int _height) {
   GLToolkit::DrawBox(posX,posY,_width,_height,rBack,gBack,bBack,border);
 
   // Title bar
-  BOOL hasTitle = strlen(title)!=0;
+  bool hasTitle = strlen(title)!=0;
   if( hasTitle ) {
     glColor3f(0.25f,0.35f,0.75f);
     GLToolkit::DrawBar(posX+2,posY+1,_width-5,18);
     //GLToolkit::DrawBox(posX+2,posY+1,_width-5,18,50,80,140);
     GLToolkit::GetDialogFontBold()->SetTextColor(1.0f,1.0f,1.0f);
     if( iconified )
-      GLToolkit::GetDialogFontBold()->DrawText(posX+5,posY+3,iconTitle,FALSE);
+      GLToolkit::GetDialogFontBold()->DrawText(posX+5,posY+3,iconTitle,false);
     else
-      GLToolkit::GetDialogFontBold()->DrawText(posX+5,posY+3,title,FALSE);
+      GLToolkit::GetDialogFontBold()->DrawText(posX+5,posY+3,title,false);
   }
 
   // System menu
   if( hasTitle ) {
     GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
     if(!closeState) {
-      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,TRUE,FALSE);
-      GLToolkit::GetDialogFont()->DrawText(posX+_width-15,posY+2,"x",FALSE);
+      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,false);
+      GLToolkit::GetDialogFont()->DrawText(posX+_width-15,posY+2,"x",false);
     } else {
-      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,TRUE,TRUE);
-      GLToolkit::GetDialogFont()->DrawText(posX+_width-14,posY+3,"x",FALSE);
+      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,true);
+      GLToolkit::GetDialogFont()->DrawText(posX+_width-14,posY+3,"x",false);
     }
     if( !isModal ) {
       if(!maxState) {
         if( isResizable && !iconified) GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
         else                           GLToolkit::GetDialogFont()->SetTextColor(0.7f,0.7f,0.7f);
-        GLToolkit::DrawBox(posX+_width-35,posY+4,13,12,212,208,200,TRUE,FALSE);
+        GLToolkit::DrawBox(posX+_width-35,posY+4,13,12,212,208,200,true,false);
         if( maximized && !iconified )
-          GLToolkit::GetDialogFont()->DrawText(posX+_width-34,posY+2,"\210",FALSE);
+          GLToolkit::GetDialogFont()->DrawText(posX+_width-34,posY+2,"\210",false);
         else
-          GLToolkit::GetDialogFont()->DrawText(posX+_width-34,posY+2,"\207",FALSE);
+          GLToolkit::GetDialogFont()->DrawText(posX+_width-34,posY+2,"\207",false);
       } else {
-        GLToolkit::DrawBox(posX+_width-34,posY+4,13,12,212,208,200,TRUE,TRUE);
+        GLToolkit::DrawBox(posX+_width-34,posY+4,13,12,212,208,200,true,true);
         if( maximized )
-          GLToolkit::GetDialogFont()->DrawText(posX+_width-33,posY+3,"\210",FALSE);
+          GLToolkit::GetDialogFont()->DrawText(posX+_width-33,posY+3,"\210",false);
         else
-          GLToolkit::GetDialogFont()->DrawText(posX+_width-33,posY+3,"\207",FALSE);
+          GLToolkit::GetDialogFont()->DrawText(posX+_width-33,posY+3,"\207",false);
       }
       if(!iconState) {
         if( iconifiable ) GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
         else              GLToolkit::GetDialogFont()->SetTextColor(0.7f,0.7f,0.7f);
-        GLToolkit::DrawBox(posX+_width-52,posY+4,13,12,212,208,200,TRUE,FALSE);
-        GLToolkit::GetDialogFont()->DrawText(posX+_width-49,posY+2,"_",FALSE);
+        GLToolkit::DrawBox(posX+_width-52,posY+4,13,12,212,208,200,true,false);
+        GLToolkit::GetDialogFont()->DrawText(posX+_width-49,posY+2,"_",false);
       } else {
-        GLToolkit::DrawBox(posX+_width-52,posY+4,13,12,212,208,200,TRUE,TRUE);
-        GLToolkit::GetDialogFont()->DrawText(posX+_width-48,posY+3,"_",FALSE);
+        GLToolkit::DrawBox(posX+_width-52,posY+4,13,12,212,208,200,true,true);
+        GLToolkit::GetDialogFont()->DrawText(posX+_width-48,posY+3,"_",false);
       }
     }
   }

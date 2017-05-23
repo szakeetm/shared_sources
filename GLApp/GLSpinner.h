@@ -13,10 +13,10 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-
 #ifndef _GLSPINNERH_
 #define _GLSPINNERH_
+
+#include "GLComponent.h"
 
 class GLSpinner : public GLComponent {
 

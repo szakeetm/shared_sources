@@ -1,3 +1,4 @@
+#pragma once
 /*
   File:        GLContainer.h
   Description: Base component container class (SDL/OpenGL OpenGL application framework)
@@ -15,18 +16,14 @@
 */
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include "GLTypes.h"
-
-#ifndef _GLCONTAINERH_
-#define _GLCONTAINERH_
 
 class GLComponent;
 class GLWindow;
 
 typedef struct COMPLINK {
   GLComponent *comp;
-  BOOL postDelete;
-  BOOL canProcess;
+  bool postDelete;
+  bool canProcess;
   COMPLINK *next;
 } COMP_LIST;
 
@@ -44,6 +41,7 @@ public:
 
   // Components method
   void Add(GLComponent *comp);
+  void SetCompBoundsRelativeTo(GLComponent * org, GLComponent * src, int dx, int dy, int w, int h);
   void Remove(GLComponent *comp);
   void SetFocus(GLComponent *src);
   void PaintComponents();
@@ -55,8 +53,8 @@ public:
   // Event stuff
   void FreezeComp();
   void UnfreezeComp();
-  BOOL IsEventProcessed();
-  BOOL IsEventCanceled();
+  bool IsEventProcessed();
+  bool IsEventCanceled();
   void RelayEvent(SDL_Event *evt);
   void RedirectMessage(GLContainer *cont);
   GLContainer *GetRedirect();
@@ -68,7 +66,7 @@ public:
   virtual void ProcessMessage(GLComponent *src,int message);
   virtual void ProcessAcc(int accId);
   virtual void CancelDrag(SDL_Event *evt);
-  virtual BOOL IsDragging();
+  virtual bool IsDragging();
 
 protected:
 
@@ -78,8 +76,8 @@ protected:
 
   GLComponent *lastFocus;
   GLComponent *draggedComp;
-  BOOL evtProcessed;
-  BOOL evtCanceled;
+  bool evtProcessed;
+  bool evtCanceled;
 
 private:
 
@@ -90,4 +88,4 @@ private:
 
 };
 
-#endif /* _GLCOMPONENTH_ */
+

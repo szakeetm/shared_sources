@@ -14,12 +14,16 @@
   GNU General Public License for more details.
 */
 
+#include "GLWindow.h"
+#include "GLLabel.h"
+#include "GLTitledPanel.h"
+#include "GLTextField.h"
 #include "GLColorBox.h"
 #include "GLButton.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
 #include "MathTools.h" //SATURATE
-#include <malloc.h>
+//#include <malloc.h>
 #include <Cimage.h>
 
 const DWORD sColors[] = {
@@ -50,7 +54,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   Add(swPanel);
 
   swBox = new GLLabel("");
-  swBox->SetOpaque(FALSE);
+  swBox->SetOpaque(false);
   swBox->SetBounds(15,hD-155,340,98);
   Add(swBox);
 
@@ -59,12 +63,12 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   Add(hsvPanel);
 
   hsBox = new GLLabel("");
-  hsBox->SetOpaque(FALSE);
+  hsBox->SetOpaque(false);
   hsBox->SetBounds(15,30,128,128);
   Add(hsBox);
 
   vBox = new GLLabel("");
-  vBox->SetOpaque(FALSE);
+  vBox->SetOpaque(false);
   vBox->SetBounds(170,30,45,128);
   Add(vBox);
 
@@ -76,7 +80,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   l1->SetBounds(250,30,50,19);
   Add(l1);
   rText = new GLTextField(0,"");
-  rText->SetEditable(TRUE);
+  rText->SetEditable(true);
   rText->SetBounds(305,30,50,19);
   Add(rText);
 
@@ -84,7 +88,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   l2->SetBounds(250,55,50,19);
   Add(l2);
   gText = new GLTextField(0,"");
-  gText->SetEditable(TRUE);
+  gText->SetEditable(true);
   gText->SetBounds(305,55,50,19);
   Add(gText);
 
@@ -92,7 +96,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   l3->SetBounds(250,80,50,19);
   Add(l3);
   bText = new GLTextField(0,"");
-  bText->SetEditable(TRUE);
+  bText->SetEditable(true);
   bText->SetBounds(305,80,50,19);
   Add(bText);
 
@@ -101,7 +105,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   Add(l4);
 
   oldColor = new GLLabel("");
-  oldColor->SetOpaque(TRUE);
+  oldColor->SetOpaque(true);
   oldColor->SetBorder(BORDER_NONE);
   oldColor->SetBackgroundColor(*r,*g,*b);
   oldColor->SetBounds(305,110,50,20);
@@ -112,7 +116,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   Add(l5);
 
   newColor = new GLLabel("");
-  newColor->SetOpaque(TRUE);
+  newColor->SetOpaque(true);
   newColor->SetBorder(BORDER_NONE);
   newColor->SetBounds(305,130,50,20);
   Add(newColor);
@@ -126,7 +130,7 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
   Add(cancelButton);
 
   updateColor(*r,*g,*b);
-  draggV = FALSE;
+  draggV = false;
 
   // Center dialog
   int wS,hS;
@@ -169,7 +173,7 @@ void GLColorBox::RestoreDeviceObjects() {
       float h = ((float)i / 128.0f) * 360.0f;
       float s = (float)j / 128.0f;
       float v = 0.9f;
-      buff32[i+j*128]=hsv_to_rgb(h,s,v,TRUE);
+      buff32[i+j*128]=hsv_to_rgb(h,s,v,true);
     }
   }
 
@@ -400,7 +404,7 @@ float GLColorBox::get_blue( DWORD c ) {
 }
 
 // h in [0,360], s in [0,1], v in [0,1]
-DWORD GLColorBox::hsv_to_rgb( float h,float s,float v,BOOL swap ) {
+DWORD GLColorBox::hsv_to_rgb( float h,float s,float v,bool swap ) {
 
 	float r,g,b;
 	int   ir,ig,ib;
@@ -524,7 +528,7 @@ void GLColorBox::ProcessMessage(GLComponent *src,int message) {
 void GLColorBox::ManageEvent(SDL_Event *evt) {
 
   if(evt->type == SDL_MOUSEBUTTONUP) {
-    draggV = FALSE;
+    draggV = false;
   }
 
   if(evt->type == SDL_MOUSEBUTTONDOWN) {
@@ -545,7 +549,7 @@ void GLColorBox::ManageEvent(SDL_Event *evt) {
       float v = GetY(vBox,evt)/128.0f;
       DWORD newC = hsv_to_rgb(curH,curS,v);
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
-      draggV = TRUE;
+      draggV = true;
     }
   }
 

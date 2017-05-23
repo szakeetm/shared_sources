@@ -24,7 +24,7 @@
 static char ret[1024];
 
 // Construct a dialog box
-GLInputBox::GLInputBox(char *message,char *label,char *title):GLWindow() {
+GLInputBox::GLInputBox(const char *message,char *label,char *title):GLWindow() {
 
   int wD;
   int hD=80;
@@ -42,7 +42,7 @@ GLInputBox::GLInputBox(char *message,char *label,char *title):GLWindow() {
 
   //Text Field
   text = new GLTextField(0,message?message:"");
-  text->SetEditable(TRUE);
+  text->SetEditable(true);
   text->SetBounds(txtWidth+15,5,90,19);
   Add(text);
 
@@ -99,7 +99,7 @@ void GLInputBox::ProcessMessage(GLComponent *src,int message) {
 
 // -------------------------------------------------
 
-char *GLInputBox::GetInput(char *message,char *label,char *title) {
+char *GLInputBox::GetInput(const char *message,char *label,char *title) {
 
   GLfloat old_mView[16];
   GLfloat old_mProj[16];

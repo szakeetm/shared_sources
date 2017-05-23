@@ -20,6 +20,11 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\GLTextField.h"
+#include "GLApp\GLLabel.h"
+#include "GLApp\GLButton.h"
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -121,7 +126,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 	  //if (work->running) work->Stop_Public();
 		  geom->AddVertex(X,Y,Z);
 	  //work->Reload();
-	  //mApp->changedSinceSave = TRUE; //Adding a vertex doesn't modify the simulation whatsoever
+	  //mApp->changedSinceSave = true; //Adding a vertex doesn't modify the simulation whatsoever
 
 
       //GLWindowManager::FullRepaint();

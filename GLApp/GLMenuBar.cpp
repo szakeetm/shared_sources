@@ -18,7 +18,7 @@
 #include "GLMenuBar.h"
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
-#include <malloc.h>
+//#include <malloc.h>
 
 #define SIDE_MARGIN 7
 
@@ -28,7 +28,7 @@ GLMenuBar::GLMenuBar(int compId):GLComponent(compId) {
   SetBorder(BORDER_NONE);
   nbItem=0;
   selMenu=-1;
-  autoDrop=FALSE;
+  autoDrop=false;
   memset(items,0,sizeof items);
 }
 
@@ -72,7 +72,7 @@ void GLMenuBar::Add(char *itemName) {
 
 int GLMenuBar::GetMenu(int mx,int my) {
 
-  BOOL found = FALSE;
+  bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
     found = IsInItem(items+i,mx,my);
@@ -85,7 +85,7 @@ int GLMenuBar::GetMenu(int mx,int my) {
 
 // -----------------------------------------------------------
 
-BOOL GLMenuBar::IsInItem(MENUITEM *p,int mx,int my) {
+bool GLMenuBar::IsInItem(MENUITEM *p,int mx,int my) {
     return mx>=(p->x) && mx<=(p->x)+(p->width) &&
            my>=(p->y) && my<=(p->y)+(p->height);
 }
@@ -98,7 +98,7 @@ GLMenu *GLMenuBar::GetSubMenu(char *itemName) {
   strcpy(tmpName,itemName);
   GLWindowManager::RemoveAccFromStr(tmpName);
 
-  BOOL found = FALSE;
+  bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
     found = (strcmp(tmpName,items[i].itemName)==0);
@@ -114,7 +114,7 @@ GLMenu *GLMenuBar::GetSubMenu(char *itemName) {
 
 // -----------------------------------------------------------------
 
-void GLMenuBar::SetFocus(BOOL focus) {
+void GLMenuBar::SetFocus(bool focus) {
   if( !focus ) Close();
   GLComponent::SetFocus(focus);
 }
@@ -127,7 +127,7 @@ void GLMenuBar::Close() {
     GLMenu *sub = items[i].subMenu;
     if(sub) sub->Close();
   }
-  autoDrop=FALSE;
+  autoDrop=false;
   selMenu=-1;
 
 }
@@ -144,12 +144,12 @@ void GLMenuBar::Paint() {
     MENUITEM *p = items + i;
     if(autoDrop) {
       if( selMenu==i )
-        GLToolkit::DrawBox(p->x,p->y+1,p->width,p->height,rBack,gBack,bBack,TRUE,TRUE);
+        GLToolkit::DrawBox(p->x,p->y+1,p->width,p->height,rBack,gBack,bBack,true,true);
     } else {
       if( selMenu==i )
-        GLToolkit::DrawBox(p->x,p->y+1,p->width,p->height,rBack,gBack,bBack,TRUE,FALSE);
+        GLToolkit::DrawBox(p->x,p->y+1,p->width,p->height,rBack,gBack,bBack,true,false);
     }
-    GLToolkit::GetDialogFont()->DrawText(p->x+SIDE_MARGIN,p->y+3,p->itemName,FALSE);
+    GLToolkit::GetDialogFont()->DrawText(p->x+SIDE_MARGIN,p->y+3,p->itemName,false);
 
     // Shortcut underline
     if( p->shortcut ) {
@@ -174,7 +174,7 @@ void GLMenuBar::Drop(int sel) {
     p->subMenu->Drop(parent,p->x,1);
   }
   selMenu = sel;
-  autoDrop = TRUE;
+  autoDrop = true;
 }
 
 // -----------------------------------------------------------------

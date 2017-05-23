@@ -1,6 +1,8 @@
 #include "FormulaSettings.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLMessageBox.h"
+#include "GLApp\GLTextField.h"
+#include "GLApp\GLButton.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -16,13 +18,13 @@ void FormulaSettings::Update(GLParser *f,int id) {
 
 	if (f == NULL) { //New formula
 	  applyButton->SetText("Create");
-	  deleteButton->SetEnabled(FALSE);
+	  deleteButton->SetEnabled(false);
 	  nameT->SetText("");
 	  exprT->SetText("");
 	}
 	else { //Edit formula
 		applyButton->SetText("Apply");
-		deleteButton->SetEnabled(TRUE);
+		deleteButton->SetEnabled(true);
 		nameT->SetText(f->GetName());
 		exprT->SetText(f->GetExpression());
 	}

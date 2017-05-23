@@ -13,10 +13,10 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-
 #ifndef _GLTITLEDPANELH_
 #define _GLTITLEDPANELH_
+
+#include "GLComponent.h"
 
 class GLTitledPanel : public GLComponent {
 
@@ -28,11 +28,11 @@ public:
   // Component method
   void SetTitle(char *title);
   void SetTextColor(int r,int g,int b);
-  void SetBold(BOOL b);
-  void SetClosable(BOOL c);
+  void SetBold(bool b);
+  void SetClosable(bool c);
   void Close();
   void Open();
-  BOOL IsClosed();
+  bool IsClosed();
   void SetCompBounds(GLComponent *src,int x,int y,int width,int height);
 
   // Implementation
@@ -47,10 +47,10 @@ private:
   float rText;
   float gText;
   float bText;
-  BOOL  isBold;
-  BOOL  closeAble;
-  BOOL  closeState;
-  BOOL  closed;
+  bool  isBold;
+  bool  closeAble;
+  bool  closeState;
+  bool  closed;
   int   wOrg;
   int   hOrg;
   int   txtWidth;

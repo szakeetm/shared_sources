@@ -7,18 +7,17 @@
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
+//  This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
 
+#ifndef _GLSAVEDIALOGH_
+#define _GLSAVEDIALGOH_
 
 #include <SDL_opengl.h>
 #include "GLWindow.h"
-
-#ifndef _GLSAVEDIALOGH_
-#define _GLSAVEDIALGOH_
 
 // Buttons
 #define GLDLG_SAVE		  0x0001

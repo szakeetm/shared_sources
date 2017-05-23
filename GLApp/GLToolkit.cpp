@@ -16,12 +16,14 @@
 
 #include "GLToolkit.h"
 #include "MathTools.h" //Min max saturate
+#include "GLFont.h"
 #include "GLApp.h"
 #include "GLWindow.h"
 #include "GLMatrix.h"
 #include "GLSprite.h"
+//#include "File.h"
 #include <math.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <cimage.h>
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -237,22 +239,22 @@ void GLToolkit::SetIcon32x32(char *pngName) {
 
 // ---------------------------------------------------------------------
 
-BOOL GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
+bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
 
   scrWidth = width;
   scrHeight = height;
 
   dlgFont = new GLFont2D("images/fnt_sansserif_8.png");
   dlgFont->SetTextSize(12,14);
-  dlgFont->SetVariableWidth(TRUE);
+  dlgFont->SetVariableWidth(true);
   if( !dlgFont->RestoreDeviceObjects(scrWidth,scrHeight) )
-    return FALSE;
+    return false;
 
   dlgFontB = new GLFont2D("images/fnt_sansserif_8b.png");
   dlgFontB->SetTextSize(12,14);
-  dlgFontB->SetVariableWidth(TRUE);
+  dlgFontB->SetVariableWidth(true);
   if( !dlgFontB->RestoreDeviceObjects(scrWidth,scrHeight) )
-    return FALSE;
+    return false;
 
   if(!defCursor) defCursor = InitCursor("images/cursor_default.png",0,0);
   if(!busyCursor) busyCursor = InitCursor("images/cursor_busy.png",0,0);
@@ -274,10 +276,10 @@ BOOL GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
 
   compTex = new Sprite2D();
   if( !compTex->RestoreDeviceObjects("images/gui_background.png","images/gui_backgrounda.png",256,256) )
-    return FALSE;
+    return false;
 
   SetCursor(CURSOR_DEFAULT);
-  return TRUE;
+  return true;
 
 }
 
@@ -362,12 +364,12 @@ void GLToolkit::DrawButtonBack(const int &x,const int &y,const int &width,const 
   // Left part
   compTex->UpdateSprite(x,y,x+w1,y+height);
   compTex->SetSpriteMapping(0.0f,0.0f,fw1,ft);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
   // Right part
   compTex->UpdateSprite(x+w1,y,x+width,y+height);
   compTex->SetSpriteMapping(1.0f-fw2,0.0f,1.0f,ft);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -380,7 +382,7 @@ void GLToolkit::DrawTinyButton(int x,int y,int state) {
 
   compTex->UpdateSprite(x,y,x+12,y+12);
   compTex->SetSpriteMapping(0.0f,95.0f/TW,12.0f/TW,107.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -394,7 +396,7 @@ void GLToolkit::DrawSmallButton(int x,int y,int state) {
 
   compTex->UpdateSprite(x,y,x+15,y+17);
   compTex->SetSpriteMapping(0.0f,24.0f/TW,15.0f/TW,41.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -405,7 +407,7 @@ void GLToolkit::DrawToggle(int x,int y) {
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+12,y+12);
   compTex->SetSpriteMapping(17.0f/TW,24.0f/TW,29.0f/TW,36.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -416,7 +418,7 @@ void GLToolkit::DrawBar(int x,int y,int width,int height) {
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+width,y+height);
   compTex->SetSpriteMapping(0.0f,44.0f/TW,1.0f,51.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -437,23 +439,23 @@ void GLToolkit::DrawTextBack(const int &x,const int &y,const int &width,const in
   // Left part
   compTex->UpdateSprite(x,y,x+w1,y+height);
   compTex->SetSpriteMapping(0.0f,54.0f/TW,fw1,75.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
   // Right part
   compTex->UpdateSprite(x+w1,y,x+width,y+height);
   compTex->SetSpriteMapping(1.0f-fw2,54.0f/TW,1.0f,75.0f/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
 // ---------------------------------------------------------------
 
-void GLToolkit::DrawVGradientBox(int x,int y,int width,int height,BOOL shadow,BOOL iShadow,BOOL isEtched) {
+void GLToolkit::DrawVGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+width,y+height);
   compTex->SetSpriteMapping(0.1f,3.0f/TW,0.5f,17.0f/TW);
-  compTex->Render(TRUE);
+  compTex->Render(true);
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
@@ -464,12 +466,12 @@ void GLToolkit::DrawVGradientBox(int x,int y,int width,int height,BOOL shadow,BO
 
 // ---------------------------------------------------------------
 
-void GLToolkit::DrawHGradientBox(int x,int y,int width,int height,BOOL shadow,BOOL iShadow,BOOL isEtched) {
+void GLToolkit::DrawHGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+width,y+height);
   compTex->SetSpriteMapping(32.0f/TW,25.0f/TW,45.0f/TW,35.0f/TW);
-  compTex->Render(TRUE);
+  compTex->Render(true);
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
@@ -513,20 +515,20 @@ void GLToolkit::DrawHScroll(int x,int y,int width,int height,int state) {
   // First part
   compTex->UpdateSprite(x,y,x+w1,y+height);
   compTex->SetSpriteMapping(0.0f,ftu,fw1,ftd);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
     int sleft = MIN(left-i,200);
     compTex->UpdateSprite(x+w1+i,y,x+w1+i+sleft,y+height);
-    compTex->Render(FALSE);
+    compTex->Render(false);
   }
 
   // Last part
   compTex->UpdateSprite(x+w1+left,y,x+width,y+height);
   compTex->SetSpriteMapping(1.0f-fw2,ftu,1.0f,ftd);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -565,31 +567,31 @@ void GLToolkit::DrawVScroll(int x,int y,int width,int height,int state) {
   // First part
   compTex->UpdateSprite(x,y,x+width,y+h1);
   compTex->SetSpriteMapping(0.0f,ftu,fw1,ftd);
-  compTex->Render90(FALSE);
+  compTex->Render90(false);
 
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
     int sleft = MIN(left-i,200);
     compTex->UpdateSprite(x,y+h1+i,x+width,y+h1+i+sleft);
-    compTex->Render90(FALSE);
+    compTex->Render90(false);
   }
 
   // Last part
   compTex->UpdateSprite(x,y+h1+left,x+width,y+height);
   compTex->SetSpriteMapping(1.0f-fw2,ftu,1.0f,ftd);
-  compTex->Render90(FALSE);
+  compTex->Render90(false);
 
 }
 
 // ---------------------------------------------------------------
 
-void GLToolkit::DrawHIGradientBox(int x,int y,int width,int height,BOOL shadow,BOOL iShadow,BOOL isEtched) {
+void GLToolkit::DrawHIGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+width,y+height);
   compTex->SetSpriteMapping(49.0f/TW,25.0f/TW,62.0f/TW,35.0f/TW);
-  compTex->Render(TRUE);
+  compTex->Render(true);
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
@@ -605,7 +607,7 @@ void GLToolkit::Draw16x16(int x,int y,int xt,int yt) {
   compTex->SetColor(1.0f,1.0f,1.0f);
   compTex->UpdateSprite(x,y,x+16,y+16);
   compTex->SetSpriteMapping((float)xt/TW,(float)yt/TW,(float)(xt+16)/TW,(float)(yt+16)/TW);
-  compTex->Render(FALSE);
+  compTex->Render(false);
 
 }
 
@@ -623,7 +625,7 @@ void GLToolkit::DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer) {
 // ---------------------------------------------------------------------
 
 void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
-						   const int &height,const BOOL &shadow,const BOOL &iShadow,const BOOL &isEtched) {
+						   const int &height,const bool &shadow,const bool &iShadow,const bool &isEtched) {
 
   float rL = 1.0f;
   float gL = 1.0f;
@@ -730,8 +732,8 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
 // ---------------------------------------------------------------------
 
 void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &height,
-	  const int &r,const int &g,const int &b,const BOOL &shadow,const BOOL &iShadow,
-	  const BOOL &isEtched) {
+	  const int &r,const int &g,const int &b,const bool &shadow,const bool &iShadow,
+	  const bool &isEtched) {
 
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;
@@ -816,7 +818,7 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
 
 // -------------------------------------------
 
-BOOL GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const int &nbPts) {
+bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts) {
 
    // Fast method to check if a point is inside a polygon or not.
    // Works with convex and concav polys, orientation independant
@@ -824,7 +826,7 @@ BOOL GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,c
    double x1,x2,y1,y2,a,b;
    double xp = (double)x;
    double yp = (double)y;
-   BOOL inside = FALSE;
+   bool inside = false;
 
    n_updown=0;
    n_found=0;
@@ -863,7 +865,7 @@ BOOL GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,c
 
 // -------------------------------------------
 
-BOOL GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
+bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
 
   GLfloat mProj[16];
   GLfloat mView[16];
@@ -880,11 +882,11 @@ BOOL GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
 
   float rx,ry,rz,rw;
   m.TransfomVec(x,y,z,1.0f,&rx,&ry,&rz,&rw);
-  if(rw<=0.0f) return FALSE;
+  if(rw<=0.0f) return false;
   *xe = (int)(((rx / rw) + 1.0f)  * (float)g.width/2.0f);
   *ye = (int)(((-ry / rw) + 1.0f) * (float)g.height/2.0f);
 
-  return TRUE;
+  return true;
 
 }
 
@@ -968,7 +970,7 @@ void GLToolkit::DrawStringRestore() {
 
 // -------------------------------------------
 
-void GLToolkit::DrawRule(double length,BOOL invertX,BOOL invertY,BOOL invertZ,double n) {
+void GLToolkit::DrawRule(double length,bool invertX,bool invertY,bool invertZ,double n) {
 
   DrawVector(0.0,0.0,0.0,(invertX)?-length:length,0.0,0.0,n);
   DrawVector(0.0,0.0,0.0,0.0,(invertY)?-length:length,0.0,n);
@@ -1137,7 +1139,7 @@ void GLToolkit::printGlError(GLenum glError) {
 }
 
 void GLToolkit::CheckGLErrors(char *compname) {
-	static BOOL savedOnGLError=FALSE;   
+	static bool savedOnGLError=false;   
 	GLenum glError = glGetError();
        if( glError != GL_NO_ERROR ) { 
 		   char tmp[256];
@@ -1151,7 +1153,7 @@ void GLToolkit::CheckGLErrors(char *compname) {
 		 /*if (!savedOnGLError) {
 			 extern SynRad*mApp;
 			 mApp->AutoSave();
-			 savedOnGLError = TRUE;
+			 savedOnGLError = true;
 		 }*/
 		 throw Error(tmp);
        }

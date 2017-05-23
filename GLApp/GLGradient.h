@@ -13,12 +13,14 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include "GLChart\GLChart.h"
-#include "GLLabel.h"
 
 #ifndef _GLGRADIENTH_
 #define _GLGRADIENTH_
+
+#include "GLComponent.h"
+#include "GLChart\GLChartConst.h" //linear, log scale constants
+class GLAxis;
+class GLLabel;
 
 #define GRADIENT_BW    0
 #define GRADIENT_COLOR 1
@@ -36,7 +38,7 @@ public:
   void SetType(int type);
   void SetScale(int scale);
   int  GetScale();
-  void SetMouseCursor(BOOL enable);
+  void SetMouseCursor(bool enable);
 
   // Implementation
   void Paint();
@@ -52,7 +54,7 @@ private:
   GLuint       bwTex;
   GLAxis       *axis;
   GLLabel      *mouseValue;
-  BOOL         mouseCursor;
+  bool         mouseCursor;
   int          gType;
 
   int          gWidth;

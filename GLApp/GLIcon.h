@@ -13,11 +13,13 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-#include "GLComponent.h"
-#include "GLSprite.h"
+
 
 #ifndef _GLICONH_
 #define _GLICONH_
+
+#include "GLComponent.h"
+#include "GLSprite.h"
 
 class GLIcon : public GLComponent {
 

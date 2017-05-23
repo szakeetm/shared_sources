@@ -26,6 +26,8 @@
 #include "MathTools.h" //Min, max
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
+#include "GLComponent.h"
+#include "GLWindow.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -49,13 +51,13 @@ GLApplication::GLApplication() {
   m_screenHeight = 480;
   m_minScreenWidth = 640;
   m_minScreenHeight = 480;
-  m_bResizable = FALSE;
+  m_bResizable = false;
   wnd = new GLWindow();
-  wnd->SetMaster(TRUE);
-  wnd->SetBorder(FALSE);
+  wnd->SetMaster(true);
+  wnd->SetBorder(false);
   wnd->SetBackgroundColor(0,0,0);
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
-  wnd->SetVisible(TRUE); // Make top level shell
+  wnd->SetVisible(true); // Make top level shell
 
 #ifdef _DEBUG
   nbRestore = 0;
@@ -102,7 +104,7 @@ double GLApplication::GetTick() {
 
 // -------------------------------------------
 
-int GLApplication::setUpSDL(BOOL doFirstInit) {
+int GLApplication::setUpSDL(bool doFirstInit) {
 
   int errCode;
 
@@ -174,7 +176,7 @@ void GLApplication::SetTitle(std::string title) {
 
 // -------------------------------------------
 
-int GLApplication::Create(int width, int height, BOOL bFullScreen ) {
+int GLApplication::Create(int width, int height, bool bFullScreen ) {
 
 	theApp=this;
   m_screenWidth = width;
@@ -194,18 +196,18 @@ int GLApplication::Create(int width, int height, BOOL bFullScreen ) {
     
   SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
 
-  return setUpSDL(TRUE);
+  return setUpSDL(true);
 
 }
 
 // -------------------------------------------
 
-void GLApplication::Pause(BOOL bPause) {
+void GLApplication::Pause(bool bPause) {
 }
 
 // -------------------------------------------
 
-int GLApplication::Resize( DWORD nWidth, DWORD nHeight, BOOL forceWindowed ) {
+int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
 
   int width  = MAX((int)nWidth,m_minScreenWidth);
   int height = MAX((int)nHeight,m_minScreenHeight);
@@ -216,7 +218,7 @@ int GLApplication::Resize( DWORD nWidth, DWORD nHeight, BOOL forceWindowed ) {
   GLToolkit::InvalidateDeviceObjects();
   GLWindowManager::InvalidateDeviceObjects();
   InvalidateDeviceObjects();
-  if( forceWindowed ) m_bWindowed = TRUE;
+  if( forceWindowed ) m_bWindowed = true;
 
   if( setUpSDL() == GL_OK ) {
     GLWindowManager::Resize();
@@ -368,7 +370,7 @@ void GLApplication::Run() {
 	#endif
   SDL_Event sdlEvent;
 
-  BOOL   quit = FALSE;
+  bool   quit = false;
   int    ok;
   GLenum glError;
 //#ifdef _DEBUG
@@ -379,6 +381,8 @@ void GLApplication::Run() {
   m_fTime        = 0.0f;
   //m_fElapsedTime = 0.0f;
   m_fFPS         = 0.0f;
+  fMoveTime = 
+	  fPaintTime = 0.0;
   nbFrame        = 0;
   nbEvent        = 0;
   nbMouse        = 0;
@@ -396,7 +400,7 @@ void GLApplication::Run() {
   lastTick  = firstTick = SDL_GetTicks();
 
   mApp->CheckForRecovery();
-  wereEvents = FALSE;
+  wereEvents = false;
 
   //Wait for user exit
   while( !quit )
@@ -406,13 +410,13 @@ void GLApplication::Run() {
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
 
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=NULL) wereEvents = TRUE;
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=NULL) wereEvents = true;
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
 
          case SDL_QUIT:
-           if (mApp->AskToSave()) quit = TRUE;
+           if (mApp->AskToSave()) quit = true;
            break;
 
          case SDL_VIDEORESIZE:
@@ -467,7 +471,7 @@ void GLApplication::Run() {
        // Repaint
 	   if (wereEvents) {
 		   GLWindowManager::Repaint();
-		   wereEvents = FALSE;
+		   wereEvents = false;
 	   }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");

@@ -21,6 +21,12 @@
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+
+#include "Geometry.h"
+
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -132,7 +138,7 @@ void MoveVertex::ProcessMessage(GLComponent *src,int message) {
 
 					  geom->MoveSelectedVertex(dX, dY, dZ, src == copyButton, work);
 					  work->Reload();
-					  mApp->changedSinceSave = TRUE;
+					  mApp->changedSinceSave = true;
 				  }
     }
     break;
