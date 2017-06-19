@@ -325,7 +325,7 @@ FILENAME *GLFileBox::OpenFile(char *path,char *fileName,char *title,const char *
 
 	//Windows File Open dialog
 	OPENFILENAME ofn;       // common dialog box structure
-	char fileNm[260];       // buffer for file name
+	char fileNm[MAX_PATH];       // buffer for file name
 				
 	// Initialize OPENFILENAME
 	ZeroMemory(&ofn, sizeof(ofn));
@@ -345,7 +345,7 @@ FILENAME *GLFileBox::OpenFile(char *path,char *fileName,char *title,const char *
 
 	char CWD [MAX_PATH];
 	_getcwd( CWD, MAX_PATH );
-	//_chdir( CWD ); 				
+	//_chdir( CWD );
 	if (GetOpenFileName(&ofn)==TRUE) {
 		_chdir( CWD ); //OpenFileName dialog changes the working driectory, so we must set it back
 		strcpy(retFile.fullName,fileNm);

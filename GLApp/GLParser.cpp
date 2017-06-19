@@ -87,6 +87,7 @@ GLParser::GLParser() {
  varList=NULL;
  strcpy(expr,"");
  strcpy(name,"");
+ hasVariableEvalError = false;
 
 }
 
@@ -379,16 +380,6 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
                 AV();
 			  }
 			  else if (_stricmp(Extract(4), "SUM(") == 0) {
-				  std::string sumExpression;
-				  sumExpression+= EC;
-				  while (EC != ')') {
-					  AV();
-					  sumExpression += EC;
-				  } ;
-				  AV();
-				  elem.variable = AddVar(sumExpression.c_str(), var_list);
-				  AddNode(TVARIABLE, elem, node, NULL, NULL);
-			  } else if (_stricmp(Extract(4), "SUM(") == 0) {
 				  std::string sumExpression;
 				  sumExpression+= EC;
 				  while (EC != ')') {
@@ -889,6 +880,17 @@ VLIST *GLParser::GetVariableAt(int idx) {
 void   GLParser::SetVariable(char *name,double value) {
   VLIST *v = FindVar(name,varList);
   if( v ) v->value = value;
+}
+
+std::string GLParser::GetVariableEvalError()
+{
+	return variableEvalErrorMsg;
+}
+
+void GLParser::SetVariableEvalError(std::string errMsg)
+{
+	variableEvalErrorMsg = errMsg;
+	hasVariableEvalError = true;
 }
 
 int GLParser::GetCurrentPos() {

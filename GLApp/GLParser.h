@@ -55,6 +55,7 @@
 #define _GLPARSERH_
 
 #include "GLTypes.h" // For bool typedef
+#include <string>
 
 // Evaluation tree node type
 #define OPER_PLUS   1
@@ -129,8 +130,13 @@ public:
   VLIST *GetVariableAt(int idx);   // Return var at specified index
   void   SetVariable(char *name,double value); // Set the variable value
 
+  std::string GetVariableEvalError();
+  void SetVariableEvalError(std::string errMsg);
+
   // Evaluation
   bool   Evaluate(double *result); // Evaluate the expression
+  bool   hasVariableEvalError;
+  std::string variableEvalErrorMsg;
 
 private:
 

@@ -725,10 +725,9 @@ void GLList::ClearSelection() {
 
 // ---------------------------------------------------------------
 
-void GLList::SetSelectedRow(size_t row,bool searchIndex) {
-	_ASSERTE(row<nbRow);
+void GLList::SetSelectedRow(int row,bool searchIndex) {
 
-	if(row<0) {
+	if(row<0) { //-1 flag
 		ClearSelection();
 	} else if(row<nbRow) {
 		size_t rowIndex;
@@ -770,7 +769,7 @@ std::vector<size_t> GLList::GetSelectedRows(bool searchIndex) {
 
 // ---------------------------------------------------------------
 
-void GLList::AddSelectedRow(size_t row,bool searchIndex) {
+void GLList::AddSelectedRow(int row,bool searchIndex) {
 
 	if( row<0 || row>nbRow-1 || selectionMode!=MULTIPLE_ROW )
 		return;
@@ -1163,7 +1162,7 @@ void GLList::GetVisibleRows(int *start, int *end) {
 
 // ---------------------------------------------------------------
 
-size_t GLList::GetRowForLocation(int x,int y) {
+int GLList::GetRowForLocation(int x,int y) {
 
 	int pos = (y+sbV->GetPosition()-labHeight);
 	int idx = pos/cHeight;
@@ -1190,7 +1189,7 @@ size_t GLList::GetRowForLocationSat(int x,int y) {
 
 // ---------------------------------------------------------------
 
-size_t GLList::GetColForLocation(int x,int y) {
+int GLList::GetColForLocation(int x,int y) {
 
 	int labW = (showRLabel)?labWidth+labelRowMargin:0;
 	int sx = -sbH->GetPosition()+labW;
@@ -1892,7 +1891,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( Sortable && evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_LEFT &&  nbRow>1  && !(GetColumnEdge(mx-labW,my)>=0)) {
 				GLToolkit::SetCursor(CURSOR_BUSY);
 				menu->Clear();
-				size_t sCol = GetColForLocation(mx,my);
+				int sCol = GetColForLocation(mx,my);
 				if( sCol>=0 ) {
 					if ( this->Sortable ) {
 						size_t clickedColTmp = sCol;
@@ -1972,7 +1971,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					lastColX = mx;
 					lastColY = my;
 				} else {
-					size_t sCol = GetColForLocation(mx,my);
+					int sCol = GetColForLocation(mx,my);
 					ClearSelection();
 					if( selectionMode==BOX_CELL && sCol>=0 ) {
 						// Select column
@@ -1989,10 +1988,10 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_RIGHT ) {
 				char tmp[256];
 				menu->Clear();
-				size_t sCol = GetColForLocation(mx,my);
+				int sCol = GetColForLocation(mx,my);
 				if( sCol>=0 ) {
 					if(cNames) sprintf(tmp,"Copy column %s",cNames[sCol]);
-					else       sprintf(tmp,"Copy column #%zd",sCol);
+					else       sprintf(tmp,"Copy column #%d",sCol);
 					menu->Add(tmp,0);
 					int menuId = menu->Track(GetWindow(),posX+mx,posY+my);
 					if( menuId==0 ) {
@@ -2040,10 +2039,10 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			if( evt->type == SDL_MOUSEBUTTONDOWN && evt->button.button == SDL_BUTTON_RIGHT ) {
 				char tmp[256];
 				menu->Clear();
-				size_t sRow = GetRowForLocation(mx,my);
+				int sRow = GetRowForLocation(mx,my);
 				if( sRow>=0 ) {
 					if(rNames) sprintf(tmp,"Copy row %s",rNames[sRow]);
-					else       sprintf(tmp,"Copy row #%zd",sRow);
+					else       sprintf(tmp,"Copy row #%d",sRow);
 					menu->Add(tmp,0);
 					int menuId = menu->Track(GetWindow(),posX+mx,posY+my);
 					if( menuId==0 ) {
@@ -2095,7 +2094,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 
 			case BOX_CELL:
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = (int)GetColForLocation(mx,my);
+					selectedCol = GetColForLocation(mx,my);
 					SetSelectedRow( GetRowForLocation(mx,my));
 					if( selectedCol!=-1 && selectedRows.size()>0 ) {
 						selDragged = true;
@@ -2123,7 +2122,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			case SINGLE_CELL:
 
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = lastColSel = (int)GetColForLocation(mx,my);
+					selectedCol = lastColSel = GetColForLocation(mx,my);
 					SetSelectedRow( GetRowForLocation(mx,my));
 					parent->ProcessMessage(this,MSG_LIST);
 					ScrollToVisible();
@@ -2162,7 +2161,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 			case MULTIPLE_ROW:
 
 				if( evt->button.button == SDL_BUTTON_LEFT ) {
-					selectedCol = (int)GetColForLocation(mx,my);
+					selectedCol = GetColForLocation(mx,my);
 					if( GetWindow()->IsCtrlDown() )
 						AddSelectedRow( GetRowForLocation(mx,my) );
 					else {

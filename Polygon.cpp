@@ -686,7 +686,7 @@ double GetInterArea(POLYGON *inP1,POLYGON *inP2,bool *edgeVisible,float *uC,floa
   *vC = 0.0;
 
   nbPoly = IntersectPoly(inP1,inP2,edgeVisible,&polys);
-  if( nbPoly<0 )
+  if( nbPoly==(size_t)-1 )
     return 0.0;
   if( nbPoly==0 )
     return 0.0;

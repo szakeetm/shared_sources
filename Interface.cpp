@@ -47,6 +47,7 @@
 #include "SelectTextureType.h"
 #include "AlignFacet.h"
 #include "AddVertex.h"
+#include "FormulaEditor.h"
 
 //Updater
 #include <PugiXML\pugixml.hpp>
@@ -79,7 +80,7 @@ Interface::Interface() {
 
 	antiAliasing = true;
 	whiteBg = false;
-	autoUpdateFormulas = false;
+	autoUpdateFormulas = true;
 	compressSavedFiles = true;
 	/*double gasMass=28;
 	double totalOutgassing=0.0; //total outgassing in Pa*m3/sec (internally everything is in SI units)
@@ -782,7 +783,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->Add("Tools");
 
 	menu->GetSubMenu("Tools")->Add("Add formula ...", MENU_EDIT_ADDFORMULA);
-	menu->GetSubMenu("Tools")->Add("Update formulas now!", MENU_EDIT_UPDATEFORMULAS, SDLK_f, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Formula editor", MENU_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
@@ -1129,9 +1130,19 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			formulaSettings->Update(NULL, -1);
 			formulaSettings->SetVisible(true);
 			return true;
-		case MENU_EDIT_UPDATEFORMULAS:
-			UpdateFormula();
-			return true;
+
+		case MENU_FORMULAEDITOR:
+			if (!geom->IsLoaded()) {
+				GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+				return true;
+			}
+			if (!formulaEditor || !formulaEditor->IsVisible()) {
+				SAFE_DELETE(formulaEditor);
+				formulaEditor = new FormulaEditor(&worker);
+				formulaEditor->Refresh();
+				formulaEditor->SetVisible(TRUE);
+			}
+			break;
 
 		case MENU_FACET_COLLAPSE:
 			if (geom->IsLoaded()) {
@@ -2169,6 +2180,11 @@ void Interface::AddFormula(const char *fName, const char *formula) {
 	f->Parse();
 	AddFormula(f, false);
 
+	GLParser *f2 = new GLParser();
+	f2->SetExpression(formula);
+	f2->SetName(fName);
+	f2->Parse();
+	formulas_n.push_back(f2);
 }
 
 
@@ -2184,6 +2200,12 @@ void Interface::ClearFormula() {
 		SAFE_DELETE(formulas[i].parser);
 	}
 	nbFormula = 0;
+
+	for (auto f : formulas_n)
+		SAFE_DELETE(f);
+	formulas_n.clear();
+	if (formulaEditor) formulaEditor->Refresh();
+
 	PlaceComponents();
 
 }
@@ -2341,7 +2363,7 @@ void Interface::UpdateFormula() {
 		bool ok = true;
 		for (int j = 0; j < nbVar && ok; j++) {
 			VLIST *v = f->GetVariableAt(j);
-			ok = EvaluateVariable(v, &worker, geom);
+			ok = EvaluateVariable(v);
 			if (!ok) {
 				std::stringstream tmp;
 				tmp << "Invalid variable " << v->name;
@@ -2589,6 +2611,7 @@ int Interface::FrameMove()
 
 				// Formulas
 				if (autoUpdateFormulas) UpdateFormula();
+				if (formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
 
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 

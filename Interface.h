@@ -42,6 +42,7 @@ class SelectDialog;
 class SelectTextureType;
 class AlignFacet;
 class AddVertex;
+class FormulaEditor;
 
 class Geometry;
 
@@ -76,7 +77,7 @@ typedef struct {
 
 #define MENU_EDIT_TSCALING     201
 #define MENU_EDIT_ADDFORMULA   202
-#define MENU_EDIT_UPDATEFORMULAS 203
+#define MENU_FORMULAEDITOR 203
 #define MENU_EDIT_GLOBALSETTINGS 204
 
 
@@ -190,7 +191,7 @@ protected:
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows=false) {}
 	//virtual void UpdateFormula() {}
-	virtual bool EvaluateVariable(VLIST *v, Worker * w, Geometry * geom) { return false; }
+	virtual bool EvaluateVariable(VLIST *v) { return false; }
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
 	virtual void BuildPipe(double ratio, int steps = 0) {}
@@ -243,6 +244,7 @@ public:
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
 	
+	std::vector<GLParser*> formulas_n;
 
 	HANDLE compressProcessHandle;
 	
@@ -374,10 +376,11 @@ public:
 	RotateVertex	   *rotateVertex;
 	AlignFacet         *alignFacet;
 	AddVertex		   *addVertex;
-	LoadStatus         *loadStatus;
-	FacetCoordinates   *facetCoordinates;
-	VertexCoordinates  *vertexCoordinates;
-	SmartSelection     *smartSelection;
+	LoadStatus			*loadStatus;
+	FacetCoordinates	*facetCoordinates;
+	VertexCoordinates	*vertexCoordinates;
+	SmartSelection		*smartSelection;
+	FormulaEditor		*formulaEditor;
 
 	// Current directory
 	void UpdateCurrentDir(char *fileName);

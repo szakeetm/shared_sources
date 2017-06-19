@@ -75,8 +75,8 @@ public:
   void SetColumnAlign(size_t colId,int align);
   void SetAllColumnAlign(int align);
   void SetColumnColors(int *aligns);
-  void SetColumnColor(size_t colId, int align);
-  void SetAllColumnColors(int align);
+  void SetColumnColor(size_t colId, int color);
+  void SetAllColumnColors(int color);
   void SetColumnEditable(int *editables);
   bool GetSelectionBox(size_t *row, size_t *col, size_t *rowLength, size_t *colLength);
   void SetVScrollVisible(bool visible);
@@ -96,13 +96,13 @@ public:
   char *GetValueAt(size_t col, size_t row);
   int  GetUserValueAt(size_t col, size_t row);
   void SetValueAt(size_t col,size_t row,const char *value,int userData=0,bool searchIndex=false);
-  size_t  GetRowForLocation(int x,int y);
-  size_t  GetColForLocation(int x,int y);
+  int  GetRowForLocation(int x,int y);
+  int  GetColForLocation(int x,int y);
   void SetMotionSelection(bool enable);
   int  GetSelectedRow(bool searchIndex=false);
   int  GetSelectedColumn();
-  void SetSelectedRow(size_t row,bool searchIndex=false);
-  void AddSelectedRow(size_t row,bool searchIndex=false);
+  void SetSelectedRow(int row,bool searchIndex=false);
+  void AddSelectedRow(int row,bool searchIndex=false);
   void SetSelectedRows(std::vector<size_t> selection,bool searchIndex=false);
   void SelectAllRows();
   std::vector<size_t> GetSelectedRows(bool searchIndex=false);

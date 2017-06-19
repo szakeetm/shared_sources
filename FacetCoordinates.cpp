@@ -305,7 +305,7 @@ void FacetCoordinates::RebuildList() {
 void FacetCoordinates::RemoveRow(size_t rowId){
  lines.erase(lines.begin()+rowId);
  RebuildList();
- if (rowId<facetListC->GetNbRow()) facetListC->SetSelectedRow(rowId);
+ if (rowId<facetListC->GetNbRow()) facetListC->SetSelectedRow((int)rowId);
  int selRow=facetListC->GetSelectedRow()+1;
  insertBeforeButton->SetEnabled(selRow);
  removePosButton->SetEnabled(selRow);
@@ -318,7 +318,7 @@ void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 	lines.insert(lines.begin()+rowId,newLine);
 	RebuildList();
 
-	facetListC->SetSelectedRow(rowId+1);
+	facetListC->SetSelectedRow((int)rowId+1);
 	int selRow=facetListC->GetSelectedRow()+1;
 	insertBeforeButton->SetEnabled(selRow);
 	removePosButton->SetEnabled(selRow);

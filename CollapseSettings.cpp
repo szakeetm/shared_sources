@@ -122,7 +122,7 @@ void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
 
 	char tmp[512];
 
-	geom = geom;
+	this->geom = geom;
 	work = w;
 
 	nbVertexS = geom->GetNbVertex();

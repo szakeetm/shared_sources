@@ -383,7 +383,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	InitializeGeometry();
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
-	mApp->facetList->SetSelectedRow(sh.nbFacet - 1);
+	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
@@ -409,7 +409,7 @@ void Geometry::CreatePolyFromVertices_Order() {
 	InitializeGeometry();
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
-	mApp->facetList->SetSelectedRow(sh.nbFacet - 1);
+	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
@@ -459,7 +459,7 @@ void Geometry::CreateDifference() {
 	InitializeGeometry();
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
-	mApp->facetList->SetSelectedRow(sh.nbFacet - 1);
+	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
@@ -882,12 +882,12 @@ bool Geometry::GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, si
 
 	for (size_t i = 0; i < f1->sh.nbIndex; i++) {
 
-		p11 = i;
+		p11 = f1->GetIndex(i);
 		p12 = f1->GetIndex(i + 1);
 
 		for (size_t j = 0; j < f2->sh.nbIndex; j++) {
 
-			p21 = j;
+			p21 = f2->GetIndex(j);
 			p22 = f2->GetIndex(j + 1);
 
 			if (p11 == p22 && p12 == p21) {
@@ -1052,7 +1052,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 	InitializeGeometry();
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
-	mApp->facetList->SetSelectedRow(sh.nbFacet - 1);
+	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
