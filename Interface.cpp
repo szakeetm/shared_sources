@@ -26,7 +26,6 @@
 
 //Windows
 #include "GeometryViewer.h"
-#include "FormulaSettings.h"
 #include "CollapseSettings.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
@@ -103,7 +102,7 @@ Interface::Interface() {
 	nbHitStart = 0;
 
 	lastUpdate = 0.0;
-	nbFormula = 0;
+	//nbFormula = 0;
 	nbRecent = 0;
 
 	nbView = 0;
@@ -120,9 +119,9 @@ Interface::Interface() {
 	curViewer = 0;
 	strcpy(currentDir, ".");
 	strcpy(currentSelDir, ".");
-	memset(formulas, 0, sizeof formulas);
+	//memset(formulas, 0, sizeof formulas);
 
-	formulaSettings = NULL;
+	//formulaSettings = NULL;
 	collapseSettings = NULL;
 	moveVertex = NULL;
 	scaleVertex = NULL;
@@ -782,7 +781,6 @@ int Interface::OneTimeSceneInit_shared() {
 
 	menu->Add("Tools");
 
-	menu->GetSubMenu("Tools")->Add("Add formula ...", MENU_EDIT_ADDFORMULA);
 	menu->GetSubMenu("Tools")->Add("Formula editor", MENU_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
@@ -792,7 +790,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
 
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_TSCALING, 137, 24);
-	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_ADDFORMULA, 155, 24);
+	menu->GetSubMenu("Tools")->SetIcon(MENU_FORMULAEDITOR, 155, 24);
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_GLOBALSETTINGS, 0, 77);
 
 	menu->Add("Facet");
@@ -1019,7 +1017,7 @@ int Interface::RestoreDeviceObjects_shared() {
 
 	// Restore dialog which are not displayed
 	// Those which are displayed are invalidated by the window manager
-	RVALIDATE_DLG(formulaSettings);
+	RVALIDATE_DLG(formulaEditor);
 	RVALIDATE_DLG(collapseSettings);
 	RVALIDATE_DLG(moveVertex);
 	RVALIDATE_DLG(scaleVertex);
@@ -1052,7 +1050,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 
 	// Restore dialog which are not displayed
 	// Those which are displayed are invalidated by the window manager
-	IVALIDATE_DLG(formulaSettings);
+	IVALIDATE_DLG(formulaEditor);
 	IVALIDATE_DLG(collapseSettings);
 	IVALIDATE_DLG(moveVertex);
 	IVALIDATE_DLG(scaleVertex);
@@ -1125,11 +1123,11 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			if (AskToSave()) Exit();
 			return true;
 
-		case MENU_EDIT_ADDFORMULA:
+		/*case MENU_EDIT_ADDFORMULA:
 			if (!formulaSettings) formulaSettings = new FormulaSettings();
 			formulaSettings->Update(NULL, -1);
 			formulaSettings->SetVisible(true);
-			return true;
+			return true;*/
 
 		case MENU_FORMULAEDITOR:
 			if (!geom->IsLoaded()) {
@@ -2115,19 +2113,14 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
-	for (int i = 0; i < nbFormula; i++) {
-		char expression[1024];
-		strcpy(expression, this->formulas[i].parser->GetExpression());
-		if (OffsetFormula(expression, NULL, NULL, newRefs)) {
-			this->formulas[i].parser->SetExpression(expression);
-			this->formulas[i].parser->Parse();
-			std::string formulaName = formulas[i].parser->GetName();
-			if (formulaName.empty()) formulaName = expression;
-			formulas[i].name->SetText(formulaName.c_str());
+	for (auto f:formulas_n) {
+		if (OffsetFormula(f->GetExpression(), NULL, NULL, newRefs)) {
+			f->Parse();
 		}
 	}
 }
 
+/*
 //-----------------------------------------------------------------------------
 // Name: ProcessFormulaButtons()
 // Desc: Handle forumla button event
@@ -2147,8 +2140,9 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 		formulaSettings->SetVisible(true);
 	}
 }
+*/
 
-void Interface::AddFormula(GLParser *f, bool doUpdate) {
+/*void Interface::AddFormula(GLParser *f, bool doUpdate) {
 
 	if (f) {
 		if (nbFormula < MAX_FORMULA) {
@@ -2171,16 +2165,16 @@ void Interface::AddFormula(GLParser *f, bool doUpdate) {
 		}
 	}
 
-}
+}*/
 
 
 void Interface::AddFormula(const char *fName, const char *formula) {
 
-	GLParser *f = new GLParser();
+	/*GLParser *f = new GLParser();
 	f->SetExpression(formula);
 	f->SetName(fName);
 	f->Parse();
-	AddFormula(f, false);
+	AddFormula(f, false);*/
 
 	GLParser *f2 = new GLParser();
 	f2->SetExpression(formula);
@@ -2190,9 +2184,9 @@ void Interface::AddFormula(const char *fName, const char *formula) {
 }
 
 
-void Interface::ClearFormula() {
+void Interface::ClearFormulas() {
 
-	for (int i = 0; i < nbFormula; i++) {
+	/*for (int i = 0; i < nbFormula; i++) {
 		wnd->PostDelete(formulas[i].name);
 		wnd->PostDelete(formulas[i].value);
 		wnd->PostDelete(formulas[i].setBtn);
@@ -2203,22 +2197,26 @@ void Interface::ClearFormula() {
 	}
 	nbFormula = 0;
 
+	PlaceComponents();
+	*/
+
 	for (auto f : formulas_n)
 		SAFE_DELETE(f);
 	formulas_n.clear();
 	if (formulaEditor) formulaEditor->Refresh();
 
-	PlaceComponents();
-
 }
 
+/*
 void Interface::UpdateFormulaName(int i) {
 		std::string formulaName = formulas[i].parser->GetName();
 		if (formulaName.empty()) formulaName = formulas[i].parser->GetExpression();
 		formulas[i].name->SetText(formulaName.c_str());
 		UpdateFormula();
 }
+*/
 
+/*
 void Interface::DeleteFormula(int i) {
 			// Delete
 			wnd->PostDelete(formulas[i].name);
@@ -2236,22 +2234,23 @@ void Interface::DeleteFormula(int i) {
 			wnd->DoPostDelete(); //forces redraw
 			//UpdateFormula(); //no new values needed
 }
+*/
 
-bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vector<int> *newRefs) {
+bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vector<int> *newRefs) {
 	//will increase or decrease facet numbers in a formula
 	//only applies to facet numbers larger than "filter" parameter
 	//If *newRefs is not NULL, a vector is passed containing the new references
 	bool changed = false;
 
-	string expr = expression; //convert char array to string
+	string newExpr = expression; //convert char* to string
 
 	size_t pos = 0; //analyzed until this position
-	while (pos < expr.size()) { //while not end of expression
+	while (pos < newExpr.size()) { //while not end of expression
 
 		vector<size_t> location; //for each prefix, we store where it was found
 
 		for (int j = 0; j < (int)formulaPrefixes.size(); j++) { //try all expressions
-			location.push_back(expr.find(formulaPrefixes[j], pos));
+			location.push_back(newExpr.find(formulaPrefixes[j], pos));
 		}
 		size_t minPos = string::npos;
 		size_t maxLength = 0;
@@ -2261,32 +2260,32 @@ bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vec
 			if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
 		int digitsLength = 0;
 		if (minPos != string::npos) { //found expression, let's find tailing facet number digits
-			while ((minPos + maxLength + digitsLength) < expr.length() && expr[minPos + maxLength + digitsLength] >= '0' && expr[minPos + maxLength + digitsLength] <= '9')
+			while ((minPos + maxLength + digitsLength) < newExpr.length() && newExpr[minPos + maxLength + digitsLength] >= '0' && newExpr[minPos + maxLength + digitsLength] <= '9')
 				digitsLength++;
 			if (digitsLength > 0) { //there was a digit after the prefix
 				int facetNumber;
-				if (sscanf(expr.substr(minPos + maxLength, digitsLength).c_str(), "%d", &facetNumber)) {
+				if (sscanf(newExpr.substr(minPos + maxLength, digitsLength).c_str(), "%d", &facetNumber)) {
 					if (newRefs == NULL) { //Offset mode
 						if ((facetNumber - 1) > filter) {
 							char tmp[10];
 							sprintf(tmp, "%d", facetNumber + offset);
-							expr.replace(minPos + maxLength, digitsLength, tmp);
+							newExpr.replace(minPos + maxLength, digitsLength, tmp);
 							changed = true;
 						}
 						else if ((facetNumber - 1) == filter) {
-							expr.replace(minPos + maxLength, digitsLength, "0");
+							newExpr.replace(minPos + maxLength, digitsLength, "0");
 							changed = true;
 						}
 					}
 					else { //newRefs mode
 						if ((facetNumber - 1) >= (*newRefs).size() || (*newRefs)[facetNumber - 1] == -1) { //Facet doesn't exist anymore
-							expr.replace(minPos + maxLength, digitsLength, "0");
+							newExpr.replace(minPos + maxLength, digitsLength, "0");
 							changed = true;
 						}
 						else { //Update facet number
 							char tmp[10];
 							sprintf(tmp, "%d", (*newRefs)[facetNumber - 1]);
-							expr.replace(minPos + maxLength, digitsLength, tmp);
+							newExpr.replace(minPos + maxLength, digitsLength, tmp);
 							changed = true;
 						}
 					}
@@ -2296,7 +2295,7 @@ bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vec
 		if (minPos != string::npos) pos = minPos + maxLength + digitsLength;
 		else pos = minPos;
 	}
-	strcpy(expression, expr.c_str());
+	strcpy(expression, newExpr.c_str());
 	return changed;
 }
 
@@ -2347,6 +2346,7 @@ int Interface::GetVariable(char *name, char *prefix) {
 
 }
 
+/*
 void Interface::UpdateFormula() {
 
 	char tmp[256];
@@ -2392,6 +2392,7 @@ void Interface::UpdateFormula() {
 		}
 	}
 }
+*/
 
 bool Interface::AskToSave() {
 	if (!changedSinceSave) return true;
@@ -2612,8 +2613,8 @@ int Interface::FrameMove()
 				UpdatePlotters();
 
 				// Formulas
-				if (autoUpdateFormulas) UpdateFormula();
-				if (formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
+				//if (autoUpdateFormulas) UpdateFormula();
+				if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
 
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 

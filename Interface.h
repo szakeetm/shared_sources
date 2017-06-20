@@ -21,7 +21,6 @@ class GLParser;
 class GLMenu;
 
 class GeometryViewer;
-class FormulaSettings;
 class CollapseSettings;
 class MoveVertex;
 class ScaleVertex;
@@ -46,15 +45,17 @@ class FormulaEditor;
 
 class Geometry;
 
+/*
 typedef struct {
 	GLLabel     *name;
 	GLTextField *value;
 	GLButton    *setBtn;
 	GLParser    *parser;
 } FORMULA;
+*/
 
 #define MAX_VIEWER  4
-#define MAX_FORMULA 10
+//#define MAX_FORMULA 10
 #define MAX_VIEW    19
 #define MAX_RECENT  10
 
@@ -76,7 +77,6 @@ typedef struct {
 #define MENU_FILE_EXIT       106
 
 #define MENU_EDIT_TSCALING     201
-#define MENU_EDIT_ADDFORMULA   202
 #define MENU_FORMULAEDITOR 203
 #define MENU_EDIT_GLOBALSETTINGS 204
 
@@ -359,7 +359,6 @@ public:
 	size_t idSelection; //Allows "select next" / "select previous" commands
 
 	//Dialog
-	FormulaSettings    *formulaSettings;
 	CollapseSettings   *collapseSettings;
 	MoveVertex		   *moveVertex;
 	ScaleFacet         *scaleFacet;
@@ -418,18 +417,17 @@ public:
 	int  Resize(DWORD width, DWORD height, bool forceWindowed);
 
 	// Formula management
-	int nbFormula;
-	FORMULA formulas[MAX_FORMULA];
-	void ProcessFormulaButtons(GLComponent *src);
-	void AddFormula(GLParser *f, bool doUpdate = true);
+	//int nbFormula;
+	//FORMULA formulas[MAX_FORMULA];
+	//void ProcessFormulaButtons(GLComponent *src);
+	//void AddFormula(GLParser *f, bool doUpdate = true);
 	void AddFormula(const char *fName, const char *formula); //file loading
-	void UpdateFormulaName(int i);
-	void DeleteFormula(int id);
+	//void UpdateFormulaName(int i);
+	//void DeleteFormula(int id);
 	bool OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
-	void UpdateFormula();
+	//void UpdateFormula();
 	void RenumberFormulas(std::vector<int> *newRefs);
-	
-	void ClearFormula();
+	void ClearFormulas();
 
 	void ExportTextures(int grouping, int mode);
 	
