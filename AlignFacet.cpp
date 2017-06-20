@@ -175,7 +175,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 
-			size_t anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,dirDestVertexId;
+			int anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,dirDestVertexId;
 			anchorSourceVertexId=anchorDestVertexId=dirSourceVertexId=dirDestVertexId=-1;
 
 			//find source anchor and dir vertex

@@ -594,19 +594,18 @@ void GeometryViewer::DrawIndex() {
 		// Get selected vertex
 	Geometry *geom = work->GetGeometry();
 	size_t nbVertex = geom->GetNbVertex();
-	size_t nbFacet = geom->GetNbFacet();
+	std::vector<size_t> selectedFacets = geom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
 
-	size_t *vIdx = (size_t *)malloc(nbVertex * sizeof(size_t));
-	memset(vIdx, 0xFF, nbVertex * sizeof(size_t));
-	for (int i = 0; i < nbFacet; i++) {
-		Facet *f = geom->GetFacet(i);
-		if (f->selected) {
-			size_t nb = f->sh.nbIndex;
-			for (size_t i = 0; i < nb; i++) {
-				vIdx[f->indices[i]] = i;
+	//Mark vertices of selected facets
+	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
+	std::vector<size_t> vertexId(nbVertex);
+	for (auto selId:selectedFacets) {
+		Facet *f = geom->GetFacet(selId);
+			for (size_t i = 0; i < f->sh.nbIndex; i++) {
+				vertexOnSelectedFacet[f->indices[i]] = true;
+				vertexId[f->indices[i]] = i;
 			}
-		}
 	}
 
 	// Draw dot
@@ -619,8 +618,8 @@ void GeometryViewer::DrawIndex() {
 	glColor3f(1.0f, 0.2f, 0.2f);
 
 	glBegin(GL_POINTS);
-	for (int i = 0; i < nbVertex; i++) {
-		if (vIdx[i] >= 0) {
+	for (size_t i = 0; i < nbVertex; i++) {
+		if (vertexOnSelectedFacet[i]) {
 			Vector3d *v = geom->GetVertex(i);
 			glVertex3d(v->x, v->y, v->z);
 		}
@@ -633,13 +632,12 @@ void GeometryViewer::DrawIndex() {
 
 	// Draw Labels
 	for (size_t i = 0; i < nbVertex; i++) {
-		size_t idx = vIdx[i];
-		if (idx >= 0) {
+		if (vertexOnSelectedFacet[i]) {
 			if (showIndex && showVertex) {
-				sprintf(tmp, "%zd,%zd ", idx + 1, i + 1);
+				sprintf(tmp, "%zd,%zd ", vertexId[i] + 1, i + 1);
 			}
 			else if (showIndex && !showVertex) {
-				sprintf(tmp, "%zd ", idx + 1);
+				sprintf(tmp, "%zd ", vertexId[i] + 1);
 			}
 			else {
 				sprintf(tmp, "%zd ", i + 1);
@@ -651,7 +649,6 @@ void GeometryViewer::DrawIndex() {
 
 	//Restore
 	GLToolkit::DrawStringRestore();
-	free(vIdx);
 }
 
 

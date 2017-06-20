@@ -9,7 +9,7 @@ bool IsConvex(POLYGON *p,size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
 
-  size_t i1 = IDX(idx-1,p->nbPts);
+  size_t i1 = IDX((int)idx-1,p->nbPts); //idx can be 0
   size_t i2 = IDX(idx  ,p->nbPts);
   size_t i3 = IDX(idx+1,p->nbPts);
 

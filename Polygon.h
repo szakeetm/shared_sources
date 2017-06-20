@@ -4,7 +4,7 @@
 typedef struct {
 
   Vector2d  *pts;   // Array of 2D vertex
-  size_t        nbPts; // Number of vertex
+  size_t     nbPts; // Number of vertex
   double     sign;  // Polygon orientation
 
 } POLYGON;
@@ -17,8 +17,8 @@ typedef struct  {
 
   size_t       nbOut;  // Number of outgoing arc
   size_t       nbIn;   // Number of incoming arc
-  size_t       VI[2];  // Tangent point detection
-  size_t       VO[2];  // Tangent point detection
+  int       VI[2];  // Tangent point detection, can be -1
+  int       VO[2];  // Tangent point detection, can be -1
 
 } POLYVERTEX;
 

@@ -47,7 +47,7 @@ void Facet::DetectOrientation() {
 	p.sign = 1.0;
 
 	bool convexFound = false;
-	int i = 0;
+	size_t i = 0;
 	while (i < p.nbPts && !convexFound) {
 		Vector2d c;
 		bool empty = EmptyTriangle(&p, i - 1, i, i + 1, &c);
@@ -232,9 +232,9 @@ bool Facet::BuildMesh() {
 	//tA = 0.0;
 	//nbElem = 0;
 
-	for (int j = 0;j < sh.texHeight;j++) {
+	for (size_t j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
-		for (int i = 0;i < sh.texWidth;i++) {
+		for (size_t i = 0;i < sh.texWidth;i++) {
 			sx = (double)i;
 
 			bool allInside = false;
@@ -306,7 +306,7 @@ bool Facet::BuildMesh() {
 							// Mesh coordinates
 							cellprop.points = (Vector2d*)malloc(nbv * sizeof(Vector2d));
 							cellprop.nbPoints = nbv;
-							for (int n = 0; n < nbv; n++) {
+							for (size_t n = 0; n < nbv; n++) {
 								Vector2d newPoint;
 								newPoint.u = vList[2 * n];
 								newPoint.v = vList[2 * n + 1];

@@ -2097,13 +2097,15 @@ void Interface::DisplayCollapseDialog() {
 
 void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 	for (size_t i = 0; i < selections.size(); i++) {
-		for (size_t j = 0; j < selections[i].selection.size(); j++) {
+		for (size_t j = 0; i>=0 && i < selections.size() && j>=0 && j < selections[i].selection.size(); j++) {
 			if (selections[i].selection[j] >= newRefs.size() || newRefs[selections[i].selection[j]] == -1) { //remove from selection
 				selections[i].selection.erase(selections[i].selection.begin()+j);
+				j--; //Do again the element as now it's the next
 				if (selections[i].selection.size() == 0) {
 					ClearSelection(i); //last facet removed from selection
+					i--;
 				}
-				j--; //Do again the element as now it's the next
+				
 			}
 			else { //renumber
 				selections[i].selection[j] = newRefs[selections[i].selection[j]];

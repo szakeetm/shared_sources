@@ -526,7 +526,7 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 			glPolygonOffset(0.0f, 5.0f);
 		}
 		glBegin(GL_POLYGON);
-		for (int j = 0; j < nb; j++) {
+		for (size_t j = 0; j < nb; j++) {
 			i1 = f->indices[j];
 			glEdgeFlag(f->visible[j] || showHidden);
 			glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
@@ -542,7 +542,7 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 		if (nb < 8) {
 			// No hole possible
 			glBegin(GL_LINE_LOOP);
-			for (int j = 0; j < nb; j++) {
+			for (size_t j = 0; j < nb; j++) {
 				i1 = f->indices[j];
 				glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
 			}
@@ -607,18 +607,18 @@ void Geometry::DrawPolys() {
 	glBegin(GL_TRIANGLES);
 
 	// Triangle
-	for (int i = 0; i < nbF3; i++)
+	for (size_t i = 0; i < nbF3; i++)
 		FillFacet(facets[f3[i]], false);
 
 	// Triangulate polygon
-	for (int i = 0; i < nbFP; i++)
+	for (size_t i = 0; i < nbFP; i++)
 		Triangulate(facets[fp[i]], false);
 
 	glEnd();
 
 	// Quads
 	glBegin(GL_QUADS);
-	for (int i = 0; i < nbF4; i++)
+	for (size_t i = 0; i < nbF4; i++)
 		FillFacet(facets[f4[i]], false);
 	glEnd();
 
@@ -823,7 +823,7 @@ void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 
 void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 
-	for (int i = 0; i < f->sh.nbIndex; i++) {
+	for (size_t i = 0; i < f->sh.nbIndex; i++) {
 		size_t idx = f->indices[i];
 		glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 		if (addTextureCoord) AddTextureCoord(f, f->vertices2 + i);
