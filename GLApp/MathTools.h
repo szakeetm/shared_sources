@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-bool    IsEqual(const double &a, const double &b, double tolerance=1E-8);
+bool    IsEqual(const double &a, const double &b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
 size_t    GetPower2(size_t n);
 #define MAX(x,y) (((x)<(y))?(y):(x))

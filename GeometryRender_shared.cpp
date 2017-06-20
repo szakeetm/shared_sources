@@ -1002,7 +1002,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glBlendFunc(GL_ONE, GL_ZERO);
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0f, 3.0f);
-		for (int i = 0;i < sh.nbFacet && renderTexture;i++) {
+		for (size_t i = 0;i < sh.nbFacet && renderTexture;i++) {
 			Facet *f = facets[i];
 			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #ifdef MOLFLOW

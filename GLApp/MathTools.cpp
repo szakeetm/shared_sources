@@ -6,8 +6,8 @@
 #include <sstream>
 #include <iterator>
 
-bool IsEqual(const double &a, const double &b, double tolerance) {
-	return fabs(a - b) < tolerance;
+bool IsEqual(const double &a, const double &b, double toleranceRatio) {
+	return fabs(a - b) < (a*toleranceRatio);
 }
 
 size_t  IDX(int i, size_t nb) {
