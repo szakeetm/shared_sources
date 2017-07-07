@@ -91,6 +91,7 @@ public:
   virtual void PaintMenu();
   virtual void SetBounds(int x,int y,int w,int h);
   virtual void CancelDrag(SDL_Event *evt);
+  virtual void DestroyComponents() {};
 
   
 

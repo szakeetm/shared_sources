@@ -78,6 +78,11 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	RestoreDeviceObjects();
 }
 
+LoadStatus::~LoadStatus()
+{
+	//SAFE_DELETE(processList);
+}
+
 void LoadStatus::SMPUpdate() {
 
 		char tmp[512];

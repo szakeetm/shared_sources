@@ -107,15 +107,28 @@ GLList::GLList(int compId):GLComponent(compId) {
 }
 
 // ---------------------------------------------------------------
+void GLList::InvalidateDeviceObjects() {
+	//Clear(false,false);
+}
 
-GLList::~GLList() {
-
-	Clear();
+void GLList::DestroyComponents()
+{
+	Clear(false,false);
 	SAFE_DELETE(sbH);
 	SAFE_DELETE(sbV);
 	SAFE_DELETE(edit);
 	SAFE_FREE(cornerLabel);
+	SAFE_DELETE(menu);
+	//selectedRows.clear(); selectedRows.shrink_to_fit();
+}
 
+GLList::~GLList() {
+	Clear(false,false);
+	SAFE_DELETE(sbH);
+	SAFE_DELETE(sbV);
+	SAFE_DELETE(edit);
+	SAFE_FREE(cornerLabel);
+	SAFE_DELETE(menu);
 }
 
 // ---------------------------------------------------------------
@@ -806,7 +819,8 @@ void GLList::SetSelectedRows(std::vector<size_t> selection,bool searchIndex) {
 			selectedRows.push_back((size_t)FindIndex(sel, 0));
 	}
 	else
-		this->selectedRows = selection;
+		selectedRows = selection;
+	//selectedRows.shrink_to_fit();
 }
 
 void GLList::SelectAllRows() {

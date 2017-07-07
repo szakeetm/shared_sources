@@ -5,14 +5,15 @@
 #include "GLApp/GLApp.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp\MathTools.h" //Min max
+#include "GLApp\GLList.h"
 #include <math.h>
 #include <stdlib.h>
 #include <Process.h>
 #include "GLApp/GLUnitDialog.h"
+#include "LoadStatus.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #include "MolflowGeometry.h"
-#include "LoadStatus.h"
 #endif
 
 #ifdef SYNRAD
@@ -417,6 +418,7 @@ void Worker::SetProcNumber(size_t n) {
 	LoadStatus *statusWindow = NULL;
 	statusWindow = new LoadStatus(this);
 	bool result = Wait(PROCESS_READY, statusWindow);
+	//IVALIDATE_DLG(statusWindow);
 	SAFE_DELETE(statusWindow);
 	if( !result )
 		ThrowSubProcError("Sub process(es) starting failure");

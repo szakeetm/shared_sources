@@ -52,6 +52,7 @@ void GLContainer::Clear() {
 
   while(node!=NULL) {
     node->comp->InvalidateDeviceObjects();
+	node->comp->DestroyComponents();
     SAFE_DELETE(node->comp);
     lnode = node;
     node = node->next;

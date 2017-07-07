@@ -7,7 +7,7 @@
 #include <iterator>
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
-	return fabs(a - b) < (a*toleranceRatio);
+	return fabs(a - b) < MAX(1E-99,a*toleranceRatio);
 }
 
 size_t  IDX(int i, size_t nb) {

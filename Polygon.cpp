@@ -424,11 +424,11 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,bool *visible2)
 		size_t idxO = g->arcs[i].i1;
 		size_t idxI = g->arcs[i].i2;
       if( g->nodes[idxI].nbIn<2 ) {
-        g->nodes[idxI].VI[ g->arcs[i].s-1 ]=g->arcs[i].i1;
+        g->nodes[idxI].VI[ g->arcs[i].s-1 ]=(int)g->arcs[i].i1;
         g->nodes[idxI].nbIn++;
       }
       if( g->nodes[idxO].nbOut<2 ) {
-        g->nodes[idxO].VO[ g->arcs[i].s-1 ]=g->arcs[i].i2;
+        g->nodes[idxO].VO[ g->arcs[i].s-1 ]=(int)g->arcs[i].i2;
         g->nodes[idxO].nbOut++;
       }
     }

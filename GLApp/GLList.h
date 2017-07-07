@@ -52,6 +52,8 @@ public:
 
   // Construction
   GLList(int compId);
+  void InvalidateDeviceObjects();
+  virtual void DestroyComponents();
   ~GLList();
 
   // Component methods

@@ -30,6 +30,7 @@ public:
 
   // Construction
   LoadStatus(Worker *w);
+  ~LoadStatus();
   void SMPUpdate();
 
   // Implementation

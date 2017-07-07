@@ -1298,7 +1298,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			}
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->err >= planarityThreshold)
+				if (fabs(geom->GetFacet(i)->err) >= planarityThreshold)
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);

@@ -182,9 +182,9 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			for (int j=0;j<geom->GetFacet(sourceFacetId)->sh.nbIndex;j++) {
 				if (geom->GetVertex(geom->GetFacet(sourceFacetId)->indices[j])->selected) {
 					if (anchorSourceVertexId==-1 && dirSourceVertexId==-1) {
-						anchorSourceVertexId=geom->GetFacet(sourceFacetId)->indices[j];
+						anchorSourceVertexId=(int)geom->GetFacet(sourceFacetId)->indices[j];
 					} else if (dirSourceVertexId==-1) {
-						dirSourceVertexId=geom->GetFacet(sourceFacetId)->indices[j];
+						dirSourceVertexId=(int)geom->GetFacet(sourceFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the source facet. Two must be on the destination.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
@@ -201,9 +201,9 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			for (int j=0;j<geom->GetFacet(destFacetId)->sh.nbIndex;j++) {
 				if (geom->GetVertex(geom->GetFacet(destFacetId)->indices[j])->selected) {
 					if (anchorDestVertexId==-1 && dirDestVertexId==-1) {
-						anchorDestVertexId=geom->GetFacet(destFacetId)->indices[j];
+						anchorDestVertexId=(int)geom->GetFacet(destFacetId)->indices[j];
 					} else if (dirDestVertexId==-1) {
-						dirDestVertexId=geom->GetFacet(destFacetId)->indices[j];
+						dirDestVertexId=(int)geom->GetFacet(destFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the destination facet. Two must be on the source.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;

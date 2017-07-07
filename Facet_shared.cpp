@@ -50,7 +50,7 @@ void Facet::DetectOrientation() {
 	size_t i = 0;
 	while (i < p.nbPts && !convexFound) {
 		Vector2d c;
-		bool empty = EmptyTriangle(&p, i - 1, i, i + 1, &c);
+		bool empty = EmptyTriangle(&p, (int)i - 1, (int)i, (int)i + 1, &c);
 		if (empty || sh.nbIndex == 3) {
 			size_t _i1 = IDX(i - 1, p.nbPts);
 			size_t _i2 = IDX(i, p.nbPts);

@@ -57,6 +57,7 @@ public:
   virtual void SetFocus(bool focus);
   virtual void SetBounds(int x,int y, int width, int height);
   virtual void SetParent(GLContainer *parent);
+  virtual void DestroyComponents() {};
 
 protected:
 
