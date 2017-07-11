@@ -121,7 +121,7 @@ void GLTitledPanel::ManageEvent(SDL_Event *evt) {
       closeState = 1;
     }
     if( evt->type==SDL_MOUSEBUTTONUP && evt->button.button==SDL_BUTTON_LEFT ) {
-      closed = !closed;
+      if (closeAble) closed = !closed;
       parent->ProcessMessage(this,MSG_PANELR);
     }
   }

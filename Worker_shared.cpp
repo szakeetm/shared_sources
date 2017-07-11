@@ -200,6 +200,10 @@ BYTE *Worker::GetHits() {
 
 }
 
+void Worker::ThrowSubProcError(std::string message) {
+	message.c_str();
+}
+
 void Worker::ThrowSubProcError(char *message) {
 
 	char errMsg[1024];
@@ -245,13 +249,10 @@ char *Worker::GetErrorDetails() {
 			if (st == PROCESS_ERROR) {
 				sprintf(tmp, "[#%d] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
 			}
-
-
 			else {
 				sprintf(tmp, "[#%d] Process [PID %d] %s\n", i, pID[i], prStates[st]);
 			}
 		}
-
 		else {
 			sprintf(tmp, "[#%d] Process [PID ???] Not started\n", i);
 		}
@@ -262,7 +263,7 @@ char *Worker::GetErrorDetails() {
 	return err;
 }
 
-bool Worker::Wait(int waitState,LoadStatus *statusWindow) {
+bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
 	
 	abortRequested = false;
 	bool finished = false;
@@ -280,10 +281,9 @@ bool Worker::Wait(int waitState,LoadStatus *statusWindow) {
 
 		for(size_t i=0;i<nbProcess;i++) {
 
-			finished = finished & (shMaster->states[i]==waitState || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
+			finished = finished & (shMaster->states[i]==readyState || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
 			if( shMaster->states[i]==PROCESS_ERROR ) {
 				error = true;
-
 			}
 			allDone = allDone & (shMaster->states[i]==PROCESS_DONE);
 		}
