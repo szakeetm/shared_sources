@@ -18,9 +18,6 @@
 
 using namespace pugi;
 
-#define MAX(x,y) (((x)<(y))?(y):(x))
-#define MIN(x,y) (((x)<(y))?(x):(y))
-
 // Colormap stuff
 extern COLORREF rainbowCol[]; //defined in GLGradient.cpp
 
@@ -268,14 +265,14 @@ bool Facet::BuildMesh() {
 				P1.pts[3].u = u0;
 				P1.pts[3].v = v1;
 				A = GetInterArea(&P1, &P2, visible, &uC, &vC, &nbv, &vList);
-				if (!IS_ZERO(A)) {
+				if (!IsZero(A)) {
 
 					if (A > (fA + 1e-10)) {
 
 						// Polyon intersection error !
 						// Switch back to brute force
 						A = GetInterAreaBF(&P2, u0, v0, u1, v1, &uC, &vC);
-						bool fullElem = IS_ZERO(fA - A);
+						bool fullElem = IsZero(fA - A);
 						if (!fullElem) {
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
 							cellprop.uCenter = uC;
@@ -289,18 +286,18 @@ bool Facet::BuildMesh() {
 							cellPropertiesIds[i + j*sh.texWidth] = -1;
 						}
 
-						//cellprop.full = IS_ZERO(fA - A);
+						//cellprop.full = IsZero(fA - A);
 
 					}
 					else {
 
-						bool fullElem = IS_ZERO(fA - A);
+						bool fullElem = IsZero(fA - A);
 						if (!fullElem) {
 							// !! P1 and P2 are in u,v coordinates !!
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
 							cellprop.uCenter = uC;
 							cellprop.vCenter = vC;
-							//cellprop.full = IS_ZERO(fA - A);
+							//cellprop.full = IsZero(fA - A);
 							//cellprop.elemId = nbElem;
 
 							// Mesh coordinates
@@ -485,8 +482,8 @@ void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 		size_t maxH = sh.texHeight - v;
 		selectedElem.u = u;
 		selectedElem.v = v;
-		selectedElem.width = MIN(maxW, width);
-		selectedElem.height = MIN(maxH, height);
+		selectedElem.width = Min(maxW, width);
+		selectedElem.height = Min(maxH, height);
 		BuildSelElemList();
 
 	}
@@ -573,7 +570,7 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 		int iwidth = (int)ceil(width);
 		int iheight = (int)ceil(height);
-		int m = MAX(iwidth, iheight);
+		int m = Max(iwidth, iheight);
 		size_t tDim = GetPower2(m);
 		if (tDim < 16) tDim = 16;
 		size_t tSize = tDim*tDim;

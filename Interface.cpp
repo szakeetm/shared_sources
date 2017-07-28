@@ -112,7 +112,7 @@ Interface::Interface() {
 #ifdef _DEBUG
 	nbProc = 1;
 #else
-	SATURATE(numCPU, 1, MIN(MAX_PROCESS, 16)); //limit the auto-detected processes to the maximum available, at least one, and max 16 (above it speed improvement not obvious)
+	Saturate(numCPU, 1, Min(MAX_PROCESS, (size_t)16)); //limit the auto-detected processes to the maximum available, at least one, and max 16 (above it speed improvement not obvious)
 	nbProc = numCPU;
 #endif
 
@@ -186,6 +186,7 @@ void Interface::ResetSimulation(bool askConfirm) {
 
 	if (ok) {
 		worker.ResetStatsAndHits(m_fTime);
+
 		nbDesStart = 0;
 		nbHitStart = 0;
 	}
@@ -2615,7 +2616,6 @@ int Interface::FrameMove()
 				// Formulas
 				//if (autoUpdateFormulas) UpdateFormula();
 				if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
-
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
 

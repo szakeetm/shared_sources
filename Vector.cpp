@@ -131,7 +131,7 @@ Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS
 }
 
 int VertexEqual(Vector2d *p1, Vector2d *p2) {
-	return IS_ZERO(p1->u - p2->u) && IS_ZERO(p1->v - p2->v);
+	return IsZero(p1->u - p2->u) && IsZero(p1->v - p2->v);
 }
 
 Vector2d ProjectVertex(const Vector3d& v, const Vector3d& U, const Vector3d& V, const Vector3d& origin){
@@ -155,7 +155,7 @@ int Intersect2D(Vector2d *p1,Vector2d *p2,Vector2d *p3,Vector2d *p4,Vector2d *I)
 
   double det = DET22(-p12.u,p34.u,
                      -p12.v,p34.v);
-  if( IS_ZERO(det) ) return 0;
+  if( IsZero(det) ) return 0;
 
   double idet = 1.0 / det;
 

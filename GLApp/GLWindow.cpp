@@ -666,8 +666,8 @@ void GLWindow::UpdateSize(int newWidht,int newHeight,int cursor) {
   int srcW,srcH;
   GLToolkit::GetScreenSize(&srcW,&srcH);
   int uMargin = GetUpMargin();
-  SATURATE(newWidht,minWidth,srcW);
-  SATURATE(newHeight,minHeight+uMargin,srcW);
+  Saturate(newWidht,minWidth,srcW);
+  Saturate(newHeight,minHeight+uMargin,srcW);
   if( newWidht!=width || newHeight!=height ) {
     maximized = false;
     SetBounds(posX,posY,newWidht,newHeight);

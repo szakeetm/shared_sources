@@ -325,10 +325,10 @@ void GLWindowManager::AnimateFocus(GLWindow *src) {
     double g = (gs + t*(ge-gs));
     double b = (bs + t*(be-bs));
     float  w = (float)(ws + t*(we-ws));
-    SATURATE(r,0.0,255.0);
-    SATURATE(g,0.0,255.0);
-    SATURATE(b,0.0,255.0);
-    SATURATE(w,1.0,3.0);
+    Saturate(r,0.0,255.0);
+    Saturate(g,0.0,255.0);
+    Saturate(b,0.0,255.0);
+    Saturate(w,1.0f,3.0f);
 
     // Paint a highlighted red border
     NoClip();

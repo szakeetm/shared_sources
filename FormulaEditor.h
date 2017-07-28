@@ -25,6 +25,8 @@ public:
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message);
+
+  void SetBounds(int x, int y, int w, int h);
   
 
 private:

@@ -22,7 +22,7 @@
 #include "GLButton.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#include "MathTools.h" //SATURATE
+#include "MathTools.h" //Saturate
 //#include <malloc.h>
 #include <Cimage.h>
 
@@ -556,7 +556,7 @@ void GLColorBox::ManageEvent(SDL_Event *evt) {
   if(evt->type == SDL_MOUSEMOTION) {
     if( draggV ) {
       float v = GetY(vBox,evt)/128.0f;
-      SATURATE(v,0.0f,1.0f);
+      Saturate(v,0.0f,1.0f);
       DWORD newC = hsv_to_rgb(curH,curS,v);
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
     }

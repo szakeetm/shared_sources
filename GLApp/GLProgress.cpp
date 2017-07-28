@@ -35,7 +35,7 @@ GLProgress::GLProgress(char *message,char *title):GLWindow() {
   // Label
   label = new GLLabel(message);
   label->GetTextBounds(&txtWidth,&txtHeight);
-  txtWidth = MAX(txtWidth,150);
+  txtWidth = Max(txtWidth,150);
   label->SetBounds(67,(64-(txtHeight+22))/2,txtWidth,txtHeight);
   Add(label);
 
@@ -70,7 +70,7 @@ GLProgress::GLProgress(char *message,char *title):GLWindow() {
   Add(gIcon);
 
   wD = txtWidth + 94;
-  hD = MAX(txtHeight+35,90);
+  hD = Max(txtHeight+35,90);
 
   // Center dialog
   int wS,hS;
@@ -100,7 +100,7 @@ void GLProgress::SetProgress(double value) {
   char tmp[128];
   int nW;
   double v = value;
-  SATURATE(v,0.0,1.0);
+  Saturate(v,0.0,1.0);
   int p = (int)( v*100.0 + 0.5 );
   if( progress != p ) {
     progress = p;

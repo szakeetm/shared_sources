@@ -47,7 +47,7 @@ GLInputBox::GLInputBox(const char *message,char *label,char *title):GLWindow() {
   Add(text);
 
   // Buttons
-  wD = MAX(txtWidth + 110,170);
+  wD = Max(txtWidth + 110,170);
   int startX = (wD-160)/2 + 3;
   int startY = hD - 43;
 

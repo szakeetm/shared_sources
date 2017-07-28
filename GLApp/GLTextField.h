@@ -49,6 +49,7 @@ public:
 
   bool GetNumber(double *num);
   bool GetNumberInt(int *num);
+  bool GetNumberSize(size_t *num);
   void SelectAll();
   bool IsCaptured();
 

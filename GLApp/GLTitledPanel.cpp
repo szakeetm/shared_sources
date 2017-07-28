@@ -116,7 +116,7 @@ void GLTitledPanel::ManageEvent(SDL_Event *evt) {
     closeState = 0;
   }
 
-  if( mX>=7 && mX<=19+txtWidth && mY>=1 && mY<=13 && !evtProcessed ) {
+  if( mX>=7 && mX<=19+txtWidth && mY>=1 && mY<=13 && !evtProcessed ) { //click on close/expand button
     if( evt->type==SDL_MOUSEBUTTONDOWN && evt->button.button==SDL_BUTTON_LEFT ) {
       closeState = 1;
     }

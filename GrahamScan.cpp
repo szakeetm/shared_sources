@@ -1,6 +1,6 @@
 #include "GrahamScan.h"
 
-GRpoint* GRfirstPoint; //GLOBAL POINTER TO MIN GRpoint IN DOUBLELY LINKED LIST
+GRpoint* GRfirstPoint; //GLOBAL POINTER TO Min GRpoint IN DOUBLELY LINKED LIST
 size_t pubNbPoints;
 int *pubReturnList;
 Vector2d *pubProjectedPoints;
@@ -71,7 +71,7 @@ void grahamInit()
 		tempPoints[i].id=i;
     }
     
-    for (int k=1;k<pubNbPoints;k++)  //FIND MIN GRpoint, lowest y coordinate
+    for (int k=1;k<pubNbPoints;k++)  //FIND Min GRpoint, lowest y coordinate
         if (tempPoints[k].y<tempPoints[minPoint].y)
             minPoint=k;
     

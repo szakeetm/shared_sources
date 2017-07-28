@@ -29,27 +29,27 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-static const int   flWidth[] = { 200,200,200 };
+static const int   flWidth[] = { 166,166,166 };
 static const char *flName[] = { "Expression","Name (optional)","Value" };
 static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 
 FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
 
-	int wD = 650;
-	int hD = 300; //Height extended runtime
+	int wD = 400;
+	int hD = 200; //Height extended runtime
 
 	work = w;
 
 	SetTitle("Formula Editor");
 	SetIconfiable(true);
+	
+	SetResizable(true);
 
 	panel1 = new GLTitledPanel("Formula list");
-	panel1->SetBounds(5, 5, wD - 10, 250);
 	Add(panel1);
 
 	formulaList = new GLList(0);
-	formulaList->SetBounds(10, 22, wD - 20, 200);
 	formulaList->SetColumnLabelVisible(true);
 	formulaList->SetRowLabelVisible(true);
 	formulaList->SetHScrollVisible(false);
@@ -57,28 +57,23 @@ FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
 	Add(formulaList);
 
 	recalcButton = new GLButton(0, "Recalculate now");
-	recalcButton->SetBounds(10, 229, 95, 20);
 	Add(recalcButton);
 
 	moveUpButton = new GLButton(0, "Move Up");
-	moveUpButton->SetBounds(wD - 160, 229, 65, 20);
 	moveUpButton->SetEnabled(false);
 	Add(moveUpButton);
 
 	moveDownButton = new GLButton(0, "Move Down");
-	moveDownButton->SetBounds(wD - 90, 229, 65, 20);
 	moveDownButton->SetEnabled(false);
 	Add(moveDownButton);
 
 	panel2 = new GLTitledPanel("Format");
-	panel2->SetBounds(5, 260, wD - 10, 15); //Height will be extended runtime
 	panel2->SetClosable(TRUE);
 	panel2->Close();
 	Add(panel2);
 
 	descL = new GLLabel(formulaSyntax.c_str());
 	descL->SetVisible(false); //Set visible runtime
-	panel2->SetCompBounds(descL, 10, 15, wD - 30, 355);
 	Add(descL);
 
 	// Top right
@@ -101,16 +96,16 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			GetBounds(&x, &y, &w, &h);
 			if (panel2->IsClosed()) {
 				SetBounds(x, y, w, h - 360);
-				panel2->GetBounds(&x, &y, &w, &h);
-				panel2->SetBounds(x, y, w, h - 360);
+				//panel2->GetBounds(&x, &y, &w, &h);
+				//panel2->SetBounds(x, y, w, h - 330);
 				/*descL->GetBounds(&x, &y, &w, &h);
 				descL->SetBounds(x, y, w, h - 360);*/
 				descL->SetVisible(false);
 			}
 			else {
 				SetBounds(x, y, w, h + 360);
-				panel2->GetBounds(&x, &y, &w, &h);
-				panel2->SetBounds(x, y, w, h + 360);
+				//panel2->GetBounds(&x, &y, &w, &h);
+				//panel2->SetBounds(x, y, w, h + 330);
 				/*descL->GetBounds(&x, &y, &w, &h);
 				descL->SetBounds(x, y, w, h - 360);*/
 				descL->SetVisible(true);
@@ -221,6 +216,21 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	GLWindow::ProcessMessage(src, message);
 }
 
+void FormulaEditor::SetBounds(int x, int y, int w, int h) {
+	panel1->SetBounds(5, 5, w - 10, h - (panel2->IsClosed() ? 90 : 450));
+	formulaList->SetBounds(10, 22, w - 20, h - (panel2->IsClosed() ? 115 : 475));
+	formulaList->SetColumnWidthForAll((w - 50) / 3);
+	recalcButton->SetBounds(10, h - (panel2->IsClosed() ? 80 : 440), 95, 20);
+	moveUpButton->SetBounds(w - 160, h - (panel2->IsClosed() ? 80 : 440), 65, 20);
+	moveDownButton->SetBounds(w - 90, h - (panel2->IsClosed() ? 80 : 440), 65, 20);
+
+	panel2->SetBounds(5, h - (panel2->IsClosed() ? 50 : 410), w - 10, 375); //Height will be extended runtime
+	panel2->SetCompBounds(descL, 10, 15, w-30, 355);
+
+	SetMinimumSize(400, (panel2->IsClosed() ? 150 : 510));
+	GLWindow::SetBounds(x, y, w, h);
+}
+
 void FormulaEditor::EnableDisableMoveButtons()
 {
 	int selRow = formulaList->GetSelectedRow(false);
@@ -244,9 +254,10 @@ void FormulaEditor::EnableDisableMoveButtons()
 
 void FormulaEditor::RebuildList() {
 	//Rebuild list based on locally stored userExpressions
-
+	int x, y, w, h;
+	GetBounds(&x, &y, &w, &h);
 	formulaList->SetSize(3, userExpressions.size() + 1);
-	formulaList->SetColumnWidths((int*)flWidth);
+	formulaList->SetColumnWidthForAll((w - 50) / 3);
 	formulaList->SetColumnLabels((char **)flName);
 	formulaList->SetColumnAligns((int *)flAligns);
 	formulaList->SetColumnEditable((int *)fEdits);

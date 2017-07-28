@@ -49,7 +49,7 @@ private:
   float bText;
   bool  isBold;
   bool  closeAble;
-  bool  closeState;
+  bool  closeState; //make collapse/expand button grey while pressed
   bool  closed;
   int   wOrg;
   int   hOrg;

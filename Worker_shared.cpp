@@ -14,6 +14,7 @@
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #include "MolflowGeometry.h"
+#include "FacetAdvParams.h"
 #endif
 
 #ifdef SYNRAD
@@ -144,7 +145,7 @@ void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When load
 	if (dpHit) {
 		AccessDataport(dpHit);
 		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
-		size_t nbCopy = MIN(LEAKCACHESIZE, *nb);
+		size_t nbCopy = Min(LEAKCACHESIZE, *nb);
 		memcpy(leakCache, buffer, sizeof(LEAK)*nbCopy);
 		memcpy(gHits->leakCache, buffer, sizeof(LEAK)*nbCopy);
 		gHits->lastLeakIndex = nbCopy % LEAKCACHESIZE;
@@ -157,7 +158,7 @@ void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
 	if (dpHit) {
 		AccessDataport(dpHit);
 		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
-		size_t nbCopy = MIN(HITCACHESIZE, *nb);
+		size_t nbCopy = Min(HITCACHESIZE, *nb);
 		memcpy(hitCache, buffer, sizeof(HIT)*nbCopy);
 		memcpy(gHits->hitCache, buffer, sizeof(HIT)*nbCopy);
 		gHits->lastHitIndex = nbCopy % HITCACHESIZE;
@@ -403,7 +404,7 @@ void Worker::SetProcNumber(size_t n) {
 		sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
 		#endif
 		#ifdef SYNRAD
-		sprintf(cmdLine,"synradSub.exe %d %d",pid,i);
+		sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
 		#endif
 		pID[i] = StartProc(cmdLine,STARTPROC_NORMAL);
 		Sleep(25); // Wait a bit
@@ -491,6 +492,7 @@ void Worker::Update(float appTime) {
 			nbDesorption = gHits->total.hit.nbDesorbed;
 			distTraveledTotal_total = gHits->distTraveledTotal_total;
 			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
+			bool needsAngleMapStatusRefresh = false;
 #endif
 
 #ifdef SYNRAD
@@ -525,16 +527,17 @@ void Worker::Update(float appTime) {
 #ifdef MOLFLOW
 				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(SHHITS), sizeof(SHHITS));
 				
-				if (f->sh.recordAngleMap) {
-					if (!f->sh.hasRecordedAngleMap) { //It was released by the user maybe
+				if (f->sh.anglemapParams.record) {
+					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
 						//Initialize angle map
-						f->angleMapCache = (size_t*)malloc(f->sh.angleMapPhiWidth * f->sh.angleMapThetaHeight * sizeof(size_t));
+						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
 						if (!f->angleMapCache) {
 							std::stringstream tmp;
 							tmp << "Not enough memory for incident angle map on facet " << i + 1;
 							throw Error(tmp.str().c_str());
 						}
-						f->sh.hasRecordedAngleMap = true;
+						f->sh.anglemapParams.hasRecorded = true;
+						if (f->selected) needsAngleMapStatusRefresh = true;
 					}
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
@@ -542,7 +545,7 @@ void Worker::Update(float appTime) {
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(APROFILE) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(AHIT) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(VHIT)*(1 + moments.size()) : 0);
-					memcpy(f->angleMapCache, angleMapAddress, f->sh.angleMapPhiWidth*f->sh.angleMapThetaHeight * sizeof(size_t));	
+					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.phiWidth*(f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
 					angleMapAddress = 0;
 				}
 				
@@ -556,6 +559,10 @@ void Worker::Update(float appTime) {
 				ReleaseDataport(dpHit);
 				return;
 			}
+#ifdef MOLFLOW
+			if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
+				mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
+#endif
 			ReleaseDataport(dpHit);
 		}
 	}

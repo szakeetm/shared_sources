@@ -59,8 +59,8 @@ GLSaveDialog::GLSaveDialog(char *message,char *title,int mode,int icon):GLWindow
   if( mode & GLDLG_SAVE ) nbButton++;
   if( mode & GLDLG_DISCARD ) nbButton++;
   int totalBW = nbButton * 80;
-  wD = MAX(txtWidth + iW + 30,totalBW);
-  hD = 50 + MAX(txtHeight,iW);
+  wD = Max(txtWidth + iW + 30,totalBW);
+  hD = 50 + Max(txtHeight,iW);
   int startX = (wD-totalBW)/2;
   int startY = hD - 45;
     

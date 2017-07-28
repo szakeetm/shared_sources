@@ -56,8 +56,8 @@ GLUnitDialog::GLUnitDialog(char *message,char *title,int mode,int icon):GLWindow
 
   // Buttons
   int totalBW = nbButton * 80;
-  wD = MAX(txtWidth + iW + 30,totalBW);
-  hD = 75+ MAX(txtHeight,iW);
+  wD = Max(txtWidth + iW + 30,totalBW);
+  hD = 75+ Max(txtHeight,iW);
   int startX = (wD-totalBW)/2;
   int startY = hD - 70;
     

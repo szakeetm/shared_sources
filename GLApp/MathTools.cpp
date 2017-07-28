@@ -5,9 +5,10 @@
 #include <algorithm> //std::Lower_bound
 #include <sstream>
 #include <iterator>
+#include "Random.h"
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
-	return fabs(a - b) < MAX(1E-99,a*toleranceRatio);
+	return fabs(a - b) < Max(1E-99,a*toleranceRatio);
 }
 
 size_t  IDX(int i, size_t nb) {
@@ -91,6 +92,11 @@ double my_erf(double x)
 	double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
 
 	return sign*y;
+}
+
+double Weigh(const double & a, const double & b, const double & weigh)
+{
+	return a + (b - a)*weigh;
 }
 
 bool compare_second(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
@@ -178,7 +184,7 @@ std::vector<double> InterpolateVector(const double& x, const std::vector<std::pa
 		double overShoot = (log(x) - log(lower->first)) / (log(upper->first) - log(lower->first));
 		std::vector<double> returnValues;
 		for (size_t i = 0; i < lower->second.size(); i++) {
-			returnValues.push_back(exp(WEIGH(log(lower->second[i]), log(upper->second[i]), overShoot)));
+			returnValues.push_back(exp(Weigh(log(lower->second[i]), log(upper->second[i]), overShoot)));
 		}
 		return returnValues;
 	}
@@ -186,7 +192,7 @@ std::vector<double> InterpolateVector(const double& x, const std::vector<std::pa
 		double overShoot = (x - lower->first) / (upper->first - lower->first);
 		std::vector<double> returnValues;
 		for (size_t i = 0; i < lower->second.size(); i++) {
-			returnValues.push_back(WEIGH(lower->second[i], upper->second[i], overShoot));
+			returnValues.push_back(Weigh(lower->second[i], upper->second[i], overShoot));
 		}
 		return returnValues;
 	}
@@ -305,4 +311,73 @@ bool endsWith(std::string const &fullString, std::string const &ending) {
 
 bool beginsWith(std::string const &fullString, std::string const &ending) {
 	return (fullString.compare(0, ending.length(), ending) == 0);
+}
+
+double InverseQuadraticInterpolation(const double& y,
+	const double& a, const double& b, const double& c,
+	const double& FA, const double& FB, const double& FC) {
+	double amb = a - b;
+	double amc = a - c;
+	double bmc = b - c;
+	double amb_amc = amb*amc;
+	double amc_bmc = amc*bmc;
+	double divisor = (2 * (-(FA / (amb_amc)) + FB / (amb_amc)+FB / (amc_bmc)-FC / (amc_bmc)));
+	                 
+	if (fabs(divisor) < 1e-30) {
+		//Divisor is 0 when the slope is 1st order (a straight line) i.e. (FC-FB)/(c-b) == (FB-FA)/(b-a)
+		if ((FB - FA) < 1e-30) {
+			//FA==FB, shouldn't happen
+			return a + rnd()*(b - a);
+		}
+		else {
+			//Inverse linear interpolation
+			return a + (y - FA) * (b - a)/ (FB - FA);
+		}
+	}
+	else {
+		//(reverse interpolate y on a 2nd order polynomial fitted on {a,FA},{b,FB},{c,FC} where FA<y<FB):
+		//Root of Lagrangian polynomials, solved by Mathematica
+		return (FA / (amb)-(a*FA) / (amb_amc)-(b*FA) / (amb_amc)-FB / (amb)+(a*FB) / (amb_amc)+(b*FB) / (amb_amc)+(a*FB) / (amc_bmc)+(b*	FB) / (amc_bmc)-(a*FC) / (amc_bmc)
+			-(b*FC) / (amc_bmc)-sqrt(Sqr(-(FA / (amb)) + (a*FA) / (amb_amc)+(b*FA) / (amb_amc)+FB / (amb)-(a*FB) / (amb_amc)-(b*FB) / (amb_amc)-(a*FB) / (amc_bmc)-(b*FB)
+				/ (amc_bmc)+(a*FC) / (amc_bmc)+(b*FC) / (amc_bmc)) - 4 * (-(FA / (amb_amc)) + FB / (amb_amc)+FB / (amc_bmc)-FC / (amc_bmc))*(-FA + (a*FA) / (amb)-(a*b*FA)
+					/ (amb_amc)-(a*FB) / (amb)+(a*b*FB) / (amb_amc)+(a*b*FB) / (amc_bmc)-(a*b*FC) / (amc_bmc)+y))) / divisor;
+	}
+}
+
+int weighed_lower_bound_X(const double & key, const double & weigh, double * A, double * B, const size_t & size)
+{
+	//interpolates among two lines of a cumulative distribution
+	//all elements of line 1 and line 2 must be monotonously increasing (except equal consecutive values)
+	//key: lookup value
+	//weigh: between 0 and 1 (0: only first distribution, 1: only second distribution)
+	//A* and B* : pointers to arrays of 'size' number of CDF values. The first value (not included) is assumed to be 0, the last (not included) is assumed to be 1
+	//return value: lower index. If -1, then key is smaller than first element, if 'size-1', then key is larger than last element
+	
+		if (size == 0) return -1;
+		int L = 0;
+		int R = (int)(size - 1);
+		// continue searching while [imin,imax] is not empty
+		int M; double weighed,nextWeighed;
+		while (L<=R)
+		{
+			M = (L + R) / 2;
+			weighed = Weigh(A[M], B[M], weigh);
+			nextWeighed = Weigh(A[M + 1], B[M + 1], weigh);
+			if (weighed <= key && key < nextWeighed) {
+				// key found at index M
+				return M;
+			}
+			else if (weighed < key) {
+				L = M + 1;
+			}
+			else  {
+				R = M - 1;
+			}
+		}
+		//Not found
+		if (M == 0)
+			return -1; //key lower than first element
+		else
+			return (int)size - 1; //key larger than last element
+	
 }

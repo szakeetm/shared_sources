@@ -503,7 +503,7 @@ void GeometryViewer::UpdateMatrix() {
 
 	if (view.projMode == PERSPECTIVE_PROJ) {
 
-		double _zNear = MAX(zNear, 0.1);
+		double _zNear = Max(zNear, 0.1);
 		double _zFar = (_zNear < zFar) ? zFar : _zNear + 1.0;
 		GLToolkit::PerspectiveLH(FOV_ANGLE, aspect, _zNear - 0.05, _zFar + 10.0);
 
@@ -580,8 +580,8 @@ void GeometryViewer::SetWorker(Worker *w) {
 	// Auto size vector length (consider Front View)
 	Geometry *geom = work->GetGeometry();
 	AABB bb = geom->GetBB();
-	vectorLength = MAX((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
-	arrowLength = 10.0 / vectorLength;//MAX((bb.max.z-bb.min.z),vectorLength);
+	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+	arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 }
 
 
@@ -799,7 +799,7 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
-		for (int i = 0; i < MIN(dispNumLeaks,mApp->worker.leakCacheSize); i++) {
+		for (size_t i = 0; i < Min(dispNumLeaks,mApp->worker.leakCacheSize); i++) {
 
 			Vector3d p = mApp->worker.leakCache[i].pos;
 			Vector3d d = mApp->worker.leakCache[i].dir;
@@ -849,7 +849,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 		// Autoscale dist, at least try to ;) .stub.
 		double a = 0.5 / tan((FOV_ANGLE / 360.0)*PI);
-		view.camDist = MAX((xMax - xMin) / aspect,
+		view.camDist = Max((xMax - xMin) / aspect,
 			(yMax - yMin)) * a
 			+ (zFar - zNear) / 1.9;
 
@@ -859,7 +859,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 		// Scale
 		view.camDist = 1.0;
 
-		double mDist = MAX((xMax - xMin), (yMax - yMin)*aspect);
+		double mDist = Max((xMax - xMin), (yMax - yMin)*aspect);
 		mDist *= 1.1; // 10% margin
 		double dx = (xMax + xMin) / 2.0;
 		double dy = (yMax + yMin) / 2.0;
@@ -894,15 +894,15 @@ void GeometryViewer::Zoom() {
 		if (hS > wS) {
 			w0 = (double)hS*aspect;
 			h0 = (double)hS;
-			x0 = ((double)wS - w0) / 2.0f + (double)MIN(selX1, selX2) + w0 / 2.0;
-			y0 = (double)MIN(selY1, selY2) + h0 / 2.0;
+			x0 = ((double)wS - w0) / 2.0f + (double)Min(selX1, selX2) + w0 / 2.0;
+			y0 = (double)Min(selY1, selY2) + h0 / 2.0;
 			z = (double)(height - DOWN_MARGIN) / h0;
 		}
 		else {
 			w0 = (double)wS;
 			h0 = (double)wS / aspect;
-			x0 = (double)MIN(selX1, selX2) + w0 / 2.0;
-			y0 = ((double)hS - h0) / 2.0f + (double)MIN(selY1, selY2) + h0 / 2.0;
+			x0 = (double)Min(selX1, selX2) + w0 / 2.0;
+			y0 = ((double)hS - h0) / 2.0f + (double)Min(selY1, selY2) + h0 / 2.0;
 			z = (double)width / w0;
 		}
 

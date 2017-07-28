@@ -257,7 +257,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 			size_t c1, c2, l;
 			if (GetCommonEdges(facets[i], facets[j], &c1, &c2, &l)) {
 				double dotProduct = Dot(f1->sh.N, f2->sh.N);
-				SATURATE(dotProduct, -1.0, 1.0); //Rounding errors...
+				Saturate(dotProduct, -1.0, 1.0); //Rounding errors...
 				double angleDiff = fabs(acos(dotProduct));
 				NeighborFacet n1, n2;
 				n1.id = i;
@@ -2120,9 +2120,9 @@ bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<Cli
 bool Geometry::IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection) {
 	//Notations from http://geomalgorithms.com/a05-_intersect-1.html
 	//At this point, intersecting ray is L=P0+s*u
-	if (IS_ZERO(Dot(n, u))) return false; //Check for parallelness
+	if (IsZero(Dot(n, u))) return false; //Check for parallelness
 	Vector3d w = P0 - V0;
-	if (IS_ZERO(Dot(n, w))) return false; //Check for inclusion
+	if (IsZero(Dot(n, w))) return false; //Check for inclusion
 	//Intersection point: P(s_i)-V0=w+s_i*u -> s_i=(-n*w)/(n*u)
 	double s_i = -Dot(n, w) / Dot(n, u);
 	if (withinSection && ((s_i < 0) || (s_i > 1.0))) return false;
@@ -2206,7 +2206,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 								//Intersection found. First check if we already created this point
 								int foundId = -1;
 								for (size_t v = 0; foundId == -1 && v < newVertices.size(); v++) {
-									if (IS_ZERO((newVertices[v] - intersectionPoint).Norme()))
+									if (IsZero((newVertices[v] - intersectionPoint).Norme()))
 										foundId = (int)v;
 								}
 								IntersectPoint newPoint, newPointOtherFacet;
@@ -3558,7 +3558,7 @@ void Geometry::AdjustProfile() {
 			Vector3d v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
 			double n0 = v0.Norme();
 			double nU = f->sh.U.Norme();
-			if (IS_ZERO(n0 - nU)) f->sh.profileType = REC_PRESSUREU; // Select U
+			if (IsZero(n0 - nU)) f->sh.profileType = REC_PRESSUREU; // Select U
 			else               f->sh.profileType = REC_PRESSUREV; // Select V
 		}
 	}

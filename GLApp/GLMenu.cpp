@@ -442,15 +442,15 @@ void GLMenu::Paint() {
       float rL = (float)rBack / 100.0f;
       float gL = (float)gBack / 100.0f;
       float bL = (float)bBack / 100.0f;
-      SATURATE(rL,0.0f,1.0f);
-      SATURATE(gL,0.0f,1.0f);
-      SATURATE(bL,0.0f,1.0f);
+      Saturate(rL,0.0f,1.0f);
+      Saturate(gL,0.0f,1.0f);
+      Saturate(bL,0.0f,1.0f);
       float rD = (float)rBack / 500.0f;
       float gD = (float)gBack / 500.0f;
       float bD = (float)bBack / 500.0f;
-      SATURATE(rD,0.0f,1.0f);
-      SATURATE(gD,0.0f,1.0f);
-      SATURATE(bD,0.0f,1.0f);
+      Saturate(rD,0.0f,1.0f);
+      Saturate(gD,0.0f,1.0f);
+      Saturate(bD,0.0f,1.0f);
 
       glDisable(GL_BLEND);
       glDisable(GL_TEXTURE_2D);
@@ -558,7 +558,7 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
   int menuHeight = 0;
   for(int i=0;i<nbItem;i++) { 
     MENUITEM *p = items + i;
-    menuWidth=MAX(menuWidth,p->width);
+    menuWidth=Max(menuWidth,p->width);
     menuHeight += p->height;
   }
   // margin
@@ -626,7 +626,7 @@ void GLMenu::Drop(GLContainer *parent,int x,int y) {
   int menuHeight = 0;
   for(int i=0;i<nbItem;i++) { 
     MENUITEM *p = items + i;
-    menuWidth=MAX(menuWidth,p->width);
+    menuWidth=Max(menuWidth,p->width);
     menuHeight += p->height;
   }
   // margin

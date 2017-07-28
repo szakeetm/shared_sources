@@ -209,8 +209,8 @@ void GLApplication::Pause(bool bPause) {
 
 int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
 
-  int width  = MAX((int)nWidth,m_minScreenWidth);
-  int height = MAX((int)nHeight,m_minScreenHeight);
+  int width  = Max((int)nWidth,m_minScreenWidth);
+  int height = Max((int)nHeight,m_minScreenHeight);
 
   m_screenWidth = width;
   m_screenHeight = height;

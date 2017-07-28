@@ -56,8 +56,8 @@ RecoveryDialog::RecoveryDialog(const char *message, char *title, int mode, int i
 
   // Buttons
   int totalBW = nbButton * 80;
-  wD = MAX(txtWidth + iW + 30,totalBW);
-  hD = 50+ MAX(txtHeight,iW);
+  wD = Max(txtWidth + iW + 30,totalBW);
+  hD = 50+ Max(txtHeight,iW);
   int startX = (wD-totalBW)/2+20;
   int startY = hD - 45;
     

@@ -48,10 +48,10 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	float rx, ry, rz, rw, r2;
 	int _x1, _y1, _x2, _y2;
 
-	_x1 = MIN(x1, x2);
-	_x2 = MAX(x1, x2);
-	_y1 = MIN(y1, y2);
-	_y2 = MAX(y1, y2);
+	_x1 = Min(x1, x2);
+	_x2 = Max(x1, x2);
+	_y1 = Min(y1, y2);
+	_y2 = Max(y1, y2);
 
 	if (circularSelection) {
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
@@ -298,10 +298,10 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 
 
 
-	_x1 = MIN(x1, x2);
-	_x2 = MAX(x1, x2);
-	_y1 = MIN(y1, y2);
-	_y2 = MAX(y1, y2);
+	_x1 = Min(x1, x2);
+	_x2 = Max(x1, x2);
+	_y1 = Min(y1, y2);
+	_y2 = Max(y1, y2);
 
 	if (circularSelection) {
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
@@ -680,7 +680,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 	// Direction
 	float n = sqrtf(dx*dx + dy*dy + dz*dz);
-	if (IS_ZERO(n)) {
+	if (IsZero(n)) {
 
 		// Isotropic (render a sphere)
 		mScale._11 = (d / 4.0f);
@@ -709,17 +709,17 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 	// A point belonging to the plane
 	// normal to the direction vector
-	if (!IS_ZERO(dx)) {
+	if (!IsZero(dx)) {
 		v1x = -dz / dx;
 		v1y = 0.0;
 		v1z = 1.0;
 	}
-	else if (!IS_ZERO(dy)) {
+	else if (!IsZero(dy)) {
 		v1x = 0.0;
 		v1y = -dz / dy;
 		v1z = 1.0;
 	}
-	else if (!IS_ZERO(dz)) {
+	else if (!IsZero(dz)) {
 		// normal to z
 		v1x = 1.0;
 		v1y = 0.0;

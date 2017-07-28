@@ -48,7 +48,7 @@ void GLScrollBar::SetRange(int max,int page,int wheel)
     m_Page=page;
     m_Wheel=wheel;
   }
-  SATURATE(m_Pos,0,m_Max-m_Page);
+  Saturate(m_Pos,0,m_Max-m_Page);
   m_Drag=0;
 }
 

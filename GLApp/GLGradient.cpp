@@ -133,7 +133,7 @@ void GLGradient::RestoreDeviceObjects() {
     b2 = (double) ((rainbowCol[colId+1] >>  0) & 0xFF);
   
     double rr = (double)(i-colId*64) / 64.0;
-    SATURATE(rr,0.0,1.0);
+    Saturate(rr,0.0,1.0);
     COLORREF c = (COLORREF)((int)( r1 + (r2-r1)*rr )+
                             (int)( g1 + (g2-g1)*rr )* 256 +
                             (int)( b1 + (b2-b1)*rr )* 65536 );
@@ -238,7 +238,7 @@ void GLGradient::ManageEvent(SDL_Event *evt) {
         int ex = GetWindow()->GetX(this,evt) + posX;
         int ey = GetWindow()->GetY(this,evt) + posY;
         cursorPos = (double)(ex-gPosX) / (double)(gWidth);
-        SATURATE(cursorPos,0.0,1.0);
+        Saturate(cursorPos,0.0,1.0);
         UpdateValue();
       } else {
         cursorPos = -1.0;

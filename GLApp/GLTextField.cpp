@@ -168,6 +168,12 @@ bool GLTextField::GetNumberInt(int *num) {
 
 }
 
+bool GLTextField::GetNumberSize(size_t *num) {
+
+	int conv = sscanf(m_Text, "%zd", num);
+	return (conv == 1);
+
+}
 // ------------------------------------------------------
 
 void GLTextField::UpdateXpos() {
@@ -271,8 +277,8 @@ void GLTextField::Paint() {
 
   if( m_Start!=m_Stop ) {
 
-    int min = MIN(m_Stop,m_Start);
-    int max = MAX(m_Stop,m_Start);
+    int min = Min(m_Stop,m_Start);
+    int max = Max(m_Stop,m_Start);
 
     int tMargin = (border?2:1);
 

@@ -96,12 +96,12 @@ void GLSpinner::ManageEvent(SDL_Event *evt) {
       if( my < h2 ) {
         state = 1;
         value += increment;
-        SATURATE(value,min,max);
+        Saturate(value,min,max);
         parent->ProcessMessage(this,MSG_SPINNER);
       } else {
         state = 2;
         value -= increment;
-        SATURATE(value,min,max);
+        Saturate(value,min,max);
         parent->ProcessMessage(this,MSG_SPINNER);
       }
     }

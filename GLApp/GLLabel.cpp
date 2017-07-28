@@ -81,14 +81,14 @@ void GLLabel::SetText(const char *text) {
     *p = 0;
     lines[nbLine++] = m;
     w = font->GetTextWidth(m);
-    txtWidth = MAX(txtWidth,w);
+    txtWidth = Max(txtWidth,w);
     m = p+1;
   }
 
   // Last line
   lines[nbLine++] = m;
   w = font->GetTextWidth(m);
-  txtWidth = MAX(txtWidth,w);
+  txtWidth = Max(txtWidth,w);
   txtHeight = 14 * nbLine;
 
 }

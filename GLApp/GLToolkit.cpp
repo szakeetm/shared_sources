@@ -520,7 +520,7 @@ void GLToolkit::DrawHScroll(int x,int y,int width,int height,int state) {
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
-    int sleft = MIN(left-i,200);
+    int sleft = Min(left-i,200);
     compTex->UpdateSprite(x+w1+i,y,x+w1+i+sleft,y+height);
     compTex->Render(false);
   }
@@ -572,7 +572,7 @@ void GLToolkit::DrawVScroll(int x,int y,int width,int height,int state) {
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
-    int sleft = MIN(left-i,200);
+    int sleft = Min(left-i,200);
     compTex->UpdateSprite(x,y+h1+i,x+width,y+h1+i+sleft);
     compTex->Render90(false);
   }
@@ -641,16 +641,16 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
     float rL = (float)r / 100.0f;
     float gL = (float)g / 100.0f;
     float bL = (float)b / 100.0f;
-    SATURATE(rL,0.0f,1.0f);
-    SATURATE(gL,0.0f,1.0f);
-    SATURATE(bL,0.0f,1.0f);
+    Saturate(rL,0.0f,1.0f);
+    Saturate(gL,0.0f,1.0f);
+    Saturate(bL,0.0f,1.0f);
 
     float rD = (float)r / 500.0f;
     float gD = (float)g / 500.0f;
     float bD = (float)b / 500.0f;
-    SATURATE(rD,0.0f,1.0f);
-    SATURATE(gD,0.0f,1.0f);
-    SATURATE(bD,0.0f,1.0f);
+    Saturate(rD,0.0f,1.0f);
+    Saturate(gD,0.0f,1.0f);
+    Saturate(bD,0.0f,1.0f);
     */
 
     if(!iShadow) glColor3f(rL,gL,bL);
@@ -682,16 +682,16 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
     float rL = (float)r / 100.0f;
     float gL = (float)g / 100.0f;
     float bL = (float)b / 100.0f;
-    SATURATE(rL,0.0f,1.0f);
-    SATURATE(gL,0.0f,1.0f);
-    SATURATE(bL,0.0f,1.0f);
+    Saturate(rL,0.0f,1.0f);
+    Saturate(gL,0.0f,1.0f);
+    Saturate(bL,0.0f,1.0f);
 
     float rD = (float)r / 500.0f;
     float gD = (float)g / 500.0f;
     float bD = (float)b / 500.0f;
-    SATURATE(rD,0.0f,1.0f);
-    SATURATE(gD,0.0f,1.0f);
-    SATURATE(bD,0.0f,1.0f);
+    Saturate(rD,0.0f,1.0f);
+    Saturate(gD,0.0f,1.0f);
+    Saturate(bD,0.0f,1.0f);
     */
 
     glColor3f(rD,gD,bD);
@@ -738,9 +738,9 @@ void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &he
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;
   float bN = (float)b / 255.0f;
-  SATURATE(rN,0.0f,1.0f);
-  SATURATE(gN,0.0f,1.0f);
-  SATURATE(bN,0.0f,1.0f);
+  Saturate(rN,0.0f,1.0f);
+  Saturate(gN,0.0f,1.0f);
+  Saturate(bN,0.0f,1.0f);
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
@@ -782,9 +782,9 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;
   float bN = (float)b / 255.0f;
-  SATURATE(rN,0.0f,1.0f);
-  SATURATE(gN,0.0f,1.0f);
-  SATURATE(bN,0.0f,1.0f);
+  Saturate(rN,0.0f,1.0f);
+  Saturate(gN,0.0f,1.0f);
+  Saturate(bN,0.0f,1.0f);
 
   if( dashStyle==DASHSTYLE_NONE ) {
     glDisable(GL_LINE_STIPPLE);
@@ -844,7 +844,7 @@ bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,c
        y2 = (double) PointY[0];
      }
 
-     if (xp > MIN(x1, x2) && xp <= MAX(x1, x2)) {
+     if (xp > Min(x1, x2) && xp <= Max(x1, x2)) {
        a = (y2 - y1) / (x2 - x1);
        b = y1 - a * x1;
        if ((a * xp + b) < yp) {

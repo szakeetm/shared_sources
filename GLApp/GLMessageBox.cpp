@@ -60,8 +60,8 @@ GLMessageBox::GLMessageBox(const std::string & message, const std::string & titl
 
 	// Buttons
 	int totalBW = (int)buttonList.size() * 80;
-	wD = MAX(txtWidth + iconWidth + 30, totalBW);
-	hD = 50 + MAX(txtHeight, iconWidth);
+	wD = Max(txtWidth + iconWidth + 30, totalBW);
+	hD = 50 + Max(txtHeight, iconWidth);
 	int startX = (wD - totalBW) / 2;
 	int startY = hD - 45;
 
@@ -130,8 +130,8 @@ GLMessageBox::GLMessageBox(const char *message,char *title,int mode,int icon):GL
   if( mode & GLDLG_OK     ) nbButton++;
   if( mode & GLDLG_CANCEL ) nbButton++;
   int totalBW = nbButton * 80;
-  wD = MAX(txtWidth + iconWidth + 30,totalBW);
-  hD = 50 + MAX(txtHeight,iconWidth);
+  wD = Max(txtWidth + iconWidth + 30,totalBW);
+  hD = 50 + Max(txtHeight,iconWidth);
   int startX = (wD-totalBW)/2;
   int startY = hD - 45;
 
