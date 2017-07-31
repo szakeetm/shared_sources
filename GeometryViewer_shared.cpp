@@ -1513,8 +1513,11 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				selY2 += diffY;
 			}
 			else {
-				selX2 = mX;
-				selY2 = mY;
+				//selX2 = mX;
+				//selY2 = mY;
+
+				selX2 += diffX;
+				selY2 += diffY;
 			}
 			//}
 			break;

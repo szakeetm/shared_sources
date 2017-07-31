@@ -20,6 +20,7 @@
 
 extern GLApplication *theApp;
 extern std::string formulaSyntax;
+extern int formulaSyntaxHeight;
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -29,15 +30,15 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-static const int   flWidth[] = { 166,166,166 };
 static const char *flName[] = { "Expression","Name (optional)","Value" };
 static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 
 FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
+	columnRatios = { 0.333,0.333,0.333 };
 
 	int wD = 400;
-	int hD = 200; //Height extended runtime
+	int hD = 200; //Height extended runtime when formula syntax panel is expanded
 
 	work = w;
 
@@ -76,10 +77,10 @@ FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
 	descL->SetVisible(false); //Set visible runtime
 	Add(descL);
 
-	// Top right
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = (wS - wD - 215);
+	// Place in top left corner
+	//int wS, hS;
+	//GLToolkit::GetScreenSize(&wS, &hS);
+	int xD = /*(wS - wD - 215)*/ 10;
 	int yD = 30;
 	SetBounds(xD, yD, wD, hD);
 
@@ -95,19 +96,11 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			int x, y, w, h;
 			GetBounds(&x, &y, &w, &h);
 			if (panel2->IsClosed()) {
-				SetBounds(x, y, w, h - 360);
-				//panel2->GetBounds(&x, &y, &w, &h);
-				//panel2->SetBounds(x, y, w, h - 330);
-				/*descL->GetBounds(&x, &y, &w, &h);
-				descL->SetBounds(x, y, w, h - 360);*/
+				SetBounds(x, y, w, h - formulaSyntaxHeight);
 				descL->SetVisible(false);
 			}
 			else {
-				SetBounds(x, y, w, h + 360);
-				//panel2->GetBounds(&x, &y, &w, &h);
-				//panel2->SetBounds(x, y, w, h + 330);
-				/*descL->GetBounds(&x, &y, &w, &h);
-				descL->SetBounds(x, y, w, h - 360);*/
+				SetBounds(x, y, w, h + formulaSyntaxHeight);
 				descL->SetVisible(true);
 			}
 		}
@@ -211,23 +204,37 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		EnableDisableMoveButtons();
 		break;
 	}
+	case MSG_LIST_COL:
+		int x,y,w,h;
+		GetBounds(&x, &y, &w, &h);
+		double sum = (double)(w - 45);
+		std::vector<double> colWidths(3);
+		for (size_t i = 0; i < 3; i++) {
+			colWidths[i]=(double)formulaList->GetColWidth(i);
+		}
+		for (size_t i = 0; i < 3; i++) {
+			columnRatios[i] = colWidths[i] / sum;
+		}
+		break;
 	}
 
 	GLWindow::ProcessMessage(src, message);
 }
 
 void FormulaEditor::SetBounds(int x, int y, int w, int h) {
-	panel1->SetBounds(5, 5, w - 10, h - (panel2->IsClosed() ? 90 : 450));
-	formulaList->SetBounds(10, 22, w - 20, h - (panel2->IsClosed() ? 115 : 475));
-	formulaList->SetColumnWidthForAll((w - 50) / 3);
-	recalcButton->SetBounds(10, h - (panel2->IsClosed() ? 80 : 440), 95, 20);
-	moveUpButton->SetBounds(w - 160, h - (panel2->IsClosed() ? 80 : 440), 65, 20);
-	moveDownButton->SetBounds(w - 90, h - (panel2->IsClosed() ? 80 : 440), 65, 20);
+	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
+	panel1->SetBounds(5, 5, w - 10, h - 90 - formulaHeight);
+	formulaList->SetBounds(10, 22, w - 20, h - 115 - formulaHeight);
+	for (size_t i=0;i<3;i++)
+		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
+	recalcButton->SetBounds(10, h - 80 - formulaHeight, 95, 20);
+	moveUpButton->SetBounds(w - 160, h - 80 - formulaHeight, 65, 20);
+	moveDownButton->SetBounds(w - 90, h - 80 - formulaHeight, 65, 20);
 
-	panel2->SetBounds(5, h - (panel2->IsClosed() ? 50 : 410), w - 10, 375); //Height will be extended runtime
-	panel2->SetCompBounds(descL, 10, 15, w-30, 355);
+	panel2->SetBounds(5, h - 50 - formulaHeight, w - 10, 20 + formulaHeight); //Height will be extended runtime
+	panel2->SetCompBounds(descL, 10, 15, w-30, formulaHeight);
 
-	SetMinimumSize(400, (panel2->IsClosed() ? 150 : 510));
+	SetMinimumSize(400, 150 + formulaHeight);
 	GLWindow::SetBounds(x, y, w, h);
 }
 
@@ -257,7 +264,8 @@ void FormulaEditor::RebuildList() {
 	int x, y, w, h;
 	GetBounds(&x, &y, &w, &h);
 	formulaList->SetSize(3, userExpressions.size() + 1);
-	formulaList->SetColumnWidthForAll((w - 50) / 3);
+	for (size_t i = 0; i<3; i++)
+		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
 	formulaList->SetColumnLabels((char **)flName);
 	formulaList->SetColumnAligns((int *)flAligns);
 	formulaList->SetColumnEditable((int *)fEdits);

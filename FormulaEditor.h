@@ -42,7 +42,10 @@ private:
   GLTitledPanel *panel1;
   GLTitledPanel *panel2;
 
+  int descLabelHeight;
+
   std::vector<std::string> userExpressions,userFormulaNames;
+  std::vector<double> columnRatios;
 
   void EnableDisableMoveButtons();
 
