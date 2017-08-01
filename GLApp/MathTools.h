@@ -96,7 +96,7 @@ template <class K, class T> int my_binary_search(const K& key, T* A, const size_
 
 {
 	int imin = 0;
-	int imax = size - 1;
+	int imax = (int)size - 1;
 	// continue searching while [imin,imax] is not empty
 	while (imin <= imax)
 	{

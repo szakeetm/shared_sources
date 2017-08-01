@@ -261,6 +261,8 @@ private:
   GLMATERIAL greenMaterial;
   GLMATERIAL blueMaterial;
 
+  //Debug
+  //GLLabel* debugLabel;
 };
 
 #endif /* _GEOMETRYVIEWERH_ */

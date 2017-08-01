@@ -113,10 +113,10 @@ void SmpStatus::Update(float appTime) {
     char tmp[512];
     PROCESS_INFO pInfo;
     int  states[MAX_PROCESS];
-    char statusStr[MAX_PROCESS][64];
+    char statusStr[MAX_PROCESS][128];
 
     memset(states,0,MAX_PROCESS*sizeof(int));
-    worker->GetProcStatus(states,(char **)statusStr);
+    worker->GetProcStatus(states,statusStr);
 
     processList->ResetValues();
     for(size_t i=0;i<nb;i++) {

@@ -244,7 +244,7 @@ char *Worker::GetErrorDetails() {
 	AccessDataport(dpControl);
 	SHCONTROL *master = (SHCONTROL *)dpControl->buff;
 	for (int i = 0; i < nbProcess; i++) {
-		char tmp[256];
+		char tmp[512];
 		if (pID[i] != 0) {
 			int st = master->states[i];
 			if (st == PROCESS_ERROR) {
@@ -293,7 +293,10 @@ bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
 		if (!finished) {
 
 			if (statusWindow) {
-				if (waitTime >= 500) statusWindow->SetVisible(true);
+				if (waitTime >= 500) {
+					statusWindow->RefreshNbProcess();
+					statusWindow->SetVisible(true);
+				}
 				statusWindow->SMPUpdate();
 				mApp->DoEvents();
 			}
@@ -322,10 +325,9 @@ bool Worker::ExecuteAndWait(int command,int readyState,size_t param) {
 
 	Sleep(100);
 
-	LoadStatus *statusWindow = NULL;
-	statusWindow = new LoadStatus(this);
-	bool result= Wait(readyState,statusWindow);
-	SAFE_DELETE(statusWindow);
+	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
+	bool result= Wait(readyState, mApp->loadStatus);
+	//SAFE_DELETE(statusWindow);
 	return result;
 }
 
@@ -416,11 +418,10 @@ void Worker::SetProcNumber(size_t n) {
 
 	nbProcess = n;
 
-	LoadStatus *statusWindow = NULL;
-	statusWindow = new LoadStatus(this);
-	bool result = Wait(PROCESS_READY, statusWindow);
+	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
+	bool result = Wait(PROCESS_READY, mApp->loadStatus);
 	//IVALIDATE_DLG(statusWindow);
-	SAFE_DELETE(statusWindow);
+	//SAFE_DELETE(statusWindow);
 	if( !result )
 		ThrowSubProcError("Sub process(es) starting failure");
 }
@@ -568,3 +569,19 @@ void Worker::Update(float appTime) {
 	}
 }
 
+void Worker::GetProcStatus(int *states, std::vector<std::string>& statusStrings) {
+
+	if (nbProcess == 0) return;
+
+	AccessDataport(dpControl);
+	SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+	memcpy(states, shMaster->states, MAX_PROCESS * sizeof(int));
+	for (size_t i = 0; i < MAX_PROCESS; i++) {
+		char tmp[128];
+		strncpy(tmp, shMaster->statusStr[i], 127);
+		tmp[127] = 0;
+		statusStrings[i] = tmp;
+	}
+	ReleaseDataport(dpControl);
+
+}

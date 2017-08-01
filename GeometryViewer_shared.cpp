@@ -138,6 +138,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	facetSearchState->SetVisible(false);
 	Add(facetSearchState);
 
+	//debugLabel = new GLLabel("Debug");
+	//Add(debugLabel);
+
 	frontBtn = new GLButton(0, "Front");
 	frontBtn->SetToggle(true);
 	Add(frontBtn);
@@ -1354,6 +1357,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 	if (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEBUTTONDBLCLICK) {
 		mXOrg = mX;
 		mYOrg = mY;
+
 		if (evt->button.button == SDL_BUTTON_LEFT) {
 			// Selection dragging
 			selX1 = selX2 = mX;
@@ -1402,10 +1406,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
+
 		UpdateMouseCursor(mode);
 	}
 
 	if (evt->type == SDL_MOUSEBUTTONUP) {
+
 		switch (draggMode) {
 
 		case DRAGG_SELECT:
@@ -1481,6 +1487,14 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 	if (evt->type == SDL_MOUSEMOTION) {
 
+		/*
+		//debug
+		std::stringstream tmp;
+		tmp << "MxOrg:" << mXOrg << " MyOrg:" << mYOrg << "Mx:" << mX << " My:" << mY << " SelX1:" << selX1 << " SelY1:" << selY1 << " SelX2:" << selX2 << " SelY2:" << selY2 << "type=mousemotion, mode="<<draggMode<<"\n"
+			<< " ALT=" << GetWindow()->IsAltDown() << " CTRL="<<GetWindow()->IsCtrlDown()  << " SHIFT=" << GetWindow()->IsShiftDown() << " CAPS=" << GetWindow()->IsCapsLockOn() << " SPC=" << GetWindow()->IsSpaceDown()<<" modstate="<<GetWindow()->GetModState();
+		debugLabel->SetText(tmp.str());
+		*/
+
 		int diffX = (mX - mXOrg);
 		int diffY = (mY - mYOrg);
 		mXOrg = mX;
@@ -1498,14 +1512,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		case DRAGG_SELECTVERTEX:
 		case DRAGG_SELECT:
+		{
 
-
-			// Selection rectangle
-			/*if( GetWindow()->IsAltDown() ) {
-				draggMode=DRAGG_MOVE;
-			}
-
-			else{*/
+			
 			if (GetWindow()->IsSpaceDown()) { //Move origin
 				selX1 += diffX;
 				selX2 += diffX;
@@ -1513,13 +1522,10 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				selY2 += diffY;
 			}
 			else {
-				//selX2 = mX;
-				//selY2 = mY;
-
-				selX2 += diffX;
-				selY2 += diffY;
+				selX2 = mX;
+				selY2 = mY;
 			}
-			//}
+		}
 			break;
 
 		case DRAGG_MOVE:

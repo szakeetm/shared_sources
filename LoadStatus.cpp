@@ -47,8 +47,6 @@ static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 LoadStatus::LoadStatus(Worker* w):GLWindow() {
 
 	worker = w;
-	int wD = 450;
-	int hD = 100+(int)worker->GetProcNumber()*15;
 
 	SetTitle("Waiting for subprocesses...");
 	SetIconfiable(true);
@@ -56,26 +54,33 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	processList = new GLList(0);
 	processList->SetHScrollVisible(false);
 	processList->SetVScrollVisible(false);
-	processList->SetSize(5,worker->GetProcNumber()+1);
-	processList->SetColumnWidths((int*)plWidth);
-	processList->SetColumnLabels((char **)plName);
-	processList->SetColumnAligns((int *)plAligns);
 	processList->SetColumnLabelVisible(true);
-	processList->SetBounds(7,8,wD-17,hD-55);
 	Add(processList);
 
 	cancelButton = new GLButton(0,"Stop waiting");
-	cancelButton->SetBounds(wD/2-45,hD-43,90,19);
 	Add(cancelButton);
 
-	// Place dialog lower right
-	int wS,hS;
-	GLToolkit::GetScreenSize(&wS,&hS);
-	int xD = wS-wD-215;
-	int yD = hS-hD-30;
-	SetBounds(xD,yD,wD,hD);
+	RefreshNbProcess(); //Determines size, position and processList nbRows, position and cancelButton position
 
 	RestoreDeviceObjects();
+}
+
+void LoadStatus::RefreshNbProcess()
+{
+	int wD = 450;
+	int hD = 100 + (int)worker->GetProcNumber() * 15;
+	processList->SetSize(3, worker->GetProcNumber() + 1);
+	processList->SetColumnWidths((int*)plWidth);
+	processList->SetColumnLabels((char **)plName);
+	processList->SetColumnAligns((int *)plAligns);
+	processList->SetBounds(7, 8, wD - 17, hD - 55);
+	cancelButton->SetBounds(wD / 2 - 45, hD - 43, 90, 19);
+	// Place dialog lower right
+	int wS, hS;
+	GLToolkit::GetScreenSize(&wS, &hS);
+	int xD = wS - wD - 215;
+	int yD = hS - hD - 30;
+	SetBounds(xD, yD, wD, hD);
 }
 
 LoadStatus::~LoadStatus()
@@ -84,14 +89,14 @@ LoadStatus::~LoadStatus()
 }
 
 void LoadStatus::SMPUpdate() {
-
+	
 		char tmp[512];
 		PROCESS_INFO pInfo;
 		int  states[MAX_PROCESS];
-		char statusStr[MAX_PROCESS][64];
+		std::vector<std::string> statusStrings(MAX_PROCESS);
 
 		memset(states,0,MAX_PROCESS*sizeof(int));
-		worker->GetProcStatus(states,(char **)statusStr);
+		worker->GetProcStatus(states,statusStrings);
 
 		processList->ResetValues();
 
@@ -102,6 +107,7 @@ void LoadStatus::SMPUpdate() {
 		sprintf(tmp, "%.0f MB", (double)pInfo.mem_use/(1024.0*1024.0));
 		processList->SetValueAt(1, 0, tmp);
 
+		
 		for(size_t i=0;i<worker->GetProcNumber();i++) {
 			DWORD pid = worker->GetPID(i);
 			sprintf(tmp,"Subproc.%zd",i+1);
@@ -113,12 +119,8 @@ void LoadStatus::SMPUpdate() {
 				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
 				processList->SetValueAt(1, i+1, tmp);
 				// State/Status
-				_snprintf(tmp,127,"%s: %s",prStates[states[i]],statusStr[i]);
-
-				//if (states[i] == PROCESS_ERROR) processList->SetFontColor(255, 0, 0);
-				//else if (states[i] == PROCESS_READY) processList->SetFontColor(0, 150, 0);
+				strncpy(tmp, statusStrings[i].c_str(), 127); tmp[127] = 0;
 				processList->SetValueAt(2,i+1,tmp);
-				//processList->SetFontColor(0, 0, 0);
 
 			}
 		}

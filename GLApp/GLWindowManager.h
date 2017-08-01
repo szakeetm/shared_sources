@@ -53,6 +53,7 @@ public:
   static bool      IsAltDown();
   static bool      IsCapsLockOn();
   static bool      IsSpaceDown();
+  static int	GetModState();
 
   // Registering
   static void RegisterWindow(GLWindow *wnd);

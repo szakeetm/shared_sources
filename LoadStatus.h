@@ -30,6 +30,7 @@ public:
 
   // Construction
   LoadStatus(Worker *w);
+  void RefreshNbProcess();
   ~LoadStatus();
   void SMPUpdate();
 

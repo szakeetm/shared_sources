@@ -286,6 +286,10 @@ bool GLWindow::IsCapsLockOn() {
   return GLWindowManager::IsCapsLockOn();
 }
 
+int GLWindow::GetModState() {
+	return GLWindowManager::GetModState();
+}
+
 // ---------------------------------------------------------------
 
 int GLWindow::GetUpMargin() {

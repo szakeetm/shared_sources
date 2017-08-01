@@ -215,8 +215,8 @@ public:
 	llong    lastNbDes;    // measurement
 	llong    nbDesStart;   // measurement
 	llong    nbHitStart;   // measurement
-	int      nbProc;       // Temporary var (use Worker::GetProcNumber)
-	int      numCPU;
+	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
+	size_t      numCPU;
 	float    lastAppTime;
 	bool     antiAliasing;
 	bool     whiteBg;

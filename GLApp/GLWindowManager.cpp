@@ -21,6 +21,7 @@
 #include "MathTools.h" //Saturate
 #include "GLApp.h"
 #include "GLWindow.h"
+#include <sstream>
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -554,6 +555,11 @@ bool GLWindowManager::IsCapsLockOn() {
  return (modState & CAPSLOCK_MODIFIER)!=0;
 }
 
+int GLWindowManager::GetModState() {
+	return modState;
+}
+
+
 // ---------------------------------------------------------------
 
 bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
@@ -563,6 +569,8 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
   // Handle key modifier
   int unicode = (evt->key.keysym.unicode & 0x7F);
   if( !unicode ) unicode = evt->key.keysym.sym;
+  
+  std::ostringstream tmp; tmp << "\nevt->type="<<(int)(evt->type)<<" unicode:" << evt->key.keysym.unicode << " keysim.sim:" << evt->key.keysym.sym << "    unicode & 0x7F:" << (evt->key.keysym.unicode & 0x7F) << " chosen:" << unicode; OutputDebugStringA(tmp.str().c_str());
 
   if( evt->type == SDL_KEYDOWN )
   {
@@ -577,10 +585,11 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 	
 	if( unicode == SDLK_CAPSLOCK)
       modState |= CAPSLOCK_MODIFIER;
-
 	
-	if( unicode == SDLK_SPACE)
-      modState |= SPACE_MODIFIER;
+	if (unicode == SDLK_SPACE) {
+		modState |= SPACE_MODIFIER;
+		//OutputDebugStringA("\nSpace on");
+	}
   }
 
   if( evt->type == SDL_KEYUP )
@@ -603,8 +612,10 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 	if (unicode == SDLK_CAPSLOCK)
       modState &= capsLockMask;
 
-	if (unicode == SDLK_SPACE)
+	if (unicode == SDLK_SPACE) {
 		modState &= spaceMask;
+		//OutputDebugStringA("\nSpace off");
+	}
   }
 
   // Process
@@ -667,6 +678,7 @@ bool GLWindowManager::ManageEvent(SDL_Event *evt) {
       return true;
     }
   }
+  
 
   // Searh for dragged window
   bool draggFound = false;
