@@ -381,7 +381,7 @@ void GLApplication::Run() {
   m_fTime        = 0.0f;
   //m_fElapsedTime = 0.0f;
   m_fFPS         = 0.0f;
-  fMoveTime = 
+  fMoveTime =			
 	  fPaintTime = 0.0;
   nbFrame        = 0;
   nbEvent        = 0;
@@ -401,7 +401,7 @@ void GLApplication::Run() {
 
   mApp->CheckForRecovery();
   wereEvents = false;
-
+				
   //Wait for user exit
   while( !quit )
   {

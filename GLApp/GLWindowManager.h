@@ -27,6 +27,7 @@
 #define SHIFT_MODIFIER 4
 #define CAPSLOCK_MODIFIER 8
 #define SPACE_MODIFIER 16
+#define TAB_MODIFIER 32
 
 class GLWindow;
 class GLComponent;
@@ -53,6 +54,7 @@ public:
   static bool      IsAltDown();
   static bool      IsCapsLockOn();
   static bool      IsSpaceDown();
+  static bool		IsTabDown();
   static int	GetModState();
 
   // Registering

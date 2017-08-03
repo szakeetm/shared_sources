@@ -549,6 +549,10 @@ bool GLWindowManager::IsAltDown() {
 bool GLWindowManager::IsSpaceDown() {
   return (modState & SPACE_MODIFIER)!=0;
 }
+
+bool GLWindowManager::IsTabDown() {
+  return (modState & TAB_MODIFIER)!=0;
+}
 // ---------------------------------------------------------------
 
 bool GLWindowManager::IsCapsLockOn() {
@@ -577,17 +581,22 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
     if( unicode == SDLK_LCTRL ||  unicode == SDLK_RCTRL )
       modState |= CTRL_MODIFIER;
 
-    if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
+    else if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
       modState |= SHIFT_MODIFIER;
 
-    if( unicode == SDLK_RALT || unicode == SDLK_LALT )
+    else if( unicode == SDLK_RALT || unicode == SDLK_LALT )
       modState |= ALT_MODIFIER;
 	
-	if( unicode == SDLK_CAPSLOCK)
+	else if( unicode == SDLK_CAPSLOCK)
       modState |= CAPSLOCK_MODIFIER;
 	
-	if (unicode == SDLK_SPACE) {
+	else if (unicode == SDLK_SPACE) {
 		modState |= SPACE_MODIFIER;
+		//OutputDebugStringA("\nSpace on");
+	}
+
+	else if (unicode == SDLK_TAB) {
+		modState |= TAB_MODIFIER;
 		//OutputDebugStringA("\nSpace on");
 	}
   }
@@ -599,21 +608,27 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
     int shiftMask = SHIFT_MODIFIER;shiftMask = ~shiftMask;
 	int capsLockMask = CAPSLOCK_MODIFIER;capsLockMask = ~capsLockMask;
 	int spaceMask = SPACE_MODIFIER;spaceMask = ~spaceMask;
+	int tabMask = TAB_MODIFIER;tabMask = ~tabMask;
 
     if( unicode == SDLK_LCTRL ||  unicode == SDLK_RCTRL )
       modState &= ctrlMask;
 
-    if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
+    else if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
       modState &= shiftMask;
 
-    if( unicode == SDLK_RALT || unicode == SDLK_LALT )
+    else if( unicode == SDLK_RALT || unicode == SDLK_LALT )
       modState &= altMask;
 
-	if (unicode == SDLK_CAPSLOCK)
+	else if (unicode == SDLK_CAPSLOCK)
       modState &= capsLockMask;
 
-	if (unicode == SDLK_SPACE) {
+	else if (unicode == SDLK_SPACE) {
 		modState &= spaceMask;
+		//OutputDebugStringA("\nSpace off");
+	}
+
+	else if (unicode == SDLK_TAB) {
+		modState &= tabMask;
 		//OutputDebugStringA("\nSpace off");
 	}
   }

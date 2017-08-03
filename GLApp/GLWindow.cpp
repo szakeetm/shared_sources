@@ -286,6 +286,10 @@ bool GLWindow::IsCapsLockOn() {
   return GLWindowManager::IsCapsLockOn();
 }
 
+bool GLWindow::IsTabDown() {
+  return GLWindowManager::IsTabDown();
+}
+
 int GLWindow::GetModState() {
 	return GLWindowManager::GetModState();
 }

@@ -266,68 +266,67 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 	this->mode = mode;
 
-	if (parent) {
+	if (!parent) return;
 
-		if (!((draggMode == DRAGG_ROTATE) || (draggMode == DRAGG_MOVE))) {
-			switch (mode) {
+	if (draggMode == DRAGG_ROTATE) {
+		SetCursor(CURSOR_ROTATE);
+	}
+	else if (draggMode == DRAGG_MOVE) {
+		SetCursor(CURSOR_HAND);
+	}
+	else {
+		if ((mode == MODE_SELECT && !GetWindow()->IsTabDown()) || (mode == MODE_SELECTVERTEX && GetWindow()->IsTabDown())) {
+			if (GetWindow()->IsCtrlDown()) {
+				SetCursor(CURSOR_SELDEL);
+			}
+			else if (GetWindow()->IsShiftDown()) {
+				SetCursor(CURSOR_SELADD);
+			}
+			/*else if (GetWindow()->IsAltDown()) {
+				SetCursor(CURSOR_HAND);
+			}*/ //Disabling ALT-zoom for circular selection
+			else {
+				SetCursor(CURSOR_DEFAULT);
+			}
 
-			case MODE_SELECT:
-				if (GetWindow()->IsCtrlDown()) {
-					SetCursor(CURSOR_SELDEL);
-				}
-				else if (GetWindow()->IsShiftDown()) {
-					SetCursor(CURSOR_SELADD);
-				}
-				/*else if (GetWindow()->IsAltDown()) {
-					SetCursor(CURSOR_HAND);
-				}*/ //Disabling ALT-zoom for circular selection
-				else {
-					SetCursor(CURSOR_DEFAULT);
-				}
+		}
 
-				break;
+		else if ((mode == MODE_SELECTVERTEX && !GetWindow()->IsTabDown()) || (mode == MODE_SELECT && GetWindow()->IsTabDown())) {
+			if (GetWindow()->IsCtrlDown()) {
+				SetCursor(CURSOR_VERTEX_CLR);
+			}
+			else if (GetWindow()->IsShiftDown()) {
+				SetCursor(CURSOR_VERTEX_ADD);
+			}
+			/*else if (GetWindow()->IsAltDown()) {
+				SetCursor(CURSOR_HAND);
+			}*/ //Disabling ALT-zoom for circular selection
 
-			case MODE_SELECTVERTEX:
-				if (GetWindow()->IsCtrlDown()) {
-					SetCursor(CURSOR_VERTEX_CLR);
-				}
-				else if (GetWindow()->IsShiftDown()) {
-					SetCursor(CURSOR_VERTEX_ADD);
-				}
-				/*else if (GetWindow()->IsAltDown()) {
-					SetCursor(CURSOR_HAND);
-				}*/ //Disabling ALT-zoom for circular selection
+			else {
+				SetCursor(CURSOR_VERTEX);
+			}
 
-				else {
-					SetCursor(CURSOR_VERTEX);
-				}
-
-				break;
+		}
 
 #ifdef SYNRAD
-			case MODE_SELECTTRAJ:
-				if (GetWindow()->IsAltDown()) {
-					SetCursor(CURSOR_HAND);
-				}
-				else {
-					SetCursor(CURSOR_TRAJ);
-				}
+		else if (mode == MODE_SELECTTRAJ) {
+			if (GetWindow()->IsAltDown()) {
+				SetCursor(CURSOR_HAND);
+			}
+			else {
+				SetCursor(CURSOR_TRAJ);
+			}
 
-				break;
+			break;
+		}
 #endif
 
-			case MODE_ZOOM:
-				SetCursor(CURSOR_ZOOM);
-				break;
-			case MODE_MOVE:
-				SetCursor(CURSOR_HAND);
-
-				break;
-			}
+		else if (mode == MODE_ZOOM) {
+			SetCursor(CURSOR_ZOOM);
 		}
-		if (draggMode == DRAGG_ROTATE) SetCursor(CURSOR_ROTATE);
-		if (draggMode == DRAGG_MOVE) SetCursor(CURSOR_HAND);
-
+		else if (mode == MODE_MOVE) {
+			SetCursor(CURSOR_HAND);
+		}
 	}
 }
 
@@ -1302,12 +1301,15 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			UpdateMouseCursor(mode);
 		}
 
-		if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
+		else if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
 			//UpdateMouseCursor(MODE_SELECT);
 			UpdateMouseCursor(mode);
 		}
-		if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
+		else if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
 			//UpdateMouseCursor(MODE_SELECT);
+			UpdateMouseCursor(mode);
+		}
+		else if (unicode == SDLK_TAB) {
 			UpdateMouseCursor(mode);
 		}
 
@@ -1323,12 +1325,15 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			//UpdateMouseCursor(MODE_SELECT);
 			UpdateMouseCursor(mode);
 		}
-		if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
+		else if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
 			//UpdateMouseCursor(MODE_SELECT);
 			UpdateMouseCursor(mode);
 		}
-		if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
+		else if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
 			//UpdateMouseCursor(MODE_SELECT);
+			UpdateMouseCursor(mode);
+		}
+		else if (unicode == SDLK_TAB) {
 			UpdateMouseCursor(mode);
 		}
 
@@ -1362,8 +1367,15 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			// Selection dragging
 			selX1 = selX2 = mX;
 			selY1 = selY2 = mY;
-			if (mode == MODE_SELECT || mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
-			else if (mode == MODE_SELECTVERTEX) draggMode = DRAGG_SELECTVERTEX;
+			if (mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
+			else if (mode == MODE_SELECT) {
+				if (!GetWindow()->IsTabDown()) draggMode = DRAGG_SELECT;
+				else draggMode = DRAGG_SELECTVERTEX;
+			}
+			else if (mode == MODE_SELECTVERTEX) {
+				if (!GetWindow()->IsTabDown()) draggMode = DRAGG_SELECTVERTEX;
+				else draggMode = DRAGG_SELECT;
+			}
 #ifdef SYNRAD
 			else if (mode == MODE_SELECTTRAJ) draggMode = DRAGG_SELECTTRAJ;
 #endif
@@ -1421,13 +1433,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 #endif
 
 
-			switch (mode) {
-			case MODE_ZOOM:
+			if (mode == MODE_ZOOM) {
 				Zoom();
 				autoScaleOn = false;
 				autoBtn->SetState(false);
-				break;
-			case MODE_SELECT:
+			}
+			else if ((mode == MODE_SELECT && !GetWindow()->IsTabDown()) || (mode == MODE_SELECTVERTEX && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
@@ -1446,8 +1457,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					geom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 						!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
 				}
-				break;
-			case MODE_SELECTVERTEX:
+			}
+			else if ((mode == MODE_SELECTVERTEX && !GetWindow()->IsTabDown()) || (mode == MODE_SELECT && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
@@ -1464,9 +1475,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					geom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
 				}
-				break;
+			}
 #ifdef SYNRAD
-			case MODE_SELECTTRAJ:
+			else if (mode == MODE_SELECTTRAJ) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
@@ -1474,13 +1485,10 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glLoadMatrixf(matView);
 				for (size_t i = 0; i < work->regions.size(); i++)
 					work->regions[i].SelectTrajPoint(mX - posX, mY - posY, i);
-				break;
-#endif
 			}
-			break;
+#endif
 
 		}
-
 		draggMode = DRAGG_NONE;
 		UpdateMouseCursor(mode); //Sets cursor
 	}
