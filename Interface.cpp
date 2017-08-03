@@ -2119,6 +2119,7 @@ void Interface::RenumberFormulas(std::vector<int> *newRefs) {
 			f->Parse();
 		}
 	}
+	if (formulaEditor && formulaEditor->IsVisible()) formulaEditor->Refresh();
 }
 
 /*
@@ -2250,14 +2251,14 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 
 		vector<size_t> location; //for each prefix, we store where it was found
 
-		for (int j = 0; j < (int)formulaPrefixes.size(); j++) { //try all expressions
+		for (size_t j = 0; j < formulaPrefixes.size(); j++) { //try all expressions
 			location.push_back(newExpr.find(formulaPrefixes[j], pos));
 		}
 		size_t minPos = string::npos;
 		size_t maxLength = 0;
-		for (int j = 0; j < (int)formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
+		for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
 			if (location[j] < minPos) minPos = location[j];
-		for (int j = 0; j < (int)formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
+		for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
 			if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
 		int digitsLength = 0;
 		if (minPos != string::npos) { //found expression, let's find tailing facet number digits
@@ -2285,7 +2286,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 						}
 						else { //Update facet number
 							char tmp[10];
-							sprintf(tmp, "%d", (*newRefs)[facetNumber - 1]);
+							sprintf(tmp, "%d", (*newRefs)[facetNumber - 1]+1);
 							newExpr.replace(minPos + maxLength, digitsLength, tmp);
 							changed = true;
 						}

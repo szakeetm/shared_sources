@@ -1456,13 +1456,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				//selectionChange = true;
 				if (abs(selX1 - selX2) <= 1 && abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
-					geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown());
+					geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
 				}
 				else {
 					// Select region
 					geom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
-						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown());
+						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
 				}
 				break;
 #ifdef SYNRAD

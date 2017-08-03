@@ -199,14 +199,15 @@ public:
 	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
 	void SelectFacet(size_t facetId);
 	void SelectAllVertex();
-	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection);
-	void SelectVertex(int x, int y, bool shiftDown, bool ctrlDown);
+	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound);
+	void SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound);
 	void SelectVertex(int facet);
 	void UnselectAllVertex();
 	std::vector<size_t> GetSelectedVertices();
 	size_t  GetNbSelectedVertex();
 	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void ClearFacetTextures();
+	std::vector<bool> GetVertexBelongsToSelectedFacet();
 #pragma endregion
 
 #pragma region GeometryViewer_Shared.cpp

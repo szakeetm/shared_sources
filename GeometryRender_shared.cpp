@@ -288,7 +288,7 @@ void Geometry::SelectVertex(int vertexId) {
 	vertices3[vertexId].selected = true;
 }
 
-void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection) {
+void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound) {
 
 	// Select a set of vertices according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -325,9 +325,11 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 		//nbSelectedHistVertex = 0;
 	}
 
+	std::vector<bool> selectedFacetsVertices;
+	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
 	for (int i = 0; i < sh.nbVertex; i++) {
-
+		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
 		Vector3d *v = GetVertex(i);
 		//if(viewStruct==-1 || f->sh.superIdx==viewStruct) {
 		if (true) {
@@ -365,7 +367,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown) {
+void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound) {
 	int i;
 	if (!isLoaded) return;
 
@@ -377,16 +379,22 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown) {
 	int *allXe = (int *)malloc(sh.nbVertex * sizeof(int));
 	int *allYe = (int *)malloc(sh.nbVertex * sizeof(int));
 
+	std::vector<bool> selectedFacetsVertices;
+	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
+
 	// Transform points to screen coordinates
 	bool *ok = (bool *)malloc(sh.nbVertex * sizeof(bool));
-	for (i = 0; i < sh.nbVertex; i++)
+	for (i = 0; i < sh.nbVertex; i++) {
+		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
 		ok[i] = GLToolkit::Get2DScreenCoord((float)vertices3[i].x, (float)vertices3[i].y, (float)vertices3[i].z, allXe + i, allYe + i);
+	}
 
 	//Get Closest Point to click
 	double minDist = 9999;
 	double distance;
 	int minId = -1;
 	for (i = 0; i < sh.nbVertex; i++) {
+		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
 		if (ok[i] && !(allXe[i] < 0) && !(allYe[i] < 0)) { //calculate only for points on screen
 			distance = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
 			if (distance < minDist) {
@@ -1133,4 +1141,15 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	DELETE_LIST(selectList);
 	DELETE_LIST(selectList2);
 	DELETE_LIST(selectList3);
+}
+
+std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
+	std::vector<bool> result(sh.nbVertex, false);
+	std::vector<size_t> selFacetIds = GetSelectedFacets();
+	for (auto facetId : selFacetIds) {
+		Facet* f = facets[facetId];
+		for (size_t i = 0; i < f->sh.nbIndex; i++)
+			result[f->indices[i]] = true;
+	}
+	return result;
 }
