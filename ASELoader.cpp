@@ -25,9 +25,7 @@
 
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
 
-//-----------------------------------------------------------------------------
 // Construction
-//-----------------------------------------------------------------------------
 
 ASELoader::ASELoader(FileReader *f) {
 
@@ -371,11 +369,9 @@ void ASELoader::Load()
       CHECK_LEX(lex,OPEN_BLOCK);
       break;
 
-
     case CLOSE_BLOCK:
       //strcpy(cur_group,"none");
       break;
-
 
       //Geometry section
 
@@ -766,7 +762,6 @@ void ASELoader::Load()
       OBJ[nbObj].mat=-1;
       break;
 
-
     default:
       sprintf(err_str,"Unexpected keyword %s\n"
         "*GEOMOBJECT[%s] section\n"
@@ -845,7 +840,6 @@ void ASELoader::Load()
       */
     }
 
-
     if( OBJ[i].nb_map==0 ) {
       sprintf(tmp,"No mapping coordinate for %s",OBJ[i].name);
       MessageBox( NULL , tmp  ,
@@ -869,7 +863,6 @@ void ASELoader::Load()
       opt_point[3*j+2].x = OBJ[i].pts[OBJ[i].face[j].v3].x;
       opt_point[3*j+2].y = OBJ[i].pts[OBJ[i].face[j].v3].y;
       opt_point[3*j+2].z = OBJ[i].pts[OBJ[i].face[j].v3].z;
-
 
       // Normals
 
@@ -1001,14 +994,12 @@ void ASELoader::Load()
       ret_scn->obj[i].hp[j].tv = opt_point[k].v;
     }
 
-
     for(j=0;j<nb_opt_face;j++)
     {
       ret_scn->obj[i].ind[j*3+0]=(WORD)opt_face[j].v1;
       ret_scn->obj[i].ind[j*3+1]=(WORD)opt_face[j].v2;
       ret_scn->obj[i].ind[j*3+2]=(WORD)opt_face[j].v3;
     }
-
 
     // free data
 

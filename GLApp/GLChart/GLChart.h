@@ -22,8 +22,6 @@
 //#include "..\GLMenu.h"
 //#include "..\GLButton.h"
 
-
-
 class GLChart;
 class GLAxis;
 class SearchInfo;

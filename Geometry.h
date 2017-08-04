@@ -46,8 +46,6 @@ public:
 	size_t oriId;
 };
 
-
-
 class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad

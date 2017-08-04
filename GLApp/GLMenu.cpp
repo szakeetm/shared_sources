@@ -24,8 +24,6 @@
 
 #define SIDE_MARGIN 24
 
-// -----------------------------------------------------------
-
 GLMenu::GLMenu():GLComponent(0) {
   selMenu = -1;
   nbItem = 0;
@@ -41,8 +39,6 @@ GLMenu::GLMenu():GLComponent(0) {
   SetBackgroundColor(225,220,220);
 }
 
-// -----------------------------------------------------------
-
 GLMenu::~GLMenu() {
   for(int i=0;i<nbItem;i++) {
     if(!items[i].subMenu->GetParent())
@@ -51,8 +47,6 @@ GLMenu::~GLMenu() {
   }
   SAFE_FREE(items);
 }
-
-// -----------------------------------------------------------
 
 int GLMenu::GetMenu(int mx,int my) {
 
@@ -67,25 +61,17 @@ int GLMenu::GetMenu(int mx,int my) {
 
 }
 
-// -----------------------------------------------------------
-
 void GLMenu::SetParentMenuBar(GLMenuBar *p) {
   pBar = p;
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::SetParentMenu(GLMenu *p) {
   pMenu = p;
 }
 
-// -----------------------------------------------------------
-
 int GLMenu::GetNbItem() {
   return nbItem;
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::SetCheck(int itemId,bool checked) {
 
@@ -119,8 +105,6 @@ void  GLMenu::SetEnabled(int itemId,bool enabled) {
 
 }
 
-// -----------------------------------------------------------
-
 int GLMenu::GetMenu(int id) {
 
   bool found = false;
@@ -134,15 +118,10 @@ int GLMenu::GetMenu(int id) {
 
 }
 
-// -----------------------------------------------------------
-
 bool GLMenu::IsInItem(MENUITEM *p,int mx,int my) {
     return mx>(p->x) && mx<=(p->x)+width &&
            my>(p->y) && my<=(p->y)+(p->height);
 }
-
-
-// -----------------------------------------------------------
 
 void GLMenu::Clear() {
 
@@ -159,8 +138,6 @@ void GLMenu::Clear() {
   hasAcc = false;
 
 }
-
-// -----------------------------------------------------------
 
 GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
 
@@ -208,8 +185,6 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
   return items[i].subMenu;
 }
 
-// -----------------------------------------------------------
-
 GLMenu *GLMenu::GetSubMenu(char *itemName) {
 
   char tmpName[256];
@@ -231,8 +206,6 @@ GLMenu *GLMenu::GetSubMenu(char *itemName) {
 
 }
 
-// -----------------------------------------------------------
-
 bool GLMenu::HasSub(int s) {
   if(s>=0 && s<nbItem) {
     GLMenu *sub = items[s].subMenu;
@@ -240,8 +213,6 @@ bool GLMenu::HasSub(int s) {
   }
   return false;
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::ProcessMenuItem(int m) {
 
@@ -262,8 +233,6 @@ void GLMenu::ProcessMenuItem(int m) {
   }
 
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::ManageEvent(SDL_Event *evt) {
 
@@ -376,8 +345,6 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   }
 }
 
-// -----------------------------------------------------------
-
 void GLMenu::ProcessAcc(int accId) {
 
   if(accId>=nbItem) return;
@@ -391,8 +358,6 @@ void GLMenu::ProcessAcc(int accId) {
   }
 
 }
-
-// -----------------------------------------------------------
 
 bool GLMenu::ProcessShortcut(SDL_Event *evt) {
 
@@ -413,16 +378,12 @@ bool GLMenu::ProcessShortcut(SDL_Event *evt) {
 
 }
 
-// -----------------------------------------------------------
-
 void GLMenu::Close() {
 
   CloseSub();
   SetVisible(false);
 
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::Paint() {
 
@@ -522,8 +483,6 @@ void GLMenu::Paint() {
   GLToolkit::CheckGLErrors("GLMenu::Paint()");
 }
 
-// -----------------------------------------------------------
-
 void GLMenu::DropSub(int s) {
 
   CloseSub();
@@ -536,8 +495,6 @@ void GLMenu::DropSub(int s) {
 
 }
 
-// -----------------------------------------------------------
-
 void GLMenu::CloseSub(bool resetSel) {
 
   for(int i=0;i<nbItem;i++) {
@@ -547,7 +504,6 @@ void GLMenu::CloseSub(bool resetSel) {
   if(resetSel) selMenu = -1;
 
 }
-// -----------------------------------------------------------
 
 int GLMenu::Track(GLWindow *parent,int x,int y) {
 
@@ -614,8 +570,6 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
   return rCode;
 
 }
-
-// -----------------------------------------------------------
 
 void GLMenu::Drop(GLContainer *parent,int x,int y) {
   

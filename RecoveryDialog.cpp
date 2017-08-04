@@ -92,8 +92,6 @@ RecoveryDialog::RecoveryDialog(const char *message, char *title, int mode, int i
 
 }
 
-// -------------------------------------------------
-
 void RecoveryDialog::ProcessMessage(GLComponent *src, int message) {
   if(message==MSG_BUTTON) {
     rCode = src->GetId();
@@ -102,8 +100,6 @@ void RecoveryDialog::ProcessMessage(GLComponent *src, int message) {
   }
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 int RecoveryDialog::Display(const char *message, char *title, int mode, int icon) {
 

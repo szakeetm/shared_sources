@@ -19,7 +19,6 @@
 //#include <SDL_opengl.h>
 #include "GLApp/GLWindow.h"
 
-
 // Buttons
 #define GLDLG_LOAD		0x0001
 #define GLDLG_SKIP		0x0002

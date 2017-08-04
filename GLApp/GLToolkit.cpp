@@ -76,19 +76,13 @@ static char *logs[MAX_LOG];
 
 extern GLApplication *theApp;
 
-// ---------------------------------------------------------------------
-
 GLFont2D *GLToolkit::GetDialogFont() {
   return dlgFont;
 }
 
-// ---------------------------------------------------------------------
-
 GLFont2D *GLToolkit::GetDialogFontBold() {
   return dlgFontB;
 }
-
-// ---------------------------------------------------------------------
 
 void GLToolkit::InvalidateDeviceObjects() {
 
@@ -107,13 +101,9 @@ void GLToolkit::InvalidateDeviceObjects() {
 
 }
 
-// ---------------------------------------------------------------
-
 int GLToolkit::GetCursor() {
   return currentCursor;
 }
-
-// ---------------------------------------------------------------
 
 void GLToolkit::SetCursor(int cursor) {
 
@@ -177,8 +167,6 @@ void GLToolkit::SetCursor(int cursor) {
 
 }
 
-// ---------------------------------------------------------------------
-
 SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
 
   int i, row, col;
@@ -218,10 +206,7 @@ SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
     return NULL;
   }
 
-
 }
-
-// ---------------------------------------------------------------------
 
 void GLToolkit::SetIcon32x32(char *pngName) {
 
@@ -236,8 +221,6 @@ void GLToolkit::SetIcon32x32(char *pngName) {
   }
 
 }
-
-// ---------------------------------------------------------------------
 
 bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
 
@@ -283,8 +266,6 @@ bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLToolkit::Log(char *message) {
 
   if( nbLog < MAX_LOG ) {
@@ -294,8 +275,6 @@ void GLToolkit::Log(char *message) {
   }
 
 }
-
-// ---------------------------------------------------------------------
 
 char *GLToolkit::GetLogs() {
 
@@ -322,20 +301,14 @@ void GLToolkit::ClearLogs() {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLToolkit::GetScreenSize(int *width,int *height) {
   *width = scrWidth;
   *height = scrHeight;
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::SetViewport(const GLVIEWPORT &v) {
   GLToolkit::SetViewport(v.x,v.y,v.width,v.height);
 }
-
-// ---------------------------------------------------------------
 
 void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int &height) {
 
@@ -344,8 +317,6 @@ void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int
   glViewport(vx,vy,width,height);
 
 }
-
-// ---------------------------------------------------------------
 
 #define TW 256.0f
 
@@ -373,8 +344,6 @@ void GLToolkit::DrawButtonBack(const int &x,const int &y,const int &width,const 
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawTinyButton(int x,int y,int state) {
 
   if( !state ) compTex->SetColor(1.0f,1.0f,1.0f);
@@ -385,9 +354,6 @@ void GLToolkit::DrawTinyButton(int x,int y,int state) {
   compTex->Render(false);
 
 }
-
-// ---------------------------------------------------------------
-
 
 void GLToolkit::DrawSmallButton(int x,int y,int state) {
 
@@ -400,8 +366,6 @@ void GLToolkit::DrawSmallButton(int x,int y,int state) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawToggle(int x,int y) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
@@ -411,8 +375,6 @@ void GLToolkit::DrawToggle(int x,int y) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawBar(int x,int y,int width,int height) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
@@ -421,8 +383,6 @@ void GLToolkit::DrawBar(int x,int y,int width,int height) {
   compTex->Render(false);
 
 }
-
-// ---------------------------------------------------------------
 
 void GLToolkit::DrawTextBack(const int &x,const int &y,const int &width,const int &height,
 							 const int &rBack, const int &gBack, const int &bBack) {
@@ -448,8 +408,6 @@ void GLToolkit::DrawTextBack(const int &x,const int &y,const int &width,const in
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawVGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
@@ -463,8 +421,6 @@ void GLToolkit::DrawVGradientBox(int x,int y,int width,int height,bool shadow,bo
   DrawBorder(x,y,width,height,shadow,iShadow,isEtched);
 
 }
-
-// ---------------------------------------------------------------
 
 void GLToolkit::DrawHGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
@@ -584,8 +540,6 @@ void GLToolkit::DrawVScroll(int x,int y,int width,int height,int state) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawHIGradientBox(int x,int y,int width,int height,bool shadow,bool iShadow,bool isEtched) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
@@ -600,8 +554,6 @@ void GLToolkit::DrawHIGradientBox(int x,int y,int width,int height,bool shadow,b
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::Draw16x16(int x,int y,int xt,int yt) {
 
   compTex->SetColor(1.0f,1.0f,1.0f);
@@ -611,8 +563,6 @@ void GLToolkit::Draw16x16(int x,int y,int xt,int yt) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLToolkit::DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer) {
 
   glDisable(GL_TEXTURE_2D);
@@ -621,8 +571,6 @@ void GLToolkit::DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer) {
   glDrawPixels(width,height,GL_LUMINANCE_ALPHA,GL_UNSIGNED_BYTE,buffer);
 
 }
-
-// ---------------------------------------------------------------------
 
 void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
 						   const int &height,const bool &shadow,const bool &iShadow,const bool &isEtched) {
@@ -726,10 +674,7 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
 
   }
 
-
 }
-
-// ---------------------------------------------------------------------
 
 void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &height,
 	  const int &r,const int &g,const int &b,const bool &shadow,const bool &iShadow,
@@ -763,8 +708,6 @@ void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &he
   DrawBorder(x,y,width,height,shadow,iShadow,isEtched);
 
 }
-
-// -------------------------------------------
 
 void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
                          int nbPoint,int *pointX,int *pointY) {
@@ -816,8 +759,6 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
 
 }
 
-// -------------------------------------------
-
 bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts) {
 
    // Fast method to check if a point is inside a polygon or not.
@@ -862,9 +803,6 @@ bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,c
 
 }
 
-
-// -------------------------------------------
-
 bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
 
   GLfloat mProj[16];
@@ -890,8 +828,6 @@ bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
 
 }
 
-// -------------------------------------------
-
 float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,double nz) {
 
   GLfloat mView[16];
@@ -906,8 +842,6 @@ float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,do
 
 }
 
-// -------------------------------------------
-
 float GLToolkit::GetCamDistance(GLfloat *mView,double x,double y,double z) {
 
   float rx,ry,rz,rw;
@@ -917,7 +851,6 @@ float GLToolkit::GetCamDistance(GLfloat *mView,double x,double y,double z) {
 
 }
 
-// -------------------------------------------
 static GLMatrix   dsm;
 static GLfloat    dsmProj[16];
 static GLfloat    dsmView[16];
@@ -968,8 +901,6 @@ void GLToolkit::DrawStringRestore() {
 
 }
 
-// -------------------------------------------
-
 void GLToolkit::DrawRule(double length,bool invertX,bool invertY,bool invertZ,double n) {
 
   DrawVector(0.0,0.0,0.0,(invertX)?-length:length,0.0,0.0,n);
@@ -981,8 +912,6 @@ void GLToolkit::DrawRule(double length,bool invertX,bool invertY,bool invertZ,do
   glEnd();
 
 }
-
-// -------------------------------------------
 
 void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2,double nr) {
 
@@ -1034,8 +963,6 @@ void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,dou
 
 }
 
-// -------------------------------------------
-
 void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar) {
 
   // Create and load a left handed proj matrix
@@ -1052,8 +979,6 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
   glLoadMatrixf(mProj);
 
 }
-
-// -------------------------------------------
 
 void GLToolkit::LookAtLH(double xEye,double yEye,double zEye,
                              double xAt,double yAt,double zAt,
@@ -1095,8 +1020,6 @@ void GLToolkit::LookAtLH(double xEye,double yEye,double zEye,
                              
 }
 
-// -------------------------------------------
-
 void GLToolkit::SetMaterial(GLMATERIAL *mat) {
 
   float acolor[] = { mat->Ambient.r, mat->Ambient.g, mat->Ambient.b, mat->Ambient.a };
@@ -1111,8 +1034,6 @@ void GLToolkit::SetMaterial(GLMATERIAL *mat) {
   glColor4f(mat->Ambient.r, mat->Ambient.g, mat->Ambient.b, mat->Ambient.a);
 
 }
-
-// -------------------------------------------
 
 void GLToolkit::printGlError(GLenum glError) {
 

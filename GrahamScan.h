@@ -32,12 +32,9 @@ using namespace std;
 //--------------------GRpoint DATA STRUCTURE---------------------------
 class GRpoint;
 
-
 //--------------------GLOBAL VARIABLES---------------------------
 const int NumPoints = 15; // n<1000
 //SDL_Surface *screen; //GLOBAL SDL GRAPHICS SURFACE POINTER
-
-
 
 //--------------------GRAHAM'S SCAN FUNCTIONS---------------------------
 void grahamInit(); //INITIALIZE VARIABLES, RANDOMLY GENERATE POINTS,

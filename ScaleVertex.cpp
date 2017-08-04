@@ -3,7 +3,6 @@ File:        ScaleVertex.cpp
 Description: Mirror facet to plane dialog
 Program:     MolFlow
 
-
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -37,7 +36,6 @@ GNU General Public License for more details.
 #include "Geometry.h"
 #include "Worker.h"
 
-
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -45,8 +43,6 @@ GNU General Public License for more details.
 #ifdef SYNRAD
 #include "SynRad.h"
 #endif
-
-
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -202,7 +198,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 	int vertexNum;
 
 	switch (message) {
-		// -------------------------------------------------------------
+		
 	case MSG_TOGGLE:
 		UpdateToggle(src);
 		break;

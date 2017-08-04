@@ -18,8 +18,6 @@
 #include "GLComponent.h"
 #include "GLToolkit.h"
 
-// ----------------------------------------------------------
-
 GLComponent::GLComponent(int compId):GLContainer() {
 
   width=0;
@@ -41,8 +39,6 @@ GLComponent::GLComponent(int compId):GLContainer() {
 
 }
 
-// ----------------------------------------------------------
-
 int GLComponent::GetWidth() {
   return width;
 }
@@ -51,8 +47,6 @@ int GLComponent::GetHeight() {
   return height;
 }
 
-// ----------------------------------------------------------
-
 void GLComponent::SetParent(GLContainer *parent) {
 
   this->parent =parent;
@@ -60,18 +54,14 @@ void GLComponent::SetParent(GLContainer *parent) {
 
 }
 
-// ----------------------------------------------------------
-
 GLContainer *GLComponent::GetParent() {
   return parent;
 }
 
-// ----------------------------------------------------------
 void GLComponent::SetCursor(int cursor) {
   this->cursor = cursor;
 }
 
-// ----------------------------------------------------------
 int GLComponent::GetCursor() {
   if( enabled )
     return cursor;
@@ -79,7 +69,6 @@ int GLComponent::GetCursor() {
     return CURSOR_DEFAULT;
 }
 
-// ----------------------------------------------------------
 void GLComponent::SetFocusable(bool acceptFocus) {
   focusable = acceptFocus;
 }
@@ -151,10 +140,6 @@ bool GLComponent::IsVisible() {
   return visible;
 }
 
-
-
-// ----------------------------------------------------------
-
 void GLComponent::Paint() {
 	
   // Paint background
@@ -175,8 +160,6 @@ void GLComponent::Paint() {
     }
   }
 }
-
-// ---------------------------------------------------------------
 
 void GLComponent::GetBounds(int *x,int *y, int *w, int *h) {
   *x = posX;

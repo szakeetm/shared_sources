@@ -3,7 +3,6 @@
   Description: Mirror/project facet to plane dialog
   Program:     SynRad
 
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -182,7 +181,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 	int facetNum;
 
 	switch (message) {
-		// -------------------------------------------------------------
+		
 	case MSG_TOGGLE:
 		UpdateToggle(src);
 		break;

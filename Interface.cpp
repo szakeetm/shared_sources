@@ -260,10 +260,9 @@ void Interface::UpdateTitle() {
 
 }
 
-//-----------------------------------------------------------------------------
 // Name: FormatInt()
 // Desc: Format an integer in K,M,G,..
-//-----------------------------------------------------------------------------
+
 char* Interface::FormatInt(llong v, char *unit)
 {
 
@@ -290,10 +289,9 @@ char* Interface::FormatInt(llong v, char *unit)
 
 }
 
-//-----------------------------------------------------------------------------
 // Name: FormatPS()
 // Desc: Format a double in K,M,G,.. per sec
-//-----------------------------------------------------------------------------
+
 char *Interface::FormatPS(double v, char *unit)
 {
 
@@ -315,10 +313,9 @@ char *Interface::FormatPS(double v, char *unit)
 
 }
 
-//-----------------------------------------------------------------------------
 // Name: FormatSize()
 // Desc: Format a double in K,M,G,.. per sec
-//-----------------------------------------------------------------------------
+
 char *Interface::FormatSize(DWORD size)
 {
 
@@ -340,10 +337,9 @@ char *Interface::FormatSize(DWORD size)
 
 }
 
-//-----------------------------------------------------------------------------
 // Name: FormatTime()
 // Desc: Format time in HH:MM:SS
-//-----------------------------------------------------------------------------
+
 char* Interface::FormatTime(float t) {
 	static char ret[64];
 	int nbSec = (int)(t + 0.5f);
@@ -414,7 +410,6 @@ void Interface::SaveSelection() {
 
 		try {
 
-
 			char *ext = fn->fullName + strlen(fn->fullName) - 4;
 
 			if (!(*ext == '.')) {
@@ -478,10 +473,9 @@ void Interface::ExportSelection() {
 	SAFE_DELETE(progressDlg2);
 }
 
-//-----------------------------------------------------------------------------
 // Name: UpdateModelParams()
 // Desc: Update displayed model parameter on geometry ghange
-//-----------------------------------------------------------------------------
+
 void Interface::UpdateModelParams() {
 
 	Geometry *geom = worker.GetGeometry();
@@ -505,10 +499,6 @@ void Interface::UpdateModelParams() {
 
 }
 
-
-
-
-
 void Interface::AnimateViewerChange(int next) {
 
 	double xs1, ys1, xs2, ys2;
@@ -526,7 +516,6 @@ void Interface::AnimateViewerChange(int next) {
 	viewer[1]->SetBounds(6 + Width2, 3, Width2, Height2);
 	viewer[2]->SetBounds(3, 6 + Height2, Width2, Height2);
 	viewer[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
-
 
 	if (modeSolo) {
 
@@ -703,8 +692,6 @@ int Interface::OnExit() {
 	return GL_OK;
 }
 
-
-
 int Interface::OneTimeSceneInit_shared() {
 	GLToolkit::SetIcon32x32("images/app_icon.png");
 
@@ -778,7 +765,6 @@ int Interface::OneTimeSceneInit_shared() {
 	clearSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Clear memorized");
 	clearSelectionsMenu->Add("Clear All", MENU_SELECTION_CLEARALL);
 	clearSelectionsMenu->Add(NULL); // Separator
-
 
 	menu->Add("Tools");
 
@@ -1008,8 +994,6 @@ int Interface::OneTimeSceneInit_shared() {
 
 	return GL_OK;
 }
-
-
 
 int Interface::RestoreDeviceObjects_shared() {
 	Geometry *geom = worker.GetGeometry();
@@ -1304,7 +1288,6 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
 			return true;
-
 
 		case MENU_FACET_SELECTERR:
 			geom->UnselectAll();
@@ -1799,13 +1782,10 @@ void Interface::CheckNeedsTexture()
 }
 
 //SELECTIONS
-//-----------------------------------------------------------------------------
 
 void Interface::SelectView(int v) {
 	viewer[curViewer]->SetCurrentView(views[v]);
 }
-
-//-----------------------------------------------------------------------------
 
 void Interface::SelectSelection(size_t v) {
 	Geometry *geom = worker.GetGeometry();
@@ -1813,7 +1793,6 @@ void Interface::SelectSelection(size_t v) {
 	idSelection = v;
 }
 
-//-----------------------------------------------------------------------------
 void Interface::ClearSelectionMenus() {
 	memorizeSelectionsMenu->Clear();
 	memorizeSelectionsMenu->Add("Add new...", MENU_SELECTION_ADDNEW, SDLK_w, CTRL_MODIFIER);
@@ -1882,7 +1861,7 @@ void Interface::AddSelection() {
 }
 
 //VIEWS
-//-----------------------------------------------------------------------------
+
 void Interface::ClearViewMenus() {
 	memorizeViewsMenu->Clear();
 	memorizeViewsMenu->Add("Add new...", MENU_VIEW_ADDNEW, SDLK_q, CTRL_MODIFIER);
@@ -1908,7 +1887,6 @@ void Interface::RebuildViewMenus() {
 		memorizeViewsMenu->Add(views[i].name, MENU_VIEW_MEMORIZEVIEWS + i);
 	}
 }
-
 
 void Interface::AddView(char *viewName, AVIEW v) {
 
@@ -1969,8 +1947,6 @@ void Interface::AddView() {
 	}
 	RebuildViewMenus();
 }
-
-//-----------------------------------------------------------------------------
 
 void Interface::RemoveRecent(char *fileName) {
 
@@ -2123,10 +2099,10 @@ void Interface::RenumberFormulas(std::vector<int> *newRefs) {
 }
 
 /*
-//-----------------------------------------------------------------------------
+
 // Name: ProcessFormulaButtons()
 // Desc: Handle forumla button event
-//-----------------------------------------------------------------------------
+
 void Interface::ProcessFormulaButtons(GLComponent *src) {
 
 	// Search formula buttons
@@ -2169,7 +2145,6 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 
 }*/
 
-
 void Interface::AddFormula(const char *fName, const char *formula) {
 
 	/*GLParser *f = new GLParser();
@@ -2184,7 +2159,6 @@ void Interface::AddFormula(const char *fName, const char *formula) {
 	f2->Parse();
 	formulas_n.push_back(f2);
 }
-
 
 void Interface::ClearFormulas() {
 
@@ -2618,7 +2592,6 @@ int Interface::FrameMove()
 				//if (autoUpdateFormulas) UpdateFormula();
 				if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
-
 
 				// Update timing measurements
 				if (worker.nbHit != lastNbHit || worker.nbDesorption != lastNbDes) {

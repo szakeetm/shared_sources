@@ -14,7 +14,6 @@
   GNU General Public License for more details.
 */
 
-
 #ifndef _GLMENUH_
 #define _GLMENUH_
 

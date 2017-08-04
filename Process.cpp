@@ -24,9 +24,7 @@
 
 static bool privilegeEnabled = false;
 
-//-----------------------------------------------------------------------------
 // Enable required process privilege for system tasks
-//-----------------------------------------------------------------------------
 
 static bool EnablePrivilege() {
 
@@ -78,9 +76,7 @@ static bool EnablePrivilege() {
 
 }
 
-//-----------------------------------------------------------------------------
 // Kill a process
-//-----------------------------------------------------------------------------
 
 bool KillProc(DWORD pID) {
 
@@ -98,9 +94,7 @@ bool KillProc(DWORD pID) {
 
 }
 
-//-----------------------------------------------------------------------------
 // Get process info
-//-----------------------------------------------------------------------------
 
 #define INITIAL_SIZE        51200
 #define EXTEND_SIZE         25600
@@ -112,7 +106,6 @@ bool KillProc(DWORD pID) {
 #define PROCESSMEM_COUNTER  "Working Set"
 #define PROCESSMEMP_COUNTER "Working Set Peak"
 
-
 static DWORD  dwProcessIdTitle;
 static DWORD  dwProcessMempTitle;
 static DWORD  dwProcessMemTitle;
@@ -120,9 +113,7 @@ static DWORD  dwProcessTimeTitle;
 static CHAR   keyPerfName[1024];
 static bool   counterInited = false;
 
-//-----------------------------------------------------------------------------
 // Search performance counter
-//-----------------------------------------------------------------------------
 
 /*bool InitCounter() {
 
@@ -284,7 +275,6 @@ bool GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
       return false;
     memset( buf, 0, dwSize );
 
-
     while (true) {
 
         rc = RegQueryValueEx( HKEY_PERFORMANCE_DATA,
@@ -387,9 +377,7 @@ bool GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
 
 }*/
 
-//-----------------------------------------------------------------------------
 // Launch the process pname and return its PID.
-//-----------------------------------------------------------------------------
 
 DWORD StartProc(char *pname,int mode) { //minimized in Debug mode, hidden in Release mode
 
@@ -429,7 +417,6 @@ DWORD StartProc(char *pname,int mode) { //minimized in Debug mode, hidden in Rel
 		si.wShowWindow = SW_SHOW;
 	}
 
-
 		  
 #endif
 	if (!CreateProcess(
@@ -466,7 +453,6 @@ DWORD StartProc_background(char *pname) { //always starts minimized
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_MINIMIZE;
 
-
 	
   if( !CreateProcess(
           NULL,             // pointer to name of executable module
@@ -481,7 +467,6 @@ DWORD StartProc_background(char *pname) { //always starts minimized
           &pi               // pointer to PROCESS_INFORMATION
 		  ) ) {
 		  
-
 
 	  return 0;
 
@@ -503,7 +488,6 @@ DWORD StartProc_foreground(char *pname) { //always starts minimized
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_SHOW;
 
-
 	
   if( !CreateProcess(
           NULL,             // pointer to name of executable module
@@ -518,7 +502,6 @@ DWORD StartProc_foreground(char *pname) { //always starts minimized
           &pi               // pointer to PROCESS_INFORMATION
 		  ) ) {
 		  
-
 
 	  return 0;
 

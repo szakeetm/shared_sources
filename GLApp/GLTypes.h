@@ -35,7 +35,6 @@
 #define MSG_SPINNER  15   // Spinner change
 #define MSG_PANELR   16   // Panel open/close
 
-
 #define MSG_USER     256
 
 // SDL extensions

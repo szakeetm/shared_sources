@@ -23,8 +23,6 @@ class GLMenu;
 class GLTextField;
 class GLScrollBar;
 
-
-
 // Cell alignment
 #define ALIGN_LEFT   0
 #define ALIGN_CENTER 1

@@ -21,7 +21,6 @@
 
 #include "GLApp/GLWindow.h"
 
-
 class GLList;
 class GLTextField;
 class GLButton;

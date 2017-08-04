@@ -18,8 +18,6 @@ class Vector3d;
 class Geometry;
 class Worker;
 
-
-
 class AlignFacet : public GLWindow {
 
 public:

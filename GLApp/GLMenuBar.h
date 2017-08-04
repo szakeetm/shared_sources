@@ -14,7 +14,6 @@
   GNU General Public License for more details.
 */
 
-
 #ifndef _GLMENUBARH_
 #define _GLMENUBARH_
 

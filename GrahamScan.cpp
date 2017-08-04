@@ -31,7 +31,6 @@ void grahamMain(Vector2d *projectedPoints,size_t nbPoints,int *returnList)
 	constructReturnList();
 }
 
-
 void grahamScan(GRpoint *P)
 {
     GRpoint *tempPrev, *tempNext;
@@ -53,7 +52,6 @@ void grahamScan(GRpoint *P)
     else //GRpoint IS CONVEX
         grahamScan(P->next); //PROCEED TO NEXT GRpoint
 }
-
 
 void grahamInit()
 {
@@ -130,7 +128,6 @@ bool isConvexPoint(GRpoint* P)
     else //if (CWAngle == CCWAngle)
 	return false; //GRpoint IS collinear
 }
-
 
 void addPoint(GRpoint Point)
 {
@@ -234,7 +231,6 @@ void drawPermeter(int color)
     }   
 }
 
-
 void printPoints()
 {
     GRpoint *curPoint=GRfirstPoint;
@@ -245,8 +241,6 @@ void printPoints()
         curPoint=curPoint->next;
     } while (curPoint!=GRfirstPoint); //CONTINUE UNTIL HAVING LOOPED BACK AROUND TO FIRSTPOINT
 }
-
-
 
 void drawPoints()
 {
@@ -260,7 +254,6 @@ void drawPoints()
     
     return;
 }
-
 
 void graphicsLoop()
 {
@@ -290,7 +283,6 @@ void graphicsLoop()
     }        
 }
 
-
 void initScreen()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) //TEST SDL STARTED PROPERLY
@@ -299,7 +291,6 @@ void initScreen()
     atexit(SDL_Quit); //CLEAN UP SDL BEFORE EXITING
     screen=SDL_SetVideoMode(500, 500, 16, SDL_SWSURFACE); //SET SCREEN MODE
 }
-
 
 void drawLine(GRpoint *A, GRpoint *B, int color)
 {

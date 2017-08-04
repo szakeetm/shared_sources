@@ -38,8 +38,6 @@
 */
 using namespace pugi;
 
-
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -54,8 +52,6 @@ Worker::~Worker() {
 	delete geom;
 }
 
-// -------------------------------------------------------------
-
 Geometry *Worker::GetGeometry() {
 	return geom;
 }
@@ -64,7 +60,6 @@ bool Worker::IsDpInitialized(){
 
 	return (dpHit != NULL);
 }
-// -------------------------------------------------------------
 
 char *Worker::GetFileName() {
 	return fullFileName;
@@ -105,15 +100,12 @@ void Worker::SetFileName(char *fileName) {
 	strcpy(fullFileName,fileName);
 }
 
-
 void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
 
 	char tmp[512];
 
 	// Read a file
 	FILE *f = NULL;
-
-
 
 	bool ok = true;
 	if (askConfirm) {
@@ -183,8 +175,6 @@ void  Worker::ReleaseHits() {
 	ReleaseDataport(dpHit);
 }
 
-// -------------------------------------------------------------
-
 BYTE *Worker::GetHits() {
 	try {
 		if (needsReload) RealReload();
@@ -227,7 +217,6 @@ void Worker::SetMaxDesorption(llong max) {
 
 		desorptionLimit = max;
 		Reload();
-
 
 	}
 	catch (Error &e) {
@@ -447,7 +436,6 @@ void Worker::RebuildTextures() {
 size_t Worker::GetProcNumber() {
 	return nbProcess;
 }
-
 
 void Worker::Update(float appTime) {
 	if (needsReload) RealReload();

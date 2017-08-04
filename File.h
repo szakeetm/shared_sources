@@ -38,8 +38,6 @@ public:
 	static std::string GetExtension(const std::string &str); //Extracts string after the last "."
 };
 
-// -------------------------------------------------------
-
 class FileReader {
 
 public:
@@ -87,8 +85,6 @@ private:
   char CurrentChar;
 };
 
-// -------------------------------------------------------
-
 class FileWriter {
 
 public:
@@ -114,5 +110,4 @@ private:
 };
 
 #endif /* FILERWH */
-
 

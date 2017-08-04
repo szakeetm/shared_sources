@@ -32,10 +32,6 @@ COLORREF rainbowCol[] = { 0x000000,   //Black
                           0x800090,   //Purple 1
                           0xF00080};  //Purple 2
 
-
-
-// ---------------------------------------------------------------------
-
 GLGradient::GLGradient(int compId):GLComponent(compId) {
 
   colorTex = 0;
@@ -56,8 +52,6 @@ GLGradient::GLGradient(int compId):GLComponent(compId) {
 
 }
 
-// ----------------------------------------------------------
-
 void GLGradient::SetScale(int scale) {
   axis->SetScale(scale);
   if(scale==LOG_SCALE)
@@ -67,25 +61,17 @@ void GLGradient::SetScale(int scale) {
   UpdateValue();
 }
 
-// ----------------------------------------------------------
-
 int GLGradient::GetScale() {
   return axis->GetScale();
 }
-
-// ----------------------------------------------------------
 
 GLGradient::~GLGradient() {
   SAFE_DELETE(axis);
 }
 
-// ----------------------------------------------------------
-
 void GLGradient::SetMouseCursor(bool enable) {
   mouseCursor = enable;
 }
-
-// ----------------------------------------------------------
 
 void GLGradient::SetMinMax(double min,double max) {
 
@@ -104,14 +90,10 @@ void GLGradient::SetType(int type) {
   gType = type;
 }
 
-// ----------------------------------------------------------
-
 void GLGradient::InvalidateDeviceObjects() {
   DELETE_TEX(colorTex);
   DELETE_TEX(bwTex);
 }
-
-// ----------------------------------------------------------
 
 void GLGradient::RestoreDeviceObjects() {
 

@@ -33,8 +33,6 @@
 #include "SynRad.h"
 #endif
 
-
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -99,8 +97,6 @@ SelectDialog::SelectDialog(Worker *w):GLWindow() {
   work = w;
   geom = w->GetGeometry();
 }
-
-// -------------------------------------------------
 
 void SelectDialog::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {

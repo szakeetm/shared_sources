@@ -26,7 +26,6 @@
 //#include <algorithm>
 #include <list>
 
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -123,8 +122,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 	// nU et nV (normalized U et V) are also stored in the Facet structure.
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
-
-
 	size_t fOffset = sizeof(SHGHITS);
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)sh.nbFacet);
@@ -160,7 +157,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 		mApp->UpdateModelParams();
 		mApp->UpdateFacetParams();
 	}
-
 
 	//initGeoPrg->SetVisible(false);
 	//SAFE_DELETE(initGeoPrg);
@@ -341,7 +337,6 @@ void Geometry::CreatePolyFromVertices_Convex() {
 		i2++;
 	} while (Dot(U, V) > 0.99 && i2 < selectedVertices.size()); //if U and V are almost the same, the projection would be inaccurate
 
-
 	//Now we have the U,V plane, let's define it by computing the normal vector:
 	N = CrossProduct(V, U).Normalized(); //We have a normal vector
 
@@ -363,7 +358,6 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	}
 	loopLength = ii;
 	//End graham scan
-
 
 	//a new facet
 	sh.nbFacet++;
@@ -512,8 +506,6 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 	}
 }
 
-
-
 void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type) {
 	mApp->changedSinceSave = true;
 	ClipperLib::PolyTree solution;
@@ -618,8 +610,6 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
 	return solution.ChildCount();
 }
-
-
 
 void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 	std::vector<size_t> facet2path;
@@ -1023,7 +1013,6 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 				}
 			}
 
-
 			//Create end cap
 			size_t endCapId = sh.nbFacet + nbNewFacets - 1; //last facet
 			facets[endCapId] = new Facet(facets[sourceFacetId]->sh.nbIndex);
@@ -1092,7 +1081,6 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF) {
 	Facet   **nFacets = (Facet **)malloc((sh.nbFacet + nbF) * sizeof(Facet *));
 	InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((sh.nbVertex + nbV) * sizeof(InterfaceVertex));
 
-
 	if (sh.nbFacet) memcpy(nFacets, facets, sizeof(Facet *) * sh.nbFacet);
 	memcpy(nFacets + sh.nbFacet, nF, sizeof(Facet *) * nbF);
 
@@ -1159,13 +1147,11 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	size_t nbVert = sh.nbVertex - nbUnused;
 
-
 	if (nbVert == 0) {
 		// Remove all
 		Clear();
 		return;
 	}
-
 
 	// Update facet indices
 	std::vector<size_t> newIndex(sh.nbVertex);
@@ -1242,7 +1228,6 @@ void Geometry::Clear() {
 	whiteMaterial.Ambient.b = 0.9f;
 
 	memset(&fillMaterial, 0, sizeof(GLMATERIAL));
-
 
 	fillMaterial.Diffuse.r = 0.6f;
 	fillMaterial.Diffuse.g = 0.65f;
@@ -1336,8 +1321,6 @@ void Geometry::RemoveSelectedVertex() {
 
 void Geometry::RemoveSelected() {
 	std::vector<size_t> facetIdList;
-
-
 
 	for (int i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->selected) facetIdList.push_back(i);
@@ -1520,8 +1503,6 @@ int Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double *
 		}
 	}
 
-
-
 	// Free allocated memory
 	for (int i = 0; i < nbS; i++) {
 		SAFE_FREE(blocks[i].facets);
@@ -1620,10 +1601,8 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 		if (invertNormal) angle = PI - angle;
 	}
 
-
 	bool *alreadyRotated = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 	memset(alreadyRotated, false, sh.nbVertex * sizeof(bool*));
-
 
 	nb = 0;
 	for (auto sel : memorizedSelection) {
@@ -1669,7 +1648,6 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 
 	bool *alreadyRotated2 = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 	memset(alreadyRotated2, false, sh.nbVertex * sizeof(bool*));
-
 
 	nb = 0;
 	for (auto sel : memorizedSelection) {
@@ -1717,7 +1695,6 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool copy, Wo
 		bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 		memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
 
-
 		int nb = 0;
 		for (auto sel : selectedFacets) {
 			counter += 1.0;
@@ -1763,7 +1740,6 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	bool *alreadyMirrored = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 	memset(alreadyMirrored, false, sh.nbVertex * sizeof(bool*));
-
 
 	int nb = 0;
 	for (auto sel : selectedFacets) {
@@ -1857,7 +1833,6 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 		bool *alreadyRotated = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 		memset(alreadyRotated, false, sh.nbVertex * sizeof(bool*));
 
-
 		int nb = 0;
 		for (auto sel : selectedFacets) {
 			counter += 1.0;
@@ -1934,7 +1909,6 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 		vertices3[sh.nbVertex + newVertexId] = newVertices[newVertexId];
 	}
 	sh.nbVertex += newVertices.size(); //update number of vertices
-
 
 	facets = (Facet **)realloc(facets, (sh.nbFacet + selectedFacetIds.size()) * sizeof(Facet *)); //make space for new facets
 	for (size_t i = 0; i < selectedFacetIds.size(); i++) {
@@ -2070,7 +2044,6 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 
 void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
-
 	GLProgress *prgMove = new GLProgress("Scaling selected facets...", "Please wait");
 	prgMove->SetProgress(0.0);
 	prgMove->SetVisible(true);
@@ -2084,7 +2057,6 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 
 	bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 	memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
-
 
 	int nb = 0;
 	for (auto i:selectedFacets) {
@@ -2678,7 +2650,6 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		if (RemoveCollinear() || RemoveNullFacet()) InitializeGeometry(); //If  facets were removed, update geom.
 	}
 
-
 	if (fT > 0.0 && !work->abortRequested) {
 
 		// Collapse facets
@@ -2856,8 +2827,6 @@ void Geometry::CalculateFacetParam(Facet* f) {
 	f->sh.center.y = (f->sh.bb.max.y + f->sh.bb.min.y) / 2.0;
 	f->sh.center.z = (f->sh.bb.max.z + f->sh.bb.min.z) / 2.0;
 
-
-
 	// Plane equation
 	double A = f->sh.N.x;
 	double B = f->sh.N.y;
@@ -2945,7 +2914,6 @@ void Geometry::CalculateFacetParam(Facet* f) {
 	//Center might not be on the facet's plane
 	Vector2d projectedCenter = ProjectVertex(f->sh.center, f->sh.U, f->sh.V, f->sh.O);
 	f->sh.center = f->sh.O + projectedCenter.u*f->sh.U + projectedCenter.v*f->sh.V;
-
 
 	f->sh.Nuv = CrossProduct(U, V);
 
@@ -3311,7 +3279,6 @@ void Geometry::BuildShapeList() {
 	glEnd();
 	glEndList();
 
-
 }
 
 void Geometry::BuildSelectList() {
@@ -3332,7 +3299,6 @@ void Geometry::BuildSelectList() {
 	}
 	glLineWidth(2.0f);
 
-
 	for(int i=0;i<sh.nbFacet;i++ ) {
 	Facet *f = facets[i];
 	if( f->selected ) {
@@ -3347,8 +3313,6 @@ void Geometry::BuildSelectList() {
 	glDisable(GL_LINE_SMOOTH);
 	}*/
 	glEndList();
-
-
 
 	// Second list for usage with POLYGON_OFFSET
 	selectList2 = glGenLists(1);
@@ -3381,11 +3345,9 @@ void Geometry::BuildSelectList() {
 	}*/
 	glEndList();
 
-
 	// Third list with hidden (hole join) edge visible
 	selectList3 = glGenLists(1);
 	glNewList(selectList3, GL_COMPILE);
-
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_LIGHTING);
@@ -3410,7 +3372,6 @@ void Geometry::BuildSelectList() {
 		glDisable(GL_LINE_SMOOTH);
 	}
 	glEndList();
-
 
 }
 
@@ -3472,8 +3433,6 @@ int Geometry::InvalidateDeviceObjects() {
 
 }
 
-
-
 int Geometry::RestoreDeviceObjects() {
 
 	if (!IsLoaded()) return GL_OK;
@@ -3489,8 +3448,6 @@ int Geometry::RestoreDeviceObjects() {
 	return GL_OK;
 
 }
-
-
 
 void Geometry::BuildFacetList(Facet *f) {
 
@@ -3537,9 +3494,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
 }
 
-// -----------------------------------------------------------
 // File handling
-// -----------------------------------------------------------
 
 void Geometry::UpdateName(FileReader *file) {
 	UpdateName(file->GetName());
@@ -3704,9 +3659,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 }
 
-
 void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
-
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
@@ -3815,8 +3768,6 @@ void Geometry::LoadTXT(FileReader *file, GLProgress *prg) {
 
 }
 
-
-
 void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 
 	//Clear();
@@ -3870,7 +3821,6 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 	//isLoaded = true; //InitializeGeometry() sets to true
 
 }
-
 
 void Geometry::LoadTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx) {
 
@@ -3988,7 +3938,6 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 	UnselectAll();
 
-
 	file->ReadKeyword("version"); file->ReadKeyword(":");
 	int version2;
 	version2 = file->ReadInt();
@@ -3997,7 +3946,6 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 		sprintf(errMsg, "Unsupported GEO version V%d", version2);
 		throw Error(errMsg);
 	}
-
 
 	file->ReadKeyword("totalHit"); file->ReadKeyword(":");
 	file->ReadLLong();
@@ -4237,7 +4185,6 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 		}
 	}
 
-
 	*nbVertex += nbNewVertex;
 	*nbFacet += nbNewFacets;
 	if (newStruct) sh.nbSuper += nbNewSuper;
@@ -4326,7 +4273,6 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 
-
 	if (!IsLoaded()) throw Error("Nothing to save !");
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
 
@@ -4334,7 +4280,6 @@ void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 
 	for (int i = 0; i < sh.nbSuper; i++)
 		SaveSuper(i);
-
 
 }
 
@@ -4431,5 +4376,4 @@ void Geometry::SaveProfileTXT(FileWriter *file) {
 bool Geometry::IsLoaded() {
 	return isLoaded;
 }
-
 

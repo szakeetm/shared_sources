@@ -53,19 +53,13 @@ static int keyFocus = 0;
 
 extern GLApplication *theApp;
 
-// ---------------------------------------------------------------
-
 GLWindow* GLWindowManager::GetWindow(int idx) {
   return allWin[idx];
 }
 
-// ---------------------------------------------------------------
-
 int GLWindowManager::GetNbWindow() {
   return nbWindow;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::RegisterWindow(GLWindow *wnd) {
 
@@ -75,8 +69,6 @@ void GLWindowManager::RegisterWindow(GLWindow *wnd) {
   }
 
 }
-
-// -------------------------------------------
 
 void GLWindowManager::BringToFront(GLWindow *wnd) {
 
@@ -96,14 +88,10 @@ void GLWindowManager::BringToFront(GLWindow *wnd) {
 
 }
 
-// -------------------------------------------
-
 GLWindow *GLWindowManager::GetTopLevelWindow() {
   if( nbWindow ) return allWin[0];
   else           return NULL;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::UnRegisterWindow(GLWindow *wnd) {
 
@@ -123,8 +111,6 @@ void GLWindowManager::UnRegisterWindow(GLWindow *wnd) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::FullRepaint() {
 
   // Done 2 times for the 2 buffer
@@ -132,8 +118,6 @@ void GLWindowManager::FullRepaint() {
   Repaint();
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::DrawStats() {
 
@@ -168,8 +152,6 @@ void GLWindowManager::DrawStats() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::SetDefault() {
 
   // Default OpenGL settings
@@ -189,8 +171,6 @@ void GLWindowManager::SetDefault() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::NoClip() {
 
   int wS,hS;
@@ -203,8 +183,6 @@ void GLWindowManager::NoClip() {
   GLToolkit::SetViewport(0,0,wS,hS);
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::AnimateIconify(GLWindow *src) {
 
@@ -252,8 +230,6 @@ void GLWindowManager::AnimateIconify(GLWindow *src) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::AnimateMaximize(GLWindow *src,int fsX,int fsY,int fsWidth,int fsHeight) {
 
   int xw,yw,ww,hw;
@@ -290,8 +266,6 @@ void GLWindowManager::AnimateMaximize(GLWindow *src,int fsX,int fsY,int fsWidth,
   Repaint();
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::AnimateFocus(GLWindow *src) {
 
@@ -357,8 +331,6 @@ void GLWindowManager::AnimateFocus(GLWindow *src) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::AnimateDeIconify(GLWindow *src) {
 
   int iPos = allWin[0]->GetWidth();
@@ -420,8 +392,6 @@ void GLWindowManager::AnimateDeIconify(GLWindow *src) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::Resize() {
 
   for(int i=1;i<nbWindow;i++) 
@@ -443,14 +413,11 @@ void GLWindowManager::Resize() {
   Repaint();
 }
 
-// ---------------------------------------------------------------
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
   SDL_GL_SwapBuffers();
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::RepaintNoSwap() {
 
@@ -476,7 +443,6 @@ void GLWindowManager::RepaintNoSwap() {
     allWin[0]->Paint();
   }
 
-
   for(int i=1;i<nbWindow;i++) {
     if( allWin[i]->IsIconic() ) {
       iPos -= (allWin[i]->GetIconWidth() + 3);
@@ -493,8 +459,6 @@ void GLWindowManager::RepaintNoSwap() {
 //#endif
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::RepaintRange(int w0,int w1) {
 
@@ -516,31 +480,21 @@ void GLWindowManager::RepaintRange(int w0,int w1) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::RestoreDeviceObjects() {
   for(int i=0;i<nbWindow;i++) allWin[i]->RestoreDeviceObjects();
 }
-
-// ---------------------------------------------------------------
 
 void GLWindowManager::InvalidateDeviceObjects() {
   for(int i=0;i<nbWindow;i++) allWin[i]->InvalidateDeviceObjects();
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindowManager::IsCtrlDown() {
   return (modState & CTRL_MODIFIER)!=0;
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindowManager::IsShiftDown() {
   return (modState & SHIFT_MODIFIER)!=0;
 }
-
-// ---------------------------------------------------------------
 
 bool GLWindowManager::IsAltDown() {
   return (modState & ALT_MODIFIER)!=0;
@@ -553,7 +507,6 @@ bool GLWindowManager::IsSpaceDown() {
 bool GLWindowManager::IsTabDown() {
   return (modState & TAB_MODIFIER)!=0;
 }
-// ---------------------------------------------------------------
 
 bool GLWindowManager::IsCapsLockOn() {
  return (modState & CAPSLOCK_MODIFIER)!=0;
@@ -562,9 +515,6 @@ bool GLWindowManager::IsCapsLockOn() {
 int GLWindowManager::GetModState() {
 	return modState;
 }
-
-
-// ---------------------------------------------------------------
 
 bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 
@@ -652,8 +602,6 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int accId) {
 
   // Search if already exists
@@ -677,8 +625,6 @@ void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int 
   }
 
 }
-
-// ---------------------------------------------------------------
 
 bool GLWindowManager::ManageEvent(SDL_Event *evt) {
 
@@ -752,8 +698,6 @@ bool GLWindowManager::ManageEvent(SDL_Event *evt) {
 
 }
 
-// -------------------------------------------
-
 void GLWindowManager::RemoveAccFromStr(char *txt,char *acc,int *pos,int *width) {
 
   int i,j;
@@ -784,8 +728,6 @@ void GLWindowManager::RemoveAccFromStr(char *txt,char *acc,int *pos,int *width) 
   strcpy(txt,tmp);
 
 }
-
-// -------------------------------------------
 
 char *GLWindowManager::GetAccStr(int keyCode,int keyModifier) {
 

@@ -23,8 +23,6 @@
 #include <math.h>
 #include <malloc.h>
 
-// ----------------------------------------------
-
 DrawingArea::DrawingArea():GLComponent(0) {
 
   p1.nbPts = 4;
@@ -394,8 +392,6 @@ DrawingArea::DrawingArea():GLComponent(0) {
 
 }
 
-// ----------------------------------------------
-
 void DrawingArea::DrawPoly(POLYGON *p,double tx,double ty) {
 
   glDisable(GL_TEXTURE_2D);
@@ -418,8 +414,6 @@ void DrawingArea::DrawPoly(POLYGON *p,double tx,double ty) {
   */
 
 }
-
-// ----------------------------------------------
 
 void DrawingArea::DrawTest(POLYGON *p,int nb,POLYGON *r,int tx,int ty) {
 
@@ -444,8 +438,6 @@ void DrawingArea::DrawTest(POLYGON *p,int nb,POLYGON *r,int tx,int ty) {
   GLToolkit::GetDialogFont()->DrawText(tx+50,ty+190,tmp,FALSE);
 
 }
-
-// ----------------------------------------------
 
 void DrawingArea::Paint() {
 

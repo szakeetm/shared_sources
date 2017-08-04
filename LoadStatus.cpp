@@ -43,7 +43,6 @@ static const int   plWidth[] = {60,70,300};
 static const char *plName[] = {"#","Mem Usage","Status"};
 static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 
-
 LoadStatus::LoadStatus(Worker* w):GLWindow() {
 
 	worker = w;
@@ -125,8 +124,6 @@ void LoadStatus::SMPUpdate() {
 			}
 		}
 }
-// ----------------------------------------------------------------
-
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 	switch (message) {

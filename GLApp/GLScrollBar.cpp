@@ -22,8 +22,6 @@
 // Minimum slider width
 #define MIN_SWIDTH 10
 
-// ---------------------------------------------------------------------
-
 GLScrollBar::GLScrollBar(int compId):GLComponent(compId) {
   m_Pos=0;
   m_Max=10;
@@ -34,8 +32,6 @@ GLScrollBar::GLScrollBar(int compId):GLComponent(compId) {
   SetBorder(BORDER_NONE);
   SetBackgroundColor(230,222,215);
 }
-
-// ---------------------------------------------------------------------
 
 void GLScrollBar::SetRange(int max,int page,int wheel)
 {
@@ -52,26 +48,18 @@ void GLScrollBar::SetRange(int max,int page,int wheel)
   m_Drag=0;
 }
 
-// ---------------------------------------------------------------------
-
 void GLScrollBar::SetOrientation(int orientation) {
   this->orientation = orientation;
 }
-
-// ---------------------------------------------------------------------
 
 int GLScrollBar::GetPosition() {
   return m_Pos;
 }
 
-// ---------------------------------------------------------------------
-
 void GLScrollBar::SetPos(int nPos) {
   SetPosition(nPos);
   parent->ProcessMessage(this,MSG_SCROLL);
 }
-
-// ---------------------------------------------------------------------
 
 void GLScrollBar::SetPosition(int nPos) {
    if( (nPos) >= (m_Max-m_Page) ) m_Pos=m_Max-m_Page;
@@ -79,13 +67,9 @@ void GLScrollBar::SetPosition(int nPos) {
    if(nPos<0) m_Pos=0;
 }
 
-// ---------------------------------------------------------------------
-
 void GLScrollBar::SetPositionMax() {
   m_Pos=m_Max-m_Page;
 }
-
-// ---------------------------------------------------------------------
 
 void GLScrollBar::Measure() {
 
@@ -123,8 +107,6 @@ void GLScrollBar::Measure() {
   }
 
 }
-
-// ---------------------------------------------------------------------
 
 void GLScrollBar::Paint() {
 
@@ -175,8 +157,6 @@ void GLScrollBar::Paint() {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLScrollBar::ManageEvent(SDL_Event *evt) {
 
   if(!parent) return;
@@ -184,7 +164,7 @@ void GLScrollBar::ManageEvent(SDL_Event *evt) {
   int mx = GetWindow()->GetX(this,evt);
   int my = GetWindow()->GetY(this,evt);
 
-  // -------------------------------------------------------------------
+  
 
   if( evt->type == SDL_MOUSEMOTION ) {
   if( m_Drag ) {
@@ -203,7 +183,7 @@ void GLScrollBar::ManageEvent(SDL_Event *evt) {
   }
   }
 
-  // -------------------------------------------------------------------
+  
 
   if( evt->type == SDL_MOUSEBUTTONDOWN ) {
   if( evt->button.button == SDL_BUTTON_LEFT ) {
@@ -232,7 +212,7 @@ void GLScrollBar::ManageEvent(SDL_Event *evt) {
   }
   }
 
-  // -------------------------------------------------------------------
+  
 
   if( evt->type == SDL_MOUSEBUTTONUP ) {
   if( evt->button.button == SDL_BUTTON_LEFT ) {
@@ -240,7 +220,7 @@ void GLScrollBar::ManageEvent(SDL_Event *evt) {
   }
   }
 
-  // -------------------------------------------------------------------
+  
   if( evt->type == SDL_KEYDOWN ) {
 
     int unicode = (evt->key.keysym.unicode & 0x7F);

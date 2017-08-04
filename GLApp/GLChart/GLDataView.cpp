@@ -22,8 +22,6 @@
 #include <float.h>
 #include <math.h>
 
-// ------------------------------------------
-
 GLDataView::GLDataView() {
 
   labelColor.r = 0;
@@ -719,7 +717,6 @@ bool GLDataView::HasTransform() {
   return !(A0 == 0 && A1 == 1 && A2 == 0);
 }
 
-
 /**
  * Determines wether this view is affected by a transform.
  * @return false when no filtering true otherwise.
@@ -1292,9 +1289,7 @@ void GLDataView::SetXDataSorted (bool dataSorted) {
   //TODO
 }
 
-// ----------------------------------------------------------------------------
 // Interpolation/Filtering stuff
-// ----------------------------------------------------------------------------
 
 void GLDataView::addPts(Point2D *p,double x,double y) {
 
@@ -1875,7 +1870,7 @@ void GLDataView::interpolate() {
 
     switch( method ) {
 
-      // ---------------------------------------------------------------------
+      
       case INTERPOLATE_LINEAR:
 
         for(i=0;i<nbPts-2;i++) {
@@ -1890,7 +1885,7 @@ void GLDataView::interpolate() {
         }
         break;
 
-      // ---------------------------------------------------------------------
+      
       case INTERPOLATE_COSINE:
 
         for(i=0;i<nbPts-2;i++) {
@@ -1905,7 +1900,7 @@ void GLDataView::interpolate() {
         }
         break;
 
-      // ---------------------------------------------------------------------
+      
       case INTERPOLATE_CUBIC:
 
         // First segment (extend tangent)
@@ -1933,7 +1928,7 @@ void GLDataView::interpolate() {
         }
         break;
 
-      // ---------------------------------------------------------------------
+      
       case INTERPOLATE_HERMITE:
 
         // First segment (extend tangent)

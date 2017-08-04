@@ -22,8 +22,6 @@
 #include "GLApp.h"
 //#include <malloc.h>
 
-// --------------------------------------------------------
-
 GLContainer::GLContainer() {
 
   list = NULL;
@@ -37,13 +35,9 @@ GLContainer::GLContainer() {
 
 }
 
-// --------------------------------------------------------
-
 GLContainer::~GLContainer() {
   Clear();
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::Clear() {
 
@@ -62,8 +56,6 @@ void GLContainer::Clear() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::SetWindow(GLWindow *parent) {
 
   parentWin = parent;
@@ -80,25 +72,17 @@ GLWindow *GLContainer::GetWindow() {
   return parentWin;
 }
 
-// ---------------------------------------------------------------
-
 bool GLContainer::IsEventProcessed() {
   return evtProcessed;
 }
-
-// ---------------------------------------------------------------
 
 bool GLContainer::IsEventCanceled() {
   return evtCanceled;
 }
 
-// ---------------------------------------------------------------
-
 bool GLContainer::IsDragging() {
   return (draggedComp!=NULL);
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::RedirectMessage(GLContainer *cont) {
   redirect = cont;
@@ -108,15 +92,11 @@ GLContainer *GLContainer::GetRedirect() {
   return redirect;
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::CancelDrag(SDL_Event *evt) {
 
   draggedComp=NULL;
 
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::RestoreDeviceObjects() {
 
@@ -128,8 +108,6 @@ void GLContainer::RestoreDeviceObjects() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::InvalidateDeviceObjects() {
 
   COMPLINK *node = list;
@@ -140,15 +118,11 @@ void GLContainer::InvalidateDeviceObjects() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::SetFocus(GLComponent *src) {
   if( lastFocus ) lastFocus->SetFocus(false);
   src->SetFocus(true);
   lastFocus = src;
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::PostDelete(GLComponent *comp) {
 
@@ -163,8 +137,6 @@ void GLContainer::PostDelete(GLComponent *comp) {
   if( found ) node->postDelete = true;
 
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::Remove(GLComponent *comp) {
 
@@ -191,8 +163,6 @@ void GLContainer::Remove(GLComponent *comp) {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::Add(GLComponent *comp) {
 
@@ -252,8 +222,6 @@ void GLContainer::FreezeComp() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::UnfreezeComp() {
 
   COMPLINK *node = list;
@@ -263,8 +231,6 @@ void GLContainer::UnfreezeComp() {
   }
 
 }
-
-// ----------------------------------------------------------
 
 void GLContainer::ManageEvent(SDL_Event *evt) {
 
@@ -282,12 +248,9 @@ void GLContainer::ManageEvent(SDL_Event *evt) {
 
 }
 
-// ----------------------------------------------------------
 GLComponent* GLContainer::GetFirstChildComp() {
 	return (list->next->comp);
 }
-
-// ----------------------------------------------------------
 
 void GLContainer::RelayEvent(SDL_Event *evt) {
 
@@ -298,16 +261,12 @@ void GLContainer::RelayEvent(SDL_Event *evt) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::RelayEventReverse(COMPLINK *lst,SDL_Event *evt) {
   if( lst ) {
     RelayEventReverse(lst->next,evt);
     if(!lst->postDelete && lst->canProcess) RelayEvent(lst->comp,evt);
   }
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::DoPostDelete() {
 
@@ -334,7 +293,6 @@ void GLContainer::DoPostDelete() {
   }
 
 }
-// ---------------------------------------------------------------
 
 void GLContainer::ManageComp(GLComponent *comp,SDL_Event *evt) {
 
@@ -343,8 +301,6 @@ void GLContainer::ManageComp(GLComponent *comp,SDL_Event *evt) {
   evtProcessed = true;
 
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
 
@@ -398,18 +354,12 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLContainer::ProcessAcc(int accId) {
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::ProcessMessage(GLComponent *src,int message) {
   if(redirect) redirect->ProcessMessage(src,message);
 }
-
-// ---------------------------------------------------------------
 
 void GLContainer::PaintComponents() {
   COMPLINK *node = list;

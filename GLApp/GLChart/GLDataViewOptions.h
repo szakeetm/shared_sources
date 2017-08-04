@@ -131,7 +131,6 @@ private:
   GLToggle         *fftModBtn;
   GLToggle         *fftPhaseBtn;
 
-
 };
 
 #endif /* _GLCHARTDVOPTIONSH_ */

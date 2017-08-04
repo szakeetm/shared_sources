@@ -253,7 +253,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
     char tmp[128];
 
-    // ------------------------------
+    
     if (src == closeBtn) {
       SetVisible(false);
     } else if (src == generalBackColorBtn) {
@@ -293,7 +293,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
       chart->SetLabelVisible(generalLabelVisibleCheck->GetState());
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == generalGridCombo) {
 
       int sel = generalGridCombo->GetSelectedIndex();
@@ -332,7 +332,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
       }
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == generalGridStyleCombo) {
 
       int s = generalGridStyleCombo->GetSelectedIndex();
@@ -341,7 +341,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
       chart->GetY2Axis()->SetGridStyle(s);
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == generalLabelPCombo) {
 
       int s = generalLabelPCombo->GetSelectedIndex();

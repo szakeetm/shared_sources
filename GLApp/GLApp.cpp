@@ -31,15 +31,12 @@
 #include <math.h>
 #include <stdlib.h>
 
-
 GLApplication *theApp=NULL;
 
 #ifdef WIN
 LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
 #endif
-
-// -------------------------------------------
 
 GLApplication::GLApplication() {
 
@@ -82,8 +79,6 @@ GLApplication::GLApplication() {
 
 }
 
-// -------------------------------------------
-
 double GLApplication::GetTick() {
 
 #ifdef WIN
@@ -100,9 +95,6 @@ double GLApplication::GetTick() {
 #endif
 
 }
-
-
-// -------------------------------------------
 
 int GLApplication::setUpSDL(bool doFirstInit) {
 
@@ -144,8 +136,6 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 
 }
 
-// -------------------------------------------
-
 int GLApplication::ToggleFullscreen() {
 
   GLToolkit::InvalidateDeviceObjects();
@@ -165,16 +155,12 @@ int GLApplication::ToggleFullscreen() {
 
 }
 
-// -------------------------------------------
-
 void GLApplication::SetTitle(std::string title) {
 
   m_strWindowTitle = title;
   SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
 
 }
-
-// -------------------------------------------
 
 int GLApplication::Create(int width, int height, bool bFullScreen ) {
 
@@ -200,12 +186,8 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
 
 }
 
-// -------------------------------------------
-
 void GLApplication::Pause(bool bPause) {
 }
-
-// -------------------------------------------
 
 int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
 
@@ -229,15 +211,9 @@ int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
 
 }
 
-// -------------------------------------------
-
 void GLApplication::Add(GLComponent *comp) {
   wnd->Add(comp);
 }
-
-
-
-// -------------------------------------------
 
 void GLApplication::Exit() {
 
@@ -266,8 +242,6 @@ void GLApplication::Exit() {
   _exit(0);
 
 }
-
-// -------------------------------------------
 
 void GLApplication::UpdateStats() {
 
@@ -357,8 +331,6 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
   if(evt->type) nbEvent++;
 
 }
-
-// -------------------------------------------
 
 void GLApplication::Run() {
 	#ifdef MOLFLOW

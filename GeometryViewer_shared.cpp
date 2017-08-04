@@ -22,8 +22,6 @@
 #include "SynRad.h"
 #endif
 
-
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -170,8 +168,6 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	Add(selTrajBtn);
 #endif
 
-
-
 	zoomBtn = new GLButton(0, "");
 	zoomBtn->SetIcon("images/icon_zoom.png");
 	zoomBtn->SetDisabledIcon("images/icon_zoomd.png");
@@ -235,7 +231,6 @@ void GeometryViewer::ToOrigo() {
 
 	view.camAngleOz = 0.0;
 
-
 	view.camDist = 100.0;
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
@@ -255,12 +250,10 @@ void GeometryViewer::SetSelected(bool s) {
 	selected = s;
 }
 
-
 void GeometryViewer::SetFocus(bool focus) {
 	if (focus && parent)  parent->ProcessMessage(this, MSG_GEOMVIEWER_SELECT);
 	GLComponent::SetFocus(focus);
 }
-
 
 void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
@@ -316,8 +309,6 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 			else {
 				SetCursor(CURSOR_TRAJ);
 			}
-
-			break;
 		}
 #endif
 
@@ -330,13 +321,9 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 	}
 }
 
-
-
 bool GeometryViewer::IsDragging() {
 	return draggMode != DRAGG_NONE;
 }
-
-
 
 void GeometryViewer::ToTopView() {
 
@@ -397,7 +384,6 @@ void GeometryViewer::UpdateLight() {
 
 	//ratio*=1.4;
 
-
 	GLfloat d0[4], d1[4];
 	d0[0] = 0.8f * ratio;
 	d0[1] = 0.8f * ratio;
@@ -428,8 +414,6 @@ void GeometryViewer::UpdateLight() {
 	}
 
 }
-
-
 
 void GeometryViewer::UpdateMatrix() {
 
@@ -537,8 +521,6 @@ AVIEW GeometryViewer::GetCurrentView() {
 	return view;
 }
 
-
-
 void GeometryViewer::SetCurrentView(AVIEW v) {
 
 	if (!work) return;
@@ -563,18 +545,13 @@ void GeometryViewer::SetCurrentView(AVIEW v) {
 	//UpdateMouseCursor(MODE_SELECT);
 	UpdateMouseCursor(mode);
 
-
 }
-
-
 
 void GeometryViewer::SetProjection(int mode) {
 	view.projMode = mode;
 	projCombo->SetSelectedIndex(mode);
 	ToFrontView();
 }
-
-
 
 void GeometryViewer::SetWorker(Worker *w) {
 	work = w;
@@ -585,8 +562,6 @@ void GeometryViewer::SetWorker(Worker *w) {
 	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 	arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 }
-
-
 
 void GeometryViewer::DrawIndex() {
 
@@ -653,7 +628,6 @@ void GeometryViewer::DrawIndex() {
 	GLToolkit::DrawStringRestore();
 }
 
-
 void GeometryViewer::DrawRule() {
 
 	if (showRule) {
@@ -716,7 +690,6 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	if (!mApp->whiteBg) GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.9f, 0.2f);
 	else GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.2f, 0.0f);
 
-
 	// Draw Labels
 	glEnable(GL_BLEND);
 	for (size_t i : selectedVertexIds) {
@@ -749,8 +722,6 @@ void GeometryViewer::DrawNormal() {
 		}
 	}
 }
-
-
 
 void GeometryViewer::DrawUV() {
 	Geometry *geom = work->GetGeometry();
@@ -787,8 +758,6 @@ void GeometryViewer::DrawUV() {
 		}
 	}
 }
-
-
 
 void GeometryViewer::DrawLeak() {
 
@@ -877,7 +846,6 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	//if(reUpdateMouseCursor) UpdateMouseCursor(MODE_SELECT);
 	if (reUpdateMouseCursor) UpdateMouseCursor(mode);
 
-
 }
 
 void GeometryViewer::Zoom() {
@@ -936,7 +904,6 @@ void GeometryViewer::Zoom() {
 	}
 
 }
-
 
 void GeometryViewer::Paint() {
 	
@@ -1033,13 +1000,9 @@ if( showVolume || showTexture ) {
 	//glPolygonOffset( 0.5f, 0.002f );
   }
 
-
 } else {
 
   glDisable(GL_DEPTH_TEST);
-
-
-
 
 }*/
 
@@ -1126,8 +1089,6 @@ if( showVolume || showTexture ) {
 	PaintCompAndBorder();
 }
 
-
-
 void GeometryViewer::PaintCompAndBorder() {
 
 	// Components
@@ -1177,8 +1138,6 @@ void GeometryViewer::PaintCompAndBorder() {
 
 }
 
-
-
 void GeometryViewer::TranslateScale(double diff) {
 
 	// Translate or Scale view according to the projection mode
@@ -1193,8 +1152,6 @@ void GeometryViewer::TranslateScale(double diff) {
 	UpdateMatrix();
 
 }
-
-
 
 void GeometryViewer::ManageEvent(SDL_Event *evt)
 {
@@ -1432,7 +1389,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		case DRAGG_SELECTTRAJ:
 #endif
 
-
 			if (mode == MODE_ZOOM) {
 				Zoom();
 				autoScaleOn = false;
@@ -1572,7 +1528,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				else {
 					// Rotate view
 
-
 					if (GetWindow()->IsAltDown()) {            //Lights direction rotation
 						view.lightAngleOx += diffY * angleStep*factor;
 						view.lightAngleOy += diffX * angleStep*factor;
@@ -1594,7 +1549,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				UpdateMatrix();
 				if (autoScaleOn) (AutoScale(false));
 
-
 			}
 
 			//UpdateMatrix();
@@ -1603,7 +1557,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 	}
 
 }
-
 
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
@@ -1616,8 +1569,6 @@ void GeometryViewer::SelectCoplanar(double tolerance) {
 	selectionChange = true;
 	geom->SelectCoplanar(this->width, this->height, tolerance);
 }
-
-
 
 void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 
@@ -1760,8 +1711,6 @@ DrawBB(node->right);
 }
 */
 
-
-
 void GeometryViewer::ComputeBB(bool getAll) {
 
 	Geometry *geom = work->GetGeometry();
@@ -1838,7 +1787,6 @@ void GeometryViewer::ComputeBB(bool getAll) {
 
 	}
 
-
 }
 
 void Geometry::ClearFacetMeshLists()
@@ -1853,8 +1801,6 @@ void Geometry::ClearFacetMeshLists()
 	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 }
-
-
 
 void Geometry::BuildFacetMeshLists()
 {

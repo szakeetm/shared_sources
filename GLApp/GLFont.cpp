@@ -23,8 +23,6 @@
 
 extern GLApplication *theApp;
 
-// -------------------------------------------
-
 GLFont2D::GLFont2D() {
   strcpy(fileName,"images/font.png");
   cHeight = 15;
@@ -38,8 +36,6 @@ GLFont2D::GLFont2D(char *imgFileName) {
   cWidth  = 9;
   isVariable = false;
 }
-
-// -------------------------------------------
 
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 
@@ -144,8 +140,6 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 
 }
 
-// -------------------------------------------
-
 void GLFont2D::ChangeViewport(GLVIEWPORT *g) {
   GLfloat oldProj[16];
   glMatrixMode( GL_PROJECTION );
@@ -155,8 +149,6 @@ void GLFont2D::ChangeViewport(GLVIEWPORT *g) {
   glGetFloatv( GL_PROJECTION_MATRIX , pMatrix );
   glLoadMatrixf(oldProj);
 }
-
-// -------------------------------------------
 
 void GLFont2D::SetVariableWidth(bool variable) {
   isVariable = variable;
@@ -184,8 +176,6 @@ int GLFont2D::GetTextHeight() {
   return cHeight;
 }
 
-// -------------------------------------------
-
 void GLFont2D::InvalidateDeviceObjects() {
 
   if(texId) glDeleteTextures(1, &texId);
@@ -193,15 +183,11 @@ void GLFont2D::InvalidateDeviceObjects() {
 
 }
 
-// -------------------------------------------
-
 void GLFont2D::SetTextColor(const float &r,const float &g,const float &b) {
   rC = r;
   gC = g;
   bC = b;
 }
-
-// -------------------------------------------
 
 void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,bool loadMatrix) {
 
@@ -265,7 +251,6 @@ void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,bool load
 
 }
 
-
 void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const bool &loadMatrix) {
 
   int lgth = (int)strlen(text);
@@ -325,8 +310,6 @@ void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const bool &loadM
 #endif
 
 }
-
-// -------------------------------------------
 
 void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 

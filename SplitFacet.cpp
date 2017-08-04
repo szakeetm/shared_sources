@@ -3,7 +3,6 @@
   Description: Split facet by plane dialog
   Program:     MolFlow
 
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -33,7 +32,6 @@
 
 #include "Geometry.h"
 
-
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -41,8 +39,6 @@
 #ifdef SYNRAD
 #include "SynRad.h"
 #endif
-
-
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -170,7 +166,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
   int facetNum;
 
   switch(message) {
-	// -------------------------------------------------------------
+	
     case MSG_TOGGLE:
 		if (src == eqmodeCheckbox) planeMode = PLANEEQ_MODE;
 		else if (src == facetmodeCheckbox) planeMode = FACET_MODE;

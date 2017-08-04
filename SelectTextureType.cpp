@@ -98,7 +98,6 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 	int startX = 5;
 	int startY = 165;
 
-
 	selectButton = new GLButton(0, "Select");
 	selectButton->SetBounds(startX, startY, 75, 20);
 	Add(selectButton);
@@ -127,8 +126,6 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 	work = w;
 	geom = w->GetGeometry();
 }
-
-// -------------------------------------------------
 
 void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 	if (message == MSG_BUTTON) {

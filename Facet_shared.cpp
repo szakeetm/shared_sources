@@ -15,13 +15,10 @@
 #include "GLApp\MathTools.h"
 #include <sstream>
 
-
 using namespace pugi;
 
 // Colormap stuff
 extern COLORREF rainbowCol[]; //defined in GLGradient.cpp
-
-
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -99,7 +96,6 @@ int Facet::InvalidateDeviceObjects() {
 
 }
 
-
 bool Facet::SetTexture(double width, double height, bool useMesh) {
 
 	bool dimOK = (width*height > 0.0000001);
@@ -172,7 +168,6 @@ void Facet::glVertex2u(double u, double v) {
 
 }
 
-
 bool Facet::BuildMesh() {
 
 	/*mesh = (SHELEM *)malloc(sh.texWidth * sh.texHeight * sizeof(SHELEM));
@@ -196,7 +191,6 @@ bool Facet::BuildMesh() {
 		//Couldn't allocate memory
 		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
-
 
 	}
 	meshvectorsize = 0;
@@ -328,7 +322,6 @@ bool Facet::BuildMesh() {
 			else {  //All indide and triangle or quad
 				cellPropertiesIds[i + j*sh.texWidth] = -1;
 
-
 				/*mesh[i + j*sh.texWidth].area = (float)(rw*rh);
 				mesh[i + j*sh.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
 				mesh[i + j*sh.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
@@ -375,7 +368,6 @@ bool Facet::BuildMesh() {
 
 }
 
-
 void Facet::BuildMeshList() {
 
 	if (!cellPropertiesIds)
@@ -387,7 +379,6 @@ void Facet::BuildMeshList() {
 	// Build OpenGL geometry for meshing
 	glElem = glGenLists(1);
 	glNewList(glElem, GL_COMPILE);
-
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	size_t nb = sh.texWidth*sh.texHeight;
@@ -403,14 +394,12 @@ void Facet::BuildMeshList() {
 			glEnd();
 		}
 
-
 	}
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEndList();
 
 }
-
 
 void Facet::BuildSelElemList() {
 
@@ -470,8 +459,6 @@ void Facet::UnselectElem() {
 
 }
 
-// -----------------------------------------------------------
-
 void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 
 	UnselectElem();
@@ -489,8 +476,6 @@ void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 	}
 
 }
-
-// -----------------------------------------------------------
 
 void Facet::RenderSelectedElem() {
 	if (glSelElem) glCallList(glSelElem);
@@ -529,8 +514,6 @@ void Facet::Explode(FACETGROUP *group) {
 	group->nbV = nb;
 
 }
-
-// -----------------------------------------------------------
 
 void Facet::FillVertexArray(InterfaceVertex *v) {
 
@@ -587,8 +570,6 @@ size_t Facet::GetNbCell() {
 	return sh.texHeight * sh.texWidth;
 }
 
-// --------------------------------------------------------------------
-
 size_t Facet::GetNbCellForRatio(double ratio) {
 
 	double nU = sh.U.Norme();
@@ -628,8 +609,6 @@ void Facet::SwapNormal() {
 
 }
 
-// -----------------------------------------------------------
-
 void Facet::ShiftVertex() {
 
 	// Shift vertex
@@ -641,8 +620,6 @@ void Facet::ShiftVertex() {
 	indices = tmp;
 
 }
-
-// -----------------------------------------------------------
 
 void Facet::InitVisibleEdge() {
 
@@ -773,7 +750,6 @@ Vector2d Facet::GetMeshPoint(size_t index, size_t pointId)
 		}
 	}
 }
-
 
 Vector2d Facet::GetMeshCenter(size_t index)
 {

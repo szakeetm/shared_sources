@@ -7,9 +7,7 @@
 #include "Random.h"
 #include "GLApp/MathTools.h"
 
-// -----------------------------------------------------------
 // AABB tree stuff
-// -----------------------------------------------------------
 
 // Minimum number of facet inside a BB
 #define MINBB    8
@@ -86,8 +84,6 @@ int FindBestCuttingPlane(struct AABBNODE *node, int *left, int *right) {
 
 }
 
-// -----------------------------------------------------------
-
 void ComputeBB(struct AABBNODE *node) {
 
 	int i;
@@ -110,8 +106,6 @@ void ComputeBB(struct AABBNODE *node) {
 	}
 
 }
-
-// -----------------------------------------------------------
 
 struct AABBNODE *BuildAABBTree(FACET **list, int nb, int depth) {
 
@@ -172,8 +166,6 @@ struct AABBNODE *BuildAABBTree(FACET **list, int nb, int depth) {
 
 }
 
-// -----------------------------------------------------------
-
 void DestroyAABB(struct AABBNODE *node) {
 
 	if (node != NULL) {
@@ -185,7 +177,6 @@ void DestroyAABB(struct AABBNODE *node) {
 
 }
 
-// -----------------------------------------------------------
 // Ray AABB intersection check (slabs method)
 
 #define IntersectBB(n,lab)                                                   \
@@ -241,7 +232,6 @@ void DestroyAABB(struct AABBNODE *node) {
 	AABBHit = true;                                                            \
 lab:
 
-
 bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
 
 	Vector3d r;
@@ -281,7 +271,6 @@ bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2) {
 
 }
 
-// -----------------------------------------------------------
 bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
 
 	// Perform ray-sphere intersection
@@ -309,14 +298,12 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 }
 
-
 void IntersectTree(struct AABBNODE *node) {
 
 	// Returns the intersection between an oriented ray and
 	// the geometry. If several intersection occurs, the
 	// closest to rayPos is returned.
 	// Returns true is a collision occurs, false otherwise.
-
 
 	// Method: 3x3 Sytem solving for ray/rectangle intersection. 
 	// Solve the vector equation u*U + v*V + d*D = Z (using Cramer's rule)
@@ -339,9 +326,9 @@ void IntersectTree(struct AABBNODE *node) {
 
 				double u, v, d;
 
-				// ---------------------------------------------------------------------------------
+				
 				// Ray/rectange instersection. Find (u,v,dist) and check 0<=u<=1, 0<=v<=1, dist>=0
-				// ---------------------------------------------------------------------------------
+				
 
 				double det = Dot(f->sh.Nuv, intD);
 

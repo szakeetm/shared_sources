@@ -41,7 +41,6 @@ GNU General Public License for more details.
 #include "SynRad.h"
 #endif
 
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -205,7 +204,6 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				sprintf(tmp, "Selected: %zd\nVertex:    %zd/%zd\nFacet:    %zd/%zd\n\nLast action: Collapse all",
 					geom->GetNbSelectedFacets(), geom->GetNbVertex(), nbVertexS, geom->GetNbFacet(), nbFacetS);
 				resultLabel->SetText(tmp);
-
 
 				GLWindowManager::FullRepaint();
 			}

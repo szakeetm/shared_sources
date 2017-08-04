@@ -69,8 +69,6 @@ int          nbDrive = 0;
 
 using namespace std;
 
-// --------------------------------------------------------------
-
 GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,bool openMode):GLWindow() {
 
   char tmp[256];
@@ -170,8 +168,6 @@ GLFileBox::GLFileBox(char *path,char *fileName,char *title,char **filters,int nb
 
 }
 
-// --------------------------------------------------------------
-
 GLFileBox::~GLFileBox() {
 
   for(int i=0;i<nbFilter;i++) {
@@ -180,8 +176,6 @@ GLFileBox::~GLFileBox() {
   }
 
 }
-
-// --------------------------------------------------------------
 
 void GLFileBox::ProcessMessage(GLComponent *src,int message) {
 
@@ -281,8 +275,6 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-// --------------------------------------------------------------
-
 bool GLFileBox::CheckDirectory(char *dirName) {
 
 #ifdef WIN
@@ -315,8 +307,6 @@ bool GLFileBox::CheckDirectory(char *dirName) {
   return true;
 
 }
-
-// --------------------------------------------------------------
 
 FILENAME *GLFileBox::OpenFile(char *path,char *fileName,char *title,const char *filters,int nbFilter) {
 	
@@ -437,8 +427,6 @@ std::vector<FILENAME> GLFileBox::OpenMultipleFiles(const char *filters, const ch
 	return ret;
 }
 
-// --------------------------------------------------------------
-
 FILENAME *GLFileBox::SaveFile(char *path,char *fileName,char *title,const char *filters,int nbFilter) {
 		FILENAME *ret = NULL;
 
@@ -496,8 +484,6 @@ FILENAME *GLFileBox::SaveFile(char *path,char *fileName,char *title,const char *
   return ret;
   */
 }
-
-// --------------------------------------------------------------
 
 void GLFileBox::InitDrivePaths() {
 #ifdef WIN
@@ -572,8 +558,6 @@ void GLFileBox::InitDrivePaths() {
 #endif
 }
 
-// --------------------------------------------------------------
-
 void GLFileBox::AddToFileHist(char *file) {
 
   // Remove first item if full
@@ -606,9 +590,6 @@ void GLFileBox::AddToFileHist(char *file) {
   nbFile++;
 
 }
-
-
-// --------------------------------------------------------------
 
 void GLFileBox::AddToPathHist(char *path) {
 
@@ -659,8 +640,6 @@ void GLFileBox::AddToPathHist(char *path) {
 #endif
 }
 
-// --------------------------------------------------------------
-
 bool GLFileBox::MatchFilters(char *fileName) {
 
   if( nbFilter==0 ) return true;
@@ -672,8 +651,6 @@ bool GLFileBox::MatchFilters(char *fileName) {
   return _stricmp(ext,extF)==0;
 
 }
-
-// --------------------------------------------------------------
 
 char *GLFileBox::GetTimeStr(time_t time) {
 
@@ -689,8 +666,6 @@ char *GLFileBox::GetTimeStr(time_t time) {
   return ret;
 
 }
-
-// --------------------------------------------------------------
 
 char *GLFileBox::GetSizeStr(DWORD size) {
 
@@ -716,8 +691,6 @@ char *GLFileBox::GetSizeStr(DWORD size) {
 
 }
 
-// --------------------------------------------------------------
-
 char *GLFileBox::GetExtension(char *fileName) {
 
   char *p = strrchr(fileName,'.');
@@ -726,16 +699,12 @@ char *GLFileBox::GetExtension(char *fileName) {
 
 }
 
-// --------------------------------------------------------------
-
 char *GLFileBox::GetName(char *fileName) {
   if( strncmp(fileName,":B:",3)==0 )
     return fileName+3;
   else
     return fileName;
 }
-
-// --------------------------------------------------------------
 
 void GLFileBox::Back() {
 
@@ -750,8 +719,6 @@ void GLFileBox::Back() {
   if(p)  *p=0;
 
 }
-
-// --------------------------------------------------------------
 
 void GLFileBox::UpdateFileList(char *path) {
 

@@ -26,7 +26,6 @@ template <typename TYPE> TYPE Sqr(const TYPE& a) { return a*a; }
 char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
-
 double my_erf(double x);
 double Weigh(const double& a, const double& b, const double& weigh);
 double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds = false, const bool& logarithmic = false);

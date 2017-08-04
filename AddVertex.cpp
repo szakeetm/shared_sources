@@ -3,7 +3,6 @@
   Description: Add vertex dialog
   Program:     MolFlow
 
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -32,8 +31,6 @@
 #ifdef SYNRAD
 #include "SynRad.h"
 #endif
-
-
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -96,8 +93,6 @@ AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
 
 }
 
-
-
 void AddVertex::ProcessMessage(GLComponent *src,int message) {
 
   double X,Y,Z;
@@ -127,7 +122,6 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 		  geom->AddVertex(X,Y,Z);
 	  //work->Reload();
 	  //mApp->changedSinceSave = true; //Adding a vertex doesn't modify the simulation whatsoever
-
 
       //GLWindowManager::FullRepaint();
 

@@ -33,8 +33,6 @@ static const int   plWidth[] = {40,70,70,50,345};
 static const char *plName[] = {"PID","Mem Usage","Mem Peak","CPU","Status"};
 static const int   plAligns[] = { ALIGN_CENTER,ALIGN_CENTER,ALIGN_CENTER,ALIGN_CENTER,ALIGN_LEFT };
 
-// ----------------------------------------------------------------
-
 SmpStatus::SmpStatus():GLWindow() {
 
   int wD = 600;
@@ -74,7 +72,6 @@ SmpStatus::SmpStatus():GLWindow() {
   dismissButton->SetBounds(wD-95,hD-43,90,19);
   Add(dismissButton);
 
-
   // Center dialog
   int wS,hS;
   GLToolkit::GetScreenSize(&wS,&hS);
@@ -90,8 +87,6 @@ SmpStatus::SmpStatus():GLWindow() {
 
 }
 
-// ----------------------------------------------------------------
-
 void SmpStatus::Display(Worker *w) {
   char tmp[64];
   worker = w;
@@ -100,8 +95,6 @@ void SmpStatus::Display(Worker *w) {
   nbProcText->SetText(tmp);
   SetVisible(true);
 }
-
-// ----------------------------------------------------------------
 
 void SmpStatus::Update(float appTime) {
 
@@ -161,8 +154,6 @@ void SmpStatus::Update(float appTime) {
 
 }
 
-// ----------------------------------------------------------------
-
 void SmpStatus::RestartProc() {
 
  int nbProc;
@@ -187,8 +178,6 @@ void SmpStatus::RestartProc() {
  }
 
 }
-
-// ----------------------------------------------------------------
 
 void SmpStatus::ProcessMessage(GLComponent *src,int message) {
 

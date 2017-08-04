@@ -29,24 +29,18 @@
 
 #define MAX_WORD_LENGTH 65536 //expected length of the longest line
 
-// -------------------------------------------------
 // Error class
-// -------------------------------------------------
 
 Error::Error(const char *message) {
   strncpy(msg,message,255);
   msg[255]=0;
 }
 
-// -------------------------------------------------
-
 const char *Error::GetMsg() {
   return msg;
 }
 
-// -------------------------------------------------
 // FileUtils class
-// -------------------------------------------------
 
 bool FileUtils::Exist(std::string fileName) {
 	return Exist(fileName.c_str());
@@ -61,9 +55,7 @@ bool FileUtils::Exist(const char *fileName) {
 	return false;
 }
 
-// -------------------------------------------------
 // FileReader class
-// -------------------------------------------------
 
 FileReader::FileReader(const char *fileName) {
 
@@ -79,8 +71,6 @@ FileReader::FileReader(const char *fileName) {
 
 }
 
-// -------------------------------------------------
-
 void FileReader::RefillBuffer() {
 
   if( !isEof ) {
@@ -90,8 +80,6 @@ void FileReader::RefillBuffer() {
   buffPos = 0;
 
 }
-
-// -------------------------------------------------
 
 char FileReader::ReadChar() {
 
@@ -110,17 +98,12 @@ char FileReader::ReadChar() {
   return CurrentChar;
 }
 
-// -------------------------------------------------
-
 int FileReader::IsEof() {
-
 
   JumpControlChars();
   return isEof;
 
 }
-
-// -------------------------------------------------
 
 int FileReader::GetCurrentLine() {
 
@@ -128,27 +111,19 @@ int FileReader::GetCurrentLine() {
 
 }
 
-// -------------------------------------------------
-
 char *FileReader::GetName() {
   return fileName;
 }
 
-// -------------------------------------------------
-
 FileReader::~FileReader() {
   fclose(file);
 }
-
-// -------------------------------------------------
 
 Error FileReader::MakeError(char *msg) {
   static char ret[4096];
   sprintf(ret,"%s (line %d)",msg,curLine);
   return Error(ret);
 }
-
-// -------------------------------------------------
 
 int FileReader::ReadInt() {
 
@@ -158,8 +133,6 @@ int FileReader::ReadInt() {
   return ret;
 
 }
-
-// -------------------------------------------------
 
 llong FileReader::ReadLLong() {
 
@@ -172,8 +145,6 @@ llong FileReader::ReadLLong() {
 
 }
 
-// -------------------------------------------------
-
 void FileReader::SeekStart() {
   fseek(file, 0L, SEEK_SET);
   isEof = 0;
@@ -182,16 +153,12 @@ void FileReader::SeekStart() {
   CurrentChar = ' ';
 }
 
-// -------------------------------------------------
-
 void FileReader::JumpSection(char *end) {
 
   char *w = ReadWord();
   while(strcmp(w,end)!=0) w=ReadWord();
 
 }
-
-// -------------------------------------------------
 
 void FileReader::ReadKeyword(char *keyword) {
 
@@ -202,8 +169,6 @@ void FileReader::ReadKeyword(char *keyword) {
 	  throw Error(MakeError(msg));
   }
 }
-
-// -------------------------------------------------
 
 double FileReader::ReadDouble() {
 
@@ -216,7 +181,6 @@ double FileReader::ReadDouble() {
 
 }
 
-// -------------------------------------------------
 bool FileReader::SeekFor(char *keyword) {
 	char *w;
 	int i=0;
@@ -238,8 +202,6 @@ bool FileReader::SeekForChar(char *c) {
 	} while (notFound);
 	return (isEof)?false:true;
 }
-
-// -------------------------------------------------
 
 char *FileReader::ReadLine() {
 
@@ -264,13 +226,10 @@ char *FileReader::ReadLine() {
 		return NULL;
 	  }
 
-
   retWord[len]='\0';
   return retWord;
 
 }
-
-// -------------------------------------------------
 
 char *FileReader::ReadString()
 {
@@ -298,8 +257,6 @@ void FileReader::JumpComment() {
 	}
 }
 
-// -------------------------------------------------
-
 void FileReader::JumpControlChars() {
 
   // Jump spaces and control characters
@@ -311,8 +268,6 @@ void FileReader::JumpControlChars() {
 int FileReader::IsEol() {
 	return CurrentChar=='\n';
 }
-
-// -------------------------------------------------
 
 char *FileReader::ReadWord() {
 
@@ -373,9 +328,7 @@ char *FileReader::ReadWord() {
 
 }
 
-// -------------------------------------------------
 // FileWriter class
-// -------------------------------------------------
 
 FileWriter::FileWriter(char *fileName) {
 
@@ -389,13 +342,9 @@ FileWriter::FileWriter(char *fileName) {
 
 }
 
-// -------------------------------------------------
-
 char *FileWriter::GetName() {
   return fileName;
 }
-
-// -------------------------------------------------
 
 FileWriter::~FileWriter() {
   fclose(file);

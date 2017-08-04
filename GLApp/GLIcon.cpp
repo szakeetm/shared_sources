@@ -17,14 +17,10 @@
 #include "GLIcon.h"
 #include "GLToolkit.h"
 
-// ---------------------------------------------------------------------
-
 GLIcon::GLIcon(char *name):GLComponent(0) {
   strcpy(this->name,name);
   icon = NULL;
 }
-
-// ---------------------------------------------------------------------
 
 void GLIcon::Paint() {
 
@@ -37,14 +33,10 @@ void GLIcon::Paint() {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLIcon::InvalidateDeviceObjects() {
   icon->InvalidateDeviceObjects();
   SAFE_DELETE(icon);
 }
-
-// ----------------------------------------------------------
 
 void GLIcon::RestoreDeviceObjects() {
 

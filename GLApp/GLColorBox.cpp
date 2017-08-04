@@ -147,13 +147,9 @@ GLColorBox::GLColorBox(char *title,int *r,int *g,int *b):GLWindow() {
 
 }
 
-// -------------------------------------------------
-
 GLColorBox::~GLColorBox() {
   InvalidateDeviceObjects();
 }
-
-// -------------------------------------------------
 
 void GLColorBox::InvalidateDeviceObjects() {
 
@@ -232,8 +228,6 @@ void GLColorBox::RestoreDeviceObjects() {
 
   GLWindow::RestoreDeviceObjects();
 }
-
-// -------------------------------------------------
 
 void GLColorBox::Paint() {
 
@@ -351,8 +345,6 @@ void GLColorBox::Paint() {
   GLToolkit::CheckGLErrors("GLColorBox::Paint()");
 }
 
-// -------------------------------------------------
-
 void GLColorBox::paintBox(int x,int y,int w,int h) {
 
   glBegin(GL_LINES);
@@ -371,8 +363,6 @@ void GLColorBox::paintBox(int x,int y,int w,int h) {
 #endif
 
 }
-
-// -------------------------------------------------
 
 int GLColorBox::get_redi( DWORD c ) {
   int ret = (c & 0x00FF0000);
@@ -505,8 +495,6 @@ void GLColorBox::rgb_to_hsv(int ri,int gi,int bi, float *h,float *s,float *v) {
 
 }
 
-// -------------------------------------------------
-
 void GLColorBox::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     rCode = src->GetId();
@@ -522,8 +510,6 @@ void GLColorBox::ProcessMessage(GLComponent *src,int message) {
   }
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 void GLColorBox::ManageEvent(SDL_Event *evt) {
 
@@ -565,8 +551,6 @@ void GLColorBox::ManageEvent(SDL_Event *evt) {
   GLWindow::ManageEvent(evt);
 }
 
-// -------------------------------------------------
-
 void GLColorBox::updateColor(int r,int g,int b) {
 
   char tmp[128];
@@ -583,8 +567,6 @@ void GLColorBox::updateColor(int r,int g,int b) {
   rgb_to_hsv(r,g,b,&curH,&curS,&curV);
 
 }
-
-// -------------------------------------------------
 
 int GLColorBox::Display(char *title,int *r,int *g,int *b) {
 

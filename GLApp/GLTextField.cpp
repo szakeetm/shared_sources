@@ -20,8 +20,6 @@
 #include "MathTools.h" //Min max
 #include "GLFont.h"
 
-// ------------------------------------------------------
-
 GLTextField::GLTextField(int compId,const char *text):GLComponent(compId) {
 
   SetBorder(BORDER_BEVEL_IN);
@@ -34,19 +32,13 @@ GLTextField::GLTextField(int compId,const char *text):GLComponent(compId) {
   SetCursor(CURSOR_TEXT);
 }
 
-// ------------------------------------------------------
-
 char *GLTextField::GetText() {
   return m_Text;
 }
 
-// ------------------------------------------------------
-
 void GLTextField::Clear() {
   SetText("");
 }
-
-// ------------------------------------------------------
 
 void GLTextField::SetCursorPos(int pos) {
   if(pos>=0 && pos<=(int)strlen(m_Text)) {
@@ -58,19 +50,13 @@ void GLTextField::SetCursorPos(int pos) {
   }
 }
 
-// ------------------------------------------------------
-
 int GLTextField::GetCursorPos() {
   return m_CursorPos;
 }
 
-// ------------------------------------------------------
-
 int GLTextField::GetTextLength() {
   return m_Length;
 }
-
-// ------------------------------------------------------
 
 void GLTextField::SetEditable(bool editable) {
   m_Editable = editable;
@@ -88,8 +74,6 @@ bool GLTextField::IsEditable() {
 	return m_Editable;
 }
 
-// ------------------------------------------------------
-
 void GLTextField::SetEditable_NoBG(bool editable) { //for combo boxes
   m_Editable = editable;
   if( m_Editable ) {
@@ -100,13 +84,9 @@ void GLTextField::SetEditable_NoBG(bool editable) { //for combo boxes
   }
 }
 
-// ------------------------------------------------------
-
 bool GLTextField::IsCaptured() {
   return m_Captured;
 }
-
-// ------------------------------------------------------
 
 void GLTextField::SetText(const char *text) {
   if(text && strcmp(text,m_Text)==0) return;
@@ -140,8 +120,6 @@ void GLTextField::SetText(const size_t &val) {
 	SetText(tmp);
 }
 
-// ------------------------------------------------------
-
 void GLTextField::UpdateText(const char *text) {
   if(text) {
     strncpy(m_Text,text,MAX_TEXT_SIZE);
@@ -151,8 +129,6 @@ void GLTextField::UpdateText(const char *text) {
   UpdateXpos();
 }
 
-// ------------------------------------------------------
-
 bool GLTextField::GetNumber(double *num) {
 
   int conv = sscanf(m_Text,"%lf",num);
@@ -160,7 +136,6 @@ bool GLTextField::GetNumber(double *num) {
 
 }
 
-// ------------------------------------------------------
 bool GLTextField::GetNumberInt(int *num) {
 
   int conv = sscanf(m_Text,"%d",num);
@@ -174,7 +149,6 @@ bool GLTextField::GetNumberSize(size_t *num) {
 	return (conv == 1);
 
 }
-// ------------------------------------------------------
 
 void GLTextField::UpdateXpos() {
 
@@ -194,8 +168,6 @@ void GLTextField::UpdateXpos() {
 
 }
 
-// ------------------------------------------------------
-
 void GLTextField::ScrollToVisible()
 {
   int sx = m_XPos[m_Zero];
@@ -213,8 +185,6 @@ void GLTextField::ScrollToVisible()
   }
 
 }
-
-// ------------------------------------------------------
 
 void GLTextField::InsertString(char *lpszString)
 {
@@ -239,8 +209,6 @@ void GLTextField::InsertString(char *lpszString)
 
 }
 
-// ------------------------------------------------------
-
 void GLTextField::DeleteString(int count)
 {
   if(!m_Editable) return;
@@ -253,8 +221,6 @@ void GLTextField::DeleteString(int count)
   UpdateText(tmp);
   ScrollToVisible();
 }
-
-// ------------------------------------------------------
 
 void GLTextField::Paint() {
 
@@ -316,8 +282,6 @@ void GLTextField::Paint() {
   GLToolkit::CheckGLErrors("GLTextField::Paint()");
 }
 
-// ------------------------------------------------------
-
 void GLTextField::MoveCursor(int newPos)
 {
   if( m_CursorState ) {
@@ -330,8 +294,6 @@ void GLTextField::MoveCursor(int newPos)
   ScrollToVisible();
 }
 
-// ------------------------------------------------------
-
 void GLTextField::MoveSel(int newPos)
 {
   m_Stop=newPos;
@@ -339,15 +301,11 @@ void GLTextField::MoveSel(int newPos)
   ScrollToVisible();
 }
 
-// ------------------------------------------------------
-
 void GLTextField::RemoveSel()
 {
   m_Start=m_CursorPos;
   m_Stop=m_CursorPos;
 }
-
-// ------------------------------------------------------
 
 void GLTextField::DeleteSel()
 {
@@ -368,8 +326,6 @@ void GLTextField::DeleteSel()
   m_Stop=m_CursorPos;
   ScrollToVisible();
 }
-
-// ------------------------------------------------------
 
 void  GLTextField::CopyClipboardText() {
 
@@ -414,8 +370,6 @@ void  GLTextField::CopyClipboardText() {
 
 }
 
-// ------------------------------------------------------
-
 void GLTextField::PasteClipboardText() {
 
 #ifdef WIN
@@ -443,8 +397,6 @@ void GLTextField::PasteClipboardText() {
 
 }
 
-// ------------------------------------------------------
-
 void GLTextField::SetFocus(bool focus) {
 
   if(focus) {
@@ -460,8 +412,6 @@ void GLTextField::SetFocus(bool focus) {
 
 }
 
-// ------------------------------------------------------
-
 void GLTextField::SelectAll() {
 
   m_Start=0;
@@ -469,8 +419,6 @@ void GLTextField::SelectAll() {
   MoveSel(m_Length);
 
 }
-
-// ------------------------------------------------------
 
 int GLTextField::GetCursorLocation(int px) {
 
@@ -493,13 +441,10 @@ int GLTextField::GetCursorLocation(int px) {
 
 }
 
-// ------------------------------------------------------
 void GLTextField::ProcessEnter() {
 
 	return;
 }
-
-// ------------------------------------------------------
 
 void GLTextField::ManageEvent(SDL_Event *evt) {
 

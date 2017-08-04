@@ -17,13 +17,9 @@
 #include "GLMatrix.h"
 #include <math.h>
 
-// -------------------------------------
-
 GLMatrix::GLMatrix() {
   Identity();
 }
-
-// -------------------------------------
 
 void GLMatrix::Init33(float _11,float _12,float _13,float _21,float _22,float _23,float _31,float _32,float _33) {
 
@@ -33,7 +29,6 @@ void GLMatrix::Init33(float _11,float _12,float _13,float _21,float _22,float _2
 
 }
 
-// -------------------------------------
   
 void GLMatrix::Identity() {
 
@@ -44,8 +39,6 @@ void GLMatrix::Identity() {
 
 }
 
-// -------------------------------------
-
 void GLMatrix::Translate(float x,float y,float z) {
 
   Identity();
@@ -55,7 +48,6 @@ void GLMatrix::Translate(float x,float y,float z) {
 
 }
     
-// -------------------------------------
 
 void GLMatrix::Multiply(GLMatrix *m2) {
 
@@ -107,8 +99,6 @@ void GLMatrix::Multiply(GLMatrix *m1,GLMatrix *m2) {
   
 }
 
-// -------------------------------------
-
 void GLMatrix::TransfomVec(float x,float y,float z,float w,float *rx,float *ry,float *rz,float *rw) {
 
   *rx = x * _11 + y * _12 + z * _13 + w * _14;
@@ -117,8 +107,6 @@ void GLMatrix::TransfomVec(float x,float y,float z,float w,float *rx,float *ry,f
   *rw = x * _41 + y * _42 + z * _43 + w * _44;
 
 }
-
-// -------------------------------------
 
 GLfloat *GLMatrix::GetGL() {
   
@@ -131,8 +119,6 @@ GLfloat *GLMatrix::GetGL() {
 
 }
 
-// -------------------------------------
-
 void GLMatrix::LoadGL(GLfloat *m) {
   
   _11 = m[0]; _12 = m[4]; _13 = m[8];  _14 = m[12]; 
@@ -141,8 +127,6 @@ void GLMatrix::LoadGL(GLfloat *m) {
   _41 = m[3]; _42 = m[7]; _43 = m[11]; _44 = m[15]; 
 
 }
-
-// -------------------------------------
 
 void GLMatrix::LoadGL(GLenum which) {
 
@@ -154,8 +138,6 @@ void GLMatrix::LoadGL(GLenum which) {
   _41 = m[3]; _42 = m[7]; _43 = m[11]; _44 = m[15]; 
 
 }
-
-// -------------------------------------
 
 void GLMatrix::Transpose() {
 
@@ -172,8 +154,6 @@ void GLMatrix::Transpose() {
 
 }
 
-// -------------------------------------
-
 void GLMatrix::RotateX(float angle) {
 
   float cs = cosf(angle);
@@ -185,8 +165,6 @@ void GLMatrix::RotateX(float angle) {
   
 }
 
-// -------------------------------------
-
 void GLMatrix::RotateY(float angle) {
 
   float cs = cosf(angle);
@@ -197,8 +175,6 @@ void GLMatrix::RotateY(float angle) {
   _31=-sn; _33=cs;
   
 }
-
-// -------------------------------------
 
 void GLMatrix::RotateZ(float angle) {
 

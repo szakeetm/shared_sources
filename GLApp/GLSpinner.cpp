@@ -20,8 +20,6 @@
 #include "GLFont.h"
 #include "MathTools.h" //Saturate
 
-// -----------------------------------------------------------------
-
 GLSpinner::GLSpinner(int compId):GLComponent(compId) {
 
   value = 0.0;
@@ -33,8 +31,6 @@ GLSpinner::GLSpinner(int compId):GLComponent(compId) {
   state = 0;
 
 }
-
-// -----------------------------------------------------------------
 
 void GLSpinner::SetValue(double value) {
   this->value = value;
@@ -56,8 +52,6 @@ void GLSpinner::SetMinMax(double min,double max) {
   this->min = min;
   this->max = max;
 }
-
-// -----------------------------------------------------------------
 
 void GLSpinner::Paint() {
 
@@ -82,8 +76,6 @@ void GLSpinner::Paint() {
   font->DrawText(posX+width-13,posY+h2-1,"\211",false);
 
 }
-
-// -----------------------------------------------------------------
 
 void GLSpinner::ManageEvent(SDL_Event *evt) {
 

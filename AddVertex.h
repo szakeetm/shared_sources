@@ -16,8 +16,6 @@ class GLLabel;
 class Geometry;
 class Worker;
 
-
-
 class AddVertex : public GLWindow {
 
 public:
@@ -43,7 +41,6 @@ private:
   GLTextField *z;
 
   int nbVertexS;
-
 
 };
 

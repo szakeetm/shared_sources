@@ -41,8 +41,6 @@ extern GLApplication *theApp;
 #define MAX_SYSBTN   1
 #define ICON_SYSBTN  2
 
-// ---------------------------------------------------------------
-
 GLWindow::GLWindow():GLContainer() {
 
   draggMode = DRAGG_NONE;
@@ -75,9 +73,6 @@ GLWindow::GLWindow():GLContainer() {
 
 }
 
-
-// ---------------------------------------------------------------
-
 GLWindow::~GLWindow() {
 
   if( menuBar ) {
@@ -91,25 +86,17 @@ GLWindow::~GLWindow() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::SetAnimatedFocus(bool animate) {
   animateFocus = animate;
 }
-
-// ---------------------------------------------------------------
 
 int GLWindow::GetHeight() {
   return height;
 }
 
-// ---------------------------------------------------------------
-
 int GLWindow::GetWidth() {
   return width;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetMenuBar(GLComponent *bar,int hBar) {
 
@@ -124,8 +111,6 @@ void GLWindow::SetMenuBar(GLComponent *bar,int hBar) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::AddMenu(GLMenu *menu) {
   if( !menus ) {
     menus = new GLContainer();
@@ -135,13 +120,9 @@ void GLWindow::AddMenu(GLMenu *menu) {
   menus->Add(menu);
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::RemoveMenu(GLMenu *menu) {
   if( menus ) menus->PostDelete(menu);
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::CloseMenu() {
 
@@ -155,8 +136,6 @@ void GLWindow::CloseMenu() {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetMaster(bool master) {
   isMaster = master;
@@ -198,14 +177,10 @@ void GLWindow::SetTitle(const char* title) {
   //GLWindowManager::Repaint();
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::SetPosition(int x,int y) {
   posX = x;
   posY = y;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetBounds(int x,int y,int w,int h) {
   posX = x;
@@ -219,25 +194,17 @@ void GLWindow::SetMinimumSize(int width, int height) {
   minHeight = height;
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::SetIconfiable(bool iconifiable) {
   this->iconifiable = iconifiable;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetBorder(bool b) {
   border = b;
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::SetResizable(bool sizable) {
   isResizable = sizable;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetBackgroundColor(int r,int g,int b) {
   rBack=r;
@@ -251,8 +218,6 @@ void GLWindow::GetBackgroundColor(int *r,int *g,int *b) {
   *b=bBack;
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
   *x = posX;
   *y = posY;
@@ -260,19 +225,13 @@ void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
   *w = width;
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsCtrlDown() {
   return GLWindowManager::IsCtrlDown();
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsShiftDown() {
   return GLWindowManager::IsShiftDown();
 }
-
-// ---------------------------------------------------------------
 
 bool GLWindow::IsAltDown() {
   return GLWindowManager::IsAltDown();
@@ -294,8 +253,6 @@ int GLWindow::GetModState() {
 	return GLWindowManager::GetModState();
 }
 
-// ---------------------------------------------------------------
-
 int GLWindow::GetUpMargin() {
   bool hasTitle = strlen(title)!=0;
   int mUp = 0;
@@ -307,8 +264,6 @@ int GLWindow::GetUpMargin() {
   }
   return mUp;
 }
-
-// ---------------------------------------------------------------
 
 bool GLWindow::IsInWindow(int mx,int my) {
   return (mx>=posX && mx<=posX+width && my>=posY && my<=posY+height);  
@@ -333,8 +288,6 @@ bool GLWindow::IsInSysButton(SDL_Event *evt,int witch) {
 
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsInComp(GLComponent *src,int mx,int my) {
   int x,y,w,h;
   src->GetBounds(&x,&y,&w,&h);
@@ -348,16 +301,12 @@ bool GLWindow::IsInComp(GLComponent *src,int mx,int my) {
   return (mx>=x && mx<=x+w && my>=y && my<=y+h);
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::GetClientArea(int *x,int *y,int *w,int *h) {
   *x = 0;
   *y = 0;
   *h = height-GetUpMargin();
   *w = width;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::ProcessMessage(GLComponent *src,int message) {
 
@@ -379,8 +328,6 @@ void GLWindow::ProcessMessage(GLComponent *src,int message) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::UpdateOnResize() {
 
   if( maximized ) {
@@ -390,8 +337,6 @@ void GLWindow::UpdateOnResize() {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::Maximise(bool max) {
 
@@ -419,8 +364,6 @@ void GLWindow::Maximise(bool max) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::Iconify(bool iconify) {
 
   if(!iconifiable) return;
@@ -442,31 +385,21 @@ void GLWindow::Iconify(bool iconify) {
 
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsIconic() {
   return iconified;
 }
-
-// ---------------------------------------------------------------
 
 bool GLWindow::IsMaximized() {
   return maximized;
 }
 
-// ---------------------------------------------------------------
-
 int GLWindow::GetIconWidth() {
   return iconWidth;
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsMoving() {
   return draggMode!=DRAGG_NONE;
 }
-
-// ---------------------------------------------------------------
 
 int GLWindow::GetScreenX(GLComponent *src) {
   int x,y,w,h;
@@ -474,15 +407,11 @@ int GLWindow::GetScreenX(GLComponent *src) {
   return x+posX;  
 }
 
-// ---------------------------------------------------------------
-
 int GLWindow::GetScreenY(GLComponent *src) {
   int x,y,w,h;
   src->GetBounds(&x,&y,&w,&h);
   return y+posY+GetUpMargin();  
 }
-
-// ---------------------------------------------------------------
 
 int GLWindow::GetX(GLComponent *src,SDL_Event *evt) {
 
@@ -500,8 +429,6 @@ int GLWindow::GetX(GLComponent *src,SDL_Event *evt) {
 
 }
 
-// ---------------------------------------------------------------
-
 int GLWindow::GetY(GLComponent *src,SDL_Event *evt) {
 
   int u = GetUpMargin();
@@ -518,8 +445,6 @@ int GLWindow::GetY(GLComponent *src,SDL_Event *evt) {
   return 0;
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::SetVisible(bool v) {
  
@@ -544,13 +469,9 @@ void GLWindow::SetVisible(bool v) {
   
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsVisible() {
   return visible;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::DoModal() {
   GLWindowManager::FullRepaint();
@@ -632,13 +553,9 @@ void GLWindow::DoModal() {
 
 }
 
-// ---------------------------------------------------------------
-
 bool GLWindow::IsDragging() {
   return (draggedComp!=NULL) || draggMode;
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::CancelDrag(SDL_Event *evt) {
 
@@ -654,8 +571,6 @@ void GLWindow::CancelDrag(SDL_Event *evt) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::ManageMenu(SDL_Event *evt) {
 
   evtProcessed = false;
@@ -666,8 +581,6 @@ void GLWindow::ManageMenu(SDL_Event *evt) {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::UpdateSize(int newWidht,int newHeight,int cursor) {
 
@@ -684,8 +597,6 @@ void GLWindow::UpdateSize(int newWidht,int newHeight,int cursor) {
   GLToolkit::SetCursor(cursor);
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::ManageEvent(SDL_Event *evt) {
 
@@ -894,10 +805,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
     }
   }
 
-
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::Clip(GLComponent *src,int lMargin,int uMargin,int rMargin,int bMargin) {
 
@@ -913,8 +821,6 @@ void GLWindow::Clip(GLComponent *src,int lMargin,int uMargin,int rMargin,int bMa
 	
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::ClipRect(GLComponent *src,int x,int y,int width,int height) {
 
   glMatrixMode( GL_PROJECTION );
@@ -928,8 +834,6 @@ void GLWindow::ClipRect(GLComponent *src,int x,int y,int width,int height) {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::ClipToWindow() {
 
   glMatrixMode( GL_MODELVIEW );
@@ -941,8 +845,6 @@ void GLWindow::ClipToWindow() {
   GLToolkit::SetViewport(posX,posY+mUp,width,height-mUp);
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::ClipWindowExtent() {
 
@@ -961,8 +863,6 @@ void GLWindow::ClipWindowExtent() {
 
 }
 
-// ---------------------------------------------------------------
-
 void GLWindow::PaintMenuBar() {
   if( menuBar && !iconified ) {
     GLWindowManager::NoClip();
@@ -970,8 +870,6 @@ void GLWindow::PaintMenuBar() {
     menuBar->Paint();
   }
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::PaintMenu() {
 
@@ -982,8 +880,6 @@ void GLWindow::PaintMenu() {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::PaintTitle(int _width,int _height) {
 
@@ -1043,8 +939,6 @@ void GLWindow::PaintTitle(int _width,int _height) {
   }
 
 }
-
-// ---------------------------------------------------------------
 
 void GLWindow::Paint() {
 

@@ -292,9 +292,9 @@ void FormulaEditor::Refresh() {
 }
 
 void FormulaEditor::ReEvaluate() {
-	//-----------------------------------------------------------------------
+	
 	//       NEW CODE
-	//-----------------------------------------------------------------------
+	
 
 	for (size_t i = 0; i < mApp->formulas_n.size(); i++) {
 

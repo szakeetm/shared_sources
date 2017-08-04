@@ -20,9 +20,8 @@
 #include "GLComponent.h"
 #include "GLFont.h"
 
-// ------------------------------------------------------
 // Tab bar component
-// ------------------------------------------------------
+
 #define TABHEIGHT 18
 
 class TabbedBar : GLComponent {
@@ -168,22 +167,15 @@ private:
 
 };
 
-
-// ------------------------------------------------------
-
 GLTabWindow::GLTabWindow():GLWindow() {
   nbPanel = 0;
   panels = NULL;
   bar = NULL;
 }
 
-// ------------------------------------------------------
-
 GLTabWindow::~GLTabWindow() {
   Clear();
 }
-
-// ------------------------------------------------------
 
 void GLTabWindow::Add(int panel,GLComponent *comp) {
 
@@ -202,8 +194,6 @@ void GLTabWindow::Add(int panel,GLComponent *comp) {
 
 }
 
-// ------------------------------------------------------
-
 void GLTabWindow::SetPanelNumber(int numP) {
 
   Clear();
@@ -213,16 +203,12 @@ void GLTabWindow::SetPanelNumber(int numP) {
 
 }
 
-// ------------------------------------------------------
-
 void GLTabWindow::SetPanelName(int idx,char *name) {
 
   panels[idx].name = _strdup(name);
   panels[idx].width = GLToolkit::GetDialogFontBold()->GetTextWidth(name)+10;
 
 }
-
-// ------------------------------------------------------
 
 void GLTabWindow::Clear() {
 
@@ -240,8 +226,6 @@ void GLTabWindow::Clear() {
 
 }
 
-// ------------------------------------------------------
-
 void GLTabWindow::Update() {
 
   if(bar) SAFE_DELETE(bar);
@@ -251,8 +235,6 @@ void GLTabWindow::Update() {
 
 }
 
-// ------------------------------------------------------
-
 void GLTabWindow::SetBounds(int x,int y,int w,int h) {
 
   if(bar) ((TabbedBar *)bar)->Measure(x+2,y+20,w-4,h);
@@ -260,16 +242,12 @@ void GLTabWindow::SetBounds(int x,int y,int w,int h) {
 
 }
 
-// ------------------------------------------------------
-
 void GLTabWindow::ProcessMessage(GLComponent *src,int message) {
 
   if( message==MSG_TAB ) showHide();
   GLWindow::ProcessMessage(src,message);
 
 }
-
-// ------------------------------------------------------
 
 void GLTabWindow::showHide() {
 
@@ -282,8 +260,6 @@ void GLTabWindow::showHide() {
   }
 
 }
-
-// ------------------------------------------------------
 
 void GLTabWindow::SetTextColor(int r,int g,int b) {
   if(bar) ((TabbedBar *)bar)->SetTextColor(r,g,b);

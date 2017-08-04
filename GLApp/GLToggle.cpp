@@ -18,8 +18,6 @@
 #include "GLToolkit.h"
 #include "GLFont.h"
 
-// ---------------------------------------------------------------------
-
 GLToggle::GLToggle(int compId,char *text):GLComponent(compId) {
   if(text) 
     strcpy(this->text,text);
@@ -31,8 +29,6 @@ GLToggle::GLToggle(int compId,char *text):GLComponent(compId) {
   SetTextColor(0,0,0);
 }
 
-// ---------------------------------------------------------------------
-
 int GLToggle::GetState() {
   return state;
 }
@@ -41,8 +37,6 @@ void GLToggle::AllowMixedState(bool setAllow) {
 	allowMixedState = setAllow;
 }
 
-// ---------------------------------------------------------------------
-
 void GLToggle::SetState(int setState) {
   state=setState;
 }
@@ -50,8 +44,6 @@ void GLToggle::SetState(int setState) {
 void GLToggle::SetText(std::string text) {
 	strcpy(this->text, text.c_str());
 }
-
-// ---------------------------------------------------------------------
 
 void GLToggle::Paint() {
 
@@ -75,8 +67,6 @@ void GLToggle::Paint() {
   GLToolkit::CheckGLErrors("GLToggle::Paint()");
 }
 
-// ---------------------------------------------------------------------
-
 void GLToggle::SetTextColor(int r,int g,int b) {
   rText = r/255.0f;
   gText = g/255.0f;
@@ -88,8 +78,6 @@ void GLToggle::SetEnabled(bool enable) { //GLComponent override
 	int color = enable ? 0 : 120;
 	SetTextColor(color, color, color);
 }
-
-// ---------------------------------------------------------------------
 
 void GLToggle::ManageEvent(SDL_Event *evt) {
 

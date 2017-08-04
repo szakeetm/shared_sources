@@ -7,7 +7,6 @@
 
 #include "GLApp/GLWindow.h"
 
-
 class GLButton;
 class GLTextField;
 class GLLabel;
@@ -54,7 +53,6 @@ private:
 
   Geometry     *geom;
   Worker	   *work;
-
 
 };
 

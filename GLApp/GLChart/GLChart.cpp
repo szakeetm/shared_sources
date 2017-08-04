@@ -28,8 +28,6 @@ double NaN;
 static const char *fileFilters = "All files\0*.*\0Text files\0*.txt";
 static const int   nbFilter = 2;
 
-// -------------------------------------------------------------
-
 GLChart::GLChart(int compId):GLComponent(compId) {
 
 	// Default
@@ -77,7 +75,6 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	chartMenu->Add("Load file (TXT)",MENU_LOADTXT);
 	dvMenuY1 = chartMenu->GetSubMenu("Dataview Y1");
 	dvMenuY2 = chartMenu->GetSubMenu("Dataview Y2");
-
 
 	zoomButton = new GLButton(0,"Zoom back");
 	zoomButton->SetVisible(false);
@@ -344,9 +341,8 @@ void GLChart::UnselectAll() {
 	GetXAxis()->ClearDataView();
 }
 
-// -----------------------------------------------------
 // Message management
-// -----------------------------------------------------
+
 void GLChart::ProcessMessage(GLComponent *src,int message) {
 
 	if( src==zoomButton ) {
@@ -970,9 +966,8 @@ char **GLChart::buildPanelString(SearchInfo *si) {
 
 }
 
-// ------------------------------------------------------------------------
 // Save a tab separated field data file (TXT)
-// ------------------------------------------------------------------------
+
 void GLChart::SaveFile() {
 
 	char tmp[128];
@@ -1104,8 +1099,6 @@ void GLChart::CopyAllToClipboard() {
 	HGLOBAL hText = NULL;
 	char   *lpszText;
 
-
-
 	//totalLength=150000;
 
 	if(!(hText = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, totalLength+1 ))) {
@@ -1176,9 +1169,8 @@ void GLChart::CopyAllToClipboard() {
 
 }
 
-// ------------------------------------------------------------------------
 // Load data From a file
-// ------------------------------------------------------------------------
+
 #define TRUNC(x) {int l = (int)strlen(x)-1; if(l>=0 && x[l]<32) x[l]=0; }
 
 void GLChart::LoadFile() {

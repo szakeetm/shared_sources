@@ -24,9 +24,7 @@
 
 void PrintLastErrorText( LPTSTR suff );
 
-// --------------------------------------------------------------------------
 // CreateDataport: Create a block of shared memory
-// --------------------------------------------------------------------------
 
 Dataport *CreateDataport(char *name,size_t size)
 {
@@ -111,9 +109,7 @@ Dataport *CreateDataport(char *name,size_t size)
    return (dp);
 }
 
-// --------------------------------------------------------------------------
 // OpenDataport: Connect to an existing block
-// --------------------------------------------------------------------------
 
 Dataport *OpenDataport(char *name,size_t size)
 {
@@ -229,8 +225,6 @@ bool CloseDataport(Dataport *dp)
 
 }
 
-// --------------------------------------------------------------------------
-
 void PrintLastErrorText( LPTSTR suff )
 {
     DWORD dwRet;
@@ -253,9 +247,7 @@ void PrintLastErrorText( LPTSTR suff )
 
 #else
 
-// -------------------------------------------------------------------------------------------------
 // Linux code
-// -------------------------------------------------------------------------------------------------
 
 #include <sys/types.h>
 
@@ -277,7 +269,6 @@ typedef struct {
 #include <errno.h>
 #include <strings.h>
 #include <unistd.h>
-
 
 /****************************************************************************
 *

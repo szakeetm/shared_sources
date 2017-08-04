@@ -91,7 +91,6 @@ GLUnitDialog::GLUnitDialog(char *message,char *title,int mode,int icon):GLWindow
     btn->SetBounds(startX-240,startY+25,75,20);
 	Add(btn);}
 
-
   // Center dialog
   int wS,hS;
   GLToolkit::GetScreenSize(&wS,&hS);
@@ -107,8 +106,6 @@ GLUnitDialog::GLUnitDialog(char *message,char *title,int mode,int icon):GLWindow
 
 }
 
-// -------------------------------------------------
-
 void GLUnitDialog::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     rCode = src->GetId();
@@ -117,8 +114,6 @@ void GLUnitDialog::ProcessMessage(GLComponent *src,int message) {
   }
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 int GLUnitDialog::Display(char *message,char *title,int mode,int icon) {
 

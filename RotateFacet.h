@@ -60,6 +60,5 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-
 };
 

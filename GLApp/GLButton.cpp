@@ -19,8 +19,6 @@
 #include "GLSprite.h"
 #include "GLFont.h"
 
-// ---------------------------------------------------------------------
-
 GLButton::GLButton(int compId,const char *text):GLComponent(compId) {
   SetText(text);
   state=0;
@@ -44,8 +42,6 @@ void GLButton::SetFontColor(float red, float green, float blue){
 	b = blue;
 }
 
-// ----------------------------------------------------------
-
 void GLButton::InvalidateDeviceObjects() {
   if(icon) {
     icon->InvalidateDeviceObjects();
@@ -56,8 +52,6 @@ void GLButton::InvalidateDeviceObjects() {
     SAFE_DELETE(iconD);
   }
 }
-
-// ----------------------------------------------------------
 
 void GLButton::RestoreDeviceObjects() {
 
@@ -85,27 +79,19 @@ void GLButton::SetText(const char *text) {
     strcpy(this->text,"");
 }
 
-// ---------------------------------------------------------------------
-
 void GLButton::SetToggle(bool toggle) {
   this->toggle = toggle;
   if( !toggle ) toggleState = false;
 }
 
-// ---------------------------------------------------------------------
-
 bool GLButton::GetState() {
   return toggleState;
 }
-
-// ---------------------------------------------------------------------
 
 void GLButton::SetState(bool checked) {
   toggleState = checked;
   toggle = true;
 }
-
-// ---------------------------------------------------------------------
 
 void GLButton::Paint() {
 
@@ -157,15 +143,11 @@ void GLButton::Paint() {
   GLToolkit::CheckGLErrors("GLButton::Paint()");
 }
 
-// ---------------------------------------------------------------------
-
 void GLButton::SetBounds(int x,int y,int width,int height) {
   GLComponent::SetBounds(x,y,width,height);
   if( icon ) icon->UpdateSprite(posX+1+state,posY+1+state,posX+17+state,posY+17+state);
   if( iconD ) iconD->UpdateSprite(posX+1+state,posY+1+state,posX+17+state,posY+17+state);
 }
-
-// ---------------------------------------------------------------------
 
 void GLButton::SetIcon(char *fileName) {
   strncpy(iconName,fileName,256);
@@ -174,8 +156,6 @@ void GLButton::SetIcon(char *fileName) {
 void GLButton::SetDisabledIcon(char *fileName) {
   strncpy(iconNameDisa,fileName,256);
 }
-
-// ---------------------------------------------------------------------
 
 void GLButton::ManageEvent(SDL_Event *evt) {
 
@@ -211,6 +191,5 @@ void GLButton::ManageEvent(SDL_Event *evt) {
   }
 
   if(icon) icon->UpdateSprite(posX+1+state,posY+1+state,posX+17+state,posY+17+state);
-
 
 }

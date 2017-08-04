@@ -36,9 +36,7 @@ extern MolFlow *mApp;
 extern SynRad *mApp;
 #endif
 
-// -------------------------------------------------------
 // Utils functions
-// -------------------------------------------------------
 
 // Add a character to a string
 void stradd(char *s,char c)
@@ -77,9 +75,7 @@ void safe_free_tree(ETREE **t)
   }
 }
 
-// -------------------------------------------------------
 // GLParser
-// -------------------------------------------------------
 
 GLParser::GLParser() {
 
@@ -91,38 +87,27 @@ GLParser::GLParser() {
 
 }
 
-// -------------------------------------------------------
-
 GLParser::~GLParser() {
   safe_free_tree(&evalTree);
   safe_free_list(&varList);
 }
 
-// -------------------------------------------------------
-
 void GLParser::SetName(const char *name) {
   strncpy(this->name,name,256);
 }
-
-// -------------------------------------------------------
 
 char *GLParser::GetName() {
   return name;
 }
 
-// -------------------------------------------------------
-
 void GLParser::SetExpression(const char *expr) {
   strncpy(this->expr,expr,4096);
 }
-
-// -------------------------------------------------------
 
 char *GLParser::GetExpression() {
   return expr;
 }
 
-// -------------------------------------------------------
 // Extract a part of the string to analyse 
 char *GLParser::Extract(int lg)
 {
@@ -136,7 +121,6 @@ char *GLParser::Extract(int lg)
   return s;
 }
 
-// -------------------------------------------------------
 // Return fisrt significative char in the string to analyse 
 void GLParser::AV()
 {
@@ -146,14 +130,12 @@ void GLParser::AV()
   } while (EC==' ' || EC=='\t');
 }
 
-// -------------------------------------------------------
 // Set global error
 void GLParser::SetError( char *err,int p) {
   sprintf(errMsg,"%s at %d",err,p);
   error=true;
 }
 
-// -------------------------------------------------------
 VLIST *GLParser::FindVar(const char *var_name,VLIST *l) {
 
   VLIST *p = l;
@@ -167,7 +149,6 @@ VLIST *GLParser::FindVar(const char *var_name,VLIST *l) {
 
 }
 
-// -------------------------------------------------------
 // Add variables into the chained list
 VLIST *GLParser::AddVar(const char *var_name,VLIST **l)
 {
@@ -186,8 +167,6 @@ VLIST *GLParser::AddVar(const char *var_name,VLIST **l)
 
 }
 
-
-// -------------------------------------------------------
 // Add node into the evaluation tree
 void GLParser::AddNode( int type , ETREE_NODE info ,
                         ETREE **t,ETREE *left,ETREE *right) {
@@ -203,9 +182,7 @@ void GLParser::AddNode( int type , ETREE_NODE info ,
   *t=elem;
 }
 
-// -------------------------------------------------------
 // Gramar functions
-// -------------------------------------------------------
 
 void GLParser::ReadDouble(double *R)
 {
@@ -302,18 +279,18 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
                AV();
                break;
 
-    // -------------------------------------------------------
+    
     // unary operator
-    // -------------------------------------------------------
+    
 
     case '-' :AV();
               ReadTerm(&l_t,var_list);
               AddNode( OPER_MINUS1 , elem , node , l_t , NULL);
         break;
 
-    // -------------------------------------------------------
+    
     // Math functions
-    // -------------------------------------------------------
+    
 
     case 'a':
     case 'A': if ( _stricmp(Extract(4),"abs(")==0 ) {
@@ -513,9 +490,9 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               }
               break;
 
-    // -------------------------------------------------------
+    
     // Constants
-    // -------------------------------------------------------
+    
 
     case 'P':
     case 'p': if ( _stricmp(Extract(2),"pi")==0 ) {
@@ -602,7 +579,6 @@ void GLParser::ReadFactor(ETREE **node,VLIST **var_list)
     *node=l_t;
   }
 }
-
 
 void GLParser::ReadExpression(ETREE **node,VLIST **var_list)
 {

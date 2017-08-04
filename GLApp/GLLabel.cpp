@@ -20,8 +20,6 @@
 
 //#include <malloc.h>
 
-// ---------------------------------------------------------------------
-
 GLLabel::GLLabel(const char *text):GLComponent(0) {
 
   mText = NULL;
@@ -31,8 +29,6 @@ GLLabel::GLLabel(const char *text):GLComponent(0) {
   SetText(text);
 
 }
-
-// ---------------------------------------------------------------------
 
 void GLLabel::Clear() {
 
@@ -97,13 +93,9 @@ void GLLabel::RestoreDeviceObjects() {
   font = GLToolkit::GetDialogFont();
 }
 
-// ---------------------------------------------------------------------
-
 GLLabel::~GLLabel() {
   Clear();
 }
-
-// ---------------------------------------------------------------------
 
 void GLLabel::SetTextColor(int r,int g,int b) {
   rText = r/255.0f;
@@ -111,14 +103,10 @@ void GLLabel::SetTextColor(int r,int g,int b) {
   bText = b/255.0f;
 }
 
-// ---------------------------------------------------------------------
-
 void GLLabel::GetTextBounds(int *w,int *h) {
  *w = txtWidth;
  *h = txtHeight;
 }
-
-// ---------------------------------------------------------------------
 
 void GLLabel::Paint() {
   if(!parent) return;

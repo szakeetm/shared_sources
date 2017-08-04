@@ -17,7 +17,6 @@
   GNU General Public License for more details.
 */
 
-
 //#include "File.h"
 class FileReader;
 #include "Vector.h"
@@ -226,7 +225,6 @@ typedef struct {
   Vector3d  n3;
 
 } ASEFACE;
-
 
 typedef struct {
 

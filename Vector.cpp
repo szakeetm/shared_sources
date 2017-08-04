@@ -71,7 +71,6 @@ double Dot(const Vector3d &v1, const Vector3d &v2) {
 	return (v1.x)*(v2.x) + (v1.y)*(v2.y) + (v1.z)*(v2.z);
 }
 
-
 double Dot(const Vector2d &v1, const Vector2d &v2) {
 	return v1.u*v2.u + v1.v*v2.v;
 }

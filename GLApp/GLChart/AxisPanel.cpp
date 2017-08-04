@@ -232,14 +232,14 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
 
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == FormatCombo) {
 
       int s = FormatCombo->GetSelectedIndex();
       pAxis->SetLabelFormat(s);
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == PositionCombo) {
       int s = PositionCombo->GetSelectedIndex();
       switch(type) {
@@ -279,7 +279,7 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
       pAxis->SetScale(s);
       commit();
 
-      // ------------------------------------------------------------
+      
     } else if (src == SubGridCheck) {
 
       pAxis->SetSubGridVisible(SubGridCheck->GetState());
@@ -338,7 +338,6 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
       commit();
 
     }
-
 
 }
 

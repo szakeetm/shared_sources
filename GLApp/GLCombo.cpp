@@ -60,8 +60,6 @@ public:
 
 };
 
-// -----------------------------------------------------------------
-
 GLCombo::GLCombo(int compId):GLComponent(compId) {
 
   wnd = new GLComboPopup(this);
@@ -79,19 +77,13 @@ GLCombo::GLCombo(int compId):GLComponent(compId) {
 
 }
 
-// -----------------------------------------------------------------
-
 void GLCombo::Clear() {
   list->Clear();
 }
 
-// -----------------------------------------------------------------
-
 GLList *GLCombo::GetList() {
   return list;
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::SetSize(size_t nbRow) {
   if( nbRow==0 )
@@ -100,44 +92,30 @@ void GLCombo::SetSize(size_t nbRow) {
     list->SetSize(1,nbRow);
 }
 
-// -----------------------------------------------------------------
-
 void GLCombo::SetValueAt(size_t row,const char *value,int userValue) {
   list->SetValueAt(0,row,value,userValue);
 }
-
-// -----------------------------------------------------------------
 
 int GLCombo::GetUserValueAt(size_t row) {
   return list->GetUserValueAt(0,row);
 }
 
-// -----------------------------------------------------------------
-
 char *GLCombo::GetValueAt(size_t row) {
   return list->GetValueAt(0,row);
 }
 
-// -----------------------------------------------------------------
-
 size_t GLCombo::GetNbRow() {
   return list->GetNbRow();
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::SetSelectedValue(char *value) {
   text->SetText(value);
   selectedRow = -1;
 }
 
-// -----------------------------------------------------------------
-
 char *GLCombo::GetSelectedValue() {
   return text->GetText();
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::ScrollTextToEnd() {
   char *value = text->GetText();
@@ -145,8 +123,6 @@ void GLCombo::ScrollTextToEnd() {
   text->SetCursorPos(l);
   text->ScrollToVisible();
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::SetSelectedIndex(int idx) {
 	if (idx == -1) {
@@ -158,21 +134,15 @@ void GLCombo::SetSelectedIndex(int idx) {
   selectedRow = idx;
 }
 
-// -----------------------------------------------------------------
-
 int GLCombo::GetSelectedIndex() {
   return selectedRow;
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::SetEditable(bool editable) {
   m_Editable = editable;
   SetEnabled(editable);
   text->SetEditable(m_Editable);
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::Paint() {
 
@@ -195,8 +165,6 @@ void GLCombo::Paint() {
   }
   GLToolkit::CheckGLErrors("GLCombo::Paint()");
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::Drop() {
 
@@ -254,8 +222,6 @@ void GLCombo::Drop() {
 
 }
 
-// -----------------------------------------------------------------
-
 void GLCombo::SetFocus(bool focus) {
   if(!focus) {
     dropped=false;
@@ -263,8 +229,6 @@ void GLCombo::SetFocus(bool focus) {
   text->SetFocus(focus);
   GLComponent::SetFocus(focus);
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::ManageEvent(SDL_Event *evt) {
 
@@ -297,8 +261,6 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
 
 }
 
-// -----------------------------------------------------------------
-
 void GLCombo::SetBounds(int x,int y,int width,int height) {
 
   // Place text field
@@ -306,8 +268,6 @@ void GLCombo::SetBounds(int x,int y,int width,int height) {
   GLComponent::SetBounds(x,y,width,height);
 
 }
-
-// -----------------------------------------------------------------
 
 void GLCombo::SetParent(GLContainer *parent) {
   text->SetParent(parent);

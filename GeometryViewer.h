@@ -187,7 +187,6 @@ private:
   void ComputeBB(bool getAll);
   void UpdateLight();
 
-
   //void DrawBB();
   //void DrawBB(AABBNODE *node);
 

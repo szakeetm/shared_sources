@@ -44,8 +44,7 @@ public:
   void SetEditable_NoBG(bool editable);
   void SetTextColor(float r, float g, float b);
   void Clear();
-  // ------------------------------------------------------
-
+  
 
   bool GetNumber(double *num);
   bool GetNumberInt(int *num);

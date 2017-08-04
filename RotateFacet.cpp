@@ -3,7 +3,6 @@ File:        RotateFacet.cpp
 Description: Rotate facet around axis
 Program:     MolFlow
 
-
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -236,7 +235,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 	int facetNum;
 
 	switch(message) {
-		// -------------------------------------------------------------
+		
 	case MSG_TOGGLE:
 		UpdateToggle(src);
 		break;

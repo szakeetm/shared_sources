@@ -41,7 +41,6 @@ private:
 
   int nbVertexS;
 
-
 };
 
 #endif /* _MOVEVERTEXH_ */

@@ -21,8 +21,6 @@
 class Sprite2D;
 class GLFont2D;
 
-
-
 class GLButton : public GLComponent {
 
 public:

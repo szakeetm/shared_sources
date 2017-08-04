@@ -19,7 +19,6 @@
 #include <SDL_opengl.h>
 #include "GLTypes.h"
 
-
 class GLFont2D {
 
 public:

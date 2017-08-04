@@ -18,8 +18,6 @@
 #include "GLToolkit.h"
 #include "GLFont.h"
 
-// ---------------------------------------------------------------------
-
 GLTitledPanel::GLTitledPanel(char *title):GLComponent(0) {
 
   isBold = true;
@@ -34,8 +32,6 @@ GLTitledPanel::GLTitledPanel(char *title):GLComponent(0) {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLTitledPanel::SetTitle(char *title) {
 
   if(title) {
@@ -47,8 +43,6 @@ void GLTitledPanel::SetTitle(char *title) {
   else         txtWidth = GLToolkit::GetDialogFont()->GetTextWidth(this->title);
 
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::SetBounds(int x,int y,int width,int height) {
 
@@ -62,47 +56,33 @@ void GLTitledPanel::SetBounds(int x,int y,int width,int height) {
 
 }
 
-// ---------------------------------------------------------------------
-
 void GLTitledPanel::SetBold(bool b) {
   isBold = b;
   if( isBold ) txtWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(title);
   else         txtWidth = GLToolkit::GetDialogFont()->GetTextWidth(title);
 }
 
-// ---------------------------------------------------------------------
-
 void GLTitledPanel::SetClosable(bool c) {
   closeAble = c;
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::Close() {
   closed = true;
 }
 
-// ---------------------------------------------------------------------
-
 void GLTitledPanel::Open() {
   closed = false;
 }
 
-// ---------------------------------------------------------------------
-
 bool GLTitledPanel::IsClosed() {
   return closed;
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::SetTextColor(int r,int g,int b) {
   rText = r/255.0f;
   gText = g/255.0f;
   bText = b/255.0f;
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::ManageEvent(SDL_Event *evt) {
 
@@ -126,24 +106,16 @@ void GLTitledPanel::ManageEvent(SDL_Event *evt) {
     }
   }
 
-
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::ProcessMessage(GLComponent *src,int message) {
   // Relay to parent
   parent->ProcessMessage(src,message);
 }
 
-
-// ---------------------------------------------------------------------
-
 void GLTitledPanel::SetCompBounds(GLComponent *src,int x,int y,int w,int h) {
   src->SetBounds(x+posX,y+posY,w,h);
 }
-
-// ---------------------------------------------------------------------
 
 void GLTitledPanel::Paint() {
 

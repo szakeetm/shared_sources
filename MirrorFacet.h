@@ -58,7 +58,6 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-
 };
 
 #endif /* _MirrorFacetH_ */

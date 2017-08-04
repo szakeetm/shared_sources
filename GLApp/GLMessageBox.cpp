@@ -165,7 +165,6 @@ GLMessageBox::GLMessageBox(const char *message,char *title,int mode,int icon):GL
 }
 
 */
-// -------------------------------------------------
 
 void GLMessageBox::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
@@ -175,8 +174,6 @@ void GLMessageBox::ProcessMessage(GLComponent *src,int message) {
   }
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 int GLMessageBox::Display(const char *message, const char *title,int mode,int icon) {
 	std::vector<std::string> list;

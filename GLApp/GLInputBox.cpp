@@ -74,8 +74,6 @@ GLInputBox::GLInputBox(const char *message,char *label,char *title):GLWindow() {
 
 }
 
-// -------------------------------------------------
-
 void GLInputBox::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     if( src->GetId() ) {
@@ -96,8 +94,6 @@ void GLInputBox::ProcessMessage(GLComponent *src,int message) {
 	} 
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 char *GLInputBox::GetInput(const char *message,char *label,char *title) {
 

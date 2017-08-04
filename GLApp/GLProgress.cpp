@@ -85,15 +85,11 @@ GLProgress::GLProgress(char *message,char *title):GLWindow() {
 
 }
 
-// -------------------------------------------------
-
 void GLProgress::ProcessMessage(GLComponent *src,int message) {
 
   GLWindow::ProcessMessage(src,message);
 
 }
-
-// -------------------------------------------------
 
 void GLProgress::SetProgress(double value) {
   
@@ -119,7 +115,6 @@ void GLProgress::SetProgress(double value) {
   }
 
 }
-
 
 double GLProgress::GetProgress() {
 

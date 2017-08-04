@@ -41,7 +41,6 @@ private:
 
   int nbFacetS;
 
-
 };
 
 #endif /* _MoveFacetH_ */

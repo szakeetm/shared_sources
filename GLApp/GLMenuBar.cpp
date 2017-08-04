@@ -22,8 +22,6 @@
 
 #define SIDE_MARGIN 7
 
-// -----------------------------------------------------------------
-
 GLMenuBar::GLMenuBar(int compId):GLComponent(compId) {
   SetBorder(BORDER_NONE);
   nbItem=0;
@@ -32,8 +30,6 @@ GLMenuBar::GLMenuBar(int compId):GLComponent(compId) {
   memset(items,0,sizeof items);
 }
 
-// -----------------------------------------------------------------
-
 GLMenuBar::~GLMenuBar() {
   for(int i=0;i<nbItem;i++) {
     if(!items[i].subMenu->GetParent())
@@ -41,8 +37,6 @@ GLMenuBar::~GLMenuBar() {
     SAFE_FREE(items[i].accName);
   }
 }
-
-// -----------------------------------------------------------------
 
 void GLMenuBar::Add(char *itemName) {
 
@@ -68,8 +62,6 @@ void GLMenuBar::Add(char *itemName) {
 
 }
 
-// -----------------------------------------------------------
-
 int GLMenuBar::GetMenu(int mx,int my) {
 
   bool found = false;
@@ -83,14 +75,10 @@ int GLMenuBar::GetMenu(int mx,int my) {
 
 }
 
-// -----------------------------------------------------------
-
 bool GLMenuBar::IsInItem(MENUITEM *p,int mx,int my) {
     return mx>=(p->x) && mx<=(p->x)+(p->width) &&
            my>=(p->y) && my<=(p->y)+(p->height);
 }
-
-// -----------------------------------------------------------
 
 GLMenu *GLMenuBar::GetSubMenu(char *itemName) {
 
@@ -112,14 +100,10 @@ GLMenu *GLMenuBar::GetSubMenu(char *itemName) {
 
 }
 
-// -----------------------------------------------------------------
-
 void GLMenuBar::SetFocus(bool focus) {
   if( !focus ) Close();
   GLComponent::SetFocus(focus);
 }
-
-// -----------------------------------------------------------------
 
 void GLMenuBar::Close() {
 
@@ -131,8 +115,6 @@ void GLMenuBar::Close() {
   selMenu=-1;
 
 }
-
-// -----------------------------------------------------------------
 
 void GLMenuBar::Paint() {
 
@@ -165,8 +147,6 @@ void GLMenuBar::Paint() {
   GLToolkit::CheckGLErrors("GLMenuBar::Paint()");
 }
 
-// -----------------------------------------------------------------
-
 void GLMenuBar::Drop(int sel) {
   Close();
   if( sel>=0 ) {
@@ -176,8 +156,6 @@ void GLMenuBar::Drop(int sel) {
   selMenu = sel;
   autoDrop = true;
 }
-
-// -----------------------------------------------------------------
 
 void  GLMenuBar::GoLeft() {
 
@@ -195,13 +173,9 @@ void  GLMenuBar::GoRight() {
 
 }
 
-// -----------------------------------------------------------------
-
 void GLMenuBar::ProcessAcc(int accId) {
   Drop(accId);
 }
-
-// -----------------------------------------------------------------
 
 void GLMenuBar::ManageEvent(SDL_Event *evt) {
 

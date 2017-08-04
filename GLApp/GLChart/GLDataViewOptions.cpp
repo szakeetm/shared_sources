@@ -441,7 +441,6 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     RestoreDeviceObjects();
 
-
   }
   
   GLDataViewOptions::~GLDataViewOptions() {

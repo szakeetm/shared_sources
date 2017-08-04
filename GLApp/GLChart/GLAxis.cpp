@@ -85,14 +85,11 @@ public:
     }
   }
 
-
   bool isValid() {
     return (d1 != NULL && d2 != NULL);
   }
 
 };
-
-// ---------------------------------------------------------
 
 GLAxis::GLAxis(GLComponent *parent,int orientation) {
 
@@ -1252,7 +1249,6 @@ GLuint GLAxis::initMarker(char *name) {
         if ( scale==LOG_SCALE) min = (int) (min / prec) * prec;
 		else min*=0.95;
 
-
       if (max < 0)
         max = (int) (max / prec) * prec;
       else
@@ -1322,7 +1318,6 @@ GLuint GLAxis::initMarker(char *name) {
 
         }
 
-
         if (min == MAX_VALUE && max == -MAX_VALUE) {
 
           // Only empty views !
@@ -1369,7 +1364,6 @@ GLuint GLAxis::initMarker(char *name) {
       }
 
     }
-
 
   }
 
@@ -2016,7 +2010,6 @@ GLuint GLAxis::initMarker(char *name) {
             }
           }
 
-
         }
 
         // Compute tickStep
@@ -2620,7 +2613,6 @@ GLuint GLAxis::initMarker(char *name) {
 
     } // End (if l!=null)
 
-
   }
 
   // Paint dataviews along the given axis in XY mode
@@ -2787,7 +2779,6 @@ GLuint GLAxis::initMarker(char *name) {
 
       }
 
-
     }
 
   }
@@ -2943,7 +2934,6 @@ GLuint GLAxis::initMarker(char *name) {
             drawLine(c,gridStyle,1,w, y0, w, y0 + la);
           }
         }
-
 
       } else if (subTickStep > 0) {  // Linear step
 

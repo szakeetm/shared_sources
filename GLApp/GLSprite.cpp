@@ -23,15 +23,11 @@
 
 extern GLApplication *theApp;
 
-// -------------------------------------------
-
 Sprite2D::Sprite2D() {
   rC = 1.0f;
   gC = 1.0f;
   bC = 1.0f;
 }
-
-// -------------------------------------------
 
 void Sprite2D::SetSpriteMapping(const float &mx1,const float &my1,const float &mx2,const float &my2) {
 
@@ -41,8 +37,6 @@ void Sprite2D::SetSpriteMapping(const float &mx1,const float &my1,const float &m
   this->my2 = my2;
 
 }
-
-// -------------------------------------------
 
 void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2,
 							const float &mx1,const float &my1,const float &mx2,const float &my2) {
@@ -58,8 +52,6 @@ void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int 
 
 }
 
-// -------------------------------------------
-
 void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2) {
 
   this->x1 = x1;
@@ -69,15 +61,11 @@ void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int 
 
 }
 
-// -------------------------------------------
-
 void Sprite2D::SetColor(const float &r,const float &g,const float &b) {
   rC = r;
   gC = g;
   bC = b;
 }
-
-// -------------------------------------------
 
 int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,int scrHeight) {
 
@@ -184,16 +172,12 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
 
 }
 
-// -------------------------------------------
-
 void Sprite2D::InvalidateDeviceObjects() {
 
   if(texId) glDeleteTextures(1, &texId);
   texId = 0;
 
 }
-
-// -------------------------------------------
 
 void Sprite2D::Render(const bool &doLinear) {
 
@@ -233,8 +217,6 @@ void Sprite2D::Render(const bool &doLinear) {
 #endif
 
 }
-
-// -------------------------------------------
 
 void Sprite2D::Render90(bool doLinear) {
 

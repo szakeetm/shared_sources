@@ -100,8 +100,6 @@ GLSaveDialog::GLSaveDialog(char *message,char *title,int mode,int icon):GLWindow
 
 }
 
-// -------------------------------------------------
-
 void GLSaveDialog::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     rCode = src->GetId();
@@ -110,8 +108,6 @@ void GLSaveDialog::ProcessMessage(GLComponent *src,int message) {
   }
   GLWindow::ProcessMessage(src,message);
 }
-
-// -------------------------------------------------
 
 int GLSaveDialog::Display(char *message,char *title,int mode,int icon) {
 

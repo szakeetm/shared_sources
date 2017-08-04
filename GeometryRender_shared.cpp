@@ -22,7 +22,6 @@
 #include "VertexCoordinates.h"
 #include "Facet.h"
 
-
 #ifdef MOLFLOW
 extern MolFlow *mApp;
 #endif
@@ -220,7 +219,6 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 						}
 					} //end unselect
 
-
 					if (AlreadySelected(i)) {
 
 						lastFound = i;
@@ -296,8 +294,6 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	float rx, ry, rz, rw, r2;
 	int _x1, _y1, _x2, _y2;
 
-
-
 	_x1 = Min(x1, x2);
 	_x2 = Max(x1, x2);
 	_y1 = Min(y1, y2);
@@ -318,7 +314,6 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	GLMatrix proj; proj.LoadGL(mProj);
 	GLMatrix view; view.LoadGL(mView);
 	GLMatrix m; m.Multiply(&proj, &view);
-
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();
@@ -466,16 +461,11 @@ void Geometry::AddToSelectedVertexList(size_t vertexId) {
 	selectedVertexList_ordered.push_back(vertexId);
 }
 
-
 void Geometry::SelectAllVertex() {
 	for (int i = 0; i < sh.nbVertex; i++)
 		SelectVertex(i);
 	//UpdateSelectionVertex();
 }
-
-
-
-
 
 size_t Geometry::GetNbSelectedVertex() {
 	size_t nbSelectedVertex = 0;
@@ -485,7 +475,6 @@ size_t Geometry::GetNbSelectedVertex() {
 	return nbSelectedVertex;
 }
 
-
 void Geometry::UnselectAll() {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		facets[i]->selected = false;
@@ -493,8 +482,6 @@ void Geometry::UnselectAll() {
 	}
 	UpdateSelection();
 }
-
-
 
 void Geometry::UnselectAllVertex() {
 	for (int i = 0; i < sh.nbVertex; i++) {
@@ -512,8 +499,6 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-
-
 void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
@@ -521,8 +506,6 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 	size_t i1;
 
 	if (offset) {
-
-
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_POLYGON_OFFSET_LINE);
@@ -545,7 +528,6 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 
 	}
 	else {
-
 
 		if (nb < 8) {
 			// No hole possible
@@ -581,8 +563,6 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 	}
 
 }
-
-
 
 void Geometry::DrawPolys() {
 
@@ -635,8 +615,6 @@ void Geometry::DrawPolys() {
 	free(fp);
 
 }
-
-
 
 void Geometry::SetCullMode(int mode) {
 
@@ -782,9 +760,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 }
 
-// ---------------------------------------------------------------
 // Triangulation stuff
-// ---------------------------------------------------------------
 
 int Geometry::FindEar(POLYGON *p) {
 
@@ -806,8 +782,6 @@ int Geometry::FindEar(POLYGON *p) {
 
 }
 
-
-
 void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
@@ -827,8 +801,6 @@ void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 
 }
 
-
-
 void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 
 	for (size_t i = 0; i < f->sh.nbIndex; i++) {
@@ -839,8 +811,6 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	}
 
 }
-
-
 
 void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 
@@ -952,7 +922,6 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 	}
 	else {
 
-
 		// Default material
 		GLToolkit::SetMaterial(&whiteMaterial);
 
@@ -978,7 +947,6 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			glColor3f(1.0f, 1.0f, 1.0f);
 		}
 		else {
-
 
 			// Draw non selectable facet in dark grey
 			glColor3f(0.2f, 0.2f, 0.2f);

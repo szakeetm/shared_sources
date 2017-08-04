@@ -20,7 +20,6 @@
 #ifndef _RANDOMH_
 #define _RANDOMH_
 
-
 #include <TruncatedGaussian\rtnorm.hpp>
 
 // Initialise the random generator with the specified seed

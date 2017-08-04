@@ -30,8 +30,6 @@ class GLWindow;
 //#include "GLFont.h"
 #include <string>
 
-
-
 class GLApplication {
 
 protected:
