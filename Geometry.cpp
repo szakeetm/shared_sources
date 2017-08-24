@@ -1215,8 +1215,8 @@ void Geometry::Clear() {
 	EmptySelectedVertexList();
 
 	memset(lineList, 0, sizeof(lineList));
-	memset(strName, 0, sizeof(strName));
-	memset(strFileName, 0, sizeof(strFileName));
+	//memset(strName, 0, sizeof(strName));
+	//memset(strFileName, 0, sizeof(strFileName));
 
 	// Init OpenGL material
 	memset(&whiteMaterial, 0, sizeof(GLMATERIAL));
@@ -2010,9 +2010,13 @@ void Geometry::DelStruct(int numToDel) {
 		if (facets[i]->sh.superIdx > numToDel) facets[i]->sh.superIdx--;
 		if (facets[i]->sh.superDest > numToDel) facets[i]->sh.superDest--;
 	}
+	SAFE_FREE(strName[numToDel]);
+	SAFE_FREE(strFileName[numToDel]);
 	for (int j = numToDel; j < (sh.nbSuper - 1); j++)
 	{
-		strName[j] = _strdup(strName[j + 1]);
+		//strName[j] = _strdup(strName[j + 1]);
+		strName[j] = strName[j + 1];
+		strFileName[j] = strFileName[j + 1];
 	}
 	sh.nbSuper--;
 	BuildGLList();
@@ -3502,7 +3506,8 @@ void Geometry::UpdateName(FileReader *file) {
 }
 
 void Geometry::UpdateName(const char *fileName) {
-	strcpy(sh.name, FileUtils::GetFilename(fileName).c_str());
+	strncpy(sh.name, FileUtils::GetFilename(fileName).c_str(),64);
+	sh.name[63] = 0;
 }
 
 void Geometry::AdjustProfile() {
