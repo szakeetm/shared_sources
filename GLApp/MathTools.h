@@ -59,6 +59,10 @@ template <class K, class T> int my_lower_bound(const K& key, T* A, const size_t&
 
 {
 	if (size == 0) return -1;
+	if (size == 1) {
+		if (key < A[0]) return -1;
+		else return 0;
+	}
 	int L = 0;
 	int R = (int)(size - 1);
 	int M;

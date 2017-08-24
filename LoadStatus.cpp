@@ -64,6 +64,11 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	RestoreDeviceObjects();
 }
 
+void LoadStatus::EnableStopButton() {
+	cancelButton->SetText("Stop waiting");
+	cancelButton->SetEnabled(true);
+}
+
 void LoadStatus::RefreshNbProcess()
 {
 	int wD = 450;

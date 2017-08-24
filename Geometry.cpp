@@ -1535,7 +1535,8 @@ bool Geometry::RemoveNullFacet() {
 	return (facetsToDelete.size() > 0);
 }
 
-void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker) {
+void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId,
+	size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker) {
 
 	double counter = 0.0;
 	GLProgress *prgAlign = new GLProgress("Aligning facets...", "Please wait");

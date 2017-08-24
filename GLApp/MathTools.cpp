@@ -354,6 +354,11 @@ int weighed_lower_bound_X(const double & key, const double & weigh, double * A, 
 	//return value: lower index. If -1, then key is smaller than first element, if 'size-1', then key is larger than last element
 	
 		if (size == 0) return -1;
+		if (size == 1) {
+			double weighed = Weigh(A[0], B[0], weigh);
+			if (key < weighed) return -1;
+			else return 0;
+		}
 		int L = 0;
 		int R = (int)(size - 1);
 		// continue searching while [imin,imax] is not empty

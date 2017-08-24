@@ -524,7 +524,7 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
   int unicode = (evt->key.keysym.unicode & 0x7F);
   if( !unicode ) unicode = evt->key.keysym.sym;
   
-  std::ostringstream tmp; tmp << "\nevt->type="<<(int)(evt->type)<<" unicode:" << evt->key.keysym.unicode << " keysim.sim:" << evt->key.keysym.sym << "    unicode & 0x7F:" << (evt->key.keysym.unicode & 0x7F) << " chosen:" << unicode; OutputDebugStringA(tmp.str().c_str());
+  //std::ostringstream tmp; tmp << "\nevt->type="<<(int)(evt->type)<<" unicode:" << evt->key.keysym.unicode << " keysim.sim:" << evt->key.keysym.sym << "    unicode & 0x7F:" << (evt->key.keysym.unicode & 0x7F) << " chosen:" << unicode; OutputDebugStringA(tmp.str().c_str());
 
   if( evt->type == SDL_KEYDOWN )
   {

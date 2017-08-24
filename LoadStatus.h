@@ -30,6 +30,7 @@ public:
 
   // Construction
   LoadStatus(Worker *w);
+  void EnableStopButton();
   void RefreshNbProcess();
   ~LoadStatus();
   void SMPUpdate();

@@ -294,7 +294,10 @@ bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
 		}
 	}
 
-	if (statusWindow) statusWindow->SetVisible(false);
+	if (statusWindow) {
+		statusWindow->SetVisible(false);
+		statusWindow->EnableStopButton();
+	}
 	return finished && !error;
 
 }
