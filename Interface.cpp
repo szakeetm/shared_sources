@@ -840,7 +840,7 @@ int Interface::OneTimeSceneInit_shared() {
 
 	menu->Add("View");
 
-	menu->GetSubMenu("View")->Add("Structure", MENU_VIEW_STRUCTURE_P);
+	menu->GetSubMenu("View")->Add("Structure");
 	structMenu = menu->GetSubMenu("View")->GetSubMenu("Structure");
 	UpdateStructMenu();
 

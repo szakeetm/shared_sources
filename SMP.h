@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #ifdef WIN
-
+ #define NOMINMAX
  #include <windows.h>
 
  // Win32 shared memory

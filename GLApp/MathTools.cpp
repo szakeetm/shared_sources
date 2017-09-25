@@ -99,142 +99,81 @@ double Weigh(const double & a, const double & b, const double & weigh)
 	return a + (b - a)*weigh;
 }
 
-bool compare_second(const std::pair<double, double>& lhs, const std::pair<double, double>& rhs) {
-	return (lhs.second<rhs.second);
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
+	return InterpolateXY(x, table, true, logarithmic, allowExtrapolate);
 }
 
-bool compare_first(const std::pair<double, std::vector<double>>& lhs,const double& rhs) {
-	return (lhs.first<rhs);
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
+	return InterpolateXY(y, table, false, logarithmic, allowExtrapolate);
 }
 
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds, const bool& logarithmic) {
-	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
-	_ASSERTE(table.size());
-	if (table.size() == 1) return table[0].second; //constant value
-												   // Assumes that "table" is sorted by .first
-												   // Check if x is out of bound
-	std::vector<std::pair<double, double> >::const_iterator lower, upper;
-	bool outOfLimits = false;
+double InterpolateVectorX(const double& y, const std::vector < std::pair<double, std::vector<double>>> & table, const size_t& elementIndex, const bool& logarithmic, const bool& allowExtrapolate) {
+	//InterpolateX and InterpolateY
+	//Avoids repeated code with minor changes only
+	//returns double
 
-	if (x >= table.back().first) {
-		if (limitToBounds) return table.back().second;
-		else {
-			outOfLimits = true;
-			lower = upper = table.end() - 1;
-			lower--;
+	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
+	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
+	bool first = false;
+	double lookupValue = y;
+
+	if (table.size() == 1) return GetElement(table[0], !first, elementIndex);
+
+	int lowerIndex = my_lower_bound(lookupValue, table, first, elementIndex);
+
+	if (lowerIndex == -1) {
+		lowerIndex = 0;
+		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first, elementIndex); //return first element
+	}
+	else if (lowerIndex == (table.size() - 1)) {
+		if (allowExtrapolate) {
+			lowerIndex = (int)table.size() - 2;
 		}
-	}
-	else if (x < table[0].first) {
-		if (limitToBounds) return table[0].second;
-		else {
-			outOfLimits = true;
-			lower = upper = table.begin();
-			upper++;
-		}
+		else return GetElement(table[lowerIndex], !first, elementIndex); //return last element
 	}
 
-	// INFINITY is defined in math.h in the glibc implementation
-	if (!outOfLimits) {
-		lower = upper = std::lower_bound(table.begin(), table.end(), std::make_pair(x, -MY_INFINITY));
-		// Corner case
-		if (upper == table.begin()) return upper->second;
-		lower--;
-	}
-	if (logarithmic) return exp(log(lower->second) + (log(upper->second) - log(lower->second))
-		*(log(x) - log(lower->first)) / (log(upper->first) - log(lower->first)));
-	else return lower->second + (upper->second - lower->second)*(x - lower->first) / (upper->first - lower->first);
+	double delta = (logarithmic) ? log10(GetElement(table[lowerIndex + 1], first, elementIndex)) - log10(GetElement(table[lowerIndex], first, elementIndex)) : GetElement(table[lowerIndex + 1], first, elementIndex) - GetElement(table[lowerIndex], first, elementIndex);
+	double overshoot = (logarithmic) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first, elementIndex)) : lookupValue - GetElement(table[lowerIndex], first, elementIndex);
 
+	if (logarithmic) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first, elementIndex)),log10(GetElement(table[lowerIndex + 1], !first, elementIndex)),overshoot / delta)); //log-log interpolation
+	else return Weigh(GetElement(table[lowerIndex], !first, elementIndex),GetElement(table[lowerIndex + 1], !first, elementIndex),overshoot / delta);
 }
 
-std::vector<double> InterpolateVector(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& limitToBounds, const bool& logarithmic) {
-	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
-	_ASSERTE(table.size());
-	if (table.size() == 1) return table[0].second; //constant value
-												   // Assumes that "table" is sorted by .first
-												   // Check if x is out of bound
-	std::vector<std::pair<double, std::vector<double>> >::const_iterator lower, upper;
-	bool outOfLimits = false;
+std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
+	//Same as InterpolateY but returns a vector.
+	//Must repeat most of code because C++ doesn't allow runtime evaluated return-type (and only 'bool first' decides what to return)
+	if (table.size() == 1) return table[0].second;
 
-	if (x >= table.back().first) {
-		if (limitToBounds) return table.back().second;
-		else {
-			outOfLimits = true;
-			lower = upper = table.end() - 1;
-			lower--;
-		}
+	int lowerIndex = my_lower_bound(x, table, true, 0);
+
+	if (lowerIndex == -1) {
+		lowerIndex = 0;
+		if (!allowExtrapolate) return table[lowerIndex].second; //return first element
 	}
-	else if (x < table[0].first) {
-		if (limitToBounds) return table[0].second;
-		else {
-			outOfLimits = true;
-			lower = upper = table.begin();
-			upper++;
+	else if (lowerIndex == (table.size() - 1)) {
+		if (allowExtrapolate) {
+			lowerIndex = (int)table.size() - 2;
 		}
+		else return table[lowerIndex].second; //return last element
 	}
 
-	// INFINITY is defined in math.h in the glibc implementation
-	if (!outOfLimits) {
-		lower = upper = std::lower_bound(table.begin(), table.end(), x , compare_first);
-		// Corner case
-		if (upper == table.begin()) return upper->second;
-		lower--;
-	}
+	double delta = (logarithmic) ? log10(table[lowerIndex + 1].first) - log10(table[lowerIndex].first) : table[lowerIndex + 1].first - table[lowerIndex].first;
+	double overshoot = (logarithmic) ? log10(x) - log10(table[lowerIndex].first) : x - table[lowerIndex].first;
 
-	if (logarithmic) {
-		double overShoot = (log(x) - log(lower->first)) / (log(upper->first) - log(lower->first));
-		std::vector<double> returnValues;
-		for (size_t i = 0; i < lower->second.size(); i++) {
-			returnValues.push_back(exp(Weigh(log(lower->second[i]), log(upper->second[i]), overShoot)));
-		}
-		return returnValues;
+	size_t distrYsize = table[0].second.size();
+	std::vector<double> result; result.resize(distrYsize);
+	for (size_t e = 0; e < distrYsize; e++)
+	{
+		if (logarithmic) result[e]=Pow10(Weigh(log10(table[lowerIndex].second[e]),log10(table[lowerIndex + 1].second[e]), overshoot / delta)); //log-log interpolation
+		else result[e]=Weigh(table[lowerIndex].second[e],table[lowerIndex + 1].second[e],overshoot / delta);
 	}
-	else {
-		double overShoot = (x - lower->first) / (upper->first - lower->first);
-		std::vector<double> returnValues;
-		for (size_t i = 0; i < lower->second.size(); i++) {
-			returnValues.push_back(Weigh(lower->second[i], upper->second[i], overShoot));
-		}
-		return returnValues;
-	}
+	return result;
 }
 
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds) {
-	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
-	_ASSERTE(table.size());
-	if (table.size() == 1) return table[0].second; //constant value
 
-												   // Assumes that "table" is sorted by .second
-												   // Check if y is out of bound
-	std::vector<std::pair<double, double> >::const_iterator lower, upper;
-	bool outOfLimits = false;
 
-	if (y >= table.back().second) {
-		if (limitToBounds) return table.back().first;
-		else {
-			outOfLimits = true;
-			lower = upper = table.end() - 1;
-			lower--;
-		}
-	}
-	else if (y < table[0].second) {
-		if (limitToBounds) return table[0].first;
-		else {
-			outOfLimits = true;
-			lower = upper = table.begin();
-			upper++;
-		}
-	}
 
-	// INFINITY is defined in math.h in the glibc implementation
-	if (!outOfLimits) {
-		lower = upper = std::lower_bound(table.begin(), table.end(), std::make_pair(MY_INFINITY, y), compare_second);
-		// Corner case
-		if (upper == table.begin()) return upper->first;
-		lower--;
-	}
-	return lower->first + (upper->first - lower->first)*(y - lower->second) / (upper->second - lower->second);
-}
-
+/*
 double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& limitToBounds) {
 	//Function inspired by http://stackoverflow.com/questions/11396860/better-way-than-if-else-if-else-for-linear-interpolation
 	_ASSERTE(table.size());
@@ -273,6 +212,7 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 	double result = lower->second + (upper->second - lower->second)*(x - lower->first) / (upper->first - lower->first);
 	return result;
 }
+*/
 
 std::vector<std::string> SplitString(std::string const &input) {
 	//Split string by whitespaces
@@ -313,7 +253,134 @@ bool beginsWith(std::string const &fullString, std::string const &ending) {
 	return (fullString.compare(0, ending.length(), ending) == 0);
 }
 
-double InverseQuadraticInterpolation(const double& y,
+int my_lower_bound(const double & key, double* A,const size_t& size)
+//"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
+//key: searched value
+//A: the lookup table
+//first: either unused or selector between first and second element of pairs
+//returns index of last lower value, or -1 if key not found
+
+// GetElement: chooses first or second member of a pair (avoids writing this function twice)
+
+{
+	int l = 0;
+	int h = (int)size; // Not n - 1
+	while (l < h) {
+		int mid = (l + h) / 2;
+		if (key <= A[mid]) {
+			h = mid;
+		}
+		else {
+			l = mid + 1;
+		}
+	}
+	return l - 1;
+}
+
+int my_lower_bound(const double & key, const std::vector<double>& A)
+//"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
+//key: searched value
+//A: the lookup table
+//first: either unused or selector between first and second element of pairs
+//returns index of last lower value, or -1 if key not found
+
+// GetElement: chooses first or second member of a pair (avoids writing this function twice)
+
+{
+	int l = 0;
+	int h = (int)A.size(); // Not n - 1
+	while (l < h) {
+		int mid = (l + h) / 2;
+		if (key <= A[mid]) {
+			h = mid;
+		}
+		else {
+			l = mid + 1;
+		}
+	}
+	return l - 1;
+}
+
+int my_lower_bound(const double & key, const std::vector<std::pair<double, double>>& A, const bool & first)
+//"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
+//key: searched value
+//A: the lookup table
+//first: either unused or selector between first and second element of pairs
+//returns index of last lower value, or -1 if key not found
+
+// GetElement: chooses first or second member of a pair (avoids writing this function twice)
+
+{
+	int l = 0;
+	int h = (int)A.size(); // Not n - 1
+	while (l < h) {
+		int mid = (l + h) / 2;
+		if (key <= GetElement(A[mid], first)) {
+			h = mid;
+		}
+		else {
+			l = mid + 1;
+		}
+	}
+	return l - 1;
+}
+
+int my_lower_bound(const double & key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool & first, const size_t & elementIndex)
+//"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
+//key: searched value
+//A: the lookup table
+//first: either unused or selector between first and second element of pairs
+//returns index of last lower value, or -1 if key not found
+
+// GetElement: chooses first or second member of a pair (avoids writing this function twice)
+
+{
+	int l = 0;
+	int h = (int)A.size(); // Not n - 1
+	while (l < h) {
+		int mid = (l + h) / 2;
+		if (key <= GetElement(A[mid],first,elementIndex)) {
+			h = mid;
+		}
+		else {
+			l = mid + 1;
+		}
+	}
+	return l-1;
+}
+
+double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool & first, const bool & logarithmic, const bool & allowExtrapolate) {
+	//InterpolateX and InterpolateY
+	//Avoids repeated code with minor changes only
+	//returns double
+
+	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
+	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
+
+	if (table.size() == 1) return GetElement(table[0], !first);
+
+	int lowerIndex = my_lower_bound(lookupValue, table, first);
+
+	if (lowerIndex == -1) {
+		lowerIndex = 0;
+		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first); //return first element
+	}
+	else if (lowerIndex == (table.size() - 1)) {
+		if (allowExtrapolate) {
+			lowerIndex = (int)table.size() - 2;
+		}
+		else return GetElement(table[lowerIndex], !first); //return last element
+	}
+
+	double delta = (logarithmic) ? log10(GetElement(table[lowerIndex + 1], first)) - log10(GetElement(table[lowerIndex], first)) : GetElement(table[lowerIndex + 1], first) - GetElement(table[lowerIndex], first);
+	double overshoot = (logarithmic) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first)) : lookupValue - GetElement(table[lowerIndex], first);
+
+	if (logarithmic) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first)),log10(GetElement(table[lowerIndex + 1], !first)),overshoot / delta)); //log-log interpolation
+	else return Weigh(GetElement(table[lowerIndex], !first),GetElement(table[lowerIndex + 1], !first),overshoot / delta);
+
+}
+
+double QuadraticInterpolateX(const double& y,
 	const double& a, const double& b, const double& c,
 	const double& FA, const double& FB, const double& FC) {
 	double amb = a - b;
@@ -385,4 +452,16 @@ int weighed_lower_bound_X(const double & key, const double & weigh, double * A, 
 		else
 			return (int)size - 1; //key larger than last element
 	
+}
+
+double GetElement(const std::pair<double, double>& pair, const bool & first) {
+	return first ? pair.first : pair.second;
+}
+
+double GetElement(const std::pair<double, std::vector<double>>& pair, const bool & first, const size_t & elementIndex) {
+	return first ? pair.first : pair.second[elementIndex];
+}
+
+double Pow10(const double& a) {
+	return pow(10,a);
 }

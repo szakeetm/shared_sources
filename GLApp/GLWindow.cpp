@@ -461,6 +461,7 @@ void GLWindow::SetVisible(bool v) {
       visible = false;
       if( iconified ) Iconify(false);
       GLWindowManager::UnRegisterWindow(this);
+	  GLWindowManager::Repaint();
     } else {
       if( iconified ) Iconify(false);
       GLWindowManager::BringToFront(this);

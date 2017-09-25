@@ -13,6 +13,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+#define NOMINMAX
 #include "GLWindow.h"
 #include "GLFileBox.h"
 #include "GLMessageBox.h"
@@ -30,7 +31,6 @@
 #ifdef WIN
 #include <direct.h>
 #include <io.h>
-#include <windows.h>
 #include <shlobj.h>
 //for windows open/save dialogs
 #include <Windows.h>

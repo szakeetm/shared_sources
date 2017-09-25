@@ -386,7 +386,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				 return;
 			 }
 			 UpdateToggle(l8);
-			 int selVertexId = 1;
+			 int selVertexId = -1;
 			 for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
 				 if (geom->GetVertex(i)->selected) {
 					 selVertexId = i;
