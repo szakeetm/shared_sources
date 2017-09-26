@@ -75,9 +75,9 @@ void ComputeBB(struct AABBNODE *node) {
 		node->bb.min.x = std::min(f->sh.bb.min.x,node->bb.min.x);
 		node->bb.min.y = std::min(f->sh.bb.min.y, node->bb.min.y);
 		node->bb.min.z = std::min(f->sh.bb.min.z, node->bb.min.z);
-		node->bb.min.x = std::max(f->sh.bb.max.x, node->bb.max.x);
-		node->bb.min.y = std::max(f->sh.bb.max.y, node->bb.max.y);
-		node->bb.min.z = std::max(f->sh.bb.max.z, node->bb.max.z);
+		node->bb.max.x = std::max(f->sh.bb.max.x, node->bb.max.x);
+		node->bb.max.y = std::max(f->sh.bb.max.y, node->bb.max.y);
+		node->bb.max.z = std::max(f->sh.bb.max.z, node->bb.max.z);
 	}
 
 }
@@ -172,8 +172,8 @@ bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nul
 	}
 
 	//Y component
-	if (rayPos.y < node.bb.min.y || rayPos.y > node.bb.max.y) {
-		return false;
+	if (nullRy) {
+		if (rayPos.y < node.bb.min.y || rayPos.y > node.bb.max.y) return false;
 	}
 	else {
 		double intersection1 = (node.bb.min.y - rayPos.y) * inverseRayDir.y;
@@ -286,9 +286,8 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 	FACET* collidedFacet = lastHitBefore;
 	double minLength=minLengthSoFar;
 
-	if (node->left == NULL || node->right == NULL) {
+	if (node->left == NULL || node->right == NULL) { // Leaf
 
-		// Leaf
 		for (size_t i = 0;i<node->nbFacet;i++) {
 
 			FACET* f = node->list[i];
@@ -354,10 +353,8 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 											f->colU = u;
 											f->colV = v;
 										}
-
 									}
 									else {
-
 										// Pass on partial transparent facet
 										//if (f->sh.isProfile || f->hits) {
 											f->colDist = d;
@@ -376,10 +373,29 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 		} // end for
 
 	} /* end is Leaf */ else {
-		if (IntersectBB_new(*(node->left), rayPos, nullRx, nullRy, nullRz, inverseRayDir))
-			std::tie(found,collidedFacet,minLength) = IntersectTree(node->left,rayPos,rayDir,minLength,collidedFacet,nullRx,nullRy,nullRz,inverseRayDir,intNbTHits,THitCache);
-		if (IntersectBB_new(*(node->right), rayPos, nullRx, nullRy, nullRz, inverseRayDir))
-			std::tie(found, collidedFacet, minLength) = IntersectTree(node->right, rayPos, rayDir, minLength,collidedFacet, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache);
+		if (IntersectBB_new(*(node->left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
+			//temp variables to receive IntersectTree output
+			bool newFound;
+			FACET* newCollidedFacet;
+			double newDist;
+			std::tie(newFound, newCollidedFacet, newDist) = IntersectTree(node->left, rayPos, rayDir, minLength, collidedFacet, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache);
+			if (newFound) {
+				found = true;
+				collidedFacet = newCollidedFacet;
+				minLength = newDist;
+			}
+		}
+		if (IntersectBB_new(*(node->right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
+			bool newFound;
+			FACET* newCollidedFacet;
+			double newDist;
+			std::tie(newFound, newCollidedFacet, newDist) = IntersectTree(node->right, rayPos, rayDir, minLength, collidedFacet, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache);
+			if (newFound) {
+				found = true;
+				collidedFacet = newCollidedFacet;
+				minLength = newDist;
+			}
+		}
 	}
 	return std::make_tuple(found, collidedFacet, minLength);
 }
