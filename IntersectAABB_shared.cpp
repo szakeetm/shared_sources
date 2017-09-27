@@ -12,50 +12,49 @@
 // AABB tree stuff
 
 // Minimum number of facet inside a BB
-#define MINBB    8
-#define MAXDEPTH 5
+#define MINBB    1
+#define MAXDEPTH 50
 
 std::tuple<size_t,size_t,size_t> FindBestCuttingPlane(struct AABBNODE *node) {
 
 	// AABB tree balancing
 
-	double mX = (node->bb.min.x + node->bb.max.x) / 2.0;
-	double mY = (node->bb.min.y + node->bb.max.y) / 2.0;
-	double mZ = (node->bb.min.z + node->bb.max.z) / 2.0;
-	size_t Lxy = 0;
-	size_t Lxz = 0;
-	size_t Lyz = 0;
-	size_t planeType;
+	double centerX = (node->bb.min.x + node->bb.max.x) / 2.0;
+	double centerY = (node->bb.min.y + node->bb.max.y) / 2.0;
+	double centerZ = (node->bb.min.z + node->bb.max.z) / 2.0;
+	size_t rightFromCenterX = 0;
+	size_t rightFromCenterY = 0;
+	size_t rightFromCenterZ = 0;
+	size_t planeType; //1: YZ, 2: XZ, 3: XY
 	double best = 1e100;
-	double Cx, Cy, Cz;
 	size_t nbLeft, nbRight;
 
 	for (size_t i = 0;i<node->nbFacet;i++) {
 		FACET *f = node->list[i];
-		if (f->sh.center.x > mX) Lyz++;
-		if (f->sh.center.y > mY) Lxz++;
-		if (f->sh.center.z > mZ) Lxy++;
+		if (f->sh.center.x > centerX) rightFromCenterZ++;
+		if (f->sh.center.y > centerY) rightFromCenterY++;
+		if (f->sh.center.z > centerZ) rightFromCenterX++;
 	}
 
-	Cx = fabs((double)Lyz - (double)(node->nbFacet) / 2.0);
-	if (Cx < best) {
-		best = Cx;
-		nbLeft = node->nbFacet - Lyz;
-		nbRight = Lyz;
+	double deviationFromHalfHalf_X = fabs((double)rightFromCenterZ - (double)(node->nbFacet) / 2.0);
+	if (deviationFromHalfHalf_X < best) {
+		best = deviationFromHalfHalf_X;
+		nbLeft = node->nbFacet - rightFromCenterZ;
+		nbRight = rightFromCenterZ;
 		planeType = 1;
 	}
-	Cy = fabs((double)Lxz - (double)(node->nbFacet) / 2.0);
-	if (Cy < best) {
-		best = Cy;
-		nbLeft = node->nbFacet - Lxz;
-		nbRight = Lxz;
+	double deviationFromHalfHalf_Y = fabs((double)rightFromCenterY - (double)(node->nbFacet) / 2.0);
+	if (deviationFromHalfHalf_Y < best) {
+		best = deviationFromHalfHalf_Y;
+		nbLeft = node->nbFacet - rightFromCenterY;
+		nbRight = rightFromCenterY;
 		planeType = 2;
 	}
-	Cz = fabs((double)Lxy - (double)(node->nbFacet) / 2.0);
-	if (Cz < best) {
-		best = Cz;
-		nbLeft = node->nbFacet - Lxy;
-		nbRight = Lxy;
+	double deviationFromHalfHalf_Z = fabs((double)rightFromCenterX - (double)(node->nbFacet) / 2.0);
+	if (deviationFromHalfHalf_Z < best) {
+		best = deviationFromHalfHalf_Z;
+		nbLeft = node->nbFacet - rightFromCenterX;
+		nbRight = rightFromCenterX;
 		planeType = 3;
 	}
 
@@ -82,12 +81,12 @@ void ComputeBB(struct AABBNODE *node) {
 
 }
 
-struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t depth) {
+struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t depth,size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;
 	double m;
 	
-
+	maxDepth = std::max(depth, maxDepth); //debug
 	if (depth >= MAXDEPTH) return NULL;
 
 	struct AABBNODE *newNode = new AABBNODE();
@@ -133,8 +132,8 @@ struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t 
 			break;
 
 		}
-		newNode->left = BuildAABBTree(lList, nbl, depth + 1);
-		newNode->right = BuildAABBTree(rList, nbr, depth + 1);
+		newNode->left = BuildAABBTree(lList, nbl, depth + 1, maxDepth);
+		newNode->right = BuildAABBTree(rList, nbr, depth + 1, maxDepth);
 	}
 
 	return newNode;
@@ -269,8 +268,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 }
 */
 
-std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDir, const double& minLengthSoFar, FACET* const lastHitBefore,
-	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir, size_t* intNbTHits, FACET** THitCache) {
+/*std::tuple<bool,FACET*,double>*/ void IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, FACET* const lastHitBefore,
+	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir, size_t& intNbTHits, FACET**& THitCache, bool& found, FACET*& collidedFacet, double& minLength) {
 
 	// Returns three values
 	// bool: did collision occur?
@@ -282,9 +281,9 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 	// Solve the vector equation u*U + v*V + d*D = Z (using Cramer's rule)
 	// nuv = u^v (for faster calculation)
 
-	bool found = false;
+	/*bool found = false;
 	FACET* collidedFacet = lastHitBefore;
-	double minLength=minLengthSoFar;
+	double minLength=minLengthSoFar;*/
 
 	if (node->left == NULL || node->right == NULL) { // Leaf
 
@@ -296,28 +295,27 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 			if (f == lastHitBefore)
 				continue;
 
+			double det = Dot(f->sh.Nuv, rayDirOpposite);
 			// Eliminate "back facet"
-			if ((f->sh.is2sided) || (Dot(f->sh.N, rayDir) < 0.0)) { //If 2-sided or if ray going opposite facet normal
+			if ((f->sh.is2sided) || (det > 0.0)) { //If 2-sided or if ray going opposite facet normal
 
 				double u, v, d;
 				// Ray/rectangle instersection. Find (u,v,dist) and check 0<=u<=1, 0<=v<=1, dist>=0
-				Vector3d intD = -1.0 * rayDir; //used often, so precalc
-				double det = Dot(f->sh.Nuv, intD);
-
+				
 				if (det != 0.0) {
 
 					double iDet = 1.0 / det;
 					Vector3d intZ = rayPos - f->sh.O;
 
-					u = iDet * DET33(intZ.x, f->sh.V.x, intD.x,
-						intZ.y, f->sh.V.y, intD.y,
-						intZ.z, f->sh.V.z, intD.z);
+					u = iDet * DET33(intZ.x, f->sh.V.x, rayDirOpposite.x,
+						intZ.y, f->sh.V.y, rayDirOpposite.y,
+						intZ.z, f->sh.V.z, rayDirOpposite.z);
 
 					if (u >= 0.0 && u <= 1.0) {
 
-						v = iDet * DET33(f->sh.U.x, intZ.x, intD.x,
-							f->sh.U.y, intZ.y, intD.y,
-							f->sh.U.z, intZ.z, intD.z);
+						v = iDet * DET33(f->sh.U.x, intZ.x, rayDirOpposite.x,
+							f->sh.U.y, intZ.y, rayDirOpposite.y,
+							f->sh.U.z, intZ.z, rayDirOpposite.z);
 
 						if (v >= 0.0 && v <= 1.0) {
 
@@ -360,8 +358,8 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 											f->colDist = d;
 											f->colU = u;
 											f->colV = v;
-											if (*intNbTHits<MAX_THIT)
-												THitCache[*intNbTHits++] = f;
+											if (intNbTHits<MAX_THIT)
+												THitCache[intNbTHits++] = f;
 										//}
 									}
 								} // IsInFacet
@@ -372,32 +370,15 @@ std::tuple<bool,FACET*,double> IntersectTree(struct AABBNODE *node, const Vector
 			} // dot<0
 		} // end for
 
-	} /* end is Leaf */ else {
+	} /* end Leaf */ else {
 		if (IntersectBB_new(*(node->left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
-			//temp variables to receive IntersectTree output
-			bool newFound;
-			FACET* newCollidedFacet;
-			double newDist;
-			std::tie(newFound, newCollidedFacet, newDist) = IntersectTree(node->left, rayPos, rayDir, minLength, collidedFacet, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache);
-			if (newFound) {
-				found = true;
-				collidedFacet = newCollidedFacet;
-				minLength = newDist;
-			}
+			IntersectTree(node->left, rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache, found, collidedFacet, minLength);
 		}
 		if (IntersectBB_new(*(node->right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
-			bool newFound;
-			FACET* newCollidedFacet;
-			double newDist;
-			std::tie(newFound, newCollidedFacet, newDist) = IntersectTree(node->right, rayPos, rayDir, minLength, collidedFacet, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache);
-			if (newFound) {
-				found = true;
-				collidedFacet = newCollidedFacet;
-				minLength = newDist;
-			}
+			IntersectTree(node->right, rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache, found, collidedFacet, minLength);
 		}
+		double a = 5;
 	}
-	return std::make_tuple(found, collidedFacet, minLength);
 }
 
 bool IsInFacet(const FACET &f, const double &u, const double &v) {
