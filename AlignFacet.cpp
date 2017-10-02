@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "GlApp\GLButton.h"
 #include "GLApp\MathTools.h" //Contains
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

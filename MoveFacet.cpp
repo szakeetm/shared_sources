@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

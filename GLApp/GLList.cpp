@@ -25,7 +25,7 @@ GNU General Public License for more details.
 //#include <malloc.h>
 #include  <math.h>
 #include <algorithm> //Sort
-#include "Geometry.h"
+#include "Geometry_shared.h"
 #include "GLWindowManager.h"
 #include <Vector.h>
 #ifdef MOLFLOW

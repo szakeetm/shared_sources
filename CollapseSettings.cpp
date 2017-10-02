@@ -29,7 +29,7 @@ GNU General Public License for more details.
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
 #include "ProfilePlotter.h"
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

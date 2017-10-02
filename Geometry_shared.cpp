@@ -1,7 +1,7 @@
 #pragma once
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 #include "Facet.h"
 #include "GLApp\MathTools.h"
 #include "GLApp\GLMessageBox.h"

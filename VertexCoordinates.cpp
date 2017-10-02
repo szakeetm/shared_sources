@@ -26,7 +26,7 @@
 #include "GLApp/GLButton.h"
 #include "GLApp/GLList.h"
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

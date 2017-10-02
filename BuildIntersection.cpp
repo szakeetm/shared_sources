@@ -14,7 +14,7 @@
   GNU General Public License for more details.
 */
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 #include "BuildIntersection.h"
 #include "Facet.h" //DeletedFacet
 #include "GLApp/GLTitledPanel.h"

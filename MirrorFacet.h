@@ -6,7 +6,7 @@
 #define _MIRRORFACETH_
 
 #include "GLApp/GLWindow.h"
-#include "Geometry.h" //UndoPoint
+#include "Geometry_shared.h" //UndoPoint
 #include <vector>
 
 class Geometry;

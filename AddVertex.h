@@ -11,7 +11,7 @@ class GLButton;
 class GLTextField;
 class GLLabel;
 
-//#include "Geometry.h"
+//#include "Geometry_shared.h"
 //#include "Worker.h"
 class Geometry;
 class Worker;

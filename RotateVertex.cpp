@@ -35,7 +35,7 @@ GNU General Public License for more details.
 #include "GLApp/GLToggle.h"
 #include "GLApp/GLTitledPanel.h"
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

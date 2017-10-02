@@ -1,4 +1,4 @@
-#include "Geometry.h"
+#include "Geometry_shared.h"
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
 #include "GLApp\GLToolkit.h"

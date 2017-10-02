@@ -8,7 +8,7 @@
 #include "GLApp\GLLabel.h"
 #include "GLApp\GLButton.h"
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #include <math.h>
 //#include <malloc.h>

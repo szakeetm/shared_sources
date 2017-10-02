@@ -23,7 +23,7 @@
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
 
-#include "Geometry.h"
+#include "Geometry_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

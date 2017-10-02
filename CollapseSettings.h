@@ -24,7 +24,7 @@ class GLTextField;
 class GLLabel;
 class GLToggle;
 
-//#include "Geometry.h"
+//#include "Geometry_shared.h"
 //#include "Worker.h"
 class Geometry;
 class Worker;

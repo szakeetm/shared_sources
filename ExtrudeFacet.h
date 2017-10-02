@@ -11,7 +11,7 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-//#include "Geometry.h"
+//#include "Geometry_shared.h"
 //#include "Worker.h"
 class Geometry;
 class Worker;
