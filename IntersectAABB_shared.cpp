@@ -238,7 +238,7 @@ lab:
 
 */
 
-/*
+
 //Unused as of 2017/09/25
 bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
 
@@ -266,10 +266,11 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 	return false;
 
 }
-*/
+
 
 /*std::tuple<bool,FACET*,double>*/ void IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, FACET* const lastHitBefore,
-	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir, size_t& intNbTHits, FACET**& THitCache, bool& found, FACET*& collidedFacet, double& minLength) {
+	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir,
+	size_t& intNbTHits, FACET**& THitCache, bool& found, FACET*& collidedFacet, double& minLength) {
 
 	// Returns three values
 	// bool: did collision occur?
@@ -371,13 +372,13 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 		} // end for
 
 	} /* end Leaf */ else {
+
 		if (IntersectBB_new(*(node->left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
 			IntersectTree(node->left, rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache, found, collidedFacet, minLength);
 		}
 		if (IntersectBB_new(*(node->right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
 			IntersectTree(node->right, rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache, found, collidedFacet, minLength);
 		}
-		double a = 5;
 	}
 }
 
@@ -438,4 +439,195 @@ bool IsInFacet(const FACET &f, const double &u, const double &v) {
 	if (n_updown<0) n_updown = -n_updown;
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
 
+}
+
+std::tuple<bool, FACET*, double> Intersect(const Vector3d& rayPos, const Vector3d& rayDir, /*FACET* lastHitFacet,*/ FACET**& THitCache) {
+	// Source ray (rayDir vector must be normalized)
+	// lastHit is to avoid detecting twice the same collision
+	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
+
+	bool nullRx = (rayDir.x == 0.0);
+	bool nullRy = (rayDir.y == 0.0);
+	bool nullRz = (rayDir.z == 0.0);
+	Vector3d inverseRayDir;
+	if (!nullRx) inverseRayDir.x = 1.0 / rayDir.x;
+	if (!nullRy) inverseRayDir.y = 1.0 / rayDir.y;
+	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
+
+	//Global variables, easier for recursion:
+	size_t intNbTHits = 0;
+
+	//Output values
+	bool found = false;
+	FACET *collidedFacet;
+	double minLength = 1e100;
+
+	IntersectTree(sHandle->str[sHandle->curStruct].aabbTree, rayPos, -1.0*rayDir, sHandle->lastHitFacet,
+		nullRx, nullRy, nullRz, inverseRayDir,
+		intNbTHits, THitCache, found, collidedFacet, minLength); //output params
+
+	if (found) {
+
+		//ProfileFacet(f,sHandle->flightTimeCurrentParticle+*dist/100.0/sHandle->velocityCurrentParticle); //Can't profile here because we don't know yet if it's a bounce, absorption, etc
+		collidedFacet->hitted = true;
+
+		// Second pass for transparent hits
+		for (size_t i = 0; i<intNbTHits; i++) {
+			FACET* tpFacet = THitCache[i];
+			if (tpFacet->colDist < minLength) {
+				tpFacet->RegisterTransparentPass();
+			}
+		}
+
+		/*
+		// Compute intersection with spheric volume element
+		if (sHandle->hasDirection) {
+
+		for (j = 0; j < sHandle->nbSuper; j++) {
+		for (i = 0; i < sHandle->str[j].nbFacet; i++) {
+		f = sHandle->str[j].facets[i];
+		if (f->direction && f->sh.countDirection) {
+
+		int      x, y;
+		Vector3d center;
+		double   d;
+		double   r = f->rw*0.45; // rw/2 - 10% (avoid side FX)
+
+		for (x = 0; x < f->sh.texWidth; x++) {
+		for (y = 0; y < f->sh.texHeight; y++) {
+		int add = x + y*f->sh.texWidth;
+		if (isFull) {
+
+		double uC = ((double)x + 0.5) * f->iw;
+		double vC = ((double)y + 0.5) * f->ih;
+		center.x = f->sh.O.x + f->sh.U.x*uC + f->sh.V.x*vC;
+		center.y = f->sh.O.y + f->sh.U.y*uC + f->sh.V.y*vC;
+		center.z = f->sh.O.z + f->sh.U.z*uC + f->sh.V.z*vC;
+		if (RaySphereIntersect(&center, r, rPos, rDir, &d)) {
+		if (d < intMinLgth) {
+		f->direction[add].dir.x += sHandle->pDir.x;
+		f->direction[add].dir.y += sHandle->pDir.y;
+		f->direction[add].dir.z += sHandle->pDir.z;
+		f->direction[add].count++;
+		}
+		}
+
+		}
+		}
+		}
+		}
+		}
+		}
+		}*/
+
+	}
+	return std::make_tuple(found, collidedFacet, minLength);
+
+}
+
+void PolarToCartesian(FACET* collidedFacet, const double& theta, const double& phi, const bool& reverse) {
+
+	//Acts on sHandle->pDir
+
+	//Vector3d U, V, N;
+	//double u, v, n;
+
+	// Polar in (nU,nV,N) to Cartesian(x,y,z) transformation  ( nU = U/|U| , nV = V/|V| )
+	// tetha is the angle to the normal of the facet N, phi to U
+	// ! See Geometry::InitializeGeometry() for further informations on the (U,V,N) basis !
+	// (nU,nV,N) and (x,y,z) are both left handed
+
+	/*#ifdef WIN
+	_asm {                    // FPU stack
+	fld qword ptr [theta]
+	fsincos                 // cos(t)        sin(t)
+	fld qword ptr [phi]
+	fsincos                 // cos(p)        sin(p) cos(t) sin(t)
+	fmul st(0),st(3)        // cos(p)*sin(t) sin(p) cos(t) sin(t)
+	fstp qword ptr [u]      // sin(p)        cos(t) sin(t)
+	fmul st(0),st(2)        // sin(p)*sin(t) cos(t) sin(t)
+	fstp qword ptr [v]      // cos(t) sin(t)
+	fstp qword ptr [n]      // sin(t)
+	fstp qword ptr [dummy]  // Flush the sin(t)
+	}
+	#else*/
+	double u = sin(theta)*cos(phi);
+	double v = sin(theta)*sin(phi);
+	double n = cos(theta);
+	//#endif
+
+	// Get the (nU,nV,N) orthonormal basis of the facet
+	Vector3d U = collidedFacet->sh.nU;
+	Vector3d V = collidedFacet->sh.nV;
+	Vector3d N = collidedFacet->sh.N;
+	if (reverse) {
+		N.x = N.x*(-1.0);
+		N.y = N.y*(-1.0);
+		N.z = N.z*(-1.0);
+	}
+	// Basis change (nU,nV,N) -> (x,y,z)
+	sHandle->pDir.x = u*U.x + v*V.x + n*N.x;
+	sHandle->pDir.y = u*U.y + v*V.y + n*N.y;
+	sHandle->pDir.z = u*U.z + v*V.z + n*N.z;
+}
+
+std::tuple<double, double> CartesianToPolar(const Vector3d& normU, const Vector3d& normV, const Vector3d& normN) {
+
+	//input vectors need to be normalized
+
+	// Get polar coordinates of the incoming particule direction in the (U,V,N) facet space.
+	// Note: The facet is parallel to (U,V), we use its (nU,nV,N) orthonormal basis here.
+	// (nU,nV,N) and (x,y,z) are both left handed
+
+	// Cartesian(x,y,z) to polar in (nU,nV,N) transformation
+
+	// Basis change (x,y,z) -> (nU,nV,N)
+	// We use the fact that (nU,nV,N) belongs to SO(3)
+	double u = Dot(sHandle->pDir, normU);
+	double v = Dot(sHandle->pDir, normV);
+	double n = Dot(sHandle->pDir, normN);
+	Saturate(n, -1.0, 1.0); //sometimes rounding errors do occur, 'acos' function would return no value for theta
+
+							// (u,v,n) -> (theta,phi)
+	double rho = sqrt(v*v + u*u);
+	double inTheta = acos(n);              // Angle to normal (PI/2 => PI)
+	double inPhi = asin(v / rho);
+	if (u < 0.0) inPhi = PI - inPhi;  // Angle to U
+
+	return std::make_tuple(inTheta, inPhi);
+}
+
+bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2, FACET** THitCache) {
+	//For AC matrix calculation, used only in MolFlow
+
+	Vector3d rayPos = *c1;
+	Vector3d rayDir = *c2 - *c1;
+
+	bool nullRx = (rayDir.x == 0.0);
+	bool nullRy = (rayDir.y == 0.0);
+	bool nullRz = (rayDir.z == 0.0);
+	Vector3d inverseRayDir;
+	if (!nullRx) inverseRayDir.x = 1.0 / rayDir.x;
+	if (!nullRy) inverseRayDir.y = 1.0 / rayDir.y;
+	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
+
+	//Global variables, easier for recursion:
+	size_t intNbTHits = 0;
+
+	//Output values
+	bool found;
+	FACET *collidedFacet;
+	double minLength;
+
+	IntersectTree(sHandle->str[0].aabbTree, rayPos, -1.0*rayDir,
+		f1, nullRx, nullRy, nullRz, inverseRayDir, intNbTHits, THitCache, found, collidedFacet, minLength);
+
+	if (found) {
+		if (collidedFacet != f2) {
+			// Obstacle found
+			return false;
+		}
+	}
+
+	return true;
 }

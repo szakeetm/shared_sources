@@ -3047,7 +3047,7 @@ void Geometry::CreateLoft() {
 			//Create triangle
 			Facet *newFacet = new Facet(3);
 			newFacet->indices[0] = f1->indices[i1];
-			newFacet->indices[1] = f2->indices[IDX(i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].visited = true;
+			newFacet->indices[1] = f2->indices[IDX((int)i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].visited = true;
 			newFacet->indices[2] = f2->indices[i2]; closestIndices2[i2].visited = true;
 			newFacet->selected = true;
 			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
@@ -3055,7 +3055,7 @@ void Geometry::CreateLoft() {
 			newFacets.push_back(newFacet);
 		}
 		//Look for smaller points in decreasing direction
-		for (size_t i2 = IDX(closestIndices1[i1].index - 1, f2->sh.nbIndex); closestIndices2[i2].index == i1; i2 = IDX(i2 - 1, f2->sh.nbIndex)) {
+		for (size_t i2 = IDX(closestIndices1[i1].index - 1, f2->sh.nbIndex); closestIndices2[i2].index == i1; i2 = IDX((int)i2 - 1, f2->sh.nbIndex)) {
 			//Create triangle
 			Facet *newFacet = new Facet(3);
 			newFacet->indices[0] = f1->indices[i1];
@@ -3106,14 +3106,14 @@ void Geometry::CreateLoft() {
 	//Go through leftover vertices on facet 2
 	for (size_t i2 = 0; i2 < f2->sh.nbIndex; i2++) {
 		if (closestIndices2[i2].visited == false) {
-			size_t targetIndex = closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].index; //Previous node
+			size_t targetIndex = closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].index; //Previous node
 
 			do {
 				//Connect with previous
 				Facet *newFacet = new Facet(3);
 				newFacet->indices[0] = f1->indices[targetIndex];
 				newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true;
-				newFacet->indices[2] = f2->indices[IDX(i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX(i2 - 1, f2->sh.nbIndex)].visited = true;
+				newFacet->indices[2] = f2->indices[IDX((int)i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].visited = true;
 				newFacet->selected = true;
 				if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
 				newFacets.push_back(newFacet);

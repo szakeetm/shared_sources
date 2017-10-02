@@ -33,6 +33,7 @@
 #include <io.h>
 #include <shlobj.h>
 //for windows open/save dialogs
+#define NOMINMAX
 #include <Windows.h>
 #include <CommDlg.h>
 #endif

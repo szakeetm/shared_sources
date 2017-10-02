@@ -2,6 +2,7 @@
 #include <string>
 #include <stdio.h>
 #include <iostream>
+#define NOMINMAX
 #include <Windows.h> //Showwindow
 #include <io.h>
 #include <direct.h>

@@ -27,8 +27,8 @@ extern "C" {
 #endif
 
 #ifdef WIN
- #define NOMINMAX
- #include <windows.h>
+#define NOMINMAX
+#include <windows.h>
 
  // Win32 shared memory
  typedef struct {
