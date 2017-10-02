@@ -1630,7 +1630,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return true;
 		}
 		else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-			geom->viewStruct = (int)IDX(geom->viewStruct - 1, geom->GetNbStructure());
+			geom->viewStruct = (int)IDX((int)geom->viewStruct - 1, geom->GetNbStructure());
 			geom->UnselectAll();
 			UpdateStructMenu();
 			return true;
@@ -1648,7 +1648,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return true;
 		}
 		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size())) { //Previous selection
-			SelectSelection(IDX(idSelection - 1, selections.size()));
+			SelectSelection(IDX((int)idSelection - 1, selections.size()));
 			return true;
 		}
 		else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size() + 1)) { //Next selection

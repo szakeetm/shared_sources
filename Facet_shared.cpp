@@ -46,7 +46,7 @@ void Facet::DetectOrientation() {
 		Vector2d c;
 		bool empty = EmptyTriangle(&p, (int)i - 1, (int)i, (int)i + 1, &c);
 		if (empty || sh.nbIndex == 3) {
-			size_t _i1 = IDX(i - 1, p.nbPts);
+			size_t _i1 = IDX((int)i - 1, p.nbPts);
 			size_t _i2 = IDX(i, p.nbPts);
 			size_t _i3 = IDX(i + 1, p.nbPts);
 			if (IsInPoly(c.u, c.v, p.pts, p.nbPts)) {
