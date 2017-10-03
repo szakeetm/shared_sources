@@ -2960,7 +2960,6 @@ void Geometry::CreateLoft() {
 		}
 	}
 	if (!(nbFound == 2)) return;
-	int incrementDir = (Dot(f1->sh.N, f2->sh.N) > 0) ? -1 : 1;
 
 	std::vector<loftIndex> closestIndices1; closestIndices1.resize(f1->sh.nbIndex);
 	std::vector<loftIndex> closestIndices2; closestIndices2.resize(f2->sh.nbIndex);
@@ -3014,11 +3013,36 @@ void Geometry::CreateLoft() {
 		if (!closestIndices2[i2].visited) {
 			double min = 9E99;
 			size_t minPos;
-			for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) {
+
+			//To avoid crossing, narrow search to previous to next connected index range on f1
+
+			//Look for first lower neighbor that is already visited
+			size_t i2_lookup = i2;
+			do {
+				i2_lookup = IDX((int)i2_lookup - 1, f2->sh.nbIndex); //previous index
+			} while (!closestIndices2[i2_lookup].visited && i2_lookup != i2);
+
+			size_t i1index_1 = closestIndices2[i2_lookup].index;
+
+			//Look for first higher neighbor that is already visited
+			i2_lookup = i2;
+			do {
+				i2_lookup = IDX(i2_lookup + 1, f2->sh.nbIndex); //next index
+			} while (!closestIndices2[i2_lookup].visited && i2_lookup != i2);
+
+			size_t i1index_2 = closestIndices2[i2_lookup].index;
+
+			size_t i1index_lower = std::min(i1index_1, i1index_2);
+			size_t i1index_higher = std::max(i1index_1, i1index_2);
+
+			//Look for the closest among [i1index_lower .. i1index_higher]
+
+			for (size_t i1 = i1index_lower; i1 <= i1index_higher; i1++) {
 				Vector2d projection = ProjectVertex(vertices3[f1->indices[i1]], f2->sh.U, f2->sh.V, f2->sh.O);
 				projection = projection + centerOffset;
 				double dist = pow(u2Length*(projection.u - f2->vertices2[i2].u), 2.0) + pow(v2Length*(projection.v - f2->vertices2[i2].v), 2.0); //We need the absolute distance
 				if (!closestIndices1[i1].boundary) dist += 1E6; //penalty -> try to connect with boundaries
+
 				if (dist < min) {
 					min = dist;
 					minPos = i1;
@@ -3036,46 +3060,68 @@ void Geometry::CreateLoft() {
 		size_t previousId = (i + closestIndices2.size() - 1) % closestIndices2.size();
 		size_t nextId = (i + 1) % closestIndices2.size();
 		closestIndices2[i].boundary = (closestIndices2[i].index != closestIndices2[nextId].index) || (closestIndices2[i].index != closestIndices2[previousId].index);
-		closestIndices2[i].visited = false; //Reset this flag, will use to make sure we don't miss anything
+		closestIndices2[i].visited = false; //Reset this flag, will use to make sure we don't miss anything on facet2
 	}
 
 	//Links created
 	std::vector<Facet*> newFacets;
-	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) {
-		//Look for smaller points in increasing direction
+	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) { //Cycle through all facet1 indices to create triangles and rectangles
+
 		for (size_t i2 = (closestIndices1[i1].index + 1) % f2->sh.nbIndex; closestIndices2[i2].index == i1; i2 = (i2 + 1) % f2->sh.nbIndex) {
-			//Create triangle
+			//In increasing direction, cycle through those indices on facet2 that are also linked with the actual facet1 index.
+			//When two consecutive indices on facet 2 are connected with the same facet1 index, create the following triangle:
+			
 			Facet *newFacet = new Facet(3);
-			newFacet->indices[0] = f1->indices[i1];
-			newFacet->indices[1] = f2->indices[IDX((int)i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].visited = true;
-			newFacet->indices[2] = f2->indices[i2]; closestIndices2[i2].visited = true;
+			newFacet->indices[0] = f1->indices[i1]; //actual facet1 index 
+			newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true; //next facet2 index (i2 already incremented in for cycle head)
+			newFacet->indices[2] = f2->indices[IDX((int)i2 - 1, f2->sh.nbIndex)]; closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].visited = true; //actual facet2 index
 			newFacet->selected = true;
 			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
-			newFacet->SwapNormal();
 			newFacets.push_back(newFacet);
 		}
-		//Look for smaller points in decreasing direction
+		
+
 		for (size_t i2 = IDX((int)closestIndices1[i1].index - 1, f2->sh.nbIndex); closestIndices2[i2].index == i1; i2 = IDX((int)i2 - 1, f2->sh.nbIndex)) {
-			//Create triangle
+			//In decreasing direction, cycle through those indices on facet2 that are also linked with the actual facet1 index.
+			//When two consecutive indices on facet 2 are connected with the same facet1 index, create the following triangle:
+
 			Facet *newFacet = new Facet(3);
-			newFacet->indices[0] = f1->indices[i1];
-			newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true;
-			newFacet->indices[2] = f2->indices[(i2 + 1) % f2->sh.nbIndex]; closestIndices2[(i2 + 1) % f2->sh.nbIndex].visited = true;
+			newFacet->indices[0] = f1->indices[i1]; //actual facet1 index
+			newFacet->indices[1] = f2->indices[(i2 + 1) % f2->sh.nbIndex]; closestIndices2[(i2 + 1) % f2->sh.nbIndex].visited = true; //actual facet2 index
+			newFacet->indices[2] = f2->indices[i2]; closestIndices2[i2].visited = true; //previous facet2 index (i2 already decremented in for cycle head)
+			
 			newFacet->selected = true;
 			if (viewStruct != -1) newFacet->sh.superIdx = viewStruct;
-			newFacet->SwapNormal();
 			newFacets.push_back(newFacet);
 		}
-		//Create rectangle
-		bool triangle = f2->indices[closestIndices1[(i1 + 1) % f1->sh.nbIndex].index] == f2->indices[closestIndices1[i1].index];
+
+		//Trivial triangle connections created. Now we're up to create rectangles. Later, if those rectangles wouldn't be planar, we'll split them to two triangles
+		//bool triangle = f2->indices[closestIndices1[(i1 + 1) % f1->sh.nbIndex].index] == f2->indices[closestIndices1[i1].index];
+		bool triangle = closestIndices1[(i1 + 1) % f1->sh.nbIndex].index == closestIndices1[i1].index; //If the current (i1) and also the next index on facet1 are connected with the same index on facet2, then create a triangle. Else a rectangle.
 		Facet *newFacet = new Facet(triangle ? 3 : 4);
-		newFacet->indices[0] = f1->indices[i1];
-		newFacet->indices[1] = f1->indices[(i1 + 1) % f1->sh.nbIndex];
-		//Find last vertex on other facet that's closest to us
-		size_t increment;
-		for (increment = 0; closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment + incrementDir, f2->sh.nbIndex)].index == ((i1 + 1) % f1->sh.nbIndex); increment += incrementDir);
-		newFacet->indices[2] = f2->indices[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)]; closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex)].visited = true;
-		if (!triangle) newFacet->indices[3] = f2->indices[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)]; closestIndices2[IDX(closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + incrementDir + increment, f2->sh.nbIndex)].visited = true;
+		newFacet->indices[0] = f1->indices[i1]; //Actual facet1 index
+		newFacet->indices[1] = f1->indices[(i1 + 1) % f1->sh.nbIndex]; //Next facet1 index
+		
+		//Find last vertex on other facet that's linked to us
+		int incrementDir = (Dot(f1->sh.N, f2->sh.N) > 0) ? -1 : 1;
+		int increment; //not size_t, allow negative values
+		for (increment = 0;
+			closestIndices2[
+				IDX((int)closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment + incrementDir, f2->sh.nbIndex) //Cycles through the indices on facet2
+			].index == 
+			((i1 + 1) % f1->sh.nbIndex); // is connected to the NEXT index on facet1
+			increment += incrementDir);
+		//Basically, look at the next connection. Fix the connection node as the next index on facet1, then step through all the indices on facet2 that are still connected to the same (the next) index on facet1
+
+		size_t lastIndexOnFacet2ThatConnectsToTheNextOnFacet1 = IDX((int)closestIndices1[(i1 + 1) % f1->sh.nbIndex].index + increment, f2->sh.nbIndex);
+		newFacet->indices[2] = f2->indices[lastIndexOnFacet2ThatConnectsToTheNextOnFacet1];
+		closestIndices2[lastIndexOnFacet2ThatConnectsToTheNextOnFacet1].visited = true;
+
+		if (!triangle) {
+			size_t nextAfterLastConnected = IDX((int)lastIndexOnFacet2ThatConnectsToTheNextOnFacet1 + incrementDir, f2->sh.nbIndex);
+			newFacet->indices[3] = f2->indices[nextAfterLastConnected];
+			closestIndices2[nextAfterLastConnected].visited = true;
+		}
 		if (incrementDir == -1) newFacet->SwapNormal();
 		CalculateFacetParam(newFacet);
 		if (abs(newFacet->err) > 1E-5) {
@@ -3104,6 +3150,8 @@ void Geometry::CreateLoft() {
 		newFacets.push_back(newFacet);
 	}
 	//Go through leftover vertices on facet 2
+	
+	
 	for (size_t i2 = 0; i2 < f2->sh.nbIndex; i2++) {
 		if (closestIndices2[i2].visited == false) {
 			size_t targetIndex = closestIndices2[IDX((int)i2 - 1, f2->sh.nbIndex)].index; //Previous node
@@ -3130,6 +3178,8 @@ void Geometry::CreateLoft() {
 			newFacets.push_back(newFacet);
 		}
 	}
+	
+
 	//Register new facets
 	if (newFacets.size() > 0) facets = (Facet**)realloc(facets, sizeof(Facet*)*(sh.nbFacet + newFacets.size()));
 	for (size_t i = 0; i < newFacets.size(); i++)
