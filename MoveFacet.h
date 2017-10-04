@@ -1,18 +1,15 @@
-/*
-  File:        MoveFacet.h
-  Description: Move facet by offset dialog
-*/
-
-#ifndef _MOVEFACETH_
-#define _MOVEFACETH_
+#pragma once
 
 #include "GLApp/GLWindow.h"
+#include "Vector.h"
 
 class GLButton;
 class GLTextField;
 class GLLabel;
+class GLToggle;
 class Geometry;
 class Worker;
+class GLTitledPanel;
 
 class MoveFacet : public GLWindow {
 
@@ -29,18 +26,33 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-  GLButton    *moveButton;
-  GLButton    *copyButton;
-  GLButton    *cancelButton;
-  GLLabel     *l1;
-  GLLabel     *l2;
-  GLLabel     *l3;
-  GLTextField *xOffset;
-  GLTextField *yOffset;
-  GLTextField *zOffset;
+  GLToggle	*offsetCheckbox;
+  GLToggle	*directionCheckBox;
+  GLTextField	*distanceText;
+  GLLabel	*dxLabel;
+  GLTextField	*xText;
+  GLLabel	*cmLabelX;
+  GLLabel	*cmLabelY;
+  GLTextField	*yText;
+  GLLabel	*dyLabel;
+  GLLabel	*cmLabelZ;
+  GLTextField	*zText;
+  GLLabel	*dzLabel;
+  GLTitledPanel	*directionPanel;
+  GLButton	*dirFacetCenterButton;
+  GLButton	*dirVertexButton;
+  GLButton	*baseFacetCenterButton;
+  GLButton	*baseVertexButton;
+  GLButton	*facetNormalButton;
+  GLLabel	*label4;
+  GLLabel	*label1;
+  GLLabel	*directionStatusLabel;
+  GLLabel	*baseStatusLabel;
+  GLButton	*copyButton;
+  GLButton	*moveButton;
+  GLTitledPanel	*dirPanel;
+  GLTitledPanel	*basePanel;
 
-  int nbFacetS;
+  Vector3d baseLocation;
 
 };
-
-#endif /* _MoveFacetH_ */

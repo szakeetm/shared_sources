@@ -1679,32 +1679,31 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 	SAFE_DELETE(prgAlign);
 }
 
-void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool copy, Worker *worker) {
+void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
 	GLProgress *prgMove = new GLProgress("Moving selected facets...", "Please wait");
 	prgMove->SetProgress(0.0);
 	prgMove->SetVisible(true);
 	auto selectedFacets = GetSelectedFacets();
-	if (!(dX == 0.0&&dY == 0.0&&dZ == 0.0)) {
-		if (!mApp->AskToReset(worker)) return;
-		int nbSelFacet = 0;
+
+	Vector3d delta = Vector3d(dX, dY, dZ);
+	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta ;
+
+	if (translation.Norme()>0.0) {
+		mApp->changedSinceSave = true;
 		if (copy) CloneSelectedFacets(); //move
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
 		double counter = 1.0;
-		if (selectedFacets.size() == 0) return;
 
 		bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
 		memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
 
-		int nb = 0;
 		for (auto sel : selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / selectedFacets.size());
 			for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
 				if (!alreadyMoved[facets[sel]->indices[j]]) {
-					vertices3[facets[sel]->indices[j]].x += dX;
-					vertices3[facets[sel]->indices[j]].y += dY;
-					vertices3[facets[sel]->indices[j]].z += dZ;
+					vertices3[facets[sel]->indices[j]].SetLocation(vertices3[facets[sel]->indices[j]] + translation);
 					alreadyMoved[facets[sel]->indices[j]] = true;
 				}
 			}
@@ -1925,32 +1924,35 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	sh.nbFacet += selectedFacetIds.size();
 }
 
-void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool copy, Worker *worker) {
+void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
-	if (!(dX == 0.0&&dY == 0.0&&dZ == 0.0)) {
-		if (!mApp->AskToReset(worker)) return;
+	GLProgress *prgMove = new GLProgress("Moving selected vertices...", "Please wait");
+	prgMove->SetProgress(0.0);
+	prgMove->SetVisible(true);
+	auto selectedVertices = GetSelectedVertices();
+
+	Vector3d delta = Vector3d(dX, dY, dZ);
+	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta;
+
+	if (translation.Norme()>0.0) {
 		mApp->changedSinceSave = true;
-		if (!copy) { //move
-			for (int i = 0; i < sh.nbVertex; i++) {
-				if (vertices3[i].selected) {
-					vertices3[i].x += dX;
-					vertices3[i].y += dY;
-					vertices3[i].z += dZ;
-				}
+		
+		double counter = 1.0;
+		for (auto i:selectedVertices) {
+			counter += 1.0;
+			prgMove->SetProgress(counter / selectedVertices.size());
+			Vector3d newLocation = vertices3[i] + translation;
+			if (!copy) {
+				vertices3[i].SetLocation(newLocation);
 			}
-			InitializeGeometry();
-		}
-
-		else { //copy
-			size_t nbVertexOri = sh.nbVertex;
-			for (size_t i = 0; i < nbVertexOri; i++) {
-				if (vertices3[i].selected) {
-					AddVertex(vertices3[i].x + dX, vertices3[i].y + dY, vertices3[i].z + dZ);
-				}
+			else {
+				AddVertex(newLocation);
 			}
 		}
-
+		if (!copy) InitializeGeometry(); //Geometry changed
 	}
+	prgMove->SetVisible(false);
+	SAFE_DELETE(prgMove);
 }
 
 void Geometry::AddVertex(const Vector3d& location, bool selected) {
