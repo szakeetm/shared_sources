@@ -206,6 +206,7 @@ private:
   GLButton      *handBtn;
   GLLabel       *coordLab;
 
+  GLLabel		*tabLabel;
   GLLabel       *capsLockLabel;
   GLLabel       *hideLotlabel;
 

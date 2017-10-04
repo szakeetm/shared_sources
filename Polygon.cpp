@@ -9,9 +9,9 @@ bool IsConvex(POLYGON *p,size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
 
-  size_t i1 = IDX((int)idx-1,p->nbPts); //idx can be 0
-  size_t i2 = IDX(idx  ,p->nbPts);
-  size_t i3 = IDX(idx+1,p->nbPts);
+  size_t i1 = Previous(idx,p->nbPts);
+  size_t i2 = IDX(idx,p->nbPts);
+  size_t i3 = Next(idx,p->nbPts);
 
   double d = DET22(p->pts[i1].u - p->pts[i2].u,p->pts[i3].u - p->pts[i2].u,
                    p->pts[i1].v - p->pts[i2].v,p->pts[i3].v - p->pts[i2].v);
@@ -381,13 +381,13 @@ void CreateGraph(POLYGRAPH *g,POLYGON *inP1,POLYGON *inP2,bool *visible2)
     g->nodes[i].VO[0] = -1;
     g->nodes[i].VO[1] = -1;
     g->arcs[i].i1 = i;
-    g->arcs[i].i2 = IDX(i+1,inP1->nbPts);
+    g->arcs[i].i2 = Next(i,inP1->nbPts);
     g->arcs[i].s = 1;
   }
 
   // Intersect with 2nd polygon
   for(size_t i=0;i<inP2->nbPts;i++)  {
-	  size_t i2 = IDX(i+1,inP2->nbPts);
+	  size_t i2 = Next(i,inP2->nbPts);
     if( (!visible2 || (visible2 && visible2[i])) ) {
       if( inP2->sign < 0.0 ) {
         InsertEdge(g,inP2->pts+i2,inP2->pts+i,0);
@@ -703,7 +703,7 @@ double GetInterArea(POLYGON *inP1,POLYGON *inP2,bool *edgeVisible,float *uC,floa
   for(size_t i=0;i<nbPoly;i++) {
     double A = 0.0;
     for(size_t j=0;j<polys[i].nbPts;j++) {
-      size_t j1 = IDX(j+1,polys[i].nbPts);
+      size_t j1 = Next(j,polys[i].nbPts);
       A += polys[i].pts[j].u*polys[i].pts[j1].v - polys[i].pts[j1].u*polys[i].pts[j].v;
       (*lList)[nbE++] = polys[i].pts[j].u;
       (*lList)[nbE++] = polys[i].pts[j].v;

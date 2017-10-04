@@ -11,6 +11,10 @@ template <typename TYPE> TYPE Max(const TYPE& x, const TYPE& y) { return (x < y)
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
 size_t  IDX(int i, size_t nb);
 size_t IDX(size_t i, size_t nb);
+size_t Next(int i, size_t nb);
+size_t Next(size_t i, size_t nb);
+size_t Previous(int i, size_t nb);
+size_t Previous(size_t i, size_t nb);
 #define NEXT_OF(list,element) (std::next(element)==(list).end())?(list).begin():std::next(element);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return fabs(x)<1E-10; }

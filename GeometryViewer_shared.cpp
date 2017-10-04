@@ -191,12 +191,16 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	autoBtn->SetToggle(true);
 	Add(autoBtn);
 
-	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
-	hideLotlabel->SetTextColor(255, 255, 255);
-	Add(hideLotlabel);
+	
+	tabLabel = new GLLabel("TAB key pressed: facet/vertex selection modes swapped");
+	tabLabel->SetTextColor(255, 255, 255);
+	Add(tabLabel);
 	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
 	capsLockLabel->SetTextColor(255, 255, 255);
 	Add(capsLockLabel);
+	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
+	hideLotlabel->SetTextColor(255, 255, 255);
+	Add(hideLotlabel);
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -1074,8 +1078,15 @@ if( showVolume || showTexture ) {
 		glDisable(GL_LINE_STIPPLE);
 
 	}
-		capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
-		hideLotlabel->SetVisible(displayWarning);
+
+	//From bottom to up
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47, 0, 19);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20*(int)displayWarning, 0, 19);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20*(int)GetWindow()->IsCapsLockOn() - 20*(int)displayWarning, 0, 19);
+
+	tabLabel->SetVisible(GetWindow()->IsTabDown());
+	capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
+	hideLotlabel->SetVisible(displayWarning);
 		
 #ifdef MOLFLOW
 	if (work->displayedMoment)

@@ -821,15 +821,15 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 
 	// Follow orientation
 	if (p->sign > 0.0) {
-		p1 = &(p->pts[IDX((int)ear - 1, p->nbPts)]);
-		p2 = &(p->pts[IDX(ear + 1, p->nbPts)]);
+		p1 = &(p->pts[Previous(ear, p->nbPts)]);
+		p2 = &(p->pts[Next(ear, p->nbPts)]);
 		p3 = &(p->pts[IDX(ear, p->nbPts)]);
 	}
 	else {
 
-		p1 = &(p->pts[IDX((int)ear - 1, p->nbPts)]);
+		p1 = &(p->pts[Previous(ear, p->nbPts)]);
 		p2 = &(p->pts[IDX(ear, p->nbPts)]);
-		p3 = &(p->pts[IDX(ear + 1, p->nbPts)]);
+		p3 = &(p->pts[Next(ear, p->nbPts)]);
 	}
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);

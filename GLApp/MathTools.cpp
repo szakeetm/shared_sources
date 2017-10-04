@@ -19,6 +19,23 @@ size_t IDX(size_t i, size_t nb) {
 	return i%nb;
 }
 
+
+size_t Next(int i, size_t nb) {
+	return i%nb;
+}
+
+size_t Next(size_t i, size_t nb) {
+	return (i+1)%nb;
+}
+
+size_t Previous(int i, size_t nb) {
+	return IDX(i - 1, nb);
+}
+
+size_t Previous(size_t i, size_t nb) {
+	return IDX((int)i - 1, nb);
+}
+
 size_t GetPower2(size_t n) {
 // Return a power of 2 which is greater or equal than n
   if((n & (n-1))==0) {
