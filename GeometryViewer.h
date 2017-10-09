@@ -184,7 +184,7 @@ private:
   void PaintCompAndBorder();
   void PaintSelectedVertices(bool hiddenVertex);
   void AutoScale(bool reUpdateMouseCursor=true);
-  void ComputeBB(bool getAll);
+  void ComputeBB(/*bool getAll*/);
   void UpdateLight();
 
   //void DrawBB();

@@ -23,6 +23,8 @@
 #include "GLApp\GLLabel.h"
 #include "GLApp\GLButton.h"
 #include "Geometry_shared.h"
+#include "Facet.h"
+#include "GLApp\MathTools.h" //Contains
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -42,42 +44,54 @@ extern SynRad*mApp;
 
 AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
 
-  int wD = 200;
-  int hD = 130;
+  int wD = 335;
+  int hD = 120;
 
-  SetTitle("Add new vertex by coordinates");
+  SetTitle("Add new vertex");
 
-  GLLabel *l1 = new GLLabel("X");
-  l1->SetBounds(10,5,170,18);
+  GLLabel *l1 = new GLLabel("X:");
+  l1->SetBounds(10,5,10,18);
   Add(l1);
 
   x = new GLTextField(0,"0");
-  x->SetBounds(100,5,80,18);
+  x->SetBounds(25,4,80,18);
   Add(x);
 
-  GLLabel *l2 = new GLLabel("Y");
-  l2->SetBounds(10,30,170,18);
+  GLLabel *l2 = new GLLabel("Y:");
+  l2->SetBounds(120,5,10,18);
   Add(l2);
 
   y = new GLTextField(0,"0");
-  y->SetBounds(100,30,80,18);
+  y->SetBounds(135,4,80,18);
   Add(y);
   
-  GLLabel *l3 = new GLLabel("Z");
-  l3->SetBounds(10,55,170,18);
+  GLLabel *l3 = new GLLabel("Z:");
+  l3->SetBounds(230,5,10,18);
   Add(l3);
 
   z = new GLTextField(0,"0");
-  z->SetBounds(100,55,80,18);
+  z->SetBounds(245,4,80,18);
   Add(z);
 
-  addButton = new GLButton(0,"Add");
-  addButton->SetBounds(10,hD-44,85,21);
-  Add(addButton);
+  facetCenterButton = new GLButton(0, "Facet center");
+  facetCenterButton->SetBounds(10, 30, 75, 20);
+  Add(facetCenterButton);
 
-  cancelButton = new GLButton(0,"Dismiss");
-  cancelButton->SetBounds(wD-90,hD-44,85,21);
-  Add(cancelButton);
+  facetUButton = new GLButton(0, "Facet \201");
+  facetUButton->SetBounds(90, 30, 75, 20);
+  Add(facetUButton);
+
+  facetVButton = new GLButton(0, "Facet \202");
+  facetVButton->SetBounds(170, 30, 75, 20);
+  Add(facetVButton);
+
+  facetNormalButton = new GLButton(0, "Facet N");
+  facetNormalButton->SetBounds(250, 30, 75, 20);
+  Add(facetNormalButton);
+
+  addButton = new GLButton(0,"Add vertex");
+  addButton->SetBounds(120,hD-44,100,20);
+  Add(addButton);
 
   // Center dialog
   int wS,hS;
@@ -97,38 +111,50 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 
   double X,Y,Z;
 
-  switch(message) {
-    case MSG_BUTTON:
+  switch (message) {
+  case MSG_BUTTON:
 
-    if(src==cancelButton) {
+	  if (src == addButton) {
 
-      GLWindow::ProcessMessage(NULL,MSG_CLOSE);
-
-    } else if (src==addButton) {
-
-      if( !x->GetNumber(&X) ) {
-        GLMessageBox::Display("Invalid X coordinate","Error",GLDLG_OK,GLDLG_ICONERROR);
-        return;
-      }
-	        if( !y->GetNumber(&Y) ) {
-        GLMessageBox::Display("Invalid Y coordinate","Error",GLDLG_OK,GLDLG_ICONERROR);
-        return;
-      }
-			      if( !z->GetNumber(&Z) ) {
-        GLMessageBox::Display("Invalid Z coordinate","Error",GLDLG_OK,GLDLG_ICONERROR);
-        return;
-      }
-	  //if (work->running) work->Stop_Public();
-		  geom->AddVertex(X,Y,Z);
-	  //work->Reload();
-	  //mApp->changedSinceSave = true; //Adding a vertex doesn't modify the simulation whatsoever
-
-      //GLWindowManager::FullRepaint();
-
-    }
-    break;
+		  if (!x->GetNumber(&X)) {
+			  GLMessageBox::Display("Invalid X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!y->GetNumber(&Y)) {
+			  GLMessageBox::Display("Invalid Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!z->GetNumber(&Z)) {
+			  GLMessageBox::Display("Invalid Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  geom->AddVertex(X, Y, Z);
+	  }
+	  else if (Contains({ facetCenterButton,facetUButton,facetVButton,facetNormalButton }, src)) {
+		  auto selFacetIds = geom->GetSelectedFacets();
+		  if (selFacetIds.size() != 1) {
+			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  Vector3d location;
+		  auto sh = geom->GetFacet(selFacetIds[0])->sh;
+		  if (src == facetCenterButton) {
+			  location = sh.center;
+		  }
+		  else if (src == facetUButton) {
+			  location = sh.O + sh.U;
+		  }
+		  else if (src == facetVButton) {
+			  location = sh.O + sh.V;
+		  }
+		  else if (src == facetNormalButton) {
+			  location = sh.center + sh.N;
+		  }
+		  geom->AddVertex(location);
+	  }
+	  break;
   }
 
-  GLWindow::ProcessMessage(src,message);
+  GLWindow::ProcessMessage(src, message);
 }
 

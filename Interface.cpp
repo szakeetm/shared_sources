@@ -31,6 +31,7 @@
 #include "ScaleVertex.h"
 #include "ScaleFacet.h"
 #include "MoveFacet.h"
+#include "CreateShape.h"
 #include "ExtrudeFacet.h"
 #include "MirrorFacet.h"
 #include "MirrorVertex.h"
@@ -129,6 +130,7 @@ Interface::Interface() {
 	selectDialog = NULL;
 	selectTextureType = NULL;
 	moveFacet = NULL;
+	createShape = NULL;
 	extrudeFacet = NULL;
 	mirrorFacet = NULL;
 	mirrorVertex = NULL;
@@ -705,6 +707,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu = new GLMenuBar(0);
 	wnd->SetMenuBar(menu);
 	menu->Add("File");
+	menu->GetSubMenu("File")->Add("New, empty geometry", MENU_FILE_NEW);
 	menu->GetSubMenu("File")->Add("&Load", MENU_FILE_LOAD, SDLK_o, CTRL_MODIFIER);
 	menu->GetSubMenu("File")->Add("Load recent");
 	menu->GetSubMenu("File")->Add(NULL); //separator
@@ -804,6 +807,7 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("XOR", MENU_FACET_CREATE_XOR);
 	menu->GetSubMenu("Facet")->Add("Transition between 2", MENU_FACET_LOFT);
 	menu->GetSubMenu("Facet")->Add("Build intersection...", MENU_FACET_INTERSECT);
+	menu->GetSubMenu("Facet")->Add("Create shape...", MENU_FACET_CREATESHAPE);
 
 	//menu->GetSubMenu("Facet")->Add("Facet Details ...", MENU_FACET_DETAILS);
 	//menu->GetSubMenu("Facet")->Add("Facet Mesh ...",MENU_FACET_MESH);
@@ -1010,6 +1014,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(selectDialog);
 	RVALIDATE_DLG(selectTextureType);
 	RVALIDATE_DLG(moveFacet);
+	RVALIDATE_DLG(createShape);
 	RVALIDATE_DLG(extrudeFacet);
 	RVALIDATE_DLG(mirrorFacet);
 	RVALIDATE_DLG(mirrorVertex);
@@ -1043,6 +1048,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(selectDialog);
 	IVALIDATE_DLG(selectTextureType);
 	IVALIDATE_DLG(moveFacet);
+	IVALIDATE_DLG(createShape);
 	IVALIDATE_DLG(extrudeFacet);
 	IVALIDATE_DLG(mirrorFacet);
 	IVALIDATE_DLG(mirrorVertex);
@@ -1071,6 +1077,12 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 	//MENU --------------------------------------------------------------------
 	case MSG_MENU:
 		switch (src->GetId()) {
+		case MENU_FILE_NEW:
+			if (AskToSave()) {
+				if (worker.running) worker.Stop_Public();
+				EmptyGeometry();
+			}
+			return true;
 		case MENU_FILE_LOAD:
 			if (AskToSave()) {
 				if (worker.running) worker.Stop_Public();
@@ -1229,7 +1241,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				}
 			}
 			return true;
-
+		case MENU_FACET_CREATESHAPE:
+			if (!createShape) createShape = new CreateShape(geom, &worker);
+			createShape->SetVisible(true);
+			return true;
 		case MENU_SELECTION_SMARTSELECTION:
 			if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
 			smartSelection->SetVisible(true);
@@ -1422,13 +1437,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				catch (Error &e) {
 					GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
 				}
-				//UpdateModelParams();
-				try {
-					worker.Reload();
-				}
-				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-				}
+				worker.Reload();
 			}
 			return true;
 		case MENU_VERTEX_CREATE_POLY_ORDER:

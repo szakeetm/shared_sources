@@ -21,7 +21,7 @@ size_t IDX(size_t i, size_t nb) {
 
 
 size_t Next(int i, size_t nb) {
-	return i%nb;
+	return (i+1)%nb;
 }
 
 size_t Next(size_t i, size_t nb) {

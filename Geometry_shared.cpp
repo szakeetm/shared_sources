@@ -314,10 +314,31 @@ char *Geometry::GetStructureName(int idx) {
 	return strName[idx];
 }
 
-void Geometry::CreatePolyFromVertices_Convex() {
-	//creates facet from selected vertices
+void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
+	//Creates a facet connecting vertexIds in order
+	//Recalculates geometry after execution, so shouldn't be used repetitively
+
+	//a new facet
+	sh.nbFacet++;
+	facets = (Facet **)realloc(facets, sh.nbFacet * sizeof(Facet *));
+	facets[sh.nbFacet - 1] = new Facet(vertexIds.size());
+	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
+	UnselectAll();
+	facets[sh.nbFacet - 1]->selected = true;
+	for (size_t i = 0; i < vertexIds.size(); i++) {
+		facets[sh.nbFacet - 1]->indices[i] = vertexIds[i];
+	}
 
 	mApp->changedSinceSave = true;
+	InitializeGeometry();
+	mApp->UpdateFacetParams(true);
+	UpdateSelection();
+	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
+	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
+}
+
+void Geometry::CreatePolyFromVertices_Convex() {
+	//creates facet from selected vertices
 
 	auto selectedVertices = GetSelectedVertices();
 
@@ -339,7 +360,6 @@ void Geometry::CreatePolyFromVertices_Convex() {
 
 	//Now we have the U,V plane, let's define it by computing the normal vector:
 	N = CrossProduct(V, U).Normalized(); //We have a normal vector
-
 	V = CrossProduct(N, U).Normalized(); //Make V perpendicular to U and N (and still in the U,V plane)
 
 	std::vector<Vector2d> projected;
@@ -350,7 +370,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	}
 
 	//Graham scan here on the projected[] array
-	int *returnList = (int *)malloc(selectedVertices.size() * sizeof(int));
+	int *returnList = (int *)malloc(selectedVertices.size() * sizeof(int)); //need this intermediary structure for compatibility
 	grahamMain(projected.data(), selectedVertices.size(), returnList);
 	int ii, loopLength;
 	for (ii = 0; ii < selectedVertices.size(); ii++) {
@@ -359,52 +379,20 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	loopLength = ii;
 	//End graham scan
 
-	//a new facet
-	sh.nbFacet++;
-	facets = (Facet **)realloc(facets, sh.nbFacet * sizeof(Facet *));
-	facets[sh.nbFacet - 1] = new Facet(loopLength);
-	//facets[sh.nbFacet - 1]->sh.sticking = 0.0;
-	//facets[sh.nbFacet - 1]->sh.sticking = DES_NONE;
-	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
-	//set selection
-	UnselectAll();
-	facets[sh.nbFacet - 1]->selected = true;
-	for (int i = 0; i < loopLength; i++) {
-		facets[sh.nbFacet - 1]->indices[i] = selectedVertices[returnList[i]];
+	std::vector<size_t> vertexIds(selectedVertices.size());
+	for (size_t i = 0; i < selectedVertices.size(); i++) {
+		vertexIds[i] = selectedVertices[returnList[i]];
 	}
+
 	SAFE_FREE(returnList);
 
-	InitializeGeometry();
-	mApp->UpdateFacetParams(true);
-	UpdateSelection();
-	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
-	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
+	AddFacet(vertexIds);
 }
 
 void Geometry::CreatePolyFromVertices_Order() {
 	//creates facet from selected vertices
 
-	mApp->changedSinceSave = true;
-
-	//a new facet
-	sh.nbFacet++;
-	facets = (Facet **)realloc(facets, sh.nbFacet * sizeof(Facet *));
-	facets[sh.nbFacet - 1] = new Facet((int)selectedVertexList_ordered.size());
-	//facets[sh.nbFacet - 1]->sh.sticking = 0.0;
-	//facets[sh.nbFacet - 1]->sh.sticking = DES_NONE;
-	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
-	//set selection
-	UnselectAll();
-	facets[sh.nbFacet - 1]->selected = true;
-	for (size_t i = 0; i < selectedVertexList_ordered.size(); i++) {
-		facets[sh.nbFacet - 1]->indices[i] = selectedVertexList_ordered[i];
-	}
-
-	InitializeGeometry();
-	mApp->UpdateFacetParams(true);
-	UpdateSelection();
-	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
-	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
+	AddFacet(selectedVertexList_ordered);
 }
 
 void Geometry::CreateDifference() {
@@ -715,13 +703,13 @@ size_t Geometry::GetNbFacet() {
 
 AABB Geometry::GetBB() {
 
-	if (viewStruct < 0) {
+	/*if (viewStruct < 0) {
 
 		return bb;
 
 	}
-	else {
-		// BB of selected struture
+	else {*/
+		// BB of selected struture //replaced with all vertices
 		AABB sbb;
 
 		sbb.min.x = 1e100;
@@ -732,6 +720,7 @@ AABB Geometry::GetBB() {
 		sbb.max.z = -1e100;
 
 		// Axis Aligned Bounding Box
+		/*
 		for (int i = 0; i < sh.nbFacet; i++) {
 			Facet *f = facets[i];
 			if (f->sh.superIdx == viewStruct) {
@@ -745,6 +734,17 @@ AABB Geometry::GetBB() {
 					if (p.z > sbb.max.z) sbb.max.z = p.z;
 				}
 			}
+		}
+		*/
+
+		for (size_t i = 0; i < sh.nbVertex; i++) {
+			Vector3d* v = &vertices3[i];
+			if (v->x < sbb.min.x) sbb.min.x = v->x;
+			if (v->y < sbb.min.y) sbb.min.y = v->y;
+			if (v->z < sbb.min.z) sbb.min.z = v->z;
+			if (v->x > sbb.max.x) sbb.max.x = v->x;
+			if (v->y > sbb.max.y) sbb.max.y = v->y;
+			if (v->z > sbb.max.z) sbb.max.z = v->z;
 		}
 
 #ifdef SYNRAD
@@ -760,19 +760,27 @@ AABB Geometry::GetBB() {
 		}
 #endif
 
+		//If geometry is empty
+		if (sbb.min.x == 1e100) sbb.min.x = -1.0;
+		if (sbb.min.y == 1e100) sbb.min.y = -1.0;
+		if (sbb.min.z == 1e100) sbb.min.z = -1.0;
+		if (sbb.max.x == -1e100) sbb.max.x = 1.0;
+		if (sbb.max.y == -1e100) sbb.max.y = 1.0;
+		if (sbb.max.z == -1e100) sbb.max.z = 1.0;
+
 		return sbb;
-	}
+	//}
 
 }
 
 Vector3d Geometry::GetCenter() {
 
-	if (viewStruct < 0) {
+	/*if (viewStruct < 0) {
 
 		return center;
 
 	}
-	else {
+	else {*/
 
 		Vector3d r;
 		AABB sbb = GetBB();
@@ -783,7 +791,7 @@ Vector3d Geometry::GetCenter() {
 
 		return r;
 
-	}
+	//}
 }
 
 int Geometry::AddRefVertex(InterfaceVertex *p, InterfaceVertex *refs, int *nbRef, double vT) {
@@ -3717,7 +3725,6 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 }
 
 void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
-
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
 	char *w;
@@ -4434,3 +4441,68 @@ bool Geometry::IsLoaded() {
 	return isLoaded;
 }
 
+void Geometry::CreateRectangle(const Vector3d& center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double& axis1Length, const double& axis2Length) {
+	
+	std::vector<size_t> vertexIds;
+	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
+	Vector3d axis2half = CrossProduct(normalDir.Normalized()*(axis2Length/axis1Length), axis1half); //left-hand coordinate system, V = N x U
+
+	AddVertex(center - axis1half - axis2half, false);
+	vertexIds.push_back(sh.nbVertex - 1);
+	AddVertex(center + axis1half - axis2half, false);
+	vertexIds.push_back(sh.nbVertex - 1);
+	AddVertex(center + axis1half + axis2half, false);
+	vertexIds.push_back(sh.nbVertex - 1);
+	AddVertex(center - axis1half + axis2half, false);
+	vertexIds.push_back(sh.nbVertex - 1);
+
+	AddFacet(vertexIds);
+}
+
+void Geometry::CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t & nbSteps)
+{	
+	std::vector<size_t> vertexIds;
+	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
+	Vector3d axis2half = CrossProduct(normalDir.Normalized()*(axis2Length / axis1Length), axis1half); //left-hand coordinate system, V = N x U
+	for (double angle = 0.0; angle < (2 * PI); angle += ((2 * PI / ((double)nbSteps)))) {
+		double u = cos(angle);
+		double v = sin(angle);
+		AddVertex(center + u*axis1half + v*axis2half,false);
+		vertexIds.push_back(sh.nbVertex - 1);
+	}
+	AddFacet(vertexIds);
+}
+
+void Geometry::CreateRacetrack(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t & nbSteps)
+{
+	//Set of 3 equations:
+	// r: radius of racetrack arc
+	// alpha: half-angle of racetrack arc
+	// delta: arc center offset from shape center
+
+	//Equation1: axis1L == 2*(r + delta)
+	//Equation2: axis2L == 2*r*sin(alpha)
+	//Equation2: topLength == 2*(r*cos(alpha)+delta)
+
+	//Solution by Wolfram Alpha:
+	double r = (Sqr(axis1Length) - 2 * axis1Length*topLength + Sqr(axis2Length) + Sqr(topLength)) / (4 * (axis1Length - topLength));
+	double delta = axis1Length / 2 - r;
+	double alpha = acos((topLength / 2 - delta) / r);
+
+	std::vector<size_t> vertexIds;
+	Vector3d i = axis1Dir.Normalized();
+	Vector3d j = CrossProduct(normalDir, i).Normalized(); //left-hand coordinate system, V = N x U
+
+	for (size_t step = 0; step < (nbSteps + 1);step++) {  //Right side arc
+		double angle = 0.0-alpha + (double)step / (double)nbSteps*2.0*alpha;
+		AddVertex(center + delta*i + r*cos(angle)*i + r*sin(angle)*j,false);
+		vertexIds.push_back(sh.nbVertex - 1);
+	}
+
+	for (size_t step = 0; step < (nbSteps + 1); step++) {  //Left side arc
+		double angle = PI-alpha + (double)step / (double)nbSteps*2.0*alpha;
+		AddVertex(center - delta*i + r*cos(angle)*i + r*sin(angle)*j,false);
+		vertexIds.push_back(sh.nbVertex - 1);
+	}
+	AddFacet(vertexIds);
+}

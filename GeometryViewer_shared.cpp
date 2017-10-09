@@ -77,7 +77,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	showVertex = false;
 	showNormal = false;
 	showUV = false;
-	showRule = false;
+	showRule = true;
 	showLeak = false;
 	showHit = false;
 	showLine = false;
@@ -486,7 +486,7 @@ void GeometryViewer::UpdateMatrix() {
 	// Projection matrix ---------------------------------------------------
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
-	ComputeBB(true);
+	ComputeBB(/*true*/);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -810,7 +810,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	UpdateMatrix();
 
 	// Get geometry transformed BB
-	ComputeBB(false);
+	ComputeBB(/*false*/);
 
 	Vector3d v;
 	v.x = xMax - org.x;
@@ -1722,7 +1722,7 @@ DrawBB(node->right);
 }
 */
 
-void GeometryViewer::ComputeBB(bool getAll) {
+void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 	Geometry *geom = work->GetGeometry();
 
@@ -1751,14 +1751,15 @@ void GeometryViewer::ComputeBB(bool getAll) {
 
 	size_t nbV = geom->GetNbVertex();
 
-	if (geom->viewStruct < 0 || getAll) {
+	if (true /*geom->viewStruct < 0 || getAll*/) {
 
+		/*
 		for (int i = 0; i < nbV; i++) {
 			Vector3d *p = geom->GetVertex(i);
 			TRANSFORMVERTEX(p->x, p->y, p->z);
-		}
+		}*/
 
-#ifdef SYNRAD		
+//#ifdef SYNRAD		
 		//regions included
 		AABB bb = geom->GetBB();
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
@@ -1769,10 +1770,10 @@ void GeometryViewer::ComputeBB(bool getAll) {
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.max.z);
 		TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.max.z);
-#endif
+//#endif
 
 	}
-	else {
+	else { //ignored
 
 		bool *refIdx = (bool *)malloc(nbV * sizeof(bool));
 		memset(refIdx, 0, nbV * sizeof(bool));

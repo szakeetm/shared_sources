@@ -85,6 +85,7 @@ public:
 	Vector3d GetFacetCenter(int facet);
 	size_t      GetNbStructure();
 	char     *GetStructureName(int idx);
+	void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
 	void CreateDifference(); //creates the difference from 2 selected facets
@@ -131,7 +132,7 @@ public:
 	void CreateLoft();
 	bool RemoveCollinear();
 	int  ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
-	void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
+	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = NULL);
@@ -164,6 +165,10 @@ public:
 	void     SetCenterNorme(bool enable);
 	bool     GetCenterNorme();
 	void     BuildFacetList(Facet *f);
+
+	void CreateRectangle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
+	void CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
+	void CreateRacetrack(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
 
 	void UpdateName(FileReader *file);
 	void UpdateName(const char *fileName);

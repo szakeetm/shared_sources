@@ -28,6 +28,7 @@ class ScaleFacet;
 class MoveFacet;
 class ExtrudeFacet;
 class MirrorFacet;
+class CreateShape;
 class MirrorVertex;
 class SplitFacet;
 class BuildIntersection;
@@ -63,6 +64,7 @@ typedef struct {
 #define DOWN_MARGIN 25
 
 //Common menu items
+#define MENU_FILE_NEW       100
 #define MENU_FILE_LOAD       101
 
 #define MENU_FILE_SAVE       102
@@ -111,6 +113,7 @@ typedef struct {
 #define MENU_FACET_MIRROR	   330
 #define MENU_FACET_ROTATE	   331
 #define MENU_FACET_ALIGN       332
+#define MENU_FACET_CREATESHAPE 333
 
 #define MENU_FACET_CREATE_DIFFERENCE 340
 #define MENU_FACET_CREATE_DIFFERENCE2 341
@@ -193,6 +196,7 @@ protected:
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
 	virtual void BuildPipe(double ratio, int steps = 0) {}
+	virtual void EmptyGeometry() {}
 	virtual void LoadFile(char *fName = NULL) {}
 	virtual void InsertGeometry(bool newStr, char *fName = NULL) {}
 	virtual void SaveFile() {}
@@ -367,6 +371,7 @@ public:
 	MoveFacet	  	   *moveFacet;
 	MirrorFacet	       *mirrorFacet;
 	MirrorVertex       *mirrorVertex;
+	CreateShape			*createShape;
 	SplitFacet         *splitFacet;
 	BuildIntersection  *buildIntersection;
 	RotateFacet        *rotateFacet;

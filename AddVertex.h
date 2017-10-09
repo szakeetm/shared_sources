@@ -1,9 +1,4 @@
-/*
-  File:        AddVertex.h
-  Description: Add new vertex dialog
-*/
-#ifndef _ADDVERTEXH_
-#define _ADDVERTEXH_
+#pragma once
 
 #include "GLApp/GLWindow.h"
 class GLWindow;
@@ -32,16 +27,12 @@ private:
   Worker	   *work;
 
   GLButton    *addButton;
-  GLButton    *cancelButton;
-  GLLabel     *l1;
-  GLLabel     *l2;
-  GLLabel     *l3;
+  GLButton    *facetCenterButton;
+  GLButton    *facetUButton;
+  GLButton    *facetVButton;
+  GLButton    *facetNormalButton;
   GLTextField *x;
   GLTextField *y;
   GLTextField *z;
 
-  int nbVertexS;
-
 };
-
-#endif /* _ADDVERTEXH_ */
