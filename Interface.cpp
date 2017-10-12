@@ -784,19 +784,19 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_GLOBALSETTINGS, 0, 77);
 
 	menu->Add("Facet");
-	menu->GetSubMenu("Facet")->Add("Collapse ...", MENU_FACET_COLLAPSE);
+	menu->GetSubMenu("Facet")->Add("Delete", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Swap normal", MENU_FACET_SWAPNORMAL, SDLK_n, CTRL_MODIFIER);
-	menu->GetSubMenu("Facet")->Add("Shift vertex", MENU_FACET_SHIFTVERTEX, SDLK_h, CTRL_MODIFIER);
+	menu->GetSubMenu("Facet")->Add("Shift indices", MENU_FACET_SHIFTVERTEX, SDLK_h, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Edit coordinates ...", MENU_FACET_COORDINATES);
 	menu->GetSubMenu("Facet")->Add("Move ...", MENU_FACET_MOVE);
 	menu->GetSubMenu("Facet")->Add("Scale ...", MENU_FACET_SCALE);
 	menu->GetSubMenu("Facet")->Add("Mirror / Project ...", MENU_FACET_MIRROR);
 	menu->GetSubMenu("Facet")->Add("Rotate ...", MENU_FACET_ROTATE);
-	menu->GetSubMenu("Facet")->Add("Align ...", MENU_FACET_ALIGN);
+	menu->GetSubMenu("Facet")->Add("Align to ...", MENU_FACET_ALIGN);
 	menu->GetSubMenu("Facet")->Add("Extrude ...", MENU_FACET_EXTRUDE);
-	menu->GetSubMenu("Facet")->Add("Split by plane ...", MENU_FACET_SPLIT);
-	menu->GetSubMenu("Facet")->Add("Remove selected", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
-	menu->GetSubMenu("Facet")->Add("Explode selected", MENU_FACET_EXPLODE);
+	menu->GetSubMenu("Facet")->Add("Cut by plane ...", MENU_FACET_SPLIT);
+	menu->GetSubMenu("Facet")->Add(NULL);
+	menu->GetSubMenu("Facet")->Add("Create shape...", MENU_FACET_CREATESHAPE);
 	menu->GetSubMenu("Facet")->Add("Create two facets' ...");
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Difference");
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Auto (non-zero)", MENU_FACET_CREATE_DIFFERENCE_AUTO);
@@ -807,7 +807,10 @@ int Interface::OneTimeSceneInit_shared() {
 	menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("XOR", MENU_FACET_CREATE_XOR);
 	menu->GetSubMenu("Facet")->Add("Transition between 2", MENU_FACET_LOFT);
 	menu->GetSubMenu("Facet")->Add("Build intersection...", MENU_FACET_INTERSECT);
-	menu->GetSubMenu("Facet")->Add("Create shape...", MENU_FACET_CREATESHAPE);
+	menu->GetSubMenu("Facet")->Add(NULL);
+	menu->GetSubMenu("Facet")->Add("Collapse ...", MENU_FACET_COLLAPSE);
+	menu->GetSubMenu("Facet")->Add("Explode", MENU_FACET_EXPLODE);
+	
 
 	//menu->GetSubMenu("Facet")->Add("Facet Details ...", MENU_FACET_DETAILS);
 	//menu->GetSubMenu("Facet")->Add("Facet Mesh ...",MENU_FACET_MESH);

@@ -532,6 +532,21 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
       }
       break;
 
+	  case SDLK_END:
+		  if (m_CursorPos<m_Length) {
+			  if (GetWindow()->IsShiftDown()) {
+				  MoveSel(m_Length);
+			  }
+			  else {
+				  RemoveSel();
+				  MoveCursor(m_Length);
+			  }
+		  }
+		  else {
+			  if (!GetWindow()->IsShiftDown()) RemoveSel();
+		  }
+	 break;
+
       case SDLK_LEFT:
       if( m_CursorPos>0 ) {
         if( GetWindow()->IsShiftDown() ) {
@@ -544,6 +559,21 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
         if( !GetWindow()->IsShiftDown() ) RemoveSel();
       }
       break;
+
+	  case SDLK_HOME:
+		  if (m_CursorPos>0) {
+			  if (GetWindow()->IsShiftDown()) {
+				  MoveSel(0);
+			  }
+			  else {
+				  RemoveSel();
+				  MoveCursor(0);
+			  }
+		  }
+		  else {
+			  if (!GetWindow()->IsShiftDown()) RemoveSel();
+		  }
+	  break;
 
       case SDLK_DELETE:
       if( m_Start!=m_Stop ) {

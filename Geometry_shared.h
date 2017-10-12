@@ -124,7 +124,7 @@ public:
 	void UpdateSelection();
 	void SwapNormal();
 	void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
-	void RemoveSelected();
+	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
 	void RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd);
 	void RemoveSelectedVertex();

@@ -521,37 +521,37 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
   bool accFound = false;
 
   // Handle key modifier
+  /*
   int unicode = (evt->key.keysym.unicode & 0x7F);
   if( !unicode ) unicode = evt->key.keysym.sym;
-  
+  */
+
   //std::ostringstream tmp; tmp << "\nevt->type="<<(int)(evt->type)<<" unicode:" << evt->key.keysym.unicode << " keysim.sim:" << evt->key.keysym.sym << "    unicode & 0x7F:" << (evt->key.keysym.unicode & 0x7F) << " chosen:" << unicode; OutputDebugStringA(tmp.str().c_str());
 
   if( evt->type == SDL_KEYDOWN )
   {
-    if( unicode == SDLK_LCTRL ||  unicode == SDLK_RCTRL )
+    if(evt->key.keysym.sym == SDLK_LCTRL || evt->key.keysym.sym == SDLK_RCTRL )
       modState |= CTRL_MODIFIER;
 
-    else if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
+    else if(evt->key.keysym.sym == SDLK_LSHIFT || evt->key.keysym.sym == SDLK_RSHIFT )
       modState |= SHIFT_MODIFIER;
 
-    else if( unicode == SDLK_RALT || unicode == SDLK_LALT )
+    else if(evt->key.keysym.sym == SDLK_RALT || evt->key.keysym.sym == SDLK_LALT )
       modState |= ALT_MODIFIER;
 	
-	else if( unicode == SDLK_CAPSLOCK)
+	else if(evt->key.keysym.sym == SDLK_CAPSLOCK)
       modState |= CAPSLOCK_MODIFIER;
 	
-	else if (unicode == SDLK_SPACE) {
+	else if (evt->key.keysym.sym == SDLK_SPACE) {
 		modState |= SPACE_MODIFIER;
 		//OutputDebugStringA("\nSpace on");
 	}
 
-	else if (unicode == SDLK_TAB) {
+	else if (evt->key.keysym.sym == SDLK_TAB) {
 		modState |= TAB_MODIFIER;
 		//OutputDebugStringA("\nSpace on");
 	}
-  }
-
-  if( evt->type == SDL_KEYUP )
+  } else if( evt->type == SDL_KEYUP )
   {
     int altMask   =  ALT_MODIFIER; altMask   = ~altMask;
     int ctrlMask  = CTRL_MODIFIER; ctrlMask  = ~ctrlMask;
@@ -560,24 +560,24 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 	int spaceMask = SPACE_MODIFIER;spaceMask = ~spaceMask;
 	int tabMask = TAB_MODIFIER;tabMask = ~tabMask;
 
-    if( unicode == SDLK_LCTRL ||  unicode == SDLK_RCTRL )
+    if(evt->key.keysym.sym == SDLK_LCTRL || evt->key.keysym.sym == SDLK_RCTRL )
       modState &= ctrlMask;
 
-    else if( unicode == SDLK_LSHIFT ||  unicode == SDLK_RSHIFT )
+    else if(evt->key.keysym.sym == SDLK_LSHIFT || evt->key.keysym.sym == SDLK_RSHIFT )
       modState &= shiftMask;
 
-    else if( unicode == SDLK_RALT || unicode == SDLK_LALT )
+    else if(evt->key.keysym.sym == SDLK_RALT || evt->key.keysym.sym == SDLK_LALT )
       modState &= altMask;
 
-	else if (unicode == SDLK_CAPSLOCK)
+	else if (evt->key.keysym.sym == SDLK_CAPSLOCK)
       modState &= capsLockMask;
 
-	else if (unicode == SDLK_SPACE) {
+	else if (evt->key.keysym.sym == SDLK_SPACE) {
 		modState &= spaceMask;
 		//OutputDebugStringA("\nSpace off");
 	}
 
-	else if (unicode == SDLK_TAB) {
+	else if (evt->key.keysym.sym == SDLK_TAB) {
 		modState &= tabMask;
 		//OutputDebugStringA("\nSpace off");
 	}

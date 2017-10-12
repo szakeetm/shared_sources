@@ -1327,14 +1327,6 @@ void Geometry::RemoveSelectedVertex() {
 	DeleteIsolatedVertices(true);
 }
 
-void Geometry::RemoveSelected() {
-	std::vector<size_t> facetIdList;
-
-	for (int i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->selected) facetIdList.push_back(i);
-	RemoveFacets(facetIdList);
-}
-
 void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy) {
 	if (facetIdList.size() == 0) return;
 	mApp->changedSinceSave = true;
@@ -1483,7 +1475,7 @@ int Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double *
 
 	auto nbS = selectedFacets.size(); //to remember it after RemveSelected() routine
 	// Delete selected facets
-	RemoveSelected();
+	RemoveFacets(selectedFacets);
 
 	//Fill old facets
 	for (nb = 0; nb < sh.nbFacet; nb++)
@@ -2953,10 +2945,11 @@ void Geometry::RemoveFromStruct(int numToDel) {
 }
 
 void Geometry::CreateLoft() {
+	//Creates transition between two facets
 	struct loftIndex {
 		size_t index;
 		bool visited;
-		bool boundary;
+		bool boundary; //false if in the middle of a series of indices connecting to the same index on the other facet
 	};
 	//Find first two selected facets
 	int nbFound = 0;
@@ -2971,12 +2964,12 @@ void Geometry::CreateLoft() {
 	}
 	if (!(nbFound == 2)) return;
 
-	std::vector<loftIndex> closestIndices1; closestIndices1.resize(f1->sh.nbIndex);
-	std::vector<loftIndex> closestIndices2; closestIndices2.resize(f2->sh.nbIndex);
+	std::vector<loftIndex> closestIndices1; closestIndices1.resize(f1->sh.nbIndex); //links starting from the indices of facet 1
+	std::vector<loftIndex> closestIndices2; closestIndices2.resize(f2->sh.nbIndex); //links starting from the indices of facet 2
 	for (auto closest : closestIndices1)
-		closest.visited = false;
+		closest.visited = false; //I don't trust C++ default values
 	for (auto closest : closestIndices2)
-		closest.visited = false;
+		closest.visited = false; //I don't trust C++ default values
 
 	double u1Length = f1->sh.U.Norme();
 	double v1Length = f1->sh.V.Norme();
@@ -2985,25 +2978,51 @@ void Geometry::CreateLoft() {
 
 	Vector2d center2Pos = ProjectVertex(f2->sh.center, f1->sh.U, f1->sh.V, f1->sh.O);
 	Vector2d center1Pos = ProjectVertex(f1->sh.center, f1->sh.U, f1->sh.V, f1->sh.O);
-	Vector2d centerOffset = center1Pos - center2Pos; //aligns centers
+	Vector2d centerOffset = center1Pos - center2Pos; //the centers will be aligned when looking for closest indices
 
-	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) {
+	//We will loop through the indices on facet 1, and for each, we'll find the closest index on facet 2
+	//We have to avoid cross-linking: whenever a link is established to facet 2, we have to reduce the search area on facet 2 to between the last established link and the first established link
+	bool normalsAligned = Dot(f1->sh.N, f2->sh.N) > 0.0; //The loop direction on facets 1 and 2 must be the same
+	size_t searchBeginIndex=normalsAligned?1:f2->sh.nbIndex-1; //Lower boundary of available region on facet 2 (used to avoid crossing)
+	size_t searchEndIndex=0; //Higher boundary of available region on facet 2
+	//These two limits cover the whole facet2 in the beginning
+
+	bool needInit = true; //Whole facet2 is available until the first connection is made
+	bool leftFirst = false; //Allow to search on full facet2 until only one index is linked on facet 2
+	
+	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) { //Go through indices on facet 1
 		//Find closest point on other facet
 		double min = 9E99;
 		size_t minPos;
-		for (size_t i2 = 0; i2 < f2->sh.nbIndex; i2++) {
+		for (size_t i2 = searchBeginIndex; min>8.9E99 || i2 != (normalsAligned?Next(searchEndIndex,f2->sh.nbIndex):Previous(searchEndIndex,f2->sh.nbIndex)); i2= normalsAligned ? Next(i2, f2->sh.nbIndex) : Previous(i2, f2->sh.nbIndex)) {
+			//Loop through the available search area on facet2
+			//The loop direction depends on if the normals are pointing the same or the opposite direction
+			//Stop when the currently scanned index on facet2 would be the out of the search area (next or previous of searchEndIndex, depending on the loop direction)
 			Vector2d projection = ProjectVertex(vertices3[f2->indices[i2]], f1->sh.U, f1->sh.V, f1->sh.O);
 			projection = projection + centerOffset;
-			double dist = pow(u1Length*(projection.u - f1->vertices2[i1].u), 2.0) + pow(v1Length*(projection.v - f1->vertices2[i1].v), 2.0); //We need the absolute distance
+			double dist = Sqr(u1Length*(projection.u - f1->vertices2[i1].u)) + Sqr(v1Length*(projection.v - f1->vertices2[i1].v)); //We need the absolute distance
 			if (dist < min) {
 				min = dist;
 				minPos = i2;
 			}
 		}
-		//Make pair
-		closestIndices1[i1].index = minPos;
-		closestIndices2[minPos].index = i1;
-		closestIndices1[i1].visited = closestIndices2[minPos].visited = true;
+		//Make pair with the closest index on facet 2
+		closestIndices1[i1].index = minPos; //Link from facet1 to facet2
+		closestIndices2[minPos].index = i1; //Link from facet2 to facet1
+		closestIndices1[i1].visited = closestIndices2[minPos].visited = true; //Pair is complete
+		
+		if (needInit) { //If this is the first link, set search area from next index on facet 2 to this index on facet 2 (so the whole facet 2 is still searched)
+			searchBeginIndex = normalsAligned ? Next(minPos, f2->sh.nbIndex) : Previous(minPos, f2->sh.nbIndex); //Next, depending on loop direction
+			searchEndIndex = minPos;
+			needInit = false;
+		}
+		else {
+			if (leftFirst || minPos != searchEndIndex) {
+				//If it's not just a new link from facet1 to the first link destination on facet2
+				searchBeginIndex = minPos; //Reduce search region on facet2 to begin with the last established link
+				leftFirst = true;
+			}
+		}
 	}
 
 	//Find boundaries of regions on the first facet that are the closest to the same point on facet 2
@@ -3017,35 +3036,49 @@ void Geometry::CreateLoft() {
 	center1Pos = ProjectVertex(f1->sh.center, f2->sh.U, f2->sh.V, f2->sh.O);
 	centerOffset = center2Pos - center1Pos;
 
-	//Revisit those on f2 without a link
+	//Revisit those on f2 which aren't linked yet
 	for (size_t i2 = 0; i2 < f2->sh.nbIndex; i2++) {
 		//Find closest point on other facet
 		if (!closestIndices2[i2].visited) {
 			double min = 9E99;
 			size_t minPos;
 
-			//To avoid crossing, narrow search to previous to next connected index range on f1
+			//To avoid crossing, narrow search area on facet2 ranging...
+			// ...from the previous facet2 index that is already linked
+			// ...to the next facet2 index that is already linked
 
-			//Look for first lower neighbor that is already visited
+			//Searching for the previous facet2 index that is already linked
 			size_t i2_lookup = i2;
 			do {
-				i2_lookup = Previous(i2_lookup, f2->sh.nbIndex); //previous index
-			} while (!closestIndices2[i2_lookup].visited && i2_lookup != i2);
+				i2_lookup = Previous(i2_lookup, f2->sh.nbIndex);
+			} while (!closestIndices2[i2_lookup].visited /*&& i2_lookup != i2*/); //Commented out, I don't see how i2_lookup could be the same as i2
 
+			//At this point, we know that closestIndices2[i2_lookup].index is connected to i2_lookup, however we need to find the last facet1 index (in the loop direction) that is connected to the same i2_lookup index (otherwise we would still create a crossing)
 			size_t i1index_1 = closestIndices2[i2_lookup].index;
+			do {
+				i1index_1 = (normalsAligned ? Next(i1index_1,f1->sh.nbIndex) : Previous(i1index_1, f1->sh.nbIndex));
+			} while (closestIndices1[i1index_1].index == i2_lookup);
 
-			//Look for first higher neighbor that is already visited
+			i1index_1 = (normalsAligned ? Previous(i1index_1, f1->sh.nbIndex) : Next(i1index_1, f1->sh.nbIndex)); //step back one after loop exited
+
+			//Now searching for the next facet2 index that is already linked
 			i2_lookup = i2;
 			do {
 				i2_lookup = Next(i2_lookup, f2->sh.nbIndex); //next index
-			} while (!closestIndices2[i2_lookup].visited && i2_lookup != i2);
+			} while (!closestIndices2[i2_lookup].visited /*&& i2_lookup != i2*/); //Commented out
 
+			//At this point, we know that closestIndices2[i2_lookup].index is connected to i2_lookup, however we need to find the last facet1 index that is connected to the same i2_lookup index
 			size_t i1index_2 = closestIndices2[i2_lookup].index;
+			do {
+				i1index_2 = (normalsAligned ? Previous(i1index_2, f1->sh.nbIndex) : Next(i1index_2, f1->sh.nbIndex));
+			} while (closestIndices1[i1index_2].index == i2_lookup);
+
+			i1index_2 = (normalsAligned ? Next(i1index_2, f1->sh.nbIndex) : Previous(i1index_2, f1->sh.nbIndex)); //step back one after loop exited
 
 			size_t i1index_lower = std::min(i1index_1, i1index_2);
 			size_t i1index_higher = std::max(i1index_1, i1index_2);
 
-			//Look for the closest among [i1index_lower .. i1index_higher]
+			//Look for the closest among [i1index_lower .. i1index_higher]. These can be safely connected to, without creating a crossing
 
 			for (size_t i1 = i1index_lower; i1 <= i1index_higher; i1++) {
 				Vector2d projection = ProjectVertex(vertices3[f1->indices[i1]], f2->sh.U, f2->sh.V, f2->sh.O);
@@ -3060,12 +3093,12 @@ void Geometry::CreateLoft() {
 			}
 			//Make pair
 			closestIndices2[i2].index = minPos;
-			//closestIndices1[minPos].index = i2; //Alerady assigned
+			//closestIndices1[minPos].index = i2; //All indices on facet1 already have links
 			closestIndices2[i2].visited = true;
 		}
 	}
 
-	//Same for facet 2
+	//Detect boundaries on facet 2
 	for (size_t i = 0; i < closestIndices2.size(); i++) {
 		size_t previousId = Previous(i + closestIndices2.size() , closestIndices2.size());
 		size_t nextId = Next(i , closestIndices2.size());
@@ -3073,7 +3106,7 @@ void Geometry::CreateLoft() {
 		closestIndices2[i].visited = false; //Reset this flag, will use to make sure we don't miss anything on facet2
 	}
 
-	//Links created
+	//Links created, now we have to build the facets
 	std::vector<Facet*> newFacets;
 	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) { //Cycle through all facet1 indices to create triangles and rectangles
 
@@ -3112,7 +3145,7 @@ void Geometry::CreateLoft() {
 		newFacet->indices[1] = f1->indices[Next(i1,f1->sh.nbIndex)]; //Next facet1 index
 		
 		//Find last vertex on other facet that's linked to us
-		int incrementDir = (Dot(f1->sh.N, f2->sh.N) > 0) ? -1 : 1;
+		int incrementDir = (Dot(f1->sh.N, f2->sh.N) > 0) ? -1 : 1; //In some procedures we have to go in the same direction on both facets
 		int increment; //not size_t, allow negative values
 		for (increment = 0;
 			closestIndices2[
@@ -3140,7 +3173,7 @@ void Geometry::CreateLoft() {
 			newFacet = new Facet(3);
 			Vector3d diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
 			Vector3d diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
-			bool connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side
+			bool connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side. To do: detect which split would create larger total surface and use that
 			newFacet->indices[0] = ind4[0];
 			newFacet->indices[1] = ind4[1];
 			newFacet->indices[2] = ind4[connect_0_2 ? 2 : 3];
@@ -3159,8 +3192,6 @@ void Geometry::CreateLoft() {
 		newFacets.push_back(newFacet);
 	}
 	//Go through leftover vertices on facet 2
-	
-	
 	for (size_t i2 = 0; i2 < f2->sh.nbIndex; i2++) {
 		if (closestIndices2[i2].visited == false) {
 			size_t targetIndex = closestIndices2[Previous(i2, f2->sh.nbIndex)].index; //Previous node
@@ -4504,5 +4535,8 @@ void Geometry::CreateRacetrack(const Vector3d & center, const Vector3d & axis1Di
 		AddVertex(center - delta*i + r*cos(angle)*i + r*sin(angle)*j,false);
 		vertexIds.push_back(sh.nbVertex - 1);
 	}
+
+	std::rotate(vertexIds.begin(), vertexIds.begin()+vertexIds.size()-1, vertexIds.end()); //Shift vertex back so U is aligned with the bottom
+
 	AddFacet(vertexIds);
 }

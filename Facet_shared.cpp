@@ -609,16 +609,13 @@ void Facet::SwapNormal() {
 
 }
 
-void Facet::ShiftVertex() {
-
+void Facet::ShiftVertex(const int& offset) {
 	// Shift vertex
-
 	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
 	for (size_t i = 0; i < sh.nbIndex; i++)
-		tmp[i] = GetIndex((int)i + 1);
+		tmp[i] = GetIndex((int)i + offset);
 	free(indices);
 	indices = tmp;
-
 }
 
 void Facet::InitVisibleEdge() {

@@ -1171,8 +1171,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 	Geometry *geom = work->GetGeometry();
 	// Key pressed
 	if (evt->type == SDL_KEYDOWN) {
-		int unicode = (evt->key.keysym.unicode & 0x7F);
-		if (!unicode) unicode = evt->key.keysym.sym;
+		int unicode = /*(evt->key.keysym.unicode & 0x7F);
+		if (!unicode) unicode =*/ evt->key.keysym.sym;
 
 		if (unicode == SDLK_UP) {
 			if (GetWindow()->IsShiftDown()) {

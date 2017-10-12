@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "Geometry_shared.h"
 #include "GLWindowManager.h"
 #include <Vector.h>
+#include <iomanip> //stream setprecision
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -1592,7 +1593,7 @@ void GLList::CopyAllToClipboard() {
 }
 
 void GLList::CopySelectionToClipboard() {
-	std::stringstream clipboardData;
+	std::stringstream clipboardData; clipboardData << std::setprecision(8);
 	if (selectionMode == MULTIPLE_ROW) { //Most probably facet hit list
 		if (this==mApp->facetList) mApp->UpdateFacetHits(true);
 		// Compute data length
