@@ -1155,11 +1155,13 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	size_t nbVert = sh.nbVertex - nbUnused;
 
+	/*
 	if (nbVert == 0) {
 		// Remove all
 		Clear();
 		return;
 	}
+	*/
 
 	// Update facet indices
 	std::vector<size_t> newIndex(sh.nbVertex);

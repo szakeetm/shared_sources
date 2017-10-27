@@ -589,11 +589,12 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& normU, const Vector3
 	Saturate(n, -1.0, 1.0); //sometimes rounding errors do occur, 'acos' function would return no value for theta
 
 							// (u,v,n) -> (theta,phi)
-	double rho = sqrt(v*v + u*u);
-	double inTheta = acos(n);              // Angle to normal (PI/2 => PI)
-	double inPhi = asin(v / rho);
-	if (u < 0.0) inPhi = PI - inPhi;  // Angle to U
-
+	
+	double inTheta = acos(n);              // Angle to normal (PI/2 => PI
+	//double rho = sqrt(v*v + u*u);
+	//double inPhi = asin(v / rho);     //At this point, -PI/2 < inPhi < PI/2
+	//if (u < 0.0) inPhi = PI - inPhi;  // Angle to U
+	double inPhi = atan2(v, u); //-PI .. PI, and the angle is 0 when pointing towards u
 	return std::make_tuple(inTheta, inPhi);
 }
 

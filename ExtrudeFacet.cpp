@@ -601,7 +601,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			std::tie(exists, foundId) = AssertOneFacetSelected();
 			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %zd N x X", foundId + 1);
+				sprintf(tmp, "Facet %zd N x Y", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(-geom->GetFacet(foundId)->sh.N.z);
 				curvedYText->SetText(0);
@@ -613,7 +613,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			std::tie(exists, foundId) = AssertOneFacetSelected();
 			if (exists) {
 				char tmp[32];
-				sprintf(tmp, "Facet %zd N x X", foundId + 1);
+				sprintf(tmp, "Facet %zd N x Z", foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(geom->GetFacet(foundId)->sh.N.y);
 				curvedYText->SetText(-geom->GetFacet(foundId)->sh.N.x);
