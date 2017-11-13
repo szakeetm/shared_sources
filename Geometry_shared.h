@@ -3,13 +3,13 @@
 #include "File.h"
 #include "GLApp/GLProgress.h"
 #include "SMP.h"
-#include "Shared.h"
 #include "GrahamScan.h"
 #include "PugiXML/pugixml.hpp"
 #include "Clipper\clipper.hpp"
 #include <vector>
 #include <sstream>
 #include <list>
+#include "Buffer_shared.h"
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
@@ -131,7 +131,6 @@ public:
 	void RemoveFromStruct(int numToDel);
 	void CreateLoft();
 	bool RemoveCollinear();
-	int  ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
 	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
@@ -149,22 +148,23 @@ public:
 	void AddStruct(const char *name);
 	void DelStruct(int numToDel);
 	std::vector<DeletedFacet> BuildIntersection(size_t *nbCreated);
-	void     MoveVertexTo(size_t idx, double x, double y, double z);
-	void Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
-	void     SetFacetTexture(size_t facetId, double ratio, bool corrMap);
-	void     Rebuild();
-	void	   MergecollinearSides(Facet *f, double fT);
-	void     ShiftVertex();
-	int      HasIsolatedVertices();
-	void     DeleteIsolatedVertices(bool selectedOnly);
-	void	   SelectIsolatedVertices();
-	void     SetNormeRatio(float r);
-	float    GetNormeRatio();
-	void     SetAutoNorme(bool enable);
-	bool     GetAutoNorme();
-	void     SetCenterNorme(bool enable);
-	bool     GetCenterNorme();
-	void     BuildFacetList(Facet *f);
+	void    MoveVertexTo(size_t idx, double x, double y, double z);
+	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
+	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
+	void    Rebuild();
+	void	MergecollinearSides(Facet *f, double fT);
+	void    ShiftVertex();
+	int     HasIsolatedVertices();
+	void    DeleteIsolatedVertices(bool selectedOnly);
+	void	SelectIsolatedVertices();
+	void    SetNormeRatio(float r);
+	float   GetNormeRatio();
+	void    SetAutoNorme(bool enable);
+	bool    GetAutoNorme();
+	void    SetCenterNorme(bool enable);
+	bool    GetCenterNorme();
+	void    BuildFacetList(Facet *f);
+	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
 
 	void CreateRectangle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
 	void CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
@@ -220,7 +220,7 @@ public:
 
 protected:
 	// Structure viewing (-1 => all)
-	SHGEOM    sh;
+	GeomProperties sh;
 	Vector3d  center;                     // Center (3D space)
 	char      *strName[MAX_SUPERSTR];     // Structure name
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
@@ -271,6 +271,7 @@ protected:
 		int textureMode;  //MC hits/flux/power
 
 #ifdef MOLFLOW
+#include "MolflowTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 

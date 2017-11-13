@@ -16,7 +16,7 @@
 
 #include "Geometry_shared.h"
 #include "BuildIntersection.h"
-#include "Facet.h" //DeletedFacet
+#include "Facet_shared.h" //DeletedFacet
 #include "GLApp/GLTitledPanel.h"
 //#include "GLApp/GLToolkit.h"
 //#include "GLApp/GLWindowManager.h"

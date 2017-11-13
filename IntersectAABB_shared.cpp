@@ -30,7 +30,7 @@ std::tuple<size_t,size_t,size_t> FindBestCuttingPlane(struct AABBNODE *node) {
 	size_t nbLeft, nbRight;
 
 	for (size_t i = 0;i<node->nbFacet;i++) {
-		FACET *f = node->list[i];
+		SubprocessFacet *f = node->list[i];
 		if (f->sh.center.x > centerX) rightFromCenterZ++;
 		if (f->sh.center.y > centerY) rightFromCenterY++;
 		if (f->sh.center.z > centerZ) rightFromCenterX++;
@@ -70,7 +70,7 @@ void ComputeBB(struct AABBNODE *node) {
 	node->bb.min=Vector3d(1e100,1e100,1e100);
 
 	for (i = 0;i<node->nbFacet;i++) {
-		FACET *f = node->list[i];
+		SubprocessFacet *f = node->list[i];
 		node->bb.min.x = std::min(f->sh.bb.min.x,node->bb.min.x);
 		node->bb.min.y = std::min(f->sh.bb.min.y, node->bb.min.y);
 		node->bb.min.z = std::min(f->sh.bb.min.z, node->bb.min.z);
@@ -81,7 +81,7 @@ void ComputeBB(struct AABBNODE *node) {
 
 }
 
-struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t depth,size_t& maxDepth) {
+struct AABBNODE *BuildAABBTree(SubprocessFacet **list, const size_t nbFacet, const size_t depth,size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;
 	double m;
@@ -100,14 +100,14 @@ struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t 
 	if (nbLeft >= MINBB && nbRight >= MINBB) {
 
 		// We can cut
-		FACET **lList = new FACET*[nbLeft];
-		FACET **rList = new FACET*[nbRight];
+		SubprocessFacet **lList = new SubprocessFacet*[nbLeft];
+		SubprocessFacet **rList = new SubprocessFacet*[nbRight];
 		switch (planeType) {
 
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
 			for (size_t i = 0;i<newNode->nbFacet;i++) {
-				FACET *f = newNode->list[i];
+				SubprocessFacet *f = newNode->list[i];
 				if (f->sh.center.x > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -116,7 +116,7 @@ struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t 
 		case 2: // xz
 			m = (newNode->bb.min.y + newNode->bb.max.y) / 2.0;
 			for (size_t i = 0;i<newNode->nbFacet;i++) {
-				FACET *f = newNode->list[i];
+				SubprocessFacet *f = newNode->list[i];
 				if (f->sh.center.y > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -125,7 +125,7 @@ struct AABBNODE *BuildAABBTree(FACET **list, const size_t nbFacet, const size_t 
 		case 3: // xy
 			m = (newNode->bb.min.z + newNode->bb.max.z) / 2.0;
 			for (size_t i = 0;i<newNode->nbFacet;i++) {
-				FACET *f = newNode->list[i];
+				SubprocessFacet *f = newNode->list[i];
 				if (f->sh.center.z > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -268,13 +268,13 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 }
 
 
-/*std::tuple<bool,FACET*,double>*/ void IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, FACET* const lastHitBefore,
+/*std::tuple<bool,SubprocessFacet*,double>*/ void IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
 	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir,
-	size_t& intNbTHits, FACET**& THitCache, bool& found, FACET*& collidedFacet, double& minLength) {
+	size_t& intNbTHits, SubprocessFacet**& THitCache, bool& found, SubprocessFacet*& collidedFacet, double& minLength) {
 
 	// Returns three values
 	// bool: did collision occur?
-	// FACET* : closest collided facet
+	// SubprocessFacet* : closest collided facet
 	// double: minimum distance
 	// Operates on global variables intNbTHits and THits[] to avoid passing these on heap
 
@@ -283,14 +283,14 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 	// nuv = u^v (for faster calculation)
 
 	/*bool found = false;
-	FACET* collidedFacet = lastHitBefore;
+	SubprocessFacet* collidedFacet = lastHitBefore;
 	double minLength=minLengthSoFar;*/
 
 	if (node->left == NULL || node->right == NULL) { // Leaf
 
 		for (size_t i = 0;i<node->nbFacet;i++) {
 
-			FACET* f = node->list[i];
+			SubprocessFacet* f = node->list[i];
 
 			// Do not check last collided facet
 			if (f == lastHitBefore)
@@ -382,7 +382,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 	}
 }
 
-bool IsInFacet(const FACET &f, const double &u, const double &v) {
+bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 
 	// 2D polygon "is inside" solving
 	// Using the "Jordan curve theorem" (we intersect in v direction here)
@@ -441,7 +441,7 @@ bool IsInFacet(const FACET &f, const double &u, const double &v) {
 
 }
 
-std::tuple<bool, FACET*, double> Intersect(const Vector3d& rayPos, const Vector3d& rayDir, /*FACET* lastHitFacet,*/ FACET**& THitCache) {
+std::tuple<bool, SubprocessFacet*, double> Intersect(const Vector3d& rayPos, const Vector3d& rayDir, /*SubprocessFacet* lastHitFacet,*/ SubprocessFacet**& THitCache) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
 	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
@@ -459,7 +459,7 @@ std::tuple<bool, FACET*, double> Intersect(const Vector3d& rayPos, const Vector3
 
 	//Output values
 	bool found = false;
-	FACET *collidedFacet;
+	SubprocessFacet *collidedFacet;
 	double minLength = 1e100;
 
 	IntersectTree(sHandle->str[sHandle->curStruct].aabbTree, rayPos, -1.0*rayDir, sHandle->lastHitFacet,
@@ -473,7 +473,7 @@ std::tuple<bool, FACET*, double> Intersect(const Vector3d& rayPos, const Vector3
 
 		// Second pass for transparent hits
 		for (size_t i = 0; i<intNbTHits; i++) {
-			FACET* tpFacet = THitCache[i];
+			SubprocessFacet* tpFacet = THitCache[i];
 			if (tpFacet->colDist < minLength) {
 				tpFacet->RegisterTransparentPass();
 			}
@@ -525,7 +525,7 @@ std::tuple<bool, FACET*, double> Intersect(const Vector3d& rayPos, const Vector3
 
 }
 
-void PolarToCartesian(FACET* collidedFacet, const double& theta, const double& phi, const bool& reverse) {
+void PolarToCartesian(SubprocessFacet* collidedFacet, const double& theta, const double& phi, const bool& reverse) {
 
 	//Acts on sHandle->pDir
 
@@ -598,7 +598,7 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& normU, const Vector3
 	return std::make_tuple(inTheta, inPhi);
 }
 
-bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2, FACET** THitCache) {
+bool Visible(Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2, SubprocessFacet** THitCache) {
 	//For AC matrix calculation, used only in MolFlow
 
 	Vector3d rayPos = *c1;
@@ -617,7 +617,7 @@ bool Visible(Vector3d *c1, Vector3d *c2, FACET *f1, FACET *f2, FACET** THitCache
 
 	//Output values
 	bool found;
-	FACET *collidedFacet;
+	SubprocessFacet *collidedFacet;
 	double minLength;
 
 	IntersectTree(sHandle->str[0].aabbTree, rayPos, -1.0*rayDir,

@@ -23,7 +23,7 @@
 #include "GLApp\GLLabel.h"
 #include "GLApp\GLButton.h"
 #include "Geometry_shared.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp\MathTools.h" //Contains
 
 #ifdef MOLFLOW

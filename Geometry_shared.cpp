@@ -2,7 +2,7 @@
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry_shared.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp\MathTools.h"
 #include "GLApp\GLMessageBox.h"
 #include "GLApp\GLToolkit.h"
@@ -16,6 +16,7 @@
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
+#include "MolflowTypes.h"
 #endif
 
 #ifdef SYNRAD
@@ -122,7 +123,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 	// nU et nV (normalized U et V) are also stored in the Facet structure.
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
-	size_t fOffset = sizeof(SHGHITS);
+	size_t fOffset = sizeof(GlobalHitBuffer);
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)sh.nbFacet);
 		if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
@@ -1414,114 +1415,6 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool to
 	SAFE_FREE(facets);
 	facets = tempFacets;
 	InitializeGeometry();
-}
-
-int Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double *values) {
-
-	auto selectedFacets = GetSelectedFacets();
-	mApp->changedSinceSave = true;
-	if (selectedFacets.size() == 0) return -1;
-
-	// Check that all facet has a mesh
-	bool ok = true;
-	int idx = 0;
-	while (ok && idx < sh.nbFacet) {
-		if (facets[idx]->selected)
-			ok = facets[idx]->hasMesh;
-		idx++;
-	}
-	if (!ok) return -2;
-
-	size_t nb = 0;
-	size_t FtoAdd = 0;
-	size_t VtoAdd = 0;
-	Facet::FACETGROUP *blocks = (Facet::FACETGROUP *)malloc(selectedFacets.size() * sizeof(Facet::FACETGROUP));
-
-	for (auto sel : selectedFacets) {
-		facets[sel]->Explode(blocks + nb);
-		FtoAdd += blocks[nb].nbF;
-		VtoAdd += blocks[nb].nbV;
-		nb++;
-	}
-
-	// Update vertex array
-	InterfaceVertex *ptrVert;
-	size_t       vIdx;
-	InterfaceVertex *nVert = (InterfaceVertex *)malloc((sh.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
-	memcpy(nVert, vertices3, sh.nbVertex * sizeof(InterfaceVertex));
-
-	ptrVert = nVert + sh.nbVertex;
-	vIdx = sh.nbVertex;
-	nb = 0;
-	for (int i = 0; i < sh.nbFacet; i++) {
-		if (facets[i]->selected) {
-			facets[i]->FillVertexArray(ptrVert);
-			for (int j = 0; j < blocks[nb].nbF; j++) {
-				for (int k = 0; k < blocks[nb].facets[j]->sh.nbIndex; k++) {
-					blocks[nb].facets[j]->indices[k] = vIdx + k;
-				}
-				vIdx += blocks[nb].facets[j]->sh.nbIndex;
-			}
-			ptrVert += blocks[nb].nbV;
-			nb++;
-		}
-	}
-	SAFE_FREE(vertices3);
-	vertices3 = nVert;
-	for (size_t i = sh.nbVertex; i < sh.nbVertex + VtoAdd; i++)
-		vertices3[i].selected = false;
-	sh.nbVertex += VtoAdd;
-
-	// Update facet
-	Facet   **f = (Facet **)malloc((sh.nbFacet + FtoAdd - selectedFacets.size()) * sizeof(Facet *));
-
-	auto nbS = selectedFacets.size(); //to remember it after RemveSelected() routine
-	// Delete selected facets
-	RemoveFacets(selectedFacets);
-
-	//Fill old facets
-	for (nb = 0; nb < sh.nbFacet; nb++)
-		f[nb] = facets[nb];
-
-	// Add new facets
-	int count = 0;
-	for (int i = 0; i < nbS; i++) {
-		for (int j = 0; j < blocks[i].nbF; j++) {
-			f[nb++] = blocks[i].facets[j];
-#ifdef MOLFLOW
-			if (toMap) { //set outgassing values
-				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
-				if (f[nb - 1]->sh.outgassing > 0.0) {
-					f[nb - 1]->sh.desorbType = desType + 1;
-					f[nb - 1]->selected = true;
-					if (f[nb - 1]->sh.desorbType == DES_COSINE_N) f[nb - 1]->sh.desorbTypeN = exponent;
-				}
-				else {
-					f[nb - 1]->sh.desorbType = DES_NONE;
-					f[nb - 1]->selected = false;
-				}
-			}
-#endif
-		}
-	}
-
-	// Free allocated memory
-	for (int i = 0; i < nbS; i++) {
-		SAFE_FREE(blocks[i].facets);
-	}
-	SAFE_FREE(blocks);
-
-	SAFE_FREE(facets);
-	facets = f;
-	sh.nbFacet = nb;
-
-	// Delete old resources
-	DeleteGLLists(true, true);
-
-	InitializeGeometry();
-
-	return 0;
-
 }
 
 bool Geometry::RemoveNullFacet() {
@@ -4541,4 +4434,117 @@ void Geometry::CreateRacetrack(const Vector3d & center, const Vector3d & axis1Di
 	std::rotate(vertexIds.begin(), vertexIds.begin()+vertexIds.size()-1, vertexIds.end()); //Shift vertex back so U is aligned with the bottom
 
 	AddFacet(vertexIds);
+}
+
+int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double* values){
+
+	auto selectedFacets = GetSelectedFacets();
+	if (selectedFacets.size() == 0) return -1;
+
+	// Check that all facet has a mesh
+	bool ok = true;
+	int idx = 0;
+	while (ok && idx < sh.nbFacet) {
+		if (facets[idx]->selected)
+			ok = facets[idx]->hasMesh;
+		idx++;
+	}
+	if (!ok) return -2;
+
+	mApp->changedSinceSave = true;
+
+	size_t nb = 0;
+	size_t FtoAdd = 0;
+	size_t VtoAdd = 0;
+
+	std::vector<FacetGroup> blocks;
+
+	for (auto sel : selectedFacets) {
+		blocks.push_back(facets[sel]->Explode());
+		FtoAdd += blocks[nb].facets.size();
+		VtoAdd += blocks[nb].nbV;
+		nb++;
+	}
+
+	// Update vertex array
+	InterfaceVertex *ptrVert;
+	size_t       vIdx;
+	InterfaceVertex *nVert = (InterfaceVertex *)malloc((sh.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
+	memcpy(nVert, vertices3, sh.nbVertex * sizeof(InterfaceVertex));
+
+	ptrVert = nVert + sh.nbVertex;
+	vIdx = sh.nbVertex;
+	nb = 0;
+	for (int i = 0; i < sh.nbFacet; i++) {
+		if (facets[i]->selected) {
+			facets[i]->FillVertexArray(ptrVert);
+			for (auto f : blocks[nb].facets) {
+				for (int k = 0; k < f->sh.nbIndex; k++) {
+					f->indices[k] = vIdx + k;
+				}
+				vIdx += f->sh.nbIndex;
+			}
+			ptrVert += blocks[nb].nbV;
+			nb++;
+		}
+	}
+	SAFE_FREE(vertices3);
+	vertices3 = nVert;
+
+	for (size_t i = sh.nbVertex; i < sh.nbVertex + VtoAdd; i++)
+		vertices3[i].selected = false;
+	sh.nbVertex += VtoAdd;
+
+	// Update facet
+	Facet   **f = (Facet **)malloc((sh.nbFacet + FtoAdd - selectedFacets.size()) * sizeof(Facet *));
+
+	auto nbS = selectedFacets.size(); //to remember it after RemveSelected() routine
+									  // Delete selected facets
+	RemoveFacets(selectedFacets);
+
+	//Fill old facets
+	for (nb = 0; nb < sh.nbFacet; nb++)
+		f[nb] = facets[nb];
+
+	// Add new facets
+	int count = 0;
+	for (int i = 0; i < nbS; i++) {
+		for (auto fac : blocks[i].facets) {
+			f[nb++] = fac;
+#ifdef MOLFLOW
+			if (toMap) { //set outgassing values
+				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
+				if (f[nb - 1]->sh.outgassing > 0.0) {
+					f[nb - 1]->sh.desorbType = desType + 1;
+					f[nb - 1]->selected = true;
+					if (f[nb - 1]->sh.desorbType == DES_COSINE_N) f[nb - 1]->sh.desorbTypeN = exponent;
+				}
+				else {
+					f[nb - 1]->sh.desorbType = DES_NONE;
+					f[nb - 1]->selected = false;
+				}
+			}
+#endif
+		}
+	}
+
+	/*
+	// Free allocated memory
+	for (int i = 0; i < nbS; i++) {
+	SAFE_FREE(blocks[i].facets);
+	}
+	SAFE_FREE(blocks);
+	*/
+
+	SAFE_FREE(facets);
+	facets = f;
+	sh.nbFacet = nb;
+
+	// Delete old resources
+	DeleteGLLists(true, true);
+
+	InitializeGeometry();
+
+	return 0;
+
 }

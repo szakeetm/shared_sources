@@ -23,7 +23,7 @@ GNU General Public License for more details.
 
 #include "ScaleFacet.h"
 
-#include "Facet.h"
+#include "Facet_shared.h"
 
 #include "GLApp\GLToolkit.h"
 #include "GLApp\GLMessageBox.h"

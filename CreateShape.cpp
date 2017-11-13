@@ -8,7 +8,7 @@
 #include "GLApp\GLButton.h"
 #include "GLApp\GLToggle.h"
 #include "Geometry_shared.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp\MathTools.h" //Contains
 #include "GLApp\GLIcon.h"
 

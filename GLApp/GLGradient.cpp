@@ -32,6 +32,8 @@ COLORREF rainbowCol[] = { 0x000000,   //Black
                           0x800090,   //Purple 1
                           0xF00080};  //Purple 2
 
+std::vector<int> colorMap = GLGradient::GenerateColorMap(); //Global variable
+
 GLGradient::GLGradient(int compId):GLComponent(compId) {
 
   colorTex = 0;
@@ -69,6 +71,36 @@ GLGradient::~GLGradient() {
   SAFE_DELETE(axis);
 }
 
+std::vector<int> GLGradient::GenerateColorMap()
+{
+	std::vector<int> colorMap(65536);
+	
+	for (int i = 0; i < 65536 ; i++) {
+
+		double r1, g1, b1;
+		double r2, g2, b2;
+		int colId = i / 8192; //8192= 65536 steps / 8 colors
+
+		r1 = (double)((rainbowCol[colId] >> 16) & 0xFF);
+		g1 = (double)((rainbowCol[colId] >> 8) & 0xFF);
+		b1 = (double)((rainbowCol[colId] >> 0) & 0xFF);
+
+		r2 = (double)((rainbowCol[colId + 1] >> 16) & 0xFF);
+		g2 = (double)((rainbowCol[colId + 1] >> 8) & 0xFF);
+		b2 = (double)((rainbowCol[colId + 1] >> 0) & 0xFF);
+
+		double rr = (double)(i - colId * 8192) / 8192.0;
+		Saturate(rr, 0.0, 1.0);
+		colorMap[i] = (COLORREF)((int)(r1 + (r2 - r1)*rr) +
+			(int)(g1 + (g2 - g1)*rr) * 256 +
+			(int)(b1 + (b2 - b1)*rr) * 65536);
+
+	}
+	colorMap[65535] = 0xFFFFFF; // Saturation color
+	
+	return colorMap;
+}
+
 void GLGradient::SetMouseCursor(bool enable) {
   mouseCursor = enable;
 }
@@ -104,7 +136,7 @@ void GLGradient::RestoreDeviceObjects() {
  
     double r1,g1,b1;
     double r2,g2,b2;
-		int colId = i/64;
+		int colId = i/64; //64= 512 steps / 8 colors
 
     r1 = (double) ((rainbowCol[colId] >> 16) & 0xFF);
     g1 = (double) ((rainbowCol[colId] >>  8) & 0xFF);

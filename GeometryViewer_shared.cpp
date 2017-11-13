@@ -12,7 +12,7 @@
 
 #include <math.h>
 //#include <malloc.h>
-#include "Facet.h"
+#include "Facet_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

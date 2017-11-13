@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #define EQMODE 8
 
 #include "RotateFacet.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp\MathTools.h"
 #include "GLApp/GLMessageBox.h"

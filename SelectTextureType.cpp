@@ -1,6 +1,6 @@
 #include "SelectTextureType.h"
 #include "GLApp\GLMessageBox.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp\GLTitledPanel.h"

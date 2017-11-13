@@ -11,7 +11,7 @@
 #include "GLApp\GLToolkit.h"
 #include "GLApp/MathTools.h" //IDX
 #include "RecoveryDialog.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLToggle.h"

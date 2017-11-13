@@ -19,6 +19,7 @@
 
 #include "GLComponent.h"
 #include "GLChart\GLChartConst.h" //linear, log scale constants
+#include <vector>
 class GLAxis;
 class GLLabel;
 
@@ -32,6 +33,8 @@ public:
   // Construction
   GLGradient(int compId);
   ~GLGradient();
+
+  static std::vector<int> GenerateColorMap();
 
   // Component methods
   void SetMinMax(double min,double max);

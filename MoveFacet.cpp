@@ -10,7 +10,7 @@
 #include "GLApp/GlToggle.h"
 
 #include "Geometry_shared.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"

@@ -20,7 +20,7 @@
 #include "SmartSelection.h"
 #include "FacetCoordinates.h"
 #include "VertexCoordinates.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;

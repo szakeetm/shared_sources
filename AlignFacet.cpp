@@ -15,7 +15,7 @@ GNU General Public License for more details.
 */
 
 #include "AlignFacet.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp\GLToggle.h"

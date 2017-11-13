@@ -22,7 +22,7 @@
 #define ABCDMODE 5
 
 #include "MirrorFacet.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"

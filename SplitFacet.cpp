@@ -18,7 +18,7 @@
 #define FACET_MODE 1
 #define VERTEX_MODE 2
 
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "SplitFacet.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"

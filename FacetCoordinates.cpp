@@ -17,7 +17,7 @@
 */
 
 #include "FacetCoordinates.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLToolkit.h"

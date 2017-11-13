@@ -2,7 +2,7 @@
 #include <Windows.h>
 
 #include "Worker.h"
-#include "Facet.h"
+#include "Facet_shared.h"
 #include "GLApp/GLApp.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp\MathTools.h" //Min max
@@ -137,7 +137,7 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConf
 void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When loading from file
 	if (dpHit) {
 		AccessDataport(dpHit);
-		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
+		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
 		size_t nbCopy = Min(LEAKCACHESIZE, *nb);
 		memcpy(leakCache, buffer, sizeof(LEAK)*nbCopy);
 		memcpy(gHits->leakCache, buffer, sizeof(LEAK)*nbCopy);
@@ -150,7 +150,7 @@ void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When load
 void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
 	if (dpHit) {
 		AccessDataport(dpHit);
-		SHGHITS *gHits = (SHGHITS *)dpHit->buff;
+		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
 		size_t nbCopy = Min(HITCACHESIZE, *nb);
 		memcpy(hitCache, buffer, sizeof(HIT)*nbCopy);
 		memcpy(gHits->hitCache, buffer, sizeof(HIT)*nbCopy);
@@ -476,7 +476,7 @@ void Worker::Update(float appTime) {
 
 			mApp->changedSinceSave = true;
 			// Globals
-			SHGHITS *gHits = (SHGHITS *)buffer;
+			GlobalHitBuffer *gHits = (GlobalHitBuffer *)buffer;
 
 // Global hits and leaks
 #ifdef MOLFLOW
@@ -515,10 +515,10 @@ void Worker::Update(float appTime) {
 			for (size_t i = 0; i<nbFacet; i++) {
 				Facet *f = geom->GetFacet(i);
 #ifdef SYNRAD
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(SHHITS));
+				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #ifdef MOLFLOW
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(SHHITS), sizeof(SHHITS));
+				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
 				
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
@@ -534,7 +534,7 @@ void Worker::Update(float appTime) {
 					}
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
-					+ (1 + moments.size()) * sizeof(SHHITS)
+					+ (1 + moments.size()) * sizeof(FacetHitBuffer)
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(APROFILE) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(AHIT) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(VHIT)*(1 + moments.size()) : 0);
