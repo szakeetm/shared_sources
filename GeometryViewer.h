@@ -159,7 +159,7 @@ public:
 
   #ifdef  SYNRAD
   bool shadeLines;
-  int dispNumTraj;  // displayed number of trajectory points
+  size_t dispNumTraj;  // displayed number of trajectory points
   #endif
   
   size_t dispNumHits; // displayed number of lines and hits

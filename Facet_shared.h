@@ -100,8 +100,8 @@ public:
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 #endif
 #ifdef SYNRAD //Implementations in SynradFacet.cpp
-	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, int nbVertex);
-	void  LoadXML(pugi::xml_node f, int nbVertex, bool isMolflowFile, int vertexOffset);
+	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();
 	size_t GetTexRamSize();

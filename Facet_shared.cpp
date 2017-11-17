@@ -100,6 +100,7 @@ Facet::Facet(size_t nbIndex) {
 
 	sh.reflection.diffusePart = 1.0; //totally diffuse reflection
 	sh.reflection.specularPart = 0.0;
+	sh.reflection.cosineExponent = 0.0; //Cos^0 = uniform
 
 	sh.countDes = false;
 	sh.countACD = false;
@@ -911,9 +912,8 @@ bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
 		IsEqual(sh.outgassing, f->sh.outgassing) &&
 		IsEqual(sh.reflection.diffusePart, f->sh.reflection.diffusePart) &&
 		IsEqual(sh.reflection.specularPart, f->sh.reflection.specularPart) &&
+		IsEqual(sh.reflection.cosineExponent, f->sh.reflection.cosineExponent) &&
 		(sh.temperature == f->sh.temperature) &&
-		(sh.reflection.diffusePart == f->sh.reflection.diffusePart) &&
-		(sh.reflection.specularPart == f->sh.reflection.specularPart) &&
 #endif
 #ifdef SYNRAD
 		(sh.reflectType == f->sh.reflectType) &&

@@ -100,29 +100,29 @@ std::pair<double, double> rtnorm(
   // In other cases (xmin < a < xmax), use Chopin's algorithm
   else
   {
-    // Compute ka
-    i = I0 + int(floor(a*INVH));
-    ka = Rtnorm::ncell[i];
+	  // Compute ka
+	  i = I0 + (int)floor(a*INVH);
+	  ka = Rtnorm::ncell[i];
 
-    // Compute kb
-    (b>=xmax) ?
-    kb = N :
-    (
-      i = I0 + int(floor(b*INVH)),
-      kb = Rtnorm::ncell[i]
-    );
+	  // Compute kb
+	  (b >= xmax) ?
+		  kb = N :
+		  (
+			  i = I0 + (int)floor(b*INVH),
+			  kb = Rtnorm::ncell[i]
+			  );
 
-    // If |b-a| is small, use rejection algorithm with a truncated exponential proposal
-    if(abs(kb-ka) < kmin)
-    {
-      r = rtexp(gen,a,b);
-      stop = true;  
-    }
-    
-    while(!stop)
-    {
-      // Sample integer between ka and kb
-      k = int(floor(gsl_rng_uniform(gen)) * (kb-ka+1)) + ka;
+	  // If |b-a| is small, use rejection algorithm with a truncated exponential proposal
+	  if (abs(kb - ka) < kmin)
+	  {
+		  r = rtexp(gen, a, b);
+		  stop = true;
+	  }
+
+	  while (!stop)
+	  {
+		  // Sample integer between ka and kb
+		  k = (int)floor(gsl_rng_uniform(gen) * (kb - ka + 1)) + ka;
     
       if(k == N)
       {    

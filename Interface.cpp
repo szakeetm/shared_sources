@@ -2888,7 +2888,7 @@ void Interface::DownloadInstallUpdate(std::string zipUrl, std::string zipName, s
 	for (int zi = 0; zi<numitems; zi++)
 	{
 		ZIPENTRY ze; GetZipItem(hz, zi, &ze); // fetch individual details
-		UnzipItem(hz, zi, ze.name);         // e.g. the item's name.
+		UnzipItem(hz, zi, ze.name);           // e.g. the item's name.
 	}
 	CloseZip(hz);
 
