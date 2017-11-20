@@ -2633,8 +2633,6 @@ int Interface::FrameMove()
 		}
 #endif
 
-		
-
 		forceFrameMoveButton->SetEnabled(!autoFrameMove);
 		forceFrameMoveButton->SetText("Update");
 	}
@@ -2664,26 +2662,23 @@ int Interface::FrameMove()
 	if (timeForAutoSave) AutoSave();
 
 	//Check if app updater has found updates
-	if (appUpdater && !appUpdater->foundUpdate) {
+	if (appUpdater && appUpdater->foundUpdate) {
 
 			std::stringstream msg;
 			msg << "Update available:\n" << appUpdater->latestUpdate.name << "\nChangelog:\n" << appUpdater->cumulativeChangeLog;
-			int answer = GLMessageBox::Display(msg.str(), "Updater", { "Update now","Later","Skip this version","Turn off update checking" },GLDLG_ICONINFO);
+			int answer = GLMessageBox::Display(msg.str(), "Updater", { "Update now","Later","Skip version","Disable check" },GLDLG_ICONINFO);
+			appUpdater->foundUpdate = false;
 			switch (answer) {
-			case 0:
+			case 0: //Update now
 				GLMessageBox::Display(appUpdater->DownloadInstallUpdate(appUpdater->latestUpdate), "Updater result", { "OK" }, GLDLG_ICONINFO);
-				appUpdater->foundUpdate = false;
 				break;
-			case 1:
-				appUpdater->foundUpdate = true;
+			case 1:  //Later
 				break;
-			case 2:
+			case 2:  //Skip
 				appUpdater->SkipUpdate(appUpdater->latestUpdate);
-				appUpdater->foundUpdate = false;
 				break;
-			case 3:
+			case 3:  //Turn off chk
 				appUpdater->SetUserUpdatePreference(false);
-				appUpdater->foundUpdate = false;
 				break;
 			}
 	}

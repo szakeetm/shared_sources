@@ -143,7 +143,7 @@ bool GLTextField::GetNumberInt(int *num) {
 
 }
 
-bool GLTextField::GetNumberSize(size_t *num) {
+bool GLTextField::GetNumberSizeT(size_t *num) {
 
 	int conv = sscanf(m_Text, "%zd", num);
 	return (conv == 1);
