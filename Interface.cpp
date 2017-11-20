@@ -1,7 +1,6 @@
 #include "Interface.h"
 #include <direct.h> //_getcwd()
 #include <io.h> // Check for recovery
-#include <thread> //Check for updates
 #include <filesystem>
 
 #include "GLApp/GLFileBox.h"
@@ -51,7 +50,6 @@
 
 //Updater
 #include <PugiXML\pugixml.hpp>
-#include "Web.h"
 #include "ZipUtils/zip.h"
 #include "ZipUtils/unzip.h"
 #include "File.h" //File utils (Get extension, etc)
@@ -77,6 +75,7 @@ Interface::Interface() {
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
 	numCPU = (size_t)sysinfo.dwNumberOfProcessors;
+	appUpdater = NULL; //We'll initialize later, when the app name and version id is known
 
 	antiAliasing = true;
 	whiteBg = false;
@@ -90,10 +89,6 @@ Interface::Interface() {
 	autosaveFilename = "";
 	compressProcessHandle = NULL;
 	autoFrameMove = true;
-
-	installId = "default";
-	checkForUpdates = false;
-	appLaunchesWithoutAsking = 0; //Default value
 
 	lastSaveTime = 0.0f;
 	lastSaveTimeSimu = 0.0f;
@@ -146,7 +141,6 @@ Interface::Interface() {
 	smartSelection = NULL;
 
 	m_strWindowTitle = appName;
-	latestVersionId = appVersion;
 	wnd->SetBackgroundColor(212, 208, 200);
 	m_bResizable = true;
 	m_minScreenWidth = 800;
@@ -683,7 +677,11 @@ void Interface::SetFacetSearchPrg(bool visible, char *text) {
 }
 
 int Interface::OnExit() {
-	SaveConfig(true);
+	SaveConfig();
+	if (appUpdater) {
+		appUpdater->IncreaseSessionCount();
+		appUpdater->SaveConfig();
+	}
 	remove(autosaveFilename.c_str());
 	//empty TMP directory
 	char tmp[1024];
@@ -2665,12 +2663,29 @@ int Interface::FrameMove()
 	//Autosave
 	if (timeForAutoSave) AutoSave();
 
-	//Updates
-	if (latestVersionId > appVersion) {
-		std::stringstream tmp;
-		tmp << "New version: " << latestVersionId << "\nCurrent: " << appVersion;
-		GLMessageBox::Display(tmp.str().c_str(), "Update available");
-		latestVersionId = -1;
+	//Check if app updater has found updates
+	if (appUpdater && !appUpdater->foundUpdate) {
+
+			std::stringstream msg;
+			msg << "Update available:\n" << appUpdater->latestUpdate.name << "\nChangelog:\n" << appUpdater->cumulativeChangeLog;
+			int answer = GLMessageBox::Display(msg.str(), "Updater", { "Update now","Later","Skip this version","Turn off update checking" },GLDLG_ICONINFO);
+			switch (answer) {
+			case 0:
+				GLMessageBox::Display(appUpdater->DownloadInstallUpdate(appUpdater->latestUpdate), "Updater result", { "OK" }, GLDLG_ICONINFO);
+				appUpdater->foundUpdate = false;
+				break;
+			case 1:
+				appUpdater->foundUpdate = true;
+				break;
+			case 2:
+				appUpdater->SkipUpdate(appUpdater->latestUpdate);
+				appUpdater->foundUpdate = false;
+				break;
+			case 3:
+				appUpdater->SetUserUpdatePreference(false);
+				appUpdater->foundUpdate = false;
+				break;
+			}
 	}
 
 	if (worker.nbLeakTotal) {
@@ -2795,114 +2810,4 @@ void Interface::CheckForRecovery() {
 		} while (_findnext(file, &filedata) == 0);
 	}
 	_findclose(file);
-}
-
-void Interface::AppUpdater() {
-	if (!checkForUpdates) {
-		if (appLaunchesWithoutAsking >= 2) { //Third time launching app, time to ask if we can check for updates
-			std::stringstream msg;
-			msg << "Can " << appId << " check online for updates?\nYou can change the setting later in Tools / Global Settings";
-			int ret = GLMessageBox::Display(msg.str().c_str(), "Auto-updater", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-			checkForUpdates = (ret == GLDLG_OK);
-			appLaunchesWithoutAsking = -1;SaveConfig(); //Don't ask again
-		}
-	}
-	else {
-		appLaunchesWithoutAsking = -1; //Don't ask if already checking for updates
-	}
-
-	if (checkForUpdates) {
-		latestVersionId = -1;
-		updateThread = std::thread(&Interface::CheckUpdates, (Interface*)this); //Launch parallel update-checking thread
-	}
-}
-
-void Interface::CheckUpdates() {
-	//Update checker
-
-	std::string url = "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"; //Update feed
-	std::string body = DownloadString(url);
-
-	pugi::xml_document updateDoc;
-	pugi::xml_parse_result result = updateDoc.load_string(body.c_str());
-
-	//DownloadInstallUpdate("https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.33.zip", "molflow_2.6.33.zip", "molflow_2.6.33", "molflow.cfg", true);
-	
-	if (installId == "default") {
-		//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
-		//It is generated based on the computer's network name and the logged in user name
-		//FOR USER PRIVACY, THESE ARE NOT SENT TO GOOGLE ANALYTICS, JUST AN ANONYMOUS HASH
-		//Should get the same hash even in case of subsequent installs
-
-		char computerName[1024];
-		char userName[1024];
-		DWORD size = 1024;
-		GetComputerName(computerName, &size);
-		GetUserName(userName, &size);
-		std::string id = computerName;
-		id += "/";
-		id += userName;
-
-		//Create hash code from computer name
-		//Source: http://www.cse.yorku.ca/~oz/hash.html
-		size_t hashCode = 5381;
-		int c;
-		size_t index = 0;
-		while (c = id.c_str()[index++]) {
-			hashCode = ((hashCode << 5) + hashCode) + c; /* hash * 33 + c */
-		}		
-
-		//Convert hash number to alphanumerical hash (base62)
-		std::string alphaNum =
-			"0123456789"
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			"abcdefghijklmnopqrstuvwxyz";
-
-		installId = "";
-		while (hashCode > 0) {
-			size_t dividend = (size_t)(hashCode / alphaNum.length());
-			size_t remainder = hashCode - dividend*alphaNum.length();
-			hashCode = dividend;
-			installId = alphaNum[remainder] + installId;
-		}
-	}
-
-	std::string GoogleAnalyticsTrackingId = "UA-86802533-2";
-	std::string eventCategory = "updateCheck";
-
-	std::stringstream payload;
-	payload << "v=1&t=event&tid=" << GoogleAnalyticsTrackingId << "&cid=" << installId << "&ec=" << eventCategory << "&ea=" << appId << "_" << appVersion;
-	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
-}
-
-void Interface::DownloadInstallUpdate(std::string zipUrl, std::string zipName, std::string folderName, std::string configName, bool copyCfg) {
-
-	//Download the zipped new version to parent directory
-	std::stringstream zipDest; zipDest << "..\\" << zipName;
-	DownloadFile(zipUrl, zipDest.str());
-
-	//Extract it to LOCAL directory (no way to directly extract to parent)
-	HZIP hz = OpenZip(zipDest.str().c_str(), 0);
-	ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
-	// -1 gives overall information about the zipfile
-	for (int zi = 0; zi<numitems; zi++)
-	{
-		ZIPENTRY ze; GetZipItem(hz, zi, &ze); // fetch individual details
-		UnzipItem(hz, zi, ze.name);           // e.g. the item's name.
-	}
-	CloseZip(hz);
-
-	//ZIP file not required anymore
-	DeleteFile(zipDest.str().c_str());
-
-	//Move extracted dir to parent dir
-	std::stringstream folderDest; folderDest << "..\\" << folderName;
-	MoveFileEx(folderName.c_str(), folderDest.str().c_str(), MOVEFILE_WRITE_THROUGH);
-
-	//Copy current config file to new version's dir
-	std::stringstream configDest; configDest << folderDest.str() << configName;
-	if (copyCfg) CopyFile(configName.c_str(), folderDest.str().c_str(),false);
-
-	//Optionally run "..\app_name.exe" and exit
-
 }

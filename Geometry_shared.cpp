@@ -4548,3 +4548,14 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 	return 0;
 
 }
+
+void  Geometry::EmptyGeometry() {
+	Clear(); //Clear everything first
+
+	//Initialize a default structure:
+	sh.nbSuper = 1;
+	strName[0] = _strdup("");
+	//Do rest of init:
+	InitializeGeometry(); //sets isLoaded to true
+
+}

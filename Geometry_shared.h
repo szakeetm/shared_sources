@@ -178,6 +178,8 @@ public:
 	int  RestoreDeviceObjects();
 	int  InvalidateDeviceObjects();
 
+	void     EmptyGeometry();
+
 #pragma region GeometryRender_Shared.cpp
 protected:
 	void AddToSelectionHist(size_t f);

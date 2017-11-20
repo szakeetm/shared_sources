@@ -5,6 +5,7 @@
 
 #include "Worker.h"
 #include "GeometryViewer.h"
+#include "AppUpdater.h"
 
 #include "GLApp/GLApp.h"
 #include "GLApp\GLParser.h"
@@ -204,7 +205,7 @@ protected:
 
 public:
 	virtual void UpdateFacetParams(bool updateSelection=false) {}
-	virtual void SaveConfig(bool increaseSessionCount=false) {}
+	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
 
 	// Simulation state
@@ -227,12 +228,7 @@ public:
 	double   largeArea; //Selection filter
 	double   planarityThreshold; //Planarity threshold
 	
-	int      checkForUpdates;
-	int      appLaunchesWithoutAsking; //Number of app launches before asking if user wants to check for updates. 0: default (shipping) value, -1: user already answered
-	std::string		 installId;
-	int      skipUpdatesUntilThisId;
-	int		 latestVersionId;
-	std::thread updateThread;
+	AppUpdater* appUpdater;
 
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
@@ -346,10 +342,6 @@ public:
 	bool AutoSave(bool crashSave = false);
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
-
-	void CheckUpdates();
-	void AppUpdater();
-	void DownloadInstallUpdate(std::string zipurl, std::string zipName, std::string folderName, std::string configName, bool copyCfg);
 
 	AVIEW   views[MAX_VIEW];
 	int     nbView;
