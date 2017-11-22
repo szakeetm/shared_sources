@@ -1,6 +1,5 @@
 #include "Web.h"
 #include <string>
-#include <curl/curl.h>
 
 size_t AppendDataToStringCurlCallback(void *ptr, size_t size, size_t nmemb, void *vstring)
 {
@@ -14,7 +13,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return written;
 }
 
-std::string DownloadString(std::string url) {
+std::tuple<CURLcode,std::string> DownloadString(std::string url) {
 	std::string body;
 	
 	CURL *curl_handle;
@@ -23,36 +22,38 @@ std::string DownloadString(std::string url) {
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, AppendDataToStringCurlCallback);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &body);
-	curl_easy_perform(curl_handle);
+	CURLcode result = curl_easy_perform(curl_handle);
 	curl_easy_cleanup(curl_handle);
 
-	return body;
+	return std::tie(result,body);
 }
 
-void SendHTTPPostRequest(std::string hostname, std::string payload) {
-		CURL *curl_handle;
-		CURLcode retVal;
-		curl_global_init(CURL_GLOBAL_ALL);
-		curl_handle = curl_easy_init();
-		curl_easy_setopt(curl_handle, CURLOPT_URL, hostname.c_str()); //host
-		curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload.c_str()); //payload
-		retVal = curl_easy_perform(curl_handle);
-		curl_easy_cleanup(curl_handle);
+CURLcode SendHTTPPostRequest(std::string hostname, std::string payload) {
+	CURL *curl_handle;
+	CURLcode retVal;
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl_handle = curl_easy_init();
+	curl_easy_setopt(curl_handle, CURLOPT_URL, hostname.c_str()); //host
+	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload.c_str()); //payload
+	retVal = curl_easy_perform(curl_handle);
+	curl_easy_cleanup(curl_handle);
+	return retVal;
 }
 
-void DownloadFile(std::string url,std::string fileName) {
+CURLcode DownloadFile(std::string url,std::string fileName) {
     CURL *curl;
     FILE *fp;
-    CURLcode res;
+    CURLcode result;
     curl = curl_easy_init();
     if (curl) {
         fp = fopen(fileName.c_str(),"wb");
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        res = curl_easy_perform(curl);
-        /* always cleanup */
+        result = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
         fclose(fp);
-    }
+		return result;
+	}
+	else return CURLE_FAILED_INIT;
 }

@@ -246,7 +246,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 		facets[i]->neighbors.clear();
 	}
 	for (i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-		mApp->DoEvents();
+		mApp->DoEvents(); //Cathch possible cancel press
 		Facet *f1 = facets[i];
 		prg->SetProgress(double(i) / double(sh.nbFacet));
 		for (size_t j = i + 1; j < sh.nbFacet; j++) {

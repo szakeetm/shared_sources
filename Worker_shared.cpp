@@ -288,7 +288,7 @@ bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
 					statusWindow->SetVisible(true);
 				}
 				statusWindow->SMPUpdate();
-				mApp->DoEvents();
+				mApp->DoEvents(); //Do a few refreshes during waiting for subprocesses
 			}
 			Sleep(250);
 			waitTime+=250;

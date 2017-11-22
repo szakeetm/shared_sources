@@ -56,7 +56,7 @@
 
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;
-//extern const char* appName;
+//extern const char* appTitle;
 
 extern const char *fileLFilters;
 extern const char *fileInsFilters;
@@ -66,9 +66,10 @@ extern const char *fileDesFilters;
 extern int   cSize;
 extern int   cWidth[];
 extern char *cName[];
+extern std::string appTitle;
 extern std::string appName;
-extern std::string appId;
-extern int appVersion;
+extern std::string appVersionName;
+extern int appVersionId;
 
 Interface::Interface() {
 	//Get number of cores
@@ -139,8 +140,10 @@ Interface::Interface() {
 	facetCoordinates = NULL;
 	vertexCoordinates = NULL;
 	smartSelection = NULL;
+	updateCheckDialog = NULL;
+	updateFoundDialog = NULL;
 
-	m_strWindowTitle = appName;
+	m_strWindowTitle = appTitle;
 	wnd->SetBackgroundColor(212, 208, 200);
 	m_bResizable = true;
 	m_minScreenWidth = 800;
@@ -241,14 +244,14 @@ void Interface::UpdateTitle() {
 	Geometry *geom = worker.GetGeometry();
 
 	if (!geom->IsLoaded()) {
-		title = appName;
+		title = appTitle;
 	}
 	else {
 		if (geom->viewStruct < 0) {
-			title = appName + " [" + worker.GetShortFileName() + "]";
+			title = appTitle + " [" + worker.GetShortFileName() + "]";
 		}
 		else {
-			title = appName + " [" + worker.GetShortFileName() + ": Struct #" + std::to_string(geom->viewStruct + 1) +" " + geom->GetStructureName(geom->viewStruct) +"]";
+			title = appTitle + " [" + worker.GetShortFileName() + ": Struct #" + std::to_string(geom->viewStruct + 1) +" " + geom->GetStructureName(geom->viewStruct) +"]";
 		}
 	}
 
@@ -680,7 +683,6 @@ int Interface::OnExit() {
 	SaveConfig();
 	if (appUpdater) {
 		appUpdater->IncreaseSessionCount();
-		appUpdater->SaveConfig();
 	}
 	remove(autosaveFilename.c_str());
 	//empty TMP directory
@@ -1029,6 +1031,9 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(facetCoordinates);
 	RVALIDATE_DLG(vertexCoordinates);
 
+	RVALIDATE_DLG(updateCheckDialog);
+	RVALIDATE_DLG(updateFoundDialog);
+
 	UpdateTitle();
 
 	return GL_OK;
@@ -1062,6 +1067,9 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(loadStatus);
 	IVALIDATE_DLG(facetCoordinates);
 	IVALIDATE_DLG(vertexCoordinates);
+
+	IVALIDATE_DLG(updateCheckDialog);
+	IVALIDATE_DLG(updateFoundDialog);
 
 	UpdateTitle();
 
@@ -2662,25 +2670,11 @@ int Interface::FrameMove()
 	if (timeForAutoSave) AutoSave();
 
 	//Check if app updater has found updates
-	if (appUpdater && appUpdater->foundUpdate) {
-
-			std::stringstream msg;
-			msg << "Update available:\n" << appUpdater->latestUpdate.name << "\nChangelog:\n" << appUpdater->cumulativeChangeLog;
-			int answer = GLMessageBox::Display(msg.str(), "Updater", { "Update now","Later","Skip version","Disable check" },GLDLG_ICONINFO);
-			appUpdater->foundUpdate = false;
-			switch (answer) {
-			case 0: //Update now
-				GLMessageBox::Display(appUpdater->DownloadInstallUpdate(appUpdater->latestUpdate), "Updater result", { "OK" }, GLDLG_ICONINFO);
-				break;
-			case 1:  //Later
-				break;
-			case 2:  //Skip
-				appUpdater->SkipUpdate(appUpdater->latestUpdate);
-				break;
-			case 3:  //Turn off chk
-				appUpdater->SetUserUpdatePreference(false);
-				break;
-			}
+	if (appUpdater && appUpdater->IsUpdateAvailable()) {
+		if (!updateFoundDialog) {
+			updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater);
+			updateFoundDialog->SetVisible(true);
+		}
 	}
 
 	if (worker.nbLeakTotal) {

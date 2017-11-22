@@ -44,6 +44,8 @@ class SelectTextureType;
 class AlignFacet;
 class AddVertex;
 class FormulaEditor;
+class UpdateCheckDialog;
+class UpdateFoundDialog;
 
 class Geometry;
 
@@ -375,6 +377,9 @@ public:
 	VertexCoordinates	*vertexCoordinates;
 	SmartSelection		*smartSelection;
 	FormulaEditor		*formulaEditor;
+
+	UpdateCheckDialog *updateCheckDialog;
+	UpdateFoundDialog *updateFoundDialog;
 
 	// Current directory
 	void UpdateCurrentDir(char *fileName);

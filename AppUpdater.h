@@ -5,6 +5,7 @@
 #include <tuple>
 #include <PugiXML\pugixml.hpp>
 using namespace pugi;
+#include "GLApp/GLWindow.h"
 
 #define ANSWER_DONTASKYET 1
 #define ANSWER_ALREADYDECIDED 2
@@ -15,7 +16,7 @@ public:
 	std::string name; //Version name, like "Molflow 2.6 beta"
 	std::string date; //Release date
 	std::string changeLog; //Changes since the last published version
-	int versionId; //Will be compared with appVersion
+	int versionId; //Will be compared with appVersionId
 
 	std::string zipUrl; //URL of ZIP file to download
 	std::string zipName; //Local download target fileName
@@ -24,11 +25,24 @@ public:
 };
 
 class AppUpdater {
-	
-	public:
+public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
 
+	bool IsUpdateAvailable();
+	bool IsUpdateCheckAllowed();
+	void ClearAvailableUpdates();
+	std::string GetLatestUpdateName();
+	std::string GetCumulativeChangeLog();
+
+	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
+
+	void SetUserUpdatePreference(bool answer);
+	void SkipAvailableUpdates();
+	std::string InstallLatestUpdate();
+	void IncreaseSessionCount();
 	
+private:
+
 	//Initialized by constructor:
 	int currentVersionId;
 	std::string applicationName;
@@ -37,34 +51,56 @@ class AppUpdater {
 	//Initialized by shipped config file:
 	std::string branchName;
 	std::string feedUrl,publicWebsite,publicDownloadsPage;
-	std::string googleAnalyticsTrackingId, googleAnalyticsEventCategory;
+	std::string googleAnalyticsTrackingId;
 	
 	//Values that are generated during run
 	std::string	userId; //User unique identifier. Default value: "not_set"
 	std::vector<int> skippedVersionIds;
 	std::thread updateThread;
-	bool checkForUpdates;
+	bool allowUpdateCheck;
 	int appLaunchedWithoutAsking, askAfterNbLaunches; //Number of app launches before asking if user wants to check for updates. 0: default (shipping) value, -1: user already answered
 
-	//Updatecheck result (state)
-	bool foundUpdate;
-	UpdateManifest latestUpdate;
-	std::string cumulativeChangeLog; //diff between current version and latest
+	std::vector<UpdateManifest> availableUpdates; //empty in the beginning, populated upon update check
 
 	//Methods
 	void SaveConfig();
 	void LoadConfig();
-	void SetUserUpdatePreference(bool answer);
-	void SkipUpdate(const UpdateManifest& update);
-
-	//Communication with host app
-	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
-	std::tuple<bool, UpdateManifest, std::string> GetResult(); //Host app querying async process result (whether there was an update). Usually called regularly, i.e. in the main event loop. Return values: isUpdateAvailable,latestVersionName(can include version Id and Date), cumulative changelog. If there was an update, host app should display a dialog whether user wants to update, skip this version, install later or disable update check
-
 	void PerformUpdateCheck(); //Actually check for updates (once we have user permission)
-	std::tuple<bool, UpdateManifest, std::string> AnalyzeFeed(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName);
+	
+	std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
 	std::string DownloadInstallUpdate(const UpdateManifest& update); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
+	UpdateManifest GetLatest(const std::vector<UpdateManifest>& updates);
+	std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
+	void SkipVersions(const std::vector<UpdateManifest>& updates);
+
 	void GenerateUserId();
-	void IncreaseSessionCount();
+	
+};
+
+class GLButton;
+class GLLabel;
+
+class UpdateCheckDialog : public GLWindow {
+public:
+	UpdateCheckDialog(const std::string& appName, AppUpdater* appUpdater);
+
+	// Implementation
+	void ProcessMessage(GLComponent *src, int message);
+private:
+	GLLabel *questionLabel;
+	GLButton *allowButton,*declineButton,*laterButton,*privacyButton;
+	AppUpdater* updater;
+};
+
+class UpdateFoundDialog : public GLWindow {
+public:
+	UpdateFoundDialog(const std::string& appName, const std::string& appVersionName, AppUpdater* appUpdater);
+
+	// Implementation
+	void ProcessMessage(GLComponent *src, int message);
+private:
+	GLLabel *questionLabel;
+	GLButton *updateButton, *laterButton, *skipButton, *disableButton;
+	AppUpdater* updater;
 };
