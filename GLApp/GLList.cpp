@@ -1624,52 +1624,7 @@ void GLList::CopySelectionToClipboard() {
 
 	if( clipboardData.str().empty() ) return;
 
-#ifdef WIN
-
-	if( !OpenClipboard(NULL) )
-		return;
-
-	EmptyClipboard();
-
-	HGLOBAL hText = NULL;
-	char   *lpszText;
-
-	if(!(hText = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, clipboardData.str().length()/*+1*/ ))) {
-		CloseClipboard();
-		return; 
-	}
-	if(!(lpszText = (char *)GlobalLock(hText))) {
-		CloseClipboard();
-		GlobalFree(hText);
-		return;
-	}
-
-	/*
-	for(int s=0;s<selectedRows.size();s++) {
-		for(int j=0;j<nbCol;j++) {
-			char *v = GetValueAt(j,selectedRows[s]);
-			if( v ) {
-				strcpy(lpszText,v);
-				lpszText += strlen(v);
-			}
-			if( j<nbCol-1 ) {
-				*lpszText++ = '\t';
-			} 
-		}
-		*lpszText++ = '\r';
-		*lpszText++ = '\n';
-	}
-	*lpszText++ = 0;
-	*/
-	std::string tmp = clipboardData.str();
-	strcpy(lpszText,tmp.c_str());
-
-	SetClipboardData(CF_TEXT,hText);
-	GlobalUnlock (hText);
-	CloseClipboard();
-	GlobalFree(hText);
-
-#endif
+	GLToolkit::CopyTextToClipboard(clipboardData.str());
 
 }
 

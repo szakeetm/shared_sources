@@ -101,6 +101,37 @@ void GLToolkit::InvalidateDeviceObjects() {
 
 }
 
+void GLToolkit::CopyTextToClipboard(const std::string & text)
+{
+#ifdef WIN
+
+	if (!OpenClipboard(NULL))
+		return;
+
+	EmptyClipboard();
+
+	HGLOBAL hText = NULL;
+	char   *lpszText;
+
+	if (!(hText = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, text.length() + 1))) {
+		CloseClipboard();
+		return;
+	}
+	if (!(lpszText = (char *)GlobalLock(hText))) {
+		CloseClipboard();
+		GlobalFree(hText);
+		return;
+	}
+
+	strcpy(lpszText, text.c_str());
+	SetClipboardData(CF_TEXT, hText);
+	GlobalUnlock(hText);
+	CloseClipboard();
+	GlobalFree(hText);
+
+#endif
+}
+
 int GLToolkit::GetCursor() {
   return currentCursor;
 }

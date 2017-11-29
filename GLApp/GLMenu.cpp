@@ -19,6 +19,9 @@
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
 #include "MathTools.h" //Saturate
+#include "GLApp.h"
+
+extern GLApplication* theApp;
 
 //#include <malloc.h>
 
@@ -340,8 +343,9 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   if(sub) sub->ManageEvent(evt);
 
   if (IsVisible()) {
-	  GLWindowManager::Repaint();
-	  Sleep(30);
+	  /*GLWindowManager::Repaint();
+	  Sleep(30);*/
+	  theApp->wereEvents = true;
   }
 }
 
@@ -559,14 +563,16 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
     }
 
 	if( IsVisible() ) {
-      GLWindowManager::Repaint();
-      Sleep(30);
+      /*GLWindowManager::Repaint();
+      Sleep(30);*/
+		theApp->wereEvents = true;
     }
 
   }
 
   parent->UnfreezeComp();
-  GLWindowManager::FullRepaint();
+  //GLWindowManager::FullRepaint();
+  theApp->wereEvents = true;
   return rCode;
 
 }

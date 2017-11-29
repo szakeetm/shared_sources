@@ -340,33 +340,7 @@ void  GLTextField::CopyClipboardText() {
  strcpy(tmp,&(m_Text[min]));
  tmp[max-min]=0;
 
-#ifdef WIN
-
- if( !OpenClipboard(NULL) )
-   return;
-
- EmptyClipboard();
-
- HGLOBAL hText = NULL;
- char   *lpszText;
-
- if(!(hText = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, strlen(tmp)+1 ))) {
-   CloseClipboard();
-   return; 
- }
- if(!(lpszText = (char *)GlobalLock(hText))) {
-   CloseClipboard();
-   GlobalFree(hText);
-   return;
- }
-
- strcpy(lpszText,tmp);
- SetClipboardData(CF_TEXT,hText);
- GlobalUnlock (hText);
- CloseClipboard();
- GlobalFree(hText);
-
-#endif
+ GLToolkit::CopyTextToClipboard(tmp);
 
 }
 

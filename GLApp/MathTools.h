@@ -9,7 +9,7 @@ double Pow10(const double& a);
 template <typename TYPE> TYPE Min(const TYPE& x, const TYPE& y) { return (x < y) ? x : y; }
 template <typename TYPE> TYPE Max(const TYPE& x, const TYPE& y) { return (x < y) ? y : x; }
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
-size_t  IDX(int i, size_t nb);
+size_t IDX(int i, size_t nb);
 size_t IDX(size_t i, size_t nb);
 size_t Next(int i, size_t nb);
 size_t Next(size_t i, size_t nb);
@@ -42,11 +42,11 @@ double InterpolateVectorX(const double& y, const std::vector<std::pair<double, s
 double QuadraticInterpolateX(const double & y, const double & a, const double & b, const double & c, const double & FA, const double & FB, const double & FC);
 //double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& allowExtrapolate = false);
 
-template <typename TYPE> bool Contains(std::vector<TYPE> vec, const TYPE& value) {
+template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) != vec.end());
 }
 
-template <typename TYPE> size_t FirstIndex(std::vector<TYPE> vec, const TYPE& value) {
+template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
@@ -61,8 +61,6 @@ int my_lower_bound(const double& key, double* A,const size_t& size);
 int my_lower_bound(const double& key, const std::vector<double>& A);
 int my_lower_bound(const double& key, const std::vector<std::pair<double, double>>& A, const bool& first);
 int my_lower_bound(const double& key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool& first, const size_t& elementIndex);
-
-
 
 int weighed_lower_bound_X(const double& key, const double& weigh, double* A, double* B, const size_t& size);
 

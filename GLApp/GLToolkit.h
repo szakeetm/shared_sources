@@ -18,6 +18,7 @@
 
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <string>
 #include "GLTypes.h"
 #include "GLFont.h"
 //class GLFont2D;
@@ -110,6 +111,7 @@ public:
   static bool RestoreDeviceObjects(const int &width,const int &height);
   static void InvalidateDeviceObjects();
 
+  static void CopyTextToClipboard(const std::string& text);
 };
 
 #endif /* _GLTOOLKITH_ */

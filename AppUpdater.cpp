@@ -7,7 +7,7 @@
 #include "GLApp\MathTools.h" //Contains
 
 #include "GLApp/GLToolkit.h"
-//#include "GLApp/GLWindowManager.h"
+#include "GLApp/GLList.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
@@ -81,9 +81,12 @@ void AppUpdater::SkipAvailableUpdates()
 	SaveConfig();
 }
 
-std::string AppUpdater::InstallLatestUpdate()
+void AppUpdater::InstallLatestUpdate(UpdateLogWindow* logWindow)
 {
-	return DownloadInstallUpdate(GetLatest(availableUpdates));
+	UpdateManifest latestUpdate = GetLatest(availableUpdates);
+	std::thread t = std::thread(&AppUpdater::DownloadInstallUpdate,this,latestUpdate,logWindow);
+	t.detach();
+	//DownloadInstallUpdate(GetLatest(availableUpdates),logWindow);
 }
 
 void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates)
@@ -149,6 +152,7 @@ void AppUpdater::PerformUpdateCheck() {
 			//Should get the same hash even in case of subsequent installs
 
 			GenerateUserId();
+			SaveConfig();
 		}
 
 		std::stringstream payload;
@@ -244,21 +248,26 @@ void AppUpdater::GenerateUserId() {
 	}
 }
 
-std::string AppUpdater::DownloadInstallUpdate(const UpdateManifest& update) {
+void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow) {
+	//logWindow->Log("[Background update thread started.]");
 
 	std::stringstream payload;
 	payload << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << "updateStart" << "&ea=" << "updateStart_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+	logWindow->Log("Downloading update file...");
 
 	std::string resultCategory;
 	std::stringstream resultDetail;
-	std::stringstream userResult; //Reported to the user
+	std::stringstream userResult;
 
 	//Download the zipped new version to parent directory
 	std::stringstream zipDest; zipDest << "..\\" << update.zipName;
 	CURLcode dlResult = DownloadFile(update.zipUrl, zipDest.str());
 	if (dlResult == CURLE_OK) { //Download success
-		userResult << "Downloaded\n" << update.zipUrl << "\nto\n" << zipDest.str() << "\n\n";
+		userResult.str("");
+		userResult.clear();
+		userResult << "Downloaded " << update.zipUrl << " to " << zipDest.str();
+		logWindow->Log(userResult.str());
 
 		//Extract it to LOCAL directory (no way to directly extract to parent)
 		HZIP hz = OpenZip(zipDest.str().c_str(), 0);
@@ -266,7 +275,10 @@ std::string AppUpdater::DownloadInstallUpdate(const UpdateManifest& update) {
 		ZRESULT zipResult = GetZipItem(hz, -1, &ze);
 		int numitems = ze.index;
 		if (zipResult == ZR_OK) {
-			userResult << update.zipName << " opened, it contains " << numitems << "files.\n\n";
+			userResult.str("");
+			userResult.clear();
+			userResult << update.zipName << " opened, it contains " << numitems << " files.";
+			logWindow->Log(userResult.str());
 
 			// -1 gives overall information about the zipfile
 			for (int zi = 0; zi < numitems; zi++)
@@ -274,56 +286,87 @@ std::string AppUpdater::DownloadInstallUpdate(const UpdateManifest& update) {
 				ZIPENTRY ze;
 				zipResult = GetZipItem(hz, zi, &ze); // fetch individual details
 				if (zipResult == ZR_OK) {
-					UnzipItem(hz, zi, ze.name);           // e.g. the item's name.
+					if (UnzipItem(hz, zi, ze.name) != ZR_OK) {
+						resultCategory = "zipExtractError";
+						resultDetail << "zipExtractError_" << zipResult << "_item_" << zi << "_" << applicationName << "_" << currentVersionId;
+						userResult.str(""); userResult.clear();
+						userResult << "Couldn't extract item " << zi << " of " << update.zipName << ". Maybe it already exists in your app folder (from a previous update), or you don't have permission to write in the destination.";
+						logWindow->Log(userResult.str());
+						logWindow->Log("Aborting update process.");
+						break;
+					}
 				}
 				else {
 					resultCategory = "zipItemError";
 					resultDetail << "zipItemError_" << zipResult << "_item_" << zi << "_" << applicationName << "_" << currentVersionId;
-					userResult << "Couldn't open item " << zi << " of " << update.zipName << "\nUpdate process aborted.\n";
+					userResult.str(""); userResult.clear();
+					userResult << "Couldn't open item " << zi << " of " << update.zipName;
+					logWindow->Log(userResult.str());
+					logWindow->Log("Aborting update process.");
 					break;
 				}
 			}
 			CloseZip(hz);
 
 			if (zipResult == ZR_OK) {
-				userResult << "All files extracted.\n\n";
+				userResult.str(""); userResult.clear();
+				userResult << "All files extracted.";
+				logWindow->Log(userResult.str());
 
 				//ZIP file not required anymore
 				if (DeleteFile(zipDest.str().c_str()) == 0) {
 					resultCategory = "zipDeleteError";
 					resultDetail << "zipDeleteError_" << applicationName << "_" << currentVersionId;
-					userResult << "Couldn't delete " << update.zipName << "\nUpdate process aborted.\n";
+					userResult.str(""); userResult.clear();
+					userResult << "Couldn't delete " << update.zipName;
+					logWindow->Log(userResult.str());
+					logWindow->Log("Aborting update process.");
 				}
 				else {
-					userResult << update.zipName << " deleted.\n\n";
+					userResult.str(""); userResult.clear();
+					userResult << update.zipName << " deleted.";
+					logWindow->Log(userResult.str());
 					//Move extracted dir to parent dir
 					std::stringstream folderDest; folderDest << "..\\" << update.folderName;
 					if (MoveFileEx(update.folderName.c_str(), folderDest.str().c_str(), MOVEFILE_WRITE_THROUGH) == 0) {
 						resultCategory = "folderMoveError";
 						resultDetail << "folderMoveError_" << applicationName << "_" << currentVersionId;
-						userResult << "Couldn't move\n" << update.folderName << "\nto\n" << folderDest.str() << "\nUpdate process aborted.\n";
+						userResult.str(""); userResult.clear();
+						userResult << "Couldn't move " << update.folderName << " to " << folderDest.str() << "  The folder already exists or you don't have permission to write there.";
+						logWindow->Log(userResult.str());
+						logWindow->Log("Aborting update process.");
+
 					}
 					else {
-						userResult << "Moved the extracted folder\n" << update.folderName << "\nto\n" << folderDest.str() << "\n\n";
+						userResult.str(""); userResult.clear();
+						userResult << "Moved the extracted folder " << update.folderName << " to " << folderDest.str();
+						logWindow->Log(userResult.str());
 						//Copy current config file to new version's dir
 						for (auto copyFile : update.filesToCopy) {
 							std::stringstream configDest; configDest << folderDest.str() << "\\" << copyFile;
 							if (CopyFile(copyFile.c_str(), configDest.str().c_str(), false) == 0) {
 								resultCategory = "fileCopyWarning";
 								resultDetail << "fileCopyWarning_" << copyFile << "_" << applicationName << "_" << currentVersionId;
-								userResult << "Couldn't copy\n" << copyFile << "\nto\n" << configDest.str() << "\nFile skipped.\n";
+								userResult.str(""); userResult.clear();
+								userResult << "Couldn't copy " << copyFile << " to " << configDest.str() << "  File skipped.";
+								logWindow->Log(userResult.str());
 								
 								std::stringstream payload2;
 								payload2 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
 								SendHTTPPostRequest("http://www.google-analytics.com/collect", payload2.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 							}
 							else {
-								userResult << "Copied the file\n" << copyFile << "\nto\n" << configDest.str() << "\n\n";
+								userResult.str(""); userResult.clear();
+								userResult << "Copied " << copyFile << " to " << configDest.str();
+								logWindow->Log(userResult.str());
 							}
 						}
 						resultCategory = "updateSuccess";
 						resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" <<update.versionId;
-						userResult << "Update successful. If you wish, you can now close this version\nand launch the new one in the adjacent " << folderDest.str() << " folder.\n";
+						logWindow->Log("Update successful.");
+						userResult.str(""); userResult.clear();
+						userResult << "If you wish, you can now close this version and launch the new one in the adjacent " << folderDest.str() << " folder.";
+						logWindow->Log(userResult.str());
 					}
 				}
 			}
@@ -332,21 +375,26 @@ std::string AppUpdater::DownloadInstallUpdate(const UpdateManifest& update) {
 			CloseZip(hz);
 			resultCategory = "zipItemError";
 			resultDetail << "zipItemError_" << zipResult << "_item_-1_" << applicationName << "_" << currentVersionId;
-			userResult << "Couldn't open " << update.zipName << "\nUpdate process aborted.";
+			userResult.str(""); userResult.clear();
+			userResult << "Couldn't open " << update.zipName;
+			logWindow->Log(userResult.str());
+			logWindow->Log("Aborting update process.");
 		}
 	}
 	else {
 		resultCategory = "zipDownloadError";
 		resultDetail << "zipDownloadError_" << dlResult << "_" << applicationName << "_" << currentVersionId;
-		userResult << "Couldn't download \n" << update.zipUrl << "\nto\n" << zipDest.str() << "\nUpdate process aborted.";
+		userResult.str(""); userResult.clear();
+		userResult << "Couldn't download " << update.zipUrl << " to " << zipDest.str() << " No network connection or the file doesn't exist on the server.";
+		logWindow->Log(userResult.str());
+		logWindow->Log("Aborting update process.");
 	}
 
 	std::stringstream payload3;
 	payload3 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload3.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 
-	return userResult.str();
-	//Optionally run "..\app_name.exe" and exit
+	//logWindow->Log("[Background update thread closed.]");
 }
 
 void AppUpdater::IncreaseSessionCount()
@@ -463,9 +511,10 @@ there isn't any network communication later.
 	GLWindow::ProcessMessage(src, message);
 }
 
-UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater)
+UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow)
 {
 	updater = appUpdater;
+	logWnd = logWindow;
 
 	std::stringstream question;
 	question << appName << " " << appUpdater->GetLatestUpdateName() << " is available.\n";
@@ -520,7 +569,9 @@ void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 
 
 		if (src == updateButton) {
-			GLMessageBox::Display(updater->InstallLatestUpdate(), "Updater result", { "OK" }, GLDLG_ICONINFO);
+			logWnd->ClearLog();
+			logWnd->SetVisible(true);
+			updater->InstallLatestUpdate(logWnd);
 			updater->ClearAvailableUpdates();
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 		}
@@ -538,6 +589,101 @@ void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 			updater->SetUserUpdatePreference(false);
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 		}
+		break;
+	}
+	GLWindow::ProcessMessage(src, message);
+}
+
+UpdateLogWindow::UpdateLogWindow(Interface *app)
+{
+	isLocked = true;
+
+	mApp = app;
+	
+	int wD = 400;
+	int hD = 250;
+
+	logList = new GLList(0);
+	
+	logList->SetColumnLabelVisible(true);
+	logList->SetSize(1, 1);
+	logList->SetBounds(5, 5, wD - 10, hD - 60);
+	logList->SetColumnWidthForAll(600);
+	Add(logList);
+
+	okButton = new GLButton(0, "Dismiss");
+	okButton->SetBounds(10, hD - 45, 80, 19);
+	Add(okButton);
+
+	copyButton = new GLButton(0, "Copy to clipboard");
+	copyButton->SetBounds(wD-115, hD - 45, 100, 19);
+	Add(copyButton);
+
+	SetTitle("Update log");
+	//Set to lower right corner
+	int wS, hS;
+	GLToolkit::GetScreenSize(&wS, &hS);
+	int xD = (wS - wD) - 217;
+	int yD = 50;
+	SetBounds(xD, yD, wD, hD);
+
+	RestoreDeviceObjects();
+	isLocked = false;
+}
+
+void UpdateLogWindow::ClearLog()
+{
+	lines.clear();
+	if (!isLocked) {
+		isLocked = true;
+		RebuildList();
+		mApp->wereEvents = true;
+		isLocked = false;
+	}
+	else {
+		__debugbreak();
+	}
+}
+
+void UpdateLogWindow::Log(const std::string & line)
+{
+	lines.push_back(line);
+	if (!isLocked) {
+		isLocked = true;
+		RebuildList();
+		mApp->wereEvents = true;
+		isLocked = false;
+	}
+	else {
+		__debugbreak();
+	}
+}
+
+void UpdateLogWindow::RebuildList()
+{
+	logList->SetSize(1, lines.size(), false, false);
+	logList->SetColumnWidthForAll(600);
+	for (size_t i = 0; i < lines.size(); i++) {
+		logList->SetValueAt(0, i, lines[i].c_str());
+	}
+}
+
+void UpdateLogWindow::ProcessMessage(GLComponent *src, int message) {
+
+	switch (message) {
+	case MSG_BUTTON:
+
+
+		if (src == okButton) {
+			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+		}
+		else if (src == copyButton) {
+			std::ostringstream text;
+			for (auto line : lines)
+				text << line <<"\n";
+			GLToolkit::CopyTextToClipboard(text.str());
+		}
+		
 		break;
 	}
 	GLWindow::ProcessMessage(src, message);

@@ -2,6 +2,7 @@
 #include <direct.h> //_getcwd()
 #include <io.h> // Check for recovery
 #include <filesystem>
+#include "AppUpdater.h"
 
 #include "GLApp/GLFileBox.h"
 #include "GLApp/GLMessageBox.h"
@@ -142,14 +143,15 @@ Interface::Interface() {
 	smartSelection = NULL;
 	updateCheckDialog = NULL;
 	updateFoundDialog = NULL;
+	updateLogWindow = NULL;
 
 	m_strWindowTitle = appTitle;
 	wnd->SetBackgroundColor(212, 208, 200);
 	m_bResizable = true;
 	m_minScreenWidth = 800;
 	m_minScreenHeight = 600;
-	tolerance = 1e-8;
-	largeArea = 1.0;
+	coplanarityTolerance = 1e-8;
+	largeAreaThreshold = 1.0;
 	planarityThreshold = 1e-5;
 }
 
@@ -694,7 +696,7 @@ int Interface::OnExit() {
 	return GL_OK;
 }
 
-int Interface::OneTimeSceneInit_shared() {
+void Interface::OneTimeSceneInit_shared_pre() {
 	GLToolkit::SetIcon32x32("images/app_icon.png");
 
 	for (int i = 0; i < MAX_VIEWER; i++) {
@@ -998,8 +1000,34 @@ int Interface::OneTimeSceneInit_shared() {
 	facetApplyBtn = new GLButton(0, "Apply");
 	facetApplyBtn->SetEnabled(false);
 	facetPanel->Add(facetApplyBtn);
+}
 
-	return GL_OK;
+void Interface::OneTimeSceneInit_shared_post() {
+	ClearFacetParams();
+	LoadConfig();
+	UpdateRecentMenu();
+	UpdateViewerPanel();
+	PlaceComponents();
+	CheckNeedsTexture();
+
+	try {
+		worker.SetProcNumber(nbProc);
+	}
+	catch (Error &e) {
+		char errMsg[512];
+		sprintf(errMsg, "Failed to start working sub-process(es), simulation not available\n%s", e.GetMsg());
+		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
+	}
+
+	EmptyGeometry();
+
+	appUpdater = new AppUpdater(appName, appVersionId, "updater_config.xml");
+	int answer = appUpdater->RequestUpdateCheck();
+	if (answer == ANSWER_ASKNOW) {
+		updateCheckDialog = new UpdateCheckDialog(appName, appUpdater);
+		updateCheckDialog->SetVisible(true);
+		wereEvents = true;
+	}
 }
 
 int Interface::RestoreDeviceObjects_shared() {
@@ -1033,6 +1061,7 @@ int Interface::RestoreDeviceObjects_shared() {
 
 	RVALIDATE_DLG(updateCheckDialog);
 	RVALIDATE_DLG(updateFoundDialog);
+	RVALIDATE_DLG(updateLogWindow);
 
 	UpdateTitle();
 
@@ -1070,6 +1099,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 
 	IVALIDATE_DLG(updateCheckDialog);
 	IVALIDATE_DLG(updateFoundDialog);
+	IVALIDATE_DLG(updateLogWindow);
 
 	UpdateTitle();
 
@@ -1375,21 +1405,21 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 
 		case MENU_FACET_SELECTNOHITS_AREA:
 
-			sprintf(tmp, "%g", largeArea);
+			sprintf(tmp, "%g", largeAreaThreshold);
 			//sprintf(title,"Pipe L/R = %g",L/R);
 			input = GLInputBox::GetInput(tmp, "Min.area (cm\262)", "Select large facets without hits");
 			if (!input) return true;
-			if ((sscanf(input, "%lf", &largeArea) <= 0) || (largeArea <= 0.0)) {
+			if ((sscanf(input, "%lf", &largeAreaThreshold) <= 0) || (largeAreaThreshold <= 0.0)) {
 				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return true;
 			}
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeArea)
+				if (geom->GetFacet(i)->counterCache.hit.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 #ifdef SYNRAD
-				if (geom->GetFacet(i)->counterCache.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeArea)
+				if (geom->GetFacet(i)->counterCache.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1513,15 +1543,15 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 					return true;
 				}
-				sprintf(tmp, "%g", tolerance);
+				sprintf(tmp, "%g", coplanarityTolerance);
 				//sprintf(title,"Pipe L/R = %g",L/R);
 				input = GLInputBox::GetInput(tmp, "Tolerance (cm)", "Select coplanar vertices");
 				if (!input) return true;
-				if ((sscanf(input, "%lf", &tolerance) <= 0) || (tolerance <= 0.0)) {
+				if ((sscanf(input, "%lf", &coplanarityTolerance) <= 0) || (coplanarityTolerance <= 0.0)) {
 					GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return true;
 				}
-				try { viewer[curViewer]->SelectCoplanar(tolerance); }
+				try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
 				catch (Error &e) {
 					GLMessageBox::Display((char *)e.GetMsg(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
 				}
@@ -2671,9 +2701,13 @@ int Interface::FrameMove()
 
 	//Check if app updater has found updates
 	if (appUpdater && appUpdater->IsUpdateAvailable()) {
+		if (!updateLogWindow) {
+			updateLogWindow = new UpdateLogWindow(this);
+		}
 		if (!updateFoundDialog) {
-			updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater);
+			updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
 			updateFoundDialog->SetVisible(true);
+			wereEvents = true;
 		}
 	}
 

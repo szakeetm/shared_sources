@@ -5,7 +5,6 @@
 
 #include "Worker.h"
 #include "GeometryViewer.h"
-#include "AppUpdater.h"
 
 #include "GLApp/GLApp.h"
 #include "GLApp\GLParser.h"
@@ -46,6 +45,7 @@ class AddVertex;
 class FormulaEditor;
 class UpdateCheckDialog;
 class UpdateFoundDialog;
+class UpdateLogWindow;
 
 class Geometry;
 
@@ -189,6 +189,8 @@ static const char *fileSelFilters = "Selection files\0*.sel\0All files\0*.*\0";
 static const char *fileTexFilters = "Text files\0*.txt\0All files\0*.*\0";
 static const char *fileProfFilters = "CSV file\0*.csv\0Text files\0*.txt\0All files\0*.*\0";
 
+class AppUpdater;
+
 class Interface : public GLApplication {
 protected:
 	Interface();
@@ -196,6 +198,8 @@ protected:
 	virtual void UpdateFacetHits(bool allRows=false) {}
 	//virtual void UpdateFormula() {}
 	virtual bool EvaluateVariable(VLIST *v) { return false; }
+	virtual void ClearFacetParams() {}
+	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
 	virtual void BuildPipe(double ratio, int steps = 0) {}
@@ -226,8 +230,8 @@ public:
 	bool     antiAliasing;
 	bool     whiteBg;
 	float    lastMeasTime; // Last measurement time (for hps and dps)
-	double   tolerance; //Select coplanar tolerance
-	double   largeArea; //Selection filter
+	double   coplanarityTolerance; //Select coplanar tolerance
+	double   largeAreaThreshold; //Selection filter
 	double   planarityThreshold; //Planarity threshold
 	
 	AppUpdater* appUpdater;
@@ -380,6 +384,7 @@ public:
 
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
+	UpdateLogWindow   *updateLogWindow;
 
 	// Current directory
 	void UpdateCurrentDir(char *fileName);
@@ -445,7 +450,8 @@ public:
 	void DoEvents(bool forced = false); //Used to catch button presses (check if an abort button was pressed during an operation)
 
 protected:
-	int OneTimeSceneInit_shared();
+	void OneTimeSceneInit_shared_pre();
+	void OneTimeSceneInit_shared_post();
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
 	bool ProcessMessage_shared(GLComponent *src, int message);

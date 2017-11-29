@@ -19,7 +19,10 @@
 #include "MathTools.h" //Saturate
 #include "GLChart\GLChart.h"
 #include "GLLabel.h"
+#include "GLApp.h"
 #include <math.h>
+
+extern GLApplication* theApp;
 
 // Rainbow
 COLORREF rainbowCol[] = { 0x000000,   //Black
@@ -257,7 +260,7 @@ void GLGradient::ManageEvent(SDL_Event *evt) {
       } else {
         cursorPos = -1.0;
       }
-
+	  theApp->wereEvents = true;
       break;
     }
 

@@ -1,3 +1,96 @@
+/*
+App updater methods and dialogs.
+Adding it to a program requires the following:
+
+----------On program startup----------
+- Create a new instance of the AppUpdater class
+- Call the RequestUpdateCheck() method
+- If the return value is ANSWER_ASKNOW, display a dialog (for example the included UpdateCheckDialog) where the user can decide whether he wants update checks. Based on his answer call SetUserUpdatePreference(bool answer) method
+
+----------On program exit-------------
+- Call IncreaseSessionCount()
+
+----------Periodically during the program run (for example in the main event loop)-----------
+- Check for background update check process' result:
+- IsUpdateAvailable() tells if an update was found
+	- (Optional) Create a log window that has a public method Log(string message) to see the update process result. You can use the included UpdateLogWindow
+	- If IsUpdateAvailable() is true, display a dialog (for example the included UpdateFoundDialog to ask whether to install that update)
+
+	- If the users asks to install, call InstallLatestUpdate(), then ClearAvailableUpdates()
+	- If he asks to skip the available update(s), call SkipAvailableUpdates(), then ClearAvailableUpdates();
+	- If he asks to ask later, call ClearAvailableUpdates()
+	- If he asks to disable update checking, call ClearAvailableUpdates() then SetUserUpdatePreference(false);
+
+---------In program settings window------------
+- Query update check setting by IsUpdateCheckAllowed()
+- Set update check setting by SetUserUpdatePreference()
+
+--------Shipped config file--------------------
+<?xml version="1.0"?>
+<UpdaterConfigFile>
+	<ServerConfig>
+		<RemoteFeed url="https://company.com/autoupdate.xml" />
+		<PublicWebsite url="https://company.com/" downloadsPage="https://company.com/content/downloads" />
+		<GoogleAnalytics projectId="UA-12345678-1" />
+	</ServerConfig>
+	<LocalConfig>
+		<Permission allowUpdateCheck="false" appLaunchedBeforeAsking="0" askAfterNbLaunches="3" />
+		<Branch name="appname_public" />
+		<GoogleAnalytics cookie="not_set" />
+		<SkippedVersions />
+	</LocalConfig>
+</UpdaterConfigFile>
+
+------------Example implementation in Molflow/Synrad--------------
+-----In Interface::OneTimeSceneInit_post()----------
+
+appUpdater = new AppUpdater(appName, appVersionId, "updater_config.xml");
+int answer = appUpdater->RequestUpdateCheck();
+if (answer == ANSWER_ASKNOW) {
+updateCheckDialog = new UpdateCheckDialog(appName, appUpdater);
+updateCheckDialog->SetVisible(true);
+wereEvents = true;
+
+----In GlobalSettings-------------
+
+if (mApp->appUpdater) { //Updater initialized
+	chkCheckForUpdates->SetState(mApp->appUpdater->IsUpdateCheckAllowed());
+}
+//...
+if (mApp->appUpdater) {
+	if (mApp->appUpdater->IsUpdateCheckAllowed() != updateCheckPreference) {
+		mApp->appUpdater->SetUserUpdatePreference(updateCheckPreference);
+	}
+}
+
+
+---In interface constructor ----------
+appUpdater = NULL; //We'll initialize later, when the app name and version id is known
+
+---In Interface::OnExit()-------------
+if (appUpdater) {
+	appUpdater->IncreaseSessionCount();
+}
+
+
+-----in Interface::FrameMove()-----------
+//Check if app updater has found updates
+if (appUpdater && appUpdater->IsUpdateAvailable()) {
+	if (!updateLogWindow) {
+		updateLogWindow = new UpdateLogWindow(this);
+	}
+	if (!updateFoundDialog) {
+		updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
+		updateFoundDialog->SetVisible(true);
+		wereEvents = true;
+		}
+	}
+}
+
+
+
+*/
+
 #pragma once
 #include <string>
 #include <vector>
@@ -6,6 +99,7 @@
 #include <PugiXML\pugixml.hpp>
 using namespace pugi;
 #include "GLApp/GLWindow.h"
+#include "Interface.h" //DoEvents
 
 #define ANSWER_DONTASKYET 1
 #define ANSWER_ALREADYDECIDED 2
@@ -24,6 +118,42 @@ public:
 	std::vector<std::string> filesToCopy; //Config files to copy to new dir
 };
 
+class GLButton;
+class GLLabel;
+class GLList;
+
+class UpdateLogWindow : public GLWindow {
+public:
+	UpdateLogWindow(Interface* mApp);
+
+	// Implementation
+	void ProcessMessage(GLComponent *src, int message);
+	void ClearLog();
+	void Log(const std::string& line);
+private:
+	void RebuildList();
+	GLList *logList;
+	GLButton *okButton,*copyButton;
+	std::vector<std::string> lines;
+	Interface* mApp;
+	bool isLocked;
+};
+
+class AppUpdater;
+
+class UpdateFoundDialog : public GLWindow {
+public:
+	UpdateFoundDialog(const std::string& appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow);
+
+	// Implementation
+	void ProcessMessage(GLComponent *src, int message);
+private:
+	GLLabel *questionLabel;
+	GLButton *updateButton, *laterButton, *skipButton, *disableButton;
+	AppUpdater* updater;
+	UpdateLogWindow* logWnd;
+};
+
 class AppUpdater {
 public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
@@ -38,7 +168,7 @@ public:
 
 	void SetUserUpdatePreference(bool answer);
 	void SkipAvailableUpdates();
-	std::string InstallLatestUpdate();
+	void InstallLatestUpdate(UpdateLogWindow* logWindow);
 	void IncreaseSessionCount();
 	
 private:
@@ -68,7 +198,7 @@ private:
 	void PerformUpdateCheck(); //Actually check for updates (once we have user permission)
 	
 	std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
-	std::string DownloadInstallUpdate(const UpdateManifest& update); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
+	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
 	UpdateManifest GetLatest(const std::vector<UpdateManifest>& updates);
 	std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
@@ -78,9 +208,6 @@ private:
 	
 };
 
-class GLButton;
-class GLLabel;
-
 class UpdateCheckDialog : public GLWindow {
 public:
 	UpdateCheckDialog(const std::string& appName, AppUpdater* appUpdater);
@@ -89,18 +216,6 @@ public:
 	void ProcessMessage(GLComponent *src, int message);
 private:
 	GLLabel *questionLabel;
-	GLButton *allowButton,*declineButton,*laterButton,*privacyButton;
-	AppUpdater* updater;
-};
-
-class UpdateFoundDialog : public GLWindow {
-public:
-	UpdateFoundDialog(const std::string& appName, const std::string& appVersionName, AppUpdater* appUpdater);
-
-	// Implementation
-	void ProcessMessage(GLComponent *src, int message);
-private:
-	GLLabel *questionLabel;
-	GLButton *updateButton, *laterButton, *skipButton, *disableButton;
+	GLButton *allowButton, *declineButton, *laterButton, *privacyButton;
 	AppUpdater* updater;
 };
