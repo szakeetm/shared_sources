@@ -971,16 +971,18 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 	volumeVisible = f->volumeVisible;
 	selected = f->selected;
 	
-	/*
-	//These should be calculated by init
-	sh.area = f->sh.area;
+	
+	//These are required for the collapse routine
+	
 	a = f->a;
 	b = f->b;
 	c = f->c;
 	d = f->d;
-	err = f->err;
+	
+	//sh.area = f->sh.area;
+	//err = f->err;
 	sh.N = f->sh.N;
-	*/
+	
 }
 
 FacetGroup Facet::Explode()

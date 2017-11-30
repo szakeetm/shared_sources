@@ -485,8 +485,8 @@ void Interface::UpdateModelParams() {
 	facetList->SetSize(cSize, geom->GetNbFacet(), false, true);
 	facetList->SetColumnWidths((int*)cWidth);
 	facetList->SetColumnLabels((char **)cName);
-
 	UpdateFacetHits(true);
+	UpdateFacetlistSelected();
 	AABB bb = geom->GetBB();
 
 	for (int i = 0; i < geom->GetNbFacet(); i++) {

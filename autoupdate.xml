@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<UpdateFeed>
+	<Branches>
+		<Branch name="molflow_public" description="MolFlow+ stable releases">
+			
+		</Branch>
+		
+		<Branch name="synrad_public" description="SynRad+ stable releases">
+			<UpdateManifest>
+				<Version id="1419" name="1.4.19" date="29-11-2017" />
+				<ChangeLog>
+<![CDATA[
+Bugfix
+- Wrong relaunch angle at teleport
+- Fixed not saving "shade lines" and "show teleports" viewer settings
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/synrad_1.4.19.zip" zipName="synrad_1.4.19.zip" folderName="synrad_1.4.19" />
+				<FilesToCopy>
+					<File name="synrad.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+		</Branch>
+		
+		<Branch name="molflow_test" description="MolFlow+ versions for internal testing at CERN">
+		
+			<UpdateManifest>
+				<Version id="26800" name="2.6.80" date="21-11-2017" />
+				<ChangeLog>
+<![CDATA[
+Feature2
+- New feature2
+Bugfix2
+- Bugfix 12
+- Bugfix 22
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.61.zip" zipName="molflow_2.6.61.zip" folderName="molflow_2.6.61" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+			
+		</Branch>
+	</Branches>
+</UpdateFeed>

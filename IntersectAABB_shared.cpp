@@ -468,14 +468,13 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(const Vector3d& rayPos, con
 
 	if (found) {
 
-		//ProfileFacet(f,sHandle->flightTimeCurrentParticle+*dist/100.0/sHandle->velocityCurrentParticle); //Can't profile here because we don't know yet if it's a bounce, absorption, etc
 		collidedFacet->hitted = true;
 
 		// Second pass for transparent hits
 		for (size_t i = 0; i<intNbTHits; i++) {
-			SubprocessFacet* tpFacet = THitCache[i];
-			if (tpFacet->colDist < minLength) {
-				tpFacet->RegisterTransparentPass();
+			SubprocessFacet& tpFacet = *THitCache[i];
+			if (tpFacet.colDist < minLength) {
+				tpFacet.RegisterTransparentPass();
 			}
 		}
 
