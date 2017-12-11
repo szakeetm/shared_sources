@@ -1118,26 +1118,26 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		switch (src->GetId()) {
 		case MENU_FILE_NEW:
 			if (AskToSave()) {
-				if (worker.running) worker.Stop_Public();
+				if (worker.isRunning) worker.Stop_Public();
 				EmptyGeometry();
 			}
 			return true;
 		case MENU_FILE_LOAD:
 			if (AskToSave()) {
-				if (worker.running) worker.Stop_Public();
+				if (worker.isRunning) worker.Stop_Public();
 				LoadFile();
 			}
 			return true;
 		case MENU_FILE_INSERTGEO:
 			if (geom->IsLoaded()) {
-				if (worker.running) worker.Stop_Public();
+				if (worker.isRunning) worker.Stop_Public();
 				InsertGeometry(false);
 			}
 			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 			return true;
 		case MENU_FILE_INSERTGEO_NEWSTR:
 			if (geom->IsLoaded()) {
-				if (worker.running) worker.Stop_Public();
+				if (worker.isRunning) worker.Stop_Public();
 				InsertGeometry(true);
 			}
 			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -1649,7 +1649,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		// Load recent menu
 		if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + nbRecent) {
 			if (AskToSave()) {
-				if (worker.running) worker.Stop_Public();
+				if (worker.isRunning) worker.Stop_Public();
 				LoadFile(recents[src->GetId() - MENU_FILE_LOADRECENT]);
 			}
 			return true;
@@ -2594,7 +2594,7 @@ int Interface::FrameMove()
 	bool timeForAutoSave = false;
 	if (geom->IsLoaded()) {
 		if (autoSaveSimuOnly) {
-			if (worker.running) {
+			if (worker.isRunning) {
 				if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >= (float)autoSaveFrequency*60.0f) {
 					timeForAutoSave = true;
 				}
@@ -2607,7 +2607,7 @@ int Interface::FrameMove()
 		}
 	}
 	
-	if (worker.running) {
+	if (worker.isRunning) {
 		if (m_fTime - lastUpdate >= 1.0f) {
 
 			sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
@@ -2718,9 +2718,9 @@ int Interface::FrameMove()
 	else {
 		leakNumber->SetText("None");
 	}
-	resetSimu->SetEnabled(!worker.running&&worker.nbDesorption > 0);
+	resetSimu->SetEnabled(!worker.isRunning&&worker.nbDesorption > 0);
 
-	if (worker.running) {
+	if (worker.isRunning) {
 		startSimu->SetText("Pause");
 		//startSimu->SetFontColor(255, 204, 0);
 	}
@@ -2801,6 +2801,7 @@ bool Interface::AutoSave(bool crashSave) {
 	//lastSaveTime=(worker.simuTime+(m_fTime-worker.startTime));
 	progressDlg2->SetVisible(false);
 	SAFE_DELETE(progressDlg2);
+	wereEvents = true;
 	return true;
 }
 

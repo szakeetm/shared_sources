@@ -233,10 +233,10 @@ char *Worker::GetErrorDetails() {
 
 	AccessDataport(dpControl);
 	SHCONTROL *master = (SHCONTROL *)dpControl->buff;
-	for (int i = 0; i < nbProcess; i++) {
+	for (size_t i = 0; i < nbProcess; i++) {
 		char tmp[512];
 		if (pID[i] != 0) {
-			int st = master->states[i];
+			size_t st = master->states[i];
 			if (st == PROCESS_ERROR) {
 				sprintf(tmp, "[#%d] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
 			}
@@ -254,7 +254,7 @@ char *Worker::GetErrorDetails() {
 	return err;
 }
 
-bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
+bool Worker::Wait(size_t readyState,LoadStatus *statusWindow) {
 	
 	abortRequested = false;
 	bool finished = false;
@@ -303,7 +303,7 @@ bool Worker::Wait(int readyState,LoadStatus *statusWindow) {
 
 }
 
-bool Worker::ExecuteAndWait(int command,int readyState,size_t param) {
+bool Worker::ExecuteAndWait(int command, size_t readyState,size_t param) {
 
 	if(!dpControl) return false;
 
@@ -333,7 +333,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 	stopTime = 0.0f;
 	startTime = 0.0f;
 	simuTime = 0.0f;
-	running = false;
+	isRunning = false;
 	if (nbProcess == 0)
 		return;
 
@@ -463,7 +463,7 @@ void Worker::Update(float appTime) {
 	}
 
 	// End of simulation reached (Stop GUI)
-	if ((error || done) && running && appTime != 0.0f) {
+	if ((error || done) && isRunning && appTime != 0.0f) {
 		InnerStop(appTime);
 		if (error) ThrowSubProcError();
 	}
@@ -495,7 +495,7 @@ void Worker::Update(float appTime) {
 			nbDesorption = gHits->total.nbDesorbed;
 			totalFlux = gHits->total.fluxAbs;
 			totalPower = gHits->total.powerAbs;
-			distTraveledTotal = gHits->distTraveledTotal;
+			distTraveledTotal_total = gHits->distTraveledTotal;
 
 			if (nbDesorption && nbTrajPoints) {
 				no_scans = (double)nbDesorption / (double)nbTrajPoints;
@@ -561,13 +561,13 @@ void Worker::Update(float appTime) {
 	}
 }
 
-void Worker::GetProcStatus(int *states, std::vector<std::string>& statusStrings) {
+void Worker::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
 	if (nbProcess == 0) return;
 
 	AccessDataport(dpControl);
 	SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-	memcpy(states, shMaster->states, MAX_PROCESS * sizeof(int));
+	memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
 	for (size_t i = 0; i < MAX_PROCESS; i++) {
 		char tmp[128];
 		strncpy(tmp, shMaster->statusStr[i], 127);
@@ -576,4 +576,106 @@ void Worker::GetProcStatus(int *states, std::vector<std::string>& statusStrings)
 	}
 	ReleaseDataport(dpControl);
 
+}
+
+std::vector<std::vector<std::string>> Worker::ImportCSV_string(FileReader *file) {
+	std::vector<std::vector<string>> table; //reset table
+	do {
+		std::vector<std::string> row;
+		std::string line = file->ReadLine();
+		std::stringstream token;
+		size_t cursor = 0;
+		size_t length = line.length();
+		while (cursor<length) {
+			char c = line[cursor];
+			if (c == ',') {
+				row.push_back(token.str());
+				token.str(""); token.clear();
+			}
+			else {
+				token << c;
+			}
+			cursor++;
+		}
+		if (token.str().length() > 0) row.push_back(token.str());
+
+		table.push_back(row);
+	} while (!file->IsEof());
+	return table;
+}
+
+std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
+	std::vector<std::vector<double>> table;
+	do {
+		std::vector<double> currentRow;
+		do {
+			currentRow.push_back(file->ReadDouble());
+			if (!file->IsEol()) file->ReadKeyword(",");
+		} while (!file->IsEol());
+		table.push_back(currentRow);
+	} while (!file->IsEof());
+	return table;
+}
+
+void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
+	if (nbProcess == 0 || !geom->IsLoaded()) return;
+	if (needsReload) RealReload(); //Sync (number of) regions
+
+	GLProgress *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
+	progressDlg->SetVisible(true);
+	progressDlg->SetProgress(0.0);
+
+	// Create the temporary geometry shared structure
+	size_t loadSize = sizeof(OntheflySimulationParams);
+#ifdef SYNRAD
+	loadSize += regions.size() * sizeof(bool); //Show photons or not
+#endif
+	Dataport *loader = CreateDataport(loadDpName, loadSize);
+	if (!loader) {
+		progressDlg->SetVisible(false);
+		SAFE_DELETE(progressDlg);
+		throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
+	}
+	progressDlg->SetMessage("Accessing dataport...");
+	AccessDataportTimed(loader, 1000);
+	progressDlg->SetMessage("Assembling parameters to pass...");
+
+	BYTE* buffer = (BYTE*)loader->buff;
+
+	WRITEBUFFER(ontheflyParam, OntheflySimulationParams);
+
+#ifdef SYNRAD
+	for (size_t i = 0; i < regions.size(); i++) {
+		WRITEBUFFER(regions[i].params.showPhotons, bool);
+	}
+#endif
+
+	progressDlg->SetMessage("Releasing dataport...");
+	ReleaseDataport(loader);
+
+	// Pass to workers
+	progressDlg->SetMessage("Waiting for subprocesses to read mode...");
+	if (!ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+		CLOSEDP(loader);
+		char errMsg[1024];
+		sprintf(errMsg, "Failed to send params to sub process:\n%s", GetErrorDetails());
+		GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+
+		progressDlg->SetVisible(false);
+		SAFE_DELETE(progressDlg);
+		return;
+	}
+
+	progressDlg->SetMessage("Closing dataport...");
+	CLOSEDP(loader);
+	progressDlg->SetVisible(false);
+	SAFE_DELETE(progressDlg);
+
+#ifdef SYNRAD
+	//Reset leak and hit cache
+	leakCacheSize = 0;
+	SetLeakCache(leakCache, &leakCacheSize, dpHit); //will only write leakCacheSize
+	hitCacheSize = 0;
+	SetHitCache(hitCache, &hitCacheSize, dpHit); //will only write hitCacheSize
+#endif
 }

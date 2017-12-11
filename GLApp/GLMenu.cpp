@@ -563,9 +563,9 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
     }
 
 	if( IsVisible() ) {
-      /*GLWindowManager::Repaint();
-      Sleep(30);*/
-		theApp->wereEvents = true;
+      GLWindowManager::Repaint();
+      Sleep(30);
+		//theApp->wereEvents = true;
     }
 
   }

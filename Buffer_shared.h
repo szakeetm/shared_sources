@@ -143,6 +143,14 @@ public:
 };
 
 typedef struct {
+#ifdef SYNRAD
+	int      generation_mode; // Fluxwise/powerwise
+#endif
+	bool	 lowFluxMode;
+	double	 lowFluxCutoff;
+} OntheflySimulationParams; //parameters that can be changed without restarting the simulation
+
+typedef struct {
 
 	Vector3d pos;
 	int    type;
@@ -208,7 +216,7 @@ public:
 	LEAK   leakCache[LEAKCACHESIZE];      // Leak history
 
 #ifdef MOLFLOW
-	int    mode;                // Simu mode (MC_MODE or AC_MODE)
+	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
 	double distTraveledTotal_total;
 	double distTraveledTotal_fullHitsOnly;
@@ -276,7 +284,7 @@ static const char *prStates[] = {
 
 typedef struct {
 	// Process control
-	int		states[MAX_PROCESS];        // Process states/commands
+	size_t		states[MAX_PROCESS];        // Process states/commands
 	size_t    cmdParam[MAX_PROCESS];      // Command param 1
 	size_t		cmdParam2[MAX_PROCESS];     // Command param 2
 	char		statusStr[MAX_PROCESS][128]; // Status message

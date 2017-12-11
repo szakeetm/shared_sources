@@ -96,7 +96,7 @@ void LoadStatus::SMPUpdate() {
 	
 		char tmp[512];
 		PROCESS_INFO pInfo;
-		int  states[MAX_PROCESS];
+		size_t  states[MAX_PROCESS];
 		std::vector<std::string> statusStrings(MAX_PROCESS);
 
 		memset(states,0,MAX_PROCESS*sizeof(int));
