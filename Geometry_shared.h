@@ -258,7 +258,8 @@ protected:
 	GLint sphereList;             // Compiled geometry of sphere used for direction field
 
 	public:
-		llong loaded_nbHit;
+		llong loaded_nbMCHit;
+		double loaded_nbHitEquiv;
 		llong loaded_nbDesorption;
 		llong loaded_desorptionLimit;
 		llong   loaded_nbLeak;

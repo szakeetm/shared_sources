@@ -131,11 +131,12 @@ public:
 
   size_t  nbAbsorption;      // Total number of molecules absorbed (64 bit integer)
   size_t  nbDesorption;      // Total number of molecules generated (64 bit integer)
-  size_t  nbHit;             // Total number of hit (64 bit integer)
+  size_t  nbMCHit;             // Total number of hit (64 bit integer)
+  double  nbHitEquiv;          // Equivalent number of hits (low-flux mode), for MFP calculation
   size_t  nbLeakTotal;            // Total number of leak
   
   size_t  desorptionLimit;     // Number of desoprtion before halting
-  double distTraveledTotal_total; // Total distance traveled by particles (for mean free path calc.)
+  double distTraveled_total; // Total distance traveled by particles (for mean free path calc.)
 
   bool   isRunning;           // Started/Stopped state
   float  startTime;         // Start time
@@ -152,7 +153,7 @@ public:
 			   // Caches
   HIT  hitCache[HITCACHESIZE];
   LEAK leakCache[LEAKCACHESIZE];
-  size_t    hitCacheSize;            // Total number of hhit
+  size_t hitCacheSize;            // Total number of hhit
   size_t leakCacheSize;
   
 #ifdef MOLFLOW

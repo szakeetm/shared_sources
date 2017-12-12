@@ -3815,7 +3815,8 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	loaded_nbHit = file->ReadLLong();
+	loaded_nbMCHit = file->ReadLLong();
+	loaded_nbHitEquiv = (double)loaded_nbMCHit; //Backward comp
 	loaded_nbLeak = file->ReadLLong();
 	loaded_nbDesorption = file->ReadLLong();
 	loaded_desorptionLimit = file->ReadLLong();
@@ -3867,7 +3868,7 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t *nbVertex, size_t *nbFacet
 
 	UnselectAll();
 
-	//loaded_nbHit = file->ReadLLong();
+	//loaded_nbMCHit = file->ReadLLong();
 	//loaded_nbLeak = file->ReadInt();
 	//loaded_nbDesorption = file->ReadLLong();
 	//loaded_desorptionLimit = file->ReadLLong(); 
@@ -4294,7 +4295,7 @@ void Geometry::SaveSuper(int s) {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		Facet *f = facets[i];
 		if (f->sh.superIdx == s) {
-			/*totHit += f->counterCache.nbHit;
+			/*totHit += f->counterCache.nbMCHit;
 			totAbs += f->counterCache.nbAbsorbed;
 			totDes += f->counterCache.nbDesorbed;*/
 			for (int j = 0; j < f->sh.nbIndex; j++)

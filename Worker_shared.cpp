@@ -238,14 +238,14 @@ char *Worker::GetErrorDetails() {
 		if (pID[i] != 0) {
 			size_t st = master->states[i];
 			if (st == PROCESS_ERROR) {
-				sprintf(tmp, "[#%d] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
+				sprintf(tmp, "[#%zd] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
 			}
 			else {
-				sprintf(tmp, "[#%d] Process [PID %d] %s\n", i, pID[i], prStates[st]);
+				sprintf(tmp, "[#%zd] Process [PID %d] %s\n", i, pID[i], prStates[st]);
 			}
 		}
 		else {
-			sprintf(tmp, "[#%d] Process [PID ???] Not started\n", i);
+			sprintf(tmp, "[#%zd] Process [PID ???] Not started\n", i);
 		}
 		strcat(err, tmp);
 	}
@@ -480,22 +480,24 @@ void Worker::Update(float appTime) {
 
 // Global hits and leaks
 #ifdef MOLFLOW
-			nbHit = gHits->total.hit.nbHit;
+			nbMCHit = gHits->total.hit.nbMCHit;
+			nbHitEquiv = gHits->total.hit.nbHitEquiv;
 			nbAbsorption = gHits->total.hit.nbAbsorbed;
 			nbDesorption = gHits->total.hit.nbDesorbed;
-			distTraveledTotal_total = gHits->distTraveledTotal_total;
+			//No global hitEquiv
+			distTraveled_total = gHits->distTraveled_total;
 			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
 			bool needsAngleMapStatusRefresh = false;
 #endif
 
 #ifdef SYNRAD
 			
-			nbHit = gHits->total.nbHit;
+			nbMCHit = gHits->total.nbMCHit;
 			nbAbsorption = gHits->total.nbAbsorbed;
 			nbDesorption = gHits->total.nbDesorbed;
 			totalFlux = gHits->total.fluxAbs;
 			totalPower = gHits->total.powerAbs;
-			distTraveledTotal_total = gHits->distTraveledTotal;
+			distTraveled_total = gHits->distTraveledTotal;
 
 			if (nbDesorption && nbTrajPoints) {
 				no_scans = (double)nbDesorption / (double)nbTrajPoints;

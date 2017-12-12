@@ -177,9 +177,11 @@ typedef union {
 	struct {
 		// Counts
 		llong nbDesorbed;          // Number of desorbed molec
-		llong nbHit;               // Number of hits
+		llong nbMCHit;               // Number of hits
+		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 		llong nbAbsorbed;          // Number of absorbed molec
 		double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
+		double sum_velocity;          //For average molecule speed calculation
 		double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
 	} hit;
 
@@ -196,7 +198,7 @@ typedef union {
 	typedef struct {
 		// Counts
 		double fluxAbs, powerAbs;
-		llong nbHit;           // Number of hits
+		llong nbMCHit;           // Number of hits
 		llong nbAbsorbed;      // Number of absorbed molec
 		llong nbDesorbed;
 	} FacetHitBuffer;
@@ -218,7 +220,7 @@ public:
 #ifdef MOLFLOW
 	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
-	double distTraveledTotal_total;
+	double distTraveled_total;
 	double distTraveledTotal_fullHitsOnly;
 #endif
 

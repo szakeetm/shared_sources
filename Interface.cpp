@@ -1393,10 +1393,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbHit > 0)
+				if (geom->GetFacet(i)->counterCache.hit.nbMCHit > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbHit > 0)
+					if (geom->GetFacet(i)->counterCache.nbMCHit > 0)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1416,10 +1416,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->counterCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 #ifdef SYNRAD
-				if (geom->GetFacet(i)->counterCache.nbHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->counterCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -2569,7 +2569,7 @@ void Interface::DoEvents(bool forced)
 
 bool Interface::AskToReset(Worker *work) {
 	if (work == NULL) work = &worker;
-	if (work->nbHit > 0) {
+	if (work->nbMCHit > 0) {
 		int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
 		if (rep == GLDLG_OK) {
 			work->ResetStatsAndHits(m_fTime);
@@ -2642,9 +2642,9 @@ int Interface::FrameMove()
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
 				// Update timing measurements
-				if (worker.nbHit != lastNbHit || worker.nbDesorption != lastNbDes) {
+				if (worker.nbMCHit != lastNbHit || worker.nbDesorption != lastNbDes) {
 					double dTime = (double)(m_fTime - lastMeasTime);
-					hps = (double)(worker.nbHit - lastNbHit) / dTime;
+					hps = (double)(worker.nbMCHit - lastNbHit) / dTime;
 					dps = (double)(worker.nbDesorption - lastNbDes) / dTime;
 					if (lastHps != 0.0) {
 						hps = 0.2*(hps)+0.8*lastHps;
@@ -2652,7 +2652,7 @@ int Interface::FrameMove()
 					}
 					lastHps = hps;
 					lastDps = dps;
-					lastNbHit = worker.nbHit;
+					lastNbHit = worker.nbMCHit;
 					lastNbDes = worker.nbDesorption;
 					lastMeasTime = m_fTime;
 				}
@@ -2676,7 +2676,7 @@ int Interface::FrameMove()
 	}
 	else {
 		if (worker.simuTime > 0.0) {
-			hps = (double)(worker.nbHit - nbHitStart) / worker.simuTime;
+			hps = (double)(worker.nbMCHit - nbHitStart) / worker.simuTime;
 			dps = (double)(worker.nbDesorption - nbDesStart) / worker.simuTime;
 		}
 		else {
@@ -2724,7 +2724,7 @@ int Interface::FrameMove()
 		startSimu->SetText("Pause");
 		//startSimu->SetFontColor(255, 204, 0);
 	}
-	else if (worker.nbHit > 0) {
+	else if (worker.nbMCHit > 0) {
 		startSimu->SetText("Resume");
 		//startSimu->SetFontColor(0, 140, 0);
 	}

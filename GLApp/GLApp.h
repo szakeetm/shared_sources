@@ -16,8 +16,8 @@
 #ifndef _GLAPPH_
 #define _GLAPPH_
 
-extern long long	  nbDesStart;
-extern long long	  nbHitStart;
+//extern long long	  nbDesStart;
+//extern long long	  nbHitStart;
 
 #include <SDL.h>
 #include <SDL_opengl.h>
