@@ -482,7 +482,7 @@ void Worker::Update(float appTime) {
 #ifdef MOLFLOW
 			nbMCHit = gHits->total.hit.nbMCHit;
 			nbHitEquiv = gHits->total.hit.nbHitEquiv;
-			nbAbsorption = gHits->total.hit.nbAbsorbed;
+			nbAbsEquiv = gHits->total.hit.nbAbsEquiv;
 			nbDesorption = gHits->total.hit.nbDesorbed;
 			//No global hitEquiv
 			distTraveled_total = gHits->distTraveled_total;
@@ -493,7 +493,7 @@ void Worker::Update(float appTime) {
 #ifdef SYNRAD
 			
 			nbMCHit = gHits->total.nbMCHit;
-			nbAbsorption = gHits->total.nbAbsorbed;
+			nbAbsEquiv = gHits->total.nbAbsEquiv;
 			nbDesorption = gHits->total.nbDesorbed;
 			totalFlux = gHits->total.fluxAbs;
 			totalPower = gHits->total.powerAbs;

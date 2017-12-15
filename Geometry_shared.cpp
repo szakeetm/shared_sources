@@ -4295,9 +4295,6 @@ void Geometry::SaveSuper(int s) {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		Facet *f = facets[i];
 		if (f->sh.superIdx == s) {
-			/*totHit += f->counterCache.nbMCHit;
-			totAbs += f->counterCache.nbAbsorbed;
-			totDes += f->counterCache.nbDesorbed;*/
 			for (int j = 0; j < f->sh.nbIndex; j++)
 				refIdx[f->indices[j]] = 1;
 			nbF++;

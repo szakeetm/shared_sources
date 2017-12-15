@@ -129,7 +129,7 @@ public:
   // Global simulation parameters
   OntheflySimulationParams ontheflyParam;
 
-  size_t  nbAbsorption;      // Total number of molecules absorbed (64 bit integer)
+  double  nbAbsEquiv;      // Total number of molecules absorbed (64 bit integer)
   size_t  nbDesorption;      // Total number of molecules generated (64 bit integer)
   size_t  nbMCHit;             // Total number of hit (64 bit integer)
   double  nbHitEquiv;          // Equivalent number of hits (low-flux mode), for MFP calculation

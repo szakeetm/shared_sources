@@ -263,7 +263,7 @@ protected:
 		llong loaded_nbDesorption;
 		llong loaded_desorptionLimit;
 		llong   loaded_nbLeak;
-		llong loaded_nbAbsorption;
+		double loaded_nbAbsEquiv;
 		double loaded_distTraveledTotal;
 
 		bool  texAutoScale;  // Autoscale flag

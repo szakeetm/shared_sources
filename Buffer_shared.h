@@ -179,9 +179,9 @@ typedef union {
 		llong nbDesorbed;          // Number of desorbed molec
 		llong nbMCHit;               // Number of hits
 		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-		llong nbAbsorbed;          // Number of absorbed molec
+		double nbAbsEquiv;          // Equivalent number of absorbed molecules
 		double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
-		double sum_velocity;          //For average molecule speed calculation
+		double sum_1_per_velocity;          //For average molecule speed calculation
 		double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
 	} hit;
 

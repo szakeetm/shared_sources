@@ -98,6 +98,7 @@ public:
 	void Sum_Neighbor(const int& i, const int& j, const double& weight, AHIT *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
+	double DensityCorrection();
 #endif
 #ifdef SYNRAD //Implementations in SynradFacet.cpp
 	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);

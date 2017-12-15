@@ -1377,10 +1377,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++) {
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbAbsorbed > 0)
+				if (geom->GetFacet(i)->counterCache.hit.nbAbsEquiv > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbAbsorbed > 0)
+					if (geom->GetFacet(i)->counterCache.nbAbsEquiv > 0)
 #endif
 					geom->SelectFacet(i);
 			}

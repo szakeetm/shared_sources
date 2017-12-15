@@ -1497,42 +1497,6 @@ void GLList::CopyToClipboard(size_t row, size_t col, size_t rowLght, size_t colL
 
 }
 
-/*
-
-void GLList::UpdateAllRows() {//Fetch non-visible values too
-	
-	if (this==mApp->facetList) {
-	if (worker) {
-		char tmp[256];
-		Geometry *geom=worker->GetGeometry();
-
-		for(int i=0;i<nbRow;i++) {
-			int index=GetValueInt(i,0)-1;
-			if (index==-2) index=i;
-			Facet *f =NULL;
-			try {
-				 f = geom->GetFacet(index);
-			} catch (...) {
-#ifdef _DEBUG
-				__debugbreak();
-#endif
-				return;
-			}
-			sprintf(tmp,"%d",index+1);
-			SetValueAt(0,i,tmp);
-			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbMCHit);
-			SetValueAt(1,i,tmp);
-			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbDesorbed);
-			SetValueAt(2,i,tmp);
-			sprintf(tmp,"%I64d",f->counterCache[worker->displayedMoment].hit.nbAbsorbed);
-			SetValueAt(3,i,tmp);
-		}
-		//geom=geom;
-	}
-	}
-}
-*/
-
 void GLList::CopyAllToClipboard() {
 	if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 	// Compute data length
