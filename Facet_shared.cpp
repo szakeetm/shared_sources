@@ -37,7 +37,7 @@ Facet::Facet(size_t nbIndex) {
 	sh.sticking = 0.0;
 	sh.opacity = 1.0;
 
-	sh.profileType = REC_NONE;
+	sh.profileType = PROFILE_NONE;
 	sh.texWidth = 0;
 	sh.texHeight = 0;
 	sh.texWidthD = 0.0;
@@ -137,7 +137,7 @@ Facet::Facet(size_t nbIndex) {
 	sh.rmsRoughness = 100.0E-9; //100nm
 	sh.autoCorrLength = 100 * 100E-9; //tau=autoCorr/RMS=100
 
-	sh.reflectType = REF_MIRROR;
+	sh.reflectType = REFLECTION_MIRROR;
 	sh.hasSpectrum = false;
 #endif
 }
@@ -892,7 +892,7 @@ Vector3d Facet::GetRealCenter() {
 
 void Facet::UpdateFlags() {
 
-	sh.isProfile = (sh.profileType != REC_NONE);
+	sh.isProfile = (sh.profileType != PROFILE_NONE);
 	//sh.isOpaque = (sh.opacity != 0.0);
 	sh.isTextured = ((texDimW*texDimH) > 0);
 }
@@ -933,7 +933,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 		sh.profileType = f->sh.profileType;
 	}
 	else {
-		sh.profileType = REC_NONE;
+		sh.profileType = PROFILE_NONE;
 	}
 	sh.is2sided = f->sh.is2sided;
 #ifdef MOLFLOW

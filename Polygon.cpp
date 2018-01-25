@@ -737,7 +737,7 @@ double GetInterAreaBF(POLYGON *inP1,double u0,double v0,double u1,double v1,floa
   // Slow but sure.
 
   int step = 50;
-  int nbMCHit = 0;
+  int nbTestHit = 0;
   double ui = (u1-u0) / (double)step;
   double vi = (v1-v0) / (double)step;
 
@@ -746,13 +746,13 @@ double GetInterAreaBF(POLYGON *inP1,double u0,double v0,double u1,double v1,floa
     for(int j=0;j<step;j++) {
       double vc = v0 + vi*((double)j+0.5);
       if( IsInPoly(uc,vc,inP1->pts,inP1->nbPts) ) {
-        nbMCHit++;
+        nbTestHit++;
         *uC = (float)uc;
         *vC = (float)vc;
       }
     }
   }
 
-  return (u1-u0)*(v1-v0)*((double)nbMCHit/(double)(step*step));
+  return (u1-u0)*(v1-v0)*((double)nbTestHit/(double)(step*step));
 
 }

@@ -199,7 +199,8 @@ typedef union {
 		// Counts
 		double fluxAbs, powerAbs;
 		llong nbMCHit;           // Number of hits
-		llong nbAbsorbed;      // Number of absorbed molec
+		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+		double nbAbsEquiv;      // Number of absorbed molec
 		llong nbDesorbed;
 	} FacetHitBuffer;
 #endif

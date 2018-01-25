@@ -493,6 +493,7 @@ void Worker::Update(float appTime) {
 #ifdef SYNRAD
 			
 			nbMCHit = gHits->total.nbMCHit;
+			nbHitEquiv = gHits->total.nbHitEquiv;
 			nbAbsEquiv = gHits->total.nbAbsEquiv;
 			nbDesorption = gHits->total.nbDesorbed;
 			totalFlux = gHits->total.fluxAbs;
@@ -644,7 +645,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
 	BYTE* buffer = (BYTE*)loader->buff;
 
-	WRITEBUFFER(ontheflyParam, OntheflySimulationParams);
+	WRITEBUFFER(ontheflyParams, OntheflySimulationParams);
 
 #ifdef SYNRAD
 	for (size_t i = 0; i < regions.size(); i++) {

@@ -127,7 +127,7 @@ public:
 #endif
 
   // Global simulation parameters
-  OntheflySimulationParams ontheflyParam;
+  OntheflySimulationParams ontheflyParams;
 
   double  nbAbsEquiv;      // Total number of molecules absorbed (64 bit integer)
   size_t  nbDesorption;      // Total number of molecules generated (64 bit integer)
