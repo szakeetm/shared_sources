@@ -93,9 +93,9 @@ public:
 	size_t GetHitsSize(size_t nbMoments);
 	size_t GetTexRamSize(size_t nbMoments);
 	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir, size_t nbMoments);
-	void  BuildTexture(AHIT *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
-	double GetSmooth(int i, int j, AHIT *texBuffer, int textureMode, double scaleF);
-	void Sum_Neighbor(const int& i, const int& j, const double& weight, AHIT *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
+	void  BuildTexture(TextureCell *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
+	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
+	void Sum_Neighbor(const int& i, const int& j, const double& weight, TextureCell *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 	double DensityCorrection();

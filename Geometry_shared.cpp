@@ -73,7 +73,10 @@ void Geometry::CheckCollinear() {
 		sprintf(tmp, "%d null polygon(s) found !\nThese polygons have all vertices on a single line, thus they do nothing.\nDelete them?", nbCollinear);
 		ok = GLMessageBox::Display(tmp, "Info", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
 	}
-	if (ok) RemoveCollinear();
+	if (ok) {
+		RemoveCollinear();
+		mApp->UpdateModelParams();
+	}
 }
 
 void Geometry::CheckNonSimple() {
@@ -1331,6 +1334,8 @@ void Geometry::RemoveSelectedVertex() {
 }
 
 void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy) {
+	//Think of calling UpdateModelParams() after executed to refresh facet hit list
+
 	if (facetIdList.size() == 0) return;
 	mApp->changedSinceSave = true;
 	Facet   **f = (Facet **)malloc((sh.nbFacet - facetIdList.size()) * sizeof(Facet *));
@@ -1422,7 +1427,7 @@ bool Geometry::RemoveNullFacet() {
 	// Remove degenerated facet (area~0.0)
 	std::vector<size_t> facetsToDelete;
 
-	double areaMin = 1E-10;
+	double areaMin = 1E-20;
 	for (int i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->sh.area < areaMin) facetsToDelete.push_back(i);
 	RemoveFacets(facetsToDelete);
@@ -2549,7 +2554,10 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 	if (vT > 0.0) {
 		CollapseVertex(work, prg, totalWork, vT);
 		InitializeGeometry(); //Find collinear facets
-		if (RemoveCollinear() || RemoveNullFacet()) InitializeGeometry(); //If  facets were removed, update geom.
+		if (RemoveCollinear() || RemoveNullFacet()) {
+			InitializeGeometry(); //If  facets were removed, update geom.
+			mApp->UpdateModelParams();
+		}
 	}
 
 	if (fT > 0.0 && !work->abortRequested) {

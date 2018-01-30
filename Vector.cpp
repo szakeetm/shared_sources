@@ -87,6 +87,12 @@ Vector3d Vector3d::Normalized() const {
 	return result;
 }
 
+Vector3d & Vector3d::operator+=(const Vector3d & rhs)
+{
+	*this = *this + rhs;
+	return *this;
+}
+
 double Vector2d::Norme() const {
 	return sqrt(Dot(*this, *this));
 }

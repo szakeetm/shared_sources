@@ -34,7 +34,7 @@ public:
 	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
 						 // Geometry
-	size_t    nbIndex;   // Number of index/vertex
+	size_t nbIndex;   // Number of index/vertex
 	double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
 					  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
@@ -106,7 +106,7 @@ public:
 	double rmsRoughness;   // RMS height roughness, in meters
 	double autoCorrLength; // Autocorrelation length, in meters
 	int    reflectType;    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
-	bool   hasSpectrum;    // Calculate energy spectrum (histogram)
+	bool   recordSpectrum;    // Calculate energy spectrum (histogram)
 #endif
 
 };

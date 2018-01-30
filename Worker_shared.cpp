@@ -538,8 +538,8 @@ void Worker::Update(float appTime) {
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
 					+ (1 + moments.size()) * sizeof(FacetHitBuffer)
-					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(APROFILE) *(1 + moments.size()) : 0)
-					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(AHIT) *(1 + moments.size()) : 0)
+					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
+					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(VHIT)*(1 + moments.size()) : 0);
 					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.phiWidth*(f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
 					angleMapAddress = 0;

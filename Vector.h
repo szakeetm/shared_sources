@@ -9,6 +9,7 @@ public:
 	Vector3d(const double &x, const double &y, const double &z);
 	double Norme() const;
 	Vector3d Normalized() const;
+	Vector3d& operator+=(const Vector3d & rhs);
 };
 
 class Vector2d {

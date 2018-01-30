@@ -137,8 +137,8 @@ Facet::Facet(size_t nbIndex) {
 	sh.rmsRoughness = 100.0E-9; //100nm
 	sh.autoCorrLength = 100 * 100E-9; //tau=autoCorr/RMS=100
 
-	sh.reflectType = REFLECTION_MIRROR;
-	sh.hasSpectrum = false;
+	sh.reflectType = REFLECTION_SPECULAR;
+	sh.recordSpectrum = false;
 #endif
 }
 
