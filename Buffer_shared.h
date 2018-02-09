@@ -6,6 +6,10 @@
 #include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
+#ifdef SYNRAD
+#include "SynradTypes.h" //Texture Min Max of GlobalHitBuffer
+#endif
+
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
@@ -164,7 +168,7 @@ typedef struct {
 typedef struct {
 	Vector3d dir;
 	size_t count;
-} VHIT;
+} DirectionCell;
 
 typedef struct {
 	Vector3d pos;
@@ -195,14 +199,15 @@ typedef union {
 #endif
 
 #ifdef SYNRAD
-	typedef struct {
-		// Counts
+	class FacetHitBuffer {
+	public:
 		double fluxAbs, powerAbs;
 		llong nbMCHit;           // Number of hits
 		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 		double nbAbsEquiv;      // Number of absorbed molec
 		llong nbDesorbed;
-	} FacetHitBuffer;
+		FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
+	};
 #endif
 
 
@@ -226,11 +231,7 @@ public:
 #endif
 
 #ifdef SYNRAD
-	llong  minHit_MC, maxHit_MC;
-	double   minHit_flux;              // Minimum on texture
-	double   maxHit_flux;              // Maximum on texture
-	double   minHit_power;              // Minimum on texture
-	double   maxHit_power;              // Maximum on texture
+	TextureCell hitMin, hitMax;
 	double distTraveledTotal;
 #endif
 };

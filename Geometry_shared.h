@@ -280,10 +280,6 @@ protected:
 
 #ifdef SYNRAD
 		// Texture scaling
-		double  texMin_flux, texMin_power;        // User min
-		double  texMax_flux, texMax_power;        // User max
-		double  texCMin_flux, texCMin_power;       // Current minimum
-		double  texCMax_flux, texCMax_power;       // Current maximum
-		llong texMin_MC, texMax_MC, texCMin_MC, texCMax_MC;
+		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif
 };

@@ -74,7 +74,7 @@ bool CloseDataport(Dataport *dp);
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-DWORD         StartProc(char *pname,int mode);
+DWORD         StartProc(const char *pname,int mode);
 bool IsProcessRunning(DWORD pID);
 
 /*extern DWORD         StartProc_background(char *pname);

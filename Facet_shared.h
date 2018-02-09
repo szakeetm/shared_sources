@@ -1,7 +1,7 @@
 #pragma once
 #include "Vector.h"
 #include <vector>
-#include "Buffer_shared.h" //VHIT
+#include "Buffer_shared.h" //DirectionCell
 #include "File.h"
 #include "PugiXML\pugixml.hpp"
 using namespace pugi;
@@ -107,37 +107,9 @@ public:
 	size_t GetHitsSize();
 	size_t GetTexRamSize();
 	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir);
-	void  BuildTexture(double *texBuffer, double min, double max, double no_scans, bool useColorMap, bool doLog, bool normalize = true);
-	void  BuildTexture(llong *texBuffer, llong min, llong max, bool useColorMap, bool doLog);
-
-	template<class textureType> void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, textureType* texBuffer, const float& scaleF, double& weighedSum, double& totalWeigh) {
-		if (i >= 0 && i < sh.texWidth && j >= 0 && j < sh.texHeight) {
-			size_t index = i + j*sh.texWidth;
-			if (GetMeshArea(index) > 0.0) {
-				weighedSum += weight*((double)(texBuffer[index]) / GetMeshArea(index)*scaleF);
-				totalWeigh += weight;
-			}
-		}
-	}
-	
-	template<class textureType> double GetSmooth(const int &i, const int &j, textureType *texBuffer, const float &scaleF) {
-		double totalWeigh = 0.0;
-		double weighedSum = 0.0;
-		if (sh.texWidth > 0 && sh.texHeight > 0) {
-			Weigh_Neighbor<textureType>(i - 1, j - 1, 1.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i - 1, j + 1, 1.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i + 1, j - 1, 1.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i + 1, j + 1, 1.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i, j - 1, 2.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i, j + 1, 2.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i - 1, j, 2.0, texBuffer, scaleF, weighedSum, totalWeigh);
-			Weigh_Neighbor<textureType>(i + 1, j, 2.0, texBuffer, scaleF, weighedSum, totalWeigh);
-		}
-		if (totalWeigh == 0.0)
-			return 0.0;
-		else
-			return weighedSum / totalWeigh;
-	}
+	void  BuildTexture(TextureCell *texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
+	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, TextureCell* texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
+	double GetSmooth(const int &i, const int &j, TextureCell *texture, const size_t& textureMode, const float &scaleF);
 #endif
 
 
@@ -163,7 +135,7 @@ public:
 	bool  collinear;      //All vertices are on a line (non-simple)
 	bool	volumeVisible;	//Draw volume?
 	bool    hasMesh;     // Has texture
-	VHIT   *dirCache;    // Direction field cache
+	DirectionCell   *dirCache;    // Direction field cache
 	bool textureError;   // Disable rendering if the texture has an error
 
 						 // GUI stuff

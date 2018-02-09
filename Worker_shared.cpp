@@ -62,11 +62,11 @@ bool Worker::IsDpInitialized(){
 	return (dpHit != NULL);
 }
 
-char *Worker::GetFileName() {
+char *Worker::GetCurrentFileName() {
 	return fullFileName;
 }
 
-char *Worker::GetShortFileName() {
+char *Worker::GetCurrentShortFileName() {
 
 	static char ret[512];
 	char *r = strrchr(fullFileName,'/');
@@ -81,6 +81,7 @@ char *Worker::GetShortFileName() {
 
 }
 
+/*
 char *Worker::GetShortFileName(char* longFileName) {
 
 	static char ret[512];
@@ -95,8 +96,9 @@ char *Worker::GetShortFileName(char* longFileName) {
 	return ret;
 
 }
+*/
 
-void Worker::SetFileName(char *fileName) {
+void Worker::SetCurrentFileName(char *fileName) {
 
 	strcpy(fullFileName,fileName);
 }
@@ -540,7 +542,7 @@ void Worker::Update(float appTime) {
 					+ (1 + moments.size()) * sizeof(FacetHitBuffer)
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
-					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(VHIT)*(1 + moments.size()) : 0);
+					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
 					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.phiWidth*(f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
 					angleMapAddress = 0;
 				}

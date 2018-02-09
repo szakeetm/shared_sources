@@ -280,7 +280,7 @@ bool Facet::SetTexture(double width, double height, bool useMesh) {
 		if (useMesh)
 			if (!BuildMesh()) return false;
 		if (sh.countDirection) {
-			dirCache = (VHIT *)calloc(sh.texWidth*sh.texHeight, sizeof(VHIT));
+			dirCache = (DirectionCell *)calloc(sh.texWidth*sh.texHeight, sizeof(DirectionCell));
 			if (!dirCache) return false;
 			//memset(dirCache,0,dirSize); //already done by calloc
 		}

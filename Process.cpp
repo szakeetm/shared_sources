@@ -380,7 +380,7 @@ bool GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
 
 // Launch the process pname and return its PID.
 
-DWORD StartProc(char *pname,int mode) { //minimized in Debug mode, hidden in Release mode
+DWORD StartProc(const char *pname,int mode) { //minimized in Debug mode, hidden in Release mode
 
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
@@ -420,9 +420,10 @@ DWORD StartProc(char *pname,int mode) { //minimized in Debug mode, hidden in Rel
 
 		  
 #endif
+	char* commandLine = _strdup(pname);
 	if (!CreateProcess(
 		NULL,             // pointer to name of executable module
-		pname,            // pointer to command line string
+		commandLine,            // pointer to command line string
 		NULL,             // process security attributes
 		NULL,             // thread security attributes
 		false,            // handle inheritance flag

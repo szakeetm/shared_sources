@@ -3508,12 +3508,12 @@ void Geometry::AdjustProfile() {
 	// Backward compatibily with TXT profile (To be improved)
 	for (int i = 0; i < sh.nbFacet; i++) {
 		Facet *f = facets[i];
-		if (f->sh.profileType == PROFILE_PRESSURE_U) {
+		if (f->sh.profileType == PROFILE_U) {
 			Vector3d v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
 			double n0 = v0.Norme();
 			double nU = f->sh.U.Norme();
-			if (IsZero(n0 - nU)) f->sh.profileType = PROFILE_PRESSURE_U; // Select U
-			else               f->sh.profileType = PROFILE_PRESSURE_V; // Select V
+			if (IsZero(n0 - nU)) f->sh.profileType = PROFILE_U; // Select U
+			else               f->sh.profileType = PROFILE_V; // Select V
 		}
 	}
 
@@ -3535,10 +3535,18 @@ void Geometry::ResetTextureLimits() {
 		texture_limits[2].manual.max.all = texture_limits[2].manual.max.moments_only = 1.0;
 #endif
 #ifdef SYNRAD
-	texCMin_MC = 0;             // Current minimum
-	texCMax_MC = 1;             // Current maximum
-	texCMin_flux = texCMin_power = 0.0;
-	texCMax_flux = texCMax_power = 1.0;
+	textureMin_auto.count = 0;
+	textureMin_auto.flux = 0.0;
+	textureMin_auto.power = 0.0;
+	textureMin_manual.count = 0;
+	textureMin_manual.flux = 0.0;
+	textureMin_manual.power = 0.0;
+	textureMax_auto.count = 0;
+	textureMax_auto.flux = 0.0;
+	textureMax_auto.power = 0.0;
+	textureMax_manual.count = 0;
+	textureMax_manual.flux = 0.0;
+	textureMax_manual.power = 0.0;
 #endif
 }
 

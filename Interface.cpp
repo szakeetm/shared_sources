@@ -250,10 +250,10 @@ void Interface::UpdateTitle() {
 	}
 	else {
 		if (geom->viewStruct < 0) {
-			title = appTitle + " [" + worker.GetShortFileName() + "]";
+			title = appTitle + " [" + worker.GetCurrentShortFileName() + "]";
 		}
 		else {
-			title = appTitle + " [" + worker.GetShortFileName() + ": Struct #" + std::to_string(geom->viewStruct + 1) +" " + geom->GetStructureName(geom->viewStruct) +"]";
+			title = appTitle + " [" + worker.GetCurrentShortFileName() + ": Struct #" + std::to_string(geom->viewStruct + 1) +" " + geom->GetStructureName(geom->viewStruct) +"]";
 		}
 	}
 
@@ -405,7 +405,7 @@ void Interface::SaveSelection() {
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
 
-	FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetShortFileName(), "Save selection", fileSelFilters, 0);
+	FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetCurrentShortFileName(), "Save selection", fileSelFilters, 0);
 
 	if (fn) {
 
@@ -449,7 +449,7 @@ void Interface::ExportSelection() {
 		return;
 	}
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetShortFileName(), "Export selection", fileSFilters, 0);
+	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
@@ -796,7 +796,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Facet")->Add("Rotate ...", MENU_FACET_ROTATE);
 	menu->GetSubMenu("Facet")->Add("Align to ...", MENU_FACET_ALIGN);
 	menu->GetSubMenu("Facet")->Add("Extrude ...", MENU_FACET_EXTRUDE);
-	menu->GetSubMenu("Facet")->Add("Cut by plane ...", MENU_FACET_SPLIT);
+	menu->GetSubMenu("Facet")->Add("Split ...", MENU_FACET_SPLIT);
 	menu->GetSubMenu("Facet")->Add(NULL);
 	menu->GetSubMenu("Facet")->Add("Create shape...", MENU_FACET_CREATESHAPE);
 	menu->GetSubMenu("Facet")->Add("Create two facets' ...");
@@ -2422,7 +2422,7 @@ bool Interface::AskToSave() {
 	if (!changedSinceSave) return true;
 	int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved", GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
 	if (ret == GLDLG_SAVE) {
-		FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetShortFileName(), "Save File", fileSFilters, 0);
+		FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
 		if (fn) {
 			GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 			progressDlg2->SetVisible(true);
@@ -2482,7 +2482,7 @@ void Interface::UpdateRecentMenu(){
 
 void Interface::SaveFileAs() {
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetShortFileName(), "Save File", fileSFilters, 0);
+	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
 
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
@@ -2768,7 +2768,7 @@ bool Interface::AutoSave(bool crashSave) {
 	char CWD[MAX_PATH];
 	_getcwd(CWD, MAX_PATH);
 
-	std::string shortFn(worker.GetShortFileName());
+	std::string shortFn(worker.GetCurrentShortFileName());
 #ifdef MOLFLOW
 	std::string newAutosaveFilename = "Molflow_Autosave";
 	if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";

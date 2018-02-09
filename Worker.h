@@ -58,10 +58,10 @@ public:
   std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
 
   // Return/Set the current filename
-  char *GetFileName();
-  char *GetShortFileName();
-  char *GetShortFileName(char* longFileName);
-  void  SetFileName(char *fileName);
+  char *GetCurrentFileName();
+  char *GetCurrentShortFileName();
+  //char *GetShortFileName(char* longFileName);
+  void  SetCurrentFileName(char *fileName);
 
   void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
@@ -85,6 +85,7 @@ public:
   void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
   void RecalcRegion(int regionId);
   void SaveRegion(char *fileName,int position,bool overwrite=false);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
 
 #ifdef MOLFLOW
   MolflowGeometry* GetMolflowGeometry();
