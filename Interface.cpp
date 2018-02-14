@@ -48,6 +48,7 @@
 #include "AlignFacet.h"
 #include "AddVertex.h"
 #include "FormulaEditor.h"
+#include "ParticleLogger.h"
 
 //Updater
 #include <PugiXML\pugixml.hpp>
@@ -144,6 +145,7 @@ Interface::Interface() {
 	updateCheckDialog = NULL;
 	updateFoundDialog = NULL;
 	updateLogWindow = NULL;
+	particleLogger = NULL;
 
 	m_strWindowTitle = appTitle;
 	wnd->SetBackgroundColor(212, 208, 200);
@@ -317,7 +319,7 @@ char *Interface::FormatPS(double v, char *unit)
 // Name: FormatSize()
 // Desc: Format a double in K,M,G,.. per sec
 
-char *Interface::FormatSize(DWORD size)
+char *Interface::FormatSize(size_t size)
 {
 
 	static char ret[64];
@@ -773,16 +775,17 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
 	menu->Add("Tools");
 
-	menu->GetSubMenu("Tools")->Add("Formula editor", MENU_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Formula editor", MENU_TOOLS_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
 
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_TSCALING, 137, 24);
-	menu->GetSubMenu("Tools")->SetIcon(MENU_FORMULAEDITOR, 155, 24);
+	menu->GetSubMenu("Tools")->SetIcon(MENU_TOOLS_FORMULAEDITOR, 155, 24);
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_GLOBALSETTINGS, 0, 77);
 
 	menu->Add("Facet");
@@ -1058,6 +1061,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(loadStatus);
 	RVALIDATE_DLG(facetCoordinates);
 	RVALIDATE_DLG(vertexCoordinates);
+	RVALIDATE_DLG(particleLogger);
 
 	RVALIDATE_DLG(updateCheckDialog);
 	RVALIDATE_DLG(updateFoundDialog);
@@ -1096,6 +1100,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(loadStatus);
 	IVALIDATE_DLG(facetCoordinates);
 	IVALIDATE_DLG(vertexCoordinates);
+	IVALIDATE_DLG(particleLogger);
 
 	IVALIDATE_DLG(updateCheckDialog);
 	IVALIDATE_DLG(updateFoundDialog);
@@ -1165,7 +1170,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			formulaSettings->SetVisible(true);
 			return true;*/
 
-		case MENU_FORMULAEDITOR:
+		case MENU_TOOLS_FORMULAEDITOR:
 			if (!geom->IsLoaded()) {
 				GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 				return true;
@@ -1177,6 +1182,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				formulaEditor->SetVisible(TRUE);
 			}
 			break;
+		case MENU_TOOLS_PARTICLELOGGER:
+			if (!particleLogger || !particleLogger->IsVisible()) {
+				SAFE_DELETE(particleLogger);
+				particleLogger = new ParticleLogger(geom, &worker);
+			}
+			particleLogger->UpdateStatus();
+			particleLogger->SetVisible(true);
+			return true;
 
 		case MENU_FACET_COLLAPSE:
 			if (geom->IsLoaded()) {
@@ -2639,6 +2652,7 @@ int Interface::FrameMove()
 				// Formulas
 				//if (autoUpdateFormulas) UpdateFormula();
 				if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
+				if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
 				// Update timing measurements

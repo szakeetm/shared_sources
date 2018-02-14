@@ -50,6 +50,7 @@ extern SynRad*mApp;
 Worker::~Worker() {
 	CLOSEDP(dpHit);
 	CLOSEDP(dpControl);
+	CLOSEDP(dpLog);
 	delete geom;
 }
 
@@ -194,6 +195,29 @@ BYTE *Worker::GetHits() {
 
 }
 
+std::tuple<size_t, ParticleLoggerItem*> Worker::GetLogBuff() {
+	try {
+		if (needsReload) RealReload();
+	}
+	catch (Error &e) {
+		GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+	}
+	size_t nbRec = 0;
+	ParticleLoggerItem* logBuffPtr = NULL;
+	if (dpLog)
+		if (AccessDataport(dpLog)) {
+			size_t* logBuff = (size_t*)dpLog->buff;
+			nbRec = *logBuff;
+			logBuff++;
+			logBuffPtr = (ParticleLoggerItem*)logBuff;
+		}
+	return std::tie(nbRec,logBuffPtr);
+}
+
+void Worker::ReleaseLogBuff() {
+	ReleaseDataport(dpLog);
+}
+
 void Worker::ThrowSubProcError(std::string message) {
 	message.c_str();
 }
@@ -213,6 +237,7 @@ void Worker::Reload(){
 	needsReload = true;
 }
 
+/*
 void Worker::SetMaxDesorption(llong max) {
 
 	try {
@@ -227,6 +252,7 @@ void Worker::SetMaxDesorption(llong max) {
 	}
 
 }
+*/
 
 char *Worker::GetErrorDetails() {
 
@@ -235,7 +261,7 @@ char *Worker::GetErrorDetails() {
 
 	AccessDataport(dpControl);
 	SHCONTROL *master = (SHCONTROL *)dpControl->buff;
-	for (size_t i = 0; i < nbProcess; i++) {
+	for (size_t i = 0; i < ontheflyParams.nbProcess; i++) {
 		char tmp[512];
 		if (pID[i] != 0) {
 			size_t st = master->states[i];
@@ -272,7 +298,7 @@ bool Worker::Wait(size_t readyState,LoadStatus *statusWindow) {
 		AccessDataport(dpControl);
 		SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
 
-		for(size_t i=0;i<nbProcess;i++) {
+		for(size_t i=0;i<ontheflyParams.nbProcess;i++) {
 
 			finished = finished & (shMaster->states[i]==readyState || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
 			if( shMaster->states[i]==PROCESS_ERROR ) {
@@ -286,7 +312,6 @@ bool Worker::Wait(size_t readyState,LoadStatus *statusWindow) {
 
 			if (statusWindow) {
 				if (waitTime >= 500) {
-					statusWindow->RefreshNbProcess();
 					statusWindow->SetVisible(true);
 				}
 				statusWindow->SMPUpdate();
@@ -312,7 +337,7 @@ bool Worker::ExecuteAndWait(int command, size_t readyState,size_t param) {
 	// Send command
 	AccessDataport(dpControl);
 	SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-	for(size_t i=0;i<nbProcess;i++) {
+	for(size_t i=0;i<ontheflyParams.nbProcess;i++) {
 		shMaster->states[i]=command;
 		shMaster->cmdParam[i]=param;
 	}
@@ -336,7 +361,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 	startTime = 0.0f;
 	simuTime = 0.0f;
 	isRunning = false;
-	if (nbProcess == 0)
+	if (ontheflyParams.nbProcess == 0)
 		return;
 
 	try {
@@ -353,7 +378,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 
 void Worker::Stop() {
 
-	if( nbProcess==0 )
+	if(ontheflyParams.nbProcess==0 )
 		throw Error("No sub process found. (Simulation not available)");
 
 	if( !ExecuteAndWait(COMMAND_PAUSE,PROCESS_READY) )
@@ -362,20 +387,20 @@ void Worker::Stop() {
 
 void Worker::KillAll() {
 
-	if( dpControl && nbProcess>0 ) {
+	if( dpControl && ontheflyParams.nbProcess>0 ) {
 		if( !ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED) ) {
 			AccessDataport(dpControl);
 			SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-			for(size_t i=0;i<nbProcess;i++)
+			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
 				if(shMaster->states[i]==PROCESS_KILLED) pID[i]=0;
 			ReleaseDataport(dpControl);
 			// Force kill
-			for(size_t i=0;i<nbProcess;i++)
+			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
 				if(pID[i]) KillProc(pID[i]);
 		}
 		CLOSEDP(dpHit);
 	}
-	nbProcess = 0;
+	ontheflyParams.nbProcess = 0;
 
 }
 
@@ -406,12 +431,12 @@ void Worker::SetProcNumber(size_t n) {
 		pID[i] = StartProc(cmdLine,STARTPROC_NORMAL);
 		Sleep(25); // Wait a bit
 		if( pID[i]==0 ) {
-			nbProcess = 0;
+			ontheflyParams.nbProcess = 0;
 			throw Error(cmdLine);
 		}
 	}
 
-	nbProcess = n;
+	ontheflyParams.nbProcess = n;
 
 	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 	bool result = Wait(PROCESS_READY, mApp->loadStatus);
@@ -440,7 +465,7 @@ void Worker::RebuildTextures() {
 }
 
 size_t Worker::GetProcNumber() {
-	return nbProcess;
+	return ontheflyParams.nbProcess;
 }
 
 void Worker::Update(float appTime) {
@@ -453,7 +478,7 @@ void Worker::Update(float appTime) {
 		if (AccessDataport(dpControl)) {
 			int i = 0;
 			SHCONTROL *master = (SHCONTROL *)dpControl->buff;
-			for (int i = 0; i<nbProcess && done; i++) {
+			for (int i = 0; i<ontheflyParams.nbProcess && done; i++) {
 				done = done && (master->states[i] == PROCESS_DONE);
 				error = error && (master->states[i] == PROCESS_ERROR);
 #ifdef MOLFLOW
@@ -568,7 +593,7 @@ void Worker::Update(float appTime) {
 
 void Worker::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
-	if (nbProcess == 0) return;
+	if (ontheflyParams.nbProcess == 0) return;
 
 	AccessDataport(dpControl);
 	SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
@@ -623,7 +648,7 @@ std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
 }
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
-	if (nbProcess == 0 || !geom->IsLoaded()) return;
+	if (ontheflyParams.nbProcess == 0 || !geom->IsLoaded()) return;
 	if (needsReload) RealReload(); //Sync (number of) regions
 
 	GLProgress *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
@@ -635,6 +660,30 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 #ifdef SYNRAD
 	loadSize += regions.size() * sizeof(bool); //Show photons or not
 #endif
+
+	//To do: only close if parameters changed
+	CLOSEDP(dpLog);
+	progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
+	if (!ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+		char errMsg[1024];
+		sprintf(errMsg, "Subprocesses didn't release dpLog handle:\n%s", GetErrorDetails());
+		GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+
+		progressDlg->SetVisible(false);
+		SAFE_DELETE(progressDlg);
+		return;
+	}
+	if (ontheflyParams.enableLogging) {
+		size_t logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
+		dpLog = CreateDataport(logDpName, logDpSize);
+		if (!dpLog) {
+			progressDlg->SetVisible(false);
+			SAFE_DELETE(progressDlg);
+			throw Error("Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
+		}
+		//Fills values with 0
+	}
+
 	Dataport *loader = CreateDataport(loadDpName, loadSize);
 	if (!loader) {
 		progressDlg->SetVisible(false);
@@ -646,8 +695,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 	progressDlg->SetMessage("Assembling parameters to pass...");
 
 	BYTE* buffer = (BYTE*)loader->buff;
-
 	WRITEBUFFER(ontheflyParams, OntheflySimulationParams);
+
 
 #ifdef SYNRAD
 	for (size_t i = 0; i < regions.size(); i++) {

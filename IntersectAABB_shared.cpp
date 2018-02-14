@@ -355,7 +355,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 									}
 									else {
 										// Pass on partial transparent facet
-										//if (f->sh.isProfile || f->hits) {
+										//if (f->sh.isProfile || f->texture) {
 											f->colDist = d;
 											f->colU = u;
 											f->colV = v;

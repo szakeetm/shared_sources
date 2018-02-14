@@ -94,7 +94,8 @@ Dataport *CreateDataport(char *name,size_t size)
 
    /* ------------------- Map the memomy ------------------- */
 
-   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,0);
+   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,size); //With this function write access equals all_access
+   
 
    if( dp->buff==NULL ) {
 
@@ -105,6 +106,8 @@ Dataport *CreateDataport(char *name,size_t size)
 	   return NULL;
 
    }
+   
+   memset(dp->buff, 0, size);//Debug
 
    return (dp);
 }
@@ -132,21 +135,25 @@ Dataport *OpenDataport(char *name,size_t size)
 
    /* ------------------- Link to the share memory ------------------- */
 
-   // 2^32 = 4294967296      DWORD is 32-bit unsigned
-   DWORD sizeHighOrder = DWORD(size >> 32);
-   DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
+   //
+   //// 2^32 = 4294967296      DWORD is 32-bit unsigned
+   //DWORD sizeHighOrder = DWORD(size >> 32);
+   //DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
 
-   //dp->file = CreateFile(name, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   ////dp->file = CreateFile(name, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-   dp->mem = CreateFileMapping(
-	            INVALID_HANDLE_VALUE /*dp->file*/,   // to create a memory file
-		       		NULL,                   // no security 
-			      	PAGE_READWRITE,         // to allow read & write access
-		      		sizeHighOrder,     
-		      		sizeLowOrder,                   // file size      
-			      	name);                  // object name      
-   
-   if( GetLastError()!=ERROR_ALREADY_EXISTS ) {
+   //dp->mem = CreateFileMapping(
+	  //          INVALID_HANDLE_VALUE /*dp->file*/,   // to create a memory file
+		 //      		NULL,                   // no security 
+			//      	PAGE_READWRITE,         // to allow read & write access
+		 //     		sizeHighOrder,     
+		 //     		sizeLowOrder,                   // file size      
+			//      	name);                  // object name      
+   //
+
+   dp->mem = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, name);
+
+   if( /*GetLastError()!=ERROR_ALREADY_EXISTS*/ !dp->mem ) {
 
 	   printf("OpenDataport(): dataport %s doesn't exist.\n",dp->name);
 	   if( dp->mem != INVALID_HANDLE_VALUE )
@@ -158,10 +165,11 @@ Dataport *OpenDataport(char *name,size_t size)
 
    /* ------------------- Link to the semaphore ------------------- */
 
-   SetLastError (ERROR_SUCCESS);
-   dp->sema = CreateMutex (NULL, false, dp->semaname);
+   //SetLastError (ERROR_SUCCESS);
+   //dp->sema = CreateMutex (NULL, false, dp->semaname);
+   dp->sema = OpenMutex(SYNCHRONIZE, false, dp->semaname);
 
-   if( GetLastError()!=ERROR_ALREADY_EXISTS ) {
+   if( /*GetLastError()!=ERROR_ALREADY_EXISTS*/ !dp->sema ) {
 
 	   printf("OpenDataport(): dataport semaphore %s doesn't exist.\n",dp->semaname);
 	   if( dp->sema != INVALID_HANDLE_VALUE )
@@ -173,7 +181,7 @@ Dataport *OpenDataport(char *name,size_t size)
 
    /* ------------------- Map the memomy ------------------- */
 
-   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,0);
+   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,size);  //With this function write access equals all_access
 
    if( dp->buff==NULL ) {
 
@@ -206,9 +214,10 @@ bool AccessDataportTimed(Dataport *dp,DWORD timeout)
 
 bool ReleaseDataport(Dataport *dp)
 {
-  if( ReleaseMutex(dp->sema)==0 )
-	  return true;
-  else
+	if (dp)
+		if( ReleaseMutex(dp->sema)==0 )
+			return true;
+  
 	  return false;
 }
 

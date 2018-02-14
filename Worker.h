@@ -65,7 +65,7 @@ public:
 
   void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
-  void SetMaxDesorption(llong max);// Set the number of maximum desorption
+ // void SetMaxDesorption(llong max);// Set the number of maximum desorption
   DWORD GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
@@ -79,6 +79,8 @@ public:
   void SetHitCache(HIT *buffer,size_t *nb, Dataport *dpHit);  // Set HHit
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
   BYTE *GetHits(); // Access to dataport (HIT)
+  std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();
+  void ReleaseLogBuff();
   void ReleaseHits();
  
   void RemoveRegion(int index);
@@ -136,7 +138,6 @@ public:
   double  nbHitEquiv;          // Equivalent number of hits (low-flux mode), for MFP calculation
   size_t  nbLeakTotal;            // Total number of leak
   
-  size_t  desorptionLimit;     // Number of desoprtion before halting
   double distTraveled_total; // Total distance traveled by particles (for mean free path calc.)
 
   bool   isRunning;           // Started/Stopped state
@@ -156,7 +157,7 @@ public:
   LEAK leakCache[LEAKCACHESIZE];
   size_t hitCacheSize;            // Total number of hhit
   size_t leakCacheSize;
-  
+
 #ifdef MOLFLOW
   size_t sMode; //MC or AC
 
@@ -208,7 +209,6 @@ public:
 private:
 
   // Process management
-  size_t    nbProcess;
   DWORD  pID[MAX_PROCESS];
   DWORD  pid;
   bool   allDone;
@@ -216,10 +216,12 @@ private:
   // Dataport handles and names
   Dataport *dpControl;
   Dataport *dpHit;
+  Dataport *dpLog;
 
   char      ctrlDpName[32];
   char      loadDpName[32];
   char      hitsDpName[32];
+  char      logDpName[32];
 
 
   // Methods

@@ -46,6 +46,7 @@ class FormulaEditor;
 class UpdateCheckDialog;
 class UpdateFoundDialog;
 class UpdateLogWindow;
+class ParticleLogger;
 
 class Geometry;
 
@@ -82,7 +83,7 @@ typedef struct {
 #define MENU_FILE_EXIT       106
 
 #define MENU_EDIT_TSCALING     201
-#define MENU_FORMULAEDITOR 203
+#define MENU_TOOLS_FORMULAEDITOR 203
 #define MENU_EDIT_GLOBALSETTINGS 204
 
 #define MENU_FACET_COLLAPSE    301
@@ -132,6 +133,7 @@ typedef struct {
 
 #define MENU_TOOLS_TEXPLOTTER  401
 #define MENU_TOOLS_PROFPLOTTER 402
+#define MENU_TOOLS_PARTICLELOGGER 403
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -367,6 +369,7 @@ public:
 	SelectTextureType  *selectTextureType;
 	ExtrudeFacet	   *extrudeFacet;
 	MoveFacet	  	   *moveFacet;
+	ParticleLogger     *particleLogger;
 	MirrorFacet	       *mirrorFacet;
 	MirrorVertex       *mirrorVertex;
 	CreateShape			*createShape;
@@ -396,7 +399,7 @@ public:
 	//void SendHeartBeat(bool forced=false);
 	char *FormatInt(llong v, char *unit);
 	char *FormatPS(double v, char *unit);
-	char *FormatSize(DWORD size);
+	char *FormatSize(size_t size);
 	char *FormatTime(float t);
 	
 	void LoadSelection(char *fName = NULL);

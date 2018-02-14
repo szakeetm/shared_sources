@@ -59,7 +59,7 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	cancelButton = new GLButton(0,"Stop waiting");
 	Add(cancelButton);
 
-	RefreshNbProcess(); //Determines size, position and processList nbRows, position and cancelButton position
+	//RefreshNbProcess(); //Determines size, position and processList nbRows, position and cancelButton position
 
 	RestoreDeviceObjects();
 }
@@ -93,7 +93,9 @@ LoadStatus::~LoadStatus()
 }
 
 void LoadStatus::SMPUpdate() {
-	
+		
+	if ((processList->GetNbRow() - 1) != worker->ontheflyParams.nbProcess) RefreshNbProcess();
+
 		char tmp[512];
 		PROCESS_INFO pInfo;
 		size_t  states[MAX_PROCESS];

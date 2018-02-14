@@ -68,7 +68,7 @@ public:
 #ifdef SYNRAD
 	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, Dataport *dpHit, bool saveSelected) {}
 #endif
-	virtual void BuildFacetTextures(BYTE *hits) {}
+	virtual void BuildFacetTextures(BYTE *texture) {}
 
 	void Clear();
 	void BuildGLList();

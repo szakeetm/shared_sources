@@ -50,6 +50,7 @@
 #define DELETE_TEX(t)  if(t) { glDeleteTextures(1,&t);t=0; }
 #define SAFE_DELETE(x) if(x) { delete x;x=NULL; }
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
+#define SAFE_CLEAR(vect) if(vect) {vect.clear();}
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
 #define ZEROVECTOR(_vector) memset(&(_vector[0]),0,_vector.size()*sizeof(_vector[0]))
