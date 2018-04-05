@@ -94,7 +94,7 @@ Dataport *CreateDataport(char *name,size_t size)
 
    /* ------------------- Map the memomy ------------------- */
 
-   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,size); //With this function write access equals all_access
+   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,0); //With this function write access equals all_access
    
 
    if( dp->buff==NULL ) {
@@ -107,14 +107,14 @@ Dataport *CreateDataport(char *name,size_t size)
 
    }
    
-   memset(dp->buff, 0, size);//Debug
+   //memset(dp->buff, 0, size);//Debug
 
    return (dp);
 }
 
 // OpenDataport: Connect to an existing block
 
-Dataport *OpenDataport(char *name,size_t size)
+Dataport *OpenDataport(char *name/*,size_t size*/)
 {
    Dataport *dp;
 
@@ -179,9 +179,9 @@ Dataport *OpenDataport(char *name,size_t size)
 
    }
 
-   /* ------------------- Map the memomy ------------------- */
+   /* ------------------- Map the memory ------------------- */
 
-   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,size);  //With this function write access equals all_access
+   dp->buff = MapViewOfFile(dp->mem,FILE_MAP_WRITE,0,0,0);  //With this function write access equals all_access
 
    if( dp->buff==NULL ) {
 

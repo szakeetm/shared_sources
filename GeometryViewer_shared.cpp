@@ -9,6 +9,7 @@
 #include "GLApp\GLButton.h"
 
 #include "Geometry_shared.h"
+#include "SDL_SavePNG\savepng.h"
 
 #include <math.h>
 //#include <malloc.h>
@@ -53,6 +54,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	blueMaterial.Ambient.b = 1.0f;
 
 	/// Default values
+	screenshotStatus.requested = 0;
 	draggMode = DRAGG_NONE;
 	selected = false;
 	view.projMode = ORTHOGRAPHIC_PROJ;
@@ -192,15 +194,28 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	Add(autoBtn);
 
 	
-	tabLabel = new GLLabel("TAB key pressed: facet/vertex selection modes swapped");
-	tabLabel->SetTextColor(255, 255, 255);
-	Add(tabLabel);
+	
 	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
 	capsLockLabel->SetTextColor(255, 255, 255);
 	Add(capsLockLabel);
 	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
 	hideLotlabel->SetTextColor(255, 255, 255);
 	Add(hideLotlabel);
+	screenshotLabel = new GLLabel("Screenshot: Draw selection rectangle to capture box. Press CTRL+R again to capture whole scene. ESC to cancel");
+	screenshotLabel->SetTextColor(255, 255, 255);
+	Add(screenshotLabel);
+	selectLabel = new GLLabel("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/CTRL to add/remove to existing selection.");
+	selectLabel->SetTextColor(255, 255, 255);
+	Add(selectLabel);
+	rotateLabel = new GLLabel("Rotation mode: hold SHIFT to slow down rotation, hold CTRL to rotate around the third axis, and hold ALT to rotate lighting direction of volume view");
+	rotateLabel->SetTextColor(255, 255, 255);
+	Add(rotateLabel);
+	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning");
+	panLabel->SetTextColor(255, 255, 255);
+	Add(panLabel);
+	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
+	tabLabel->SetTextColor(255, 255, 255);
+	Add(tabLabel);
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -225,7 +240,6 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuseLight2);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, specularLight2);
 	glDisable(GL_LIGHT1);
-
 }
 
 void GeometryViewer::ToOrigo() {
@@ -915,6 +929,7 @@ void GeometryViewer::Paint() {
 
 	if (!parent) return;
 	GLComponent::Paint();
+
 	//Background gradient
 	int x, y, width, height;
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
@@ -1013,6 +1028,7 @@ if( showVolume || showTexture ) {
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
+
 	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
 #ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
@@ -1021,11 +1037,13 @@ if( showVolume || showTexture ) {
 
 	bool detailsSuppressed = hideLot != -1 && (geom->GetNbSelectedFacets() > hideLot);
 	bool displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
+
 	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
 	DrawRule();
+
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
 	
@@ -1036,7 +1054,10 @@ if( showVolume || showTexture ) {
 	GLWindowManager::SetDefault();
 	
 	// Draw selection rectangle or circle
-	if ((draggMode == DRAGG_SELECT || draggMode == DRAGG_SELECTVERTEX) && (mode == MODE_SELECT || mode == MODE_SELECTVERTEX || mode == MODE_ZOOM)) {
+	bool displaySelectionRectangle = (draggMode == DRAGG_SELECT || draggMode == DRAGG_SELECTVERTEX)
+		&& (mode == MODE_SELECT || mode == MODE_SELECTVERTEX || mode == MODE_ZOOM)
+		&& (selX1 != selX2) && (selY1 != selY2);
+	if (displaySelectionRectangle) {
 		bool circleMode = GetWindow()->IsAltDown();
 		GLushort dashPattern = 0xCCCC;
 
@@ -1069,7 +1090,7 @@ if( showVolume || showTexture ) {
 			float radius = sqrt(pow((float)(selX1 - selX2), 2) + pow((float)(selY1 - selY2), 2));
 
 			for (int i = 0; i <= 360; i += 2) {
-				float degInRad = i*DEG2RAD;
+				float degInRad = i * DEG2RAD;
 				glVertex2f(selX1 + cos(degInRad)*radius, selY1 + sin(degInRad)*radius);
 			}
 			glEnd();
@@ -1079,14 +1100,37 @@ if( showVolume || showTexture ) {
 
 	}
 
+	//Status labels
 	//From bottom to up
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47, 0, 19);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20*(int)displayWarning, 0, 19);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20*(int)GetWindow()->IsCapsLockOn() - 20*(int)displayWarning, 0, 19);
+	bool displayHideLotLabel = displayWarning;
+	bool displayCapsLockLabel = GetWindow()->IsCapsLockOn();
+	bool displayRotateLabel = draggMode == DRAGG_ROTATE;
+	bool displayScreenshotLabel = screenshotStatus.requested > 0;
+	bool displaySelectionLabel = displaySelectionRectangle;
+	bool displayPanLabel = draggMode == DRAGG_MOVE;
+	bool displayTabLabel = GetWindow()->IsTabDown();
 
-	tabLabel->SetVisible(GetWindow()->IsTabDown());
-	capsLockLabel->SetVisible(GetWindow()->IsCapsLockOn());
-	hideLotlabel->SetVisible(displayWarning);
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47, 0, 19);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayHideLotLabel, 0, 19);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel, 0, 19);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel - 20 * (int)displayRotateLabel, 0, 19);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
+		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel, 0, 19);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
+		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel, 0, 19);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
+		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel - 20 * displayPanLabel, 0, 19);
+
+	rotateLabel->SetVisible(displayRotateLabel);
+	capsLockLabel->SetVisible(displayCapsLockLabel);
+	hideLotlabel->SetVisible(displayHideLotLabel);
+	screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetVisible(displayTabLabel);
+
+	
+
 		
 #ifdef MOLFLOW
 	if (work->displayedMoment)
@@ -1097,7 +1141,12 @@ if( showVolume || showTexture ) {
 	timeLabel->SetVisible(showTime);
 #endif
 	
+	if (screenshotStatus.requested >= 2) {
+		Screenshot();
+	}
+
 	PaintCompAndBorder();
+	
 }
 
 void GeometryViewer::PaintCompAndBorder() {
@@ -1280,6 +1329,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		else if (unicode == SDLK_TAB) {
 			UpdateMouseCursor(mode);
 		}
+		else if (unicode == SDLK_ESCAPE) {
+			screenshotStatus.requested = 0;
+		}
 
 		return;
 	}
@@ -1421,8 +1473,23 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				}
 				else {
 					// Select region
-					geom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
-						!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
+					if (screenshotStatus.requested == 1) {
+						int wx, wy, ww, wh;
+						this->GetBounds(&wx, &wy, &ww, &wh); wh -= 28;//Toolbar height
+						int sx = Min(selX1, selX2)/* - wx*/; sx = Max(sx, 0);
+						int sy = Min(selY1, selY2)/* - wy*/; sy = Max(sy, 0);
+						int sw = abs(selX2 - selX1); sw = Min(sw, ww - sx);
+						int sh = abs(selY2 - selY1); sh = Min(sh, wh - sy);
+						screenshotStatus.x = sx;
+						screenshotStatus.y = sy;
+						screenshotStatus.w = sw;
+						screenshotStatus.h = sh;
+						screenshotStatus.requested = 2;
+					}
+					else {
+						geom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+							!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
+					}
 				}
 			}
 			else if ((mode == MODE_SELECTVERTEX && !GetWindow()->IsTabDown()) || (mode == MODE_SELECT && GetWindow()->IsTabDown())) {
@@ -1827,4 +1894,47 @@ void Geometry::BuildFacetMeshLists()
 	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 
+}
+
+void GeometryViewer::Screenshot() {
+
+	screenshotStatus.requested = 0;
+
+	SDL_Surface * image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenshotStatus.w, screenshotStatus.h, 24, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
+
+	glReadPixels(screenshotStatus.x, this->GetHeight() - screenshotStatus.y - screenshotStatus.h , screenshotStatus.w, screenshotStatus.h, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+	//Vertical flip
+	int index;
+	void* temp_row;
+	int height_div_2;
+
+	temp_row = (void *)malloc(image->pitch);
+	if (NULL == temp_row)
+	{
+		throw Error("Not enough memory for image inversion");
+	}
+	height_div_2 = (int)(image->h * .5);
+	for (index = 0; index < height_div_2; index++)
+	{
+		memcpy((Uint8 *)temp_row, (Uint8 *)(image->pixels) + image->pitch * index, image->pitch);
+		memcpy((Uint8 *)(image->pixels) + image->pitch * index, (Uint8 *)(image->pixels) + image->pitch * (image->h - index - 1), image->pitch);
+		memcpy((Uint8 *)(image->pixels) + image->pitch * (image->h - index - 1), temp_row, image->pitch);
+	}
+	free(temp_row);
+	SDL_SavePNG(image, screenshotStatus.fileName.c_str());
+	SDL_FreeSurface(image);
+
+	screenshotLabel->SetVisible(false);
+	//mApp->wereEvents = true; //Hide screensot status label
+}
+
+void GeometryViewer::RequestScreenshot(std::string fileName, int x, int y, int w, int h) {
+	//Set area as whole screen by default
+	screenshotStatus.x = x;
+	screenshotStatus.y = y;
+	screenshotStatus.w = w;
+	screenshotStatus.h = h;
+	screenshotStatus.fileName = fileName;
+	if (screenshotStatus.requested<2) screenshotStatus.requested++;
 }

@@ -116,7 +116,7 @@ public:
   int GetCDFId(double temperature);
   int GetIDId(int paramId);
   //Different signature:
-  void SendHits(bool skipFacetHits = false);// Send total and facet hit counts to subprocesses
+  void WriteHitBuffer(bool skipFacetHits = false);// Send total and facet hit counts to subprocesses
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
 #endif
 
@@ -125,7 +125,7 @@ public:
   void AddMaterial(std::string *fileName);
   void ClearRegions();
   //Different signature:
-  void SendHits();// Send total and facet hit counts to subprocesses
+  void WriteHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
 #endif
 

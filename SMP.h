@@ -32,12 +32,12 @@ extern "C" {
 
  // Win32 shared memory
  typedef struct {
-	 char              name[32];
-	 char              semaname[32];
-   HANDLE            sema;
-	 HANDLE            mem;
-	 HANDLE file; //Debug
-	 void              *buff;
+	 char              name[32]; //Unique identifier
+	 char              semaname[32]; //Mutex unique identifier
+     HANDLE            sema; //Mutex handle (CreateMutex return value)
+	 HANDLE            mem; //File mapping handle (CreateFileMapping return value)
+	 HANDLE file;			//Physical file handle (if persistent)
+	 void              *buff; //View handle (MapViewOfFile return value, pointer to data)
  } Dataport;
 
 #else
@@ -65,7 +65,7 @@ typedef struct {
 
 // Shared memory
 Dataport *CreateDataport(char *name, size_t size);
-Dataport *OpenDataport(char *name, size_t size);
+Dataport *OpenDataport(char *name/*, size_t size*/);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);

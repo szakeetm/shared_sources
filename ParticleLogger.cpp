@@ -249,6 +249,11 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 		<< "HitTime_[s]" << separator
 		<< "ParticleDecayMoment_[s]" << separator;
 #endif // MOLFLOW
+#ifdef SYNRAD
+	tmp << "Energy_[eV]" << separator
+		<< "Flux_[photon/s]" << separator
+		<< "Power_[W]" << separator;
+#endif // SYNRAD
 	tmp << "\n";
 
 	if (directWriteMode)
@@ -290,6 +295,11 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 			<< log[i].time << separator
 			<< log[i].particleDecayMoment << separator;
 #endif // MOLFLOW
+#ifdef SYNRAD
+		tmp << log[i].energy << separator
+			<< log[i].dF << separator
+			<< log[i].dP << separator;
+#endif // SYNRAD
 
 		tmp << "\n";
 

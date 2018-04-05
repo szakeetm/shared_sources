@@ -385,7 +385,12 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 		resultCategory = "zipDownloadError";
 		resultDetail << "zipDownloadError_" << dlResult << "_" << applicationName << "_" << currentVersionId;
 		userResult.str(""); userResult.clear();
-		userResult << "Couldn't download " << update.zipUrl << " to " << zipDest.str() << " No network connection or the file doesn't exist on the server.";
+		if (dlResult == CURLE_WRITE_ERROR) {
+			userResult << "Couldn't write local file " << zipDest.str() << "\nCheck if you have access to write there.";
+		}
+		else {
+			userResult << "Couldn't download " << update.zipUrl << " to " << zipDest.str() << "\nNo network connection or the file doesn't exist on the server.";
+		}
 		logWindow->Log(userResult.str());
 		logWindow->Log("Aborting update process.");
 	}

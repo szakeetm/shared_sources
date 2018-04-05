@@ -251,7 +251,7 @@ public:
 	double time, particleDecayMoment, velocity;
 #endif
 #ifdef SYNRAD
-	double dF, dP;
+	double energy, dF, dP;
 #endif
 };
 

@@ -324,7 +324,7 @@ char *Interface::FormatSize(size_t size)
 
 	static char ret[64];
 	if (size < 1024UL) {
-		sprintf(ret, "%d Bytes", size);
+		sprintf(ret, "%zd Bytes", size);
 	}
 	else if (size < 1048576UL) {
 		sprintf(ret, "%.1f KB", (double)size / 1024.0);
@@ -783,6 +783,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
+	menu->GetSubMenu("Tools")->Add(NULL); // Separator
+	menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT,SDLK_r, CTRL_MODIFIER);
 
 	menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_TSCALING, 137, 24);
 	menu->GetSubMenu("Tools")->SetIcon(MENU_TOOLS_FORMULAEDITOR, 155, 24);
@@ -1190,7 +1192,48 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			particleLogger->UpdateStatus();
 			particleLogger->SetVisible(true);
 			return true;
+		
+		case MENU_TOOLS_SCREENSHOT:
+		{
+			std::ostringstream tmp;
 
+			time_t     now = time(0);
+			struct tm  tstruct;
+			char       buf[80];
+			tstruct = *localtime(&now);
+			// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+			// for more information about date/time format
+			strftime(buf, sizeof(buf), "%Y_%m_%d__%H_%M_%S", &tstruct);
+
+			tmp << buf << "_" << worker.GetCurrentShortFileName();
+			std::string oriName = tmp.str();
+			tmp.str("");
+			tmp.clear();
+			for (char c : oriName) {
+				bool basic_ascii = ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+				if (basic_ascii) tmp << c;
+				else tmp << '_';
+			}
+			std::string asciiName = tmp.str();
+			tmp.str("");
+			tmp.clear();
+			tmp << "Screenshots\\" << asciiName << ".png";
+
+			if (!FileUtils::DirExists("Screenshots")) { //Actually, it isn't necessary to check if exists, CreateDirectory can silently fail.
+				CreateDirectory("Screenshots", NULL);
+			}
+
+			int x, y, width, height;
+			viewer[curViewer]->GetBounds(&x, &y, &width, &height);
+
+			int leftMargin = 4; //Left bewel
+			int rightMargin = 0;
+			int topMargin = 0;
+			int bottomMargin = 28; //Toolbar
+
+			viewer[curViewer]->RequestScreenshot(tmp.str(), leftMargin, topMargin, width - leftMargin - rightMargin, height - topMargin - bottomMargin);
+			return true;
+		}
 		case MENU_FACET_COLLAPSE:
 			if (geom->IsLoaded()) {
 				DisplayCollapseDialog();

@@ -99,6 +99,12 @@ typedef struct {
 
 } SelectionGroup;
 
+typedef struct {
+	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
+	std::string fileName;
+	int x, y, w, h; //Screenshotarea
+} ScreenshotStatus;
+
 class GeometryViewer : public GLComponent {
 
 public:
@@ -129,6 +135,7 @@ public:
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();
+  void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   // Flag view
   bool showIndex;
@@ -186,6 +193,7 @@ private:
   void AutoScale(bool reUpdateMouseCursor=true);
   void ComputeBB(/*bool getAll*/);
   void UpdateLight();
+  void Screenshot();
 
   //void DrawBB();
   //void DrawBB(AABBNODE *node);
@@ -206,9 +214,14 @@ private:
   GLButton      *handBtn;
   GLLabel       *coordLab;
 
-  GLLabel		*tabLabel;
+  
   GLLabel       *capsLockLabel;
   GLLabel       *hideLotlabel;
+  GLLabel		*screenshotLabel;
+  GLLabel		*selectLabel;
+  GLLabel		*rotateLabel;
+  GLLabel		*panLabel;
+  GLLabel		*tabLabel;
 
   #ifdef MOLFLOW
   GLOverlayLabel *timeLabel;
@@ -254,6 +267,7 @@ private:
 
   // Selection change
   bool selectionChange;
+  ScreenshotStatus screenshotStatus;
 
   // SDL/OpenGL stuff
   GLfloat matView[16];

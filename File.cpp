@@ -55,6 +55,18 @@ bool FileUtils::Exist(const char *fileName) {
 	return false;
 }
 
+bool FileUtils::DirExists(std::string dirName)
+{
+	struct stat info;
+
+	if (stat(dirName.c_str(), &info) != 0)
+		return false;
+	else if (info.st_mode & S_IFDIR)
+		return true;
+	else
+		return false;
+}
+
 // FileReader class
 
 FileReader::FileReader(const char *fileName) {

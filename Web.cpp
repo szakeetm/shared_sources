@@ -47,7 +47,8 @@ CURLcode DownloadFile(std::string url,std::string fileName) {
     curl = curl_easy_init();
     if (curl) {
         fp = fopen(fileName.c_str(),"wb");
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		if (fp == NULL) return CURLE_WRITE_ERROR;
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
         result = curl_easy_perform(curl);

@@ -53,7 +53,14 @@ Geometry::Geometry() {
 	texColormap = true;
 
 	sh.nbSuper = 0;
+#ifdef MOLFLOW
+	textureMode = 0; //PRESSURE
+#endif
+#ifdef SYNRAD
+	textureMode = 1; //FLUX
+#endif
 	viewStruct = -1;
+
 	strcpy(strPath, "");
 }
 
@@ -502,69 +509,65 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	mApp->changedSinceSave = true;
 	ClipperLib::PolyTree solution;
 	std::vector<ProjectedPoint> projectedPoints;
-	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type);
+	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type); //Returns solution in a polygon/hole list, we have to convert it to a continous outline
 
 	//a new facet
-	size_t nbNewFacets = solution.ChildCount();
+	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
 	facets = (Facet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(Facet *));
 	//set selection
 	UnselectAll();
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
-		bool hasHole = solution.Childs[i]->ChildCount() > 0;
-		size_t closestIndexToChild, closestIndexToParent;
-		double minDist = 9E99;
-		if (hasHole) {
-			for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) { //Find closest parent point
-				Vector2d vert;
-				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
-				for (size_t k = 0; k < solution.Childs[i]->Childs[0]->Contour.size(); k++) {//Find closest child point
-					Vector2d childVert;
-					childVert.u = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[k].X;
-					childVert.v = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[k].Y;
-					double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
-					if (dist < minDist) {
-						minDist = dist;
-						closestIndexToChild = j;
-						closestIndexToParent = k;
+		size_t nbHoles = solution.Childs[i]->ChildCount();
+		std::vector<size_t> closestIndexToChild(nbHoles), closestIndexToParent(nbHoles);
+		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
+			double minDist = 9E99;
+			
+				for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) { //Find closest parent point
+					Vector2d vert;
+					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
+					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
+					for (size_t k = 0; k < solution.Childs[i]->Childs[holeIndex]->Contour.size(); k++) {//Find closest child point
+						Vector2d childVert;
+						childVert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].X;
+						childVert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].Y;
+						double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
+						if (dist < minDist) {
+							minDist = dist;
+							closestIndexToChild[holeIndex] = j;
+							closestIndexToParent[holeIndex] = k;
+						}
 					}
 				}
-			}
+			
 		}
 		size_t nbRegistered = 0;
-		size_t nbVertex;
-		if (!hasHole)
-			nbVertex = solution.Childs[i]->Contour.size();
-		else
-			nbVertex = solution.Childs[i]->Contour.size() + 2 + solution.Childs[i]->Childs[0]->Contour.size();
+		size_t nbVertex = solution.Childs[i]->Contour.size();
+		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
+			nbVertex += 2 + solution.Childs[i]->Childs[holeIndex]->Contour.size();
+		}
+
 		Facet *f = new Facet(nbVertex);
 		for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) {
 			Vector2d vert;
-			if (hasHole && j == closestIndexToChild) { //Create hole
-				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
-				RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
-				for (size_t k = 0; k < solution.Childs[i]->Childs[0]->Contour.size(); k++) { //Register hole
-					vert.u = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[(k + closestIndexToParent) % solution.Childs[i]->Childs[0]->Contour.size()].X;
-					vert.v = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[(k + closestIndexToParent) % solution.Childs[i]->Childs[0]->Contour.size()].Y;
-					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
+			for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
+				if (j == closestIndexToChild[holeIndex]) { //Create hole
+					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
+					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
+					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
+					for (size_t k = 0; k < solution.Childs[i]->Childs[0]->Contour.size(); k++) { //Register hole
+						vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].X;
+						vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].Y;
+						RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
+					}
+					vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[closestIndexToParent[holeIndex]].X;
+					vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[closestIndexToParent[holeIndex]].Y;
+					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++); //Re-register hole entry point before exit
 				}
-				vert.u = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[closestIndexToParent].X;
-				vert.v = 1E-6*(double)solution.Childs[i]->Childs[0]->Contour[closestIndexToParent].Y;
-				RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++); //Re-register hole entry point before exit
-																								 //re-register parent entry
-				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
-				RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
-
 			}
-			else {
-				vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-				vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
-				RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
-			}
-
+			vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
+			vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
+			RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
 		}
 		f->selected = true;
 		if (viewStruct != -1) f->sh.superIdx = viewStruct;
@@ -581,6 +584,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 }
 
 size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree& solution, ClipperLib::ClipType& type) {
+	
 	ClipperLib::Paths subj(1), clip(clippingPaths.size());
 
 	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
@@ -601,6 +605,77 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 	c.AddPaths(clip, ClipperLib::ptClip, true);
 	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
 	return solution.ChildCount();
+
+	//The code below could identify holes in Molflow logic and convert them to Polygon/hole-subpolygon format.
+	//Turns out it wasn't necessary for the Clipper library to recognize holes, so we return to the original code above for simplicty
+	/*
+	//Identify holes in source facet
+	std::vector<size_t> existingVertices;
+	std::vector < std::vector<size_t> > holePaths; // list of list of vertices
+	bool skipNext = false;
+	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
+		if (skipNext) {
+			skipNext = false;
+			continue;
+		}
+		if (Contains(existingVertices, facets[id1]->indices[i1])) {
+			//Identify last occurrence of the same index (beginning of hole)
+			size_t holeStartIndex = Previous(i1, facets[id1]->sh.nbIndex);
+			while (facets[id1]->indices[holeStartIndex] != facets[id1]->indices[i1]) {
+				holeStartIndex = Previous(holeStartIndex, facets[id1]->sh.nbIndex);
+			}
+			std::vector<size_t> newHolePath;
+			for (int i2 = holeStartIndex; i2 != i1; i2 = Next(i2, facets[id1]->sh.nbIndex)) {
+				newHolePath.push_back(i2);
+			}
+			holePaths.push_back(newHolePath);
+			skipNext = true;
+		}
+		existingVertices.push_back(facets[id1]->indices[i1]);
+	}
+
+
+	
+	ClipperLib::Paths subj(1+ holePaths.size()), clip(clippingPaths.size());
+
+	size_t lastAdded = -1;
+	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
+		bool notPartOfHole = true;
+		for (auto path : holePaths) {
+			for (auto v : path) {
+				if (facets[id1]->indices[v] == facets[id1]->indices[i1]) {
+					notPartOfHole = false;
+					break;
+				}
+			}
+		}
+		if (notPartOfHole && facets[id1]->indices[i1]!=lastAdded) {
+			subj[0] << ClipperLib::IntPoint((int)(facets[id1]->vertices2[i1].u*1E6), (int)(facets[id1]->vertices2[i1].v*1E6));
+			lastAdded = facets[id1]->indices[i1];
+		}
+	}
+
+	for (size_t i1 = 0; i1 < holePaths.size(); i1++) {
+		for (size_t i2 : holePaths[i1]) {
+			subj[i1+1] << ClipperLib::IntPoint((int)(facets[id1]->vertices2[i2].u*1E6), (int)(facets[id1]->vertices2[i2].v*1E6));
+		}
+	}
+
+	for (size_t i3 = 0; i3 < clippingPaths.size(); i3++) {
+		for (size_t i2 = 0; i2 < clippingPaths[i3].size(); i2++) {
+			ProjectedPoint proj;
+			proj.globalId = clippingPaths[i3][i2];
+			proj.vertex2d = ProjectVertex(vertices3[clippingPaths[i3][i2]], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
+			clip[0] << ClipperLib::IntPoint((int)(proj.vertex2d.u*1E6), (int)(proj.vertex2d.v*1E6));
+			projectedPoints.push_back(proj);
+		}
+	}
+	ClipperLib::Clipper c;
+	c.AddPaths(subj, ClipperLib::ptSubject, true);
+	c.AddPaths(clip, ClipperLib::ptClip, true);
+	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
+	return solution.ChildCount();
+	*/
 }
 
 void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
