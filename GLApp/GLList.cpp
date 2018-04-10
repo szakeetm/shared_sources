@@ -1317,7 +1317,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		if( evt->button.button==SDL_BUTTON_WHEELUP ) {
 			if( selectedRows[0]>0 ) {
 				UpdateCell();
-				selectedRows[0]--;
+				selectedRows[0]--; //Can't go negative
 				MapEditText();
 			}
 			return EDIT_RELAY;
@@ -1358,7 +1358,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		case SDLK_UP:
 			if( selectedRows[0]>0 ) {
 				UpdateCell();
-				selectedRows[0]--;lastRowSel= (int)selectedRows[0];
+				selectedRows[0]--;lastRowSel= (int)selectedRows[0]; //Can't go negative
 				parent->ProcessMessage(this,MSG_LIST);
 				MapEditText();
 				//ScrollToVisible(selectedRows[0],0,false);
@@ -1368,7 +1368,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		case SDLK_LEFT:
 			if( edit->GetCursorPos()==0 && selectedCol>0 && cEdits[selectedCol-1]) {
 				UpdateCell();
-				selectedCol--;lastColSel=selectedCol;
+				selectedCol--;lastColSel=selectedCol; //Can't go negative
 				parent->ProcessMessage(this,MSG_LIST);
 				MapEditText();
 				return EDIT_IGNORE;
@@ -1416,7 +1416,7 @@ void GLList::HandleWheel(SDL_Event *evt) {
 
 	if( evt->button.button==SDL_BUTTON_WHEELUP ) {
 		if( selectedRows.size()==1 && selectedRows[0]>0 ) {
-			selectedRows[0]--;
+			selectedRows[0]--; //Can't go negative
 			lastRowSel = (int)selectedRows[0];
 			parent->ProcessMessage(this,MSG_LIST);
 			ScrollToVisible();
@@ -2017,7 +2017,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					case SINGLE_CELL:
 					case BOX_CELL:
 						if(selectedCol>0 && selectedRows.size() ==1) {
-							selectedCol--;
+							selectedCol--; //Can't go negative
 							lastColSel = selectedCol;
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();
@@ -2077,7 +2077,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 					case SINGLE_CELL:
 					case BOX_CELL:
 						if(selectedRows.size()==1 && selectedRows[0]>0 && selectedCol>=0) {
-							selectedRows[0]--;
+							selectedRows[0]--;  //Can't go negative
 							lastRowSel = (int)(selectedRows[0]);
 							parent->ProcessMessage(this,MSG_LIST);
 							ScrollToVisible();

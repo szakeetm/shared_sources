@@ -885,7 +885,7 @@ void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
 		// Remove the ear
 		for (int i = e; i < p.nbPts - 1; i++)
 			p.pts[i] = p.pts[i + 1];
-		p.nbPts--;
+		p.nbPts--; //Underrun-safe
 	}
 
 	// Draw the last ear

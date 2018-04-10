@@ -694,7 +694,7 @@ void Facet::SwapNormal() {
 	// Revert vertex order (around the second point)
 
 	size_t* tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
-	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++)
+	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
 		tmp[(i + 1) % sh.nbIndex] = GetIndex((int)j + 1);
 	free(indices);
 	indices = tmp;

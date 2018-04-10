@@ -444,8 +444,8 @@ void Geometry::CreateDifference() {
 	//close circle by adding the first vertex again
 	facets[sh.nbFacet - 1]->indices[counter++] = facets[firstFacet]->indices[0];
 	//reverse circle on second facet
-	for (size_t i = facets[secondFacet]->sh.nbIndex - 1; i >= 0; i--)
-		facets[sh.nbFacet - 1]->indices[counter++] = facets[secondFacet]->GetIndex((int)i + 1);
+	for (int i = (int)facets[secondFacet]->sh.nbIndex - 1; i >= 0; i--)
+		facets[sh.nbFacet - 1]->indices[counter++] = facets[secondFacet]->GetIndex(i + 1);
 	//close circle by adding the first vertex again
 	facets[sh.nbFacet - 1]->indices[counter++] = facets[secondFacet]->indices[0];
 
@@ -962,7 +962,7 @@ bool Geometry::GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, si
 		p11 = f1->GetIndex(i);
 		p12 = f1->GetIndex(i + 1);
 
-		for (size_t j = 0; j < f2->sh.nbIndex; j++) {
+		for (int j = 0; j < f2->sh.nbIndex; j++) { //Cannot be size_t, negative values
 
 			p21 = f2->GetIndex(j);
 			p22 = f2->GetIndex(j + 1);
@@ -1384,7 +1384,7 @@ void Geometry::RemoveSelectedVertex() {
 
 	for (size_t c = 0; c < facetsToChange.size(); c++) {
 		Facet* f = facets[facetsToChange[c]];
-		int nbRemove = 0;
+		size_t nbRemove = 0;
 		for (size_t i = 0; (int)i < f->sh.nbIndex; i++) //count how many to remove			
 			if (vertices3[f->indices[i]].selected)
 				nbRemove++;
@@ -2425,7 +2425,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 
 			if (startIndex == f->sh.nbIndex) continue; //Whole null facet on clipping line...
 
-			startIndex--; //First vertex not on clipping line
+			startIndex--; //First vertex not on clipping line. Underrun-safe because it's at least 1
 			bool areWeInside = (currentPos == 1);
 
 			size_t v = startIndex;
@@ -2725,7 +2725,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		Facet *f = facets[i];
-		for (size_t j = 0; j < f->neighbors.size(); j++) {
+		for (int j = 0; j < f->neighbors.size(); j++) {
 			size_t oriId = f->neighbors[j].id;
 			if (oriId >= newRefs.size()) { //Refers to a facet that didn't exist even before
 				f->neighbors.erase(f->neighbors.begin() + j);

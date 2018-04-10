@@ -3,6 +3,27 @@
 	<Branches>
 		<Branch name="molflow_public" description="MolFlow+ stable releases">
 			<UpdateManifest>
+				<Version id="2665" name="2.6.65" date="05-04-2018" />
+				<ChangeLog>
+<![CDATA[
+Feature
+- Particle logger tool (record and export all hits on a facet)
+- Screenshot tool
+- 'Create difference' can now create multiple holes in the same facet
+Interface
+- More verbose status labels in bottom of screen
+Bugfix
+- Fixed an auto-updater crash when the update file couldn't be written locally
+- Loading SYN files works again
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.65.zip" zipName="molflow_2.6.65.zip" folderName="molflow_2.6.65" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+			<UpdateManifest>
 				<Version id="2664" name="2.6.64" date="25-01-2018" />
 				<ChangeLog>
 <![CDATA[
