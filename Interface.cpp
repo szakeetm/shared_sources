@@ -27,6 +27,7 @@
 //Windows
 #include "GeometryViewer.h"
 #include "CollapseSettings.h"
+#include "HistogramSettings.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
 #include "ScaleFacet.h"
@@ -82,6 +83,7 @@ Interface::Interface() {
 
 	antiAliasing = true;
 	whiteBg = false;
+	leftHandedView = false;
 	autoUpdateFormulas = true;
 	compressSavedFiles = true;
 	/*double gasMass=28;
@@ -122,6 +124,7 @@ Interface::Interface() {
 
 	//formulaSettings = NULL;
 	collapseSettings = NULL;
+	histogramSettings = NULL;
 	moveVertex = NULL;
 	scaleVertex = NULL;
 	scaleFacet = NULL;
@@ -999,8 +1002,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	facetDetailsBtn = new GLButton(0, "Details...");
 	facetPanel->Add(facetDetailsBtn);
 
-	facetCoordBtn = new GLButton(0, "Coord...");
-	facetPanel->Add(facetCoordBtn);
+	facetHistogramBtn = new GLButton(0, "Histogr.");
+	facetPanel->Add(facetHistogramBtn);
 
 	facetApplyBtn = new GLButton(0, "Apply");
 	facetApplyBtn->SetEnabled(false);
@@ -1044,6 +1047,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	// Those which are displayed are invalidated by the window manager
 	RVALIDATE_DLG(formulaEditor);
 	RVALIDATE_DLG(collapseSettings);
+	RVALIDATE_DLG(histogramSettings);
 	RVALIDATE_DLG(moveVertex);
 	RVALIDATE_DLG(scaleVertex);
 	RVALIDATE_DLG(scaleFacet);
@@ -1083,6 +1087,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	// Those which are displayed are invalidated by the window manager
 	IVALIDATE_DLG(formulaEditor);
 	IVALIDATE_DLG(collapseSettings);
+	IVALIDATE_DLG(histogramSettings);
 	IVALIDATE_DLG(moveVertex);
 	IVALIDATE_DLG(scaleVertex);
 	IVALIDATE_DLG(scaleFacet);
@@ -1590,8 +1595,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				buildIntersection = new BuildIntersection(geom, &worker);
 				buildIntersection->SetVisible(true);
 			}
-			return true;
-
+			return true;			
 		case MENU_VERTEX_SELECT_COPLANAR:
 			char *input;
 			if (geom->IsLoaded()) {
@@ -1864,6 +1868,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			updateRequested = true;
 			FrameMove();
 			return true;
+		}
+		else if (src == facetHistogramBtn) {
+			if (!histogramSettings) {
+				histogramSettings = new HistogramSettings();
+				histogramSettings->Refresh(geom->GetSelectedFacets());
+			}
+			histogramSettings->SetVisible(!histogramSettings->IsVisible());
+			histogramSettings->Reposition();
 		}
 		break;
 

@@ -245,8 +245,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 void GeometryViewer::ToOrigo() {
 	//view.projMode = PERSPECTIVE_PROJ;
 	view.camAngleOx = 0.0;
-	view.camAngleOy = (view.projMode == PERSPECTIVE_PROJ) ? 0.0 : PI;
-
+	view.camAngleOy = (view.projMode == PERSPECTIVE_PROJ) ? 0.0 : (mApp->leftHandedView ? PI : 0.0);
 	view.camAngleOz = 0.0;
 
 	view.camDist = 100.0;
@@ -346,12 +345,18 @@ bool GeometryViewer::IsDragging() {
 void GeometryViewer::ToTopView() {
 
 	if (!work) return;
-	view.camAngleOx = PI / 2.0;
-	view.camAngleOy = 0.0;
-
-	view.camAngleOz = 0.0;
-
-	view.performXY = (view.projMode == PERSPECTIVE_PROJ) ? XYZ_NONE : XYZ_TOP;
+	if (view.projMode == ORTHOGRAPHIC_PROJ) {
+		view.camAngleOx = -.5 * PI;
+		view.camAngleOy = mApp->leftHandedView ? PI : 0.0;
+		view.camAngleOz = 0.0;
+		view.performXY = XYZ_TOP;
+	}
+	else { //Perspective
+		view.camAngleOx = .5 * PI;
+		view.camAngleOy = 0.0;
+		view.camAngleOz = 0.0;
+		view.performXY = XYZ_NONE;
+	}
 	AutoScale();
 
 }
@@ -438,13 +443,12 @@ void GeometryViewer::UpdateMatrix() {
 	if (!work) return;
 	Geometry *geom = work->GetGeometry();
 	if (!geom) return;
-
+	double handedness = mApp->leftHandedView ? -1.0 : 1.0;
 	// Model view matrix ---------------------------------------------------
 
 	// Scale angle in -PI,PI
 	view.camAngleOx = RoundAngle(view.camAngleOx);
 	view.camAngleOy = RoundAngle(view.camAngleOy);
-
 	view.camAngleOz = RoundAngle(view.camAngleOz);
 
 	// Convert polar coordinates
@@ -456,16 +460,18 @@ void GeometryViewer::UpdateMatrix() {
 	camDir.z  = -cos(view.camAngleOx) * cos(view.camAngleOy);
 	*/
 
+	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
-	double z = -cos(view.camAngleOx) * cos(view.camAngleOy);
+	double z = handedness * cos(view.camAngleOx) * cos(view.camAngleOy);
 
-	//Rotation around Z
+	//Rotation of cam direction around Z
 	camDir.x = x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
 	camDir.y = x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
 	camDir.z = z;
 
-	camLeft.x = -cos(view.camAngleOy);
+	//Camleft doesn't take into account camAngleOz...
+	camLeft.x = handedness * cos(view.camAngleOy);
 	camLeft.y = 0.0;
 	camLeft.z = sin(view.camAngleOy);
 
@@ -486,12 +492,13 @@ void GeometryViewer::UpdateMatrix() {
 	case ORTHOGRAPHIC_PROJ:
 		glLoadIdentity();
 		glScaled(-view.camDist, -view.camDist, view.camDist);
-		glRotated(ToDeg(-view.camAngleOx), 1.0, 0.0, 0.0);
+
+		glRotated(ToDeg(handedness * view.camAngleOx), 1.0, 0.0, 0.0);
 		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
 
 		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
 
-		glTranslated(-(org.x - view.camOffset.x), -(org.y + view.camOffset.y), -(org.z + view.camOffset.z));
+		glTranslated(-(org.x + handedness * view.camOffset.x), -(org.y + view.camOffset.y), -(org.z + view.camOffset.z));
 		break;
 	}
 
@@ -896,10 +903,12 @@ void GeometryViewer::Zoom() {
 
 		x0 -= (double)posX;
 		y0 -= (double)posY;
-
+		
+		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
+			
 		case XYZ_TOP: // TopView
-			dx = (-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = (0.5 - x0 / (double)width)  * (view.vRight - view.vLeft);
 			dz = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_SIDE: // Side View
@@ -907,7 +916,7 @@ void GeometryViewer::Zoom() {
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_FRONT: // Front View
-			dx = -(-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = -1.0 * (-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		}
@@ -965,9 +974,10 @@ void GeometryViewer::Paint() {
 		// Draw coordinates on screen when aligned
 		Vector3d org = geom->GetCenter();
 		double x, y, z;
+		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
 		case XYZ_TOP: // TopView
-			x = -view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist;
+			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x - view.camOffset.x)*view.camDist);
 			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z)*view.camDist;
 			sprintf(tmp, "X=%g, Z=%g", -x / view.camDist, z / view.camDist);
 			topBtn->SetState(true);
@@ -979,7 +989,7 @@ void GeometryViewer::Paint() {
 			sideBtn->SetState(true);
 			break;
 		case XYZ_FRONT: // Front View
-			x = -view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist;
+			x =  handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x - view.camOffset.x)*view.camDist);
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
 			sprintf(tmp, "X=%g, Y=%g", x / view.camDist, y / view.camDist);
 			frontBtn->SetState(true);
@@ -1222,7 +1232,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 	if (evt->type == SDL_KEYDOWN) {
 		int unicode = /*(evt->key.keysym.unicode & 0x7F);
 		if (!unicode) unicode =*/ evt->key.keysym.sym;
-
+		
+		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		if (unicode == SDLK_UP) {
 			if (GetWindow()->IsShiftDown()) {
 				view.camAngleOx += angleStep;
@@ -1243,9 +1254,10 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				}
 				else {
 					// Up
+					
 					view.camOffset.x += transStep * camUp.x;
 					view.camOffset.y += transStep * camUp.y;
-					view.camOffset.z += transStep * camUp.z;
+					view.camOffset.z += handedness * transStep * camUp.z;
 				}
 			}
 			UpdateMatrix();
@@ -1275,7 +1287,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					// Down
 					view.camOffset.x -= transStep * camUp.x;
 					view.camOffset.y -= transStep * camUp.y;
-					view.camOffset.z -= transStep * camUp.z;
+					view.camOffset.z -= handedness * transStep * camUp.z;
 				}
 			}
 			UpdateMatrix();
@@ -1285,7 +1297,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		if (unicode == SDLK_LEFT) {
 			if (GetWindow()->IsShiftDown()) {
-				view.camAngleOy += angleStep;
+				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+				double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
+				view.camAngleOy += angleStep * handedness * projection;
 				view.performXY = XYZ_NONE;
 			}
 			else {
@@ -1299,7 +1313,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		if (unicode == SDLK_RIGHT) {
 			if (GetWindow()->IsShiftDown()) {
-				view.camAngleOy -= angleStep;
+				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+				double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
+				view.camAngleOy -= angleStep * handedness * projection;
 				view.performXY = XYZ_NONE;
 			}
 			else {
@@ -1543,7 +1559,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		mYOrg = mY;
 
 		UpdateMouseCursor(mode);
-
+		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (draggMode) {
 
 		case DRAGG_NONE:
@@ -1598,6 +1614,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 			if (fabs(diffX) > 1.9 || fabs(diffY) > 1.9) {
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
+				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 				if (GetWindow()->IsCtrlDown()) {
 					//Z axis rotation
 					//TranslateScale(diffY);
@@ -1613,11 +1630,11 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					else {                                  //Camera angle rotation
 						if (view.projMode == PERSPECTIVE_PROJ) {
 							view.camAngleOx += diffY * angleStep*factor;
-							view.camAngleOy += diffX * angleStep*factor;
+							view.camAngleOy += diffX * angleStep*factor*handedness;
 						}
 						else {
 							view.camAngleOx -= diffY * angleStep*factor;
-							view.camAngleOy -= diffX * angleStep*factor;
+							view.camAngleOy -= diffX * angleStep*factor*handedness;
 						}
 					}
 				}

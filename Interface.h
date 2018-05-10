@@ -22,6 +22,7 @@ class GLMenu;
 
 class GeometryViewer;
 class CollapseSettings;
+class HistogramSettings;
 class MoveVertex;
 class ScaleVertex;
 class ScaleFacet;
@@ -232,6 +233,7 @@ public:
 	float    lastAppTime;
 	bool     antiAliasing;
 	bool     whiteBg;
+	bool	 leftHandedView;
 	float    lastMeasTime; // Last measurement time (for hps and dps)
 	double   coplanarityTolerance; //Select coplanar tolerance
 	double   largeAreaThreshold; //Selection filter
@@ -273,7 +275,7 @@ public:
 	GLToggle      *showFilter;
 	GLToggle      *showIndex;
 	GLToggle      *showVertex;
-	GLButton      *showMoreBtn;
+	GLButton      *viewerMoreButton;
 	GLButton      *startSimu;
 	GLButton      *resetSimu;
 
@@ -286,8 +288,8 @@ public:
 
 	GLButton      *facetApplyBtn;
 	GLButton      *facetDetailsBtn;
-	GLButton      *facetCoordBtn;
-	GLButton      *facetMoreBtn; // <<Adv, used by Molflow only
+	GLButton      *facetHistogramBtn;
+	GLButton      *facetAdvParamsBtn; // <<Adv, used by Molflow only
 	GLTitledPanel *facetPanel;
 	GLList        *facetList;
 	GLLabel       *facetSideLabel;
@@ -363,6 +365,7 @@ public:
 
 	//Dialog
 	CollapseSettings   *collapseSettings;
+	HistogramSettings  *histogramSettings;
 	MoveVertex		   *moveVertex;
 	ScaleFacet         *scaleFacet;
 	ScaleVertex        *scaleVertex;

@@ -72,8 +72,8 @@ typedef struct {
   char    *name;       // View name
 
   int      projMode;   // Projection type
-  double   camAngleOx; // Spheric coordinates
-  double   camAngleOy; // Spheric coordinates
+  double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
+  double   camAngleOy; // Spheric coordinates Left-hand rotation (in left-hand c.sys)
 
   double   camAngleOz;
 
