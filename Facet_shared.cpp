@@ -518,10 +518,25 @@ void Facet::BuildMeshList() {
 		if (cellPropertiesIds[i] != -2) {
 			glBegin(GL_POLYGON);
 			size_t nbPts = GetMeshNbPoint(i);
-			for (size_t n = 0; n < nbPts; n++) {
+			/*size_t nbDrawn = 0;
+			size_t n;
+			if (mApp->leftHandedView) {
+				n = 0;
+			}
+			else {
+				n = nbPts - 1;
+			}
+			for (; nbDrawn < nbPts; nbDrawn++) {*/
+			for (size_t n=0;n<nbPts;n++) {
 				glEdgeFlag(true);
 				Vector2d pt = GetMeshPoint(i, n);
 				glVertex2u(pt.u, pt.v);
+				/*if (mApp->leftHandedView) {
+					n++;
+				}
+				else {
+					n--;
+				}*/
 			}
 			glEnd();
 		}

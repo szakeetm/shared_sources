@@ -1011,11 +1011,13 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAtLH(double xEye,double yEye,double zEye,
+void GLToolkit::LookAt(double xEye,double yEye,double zEye,
                              double xAt,double yAt,double zAt,
-                             double xUp,double yUp,double zUp) {
+                             double xUp,double yUp,double zUp, double handedness) {
 
-  // Create and load a left handed view matrix
+  // Create and load a left- or right-handed view matrix
+
+  //Z = Norm(At-Eye)
   double Zx = xAt - xEye;
   double Zy = yAt - yEye;
   double Zz = zAt - zEye;
@@ -1024,22 +1026,26 @@ void GLToolkit::LookAtLH(double xEye,double yEye,double zEye,
   Zy /= nZ;
   Zz /= nZ;
 
+  //X = Norm(Up x Z)
   double Xx = (yUp*Zz - zUp*Zy);
   double Xy = (zUp*Zx - xUp*Zz);
   double Xz = (xUp*Zy - yUp*Zx);
   double nX = sqrt( Xx*Xx + Xy*Xy + Xz*Xz );
-  Xx /= nX;
-  Xy /= nX;
-  Xz /= nX;
+  Xx /= -handedness * nX;
+  Xy /= -handedness * nX;
+  Xz /= -handedness * nX;
 
-  double Yx = (Zy*Xz - Zz*Xy);
-  double Yy = (Zz*Xx - Zx*Xz);
-  double Yz = (Zx*Xy - Zy*Xx);
+  //Y = Z x X
+  double Yx = -handedness * (Zy*Xz - Zz*Xy);
+  double Yy = -handedness * (Zz*Xx - Zx*Xz);
+  double Yz = -handedness * (Zx*Xy - Zy*Xx);
+
+  //handedness =  -1: left handed
 
   double dotXE = xEye*Xx + yEye*Xy + zEye*Xz;
   double dotYE = xEye*Yx + yEye*Yy + zEye*Yz;
   double dotZE = xEye*Zx + yEye*Zy + zEye*Zz;
-
+  
   GLfloat mView[16];
 
   mView[0] = (float)Xx; mView[1] = (float)Yx; mView[2] = (float)Zx; mView[3] = 0.0f;

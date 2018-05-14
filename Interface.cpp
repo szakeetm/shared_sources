@@ -1003,6 +1003,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	facetPanel->Add(facetDetailsBtn);
 
 	facetHistogramBtn = new GLButton(0, "Histogr.");
+	facetHistogramBtn->SetEnabled(false); //coming in next version
 	facetPanel->Add(facetHistogramBtn);
 
 	facetApplyBtn = new GLButton(0, "Apply");

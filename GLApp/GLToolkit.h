@@ -67,7 +67,7 @@ public:
   static void printGlError(GLenum glError);
   static bool Get2DScreenCoord(float x,float y,float z,int *xe,int *ye);
   static bool IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts);
-  static void LookAtLH(double xEye,double yEye,double zEye,double xAt,double yAt,double zAt,double xUp,double uUp,double zUp);
+  static void LookAt(double xEye,double yEye,double zEye,double xAt,double yAt,double zAt,double xUp,double uUp,double zUp,double handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z);
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);

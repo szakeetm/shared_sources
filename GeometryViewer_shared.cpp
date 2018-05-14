@@ -245,7 +245,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 void GeometryViewer::ToOrigo() {
 	//view.projMode = PERSPECTIVE_PROJ;
 	view.camAngleOx = 0.0;
-	view.camAngleOy = (view.projMode == PERSPECTIVE_PROJ) ? 0.0 : (mApp->leftHandedView ? PI : 0.0);
+	view.camAngleOy = (view.projMode == PERSPECTIVE_PROJ) ? PI : 0.0;
 	view.camAngleOz = 0.0;
 
 	view.camDist = 100.0;
@@ -347,13 +347,13 @@ void GeometryViewer::ToTopView() {
 	if (!work) return;
 	if (view.projMode == ORTHOGRAPHIC_PROJ) {
 		view.camAngleOx = -.5 * PI;
-		view.camAngleOy = mApp->leftHandedView ? PI : 0.0;
+		view.camAngleOy = /*mApp->leftHandedView ? PI :*/ 0.0;
 		view.camAngleOz = 0.0;
 		view.performXY = XYZ_TOP;
 	}
 	else { //Perspective
 		view.camAngleOx = .5 * PI;
-		view.camAngleOy = 0.0;
+		view.camAngleOy = PI;
 		view.camAngleOz = 0.0;
 		view.performXY = XYZ_NONE;
 	}
@@ -387,6 +387,8 @@ void GeometryViewer::ToFrontView() {
 
 void GeometryViewer::UpdateLight() {
 
+	//double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+
 	float ratio = 1.0f;
 
 	// Update lights
@@ -398,8 +400,8 @@ void GeometryViewer::UpdateLight() {
 		glRotated(ToDeg(-view.lightAngleOy), 0.0, 1.0, 0.0);
 		ratio = 1.0f;
 	}
-	else {
-		glScaled(1.0, -1.0, -1.0);
+	else { //Ortho
+		glScaled(1.0, -1.0, -/*handedness **/ 1.0);
 		glRotated(ToDeg(-view.lightAngleOx), 1.0, 0.0, 0.0);
 		glRotated(ToDeg(-view.lightAngleOy), 0.0, 1.0, 0.0);
 		ratio = (float)view.camDist;
@@ -423,7 +425,7 @@ void GeometryViewer::UpdateLight() {
 	d1[2] = 0.2f * ratio;
 	d1[3] = 0.0f;
 
-	if (showBack == 1) {
+	if (showBack == SHOW_FRONT) {
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, d0);
 		glLightfv(GL_LIGHT0, GL_POSITION, positionI);
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, d1);
@@ -444,6 +446,7 @@ void GeometryViewer::UpdateMatrix() {
 	Geometry *geom = work->GetGeometry();
 	if (!geom) return;
 	double handedness = mApp->leftHandedView ? -1.0 : 1.0;
+	double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 	// Model view matrix ---------------------------------------------------
 
 	// Scale angle in -PI,PI
@@ -454,51 +457,42 @@ void GeometryViewer::UpdateMatrix() {
 	// Convert polar coordinates
 	Vector3d org = geom->GetCenter();
 
-	/*
-	camDir.x  = -cos(view.camAngleOx) * sin(view.camAngleOy);
-	camDir.y  =  sin(view.camAngleOx);
-	camDir.z  = -cos(view.camAngleOx) * cos(view.camAngleOy);
-	*/
-
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
-	double z = handedness * cos(view.camAngleOx) * cos(view.camAngleOy);
+	double z = cos(view.camAngleOx) * cos(view.camAngleOy);
 
 	//Rotation of cam direction around Z
-	camDir.x = x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
-	camDir.y = x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
-	camDir.z = z;
+	camDir.x = /*projection **/ x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
+	camDir.y = /*projection **/ x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
+	camDir.z = /*projection **/ z;
 
 	//Camleft doesn't take into account camAngleOz...
 	camLeft.x = handedness * cos(view.camAngleOy);
 	camLeft.y = 0.0;
-	camLeft.z = sin(view.camAngleOy);
+	camLeft.z = handedness * sin(view.camAngleOy);
 
-	//Rotate(&camLeft,org,camDir,ToDeg(view.camAngleOz));
-
-	camUp = CrossProduct(camDir, camLeft);
+	camUp = CrossProduct(camDir, camLeft) * handedness;
 
 	glMatrixMode(GL_MODELVIEW);
 
 	switch (view.projMode) {
 	case PERSPECTIVE_PROJ:
-		GLToolkit::LookAtLH((camDir.x * view.camDist + org.x) + view.camOffset.x,
+		GLToolkit::LookAt((camDir.x * view.camDist + org.x) + view.camOffset.x,
 			(camDir.y * view.camDist + org.y) + view.camOffset.y,
 			(camDir.z * view.camDist + org.z) + view.camOffset.z,
 			org.x + view.camOffset.x, org.y + view.camOffset.y, org.z + view.camOffset.z,
-			camUp.x, camUp.y, camUp.z);
+			camUp.x, camUp.y, camUp.z, handedness);
 		break;
 	case ORTHOGRAPHIC_PROJ:
 		glLoadIdentity();
-		glScaled(-view.camDist, -view.camDist, view.camDist);
+		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);
 
-		glRotated(ToDeg(handedness * view.camAngleOx), 1.0, 0.0, 0.0);
+		glRotated(ToDeg(view.camAngleOx), 1.0, 0.0, 0.0);
 		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
-
 		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
 
-		glTranslated(-(org.x + handedness * view.camOffset.x), -(org.y + view.camOffset.y), -(org.z + view.camOffset.z));
+		glTranslated(-(org.x + view.camOffset.x), -(org.y + view.camOffset.y), -(org.z + view.camOffset.z));
 		break;
 	}
 
@@ -656,6 +650,7 @@ void GeometryViewer::DrawIndex() {
 void GeometryViewer::DrawRule() {
 
 	if (showRule) {
+		glLineWidth(1.0f);
 		// Restore large clipping plane for drawing rules
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
@@ -729,6 +724,9 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 }
 
 void GeometryViewer::DrawNormal() {
+	glLineWidth(2.0f);
+	glPointSize(3.0f);
+	glColor3f(1.0f, 0.0f, 0.0f);
 
 	Geometry *geom = work->GetGeometry();
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
@@ -737,15 +735,15 @@ void GeometryViewer::DrawNormal() {
 			Vector3d v1 = geom->GetFacetCenter(i);
 			Vector3d v2 = f->sh.N;
 			GLToolkit::SetMaterial(&blueMaterial);
-			glLineWidth(2.0f);
+			
 			GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
-			glPointSize(3.0f);
-			glColor3f(1.0f, 0.0f, 0.0f);
+			
 			glBegin(GL_POINTS);
 			glVertex3d(v1.x, v1.y, v1.z);
 			glEnd();
 		}
 	}
+	glLineWidth(1.0f);
 }
 
 void GeometryViewer::DrawUV() {
@@ -1009,10 +1007,39 @@ void GeometryViewer::Paint() {
 
 	// Draw geometry
 	if (showVolume || showTexture) glEnable(GL_DEPTH_TEST);
-	glClearDepth(1.0);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glDepthFunc(GL_LEQUAL);
-	/*// Draw geometry
+	if (view.projMode == ORTHOGRAPHIC_PROJ) {
+		if (mApp->leftHandedView) {
+			//Ortho + left-handed*/
+			glClearDepth(1.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			//glDepthFunc(GL_LEQUAL);
+			glDepthRange(0, 1);
+		}
+		else {
+			//Ortho + right-handed
+			glClearDepth(1.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glDepthRange(0, 1);
+		}
+	}
+	else {
+		if (mApp->leftHandedView) {
+			//Persp + left-handed
+			glClearDepth(1.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glDepthFunc(GL_LEQUAL);
+			//glDepthRange(1, 0);
+		}
+		else {
+			//Persp + right-handed
+			glClearDepth(1.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glDepthFunc(GL_LEQUAL);
+		}
+	}
+	
+	/*
+	// Draw geometry
 if( showVolume || showTexture ) {
 
   glEnable(GL_DEPTH_TEST);
@@ -1038,8 +1065,14 @@ if( showVolume || showTexture ) {
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
-
-	geom->Render((GLfloat *)matView, showVolume, showTexture, showBack, showFilter, showHidden, showMesh, showDir);
+	int cullMode;
+	
+	if (showBack != SHOW_FRONTANDBACK && view.projMode == ORTHOGRAPHIC_PROJ && !mApp->leftHandedView) {
+		//Right-handed orthogonal projection, front and back inverse
+		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
+		else cullMode = SHOW_BACK;
+	} else cullMode = showBack;
+	geom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
 #ifdef SYNRAD
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
@@ -1630,7 +1663,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					else {                                  //Camera angle rotation
 						if (view.projMode == PERSPECTIVE_PROJ) {
 							view.camAngleOx += diffY * angleStep*factor;
-							view.camAngleOy += diffX * angleStep*factor*handedness;
+							view.camAngleOy -= diffX * angleStep*factor*handedness;
 						}
 						else {
 							view.camAngleOx -= diffY * angleStep*factor;

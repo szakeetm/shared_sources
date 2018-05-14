@@ -3524,7 +3524,7 @@ int Geometry::RestoreDeviceObjects() {
 
 void Geometry::BuildFacetList(Facet *f) {
 
-	// Rebuild OpenGL geomtetry with texture
+	// Rebuild OpenGL geometry with texture
 
 	if (f->sh.isTextured) {
 

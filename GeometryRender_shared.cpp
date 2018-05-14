@@ -802,14 +802,29 @@ void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 }
 
 void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
-
-	for (size_t i = 0; i < f->sh.nbIndex; i++) {
+	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	/*size_t nbDrawn = 0;
+	size_t i;
+	if (mApp->leftHandedView) {
+			i = 0;
+			glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	}
+	else {
+			i = f->sh.nbIndex-1;
+			glNormal3d(f->sh.N.x, f->sh.N.y, f->sh.N.z);
+	}
+	for (; nbDrawn < f->sh.nbIndex; nbDrawn++) {*/
+	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
-		glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 		if (addTextureCoord) AddTextureCoord(f, f->vertices2 + i);
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
+		/*if (mApp->leftHandedView) {
+			i++;
+		}
+		else {
+			i--;
+		}*/
 	}
-
 }
 
 void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
@@ -820,13 +835,13 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 	Vector2d *p3;
 
 	// Follow orientation
-	if (p->sign > 0.0) {
+	/*double handedness = mApp->leftHandedView ? 1.0 : -1.0;*/
+	if (/*handedness * */ p->sign > 0.0) {
 		p1 = &(p->pts[Previous(ear, p->nbPts)]);
 		p2 = &(p->pts[Next(ear, p->nbPts)]);
 		p3 = &(p->pts[IDX(ear, p->nbPts)]);
 	}
 	else {
-
 		p1 = &(p->pts[Previous(ear, p->nbPts)]);
 		p2 = &(p->pts[IDX(ear, p->nbPts)]);
 		p3 = &(p->pts[Next(ear, p->nbPts)]);
@@ -840,7 +855,7 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 	p3D.z = f->sh.O.z + p1->u*f->sh.U.z + p1->v*f->sh.V.z;
 	glVertex3d(p3D.x, p3D.y, p3D.z);
 
-	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	//glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p2);
 	// (U,V) -> (x,y,z)
 	p3D.x = f->sh.O.x + p2->u*f->sh.U.x + p2->v*f->sh.V.x;
@@ -848,7 +863,7 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 	p3D.z = f->sh.O.z + p2->u*f->sh.U.z + p2->v*f->sh.V.z;
 	glVertex3d(p3D.x, p3D.y, p3D.z);
 
-	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	//glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p3);
 	// (U,V) -> (x,y,z)
 	p3D.x = f->sh.O.x + p3->u*f->sh.U.x + p3->v*f->sh.V.x;
