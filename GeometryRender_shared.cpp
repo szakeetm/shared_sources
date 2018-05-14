@@ -802,6 +802,9 @@ void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
 }
 
 void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
+	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
+	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
+
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	/*size_t nbDrawn = 0;
 	size_t i;
@@ -828,6 +831,9 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 }
 
 void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
+
+	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
+	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
 	Vector3d  p3D;
 	Vector2d *p1;

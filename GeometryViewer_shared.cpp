@@ -463,9 +463,9 @@ void GeometryViewer::UpdateMatrix() {
 	double z = cos(view.camAngleOx) * cos(view.camAngleOy);
 
 	//Rotation of cam direction around Z
-	camDir.x = /*projection **/ x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
-	camDir.y = /*projection **/ x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
-	camDir.z = /*projection **/ z;
+	camDir.x = x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
+	camDir.y = x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
+	camDir.z = z;
 
 	//Camleft doesn't take into account camAngleOz...
 	camLeft.x = handedness * cos(view.camAngleOy);
@@ -906,15 +906,15 @@ void GeometryViewer::Zoom() {
 		switch (view.performXY) {
 			
 		case XYZ_TOP: // TopView
-			dx = (0.5 - x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = -handedness*(0.5 - x0 / (double)width)  * (view.vRight - view.vLeft);
 			dz = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_SIDE: // Side View
-			dz = (0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
+			dz = -handedness*(0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_FRONT: // Front View
-			dx = -1.0 * (-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = handedness*(-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		}
@@ -975,19 +975,19 @@ void GeometryViewer::Paint() {
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
 		case XYZ_TOP: // TopView
-			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x - view.camOffset.x)*view.camDist);
+			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x + view.camOffset.x)*view.camDist);
 			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z)*view.camDist;
 			sprintf(tmp, "X=%g, Z=%g", -x / view.camDist, z / view.camDist);
 			topBtn->SetState(true);
 			break;
 		case XYZ_SIDE: // Side View
-			z = -view.vLeft - ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z)*view.camDist;
+			z = view.vLeft + ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z)*view.camDist;
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
 			sprintf(tmp, "Z=%g, Y=%g", z / view.camDist, y / view.camDist);
 			sideBtn->SetState(true);
 			break;
 		case XYZ_FRONT: // Front View
-			x =  handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x - view.camOffset.x)*view.camDist);
+			x =  handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist);
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
 			sprintf(tmp, "X=%g, Y=%g", x / view.camDist, y / view.camDist);
 			frontBtn->SetState(true);
@@ -1067,8 +1067,8 @@ if( showVolume || showTexture ) {
 	DrawLinesAndHits();
 	int cullMode;
 	
-	if (showBack != SHOW_FRONTANDBACK && view.projMode == ORTHOGRAPHIC_PROJ && !mApp->leftHandedView) {
-		//Right-handed orthogonal projection, front and back inverse
+	if (showBack != SHOW_FRONTANDBACK && !mApp->leftHandedView) {
+		//Right-handed coord system: front and back inverse
 		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
 		else cullMode = SHOW_BACK;
 	} else cullMode = showBack;
@@ -1329,33 +1329,33 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		}
 
 		if (unicode == SDLK_LEFT) {
+			double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+			double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 			if (GetWindow()->IsShiftDown()) {
-				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
-				double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 				view.camAngleOy += angleStep * handedness * projection;
 				view.performXY = XYZ_NONE;
 			}
 			else {
 				// Strafe left
-				view.camOffset.x += transStep * camLeft.x;
-				view.camOffset.y += transStep * camLeft.y;
-				view.camOffset.z += transStep * camLeft.z;
+				view.camOffset.x += transStep * projection * camLeft.x;
+				view.camOffset.y += transStep * projection * camLeft.y;
+				view.camOffset.z += transStep * projection * camLeft.z;
 			}
 			UpdateMatrix();
 		}
 
 		if (unicode == SDLK_RIGHT) {
+			double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+			double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 			if (GetWindow()->IsShiftDown()) {
-				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
-				double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 				view.camAngleOy -= angleStep * handedness * projection;
 				view.performXY = XYZ_NONE;
 			}
 			else {
 				// Strafe right
-				view.camOffset.x -= transStep * camLeft.x;
-				view.camOffset.y -= transStep * camLeft.y;
-				view.camOffset.z -= transStep * camLeft.z;
+				view.camOffset.x -= transStep * projection * camLeft.x;
+				view.camOffset.y -= transStep * projection * camLeft.y;
+				view.camOffset.z -= transStep * projection * camLeft.z;
 			}
 			UpdateMatrix();
 			autoScaleOn = false;
@@ -1625,9 +1625,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
 				double tv = factor*diffX / (double)width * view.camDist * 0.75;
 				double tu = factor*diffY / (double)(height - DOWN_MARGIN) * view.camDist * 0.75;
-				view.camOffset.x += tu * camUp.x + tv * camLeft.x;
-				view.camOffset.y += tu * camUp.y + tv * camLeft.y;
-				view.camOffset.z += tu * camUp.z + tv * camLeft.z;
+				view.camOffset.x += tu * camUp.x - tv * camLeft.x;
+				view.camOffset.y += tu * camUp.y - tv * camLeft.y;
+				view.camOffset.z += tu * camUp.z - tv * camLeft.z;
 			}
 			else {
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
