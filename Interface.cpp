@@ -797,7 +797,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Facet")->Add("Delete", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Swap normal", MENU_FACET_SWAPNORMAL, SDLK_n, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Shift indices", MENU_FACET_SHIFTVERTEX, SDLK_h, CTRL_MODIFIER);
-	menu->GetSubMenu("Facet")->Add("Edit coordinates ...", MENU_FACET_COORDINATES);
+	menu->GetSubMenu("Facet")->Add("Facet coordinates ...", MENU_FACET_COORDINATES, SDLK_t, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Move ...", MENU_FACET_MOVE);
 	menu->GetSubMenu("Facet")->Add("Scale ...", MENU_FACET_SCALE);
 	menu->GetSubMenu("Facet")->Add("Mirror / Project ...", MENU_FACET_MIRROR);

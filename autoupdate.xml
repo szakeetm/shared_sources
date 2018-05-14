@@ -56,7 +56,38 @@ Bugfix
 		</Branch>
 		
 		<Branch name="synrad_public" description="SynRad+ stable releases">
-						<UpdateManifest>
+			<UpdateManifest>
+				<Version id="1421" name="1.4.21" date="14-05-2018" />
+				<ChangeLog>
+<![CDATA[
+Feature
+- All profiles and spectra count incident and absorbed flux/power/hits separately
+- Added Particle Logger tool (Tools menu)
+- Screenshot tool (CTRL+R)
+- Starting structure changeable for each region
+- SYN file advanced to version 10, earlier versions won't open files written with this version
+Interface
+- Support for right-handed coordinate system (change in Global Settings)
+- Region editor: can copy beam settings from an other region
+Bugfix
+- Collapse bug fix
+- Removed rough surface reflection angle limit (discrete lines in the reflection pattern)
+- Checking for filename conflicts before saving to a syn7z file
+- Fixed enabled/disabled controls in region editor
+- Fixed "invalid autocorrelation length" message
+- BXY file empty lines are skipped (previously gave error)
+- Fixed inserting SYN file
+- param file handle released if loading fails
+- App updater can handle file write errors (crashed before)
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/synrad_1.4.21.zip" zipName="synrad_1.4.21.zip" folderName="synrad_1.4.21" />
+				<FilesToCopy>
+					<File name="synrad.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+			<UpdateManifest>
 				<Version id="1420" name="1.4.20" date="30-11-2017" />
 				<ChangeLog>
 <![CDATA[

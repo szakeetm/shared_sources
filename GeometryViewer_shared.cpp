@@ -940,23 +940,31 @@ void GeometryViewer::Paint() {
 	//Background gradient
 	int x, y, width, height;
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
-	if (!(mApp->whiteBg)) {
+	
 		glBegin(GL_QUADS);
+		if (mApp->whiteBg) {
+			glColor3f(1.0f, 1.0f, 1.0f);
+		}
+		else {
 #ifdef MOLFLOW
-		glColor3f(0.3f, 0.5f, 0.7f); //blue top
+			glColor3f(0.3f, 0.5f, 0.7f); //blue top
 #endif
 
 #ifdef SYNRAD
-		glColor3f(0.7f, 0.4f, 0.3f); //red top
+			glColor3f(0.7f, 0.4f, 0.3f); //red top
 #endif
+		}
 		glVertex2i(x, y);
 		glVertex2i(x + width, y);
-		glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
+
+		if (!mApp->whiteBg) {
+			glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
+		}
 		glVertex2i(x + width, y + height);
 		glVertex2i(x, y + height);
 
 		glEnd();
-	}
+	
 
 	if (!work) return;
 	Geometry *geom = work->GetGeometry();
