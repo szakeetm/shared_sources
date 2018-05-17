@@ -183,8 +183,10 @@ int GLMessageBox::Display(const char *message, const char *title,int mode,int ic
 	if (mode & GLDLG_CANCEL) {
 		list.push_back("Cancel");
 	}
-		
-	int retCode = Display(message, title, list, icon);
+	std::string titleStr;
+	if (title == NULL) titleStr = "";
+	else titleStr = title;
+	int retCode = Display(message, titleStr, list, icon);
 	if (retCode == 0) return GLDLG_OK;
 	else return GLDLG_CANCEL;
 }

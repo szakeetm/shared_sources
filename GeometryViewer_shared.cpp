@@ -457,6 +457,29 @@ void GeometryViewer::UpdateMatrix() {
 	// Convert polar coordinates
 	Vector3d org = geom->GetCenter();
 
+	/*
+	Vector3d X(1.0, 0.0, 0.0);
+	Vector3d Y(0.0, 1.0, 0.0);
+	Vector3d Z(0.0, 0.0, 1.0);
+
+	camDir = Z;
+	camLeft = X * handedness;
+	camUp = Y;
+
+	camDir = Rotate(camDir, org, X, -view.camAngleOx);
+	camDir = Rotate(camDir, org, Y, -view.camAngleOy);
+	camDir = Rotate(camDir, org, Z, -view.camAngleOz);
+
+	camLeft = Rotate(camLeft, org, X, -view.camAngleOx);
+	camLeft = Rotate(camLeft, org, Y, -view.camAngleOy);
+	camLeft = Rotate(camLeft, org, Z, -view.camAngleOz);
+
+	camUp = Rotate(camUp, org, X, -view.camAngleOx);
+	camUp = Rotate(camUp, org, Y, -view.camAngleOy);
+	camUp = Rotate(camUp, org, Z, -view.camAngleOz);
+	*/
+
+	
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
@@ -1015,19 +1038,22 @@ void GeometryViewer::Paint() {
 
 	// Draw geometry
 	if (showVolume || showTexture) glEnable(GL_DEPTH_TEST);
-	if (view.projMode == ORTHOGRAPHIC_PROJ) {
-		if (mApp->leftHandedView) {
-			//Ortho + left-handed*/
 			glClearDepth(1.0);
 			glClear(GL_DEPTH_BUFFER_BIT);
-			//glDepthFunc(GL_LEQUAL);
-			glDepthRange(0, 1);
+			glDepthFunc(GL_LEQUAL);
+	
+	/*if (view.projMode == ORTHOGRAPHIC_PROJ) {
+		if (mApp->leftHandedView) {
+			//Ortho + left-handed
+			
+			//glDepthRange(0, 1); //chg recently
 		}
 		else {
 			//Ortho + right-handed
 			glClearDepth(1.0);
 			glClear(GL_DEPTH_BUFFER_BIT);
-			glDepthRange(0, 1);
+			//glDepthRange(0, 1);
+			glDepthFunc(GL_LEQUAL);
 		}
 	}
 	else {
@@ -1044,7 +1070,7 @@ void GeometryViewer::Paint() {
 			glClear(GL_DEPTH_BUFFER_BIT);
 			glDepthFunc(GL_LEQUAL);
 		}
-	}
+	}*/
 	
 	/*
 	// Draw geometry
