@@ -1,3 +1,4 @@
+﻿extensions: .cs .cpp .h
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -17,15 +18,3 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#include "Buffer_shared.h"
-
-FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs)
-{
-	this->fluxAbs += rhs.fluxAbs;
-	this->nbAbsEquiv += rhs.nbAbsEquiv;
-	this->nbDesorbed += rhs.nbDesorbed;
-	this->nbHitEquiv += rhs.nbHitEquiv;
-	this->nbMCHit += rhs.nbMCHit;
-	this->powerAbs += rhs.powerAbs;
-	return *this;
-}
