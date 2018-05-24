@@ -1031,6 +1031,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
 }
 
 void Interface::OneTimeSceneInit_shared_post() {
+	menu->Add("About");
+	menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
+
 	ClearFacetParams();
 	LoadConfig();
 	UpdateRecentMenu();
@@ -1725,6 +1728,30 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_QUICKPIPE:
 			if (AskToSave()) BuildPipe(5.0,5);
 			return true;
+		case MENU_ABOUT:
+		{
+			std::ostringstream aboutText;
+			aboutText << "Program:    " << appName << " " << appVersionName;
+			aboutText << R"(
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Copyright:   E.S.R.F / CERN   (2018)
+Website:    https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+)";
+			GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
+			return true;
+		}
 		}
 		// Load recent menu
 		if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + nbRecent) {
