@@ -158,6 +158,7 @@ public:
 	int motionType;
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
+	HistogramParams globalHistogramParams;
 #endif
 
 #ifdef SYNRAD

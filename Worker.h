@@ -206,6 +206,7 @@ public:
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
   double latestMoment;
   std::vector<std::string> userMoments;    //user-defined text values for defining time moments (can be time or time series)
+  HistogramParams globalHistogramParams;
 
   size_t    calcACprg;         // AC matrix progress
 #endif
