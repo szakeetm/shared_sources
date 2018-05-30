@@ -252,7 +252,7 @@ typedef union {
 
 class GlobalHitBuffer {
 public:
-	FacetHitBuffer total;               // Global counts (as if the whole geometry was one extra facet)
+	FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
 	size_t hitCacheSize;              // Number of valid hits in cache
 	size_t lastHitIndex;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
 	HIT    hitCache[HITCACHESIZE];       // Hit history

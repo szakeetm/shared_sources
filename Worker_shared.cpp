@@ -526,10 +526,10 @@ void Worker::Update(float appTime) {
 
 // Global hits and leaks
 #ifdef MOLFLOW
-			nbMCHit = gHits->total.hit.nbMCHit;
-			nbHitEquiv = gHits->total.hit.nbHitEquiv;
-			nbAbsEquiv = gHits->total.hit.nbAbsEquiv;
-			nbDesorption = gHits->total.hit.nbDesorbed;
+			nbMCHit = gHits->globalHits.hit.nbMCHit;
+			nbHitEquiv = gHits->globalHits.hit.nbHitEquiv;
+			nbAbsEquiv = gHits->globalHits.hit.nbAbsEquiv;
+			nbDesorption = gHits->globalHits.hit.nbDesorbed;
 			//No global hitEquiv
 			distTraveled_total = gHits->distTraveled_total;
 			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
@@ -538,12 +538,12 @@ void Worker::Update(float appTime) {
 
 #ifdef SYNRAD
 			
-			nbMCHit = gHits->total.nbMCHit;
-			nbHitEquiv = gHits->total.nbHitEquiv;
-			nbAbsEquiv = gHits->total.nbAbsEquiv;
-			nbDesorption = gHits->total.nbDesorbed;
-			totalFlux = gHits->total.fluxAbs;
-			totalPower = gHits->total.powerAbs;
+			nbMCHit = gHits->globalHits.nbMCHit;
+			nbHitEquiv = gHits->globalHits.nbHitEquiv;
+			nbAbsEquiv = gHits->globalHits.nbAbsEquiv;
+			nbDesorption = gHits->globalHits.nbDesorbed;
+			totalFlux = gHits->globalHits.fluxAbs;
+			totalPower = gHits->globalHits.powerAbs;
 			distTraveled_total = gHits->distTraveledTotal;
 
 			if (nbDesorption && nbTrajPoints) {
