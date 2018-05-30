@@ -139,7 +139,7 @@ public:
 	size_t meshvectorsize;
 
 	FacetProperties sh;
-	FacetHitBuffer counterCache;
+	FacetHitBuffer facetHitCache;
 
 	// Normalized plane equation (ax + by + cz + d = 0)
 	double a;

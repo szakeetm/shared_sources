@@ -564,10 +564,10 @@ void Worker::Update(float appTime) {
 			for (size_t i = 0; i<nbFacet; i++) {
 				Facet *f = geom->GetFacet(i);
 #ifdef SYNRAD
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
+				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #ifdef MOLFLOW
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
+				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
 				
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe

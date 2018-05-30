@@ -49,7 +49,7 @@ Facet::Facet(size_t nbIndex) {
 	vertices2 = (Vector2d *)malloc(nbIndex * sizeof(Vector2d));      // Local U,V coordinates
 	memset(vertices2, 0, nbIndex * sizeof(Vector2d));
 
-	memset(&counterCache, 0, sizeof(FacetHitBuffer));
+	memset(&facetHitCache, 0, sizeof(FacetHitBuffer));
 
 	sh.nbIndex = nbIndex;
 

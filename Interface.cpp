@@ -1461,10 +1461,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++) {
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbAbsEquiv > 0)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbAbsEquiv > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbAbsEquiv > 0)
+					if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
 #endif
 					geom->SelectFacet(i);
 			}
@@ -1477,10 +1477,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbMCHit > 0)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbMCHit > 0)
+					if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1500,10 +1500,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 #ifdef SYNRAD
-				if (geom->GetFacet(i)->counterCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
