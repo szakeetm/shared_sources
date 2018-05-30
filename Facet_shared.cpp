@@ -57,6 +57,9 @@ Facet::Facet(size_t nbIndex) {
 	sh.opacity = 1.0;
 
 	sh.profileType = PROFILE_NONE;
+	
+	sh.histogramParams.record = false;
+	
 	sh.texWidth = 0;
 	sh.texHeight = 0;
 	sh.texWidthD = 0.0;

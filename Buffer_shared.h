@@ -50,6 +50,8 @@ public:
 	bool   countTrans;     // Count transparent (MC texture)
 	bool   countDirection;
 
+	HistogramParams facetHistogramParams;
+
 	// Flags
 	bool   is2sided;     // 2 sided
 	bool   isProfile;    // Profile facet
@@ -178,6 +180,18 @@ typedef struct {
 	size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
 } OntheflySimulationParams; //parameters that can be changed without restarting the simulation
+
+typedef struct {
+	bool record;
+	size_t nbBounceMax;
+	size_t nbBounceBinsize;
+	double distanceMax;
+	size_t distanceResolution;
+#ifdef MOLFLOW
+	double timeMax;
+	size_t timeResolution;
+#endif
+} HistogramParams;
 
 typedef struct {
 
