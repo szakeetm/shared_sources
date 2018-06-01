@@ -501,7 +501,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(const Vector3d& rayPos, con
 		// Compute intersection with spheric volume element
 		if (sHandle->hasDirection) {
 
-		for (j = 0; j < sHandle->nbSuper; j++) {
+		for (j = 0; j < sHandle->sh.nbSuper; j++) {
 		for (i = 0; i < sHandle->str[j].nbFacet; i++) {
 		f = sHandle->str[j].facets[i];
 		if (f->direction && f->sh.countDirection) {

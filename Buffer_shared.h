@@ -18,11 +18,12 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
+#include <vector>
 #include "Vector.h"
 #include "GLApp/GLTypes.h"
 
 #ifdef MOLFLOW
-#include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer
+#include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
 #endif
 
 #ifdef SYNRAD
@@ -32,6 +33,40 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
+
+class HistogramParams {
+public:
+	bool record;
+	size_t nbBounceMax;
+	size_t nbBounceBinsize;
+	double distanceMax;
+	size_t distanceResolution;
+#ifdef MOLFLOW
+	double timeMax;
+	size_t timeResolution;
+#endif
+
+	size_t GetBounceHistogramSize() {
+		return nbBounceMax / nbBounceBinsize + 1 + 1; //+1: overrun
+	}
+	size_t GetDataSize() {
+		if (!record) return 0;
+		else return sizeof(double)*(GetBounceHistogramSize() + distanceResolution + 1 + timeResolution + 1);
+	}
+	size_t GetBouncesDataSize() {
+		if (!record) return 0;
+		else return sizeof(double)*GetBounceHistogramSize();
+	}
+	size_t GetDistanceDataSize() {
+		if (!record) return 0;
+		else return sizeof(double)*(distanceResolution + 1);
+	}
+	size_t GetTimeDataSize() {
+		if (!record) return 0;
+		else return sizeof(double)*(timeResolution + 1);
+	}
+};
+
 
 class FacetProperties { //Formerly SHFACET
 public:
@@ -110,7 +145,7 @@ public:
 	double sojournFreq, sojournE;
 
 	// Facet hit counters
-	// FacetHitBuffer counter; - removed as now it's time-dependent and part of the hits buffer
+	// FacetHitBuffer tmpCounter; - removed as now it's time-dependent and part of the hits buffer
 
 	// Moving facets
 	bool isMoving;
@@ -183,18 +218,6 @@ typedef struct {
 } OntheflySimulationParams; //parameters that can be changed without restarting the simulation
 
 typedef struct {
-	bool record;
-	size_t nbBounceMax;
-	size_t nbBounceBinsize;
-	double distanceMax;
-	size_t distanceResolution;
-#ifdef MOLFLOW
-	double timeMax;
-	size_t timeResolution;
-#endif
-} HistogramParams;
-
-typedef struct {
 
 	Vector3d pos;
 	int    type;
@@ -214,6 +237,13 @@ typedef struct {
 	Vector3d pos;
 	Vector3d dir;
 } LEAK;
+
+class FacetHistogramBuffer { //raw data containing histogram result
+public:
+	std::vector<double> nbHitsHistogram;
+	std::vector<double> distanceHistogram;
+	std::vector<double> timeHistogram;
+};
 
 #ifdef MOLFLOW
 typedef union {

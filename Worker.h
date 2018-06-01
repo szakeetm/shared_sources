@@ -159,6 +159,8 @@ public:
   
   double distTraveled_total; // Total distance traveled by particles (for mean free path calc.)
 
+  FacetHistogramBuffer globalHistogramCache;
+
   bool   isRunning;           // Started/Stopped state
   float  startTime;         // Start time
   float  stopTime;          // Stop time

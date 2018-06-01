@@ -58,8 +58,6 @@ Facet::Facet(size_t nbIndex) {
 
 	sh.profileType = PROFILE_NONE;
 	
-	sh.histogramParams.record = false;
-	
 	sh.texWidth = 0;
 	sh.texHeight = 0;
 	sh.texWidthD = 0.0;
@@ -147,6 +145,8 @@ Facet::Facet(size_t nbIndex) {
 	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
 	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
 
+	sh.facetHistogramParams.record = false;
+
 	totalFlux = sh.totalOutgassing = totalDose = 0.0;
 
 	userOutgassing = "";
@@ -179,6 +179,7 @@ Facet::~Facet() {
 	  SAFE_FREE(meshvector);
 #ifdef MOLFLOW
 	  SAFE_FREE(outgassingMap);
+	  SAFE_FREE(angleMapCache);
 #endif
 }
 

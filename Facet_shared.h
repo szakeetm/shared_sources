@@ -48,7 +48,7 @@ public:
 
 class FacetGroup; //forward declaration as it's the return value of Explode()
 
-class Facet {
+class Facet { //Interface facet
 
 	typedef struct {
 		size_t u;
@@ -132,14 +132,15 @@ public:
 #endif
 
 
-	size_t      *indices;      // Indices (Reference to geometry vertex)
+	size_t   *indices;      // Indices (Reference to geometry vertex)
 	Vector2d *vertices2;    // Vertices (2D plane space, UV coordinates)
-	int     *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
+	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
 	CellProperties* meshvector;
 	size_t meshvectorsize;
 
 	FacetProperties sh;
 	FacetHitBuffer facetHitCache;
+	FacetHistogramBuffer facetHistogramCache; //contains empty vectors when facet doesn't have it
 
 	// Normalized plane equation (ax + by + cz + d = 0)
 	double a;

@@ -559,6 +559,23 @@ void Worker::Update(float appTime) {
 			leakCacheSize = gHits->leakCacheSize;
 			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
 
+			//Copy global histogram
+			if (globalHistogramParams.record) {
+				//Prepare vectors to receive data
+				globalHistogramCache.distanceHistogram.resize(globalHistogramParams.distanceResolution);
+				globalHistogramCache.timeHistogram.resize(globalHistogramParams.timeResolution);
+				globalHistogramCache.nbHitsHistogram.resize(globalHistogramParams.GetBounceHistogramSize());
+
+				BYTE* globalHistogramAddress = buffer + sizeof(GlobalHitBuffer);
+#ifdef MOLFLOW
+				globalHistogramAddress += displayedMoment * globalHistogramParams.GetDataSize();
+#endif
+
+				memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, globalHistogramParams.GetBouncesDataSize());
+				memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + globalHistogramParams.GetBouncesDataSize(), globalHistogramParams.GetDistanceDataSize());
+				memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + globalHistogramParams.GetBouncesDataSize() + globalHistogramParams.GetDistanceDataSize(), globalHistogramParams.GetTimeDataSize());
+			}
+
 			// Refresh local facet hit cache for the displayed moment
 			size_t nbFacet = geom->GetNbFacet();
 			for (size_t i = 0; i<nbFacet; i++) {
@@ -572,7 +589,7 @@ void Worker::Update(float appTime) {
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
 						//Initialize angle map
-						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
+						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
 						if (!f->angleMapCache) {
 							std::stringstream tmp;
 							tmp << "Not enough memory for incident angle map on facet " << i + 1;
@@ -581,17 +598,39 @@ void Worker::Update(float appTime) {
 						f->sh.anglemapParams.hasRecorded = true;
 						if (f->selected) needsAngleMapStatusRefresh = true;
 					}
+					//Retrieve angle map from hits dp
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
 					+ (1 + moments.size()) * sizeof(FacetHitBuffer)
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.phiWidth*(f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
-					angleMapAddress = 0;
+					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
 				}
 				
 #endif
+				if (f->sh.facetHistogramParams.record) {
+					//Prepare vectors for receiving data
+					f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.distanceResolution);
+					f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.timeResolution);
+					f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
+					
+					//Retrieve histogram map from hits dp
+					BYTE* histogramAddress = buffer
+						+ f->sh.hitOffset
+						+ (1 + moments.size()) * sizeof(FacetHitBuffer)
+						+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
+						+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
+						+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0)
+						+ f->sh.anglemapParams.GetRecordedDataSize();
+#ifdef MOLFLOW
+					histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
+#endif
+					
+					memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress, f->sh.facetHistogramParams.GetBouncesDataSize());
+					memcpy(f->facetHistogramCache.distanceHistogram.data(), histogramAddress+ f->sh.facetHistogramParams.GetBouncesDataSize(), f->sh.facetHistogramParams.GetDistanceDataSize());
+					memcpy(f->facetHistogramCache.timeHistogram.data(), histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() + f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
+				}
 			}
 			try {
 				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);

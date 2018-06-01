@@ -152,7 +152,13 @@ void Geometry::InitializeGeometry(int facet_number) {
 	// nU et nV (normalized U et V) are also stored in the Facet structure.
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
-	size_t fOffset = sizeof(GlobalHitBuffer);
+	
+	size_t nbMoments = 1; //Constant flow
+#ifdef MOLFLOW
+	nbMoments += mApp->worker.moments.size();
+#endif
+	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.globalHistogramParams.GetDataSize();
+
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)sh.nbFacet);
 		if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
