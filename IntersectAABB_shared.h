@@ -25,26 +25,27 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // AABBTree node
 
-struct AABBNODE {
-
+class AABBNODE {
+public:
+	AABBNODE();
+	~AABBNODE();
+	void ComputeBB();
+	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
 	AABB             bb;
-	struct AABBNODE *left;
-	struct AABBNODE *right;
-	SubprocessFacet          **list;
-	size_t           nbFacet;
+	AABBNODE *left;
+	AABBNODE *right;
+	std::vector<SubprocessFacet*> facets;
 
 };
 
-struct AABBNODE *BuildAABBTree(SubprocessFacet **list,const size_t nbFacet,const size_t depth,size_t& maxDepth);
-std::tuple<size_t, size_t, size_t> FindBestCuttingPlane(struct AABBNODE *node);
-void ComputeBB(struct AABBNODE *node);
-void DestroyAABB(struct AABBNODE *node);
-void IntersectTree(struct AABBNODE *node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
+AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);
+
+void IntersectTree(const Simulation& sHandle, const AABBNODE& node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
 	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir,
-	size_t& intNbTHits, SubprocessFacet**& THitCache, bool& found, SubprocessFacet*& collidedFacet, double& minLength);
-std::tuple<bool, SubprocessFacet*, double> Intersect(const Vector3d& rayPos, const Vector3d& rayDir, SubprocessFacet**& THitCache);
-bool Visible(Vector3d *c1,Vector3d *c2,SubprocessFacet *f1,SubprocessFacet *f2,SubprocessFacet** THitCache);
+	std::vector<SubprocessFacet*>& transparentHitFacetPointers, bool& found, SubprocessFacet*& collidedFacet, double& minLength);
+std::tuple<bool, SubprocessFacet*, double> Intersect(const Simulation& sHandle, const Vector3d& rayPos, const Vector3d& rayDir);
+bool Visible(const Simulation& sHandle, Vector3d *c1,Vector3d *c2,SubprocessFacet *f1,SubprocessFacet *f2);
 bool IsInFacet(const SubprocessFacet &f,const double &u,const double &v);
 
-void PolarToCartesian(SubprocessFacet* collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->pDir
-std::tuple<double, double> CartesianToPolar(const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
+Vector3d PolarToCartesian(SubprocessFacet* collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->pDir
+std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);

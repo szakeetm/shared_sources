@@ -33,6 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
+#define MAX_STRUCT 64
 
 class HistogramParams {
 public:
