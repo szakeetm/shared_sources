@@ -298,7 +298,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 }
 
 void Geometry::SelectVertex(int vertexId) {
-	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->sh.superIdx);
+	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->wp.superIdx);
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
 	if (!isLoaded) return;
@@ -345,7 +345,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
 		Vector3d *v = GetVertex(i);
-		//if(viewStruct==-1 || f->sh.superIdx==viewStruct) {
+		//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
 		if (true) {
 
 			bool isInside;
@@ -829,13 +829,13 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	size_t i;
 	if (mApp->leftHandedView) {
 			i = 0;
-			glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+			glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	}
 	else {
-			i = f->sh.nbIndex-1;
-			glNormal3d(f->sh.N.x, f->sh.N.y, f->sh.N.z);
+			i = f->wp.nbIndex-1;
+			glNormal3d(f->wp.N.x, f->wp.N.y, f->wp.N.z);
 	}
-	for (; nbDrawn < f->sh.nbIndex; nbDrawn++) {*/
+	for (; nbDrawn < f->wp.nbIndex; nbDrawn++) {*/
 	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
 		if (addTextureCoord) AddTextureCoord(f, f->vertices2 + i);
@@ -880,7 +880,7 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 	p3D.z = f->sh.O.z + p1->u*f->sh.U.z + p1->v*f->sh.V.z;
 	glVertex3d(p3D.x, p3D.y, p3D.z);
 
-	//glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p2);
 	// (U,V) -> (x,y,z)
 	p3D.x = f->sh.O.x + p2->u*f->sh.U.x + p2->v*f->sh.V.x;
@@ -888,7 +888,7 @@ void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
 	p3D.z = f->sh.O.z + p2->u*f->sh.U.z + p2->v*f->sh.V.z;
 	glVertex3d(p3D.x, p3D.y, p3D.z);
 
-	//glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p3);
 	// (U,V) -> (x,y,z)
 	p3D.x = f->sh.O.x + p3->u*f->sh.U.x + p3->v*f->sh.V.x;
@@ -1304,7 +1304,7 @@ void Geometry::BuildSelectList() {
 	}
 	glLineWidth(2.0f);
 
-	for(int i=0;i<sh.nbFacet;i++ ) {
+	for(int i=0;i<wp.nbFacet;i++ ) {
 	Facet *f = facets[i];
 	if( f->selected ) {
 	//DrawFacet(f,false);
@@ -1335,7 +1335,7 @@ void Geometry::BuildSelectList() {
 	}
 	glLineWidth(2.0f);
 
-	for(int i=0;i<sh.nbFacet;i++ ) {
+	for(int i=0;i<wp.nbFacet;i++ ) {
 	Facet *f = facets[i];
 	if( f->selected )
 	{

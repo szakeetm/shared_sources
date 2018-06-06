@@ -58,14 +58,25 @@ public:
 	InterfaceVertex();
 	bool selected;
 	void SetLocation(const Vector3d& v);
+	/*template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(*((Vector3d*)this)); //Write base class
+		archive(selected);
+	}*/
 };
 
-typedef struct {
+class AABB{
+public:
 
 	Vector3d min;
 	Vector3d max;
-
-} AABB;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(min, max);
+	}
+} ;
 
 Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);

@@ -47,6 +47,7 @@ class SynradGeometry;
 class Material;
 #endif
 
+
 class Worker
 {
 
@@ -89,6 +90,7 @@ public:
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
   void RealReload();
+  void Serialize();
   void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource
@@ -150,6 +152,7 @@ public:
 
   // Global simulation parameters
   OntheflySimulationParams ontheflyParams;
+  WorkerParams wp;
 
   double  nbAbsEquiv;      // Total number of molecules absorbed (64 bit integer)
   size_t  nbDesorption;      // Total number of molecules generated (64 bit integer)
@@ -182,20 +185,6 @@ public:
 #ifdef MOLFLOW
   size_t sMode; //MC or AC
 
-  double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
-  double finalOutgassingRate; //Number of outgassing molecules / second at latest_moment (constant flow)
-  double finalOutgassingRate_Pa_m3_sec; //For the user to see on Global Seetings and in formulas. Not shared with workers
-  double gasMass;
-  bool   enableDecay;
-  double halfLife;
-  double timeWindowSize;
-  bool useMaxwellDistribution; //true: Maxwell-Boltzmann distribution, false: All molecules have the same (V_avg) speed
-  bool calcConstantFlow;
-
-  int motionType;
-  Vector3d motionVector1; //base point for rotation
-  Vector3d motionVector2; //rotation vector or velocity vector
-
   std::vector<Parameter> parameters;
   int displayedMoment;
 
@@ -206,9 +195,8 @@ public:
   std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
   std::vector<double> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
-  double latestMoment;
   std::vector<std::string> userMoments;    //user-defined text values for defining time moments (can be time or time series)
-  HistogramParams globalHistogramParams;
+
 
   size_t    calcACprg;         // AC matrix progress
 #endif
@@ -217,10 +205,8 @@ public:
 	double totalFlux;         // Total desorbed Flux
 	double totalPower;        // Total desorbed power
 
-	size_t    nbTrajPoints;       // number of all points in trajectory
 	double no_scans;           // = nbDesorption/nbTrajPoints. Stored separately for saving/loading
 
-	bool   newReflectionModel;
 	std::vector<Region_full> regions;
 	std::vector<Material> materials;
 	std::vector<std::vector<double>> psi_distro; //psi-energy map for full (par+ort) polarization
@@ -228,6 +214,20 @@ public:
 	std::vector<std::vector<std::vector<double>>> chi_distros; //3 psi-chi    maps for full/parallel/orthogonal polarizations
 #endif
 
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			wp,
+			ontheflyParams,
+			CDFs,
+			IDs,
+			parameters,
+			temperatures,
+			moments,
+			desorptionParameterIDs
+		);
+	}
 private:
 
   // Process management
@@ -267,5 +267,4 @@ private:
   Dataport *dpMat;
   char      materialsDpName[32];
 #endif
-
 };

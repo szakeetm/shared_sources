@@ -68,7 +68,7 @@ Facet::Facet(size_t nbIndex) {
 
 	sh.is2sided = false;
 	sh.isProfile = false;
-	//sh.isOpaque = true;
+	//wp.isOpaque = true;
 	sh.isTextured = false;
 	sh.sign = 0.0;
 	sh.countAbs = false;
@@ -325,13 +325,13 @@ void Facet::glVertex2u(double u, double v) {
 
 bool Facet::BuildMesh() {
 
-	/*mesh = (SHELEM *)malloc(sh.texWidth * sh.texHeight * sizeof(SHELEM));
+	/*mesh = (SHELEM *)malloc(wp.texWidth * wp.texHeight * sizeof(SHELEM));
 	if (!mesh) {
 		//Couldn't allocate memory
 		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	meshPts = (MESH *)malloc(sh.texWidth * sh.texHeight * sizeof(MESH));
+	meshPts = (MESH *)malloc(wp.texWidth * wp.texHeight * sizeof(MESH));
 	if (!meshPts) {
 		return false;
 	}*/
@@ -350,8 +350,8 @@ bool Facet::BuildMesh() {
 	}
 	meshvectorsize = 0;
 	hasMesh = true;
-	//memset(mesh, 0, sh.texWidth * sh.texHeight * sizeof(SHELEM));
-	//memset(meshPts, 0, sh.texWidth * sh.texHeight * sizeof(MESH));
+	//memset(mesh, 0, wp.texWidth * wp.texHeight * sizeof(SHELEM));
+	//memset(meshPts, 0, wp.texWidth * wp.texHeight * sizeof(MESH));
 	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
 	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
 
@@ -389,7 +389,7 @@ bool Facet::BuildMesh() {
 			double u1 = (sx + 1.0) * iw;
 			double v1 = (sy + 1.0) * ih;
 			float  uC, vC;
-			//mesh[i + j*sh.texWidth].elemId = -1;
+			//mesh[i + j*wp.texWidth].elemId = -1;
 
 			if (sh.nbIndex <= 4) {
 
@@ -477,11 +477,11 @@ bool Facet::BuildMesh() {
 			else {  //All indide and triangle or quad
 				cellPropertiesIds[i + j*sh.texWidth] = -1;
 
-				/*mesh[i + j*sh.texWidth].area = (float)(rw*rh);
-				mesh[i + j*sh.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
-				mesh[i + j*sh.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
-				mesh[i + j*sh.texWidth].full = true;
-				mesh[i + j*sh.texWidth].elemId = nbElem;
+				/*mesh[i + j*wp.texWidth].area = (float)(rw*rh);
+				mesh[i + j*wp.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
+				mesh[i + j*wp.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
+				mesh[i + j*wp.texWidth].full = true;
+				mesh[i + j*wp.texWidth].elemId = nbElem;
 
 				// Mesh coordinates
 				meshPts[nbElem].nbPts = 4;
@@ -502,7 +502,7 @@ bool Facet::BuildMesh() {
 
 			}
 
-			//tA += mesh[i + j*sh.texWidth].area;
+			//tA += mesh[i + j*wp.texWidth].area;
 
 		}
 	}
@@ -511,9 +511,9 @@ bool Facet::BuildMesh() {
 
 	// Check meshing accuracy (TODO)
 	/*
-	int p = (int)(ceil(log10(sh.area)));
+	int p = (int)(ceil(log10(wp.area)));
 	double delta = pow(10.0,(double)(p-5));
-	if( fabs(sh.area - tA)>delta ) {
+	if( fabs(wp.area - tA)>delta ) {
 	}
 	*/
 
@@ -739,9 +739,9 @@ void Facet::SwapNormal() {
 
 	/* normal recalculated at reinitialize
 	// Invert normal
-	sh.N.x = -sh.N.x;
-	sh.N.y = -sh.N.y;
-	sh.N.z = -sh.N.z;*/
+	wp.N.x = -wp.N.x;
+	wp.N.y = -wp.N.y;
+	wp.N.z = -wp.N.z;*/
 
 }
 
@@ -931,7 +931,7 @@ Vector3d Facet::GetRealCenter() {
 void Facet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
-	//sh.isOpaque = (sh.opacity != 0.0);
+	//wp.isOpaque = (wp.opacity != 0.0);
 	sh.isTextured = ((texDimW*texDimH) > 0);
 }
 
@@ -1017,7 +1017,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 	c = f->c;
 	d = f->d;
 	
-	//sh.area = f->sh.area;
+	//wp.area = f->wp.area;
 	//err = f->err;
 	sh.N = f->sh.N;
 	

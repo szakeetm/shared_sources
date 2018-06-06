@@ -47,6 +47,22 @@ public:
 	size_t timeResolution;
 #endif
 
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			record,
+			nbBounceMax,
+			nbBounceBinsize,
+			distanceMax,
+			distanceResolution
+	#ifdef MOLFLOW
+			,timeMax,
+			timeResolution
+	#endif
+		);
+	}
+
 	size_t GetBounceHistogramSize() {
 		return nbBounceMax / nbBounceBinsize + 1 + 1; //+1: overrun
 	}
@@ -170,20 +186,122 @@ public:
 	bool   recordSpectrum;    // Calculate energy spectrum (histogram)
 #endif
 
+
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			 sticking,       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
+		 opacity,        // opacity  (0=>transparent , 1=>opaque)
+		 area,          // Facet area (m^2)
+
+		    profileType,    // Profile type
+		    superIdx,       // Super structure index (Indexed from 0)
+		    superDest,      // Super structure destination index (Indexed from 1, 0=>current)
+			 teleportDest,   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
+
+		   countAbs,       // Count absoprtion (MC texture)
+		   countRefl,      // Count reflection (MC texture)
+		   countTrans,     // Count transparent (MC texture)
+		   countDirection,
+
+		 facetHistogramParams,
+
+		// Flags
+		   is2sided,     // 2 sided
+		   isProfile,    // Profile facet
+		   isTextured,   // texture
+		   isVolatile,   // Volatile facet (absorbtion facet which does not affect particule trajectory)
+
+							 // Geometry
+		 nbIndex,   // Number of index/vertex
+		 sign,      // Facet vertex rotation (see Facet::DetectOrientation())
+
+						  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+		   O,  // Origin
+		   U,  // U vector
+		   V,  // V vector
+		   nU, // Normalized U
+		   nV, // Normalized V
+
+					   // Normal vector
+		    N,    // normalized
+		    Nuv,  // normal to (u,v) not normlized
+
+						  // Axis Aligned Bounding Box (AABB)
+		       bb,
+		   center,
+
+		// Hit/Abs/Des/Density recording on 2D texture map
+		    texWidth,    // Rounded texture resolution (U)
+		    texHeight,   // Rounded texture resolution (V)
+		 texWidthD,   // Actual texture resolution (U)
+		 texHeightD,  // Actual texture resolution (V)
+
+		   hitOffset      // Hit address offset for this facet
+
+#ifdef MOLFLOW
+								 // Molflow-specific facet parameters
+		 ,temperature,    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
+		 outgassing,           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
+
+		 sticking_paramId,    // -1 if use constant value, 0 or more if referencing time-dependent parameter
+		 opacity_paramId,     // -1 if use constant value, 0 or more if referencing time-dependent parameter
+		 outgassing_paramId,  // -1 if use constant value, 0 or more if referencing time-dependent parameter
+
+		 CDFid, //Which probability distribution it belongs to (one CDF per temperature)
+		 IDid,  //If time-dependent desorption, which is its ID
+
+		    desorbType,     // Desorption type
+		 desorbTypeN,    // Exponent in Cos^N desorption type
+		 reflection,
+
+		   countDes,       // Count desoprtion (MC texture)
+
+		   countACD,       // Angular coefficient (AC texture)
+		 maxSpeed,       // Max expected particle velocity (for velocity histogram)
+		 accomodationFactor, // Thermal accomodation factor [0..1]
+		   enableSojournTime,
+		 sojournFreq, sojournE,
+
+		// Facet hit counters
+		// FacetHitBuffer tmpCounter, - removed as now it's time-dependent and part of the hits buffer
+
+		// Moving facets
+		 isMoving,
+
+		//Outgassing map
+		   useOutgassingFile,   //has desorption file for cell elements
+		 outgassingFileRatio, //desorption file's sample/unit ratio
+		   outgassingMapWidth, //rounded up outgassing file map width
+		   outgassingMapHeight, //rounded up outgassing file map height
+
+		totalOutgassing, //total outgassing for the given facet
+
+		anglemapParams//Incident angle map
+#endif*/
+
+#ifdef SYNRAD
+		,
+			doScattering,   // Do rough surface scattering
+		rmsRoughness,   // RMS height roughness, in meters
+		autoCorrLength, // Autocorrelation length, in meters
+		reflectType,    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
+		recordSpectrum,    // Calculate energy spectrum (histogram)
+#endif
+		);
+	}
 };
 
-class GeomProperties {  //Formerly SHGEOM
+class WorkerParams {
 public:
-	size_t     nbFacet;   // Number of facets (total)
-	size_t     nbVertex;  // Number of 3D vertices
-	size_t     nbSuper;   // Number of superstructures
-	char       name[64];  // (Short file name)
-
+HistogramParams globalHistogramParams;
 #ifdef MOLFLOW
 	size_t nbMoments; //To pass in advance for memory reservation
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
 	double finalOutgassingRate; //Number of outgassing molecules / second at latest_moment (constant flow)
+	double finalOutgassingRate_Pa_m3_sec;
 	double gasMass;
 	bool enableDecay;
 	double halfLife;
@@ -194,17 +312,62 @@ public:
 	int motionType;
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
-	HistogramParams globalHistogramParams;
 #endif
-
 #ifdef SYNRAD
 	size_t        nbRegion;  //number of magnetic regions
 	size_t        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
 	bool       newReflectionModel;
 #endif
+
+	template <class Archive> void serialize(Archive & archive) {
+		archive(
+			globalHistogramParams
+
+#ifdef MOLFLOW
+			, nbMoments
+			, latestMoment
+			, totalDesorbedMolecules
+			, finalOutgassingRate
+			, gasMass
+			, enableDecay
+			, halfLife
+			, timeWindowSize
+			, useMaxwellDistribution
+			, calcConstantFlow
+
+			, motionType
+			, motionVector1
+			, motionVector2
+#endif
+
+#ifdef SYNRAD
+			nbRegion  //number of magnetic regions
+			, nbTrajPoints //total number of trajectory points (calculated at CopyGeometryBuffer)
+			, newReflectionModel
+#endif
+		);
+	}
 };
 
-typedef struct {
+class GeomProperties {  //Formerly SHGEOM
+public:
+	size_t     nbFacet;   // Number of facets (total)
+	size_t     nbVertex;  // Number of 3D vertices
+	size_t     nbSuper;   // Number of superstructures
+	std::string name;  // (Short file name)
+
+	template <class Archive> void serialize(Archive & archive) {
+		archive(
+			nbFacet,   // Number of facets (total)
+			nbVertex,  // Number of 3D vertices
+			nbSuper,   // Number of superstructures
+			name  // (Short file name)
+		);
+	}
+};
+
+class OntheflySimulationParams {
+public:
 #ifdef SYNRAD
 	int      generation_mode; // Fluxwise/powerwise
 #endif
@@ -216,7 +379,7 @@ typedef struct {
 
 	size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
-
+	
 	template<class Archive> void serialize(Archive& archive) {
 		archive(
 #ifdef SYNRAD
@@ -231,34 +394,64 @@ typedef struct {
 			nbProcess
 		);
 	}
-} OntheflySimulationParams; //parameters that can be changed without restarting the simulation
+	
+}; //parameters that can be changed without restarting the simulation
 
-typedef struct {
-
+class HIT {
+public:
 	Vector3d pos;
 	int    type;
 #ifdef SYNRAD
 	double dF;
 	double dP;
 #endif
-} HIT;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			 pos,
+		    type,
+#ifdef SYNRAD
+		 dF,
+		 dP,
+#endif
+		);
+	}
+} ;
 
 // Velocity field
-typedef struct {
+class DirectionCell {
+public:
 	Vector3d dir;
 	size_t count;
-} DirectionCell;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(dir,count);
+	}
+} ;
 
-typedef struct {
+class LEAK {
+public:
 	Vector3d pos;
 	Vector3d dir;
-} LEAK;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(pos,dir);
+	}
+} ;
 
 class FacetHistogramBuffer { //raw data containing histogram result
 public:
 	std::vector<double> nbHitsHistogram;
 	std::vector<double> distanceHistogram;
 	std::vector<double> timeHistogram;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(nbHitsHistogram, distanceHistogram, timeHistogram);
+	}
 };
 
 #ifdef MOLFLOW
@@ -281,6 +474,19 @@ typedef union {
 		double value;
 		double absorbed;
 	} density;
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			 nbDesorbed,          // Number of desorbed molec
+		 nbMCHit,               // Number of hits
+		 nbHitEquiv,			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+		 nbAbsEquiv,          // Equivalent number of absorbed molecules
+		 sum_1_per_ort_velocity,    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
+		 sum_1_per_velocity,          //For average molecule speed calculation
+		 sum_v_ort,          // sum of orthogonal speeds of incident velocities, used to determine the pressure
+		);
+	}
 } FacetHitBuffer;
 #endif
 
@@ -292,6 +498,19 @@ typedef union {
 		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 		double nbAbsEquiv;      // Number of absorbed molec
 		llong nbDesorbed;
+
+		template<class Archive>
+		void serialize(Archive & archive)
+		{
+			archive(
+				 fluxAbs, powerAbs,
+			 nbMCHit,           // Number of hits
+			 nbHitEquiv,			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			 nbAbsEquiv,      // Number of absorbed molec
+			 nbDesorbed,
+			);
+		}
+
 		FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
 	};
 #endif
@@ -320,6 +539,34 @@ public:
 	TextureCell hitMin, hitMax;
 	double distTraveledTotal;
 #endif
+
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			 globalHits,               // Global counts (as if the whole geometry was one extra facet)
+		 hitCacheSize,              // Number of valid hits in cache
+		 lastHitIndex,					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
+		    hitCache,       // Hit history
+
+		  lastLeakIndex,		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
+		  leakCacheSize,        //Number of valid leaks in the cache
+		  nbLeakTotal,         // Total leaks
+		   leakCache,      // Leak history
+
+#ifdef MOLFLOW
+		    sMode,                // Simu mode (MC_MODE or AC_MODE)
+		 texture_limits[3], //Min-max on texture
+		 distTraveled_total,
+		 distTraveledTotal_fullHitsOnly,
+#endif
+
+#ifdef SYNRAD
+		 hitMin, hitMax,
+		 distTraveledTotal,
+#endif
+		);
+	}
 };
 
 class ParticleLoggerItem {
@@ -333,6 +580,21 @@ public:
 #ifdef SYNRAD
 	double energy, dF, dP;
 #endif
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			 facetHitPosition,
+		 hitTheta, hitPhi,
+		 oriRatio,
+#ifdef MOLFLOW
+		 time, particleDecayMoment, velocity,
+#endif
+#ifdef SYNRAD
+		 energy, dF, dP,
+#endif
+		);
+	}
 };
 
 
@@ -392,4 +654,14 @@ typedef struct {
 	size_t    cmdParam[MAX_PROCESS];      // Command param 1
 	size_t		cmdParam2[MAX_PROCESS];     // Command param 2
 	char		statusStr[MAX_PROCESS][128]; // Status message
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			states,
+			cmdParam,
+			cmdParam2,
+			statusStr		
+		);
+	}
 } SHCONTROL;

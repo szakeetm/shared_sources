@@ -560,20 +560,20 @@ void Worker::Update(float appTime) {
 			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
 
 			//Copy global histogram
-			if (globalHistogramParams.record) {
+			if (wp.globalHistogramParams.record) {
 				//Prepare vectors to receive data
-				globalHistogramCache.distanceHistogram.resize(globalHistogramParams.distanceResolution);
-				globalHistogramCache.timeHistogram.resize(globalHistogramParams.timeResolution);
-				globalHistogramCache.nbHitsHistogram.resize(globalHistogramParams.GetBounceHistogramSize());
+				globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.distanceResolution);
+				globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.timeResolution);
+				globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
 
 				BYTE* globalHistogramAddress = buffer + sizeof(GlobalHitBuffer);
 #ifdef MOLFLOW
-				globalHistogramAddress += displayedMoment * globalHistogramParams.GetDataSize();
+				globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
 #endif
 
-				memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, globalHistogramParams.GetBouncesDataSize());
-				memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + globalHistogramParams.GetBouncesDataSize(), globalHistogramParams.GetDistanceDataSize());
-				memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + globalHistogramParams.GetBouncesDataSize() + globalHistogramParams.GetDistanceDataSize(), globalHistogramParams.GetTimeDataSize());
+				memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, wp.globalHistogramParams.GetBouncesDataSize());
+				memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(), wp.globalHistogramParams.GetDistanceDataSize());
+				memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() + wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
 			}
 
 			// Refresh local facet hit cache for the displayed moment

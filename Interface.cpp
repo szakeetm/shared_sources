@@ -105,7 +105,7 @@ Interface::Interface() {
 	leftHandedView = false;
 	autoUpdateFormulas = true;
 	compressSavedFiles = true;
-	/*double gasMass=28;
+	/*double wp.gasMass=28;
 	double totalOutgassing=0.0; //total outgassing in Pa*m3/sec (internally everything is in SI units)
 	double totalInFlux = 0.0; //total incoming molecules per second. For anisothermal system, it is (totalOutgassing / Kb / T)*/
 	autoSaveFrequency = 10.0; //in minutes
