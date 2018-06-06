@@ -29,6 +29,12 @@ public:
 	double Norme() const;
 	Vector3d Normalized() const;
 	Vector3d& operator+=(const Vector3d & rhs);
+	
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(x, y, z);
+	}
 };
 
 class Vector2d {
@@ -39,10 +45,17 @@ public:
 	Vector2d(const double &u, const double &v);
 	double Norme() const;
 	Vector2d Normalized() const;
+
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(u,v);
+	}
 };
 
 class InterfaceVertex : public Vector3d { //For Interface
 public:
+	InterfaceVertex();
 	bool selected;
 	void SetLocation(const Vector3d& v);
 };

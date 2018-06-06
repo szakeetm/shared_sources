@@ -216,6 +216,21 @@ typedef struct {
 
 	size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
+
+	template<class Archive> void serialize(Archive& archive) {
+		archive(
+#ifdef SYNRAD
+			generation_mode,
+#endif
+			lowFluxMode,
+			lowFluxCutoff,
+			enableLogging,
+			logFacetId,
+			logLimit,
+			desorptionLimit,
+			nbProcess
+		);
+	}
 } OntheflySimulationParams; //parameters that can be changed without restarting the simulation
 
 typedef struct {

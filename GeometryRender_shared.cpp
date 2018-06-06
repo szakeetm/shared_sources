@@ -232,7 +232,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 							std::vector<size_t> connectedFacets;
 							mApp->SetFacetSearchPrg(true, "Smart selecting...");
 							if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-							for (auto ind : connectedFacets)
+							for (auto& ind : connectedFacets)
 								facets[ind]->selected = false;
 							mApp->SetFacetSearchPrg(false, "");
 						}
@@ -277,7 +277,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 				std::vector<size_t> connectedFacets;
 				mApp->SetFacetSearchPrg(true, "Smart selecting...");
 				if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-				for (auto ind : connectedFacets)
+				for (auto& ind : connectedFacets)
 					facets[ind]->selected = !unselect;
 				mApp->SetFacetSearchPrg(false, "");
 			}
@@ -1154,7 +1154,7 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
 	std::vector<bool> result(sh.nbVertex, false);
 	std::vector<size_t> selFacetIds = GetSelectedFacets();
-	for (auto facetId : selFacetIds) {
+	for (auto& facetId : selFacetIds) {
 		Facet* f = facets[facetId];
 		for (size_t i = 0; i < f->sh.nbIndex; i++)
 			result[f->indices[i]] = true;
@@ -1366,7 +1366,7 @@ void Geometry::BuildSelectList() {
 	glLineWidth(2.0f);
 
 	auto selectedFacets = GetSelectedFacets();
-	for (auto sel : selectedFacets) {
+	for (auto& sel : selectedFacets) {
 		Facet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
 		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches

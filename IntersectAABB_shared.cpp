@@ -47,7 +47,7 @@ std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
 	double best = 1e100;
 	size_t nbLeft, nbRight;
 
-	for (SubprocessFacet *f : facets) {
+	for (const auto& f : facets) {
 		if (f->sh.center.x > centerX) rightFromCenterZ++;
 		if (f->sh.center.y > centerY) rightFromCenterY++;
 		if (f->sh.center.z > centerZ) rightFromCenterX++;
@@ -84,7 +84,7 @@ void AABBNODE::ComputeBB() {
 	bb.max=Vector3d(-1e100,-1e100,-1e100);
 	bb.min=Vector3d(1e100,1e100,1e100);
 
-	for (SubprocessFacet *f : facets) {
+	for (const auto& f : facets) {
 		bb.min.x = std::min(f->sh.bb.min.x,bb.min.x);
 		bb.min.y = std::min(f->sh.bb.min.y, bb.min.y);
 		bb.min.z = std::min(f->sh.bb.min.z, bb.min.z);
@@ -119,7 +119,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
-			for (SubprocessFacet *f : newNode->facets) {
+			for (const auto& f : newNode->facets) {
 				if (f->sh.center.x > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -127,7 +127,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 
 		case 2: // xz
 			m = (newNode->bb.min.y + newNode->bb.max.y) / 2.0;
-			for (SubprocessFacet *f : newNode->facets) {
+			for (const auto& f : newNode->facets) {
 				if (f->sh.center.y > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -135,7 +135,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 
 		case 3: // xy
 			m = (newNode->bb.min.z + newNode->bb.max.z) / 2.0;
-			for (SubprocessFacet *f : newNode->facets) {
+			for (const auto& f : newNode->facets) {
 				if (f->sh.center.z > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
@@ -456,6 +456,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(const Simulation& sHandle, 
 	double minLength = 1e100;
 
 	std::vector<SubprocessFacet*> transparentHitFacetPointers;
+	transparentHitFacetPointers.reserve(65536);
 
 	IntersectTree(sHandle, *sHandle.structures[sHandle.curStruct].aabbTree, rayPos, -1.0*rayDir, sHandle.lastHitFacet,
 		nullRx, nullRy, nullRz, inverseRayDir,
@@ -466,7 +467,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(const Simulation& sHandle, 
 		collidedFacet->hitted = true;
 
 		// Second pass for transparent hits
-		for (SubprocessFacet* tpFacet:transparentHitFacetPointers) {
+		for (const auto& tpFacet:transparentHitFacetPointers) {
 			if (tpFacet->colDist < minLength) {
 				tpFacet->RegisterTransparentPass();
 			}
@@ -518,7 +519,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(const Simulation& sHandle, 
 
 }
 
-Vector3d PolarToCartesian(SubprocessFacet* collidedFacet, const double& theta, const double& phi, const bool& reverse) {
+Vector3d PolarToCartesian(SubprocessFacet* const collidedFacet, const double& theta, const double& phi, const bool& reverse) {
 
 	//returns sHandle->pDir
 
@@ -554,14 +555,10 @@ Vector3d PolarToCartesian(SubprocessFacet* collidedFacet, const double& theta, c
 	Vector3d V = collidedFacet->sh.nV;
 	Vector3d N = collidedFacet->sh.N;
 	if (reverse) {
-		N.x = N.x*(-1.0);
-		N.y = N.y*(-1.0);
-		N.z = N.z*(-1.0);
+		N = -1.0 * N;
 	}
 	// Basis change (nU,nV,N) -> (x,y,z)
-	return Vector3d(u*U.x + v * V.x + n * N.x,
-		u*U.y + v * V.y + n * N.y,
-		u*U.z + v * V.z + n * N.z);
+	return u*U + v*V + n*N;
 }
 
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN) {

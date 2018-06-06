@@ -683,7 +683,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 
 void ExtrudeFacet::ClearToggles(GLToggle* leaveChecked) {
 	std::vector<GLToggle*> toggles = { towardsNormalCheckbox,againstNormalCheckbox,offsetCheckbox,curveTowardsNormalCheckbox,curveAgainstNormalCheckbox };
-	for (auto toggle : toggles) 
+	for (auto& toggle : toggles) 
 		toggle->SetState(toggle==leaveChecked);
 }
 

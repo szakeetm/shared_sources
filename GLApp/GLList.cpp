@@ -679,7 +679,7 @@ std::vector<size_t> GLList::GetSelectedRows(bool searchIndex) {
 	if (!searchIndex) return selectedRows;
 	else {
 		std::vector<size_t> ret;
-		for (auto sel:selectedRows)
+		for (auto& sel:selectedRows)
 			ret.push_back(GetValueInt(sel,0)-1);
 		return ret;
 	}
@@ -716,7 +716,7 @@ void GLList::AddSelectedRow(int row,bool searchIndex) {
 void GLList::SetSelectedRows(std::vector<size_t> selection,bool searchIndex) {
 	if (searchIndex) {
 		selectedRows.clear();
-		for (auto sel : selection)
+		for (auto& sel : selection)
 			selectedRows.push_back((size_t)FindIndex(sel, 0));
 	}
 	else
@@ -832,7 +832,7 @@ void GLList::Paint() {
 
 	case SINGLE_ROW:
 	case MULTIPLE_ROW:
-		for(auto sel:selectedRows) {
+		for(auto& sel:selectedRows) {
 			if( (sel+1)*cHeight>=sY && sel*cHeight<=sY+_height ) {
 				int mu=(showCLabel?labHeight:1);
 				GetWindow()->Clip(this,1+labW,mu,(sbWidth?sbWidth:1),Min(mb,this->GetHeight()-mu-1)); //maintain minimum height to avoid SetViewPort error
@@ -1713,7 +1713,7 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						}
 
 						std::vector<size_t> selFacetIds;
-						for (auto sel:selectedRows)
+						for (auto& sel:selectedRows)
 							selFacetIds.push_back(GetValueInt(sel,0)-1);
 
 						std::qsort(table, nbRow,sizeof(SORTVAR*), cmp_column<SORTVAR>);

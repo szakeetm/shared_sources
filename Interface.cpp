@@ -1853,7 +1853,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 		if (src == facetList && geom->IsLoaded()) {
 			auto selRows = facetList->GetSelectedRows(true);
 			geom->UnselectAll();
-			for (auto sel:selRows)
+			for (auto& sel:selRows)
 				geom->SelectFacet(sel);
 			geom->UpdateSelection();
 			UpdateFacetParams();
@@ -2253,7 +2253,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
-	for (auto f:formulas_n) {
+	for (auto& f:formulas_n) {
 		if (OffsetFormula(f->GetExpression(), NULL, NULL, newRefs)) {
 			f->Parse();
 		}
@@ -2339,7 +2339,7 @@ void Interface::ClearFormulas() {
 	PlaceComponents();
 	*/
 
-	for (auto f : formulas_n)
+	for (auto& f : formulas_n)
 		SAFE_DELETE(f);
 	formulas_n.clear();
 	if (formulaEditor) formulaEditor->Refresh();

@@ -70,10 +70,10 @@ protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
 	void CalculateFacetParam(Facet *f);
 	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
-	void LoadTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0);
-	void InsertTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, bool newStruct = false);
-	void InsertGEOGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, bool newStruct = false);
-	void InsertSTLGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
+	void LoadTXTGeom(FileReader *file, size_t strIdx = 0);
+	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
+	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
+	void InsertSTLGeom(FileReader *file, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
 	void AdjustProfile();
 	void BuildShapeList();
 	void BuildSelectList();
@@ -120,7 +120,7 @@ public:
 	Vector3d GetCenter();
 
 	// Collapsing stuff
-	int  AddRefVertex(InterfaceVertex *p, InterfaceVertex *refs, int *nbRef, double vT);
+	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
 	bool RemoveNullFacet();
 	Facet *MergeFacet(Facet *f1, Facet *f2);
 	bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
@@ -249,7 +249,7 @@ protected:
 
 										  // Geometry
 	Facet    **facets;    // All facets of this geometry
-	InterfaceVertex  *vertices3; // Vertices (3D space), can be selected
+	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AABB bb;              // Global Axis Aligned Bounding Box (AABB)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)

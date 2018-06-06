@@ -638,7 +638,7 @@ void GeometryViewer::DrawIndex() {
 	//Mark vertices of selected facets
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
 	std::vector<size_t> vertexId(nbVertex);
-	for (auto selId:selectedFacets) {
+	for (auto& selId:selectedFacets) {
 		Facet *f = geom->GetFacet(selId);
 			for (size_t i = 0; i < f->sh.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;

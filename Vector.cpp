@@ -228,6 +228,11 @@ Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
 	return length*perpendicularVector.Normalized();
 }
 
+InterfaceVertex::InterfaceVertex()
+{
+	selected = false;
+}
+
 void InterfaceVertex::SetLocation(const Vector3d& v) {
 	this->x = v.x;
 	this->y = v.y;

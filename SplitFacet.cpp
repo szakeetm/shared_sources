@@ -157,7 +157,7 @@ SplitFacet::~SplitFacet() {
 
 void SplitFacet::ClearUndoFacets() {
 	//Destroy old undo facets
-	for (auto delFacet : deletedFacetList)
+	for (auto& delFacet : deletedFacetList)
 		delete delFacet.f;
 	deletedFacetList.clear();
 	resultLabel->SetText("");
