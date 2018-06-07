@@ -110,12 +110,14 @@ Dataport *CreateDataport(char *name,size_t size)
    
    //memset(dp->buff, 0, size);//Debug
 
+   dp->size = size;
+
    return (dp);
 }
 
 // OpenDataport: Connect to an existing block
 
-Dataport *OpenDataport(char *name/*,size_t size*/)
+Dataport *OpenDataport(char *name,size_t size)
 {
    Dataport *dp;
 
@@ -191,7 +193,7 @@ Dataport *OpenDataport(char *name/*,size_t size*/)
 	   return NULL;
 
    }
-
+   dp->size = size;
    return (dp);
 }
 

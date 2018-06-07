@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "PugiXML\pugixml.hpp"
 using namespace pugi;
 #include "GLApp/GLToolkit.h"
+#include <cereal/archives/binary.hpp>
 
 #ifdef SYNRAD
 #include "SynradDistributions.h" //material, for Save, etc.
@@ -186,69 +187,7 @@ public:
 #ifdef SYNRAD
 
 #endif
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		std::vector<size_t> indicesVector(sh.nbIndex);
-		std::vector<Vector2d> vertices2Vector(sh.nbIndex);
-		for (size_t i = 0; i < sh.nbIndex; i++) {
-			indicesVector[i] = indices[i];
-			vertices2Vector[i] = vertices2[i];
-		}
-		std::vector<double> outgMapVector(sh.useOutgassingFile ? sh.outgassingMapWidth*sh.outgassingMapHeight : 0);
-		memcpy(outgMapVector.data(), outgassingMap, sizeof(double)*(sh.useOutgassingFile ? sh.outgassingMapWidth*sh.outgassingMapHeight : 0));
-		std::vector<double> textIncVector;
-
-		// Add surface elements area (reciprocal)
-		if (sh.isTextured) {
-			textIncVector.resize(sh.texHeight*sh.texWidth);
-			if (cellPropertiesIds) {
-				size_t add = 0;
-				for (size_t j = 0; j < sh.texHeight; j++) {
-					for (size_t i = 0; i < sh.texWidth; i++) {
-						double area = GetMeshArea(add, true);
-
-						if (area > 0.0) {
-							// Use the sign bit to store isFull flag
-							textIncVector[add]=1.0 / area;
-						}
-						else {
-							textIncVector[add] = 0.0;
-						}
-						add++;
-					}
-				}
-			}
-			else {
-
-				double rw = sh.U.Norme() / (double)(sh.texWidthD);
-				double rh = sh.V.Norme() / (double)(sh.texHeightD);
-				double area = rw * rh;
-				size_t add = 0;
-				for (int j = 0; j < sh.texHeight; j++) {
-					for (int i = 0; i < sh.texWidth; i++) {
-						if (area > 0.0) {
-							textIncVector[add] = 1.0 / area;
-						}
-						else {
-							textIncVector[add] = 0.0;
-						}
-						add++;
-					}
-				}
-			}
-		}
-
-		archive(
-			sh, //Contains anglemapParams
-			indicesVector,
-			vertices2Vector
-#ifdef MOLFLOW
-			,outgMapVector
-			,textIncVector
-#endif
-		);
-	}
+	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };
 
 class FacetGroup {

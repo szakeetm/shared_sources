@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include "Vector.h"
 #include "GLApp/GLTypes.h"
+#include <cereal/cereal.hpp>
 
 #ifdef MOLFLOW
 #include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
@@ -51,15 +52,15 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			record,
-			nbBounceMax,
-			nbBounceBinsize,
-			distanceMax,
-			distanceResolution
-	#ifdef MOLFLOW
-			,timeMax,
-			timeResolution
-	#endif
+			CEREAL_NVP(record),
+			CEREAL_NVP(nbBounceMax),
+			CEREAL_NVP(nbBounceBinsize),
+			CEREAL_NVP(distanceMax),
+			CEREAL_NVP(distanceResolution)
+#ifdef MOLFLOW
+			, CEREAL_NVP(timeMax),
+			CEREAL_NVP(timeResolution)
+#endif
 		);
 	}
 
@@ -83,7 +84,6 @@ public:
 		else return sizeof(double)*(timeResolution + 1);
 	}
 };
-
 
 class FacetProperties { //Formerly SHFACET
 public:
@@ -191,103 +191,104 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			 sticking,       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
-		 opacity,        // opacity  (0=>transparent , 1=>opaque)
-		 area,          // Facet area (m^2)
+			CEREAL_NVP(sticking),       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
+			CEREAL_NVP(opacity),        // opacity  (0=>transparent , 1=>opaque)
+			CEREAL_NVP(area),          // Facet area (m^2)
 
-		    profileType,    // Profile type
-		    superIdx,       // Super structure index (Indexed from 0)
-		    superDest,      // Super structure destination index (Indexed from 1, 0=>current)
-			 teleportDest,   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
+			CEREAL_NVP(profileType),    // Profile type
+			CEREAL_NVP(superIdx),       // Super structure index (Indexed from 0)
+			CEREAL_NVP(superDest),      // Super structure destination index (Indexed from 1, 0=>current)
+			CEREAL_NVP(teleportDest),   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
 
-		   countAbs,       // Count absoprtion (MC texture)
-		   countRefl,      // Count reflection (MC texture)
-		   countTrans,     // Count transparent (MC texture)
-		   countDirection,
+			CEREAL_NVP(countAbs),       // Count absoprtion (MC texture)
+			CEREAL_NVP(countRefl),      // Count reflection (MC texture)
+			CEREAL_NVP(countTrans),     // Count transparent (MC texture)
+			CEREAL_NVP(countDirection),
 
-		 facetHistogramParams,
+			CEREAL_NVP(facetHistogramParams),
 
-		// Flags
-		   is2sided,     // 2 sided
-		   isProfile,    // Profile facet
-		   isTextured,   // texture
-		   isVolatile,   // Volatile facet (absorbtion facet which does not affect particule trajectory)
+			// Flags
+			CEREAL_NVP(is2sided),     // 2 sided
+			CEREAL_NVP(isProfile),    // Profile facet
+			CEREAL_NVP(isTextured),   // texture
+			CEREAL_NVP(isVolatile),   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
-							 // Geometry
-		 nbIndex,   // Number of index/vertex
-		 sign,      // Facet vertex rotation (see Facet::DetectOrientation())
+							  // Geometry
+			CEREAL_NVP(nbIndex),   // Number of index/vertex
+			CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
 
-						  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
-		   O,  // Origin
-		   U,  // U vector
-		   V,  // V vector
-		   nU, // Normalized U
-		   nV, // Normalized V
+							 // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+			CEREAL_NVP(O),  // Origin
+			CEREAL_NVP(U),  // U vector
+			CEREAL_NVP(V),  // V vector
+			CEREAL_NVP(nU), // Normalized U
+			CEREAL_NVP(nV), // Normalized V
 
-					   // Normal vector
-		    N,    // normalized
-		    Nuv,  // normal to (u,v) not normlized
+						// Normal vector
+			CEREAL_NVP(N),    // normalized
+			CEREAL_NVP(Nuv),  // normal to (u,v) not normlized
 
 						  // Axis Aligned Bounding Box (AABB)
-		       bb,
-		   center,
+			CEREAL_NVP(bb),
+			CEREAL_NVP(center),
 
-		// Hit/Abs/Des/Density recording on 2D texture map
-		    texWidth,    // Rounded texture resolution (U)
-		    texHeight,   // Rounded texture resolution (V)
-		 texWidthD,   // Actual texture resolution (U)
-		 texHeightD,  // Actual texture resolution (V)
+			// Hit/Abs/Des/Density recording on 2D texture map
+			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)
+			CEREAL_NVP(texHeight),   // Rounded texture resolution (V)
+			CEREAL_NVP(texWidthD),   // Actual texture resolution (U)
+			CEREAL_NVP(texHeightD),  // Actual texture resolution (V)
 
-		   hitOffset      // Hit address offset for this facet
+			CEREAL_NVP(hitOffset)      // Hit address offset for this facet
 
 #ifdef MOLFLOW
 								 // Molflow-specific facet parameters
-		 ,temperature,    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
-		 outgassing,           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
+			, CEREAL_NVP(temperature),    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
+			CEREAL_NVP(outgassing),           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
 
-		 sticking_paramId,    // -1 if use constant value, 0 or more if referencing time-dependent parameter
-		 opacity_paramId,     // -1 if use constant value, 0 or more if referencing time-dependent parameter
-		 outgassing_paramId,  // -1 if use constant value, 0 or more if referencing time-dependent parameter
+			CEREAL_NVP(sticking_paramId),    // -1 if use constant value, 0 or more if referencing time-dependent parameter
+			CEREAL_NVP(opacity_paramId),     // -1 if use constant value, 0 or more if referencing time-dependent parameter
+			CEREAL_NVP(outgassing_paramId),  // -1 if use constant value, 0 or more if referencing time-dependent parameter
 
-		 CDFid, //Which probability distribution it belongs to (one CDF per temperature)
-		 IDid,  //If time-dependent desorption, which is its ID
+			CEREAL_NVP(CDFid), //Which probability distribution it belongs to (one CDF per temperature)
+			CEREAL_NVP(IDid),  //If time-dependent desorption, which is its ID
 
-		    desorbType,     // Desorption type
-		 desorbTypeN,    // Exponent in Cos^N desorption type
-		 reflection,
+			CEREAL_NVP(desorbType),     // Desorption type
+			CEREAL_NVP(desorbTypeN),    // Exponent in Cos^N desorption type
+			CEREAL_NVP(reflection),
 
-		   countDes,       // Count desoprtion (MC texture)
+			CEREAL_NVP(countDes),       // Count desoprtion (MC texture)
 
-		   countACD,       // Angular coefficient (AC texture)
-		 maxSpeed,       // Max expected particle velocity (for velocity histogram)
-		 accomodationFactor, // Thermal accomodation factor [0..1]
-		   enableSojournTime,
-		 sojournFreq, sojournE,
+			CEREAL_NVP(countACD),       // Angular coefficient (AC texture)
+			CEREAL_NVP(maxSpeed),       // Max expected particle velocity (for velocity histogram)
+			CEREAL_NVP(accomodationFactor), // Thermal accomodation factor [0..1]
+			CEREAL_NVP(enableSojournTime),
+			CEREAL_NVP(sojournFreq),
+			CEREAL_NVP(sojournE),
 
-		// Facet hit counters
-		// FacetHitBuffer tmpCounter, - removed as now it's time-dependent and part of the hits buffer
+			// Facet hit counters
+			// FacetHitBuffer tmpCounter, - removed as now it's time-dependent and part of the hits buffer
 
-		// Moving facets
-		 isMoving,
+			// Moving facets
+			CEREAL_NVP(isMoving),
 
-		//Outgassing map
-		   useOutgassingFile,   //has desorption file for cell elements
-		 outgassingFileRatio, //desorption file's sample/unit ratio
-		   outgassingMapWidth, //rounded up outgassing file map width
-		   outgassingMapHeight, //rounded up outgassing file map height
+			//Outgassing map
+			CEREAL_NVP(useOutgassingFile),   //has desorption file for cell elements
+			CEREAL_NVP(outgassingFileRatio), //desorption file's sample/unit ratio
+			CEREAL_NVP(outgassingMapWidth), //rounded up outgassing file map width
+			CEREAL_NVP(outgassingMapHeight), //rounded up outgassing file map height
 
-		totalOutgassing, //total outgassing for the given facet
+			CEREAL_NVP(totalOutgassing), //total outgassing for the given facet
 
-		anglemapParams//Incident angle map
+			CEREAL_NVP(anglemapParams)//Incident angle map
 #endif*/
 
 #ifdef SYNRAD
-		,
-			doScattering,   // Do rough surface scattering
-		rmsRoughness,   // RMS height roughness, in meters
-		autoCorrLength, // Autocorrelation length, in meters
-		reflectType,    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
-		recordSpectrum,    // Calculate energy spectrum (histogram)
+			,
+			CEREAL_NVP(doScattering),   // Do rough surface scattering
+			CEREAL_NVP(rmsRoughness),   // RMS height roughness, in meters
+			CEREAL_NVP(autoCorrLength), // Autocorrelation length, in meters
+			CEREAL_NVP(reflectType),    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
+			CEREAL_NVP(recordSpectrum),    // Calculate energy spectrum (histogram)
 #endif
 		);
 	}
@@ -295,7 +296,7 @@ public:
 
 class WorkerParams {
 public:
-HistogramParams globalHistogramParams;
+	HistogramParams globalHistogramParams;
 #ifdef MOLFLOW
 	size_t nbMoments; //To pass in advance for memory reservation
 	double latestMoment;
@@ -321,29 +322,29 @@ HistogramParams globalHistogramParams;
 
 	template <class Archive> void serialize(Archive & archive) {
 		archive(
-			globalHistogramParams
+			CEREAL_NVP(globalHistogramParams)
 
 #ifdef MOLFLOW
-			, nbMoments
-			, latestMoment
-			, totalDesorbedMolecules
-			, finalOutgassingRate
-			, gasMass
-			, enableDecay
-			, halfLife
-			, timeWindowSize
-			, useMaxwellDistribution
-			, calcConstantFlow
+			, CEREAL_NVP(nbMoments)
+			, CEREAL_NVP(latestMoment)
+			, CEREAL_NVP(totalDesorbedMolecules)
+			, CEREAL_NVP(finalOutgassingRate)
+			, CEREAL_NVP(gasMass)
+			, CEREAL_NVP(enableDecay)
+			, CEREAL_NVP(halfLife)
+			, CEREAL_NVP(timeWindowSize)
+			, CEREAL_NVP(useMaxwellDistribution)
+			, CEREAL_NVP(calcConstantFlow)
 
-			, motionType
-			, motionVector1
-			, motionVector2
+			, CEREAL_NVP(motionType)
+			, CEREAL_NVP(motionVector1)
+			, CEREAL_NVP(motionVector2)
 #endif
 
 #ifdef SYNRAD
-			nbRegion  //number of magnetic regions
-			, nbTrajPoints //total number of trajectory points (calculated at CopyGeometryBuffer)
-			, newReflectionModel
+			CEREAL_NVP(nbRegion)  //number of magnetic regions
+			, CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
+			, CEREAL_NVP(newReflectionModel)
 #endif
 		);
 	}
@@ -358,10 +359,10 @@ public:
 
 	template <class Archive> void serialize(Archive & archive) {
 		archive(
-			nbFacet,   // Number of facets (total)
-			nbVertex,  // Number of 3D vertices
-			nbSuper,   // Number of superstructures
-			name  // (Short file name)
+			CEREAL_NVP(nbFacet),   // Number of facets (total)
+			CEREAL_NVP(nbVertex),  // Number of 3D vertices
+			CEREAL_NVP(nbSuper),   // Number of superstructures
+			CEREAL_NVP(name)  // (Short file name)
 		);
 	}
 };
@@ -373,28 +374,28 @@ public:
 #endif
 	bool	 lowFluxMode;
 	double	 lowFluxCutoff;
-	
+
 	bool enableLogging;
 	size_t logFacetId, logLimit;
 
 	size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
-	
+
 	template<class Archive> void serialize(Archive& archive) {
 		archive(
 #ifdef SYNRAD
-			generation_mode,
+			CEREAL_NVP(generation_mode),
 #endif
-			lowFluxMode,
-			lowFluxCutoff,
-			enableLogging,
-			logFacetId,
-			logLimit,
-			desorptionLimit,
-			nbProcess
+			CEREAL_NVP(lowFluxMode),
+			CEREAL_NVP(lowFluxCutoff),
+			CEREAL_NVP(enableLogging),
+			CEREAL_NVP(logFacetId),
+			CEREAL_NVP(logLimit),
+			CEREAL_NVP(desorptionLimit),
+			CEREAL_NVP(nbProcess)
 		);
 	}
-	
+
 }; //parameters that can be changed without restarting the simulation
 
 class HIT {
@@ -409,15 +410,15 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			 pos,
-		    type,
+			CEREAL_NVP(pos),
+			CEREAL_NVP(type),
 #ifdef SYNRAD
-		 dF,
-		 dP,
+			CEREAL_NVP(dF),
+			CEREAL_NVP(dP),
 #endif
 		);
 	}
-} ;
+};
 
 // Velocity field
 class DirectionCell {
@@ -427,9 +428,12 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(dir,count);
+		archive(
+			CEREAL_NVP(dir), 
+			CEREAL_NVP(count)
+		);
 	}
-} ;
+};
 
 class LEAK {
 public:
@@ -438,9 +442,12 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(pos,dir);
+		archive(
+			CEREAL_NVP(pos),
+			CEREAL_NVP(dir)
+		);
 	}
-} ;
+};
 
 class FacetHistogramBuffer { //raw data containing histogram result
 public:
@@ -450,7 +457,11 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(nbHitsHistogram, distanceHistogram, timeHistogram);
+		archive(
+			CEREAL_NVP(nbHitsHistogram), 
+			CEREAL_NVP(distanceHistogram), 
+			CEREAL_NVP(timeHistogram)
+		);
 	}
 };
 
@@ -478,41 +489,42 @@ typedef union {
 	void serialize(Archive & archive)
 	{
 		archive(
-			 nbDesorbed,          // Number of desorbed molec
-		 nbMCHit,               // Number of hits
-		 nbHitEquiv,			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-		 nbAbsEquiv,          // Equivalent number of absorbed molecules
-		 sum_1_per_ort_velocity,    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
-		 sum_1_per_velocity,          //For average molecule speed calculation
-		 sum_v_ort,          // sum of orthogonal speeds of incident velocities, used to determine the pressure
-		);
+			CEREAL_NVP(nbDesorbed),          // Number of desorbed molec
+			CEREAL_NVP(nbMCHit),               // Number of hits
+			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			CEREAL_NVP(nbAbsEquiv),          // Equivalent number of absorbed molecules
+			CEREAL_NVP(sum_1_per_ort_velocity),    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
+			CEREAL_NVP(sum_1_per_velocity),          //For average molecule speed calculation
+			CEREAL_NVP(sum_v_ort),          // sum of orthogonal speeds of incident velocities, used to determine the pressure
+			);
 	}
 } FacetHitBuffer;
 #endif
 
 #ifdef SYNRAD
-	class FacetHitBuffer {
-	public:
-		double fluxAbs, powerAbs;
-		llong nbMCHit;           // Number of hits
-		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-		double nbAbsEquiv;      // Number of absorbed molec
-		llong nbDesorbed;
+class FacetHitBuffer {
+public:
+	double fluxAbs, powerAbs;
+	llong nbMCHit;           // Number of hits
+	double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+	double nbAbsEquiv;      // Number of absorbed molec
+	llong nbDesorbed;
 
-		template<class Archive>
-		void serialize(Archive & archive)
-		{
-			archive(
-				 fluxAbs, powerAbs,
-			 nbMCHit,           // Number of hits
-			 nbHitEquiv,			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-			 nbAbsEquiv,      // Number of absorbed molec
-			 nbDesorbed,
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(
+			CEREAL_NVP(fluxAbs),
+			CEREAL_NVP(powerAbs),
+			CEREAL_NVP(nbMCHit),           // Number of hits
+			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			CEREAL_NVP(nbAbsEquiv),      // Number of absorbed molec
+			CEREAL_NVP(nbDesorbed),
 			);
-		}
+	}
 
-		FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
-	};
+	FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
+};
 #endif
 
 
@@ -544,26 +556,27 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			 globalHits,               // Global counts (as if the whole geometry was one extra facet)
-		 hitCacheSize,              // Number of valid hits in cache
-		 lastHitIndex,					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-		    hitCache,       // Hit history
+			CEREAL_NVP(globalHits),               // Global counts (as if the whole geometry was one extra facet)
+			CEREAL_NVP(hitCacheSize),              // Number of valid hits in cache
+			CEREAL_NVP(lastHitIndex),					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
+			CEREAL_NVP(hitCache),       // Hit history
 
-		  lastLeakIndex,		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
-		  leakCacheSize,        //Number of valid leaks in the cache
-		  nbLeakTotal,         // Total leaks
-		   leakCache,      // Leak history
+			CEREAL_NVP(lastLeakIndex),		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
+			CEREAL_NVP(leakCacheSize),        //Number of valid leaks in the cache
+			CEREAL_NVP(nbLeakTotal),         // Total leaks
+			CEREAL_NVP(leakCache),      // Leak history
 
 #ifdef MOLFLOW
-		    sMode,                // Simu mode (MC_MODE or AC_MODE)
-		 texture_limits[3], //Min-max on texture
-		 distTraveled_total,
-		 distTraveledTotal_fullHitsOnly,
+			CEREAL_NVP(sMode),                // Simu mode (MC_MODE or AC_MODE)
+			CEREAL_NVP(texture_limits), //Min-max on texture
+			CEREAL_NVP(distTraveled_total),
+			CEREAL_NVP(distTraveledTotal_fullHitsOnly),
 #endif
 
 #ifdef SYNRAD
-		 hitMin, hitMax,
-		 distTraveledTotal,
+			CEREAL_NVP(hitMin),
+				CEREAL_NVP(hitMax),
+				CEREAL_NVP(distTraveledTotal),
 #endif
 		);
 	}
@@ -584,14 +597,14 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			 facetHitPosition,
-		 hitTheta, hitPhi,
-		 oriRatio,
+			CEREAL_NVP(facetHitPosition),
+			CEREAL_NVP(hitTheta), CEREAL_NVP(hitPhi),
+			CEREAL_NVP(oriRatio),
 #ifdef MOLFLOW
-		 time, particleDecayMoment, velocity,
+			CEREAL_NVP(time), CEREAL_NVP(particleDecayMoment), CEREAL_NVP(velocity),
 #endif
 #ifdef SYNRAD
-		 energy, dF, dP,
+			CEREAL_NVP(energy), CEREAL_NVP(dF), CEREAL_NVP(dP),
 #endif
 		);
 	}
@@ -648,7 +661,8 @@ static const char *prStates[] = {
 
 #define MAX_PROCESS (size_t)32    // Maximum number of process
 
-typedef struct {
+class SHCONTROL {
+public:
 	// Process control
 	size_t		states[MAX_PROCESS];        // Process states/commands
 	size_t    cmdParam[MAX_PROCESS];      // Command param 1
@@ -658,10 +672,10 @@ typedef struct {
 	void serialize(Archive & archive)
 	{
 		archive(
-			states,
-			cmdParam,
-			cmdParam2,
-			statusStr		
+			CEREAL_NVP(states),
+			CEREAL_NVP(cmdParam),
+			CEREAL_NVP(cmdParam2),
+			CEREAL_NVP(statusStr)
 		);
 	}
-} SHCONTROL;
+};

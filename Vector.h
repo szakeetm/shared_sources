@@ -18,6 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
+#include <cereal/cereal.hpp>
 
 class Vector3d {
 public:
@@ -33,7 +34,7 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(x, y, z);
+		archive(CEREAL_NVP(x), CEREAL_NVP(y), CEREAL_NVP(z));
 	}
 };
 
@@ -49,7 +50,7 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(u,v);
+		archive(CEREAL_NVP(u), CEREAL_NVP(v));
 	}
 };
 
@@ -74,7 +75,7 @@ public:
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive(min, max);
+		archive(CEREAL_NVP(min), CEREAL_NVP(max));
 	}
 } ;
 

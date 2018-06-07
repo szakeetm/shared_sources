@@ -90,7 +90,7 @@ public:
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
   void RealReload();
-  void Serialize();
+  std::ostringstream SerializeForLoader();
   void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource
@@ -213,21 +213,22 @@ public:
 	std::vector<std::vector<double>> parallel_polarization; //ratio of parallel polarization for a given E/E_crit ratio and psi vertical angle
 	std::vector<std::vector<std::vector<double>>> chi_distros; //3 psi-chi    maps for full/parallel/orthogonal polarizations
 #endif
-
+	/*
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			wp,
-			ontheflyParams,
-			CDFs,
-			IDs,
-			parameters,
-			temperatures,
-			moments,
-			desorptionParameterIDs
+			CEREAL_NVP(wp),
+			CEREAL_NVP(ontheflyParams),
+			CEREAL_NVP(CDFs),
+			CEREAL_NVP(IDs),
+			CEREAL_NVP(parameters),
+			CEREAL_NVP(temperatures),
+			CEREAL_NVP(moments),
+			CEREAL_NVP(desorptionParameterIDs)
 		);
 	}
+	*/
 private:
 
   // Process management
