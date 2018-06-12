@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Vector.h"
 #include "GLApp/GLTypes.h"
 #include <cereal/cereal.hpp>
+#include <array>
 
 #ifdef MOLFLOW
 #include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
@@ -313,6 +314,7 @@ public:
 	int motionType;
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
+	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 #endif
 #ifdef SYNRAD
 	size_t        nbRegion;  //number of magnetic regions
@@ -339,6 +341,7 @@ public:
 			, CEREAL_NVP(motionType)
 			, CEREAL_NVP(motionVector1)
 			, CEREAL_NVP(motionVector2)
+			, CEREAL_NVP(sMode)
 #endif
 
 #ifdef SYNRAD
@@ -485,17 +488,18 @@ typedef union {
 		double value;
 		double absorbed;
 	} density;
+
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(nbDesorbed),          // Number of desorbed molec
-			CEREAL_NVP(nbMCHit),               // Number of hits
-			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-			CEREAL_NVP(nbAbsEquiv),          // Equivalent number of absorbed molecules
-			CEREAL_NVP(sum_1_per_ort_velocity),    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
-			CEREAL_NVP(sum_1_per_velocity),          //For average molecule speed calculation
-			CEREAL_NVP(sum_v_ort),          // sum of orthogonal speeds of incident velocities, used to determine the pressure
+			CEREAL_NVP(nbDesorbed),
+			CEREAL_NVP(nbMCHit),
+			CEREAL_NVP(nbHitEquiv),
+			CEREAL_NVP(nbAbsEquiv),
+			CEREAL_NVP(sum_1_per_ort_velocity),
+			CEREAL_NVP(sum_1_per_velocity),
+			CEREAL_NVP(sum_v_ort)
 			);
 	}
 } FacetHitBuffer;
@@ -528,20 +532,19 @@ public:
 #endif
 
 
-class GlobalHitBuffer {
+class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
 	FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
 	size_t hitCacheSize;              // Number of valid hits in cache
 	size_t lastHitIndex;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-	HIT    hitCache[HITCACHESIZE];       // Hit history
-
+	HIT hitCache[HITCACHESIZE];       // Hit history
+	LEAK leakCache[LEAKCACHESIZE];      // Leak history
 	size_t  lastLeakIndex;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 	size_t  leakCacheSize;        //Number of valid leaks in the cache
 	size_t  nbLeakTotal;         // Total leaks
-	LEAK   leakCache[LEAKCACHESIZE];      // Leak history
+	
 
 #ifdef MOLFLOW
-	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
 	double distTraveled_total;
 	double distTraveledTotal_fullHitsOnly;
@@ -567,7 +570,6 @@ public:
 			CEREAL_NVP(leakCache),      // Leak history
 
 #ifdef MOLFLOW
-			CEREAL_NVP(sMode),                // Simu mode (MC_MODE or AC_MODE)
 			CEREAL_NVP(texture_limits), //Min-max on texture
 			CEREAL_NVP(distTraveled_total),
 			CEREAL_NVP(distTraveledTotal_fullHitsOnly),

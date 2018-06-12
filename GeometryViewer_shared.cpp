@@ -835,10 +835,10 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
-		for (size_t i = 0; i < Min(dispNumLeaks,mApp->worker.leakCacheSize); i++) {
+		for (size_t i = 0; i < Min(dispNumLeaks,mApp->worker.globalHitCache.leakCacheSize); i++) {
 
-			Vector3d p = mApp->worker.leakCache[i].pos;
-			Vector3d d = mApp->worker.leakCache[i].dir;
+			Vector3d p = mApp->worker.globalHitCache.leakCache[i].pos;
+			Vector3d d = mApp->worker.globalHitCache.leakCache[i].dir;
 
 			glColor3f(0.9f, 0.2f, 0.5f);
 			glBegin(GL_POINTS);

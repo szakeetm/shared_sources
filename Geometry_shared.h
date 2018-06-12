@@ -70,7 +70,7 @@ protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
 	void CalculateFacetParam(Facet *f);
 	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
-	void LoadTXTGeom(FileReader *file, size_t strIdx = 0);
+	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertSTLGeom(FileReader *file, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
@@ -127,7 +127,7 @@ public:
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 
-	void LoadTXT(FileReader *file, GLProgress *prg);
+	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
 	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor);
 	void LoadASE(FileReader *file, GLProgress *prg);
@@ -277,14 +277,6 @@ protected:
 	GLint sphereList;             // Compiled geometry of sphere used for direction field
 
 	public:
-		llong loaded_nbMCHit;
-		double loaded_nbHitEquiv;
-		llong loaded_nbDesorption;
-		llong loaded_desorptionLimit;
-		llong   loaded_nbLeak;
-		double loaded_nbAbsEquiv;
-		double loaded_distTraveledTotal;
-
 		bool  texAutoScale;  // Autoscale flag
 		bool  texColormap;   // Colormap flag
 		bool  texLogScale;   // Texture im log scale

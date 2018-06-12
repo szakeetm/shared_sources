@@ -96,8 +96,8 @@ public:
   //void Exit(); // Free all allocated resource
   void KillAll();// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
-  void SetLeakCache(LEAK *buffer,size_t *nb,Dataport *dpHit);// Set Leak
-  void SetHitCache(HIT *buffer,size_t *nb, Dataport *dpHit);  // Set HHit
+  //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
+  //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
   BYTE *GetHits(); // Access to dataport (HIT)
   std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();
@@ -125,6 +125,7 @@ public:
   void ComputeAC(float appTime); // Send Compute AC matrix order
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
+  void SendFacetHitCounts(Dataport * dpHit);
   int AddMoment(std::vector<double> newMoments); //Adds a time serie to moments and returns the number of elements
   std::vector<double> ParseMoment(std::string userInput); //Parses a user input and returns a vector of time moments
   void ResetMoments();
@@ -137,7 +138,7 @@ public:
   int GetCDFId(double temperature);
   int GetIDId(int paramId);
   //Different signature:
-  void WriteHitBuffer(bool skipFacetHits = false);// Send total and facet hit counts to subprocesses
+  void SendToHitBuffer(bool skipFacetHits = false);// Send total and facet hit counts to subprocesses
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
 #endif
 
@@ -146,21 +147,16 @@ public:
   void AddMaterial(std::string *fileName);
   void ClearRegions();
   //Different signature:
-  void WriteHitBuffer();// Send total and facet hit counts to subprocesses
+  void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
 #endif
 
   // Global simulation parameters
   OntheflySimulationParams ontheflyParams;
   WorkerParams wp;
-
-  double  nbAbsEquiv;      // Total number of molecules absorbed (64 bit integer)
-  size_t  nbDesorption;      // Total number of molecules generated (64 bit integer)
-  size_t  nbMCHit;             // Total number of hit (64 bit integer)
-  double  nbHitEquiv;          // Equivalent number of hits (low-flux mode), for MFP calculation
-  size_t  nbLeakTotal;            // Total number of leak
+  GlobalHitBuffer globalHitCache;
   
-  double distTraveled_total; // Total distance traveled by particles (for mean free path calc.)
+
 
   FacetHistogramBuffer globalHistogramCache;
 
@@ -176,19 +172,10 @@ public:
 
   bool calcAC; //Not used in Synrad, kept for ResetStatsAndHits function shared with Molflow
 
-			   // Caches
-  HIT  hitCache[HITCACHESIZE];
-  LEAK leakCache[LEAKCACHESIZE];
-  size_t hitCacheSize;            // Total number of hhit
-  size_t leakCacheSize;
-
 #ifdef MOLFLOW
-  size_t sMode; //MC or AC
 
   std::vector<Parameter> parameters;
   int displayedMoment;
-
-  double distTraveledTotal_fullHitsOnly; // Total distance traveled by particles between full hits (for mean free path calc.)
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<std::vector<std::pair<double, double>>> IDs; //integrated distribution function for each time-dependent desorption type

@@ -3565,12 +3565,12 @@ void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
 
 }
 
-void Geometry::LoadTXT(FileReader *file, GLProgress *prg) {
+void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
 	Clear();
-	LoadTXTGeom(file);
+	LoadTXTGeom(file, worker);
 	UpdateName(file);
 	sh.nbSuper = 1;
 	strName[0] = _strdup(sh.name.c_str());
@@ -3638,14 +3638,14 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 
 }
 
-void Geometry::LoadTXTGeom(FileReader *file, size_t strIdx) {
+void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	loaded_nbMCHit = file->ReadLLong();
-	loaded_nbHitEquiv = (double)loaded_nbMCHit; //Backward comp
-	loaded_nbLeak = file->ReadLLong();
-	loaded_nbDesorption = file->ReadLLong();
-	loaded_desorptionLimit = file->ReadLLong();
+	worker->globalHitCache.globalHits.hit.nbMCHit = file->ReadLLong();
+	worker->globalHitCache.globalHits.hit.nbHitEquiv = (double)worker->globalHitCache.globalHits.hit.nbMCHit; //Backward comp
+	worker->globalHitCache.nbLeakTotal = file->ReadLLong();
+	worker->globalHitCache.globalHits.hit.nbDesorbed = file->ReadLLong();
+	worker->ontheflyParams.desorptionLimit = file->ReadLLong();
 
 	sh.nbVertex = file->ReadInt();
 	sh.nbFacet = file->ReadInt();

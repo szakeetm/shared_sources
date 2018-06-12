@@ -146,7 +146,7 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConf
 
 		}
 #ifdef MOLFLOW
-		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected);
+		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected,wp.sMode);
 #endif
 #ifdef SYNRAD
 		geom->ExportTextures(f, grouping, mode, no_scans, dpHit, saveSelected);
@@ -156,31 +156,31 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConf
 
 }
 
-void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When loading from file
+/*
+void Worker::SendLeakCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
 	if (dpHit) {
 		AccessDataport(dpHit);
 		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(LEAKCACHESIZE, *nb);
-		memcpy(leakCache, buffer, sizeof(LEAK)*nbCopy);
-		memcpy(gHits->leakCache, buffer, sizeof(LEAK)*nbCopy);
-		gHits->lastLeakIndex = nbCopy % LEAKCACHESIZE;
-		gHits->leakCacheSize = nbCopy;
+		size_t nbCopy = Min(LEAKCACHESIZE, globalHitCache.leakCacheSize);
+		gHits->leakCache = globalHitCache.leakCache;
+		gHits->lastLeakIndex = nbCopy-1;
+		gHits->leakCacheSize = globalHitCache.leakCacheSize;
 		ReleaseDataport(dpHit);
 	}
 }
 
-void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
+void Worker::SendHitCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
 	if (dpHit) {
 		AccessDataport(dpHit);
 		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(HITCACHESIZE, *nb);
-		memcpy(hitCache, buffer, sizeof(HIT)*nbCopy);
-		memcpy(gHits->hitCache, buffer, sizeof(HIT)*nbCopy);
-		gHits->lastHitIndex = nbCopy % HITCACHESIZE;
-		gHits->hitCacheSize = nbCopy;
+		size_t nbCopy = Min(HITCACHESIZE, globalHitCache.hitCacheSize);
+		gHits->hitCache = globalHitCache.hitCache;
+		gHits->lastHitIndex = nbCopy - 1;
+		gHits->hitCacheSize = globalHitCache.hitCacheSize;
 		ReleaseDataport(dpHit);
 	}
 }
+*/
 
 void Worker::Stop_Public() {
 	// Stop
@@ -474,7 +474,7 @@ void Worker::RebuildTextures() {
 	if (needsReload) RealReload();
 	if (AccessDataport(dpHit)) {
 		BYTE *buffer = (BYTE *)dpHit->buff;
-		if (mApp->needsTexture || mApp->needsDirection) try{ geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection); }
+		if (mApp->needsTexture || mApp->needsDirection) try{ geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection,wp.sMode); }
 		catch (Error &e) {
 			ReleaseDataport(dpHit);
 			throw e;
@@ -518,33 +518,20 @@ void Worker::Update(float appTime) {
 	if (dpHit) {
 
 		if (AccessDataport(dpHit)) {
-			BYTE *buffer = (BYTE *)dpHit->buff;
+			BYTE *bufferStart = (BYTE *)dpHit->buff;
+			BYTE *buffer = bufferStart;
+
 
 			mApp->changedSinceSave = true;
 			// Globals
-			GlobalHitBuffer *gHits = (GlobalHitBuffer *)buffer;
+			globalHitCache = READBUFFER(GlobalHitBuffer);
 
 // Global hits and leaks
 #ifdef MOLFLOW
-			nbMCHit = gHits->globalHits.hit.nbMCHit;
-			nbHitEquiv = gHits->globalHits.hit.nbHitEquiv;
-			nbAbsEquiv = gHits->globalHits.hit.nbAbsEquiv;
-			nbDesorption = gHits->globalHits.hit.nbDesorbed;
-			//No global hitEquiv
-			distTraveled_total = gHits->distTraveled_total;
-			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
 			bool needsAngleMapStatusRefresh = false;
 #endif
 
 #ifdef SYNRAD
-			
-			nbMCHit = gHits->globalHits.nbMCHit;
-			nbHitEquiv = gHits->globalHits.nbHitEquiv;
-			nbAbsEquiv = gHits->globalHits.nbAbsEquiv;
-			nbDesorption = gHits->globalHits.nbDesorbed;
-			totalFlux = gHits->globalHits.fluxAbs;
-			totalPower = gHits->globalHits.powerAbs;
-			distTraveled_total = gHits->distTraveledTotal;
 
 			if (nbDesorption && nbTrajPoints) {
 				no_scans = (double)nbDesorption / (double)nbTrajPoints;
@@ -553,11 +540,7 @@ void Worker::Update(float appTime) {
 				no_scans = 1.0;
 			}
 #endif
-			nbLeakTotal = gHits->nbLeakTotal;
-			hitCacheSize = gHits->hitCacheSize;
-			memcpy(hitCache, gHits->hitCache, sizeof(HIT)*hitCacheSize);
-			leakCacheSize = gHits->leakCacheSize;
-			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
+
 
 			//Copy global histogram
 			if (wp.globalHistogramParams.record) {
@@ -566,7 +549,7 @@ void Worker::Update(float appTime) {
 				globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.timeResolution);
 				globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
 
-				BYTE* globalHistogramAddress = buffer + sizeof(GlobalHitBuffer);
+				BYTE* globalHistogramAddress = buffer;
 #ifdef MOLFLOW
 				globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
 #endif
@@ -575,6 +558,8 @@ void Worker::Update(float appTime) {
 				memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(), wp.globalHistogramParams.GetDistanceDataSize());
 				memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() + wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
 			}
+
+			buffer = bufferStart;
 
 			// Refresh local facet hit cache for the displayed moment
 			size_t nbFacet = geom->GetNbFacet();
@@ -633,7 +618,7 @@ void Worker::Update(float appTime) {
 				}
 			}
 			try {
-				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);
+				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
 			}
 			catch (Error &e) {
 				GLMessageBox::Display((char *)e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
