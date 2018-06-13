@@ -17,7 +17,7 @@ GLTextField::GLTextField(int compId,const char *text):GLComponent(compId) {
   SetCursor(CURSOR_TEXT);
 }
 
-char *GLTextField::GetText() {
+std::string GLTextField::GetText() {
   return m_Text;
 }
 

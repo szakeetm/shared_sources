@@ -49,7 +49,7 @@ public:
   void SetPaintAxisFirst(bool b);
   bool IsPaintAxisFirst();
   void SetHeaderVisible(bool b);
-  void SetHeader(char *s);
+  void SetHeader(const char *s);
   char *GetHeader();
   void SetDisplayDuration(double v);
   double GetDisplayDuration();

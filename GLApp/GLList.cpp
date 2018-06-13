@@ -1255,7 +1255,7 @@ void GLList::UpdateCell() {
 
 	if( cEdits[selectedCol]==EDIT_NUMBER ) {
 		double val;
-		if( sscanf(edit->GetText(),"%lf",&val)<=0 ) {
+		if( !edit->GetNumber(&val) ) {
 			if( cNames ) {
 				sprintf(tmp,"Wrong number format at line %zd (%s)",selectedRows[0]+1,cNames[selectedCol]);
 			} else {
@@ -1267,7 +1267,7 @@ void GLList::UpdateCell() {
 			SetValueAt(selectedCol,selectedRows[0],tmp);
 		}
 	} else {
-		SetValueAt(selectedCol,selectedRows[0],edit->GetText());
+		SetValueAt(selectedCol,selectedRows[0],edit->GetText().c_str());
 	}
 
 }

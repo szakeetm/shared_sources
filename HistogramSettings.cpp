@@ -53,39 +53,39 @@ HistogramSettings::HistogramSettings():GLWindow() {
 
 	SetTitle("Facet histogram settings");
 
-	recordToggle = new GLToggle(0,"Record histogram on selected facet(s)");
-	recordToggle->SetBounds(5,5,170,18);
-	recordToggle->AllowMixedState(true);
-	recordToggle->SetState(true);
-	Add(recordToggle);
+	facetRecordToggle = new GLToggle(0,"Record histogram on selected facet(s)");
+	facetRecordToggle->SetBounds(5,5,170,18);
+	facetRecordToggle->AllowMixedState(true);
+	facetRecordToggle->SetState(true);
+	Add(facetRecordToggle);
 
 	GLLabel* l1 = new GLLabel("Max recorded flight distance (cm):");
 	l1->SetBounds(10, 30, 150, 20);
 	Add(l1);
 
-	distanceLimit = new GLTextField(0,"1000");
-	distanceLimit->SetBounds(185,30,80,18);
-	Add(distanceLimit);
+	facetDistanceLimitText = new GLTextField(0,"1000");
+	facetDistanceLimitText->SetBounds(185,30,80,18);
+	Add(facetDistanceLimitText);
 
 	GLLabel* l2 = new GLLabel("Max recorded no. of hits:");
 	l2->SetBounds(10, 55, 150, 20);
 	Add(l2);
 
-	hitLimit = new GLTextField(0,"1000");
-	hitLimit->SetBounds(185,55,80,18);
-	Add(hitLimit);
+	facetHitLimitText = new GLTextField(0,"1000");
+	facetHitLimitText->SetBounds(185,55,80,18);
+	Add(facetHitLimitText);
 
 	GLLabel* l3 = new GLLabel("Hit bin size:");
 	l3->SetBounds(10, 80, 150, 20);
 	Add(l3);
 
-	hitBinSize = new GLTextField(0,"1");
-	hitBinSize->SetBounds(185,80,80,18);
-	Add(hitBinSize);
+	facetHitBinSizeText = new GLTextField(0,"1");
+	facetHitBinSizeText->SetBounds(185,80,80,18);
+	Add(facetHitBinSizeText);
 
-	memoryEstimateLabel = new GLLabel("Memory estimate of selected facets:");
-	memoryEstimateLabel->SetBounds(10,105,wD-20,20);
-	Add(memoryEstimateLabel);
+	facetMemoryEstimateLabel = new GLLabel("Memory estimate of selected facets:");
+	facetMemoryEstimateLabel->SetBounds(10,105,wD-20,20);
+	Add(facetMemoryEstimateLabel);
 
 	/*
 	applyButton = new GLButton(0,"Apply");
@@ -103,14 +103,11 @@ HistogramSettings::HistogramSettings():GLWindow() {
 	
 }
 
-void HistogramSettings::Reposition() {
-	int refX, refY, w, h;
-	mApp->facetHistogramBtn->GetBounds(&refX, &refY, &w, &h);
-	SetBounds(refX - GetWidth() - 115, refY + 5, GetWidth(), GetHeight());
-}
-
 bool HistogramSettings::Apply() {
 	//Check input, return false if error, otherwise apply and return true
+	int globalHitLimit, facetHitLimit, globalHitBinSize, facetHitBinSize;
+	double globalDistanceLimit, facetDistanceLimit;
+	
 	return true;
 }
 

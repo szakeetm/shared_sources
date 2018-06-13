@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class GLWindow;
 class GLButton;
 class GLTextField;
+class GLTitledPanel;
 class GLLabel;
 class GLToggle;
 
@@ -37,7 +38,6 @@ public:
 
   // Construction
   HistogramSettings();
-  void Reposition();
 
   // Component methods
   void SetGeometry(Geometry *s,Worker *w);
@@ -52,13 +52,13 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-  //GLButton    *applyButton;
-  GLTextField *distanceLimit;
-  GLTextField *hitLimit;
-  GLTextField *hitBinSize;
-  GLToggle *recordToggle;
-  GLLabel  *memoryEstimateLabel;
+  GLTitledPanel *globalSettingsPanel, *facetSettingsPanel;
+  GLTextField *globalDistanceLimitText,*facetDistanceLimitText;
+  GLTextField *globalHitLimitText,*facetHitLimitText;
+  GLTextField *globalHitBinSizeText,*facetHitBinSizeText;
+  GLToggle *globalRecordToggle,*facetRecordToggle;
+  GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;
 
-  size_t nbFacetSelected;
+  GLButton *applyButton, *openViewerButton;
 
 };

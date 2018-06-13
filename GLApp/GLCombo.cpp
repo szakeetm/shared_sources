@@ -5,6 +5,7 @@
 #include "GLWindowManager.h"
 #include "GLList.h"
 #include "GLTextField.h"
+#include <string>
 
 // Popup -----------------------------------------------------------
 
@@ -86,7 +87,7 @@ int GLCombo::GetUserValueAt(size_t row) {
   return list->GetUserValueAt(0,row);
 }
 
-char *GLCombo::GetValueAt(size_t row) {
+std::string GLCombo::GetValueAt(size_t row) {
   return list->GetValueAt(0,row);
 }
 
@@ -99,14 +100,12 @@ void GLCombo::SetSelectedValue(char *value) {
   selectedRow = -1;
 }
 
-char *GLCombo::GetSelectedValue() {
+std::string GLCombo::GetSelectedValue() {
   return text->GetText();
 }
 
 void GLCombo::ScrollTextToEnd() {
-  char *value = text->GetText();
-  int l = (value?(int)strlen(value):0);
-  text->SetCursorPos(l);
+  text->SetCursorPos(text->GetText().length());
   text->ScrollToVisible();
 }
 

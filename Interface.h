@@ -154,7 +154,8 @@ typedef struct {
 #define MENU_TOOLS_TEXPLOTTER  401
 #define MENU_TOOLS_PROFPLOTTER 402
 #define MENU_TOOLS_PARTICLELOGGER 403
-#define MENU_TOOLS_SCREENSHOT 404
+#define MENU_TOOLS_HISTOGRAMSETTINGS 404
+#define MENU_TOOLS_SCREENSHOT 405
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -309,7 +310,7 @@ public:
 
 	GLButton      *facetApplyBtn;
 	GLButton      *facetDetailsBtn;
-	GLButton      *facetHistogramBtn;
+	GLButton      *facetCoordBtn;
 	GLButton      *facetAdvParamsBtn; // <<Adv, used by Molflow only
 	GLTitledPanel *facetPanel;
 	GLList        *facetList;

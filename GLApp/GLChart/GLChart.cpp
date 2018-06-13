@@ -183,7 +183,7 @@ void GLChart::SetHeaderVisible(bool b) {
 * @param s Graph header
 * @see getHeader
 */
-void GLChart::SetHeader(char *s) {
+void GLChart::SetHeader(const char *s) {
 	if(s) strcpy(header,s);
 	else  strcpy(header,"");
 	SetHeaderVisible(strlen(header)>0);

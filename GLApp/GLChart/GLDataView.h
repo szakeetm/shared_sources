@@ -71,7 +71,7 @@ public:
   int GetStyle();
   int GetLineWidth();
   void SetLineWidth(int c);
-  void SetName(char *s);
+  void SetName(const char *s);
   char *GetName();
   void SetUnit(char *s);
   char *GetUnit();

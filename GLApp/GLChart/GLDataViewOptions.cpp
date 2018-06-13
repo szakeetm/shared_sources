@@ -734,7 +734,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
       commit();
     } else if (src == transformA0Text && message==MSG_TEXT) {
 
-      if(sscanf(transformA0Text->GetText(),"%lf",&d)<=0) {
+      if(!transformA0Text->GetNumber(&d)) {
         error("Malformed A0 value");
         return;
       }
@@ -743,7 +743,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == transformA1Text && message==MSG_TEXT) {
 
-      if(sscanf(transformA1Text->GetText(),"%lf",&d)<=0) {
+      if(!transformA1Text->GetNumber(&d)) {
         error("Malformed A1 value");
         return;
       }
@@ -752,7 +752,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == transformA2Text && message==MSG_TEXT) {
 
-      if(sscanf(transformA2Text->GetText(),"%lf",&d)<=0) {
+      if(!transformA2Text->GetNumber(&d)) {
         error("Malformed A2 value");
         return;
       }
@@ -761,12 +761,12 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == lineNameText) {
 
-      dataView->SetName(lineNameText->GetText());
+      dataView->SetName(lineNameText->GetText().c_str());
       commit();
 
     } else if (src == tensionText && message==MSG_TEXT) {
 
-      if(sscanf(tensionText->GetText(),"%lf",&d)<=0) {
+      if(!tensionText->GetNumber(&d)) {
         error("Malformed tension value");
         return;
       }
@@ -775,7 +775,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == biasText && message==MSG_TEXT) {
 
-      if(sscanf(biasText->GetText(),"%lf",&d)<=0) {
+      if(!biasText->GetNumber(&d)) {
         error("Malformed bias value");
         return;
       }
@@ -784,7 +784,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == sigmaText && message==MSG_TEXT) {
 
-      if(sscanf(sigmaText->GetText(),"%lf",&d)<=0) {
+      if(!sigmaText->GetNumber(&d)) {
         error("Malformed sigma value");
         return;
       }

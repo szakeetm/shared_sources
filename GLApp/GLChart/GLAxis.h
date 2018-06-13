@@ -64,7 +64,7 @@ public:
   void   SetTickLength(int lgth);
   int    GetTickLength();
   char  *GetName();
-  void   SetName(char *s);
+  void   SetName(const char *s);
   void   SetPosition(int o);
   int    GetPosition();
   void   AddDataView(GLDataView *v);

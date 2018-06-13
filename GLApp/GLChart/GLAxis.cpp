@@ -668,7 +668,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param s Name of this axis.
    * @see getName
    */
-  void GLAxis::SetName(char *s) {
+  void GLAxis::SetName(const char *s) {
     strcpy(name,s);
   }
 

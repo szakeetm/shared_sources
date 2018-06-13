@@ -200,8 +200,8 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
       if (!b) {
 
         double min,max;
-        sscanf(MinText->GetText(),"%lf",&min);
-        sscanf(MaxText->GetText(),"%lf",&max);
+        MinText->GetNumber(&min);
+        MaxText->GetNumber(&max);
         if (max > min) {
            pAxis->SetMinimum(min);
            pAxis->SetMaximum(max);
@@ -291,11 +291,11 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
     } else if ((src == MinText || src == MaxText) && !pAxis->IsAutoScale() && message==MSG_TEXT ) {
 
       double min,max;
-      if( sscanf(MinText->GetText(),"%lf",&min)<=0 ) {
+      if( !MinText->GetNumber(&min) ) {
         error("Min: malformed number.");
         return;
       }
-      if( sscanf(MaxText->GetText(),"%lf",&max)<=0 ) {
+      if(!MaxText->GetNumber(&max)) {
         error("Max: malformed number.");
         return;
       }
@@ -318,7 +318,7 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
 
     } else if (src == TitleText) {
 
-      pAxis->SetName(TitleText->GetText());
+      pAxis->SetName(TitleText->GetText().c_str());
       commit();
 
     }

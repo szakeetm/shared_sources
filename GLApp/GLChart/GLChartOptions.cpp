@@ -335,17 +335,17 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     // General ------------------------------------------------------------
     } else if (src == generalLegendText) {
 
-      chart->SetHeader(generalLegendText->GetText());
+      chart->SetHeader(generalLegendText->GetText().c_str());
       commit();
 
     } else if (src == generalDurationText) {
 
-      if (_stricmp(generalDurationText->GetText(),"infinty")==0) {
+      if (_stricmp(generalDurationText->GetText().c_str(),"infinty")==0) {
         chart->SetDisplayDuration(MAX_VALUE);
         return;
       }
       double d;
-      if( sscanf(generalDurationText->GetText(),"%lf",&d)<=0 ) {
+      if( !generalDurationText->GetNumber(&d)) {
         error("Display duration: malformed number.");
         d = chart->GetDisplayDuration();
         if(d==MAX_VALUE) sprintf(tmp,"Infinity");

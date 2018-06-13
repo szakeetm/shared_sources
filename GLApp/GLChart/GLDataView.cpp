@@ -536,7 +536,7 @@ void GLDataView::SetLineWidth(int c) {
  * @param s Name of this view
  * @see getName
  */
-void GLDataView::SetName(char *s) {
+void GLDataView::SetName(const char *s) {
   strcpy(name,s);
 }
 

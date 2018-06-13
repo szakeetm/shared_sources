@@ -804,6 +804,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
+	menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT,SDLK_r, CTRL_MODIFIER);
@@ -816,7 +817,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Facet")->Add("Delete", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Swap normal", MENU_FACET_SWAPNORMAL, SDLK_n, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Shift indices", MENU_FACET_SHIFTVERTEX, SDLK_h, CTRL_MODIFIER);
-	menu->GetSubMenu("Facet")->Add("Facet coordinates ...", MENU_FACET_COORDINATES, SDLK_t, CTRL_MODIFIER);
+	menu->GetSubMenu("Facet")->Add("Facet coordinates ...", MENU_FACET_COORDINATES);
 	menu->GetSubMenu("Facet")->Add("Move ...", MENU_FACET_MOVE);
 	menu->GetSubMenu("Facet")->Add("Scale ...", MENU_FACET_SCALE);
 	menu->GetSubMenu("Facet")->Add("Mirror / Project ...", MENU_FACET_MIRROR);
@@ -1021,9 +1022,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	facetDetailsBtn = new GLButton(0, "Details...");
 	facetPanel->Add(facetDetailsBtn);
 
-	facetHistogramBtn = new GLButton(0, "Histogr.");
-	facetHistogramBtn->SetEnabled(false); //coming in next version
-	facetPanel->Add(facetHistogramBtn);
+	facetCoordBtn = new GLButton(0, "Coord.");
+	facetPanel->Add(facetCoordBtn);
 
 	facetApplyBtn = new GLButton(0, "Apply");
 	facetApplyBtn->SetEnabled(false);
@@ -1916,13 +1916,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 			FrameMove();
 			return true;
 		}
-		else if (src == facetHistogramBtn) {
-			if (!histogramSettings) {
-				histogramSettings = new HistogramSettings();
-				histogramSettings->Refresh(geom->GetSelectedFacets());
-			}
-			histogramSettings->SetVisible(!histogramSettings->IsVisible());
-			histogramSettings->Reposition();
+		else if (src == facetCoordBtn) {
+			if (!facetCoordinates) facetCoordinates = new FacetCoordinates();
+			facetCoordinates->Display(&worker);
+			return true;
 		}
 		break;
 

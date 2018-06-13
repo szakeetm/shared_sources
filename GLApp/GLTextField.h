@@ -20,7 +20,7 @@ public:
   void SetText(const double &val);
   void SetText(const int &val);
   void SetText(const size_t &val);
-  char *GetText();
+  std::string GetText();
   void ScrollToVisible();
   void SetCursorPos(int pos);
   int  GetCursorPos();
