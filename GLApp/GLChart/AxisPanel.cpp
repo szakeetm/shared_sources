@@ -104,7 +104,7 @@ AxisPanel::AxisPanel(GLAxis *a,int axisType,GLChart *parentChart)  {
     ColorView = new GLLabel("");
     ColorView->SetOpaque(true);
     ColorView->SetBorder(BORDER_ETCHED);
-    GLCColor aColor = a->GetAxisColor();
+    GLColor aColor = a->GetAxisColor();
     ColorView->SetBackgroundColor(aColor.r,aColor.g,aColor.b);
     ColorBtn = new GLButton(0,"...");
 
@@ -281,7 +281,7 @@ void AxisPanel::ProcessMessage(GLComponent *src,int message) {
 
     } else if (src == ColorBtn) {
 
-      GLCColor c = pAxis->GetAxisColor();
+      GLColor c = pAxis->GetAxisColor();
       if( GLColorBox::Display("Choose axis color",&c.r,&c.g,&c.b) ) {
         pAxis->SetAxisColor(c);
         ColorView->SetBackgroundColor(c.r,c.g,c.b);

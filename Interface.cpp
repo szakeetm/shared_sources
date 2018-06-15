@@ -1212,6 +1212,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				formulaEditor->SetVisible(TRUE);
 			}
 			break;
+		case MENU_TOOLS_HISTOGRAMSETTINGS:
+			if (!histogramSettings || !histogramSettings->IsVisible()) {
+				SAFE_DELETE(histogramSettings);
+				histogramSettings = new HistogramSettings(geom, &worker);
+			}
+			histogramSettings->Refresh(geom->GetSelectedFacets());
+			histogramSettings->SetVisible(true);
+			return true;
 		case MENU_TOOLS_PARTICLELOGGER:
 			if (!particleLogger || !particleLogger->IsVisible()) {
 				SAFE_DELETE(particleLogger);

@@ -42,10 +42,10 @@ public:
   GLAxis *GetY2Axis();
   void SetMargin(GLCDimension d);
   GLCDimension GetMargin();
-  void SetBackground(GLCColor c);
-  GLCColor GetBackground();
-  void SetChartBackground(GLCColor c);
-  GLCColor GetChartBackground();
+  void SetBackground(GLColor c);
+  GLColor GetBackground();
+  void SetChartBackground(GLColor c);
+  GLColor GetChartBackground();
   void SetPaintAxisFirst(bool b);
   bool IsPaintAxisFirst();
   void SetHeaderVisible(bool b);
@@ -53,7 +53,7 @@ public:
   char *GetHeader();
   void SetDisplayDuration(double v);
   double GetDisplayDuration();
-  void SetHeaderColor(GLCColor c);
+  void SetHeaderColor(GLColor c);
   void SetLabelVisible(bool b);
   bool IsLabelVisible();
   void SetLabelPlacement(int p);
@@ -99,11 +99,11 @@ private:
 
   char header[256];
   bool headerVisible;
-  GLCColor headerColor;
+  GLColor headerColor;
 
   bool ipanelVisible;
   bool paintAxisFirst;
-  GLCColor chartBackground;
+  GLColor chartBackground;
 
   double displayDuration;
 

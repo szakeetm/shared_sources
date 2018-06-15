@@ -15,10 +15,7 @@ static const int   nbFilter = 2;
 GLChart::GLChart(int compId):GLComponent(compId) {
 
 	// Default
-	GLCColor defColor;
-	defColor.r = 240;
-	defColor.g = 240;
-	defColor.b = 240;
+	GLColor defColor(240,240,240);
 	SetBackgroundColor(240,240,240);
 	SetChartBackground(defColor);
 	SetOpaque(true);
@@ -126,12 +123,12 @@ GLCDimension GLChart::GetMargin() {
 	return margin;
 }
 
-void GLChart::SetBackground(GLCColor c) {
+void GLChart::SetBackground(GLColor c) {
 	SetBackgroundColor(c.r,c.g,c.b);
 }
 
-GLCColor GLChart::GetBackground() {
-	GLCColor c;
+GLColor GLChart::GetBackground() {
+	GLColor c;
 	GetBackgroundColor(&(c.r),&(c.g),&(c.b));
 	return c;
 }
@@ -140,7 +137,7 @@ GLCColor GLChart::GetBackground() {
 * Sets the chart background (curve area)
 * @param c Background color
 */
-void GLChart::SetChartBackground(GLCColor c) {
+void GLChart::SetChartBackground(GLColor c) {
 	chartBackground = c;
 }
 
@@ -149,7 +146,7 @@ void GLChart::SetChartBackground(GLCColor c) {
 * Gets the chart background (curve area)
 * @return Background color
 */
-GLCColor GLChart::GetChartBackground() {
+GLColor GLChart::GetChartBackground() {
 	return chartBackground;
 }
 
@@ -222,7 +219,7 @@ double GLChart::GetDisplayDuration() {
 * Sets the header color
 * @param c Header color
 */
-void GLChart::SetHeaderColor(GLCColor c) {
+void GLChart::SetHeaderColor(GLColor c) {
 	headerColor = c;
 	SetHeaderVisible(true);
 }
@@ -354,7 +351,7 @@ void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
 	int xm   = x + (w - labelWidth) / 2 + 2;
 	int ym   = y;
 	GLAxis::DrawSampleLine(posX+xm,posY+ym + labelHeight/2 + 1, v);
-	GLCColor c = v->GetLabelColor();
+	GLColor c = v->GetLabelColor();
 	GLToolkit::GetDialogFont()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
 	GLToolkit::GetDialogFont()->DrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
 	labelRect[nbLabel].rect.x = xm;
@@ -375,7 +372,7 @@ void GLChart::paintLabelAndHeader() {
 	// Draw header
 	if (headerR.width>0) {
 		int xpos = ((headerR.width - headerWidth) / 2);
-		GLCColor c = headerColor;
+		GLColor c = headerColor;
 		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
 		GLToolkit::GetDialogFontBold()->DrawText(posX+xpos,posY+headerR.y + 1,header,false);
 	}

@@ -37,11 +37,11 @@ class HistogramSettings : public GLWindow {
 public:
 
   // Construction
-  HistogramSettings();
+  HistogramSettings(Geometry *s,Worker *w);
 
   // Component methods
-  void SetGeometry(Geometry *s,Worker *w);
   void Refresh(const std::vector<size_t>& selectedFacetIds);
+  void EnableDisableControls();
   bool Apply();
 
   // Implementation
@@ -53,9 +53,12 @@ private:
   Worker	   *work;
 
   GLTitledPanel *globalSettingsPanel, *facetSettingsPanel;
-  GLTextField *globalDistanceLimitText,*facetDistanceLimitText;
   GLTextField *globalHitLimitText,*facetHitLimitText;
-  GLTextField *globalHitBinSizeText,*facetHitBinSizeText;
+  GLTextField *globalHitBinsizeText,*facetHitBinsizeText;
+  GLTextField *globalDistanceLimitText,*facetDistanceLimitText;
+  GLTextField *globalDistanceBinsizeText, *facetDistanceBinsizeText;
+  GLTextField *globalTimeLimitText, *facetTimeLimitText;
+  GLTextField *globalTimeBinsizeText, *facetTimeBinsizeText;
   GLToggle *globalRecordToggle,*facetRecordToggle;
   GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;
 

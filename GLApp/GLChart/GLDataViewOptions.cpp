@@ -445,11 +445,11 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     viewTypeCombo->SetSelectedIndex(dataView->GetViewType());
 
-    GLCColor dColor = dataView->GetColor();
+    GLColor dColor = dataView->GetColor();
     lineColorView->SetBackgroundColor(dColor.r,dColor.g,dColor.b);
-    GLCColor fColor = dataView->GetFillColor();
+    GLColor fColor = dataView->GetFillColor();
     fillColorView->SetBackgroundColor(fColor.r,fColor.g,fColor.b);
-    GLCColor mColor = dataView->GetMarkerColor();
+    GLColor mColor = dataView->GetMarkerColor();
     markerColorView->SetBackgroundColor(mColor.r,mColor.g,mColor.b);
 
     lineWidthSpinner->SetValue(dataView->GetLineWidth());
@@ -601,7 +601,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
       SetVisible(false);
     } else if (src == lineColorBtn) {
 
-      GLCColor c = dataView->GetColor();
+      GLColor c = dataView->GetColor();
       if( GLColorBox::Display("Choose line color",&c.r,&c.g,&c.b) ) {
         dataView->SetColor(c);
         lineColorView->SetBackgroundColor(c.r,c.g,c.b);
@@ -610,7 +610,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == fillColorBtn) {
 
-      GLCColor c = dataView->GetFillColor();
+      GLColor c = dataView->GetFillColor();
       if( GLColorBox::Display("Choose fill color",&c.r,&c.g,&c.b) ) {
         dataView->SetFillColor(c);
         fillColorView->SetBackgroundColor(c.r,c.g,c.b);
@@ -619,7 +619,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == markerColorBtn) {
 
-      GLCColor c = dataView->GetMarkerColor();
+      GLColor c = dataView->GetMarkerColor();
       if( GLColorBox::Display("Choose marker color",&c.r,&c.g,&c.b) ) {
         dataView->SetMarkerColor(c);
         markerColorView->SetBackgroundColor(c.r,c.g,c.b);

@@ -39,14 +39,25 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class HistogramParams {
 public:
+	HistogramParams() { //Apply default parameters
+		 record=false;
+		 nbBounceMax=10000;
+		 nbBounceBinsize=1;
+		 distanceMax=10.0;
+		 distanceBinsize=0.001;
+#ifdef MOLFLOW
+		 timeMax=0.1;
+		 timeBinsize=1E-5;
+#endif
+	}
 	bool record;
 	size_t nbBounceMax;
 	size_t nbBounceBinsize;
 	double distanceMax;
-	size_t distanceResolution;
+	double distanceBinsize;
 #ifdef MOLFLOW
 	double timeMax;
-	size_t timeResolution;
+	double timeBinsize;
 #endif
 
 	template<class Archive>
@@ -57,10 +68,10 @@ public:
 			CEREAL_NVP(nbBounceMax),
 			CEREAL_NVP(nbBounceBinsize),
 			CEREAL_NVP(distanceMax),
-			CEREAL_NVP(distanceResolution)
+			CEREAL_NVP(distanceBinsize)
 #ifdef MOLFLOW
 			, CEREAL_NVP(timeMax),
-			CEREAL_NVP(timeResolution)
+			CEREAL_NVP(timeBinsize)
 #endif
 		);
 	}
@@ -68,9 +79,23 @@ public:
 	size_t GetBounceHistogramSize() {
 		return nbBounceMax / nbBounceBinsize + 1 + 1; //+1: overrun
 	}
+	size_t GetDistanceHistogramSize() {
+		return (size_t)(distanceMax / distanceBinsize) + 1; //+1: overrun
+	}
+#ifdef MOLFLOW
+	size_t GetTimeHistogramSize() {
+		return (size_t)(timeMax / timeBinsize) + 1; //+1: overrun
+	}
+#endif
 	size_t GetDataSize() {
 		if (!record) return 0;
-		else return sizeof(double)*(GetBounceHistogramSize() + distanceResolution + 1 + timeResolution + 1);
+		else {
+			size_t size = sizeof(double) * (GetBounceHistogramSize() + GetDistanceHistogramSize());
+#ifdef MOLFLOW
+			size += sizeof(double) * GetTimeHistogramSize();
+#endif
+			return size;
+		}
 	}
 	size_t GetBouncesDataSize() {
 		if (!record) return 0;
@@ -78,12 +103,14 @@ public:
 	}
 	size_t GetDistanceDataSize() {
 		if (!record) return 0;
-		else return sizeof(double)*(distanceResolution + 1);
+		else return sizeof(double)*GetDistanceHistogramSize();
 	}
+#ifdef MOLFLOW
 	size_t GetTimeDataSize() {
 		if (!record) return 0;
-		else return sizeof(double)*(timeResolution + 1);
+		else return sizeof(double)*GetTimeHistogramSize();
 	}
+#endif
 };
 
 class FacetProperties { //Formerly SHFACET
@@ -295,11 +322,10 @@ public:
 	}
 };
 
-class WorkerParams {
+class WorkerParams { //Plain old data
 public:
 	HistogramParams globalHistogramParams;
 #ifdef MOLFLOW
-	size_t nbMoments; //To pass in advance for memory reservation
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
 	double finalOutgassingRate; //Number of outgassing molecules / second at latest_moment (constant flow)
@@ -327,7 +353,6 @@ public:
 			CEREAL_NVP(globalHistogramParams)
 
 #ifdef MOLFLOW
-			, CEREAL_NVP(nbMoments)
 			, CEREAL_NVP(latestMoment)
 			, CEREAL_NVP(totalDesorbedMolecules)
 			, CEREAL_NVP(finalOutgassingRate)

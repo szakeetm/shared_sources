@@ -105,7 +105,7 @@ std::string GLCombo::GetSelectedValue() {
 }
 
 void GLCombo::ScrollTextToEnd() {
-  text->SetCursorPos(text->GetText().length());
+  text->SetCursorPos((int)text->GetText().length());
   text->ScrollToVisible();
 }
 

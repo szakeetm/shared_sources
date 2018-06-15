@@ -56,7 +56,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     generalBackColorView = new GLLabel("");
     generalBackColorView->SetOpaque(true);
     generalBackColorView->SetBorder(BORDER_ETCHED);
-    GLCColor bColor = chart->GetChartBackground();
+    GLColor bColor = chart->GetChartBackground();
     generalBackColorView->SetBackgroundColor(bColor.r,bColor.g,bColor.b);
     generalBackColorBtn = new GLButton(0,"...");
 
@@ -242,7 +242,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
       SetVisible(false);
     } else if (src == generalBackColorBtn) {
 
-      GLCColor c = chart->GetChartBackground();
+      GLColor c = chart->GetChartBackground();
       if( GLColorBox::Display("Choose background",&c.r,&c.g,&c.b) ) {
         chart->SetChartBackground(c);
         generalBackColorView->SetBackgroundColor(c.r,c.g,c.b);

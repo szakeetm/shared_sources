@@ -34,7 +34,7 @@ private:
   GLFileBox(char *path,char *fileName,char *title,char **filters,int nbFilter,bool openMode);
   ~GLFileBox();
   void ProcessMessage(GLComponent *src,int message);
-  void UpdateFileList(char *path);
+  void UpdateFileList(const char *path);
   void Back();
   char *GetSizeStr(DWORD size);
   char *GetTimeStr(time_t time);
@@ -43,7 +43,7 @@ private:
   bool  MatchFilters(char *fileName);
   void  AddToPathHist(char *path);
   void  AddToFileHist(char *file);
-  bool CheckDirectory(char *dirName);
+  bool CheckDirectory(const char *dirName);
 
   GLList      *fileList;
   GLLabel     *filterLabel;

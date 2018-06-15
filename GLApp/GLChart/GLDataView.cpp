@@ -147,7 +147,7 @@ int GLDataView::GetFillMethod() {
  * @param c Filling color
  * @see getFillColor
  */
-void GLDataView::SetFillColor(GLCColor c) {
+void GLDataView::SetFillColor(GLColor c) {
   fillColor = c;
 }
 
@@ -156,7 +156,7 @@ void GLDataView::SetFillColor(GLCColor c) {
  * @return Filling color
  * @see setFillColor
  */
-GLCColor GLDataView::GetFillColor() {
+GLColor GLDataView::GetFillColor() {
   return fillColor;
 }
 
@@ -167,7 +167,7 @@ GLCColor GLDataView::GetFillColor() {
  * @param c Curve color
  * @see getColor
  */
-void GLDataView::SetColor(GLCColor c) {
+void GLDataView::SetColor(GLColor c) {
   lineColor = c;
 }
 
@@ -176,7 +176,7 @@ void GLDataView::SetColor(GLCColor c) {
  * @return Curve color
  * @see setColor
  */
-GLCColor GLDataView::GetColor() {
+GLColor GLDataView::GetColor() {
   return lineColor;
 }
 
@@ -237,11 +237,11 @@ bool GLDataView::IsLabelVisible() {
   return labelVisible;
 }
 
-GLCColor GLDataView::GetLabelColor () {
+GLColor GLDataView::GetLabelColor () {
   return labelColor;
 }
 
-void GLDataView::SetLabelColor (GLCColor labelColor) {
+void GLDataView::SetLabelColor (GLColor labelColor) {
   this->labelColor = labelColor;
 }
 
@@ -459,7 +459,7 @@ int GLDataView::GetBarWidth() {
  * @param c Marker color
  * @see getMarkerColor
  */
-void GLDataView::SetMarkerColor(GLCColor c) {
+void GLDataView::SetMarkerColor(GLColor c) {
   markerColor = c;
 }
 
@@ -468,7 +468,7 @@ void GLDataView::SetMarkerColor(GLCColor c) {
  * @return Marker color
  * @see setMarkerColor
  */
-GLCColor GLDataView::GetMarkerColor() {
+GLColor GLDataView::GetMarkerColor() {
   return markerColor;
 }
 

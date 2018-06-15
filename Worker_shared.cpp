@@ -545,11 +545,11 @@ void Worker::Update(float appTime) {
 			//Copy global histogram
 			if (wp.globalHistogramParams.record) {
 				//Prepare vectors to receive data
-				globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.distanceResolution);
-				globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.timeResolution);
+				globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.GetDistanceHistogramSize());
+				globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.GetTimeHistogramSize());
 				globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
 
-				BYTE* globalHistogramAddress = buffer;
+				BYTE* globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
 #ifdef MOLFLOW
 				globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
 #endif
@@ -596,8 +596,8 @@ void Worker::Update(float appTime) {
 #endif
 				if (f->sh.facetHistogramParams.record) {
 					//Prepare vectors for receiving data
-					f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.distanceResolution);
-					f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.timeResolution);
+					f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.GetDistanceHistogramSize());
+					f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.GetTimeHistogramSize());
 					f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
 					
 					//Retrieve histogram map from hits dp

@@ -31,18 +31,18 @@ public:
   int GetFillStyle();
   void SetFillMethod(int m);
   int GetFillMethod();
-  void SetFillColor(GLCColor c);
-  GLCColor GetFillColor();
-  void SetColor(GLCColor c);
-  GLCColor GetColor();
+  void SetFillColor(GLColor c);
+  GLColor GetFillColor();
+  void SetColor(GLColor c);
+  GLColor GetColor();
   bool IsFill();
   void SetFill(bool b);
   void SetClickable(bool b);
   bool IsClickable();
   void SetLabelVisible(bool b);
   bool IsLabelVisible();
-  GLCColor GetLabelColor();
-  void SetLabelColor (GLCColor labelColor);
+  GLColor GetLabelColor();
+  void SetLabelColor (GLColor labelColor);
   void SetInterpolationMethod(int method);
   int GetInterpolationMethod();
   void SetInterpolationStep(int step);
@@ -63,8 +63,8 @@ public:
   int GetMathFunction();
   void SetBarWidth(int w);
   int GetBarWidth();
-  void SetMarkerColor(GLCColor c);
-  GLCColor GetMarkerColor();
+  void SetMarkerColor(GLColor c);
+  GLColor GetMarkerColor();
   void SetStyle(int c);
   int GetMarkerSize();
   void SetMarkerSize(int c);
@@ -147,9 +147,9 @@ private:
   void addPts(Point2D *p,APoint2D pt);
 
   GLAxis *parentAxis;
-  GLCColor lineColor;
-  GLCColor fillColor;
-  GLCColor markerColor;
+  GLColor lineColor;
+  GLColor fillColor;
+  GLColor markerColor;
   int lineStyle;
   int lineWidth;
   int markerType;
@@ -176,7 +176,7 @@ private:
   bool clickable;
   bool labelVisible;
   char *userFormat;
-  GLCColor labelColor;
+  GLColor labelColor;
   int interpMethod;
   int interpStep;
   double interpTension;

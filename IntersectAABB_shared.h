@@ -40,11 +40,11 @@ public:
 
 AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);
 
-void IntersectTree(const Simulation& sHandle, const AABBNODE& node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
+void IntersectTree(Simulation* sHandle, const AABBNODE& node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
 	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir,
 	std::vector<SubprocessFacet*>& transparentHitFacetPointers, bool& found, SubprocessFacet*& collidedFacet, double& minLength);
-std::tuple<bool, SubprocessFacet*, double> Intersect(const Simulation& sHandle, const Vector3d& rayPos, const Vector3d& rayDir);
-bool Visible(const Simulation& sHandle, Vector3d *c1,Vector3d *c2,SubprocessFacet *f1,SubprocessFacet *f2);
+std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const Vector3d& rayPos, const Vector3d& rayDir);
+bool Visible(Simulation* sHandle, Vector3d *c1,Vector3d *c2,SubprocessFacet *f1,SubprocessFacet *f2);
 bool IsInFacet(const SubprocessFacet &f,const double &u,const double &v);
-Vector3d PolarToCartesian(SubprocessFacet* const collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->pDir
+Vector3d PolarToCartesian(SubprocessFacet* const collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->currentParticle.direction
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
