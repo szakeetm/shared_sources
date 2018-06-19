@@ -543,22 +543,21 @@ void Worker::Update(float appTime) {
 
 
 			//Copy global histogram
-			if (wp.globalHistogramParams.record) {
-				//Prepare vectors to receive data
-				globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.GetDistanceHistogramSize());
-				globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.GetTimeHistogramSize());
-				globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
+			//Prepare vectors to receive data
+			if (wp.globalHistogramParams.recordBounce) globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
+			if (wp.globalHistogramParams.recordDistance) globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.GetDistanceHistogramSize());
+			if (wp.globalHistogramParams.recordTime) globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.GetTimeHistogramSize());
+				
 
 				BYTE* globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
 #ifdef MOLFLOW
 				globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
 #endif
 
-				memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, wp.globalHistogramParams.GetBouncesDataSize());
-				memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(), wp.globalHistogramParams.GetDistanceDataSize());
-				memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() + wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
-			}
-
+			memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, wp.globalHistogramParams.GetBouncesDataSize());
+			memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(), wp.globalHistogramParams.GetDistanceDataSize());
+			memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() + wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
+			
 			buffer = bufferStart;
 
 			// Refresh local facet hit cache for the displayed moment
@@ -594,12 +593,12 @@ void Worker::Update(float appTime) {
 				}
 				
 #endif
-				if (f->sh.facetHistogramParams.record) {
+				
 					//Prepare vectors for receiving data
-					f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.GetDistanceHistogramSize());
-					f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.GetTimeHistogramSize());
-					f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
-					
+					if (f->sh.facetHistogramParams.recordBounce) f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
+					if (f->sh.facetHistogramParams.recordDistance) f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.GetDistanceHistogramSize());
+					if (f->sh.facetHistogramParams.recordTime) f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.GetTimeHistogramSize());
+										
 					//Retrieve histogram map from hits dp
 					BYTE* histogramAddress = buffer
 						+ f->sh.hitOffset
@@ -615,7 +614,7 @@ void Worker::Update(float appTime) {
 					memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress, f->sh.facetHistogramParams.GetBouncesDataSize());
 					memcpy(f->facetHistogramCache.distanceHistogram.data(), histogramAddress+ f->sh.facetHistogramParams.GetBouncesDataSize(), f->sh.facetHistogramParams.GetDistanceDataSize());
 					memcpy(f->facetHistogramCache.timeHistogram.data(), histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() + f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
-				}
+				
 			}
 			try {
 				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);

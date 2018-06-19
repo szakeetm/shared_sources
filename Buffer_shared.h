@@ -39,39 +39,32 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class HistogramParams {
 public:
-	HistogramParams() { //Apply default parameters
-		 record=false;
-		 nbBounceMax=10000;
-		 nbBounceBinsize=1;
-		 distanceMax=10.0;
-		 distanceBinsize=0.001;
+	bool recordBounce=false;
+	size_t nbBounceMax=10000;
+	size_t nbBounceBinsize=1;
+	bool recordDistance = false;
+	double distanceMax=10.0;
+	double distanceBinsize=0.001;
 #ifdef MOLFLOW
-		 timeMax=0.1;
-		 timeBinsize=1E-5;
-#endif
-	}
-	bool record;
-	size_t nbBounceMax;
-	size_t nbBounceBinsize;
-	double distanceMax;
-	double distanceBinsize;
-#ifdef MOLFLOW
-	double timeMax;
-	double timeBinsize;
+	bool recordTime = false;
+	double timeMax=0.1;
+	double timeBinsize=1E-5;
 #endif
 
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(record),
+			CEREAL_NVP(recordBounce),
 			CEREAL_NVP(nbBounceMax),
 			CEREAL_NVP(nbBounceBinsize),
+			CEREAL_NVP(recordDistance),
 			CEREAL_NVP(distanceMax),
 			CEREAL_NVP(distanceBinsize)
 #ifdef MOLFLOW
-			, CEREAL_NVP(timeMax),
-			CEREAL_NVP(timeBinsize)
+			, CEREAL_NVP(recordTime)
+			, CEREAL_NVP(timeMax)
+			, CEREAL_NVP(timeBinsize)
 #endif
 		);
 	}
@@ -88,26 +81,26 @@ public:
 	}
 #endif
 	size_t GetDataSize() {
-		if (!record) return 0;
-		else {
-			size_t size = sizeof(double) * (GetBounceHistogramSize() + GetDistanceHistogramSize());
+		size_t size = 0;
+		if (recordBounce) size += sizeof(double) * GetBounceHistogramSize();
+		if (recordDistance) size += sizeof(double) * GetDistanceHistogramSize();
 #ifdef MOLFLOW
-			size += sizeof(double) * GetTimeHistogramSize();
+		if (recordTime) size += sizeof(double) * GetTimeHistogramSize();
 #endif
-			return size;
-		}
+		return size;
+		
 	}
 	size_t GetBouncesDataSize() {
-		if (!record) return 0;
+		if (!recordBounce) return 0;
 		else return sizeof(double)*GetBounceHistogramSize();
 	}
 	size_t GetDistanceDataSize() {
-		if (!record) return 0;
+		if (!recordDistance) return 0;
 		else return sizeof(double)*GetDistanceHistogramSize();
 	}
 #ifdef MOLFLOW
 	size_t GetTimeDataSize() {
-		if (!record) return 0;
+		if (!recordTime) return 0;
 		else return sizeof(double)*GetTimeHistogramSize();
 	}
 #endif

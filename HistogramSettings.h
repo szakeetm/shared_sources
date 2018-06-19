@@ -59,7 +59,11 @@ private:
   GLTextField *globalDistanceBinsizeText, *facetDistanceBinsizeText;
   GLTextField *globalTimeLimitText, *facetTimeLimitText;
   GLTextField *globalTimeBinsizeText, *facetTimeBinsizeText;
-  GLToggle *globalRecordToggle,*facetRecordToggle;
+  GLToggle *globalRecordBounceToggle,*facetRecordBounceToggle;
+  GLToggle *globalRecordDistanceToggle, *facetRecordDistanceToggle;
+#ifdef MOLFLOW
+  GLToggle *globalRecordTimeToggle, *facetRecordTimeToggle;
+#endif
   GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;
 
   GLButton *applyButton, *openViewerButton;
