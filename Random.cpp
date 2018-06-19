@@ -108,13 +108,11 @@ __forceinline double rk_double(rk_state *state)
 // Initialise the random generator with the specified seed
 void rseed(unsigned long seed) {
   rk_seed(seed,&localState);
-  //srand(seed);
 }
 
 // Returns a uniform distributed double value in the interval ]0,1[
 double rnd() {
-  return rk_double(&localState);
-  //return (double)rand()/(double)RAND_MAX;
+	return rk_double(&localState);
 }
 
 double Gaussian(const double &sigma) {
