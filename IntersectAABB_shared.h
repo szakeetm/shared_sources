@@ -42,7 +42,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t
 
 void IntersectTree(Simulation* sHandle, const AABBNODE& node, const Vector3d& rayPos, const Vector3d& rayDirOpposite, SubprocessFacet* const lastHitBefore,
 	const bool& nullRx, const bool& nullRy, const bool& nullRz, const Vector3d& inverseRayDir,
-	std::vector<SubprocessFacet*>& transparentHitFacetPointers, bool& found, SubprocessFacet*& collidedFacet, double& minLength);
+	/*std::vector<SubprocessFacet*>& transparentHitFacetPointers,*/ bool& found, SubprocessFacet*& collidedFacet, double& minLength);
 std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const Vector3d& rayPos, const Vector3d& rayDir);
 bool Visible(Simulation* sHandle, Vector3d *c1,Vector3d *c2,SubprocessFacet *f1,SubprocessFacet *f2);
 bool IsInFacet(const SubprocessFacet &f,const double &u,const double &v);

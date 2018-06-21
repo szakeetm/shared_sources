@@ -29,6 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "Geometry_shared.h"
+#include "Facet_shared.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -46,11 +47,11 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
+HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 
 	int wD = 270;
 	int panelHeight = 215;
-	int hD = 2*panelHeight+85;
+	int hD = 2*panelHeight+10;
 
 #ifdef MOLFLOW
 	hD += 6 * 25; //Time parameters
@@ -59,13 +60,9 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 
 	SetTitle("Histogram settings");
 
-	GLLabel *warningLabel = new GLLabel("Histograms only record absorption!");
-	warningLabel->SetBounds(5, 5, wD - 11, 20);
-	Add(warningLabel);
-
 	//Global histogram settings
 	globalSettingsPanel = new GLTitledPanel("Global histogram");
-	globalSettingsPanel->SetBounds(5, 30, wD - 11, panelHeight);
+	globalSettingsPanel->SetBounds(5, 5, wD - 11, panelHeight);
 	Add(globalSettingsPanel);
 
 	globalRecordBounceToggle = new GLToggle(0, "Record bounces until absorbtion");
@@ -88,8 +85,8 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalHitLimitText, globalHitBinsizeText, 0, 25, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalHitBinsizeText);
 
-	globalRecordDistanceToggle = new GLToggle(0, "Record flight distance until absorbtion");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalHitBinsizeText, globalRecordDistanceToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
+	globalRecordDistanceToggle = new GLToggle(0, "Record flight distance until absorption");
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel2, globalRecordDistanceToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalRecordDistanceToggle);
 	
 	GLLabel* globalLabel3 = new GLLabel("Max recorded flight distance (cm):");
@@ -97,7 +94,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	globalSettingsPanel->Add(globalLabel3);
 
 	globalDistanceLimitText = new GLTextField(0, "");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalHitBinsizeText, globalDistanceLimitText, 0, 25, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalHitBinsizeText, globalDistanceLimitText, 0, 50, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalDistanceLimitText);
 
 	GLLabel* globalLabel4 = new GLLabel("Distance bin size (cm):");
@@ -109,8 +106,8 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	globalSettingsPanel->Add(globalDistanceBinsizeText);
 
 #ifdef MOLFLOW
-	globalRecordTimeToggle = new GLToggle(0, "Record flight time until absorbtion");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalDistanceBinsizeText, globalRecordTimeToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
+	globalRecordTimeToggle = new GLToggle(0, "Record flight time until absorption");
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel4, globalRecordTimeToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalRecordTimeToggle);
 
 	GLLabel* globalLabel5 = new GLLabel("Max recorded flight time (s):");
@@ -118,7 +115,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	globalSettingsPanel->Add(globalLabel5);
 
 	globalTimeLimitText = new GLTextField(0, "");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalDistanceBinsizeText, globalTimeLimitText, 0, 25, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalDistanceBinsizeText, globalTimeLimitText, 0, 50, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalTimeLimitText);
 
 	GLLabel* globalLabel6 = new GLLabel("Time bin size (s):");
@@ -137,7 +134,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 
 	//Facet histogram settings
 	facetSettingsPanel = new GLTitledPanel("Facet histogram");
-	facetSettingsPanel->SetBounds(5, 30, wD - 11, panelHeight);
+	SetCompBoundsRelativeTo(globalSettingsPanel, facetSettingsPanel, 0, globalSettingsPanel->GetHeight() + 10, globalSettingsPanel->GetWidth(), globalSettingsPanel->GetHeight());
 	Add(facetSettingsPanel);
 
 	facetRecordBounceToggle = new GLToggle(0, "Record bounces until absorbtion");
@@ -160,8 +157,8 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetHitLimitText, facetHitBinsizeText, 0, 25, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetHitBinsizeText);
 
-	facetRecordDistanceToggle = new GLToggle(0, "Record flight distance until absorbtion");
-	facetSettingsPanel->SetCompBoundsRelativeTo(facetHitBinsizeText, facetRecordDistanceToggle, 0, 25, facetLabel1->GetWidth(), facetLabel1->GetHeight());
+	facetRecordDistanceToggle = new GLToggle(0, "Record flight distance until absorption");
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel2, facetRecordDistanceToggle, 0, 25, facetLabel1->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetRecordDistanceToggle);
 
 	GLLabel* facetLabel3 = new GLLabel("Max recorded flight distance (cm):");
@@ -169,7 +166,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	facetSettingsPanel->Add(facetLabel3);
 
 	facetDistanceLimitText = new GLTextField(0, "");
-	facetSettingsPanel->SetCompBoundsRelativeTo(facetHitBinsizeText, facetDistanceLimitText, 0, 25, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetHitBinsizeText, facetDistanceLimitText, 0, 50, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetDistanceLimitText);
 
 	GLLabel* facetLabel4 = new GLLabel("Distance bin size (cm):");
@@ -181,8 +178,8 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	facetSettingsPanel->Add(facetDistanceBinsizeText);
 
 #ifdef MOLFLOW
-	facetRecordTimeToggle = new GLToggle(0, "Record flight time until absorbtion");
-	facetSettingsPanel->SetCompBoundsRelativeTo(facetDistanceBinsizeText, facetRecordTimeToggle, 0, 25, facetLabel1->GetWidth(), facetLabel1->GetHeight());
+	facetRecordTimeToggle = new GLToggle(0, "Record flight time until absorption");
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel4, facetRecordTimeToggle, 0, 25, facetLabel1->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetRecordTimeToggle);
 
 	GLLabel* facetLabel5 = new GLLabel("Max recorded flight time (s):");
@@ -190,7 +187,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 	facetSettingsPanel->Add(facetLabel5);
 
 	facetTimeLimitText = new GLTextField(0, "");
-	facetSettingsPanel->SetCompBoundsRelativeTo(facetDistanceBinsizeText, facetTimeLimitText, 0, 25, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetDistanceBinsizeText, facetTimeLimitText, 0, 50, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetTimeLimitText);
 
 	GLLabel* facetLabel6 = new GLLabel("Time bin size (s):");
@@ -219,7 +216,7 @@ HistogramSettings::HistogramSettings(Geometry *s, Worker *w):GLWindow() {
 
 	RestoreDeviceObjects();
 	
-	this->geom = geom;
+	this->geom = g;
 	this->work = w;
 }
 
@@ -307,15 +304,104 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	bool hasFacetSelected = selectedFacetIds.size() > 0;
 	if (!hasFacetSelected) {
 		facetRecordBounceToggle->SetState(false);
+		facetHitLimitText->SetText("");
+		facetHitBinsizeText->SetText("");
 		facetRecordDistanceToggle->SetState(false);
+		facetDistanceLimitText->SetText("");
+		facetDistanceBinsizeText->SetText("");
 #ifdef MOLFLOW
 		facetRecordTimeToggle->SetState(false);
+		facetTimeLimitText->SetText("");
+		facetTimeBinsizeText->SetText("");
 #endif
 	}
 	facetRecordBounceToggle->SetEnabled(hasFacetSelected);
 	facetRecordDistanceToggle->SetEnabled(hasFacetSelected);
 	facetRecordTimeToggle->SetEnabled(hasFacetSelected);
 	
+	if (hasFacetSelected) {
+		//Fill in facet-specific text
+		bool recordBounceEqual = true, bounceMaxEqual = true, bounceBinsizeEqual = true,
+			recordDistanceEqual = true, distanceMaxEqual = true, distanceBinsizeEqual = true;
+#ifdef MOLFLOW	
+		bool recordTimeEqual = true, timeMaxEqual = true, timeBinsizeEqual = true;
+#endif
+		Facet* f0 = geom->GetFacet(selectedFacetIds[0]);
+		bool recBounce = f0->sh.facetHistogramParams.recordBounce;
+		size_t bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
+		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceMax;
+		bool recDist = f0->sh.facetHistogramParams.recordDistance;
+		double distMax = f0->sh.facetHistogramParams.distanceMax;
+		double distBinsize = f0->sh.facetHistogramParams.distanceBinsize;
+#ifdef MOLFLOW
+		bool recTime = f0->sh.facetHistogramParams.recordTime;
+		double timeMax = f0->sh.facetHistogramParams.timeMax;
+		double timeBinsize = f0->sh.facetHistogramParams.timeBinsize;
+#endif
+
+		for (size_t i = 1; i < selectedFacetIds.size();i++) {
+			Facet* f = geom->GetFacet(selectedFacetIds[i]);
+			recordBounceEqual = recordBounceEqual && (f->sh.facetHistogramParams.recordBounce == recBounce);
+			bounceMaxEqual = bounceMaxEqual && (f->sh.facetHistogramParams.nbBounceMax == bounceMax);
+			bounceBinsizeEqual = bounceBinsizeEqual && (f->sh.facetHistogramParams.nbBounceBinsize== bounceBinsize);
+			recordDistanceEqual = recordDistanceEqual && (f->sh.facetHistogramParams.recordDistance == recDist);
+			distanceMaxEqual = distanceMaxEqual && (f->sh.facetHistogramParams.distanceMax == distMax);
+			distanceBinsizeEqual = distanceBinsizeEqual && (f->sh.facetHistogramParams.distanceBinsize == distBinsize);
+#ifdef MOLFLOW
+			recordTimeEqual = recordDistanceEqual && (f->sh.facetHistogramParams.recordDistance == recDist);
+			timeMaxEqual = timeMaxEqual && (f->sh.facetHistogramParams.timeMax == timeMax);
+			timeBinsizeEqual = timeBinsizeEqual && (f->sh.facetHistogramParams.timeBinsize == timeBinsize);
+#endif
+		}
+
+		facetRecordBounceToggle->AllowMixedState(!recordBounceEqual);
+		facetRecordBounceToggle->SetState(recordBounceEqual ? recBounce : 2);
+		if (bounceMaxEqual) {
+			facetHitLimitText->SetText(bounceMax);
+		}
+		else {
+			facetHitLimitText->SetText("...");
+		}
+		if (bounceBinsizeEqual) {
+			facetHitBinsizeText->SetText(bounceBinsize);
+		}
+		else {
+			facetHitBinsizeText->SetText("...");
+		}
+
+		facetRecordDistanceToggle->AllowMixedState(!recordDistanceEqual);
+		facetRecordDistanceToggle->SetState(recordDistanceEqual ? recDist : 2);
+		if (distanceMaxEqual) {
+			facetDistanceLimitText->SetText(distMax);
+		}
+		else {
+			facetDistanceLimitText->SetText("...");
+		}
+		if (distanceBinsizeEqual) {
+			facetDistanceBinsizeText->SetText(distBinsize);
+		}
+		else {
+			facetDistanceBinsizeText->SetText("...");
+		}
+#ifdef MOLFLOW
+		facetRecordTimeToggle->AllowMixedState(!recordTimeEqual);
+		facetRecordTimeToggle->SetState(recordTimeEqual ? recTime : 2);
+		if (timeMaxEqual) {
+			facetTimeLimitText->SetText(timeMax);
+		}
+		else {
+			facetTimeLimitText->SetText("...");
+		}
+		if (timeBinsizeEqual) {
+			facetTimeBinsizeText->SetText(timeBinsize);
+		}
+		else {
+			facetTimeBinsizeText->SetText("...");
+		}
+#endif
+
+	}
+
 	EnableDisableControls();
 }
 

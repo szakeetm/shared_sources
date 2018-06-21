@@ -57,7 +57,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define SAFE_CLEAR(vect) if(vect) {vect.clear();}
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
-#define ZEROVECTOR(_vector) memset(&(_vector[0]),0,_vector.size()*sizeof(_vector[0]))
+#define ZEROVECTOR(_vector) std::fill(_vector.begin(),_vector.end(),0);
 #define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
 #define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
 

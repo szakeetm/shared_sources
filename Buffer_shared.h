@@ -444,8 +444,8 @@ public:
 // Velocity field
 class DirectionCell {
 public:
-	Vector3d dir;
-	size_t count;
+	Vector3d dir = Vector3d(0.0,0.0,0.0);
+	size_t count=0;
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
