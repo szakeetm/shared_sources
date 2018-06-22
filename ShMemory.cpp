@@ -52,7 +52,8 @@ Dataport *CreateDataport(char *name,size_t size)
    
    // 2^32 = 4294967296      DWORD is 32-bit unsigned
    DWORD sizeHighOrder = DWORD(size >> 32);
-   DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
+   //DWORD sizeLowOrder = DWORD(size - (size >> 32) * 4294967296);
+   DWORD sizeLowOrder = DWORD(size & 0xffffffff);
 
    //Debug:
    //dp->file = CreateFile(name, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);

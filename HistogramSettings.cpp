@@ -222,66 +222,210 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 
 bool HistogramSettings::Apply() {
 	//Check input, return false if error, otherwise apply and return true
-	size_t globalHitLimit, facetHitLimit, globalHitBinsize, facetHitBinsize;
-	double globalDistanceLimit, facetDistanceLimit, globalDistanceBinsize, facetDistanceBinsize,
-		globalTimeLimit, facetTimeLimit, globalTimeBinsize, facetTimeBinsize;
-
-	bool globalRecBounce = globalRecordBounceToggle->GetState();
-	work->wp.globalHistogramParams.recordBounce = globalRecBounce;
-
-	if (globalRecBounce) {
-		if (!globalHitLimitText->GetNumberSizeT(&globalHitLimit) || globalHitLimit < 0) {
-			GLMessageBox::Display("Global bounce limit must be a non-negative integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.nbBounceMax = globalHitLimit;
-
-		if (!globalHitBinsizeText->GetNumberSizeT(&globalHitBinsize) || globalHitBinsize < 1) {
-			GLMessageBox::Display("Global bounce bin size must be a positive integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
-	}
-
-	bool globalRecDistance = globalRecordDistanceToggle->GetState();
-	work->wp.globalHistogramParams.recordDistance = globalRecDistance;
-
-	if (globalRecDistance) {
-		if (!globalDistanceLimitText->GetNumber(&globalDistanceLimit) || globalDistanceLimit < 0) {
-			GLMessageBox::Display("Global distance limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
-
-		if (!globalDistanceBinsizeText->GetNumber(&globalDistanceBinsize) || globalDistanceBinsize <= 0) {
-			GLMessageBox::Display("Global distance bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
-	}
-
+	
+	bool globalRecBounce;
+	size_t globalHitLimit; bool doGlobalHitLimit=false;
+	size_t globalHitBinsize; bool doGlobalHitBinsize=false;
+	bool globalRecDistance;
+	double globalDistanceLimit; bool doGlobalDistanceLimit=false;
+	double globalDistanceBinsize; bool doGlobalDistanceBinsize=false;
 #ifdef MOLFLOW
-	bool globalRecTime = globalRecordDistanceToggle->GetState();
-	work->wp.globalHistogramParams.recordTime = globalRecTime;
-
-	if (globalRecTime) {
-
-		if (!globalTimeLimitText->GetNumber(&globalTimeLimit) || globalTimeLimit < 0) {
-			GLMessageBox::Display("Global time limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.timeMax = globalTimeLimit;
-
-		if (!globalTimeBinsizeText->GetNumber(&globalTimeBinsize) || globalTimeBinsize <= 0) {
-			GLMessageBox::Display("Global time bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
-			return false;
-		}
-		work->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
-	}
+	bool globalRecTime;
+	double globalTimeLimit; bool doGlobalTimeLimit=false;
+	double globalTimeBinsize; bool doGlobalTimeBinsize=false;
 #endif
 
-	//TODO: Apply facet parameters
+	bool facetRecBounce; bool doFacetRecBounce = false;
+	size_t facetHitLimit; bool doFacetHitLimit = false;
+	size_t facetHitBinsize; bool doFacetHitBinsize = false;
+	bool facetRecDistance; bool doFacetRecDistance = false;
+	double facetDistanceLimit; bool doFacetDistanceLimit = false;
+	double facetDistanceBinsize; bool doFacetDistanceBinsize = false;
+#ifdef MOLFLOW
+	bool facetRecTime; bool doFacetRecTime = false;
+	double facetTimeLimit; bool doFacetTimeLimit = false;
+	double facetTimeBinsize; bool doFacetTimeBinsize = false;
+#endif
 
+	globalRecBounce = globalRecordBounceToggle->GetState();
+
+	if (globalRecBounce) {
+
+		if (globalHitLimitText->GetText() != "...")
+		{
+			if (!globalHitLimitText->GetNumberSizeT(&globalHitLimit) || globalHitLimit < 0) {
+				GLMessageBox::Display("Global bounce limit must be a non-negative integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+				return false;
+			}
+			doGlobalHitLimit = true;
+		}
+
+		if (globalHitBinsizeText->GetText() != "...")
+		{
+			if (!globalHitBinsizeText->GetNumberSizeT(&globalHitBinsize) || globalHitBinsize < 1) {
+				GLMessageBox::Display("Global bounce bin size must be a positive integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+				return false;
+			}
+			doGlobalHitBinsize = true;
+		}
+
+		globalRecDistance = globalRecordDistanceToggle->GetState();
+
+		if (globalRecDistance) {
+			if (globalDistanceLimitText->GetText() != "...") {
+				if (!globalDistanceLimitText->GetNumber(&globalDistanceLimit) || globalDistanceLimit < 0) {
+					GLMessageBox::Display("Global distance limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doGlobalDistanceLimit = true;
+			}
+
+			if (globalDistanceBinsizeText->GetText() != "...") {
+				
+				if (!globalDistanceBinsizeText->GetNumber(&globalDistanceBinsize) || globalDistanceBinsize <= 0) {
+					GLMessageBox::Display("Global distance bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doGlobalDistanceBinsize = true;
+			}
+		}
+
+#ifdef MOLFLOW
+		globalRecTime = globalRecordDistanceToggle->GetState();
+
+		if (globalRecTime) {
+			if (globalTimeLimitText->GetText() != "...") {
+				
+				if (!globalTimeLimitText->GetNumber(&globalTimeLimit) || globalTimeLimit < 0) {
+					GLMessageBox::Display("Global time limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doGlobalTimeLimit = true;
+			}
+
+			if (globalTimeBinsizeText->GetText() != "...") {
+				
+				if (!globalTimeBinsizeText->GetNumber(&globalTimeBinsize) || globalTimeBinsize <= 0) {
+					GLMessageBox::Display("Global time bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doGlobalTimeBinsize = true;
+			}
+		}
+#endif
+	}
+
+	int facetRecBounceStatus = facetRecordBounceToggle->GetState();
+	if (facetRecBounceStatus != 2) {
+		facetRecBounce = (bool)facetRecBounceStatus;
+		doFacetRecBounce = true;
+	}
+
+	if (facetRecBounce) {
+
+		if (facetHitLimitText->GetText() != "...")
+		{
+			if (!facetHitLimitText->GetNumberSizeT(&facetHitLimit) || facetHitLimit < 0) {
+				GLMessageBox::Display("Facet bounce limit must be a non-negative integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+				return false;
+			}
+			doFacetHitLimit = true;
+		}
+
+		if (facetHitBinsizeText->GetText() != "...")
+		{
+			if (!facetHitBinsizeText->GetNumberSizeT(&facetHitBinsize) || facetHitBinsize < 1) {
+				GLMessageBox::Display("Facet bounce bin size must be a positive integer", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+				return false;
+			}
+			doFacetHitBinsize = true;
+		}
+
+		int facetRecDistanceStatus = facetRecordDistanceToggle->GetState();
+		if (facetRecDistanceStatus != 2) {
+			facetRecDistance = (bool)facetRecDistanceStatus;
+			doFacetRecDistance = true;
+		}
+
+		if (facetRecDistance) {
+			if (facetDistanceLimitText->GetText() != "...") {
+				if (!facetDistanceLimitText->GetNumber(&facetDistanceLimit) || facetDistanceLimit < 0) {
+					GLMessageBox::Display("Facet distance limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doFacetDistanceLimit = true;
+			}
+
+			if (facetDistanceBinsizeText->GetText() != "...") {
+
+				if (!facetDistanceBinsizeText->GetNumber(&facetDistanceBinsize) || facetDistanceBinsize <= 0) {
+					GLMessageBox::Display("Facet distance bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doFacetDistanceBinsize = true;
+			}
+		}
+
+#ifdef MOLFLOW
+		int facetRecTimeStatus = facetRecordTimeToggle->GetState();
+		if (facetRecTimeStatus != 2) {
+			facetRecTime = (bool)facetRecTimeStatus;
+			doFacetRecTime = true;
+		}
+
+		if (facetRecTime) {
+			if (facetTimeLimitText->GetText() != "...") {
+
+				if (!facetTimeLimitText->GetNumber(&facetTimeLimit) || facetTimeLimit < 0) {
+					GLMessageBox::Display("Facet time limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doFacetTimeLimit = true;
+			}
+
+			if (facetTimeBinsizeText->GetText() != "...") {
+
+				if (!facetTimeBinsizeText->GetNumber(&facetTimeBinsize) || facetTimeBinsize <= 0) {
+					GLMessageBox::Display("Facet time bin size must be a positive scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
+					return false;
+				}
+				doFacetTimeBinsize = true;
+			}
+		}
+#endif
+	}
+
+	if (mApp->AskToReset()) {
+		//Apply
+		work->wp.globalHistogramParams.recordBounce = globalRecBounce;
+		if (doGlobalHitLimit) work->wp.globalHistogramParams.nbBounceMax = globalHitLimit;
+		if (doGlobalHitBinsize) work->wp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
+		work->wp.globalHistogramParams.recordDistance = globalRecDistance;
+		if (doGlobalDistanceLimit) work->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
+		if (doGlobalDistanceBinsize) work->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
+#ifdef MOLFLOW
+		work->wp.globalHistogramParams.recordTime = globalRecTime;
+		if (doGlobalTimeLimit) work->wp.globalHistogramParams.timeMax = globalTimeLimit;
+		if (doGlobalTimeBinsize) work->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
+#endif
+
+		auto selectedFacets = geom->GetSelectedFacets();
+		for (const auto& facetId : selectedFacets) {
+			Facet* f = geom->GetFacet(facetId);
+			if (doFacetRecBounce) f->sh.facetHistogramParams.recordBounce = facetRecBounce;
+			if (doFacetHitLimit) f->sh.facetHistogramParams.nbBounceMax = facetHitLimit;
+			if (doFacetHitBinsize) f->sh.facetHistogramParams.nbBounceBinsize = facetHitBinsize;
+			if (doFacetRecDistance) f->sh.facetHistogramParams.recordDistance = facetRecDistance;
+			if (doFacetDistanceLimit) f->sh.facetHistogramParams.distanceMax = facetDistanceLimit;
+			if (doFacetDistanceBinsize) f->sh.facetHistogramParams.distanceBinsize = facetDistanceBinsize;
+#ifdef MOLFLOW
+			if (doFacetRecTime) f->sh.facetHistogramParams.recordTime = facetRecTime;
+			if (doFacetTimeLimit) f->sh.facetHistogramParams.timeMax = facetTimeLimit;
+			if (doFacetTimeBinsize) f->sh.facetHistogramParams.timeBinsize = facetTimeBinsize;
+#endif
+		}
+	}
+	mApp->changedSinceSave = true;
 	work->Reload();
 
 	return true;
@@ -329,7 +473,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		Facet* f0 = geom->GetFacet(selectedFacetIds[0]);
 		bool recBounce = f0->sh.facetHistogramParams.recordBounce;
 		size_t bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
-		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceMax;
+		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceBinsize;
 		bool recDist = f0->sh.facetHistogramParams.recordDistance;
 		double distMax = f0->sh.facetHistogramParams.distanceMax;
 		double distBinsize = f0->sh.facetHistogramParams.distanceBinsize;
