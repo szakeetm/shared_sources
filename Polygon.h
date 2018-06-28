@@ -33,11 +33,11 @@ public:
 class PolyVertex  {
 public:
   Vector2d  p;       // Vertex coordinates
-  int       mark;    // Cycle detection (0=>not processed, 1=>processed)
-  int       isStart; // Possible starting point
+  int       mark=0;    // Cycle detection (0=>not processed, 1=>processed)
+  int       isStart=0; // Possible starting point
 
-  size_t       nbOut;  // Number of outgoing arc
-  size_t       nbIn;   // Number of incoming arc
+  size_t       nbOut=0;  // Number of outgoing arc
+  size_t       nbIn=0;   // Number of incoming arc
   int       VI[2];  // Tangent point detection, can be -1
   int       VO[2];  // Tangent point detection, can be -1
 };
@@ -45,9 +45,9 @@ public:
 class PolyArc {
 public:
 
-	size_t i1;  // Node 1 index
-	size_t i2;  // Node 2 index
-	size_t s;   // Source polygon (tangent point detection)
+	size_t i1=0;  // Node 1 index
+	size_t i2=0;  // Node 2 index
+	size_t s=0;   // Source polygon (tangent point detection)
 
 } ;
 

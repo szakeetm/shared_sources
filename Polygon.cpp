@@ -255,13 +255,8 @@ size_t AddArc(PolyGraph& g,const size_t &i1,const size_t &i2,const size_t &sourc
 
   // Add an arc to the polygraph and returns its id
 
-  bool found = false;
-  size_t i = 0;
-
-	  while(i<g.arcs.size() && !found) {
-		found = (g.arcs[i].i1==i1 && g.arcs[i].i2==i2);
-		if (found) return i;
-		else i++;
+	for (size_t i = 0; i < g.arcs.size();i++) {
+		if (g.arcs[i].i1==i1 && g.arcs[i].i2==i2) return i;
 	  }
 
 	// Not found, new arc
@@ -336,8 +331,8 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
 	size_t MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
 
 	PolyGraph g; //result
-	g.nodes.resize(MAXEDGE);
-    g.arcs.resize(MAXEDGE);
+	g.nodes.resize(inP1.pts.size());
+    g.arcs.resize(inP1.pts.size());
 	
   // Fill up the graph with the 1st polygon
 
@@ -542,50 +537,50 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 	   polys.push_back(newPoly);
 
     eop = 0;
-	PolyVertex& s = g.nodes[vertexId];
-	PolyVertex& s0 = s;
+	PolyVertex* s = &g.nodes[vertexId]; //Not a reference, can change
+	PolyVertex* s0 = &g.nodes[vertexId];
 
     while( !eop && polys.back().pts.size()<MAXEDGE ) {
 
       // Add point to the current polygon
-      polys.back().pts.push_back(s.p);
-      s.mark = 1;
+      polys.back().pts.push_back(s->p);
+      s->mark = 1;
 
       // Go to next point
-      switch( s.nbOut ) {
+      switch( s->nbOut ) {
 
         case 1:
 
           // Next point
-          if(s.VO[0]>=0) {
+          if(s->VO[0]>=0) {
             // On a P1 edge
-            s = g.nodes[s.VO[0]];
+            s = &g.nodes[s->VO[0]];
           } else {
             // On a P2 edge
-            s = g.nodes[s.VO[1]];
+            s = &g.nodes[s->VO[1]];
           }
           break;
 
         case 2:
 
-          if( s.VO[0]==-1 || s.VO[1]==-1 ) {
+          if( s->VO[0]==-1 || s->VO[1]==-1 ) {
             //Failure!!! (tangent edge not marked)
             return std::nullopt;
           }
             
           // We have to turn left
-          n1 = g.nodes[s.VO[0]].p;
-          n2 = g.nodes[s.VO[1]].p;
+          n1 = g.nodes[s->VO[0]].p;
+          n2 = g.nodes[s->VO[1]].p;
 
-          sine = DET22(n1.u-(s.p.u),n2.u-(s.p.u),
-                       n1.v-(s.p.v),n2.v-(s.p.v));
+          sine = DET22(n1.u-(s->p.u),n2.u-(s->p.u),
+                       n1.v-(s->p.v),n2.v-(s->p.v));
 
           if( sine<0.0 )
             // Go to n1
-            s = g.nodes[s.VO[0]];
+            s = &g.nodes[s->VO[0]];
           else
             // Go to n2
-            s = g.nodes[s.VO[1]];
+            s = &g.nodes[s->VO[1]];
 
           break;
 
@@ -596,7 +591,7 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
       }
 
       // Reach start point, end of polygon
-      eop = (&s0==&s); 
+      eop = (s0==s); 
 
     }
 
