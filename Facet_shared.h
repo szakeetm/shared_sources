@@ -38,6 +38,7 @@ struct NeighborFacet {
 
 class CellProperties {
 public:
+	//Old C-style array to save memory
 	Vector2d* points;
 	size_t nbPoints;
 	float   area;     // Area of element
@@ -70,7 +71,7 @@ public:
 	bool  SetTexture(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
-	void  BuildMeshList();
+	void  BuildMeshGLList();
 	void  BuildSelElemList();
 	void  UnselectElem();
 	void  SelectElem(size_t u, size_t v, size_t width, size_t height);
@@ -133,8 +134,10 @@ public:
 #endif
 
 
-	size_t   *indices;      // Indices (Reference to geometry vertex)
-	Vector2d *vertices2;    // Vertices (2D plane space, UV coordinates)
+	std::vector<size_t>   indices;      // Indices (Reference to geometry vertex)
+	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
+
+	//C-style arrays to save memory (textures can be huge):
 	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
 	CellProperties* meshvector;
 	size_t meshvectorsize;
@@ -160,7 +163,7 @@ public:
 	bool textureError;   // Disable rendering if the texture has an error
 
 						 // GUI stuff
-	bool  *visible;         // Edge visible flag
+	std::vector<bool>  visible;         // Edge visible flag
 	bool   selected;        // Selected flag
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	GLint  glElem;          // Surface elements boundaries

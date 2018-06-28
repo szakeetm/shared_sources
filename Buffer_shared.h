@@ -146,8 +146,8 @@ public:
 	Vector3d    N;    // normalized
 	Vector3d    Nuv;  // normal to (u,v) not normlized
 
-					  // Axis Aligned Bounding Box (AABB)
-	AABB       bb;
+					  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
+	AxisAlignedBoundingBox       bb;
 	Vector3d   center;
 
 	// Hit/Abs/Des/Density recording on 2D texture map
@@ -249,7 +249,7 @@ public:
 			CEREAL_NVP(N),    // normalized
 			CEREAL_NVP(Nuv),  // normal to (u,v) not normlized
 
-						  // Axis Aligned Bounding Box (AABB)
+						  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 			CEREAL_NVP(bb),
 			CEREAL_NVP(center),
 

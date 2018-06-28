@@ -116,7 +116,7 @@ public:
 	void SelectCoplanar(int width, int height, double tolerance);
 	Facet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
-	AABB     GetBB();
+	AxisAlignedBoundingBox     GetBB();
 	Vector3d GetCenter();
 
 	// Collapsing stuff
@@ -208,14 +208,14 @@ protected:
 	void AddToSelectedVertexList(size_t vertexId);
 	void DrawFacet(Facet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void FillFacet(Facet *f, bool addTextureCoord);
-	void AddTextureCoord(Facet *f, Vector2d *p);
+	void AddTextureCoord(Facet *f, const Vector2d *p);
 	void DrawPolys();
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	int  FindEar(POLYGON *p);
+	int  FindEar(const GLAppPolygon& p);
 	void Triangulate(Facet *f, bool addTextureCoord);
-	void DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord);
+	void DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
 	void SelectAll();
 	void UnselectAll();
@@ -250,7 +250,7 @@ protected:
 										  // Geometry
 	Facet    **facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
-	AABB bb;              // Global Axis Aligned Bounding Box (AABB)
+	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)
 	bool  centerNorme;    // Center vector (direction field)

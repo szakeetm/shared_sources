@@ -504,10 +504,7 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 		ClipperLib::PolyTree solution;
 		std::vector<ProjectedPoint> projectedPoints;
 
-		std::vector<size_t> facet2path;
-		for (size_t i = 0; i < facets[secondFacet]->sh.nbIndex; i++) {
-			facet2path.push_back(facets[secondFacet]->indices[i]);
-		}
+		auto facet2path = facets[secondFacet]->indices;
 		std::vector<std::vector<size_t>> clippingPaths;
 		clippingPaths.push_back(facet2path);
 		size_t id = (int)firstFacet;
@@ -515,10 +512,7 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 			ClipPolygon(firstFacet, secondFacet, type);
 		}
 		else {
-			facet2path.clear();
-			for (size_t i = 0; i < facets[firstFacet]->sh.nbIndex; i++) {
-				facet2path.push_back(facets[firstFacet]->indices[i]);
-			}
+			facet2path.swap(facets[firstFacet]->indices);
 			clippingPaths.clear();
 			clippingPaths.push_back(facet2path);
 			id = (int)secondFacet;
@@ -704,13 +698,7 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 }
 
 void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
-	std::vector<size_t> facet2path;
-	for (size_t i = 0; i < facets[id2]->sh.nbIndex; i++) {
-		facet2path.push_back(facets[id2]->indices[i]);
-	}
-	std::vector<std::vector<size_t>> clippingPaths;
-	clippingPaths.push_back(facet2path);
-	ClipPolygon(id1, clippingPaths, type);
+	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
 void Geometry::RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
@@ -805,7 +793,7 @@ size_t Geometry::GetNbFacet() {
 	return sh.nbFacet;
 }
 
-AABB Geometry::GetBB() {
+AxisAlignedBoundingBox Geometry::GetBB() {
 
 	/*if (viewStruct < 0) {
 
@@ -814,7 +802,7 @@ AABB Geometry::GetBB() {
 	}
 	else {*/
 		// BB of selected struture //replaced with all vertices
-		AABB sbb;
+		AxisAlignedBoundingBox sbb;
 
 		sbb.min.x = 1e100;
 		sbb.min.y = 1e100;
@@ -887,7 +875,7 @@ Vector3d Geometry::GetCenter() {
 	else {*/
 
 		Vector3d r;
-		AABB sbb = GetBB();
+		AxisAlignedBoundingBox sbb = GetBB();
 
 		r.x = (sbb.max.x + sbb.min.x) / 2.0;
 		r.y = (sbb.max.y + sbb.min.y) / 2.0;
@@ -1411,20 +1399,15 @@ void Geometry::RemoveSelectedVertex() {
 		for (size_t i = 0; (int)i < f->sh.nbIndex; i++) //count how many to remove			
 			if (vertices3[f->indices[i]].selected)
 				nbRemove++;
-		size_t *newIndices = (size_t *)malloc((f->sh.nbIndex - nbRemove) * sizeof(size_t));
+		std::vector<size_t> newIndices(f->sh.nbIndex - nbRemove);
 		int nb = 0;
 		for (size_t i = 0; (int)i < f->sh.nbIndex; i++)
 			if (!vertices3[f->indices[i]].selected) newIndices[nb++] = f->indices[i];
 
-		SAFE_FREE(f->indices); f->indices = newIndices;
-		SAFE_FREE(f->vertices2);
-		SAFE_FREE(f->visible);
+		f->indices = newIndices;
 		f->sh.nbIndex -= nbRemove;
-		f->vertices2 = (Vector2d *)malloc(f->sh.nbIndex * sizeof(Vector2d));
-		memset(f->vertices2, 0, f->sh.nbIndex * sizeof(Vector2d));
-		f->visible = (bool *)malloc(f->sh.nbIndex * sizeof(bool));
-		_ASSERTE(f->visible);
-		memset(f->visible, 0xFF, f->sh.nbIndex * sizeof(bool));
+		f->vertices2.resize(f->sh.nbIndex);
+		f->visible.resize(f->sh.nbIndex);
 	}
 
 	RemoveFacets(facetsToRemove);
@@ -2185,8 +2168,8 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 						//selectedFacets[i].visitedFromThisIndice[index].push_back(f1->GetIndex(index + 1));
 						if (IntersectingPlaneWithLine(base, side, f2->sh.O, f2->sh.N, &intersectionPoint, true)) {
 							Vector2d projected = ProjectVertex(intersectionPoint, f2->sh.U, f2->sh.V, f2->sh.O);
-							bool inPoly = IsInPoly(projected.u, projected.v, f2->vertices2, f2->sh.nbIndex);
-							bool onEdge = IsOnPolyEdge(projected.u, projected.v, f2->vertices2, f2->sh.nbIndex, 1E-6);
+							bool inPoly = IsInPoly(projected, f2->vertices2);
+							bool onEdge = IsOnPolyEdge(projected.u, projected.v, f2->vertices2, 1E-6);
 							//onEdge = false;
 							if (inPoly || onEdge) {
 								//Intersection found. First check if we already created this point
@@ -2842,7 +2825,7 @@ void Geometry::CalculateFacetParam(Facet* f) {
 		if (p.z > f->sh.bb.max.z) f->sh.bb.max.z = p.z;
 	}
 
-	// Facet center (AABB center)
+	// Facet center (AxisAlignedBoundingBox center)
 	f->sh.center.x = (f->sh.bb.max.x + f->sh.bb.min.x) / 2.0;
 	f->sh.center.y = (f->sh.bb.max.y + f->sh.bb.min.y) / 2.0;
 	f->sh.center.z = (f->sh.bb.max.z + f->sh.bb.min.z) / 2.0;

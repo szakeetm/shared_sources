@@ -138,9 +138,7 @@ void AppUpdater::PerformUpdateCheck() {
 		std::string resultCategory;
 		std::stringstream resultDetail;
 
-		CURLcode downloadResult;
-		std::string body;
-		std::tie(downloadResult, body) = DownloadString(feedUrl);
+		auto [downloadResult, body] = DownloadString(feedUrl);
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
 

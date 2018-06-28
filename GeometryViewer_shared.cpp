@@ -619,7 +619,7 @@ void GeometryViewer::SetWorker(Worker *w) {
 	ToFrontView();
 	// Auto size vector length (consider Front View)
 	Geometry *geom = work->GetGeometry();
-	AABB bb = geom->GetBB();
+	AxisAlignedBoundingBox bb = geom->GetBB();
 	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 	arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 }
@@ -1907,9 +1907,9 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 	zFar = -1e100;
 	mv.LoadGL(matView);
 
-	//Transform the AABB (fast method, but less accurate 
+	//Transform the AxisAlignedBoundingBox (fast method, but less accurate 
 	//than full vertex transform)
-	//AABB bbO = geom->GetBB();
+	//AxisAlignedBoundingBox bbO = geom->GetBB();
 	//TRANSFORMBB(min.x,min.y,min.z);
 	//TRANSFORMBB(max.x,min.y,min.z);
 	//TRANSFORMBB(max.x,min.y,max.z);
@@ -1931,7 +1931,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 //#ifdef SYNRAD		
 		//regions included
-		AABB bb = geom->GetBB();
+		AxisAlignedBoundingBox bb = geom->GetBB();
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);
@@ -1991,7 +1991,7 @@ void Geometry::BuildFacetMeshLists()
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
-		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshList();
+		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshGLList();
 
 	}
 	prg->SetVisible(false);

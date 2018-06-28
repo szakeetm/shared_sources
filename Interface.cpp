@@ -511,7 +511,7 @@ void Interface::UpdateModelParams() {
 	facetList->SetColumnLabels((char **)cName);
 	UpdateFacetHits(true);
 	UpdateFacetlistSelected();
-	AABB bb = geom->GetBB();
+	AxisAlignedBoundingBox bb = geom->GetBB();
 
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		Facet *f = geom->GetFacet(i);

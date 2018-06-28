@@ -781,11 +781,11 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-int Geometry::FindEar(POLYGON *p) {
+int Geometry::FindEar(const GLAppPolygon& p) {
 
 	int i = 0;
 	bool earFound = false;
-	while (i < p->nbPts && !earFound) {
+	while (i < p.pts.size() && !earFound) {
 		if (IsConvex(p, i))
 			earFound = !ContainsConcave(p, i - 1, i, i + 1);
 		if (!earFound) i++;
@@ -801,7 +801,7 @@ int Geometry::FindEar(POLYGON *p) {
 
 }
 
-void Geometry::AddTextureCoord(Facet *f, Vector2d *p) {
+void Geometry::AddTextureCoord(Facet *f, const Vector2d *p) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -838,7 +838,7 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	for (; nbDrawn < f->wp.nbIndex; nbDrawn++) {*/
 	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
-		if (addTextureCoord) AddTextureCoord(f, f->vertices2 + i);
+		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]));
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
 		/*if (mApp->leftHandedView) {
 			i++;
@@ -849,27 +849,27 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	}
 }
 
-void Geometry::DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord) {
+void Geometry::DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
 	Vector3d  p3D;
-	Vector2d *p1;
-	Vector2d *p2;
-	Vector2d *p3;
+	const Vector2d* p1;
+	const Vector2d* p2;
+	const Vector2d* p3;
 
 	// Follow orientation
 	/*double handedness = mApp->leftHandedView ? 1.0 : -1.0;*/
-	if (/*handedness * */ p->sign > 0.0) {
-		p1 = &(p->pts[Previous(ear, p->nbPts)]);
-		p2 = &(p->pts[Next(ear, p->nbPts)]);
-		p3 = &(p->pts[IDX(ear, p->nbPts)]);
+	if (/*handedness * */ p.sign > 0.0) {
+		p1 = &(p.pts[Previous(ear, p.pts.size())]);
+		p2 = &(p.pts[Next(ear, p.pts.size())]);
+		p3 = &(p.pts[IDX(ear, p.pts.size())]);
 	}
 	else {
-		p1 = &(p->pts[Previous(ear, p->nbPts)]);
-		p2 = &(p->pts[IDX(ear, p->nbPts)]);
-		p3 = &(p->pts[Next(ear, p->nbPts)]);
+		p1 = &(p.pts[Previous(ear, p.pts.size())]);
+		p2 = &(p.pts[IDX(ear, p.pts.size())]);
+		p3 = &(p.pts[Next(ear, p.pts.size())]);
 	}
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
@@ -904,33 +904,27 @@ void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
 	// The facet must have at least 3 points
 	// Use the very simple "Two-Ears" theorem. It computes in O(n^2).
 
-	// Build a POLYGON
-	POLYGON p;
-	p.nbPts = f->sh.nbIndex;
-	p.pts = (Vector2d *)malloc(p.nbPts * sizeof(Vector2d));
-	memcpy(p.pts, f->vertices2, p.nbPts * sizeof(Vector2d));
-	p.sign = f->sh.sign;
-
 	if (f->sh.sign == 0.0) {
 		// Not a simple polygon
 		// Abort triangulation
-		free(p.pts);
 		return;
 	}
 
+	// Build a Polygon
+	GLAppPolygon p;
+	p.pts = f->vertices2;
+	p.sign = f->sh.sign;
+	
 	// Perform triangulation
-	while (p.nbPts > 3) {
-		int e = FindEar(&p);
-		DrawEar(f, &p, e, addTextureCoord);
+	while (p.pts.size() > 3) {
+		int e = FindEar(p);
+		DrawEar(f, p, e, addTextureCoord);
 		// Remove the ear
-		for (int i = e; i < p.nbPts - 1; i++)
-			p.pts[i] = p.pts[i + 1];
-		p.nbPts--; //Underrun-safe
+		p.pts.erase(p.pts.begin() + e);
 	}
 
 	// Draw the last ear
-	DrawEar(f, &p, 0, addTextureCoord);
-	free(p.pts);
+	DrawEar(f, p, 0, addTextureCoord);
 
 }
 
@@ -1060,7 +1054,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 			Facet *f = facets[i];
 			if (f->cellPropertiesIds  && f->textureVisible) {
-				if (!f->glElem) f->BuildMeshList();
+				if (!f->glElem) f->BuildMeshGLList();
 
 				glEnable(GL_POLYGON_OFFSET_LINE);
 				glPolygonOffset(1.0f, 2.0f);

@@ -158,9 +158,8 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == exportButton) {
 				//Export to CSV
-				size_t nbRec;
-				ParticleLoggerItem* logBuff;
-				std::tie(nbRec, logBuff) = work->GetLogBuff();
+				
+				auto[nbRec, logBuff] = work->GetLogBuff();
 				FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, NULL, "All files\0*.*\0", NULL);
 				if (fn) {
 					bool ok = true;
@@ -183,9 +182,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == copyButton) {
 				//Copy to clipboard
-				size_t nbRec;
-				ParticleLoggerItem* logBuff;
-				std::tie(nbRec, logBuff) = work->GetLogBuff();
+				auto[nbRec, logBuff] = work->GetLogBuff();
 				copyButton->SetText("Abort");
 				isRunning = true;
 				std::string clipBoardText = ConvertLogToText(nbRec, logBuff, "\t");
@@ -227,9 +224,7 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
-	size_t nbRec;
-	void* logBuff;
-	std::tie(nbRec, logBuff) = work->GetLogBuff();
+	auto[nbRec, logBuff] = work->GetLogBuff();
 	work->ReleaseLogBuff();
 
 	if (nbRec == 0) {

@@ -26,6 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/MathTools.h"
 #include <algorithm> //std::min
 #include "Simulation.h"
+#include <tuple>
 
 // AABB tree stuff
 
@@ -75,7 +76,7 @@ std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
 		planeType = 3;
 	}
 
-	return std::make_tuple(planeType,nbLeft,nbRight);
+	return { planeType,nbLeft,nbRight };
 
 }
 
@@ -106,9 +107,8 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 	AABBNODE *newNode = new AABBNODE();
 	newNode->facets = facets;
 	newNode->ComputeBB();
-	
-	size_t planeType, nbLeft, nbRight;
-	std::tie(planeType, nbLeft, nbRight) = newNode->FindBestCuttingPlane();
+
+	auto [planeType, nbLeft, nbRight] = newNode->FindBestCuttingPlane();
 
 	if (nbLeft >= MINBB && nbRight >= MINBB) {
 
@@ -513,7 +513,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 		}*/
 
 	}
-	return std::make_tuple(found, collidedFacet, minLength);
+	return { found, collidedFacet, minLength };
 
 }
 
@@ -583,7 +583,7 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const V
 	//double inPhi = asin(v / rho);     //At this point, -PI/2 < inPhi < PI/2
 	//if (u < 0.0) inPhi = PI - inPhi;  // Angle to U
 	double inPhi = atan2(v, u); //-PI .. PI, and the angle is 0 when pointing towards u
-	return std::make_tuple(inTheta, inPhi);
+	return { inTheta, inPhi };
 }
 
 bool Visible(Simulation* sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2) {

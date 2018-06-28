@@ -31,7 +31,7 @@ public:
 	~AABBNODE();
 	void ComputeBB();
 	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
-	AABB             bb;
+	AxisAlignedBoundingBox             bb;
 	AABBNODE *left;
 	AABBNODE *right;
 	std::vector<SubprocessFacet*> facets;

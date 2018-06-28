@@ -154,8 +154,8 @@ Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS
 	);
 }
 
-int VertexEqual(Vector2d *p1, Vector2d *p2) {
-	return IsZero(p1->u - p2->u) && IsZero(p1->v - p2->v);
+bool VertexEqual(const Vector2d& p1, const Vector2d& p2) {
+	return IsZero((p1-p2).Norme());
 }
 
 Vector2d ProjectVertex(const Vector3d& v, const Vector3d& U, const Vector3d& V, const Vector3d& origin){
@@ -164,59 +164,48 @@ Vector2d ProjectVertex(const Vector3d& v, const Vector3d& U, const Vector3d& V, 
 	return Vector2d(Dot(U, diff) / Dot(U,U),Dot(V, diff) / Dot(V,V));
 }
 
-int Intersect2D(Vector2d *p1,Vector2d *p2,Vector2d *p3,Vector2d *p4,Vector2d *I) {
+std::optional<Vector2d> Intersect2D(const Vector2d &p1, const Vector2d& p2, const Vector2d& p3, const Vector2d& p4) {
 
   // Computes the intersection between 2 segments
-  // Return 1 when an intersection is found, 0 otherwise
   // Solve P1 + t1P1P2 = P3 + t2P3P4
 
-  Vector2d p12;
-  p12.u = p2->u - p1->u;
-  p12.v = p2->v - p1->v;
-  Vector2d p34;
-  p34.u = p4->u - p3->u;
-  p34.v = p4->v - p3->v;
+  Vector2d p12 = p2 - p1;
+  Vector2d p13 = p1 - p3;
+  Vector2d p34 = p4 - p3;
 
   double det = DET22(-p12.u,p34.u,
                      -p12.v,p34.v);
-  if( IsZero(det) ) return 0;
+  if( IsZero(det) ) return std::nullopt;
 
   double idet = 1.0 / det;
 
-  double dt1 = DET22(p1->u-p3->u, p34.u, 
-                     p1->v-p3->v, p34.v);
+  double dt1 = DET22(p13.u, p34.u, 
+                     p13.v, p34.v);
   double t1  = dt1*idet;
-  if( t1<0.0 || t1>1.0 ) return 0;
+  if( t1<0.0 || t1>1.0 ) return std::nullopt;
 
-  double dt2 = DET22(-p12.u, p1->u-p3->u, 
-                     -p12.v, p1->v-p3->v);
+  double dt2 = DET22(-p12.u, p13.u, 
+                     -p12.v, p13.v);
   double t2  = dt2*idet;
-  if( t2<0.0 || t2>1.0 ) return 0;
+  if( t2<0.0 || t2>1.0 ) return std::nullopt;
 
   // Check coherence (numerical error)
-  Vector2d I1,I2;
-  I1.u = p1->u + t1*p12.u;
-  I1.v = p1->v + t1*p12.v;
-  I2.u = p3->u + t2*p34.u;
-  I2.v = p3->v + t2*p34.v;
-  double r = sqrt( (I1.u-I2.u)*(I1.u-I2.u) + (I1.v-I2.v)*(I1.v-I2.v) );
-  if( r>1e-6 ) return 0;
+  Vector2d I1 = p1 + t1 * p12;
+  Vector2d I2 = p3 + t2 * p34;
+  double r = (I1-I2).Norme();
+  if( r>1e-6 ) return std::nullopt;
 
-  I->u = I1.u;
-  I->v = I1.v;
-  return 1;
+  return I1;
 
 }
 
-double GetOrientedAngle(Vector2d *v1,Vector2d *v2) {
+double GetOrientedAngle(const Vector2d& v1,const Vector2d& v2) {
 
   // Return oriented angle [0,2PI] (clockwise)
-  double n = sqrt( (v1->u*v1->u + v1->v*v1->v ) * (v2->u*v2->u + v2->v*v2->v ) );
-  double cs = Dot(*v1,*v2)/n;
-  if(cs<-1.0) cs=-1.0;
-  if(cs>1.0)  cs= 1.0;
+  double cs = Dot(v1,v2)/(v1.Norme()*v2.Norme());
+  Saturate(cs, -1.0, 1.0);
   double a = acos( cs );
-  double s = DET22( v1->u,v2->u,v1->v,v2->v );
+  double s = DET22( v1.u,v2.u,v1.v,v2.v );
   if(s<0.0) a = 2.0*PI - a;
   return 2.0*PI - a;
 

@@ -238,7 +238,7 @@ void Worker::ReleaseLogBuff() {
 }
 
 void Worker::ThrowSubProcError(std::string message) {
-	message.c_str();
+	throw Error(message.c_str());
 }
 
 void Worker::ThrowSubProcError(char *message) {

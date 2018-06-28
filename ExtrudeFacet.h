@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 #include "GLApp/GLWindow.h"
+#include <optional>
 class GLButton;
 class GLTextField;
 class GLLabel;
@@ -123,6 +124,6 @@ private:
   size_t baseId, dirId;
   void EnableDisableControls();
   void ClearToggles(GLToggle* leaveChecked=NULL);
-  std::tuple<bool,size_t> AssertOneVertexSelected();
-  std::tuple<bool, size_t> AssertOneFacetSelected();
+  std::optional<size_t> AssertOneVertexSelected();
+  std::optional<size_t> AssertOneFacetSelected();
 };
