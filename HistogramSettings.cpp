@@ -18,6 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "HistogramSettings.h"
+#include "HistogramPlotter.h" //To call refresh
 
 #include "GLApp\GLToggle.h"
 #include "GLApp\GLTextField.h"
@@ -424,9 +425,12 @@ bool HistogramSettings::Apply() {
 			if (doFacetTimeBinsize) f->sh.facetHistogramParams.timeBinsize = facetTimeBinsize;
 #endif
 		}
+
+		mApp->changedSinceSave = true;
+		work->Reload();
+		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
 	}
-	mApp->changedSinceSave = true;
-	work->Reload();
+	
 
 	return true;
 }

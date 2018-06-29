@@ -42,6 +42,7 @@ class GLMenu;
 class GeometryViewer;
 class CollapseSettings;
 class HistogramSettings;
+class HistogramPlotter;
 class MoveVertex;
 class ScaleVertex;
 class ScaleFacet;
@@ -155,7 +156,8 @@ typedef struct {
 #define MENU_TOOLS_PROFPLOTTER 402
 #define MENU_TOOLS_PARTICLELOGGER 403
 #define MENU_TOOLS_HISTOGRAMSETTINGS 404
-#define MENU_TOOLS_SCREENSHOT 405
+#define MENU_TOOLS_HISTOGRAMPLOTTER 405
+#define MENU_TOOLS_SCREENSHOT 406
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -388,6 +390,7 @@ public:
 	//Dialog
 	CollapseSettings   *collapseSettings;
 	HistogramSettings  *histogramSettings;
+	HistogramPlotter   *histogramPlotter;
 	MoveVertex		   *moveVertex;
 	ScaleFacet         *scaleFacet;
 	ScaleVertex        *scaleVertex;

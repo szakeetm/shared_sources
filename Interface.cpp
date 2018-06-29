@@ -47,6 +47,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryViewer.h"
 #include "CollapseSettings.h"
 #include "HistogramSettings.h"
+#include "HistogramPlotter.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
 #include "ScaleFacet.h"
@@ -144,6 +145,7 @@ Interface::Interface() {
 	//formulaSettings = NULL;
 	collapseSettings = NULL;
 	histogramSettings = NULL;
+	histogramPlotter = NULL;
 	moveVertex = NULL;
 	scaleVertex = NULL;
 	scaleFacet = NULL;
@@ -801,6 +803,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
@@ -1071,6 +1074,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(formulaEditor);
 	RVALIDATE_DLG(collapseSettings);
 	RVALIDATE_DLG(histogramSettings);
+	RVALIDATE_DLG(histogramPlotter);
 	RVALIDATE_DLG(moveVertex);
 	RVALIDATE_DLG(scaleVertex);
 	RVALIDATE_DLG(scaleFacet);
@@ -1111,6 +1115,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(formulaEditor);
 	IVALIDATE_DLG(collapseSettings);
 	IVALIDATE_DLG(histogramSettings);
+	IVALIDATE_DLG(histogramPlotter);
 	IVALIDATE_DLG(moveVertex);
 	IVALIDATE_DLG(scaleVertex);
 	IVALIDATE_DLG(scaleFacet);
@@ -1219,6 +1224,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			}
 			histogramSettings->Refresh(geom->GetSelectedFacets());
 			histogramSettings->SetVisible(true);
+			return true;
+		case MENU_TOOLS_HISTOGRAMPLOTTER:
+			if (!histogramPlotter || !histogramPlotter->IsVisible()) {
+				SAFE_DELETE(histogramPlotter);
+				histogramPlotter = new HistogramPlotter(&worker);
+			}
+			histogramPlotter->Refresh();
+			histogramPlotter->SetVisible(true);
 			return true;
 		case MENU_TOOLS_PARTICLELOGGER:
 			if (!particleLogger || !particleLogger->IsVisible()) {
