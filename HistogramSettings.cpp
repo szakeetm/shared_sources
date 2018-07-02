@@ -269,6 +269,7 @@ bool HistogramSettings::Apply() {
 			}
 			doGlobalHitBinsize = true;
 		}
+	}
 
 		globalRecDistance = globalRecordDistanceToggle->GetState();
 
@@ -314,15 +315,17 @@ bool HistogramSettings::Apply() {
 			}
 		}
 #endif
-	}
+	
 
+
+	//FACETS
 	int facetRecBounceStatus = facetRecordBounceToggle->GetState();
 	if (facetRecBounceStatus != 2) {
 		facetRecBounce = (bool)facetRecBounceStatus;
 		doFacetRecBounce = true;
 	}
 
-	if (facetRecBounce) {
+	if (doFacetRecBounce && facetRecBounce) {
 
 		if (facetHitLimitText->GetText() != "...")
 		{
@@ -341,6 +344,7 @@ bool HistogramSettings::Apply() {
 			}
 			doFacetHitBinsize = true;
 		}
+	}
 
 		int facetRecDistanceStatus = facetRecordDistanceToggle->GetState();
 		if (facetRecDistanceStatus != 2) {
@@ -348,7 +352,7 @@ bool HistogramSettings::Apply() {
 			doFacetRecDistance = true;
 		}
 
-		if (facetRecDistance) {
+		if (doFacetRecDistance && facetRecDistance) {
 			if (facetDistanceLimitText->GetText() != "...") {
 				if (!facetDistanceLimitText->GetNumber(&facetDistanceLimit) || facetDistanceLimit < 0) {
 					GLMessageBox::Display("Facet distance limit must be a non-negative scalar", "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
@@ -374,7 +378,7 @@ bool HistogramSettings::Apply() {
 			doFacetRecTime = true;
 		}
 
-		if (facetRecTime) {
+		if (doFacetRecTime && facetRecTime) {
 			if (facetTimeLimitText->GetText() != "...") {
 
 				if (!facetTimeLimitText->GetNumber(&facetTimeLimit) || facetTimeLimit < 0) {
@@ -394,7 +398,7 @@ bool HistogramSettings::Apply() {
 			}
 		}
 #endif
-	}
+	
 
 	if (mApp->AskToReset()) {
 		//Apply
@@ -563,13 +567,13 @@ void HistogramSettings::EnableDisableControls() {
 	globalTimeBinsizeText->SetEditable(globalRecordTimeToggle->GetState());
 #endif
 
-	facetHitLimitText->SetEditable(facetRecordBounceToggle->GetState());
-	facetHitBinsizeText->SetEditable(facetRecordBounceToggle->GetState());
-	facetDistanceLimitText->SetEditable(facetRecordDistanceToggle->GetState());
-	facetDistanceBinsizeText->SetEditable(facetRecordDistanceToggle->GetState());
+	facetHitLimitText->SetEditable(facetRecordBounceToggle->GetState()==1);
+	facetHitBinsizeText->SetEditable(facetRecordBounceToggle->GetState()==1);
+	facetDistanceLimitText->SetEditable(facetRecordDistanceToggle->GetState()==1);
+	facetDistanceBinsizeText->SetEditable(facetRecordDistanceToggle->GetState()==1);
 #ifdef MOLFLOW
-	facetTimeLimitText->SetEditable(facetRecordTimeToggle->GetState());
-	facetTimeBinsizeText->SetEditable(facetRecordTimeToggle->GetState());
+	facetTimeLimitText->SetEditable(facetRecordTimeToggle->GetState()==1);
+	facetTimeBinsizeText->SetEditable(facetRecordTimeToggle->GetState()==1);
 #endif
 }
 
