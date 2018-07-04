@@ -17,8 +17,7 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#ifndef _GLSELECTDIALOGH_
-#define _GLSELECTDIALOGH_
+#pragma once
 
 #include "GLApp/GLWindow.h"
 
@@ -29,36 +28,17 @@ class GLLabel;
 class Geometry;
 class Worker;
 
-// Buttons
-#ifndef GLDLG_CANCEL
-#define GLDLG_CANCEL		0x0002
-#endif
-
-#ifndef GLDLG_SELECT
-#define GLDLG_SELECT		0x0004
-#endif
-
-#ifndef GLDLG_SELECT_ADD
-#define GLDLG_SELECT_ADD	0x0008
-#endif
-
-#ifndef GLDLG_SELECT_REM
-#define GLDLG_SELECT_REM	0x0016
-#endif
-
 class SelectDialog : public GLWindow {
 
 public:
   // Display a modal dialog and return the code of the pressed button
-  SelectDialog(Worker *w);
+  SelectDialog(Geometry *g);
   int  rCode;
   void ProcessMessage(GLComponent *src,int message);
 private:
  
-
+	GLButton * selButton, *addButton, *remButton;
   Geometry     *geom;
   Worker	   *work;
   GLTextField *numText;
 };
-
-#endif /* _GLSELECTDIALOGH_ */

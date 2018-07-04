@@ -488,6 +488,12 @@ size_t Worker::GetProcNumber() {
 }
 
 void Worker::Update(float appTime) {
+	//Refreshes interface cache:
+	//Global statistics, leak/hits, global histograms
+	//Facet hits, facet histograms, facet angle maps
+	//No cache for profiles, textures, directions (plotted directly from shared memory hit buffer)
+
+
 	if (needsReload) RealReload();
 
 	// Check calculation ending

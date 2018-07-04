@@ -32,6 +32,12 @@ class GLTextField;
 class Worker;
 class Geometry;
 
+#define HISTOGRAM_MODE_BOUNCES 0
+#define HISTOGRAM_MODE_DISTANCE 1
+#ifdef MOLFLOW
+#define HISTOGRAM_MODE_TIME 2
+#endif
+
 class HistogramMode {
 public:
 	GLChart * chart;

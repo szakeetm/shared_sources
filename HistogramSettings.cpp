@@ -431,7 +431,8 @@ bool HistogramSettings::Apply() {
 		}
 
 		mApp->changedSinceSave = true;
-		work->Reload();
+		work->RealReload();
+		work->Update(mApp->m_fTime); //To refresh histogram cache
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
 	}
 	

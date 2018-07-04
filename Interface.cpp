@@ -1537,7 +1537,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			UpdateFacetParams(true);
 			return true;
 		case MENU_SELECTION_SELECTFACETNUMBER:
-			if (!selectDialog) selectDialog = new SelectDialog(&worker);
+			if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
 			selectDialog->SetVisible(true);
 			return true;
 		case MENU_SELECTION_TEXTURETYPE:

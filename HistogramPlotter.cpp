@@ -194,20 +194,20 @@ void HistogramPlotter::Refresh() {
 	size_t modeId = modeCombo->GetSelectedIndex();
 	std::vector<int> histogramFacetIds;
 
-	bool recordGlobal = ((modeId == 0 && worker->wp.globalHistogramParams.recordBounce)
-		|| (modeId == 1 && worker->wp.globalHistogramParams.recordDistance)
+	bool recordGlobal = ((modeId == HISTOGRAM_MODE_BOUNCES && worker->wp.globalHistogramParams.recordBounce)
+		|| (modeId == HISTOGRAM_MODE_DISTANCE && worker->wp.globalHistogramParams.recordDistance)
 #ifdef MOLFLOW
-		|| (modeId == 2 && worker->wp.globalHistogramParams.recordTime)
+		|| (modeId == HISTOGRAM_MODE_TIME && worker->wp.globalHistogramParams.recordTime)
 #endif
 		);
 	if (recordGlobal) histogramFacetIds.push_back(-1); // -1 == Global histogram
 
 	for (size_t i = 0; i < geom->GetNbFacet(); i++) {
 		if (
-			(modeId == 0 && geom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
-			|| (modeId == 1 && geom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
+			(modeId == HISTOGRAM_MODE_BOUNCES && geom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
+			|| (modeId == HISTOGRAM_MODE_DISTANCE && geom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
 #ifdef MOLFLOW
-			|| (modeId == 2 && geom->GetFacet(i)->sh.facetHistogramParams.recordTime)
+			|| (modeId == HISTOGRAM_MODE_TIME && geom->GetFacet(i)->sh.facetHistogramParams.recordTime)
 #endif
 			) {
 			histogramFacetIds.push_back((int)i);
@@ -296,53 +296,56 @@ void HistogramPlotter::refreshChart() {
 
 std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHistogramValues(int facetId,size_t modeId)
 {
+	//facetId: -1 if global, otherwise facet id
+	//modeId: bounce/distance/time (0/1/2)
+	//returns pointer to values, max X value, X bin size, number of values (which can't be derived from the vector size when nothing's recorded yet)
 
 	Geometry *geom = worker->GetGeometry();
-	double xMax = 0;
+	double xMax;
 	double xSpacing;
 	size_t nbBins;
 
 	std::vector<double>* histogramValues;
 
 	if (facetId == -1) { //Global histogram
-		if (modeId == 0) {
+		if (modeId == HISTOGRAM_MODE_BOUNCES) {
 			histogramValues = &(worker->globalHistogramCache.nbHitsHistogram);
-			xMax = std::max(xMax, (double)worker->wp.globalHistogramParams.nbBounceMax);
+			xMax = (double)worker->wp.globalHistogramParams.nbBounceMax;
 			xSpacing = (double)worker->wp.globalHistogramParams.nbBounceBinsize;
 			nbBins = worker->wp.globalHistogramParams.GetBounceHistogramSize();
 		}
-		else if (modeId == 1) {
+		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
 			histogramValues = &(worker->globalHistogramCache.distanceHistogram);
-			xMax = std::max(xMax, worker->wp.globalHistogramParams.distanceMax);
+			xMax = worker->wp.globalHistogramParams.distanceMax;
 			xSpacing = worker->wp.globalHistogramParams.distanceBinsize;
 			nbBins = worker->wp.globalHistogramParams.GetDistanceHistogramSize();
 		}
 #ifdef MOLFLOW
-		else if (modeId == 2) {
+		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(worker->globalHistogramCache.timeHistogram);
-			xMax = std::max(xMax, worker->wp.globalHistogramParams.timeMax);
+			worker->wp.globalHistogramParams.timeMax;
 			xSpacing = worker->wp.globalHistogramParams.timeBinsize;
 			nbBins = worker->wp.globalHistogramParams.GetTimeHistogramSize();
 		}
 #endif
 	}
 	else { //Facet histogram
-		if (modeId == 0) {
+		if (modeId == HISTOGRAM_MODE_BOUNCES) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram);
-			xMax = std::max(xMax, (double)(geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax));
+			(double)geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
 			xSpacing = (double)(geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 		}
-		else if (modeId == 1) {
+		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.distanceHistogram);
-			xMax = std::max(xMax, (geom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax));
+			geom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
 			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 		}
 #ifdef MOLFLOW
-		else if (modeId == 2) {
+		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.timeHistogram);
-			xMax = std::max(xMax, (geom->GetFacet(facetId)->sh.facetHistogramParams.timeMax));
+			geom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
 			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
 		}
@@ -389,7 +392,7 @@ void HistogramPlotter::addView(int facetId) {
 			"This, among others, will cut the last histogram point representing out-of-limit values.\n"
 			"You can still get the data of the whole histogram by using the To clipboard button", "More than 1000 histogram points", { "OK" }, GLDLG_ICONWARNING);
 	}
-	Refresh();
+	//Refresh();
 }
 
 void HistogramPlotter::remView(int facetId) {
