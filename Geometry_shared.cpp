@@ -2776,9 +2776,11 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 			Vector3d p0p2 = (vertices3[p2] - vertices3[p1]).Normalized();
 			collinear = (Dot(p0p1, p0p2) >= linTreshold);
 			if (collinear&&f->sh.nbIndex > 3) { //collinear
-				for (int l = (k + 1) % f->sh.nbIndex; l < f->sh.nbIndex - 1; l++) {
-					f->indices[l] = f->indices[l + 1];
-				}
+				size_t l = (k + 1) % f->sh.nbIndex;
+				f->indices.erase(f->indices.begin() + l);
+				f->vertices2.erase(f->vertices2.begin() + l);
+				f->visible.erase(f->visible.begin() + l);
+				if (l <= k) k--;
 				f->sh.nbIndex--;
 			}
 		} while (collinear&&f->sh.nbIndex > 3);
