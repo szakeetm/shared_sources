@@ -52,7 +52,7 @@ extern SynRad*mApp;
 void Geometry::SelectFacet(size_t facetId) {
 	if (!isLoaded) return;
 	Facet *f = facets[facetId];
-	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx);
+	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
 	if (!f->selected) f->UnselectElem();
 	nbSelectedHist = 0;
 	AddToSelectionHist(facetId);
@@ -102,7 +102,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 			}
 		}
 		Facet *f = facets[i];
-		if (viewStruct == -1 || f->sh.superIdx == viewStruct) {
+		if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
 
 			size_t nb = facets[i]->sh.nbIndex;
 			bool isInside = true;
@@ -187,7 +187,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 				mApp->SetFacetSearchPrg(true, tmp);
 			}
 		}
-		if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct) {
+		if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
 			clipped = false;
 			hasVertexOnScreen = false;
@@ -1388,7 +1388,7 @@ void Geometry::BuildGLList() {
 		lineList[j] = glGenLists(1);
 		glNewList(lineList[j], GL_COMPILE);
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (facets[i]->sh.superIdx == j)
+			if (facets[i]->sh.superIdx == j || facets[i]->sh.superIdx == -1)
 				DrawFacet(facets[i], false, true, false);
 		}
 		glEndList();

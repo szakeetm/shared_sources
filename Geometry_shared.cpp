@@ -1676,21 +1676,18 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
 		double counter = 1.0;
 
-		bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-		memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
+		std::vector<bool> alreadyMoved(sh.nbVertex, false);
 
-		for (auto& sel : selectedFacets) {
+		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / selectedFacets.size());
-			for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-				if (!alreadyMoved[facets[sel]->indices[j]]) {
-					vertices3[facets[sel]->indices[j]].SetLocation(vertices3[facets[sel]->indices[j]] + translation);
-					alreadyMoved[facets[sel]->indices[j]] = true;
+			for (const auto& ind : facets[sel]->indices) {
+				if (!alreadyMoved[ind]) {
+					vertices3[ind].SetLocation(vertices3[ind] + translation);
+					alreadyMoved[ind] = true;
 				}
 			}
 		}
-
-		SAFE_FREE(alreadyMoved);
 
 		InitializeGeometry();
 		//update textures
@@ -1872,7 +1869,7 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	std::vector<InterfaceVertex> newVertices;		//vertices that we create
 	std::vector<size_t> newIndices(sh.nbVertex);    //which new vertex was created from this old one
 
-	for (auto& sel : selectedFacetIds) {
+	for (const auto& sel : selectedFacetIds) {
 		for (size_t ind = 0; ind < facets[sel]->sh.nbIndex; ind++) {
 			size_t vertexId = facets[sel]->indices[ind];
 			if (!isCopied[vertexId]) {
@@ -1893,6 +1890,7 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	wp.nbVertex += newVertices.size(); //update number of vertices
 	*/
 	vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
+	sh.nbVertex = vertices3.size();
 
 	facets = (Facet **)realloc(facets, (sh.nbFacet + selectedFacetIds.size()) * sizeof(Facet *)); //make space for new facets
 	for (size_t i = 0; i < selectedFacetIds.size(); i++) {
@@ -2938,7 +2936,7 @@ void Geometry::CalculateFacetParam(Facet* f) {
 void Geometry::RemoveFromStruct(int numToDel) {
 	std::vector<size_t> facetsToDelete;
 	for (int i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->sh.superIdx == numToDel) facetsToDelete.push_back(i);
+		if (facets[i]->sh.superIdx == numToDel) facetsToDelete.push_back(i); //Ignore universal (id==-1) facets
 	RemoveFacets(facetsToDelete);
 }
 
@@ -3666,7 +3664,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 		while ((f[i]->sh.superDest) > sh.nbSuper) { //If facet refers to a structure that doesn't exist, create it
 			AddStruct("TXT linked");
 		}
-		f[i]->sh.superIdx = strIdx;
+		f[i]->sh.superIdx = static_cast<int>(strIdx);
 	}
 
 	
@@ -3725,11 +3723,11 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			AddStruct("TXT linked");
 		}
 		if (newStruct) {
-			(facets)[i]->sh.superIdx = sh.nbSuper;
+			(facets)[i]->sh.superIdx = static_cast<int>(sh.nbSuper);
 		}
 		else {
 
-			(facets)[i]->sh.superIdx = strIdx;
+			(facets)[i]->sh.superIdx = static_cast<int>(strIdx);
 		}
 	}
 
@@ -3983,12 +3981,12 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			facets[i]->indices[j] += sh.nbVertex;
 		file->ReadKeyword("}");
 		if (newStruct) {
-			facets[i]->sh.superIdx += sh.nbSuper;
+			facets[i]->sh.superIdx += static_cast<int>(sh.nbSuper);
 			if (facets[i]->sh.superDest > 0) facets[i]->sh.superDest += sh.nbSuper;
 		}
 		else {
 
-			facets[i]->sh.superIdx += strIdx;
+			facets[i]->sh.superIdx += static_cast<int>(strIdx);
 			if (facets[i]->sh.superDest > 0) facets[i]->sh.superDest += strIdx;
 		}
 	}
@@ -4071,10 +4069,10 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor
 		facets[i + sh.nbFacet]->indices[2] = sh.nbVertex + 3 * i + 2;
 
 		if (newStruct) {
-			facets[i + sh.nbFacet]->sh.superIdx = sh.nbSuper;
+			facets[i + sh.nbFacet]->sh.superIdx = static_cast<int>(sh.nbSuper);
 		}
 		else {
-			facets[i + sh.nbFacet]->sh.superIdx = strIdx;
+			facets[i + sh.nbFacet]->sh.superIdx = static_cast<int>(strIdx);
 		}
 	}
 

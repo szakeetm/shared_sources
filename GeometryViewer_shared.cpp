@@ -1952,7 +1952,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		size_t nbF = geom->GetNbFacet();
 		for (int i = 0; i < nbF; i++) {
 			Facet *f = geom->GetFacet(i);
-			if (f->sh.superIdx == geom->viewStruct) {
+			if (f->sh.superIdx == geom->viewStruct || f->sh.superIdx == -1) {
 				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
 			}
 		}

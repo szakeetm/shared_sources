@@ -386,7 +386,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 	n_updown = 0;
 	n_found = 0;
 
-	for (j = 0; j < f.sh.nbIndex - 1; j++) {
+	for (j = 0; j < f.indices.size() - 1; j++) {
 
 		x1 = f.vertices2[j].u;
 		y1 = f.vertices2[j].v;
