@@ -21,10 +21,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
 #include "GLApp\GLToolkit.h"
-//#include <malloc.h>
 #include <string.h>
 #include <math.h>
 #include "GLApp/GLMatrix.h"
+#include <tuple>
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #include "Interface.h"
@@ -157,15 +157,22 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 	// TODO: Handle clipped polygon
 
 	// Check intersection of the facet and a "perspective ray"
-	int *allXe = (int *)malloc(sh.nbVertex * sizeof(int));
-	int *allYe = (int *)malloc(sh.nbVertex * sizeof(int));
+	std::vector<int> screenXCoords(sh.nbVertex);
+	std::vector<int> screenYCoords(sh.nbVertex);
 
 	// Transform points to screen coordinates
-	bool *ok = (bool *)malloc(sh.nbVertex * sizeof(bool));
-	bool *onScreen = (bool *)malloc(sh.nbVertex * sizeof(bool));
+	std::vector<bool> ok(sh.nbVertex);
+	std::vector<bool> onScreen(sh.nbVertex);
 	for (i = 0; i < sh.nbVertex; i++) {//here we could speed up by choosing visible vertices only?
-		ok[i] = GLToolkit::Get2DScreenCoord((float)vertices3[i].x, (float)vertices3[i].y, (float)vertices3[i].z, allXe + i, allYe + i);
-		onScreen[i] = (ok[i] && (*(allXe + i) >= 0) && (*(allYe + i) >= 0) && (*(allXe + i) <= width) && (*(allYe + i) <= height));
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord(vertices3[i])) {
+			ok[i] = true;
+			std::tie(screenXCoords[i],screenYCoords[i]) = *screenCoords;
+			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
+		}
+		else {
+			ok[i] = false;
+			//onScreen[i] = false;
+		}
 	}
 
 	// Check facets
@@ -192,24 +199,21 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			clipped = false;
 			hasVertexOnScreen = false;
 			hasSelectedVertex = false;
-			size_t nb = facets[i]->sh.nbIndex;
 			// Build array of 2D points
-			int *xe = (int *)malloc(nb * sizeof(int));
-			int *ye = (int *)malloc(nb * sizeof(int));
-			for (int j = 0; j < nb && !clipped; j++) {
+			std::vector<Vector2d> v(facets[i]->indices.size());
+
+			for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
 				size_t idx = facets[i]->indices[j];
 				if (ok[idx]) {
-					xe[j] = allXe[idx];
-					ye[j] = allYe[idx];
+					v[j] = Vector2d((double)screenXCoords[idx],(double)screenYCoords[idx]);
 					if (onScreen[idx]) hasVertexOnScreen = true;
 				}
 				else {
-
 					clipped = true;
 				}
 			}
 			if (vertexBound) { //CAPS LOCK on, select facets onyl with at least one seleted vertex
-				for (size_t j = 0; j < nb && (!hasSelectedVertex); j++) {
+				for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
 					size_t idx = facets[i]->indices[j];
 					if (vertices3[idx].selected) hasSelectedVertex = true;
 				}
@@ -217,9 +221,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 			if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex)) {
 
-				found = GLToolkit::IsInsidePoly(x, y, xe, ye, nb);
-				free(xe);
-				free(ye);
+				found = IsInPoly(Vector2d((double)x,(double)y), v);
 
 				if (found) {
 					if (unselect) {
@@ -288,11 +290,6 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			nbSelectedHist = 0;
 		}
 	}
-
-	free(allXe);
-	free(allYe);
-	free(ok);
-	free(onScreen);
 	UpdateSelection();
 
 }
@@ -390,17 +387,23 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 	// TODO: Handle clipped polygon
 
 	// Check intersection of the facet and a "perspective ray"
-	int *allXe = (int *)malloc(sh.nbVertex * sizeof(int));
-	int *allYe = (int *)malloc(sh.nbVertex * sizeof(int));
+	std::vector<int> allXe(sh.nbVertex);
+	std::vector<int> allYe(sh.nbVertex);
+	std::vector<bool> ok(sh.nbVertex);
 
 	std::vector<bool> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
 	// Transform points to screen coordinates
-	bool *ok = (bool *)malloc(sh.nbVertex * sizeof(bool));
 	for (i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		ok[i] = GLToolkit::Get2DScreenCoord((float)vertices3[i].x, (float)vertices3[i].y, (float)vertices3[i].z, allXe + i, allYe + i);
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord(vertices3[i])) {
+			ok[i] = true;
+			std::tie(allXe[i], allYe[i]) = *screenCoords;
+		}
+		else {
+			ok[i] = false;
+		}
 	}
 
 	//Get Closest Point to click
@@ -433,9 +436,6 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 		}
 	}
 
-	free(allXe);
-	free(allYe);
-	free(ok);
 	//UpdateSelection();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
@@ -585,27 +585,22 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 
 void Geometry::DrawPolys() {
 
-	size_t *f3 = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
-	size_t *f4 = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
-	size_t *fp = (size_t *)malloc(sh.nbFacet * sizeof(size_t));
-	size_t nbF3 = 0;
-	size_t nbF4 = 0;
-	size_t nbFP = 0;
+	std::vector<size_t> f3; f3.reserve(sh.nbFacet);
+	std::vector<size_t> f4; f4.reserve(sh.nbFacet);
+	std::vector<size_t> fp; fp.reserve(sh.nbFacet);
 
 	// Group TRI,QUAD and POLY
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		size_t nb = facets[i]->sh.nbIndex;
 		if (facets[i]->volumeVisible) {
 			if (nb == 3) {
-				f3[nbF3++] = i;
+				f3.push_back(i);
 			}
 			else if (nb == 4) {
-
-				f4[nbF4++] = i;
+				f4.push_back(i);
 			}
 			else {
-
-				fp[nbFP++] = i;
+				fp.push_back(i);
 			}
 		}
 	}
@@ -614,27 +609,22 @@ void Geometry::DrawPolys() {
 	glBegin(GL_TRIANGLES);
 
 	// Triangle
-	for (size_t i = 0; i < nbF3; i++)
-		FillFacet(facets[f3[i]], false);
+	for (const auto& i : f3)
+		FillFacet(facets[i], false);
 
 	// Triangulate polygon
-	for (size_t i = 0; i < nbFP; i++)
-		Triangulate(facets[fp[i]], false);
+	for (const auto& i : fp)
+		Triangulate(facets[i], false);
 
 	glEnd();
 
 	// Quads
 	glBegin(GL_QUADS);
-	for (size_t i = 0; i < nbF4; i++)
-		FillFacet(facets[f4[i]], false);
+	for (const auto& i : f4)
+		FillFacet(facets[i], false);
 	glEnd();
 
-	free(f3);
-	free(f4);
-	free(fp);
-
 }
-
 void Geometry::SetCullMode(int mode) {
 
 	switch (mode) {

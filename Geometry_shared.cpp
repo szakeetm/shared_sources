@@ -751,21 +751,18 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
 
-	int outX, outY;
-
 	for (int i = 0; i < sh.nbVertex; i++) {
 		Vector3d *v = GetVertex(i);
-		bool onScreen = GLToolkit::Get2DScreenCoord((float)v->x, (float)v->y, (float)v->z, &outX, &outY); //To improve
-		onScreen = (onScreen && outX >= 0 && outY >= 0 && outX <= (width) && (outY <= height));
-		if (onScreen) {
-			distance = abs(A*v->x + B*v->y + C*v->z + D);
-			if (distance < tolerance) { //vertex is on the plane
-
-				vertices3[i].selected = true;
-
-			}
-			else {
-				vertices3[i].selected = false;
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord(*v)) { //To improve
+			auto[outX, outY] = *screenCoords;
+			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
+				distance = abs(A*v->x + B * v->y + C * v->z + D);
+				if (distance < tolerance) { //vertex is on the plane
+					vertices3[i].selected = true;
+				}
+				else {
+					vertices3[i].selected = false;
+				}
 			}
 		}
 		else {
@@ -1348,24 +1345,18 @@ void Geometry::Clear() {
 }
 
 void  Geometry::SelectIsolatedVertices() {
+	
+	std::vector<bool> check(sh.nbVertex, false);
 
-	UnselectAllVertex();
-	// Select unused vertices
-	int *check = (int *)malloc(sh.nbVertex * sizeof(int));
-	memset(check, 0, sh.nbVertex * sizeof(int));
-
-	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
-		for (int j = 0; j < f->sh.nbIndex; j++) {
-			check[f->indices[j]]++;
+	for (size_t i = 0; i < sh.nbFacet; i++) {
+		for (const auto& ind : facets[i]->indices) {
+			check[ind]=true;
 		}
 	}
 
-	for (int i = 0; i < sh.nbVertex; i++) {
-		if (!check[i]) vertices3[i].selected = true;
+	for (size_t i = 0; i < sh.nbVertex; i++) {
+		vertices3[i].selected = !check[i];
 	}
-
-	SAFE_FREE(check);
 }
 
 bool Geometry::RemoveCollinear() {
@@ -1375,6 +1366,7 @@ bool Geometry::RemoveCollinear() {
 	RemoveFacets(facetsToDelete);
 	return (facetsToDelete.size() > 0);
 }
+
 void Geometry::RemoveSelectedVertex() {
 
 	mApp->changedSinceSave = true;
@@ -1525,8 +1517,7 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 	prgAlign->SetVisible(true);
 	if (!mApp->AskToReset(worker)) return;
 	//if (copy) CloneSelectedFacets(); //Causes problems
-	bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-	memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
+	std::vector<bool> alreadyMoved(sh.nbVertex, false);
 
 	//Translating facets to align anchors
 	size_t temp;
@@ -1543,18 +1534,16 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 	Vector3d Translation = vertices3[anchorDestVertexId] - vertices3[anchorSourceVertexId];
 
 	int nb = 0;
-	for (auto& sel : memorizedSelection) {
+	for (const auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / (double)memorizedSelection.size());
-		for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-			if (!alreadyMoved[facets[sel]->indices[j]]) {
-				vertices3[facets[sel]->indices[j]].SetLocation(vertices3[facets[sel]->indices[j]] + Translation);
-				alreadyMoved[facets[sel]->indices[j]] = true;
+		for (const auto& ind: facets[sel]->indices) {
+			if (!alreadyMoved[ind]) {
+				vertices3[ind].SetLocation(vertices3[ind] + Translation);
+				alreadyMoved[ind] = true;
 			}
 		}
 	}
-
-	SAFE_FREE(alreadyMoved);
 
 	//Rotating to match normal vectors
 	Vector3d Axis;
@@ -1583,23 +1572,20 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 		if (invertNormal) angle = PI - angle;
 	}
 
-	bool *alreadyRotated = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-	memset(alreadyRotated, false, sh.nbVertex * sizeof(bool*));
+	std::vector<bool> alreadyRotated(sh.nbVertex, false);
 
 	nb = 0;
 	for (auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / (double)memorizedSelection.size());
-		for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-			if (!alreadyRotated[facets[sel]->indices[j]]) {
+		for (const auto& ind : facets[sel]->indices) {
+			if (!alreadyRotated[ind]) {
 				//rotation comes here
-				vertices3[facets[sel]->indices[j]].SetLocation(Rotate(vertices3[facets[sel]->indices[j]], vertices3[anchorDestVertexId], Axis, angle));
-				alreadyRotated[facets[sel]->indices[j]] = true;
+				vertices3[ind].SetLocation(Rotate(vertices3[ind], vertices3[anchorDestVertexId], Axis, angle));
+				alreadyRotated[ind] = true;
 			}
 		}
 	}
-
-	SAFE_FREE(alreadyRotated);
 
 	//Rotating to match direction points
 
@@ -1628,23 +1614,20 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 		//if (invertNormal) angle=180.0-angle;
 	}
 
-	bool *alreadyRotated2 = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-	memset(alreadyRotated2, false, sh.nbVertex * sizeof(bool*));
+	std::vector<bool> alreadyRotated2(sh.nbVertex, false);
 
 	nb = 0;
 	for (auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / memorizedSelection.size());
-		for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-			if (!alreadyRotated2[facets[sel]->indices[j]]) {
+		for (const auto& ind : facets[sel]->indices) {
+			if (!alreadyRotated2[ind]) {
 				//rotation comes here
-				vertices3[facets[sel]->indices[j]].SetLocation(Rotate(vertices3[facets[sel]->indices[j]], vertices3[anchorDestVertexId], Axis, angle));
-				alreadyRotated2[facets[sel]->indices[j]] = true;
+				vertices3[ind].SetLocation(Rotate(vertices3[ind], vertices3[anchorDestVertexId], Axis, angle));
+				alreadyRotated2[ind] = true;
 			}
 		}
 	}
-
-	SAFE_FREE(alreadyRotated2);
 
 	InitializeGeometry();
 	//update textures
@@ -1716,38 +1699,35 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	int nbSelFacet = 0;
 	if (copy) CloneSelectedFacets();
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
-	bool *alreadyMirrored = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-	memset(alreadyMirrored, false, sh.nbVertex * sizeof(bool*));
+	std::vector<bool> alreadyMirrored(sh.nbVertex, false);
 
 	int nb = 0;
-	for (auto& sel : selectedFacets) {
+	for (const auto& sel : selectedFacets) {
 		counter += 1.0;
 		prgMirror->SetProgress(counter / selectedFacets.size());
 		nbSelFacet++;
-		for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-			if (!alreadyMirrored[facets[sel]->indices[j]]) {
+		for (const auto& ind : facets[sel]->indices) {
+			if (!alreadyMirrored[ind]) {
 				Vector3d newPosition;
 				if (project) {
-					newPosition = Project(vertices3[facets[sel]->indices[j]], P0, N);
+					newPosition = Project(vertices3[ind], P0, N);
 					if (!copy) {
 						UndoPoint oriPoint;
-						oriPoint.oriPos = vertices3[facets[sel]->indices[j]];
-						oriPoint.oriId = facets[sel]->indices[j];
+						oriPoint.oriPos = vertices3[ind];
+						oriPoint.oriId = ind;
 						undoPoints.push_back(oriPoint);
 					}
 				}
 				else {
 					//Mirror
-					newPosition = Mirror(vertices3[facets[sel]->indices[j]], P0, N);
+					newPosition = Mirror(vertices3[ind], P0, N);
 				}
-				vertices3[facets[sel]->indices[j]].SetLocation(newPosition);
-				alreadyMirrored[facets[sel]->indices[j]] = true;
+				vertices3[ind].SetLocation(newPosition);
+				alreadyMirrored[ind] = true;
 			}
-
 		}
 	}
 
-	SAFE_FREE(alreadyMirrored);
 	if (nbSelFacet == 0) return undoPoints;
 	if (!project) SwapNormal();
 	InitializeGeometry();
@@ -1808,23 +1788,22 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 		if (!mApp->AskToReset(worker)) return;
 		if (copy) CloneSelectedFacets();
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
-		bool *alreadyRotated = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-		memset(alreadyRotated, false, sh.nbVertex * sizeof(bool*));
+
+		std::vector<bool> alreadyRotated(sh.nbVertex, false);
 
 		int nb = 0;
-		for (auto& sel : selectedFacets) {
+		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgRotate->SetProgress(counter / selectedFacets.size());
-			for (int j = 0; j < facets[sel]->sh.nbIndex; j++) {
-				if (!alreadyRotated[facets[sel]->indices[j]]) {
+			for (const auto& ind : facets[sel]->indices) {
+				if (!alreadyRotated[ind]) {
 					//rotation comes here
-					vertices3[facets[sel]->indices[j]].SetLocation(Rotate(vertices3[facets[sel]->indices[j]], AXIS_P0, AXIS_DIR, theta));
-					alreadyRotated[facets[sel]->indices[j]] = true;
+					vertices3[ind].SetLocation(Rotate(vertices3[ind], AXIS_P0, AXIS_DIR, theta));
+					alreadyRotated[ind] = true;
 				}
 			}
 		}
-
-		SAFE_FREE(alreadyRotated);
+	
 		InitializeGeometry();
 		//update textures
 		/*try {
@@ -2050,8 +2029,7 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 	double selected = (double)GetNbSelectedFacets();
 	if (selected == 0.0) return;
 
-	bool *alreadyMoved = (bool*)malloc(sh.nbVertex * sizeof(bool*));
-	memset(alreadyMoved, false, sh.nbVertex * sizeof(bool*));
+	std::vector<bool> alreadyMoved(sh.nbVertex, false);
 
 	int nb = 0;
 	for (auto& i:selectedFacets) {
@@ -2066,8 +2044,6 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 				}
 			}
 	}
-
-	SAFE_FREE(alreadyMoved);
 
 	InitializeGeometry();   
 
@@ -2395,7 +2371,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	return deletedFacetList;
 }
 
-std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg) {
+std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress *prg) {
 	mApp->changedSinceSave = true;
 	std::vector<DeletedFacet> deletedFacetList;
 	size_t oldNbFacets = sh.nbFacet;

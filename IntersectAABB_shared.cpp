@@ -23,6 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include "IntersectAABB_shared.h"
 #include "Random.h"
+#include "Polygon.h" //IsInPoly
 #include "GLApp/MathTools.h"
 #include <algorithm> //std::min
 #include "Simulation.h"
@@ -377,6 +378,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 
+	/*
+
 	// 2D polygon "is inside" solving
 	// Using the "Jordan curve theorem" (we intersect in v direction here)
 
@@ -431,6 +434,9 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 
 	if (n_updown<0) n_updown = -n_updown;
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
+	*/
+
+	return IsInPoly(Vector2d(u, v), f.vertices2);
 
 }
 

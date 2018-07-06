@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Polygon.h"
 #include "GLApp/MathTools.h"
 #include <math.h>
+#include <algorithm> //min max
 
 bool IsConvex(const GLAppPolygon &p,size_t idx) {
 
@@ -86,65 +87,6 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
   return { !found,(1.0 / 3.0)*(p1 + p2 + p3) };
 
 }
-
-bool IsInPoly(const Vector2d& p, const std::vector<Vector2d>& polyPoints)
-{
-
-   // 2D polygon "is inside" solving
-   // Using the "Jordan curve theorem" (we intersect in v direction here)
-
-   int n_updown,n_found,j;
-   double x1,x2,y1,y2,a,minx,maxx;
-
-   n_updown=0;
-   n_found=0;
-
-   for (j = 0; j < (int)polyPoints.size()-1; j++) {
-
-     x1 = polyPoints[j].u;
-     y1 = polyPoints[j].v;
-     x2 = polyPoints[j+1].u;
-     y2 = polyPoints[j+1].v;
-
-     if( x2>x1 ) { minx=x1;maxx=x2; } 
-     else        { minx=x2;maxx=x1; }
-
-     if (p.u > minx && p.u <= maxx) {
-         a = (y2 - y1) / (x2 - x1);
-         if ((a*(p.u-x1) + y1) < p.v) {
-           n_updown = n_updown + 1;
-         } else {
-           n_updown = n_updown - 1;
-         }
-         n_found++;
-     }
-
-   }
-
-   // Last point
-   x1 = polyPoints[j].u;
-   y1 = polyPoints[j].v;
-   x2 = polyPoints[0].u;
-   y2 = polyPoints[0].v;
-
-   if( x2>x1 ) { minx=x1;maxx=x2; } 
-   else        { minx=x2;maxx=x1; }
-
-   if (p.u > minx && p.u <= maxx) {
-       a = (y2 - y1) / (x2 - x1);
-       if ((a*(p.u-x1) + y1) < p.v) {
-         n_updown = n_updown + 1;
-       } else {
-         n_updown = n_updown - 1;
-       }
-       n_found++;
-   }
-
-   if (n_updown<0) n_updown=-n_updown;
-   return (((n_found/2)&1) ^ ((n_updown/2)&1));
-
-}
-
 bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance)
 {
 	bool onEdge = false;
@@ -672,3 +614,130 @@ std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vect
   return { (p1.u - p0.u)*(p1.v - p0.v)*((double)nbTestHit / (double)(step*step)) , center};
 
 }
+
+bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
+
+	// Fast method to check if a point is inside a polygon or not.
+	// Works with convex and concave polys, orientation independent
+	int n_updown = 0;
+	int n_found = 0;
+	double minx, maxx;
+	size_t nbSizeMinusOne = polyPoints.size() - 1;
+	for (size_t j = 0; j < nbSizeMinusOne; j++) {
+		const Vector2d& p1 = polyPoints[j];
+		const Vector2d& p2 = polyPoints[j+1];
+
+		/*
+		if (p1.u < p2.u) {
+			 minx = p1.u;
+			 maxx = p2.u;
+		}
+		else {
+			 minx = p2.u;
+			 maxx = p1.u;
+		}
+		if (p.u > minx && p.u <= maxx) {
+		*/
+		
+		if (p.u<p1.u != p.u<p2.u) {
+			double slope = (p2.v - p1.v) / (p2.u - p1.u);
+			if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
+				n_updown++;
+			}
+			else {
+				n_updown--;
+			}
+			n_found++;
+		}
+	}
+	//Last point. Repeating code because it's the fastest and this function is heavily used
+	const Vector2d& p1 = polyPoints[nbSizeMinusOne];
+	const Vector2d& p2 = polyPoints[0];
+
+	/*
+	if (p1.u < p2.u) {
+	minx = p1.u;
+	maxx = p2.u;
+	}
+	else {
+	minx = p2.u;
+	maxx = p1.u;
+	}
+	if (p.u > minx && p.u <= maxx) {
+	*/
+
+	if (p.u<p1.u != p.u<p2.u) {
+		double slope = (p2.v - p1.v) / (p2.u - p1.u);
+		if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
+			n_updown++;
+		}
+		else {
+			n_updown--;
+		}
+		n_found++;
+	}
+
+	if (n_updown<0) n_updown = -n_updown;
+	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //Means one is even the other is odd
+
+}
+
+/*
+bool IsInPoly(const Vector2d& p, const std::vector<Vector2d>& polyPoints)
+{
+
+// 2D polygon "is inside" solving
+// Using the "Jordan curve theorem" (we intersect in v direction here)
+
+int n_updown,n_found,j;
+double x1,x2,y1,y2,a,minx,maxx;
+
+n_updown=0;
+n_found=0;
+
+for (j = 0; j < (int)polyPoints.size()-1; j++) {
+
+x1 = polyPoints[j].u;
+y1 = polyPoints[j].v;
+x2 = polyPoints[j+1].u;
+y2 = polyPoints[j+1].v;
+
+if( x2>x1 ) { minx=x1;maxx=x2; }
+else        { minx=x2;maxx=x1; }
+
+if (p.u > minx && p.u <= maxx) {
+a = (y2 - y1) / (x2 - x1);
+if ((a*(p.u-x1) + y1) < p.v) {
+n_updown = n_updown + 1;
+} else {
+n_updown = n_updown - 1;
+}
+n_found++;
+}
+
+}
+
+// Last point
+x1 = polyPoints[j].u;
+y1 = polyPoints[j].v;
+x2 = polyPoints[0].u;
+y2 = polyPoints[0].v;
+
+if( x2>x1 ) { minx=x1;maxx=x2; }
+else        { minx=x2;maxx=x1; }
+
+if (p.u > minx && p.u <= maxx) {
+a = (y2 - y1) / (x2 - x1);
+if ((a*(p.u-x1) + y1) < p.v) {
+n_updown = n_updown + 1;
+} else {
+n_updown = n_updown - 1;
+}
+n_found++;
+}
+
+if (n_updown<0) n_updown=-n_updown;
+return (((n_found/2)&1) ^ ((n_updown/2)&1));
+
+}
+*/

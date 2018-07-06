@@ -775,51 +775,7 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
 
 }
 
-bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts) {
-
-   // Fast method to check if a point is inside a polygon or not.
-   // Works with convex and concav polys, orientation independant
-   int n_updown,n_found,j;
-   double x1,x2,y1,y2,a,b;
-   double xp = (double)x;
-   double yp = (double)y;
-   bool inside = false;
-
-   n_updown=0;
-   n_found=0;
-
-   for (j = 0; j < nbPts; j++) {
-
-     x1 = (double) PointX[j];
-     y1 = (double) PointY[j];
-
-     if (j < nbPts - 1) {
-       x2 = (double) PointX[j + 1];
-       y2 = (double) PointY[j + 1];
-     } else {
-       x2 = (double) PointX[0];
-       y2 = (double) PointY[0];
-     }
-
-     if (xp > Min(x1, x2) && xp <= Max(x1, x2)) {
-       a = (y2 - y1) / (x2 - x1);
-       b = y1 - a * x1;
-       if ((a * xp + b) < yp) {
-         n_updown = n_updown + 1;
-       } else {
-         n_updown = n_updown - 1;
-       }
-       n_found++;
-     }
-   }
-
-   if (n_updown<0) n_updown=-n_updown;
-   inside = (((n_found/2)&1) ^ ((n_updown/2)&1));
-   return inside;
-
-}
-
-bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& p){
 
   GLfloat mProj[16];
   GLfloat mView[16];
@@ -835,12 +791,11 @@ bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
   GLMatrix m; m.Multiply(&proj,&view);
 
   float rx,ry,rz,rw;
-  m.TransfomVec(x,y,z,1.0f,&rx,&ry,&rz,&rw);
-  if(rw<=0.0f) return false;
-  *xe = (int)(((rx / rw) + 1.0f)  * (float)g.width/2.0f);
-  *ye = (int)(((-ry / rw) + 1.0f) * (float)g.height/2.0f);
+  m.TransfomVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
+  if(rw<=0.0f) return std::nullopt;
 
-  return true;
+  return std::make_tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
+  (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f) );
 
 }
 
