@@ -679,7 +679,7 @@ std::vector<size_t> GLList::GetSelectedRows(bool searchIndex) {
 	if (!searchIndex) return selectedRows;
 	else {
 		std::vector<size_t> ret;
-		for (auto& sel:selectedRows)
+		for (const auto& sel:selectedRows)
 			ret.push_back(GetValueInt(sel,0)-1);
 		return ret;
 	}
@@ -716,7 +716,7 @@ void GLList::AddSelectedRow(int row,bool searchIndex) {
 void GLList::SetSelectedRows(std::vector<size_t> selection,bool searchIndex) {
 	if (searchIndex) {
 		selectedRows.clear();
-		for (auto& sel : selection)
+		for (const auto& sel : selection)
 			selectedRows.push_back((size_t)FindIndex(sel, 0));
 	}
 	else

@@ -225,7 +225,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates) {
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
-	for (auto& update : updates) {
+	for (const auto& update : updates) {
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
 	return cumulativeChangeLog.str();

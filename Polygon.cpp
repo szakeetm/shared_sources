@@ -621,7 +621,7 @@ bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 	// Works with convex and concave polys, orientation independent
 	int n_updown = 0;
 	int n_found = 0;
-	double minx, maxx;
+
 	size_t nbSizeMinusOne = polyPoints.size() - 1;
 	for (size_t j = 0; j < nbSizeMinusOne; j++) {
 		const Vector2d& p1 = polyPoints[j];
@@ -656,13 +656,13 @@ bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 
 	/*
 	if (p1.u < p2.u) {
-	minx = p1.u;
-	maxx = p2.u;
-	}
-	else {
-	minx = p2.u;
-	maxx = p1.u;
-	}
+			minx = p1.u;
+			maxx = p2.u;
+		}
+		else {
+			minx = p2.u;
+			maxx = p1.u;
+		}
 	if (p.u > minx && p.u <= maxx) {
 	*/
 
@@ -678,7 +678,7 @@ bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 	}
 
 	if (n_updown<0) n_updown = -n_updown;
-	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //Means one is even the other is odd
+	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //(X & 1 means last bit of X is 1 i.e. the number is odd) The full expression means one is even and the other is odd
 
 }
 

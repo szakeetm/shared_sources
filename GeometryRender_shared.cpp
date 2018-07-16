@@ -864,27 +864,15 @@ void Geometry::DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTexture
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p1);
-	// (U,V) -> (x,y,z)
-	p3D.x = f->sh.O.x + p1->u*f->sh.U.x + p1->v*f->sh.V.x;
-	p3D.y = f->sh.O.y + p1->u*f->sh.U.y + p1->v*f->sh.V.y;
-	p3D.z = f->sh.O.z + p1->u*f->sh.U.z + p1->v*f->sh.V.z;
-	glVertex3d(p3D.x, p3D.y, p3D.z);
+	f->glVertex2u(p1->u, p1->v);
 
 	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p2);
-	// (U,V) -> (x,y,z)
-	p3D.x = f->sh.O.x + p2->u*f->sh.U.x + p2->v*f->sh.V.x;
-	p3D.y = f->sh.O.y + p2->u*f->sh.U.y + p2->v*f->sh.V.y;
-	p3D.z = f->sh.O.z + p2->u*f->sh.U.z + p2->v*f->sh.V.z;
-	glVertex3d(p3D.x, p3D.y, p3D.z);
+	f->glVertex2u(p2->u, p2->v);
 
 	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p3);
-	// (U,V) -> (x,y,z)
-	p3D.x = f->sh.O.x + p3->u*f->sh.U.x + p3->v*f->sh.V.x;
-	p3D.y = f->sh.O.y + p3->u*f->sh.U.y + p3->v*f->sh.V.y;
-	p3D.z = f->sh.O.z + p3->u*f->sh.U.z + p3->v*f->sh.V.z;
-	glVertex3d(p3D.x, p3D.y, p3D.z);
+	f->glVertex2u(p3->u, p3->v);
 
 }
 
