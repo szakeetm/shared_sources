@@ -160,16 +160,21 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 				//Export to CSV
 				
 				auto[nbRec, logBuff] = work->GetLogBuff();
-				FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, NULL, "All files\0*.*\0", NULL);
+				FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
+
 				if (fn) {
 					bool ok = true;
-					if (FileUtils::Exist(fn->fullName)) {
+					
+					std::string formattedFileName = fn->fullName;
+					if (FileUtils::GetExtension(formattedFileName) == "") formattedFileName = formattedFileName + ".csv";
+					
+					if (FileUtils::Exist(formattedFileName)) {
 						std::ostringstream tmp;
-						tmp << "Overwrite existing file ?\n" << fn->fullName;
+						tmp << "Overwrite existing file ?\n" << formattedFileName;
 						ok = (GLMessageBox::Display(tmp.str().c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) == GLDLG_OK);
 					}
 					if (ok) {
-						std::ofstream file(fn->fullName);
+						std::ofstream file(formattedFileName);
 						exportButton->SetText("Abort");
 						isRunning = true;
 						ConvertLogToText(nbRec, logBuff, ",", &file);
