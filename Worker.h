@@ -83,18 +83,18 @@ public:
   //char *GetShortFileName(char* longFileName);
   void  SetCurrentFileName(char *fileName);
 
-  void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
+  void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
  // void SetMaxDesorption(llong max);// Set the number of maximum desorption
   DWORD GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
-  void RealReload();
+  void RealReload(bool sendOnly=false);
   std::ostringstream SerializeForLoader();
   void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource
-  void KillAll();// Kill all sub processes
+  void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
@@ -253,6 +253,5 @@ private:
 #ifdef SYNRAD
   SynradGeometry *geom;
   Dataport *dpMat;
-  char      materialsDpName[32];
 #endif
 };

@@ -404,7 +404,7 @@ void Worker::Stop() {
 		ThrowSubProcError();
 }
 
-void Worker::KillAll() {
+void Worker::KillAll(bool keepDpHit) {
 
 	if( dpControl && ontheflyParams.nbProcess>0 ) {
 		if( !ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED) ) {
@@ -417,18 +417,18 @@ void Worker::KillAll() {
 			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
 				if(pID[i]) KillProc(pID[i]);
 		}
-		CLOSEDP(dpHit);
+		if (!keepDpHit) CLOSEDP(dpHit);
 	}
 	ontheflyParams.nbProcess = 0;
 
 }
 
-void Worker::SetProcNumber(size_t n) {
+void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
 	char cmdLine[512];
 
 	// Kill all sub process
-	KillAll();
+	KillAll(keepDpHit);
 
 	// Create new control dataport
 	if( !dpControl ) 
