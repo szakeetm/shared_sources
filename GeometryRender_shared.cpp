@@ -1070,7 +1070,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 								(float)f->dirCache[add].dir.x,
 								(float)f->dirCache[add].dir.y,
 								(float)f->dirCache[add].dir.z,
-								xc, yc, zc, (float)rw);
+								xc, yc, zc, (float)rw); // dircache already normalized
 						}
 					}
 				}

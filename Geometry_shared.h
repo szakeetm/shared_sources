@@ -38,6 +38,26 @@ class Facet;
 class DeletedFacet;
 class Worker;
 
+union PhysicalValue{
+	//Unified return value that can return size_t, double or vector
+	size_t count;
+	double value;
+	Vector3d vect;
+	PhysicalValue() { new(&vect) Vector3d(); }
+} ;
+
+enum class PhysicalMode {
+	CellArea,
+	MCHits,
+	ImpingementRate,
+	ParticleDensity,
+	GasDensity,
+	Pressure,
+	AvgGasVelocity,
+	GasVelocityVector,
+	NbVelocityVectors
+};
+
 class ClippingVertex {
 public:
 
@@ -89,6 +109,7 @@ public:
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
+	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* texture); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
