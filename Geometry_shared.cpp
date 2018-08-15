@@ -481,42 +481,32 @@ void Geometry::CreateDifference() {
 }
 
 void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder) {
-	if (GetNbSelectedFacets() != 2) {
+	auto selFacetIds = GetSelectedFacets();
+	if (selFacetIds.size() != 2) {
 		char errMsg[512];
 		sprintf(errMsg, "Select exactly 2 facets.");
 		throw Error(errMsg);
 		return;
 	}//at least three vertices
 
-	int firstFacet = -1;
-	int secondFacet = -1;;
-	for (int i = 0; i < sh.nbFacet && secondFacet < 0; i++)
-	{
-		if (facets[i]->selected) {
-			if (firstFacet < 0) firstFacet = i;
-			else (secondFacet = i);
-		}
-	}
+	size_t firstFacet = selFacetIds[0];
+	size_t secondFacet = selFacetIds[1];
+
 	if (reverseOrder == 0) ClipPolygon(firstFacet, secondFacet, type);
 	else if (reverseOrder == 1) ClipPolygon(secondFacet, firstFacet, type);
 	else {
 		//Auto
 		ClipperLib::PolyTree solution;
 		std::vector<ProjectedPoint> projectedPoints;
-
-		auto facet2path = facets[secondFacet]->indices;
 		std::vector<std::vector<size_t>> clippingPaths;
-		clippingPaths.push_back(facet2path);
-		size_t id = (int)firstFacet;
-		if (ExecuteClip(id, clippingPaths, projectedPoints, solution, type) > 0) {
+
+		clippingPaths = { facets[secondFacet]->indices };
+		if (ExecuteClip(firstFacet, clippingPaths, projectedPoints, solution, type) > 0) {
 			ClipPolygon(firstFacet, secondFacet, type);
 		}
 		else {
-			facet2path.swap(facets[firstFacet]->indices);
-			clippingPaths.clear();
-			clippingPaths.push_back(facet2path);
-			id = (int)secondFacet;
-			if (ExecuteClip(id, clippingPaths, projectedPoints, solution, type) > 0) {
+			clippingPaths = { facets[firstFacet]->indices };
+			if (ExecuteClip(secondFacet, clippingPaths, projectedPoints, solution, type) > 0) {
 				ClipPolygon(secondFacet, firstFacet, type);
 			}
 		}
@@ -1276,7 +1266,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 	}
 
 	vertices3.swap(nVert);
-	sh.nbVertex = nbVert;
+	sh.nbVertex = vertices3.size();
 }
 
 void Geometry::Clear() {

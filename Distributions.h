@@ -93,9 +93,7 @@ template <class Datatype> void Distribution<Datatype>::SetY(const size_t& index,
 }
 
 template <class Datatype> void Distribution<Datatype>::Resize(const size_t& N) {
-	std::vector<std::pair<double, Datatype>> vecs;
-	vecs.resize(N);
-	values.swap(vecs);
+	values.swap(std::vector<std::pair<double, Datatype>> vecs(N));
 }
 
 template <class Datatype> size_t Distribution<Datatype>::GetSize() {
