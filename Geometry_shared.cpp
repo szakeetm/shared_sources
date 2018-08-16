@@ -20,8 +20,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
-//test
-
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
 #include "GLApp\MathTools.h"
