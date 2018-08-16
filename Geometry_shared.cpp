@@ -20,6 +20,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
+//test
+
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
 #include "GLApp\MathTools.h"
@@ -3760,7 +3762,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		nbS = file->ReadInt();
 	}
 	if (version2 >= 7) {
-		file->ReadKeyword("sh.gasMass"); file->ReadKeyword(":");
+		file->ReadKeyword("gasMass"); file->ReadKeyword(":");
 		/*wp.gasMass = */file->ReadDouble();
 	}
 	if (version2 >= 10) { //time-dependent version
