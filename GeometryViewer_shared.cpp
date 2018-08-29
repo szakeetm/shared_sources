@@ -1432,8 +1432,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 	if (evt->type == SDL_KEYUP) {
 
-		int unicode = (evt->key.keysym.unicode & 0x7F);
-		if (!unicode) unicode = evt->key.keysym.sym;
+		int unicode = evt->key.keysym.sym;
 
 		if (unicode == SDLK_LCTRL || unicode == SDLK_RCTRL) {
 			//UpdateMouseCursor(MODE_SELECT);
@@ -1506,7 +1505,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			draggMode = DRAGG_ROTATE;
 			//UpdateMouseCursor(MODE_MOVE);
 		}
-		if (evt->button.button == SDL_BUTTON_WHEELUP) {
+
+		UpdateMouseCursor(mode);
+	}
+
+	if (evt->type == SDL_MOUSEWHEEL) {
+		if (evt->wheel.y > 0) {
 			if (GetWindow()->IsShiftDown()) {
 				TranslateScale(-2.0); //Zoom slower when SHIFT is pressed
 			}
@@ -1519,7 +1523,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
-		if (evt->button.button == SDL_BUTTON_WHEELDOWN) {
+		if (evt->wheel.y < 0) {
 			if (GetWindow()->IsShiftDown()) {
 				TranslateScale(2.0); //Zoom slower when SHIFT is pressed
 			}
@@ -1532,8 +1536,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
-
-		UpdateMouseCursor(mode);
 	}
 
 	if (evt->type == SDL_MOUSEBUTTONUP) {

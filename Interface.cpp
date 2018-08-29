@@ -2459,6 +2459,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 int Interface::Resize(DWORD width, DWORD height, bool forceWindowed) {
 	int r = GLApplication::Resize(width, height, forceWindowed);
 	PlaceComponents();
+	worker.RebuildTextures();
 	return r;
 }
 

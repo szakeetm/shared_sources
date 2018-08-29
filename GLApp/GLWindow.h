@@ -34,7 +34,7 @@ public:
   bool IsSpaceDown();
   bool IsCapsLockOn();
   bool IsTabDown();
-  int  GetModState();
+  //int  GetModState();
   int  GetX(GLComponent *src,SDL_Event *evt);
   int  GetY(GLComponent *src,SDL_Event *evt);
   int  GetScreenX(GLComponent *src);

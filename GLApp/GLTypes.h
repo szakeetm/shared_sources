@@ -43,9 +43,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // SDL extensions
 
+/*
 #define SDLK_CTRLC 3
 #define SDLK_CTRLX 24
 #define SDLK_CTRLV 22
+*/
 
 #define SDL_MOUSEBUTTONDBLCLICK SDL_USEREVENT + 0
 

@@ -88,6 +88,8 @@ void GLToolkit::InvalidateDeviceObjects() {
 
 void GLToolkit::CopyTextToClipboard(const std::string & text)
 {
+	SDL_SetClipboardText(text.c_str());
+	/*
 #ifdef WIN
 
 	if (!OpenClipboard(NULL))
@@ -115,6 +117,7 @@ void GLToolkit::CopyTextToClipboard(const std::string & text)
 	GlobalFree(hText);
 
 #endif
+*/
 }
 
 int GLToolkit::GetCursor() {
@@ -232,7 +235,7 @@ void GLToolkit::SetIcon32x32(char *pngName) {
     SDL_LockSurface(s);
     memcpy(s->pixels , img.GetData() , 3*32*32);
     SDL_UnlockSurface(s);
-    SDL_WM_SetIcon(s, NULL);
+    SDL_SetWindowIcon(theApp->mainScreen, s);
     img.Release();
   }
 

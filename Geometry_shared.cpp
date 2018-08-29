@@ -2896,7 +2896,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 	f->sh.center = f->sh.O + projectedCenter.u*f->sh.U + projectedCenter.v*f->sh.V;
 	*/
 
-	f->sh.Nuv = CrossProduct(U*uD, V*vD);
+	f->sh.Nuv = CrossProduct(f->sh.U,f->sh.V); //Not normalized normal vector
 
 	// Rescale u,v coordinates
 	for (auto& p : f->vertices2) {

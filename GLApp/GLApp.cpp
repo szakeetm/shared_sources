@@ -82,30 +82,58 @@ double GLApplication::GetTick() {
 }
 
 int GLApplication::setUpSDL(bool doFirstInit) {
+	int errCode;
+	if (doFirstInit) {
 
-  int errCode;
 
-  Uint32 flags;
-  flags  = SDL_OPENGL;
-  flags |= (m_bWindowed?0:SDL_FULLSCREEN);
-  flags |= (m_bResizable?SDL_RESIZABLE:0);
+		/*
+		Uint32 flags;
+		flags  = SDL_OPENGL;
+		flags |= (m_bWindowed?0:SDL_FULLSCREEN);
+		flags |= (m_bResizable?SDL_RESIZABLE:0);
 
-  if( SDL_SetVideoMode( m_screenWidth, m_screenHeight, 0, flags ) == NULL )
-  {
-    GLToolkit::Log("GLApplication::setUpSDL SDL_SetVideoMode() failed.");
-    return GL_FAIL;
-  }
+		if( SDL_SetVideoMode( m_screenWidth, m_screenHeight, 0, flags ) == NULL )
+		{
+		  GLToolkit::Log("GLApplication::setUpSDL SDL_SetVideoMode() failed.");
+		  return GL_FAIL;
+		}
 
-  SDL_Surface *vSurf = SDL_GetVideoSurface();
-  m_bitsPerPixel = vSurf->format->BitsPerPixel;
-  
+		SDL_Surface *vSurf = SDL_GetVideoSurface();
+		m_bitsPerPixel = vSurf->format->BitsPerPixel;
+		*/
 
-  errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth,m_screenHeight);
-  if( !errCode ) {
-    GLToolkit::Log("GLApplication::setUpSDL GLToolkit::RestoreDeviceObjects() failed.");
-    return GL_FAIL;
-  }
-  if( doFirstInit ) OneTimeSceneInit();
+		Uint32 flags;
+		flags = SDL_WINDOW_OPENGL;
+		flags |= (m_bWindowed ? 0 : SDL_WINDOW_FULLSCREEN);
+		flags |= (m_bResizable ? SDL_WINDOW_RESIZABLE : 0);
+
+		mainScreen = SDL_CreateWindow("My Game Window",
+			SDL_WINDOWPOS_UNDEFINED,
+			SDL_WINDOWPOS_UNDEFINED,
+			m_screenWidth, m_screenHeight,
+			flags);
+
+		if (mainScreen == NULL)
+		{
+			GLToolkit::Log("GLApplication::SDL_CreateWindow() failed.");
+			return GL_FAIL;
+		}
+		mainContext = SDL_GL_CreateContext(mainScreen);
+		if (mainContext == NULL) {
+			GLToolkit::Log("GLApplication::SDL_GL_CreateContext() failed.");
+			return GL_FAIL;
+		}
+
+		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
+	}
+
+	errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth, m_screenHeight);
+	if (!errCode) {
+		GLToolkit::Log("GLApplication::setUpSDL GLToolkit::RestoreDeviceObjects() failed.");
+		return GL_FAIL;
+	}
+	if (doFirstInit) OneTimeSceneInit();
+
   GLWindowManager::RestoreDeviceObjects();
 #ifdef _DEBUG
   nbRestore++;
@@ -143,7 +171,7 @@ int GLApplication::ToggleFullscreen() {
 void GLApplication::SetTitle(std::string title) {
 
   m_strWindowTitle = title;
-  SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
+  SDL_SetWindowTitle(mainScreen, title.c_str());
 
 }
 
@@ -162,10 +190,10 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
   }
 
   //SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);
-  SDL_EnableUNICODE( 1 );
-  SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
+  //SDL_EnableUNICODE( 1 );
+  //SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
     
-  SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL );
+  //SDL_WM_SetCaption( m_strWindowTitle.c_str(), NULL ); //To replace
 
   return setUpSDL(true);
 
@@ -182,9 +210,12 @@ int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
   m_screenWidth = width;
   m_screenHeight = height;
 
+  SDL_SetWindowSize(mainScreen, width,height); //Enlarge too small window if needed
+  
   GLToolkit::InvalidateDeviceObjects();
   GLWindowManager::InvalidateDeviceObjects();
   InvalidateDeviceObjects();
+  
   if( forceWindowed ) m_bWindowed = true;
 
   if( setUpSDL() == GL_OK ) {
@@ -193,7 +224,8 @@ int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
   } else {
     return GL_FAIL;
   }
-
+  
+  return GL_OK;
 }
 
 void GLApplication::Add(GLComponent *comp) {
@@ -223,6 +255,8 @@ void GLApplication::Exit() {
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
   OnExit();
+  SDL_GL_DeleteContext(mainContext);
+  SDL_DestroyWindow(mainScreen);
   SDL_Quit();
   _exit(0);
 
@@ -262,11 +296,7 @@ void GLApplication::UpdateStats() {
 
 void GLApplication::UpdateEventCount(SDL_Event *evt) {
 
-  switch(evt->type) {
-
-      case SDL_ACTIVEEVENT:
-        nbActive++;
-        break;
+  switch(evt->type) {		
 
       case SDL_KEYDOWN:
       case SDL_KEYUP:
@@ -278,13 +308,13 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
         break;
 
       case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:	
-        if( evt->button.button==SDL_BUTTON_WHEELUP || evt->button.button==SDL_BUTTON_WHEELDOWN ) {
-          nbWheel++;
-        } else {
+      case SDL_MOUSEBUTTONUP:
           nbMouse++;
-        }
         break;
+
+	  case SDL_MOUSEWHEEL:
+		nbWheel++;
+		break;
 
       case SDL_JOYAXISMOTION:
       case SDL_JOYBALLMOTION:
@@ -299,13 +329,21 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
         nbSystem++;
         break;
 
-      case SDL_VIDEORESIZE:
-        nbResize++;
-        break;
+	  case SDL_WINDOWEVENT:
+		  switch (evt->window.event) {
+		  case SDL_WINDOWEVENT_RESIZED:
+			  nbResize++;
+			  break;
 
-      case SDL_VIDEOEXPOSE:
-        nbExpose++;
-        break;
+		  case SDL_WINDOWEVENT_EXPOSED:
+			  nbExpose++;
+			  break;
+		  case SDL_WINDOWEVENT_ENTER:
+		  case SDL_WINDOWEVENT_FOCUS_GAINED:
+			  nbActive++;
+			  break;
+		  }
+		  break;
 
       default:
         nbOther++;
@@ -376,8 +414,8 @@ void GLApplication::Run() {
            if (mApp->AskToSave()) quit = true;
            break;
 
-         case SDL_VIDEORESIZE:
-           Resize(sdlEvent.resize.w,sdlEvent.resize.h);
+         case SDL_WINDOWEVENT:
+           if (sdlEvent.window.event == SDL_WINDOWEVENT_RESIZED) Resize(sdlEvent.window.data1,sdlEvent.window.data2);
            break;
 
          case SDL_SYSWMEVENT:
@@ -407,7 +445,8 @@ void GLApplication::Run() {
 
      UpdateStats();
 
-     if( SDL_GetAppState()&SDL_APPACTIVE ) { //Application visible
+	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
+     if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
 
 //#ifdef _DEBUG
        t0 = GetTick();

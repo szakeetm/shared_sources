@@ -36,7 +36,7 @@ void GLMenuBar::Add(char *itemName) {
   items[i].itemName[31]=0;
   GLWindowManager::RemoveAccFromStr(items[i].itemName,&(items[i].shortcut),&(items[i].sctPos),&(items[i].sctWidth));
   // Handle key shortcut as accelerator in menubar
-  GLWindowManager::RegisterAcc(this,items[i].shortcut,ALT_MODIFIER,i);
+  GLWindowManager::RegisterKeyboardShortcut(this,items[i].shortcut,ALT_MODIFIER,i);
   items[i].width  = 2*SIDE_MARGIN + GLToolkit::GetDialogFont()->GetTextWidth(items[i].itemName);
   items[i].height = 17;
   items[i].subMenu = new GLMenu();
@@ -158,7 +158,7 @@ void  GLMenuBar::GoRight() {
 
 }
 
-void GLMenuBar::ProcessAcc(int accId) {
+void GLMenuBar::ProcessKeyboardShortcut(int accId) {
   Drop(accId);
 }
 
@@ -190,17 +190,14 @@ void GLMenuBar::ManageEvent(SDL_Event *evt) {
   }
 
   // Active event (Mouse entering-leaving event)
-  if( evt->type == SDL_ACTIVEEVENT ) {
-    if( evt->active.state == SDL_APPMOUSEFOCUS ) {
-      if( !autoDrop ) selMenu = -1;
+  if (evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
+	  if( !autoDrop ) selMenu = -1;
     }
-  }
+  
 
   // Key press
   if( evt->type == SDL_KEYDOWN ) {
-    int unicode = (evt->key.keysym.unicode & 0x7F);
-    if( !unicode ) unicode = evt->key.keysym.sym;
-    switch(unicode) {
+    switch(evt->key.keysym.sym) {
       case SDLK_LEFT:
         if( !autoDrop ) {
           selMenu--;

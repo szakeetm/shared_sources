@@ -146,7 +146,7 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
   // Accelerators
   if( accKeyCode ) {
 
-    GLWindowManager::RegisterAcc(this,accKeyCode,accKeyModifier,nbItem);
+    GLWindowManager::RegisterKeyboardShortcut(this,accKeyCode,accKeyModifier,nbItem);
     hasAcc = true;
     items[i].accName = _strdup( GLWindowManager::GetAccStr(accKeyCode,accKeyModifier) );
     items[i].accWidth = GLToolkit::GetDialogFont()->GetTextWidth(items[i].accName);
@@ -253,8 +253,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   }
 
   // Active event (Mouse entering-leaving event)
-  if( evt->type == SDL_ACTIVEEVENT ) {
-    if( evt->active.state == SDL_APPMOUSEFOCUS ) {
+  if (evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
       if( selMenu>=0 ) {
         if( !items[selMenu].subMenu )
           selMenu = -1;
@@ -262,7 +261,6 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
           if( !items[selMenu].subMenu->IsVisible() )
             selMenu = -1;
       }
-    }
   }
 
   if( nbItem==0 ) return;
@@ -271,9 +269,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   if( selMenu>=0 ) sub = items[selMenu].subMenu;
 
   if( evt->type == SDL_KEYDOWN ) {
-    int unicode = (evt->key.keysym.unicode & 0x7F);
-    if( !unicode ) unicode = evt->key.keysym.sym;
-    switch(unicode) {
+    switch(evt->key.keysym.sym) {
       case SDLK_DOWN:
         if( !(sub && sub->IsVisible()) ) {
           selMenu++;
@@ -334,7 +330,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   }
 }
 
-void GLMenu::ProcessAcc(int accId) {
+void GLMenu::ProcessKeyboardShortcut(int accId) {
 
   if(accId>=nbItem) return;
 
@@ -350,18 +346,16 @@ void GLMenu::ProcessAcc(int accId) {
 
 bool GLMenu::ProcessShortcut(SDL_Event *evt) {
 
-  int unicode = (evt->key.keysym.unicode & 0x7F);
-  if( !unicode ) unicode = evt->key.keysym.sym;
-  if( unicode==0 ) return false;
+  if(evt->key.keysym.sym ==0 ) return false;
 
   bool found = false;
   int i = 0;
   while(!found && i<nbItem) {
-    found = (unicode==items[i].shortcut);
+    found = (evt->key.keysym.sym ==items[i].shortcut);
     if(!found) i++;
   }
 
-  if(found) ProcessAcc(i);
+  if(found) ProcessKeyboardShortcut(i);
 
   return found;
 
@@ -537,14 +531,12 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
         Close();
     }
 
-    if(evt.type == SDL_VIDEOEXPOSE)
+    if(evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_EXPOSED)
       GLWindowManager::FullRepaint();
 
     // Close modal window window on [ESC]
     if( evt.type == SDL_KEYDOWN ) {
-      int unicode = (evt.key.keysym.unicode & 0x7F);
-      if( !unicode ) unicode = evt.key.keysym.sym;
-      if( unicode == SDLK_ESCAPE ) SetVisible(false);
+      if(evt.key.keysym.sym == SDLK_ESCAPE ) SetVisible(false);
     }
 
 	if( IsVisible() ) {

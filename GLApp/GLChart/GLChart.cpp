@@ -5,8 +5,10 @@
 #include "..\GLFileBox.h"
 #include "..\GLMessageBox.h"
 #include "..\GLButton.h"
+
 //#include <malloc.h>
 #include <math.h>
+#include <sstream>
 
 double NaN;
 static const char *fileFilters = "All files\0*.*\0Text files\0*.txt";
@@ -1016,9 +1018,10 @@ void GLChart::SaveFile() {
 }
 
 void GLChart::CopyAllToClipboard() {
+	/*
 
 	// Compute data length
-	size_t totalLength = 0;
+	//size_t totalLength = 0;
 
 	char tmp[128];
 
@@ -1030,25 +1033,25 @@ void GLChart::CopyAllToClipboard() {
 	// Get DataList handle and write dataview name
 	DataList *ptr[MAX_VIEWS];
 	int j=0;
-	totalLength+=strlen("X axis\t"); //X axis
+	//totalLength+=strlen("X axis\t"); //X axis
 	for(int i=0;i<nbv1;i++) {
 		ptr[j++] = y1Axis->GetDataView(i)->GetData();
-		sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
-		int l = (int)strlen(tmp)-1;
-		if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-		totalLength+=strlen(tmp);
-		if(j<nbView) totalLength+=strlen("\t");
+		//sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
+		//int l = (int)strlen(tmp)-1;
+		//if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
+		//totalLength+=strlen(tmp);
+		//if(j<nbView) totalLength+=strlen("\t");
 	}
 	for(int i=0;i<nbv2;i++) {
 		ptr[j++] = y2Axis->GetDataView(i)->GetData();
-		sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
-		int l = (int)strlen(tmp)-1;
-		if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-		totalLength+=strlen(tmp);
-		if(j<nbView) totalLength+=strlen("\t");
+		//sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
+		//int l = (int)strlen(tmp)-1;
+		//if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
+		//totalLength+=strlen(tmp);
+		//if(j<nbView) totalLength+=strlen("\t");
 	}
-	totalLength+=strlen("\n");
-
+	//totalLength+=strlen("\n");
+	
 	bool eof = false;
 	while(!eof) {
 		eof = true;
@@ -1069,7 +1072,9 @@ void GLChart::CopyAllToClipboard() {
 	}
 
 	if( !totalLength ) return;
+	*/
 
+	/*
 #ifdef WIN
 
 	if( !OpenClipboard(NULL) )
@@ -1147,6 +1152,60 @@ void GLChart::CopyAllToClipboard() {
 	GlobalFree(hText);
 
 #endif
+	*/
+
+DataList *ptr[MAX_VIEWS];
+int nbv1 = y1Axis->GetViewNumber();
+int nbv2 = y2Axis->GetViewNumber();
+int nbView = nbv1 + nbv2;
+if (!nbView) return;
+std::ostringstream clipboardStream;
+char tmp[128];
+
+	int j = 0;
+	//X axis
+	clipboardStream << "X axis\t";
+
+	for (int i = 0; i < nbv1; i++) {
+		ptr[j++] = y1Axis->GetDataView(i)->GetData();
+		sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
+		int l = (int)strlen(tmp) - 1;
+		if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+		clipboardStream << tmp;
+		if (j < nbView) clipboardStream << '\t';
+	}
+	for (int i = 0; i < nbv2; i++) {
+		ptr[j++] = y2Axis->GetDataView(i)->GetData();
+		sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
+		int l = (int)strlen(tmp) - 1;
+		if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+		clipboardStream << tmp;
+		if (j < nbView) clipboardStream << '\t';
+	}
+	clipboardStream <<  '\n';
+
+	bool eof = false;
+	while (!eof) {
+		eof = true;
+		for (int i = 0; i < nbView; i++) if (ptr[i]) eof = false;
+		if (!eof) {
+			for (int i = 0; i < nbView; i++) {
+				if (ptr[i]) {
+					if (i == 0) {
+						sprintf(tmp, "%g\t", ptr[i]->x);
+						clipboardStream << tmp;
+					}
+					sprintf(tmp, "%g", ptr[i]->y);
+					clipboardStream << tmp;
+					ptr[i] = ptr[i]->next;
+				}
+				if (i < nbView - 1) clipboardStream << '\t';
+			}
+			clipboardStream << '\n';
+		}
+	}
+
+	GLToolkit::CopyTextToClipboard(clipboardStream.str());
 
 }
 

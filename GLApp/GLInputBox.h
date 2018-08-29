@@ -21,7 +21,7 @@ private:
 
   GLInputBox(const char *message,char *label,char *title);
   void ProcessMessage(GLComponent *src,int message);
-
+  void ManageEvent(SDL_Event *evt); //Catch enter and esc
 };
 
 #endif /* _GLINPUTBOXH_ */

@@ -330,7 +330,17 @@ void  GLTextField::CopyClipboardText() {
 }
 
 void GLTextField::PasteClipboardText() {
+	if (!SDL_HasClipboardText()) return;
+	char* text = SDL_GetClipboardText();
+	//Cut trailing whitespace characters (Paste from Excel, for example)
+	for (int cursorPos = (int)strlen(text); cursorPos >= 0; cursorPos--) {
+		if (text[cursorPos] == '\t' || text[cursorPos] == '\r' || text[cursorPos] == '\n') {
+			text[cursorPos] = NULL;
+		}
+	}
+	InsertString(text);
 
+	/*
 #ifdef WIN
 
   if( OpenClipboard(NULL) ) {
@@ -353,6 +363,7 @@ void GLTextField::PasteClipboardText() {
   }
 
 #endif
+*/
 
 }
 
@@ -471,12 +482,11 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
   // Handle key presses
   if( evt->type == SDL_KEYDOWN )
   {
-    int unicode = (evt->key.keysym.unicode & 0x7F);
-    if( !unicode ) unicode = evt->key.keysym.sym;
+    
     char c[2];
     c[1]=0;
 
-    switch( unicode ) {
+    switch(evt->key.keysym.sym) {
       
       case SDLK_RIGHT:
       if( m_CursorPos<m_Length ) {
@@ -558,42 +568,61 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
       }
       break;
 
-      case SDLK_CTRLV:
-        PasteClipboardText();
-        parent->ProcessMessage(this,MSG_TEXT_UPD);
+      case SDLK_v: //CTRL+V
+		  if (GetWindow()->IsCtrlDown()) {
+			  PasteClipboardText();
+			  parent->ProcessMessage(this, MSG_TEXT_UPD);
+		  }
       break;
 
-      case SDLK_CTRLC:
-        CopyClipboardText();
+      case SDLK_c: //CTRL+C
+		  if (GetWindow()->IsCtrlDown()) {
+			  CopyClipboardText();
+		  }
       break;
 
-      case SDLK_CTRLX:
-        CopyClipboardText();
-        DeleteSel();
-        parent->ProcessMessage(this,MSG_TEXT_UPD);
+      case SDLK_x: //CTRL+X
+		  if (GetWindow()->IsCtrlDown()) {
+			  CopyClipboardText();
+			  DeleteSel();
+			  parent->ProcessMessage(this, MSG_TEXT_UPD);
+		  }
       break;
+
+	  case SDLK_a: //CTRL+A
+		  if (GetWindow()->IsCtrlDown()) {
+			  SelectAll();
+		  }
+		  break;
 
       case SDLK_RETURN:
         parent->ProcessMessage(this,MSG_TEXT);
         m_CursorPos=0;
         ScrollToVisible();
         break;
-
+	
+		/*
       default:
-      if( (unicode>=32 && unicode<=255) ) {
-        c[0]=unicode;
+      if( (evt->key.keysym.sym >=32 && evt->key.keysym.sym <=255) ) {
+        c[0]= evt->key.keysym.sym;
         InsertString(c);
         parent->ProcessMessage(this,MSG_TEXT_UPD);
       }
       break;
-
+	  */
     }
+
+	
 
     //Debug
     //char tmp[128];
     //sprintf(tmp,"%d (%c)",unicode,unicode);
     //SetText(tmp);
 
+  }
+  if (evt->type == SDL_TEXTINPUT) {
+	  InsertString(evt->text.text);
+	  parent->ProcessMessage(this, MSG_TEXT_UPD);
   }
 
 }
