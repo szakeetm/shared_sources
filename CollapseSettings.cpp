@@ -179,7 +179,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				isRunning = false;
 
 				geom->CheckCollinear();
-				geom->CheckNonSimple();
+				//geom->CheckNonSimple();
 				geom->CheckIsolatedVertex();
 
 				mApp->UpdateModelParams();

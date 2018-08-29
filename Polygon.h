@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class GLAppPolygon { //To distinguish from possible other Polygon classes in the namespace
 public:
   std::vector<Vector2d>  pts;   // Array of 2D vertex
-  double     sign;  // Polygon orientation
+  //int sign;  // Polygon orientation
 
 };
 

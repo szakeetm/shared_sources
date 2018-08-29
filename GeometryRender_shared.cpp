@@ -851,16 +851,17 @@ void Geometry::DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTexture
 
 	// Follow orientation
 	/*double handedness = mApp->leftHandedView ? 1.0 : -1.0;*/
-	if (/*handedness * */ p.sign > 0.0) {
-		p1 = &(p.pts[Previous(ear, p.pts.size())]);
-		p2 = &(p.pts[Next(ear, p.pts.size())]);
-		p3 = &(p.pts[IDX(ear, p.pts.size())]);
-	}
-	else {
+	
+	//if (/*handedness * */ p.sign > 0) {
+	//	p1 = &(p.pts[Previous(ear, p.pts.size())]);
+	//	p2 = &(p.pts[Next(ear, p.pts.size())]);
+	//	p3 = &(p.pts[IDX(ear, p.pts.size())]);
+	//}
+	//else {
 		p1 = &(p.pts[Previous(ear, p.pts.size())]);
 		p2 = &(p.pts[IDX(ear, p.pts.size())]);
 		p3 = &(p.pts[Next(ear, p.pts.size())]);
-	}
+	//}
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p1);
@@ -882,7 +883,7 @@ void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
 	// The facet must have at least 3 points
 	// Use the very simple "Two-Ears" theorem. It computes in O(n^2).
 
-	if (f->sh.sign == 0.0) {
+	if (f->nonSimple) {
 		// Not a simple polygon
 		// Abort triangulation
 		return;
@@ -891,7 +892,7 @@ void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
 	// Build a Polygon
 	GLAppPolygon p;
 	p.pts = f->vertices2;
-	p.sign = f->sh.sign;
+	//p.sign = f->sign;
 	
 	// Perform triangulation
 	while (p.pts.size() > 3) {
@@ -1081,13 +1082,16 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glLoadMatrixf(matView);
 	}
 
-	// Paint selected facets
-	if (GetNbSelectedFacets()>0) {
+
+	// Paint non-planar and selected facets
+	//if (GetNbSelectedFacets()>0) {
 		if (mApp->antiAliasing) {
 			glEnable(GL_BLEND);
 			glEnable(GL_LINE_SMOOTH);
 		}
 		glBlendFunc(GL_ONE, GL_ZERO);
+		glColor3f(1.0f, 0.0f, 1.0f);    //purple
+		glCallList(nonPlanarList);
 		glColor3f(1.0f, 0.0f, 0.0f);    //red
 		if (showHidden) {
 			glDisable(GL_DEPTH_TEST);
@@ -1102,7 +1106,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			glDisable(GL_BLEND);
 		}
 
-	}
+	//}
 
 	// Paint selected cell on mesh
 	for (int i = 0; i < sh.nbFacet;i++) {
@@ -1352,6 +1356,41 @@ void Geometry::BuildSelectList() {
 
 }
 
+
+void Geometry::BuildNonPlanarList() {
+
+	
+	nonPlanarList = glGenLists(1);
+	glNewList(nonPlanarList, GL_COMPILE);
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_BLEND);
+	if (mApp->antiAliasing) {
+		glEnable(GL_LINE_SMOOTH);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+	}
+	glLineWidth(2.0f);
+
+	auto nonPlanarFacetIds = GetNonPlanarFacets();
+	hasNonPlanar = nonPlanarFacetIds.size() > 0;
+	for (const auto& np : nonPlanarFacetIds) {
+		Facet *f = facets[np];
+		//DrawFacet(f,false,true,true);
+		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
+	}
+	glLineWidth(1.0f);
+	if (mApp->antiAliasing) {
+		glDisable(GL_BLEND);
+		glDisable(GL_LINE_SMOOTH);
+	}
+	glEndList();
+
+}
+
+
 void Geometry::UpdateSelection() {
 
 	DeleteGLLists();
@@ -1377,6 +1416,7 @@ void Geometry::BuildGLList() {
 	DrawPolys();
 	glEndList();
 
+	BuildNonPlanarList();
 	BuildSelectList();
 
 }

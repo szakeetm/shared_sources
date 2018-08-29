@@ -223,6 +223,7 @@ private:
   GLLabel		*rotateLabel;
   GLLabel		*panLabel;
   GLLabel		*tabLabel;
+  GLLabel		*nonPlanarLabel;
 
   #ifdef MOLFLOW
   GLOverlayLabel *timeLabel;

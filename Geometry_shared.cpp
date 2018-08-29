@@ -104,13 +104,14 @@ void Geometry::CheckCollinear() {
 	}
 }
 
+//Unused
 void Geometry::CheckNonSimple() {
 	char tmp[256];
 	// Check non simple polygon
 	int *nonSimpleList = (int *)malloc(GetNbFacet() * sizeof(int));
 	int nbNonSimple = 0;
 	for (int i = 0; i < GetNbFacet(); i++) {
-		if (GetFacet(i)->sh.sign == 0.0)
+		if (GetFacet(i)->nonSimple)
 			nonSimpleList[nbNonSimple++] = i;
 	}
 	bool ok = false;
@@ -164,13 +165,13 @@ void Geometry::InitializeGeometry(int facet_number) {
 														   // Main facet params
 			// Current facet
 			Facet *f = facets[i];
-			CalculateFacetParam(f);
+			CalculateFacetParams(f);
 
 			// Detect non visible edge
 			f->InitVisibleEdge();
 
 			// Detect orientation
-			f->DetectOrientation();
+			//f->DetectOrientation();
 
 			if (facet_number == -1) {
 				// Hit address
@@ -199,11 +200,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 }
 
 void Geometry::RecalcBoundingBox(int facet_number) {
-	// Perform various precalculation here for a faster simulation.
 
-	//GLProgress *initGeoPrg = new GLProgress("Initializing geometry...","Please wait");
-	//initGeoPrg->SetProgress(0.0);
-	//initGeoPrg->SetVisible(true);
 	if (facet_number == -1) { //bounding box for all vertices
 		bb.min.x = 1e100;
 		bb.min.y = 1e100;
@@ -213,15 +210,13 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 		bb.max.z = -1e100;
 
 		// Axis Aligned Bounding Box
-		for (int i = 0; i < sh.nbVertex; i++) {
-			Vector3d& p = vertices3[i];
-			if (!(vertices3[i].selected == false || vertices3[i].selected == true)) vertices3[i].selected = false; //initialize selection
-			if (p.x < bb.min.x) bb.min.x = p.x;
-			if (p.y < bb.min.y) bb.min.y = p.y;
-			if (p.z < bb.min.z) bb.min.z = p.z;
-			if (p.x > bb.max.x) bb.max.x = p.x;
-			if (p.y > bb.max.y) bb.max.y = p.y;
-			if (p.z > bb.max.z) bb.max.z = p.z;
+		for (const Vector3d& p : vertices3) {
+			bb.min.x = std::min(bb.min.x, p.x);
+			bb.min.y = std::min(bb.min.y, p.y);
+			bb.min.z = std::min(bb.min.z, p.z);
+			bb.max.x = std::max(bb.max.x, p.x);
+			bb.max.y = std::max(bb.max.y, p.y);
+			bb.max.z = std::max(bb.max.z, p.z);
 		}
 
 #ifdef SYNRAD //Regions
@@ -238,30 +233,28 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 	}
 	else { //bounding box only for the changed facet
 		for (int i = 0; i < facets[facet_number]->sh.nbIndex; i++) {
-			Vector3d& p = vertices3[facets[facet_number]->indices[i]];
-			//if(!(vertices3[i].selected==false || vertices3[i].selected==true)) vertices3[i].selected=false; //initialize selection
-			if (p.x < bb.min.x) bb.min.x = p.x;
-			if (p.y < bb.min.y) bb.min.y = p.y;
-			if (p.z < bb.min.z) bb.min.z = p.z;
-			if (p.x > bb.max.x) bb.max.x = p.x;
-			if (p.y > bb.max.y) bb.max.y = p.y;
-			if (p.z > bb.max.z) bb.max.z = p.z;
+			const Vector3d& p = vertices3[facets[facet_number]->indices[i]];
+			bb.min.x = std::min(bb.min.x, p.x);
+			bb.min.y = std::min(bb.min.y, p.y);
+			bb.min.z = std::min(bb.min.z, p.z);
+			bb.max.x = std::max(bb.max.x, p.x);
+			bb.max.y = std::max(bb.max.y, p.y);
+			bb.max.z = std::max(bb.max.z, p.z);
 		}
 	}
 
-	center.x = (bb.max.x + bb.min.x) / 2.0;
-	center.y = (bb.max.y + bb.min.y) / 2.0;
-	center.z = (bb.max.z + bb.min.z) / 2.0;
+	center = 0.5 * (bb.min + bb.max);
 }
 
+//Unused
 void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 	mApp->changedSinceSave = true;
 	Facet *f;
 	for (int i = 0; i < nbNonSimple; i++) {
 		f = GetFacet(nonSimpleList[i]);
-		if (f->sh.sign == 0.0) {
+		if (f->nonSimple) {
 			int j = 0;
-			while ((j < f->sh.nbIndex) && (f->sh.sign == 0.0)) {
+			while ((j < f->sh.nbIndex) && (f->nonSimple)) {
 				f->ShiftVertex();
 				InitializeGeometry(nonSimpleList[i]);
 				//f->DetectOrientation();
@@ -365,8 +358,7 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	}
 
 	mApp->changedSinceSave = true;
-	InitializeGeometry();
-	mApp->UpdateFacetParams(true);
+	InitializeGeometry(); //Need to recalc facet hit offsets
 	UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
@@ -1936,6 +1928,13 @@ std::vector<size_t> Geometry::GetSelectedFacets() {
 	return selection;
 }
 
+std::vector<size_t> Geometry::GetNonPlanarFacets(const double& tolerance) {
+	std::vector<size_t> nonPlanar;
+	for (size_t i = 0; i < sh.nbFacet; i++)
+		if (facets[i]->nonSimple || abs(facets[i]->planarityError)>=tolerance) nonPlanar.push_back(i);
+	return nonPlanar;
+}
+
 size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
@@ -2514,7 +2513,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 						newFacet->indices[i] = newPolyIndices[i];
 					}
 					newFacet->CopyFacetProperties(f); //Copy physical parameters, structure, etc. - will cause problems with outgassing, though
-					CalculateFacetParam(newFacet);
+					CalculateFacetParams(newFacet);
 					/*if (f->wp.area > 0.0) {*/
 					if (Dot(f->sh.N, newFacet->sh.N) < 0) {
 						newFacet->SwapNormal();
@@ -2751,7 +2750,7 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 	}
 }
 
-void Geometry::CalculateFacetParam(Facet* f) {
+void Geometry::CalculateFacetParams(Facet* f) {
 	// Calculate facet normal
 	Vector3d p0 = vertices3[f->indices[0]];
 	Vector3d v1;
@@ -2773,28 +2772,22 @@ void Geometry::CalculateFacetParam(Facet* f) {
 	f->collinear = consecutive; //mark for later that this facet was on a line
 	f->sh.N = f->sh.N.Normalized();                  // Normalize
 
-											// Calculate Axis Aligned Bounding Box
-	f->sh.bb.min.x = 1e100;
-	f->sh.bb.min.y = 1e100;
-	f->sh.bb.min.z = 1e100;
-	f->sh.bb.max.x = -1e100;
-	f->sh.bb.max.y = -1e100;
-	f->sh.bb.max.z = -1e100;
+	// Calculate Axis Aligned Bounding Box
+	f->sh.bb.min = Vector3d(1e100, 1e100, 1e100);
+	f->sh.bb.max = Vector3d(-1e100, -1e100, -1e100);
 
-	for (size_t i = 0; i < f->sh.nbIndex; i++) {
-		Vector3d p = vertices3[f->indices[i]];
-		if (p.x < f->sh.bb.min.x) f->sh.bb.min.x = p.x;
-		if (p.y < f->sh.bb.min.y) f->sh.bb.min.y = p.y;
-		if (p.z < f->sh.bb.min.z) f->sh.bb.min.z = p.z;
-		if (p.x > f->sh.bb.max.x) f->sh.bb.max.x = p.x;
-		if (p.y > f->sh.bb.max.y) f->sh.bb.max.y = p.y;
-		if (p.z > f->sh.bb.max.z) f->sh.bb.max.z = p.z;
+	for (const auto& i : f->indices) {
+		const Vector3d& p = vertices3[i];
+		f->sh.bb.min.x = std::min(f->sh.bb.min.x,p.x);
+		f->sh.bb.min.y = std::min(f->sh.bb.min.y, p.y);
+		f->sh.bb.min.z = std::min(f->sh.bb.min.z, p.z);
+		f->sh.bb.max.x = std::max(f->sh.bb.max.x, p.x);
+		f->sh.bb.max.y = std::max(f->sh.bb.max.y, p.y);
+		f->sh.bb.max.z = std::max(f->sh.bb.max.z, p.z);
 	}
 
 	// Facet center (AxisAlignedBoundingBox center)
-	f->sh.center.x = (f->sh.bb.max.x + f->sh.bb.min.x) / 2.0;
-	f->sh.center.y = (f->sh.bb.max.y + f->sh.bb.min.y) / 2.0;
-	f->sh.center.z = (f->sh.bb.max.z + f->sh.bb.min.z) / 2.0;
+	f->sh.center = 0.5 * (f->sh.bb.max + f->sh.bb.min);
 
 	// Plane equation
 	double A = f->sh.N.x;
@@ -2802,13 +2795,12 @@ void Geometry::CalculateFacetParam(Facet* f) {
 	double C = f->sh.N.z;
 	double D = -Dot(f->sh.N, p0);
 
-	// Facet planeity
-	size_t nb = f->sh.nbIndex;
-	double max = 0.0;
-	for (size_t i = 1; i < nb; i++) {
-		Vector3d p = vertices3[f->indices[i]];
+	// Facet planarity
+	f->planarityError = 0.0;
+	for (size_t i = 3; i < f->sh.nbIndex;i++) { //First 3 vertices are by def on a plane
+		const Vector3d& p = vertices3[f->indices[i]];
 		double d = A * p.x + B * p.y + C * p.z + D;
-		if (fabs(d) > fabs(max)) max = d;
+		f->planarityError = std::max(abs(d), f->planarityError);
 	}
 
 	// Plane coef
@@ -2816,24 +2808,17 @@ void Geometry::CalculateFacetParam(Facet* f) {
 	f->b = B;
 	f->c = C;
 	f->d = D;
-	f->err = max;
 
-	//new part copied from InitGeometry
-
-	//Vector3d p0 = vertices3[f->indices[0]];
 	Vector3d p1 = vertices3[f->indices[1]];
 
 	Vector3d U, V;
 
-	U.x = p1.x - p0.x;
-	U.y = p1.y - p0.y;
-	U.z = p1.z - p0.z;
+	U = (p1 - p0).Normalized(); //First side
 
-	U = U.Normalized();
 	// Construct a normal vector V:
 	V = CrossProduct(f->sh.N, U); // |U|=1 and |N|=1 => |V|=1
 
-							   // u,v vertices (we start with p0 at 0,0)
+	// u,v vertices (we start with p0 at 0,0)
 	f->vertices2[0].u = 0.0;
 	f->vertices2[0].v = 0.0;
 	Vector2d BBmin; BBmin.u = 0.0; BBmin.v = 0.0;
@@ -2846,11 +2831,11 @@ void Geometry::CalculateFacetParam(Facet* f) {
 		f->vertices2[j].u = Dot(U, v);  // Project p on U along the V direction
 		f->vertices2[j].v = Dot(V, v);  // Project p on V along the U direction
 
-										  // Bounds
-		if (f->vertices2[j].u > BBmax.u) BBmax.u = f->vertices2[j].u;
-		if (f->vertices2[j].v > BBmax.v) BBmax.v = f->vertices2[j].v;
-		if (f->vertices2[j].u < BBmin.u) BBmin.u = f->vertices2[j].u;
-		if (f->vertices2[j].v < BBmin.v) BBmin.v = f->vertices2[j].v;
+		// Bounds
+		BBmax.u  = std::max(BBmax.u , f->vertices2[j].u);
+		BBmax.v = std::max(BBmax.v, f->vertices2[j].v);
+		BBmin.u = std::min(BBmin.u, f->vertices2[j].u);
+		BBmin.v = std::min(BBmin.v, f->vertices2[j].v);
 
 	}
 
@@ -2860,40 +2845,65 @@ void Geometry::CalculateFacetParam(Facet* f) {
 		size_t j_next = Next(j,f->sh.nbIndex);
 		area += f->vertices2[j].u*f->vertices2[j_next].v - f->vertices2[j_next].u*f->vertices2[j].v; //Equal to Z-component of vectorial product
 	}
-	f->sh.area = fabs(0.5 * area);
+	if (area > 0.0) {
+		//f->sign = -1;
+		f->nonSimple = false;
+	}
+	else if (area < 0.0) {
+		//f->sign = -1;
+		f->nonSimple = false;
+		//This is a case where a concave facet doesn't obey the right-hand rule:
+		//it happens when the first rotation (usually around the second index) is the opposite as the general outline rotation
+		
+		//Do a flip
+		f->sh.N = -1.0 * f->sh.N;
+		f->a = -1.0 * f->a;
+		f->b = -1.0 * f->b;
+		f->c = -1.0 * f->c;
+		f->d = -1.0 * f->d;
+		V = -1.0 * V;
+		BBmin.v = BBmax.v = 0.0;
+		for (auto& v : f->vertices2) {
+			v.v = -1.0 * v.v;
+			BBmax.v = std::max(BBmax.v, v.v);
+			BBmin.v = std::min(BBmin.v, v.v);
+		}
+	}
+	else { //Area==0.0
+		//f->sign = 0;
+		f->nonSimple = true;
+	}
+
+	f->sh.area = abs(0.5 * area);
 
 	// Compute the 2D basis (O,U,V)
 	double uD = (BBmax.u - BBmin.u);
 	double vD = (BBmax.v - BBmin.v);
 
 	// Origin
-	f->sh.O.x = BBmin.u * U.x + BBmin.v * V.x + p0.x;
-	f->sh.O.y = BBmin.u * U.y + BBmin.v * V.y + p0.y;
-	f->sh.O.z = BBmin.u * U.z + BBmin.v * V.z + p0.z;
+	f->sh.O = p0 + BBmin.u * U + BBmin.v * V;
 
 	// Rescale U and V vector
 	f->sh.nU = U;
-	U = U * uD;
-	f->sh.U = U;
+	f->sh.U = U * uD;
 
 	f->sh.nV = V;
-	V = V * vD;
-	f->sh.V = V;
+	f->sh.V = V * vD;
 
+	/*
 	//Center might not be on the facet's plane
 	Vector2d projectedCenter = ProjectVertex(f->sh.center, f->sh.U, f->sh.V, f->sh.O);
 	f->sh.center = f->sh.O + projectedCenter.u*f->sh.U + projectedCenter.v*f->sh.V;
+	*/
 
-	f->sh.Nuv = CrossProduct(U, V);
+	f->sh.Nuv = CrossProduct(U*uD, V*vD);
 
 	// Rescale u,v coordinates
-	for (int j = 0; j < f->sh.nbIndex; j++) {
-
-		Vector2d p = f->vertices2[j];
-		f->vertices2[j].u = (p.u - BBmin.u) / uD;
-		f->vertices2[j].v = (p.v - BBmin.v) / vD;
-
+	for (auto& p : f->vertices2) {
+		p.u = (p.u - BBmin.u) / uD;
+		p.v = (p.v - BBmin.v) / vD;
 	}
+
 #ifdef MOLFLOW
 	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.wp.gasMass);
 #endif
@@ -3127,8 +3137,8 @@ void Geometry::CreateLoft() {
 			closestIndices2[nextAfterLastConnected].visited = true;
 		}
 		if (incrementDir == -1) newFacet->SwapNormal();
-		CalculateFacetParam(newFacet);
-		if (abs(newFacet->err) > 1E-5) {
+		CalculateFacetParams(newFacet);
+		if (abs(newFacet->planarityError) > 1E-5) {
 			//Split to two triangles
 			size_t ind4[] = { newFacet->indices[0],newFacet->indices[1], newFacet->indices[2], newFacet->indices[3] };
 			delete newFacet;
@@ -3760,7 +3770,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		nbS = file->ReadInt();
 	}
 	if (version2 >= 7) {
-		file->ReadKeyword("sh.gasMass"); file->ReadKeyword(":");
+		file->ReadKeyword("gasMass"); file->ReadKeyword(":");
 		/*wp.gasMass = */file->ReadDouble();
 	}
 	if (version2 >= 10) { //time-dependent version

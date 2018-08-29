@@ -70,7 +70,6 @@ Facet::Facet(size_t nbIndex) {
 	sh.isProfile = false;
 	//wp.isOpaque = true;
 	sh.isTextured = false;
-	sh.sign = 0.0;
 	sh.countAbs = false;
 	sh.countRefl = false;
 	sh.countTrans = false;
@@ -178,6 +177,7 @@ Facet::~Facet() {
 #endif
 }
 
+/*
 void Facet::DetectOrientation() {
 
 	// Detect polygon orientation (clockwise or counter clockwise)
@@ -216,6 +216,7 @@ void Facet::DetectOrientation() {
 		sh.sign = p.sign;
 	}
 }
+*/
 
 int Facet::RestoreDeviceObjects() {
 
@@ -345,9 +346,9 @@ bool Facet::BuildMesh() {
 	double fA = iw*ih;
 
 	P1.pts.swap(std::vector<Vector2d>(4));
-	P1.sign = 1.0;
+	//P1.sign = 1;
 	P2.pts = vertices2;
-	P2.sign = -sh.sign;
+	//P2.sign = -sign;
 
 	for (size_t j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
@@ -989,7 +990,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 	d = f->d;
 	
 	//wp.area = f->wp.area;
-	//err = f->err;
+	//planarityError = f->planarityError;
 	sh.N = f->sh.N;
 	
 }

@@ -33,8 +33,8 @@ bool IsConvex(const GLAppPolygon &p,size_t idx) {
   double d = DET22(p.pts[i1].u - p.pts[i2].u,p.pts[i3].u - p.pts[i2].u,
                    p.pts[i1].v - p.pts[i2].v,p.pts[i3].v - p.pts[i2].v);
 
-  return (d*p.sign)>=0.0;
-
+  //return (d*p.sign)>=0.0;
+  return d <= 0.0;
 }
 
 bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
@@ -293,11 +293,11 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   for(size_t i=0;i<inP2.pts.size();i++)  {
 	  size_t i2 = Next(i,inP2.pts.size());
     if( visible2[i] ) {
-      if( inP2.sign < 0.0 ) {
+      //if( inP2.sign < 0 ) {
         InsertEdge(g,inP2.pts[i2],inP2.pts[i],0);
-      } else {
-        InsertEdge(g,inP2.pts[i],inP2.pts[i2],0);
-      }
+      //} else {
+      //  InsertEdge(g,inP2.pts[i],inP2.pts[i2],0);
+      //}
     }
   }
 
@@ -475,8 +475,8 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 
     // Starts a new polygon
 	  GLAppPolygon newPoly;
-	  newPoly.sign = 1.0;
-	   polys.push_back(newPoly);
+	  //newPoly.sign = 1;
+	  polys.push_back(newPoly);
 
     eop = 0;
 	PolyVertex* s = &g.nodes[vertexId]; //Not a reference, can change

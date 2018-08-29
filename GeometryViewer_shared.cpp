@@ -235,6 +235,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
 	tabLabel->SetTextColor(255, 255, 255);
 	Add(tabLabel);
+	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
+	nonPlanarLabel->SetTextColor(255, 0, 255);
+	Add(nonPlanarLabel);
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -1205,28 +1208,17 @@ if( showVolume || showTexture ) {
 	bool displaySelectionLabel = displaySelectionRectangle;
 	bool displayPanLabel = draggMode == DRAGG_MOVE;
 	bool displayTabLabel = GetWindow()->IsTabDown();
+	bool displayNonPlanarLabel = geom->hasNonPlanar;
 
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47, 0, 19);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayHideLotLabel, 0, 19);
-	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel, 0, 19);
-	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel - 20 * (int)displayRotateLabel, 0, 19);
-	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel, 0, 19);
-	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel, 0, 19);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel - 20 * displayPanLabel, 0, 19);
-
-	rotateLabel->SetVisible(displayRotateLabel);
-	capsLockLabel->SetVisible(displayCapsLockLabel);
-	hideLotlabel->SetVisible(displayHideLotLabel);
-	screenshotLabel->SetVisible(displayScreenshotLabel);
-	selectLabel->SetVisible(displaySelectionLabel);
-	panLabel->SetVisible(displayPanLabel);
-	tabLabel->SetVisible(displayTabLabel);
-
-	
-
+	int offsetCount = 0;
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20*offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel;hideLotlabel->SetVisible(displayHideLotLabel);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel;capsLockLabel->SetVisible(displayCapsLockLabel);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel;rotateLabel->SetVisible(displayRotateLabel);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel;screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel;selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel;panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel;tabLabel->SetVisible(displayTabLabel);
+	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel;nonPlanarLabel->SetVisible(displayNonPlanarLabel);
 		
 #ifdef MOLFLOW
 	if (work->displayedMoment)

@@ -88,7 +88,7 @@ public:
 class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
-	void CalculateFacetParam(Facet *f);
+	void CalculateFacetParams(Facet *f);
 	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
 	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
@@ -97,6 +97,7 @@ protected:
 	void AdjustProfile();
 	void BuildShapeList();
 	void BuildSelectList();
+	void BuildNonPlanarList();
 public:
 	Geometry();
 	~Geometry();
@@ -213,6 +214,7 @@ public:
 	void UpdateName(FileReader *file);
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
+	std::vector<size_t> GetNonPlanarFacets(const double& tolerance=1E-5);
 	size_t GetNbSelectedFacets();
 	void SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown);
 	int  RestoreDeviceObjects();
@@ -291,6 +293,7 @@ protected:
 	GLint selectList;             // Compiled geometry (selection)
 	GLint selectList2;            // Compiled geometry (selection with offset)
 	GLint selectList3;            // Compiled geometry (no offset,hidden visible)
+	GLint nonPlanarList;          // Non-planar facets with purple outline
 	GLint selectListVertex;             // Compiled geometry (selection)
 	GLint selectList2Vertex;            // Compiled geometry (selection with offset)
 	GLint selectList3Vertex;            // Compiled geometry (no offset,hidden visible)
@@ -304,6 +307,8 @@ protected:
 
 		int viewStruct;
 		int textureMode;  //MC hits/flux/power
+
+		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
 #ifdef MOLFLOW
 #include "MolflowTypes.h"

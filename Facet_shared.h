@@ -151,7 +151,9 @@ public:
 	double b;
 	double c;
 	double d;
-	double err;          // planeity error
+	double planarityError;
+	bool nonSimple = false; // A non simple polygon has crossing sides
+	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
 	double tRatio;       // Texture sample per unit

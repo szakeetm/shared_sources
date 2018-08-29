@@ -1199,11 +1199,11 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			if (AskToSave()) Exit();
 			return true;
 
-		/*case MENU_EDIT_ADDFORMULA:
-			if (!formulaSettings) formulaSettings = new FormulaSettings();
-			formulaSettings->Update(NULL, -1);
-			formulaSettings->SetVisible(true);
-			return true;*/
+			/*case MENU_EDIT_ADDFORMULA:
+				if (!formulaSettings) formulaSettings = new FormulaSettings();
+				formulaSettings->Update(NULL, -1);
+				formulaSettings->SetVisible(true);
+				return true;*/
 
 		case MENU_TOOLS_FORMULAEDITOR:
 			if (!geom->IsLoaded()) {
@@ -1241,7 +1241,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			particleLogger->UpdateStatus();
 			particleLogger->SetVisible(true);
 			return true;
-		
+
 		case MENU_TOOLS_SCREENSHOT:
 		{
 			std::ostringstream tmp;
@@ -1431,7 +1431,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return true;
 
 		case MENU_FACET_SELECTNONPLANAR:
-
+		{
 			sprintf(tmp, "%g", planarityThreshold);
 			//sprintf(title,"Pipe L/R = %g",L/R);
 			input = GLInputBox::GetInput(tmp, "Planarity larger than:", "Select non planar facets");
@@ -1441,18 +1441,18 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				return true;
 			}
 			geom->UnselectAll();
-			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (fabs(geom->GetFacet(i)->err) >= planarityThreshold)
-					geom->SelectFacet(i);
+			std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacets(planarityThreshold);
+			for (const auto& i : nonPlanarFacetids)
+				geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
 			return true;
-
+		}
 		case MENU_FACET_SELECTERR:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 
-				if (geom->GetFacet(i)->sh.sign == 0.0)
+				if (geom->GetFacet(i)->nonSimple)
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);

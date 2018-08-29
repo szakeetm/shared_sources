@@ -57,8 +57,7 @@ public:
 
 class InterfaceVertex : public Vector3d { //For Interface
 public:
-	InterfaceVertex();
-	bool selected;
+	bool selected=false;
 	void SetLocation(const Vector3d& v);
 	/*template<class Archive>
 	void serialize(Archive & archive)

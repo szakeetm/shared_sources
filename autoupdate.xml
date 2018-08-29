@@ -3,23 +3,40 @@
 	<Branches>
 		<Branch name="molflow_public" description="MolFlow+ stable releases">
 		<UpdateManifest>
-				<Version id="2670" name="2.6.70" date="06-07-2018" />
-				<ChangeLog>
+			<Version id="2671" name="2.6.71" date="16-08-2018" />
+			<ChangeLog>
 <![CDATA[
 Feature:
-- Histograms introduced (number of bounces / flight distance / flight time before absorption)
-- Pressure evolution plotter doesn't need profiles anymore, can plot any facet (facet hits are now time-dependent)
-- You can create facets that belong to every structure (type "all" to structure number)
-- Optimized ray tracing is 10% faster
-Interface:
-- "Select facet by number" command: select facets by range and/or lists
-- Restored "Coord" button for facet coordinates
+- Subprocesses can be restarted or changed without resetting simulation
 Bugfix:
-- Fixed importing desoprtion from latest version SYN files
-- Fixed a memory leak on deleting facets with angle maps
-Other:
-- Significant under-the-hood changes, Molflow now uses several C++17 features, please report if you find bugs
+- GEO files load again
+- Incident angle maps work again
 ]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.71.zip" zipName="molflow_2.6.71.zip" folderName="molflow_2.6.71" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
+		<UpdateManifest>
+				<Version id="2670" name="2.6.70" date="06-07-2018" />
+				<ChangeLog>
+	<![CDATA[
+	Feature:
+	- Histograms introduced (number of bounces / flight distance / flight time before absorption)
+	- Pressure evolution plotter doesn't need profiles anymore, can plot any facet (facet hits are now time-dependent)
+	- You can create facets that belong to every structure (type "all" to structure number)
+	- Optimized ray tracing is 10% faster
+	Interface:
+	- "Select facet by number" command: select facets by range and/or lists
+	- Restored "Coord" button for facet coordinates
+	Bugfix:
+	- Fixed importing desoprtion from latest version SYN files
+	- Fixed a memory leak on deleting facets with angle maps
+	Other:
+	- Significant under-the-hood changes, Molflow now uses several C++17 features, please report if you find bugs
+	]]>
 				</ChangeLog>
 				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.70.zip" zipName="molflow_2.6.70.zip" folderName="molflow_2.6.70" />
 				<FilesToCopy>

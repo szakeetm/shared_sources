@@ -133,7 +133,7 @@ public:
 
 						 // Geometry
 	size_t nbIndex;   // Number of index/vertex
-	double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
+	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
 					  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
 	Vector3d   O;  // Origin
@@ -236,7 +236,7 @@ public:
 
 							  // Geometry
 			CEREAL_NVP(nbIndex),   // Number of index/vertex
-			CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
+			//CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
 
 							 // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
 			CEREAL_NVP(O),  // Origin
