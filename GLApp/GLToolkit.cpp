@@ -967,14 +967,13 @@ void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector
 	double dotYE = Dot(Eye, Y);
 	double dotZE = Dot(Eye, Z);
 
-	std::vector<double> viewMatrix = 
-						{ X.x,    Y.x,    Z.x,   0.0f,
-						  X.y,    Y.y,    Z.y,   0.0f,
-						  X.z,    Y.z,    Z.z,   0.0f,
-						 -dotXE, -dotYE, -dotZE, 1.0f };
+	float glViewMatrix[] = 
+						{ (float) X.x,   (float) Y.x,   (float) Z.x,   0.0f,
+						  (float) X.y,   (float) Y.y,   (float) Z.y,   0.0f,
+						  (float) X.z,   (float) Y.z,   (float) Z.z,   0.0f,
+						  (float)-dotXE, (float)-dotYE, (float)-dotZE, 1.0f };
 
-	std::vector<float> glViewMatrix(viewMatrix.begin(), viewMatrix.end()); //Double to float for OpenGL
-	glLoadMatrixf(glViewMatrix.data());
+	glLoadMatrixf(glViewMatrix);
                              
 }
 
