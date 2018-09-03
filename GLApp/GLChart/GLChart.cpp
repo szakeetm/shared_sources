@@ -2,7 +2,9 @@
 #include "GLChart.h"
 #include "..\GLMenu.h"
 #include "..\GLToolkit.h"
-#include "..\GLFileBox.h"
+#include "..\..\File.h"
+//#include "..\GLFileBox.h"
+#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
 #include "..\GLMessageBox.h"
 #include "..\GLButton.h"
 
@@ -11,8 +13,6 @@
 #include <sstream>
 
 double NaN;
-static const char *fileFilters = "All files\0*.*\0Text files\0*.txt";
-static const int   nbFilter = 2;
 
 GLChart::GLChart(int compId):GLComponent(compId) {
 
@@ -960,14 +960,14 @@ void GLChart::SaveFile() {
 	int nbView = nbv1 + nbv2;
 	if(!nbView) return;
 
-	FILENAME *fn = GLFileBox::SaveFile(lastDir,lastFile,"Save Data File",fileFilters,nbFilter);
-	if( fn ) {
+	std::string fn = NFD_SaveFile_Cpp("csv", lastDir);
+	if (!fn.empty()) {
 
-		FILE *f = fopen(fn->fullName,"w");
+		FILE *f = fopen(fn.c_str(),"w");
 		if(f) {
 
-			strcpy(lastDir,fn->path);
-			strcpy(lastFile,fn->file);
+			strcpy(lastDir,FileUtils::GetPath(fn).c_str());
+			strcpy(lastFile,FileUtils::GetFilename(fn).c_str());
 
 			// Get DataList handle and write dataview name
 			DataList *ptr[MAX_VIEWS];
@@ -1222,15 +1222,15 @@ void GLChart::LoadFile() {
 	int nbView = nbv1 + nbv2;
 	if(!nbView) return;
 
-	FILENAME *fn = GLFileBox::OpenFile(lastDir,lastFile,"Load Data File",fileFilters,nbFilter);
-	if( fn ) {
+	std::string fn = NFD_OpenFile_Cpp("csv", "");
+	if (!fn.empty()) {
 
-		FILE *f = fopen(fn->fullName,"r");
+		FILE *f = fopen(fn.c_str(),"r");
 		if(f) {
 
 			Clear();
-			strcpy(lastDir,fn->path);
-			strcpy(lastFile,fn->file);
+			strcpy(lastDir, FileUtils::GetPath(fn).c_str());
+			strcpy(lastFile, FileUtils::GetFilename(fn).c_str());
 
 			fgets(tmp,128,f);
 			TRUNC(tmp);

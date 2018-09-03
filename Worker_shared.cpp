@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #define NOMINMAX
-#include <Windows.h>
+//#include <Windows.h>
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -118,12 +118,12 @@ char *Worker::GetShortFileName(char* longFileName) {
 }
 */
 
-void Worker::SetCurrentFileName(char *fileName) {
+void Worker::SetCurrentFileName(const char *fileName) {
 
 	strcpy(fullFileName,fileName);
 }
 
-void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
+void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
 
 	char tmp[512];
 

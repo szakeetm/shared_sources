@@ -621,7 +621,7 @@ void GLWindowManager::RegisterKeyboardShortcut(GLComponent *src,int keyCode,int 
 
 bool GLWindowManager::ManageEvent(SDL_Event *evt) {
 
-  if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP ) {
+  if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP || evt->type == SDL_TEXTINPUT) {
     if( !SearchKeyboardShortcut(evt,true) ) {
       // Process key event
       if(keyFocus<nbWindow) allWin[keyFocus]->ManageEvent(evt);

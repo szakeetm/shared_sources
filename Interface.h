@@ -213,10 +213,6 @@ typedef struct {
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-static const char *fileSelFilters = "Selection files\0*.sel\0All files\0*.*\0";
-static const char *fileTexFilters = "Text files\0*.txt\0All files\0*.*\0";
-static const char *fileProfFilters = "CSV file\0*.csv\0Text files\0*.txt\0All files\0*.*\0";
-
 class AppUpdater;
 
 class Interface : public GLApplication {
@@ -232,8 +228,8 @@ protected:
 
 	virtual void BuildPipe(double ratio, int steps = 0) {}
 	virtual void EmptyGeometry() {}
-	virtual void LoadFile(char *fName = NULL) {}
-	virtual void InsertGeometry(bool newStr, char *fName = NULL) {}
+	virtual void LoadFile(std::string fileName = "") {}
+	virtual void InsertGeometry(bool newStr, std::string fileName = "") {}
 	virtual void SaveFile() {}
 	int FrameMove();
 
@@ -419,9 +415,9 @@ public:
 	UpdateLogWindow   *updateLogWindow;
 
 	// Current directory
-	void UpdateCurrentDir(char *fileName);
+	void UpdateCurrentDir(const char *fileName);
 	char currentDir[1024];
-	void UpdateCurrentSelDir(char *fileName);
+	void UpdateCurrentSelDir(const char *fileName);
 	char currentSelDir[1024];
 
 	// Util functions
@@ -471,8 +467,8 @@ public:
 	// Recent files
 	char *recents[MAX_RECENT];
 	int  nbRecent;
-	void AddRecent(char *fileName);
-	void RemoveRecent(char *fileName);
+	void AddRecent(const char *fileName);
+	void RemoveRecent(const char *fileName);
 	void UpdateRecentMenu();
 
 	bool needsMesh;    //At least one viewer displays mesh

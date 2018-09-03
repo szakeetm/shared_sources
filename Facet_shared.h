@@ -65,7 +65,7 @@ public:
 	Facet(size_t nbIndex);
 	~Facet();
 
-	void  DetectOrientation();
+	//void  DetectOrientation();
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);

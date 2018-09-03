@@ -294,9 +294,9 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
 	  size_t i2 = Next(i,inP2.pts.size());
     if( visible2[i] ) {
       //if( inP2.sign < 0 ) {
-        InsertEdge(g,inP2.pts[i2],inP2.pts[i],0);
+      //  InsertEdge(g,inP2.pts[i2],inP2.pts[i],0);
       //} else {
-      //  InsertEdge(g,inP2.pts[i],inP2.pts[i2],0);
+        InsertEdge(g,inP2.pts[i],inP2.pts[i2],0);
       //}
     }
   }

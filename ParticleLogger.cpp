@@ -27,7 +27,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GlToggle.h"
-#include "GLApp/GLFileBox.h"
+//#include "GLApp/GLFileBox.h"
+#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
 
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
@@ -160,12 +161,12 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 				//Export to CSV
 				
 				auto[nbRec, logBuff] = work->GetLogBuff();
-				FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
-
-				if (fn) {
+				//FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
+				std::string fn = NFD_SaveFile_Cpp("csv", "");
+				if (!fn.empty()) {
 					bool ok = true;
 					
-					std::string formattedFileName = fn->fullName;
+					std::string formattedFileName = fn;
 					if (FileUtils::GetExtension(formattedFileName) == "") formattedFileName = formattedFileName + ".csv";
 					
 					if (FileUtils::Exist(formattedFileName)) {

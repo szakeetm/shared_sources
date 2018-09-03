@@ -347,7 +347,7 @@ bool Facet::BuildMesh() {
 
 	P1.pts.swap(std::vector<Vector2d>(4));
 	//P1.sign = 1;
-	P2.pts = vertices2;
+	P2.pts = vertices2; 
 	//P2.sign = -sign;
 
 	for (size_t j = 0;j < sh.texHeight;j++) {

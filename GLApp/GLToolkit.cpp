@@ -954,49 +954,27 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAt(double xEye,double yEye,double zEye,
-                             double xAt,double yAt,double zAt,
-                             double xUp,double yUp,double zUp, double handedness) {
+void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness) {
+	//handedness =  -1: left handed
+	// Create and load a left- or right-handed view matrix
 
-  // Create and load a left- or right-handed view matrix
-
-  //Z = Norm(At-Eye)
-  double Zx = xAt - xEye;
-  double Zy = yAt - yEye;
-  double Zz = zAt - zEye;
-  double nZ = sqrt( Zx*Zx + Zy*Zy + Zz*Zz );
-  Zx /= nZ;
-  Zy /= nZ;
-  Zz /= nZ;
-
-  //X = Norm(Up x Z)
-  double Xx = (yUp*Zz - zUp*Zy);
-  double Xy = (zUp*Zx - xUp*Zz);
-  double Xz = (xUp*Zy - yUp*Zx);
-  double nX = sqrt( Xx*Xx + Xy*Xy + Xz*Xz );
-  Xx /= -handedness * nX;
-  Xy /= -handedness * nX;
-  Xz /= -handedness * nX;
-
-  //Y = Z x X
-  double Yx = -handedness * (Zy*Xz - Zz*Xy);
-  double Yy = -handedness * (Zz*Xx - Zx*Xz);
-  double Yz = -handedness * (Zx*Xy - Zy*Xx);
-
-  //handedness =  -1: left handed
-
-  double dotXE = xEye*Xx + yEye*Xy + zEye*Xz;
-  double dotYE = xEye*Yx + yEye*Yy + zEye*Yz;
-  double dotZE = xEye*Zx + yEye*Zy + zEye*Zz;
+	Vector3d Z = (camPos - Eye).Normalized();
+	Vector3d X = -handedness * CrossProduct(Up, Z).Normalized();
+	Vector3d Y = -handedness * CrossProduct(Z, X);
   
-  GLfloat mView[16];
 
-  mView[0] = (float)Xx; mView[1] = (float)Yx; mView[2] = (float)Zx; mView[3] = 0.0f;
-  mView[4] = (float)Xy; mView[5] = (float)Yy; mView[6] = (float)Zy; mView[7] = 0.0f;
-  mView[8] = (float)Xz; mView[9] = (float)Yz; mView[10] = (float)Zz; mView[11] = 0.0f;
-  mView[12] = (float)-dotXE; mView[13] = (float)-dotYE; mView[14] = (float)-dotZE; mView[15] = 1.0f;
+	double dotXE = Dot(Eye,X);
+	double dotYE = Dot(Eye, Y);
+	double dotZE = Dot(Eye, Z);
 
-  glLoadMatrixf(mView);
+	std::vector<double> viewMatrix = 
+						{ X.x,    Y.x,    Z.x,   0.0f,
+						  X.y,    Y.y,    Z.y,   0.0f,
+						  X.z,    Y.z,    Z.z,   0.0f,
+						 -dotXE, -dotYE, -dotZE, 1.0f };
+
+	std::vector<float> glViewMatrix(viewMatrix.begin(), viewMatrix.end()); //Double to float for OpenGL
+	glLoadMatrixf(glViewMatrix.data());
                              
 }
 

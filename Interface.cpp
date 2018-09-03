@@ -23,7 +23,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <filesystem>
 #include "AppUpdater.h"
 
-#include "GLApp/GLFileBox.h"
+//#include "GLApp/GLFileBox.h"
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
@@ -71,6 +72,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
 
+#include "NativeFileDialog/nfd.h"
+
 //Updater
 #include <PugiXML\pugixml.hpp>
 #include "ZipUtils/zip.h"
@@ -81,10 +84,19 @@ extern Worker worker;
 extern std::vector<string> formulaPrefixes;
 //extern const char* appTitle;
 
+/*
 extern const char *fileLFilters;
 extern const char *fileInsFilters;
 extern const char *fileSFilters;
 extern const char *fileDesFilters;
+*/
+extern std::string fileLFilters;
+extern std::string fileInsFilters;
+extern std::string fileSaveFilters;
+extern std::string fileSelFilters;
+extern std::string fileTexFilters;
+extern std::string fileDesFilters;
+
 
 extern int   cSize;
 extern int   cWidth[];
@@ -247,7 +259,7 @@ void Interface::UpdateStructMenu() {
 	UpdateTitle();
 }
 
-void Interface::UpdateCurrentDir(char *fileName) {
+void Interface::UpdateCurrentDir(const char *fileName) {
 
 	strncpy(currentDir, fileName, 1024);
 	char *dp = strrchr(currentDir, '\\');
@@ -256,7 +268,7 @@ void Interface::UpdateCurrentDir(char *fileName) {
 
 }
 
-void Interface::UpdateCurrentSelDir(char *fileName) {
+void Interface::UpdateCurrentSelDir(const char *fileName) {
 
 	strncpy(currentDir, fileName, 1024);
 	char *dp = strrchr(currentDir, '\\');
@@ -376,20 +388,14 @@ char* Interface::FormatTime(float t) {
 
 void Interface::LoadSelection(char *fName) {
 
-	char fullName[1024];
-	strcpy(fullName, "");
+	std::string fileName = fName;
 	FileReader *f = NULL;
 
-	if (fName == NULL) {
-		FILENAME *fn = GLFileBox::OpenFile(currentSelDir, NULL, "Load Selection", fileSelFilters, 0);
-		if (fn)
-			strcpy(fullName, fn->fullName);
+	if (fileName.empty()) {
+		fileName = NFD_OpenFile_Cpp(fileSelFilters, "");
+		if (fileName.empty()) return;
 	}
-	else {
-		strcpy(fullName, fName);
-	}
-
-	if (strlen(fullName) == 0) return;
+	
 
 	try {
 
@@ -397,7 +403,7 @@ void Interface::LoadSelection(char *fName) {
 		geom->UnselectAll();
 		size_t nbFacet = geom->GetNbFacet();
 
-		f = new FileReader(fullName);
+		f = new FileReader(fileName);
 		while (!f->IsEof()) {
 			int s = f->ReadInt();
 			if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
@@ -405,13 +411,11 @@ void Interface::LoadSelection(char *fName) {
 		geom->UpdateSelection();
 
 		UpdateFacetParams(true);
-		UpdateCurrentSelDir(fullName);
-
 	}
 	catch (Error &e) {
 
 		char errMsg[512];
-		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fullName);
+		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 
 	}
@@ -431,21 +435,16 @@ void Interface::SaveSelection() {
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
 
-	FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetCurrentShortFileName(), "Save selection", fileSelFilters, 0);
+	std::string fileName = NFD_SaveFile_Cpp(fileSelFilters, "");
+	//FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetCurrentShortFileName(), "Save selection", fileSelFilters, 0);
 
-	if (fn) {
+	if (!fileName.empty()) {
 
 		try {
 
-			char *ext = fn->fullName + strlen(fn->fullName) - 4;
+			if (FileUtils::GetExtension(fileName).empty()) fileName = fileName + ".sel";
 
-			if (!(*ext == '.')) {
-				sprintf(fn->fullName, "%s.sel", fn->fullName); //set to default SEL format
-				ext = strrchr(fn->fullName, '.');
-			}
-			ext++;
-
-			f = new FileWriter(fn->fullName);
+			f = new FileWriter(fileName);
 			//int nbSelected = geom->GetNbSelectedFacets();
 			size_t nbFacet = geom->GetNbFacet();
 			for (size_t i = 0; i < nbFacet; i++) {
@@ -455,7 +454,7 @@ void Interface::SaveSelection() {
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
@@ -475,22 +474,23 @@ void Interface::ExportSelection() {
 		return;
 	}
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
+	std::string fileName = NFD_SaveFile_Cpp(fileSaveFilters, "");
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
-	if (fn) {
+	if (!fileName.empty()) {
 
 		try {
-			worker.SaveGeometry(fn->fullName, progressDlg2, true, true);
-			AddRecent(fn->fullName);
+			worker.SaveGeometry(fileName.c_str(), progressDlg2, true, true);
+			AddRecent(fileName.c_str());
 			//UpdateCurrentDir(fn->fullName);
 			//UpdateTitle();
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
@@ -1400,7 +1400,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTTRANS:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0)
+				if (geom->GetFacet(i)->sh.opacity_paramId!=-1 || (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -2129,7 +2129,7 @@ void Interface::AddView() {
 	RebuildViewMenus();
 }
 
-void Interface::RemoveRecent(char *fileName) {
+void Interface::RemoveRecent(const char *fileName) {
 
 	if (!fileName) return;
 
@@ -2154,7 +2154,7 @@ void Interface::RemoveRecent(char *fileName) {
 	SaveConfig();
 }
 
-void Interface::AddRecent(char *fileName) {
+void Interface::AddRecent(const char *fileName) {
 
 	// Check if already exists
 	bool found = false;
@@ -2556,24 +2556,25 @@ bool Interface::AskToSave() {
 	if (!changedSinceSave) return true;
 	int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved", GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
 	if (ret == GLDLG_SAVE) {
-		FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
-		if (fn) {
+		//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
+		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+		if (!fn.empty()) {
 			GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 			progressDlg2->SetVisible(true);
 			progressDlg2->SetProgress(0.0);
 			//GLWindowManager::Repaint();
 			try {
-				worker.SaveGeometry(fn->fullName, progressDlg2);
+				worker.SaveGeometry(fn.c_str(), progressDlg2);
 				changedSinceSave = false;
-				UpdateCurrentDir(fn->fullName);
+				UpdateCurrentDir(fn.c_str());
 				UpdateTitle();
-				AddRecent(fn->fullName);
+				AddRecent(fn.c_str());
 			}
 			catch (Error &e) {
 				char errMsg[512];
-				sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+				sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 				GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
-				RemoveRecent(fn->fullName);
+				RemoveRecent(fn.c_str());
 			}
 			progressDlg2->SetVisible(false);
 			SAFE_DELETE(progressDlg2);
@@ -2616,17 +2617,18 @@ void Interface::UpdateRecentMenu(){
 
 void Interface::SaveFileAs() {
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
-
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
+	std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+	
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();  
-	if (fn) {
+	if (!fn.empty()) {
 
 		try {
 
-			worker.SaveGeometry(fn->fullName, progressDlg2);
+			worker.SaveGeometry(fn.c_str(), progressDlg2);
 			ResetAutoSaveTimer();
 			changedSinceSave = false;
 			UpdateCurrentDir(worker.fullFileName);
@@ -2635,9 +2637,9 @@ void Interface::SaveFileAs() {
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
-			RemoveRecent(fn->fullName);
+			RemoveRecent(fn.c_str());
 		}
 
 	}
@@ -2658,18 +2660,18 @@ void Interface::ExportTextures(int grouping, int mode) {
 		return;
 	}
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, NULL, "Save File", fileTexFilters, 0);
-
-	if (fn) {
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, NULL, "Save File", fileTexFilters, 0);
+	std::string fn = NFD_SaveFile_Cpp(fileTexFilters, "");
+	if (!fn.empty()) {
 
 		try {
-			worker.ExportTextures(fn->fullName, grouping, mode, true, true);
+			worker.ExportTextures(fn.c_str(), grouping, mode, true, true);
 			//UpdateCurrentDir(fn->fullName);
 			//UpdateTitle();
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 

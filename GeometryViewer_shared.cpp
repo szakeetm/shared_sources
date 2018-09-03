@@ -523,12 +523,11 @@ void GeometryViewer::UpdateMatrix() {
 
 	switch (view.projMode) {
 	case PERSPECTIVE_PROJ:
-		GLToolkit::LookAt((camDir.x * view.camDist + org.x) + view.camOffset.x,
-			(camDir.y * view.camDist + org.y) + view.camOffset.y,
-			(camDir.z * view.camDist + org.z) + view.camOffset.z,
-			org.x + view.camOffset.x, org.y + view.camOffset.y, org.z + view.camOffset.z,
-			camUp.x, camUp.y, camUp.z, handedness);
+	{
+		Vector3d camPos = org + view.camOffset;
+		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
 		break;
+	}
 	case ORTHOGRAPHIC_PROJ:
 		glLoadIdentity();
 		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);

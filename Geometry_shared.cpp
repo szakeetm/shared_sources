@@ -172,6 +172,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 			// Detect orientation
 			//f->DetectOrientation();
+			//f->sign = -1;
 
 			if (facet_number == -1) {
 				// Hit address
@@ -2674,6 +2675,8 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		}
 	}
 	prg->SetMessage("Rebuilding geometry...");
+	
+	/*
 	for (int i = 0; i < sh.nbFacet; i++) {
 
 		Facet *f = facets[i];
@@ -2693,6 +2696,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		if (d < 0.0) f->SwapNormal();
 
 	}
+	*/
 
 	// Delete old resources
 	for (int i = 0; i < sh.nbSuper; i++)
@@ -3873,7 +3877,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	file->ReadKeyword("}");
 
 	// Reallocate memory
-	facets = (Facet **)realloc(*facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet **));
+	facets = (Facet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet **));
 	memset(*facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet *));
 	/*
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));

@@ -55,7 +55,7 @@ public:
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
   static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
-  static void LookAt(double xEye,double yEye,double zEye,double xAt,double yAt,double zAt,double xUp,double uUp,double zUp,double handedness);
+  static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z);
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);

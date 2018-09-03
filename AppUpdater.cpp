@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Web.h"
 #include "ZipUtils/zip.h"
 #include "ZipUtils/unzip.h"
-#include <Windows.h>
+//#include <Windows.h>
 #include <sstream>
 #include "GLApp\MathTools.h" //Contains
 

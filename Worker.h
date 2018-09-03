@@ -61,16 +61,16 @@ public:
   Geometry *GetGeometry();
 
   
-  void LoadGeometry(char *fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
+  void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
   void LoadTexturesSYN(FileReader* f,int version);  // Load a textures(throws Error)
   void RebuildTextures();
   
   // Save a geometry (throws Error)
-  void SaveGeometry(char *fileName,GLProgress *prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
+  void SaveGeometry(std::string fileName,GLProgress *prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
   bool IsDpInitialized();
   
   // Export textures (throws Error)
-  void ExportTextures(char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
+  void ExportTextures(const char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
   //void ExportRegionPoints(char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
   //void ExportDesorption(char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
 
@@ -81,7 +81,7 @@ public:
   char *GetCurrentFileName();
   char *GetCurrentShortFileName();
   //char *GetShortFileName(char* longFileName);
-  void  SetCurrentFileName(char *fileName);
+  void  SetCurrentFileName(const char *fileName);
 
   void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
@@ -112,9 +112,9 @@ public:
 
 #ifdef MOLFLOW
   MolflowGeometry* GetMolflowGeometry();
-  void ExportProfiles(char *fileName);
+  void ExportProfiles(const char *fileName);
   void ExportAngleMaps(std::vector<size_t> faceList, std::string fileName);
-  void AnalyzeSYNfile(char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
+  void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
   void ImportDesorption_SYN(char *fileName, const size_t &source, const double &time,
 	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
