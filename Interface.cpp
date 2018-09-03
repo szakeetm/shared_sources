@@ -80,6 +80,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ZipUtils/unzip.h"
 #include "File.h" //File utils (Get extension, etc)
 
+#include "versionId.h"
+
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;
 //extern const char* appTitle;
@@ -101,10 +103,7 @@ extern std::string fileDesFilters;
 extern int   cSize;
 extern int   cWidth[];
 extern char *cName[];
-extern std::string appTitle;
-extern std::string appName;
-extern std::string appVersionName;
-extern int appVersionId;
+
 
 Interface::Interface() {
 	//Get number of cores
@@ -1752,7 +1751,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_ABOUT:
 		{
 			std::ostringstream aboutText;
-			aboutText << "Program:    " << appName << " " << appVersionName;
+			aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId <<")";
 			aboutText << R"(
 Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
 Copyright:   E.S.R.F / CERN   (2018)
