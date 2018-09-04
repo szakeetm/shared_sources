@@ -596,6 +596,7 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
 		  break;
 
       case SDLK_RETURN:
+	  case SDLK_KP_ENTER:
         parent->ProcessMessage(this,MSG_TEXT);
         m_CursorPos=0;
         ScrollToVisible();

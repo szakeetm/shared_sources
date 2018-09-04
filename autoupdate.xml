@@ -3,6 +3,30 @@
 	<Branches>
 		<Branch name="molflow_public" description="MolFlow+ stable releases">
 		<UpdateManifest>
+			<Version id="2672" name="2.6.72" date="03-09-2018" />
+			<ChangeLog>
+<![CDATA[
+Interface:
+- Non planar facets higlighted with purple outline
+- Number input boxes catch Enter/ESC
+Bugfix:
+- Strictly enforcing right-hand facet rotation (prevents wrong normal direction on concave facets)
+- Textures no longer turn white on window resize
+- Time-dependent parameters work again
+- Fixed config file and xml file save format (gas mass and half-life)
+- Select sticking and select transparent commands select time-dependent parametered facets as well
+Misc:
+- Upgraded underlying event manager from SDL 1.2 to SDL2, please report new bugs
+- Subprocesses now have Idle (lowest possible) priority
+]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.72.zip" zipName="molflow_2.6.72.zip" folderName="molflow_2.6.72" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
+		<UpdateManifest>
 			<Version id="2671" name="2.6.71" date="16-08-2018" />
 			<ChangeLog>
 <![CDATA[

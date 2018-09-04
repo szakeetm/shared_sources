@@ -1353,6 +1353,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		switch (evt->key.keysym.sym) {
 		case SDLK_DOWN:
 		case SDLK_RETURN:
+		case SDLK_KP_ENTER:
 			if (selectedRows[0] < nbRow - 1) {
 				UpdateCell();
 				selectedRows[0]++; lastRowSel = (int)selectedRows[0];
