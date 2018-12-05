@@ -958,59 +958,62 @@ void GLChart::SaveFile() {
 	int nbv1 = y1Axis->GetViewNumber();
 	int nbv2 = y2Axis->GetViewNumber();
 	int nbView = nbv1 + nbv2;
-	if(!nbView) return;
+	if (!nbView) return;
 
-	std::string fn = NFD_SaveFile_Cpp("csv", lastDir);
+	std::string fn = NFD_SaveFile_Cpp("csv,txt", "");
 	if (!fn.empty()) {
+		if (FileUtils::GetExtension(fn) == "") fn += ".csv";
+		std::string separator;
+		if (FileUtils::GetExtension(fn) == "csv") separator = ",";
+		else separator = "\t";
 
-		FILE *f = fopen(fn.c_str(),"w");
-		if(f) {
+		FILE *f = fopen(fn.c_str(), "w");
+		if (f) {
 
-			strcpy(lastDir,FileUtils::GetPath(fn).c_str());
-			strcpy(lastFile,FileUtils::GetFilename(fn).c_str());
 
 			// Get DataList handle and write dataview name
 			DataList *ptr[MAX_VIEWS];
-			int j=0;
-			fprintf(f,"X axis\t");
-			for(int i=0;i<nbv1;i++) {
+			int j = 0;
+			fprintf(f, "X axis\t");
+			for (int i = 0; i < nbv1; i++) {
 				ptr[j++] = y1Axis->GetDataView(i)->GetData();
-				sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
-				int l = (int)strlen(tmp)-1;
-				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
+				int l = (int)strlen(tmp) - 1;
+				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+				fprintf(f, tmp);
+				if (j < nbView) fprintf(f, separator.c_str());
 			}
-			for(int i=0;i<nbv2;i++) {
+			for (int i = 0; i < nbv2; i++) {
 				ptr[j++] = y2Axis->GetDataView(i)->GetData();
-				sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
-				int l = (int)strlen(tmp)-1;
-				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
+				int l = (int)strlen(tmp) - 1;
+				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+				fprintf(f, tmp);
+				if (j < nbView) fprintf(f, separator.c_str());
 			}
-			fprintf(f,"\n");
+			fprintf(f, "\n");
 
 			bool eof = false;
-			while(!eof) {
+			while (!eof) {
 				eof = true;
-				for(int i=0;i<nbView;i++) if( ptr[i] ) eof = false;
-				if( !eof ) {
-					for(int i=0;i<nbView;i++) {
-						if( ptr[i] ) {
-							if (i==0) fprintf(f,"%g\t",ptr[i]->x);
-							fprintf(f,"%g",ptr[i]->y);
-							ptr[i]=ptr[i]->next;
+				for (int i = 0; i < nbView; i++) if (ptr[i]) eof = false;
+				if (!eof) {
+					for (int i = 0; i < nbView; i++) {
+						if (ptr[i]) {
+							if (i == 0) fprintf(f, "%g%s", ptr[i]->x, separator.c_str());
+							fprintf(f, "%g", ptr[i]->y);
+							ptr[i] = ptr[i]->next;
 						}
-						if(i<nbView-1) fprintf(f,"\t");
+						if (i < nbView - 1) fprintf(f, separator.c_str());
 					}
-					fprintf(f,"\n");
+					fprintf(f, "\n");
 				}
 			}
 			fclose(f);
 
-		} else {
-			GLMessageBox::Display("Cannot open file for writing","Error",GLDLG_OK,GLDLG_ICONERROR);
+		}
+		else {
+			GLMessageBox::Display("Cannot open file for writing", "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
 	}

@@ -338,7 +338,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->energy,
-										acos(Dot(sHandle->direction, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
+										acos(Dot(sHandle->pDir, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 
@@ -355,7 +355,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 											f->colDist = d;
 											f->colU = u;
 											f->colV = v;
-											sHandle->currentParticle.transparentHitBuffer.push_back(f);
+											sHandle->transparentHitBuffer.push_back(f);
 									}
 								} // IsInFacet
 							} // d range
@@ -435,7 +435,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 	if (n_updown<0) n_updown = -n_updown;
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
 	*/
-
+	
 	return IsInPoly(Vector2d(u, v), f.vertices2);
 
 }
@@ -454,15 +454,14 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
 
 	//Global variables, easier for recursion:
-	size_t intNbTHits = 0;
 
 	//Output values
 	bool found = false;
 	SubprocessFacet *collidedFacet = NULL;
-	sHandle->currentParticle.transparentHitBuffer.clear();
+	sHandle->transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-	IntersectTree(sHandle, *sHandle->structures[sHandle->currentParticle.structureId].aabbTree, rayPos, -1.0*rayDir, sHandle->currentParticle.lastHitFacet,
+	IntersectTree(sHandle, *sHandle->str[sHandle->curStruct].aabbTree, rayPos, -1.0*rayDir, sHandle->lastHitFacet,
 		nullRx, nullRy, nullRz, inverseRayDir,
 		/*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
 
@@ -471,7 +470,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 		collidedFacet->hitted = true;
 
 		// Second pass for transparent hits
-		for (const auto& tpFacet: sHandle->currentParticle.transparentHitBuffer){
+		for (const auto& tpFacet: sHandle->transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
 				tpFacet->RegisterTransparentPass();
 			}
@@ -615,9 +614,9 @@ bool Visible(Simulation* sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f
 	double minLength;
 
 	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
-	sHandle->currentParticle.transparentHitBuffer.clear();
+	sHandle->transparentHitBuffer.clear();
 
-	IntersectTree(sHandle, *sHandle->structures[0].aabbTree, rayPos, -1.0*rayDir,
+	IntersectTree(sHandle, *sHandle->str[0].aabbTree, rayPos, -1.0*rayDir,
 		f1, nullRx, nullRy, nullRz, inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
 
 	if (found) {
