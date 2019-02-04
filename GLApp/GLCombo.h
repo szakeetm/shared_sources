@@ -23,9 +23,9 @@ public:
   void ScrollTextToEnd();
   void SetSelectedIndex(int idx);
   int  GetSelectedIndex();
-  char *GetSelectedValue();
+  std::string GetSelectedValue();
   void SetEditable(bool editable);
-  char *GetValueAt(size_t row);
+  std::string GetValueAt(size_t row);
   size_t  GetNbRow();
 
   // Implementation

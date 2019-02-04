@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #define NOMINMAX
-#include <Windows.h>
+//#include <Windows.h>
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -118,12 +118,12 @@ char *Worker::GetShortFileName(char* longFileName) {
 }
 */
 
-void Worker::SetCurrentFileName(char *fileName) {
+void Worker::SetCurrentFileName(const char *fileName) {
 
 	strcpy(fullFileName,fileName);
 }
 
-void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
+void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
 
 	char tmp[512];
 
@@ -146,7 +146,7 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConf
 
 		}
 #ifdef MOLFLOW
-		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected);
+		geom->ExportTextures(f, grouping, mode, dpHit, saveSelected,wp.sMode);
 #endif
 #ifdef SYNRAD
 		geom->ExportTextures(f, grouping, mode, no_scans, dpHit, saveSelected);
@@ -156,31 +156,31 @@ void Worker::ExportTextures(char *fileName, int grouping, int mode, bool askConf
 
 }
 
-void Worker::SetLeakCache(LEAK *buffer,size_t *nb,Dataport* dpHit) { //When loading from file
+/*
+void Worker::SendLeakCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
 	if (dpHit) {
 		AccessDataport(dpHit);
 		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(LEAKCACHESIZE, *nb);
-		memcpy(leakCache, buffer, sizeof(LEAK)*nbCopy);
-		memcpy(gHits->leakCache, buffer, sizeof(LEAK)*nbCopy);
-		gHits->lastLeakIndex = nbCopy % LEAKCACHESIZE;
-		gHits->leakCacheSize = nbCopy;
+		size_t nbCopy = Min(LEAKCACHESIZE, globalHitCache.leakCacheSize);
+		gHits->leakCache = globalHitCache.leakCache;
+		gHits->lastLeakIndex = nbCopy-1;
+		gHits->leakCacheSize = globalHitCache.leakCacheSize;
 		ReleaseDataport(dpHit);
 	}
 }
 
-void Worker::SetHitCache(HIT *buffer, size_t *nb, Dataport *dpHit) {
+void Worker::SendHitCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
 	if (dpHit) {
 		AccessDataport(dpHit);
 		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(HITCACHESIZE, *nb);
-		memcpy(hitCache, buffer, sizeof(HIT)*nbCopy);
-		memcpy(gHits->hitCache, buffer, sizeof(HIT)*nbCopy);
-		gHits->lastHitIndex = nbCopy % HITCACHESIZE;
-		gHits->hitCacheSize = nbCopy;
+		size_t nbCopy = Min(HITCACHESIZE, globalHitCache.hitCacheSize);
+		gHits->hitCache = globalHitCache.hitCache;
+		gHits->lastHitIndex = nbCopy - 1;
+		gHits->hitCacheSize = globalHitCache.hitCacheSize;
 		ReleaseDataport(dpHit);
 	}
 }
+*/
 
 void Worker::Stop_Public() {
 	// Stop
@@ -238,7 +238,7 @@ void Worker::ReleaseLogBuff() {
 }
 
 void Worker::ThrowSubProcError(std::string message) {
-	message.c_str();
+	throw Error(message.c_str());
 }
 
 void Worker::ThrowSubProcError(char *message) {
@@ -404,7 +404,7 @@ void Worker::Stop() {
 		ThrowSubProcError();
 }
 
-void Worker::KillAll() {
+void Worker::KillAll(bool keepDpHit) {
 
 	if( dpControl && ontheflyParams.nbProcess>0 ) {
 		if( !ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED) ) {
@@ -417,18 +417,18 @@ void Worker::KillAll() {
 			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
 				if(pID[i]) KillProc(pID[i]);
 		}
-		CLOSEDP(dpHit);
+		if (!keepDpHit) CLOSEDP(dpHit);
 	}
 	ontheflyParams.nbProcess = 0;
 
 }
 
-void Worker::SetProcNumber(size_t n) {
+void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
 	char cmdLine[512];
 
 	// Kill all sub process
-	KillAll();
+	KillAll(keepDpHit);
 
 	// Create new control dataport
 	if( !dpControl ) 
@@ -474,7 +474,7 @@ void Worker::RebuildTextures() {
 	if (needsReload) RealReload();
 	if (AccessDataport(dpHit)) {
 		BYTE *buffer = (BYTE *)dpHit->buff;
-		if (mApp->needsTexture || mApp->needsDirection) try{ geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection); }
+		if (mApp->needsTexture || mApp->needsDirection) try{ geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection,wp.sMode); }
 		catch (Error &e) {
 			ReleaseDataport(dpHit);
 			throw e;
@@ -488,6 +488,12 @@ size_t Worker::GetProcNumber() {
 }
 
 void Worker::Update(float appTime) {
+	//Refreshes interface cache:
+	//Global statistics, leak/hits, global histograms
+	//Facet hits, facet histograms, facet angle maps
+	//No cache for profiles, textures, directions (plotted directly from shared memory hit buffer)
+
+
 	if (needsReload) RealReload();
 
 	// Check calculation ending
@@ -518,33 +524,20 @@ void Worker::Update(float appTime) {
 	if (dpHit) {
 
 		if (AccessDataport(dpHit)) {
-			BYTE *buffer = (BYTE *)dpHit->buff;
+			BYTE *bufferStart = (BYTE *)dpHit->buff;
+			BYTE *buffer = bufferStart;
+
 
 			mApp->changedSinceSave = true;
 			// Globals
-			GlobalHitBuffer *gHits = (GlobalHitBuffer *)buffer;
+			globalHitCache = READBUFFER(GlobalHitBuffer);
 
 // Global hits and leaks
 #ifdef MOLFLOW
-			nbMCHit = gHits->total.hit.nbMCHit;
-			nbHitEquiv = gHits->total.hit.nbHitEquiv;
-			nbAbsEquiv = gHits->total.hit.nbAbsEquiv;
-			nbDesorption = gHits->total.hit.nbDesorbed;
-			//No global hitEquiv
-			distTraveled_total = gHits->distTraveled_total;
-			distTraveledTotal_fullHitsOnly = gHits->distTraveledTotal_fullHitsOnly;
 			bool needsAngleMapStatusRefresh = false;
 #endif
 
 #ifdef SYNRAD
-			
-			nbMCHit = gHits->total.nbMCHit;
-			nbHitEquiv = gHits->total.nbHitEquiv;
-			nbAbsEquiv = gHits->total.nbAbsEquiv;
-			nbDesorption = gHits->total.nbDesorbed;
-			totalFlux = gHits->total.fluxAbs;
-			totalPower = gHits->total.powerAbs;
-			distTraveled_total = gHits->distTraveledTotal;
 
 			if (nbDesorption && nbTrajPoints) {
 				no_scans = (double)nbDesorption / (double)nbTrajPoints;
@@ -553,26 +546,40 @@ void Worker::Update(float appTime) {
 				no_scans = 1.0;
 			}
 #endif
-			nbLeakTotal = gHits->nbLeakTotal;
-			hitCacheSize = gHits->hitCacheSize;
-			memcpy(hitCache, gHits->hitCache, sizeof(HIT)*hitCacheSize);
-			leakCacheSize = gHits->leakCacheSize;
-			memcpy(leakCache, gHits->leakCache, sizeof(LEAK)*leakCacheSize); //will display only first leakCacheSize leaks
+
+
+			//Copy global histogram
+			//Prepare vectors to receive data
+			if (wp.globalHistogramParams.recordBounce) globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
+			if (wp.globalHistogramParams.recordDistance) globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.GetDistanceHistogramSize());
+			if (wp.globalHistogramParams.recordTime) globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.GetTimeHistogramSize());
+				
+
+				BYTE* globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
+#ifdef MOLFLOW
+				globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
+#endif
+
+			memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress, wp.globalHistogramParams.GetBouncesDataSize());
+			memcpy(globalHistogramCache.distanceHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(), wp.globalHistogramParams.GetDistanceDataSize());
+			memcpy(globalHistogramCache.timeHistogram.data(), globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() + wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
+			
+			buffer = bufferStart;
 
 			// Refresh local facet hit cache for the displayed moment
 			size_t nbFacet = geom->GetNbFacet();
 			for (size_t i = 0; i<nbFacet; i++) {
 				Facet *f = geom->GetFacet(i);
 #ifdef SYNRAD
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
+				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #ifdef MOLFLOW
-				memcpy(&(f->counterCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
+				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
 				
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
 						//Initialize angle map
-						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
+						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
 						if (!f->angleMapCache) {
 							std::stringstream tmp;
 							tmp << "Not enough memory for incident angle map on facet " << i + 1;
@@ -581,20 +588,42 @@ void Worker::Update(float appTime) {
 						f->sh.anglemapParams.hasRecorded = true;
 						if (f->selected) needsAngleMapStatusRefresh = true;
 					}
+					//Retrieve angle map from hits dp
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
 					+ (1 + moments.size()) * sizeof(FacetHitBuffer)
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.phiWidth*(f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes) * sizeof(size_t));
-					angleMapAddress = 0;
+					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
 				}
 				
 #endif
+				
+					//Prepare vectors for receiving data
+					if (f->sh.facetHistogramParams.recordBounce) f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
+					if (f->sh.facetHistogramParams.recordDistance) f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.GetDistanceHistogramSize());
+					if (f->sh.facetHistogramParams.recordTime) f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.GetTimeHistogramSize());
+										
+					//Retrieve histogram map from hits dp
+					BYTE* histogramAddress = buffer
+						+ f->sh.hitOffset
+						+ (1 + moments.size()) * sizeof(FacetHitBuffer)
+						+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
+						+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
+						+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0)
+						+ f->sh.anglemapParams.GetRecordedDataSize();
+#ifdef MOLFLOW
+					histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
+#endif
+					
+					memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress, f->sh.facetHistogramParams.GetBouncesDataSize());
+					memcpy(f->facetHistogramCache.distanceHistogram.data(), histogramAddress+ f->sh.facetHistogramParams.GetBouncesDataSize(), f->sh.facetHistogramParams.GetDistanceDataSize());
+					memcpy(f->facetHistogramCache.timeHistogram.data(), histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() + f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
+				
 			}
 			try {
-				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);
+				if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
 			}
 			catch (Error &e) {
 				GLMessageBox::Display((char *)e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);

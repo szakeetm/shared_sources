@@ -2,6 +2,86 @@
 <UpdateFeed>
 	<Branches>
 		<Branch name="molflow_public" description="MolFlow+ stable releases">
+		<UpdateManifest>
+			<Version id="2672" name="2.6.72" date="03-09-2018" />
+			<ChangeLog>
+<![CDATA[
+Interface:
+- Non planar facets higlighted with purple outline
+- Number input boxes catch Enter/ESC
+Bugfix:
+- Strictly enforcing right-hand facet rotation (prevents wrong normal direction on concave facets)
+- Textures no longer turn white on window resize
+- Time-dependent parameters work again
+- Fixed config file and xml file save format (gas mass and half-life)
+- Select sticking and select transparent commands select time-dependent parametered facets as well
+Misc:
+- Upgraded underlying event manager from SDL 1.2 to SDL2, please report new bugs
+- Subprocesses now have Idle (lowest possible) priority
+]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.72.zip" zipName="molflow_2.6.72.zip" folderName="molflow_2.6.72" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
+		<UpdateManifest>
+			<Version id="2671" name="2.6.71" date="16-08-2018" />
+			<ChangeLog>
+<![CDATA[
+Feature:
+- Subprocesses can be restarted or changed without resetting simulation
+Bugfix:
+- GEO files load again
+- Incident angle maps work again
+]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.71.zip" zipName="molflow_2.6.71.zip" folderName="molflow_2.6.71" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
+		<UpdateManifest>
+				<Version id="2670" name="2.6.70" date="06-07-2018" />
+				<ChangeLog>
+	<![CDATA[
+	Feature:
+	- Histograms introduced (number of bounces / flight distance / flight time before absorption)
+	- Pressure evolution plotter doesn't need profiles anymore, can plot any facet (facet hits are now time-dependent)
+	- You can create facets that belong to every structure (type "all" to structure number)
+	- Optimized ray tracing is 10% faster
+	Interface:
+	- "Select facet by number" command: select facets by range and/or lists
+	- Restored "Coord" button for facet coordinates
+	Bugfix:
+	- Fixed importing desoprtion from latest version SYN files
+	- Fixed a memory leak on deleting facets with angle maps
+	Other:
+	- Significant under-the-hood changes, Molflow now uses several C++17 features, please report if you find bugs
+	]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.70.zip" zipName="molflow_2.6.70.zip" folderName="molflow_2.6.70" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+			<UpdateManifest>
+				<Version id="2669" name="2.6.69" date="24-05-2018" />
+				<ChangeLog>
+<![CDATA[
+- Fixed a memory management error causing crash on geometry change
+- Added About/License info
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.69.zip" zipName="molflow_2.6.69.zip" folderName="molflow_2.6.69" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
 			<UpdateManifest>
 				<Version id="2668" name="2.6.68" date="16-05-2018" />
 				<ChangeLog>
@@ -89,6 +169,20 @@ Bugfix
 		</Branch>
 		
 		<Branch name="synrad_public" description="SynRad+ stable releases">
+			<UpdateManifest>
+				<Version id="1423" name="1.4.23" date="24-05-2018" />
+				<ChangeLog>
+<![CDATA[
+- Fixed a memory management error causing crash on geometry change
+- Added About/License info
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/synrad_1.4.23.zip" zipName="synrad_1.4.23.zip" folderName="synrad_1.4.23" />
+				<FilesToCopy>
+					<File name="synrad.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
 			<UpdateManifest>
 				<Version id="1422" name="1.4.22" date="16-05-2018" />
 				<ChangeLog>

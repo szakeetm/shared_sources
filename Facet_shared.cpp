@@ -45,11 +45,11 @@ extern SynRad*mApp;
 #endif
 
 Facet::Facet(size_t nbIndex) {
-	indices = (size_t *)malloc(nbIndex * sizeof(size_t));                    // Ref to Geometry Vector3d
-	vertices2 = (Vector2d *)malloc(nbIndex * sizeof(Vector2d));      // Local U,V coordinates
-	memset(vertices2, 0, nbIndex * sizeof(Vector2d));
+	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
+	vertices2.resize(nbIndex);
+	visible.resize(nbIndex);
 
-	memset(&counterCache, 0, sizeof(FacetHitBuffer));
+	memset(&facetHitCache, 0, sizeof(FacetHitBuffer));
 
 	sh.nbIndex = nbIndex;
 
@@ -57,6 +57,7 @@ Facet::Facet(size_t nbIndex) {
 	sh.opacity = 1.0;
 
 	sh.profileType = PROFILE_NONE;
+	
 	sh.texWidth = 0;
 	sh.texHeight = 0;
 	sh.texWidthD = 0.0;
@@ -67,9 +68,8 @@ Facet::Facet(size_t nbIndex) {
 
 	sh.is2sided = false;
 	sh.isProfile = false;
-	//sh.isOpaque = true;
+	//wp.isOpaque = true;
 	sh.isTextured = false;
-	sh.sign = 0.0;
 	sh.countAbs = false;
 	sh.countRefl = false;
 	sh.countTrans = false;
@@ -106,8 +106,6 @@ Facet::Facet(size_t nbIndex) {
 	glElem = 0;
 	glSelElem = 0;
 	selected = false;
-	visible = (bool *)malloc(nbIndex * sizeof(bool));
-	memset(visible, 0xFF, nbIndex * sizeof(bool));
 
 #ifdef MOLFLOW
 	angleMapCache = NULL;
@@ -144,6 +142,8 @@ Facet::Facet(size_t nbIndex) {
 	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
 	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
 
+	//sh.facetHistogramParams.record = false;
+
 	totalFlux = sh.totalOutgassing = totalDose = 0.0;
 
 	userOutgassing = "";
@@ -162,23 +162,22 @@ Facet::Facet(size_t nbIndex) {
 }
 
 Facet::~Facet() {
-	  SAFE_FREE(indices);
-	  SAFE_FREE(vertices2);
 	  SAFE_FREE(cellPropertiesIds);
 	  SAFE_FREE(dirCache);
 	  DELETE_TEX(glTex);
 	  DELETE_LIST(glList);
 	  DELETE_LIST(glElem);
 	  DELETE_LIST(glSelElem);
-	  SAFE_FREE(visible);
 	  for (size_t i = 0; i < meshvectorsize; i++)
 		  SAFE_FREE(meshvector[i].points);
 	  SAFE_FREE(meshvector);
 #ifdef MOLFLOW
 	  SAFE_FREE(outgassingMap);
+	  SAFE_FREE(angleMapCache);
 #endif
 }
 
+/*
 void Facet::DetectOrientation() {
 
 	// Detect polygon orientation (clockwise or counter clockwise)
@@ -186,25 +185,24 @@ void Facet::DetectOrientation() {
 	// p=-1.0 => The second vertex is concave and vertex are clockwise.
 	// p= 0.0 => The polygon is not a simple one and orientation cannot be detected.
 
-	POLYGON p;
-	p.nbPts = sh.nbIndex;
-	p.pts = vertices2;
+	GLAppPolygon p;
+	p.pts=vertices2;
 	p.sign = 1.0;
 
 	bool convexFound = false;
 	size_t i = 0;
-	while (i < p.nbPts && !convexFound) {
-		Vector2d c;
-		bool empty = EmptyTriangle(&p, (int)i - 1, (int)i, (int)i + 1, &c);
+	while (i < p.pts.size() && !convexFound) {
+		
+		auto [empty,center] = EmptyTriangle(p, (int)i - 1, (int)i, (int)i + 1);
 		if (empty || sh.nbIndex == 3) {
-			size_t _i1 = Previous(i, p.nbPts);
-			size_t _i2 = IDX(i, p.nbPts);
-			size_t _i3 = Next(i, p.nbPts);
-			if (IsInPoly(c.u, c.v, p.pts, p.nbPts)) {
+			size_t _i1 = Previous(i, p.pts.size());
+			size_t _i2 = IDX(i, p.pts.size());
+			size_t _i3 = Next(i, p.pts.size());
+			if (IsInPoly(center, p.pts)) {
 				convexFound = true;
 				// Orientation
-				if (IsConvex(&p, i)) p.sign = 1.0;
-				else                 p.sign = -1.0;
+				if (IsConvex(p, i)) p.sign = 1.0;
+				else                p.sign = -1.0;
 			}
 		}
 		i++;
@@ -215,11 +213,10 @@ void Facet::DetectOrientation() {
 		sh.sign = 0.0;
 	}
 	else {
-
 		sh.sign = p.sign;
 	}
-
 }
+*/
 
 int Facet::RestoreDeviceObjects() {
 
@@ -229,7 +226,7 @@ int Facet::RestoreDeviceObjects() {
 		glList = glGenLists(1);
 	}
 
-	//BuildMeshList();
+	//BuildMeshGLList();
 	BuildSelElemList();
 
 	return GL_OK;
@@ -321,58 +318,37 @@ void Facet::glVertex2u(double u, double v) {
 
 bool Facet::BuildMesh() {
 
-	/*mesh = (SHELEM *)malloc(sh.texWidth * sh.texHeight * sizeof(SHELEM));
-	if (!mesh) {
+	if (!(cellPropertiesIds = (int *)malloc(sh.texWidth * sh.texHeight * sizeof(int))))
+	{
 		//Couldn't allocate memory
 		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	meshPts = (MESH *)malloc(sh.texWidth * sh.texHeight * sizeof(MESH));
-	if (!meshPts) {
-		return false;
-	}*/
-	cellPropertiesIds = (int *)malloc(sh.texWidth * sh.texHeight * sizeof(int));
-	if (!cellPropertiesIds) {
-		//Couldn't allocate memory
-		return false;
-		//throw Error("malloc failed on Facet::BuildMesh()");
-	}
-	meshvector = (CellProperties *)malloc(sh.texWidth * sh.texHeight * sizeof(CellProperties)); //will shrink at the end
-	if (!meshvector) {
-		//Couldn't allocate memory
-		return false;
-		//throw Error("malloc failed on Facet::BuildMesh()");
+	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
 
+	if (!(meshvector = (CellProperties *)malloc(sh.texWidth * sh.texHeight * sizeof(CellProperties)))) //will shrink at the end
+	{
+		//Couldn't allocate memory
+		return false;
+		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
+	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
+	
 	meshvectorsize = 0;
 	hasMesh = true;
-	//memset(mesh, 0, sh.texWidth * sh.texHeight * sizeof(SHELEM));
-	//memset(meshPts, 0, sh.texWidth * sh.texHeight * sizeof(MESH));
-	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
-	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
-
-	POLYGON P1, P2;
-	double sx, sy, A/*,tA*/;
+	
+	GLAppPolygon P1, P2;
+	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidthD;
 	double ih = 1.0 / (double)sh.texHeightD;
 	double rw = sh.U.Norme() * iw;
 	double rh = sh.V.Norme() * ih;
-	double *vList;
 	double fA = iw*ih;
-	size_t    nbv;
 
-	P1.pts = (Vector2d *)malloc(4 * sizeof(Vector2d));
-
-	if (!P1.pts) {
-		throw Error("Couldn't allocate memory for texture mesh points.");
-	}
-	P1.nbPts = 4;
-	P1.sign = 1.0;
-	P2.nbPts = sh.nbIndex;
-	P2.pts = vertices2;
-	P2.sign = -sh.sign;
-	//tA = 0.0;
-	//nbElem = 0;
+	P1.pts.swap(std::vector<Vector2d>(4));
+	//P1.sign = 1;
+	P2.pts = vertices2; 
+	//P2.sign = -sign;
 
 	for (size_t j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
@@ -384,16 +360,15 @@ bool Facet::BuildMesh() {
 			double v0 = sy * ih;
 			double u1 = (sx + 1.0) * iw;
 			double v1 = (sy + 1.0) * ih;
-			float  uC, vC;
-			//mesh[i + j*sh.texWidth].elemId = -1;
+			//mesh[i + j*wp.texWidth].elemId = -1;
 
 			if (sh.nbIndex <= 4) {
 
 				// Optimization for quad and triangle
-				allInside = IsInPoly(u0, v0, vertices2, sh.nbIndex);
-				allInside = allInside && IsInPoly(u0, v1, vertices2, sh.nbIndex);
-				allInside = allInside && IsInPoly(u1, v0, vertices2, sh.nbIndex);
-				allInside = allInside && IsInPoly(u1, v1, vertices2, sh.nbIndex);
+				allInside = IsInPoly(Vector2d(u0,v0), vertices2);
+				allInside = allInside && IsInPoly(Vector2d(u0, v1), vertices2);
+				allInside = allInside && IsInPoly(Vector2d(u1, v0), vertices2);
+				allInside = allInside && IsInPoly(Vector2d(u1, v1), vertices2);
 
 			}
 
@@ -409,19 +384,19 @@ bool Facet::BuildMesh() {
 				P1.pts[2].v = v1;
 				P1.pts[3].u = u0;
 				P1.pts[3].v = v1;
-				A = GetInterArea(&P1, &P2, visible, &uC, &vC, &nbv, &vList);
+				auto [A,center,vList] = GetInterArea(P1, P2, visible);
 				if (!IsZero(A)) {
 
 					if (A > (fA + 1e-10)) {
 
 						// Polyon intersection error !
 						// Switch back to brute force
-						A = GetInterAreaBF(&P2, u0, v0, u1, v1, &uC, &vC);
-						bool fullElem = IsZero(fA - A);
+						auto [bfArea,center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
+						bool fullElem = IsZero(fA - bfArea);
 						if (!fullElem) {
-							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
-							cellprop.uCenter = uC;
-							cellprop.vCenter = vC;
+							cellprop.area = (float)(bfArea*(rw*rh) / (iw*ih));
+							cellprop.uCenter = (float)center.u;
+							cellprop.vCenter = (float)center.v;
 							cellprop.nbPoints = 0;
 							cellprop.points = NULL;
 							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
@@ -440,20 +415,15 @@ bool Facet::BuildMesh() {
 						if (!fullElem) {
 							// !! P1 and P2 are in u,v coordinates !!
 							cellprop.area = (float)(A*(rw*rh) / (iw*ih));
-							cellprop.uCenter = uC;
-							cellprop.vCenter = vC;
+							cellprop.uCenter = (float)center.u;
+							cellprop.vCenter = (float)center.v;
 							//cellprop.full = IsZero(fA - A);
 							//cellprop.elemId = nbElem;
 
 							// Mesh coordinates
-							cellprop.points = (Vector2d*)malloc(nbv * sizeof(Vector2d));
-							cellprop.nbPoints = nbv;
-							for (size_t n = 0; n < nbv; n++) {
-								Vector2d newPoint;
-								newPoint.u = vList[2 * n];
-								newPoint.v = vList[2 * n + 1];
-								cellprop.points[n] = (newPoint);
-							}
+							cellprop.points = (Vector2d*)malloc(sizeof(vList[0])*vList.size());
+							memcpy(cellprop.points, vList.data(), sizeof(vList[0])*vList.size());
+							cellprop.nbPoints = vList.size();
 							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
 							//nbElem++;
@@ -467,17 +437,16 @@ bool Facet::BuildMesh() {
 
 				}
 				else cellPropertiesIds[i + j*sh.texWidth] = -2; //zero element
-				SAFE_FREE(vList);
 
 			}
 			else {  //All indide and triangle or quad
 				cellPropertiesIds[i + j*sh.texWidth] = -1;
 
-				/*mesh[i + j*sh.texWidth].area = (float)(rw*rh);
-				mesh[i + j*sh.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
-				mesh[i + j*sh.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
-				mesh[i + j*sh.texWidth].full = true;
-				mesh[i + j*sh.texWidth].elemId = nbElem;
+				/*mesh[i + j*wp.texWidth].area = (float)(rw*rh);
+				mesh[i + j*wp.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
+				mesh[i + j*wp.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
+				mesh[i + j*wp.texWidth].full = true;
+				mesh[i + j*wp.texWidth].elemId = nbElem;
 
 				// Mesh coordinates
 				meshPts[nbElem].nbPts = 4;
@@ -498,7 +467,7 @@ bool Facet::BuildMesh() {
 
 			}
 
-			//tA += mesh[i + j*sh.texWidth].area;
+			//tA += mesh[i + j*wp.texWidth].area;
 
 		}
 	}
@@ -507,19 +476,18 @@ bool Facet::BuildMesh() {
 
 	// Check meshing accuracy (TODO)
 	/*
-	int p = (int)(ceil(log10(sh.area)));
+	int p = (int)(ceil(log10(wp.area)));
 	double delta = pow(10.0,(double)(p-5));
-	if( fabs(sh.area - tA)>delta ) {
+	if( fabs(wp.area - tA)>delta ) {
 	}
 	*/
 
-	free(P1.pts);
-	if (mApp->needsMesh) BuildMeshList();
+	if (mApp->needsMesh) BuildMeshGLList();
 	return true;
 
 }
 
-void Facet::BuildMeshList() {
+void Facet::BuildMeshGLList() {
 
 	if (!cellPropertiesIds)
 
@@ -727,33 +695,41 @@ void Facet::SwapNormal() {
 
 	// Revert vertex order (around the second point)
 
+	/*
 	size_t* tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
 	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
 		tmp[(i + 1) % sh.nbIndex] = GetIndex((int)j + 1);
 	free(indices);
 	indices = tmp;
+	*/
+
+	std::reverse(indices.begin(), indices.end());
 
 	/* normal recalculated at reinitialize
 	// Invert normal
-	sh.N.x = -sh.N.x;
-	sh.N.y = -sh.N.y;
-	sh.N.z = -sh.N.z;*/
+	wp.N.x = -wp.N.x;
+	wp.N.y = -wp.N.y;
+	wp.N.z = -wp.N.z;*/
 
 }
 
 void Facet::ShiftVertex(const int& offset) {
 	// Shift vertex
+	/*
 	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
 	for (size_t i = 0; i < sh.nbIndex; i++)
 		tmp[i] = GetIndex((int)i + offset);
 	free(indices);
 	indices = tmp;
+	*/
+
+	std::rotate(indices.begin(), indices.begin() + offset, indices.end());
 }
 
 void Facet::InitVisibleEdge() {
 
 	// Detect non visible edge (for polygon which contains holes)
-	memset(visible, 0xFF, sh.nbIndex * sizeof(bool));
+	std::fill(visible.begin(), visible.end(), true);
 
 	for (int i = 0;i < sh.nbIndex;i++) {
 
@@ -927,7 +903,7 @@ Vector3d Facet::GetRealCenter() {
 void Facet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
-	//sh.isOpaque = (sh.opacity != 0.0);
+	//wp.isOpaque = (wp.opacity != 0.0);
 	sh.isTextured = ((texDimW*texDimH) > 0);
 }
 
@@ -1013,8 +989,8 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 	c = f->c;
 	d = f->d;
 	
-	//sh.area = f->sh.area;
-	//err = f->err;
+	//wp.area = f->wp.area;
+	//planarityError = f->planarityError;
 	sh.N = f->sh.N;
 	
 }

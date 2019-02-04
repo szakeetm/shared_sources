@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "PugiXML\pugixml.hpp"
 using namespace pugi;
 #include "GLApp/GLToolkit.h"
+#include <cereal/archives/binary.hpp>
 
 #ifdef SYNRAD
 #include "SynradDistributions.h" //material, for Save, etc.
@@ -37,6 +38,7 @@ struct NeighborFacet {
 
 class CellProperties {
 public:
+	//Old C-style array to save memory
 	Vector2d* points;
 	size_t nbPoints;
 	float   area;     // Area of element
@@ -48,7 +50,7 @@ public:
 
 class FacetGroup; //forward declaration as it's the return value of Explode()
 
-class Facet {
+class Facet { //Interface facet
 
 	typedef struct {
 		size_t u;
@@ -63,13 +65,13 @@ public:
 	Facet(size_t nbIndex);
 	~Facet();
 
-	void  DetectOrientation();
+	//void  DetectOrientation();
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
-	void  BuildMeshList();
+	void  BuildMeshGLList();
 	void  BuildSelElemList();
 	void  UnselectElem();
 	void  SelectElem(size_t u, size_t v, size_t width, size_t height);
@@ -132,21 +134,26 @@ public:
 #endif
 
 
-	size_t      *indices;      // Indices (Reference to geometry vertex)
-	Vector2d *vertices2;    // Vertices (2D plane space, UV coordinates)
-	int     *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
+	std::vector<size_t>   indices;      // Indices (Reference to geometry vertex)
+	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
+
+	//C-style arrays to save memory (textures can be huge):
+	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
 	CellProperties* meshvector;
 	size_t meshvectorsize;
 
 	FacetProperties sh;
-	FacetHitBuffer counterCache;
+	FacetHitBuffer facetHitCache;
+	FacetHistogramBuffer facetHistogramCache; //contains empty vectors when facet doesn't have it
 
 	// Normalized plane equation (ax + by + cz + d = 0)
 	double a;
 	double b;
 	double c;
 	double d;
-	double err;          // planeity error
+	double planarityError;
+	bool nonSimple = false; // A non simple polygon has crossing sides
+	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
 	double tRatio;       // Texture sample per unit
@@ -158,7 +165,7 @@ public:
 	bool textureError;   // Disable rendering if the texture has an error
 
 						 // GUI stuff
-	bool  *visible;         // Edge visible flag
+	std::vector<bool>  visible;         // Edge visible flag
 	bool   selected;        // Selected flag
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	GLint  glElem;          // Surface elements boundaries
@@ -185,6 +192,7 @@ public:
 #ifdef SYNRAD
 
 #endif
+	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };
 
 class FacetGroup {

@@ -304,12 +304,19 @@ void FacetCoordinates::RebuildList() {
 }
 
 void FacetCoordinates::RemoveRow(size_t rowId){
- lines.erase(lines.begin()+rowId);
- RebuildList();
- if (rowId<facetListC->GetNbRow()) facetListC->SetSelectedRow((int)rowId);
- int selRow=facetListC->GetSelectedRow()+1;
- insertBeforeButton->SetEnabled(selRow);
- removePosButton->SetEnabled(selRow);
+	if (rowId < lines.size()) {
+		lines.erase(lines.begin() + rowId);
+		RebuildList();
+		if (rowId < facetListC->GetNbRow()) {
+			facetListC->SetSelectedRow((int)rowId);
+		}
+		else { //Select last
+			facetListC->SetSelectedRow(facetListC->GetNbRow()-1);
+		}
+		int selRow = facetListC->GetSelectedRow() + 1;
+		insertBeforeButton->SetEnabled(selRow);
+		removePosButton->SetEnabled(selRow);
+	}
 }
 
 void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
@@ -365,15 +372,10 @@ void FacetCoordinates::ApplyChanges(){
 			mApp->changedSinceSave=true;
 
 			//Change number of vertices
-			SAFE_FREE(selFacet->indices);
-			SAFE_FREE(selFacet->vertices2);
-			SAFE_FREE(selFacet->visible);
 			selFacet->sh.nbIndex = (int)lines.size();
-			selFacet->indices = (size_t *)malloc(selFacet->sh.nbIndex*sizeof(size_t));
-			selFacet->vertices2 = (Vector2d *)malloc(selFacet->sh.nbIndex*sizeof(Vector2d));
-			memset(selFacet->vertices2,0,selFacet->sh.nbIndex * sizeof(Vector2d));
-			selFacet->visible = (bool *)malloc(selFacet->sh.nbIndex*sizeof(bool));
-			memset(selFacet->visible,0xFF,selFacet->sh.nbIndex*sizeof(bool));
+			selFacet->indices.resize(selFacet->sh.nbIndex);
+			selFacet->vertices2.resize(selFacet->sh.nbIndex);
+			selFacet->visible.resize(selFacet->sh.nbIndex);
 
 			for(size_t i=0;i<lines.size();i++) {
 				geom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);

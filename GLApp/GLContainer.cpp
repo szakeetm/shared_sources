@@ -319,7 +319,14 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
       if(parentWin->IsInComp(comp,evt->button.x+ox,evt->button.y+oy)) {
         ManageComp(comp,evt);
       }
-    } else if( evt->type == SDL_MOUSEMOTION ) {
+	}
+	else if (evt->type ==  SDL_MOUSEWHEEL) {
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+		if (parentWin->IsInComp(comp, x, y)) {
+			ManageComp(comp,evt);
+		}
+	} else if (evt->type == SDL_MOUSEMOTION) {
       if( draggedComp ) {
         if(draggedComp==comp) ManageComp(comp,evt);
       } else {
@@ -327,7 +334,7 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
           ManageComp(comp,evt);
         }
       }
-    } else if( evt->type == SDL_ACTIVEEVENT ) {
+    } else if( evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
       ManageComp(comp,evt);
     } else {
       if( comp->HasFocus() ) {
@@ -339,7 +346,7 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
 
 }
 
-void GLContainer::ProcessAcc(int accId) {
+void GLContainer::ProcessKeyboardShortcut(int accId) {
 }
 
 void GLContainer::ProcessMessage(GLComponent *src,int message) {

@@ -27,7 +27,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GlToggle.h"
-#include "GLApp/GLFileBox.h"
+//#include "GLApp/GLFileBox.h"
+#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
 
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
@@ -158,19 +159,23 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == exportButton) {
 				//Export to CSV
-				size_t nbRec;
-				ParticleLoggerItem* logBuff;
-				std::tie(nbRec, logBuff) = work->GetLogBuff();
-				FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, NULL, "All files\0*.*\0", NULL);
-				if (fn) {
+				
+				auto[nbRec, logBuff] = work->GetLogBuff();
+				//FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
+				std::string fn = NFD_SaveFile_Cpp("csv", "");
+				if (!fn.empty()) {
 					bool ok = true;
-					if (FileUtils::Exist(fn->fullName)) {
+					
+					std::string formattedFileName = fn;
+					if (FileUtils::GetExtension(formattedFileName) == "") formattedFileName = formattedFileName + ".csv";
+					
+					if (FileUtils::Exist(formattedFileName)) {
 						std::ostringstream tmp;
-						tmp << "Overwrite existing file ?\n" << fn->fullName;
+						tmp << "Overwrite existing file ?\n" << formattedFileName;
 						ok = (GLMessageBox::Display(tmp.str().c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) == GLDLG_OK);
 					}
 					if (ok) {
-						std::ofstream file(fn->fullName);
+						std::ofstream file(formattedFileName);
 						exportButton->SetText("Abort");
 						isRunning = true;
 						ConvertLogToText(nbRec, logBuff, ",", &file);
@@ -183,9 +188,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == copyButton) {
 				//Copy to clipboard
-				size_t nbRec;
-				ParticleLoggerItem* logBuff;
-				std::tie(nbRec, logBuff) = work->GetLogBuff();
+				auto[nbRec, logBuff] = work->GetLogBuff();
 				copyButton->SetText("Abort");
 				isRunning = true;
 				std::string clipBoardText = ConvertLogToText(nbRec, logBuff, "\t");
@@ -227,9 +230,7 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
-	size_t nbRec;
-	void* logBuff;
-	std::tie(nbRec, logBuff) = work->GetLogBuff();
+	auto[nbRec, logBuff] = work->GetLogBuff();
 	work->ReleaseLogBuff();
 
 	if (nbRec == 0) {

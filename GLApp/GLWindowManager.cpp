@@ -23,7 +23,7 @@ typedef struct {
   int          keyCode;
   int          modifier;
   int          id;
-} ACC;
+} KeyboardShortcut;
 
 // Global variables
 #define MAX_WIN 64
@@ -31,9 +31,9 @@ typedef struct {
 
 static GLWindow *allWin[MAX_WIN];
 static int nbWindow = 0;
-static ACC allAcc[MAX_ACC];
+static KeyboardShortcut keyboardShortcuts[MAX_ACC];
 static int nbAcc = 0;
-static int modState = NO_MODIFIER;
+//static int modState = NO_MODIFIER;
 static int keyFocus = 0;
 
 extern GLApplication *theApp;
@@ -209,7 +209,8 @@ void GLWindowManager::AnimateIconify(GLWindow *src) {
       }
     }
     DrawStats();
-    SDL_GL_SwapBuffers();
+    //SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(theApp->mainScreen);
     t1 = (double)SDL_GetTicks()/1000.0;
   }
 
@@ -306,7 +307,7 @@ void GLWindowManager::AnimateFocus(GLWindow *src) {
     _glVertex2i(xw   ,yw+hw);
     glEnd();
     DrawStats();
-    SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(theApp->mainScreen);
 
     t1 = (double)SDL_GetTicks()/1000.0;
   }
@@ -371,7 +372,7 @@ void GLWindowManager::AnimateDeIconify(GLWindow *src) {
       }
     }
     DrawStats();
-    SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(theApp->mainScreen);
     t1 = (double)SDL_GetTicks()/1000.0;
   }
 
@@ -401,7 +402,7 @@ void GLWindowManager::Resize() {
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
-  SDL_GL_SwapBuffers();
+  SDL_GL_SwapWindow(theApp->mainScreen);
 }
 
 void GLWindowManager::RepaintNoSwap() {
@@ -461,7 +462,7 @@ void GLWindowManager::RepaintRange(int w0,int w1) {
 //#endif
 
   DrawStats();
-  SDL_GL_SwapBuffers();
+  SDL_GL_SwapWindow(theApp->mainScreen);
 
 }
 
@@ -472,6 +473,8 @@ void GLWindowManager::RestoreDeviceObjects() {
 void GLWindowManager::InvalidateDeviceObjects() {
   for(int i=0;i<nbWindow;i++) allWin[i]->InvalidateDeviceObjects();
 }
+
+/*
 
 bool GLWindowManager::IsCtrlDown() {
   return (modState & CTRL_MODIFIER)!=0;
@@ -497,22 +500,15 @@ bool GLWindowManager::IsCapsLockOn() {
  return (modState & CAPSLOCK_MODIFIER)!=0;
 }
 
+
 int GLWindowManager::GetModState() {
 	return modState;
 }
+*/
 
-bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
+bool GLWindowManager::SearchKeyboardShortcut(SDL_Event *evt,bool processAcc) {
 
-  bool accFound = false;
-
-  // Handle key modifier
-  /*
-  int unicode = (evt->key.keysym.unicode & 0x7F);
-  if( !unicode ) unicode = evt->key.keysym.sym;
-  */
-
-  //std::ostringstream tmp; tmp << "\nevt->type="<<(int)(evt->type)<<" unicode:" << evt->key.keysym.unicode << " keysim.sim:" << evt->key.keysym.sym << "    unicode & 0x7F:" << (evt->key.keysym.unicode & 0x7F) << " chosen:" << unicode; OutputDebugStringA(tmp.str().c_str());
-
+/*
   if( evt->type == SDL_KEYDOWN )
   {
     if(evt->key.keysym.sym == SDLK_LCTRL || evt->key.keysym.sym == SDLK_RCTRL )
@@ -567,45 +563,57 @@ bool GLWindowManager::ProcessKey(SDL_Event *evt,bool processAcc) {
 		//OutputDebugStringA("\nSpace off");
 	}
   }
+  */
 
   // Process
+
+	bool shortcutFound = false;
+
   if( evt->type == SDL_KEYDOWN ) {
     // Search acc (Use keysym)
     int i = 0;
-    while(i<nbAcc && !accFound) {
-      accFound = (allAcc[i].keyCode == evt->key.keysym.sym) && ( (allAcc[i].modifier & modState)!=0 );
-      if( !accFound ) i++;
+	
+    while(i<nbAcc && !shortcutFound) {
+		shortcutFound = (keyboardShortcuts[i].keyCode == evt->key.keysym.sym);
+		if (shortcutFound) {
+			//Further check for modifiers
+			int mod = keyboardShortcuts[i].modifier;
+			if (mod == ALT_MODIFIER) shortcutFound = GetTopLevelWindow()->IsAltDown();
+			if (mod == CTRL_MODIFIER) shortcutFound = GetTopLevelWindow()->IsCtrlDown();
+			if (mod == SHIFT_MODIFIER) shortcutFound = GetTopLevelWindow()->IsShiftDown();
+		}
+      if( !shortcutFound ) i++;
     }
-    if( accFound ) {
-      GLContainer *p = allAcc[i].src->GetParent();
-      if(p) p->SetFocus(allAcc[i].src);
-      allAcc[i].src->ProcessAcc(allAcc[i].id);
+    if( shortcutFound ) {
+      GLContainer *p = keyboardShortcuts[i].src->GetParent();
+      if(p) p->SetFocus(keyboardShortcuts[i].src);
+      keyboardShortcuts[i].src->ProcessKeyboardShortcut(keyboardShortcuts[i].id);
     }
   }
 
-  return accFound;
+  return shortcutFound;
 
 }
 
-void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int accId) {
+void GLWindowManager::RegisterKeyboardShortcut(GLComponent *src,int keyCode,int modifier,int accId) {
 
   // Search if already exists
   bool accFound = false;
   int i = 0;
   while(i<nbAcc && !accFound) {
-    accFound = (allAcc[i].keyCode == keyCode) && (allAcc[i].modifier == modifier);
+    accFound = (keyboardShortcuts[i].keyCode == keyCode) && (keyboardShortcuts[i].modifier == modifier);
     if( !accFound ) i++;
   }
 
   if( accFound ) {
     // Just replace id
-    allAcc[i].id = accId;
+    keyboardShortcuts[i].id = accId;
   } else if( nbAcc<MAX_ACC ) {
     // Add new one
-    allAcc[nbAcc].src = src;
-    allAcc[nbAcc].keyCode = keyCode;
-    allAcc[nbAcc].modifier = modifier;
-    allAcc[nbAcc].id = accId;
+    keyboardShortcuts[nbAcc].src = src;
+    keyboardShortcuts[nbAcc].keyCode = keyCode;
+    keyboardShortcuts[nbAcc].modifier = modifier;
+    keyboardShortcuts[nbAcc].id = accId;
     nbAcc++;
   }
 
@@ -613,8 +621,8 @@ void GLWindowManager::RegisterAcc(GLComponent *src,int keyCode,int modifier,int 
 
 bool GLWindowManager::ManageEvent(SDL_Event *evt) {
 
-  if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP ) {
-    if( !ProcessKey(evt,true) ) {
+  if( evt->type == SDL_KEYDOWN || evt->type == SDL_KEYUP || evt->type == SDL_TEXTINPUT) {
+    if( !SearchKeyboardShortcut(evt,true) ) {
       // Process key event
       if(keyFocus<nbWindow) allWin[keyFocus]->ManageEvent(evt);
       return (keyFocus==0);

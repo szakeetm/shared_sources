@@ -35,23 +35,23 @@ public:
   static void      SetDefault();
 
   // Key info
-  static bool      IsCtrlDown();
-  static bool      IsShiftDown();
-  static bool      IsAltDown();
-  static bool      IsCapsLockOn();
-  static bool      IsSpaceDown();
-  static bool		IsTabDown();
-  static int	GetModState();
+  //static bool      IsCtrlDown();
+  //static bool      IsShiftDown();
+  //static bool      IsAltDown();
+  //static bool      IsCapsLockOn();
+  //static bool      IsSpaceDown();
+  //static bool		IsTabDown();
+  //static int	GetModState();
 
   // Registering
   static void RegisterWindow(GLWindow *wnd);
   static void UnRegisterWindow(GLWindow *wnd);
-  static void RegisterAcc(GLComponent *src,int keyCode,int modifier,int accId);
+  static void RegisterKeyboardShortcut(GLComponent *src,int keyCode,int modifier,int accId);
 
   // Processing
   static bool RestoreDeviceObjects(int width,int height);
   static bool ManageEvent(SDL_Event *evt);
-  static bool ProcessKey(SDL_Event *evt,bool processAcc);
+  static bool SearchKeyboardShortcut(SDL_Event *evt,bool processAcc);
   static void RestoreDeviceObjects();
   static void InvalidateDeviceObjects();
   static void Resize();

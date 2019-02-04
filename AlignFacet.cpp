@@ -141,7 +141,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 			bool foundSource = false;
 			size_t sourceFacetId;
-			for (auto mem:memorizedSelection) { //find source facet
+			for (auto& mem:memorizedSelection) { //find source facet
 				if ( Contains(appSelectedFacets,mem)) {
 					if (!foundSource) {
 						foundSource = true;
@@ -255,7 +255,7 @@ dirDestVertexId,
 void AlignFacet::MemorizeSelection() {
 	memorizedSelection = geom->GetSelectedFacets();
 	oriPositions.clear();
-	for (auto sel : memorizedSelection) {
+	for (auto& sel : memorizedSelection) {
 		std::vector<Vector3d> op;
 		for (size_t ind = 0; ind < geom->GetFacet(sel)->sh.nbIndex; ind++)
 			op.push_back(*geom->GetVertex(geom->GetFacet(sel)->indices[ind]));

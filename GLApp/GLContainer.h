@@ -65,7 +65,7 @@ public:
   virtual void InvalidateDeviceObjects();
   virtual void RestoreDeviceObjects();
   virtual void ProcessMessage(GLComponent *src,int message);
-  virtual void ProcessAcc(int accId);
+  virtual void ProcessKeyboardShortcut(int accId);
   virtual void CancelDrag(SDL_Event *evt);
   virtual bool IsDragging();
 

@@ -428,7 +428,7 @@ DWORD StartProc(const char *pname,int mode) { //minimized in Debug mode, hidden 
 		NULL,             // process security attributes
 		NULL,             // thread security attributes
 		false,            // handle inheritance flag
-		launchMode | BELOW_NORMAL_PRIORITY_CLASS, // creation flags
+		launchMode | IDLE_PRIORITY_CLASS, // creation flags
 		NULL,             // pointer to new environment block
 		NULL,             // pointer to current directory name
 		&si,              // pointer to STARTUPINFO

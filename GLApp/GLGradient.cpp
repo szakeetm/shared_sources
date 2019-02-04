@@ -300,8 +300,7 @@ void GLGradient::Paint() {
   glTexCoord2f(0.0f,1.0f);glVertex2i(gPosX       ,gPosY+gHeight);
   glEnd();
 
-  GLCColor black;
-  black.r = 0;black.g = 0;black.b = 0;
+  GLColor black(0,0,0);
   axis->MeasureAxis(gWidth,0);
   axis->PaintAxisDirect(gPosX,gPosY+gHeight, black, 0, 0);
 

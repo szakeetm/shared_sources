@@ -157,7 +157,7 @@ SplitFacet::~SplitFacet() {
 
 void SplitFacet::ClearUndoFacets() {
 	//Destroy old undo facets
-	for (auto delFacet : deletedFacetList)
+	for (auto& delFacet : deletedFacetList)
 		delete delFacet.f;
 	deletedFacetList.clear();
 	resultLabel->SetText("");
@@ -244,10 +244,8 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		}
 			//Calculate the plane
 			Vector3d P0,N;
-			int nbSelectedVertex;
 			double nN2;
-			int *vIdx = (int *)malloc(geom->GetNbVertex()*sizeof(int));
-			memset(vIdx,0xFF,geom->GetNbVertex()*sizeof(int));
+
 			switch (planeMode) {
 			case FACET_MODE:
 				if( !(facetIdTextbox->GetNumberInt(&facetNum))||facetNum<1||facetNum>geom->GetNbFacet() ) {
@@ -259,22 +257,14 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				break;
 			case VERTEX_MODE:
 			{
-				if (geom->GetNbSelectedVertex() != 3) {
+				auto selectedVertexIds = geom->GetSelectedVertices();
+				if (selectedVertexIds.size() != 3) {
 					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				nbSelectedVertex = 0;
 
-				for (int i = 0; i < geom->GetNbVertex() && nbSelectedVertex < geom->GetNbSelectedVertex(); i++) {
-					//Vector3d *v = GetVertex(i);
-					if (geom->GetVertex(i)->selected) {
-						vIdx[nbSelectedVertex] = i;
-						nbSelectedVertex++;
-					}
-				}
-
-				Vector3d U2 = (*geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[1])).Normalized();
-				Vector3d V2 = (*geom->GetVertex(vIdx[0]) - *geom->GetVertex(vIdx[2])).Normalized();
+				Vector3d U2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[1])).Normalized();
+				Vector3d V2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[2])).Normalized();
 				Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
 				nN2 = N2.Norme();
 				if (nN2 < 1e-8) {
@@ -283,7 +273,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				}
 				; // Normalize N2
 				N = N2*(1.0 / nN2);
-				P0 = *(geom->GetVertex(vIdx[0]));
+				P0 = *(geom->GetVertex(selectedVertexIds[0]));
 				break;
 			}
 			case PLANEEQ_MODE:
@@ -317,7 +307,6 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display("Select a plane definition mode.","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 			}
-			SAFE_FREE(vIdx);
 			if (mApp->AskToReset()) {
 				GLProgress *prg = new GLProgress("Splitting facets", "Facet split");
 				

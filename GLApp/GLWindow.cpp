@@ -212,32 +212,40 @@ void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
 }
 
 bool GLWindow::IsCtrlDown() {
-  return GLWindowManager::IsCtrlDown();
+	SDL_Keymod mod = SDL_GetModState();
+	return ((mod & KMOD_LCTRL) || (mod & KMOD_RCTRL));
 }
 
 bool GLWindow::IsShiftDown() {
-  return GLWindowManager::IsShiftDown();
+	SDL_Keymod mod = SDL_GetModState();
+	return ((mod & KMOD_LSHIFT) || (mod & KMOD_RSHIFT));
 }
 
 bool GLWindow::IsAltDown() {
-  return GLWindowManager::IsAltDown();
+	SDL_Keymod mod = SDL_GetModState();
+	return ((mod & KMOD_LALT) || (mod & KMOD_RALT));
 }
 
 bool GLWindow::IsSpaceDown() {
-  return GLWindowManager::IsSpaceDown();
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	return state[SDL_GetScancodeFromKey(SDLK_SPACE)];
 }
 
 bool GLWindow::IsCapsLockOn() {
-  return GLWindowManager::IsCapsLockOn();
+  //return GLWindowManager::IsCapsLockOn();
+	return SDL_GetModState() & KMOD_CAPS;
 }
 
 bool GLWindow::IsTabDown() {
-  return GLWindowManager::IsTabDown();
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	return state[SDL_GetScancodeFromKey(SDLK_TAB)];
 }
 
+/*
 int GLWindow::GetModState() {
 	return GLWindowManager::GetModState();
 }
+*/
 
 int GLWindow::GetUpMargin() {
   bool hasTitle = strlen(title)!=0;
@@ -477,7 +485,10 @@ void GLWindow::DoModal() {
     bool needRedraw = false;
     
     // Get activation
-    bool active = (SDL_GetAppState()&SDL_APPACTIVE) != 0;
+	Uint32 flags = SDL_GetWindowFlags(theApp->mainScreen);
+	
+
+	bool active = (flags && (SDL_WINDOW_SHOWN & flags)); //App visible
     if( !appActive && active ) needRedraw = true;
     appActive = active;
 
@@ -485,24 +496,22 @@ void GLWindow::DoModal() {
     while( SDL_PollEvent( &evt ) ) {
       
 		theApp->UpdateEventCount(&evt);
-      GLWindowManager::ProcessKey(&evt,false);
-      if(evt.type == SDL_VIDEORESIZE) {
-        theApp->Resize(evt.resize.w,evt.resize.h);
+      GLWindowManager::SearchKeyboardShortcut(&evt,false);
+      if(evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_RESIZED) {
+        theApp->Resize(evt.window.data1,evt.window.data2);
         needRedraw = true;
       }
       ManageEvent(&evt);
       if(!evtProcessed && evt.type==SDL_MOUSEBUTTONDOWN && animateFocus) GLWindowManager::AnimateFocus(this);
-      if(evt.type == SDL_VIDEOEXPOSE) needRedraw = true;
+      if(evt.type == SDL_WINDOWEVENT && evt.window.event ==SDL_WINDOWEVENT_EXPOSED) needRedraw = true;
     }
 
     theApp->UpdateStats();
 	//mApp->SendHeartBeat();
     // Close modal window window on [ESC]
     if( evt.type == SDL_KEYDOWN ) {
-      int unicode = (evt.key.keysym.unicode & 0x7F);
-      if( !unicode ) unicode = evt.key.keysym.sym;
-      if( unicode == SDLK_ESCAPE ) SetVisible(false);
-	  if( unicode == SDLK_RETURN ) {
+      if(evt.key.keysym.sym == SDLK_ESCAPE ) SetVisible(false);
+	  if(evt.key.keysym.sym == SDLK_RETURN ) {
 		//Press Apply button
 		  GLComponent *child=GetFirstChildComp();
 

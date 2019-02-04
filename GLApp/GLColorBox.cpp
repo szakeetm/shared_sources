@@ -488,10 +488,12 @@ void GLColorBox::ProcessMessage(GLComponent *src,int message) {
   }
   if(message==MSG_TEXT) {
     int r=0,g=0,b=0;
-    sscanf(rText->GetText(),"%d",&r);
-    sscanf(gText->GetText(),"%d",&g);
-    sscanf(bText->GetText(),"%d",&b);
-    updateColor(r,g,b);
+	if (
+    rText->GetNumberInt(&r) &&
+	gText->GetNumberInt(&g) &&
+	bText->GetNumberInt(&b)
+		)
+			updateColor(r,g,b);
   }
   GLWindow::ProcessMessage(src,message);
 }

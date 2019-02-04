@@ -343,7 +343,7 @@ char *FileReader::ReadWord() {
 
 // FileWriter class
 
-FileWriter::FileWriter(char *fileName) {
+FileWriter::FileWriter(const char *fileName) {
 
   file = fopen(fileName,"w");
   if(!file) {

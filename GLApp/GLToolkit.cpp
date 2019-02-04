@@ -88,6 +88,8 @@ void GLToolkit::InvalidateDeviceObjects() {
 
 void GLToolkit::CopyTextToClipboard(const std::string & text)
 {
+	SDL_SetClipboardText(text.c_str());
+	/*
 #ifdef WIN
 
 	if (!OpenClipboard(NULL))
@@ -115,6 +117,7 @@ void GLToolkit::CopyTextToClipboard(const std::string & text)
 	GlobalFree(hText);
 
 #endif
+*/
 }
 
 int GLToolkit::GetCursor() {
@@ -130,7 +133,7 @@ void GLToolkit::SetCursor(int cursor) {
   switch(currentCursor) {
     case CURSOR_DEFAULT:
       SDL_SetCursor(defCursor);
-      break;
+	  break;
 	case CURSOR_BUSY:
 	  SDL_SetCursor(busyCursor);
 	  break;
@@ -168,7 +171,7 @@ void GLToolkit::SetCursor(int cursor) {
       SDL_SetCursor(rotateCursor);
       break;
 	case CURSOR_VERTEX:
-      SDL_SetCursor(vertexCursor);
+	  SDL_SetCursor(vertexCursor);
       break;
 	case CURSOR_VERTEX_ADD:
       SDL_SetCursor(vertexAddCursor);
@@ -232,7 +235,7 @@ void GLToolkit::SetIcon32x32(char *pngName) {
     SDL_LockSurface(s);
     memcpy(s->pixels , img.GetData() , 3*32*32);
     SDL_UnlockSurface(s);
-    SDL_WM_SetIcon(s, NULL);
+    SDL_SetWindowIcon(theApp->mainScreen, s);
     img.Release();
   }
 
@@ -775,51 +778,7 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
 
 }
 
-bool GLToolkit::IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts) {
-
-   // Fast method to check if a point is inside a polygon or not.
-   // Works with convex and concav polys, orientation independant
-   int n_updown,n_found,j;
-   double x1,x2,y1,y2,a,b;
-   double xp = (double)x;
-   double yp = (double)y;
-   bool inside = false;
-
-   n_updown=0;
-   n_found=0;
-
-   for (j = 0; j < nbPts; j++) {
-
-     x1 = (double) PointX[j];
-     y1 = (double) PointY[j];
-
-     if (j < nbPts - 1) {
-       x2 = (double) PointX[j + 1];
-       y2 = (double) PointY[j + 1];
-     } else {
-       x2 = (double) PointX[0];
-       y2 = (double) PointY[0];
-     }
-
-     if (xp > Min(x1, x2) && xp <= Max(x1, x2)) {
-       a = (y2 - y1) / (x2 - x1);
-       b = y1 - a * x1;
-       if ((a * xp + b) < yp) {
-         n_updown = n_updown + 1;
-       } else {
-         n_updown = n_updown - 1;
-       }
-       n_found++;
-     }
-   }
-
-   if (n_updown<0) n_updown=-n_updown;
-   inside = (((n_found/2)&1) ^ ((n_updown/2)&1));
-   return inside;
-
-}
-
-bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& p){
 
   GLfloat mProj[16];
   GLfloat mView[16];
@@ -835,12 +794,11 @@ bool GLToolkit::Get2DScreenCoord(float x,float y,float z,int *xe,int *ye) {
   GLMatrix m; m.Multiply(&proj,&view);
 
   float rx,ry,rz,rw;
-  m.TransfomVec(x,y,z,1.0f,&rx,&ry,&rz,&rw);
-  if(rw<=0.0f) return false;
-  *xe = (int)(((rx / rw) + 1.0f)  * (float)g.width/2.0f);
-  *ye = (int)(((-ry / rw) + 1.0f) * (float)g.height/2.0f);
+  m.TransfomVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
+  if(rw<=0.0f) return std::nullopt;
 
-  return true;
+  return std::make_tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
+  (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f) );
 
 }
 
@@ -996,49 +954,26 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAt(double xEye,double yEye,double zEye,
-                             double xAt,double yAt,double zAt,
-                             double xUp,double yUp,double zUp, double handedness) {
+void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness) {
+	//handedness =  -1: left handed
+	// Create and load a left- or right-handed view matrix
 
-  // Create and load a left- or right-handed view matrix
-
-  //Z = Norm(At-Eye)
-  double Zx = xAt - xEye;
-  double Zy = yAt - yEye;
-  double Zz = zAt - zEye;
-  double nZ = sqrt( Zx*Zx + Zy*Zy + Zz*Zz );
-  Zx /= nZ;
-  Zy /= nZ;
-  Zz /= nZ;
-
-  //X = Norm(Up x Z)
-  double Xx = (yUp*Zz - zUp*Zy);
-  double Xy = (zUp*Zx - xUp*Zz);
-  double Xz = (xUp*Zy - yUp*Zx);
-  double nX = sqrt( Xx*Xx + Xy*Xy + Xz*Xz );
-  Xx /= -handedness * nX;
-  Xy /= -handedness * nX;
-  Xz /= -handedness * nX;
-
-  //Y = Z x X
-  double Yx = -handedness * (Zy*Xz - Zz*Xy);
-  double Yy = -handedness * (Zz*Xx - Zx*Xz);
-  double Yz = -handedness * (Zx*Xy - Zy*Xx);
-
-  //handedness =  -1: left handed
-
-  double dotXE = xEye*Xx + yEye*Xy + zEye*Xz;
-  double dotYE = xEye*Yx + yEye*Yy + zEye*Yz;
-  double dotZE = xEye*Zx + yEye*Zy + zEye*Zz;
+	Vector3d Z = (camPos - Eye).Normalized();
+	Vector3d X = -handedness * CrossProduct(Up, Z).Normalized();
+	Vector3d Y = -handedness * CrossProduct(Z, X);
   
-  GLfloat mView[16];
 
-  mView[0] = (float)Xx; mView[1] = (float)Yx; mView[2] = (float)Zx; mView[3] = 0.0f;
-  mView[4] = (float)Xy; mView[5] = (float)Yy; mView[6] = (float)Zy; mView[7] = 0.0f;
-  mView[8] = (float)Xz; mView[9] = (float)Yz; mView[10] = (float)Zz; mView[11] = 0.0f;
-  mView[12] = (float)-dotXE; mView[13] = (float)-dotYE; mView[14] = (float)-dotZE; mView[15] = 1.0f;
+	double dotXE = Dot(Eye,X);
+	double dotYE = Dot(Eye, Y);
+	double dotZE = Dot(Eye, Z);
 
-  glLoadMatrixf(mView);
+	float glViewMatrix[] = 
+						{ (float) X.x,   (float) Y.x,   (float) Z.x,   0.0f,
+						  (float) X.y,   (float) Y.y,   (float) Z.y,   0.0f,
+						  (float) X.z,   (float) Y.z,   (float) Z.z,   0.0f,
+						  (float)-dotXE, (float)-dotYE, (float)-dotZE, 1.0f };
+
+	glLoadMatrixf(glViewMatrix);
                              
 }
 

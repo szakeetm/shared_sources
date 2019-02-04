@@ -5,8 +5,11 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <string>
+#include <optional>
+#include <tuple>
 #include "GLTypes.h"
 #include "GLFont.h"
+#include "..\Vector.h"
 //class GLFont2D;
 
 // Dashed line style
@@ -51,9 +54,8 @@ public:
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
-  static bool Get2DScreenCoord(float x,float y,float z,int *xe,int *ye);
-  static bool IsInsidePoly(const int &x,const int &y,int *PointX,int *PointY,const size_t &nbPts);
-  static void LookAt(double xEye,double yEye,double zEye,double xAt,double yAt,double zAt,double xUp,double uUp,double zUp,double handedness);
+  static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
+  static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z);
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);

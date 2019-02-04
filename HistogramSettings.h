@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class GLWindow;
 class GLButton;
 class GLTextField;
+class GLTitledPanel;
 class GLLabel;
 class GLToggle;
 
@@ -36,12 +37,11 @@ class HistogramSettings : public GLWindow {
 public:
 
   // Construction
-  HistogramSettings();
-  void Reposition();
+  HistogramSettings(Geometry *s,Worker *w);
 
   // Component methods
-  void SetGeometry(Geometry *s,Worker *w);
   void Refresh(const std::vector<size_t>& selectedFacetIds);
+  void EnableDisableControls();
   bool Apply();
 
   // Implementation
@@ -52,13 +52,20 @@ private:
   Geometry     *geom;
   Worker	   *work;
 
-  //GLButton    *applyButton;
-  GLTextField *distanceLimit;
-  GLTextField *hitLimit;
-  GLTextField *hitBinSize;
-  GLToggle *recordToggle;
-  GLLabel  *memoryEstimateLabel;
+  GLTitledPanel *globalSettingsPanel, *facetSettingsPanel;
+  GLTextField *globalHitLimitText,*facetHitLimitText;
+  GLTextField *globalHitBinsizeText,*facetHitBinsizeText;
+  GLTextField *globalDistanceLimitText,*facetDistanceLimitText;
+  GLTextField *globalDistanceBinsizeText, *facetDistanceBinsizeText;
+  GLTextField *globalTimeLimitText, *facetTimeLimitText;
+  GLTextField *globalTimeBinsizeText, *facetTimeBinsizeText;
+  GLToggle *globalRecordBounceToggle,*facetRecordBounceToggle;
+  GLToggle *globalRecordDistanceToggle, *facetRecordDistanceToggle;
+#ifdef MOLFLOW
+  GLToggle *globalRecordTimeToggle, *facetRecordTimeToggle;
+#endif
+  GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;
 
-  size_t nbFacetSelected;
+  GLButton *applyButton, *openViewerButton;
 
 };

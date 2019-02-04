@@ -64,7 +64,7 @@ public:
   // Implementation
   void Paint();
   void ManageEvent(SDL_Event *evt);
-  void ProcessAcc(int accId);
+  void ProcessKeyboardShortcut(int accId);
 
 private:
 

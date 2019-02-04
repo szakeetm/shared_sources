@@ -2,23 +2,22 @@
 #include "GLChart.h"
 #include "..\GLMenu.h"
 #include "..\GLToolkit.h"
-#include "..\GLFileBox.h"
+#include "..\..\File.h"
+//#include "..\GLFileBox.h"
+#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
 #include "..\GLMessageBox.h"
 #include "..\GLButton.h"
+
 //#include <malloc.h>
 #include <math.h>
+#include <sstream>
 
 double NaN;
-static const char *fileFilters = "All files\0*.*\0Text files\0*.txt";
-static const int   nbFilter = 2;
 
 GLChart::GLChart(int compId):GLComponent(compId) {
 
 	// Default
-	GLCColor defColor;
-	defColor.r = 240;
-	defColor.g = 240;
-	defColor.b = 240;
+	GLColor defColor(240,240,240);
 	SetBackgroundColor(240,240,240);
 	SetChartBackground(defColor);
 	SetOpaque(true);
@@ -126,12 +125,12 @@ GLCDimension GLChart::GetMargin() {
 	return margin;
 }
 
-void GLChart::SetBackground(GLCColor c) {
+void GLChart::SetBackground(GLColor c) {
 	SetBackgroundColor(c.r,c.g,c.b);
 }
 
-GLCColor GLChart::GetBackground() {
-	GLCColor c;
+GLColor GLChart::GetBackground() {
+	GLColor c;
 	GetBackgroundColor(&(c.r),&(c.g),&(c.b));
 	return c;
 }
@@ -140,7 +139,7 @@ GLCColor GLChart::GetBackground() {
 * Sets the chart background (curve area)
 * @param c Background color
 */
-void GLChart::SetChartBackground(GLCColor c) {
+void GLChart::SetChartBackground(GLColor c) {
 	chartBackground = c;
 }
 
@@ -149,7 +148,7 @@ void GLChart::SetChartBackground(GLCColor c) {
 * Gets the chart background (curve area)
 * @return Background color
 */
-GLCColor GLChart::GetChartBackground() {
+GLColor GLChart::GetChartBackground() {
 	return chartBackground;
 }
 
@@ -183,7 +182,7 @@ void GLChart::SetHeaderVisible(bool b) {
 * @param s Graph header
 * @see getHeader
 */
-void GLChart::SetHeader(char *s) {
+void GLChart::SetHeader(const char *s) {
 	if(s) strcpy(header,s);
 	else  strcpy(header,"");
 	SetHeaderVisible(strlen(header)>0);
@@ -222,7 +221,7 @@ double GLChart::GetDisplayDuration() {
 * Sets the header color
 * @param c Header color
 */
-void GLChart::SetHeaderColor(GLCColor c) {
+void GLChart::SetHeaderColor(GLColor c) {
 	headerColor = c;
 	SetHeaderVisible(true);
 }
@@ -354,7 +353,7 @@ void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
 	int xm   = x + (w - labelWidth) / 2 + 2;
 	int ym   = y;
 	GLAxis::DrawSampleLine(posX+xm,posY+ym + labelHeight/2 + 1, v);
-	GLCColor c = v->GetLabelColor();
+	GLColor c = v->GetLabelColor();
 	GLToolkit::GetDialogFont()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
 	GLToolkit::GetDialogFont()->DrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
 	labelRect[nbLabel].rect.x = xm;
@@ -375,7 +374,7 @@ void GLChart::paintLabelAndHeader() {
 	// Draw header
 	if (headerR.width>0) {
 		int xpos = ((headerR.width - headerWidth) / 2);
-		GLCColor c = headerColor;
+		GLColor c = headerColor;
 		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
 		GLToolkit::GetDialogFontBold()->DrawText(posX+xpos,posY+headerR.y + 1,header,false);
 	}
@@ -959,59 +958,62 @@ void GLChart::SaveFile() {
 	int nbv1 = y1Axis->GetViewNumber();
 	int nbv2 = y2Axis->GetViewNumber();
 	int nbView = nbv1 + nbv2;
-	if(!nbView) return;
+	if (!nbView) return;
 
-	FILENAME *fn = GLFileBox::SaveFile(lastDir,lastFile,"Save Data File",fileFilters,nbFilter);
-	if( fn ) {
+	std::string fn = NFD_SaveFile_Cpp("csv,txt", "");
+	if (!fn.empty()) {
+		if (FileUtils::GetExtension(fn) == "") fn += ".csv";
+		std::string separator;
+		if (FileUtils::GetExtension(fn) == "csv") separator = ",";
+		else separator = "\t";
 
-		FILE *f = fopen(fn->fullName,"w");
-		if(f) {
+		FILE *f = fopen(fn.c_str(), "w");
+		if (f) {
 
-			strcpy(lastDir,fn->path);
-			strcpy(lastFile,fn->file);
 
 			// Get DataList handle and write dataview name
 			DataList *ptr[MAX_VIEWS];
-			int j=0;
-			fprintf(f,"X axis\t");
-			for(int i=0;i<nbv1;i++) {
+			int j = 0;
+			fprintf(f, "X axis\t");
+			for (int i = 0; i < nbv1; i++) {
 				ptr[j++] = y1Axis->GetDataView(i)->GetData();
-				sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
-				int l = (int)strlen(tmp)-1;
-				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
+				int l = (int)strlen(tmp) - 1;
+				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+				fprintf(f, tmp);
+				if (j < nbView) fprintf(f, separator.c_str());
 			}
-			for(int i=0;i<nbv2;i++) {
+			for (int i = 0; i < nbv2; i++) {
 				ptr[j++] = y2Axis->GetDataView(i)->GetData();
-				sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
-				int l = (int)strlen(tmp)-1;
-				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
+				int l = (int)strlen(tmp) - 1;
+				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+				fprintf(f, tmp);
+				if (j < nbView) fprintf(f, separator.c_str());
 			}
-			fprintf(f,"\n");
+			fprintf(f, "\n");
 
 			bool eof = false;
-			while(!eof) {
+			while (!eof) {
 				eof = true;
-				for(int i=0;i<nbView;i++) if( ptr[i] ) eof = false;
-				if( !eof ) {
-					for(int i=0;i<nbView;i++) {
-						if( ptr[i] ) {
-							if (i==0) fprintf(f,"%g\t",ptr[i]->x);
-							fprintf(f,"%g",ptr[i]->y);
-							ptr[i]=ptr[i]->next;
+				for (int i = 0; i < nbView; i++) if (ptr[i]) eof = false;
+				if (!eof) {
+					for (int i = 0; i < nbView; i++) {
+						if (ptr[i]) {
+							if (i == 0) fprintf(f, "%g%s", ptr[i]->x, separator.c_str());
+							fprintf(f, "%g", ptr[i]->y);
+							ptr[i] = ptr[i]->next;
 						}
-						if(i<nbView-1) fprintf(f,"\t");
+						if (i < nbView - 1) fprintf(f, separator.c_str());
 					}
-					fprintf(f,"\n");
+					fprintf(f, "\n");
 				}
 			}
 			fclose(f);
 
-		} else {
-			GLMessageBox::Display("Cannot open file for writing","Error",GLDLG_OK,GLDLG_ICONERROR);
+		}
+		else {
+			GLMessageBox::Display("Cannot open file for writing", "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
 	}
@@ -1019,9 +1021,10 @@ void GLChart::SaveFile() {
 }
 
 void GLChart::CopyAllToClipboard() {
+	/*
 
 	// Compute data length
-	size_t totalLength = 0;
+	//size_t totalLength = 0;
 
 	char tmp[128];
 
@@ -1033,25 +1036,25 @@ void GLChart::CopyAllToClipboard() {
 	// Get DataList handle and write dataview name
 	DataList *ptr[MAX_VIEWS];
 	int j=0;
-	totalLength+=strlen("X axis\t"); //X axis
+	//totalLength+=strlen("X axis\t"); //X axis
 	for(int i=0;i<nbv1;i++) {
 		ptr[j++] = y1Axis->GetDataView(i)->GetData();
-		sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
-		int l = (int)strlen(tmp)-1;
-		if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-		totalLength+=strlen(tmp);
-		if(j<nbView) totalLength+=strlen("\t");
+		//sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
+		//int l = (int)strlen(tmp)-1;
+		//if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
+		//totalLength+=strlen(tmp);
+		//if(j<nbView) totalLength+=strlen("\t");
 	}
 	for(int i=0;i<nbv2;i++) {
 		ptr[j++] = y2Axis->GetDataView(i)->GetData();
-		sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
-		int l = (int)strlen(tmp)-1;
-		if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-		totalLength+=strlen(tmp);
-		if(j<nbView) totalLength+=strlen("\t");
+		//sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
+		//int l = (int)strlen(tmp)-1;
+		//if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
+		//totalLength+=strlen(tmp);
+		//if(j<nbView) totalLength+=strlen("\t");
 	}
-	totalLength+=strlen("\n");
-
+	//totalLength+=strlen("\n");
+	
 	bool eof = false;
 	while(!eof) {
 		eof = true;
@@ -1072,7 +1075,9 @@ void GLChart::CopyAllToClipboard() {
 	}
 
 	if( !totalLength ) return;
+	*/
 
+	/*
 #ifdef WIN
 
 	if( !OpenClipboard(NULL) )
@@ -1150,6 +1155,60 @@ void GLChart::CopyAllToClipboard() {
 	GlobalFree(hText);
 
 #endif
+	*/
+
+DataList *ptr[MAX_VIEWS];
+int nbv1 = y1Axis->GetViewNumber();
+int nbv2 = y2Axis->GetViewNumber();
+int nbView = nbv1 + nbv2;
+if (!nbView) return;
+std::ostringstream clipboardStream;
+char tmp[128];
+
+	int j = 0;
+	//X axis
+	clipboardStream << "X axis\t";
+
+	for (int i = 0; i < nbv1; i++) {
+		ptr[j++] = y1Axis->GetDataView(i)->GetData();
+		sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
+		int l = (int)strlen(tmp) - 1;
+		if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+		clipboardStream << tmp;
+		if (j < nbView) clipboardStream << '\t';
+	}
+	for (int i = 0; i < nbv2; i++) {
+		ptr[j++] = y2Axis->GetDataView(i)->GetData();
+		sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
+		int l = (int)strlen(tmp) - 1;
+		if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
+		clipboardStream << tmp;
+		if (j < nbView) clipboardStream << '\t';
+	}
+	clipboardStream <<  '\n';
+
+	bool eof = false;
+	while (!eof) {
+		eof = true;
+		for (int i = 0; i < nbView; i++) if (ptr[i]) eof = false;
+		if (!eof) {
+			for (int i = 0; i < nbView; i++) {
+				if (ptr[i]) {
+					if (i == 0) {
+						sprintf(tmp, "%g\t", ptr[i]->x);
+						clipboardStream << tmp;
+					}
+					sprintf(tmp, "%g", ptr[i]->y);
+					clipboardStream << tmp;
+					ptr[i] = ptr[i]->next;
+				}
+				if (i < nbView - 1) clipboardStream << '\t';
+			}
+			clipboardStream << '\n';
+		}
+	}
+
+	GLToolkit::CopyTextToClipboard(clipboardStream.str());
 
 }
 
@@ -1166,15 +1225,15 @@ void GLChart::LoadFile() {
 	int nbView = nbv1 + nbv2;
 	if(!nbView) return;
 
-	FILENAME *fn = GLFileBox::OpenFile(lastDir,lastFile,"Load Data File",fileFilters,nbFilter);
-	if( fn ) {
+	std::string fn = NFD_OpenFile_Cpp("csv", "");
+	if (!fn.empty()) {
 
-		FILE *f = fopen(fn->fullName,"r");
+		FILE *f = fopen(fn.c_str(),"r");
 		if(f) {
 
 			Clear();
-			strcpy(lastDir,fn->path);
-			strcpy(lastFile,fn->file);
+			strcpy(lastDir, FileUtils::GetPath(fn).c_str());
+			strcpy(lastFile, FileUtils::GetFilename(fn).c_str());
 
 			fgets(tmp,128,f);
 			TRUNC(tmp);

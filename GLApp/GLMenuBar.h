@@ -21,7 +21,7 @@ public:
   void Paint();
   void ManageEvent(SDL_Event *evt);
   void SetFocus(bool focus);
-  void ProcessAcc(int accId);
+  void ProcessKeyboardShortcut(int accId);
 
   // Expert usage
   void    GoLeft();

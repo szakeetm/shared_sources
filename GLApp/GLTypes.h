@@ -1,4 +1,22 @@
-// Copyright (c) 2011 rubicon IT GmbH
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 #pragma once
 
 // Messages
@@ -25,9 +43,11 @@
 
 // SDL extensions
 
+/*
 #define SDLK_CTRLC 3
 #define SDLK_CTRLX 24
 #define SDLK_CTRLV 22
+*/
 
 #define SDL_MOUSEBUTTONDBLCLICK SDL_USEREVENT + 0
 
@@ -39,7 +59,7 @@
 #define SAFE_CLEAR(vect) if(vect) {vect.clear();}
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
-#define ZEROVECTOR(_vector) memset(&(_vector[0]),0,_vector.size()*sizeof(_vector[0]))
+#define ZEROVECTOR(_vector) std::fill(_vector.begin(),_vector.end(),0);
 #define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
 #define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
 

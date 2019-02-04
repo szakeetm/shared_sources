@@ -92,7 +92,8 @@ class FileWriter {
 
 public:
   // Constructor/Destructor
-  FileWriter(char *fileName);
+  FileWriter(std::string fileName) :FileWriter(fileName.c_str()) {};
+  FileWriter(const char *fileName);
   ~FileWriter();
 
   char *GetName();

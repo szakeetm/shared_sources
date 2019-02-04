@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Web.h"
 #include "ZipUtils/zip.h"
 #include "ZipUtils/unzip.h"
-#include <Windows.h>
+//#include <Windows.h>
 #include <sstream>
 #include "GLApp\MathTools.h" //Contains
 
@@ -57,7 +57,7 @@ void AppUpdater::SaveConfig()
 	localConfigNode.append_child("Branch").append_attribute("name") = branchName.c_str();
 	localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = userId.c_str();
 	xml_node skippedVerNode = localConfigNode.append_child("SkippedVersions");
-	for (auto version : skippedVersionIds) {
+	for (auto& version : skippedVersionIds) {
 		skippedVerNode.append_child("Version").append_attribute("id") = version;
 	}
 
@@ -83,7 +83,7 @@ void AppUpdater::LoadConfig()
 	branchName = localConfigNode.child("Branch").attribute("name").as_string();
 	userId = localConfigNode.child("GoogleAnalytics").attribute("cookie").as_string();
 	xml_node skippedVerNode = localConfigNode.child("SkippedVersions");
-	for (auto version : skippedVerNode.children("Version")) {
+	for (auto& version : skippedVerNode.children("Version")) {
 		skippedVersionIds.push_back(version.attribute("id").as_int());
 	}
 }
@@ -110,7 +110,7 @@ void AppUpdater::InstallLatestUpdate(UpdateLogWindow* logWindow)
 
 void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates)
 {
-	for (auto update : updates) {
+	for (auto& update : updates) {
 		if (!Contains(skippedVersionIds, update.versionId)) {
 			skippedVersionIds.push_back(update.versionId);
 		}
@@ -138,9 +138,7 @@ void AppUpdater::PerformUpdateCheck() {
 		std::string resultCategory;
 		std::stringstream resultDetail;
 
-		CURLcode downloadResult;
-		std::string body;
-		std::tie(downloadResult, body) = DownloadString(feedUrl);
+		auto [downloadResult, body] = DownloadString(feedUrl);
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
 
@@ -197,7 +195,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 	std::vector<UpdateManifest> availableUpdates;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
-	for (auto branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
+	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
 		std::string currentBranchName = branchNode.attribute("name").as_string();
 		if (currentBranchName == branchName) {
 			for (xml_node updateNode : branchNode.children("UpdateManifest")) {
@@ -227,7 +225,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates) {
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
-	for (auto update : updates) {
+	for (const auto& update : updates) {
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
 	return cumulativeChangeLog.str();
@@ -361,7 +359,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 						userResult << "Moved the extracted folder " << update.folderName << " to " << folderDest.str();
 						logWindow->Log(userResult.str());
 						//Copy current config file to new version's dir
-						for (auto copyFile : update.filesToCopy) {
+						for (auto& copyFile : update.filesToCopy) {
 							std::stringstream configDest; configDest << folderDest.str() << "\\" << copyFile;
 							if (CopyFile(copyFile.c_str(), configDest.str().c_str(), false) == 0) {
 								resultCategory = "fileCopyWarning";
@@ -703,7 +701,7 @@ void UpdateLogWindow::ProcessMessage(GLComponent *src, int message) {
 		}
 		else if (src == copyButton) {
 			std::ostringstream text;
-			for (auto line : lines)
+			for (auto& line : lines)
 				text << line <<"\n";
 			GLToolkit::CopyTextToClipboard(text.str());
 		}

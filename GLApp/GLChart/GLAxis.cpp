@@ -208,7 +208,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param c Axis color
    * @see getAxisColor
    */
-  void GLAxis::SetAxisColor(GLCColor c) {
+  void GLAxis::SetAxisColor(GLColor c) {
     labelColor = c;
   }
 
@@ -217,7 +217,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @return Axis color
    * @see setAxisColor
    */
-  GLCColor GLAxis::GetAxisColor() {
+  GLColor GLAxis::GetAxisColor() {
     return labelColor;
   }
 
@@ -668,7 +668,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param s Name of this axis.
    * @see getName
    */
-  void GLAxis::SetName(char *s) {
+  void GLAxis::SetName(const char *s) {
     strcpy(name,s);
   }
 
@@ -843,7 +843,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @see getViews
    */
   void GLAxis::ClearDataView() {
-    GLDataView v;
+   // GLDataView v;
     for (int i = 0; i < nbView; i++) {
       dataViews[i]->SetAxis(NULL);
     }
@@ -2147,7 +2147,7 @@ GLuint GLAxis::initMarker(char *name) {
       pointX[1] =  p.x;
       pointY[0] = lp.y;
       pointY[1] =  p.y;
-      GLCColor c = v->GetColor();
+      GLColor c = v->GetColor();
       GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,2,pointX,pointY);
 
     }
@@ -2193,7 +2193,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param x x coordinates (pixel space)
    * @param y y coordinates (pixel space)
    */
-  void GLAxis::PaintMarker(GLCColor c,int mType, int mSize, int x, int y) {
+  void GLAxis::PaintMarker(GLColor c,int mType, int mSize, int x, int y) {
 
     int mSize2 = mSize / 2;
     //int mSize21 = mSize / 2 + 1;
@@ -2252,7 +2252,7 @@ GLuint GLAxis::initMarker(char *name) {
     glEnd();
   }
 
-  void GLAxis::paintBar(int barWidth, GLCColor background, int fillStyle, int y0, int x, int y) {
+  void GLAxis::paintBar(int barWidth, GLColor background, int fillStyle, int y0, int x, int y) {
 
     if (fillStyle != FILL_STYLE_NONE) {
       // TODO pattern fillStyle
@@ -2274,7 +2274,7 @@ GLuint GLAxis::initMarker(char *name) {
    */
   void GLAxis::DrawSampleLine(int x, int y, GLDataView *v) {
 
-    GLCColor c = v->GetColor();
+    GLColor c = v->GetColor();
 
     // Draw
     if( v->GetViewType()== TYPE_LINE ) {
@@ -2291,7 +2291,7 @@ GLuint GLAxis::initMarker(char *name) {
     } else if( v->GetViewType() == TYPE_BAR ) {
 
       if(v->GetFillStyle()!= FILL_STYLE_NONE) {
-        GLCColor fc = v->GetFillColor();
+        GLColor fc = v->GetFillColor();
         GLToolkit::DrawBox(x+16,y-4,8,8,fc.r,fc.g,fc.b);
       }
 
@@ -2316,7 +2316,7 @@ GLuint GLAxis::initMarker(char *name) {
     parent->GetWindow()->ClipRect(parent,x,y,width,height);
   }
 
-  void GLAxis::drawLine(GLCColor c,int dash,int lWidth,int x1,int y1,int x2,int y2) {
+  void GLAxis::drawLine(GLColor c,int dash,int lWidth,int x1,int y1,int x2,int y2) {
     int pointX[2];
     int pointY[2];
     pointX[0] = x1;
@@ -2474,7 +2474,7 @@ GLuint GLAxis::initMarker(char *name) {
       }
 
       if (v->GetLineWidth() > 0) {
-        GLCColor c = v->GetColor();
+        GLColor c = v->GetColor();
         GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,nb,pointX,pointY);
       }
 
@@ -2730,7 +2730,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint sub tick outside label limit
   // Expert usage
-  void GLAxis::paintYOutTicks(GLCColor c,int x0, double ys, int y0, int la, int tr,int off,bool grid) {
+  void GLAxis::paintYOutTicks(GLColor c,int x0, double ys, int y0, int la, int tr,int off,bool grid) {
 
     int j,h;
 
@@ -2769,7 +2769,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint sub tick outside label limit
   // Expert usage
-  void GLAxis::paintXOutTicks(GLCColor c,int y0, double xs, int x0, int la,int tr,int off,bool grid) {
+  void GLAxis::paintXOutTicks(GLColor c,int y0, double xs, int x0, int la,int tr,int off,bool grid) {
 
     int j,w;
 
@@ -2866,7 +2866,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint Y sub tick and return tick spacing
   // Expert usage
-  void GLAxis::paintYTicks(GLCColor c,int i, int x0, double y, int la, int tr,int off,bool grid) {
+  void GLAxis::paintYTicks(GLColor c,int i, int x0, double y, int la, int tr,int off,bool grid) {
 
     int j,h;
 
@@ -2903,7 +2903,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   // Paint X sub tick and return tick spacing
   // Expert usage
-  void GLAxis::paintXTicks(GLCColor c,int i, int y0, double x, int la, int tr,int off,bool grid) {
+  void GLAxis::paintXTicks(GLColor c,int i, int y0, double x, int la, int tr,int off,bool grid) {
 
     int j,w;
 
@@ -2942,11 +2942,12 @@ GLuint GLAxis::initMarker(char *name) {
    * @param c2 Color 2
    * @return Averaged color.
    */
-  GLCColor GLAxis::ComputeMediumColor(GLCColor c1, GLCColor c2) {
-    GLCColor r;
-    r.r = c1.r + 3 * c2.r / 4;
-    r.g = c1.g + 3 * c2.g / 4;
-    r.b = c1.b + 3 * c2.b / 4;
+  GLColor GLAxis::ComputeMediumColor(GLColor c1, GLColor c2) {
+    GLColor r(
+		c1.r + 3 * c2.r / 4,
+		c1.g + 3 * c2.g / 4,
+		c1.b + 3 * c2.b / 4
+		);
     return r;
   }
 
@@ -2963,7 +2964,7 @@ GLuint GLAxis::initMarker(char *name) {
    * @param oppositeVisible Oposite axis is visible.
    *
    */
-  void GLAxis::PaintAxis(int x0, int y0, GLAxis *xAxis, int xOrg, int yOrg, GLCColor back,bool oppositeVisible) {
+  void GLAxis::PaintAxis(int x0, int y0, GLAxis *xAxis, int xOrg, int yOrg, GLColor back,bool oppositeVisible) {
 
     int la = 0;
     int tr = 0;
@@ -3074,11 +3075,11 @@ GLuint GLAxis::initMarker(char *name) {
    * @param tr Translation from x0 to axis.
    * @param la Translation to opposite axis (used by grid).
    */
-  void GLAxis::PaintAxisDirect(int x0, int y0,GLCColor back,int tr,int la) {
+  void GLAxis::PaintAxisDirect(int x0, int y0,GLColor back,int tr,int la) {
 
     int i,x,y,tickOff,subTickOff,labelShift;
 
-    GLCColor subgridColor = ComputeMediumColor(labelColor, back);
+    GLColor subgridColor = ComputeMediumColor(labelColor, back);
 
     tickOff = getTickShift(tickLength);
     subTickOff = getTickShift(subtickLength);
@@ -3244,10 +3245,10 @@ GLuint GLAxis::initMarker(char *name) {
 
   }
 
-  void GLAxis::PaintAxisOpposite(int x0, int y0,GLCColor back,int tr,int la) {
+  void GLAxis::PaintAxisOpposite(int x0, int y0,GLColor back,int tr,int la) {
 
     int i,x,y,tickOff,subTickOff,nX0;
-    GLCColor subgridColor = ComputeMediumColor(labelColor, back);
+    GLColor subgridColor = ComputeMediumColor(labelColor, back);
 
     tickOff = getTickShiftOpposite(tickLength);
     subTickOff = getTickShiftOpposite(subtickLength);
@@ -3354,7 +3355,7 @@ GLuint GLAxis::initMarker(char *name) {
 
   }
 
-  void GLAxis::PaintAxisOppositeDouble(int x0, int y0,GLCColor back,int tr,int la) {
+  void GLAxis::PaintAxisOppositeDouble(int x0, int y0,GLColor back,int tr,int la) {
 
     int nX0;
 

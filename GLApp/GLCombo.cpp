@@ -5,6 +5,7 @@
 #include "GLWindowManager.h"
 #include "GLList.h"
 #include "GLTextField.h"
+#include <string>
 
 // Popup -----------------------------------------------------------
 
@@ -86,7 +87,7 @@ int GLCombo::GetUserValueAt(size_t row) {
   return list->GetUserValueAt(0,row);
 }
 
-char *GLCombo::GetValueAt(size_t row) {
+std::string GLCombo::GetValueAt(size_t row) {
   return list->GetValueAt(0,row);
 }
 
@@ -99,14 +100,12 @@ void GLCombo::SetSelectedValue(char *value) {
   selectedRow = -1;
 }
 
-char *GLCombo::GetSelectedValue() {
+std::string GLCombo::GetSelectedValue() {
   return text->GetText();
 }
 
 void GLCombo::ScrollTextToEnd() {
-  char *value = text->GetText();
-  int l = (value?(int)strlen(value):0);
-  text->SetCursorPos(l);
+  text->SetCursorPos((int)text->GetText().length());
   text->ScrollToVisible();
 }
 
@@ -224,22 +223,28 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
   int my = GetWindow()->GetY(this,evt);
 
   if( mx>=width-16 || !m_Editable ) {
-    if( evt->type == SDL_MOUSEBUTTONDOWN ) {
-      size_t nbRow = list->GetNbRow();
-      if( evt->button.button==SDL_BUTTON_WHEELUP ) {
-        if( nbRow>0 && selectedRow>0 ) {
-          SetSelectedIndex(selectedRow-1);
-          if(parent) parent->ProcessMessage(this,MSG_COMBO);
-        }
-      } else if( evt->button.button==SDL_BUTTON_WHEELDOWN ) {
-        if( nbRow>0 && selectedRow<nbRow-1 ) {
-          SetSelectedIndex(selectedRow+1);
-          if(parent) parent->ProcessMessage(this,MSG_COMBO);
-        }
-      } else {
+    size_t nbRow = list->GetNbRow();
+	if( evt->type == SDL_MOUSEBUTTONDOWN ) {
+      
+      
         Drop();
-      }
+      
     }
+
+	if (evt->type == SDL_MOUSEWHEEL) {
+		if (evt->wheel.y>0) {
+			if (nbRow > 0 && selectedRow > 0) {
+				SetSelectedIndex(selectedRow - 1);
+				if (parent) parent->ProcessMessage(this, MSG_COMBO);
+			}
+		}
+		else if (evt->wheel.y < 0) {
+			if (nbRow > 0 && selectedRow < nbRow - 1) {
+				SetSelectedIndex(selectedRow + 1);
+				if (parent) parent->ProcessMessage(this, MSG_COMBO);
+			}
+		}
+	}
     return;
   }
 

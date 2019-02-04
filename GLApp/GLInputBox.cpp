@@ -59,10 +59,29 @@ GLInputBox::GLInputBox(const char *message,char *label,char *title):GLWindow() {
 
 }
 
+void GLInputBox::ManageEvent(SDL_Event *evt) {
+	if (evt->type == SDL_KEYDOWN) {
+		if (evt->key.keysym.sym == SDLK_RETURN || evt->key.keysym.sym == SDLK_KP_ENTER) {
+			strcpy(ret, text->GetText().c_str());
+			rValue = ret;
+			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+			return;
+		} else if (evt->key.keysym.sym == SDLK_ESCAPE) {
+			rValue = NULL;
+			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+			return;
+		}
+	}
+	else {
+		GLWindow::ManageEvent(evt);
+	}
+}
+
+
 void GLInputBox::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     if( src->GetId() ) {
-      strcpy(ret,text->GetText());
+      strcpy(ret,text->GetText().c_str());
       rValue = ret;
     }
 	else {
@@ -72,7 +91,7 @@ void GLInputBox::ProcessMessage(GLComponent *src,int message) {
     return;
   }
   else if (message==MSG_TEXT) {
-		strcpy(ret,text->GetText());
+		strcpy(ret,text->GetText().c_str());
 		rValue = ret;
 		GLWindow::ProcessMessage(NULL,MSG_CLOSE);
     return;

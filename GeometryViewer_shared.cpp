@@ -235,6 +235,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
 	tabLabel->SetTextColor(255, 255, 255);
 	Add(tabLabel);
+	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
+	nonPlanarLabel->SetTextColor(255, 0, 255);
+	Add(nonPlanarLabel);
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -520,12 +523,11 @@ void GeometryViewer::UpdateMatrix() {
 
 	switch (view.projMode) {
 	case PERSPECTIVE_PROJ:
-		GLToolkit::LookAt((camDir.x * view.camDist + org.x) + view.camOffset.x,
-			(camDir.y * view.camDist + org.y) + view.camOffset.y,
-			(camDir.z * view.camDist + org.z) + view.camOffset.z,
-			org.x + view.camOffset.x, org.y + view.camOffset.y, org.z + view.camOffset.z,
-			camUp.x, camUp.y, camUp.z, handedness);
+	{
+		Vector3d camPos = org + view.camOffset;
+		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
 		break;
+	}
 	case ORTHOGRAPHIC_PROJ:
 		glLoadIdentity();
 		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);
@@ -619,7 +621,7 @@ void GeometryViewer::SetWorker(Worker *w) {
 	ToFrontView();
 	// Auto size vector length (consider Front View)
 	Geometry *geom = work->GetGeometry();
-	AABB bb = geom->GetBB();
+	AxisAlignedBoundingBox bb = geom->GetBB();
 	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 	arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 }
@@ -638,7 +640,7 @@ void GeometryViewer::DrawIndex() {
 	//Mark vertices of selected facets
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
 	std::vector<size_t> vertexId(nbVertex);
-	for (auto selId:selectedFacets) {
+	for (auto& selId:selectedFacets) {
 		Facet *f = geom->GetFacet(selId);
 			for (size_t i = 0; i < f->sh.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;
@@ -835,10 +837,10 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
-		for (size_t i = 0; i < Min(dispNumLeaks,mApp->worker.leakCacheSize); i++) {
+		for (size_t i = 0; i < Min(dispNumLeaks,mApp->worker.globalHitCache.leakCacheSize); i++) {
 
-			Vector3d p = mApp->worker.leakCache[i].pos;
-			Vector3d d = mApp->worker.leakCache[i].dir;
+			Vector3d p = mApp->worker.globalHitCache.leakCache[i].pos;
+			Vector3d d = mApp->worker.globalHitCache.leakCache[i].dir;
 
 			glColor3f(0.9f, 0.2f, 0.5f);
 			glBegin(GL_POINTS);
@@ -1205,28 +1207,17 @@ if( showVolume || showTexture ) {
 	bool displaySelectionLabel = displaySelectionRectangle;
 	bool displayPanLabel = draggMode == DRAGG_MOVE;
 	bool displayTabLabel = GetWindow()->IsTabDown();
+	bool displayNonPlanarLabel = geom->hasNonPlanar;
 
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47, 0, 19);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayHideLotLabel, 0, 19);
-	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel, 0, 19);
-	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel - 20 * (int)displayRotateLabel, 0, 19);
-	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel, 0, 19);
-	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel, 0, 19);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * (int)displayCapsLockLabel - 20 * (int)displayHideLotLabel
-		- 20 * (int)displayRotateLabel - 20 * displayScreenshotLabel - 20 * displaySelectionLabel - 20 * displayPanLabel, 0, 19);
-
-	rotateLabel->SetVisible(displayRotateLabel);
-	capsLockLabel->SetVisible(displayCapsLockLabel);
-	hideLotlabel->SetVisible(displayHideLotLabel);
-	screenshotLabel->SetVisible(displayScreenshotLabel);
-	selectLabel->SetVisible(displaySelectionLabel);
-	panLabel->SetVisible(displayPanLabel);
-	tabLabel->SetVisible(displayTabLabel);
-
-	
-
+	int offsetCount = 0;
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20*offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel;hideLotlabel->SetVisible(displayHideLotLabel);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel;capsLockLabel->SetVisible(displayCapsLockLabel);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel;rotateLabel->SetVisible(displayRotateLabel);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel;screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel;selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel;panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel;tabLabel->SetVisible(displayTabLabel);
+	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel;nonPlanarLabel->SetVisible(displayNonPlanarLabel);
 		
 #ifdef MOLFLOW
 	if (work->displayedMoment)
@@ -1440,8 +1431,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 	if (evt->type == SDL_KEYUP) {
 
-		int unicode = (evt->key.keysym.unicode & 0x7F);
-		if (!unicode) unicode = evt->key.keysym.sym;
+		int unicode = evt->key.keysym.sym;
 
 		if (unicode == SDLK_LCTRL || unicode == SDLK_RCTRL) {
 			//UpdateMouseCursor(MODE_SELECT);
@@ -1514,7 +1504,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			draggMode = DRAGG_ROTATE;
 			//UpdateMouseCursor(MODE_MOVE);
 		}
-		if (evt->button.button == SDL_BUTTON_WHEELUP) {
+
+		UpdateMouseCursor(mode);
+	}
+
+	if (evt->type == SDL_MOUSEWHEEL) {
+		if (evt->wheel.y > 0) {
 			if (GetWindow()->IsShiftDown()) {
 				TranslateScale(-2.0); //Zoom slower when SHIFT is pressed
 			}
@@ -1527,7 +1522,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
-		if (evt->button.button == SDL_BUTTON_WHEELDOWN) {
+		if (evt->wheel.y < 0) {
 			if (GetWindow()->IsShiftDown()) {
 				TranslateScale(2.0); //Zoom slower when SHIFT is pressed
 			}
@@ -1540,8 +1535,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
-
-		UpdateMouseCursor(mode);
 	}
 
 	if (evt->type == SDL_MOUSEBUTTONUP) {
@@ -1907,9 +1900,9 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 	zFar = -1e100;
 	mv.LoadGL(matView);
 
-	//Transform the AABB (fast method, but less accurate 
+	//Transform the AxisAlignedBoundingBox (fast method, but less accurate 
 	//than full vertex transform)
-	//AABB bbO = geom->GetBB();
+	//AxisAlignedBoundingBox bbO = geom->GetBB();
 	//TRANSFORMBB(min.x,min.y,min.z);
 	//TRANSFORMBB(max.x,min.y,min.z);
 	//TRANSFORMBB(max.x,min.y,max.z);
@@ -1931,7 +1924,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 //#ifdef SYNRAD		
 		//regions included
-		AABB bb = geom->GetBB();
+		AxisAlignedBoundingBox bb = geom->GetBB();
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);
@@ -1952,7 +1945,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		size_t nbF = geom->GetNbFacet();
 		for (int i = 0; i < nbF; i++) {
 			Facet *f = geom->GetFacet(i);
-			if (f->sh.superIdx == geom->viewStruct) {
+			if (f->sh.superIdx == geom->viewStruct || f->sh.superIdx == -1) {
 				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
 			}
 		}
@@ -1991,7 +1984,7 @@ void Geometry::BuildFacetMeshLists()
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
 		prg->SetProgress((double)i / (double)nbFacet);
-		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshList();
+		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshGLList();
 
 	}
 	prg->SetVisible(false);

@@ -83,6 +83,10 @@ public:
     int  nbRestore;
     double fMoveTime;
     double fPaintTime;
+
+	SDL_Window *mainScreen;
+	SDL_GLContext mainContext;
+
 //#endif
 
 private:

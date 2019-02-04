@@ -177,8 +177,8 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
         return;
       }
       if( src==okButton ) {
-        strcpy(curFile,fileText->GetSelectedValue());
-        strcpy(curPath,pathText->GetSelectedValue());
+        strcpy(curFile,fileText->GetSelectedValue().c_str());
+        strcpy(curPath,pathText->GetSelectedValue().c_str());
         rCode = OK_BTN;
         GLWindow::ProcessMessage(NULL,MSG_CLOSE);
         return;
@@ -193,9 +193,9 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
     case MSG_TEXT: {
       if( src->GetId() == PATH_TEXT ) {
         // Return pressed in nameText
-        char *nPath = pathText->GetSelectedValue();
-        if( CheckDirectory(nPath) ) {
-          UpdateFileList(nPath);
+        std::string nPath = pathText->GetSelectedValue();
+        if( CheckDirectory(nPath.c_str()) ) {
+          UpdateFileList(nPath.c_str());
           AddToPathHist(curPath);
         } else {
           pathText->SetSelectedValue(curPath);
@@ -212,8 +212,8 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
           UpdateFileList(curPath);
         }
       } else if ( src==pathText ) {
-        char *nPath = pathText->GetSelectedValue();
-        UpdateFileList(nPath);
+        std::string nPath = pathText->GetSelectedValue();
+        UpdateFileList(nPath.c_str());
       }
     } break;
 
@@ -262,7 +262,7 @@ void GLFileBox::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-bool GLFileBox::CheckDirectory(char *dirName) {
+bool GLFileBox::CheckDirectory(const char *dirName) {
 
 #ifdef WIN
 
@@ -707,7 +707,7 @@ void GLFileBox::Back() {
 
 }
 
-void GLFileBox::UpdateFileList(char *path) {
+void GLFileBox::UpdateFileList(const char *path) {
 
   vector<string> files;
   int nbFile = 0;

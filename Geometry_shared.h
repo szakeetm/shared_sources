@@ -38,6 +38,26 @@ class Facet;
 class DeletedFacet;
 class Worker;
 
+union PhysicalValue{
+	//Unified return value that can return size_t, double or vector
+	size_t count;
+	double value;
+	Vector3d vect;
+	PhysicalValue() { new(&vect) Vector3d(); }
+} ;
+
+enum class PhysicalMode {
+	CellArea,
+	MCHits,
+	ImpingementRate,
+	ParticleDensity,
+	GasDensity,
+	Pressure,
+	AvgGasVelocity,
+	GasVelocityVector,
+	NbVelocityVectors
+};
+
 class ClippingVertex {
 public:
 
@@ -68,15 +88,16 @@ public:
 class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
-	void CalculateFacetParam(Facet *f);
+	void CalculateFacetParams(Facet *f);
 	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
-	void LoadTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0);
-	void InsertTXTGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, bool newStruct = false);
-	void InsertGEOGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, bool newStruct = false);
-	void InsertSTLGeom(FileReader *file, size_t *nbV, size_t *nbF, InterfaceVertex **V, Facet ***F, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
+	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
+	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
+	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
+	void InsertSTLGeom(FileReader *file, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
 	void AdjustProfile();
 	void BuildShapeList();
 	void BuildSelectList();
+	void BuildNonPlanarList();
 public:
 	Geometry();
 	~Geometry();
@@ -89,6 +110,7 @@ public:
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
+	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* texture); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
@@ -116,18 +138,18 @@ public:
 	void SelectCoplanar(int width, int height, double tolerance);
 	Facet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
-	AABB     GetBB();
+	AxisAlignedBoundingBox     GetBB();
 	Vector3d GetCenter();
 
 	// Collapsing stuff
-	int  AddRefVertex(InterfaceVertex *p, InterfaceVertex *refs, int *nbRef, double vT);
+	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
 	bool RemoveNullFacet();
 	Facet *MergeFacet(Facet *f1, Facet *f2);
 	bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 
-	void LoadTXT(FileReader *file, GLProgress *prg);
+	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
 	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor);
 	void LoadASE(FileReader *file, GLProgress *prg);
@@ -192,6 +214,7 @@ public:
 	void UpdateName(FileReader *file);
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
+	std::vector<size_t> GetNonPlanarFacets(const double& tolerance=1E-5);
 	size_t GetNbSelectedFacets();
 	void SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown);
 	int  RestoreDeviceObjects();
@@ -208,14 +231,14 @@ protected:
 	void AddToSelectedVertexList(size_t vertexId);
 	void DrawFacet(Facet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void FillFacet(Facet *f, bool addTextureCoord);
-	void AddTextureCoord(Facet *f, Vector2d *p);
+	void AddTextureCoord(Facet *f, const Vector2d *p);
 	void DrawPolys();
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	int  FindEar(POLYGON *p);
+	int  FindEar(const GLAppPolygon& p);
 	void Triangulate(Facet *f, bool addTextureCoord);
-	void DrawEar(Facet *f, POLYGON *p, int ear, bool addTextureCoord);
+	void DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
 	void SelectAll();
 	void UnselectAll();
@@ -249,8 +272,8 @@ protected:
 
 										  // Geometry
 	Facet    **facets;    // All facets of this geometry
-	InterfaceVertex  *vertices3; // Vertices (3D space), can be selected
-	AABB bb;              // Global Axis Aligned Bounding Box (AABB)
+	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
+	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)
 	bool  centerNorme;    // Center vector (direction field)
@@ -270,6 +293,7 @@ protected:
 	GLint selectList;             // Compiled geometry (selection)
 	GLint selectList2;            // Compiled geometry (selection with offset)
 	GLint selectList3;            // Compiled geometry (no offset,hidden visible)
+	GLint nonPlanarList;          // Non-planar facets with purple outline
 	GLint selectListVertex;             // Compiled geometry (selection)
 	GLint selectList2Vertex;            // Compiled geometry (selection with offset)
 	GLint selectList3Vertex;            // Compiled geometry (no offset,hidden visible)
@@ -277,20 +301,14 @@ protected:
 	GLint sphereList;             // Compiled geometry of sphere used for direction field
 
 	public:
-		llong loaded_nbMCHit;
-		double loaded_nbHitEquiv;
-		llong loaded_nbDesorption;
-		llong loaded_desorptionLimit;
-		llong   loaded_nbLeak;
-		double loaded_nbAbsEquiv;
-		double loaded_distTraveledTotal;
-
 		bool  texAutoScale;  // Autoscale flag
 		bool  texColormap;   // Colormap flag
 		bool  texLogScale;   // Texture im log scale
 
 		int viewStruct;
 		int textureMode;  //MC hits/flux/power
+
+		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
 #ifdef MOLFLOW
 #include "MolflowTypes.h"

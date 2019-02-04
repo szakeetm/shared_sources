@@ -23,7 +23,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <filesystem>
 #include "AppUpdater.h"
 
-#include "GLApp/GLFileBox.h"
+//#include "GLApp/GLFileBox.h"
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
@@ -47,6 +48,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryViewer.h"
 #include "CollapseSettings.h"
 #include "HistogramSettings.h"
+#include "HistogramPlotter.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
 #include "ScaleFacet.h"
@@ -70,28 +72,38 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
 
+#include "NativeFileDialog/nfd.h"
+
 //Updater
 #include <PugiXML\pugixml.hpp>
 #include "ZipUtils/zip.h"
 #include "ZipUtils/unzip.h"
 #include "File.h" //File utils (Get extension, etc)
 
+#include "versionId.h"
+
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;
 //extern const char* appTitle;
 
+/*
 extern const char *fileLFilters;
 extern const char *fileInsFilters;
 extern const char *fileSFilters;
 extern const char *fileDesFilters;
+*/
+extern std::string fileLFilters;
+extern std::string fileInsFilters;
+extern std::string fileSaveFilters;
+extern std::string fileSelFilters;
+extern std::string fileTexFilters;
+extern std::string fileDesFilters;
+
 
 extern int   cSize;
 extern int   cWidth[];
 extern char *cName[];
-extern std::string appTitle;
-extern std::string appName;
-extern std::string appVersionName;
-extern int appVersionId;
+
 
 Interface::Interface() {
 	//Get number of cores
@@ -105,7 +117,7 @@ Interface::Interface() {
 	leftHandedView = false;
 	autoUpdateFormulas = true;
 	compressSavedFiles = true;
-	/*double gasMass=28;
+	/*double wp.gasMass=28;
 	double totalOutgassing=0.0; //total outgassing in Pa*m3/sec (internally everything is in SI units)
 	double totalInFlux = 0.0; //total incoming molecules per second. For anisothermal system, it is (totalOutgassing / Kb / T)*/
 	autoSaveFrequency = 10.0; //in minutes
@@ -144,6 +156,7 @@ Interface::Interface() {
 	//formulaSettings = NULL;
 	collapseSettings = NULL;
 	histogramSettings = NULL;
+	histogramPlotter = NULL;
 	moveVertex = NULL;
 	scaleVertex = NULL;
 	scaleFacet = NULL;
@@ -245,7 +258,7 @@ void Interface::UpdateStructMenu() {
 	UpdateTitle();
 }
 
-void Interface::UpdateCurrentDir(char *fileName) {
+void Interface::UpdateCurrentDir(const char *fileName) {
 
 	strncpy(currentDir, fileName, 1024);
 	char *dp = strrchr(currentDir, '\\');
@@ -254,7 +267,7 @@ void Interface::UpdateCurrentDir(char *fileName) {
 
 }
 
-void Interface::UpdateCurrentSelDir(char *fileName) {
+void Interface::UpdateCurrentSelDir(const char *fileName) {
 
 	strncpy(currentDir, fileName, 1024);
 	char *dp = strrchr(currentDir, '\\');
@@ -374,20 +387,14 @@ char* Interface::FormatTime(float t) {
 
 void Interface::LoadSelection(char *fName) {
 
-	char fullName[1024];
-	strcpy(fullName, "");
+	std::string fileName = fName;
 	FileReader *f = NULL;
 
-	if (fName == NULL) {
-		FILENAME *fn = GLFileBox::OpenFile(currentSelDir, NULL, "Load Selection", fileSelFilters, 0);
-		if (fn)
-			strcpy(fullName, fn->fullName);
+	if (fileName.empty()) {
+		fileName = NFD_OpenFile_Cpp(fileSelFilters, "");
+		if (fileName.empty()) return;
 	}
-	else {
-		strcpy(fullName, fName);
-	}
-
-	if (strlen(fullName) == 0) return;
+	
 
 	try {
 
@@ -395,7 +402,7 @@ void Interface::LoadSelection(char *fName) {
 		geom->UnselectAll();
 		size_t nbFacet = geom->GetNbFacet();
 
-		f = new FileReader(fullName);
+		f = new FileReader(fileName);
 		while (!f->IsEof()) {
 			int s = f->ReadInt();
 			if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
@@ -403,13 +410,11 @@ void Interface::LoadSelection(char *fName) {
 		geom->UpdateSelection();
 
 		UpdateFacetParams(true);
-		UpdateCurrentSelDir(fullName);
-
 	}
 	catch (Error &e) {
 
 		char errMsg[512];
-		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fullName);
+		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 
 	}
@@ -429,21 +434,16 @@ void Interface::SaveSelection() {
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
 
-	FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetCurrentShortFileName(), "Save selection", fileSelFilters, 0);
+	std::string fileName = NFD_SaveFile_Cpp(fileSelFilters, "");
+	//FILENAME *fn = GLFileBox::SaveFile(currentSelDir, worker.GetCurrentShortFileName(), "Save selection", fileSelFilters, 0);
 
-	if (fn) {
+	if (!fileName.empty()) {
 
 		try {
 
-			char *ext = fn->fullName + strlen(fn->fullName) - 4;
+			if (FileUtils::GetExtension(fileName).empty()) fileName = fileName + ".sel";
 
-			if (!(*ext == '.')) {
-				sprintf(fn->fullName, "%s.sel", fn->fullName); //set to default SEL format
-				ext = strrchr(fn->fullName, '.');
-			}
-			ext++;
-
-			f = new FileWriter(fn->fullName);
+			f = new FileWriter(fileName);
 			//int nbSelected = geom->GetNbSelectedFacets();
 			size_t nbFacet = geom->GetNbFacet();
 			for (size_t i = 0; i < nbFacet; i++) {
@@ -453,7 +453,7 @@ void Interface::SaveSelection() {
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
@@ -473,22 +473,23 @@ void Interface::ExportSelection() {
 		return;
 	}
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
+	std::string fileName = NFD_SaveFile_Cpp(fileSaveFilters, "");
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
-	if (fn) {
+	if (!fileName.empty()) {
 
 		try {
-			worker.SaveGeometry(fn->fullName, progressDlg2, true, true);
-			AddRecent(fn->fullName);
+			worker.SaveGeometry(fileName.c_str(), progressDlg2, true, true);
+			AddRecent(fileName.c_str());
 			//UpdateCurrentDir(fn->fullName);
 			//UpdateTitle();
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
@@ -511,7 +512,7 @@ void Interface::UpdateModelParams() {
 	facetList->SetColumnLabels((char **)cName);
 	UpdateFacetHits(true);
 	UpdateFacetlistSelected();
-	AABB bb = geom->GetBB();
+	AxisAlignedBoundingBox bb = geom->GetBB();
 
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		Facet *f = geom->GetFacet(i);
@@ -801,9 +802,11 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
+	menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
+	menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT,SDLK_r, CTRL_MODIFIER);
@@ -816,7 +819,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Facet")->Add("Delete", MENU_FACET_REMOVESEL, SDLK_DELETE, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Swap normal", MENU_FACET_SWAPNORMAL, SDLK_n, CTRL_MODIFIER);
 	menu->GetSubMenu("Facet")->Add("Shift indices", MENU_FACET_SHIFTVERTEX, SDLK_h, CTRL_MODIFIER);
-	menu->GetSubMenu("Facet")->Add("Facet coordinates ...", MENU_FACET_COORDINATES, SDLK_t, CTRL_MODIFIER);
+	menu->GetSubMenu("Facet")->Add("Facet coordinates ...", MENU_FACET_COORDINATES);
 	menu->GetSubMenu("Facet")->Add("Move ...", MENU_FACET_MOVE);
 	menu->GetSubMenu("Facet")->Add("Scale ...", MENU_FACET_SCALE);
 	menu->GetSubMenu("Facet")->Add("Mirror / Project ...", MENU_FACET_MIRROR);
@@ -1021,9 +1024,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	facetDetailsBtn = new GLButton(0, "Details...");
 	facetPanel->Add(facetDetailsBtn);
 
-	facetHistogramBtn = new GLButton(0, "Histogr.");
-	facetHistogramBtn->SetEnabled(false); //coming in next version
-	facetPanel->Add(facetHistogramBtn);
+	facetCoordBtn = new GLButton(0, "Coord.");
+	facetPanel->Add(facetCoordBtn);
 
 	facetApplyBtn = new GLButton(0, "Apply");
 	facetApplyBtn->SetEnabled(false);
@@ -1031,6 +1033,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
 }
 
 void Interface::OneTimeSceneInit_shared_post() {
+	menu->Add("About");
+	menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
+
 	ClearFacetParams();
 	LoadConfig();
 	UpdateRecentMenu();
@@ -1068,6 +1073,7 @@ int Interface::RestoreDeviceObjects_shared() {
 	RVALIDATE_DLG(formulaEditor);
 	RVALIDATE_DLG(collapseSettings);
 	RVALIDATE_DLG(histogramSettings);
+	RVALIDATE_DLG(histogramPlotter);
 	RVALIDATE_DLG(moveVertex);
 	RVALIDATE_DLG(scaleVertex);
 	RVALIDATE_DLG(scaleFacet);
@@ -1108,6 +1114,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 	IVALIDATE_DLG(formulaEditor);
 	IVALIDATE_DLG(collapseSettings);
 	IVALIDATE_DLG(histogramSettings);
+	IVALIDATE_DLG(histogramPlotter);
 	IVALIDATE_DLG(moveVertex);
 	IVALIDATE_DLG(scaleVertex);
 	IVALIDATE_DLG(scaleFacet);
@@ -1191,11 +1198,11 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			if (AskToSave()) Exit();
 			return true;
 
-		/*case MENU_EDIT_ADDFORMULA:
-			if (!formulaSettings) formulaSettings = new FormulaSettings();
-			formulaSettings->Update(NULL, -1);
-			formulaSettings->SetVisible(true);
-			return true;*/
+			/*case MENU_EDIT_ADDFORMULA:
+				if (!formulaSettings) formulaSettings = new FormulaSettings();
+				formulaSettings->Update(NULL, -1);
+				formulaSettings->SetVisible(true);
+				return true;*/
 
 		case MENU_TOOLS_FORMULAEDITOR:
 			if (!geom->IsLoaded()) {
@@ -1209,6 +1216,22 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				formulaEditor->SetVisible(TRUE);
 			}
 			break;
+		case MENU_TOOLS_HISTOGRAMSETTINGS:
+			if (!histogramSettings || !histogramSettings->IsVisible()) {
+				SAFE_DELETE(histogramSettings);
+				histogramSettings = new HistogramSettings(geom, &worker);
+			}
+			histogramSettings->Refresh(geom->GetSelectedFacets());
+			histogramSettings->SetVisible(true);
+			return true;
+		case MENU_TOOLS_HISTOGRAMPLOTTER:
+			if (!histogramPlotter || !histogramPlotter->IsVisible()) {
+				SAFE_DELETE(histogramPlotter);
+				histogramPlotter = new HistogramPlotter(&worker);
+			}
+			histogramPlotter->Refresh();
+			histogramPlotter->SetVisible(true);
+			return true;
 		case MENU_TOOLS_PARTICLELOGGER:
 			if (!particleLogger || !particleLogger->IsVisible()) {
 				SAFE_DELETE(particleLogger);
@@ -1217,7 +1240,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			particleLogger->UpdateStatus();
 			particleLogger->SetVisible(true);
 			return true;
-		
+
 		case MENU_TOOLS_SCREENSHOT:
 		{
 			std::ostringstream tmp;
@@ -1376,7 +1399,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTTRANS:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0)
+				if (geom->GetFacet(i)->sh.opacity_paramId!=-1 || (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1407,7 +1430,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			return true;
 
 		case MENU_FACET_SELECTNONPLANAR:
-
+		{
 			sprintf(tmp, "%g", planarityThreshold);
 			//sprintf(title,"Pipe L/R = %g",L/R);
 			input = GLInputBox::GetInput(tmp, "Planarity larger than:", "Select non planar facets");
@@ -1417,18 +1440,18 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				return true;
 			}
 			geom->UnselectAll();
-			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (fabs(geom->GetFacet(i)->err) >= planarityThreshold)
-					geom->SelectFacet(i);
+			std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacets(planarityThreshold);
+			for (const auto& i : nonPlanarFacetids)
+				geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
 			return true;
-
+		}
 		case MENU_FACET_SELECTERR:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 
-				if (geom->GetFacet(i)->sh.sign == 0.0)
+				if (geom->GetFacet(i)->nonSimple)
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1458,10 +1481,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++) {
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbAbsEquiv > 0)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbAbsEquiv > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbAbsEquiv > 0)
+					if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
 #endif
 					geom->SelectFacet(i);
 			}
@@ -1474,10 +1497,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbMCHit > 0)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit > 0)
 #endif
 #ifdef SYNRAD
-					if (geom->GetFacet(i)->counterCache.nbMCHit > 0)
+					if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1497,10 +1520,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
 #ifdef MOLFLOW
-				if (geom->GetFacet(i)->counterCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 #ifdef SYNRAD
-				if (geom->GetFacet(i)->counterCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+				if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
 #endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1513,7 +1536,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			UpdateFacetParams(true);
 			return true;
 		case MENU_SELECTION_SELECTFACETNUMBER:
-			if (!selectDialog) selectDialog = new SelectDialog(&worker);
+			if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
 			selectDialog->SetVisible(true);
 			return true;
 		case MENU_SELECTION_TEXTURETYPE:
@@ -1725,6 +1748,30 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_QUICKPIPE:
 			if (AskToSave()) BuildPipe(5.0,5);
 			return true;
+		case MENU_ABOUT:
+		{
+			std::ostringstream aboutText;
+			aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId <<")";
+			aboutText << R"(
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Copyright:   E.S.R.F / CERN   (2018)
+Website:    https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+)";
+			GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
+			return true;
+		}
 		}
 		// Load recent menu
 		if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + nbRecent) {
@@ -1826,7 +1873,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		if (src == facetList && geom->IsLoaded()) {
 			auto selRows = facetList->GetSelectedRows(true);
 			geom->UnselectAll();
-			for (auto sel:selRows)
+			for (auto& sel:selRows)
 				geom->SelectFacet(sel);
 			geom->UpdateSelection();
 			UpdateFacetParams();
@@ -1889,13 +1936,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			FrameMove();
 			return true;
 		}
-		else if (src == facetHistogramBtn) {
-			if (!histogramSettings) {
-				histogramSettings = new HistogramSettings();
-				histogramSettings->Refresh(geom->GetSelectedFacets());
-			}
-			histogramSettings->SetVisible(!histogramSettings->IsVisible());
-			histogramSettings->Reposition();
+		else if (src == facetCoordBtn) {
+			if (!facetCoordinates) facetCoordinates = new FacetCoordinates();
+			facetCoordinates->Display(&worker);
+			return true;
 		}
 		break;
 
@@ -2084,7 +2128,7 @@ void Interface::AddView() {
 	RebuildViewMenus();
 }
 
-void Interface::RemoveRecent(char *fileName) {
+void Interface::RemoveRecent(const char *fileName) {
 
 	if (!fileName) return;
 
@@ -2109,7 +2153,7 @@ void Interface::RemoveRecent(char *fileName) {
 	SaveConfig();
 }
 
-void Interface::AddRecent(char *fileName) {
+void Interface::AddRecent(const char *fileName) {
 
 	// Check if already exists
 	bool found = false;
@@ -2226,7 +2270,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
-	for (auto f:formulas_n) {
+	for (auto& f:formulas_n) {
 		if (OffsetFormula(f->GetExpression(), NULL, NULL, newRefs)) {
 			f->Parse();
 		}
@@ -2312,7 +2356,7 @@ void Interface::ClearFormulas() {
 	PlaceComponents();
 	*/
 
-	for (auto f : formulas_n)
+	for (auto& f : formulas_n)
 		SAFE_DELETE(f);
 	formulas_n.clear();
 	if (formulaEditor) formulaEditor->Refresh();
@@ -2414,6 +2458,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 int Interface::Resize(DWORD width, DWORD height, bool forceWindowed) {
 	int r = GLApplication::Resize(width, height, forceWindowed);
 	PlaceComponents();
+	worker.RebuildTextures();
 	return r;
 }
 
@@ -2510,24 +2555,25 @@ bool Interface::AskToSave() {
 	if (!changedSinceSave) return true;
 	int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved", GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
 	if (ret == GLDLG_SAVE) {
-		FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
-		if (fn) {
+		//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
+		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+		if (!fn.empty()) {
 			GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 			progressDlg2->SetVisible(true);
 			progressDlg2->SetProgress(0.0);
 			//GLWindowManager::Repaint();
 			try {
-				worker.SaveGeometry(fn->fullName, progressDlg2);
+				worker.SaveGeometry(fn.c_str(), progressDlg2);
 				changedSinceSave = false;
-				UpdateCurrentDir(fn->fullName);
+				UpdateCurrentDir(fn.c_str());
 				UpdateTitle();
-				AddRecent(fn->fullName);
+				AddRecent(fn.c_str());
 			}
 			catch (Error &e) {
 				char errMsg[512];
-				sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+				sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 				GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
-				RemoveRecent(fn->fullName);
+				RemoveRecent(fn.c_str());
 			}
 			progressDlg2->SetVisible(false);
 			SAFE_DELETE(progressDlg2);
@@ -2570,17 +2616,18 @@ void Interface::UpdateRecentMenu(){
 
 void Interface::SaveFileAs() {
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
-
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
+	std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+	
 	GLProgress *progressDlg2 = new GLProgress("Saving file...", "Please wait");
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();  
-	if (fn) {
+	if (!fn.empty()) {
 
 		try {
 
-			worker.SaveGeometry(fn->fullName, progressDlg2);
+			worker.SaveGeometry(fn.c_str(), progressDlg2);
 			ResetAutoSaveTimer();
 			changedSinceSave = false;
 			UpdateCurrentDir(worker.fullFileName);
@@ -2589,9 +2636,9 @@ void Interface::SaveFileAs() {
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
-			RemoveRecent(fn->fullName);
+			RemoveRecent(fn.c_str());
 		}
 
 	}
@@ -2612,18 +2659,18 @@ void Interface::ExportTextures(int grouping, int mode) {
 		return;
 	}
 
-	FILENAME *fn = GLFileBox::SaveFile(currentDir, NULL, "Save File", fileTexFilters, 0);
-
-	if (fn) {
+	//FILENAME *fn = GLFileBox::SaveFile(currentDir, NULL, "Save File", fileTexFilters, 0);
+	std::string fn = NFD_SaveFile_Cpp(fileTexFilters, "");
+	if (!fn.empty()) {
 
 		try {
-			worker.ExportTextures(fn->fullName, grouping, mode, true, true);
+			worker.ExportTextures(fn.c_str(), grouping, mode, true, true);
 			//UpdateCurrentDir(fn->fullName);
 			//UpdateTitle();
 		}
 		catch (Error &e) {
 			char errMsg[512];
-			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn->fullName);
+			sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
 			GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
@@ -2657,7 +2704,7 @@ void Interface::DoEvents(bool forced)
 
 bool Interface::AskToReset(Worker *work) {
 	if (work == NULL) work = &worker;
-	if (work->nbMCHit > 0) {
+	if (work->globalHitCache.globalHits.hit.nbMCHit > 0) {
 		int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
 		if (rep == GLDLG_OK) {
 			work->ResetStatsAndHits(m_fTime);
@@ -2731,18 +2778,18 @@ int Interface::FrameMove()
 				//lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
 				// Update timing measurements
-				if (worker.nbMCHit != lastNbHit || worker.nbDesorption != lastNbDes) {
+				if (worker.globalHitCache.globalHits.hit.nbMCHit != lastNbHit || worker.globalHitCache.globalHits.hit.nbDesorbed != lastNbDes) {
 					double dTime = (double)(m_fTime - lastMeasTime);
-					hps = (double)(worker.nbMCHit - lastNbHit) / dTime;
-					dps = (double)(worker.nbDesorption - lastNbDes) / dTime;
+					hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - lastNbHit) / dTime;
+					dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
 					if (lastHps != 0.0) {
 						hps = 0.2*(hps)+0.8*lastHps;
 						dps = 0.2*(dps)+0.8*lastDps;
 					}
 					lastHps = hps;
 					lastDps = dps;
-					lastNbHit = worker.nbMCHit;
-					lastNbDes = worker.nbDesorption;
+					lastNbHit = worker.globalHitCache.globalHits.hit.nbMCHit;
+					lastNbDes = worker.globalHitCache.globalHits.hit.nbDesorbed;
 					lastMeasTime = m_fTime;
 				}
 			}
@@ -2765,8 +2812,8 @@ int Interface::FrameMove()
 	}
 	else {
 		if (worker.simuTime > 0.0) {
-			hps = (double)(worker.nbMCHit - nbHitStart) / worker.simuTime;
-			dps = (double)(worker.nbDesorption - nbDesStart) / worker.simuTime;
+			hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
+			dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
 		}
 		else {
 			hps = 0.0;
@@ -2800,20 +2847,20 @@ int Interface::FrameMove()
 		}
 	}
 
-	if (worker.nbLeakTotal) {
-		sprintf(tmp, "%g (%.4f%%)", (double)worker.nbLeakTotal, (double)(worker.nbLeakTotal)*100.0 / (double)worker.nbDesorption);
+	if (worker.globalHitCache.nbLeakTotal) {
+		sprintf(tmp, "%g (%.4f%%)", (double)worker.globalHitCache.nbLeakTotal, (double)(worker.globalHitCache.nbLeakTotal)*100.0 / (double)worker.globalHitCache.globalHits.hit.nbDesorbed);
 		leakNumber->SetText(tmp);
 	}
 	else {
 		leakNumber->SetText("None");
 	}
-	resetSimu->SetEnabled(!worker.isRunning&&worker.nbDesorption > 0);
+	resetSimu->SetEnabled(!worker.isRunning&&worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
 
 	if (worker.isRunning) {
 		startSimu->SetText("Pause");
 		//startSimu->SetFontColor(255, 204, 0);
 	}
-	else if (worker.nbMCHit > 0) {
+	else if (worker.globalHitCache.globalHits.hit.nbMCHit > 0) {
 		startSimu->SetText("Resume");
 		//startSimu->SetFontColor(0, 140, 0);
 	}

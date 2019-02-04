@@ -31,6 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
 #include "ProfilePlotter.h"
+#include "HistogramPlotter.h"
 #include "Geometry_shared.h"
 
 #ifdef MOLFLOW
@@ -178,13 +179,14 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				isRunning = false;
 
 				geom->CheckCollinear();
-				geom->CheckNonSimple();
+				//geom->CheckNonSimple();
 				geom->CheckIsolatedVertex();
 
 				mApp->UpdateModelParams();
 				if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 				if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
 				if (mApp->profilePlotter) mApp->profilePlotter->Refresh();
+				if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
 #ifdef MOLFLOW
 				if (mApp->pressureEvolution) mApp->pressureEvolution->Refresh();
 				if (mApp->timewisePlotter) mApp->timewisePlotter->Refresh();
