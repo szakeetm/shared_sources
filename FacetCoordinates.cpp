@@ -311,7 +311,7 @@ void FacetCoordinates::RemoveRow(size_t rowId){
 			facetListC->SetSelectedRow((int)rowId);
 		}
 		else { //Select last
-			facetListC->SetSelectedRow(facetListC->GetNbRow()-1);
+			facetListC->SetSelectedRow((int)facetListC->GetNbRow()-1);
 		}
 		int selRow = facetListC->GetSelectedRow() + 1;
 		insertBeforeButton->SetEnabled(selRow);

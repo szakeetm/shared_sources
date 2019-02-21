@@ -1,7 +1,96 @@
 <?xml version="1.0"?>
 <UpdateFeed>
 	<Branches>
+			<Branch name="molflow_public_win" description="MolFlow+ stable releases for Windows 64-bit">
+			<UpdateManifest>
+				<Version id="2703" name="2.7.3" date="11-12-2018" />
+				<ChangeLog>
+	<![CDATA[
+	- First release of Molflow 2.7 for Windows
+	]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_win/molflow_win_2.7.3.zip" zipName="molflow_win_2.7.3.zip" folderName="molflow_win_2.7.3" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+		</Branch>
+		<Branch name="molflow_public_mac" description="MolFlow+ stable releases for Mac OS">
+			<UpdateManifest>
+				<Version id="2703" name="2.7.3" date="11-12-2018" />
+				<ChangeLog>
+	<![CDATA[
+	- First release of Molflow 2.7 for Mac OS
+	]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_mac/molflow_mac_2.7.3.zip" zipName="molflow_mac_2.7.3.zip" folderName="molflow_mac_2.7.3" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+		</Branch>
+		<Branch name="molflow_public_linux_debian" description="MolFlow+ stable releases for x64 Debian Linux">
+			<UpdateManifest>
+				<Version id="2703" name="2.7.3" date="11-12-2018" />
+				<ChangeLog>
+	<![CDATA[
+	- First release of Molflow 2.7 for Linux
+	]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_linux_debian/molflow_linux_debian_2.7.3.zip" zipName="molflow_linux_2.7.3.zip" folderName="molflow_linux_2.7.3" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+		</Branch>
+		<Branch name="molflow_public_linux_fedora" description="MolFlow+ stable releases for x64 Fedora Linux">
+			<UpdateManifest>
+				<Version id="2703" name="2.7.3" date="11-12-2018" />
+				<ChangeLog>
+	<![CDATA[
+	- First release of Molflow 2.7 for Linux
+	]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_linux_fedora/molflow_linux_fedora_2.7.3.zip" zipName="molflow_linux_fedora_2.7.3.zip" folderName="molflow_linux_fedora_2.7.3" />
+				<FilesToCopy>
+					<File name="molflow.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+		</Branch>
 		<Branch name="molflow_public" description="MolFlow+ stable releases">
+		<UpdateManifest>
+			<Version id="2674" name="2.6.74" date="05-02-2019" />
+			<ChangeLog>
+<![CDATA[
+- Fixed factor of 1E8 discrepancy in pressure evolution plotter
+]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.74.zip" zipName="molflow_2.6.74.zip" folderName="molflow_2.6.74" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
+		<UpdateManifest>
+			<Version id="2673" name="2.6.73" date="04-02-2019" />
+			<ChangeLog>
+<![CDATA[
+- Major under the hood changes, porting to SDL2 framework
+- Fixing leaks at teleports
+- Restored "Save to TXT" function for profiles
+- Restored "Coord" facet coordinates button
+]]>
+			</ChangeLog>
+			<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.73.zip" zipName="molflow_2.6.73.zip" folderName="molflow_2.6.73" />
+			<FilesToCopy>
+				<File name="molflow.cfg" />
+				<File name="updater_config.xml" />
+			</FilesToCopy>
+		</UpdateManifest>
 		<UpdateManifest>
 			<Version id="2672" name="2.6.72" date="03-09-2018" />
 			<ChangeLog>
@@ -170,6 +259,25 @@ Bugfix
 		
 		<Branch name="synrad_public" description="SynRad+ stable releases">
 			<UpdateManifest>
+				<Version id="1424" name="1.4.24" date="21-12-2018" />
+				<ChangeLog>
+<![CDATA[
+Feature:
+- Support for facets belonging to all structures at once
+Bugfix:
+- Support for compressing files with hundreds of regions
+- Apply button becomes active on Spectrum recording toggle
+- Critical energy calculation more precise
+- Fixed crash when pressing Cancel at Load region to  dialog
+]]>
+				</ChangeLog>
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/synrad_1.4.24.zip" zipName="synrad_1.4.24.zip" folderName="synrad_1.4.24" />
+				<FilesToCopy>
+					<File name="synrad.cfg" />
+					<File name="updater_config.xml" />
+				</FilesToCopy>
+			</UpdateManifest>
+			<UpdateManifest>
 				<Version id="1423" name="1.4.23" date="24-05-2018" />
 				<ChangeLog>
 <![CDATA[
@@ -267,17 +375,13 @@ Bugfix
 		<Branch name="molflow_test" description="MolFlow+ versions for internal testing at CERN">
 		
 			<UpdateManifest>
-				<Version id="26800" name="2.6.80" date="21-11-2017" />
+				<Version id="2701" name="2.7.0" date="08-10-2018" />
 				<ChangeLog>
-<![CDATA[
-Feature2
-- New feature2
-Bugfix2
-- Bugfix 12
-- Bugfix 22
-]]>
+	<![CDATA[
+	- First release
+	]]>
 				</ChangeLog>
-				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_2.6.61.zip" zipName="molflow_2.6.61.zip" folderName="molflow_2.6.61" />
+				<Content zipUrl="https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/molflow_linux/molflow_linux_2.7.0.zip" zipName="molflow_linux_2.7.0.zip" folderName="molflow_linux_2.7.0" />
 				<FilesToCopy>
 					<File name="molflow.cfg" />
 					<File name="updater_config.xml" />
