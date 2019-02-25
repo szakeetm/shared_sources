@@ -5,8 +5,8 @@
 //Hard-coded identifiers, update these on new release and rebuild solution
 //---------------------------------------------------
 static const std::string appName = "Molflow";
-static const int appVersionId = 2675; //Compared with available updates. Global variable, so rebuild whole solution if changed.
-static const std::string appVersionName = "2.6.75";
+static const int appVersionId = 2676; //Compared with available updates. Global variable, so rebuild whole solution if changed.
+static const std::string appVersionName = "2.6.76";
 //---------------------------------------------------
 #ifdef _DEBUG
 static const std::string appTitle = "MolFlow+ debug version (Compiled " __DATE__ " " __TIME__ ")";
