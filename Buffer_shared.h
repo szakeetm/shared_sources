@@ -22,6 +22,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Vector.h"
 #include "GLApp/GLTypes.h"
 #include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+
 #include <array>
 
 #ifdef MOLFLOW
@@ -69,18 +72,18 @@ public:
 		);
 	}
 
-	size_t GetBounceHistogramSize() {
+	size_t GetBounceHistogramSize() const {
 		return nbBounceMax / nbBounceBinsize + 1 + 1; //+1: overrun
 	}
-	size_t GetDistanceHistogramSize() {
+	size_t GetDistanceHistogramSize() const {
 		return (size_t)(distanceMax / distanceBinsize) + 1; //+1: overrun
 	}
 #ifdef MOLFLOW
-	size_t GetTimeHistogramSize() {
+	size_t GetTimeHistogramSize() const {
 		return (size_t)(timeMax / timeBinsize) + 1; //+1: overrun
 	}
 #endif
-	size_t GetDataSize() {
+	size_t GetDataSize() const {
 		size_t size = 0;
 		if (recordBounce) size += sizeof(double) * GetBounceHistogramSize();
 		if (recordDistance) size += sizeof(double) * GetDistanceHistogramSize();
@@ -90,16 +93,16 @@ public:
 		return size;
 		
 	}
-	size_t GetBouncesDataSize() {
+	size_t GetBouncesDataSize() const {
 		if (!recordBounce) return 0;
 		else return sizeof(double)*GetBounceHistogramSize();
 	}
-	size_t GetDistanceDataSize() {
+	size_t GetDistanceDataSize() const {
 		if (!recordDistance) return 0;
 		else return sizeof(double)*GetDistanceHistogramSize();
 	}
 #ifdef MOLFLOW
-	size_t GetTimeDataSize() {
+	size_t GetTimeDataSize() const {
 		if (!recordTime) return 0;
 		else return sizeof(double)*GetTimeHistogramSize();
 	}
@@ -301,7 +304,8 @@ public:
 			CEREAL_NVP(totalOutgassing), //total outgassing for the given facet
 
 			CEREAL_NVP(anglemapParams)//Incident angle map
-#endif*/
+#endif
+			
 
 #ifdef SYNRAD
 			,
@@ -309,7 +313,7 @@ public:
 			CEREAL_NVP(rmsRoughness),   // RMS height roughness, in meters
 			CEREAL_NVP(autoCorrLength), // Autocorrelation length, in meters
 			CEREAL_NVP(reflectType),    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
-			CEREAL_NVP(recordSpectrum),    // Calculate energy spectrum (histogram)
+			CEREAL_NVP(recordSpectrum)    // Calculate energy spectrum (histogram)
 #endif
 		);
 	}
@@ -343,9 +347,10 @@ public:
 
 	template <class Archive> void serialize(Archive & archive) {
 		archive(
+#ifdef MOLFLOW
 			CEREAL_NVP(globalHistogramParams)
 
-#ifdef MOLFLOW
+
 			, CEREAL_NVP(latestMoment)
 			, CEREAL_NVP(totalDesorbedMolecules)
 			, CEREAL_NVP(finalOutgassingRate)
@@ -432,10 +437,10 @@ public:
 	{
 		archive(
 			CEREAL_NVP(pos),
-			CEREAL_NVP(type),
+			CEREAL_NVP(type)
 #ifdef SYNRAD
-			CEREAL_NVP(dF),
-			CEREAL_NVP(dP),
+			,CEREAL_NVP(dF),
+			CEREAL_NVP(dP)
 #endif
 		);
 	}
@@ -444,6 +449,15 @@ public:
 // Velocity field
 class DirectionCell {
 public:
+	DirectionCell& operator+=(const DirectionCell& rhs) {
+		this->dir += rhs.dir;
+		this->count += rhs.count;
+		return *this;
+	}
+	DirectionCell& operator+(const DirectionCell& rhs) {
+		*this += rhs;
+		return *this;
+	}
 	Vector3d dir = Vector3d(0.0,0.0,0.0);
 	size_t count=0;
 	template<class Archive>
@@ -472,6 +486,8 @@ public:
 
 class FacetHistogramBuffer { //raw data containing histogram result
 public:
+	void Resize(const HistogramParams& params);
+	FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
 	std::vector<double> distanceHistogram;
 	std::vector<double> timeHistogram;
@@ -491,8 +507,8 @@ typedef union {
 
 	struct {
 		// Counts
-		llong nbDesorbed;          // Number of desorbed molec
-		llong nbMCHit;               // Number of hits
+        size_t nbDesorbed;          // Number of desorbed molec
+        size_t nbMCHit;               // Number of hits
 		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 		double nbAbsEquiv;          // Equivalent number of absorbed molecules
 		double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
@@ -526,11 +542,16 @@ typedef union {
 #ifdef SYNRAD
 class FacetHitBuffer {
 public:
-	double fluxAbs, powerAbs;
-	llong nbMCHit;           // Number of hits
-	double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-	double nbAbsEquiv;      // Number of absorbed molec
-	llong nbDesorbed;
+    FacetHitBuffer();
+    struct {
+        // Counts
+        double fluxAbs;
+        double powerAbs;
+        size_t nbDesorbed;          // Number of desorbed molec
+        size_t nbMCHit;               // Number of hits
+        double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+        double nbAbsEquiv;          // Equivalent number of absorbed molecules
+    } hit;
 
 	template<class Archive>
 	void serialize(Archive & archive)
@@ -585,18 +606,18 @@ public:
 			CEREAL_NVP(lastLeakIndex),		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 			CEREAL_NVP(leakCacheSize),        //Number of valid leaks in the cache
 			CEREAL_NVP(nbLeakTotal),         // Total leaks
-			CEREAL_NVP(leakCache),      // Leak history
+			CEREAL_NVP(leakCache)      // Leak history
 
 #ifdef MOLFLOW
-			CEREAL_NVP(texture_limits), //Min-max on texture
+			,CEREAL_NVP(texture_limits), //Min-max on texture
 			CEREAL_NVP(distTraveled_total),
-			CEREAL_NVP(distTraveledTotal_fullHitsOnly),
+			CEREAL_NVP(distTraveledTotal_fullHitsOnly)
 #endif
 
 #ifdef SYNRAD
-			CEREAL_NVP(hitMin),
+			,CEREAL_NVP(hitMin),
 				CEREAL_NVP(hitMax),
-				CEREAL_NVP(distTraveledTotal),
+				CEREAL_NVP(distTraveledTotal)
 #endif
 		);
 	}
@@ -619,12 +640,12 @@ public:
 		archive(
 			CEREAL_NVP(facetHitPosition),
 			CEREAL_NVP(hitTheta), CEREAL_NVP(hitPhi),
-			CEREAL_NVP(oriRatio),
+			CEREAL_NVP(oriRatio)
 #ifdef MOLFLOW
-			CEREAL_NVP(time), CEREAL_NVP(particleDecayMoment), CEREAL_NVP(velocity),
+			,CEREAL_NVP(time), CEREAL_NVP(particleDecayMoment), CEREAL_NVP(velocity)
 #endif
 #ifdef SYNRAD
-			CEREAL_NVP(energy), CEREAL_NVP(dF), CEREAL_NVP(dP),
+			,CEREAL_NVP(energy), CEREAL_NVP(dF), CEREAL_NVP(dP)
 #endif
 		);
 	}

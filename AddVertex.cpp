@@ -22,12 +22,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLButton.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLButton.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-#include "GLApp\MathTools.h" //Contains
+#include "GLApp/MathTools.h" //Contains
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -45,6 +45,11 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
+/**
+* \brief Constructor with initialisation for the AddVertex window (Vertex/Add new)
+* \param g pointer to the Geometry
+* \param w Worker handle
+*/
 AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
 
   int wD = 335;
@@ -110,6 +115,11 @@ AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void AddVertex::ProcessMessage(GLComponent *src,int message) {
 
   double X,Y,Z;

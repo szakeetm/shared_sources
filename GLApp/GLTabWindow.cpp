@@ -3,6 +3,7 @@
 #include "GLToolkit.h"
 #include "GLComponent.h"
 #include "GLFont.h"
+#include <cstring>
 
 // Tab bar component
 
@@ -187,9 +188,9 @@ void GLTabWindow::SetPanelNumber(int numP) {
 
 }
 
-void GLTabWindow::SetPanelName(int idx,char *name) {
+void GLTabWindow::SetPanelName(int idx,const char *name) {
 
-  panels[idx].name = _strdup(name);
+  panels[idx].name = strdup(name);
   panels[idx].width = GLToolkit::GetDialogFontBold()->GetTextWidth(name)+10;
 
 }
@@ -210,7 +211,7 @@ void GLTabWindow::Clear() {
 
 }
 
-void GLTabWindow::Update() {
+void GLTabWindow::UpdateBar() {
 
   if(bar) SAFE_DELETE(bar);
   bar = new TabbedBar(panels,nbPanel);
@@ -221,7 +222,7 @@ void GLTabWindow::Update() {
 
 void GLTabWindow::SetBounds(int x,int y,int w,int h) {
 
-  if(bar) ((TabbedBar *)bar)->Measure(x+2,y+20,w-4,h);
+  if(bar) bar->Measure(x+2,y+20,w-4,h);
   GLWindow::SetBounds(x,y,w,h);
 
 }
@@ -235,7 +236,7 @@ void GLTabWindow::ProcessMessage(GLComponent *src,int message) {
 
 void GLTabWindow::showHide() {
 
-  int s = ((TabbedBar *)bar)->GetSelected();
+  int s = bar->GetSelected();
   // Show selected panel
   for(int i=0;i<nbPanel;i++) {
     APANEL *p = panels + i;
@@ -246,5 +247,10 @@ void GLTabWindow::showHide() {
 }
 
 void GLTabWindow::SetTextColor(int r,int g,int b) {
-  if(bar) ((TabbedBar *)bar)->SetTextColor(r,g,b);
+  if(bar) bar->SetTextColor(r,g,b);
+}
+
+int GLTabWindow::GetSelectedTabIndex()
+{
+	return bar->GetSelected();
 }

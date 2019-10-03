@@ -9,7 +9,10 @@
 //#include "File.h"
 #include <math.h>
 //#include <malloc.h>
-#include <cimage.h>
+#define cimg_use_png 1
+#include <CImg/CImg.h>
+using namespace cimg_library;
+#include <cstring> //strcpy, etc.
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -90,7 +93,7 @@ void GLToolkit::CopyTextToClipboard(const std::string & text)
 {
 	SDL_SetClipboardText(text.c_str());
 	/*
-#ifdef WIN
+#ifdef _WIN32
 
 	if (!OpenClipboard(NULL))
 		return;
@@ -118,6 +121,44 @@ void GLToolkit::CopyTextToClipboard(const std::string & text)
 
 #endif
 */
+}
+
+std::string GLToolkit::GetOSName() {
+#ifdef _WIN32
+	//define something for Windows (32-bit and 64-bit, this part is common)
+#ifdef _WIN64
+   //define something for Windows (64-bit only)
+	return "Win64";
+#else
+   //define something for Windows (32-bit only)
+	return "Win32";
+#endif
+#elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+	// iOS Simulator
+	return "iOs_sim";
+#elif TARGET_OS_IPHONE
+	// iOS device
+	return "iOs";
+#elif TARGET_OS_MAC
+	// Other kinds of Mac OS
+	return "Mac";
+#else
+	return "Apple_unknown";
+#endif
+#elif __linux__
+	// linux
+	return "Linux";
+#elif __unix__ // all unices not caught above
+	// Unix
+	return "Unix";
+#elif defined(_POSIX_VERSION)
+	// POSIX
+	return "Posix";
+#else
+	return "Unknown";
+#endif
 }
 
 int GLToolkit::GetCursor() {
@@ -186,7 +227,7 @@ void GLToolkit::SetCursor(int cursor) {
 
 }
 
-SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
+SDL_Cursor *InitCursor(const char *pngName,const int &tx,const int &ty) {
 
   int i, row, col;
   Uint8 data[4*32];
@@ -194,11 +235,12 @@ SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
   memset(data,0,4*32);
   memset(mask,0,4*32);
 
-  CImage img;
-  if( img.LoadCImage(pngName) ) {
+  try{
+  CImg<Uint8> img(pngName);
+  //if( img.LoadCImage(pngName) ) {
 
     i = -1;
-    BYTE *image = img.GetData();
+   // BYTE *image = img.data();
     for ( row=0; row<32; ++row ) {
       for ( col=0; col<32; ++col ) {
         if ( col % 8 ) {
@@ -207,7 +249,8 @@ SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
         } else {
           ++i;
         }
-        switch (image[(col+row*32)*3]) {
+		
+        switch (*(img.data(col,row))) {
           case 0:
             data[i] |= 0x01;
             mask[i] |= 0x01;
@@ -218,26 +261,35 @@ SDL_Cursor *InitCursor(char *pngName,const int &tx,const int &ty) {
         }
       }
     }
-    img.Release();
+   // img.Release();
     return SDL_CreateCursor(data,mask,32,32,tx,ty);
 
-  } else {
+  } catch (...) {
     return NULL;
   }
 
 }
 
-void GLToolkit::SetIcon32x32(char *pngName) {
+void GLToolkit::SetIcon32x32(const char *pngName) {
 
-  CImage img;
-  if( img.LoadCImage(pngName) ) {
-    SDL_Surface *s = SDL_CreateRGBSurface(SDL_SWSURFACE,32,32,24,0,0,0,0);
+  //CImage img;
+  //if( img.LoadCImage(pngName) ) {
+	CImg<BYTE> img(pngName);
+	SDL_Surface *s = SDL_CreateRGBSurface(SDL_SWSURFACE,32,32,24,0,0,0,0);
     SDL_LockSurface(s);
-    memcpy(s->pixels , img.GetData() , 3*32*32);
+	for (unsigned int x = 0; x < 32; x++) {
+		for (unsigned int y = 0; y < 32; y++) {
+			((BYTE*)(s->pixels))[x*3 + y*3 * 32 + 0] = *(img.data(x, y, 0, 2));
+			((BYTE*)(s->pixels))[x*3 + y*3 * 32 + 1] = *(img.data(x, y, 0, 1));
+			((BYTE*)(s->pixels))[x*3 + y*3 * 32 + 2] = *(img.data(x, y, 0, 0));
+		}
+	}
+    //memcpy(s->pixels , img.data() , 3*32*32);
+	//memset(s->pixels, 0, 3 * 32 * 32);
     SDL_UnlockSurface(s);
     SDL_SetWindowIcon(theApp->mainScreen, s);
-    img.Release();
-  }
+    //img.Release();
+  //}
 
 }
 
@@ -285,10 +337,10 @@ bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
 
 }
 
-void GLToolkit::Log(char *message) {
+void GLToolkit::Log(const char *message) {
 
   if( nbLog < MAX_LOG ) {
-    logs[nbLog] = _strdup(message);
+    logs[nbLog] = strdup(message);
     logLength += (int)strlen(logs[nbLog])+2;
     nbLog++;
   }
@@ -895,12 +947,12 @@ void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,dou
   double nz;
 
   // Choose a normal vector
-  if( abs(x2-x1) > 1e-3 ) {
+  if( std::abs(x2-x1) > 1e-3 ) {
     // Oy
     nx = (z2-z1)/n;
     ny = (y2-y1)/n;
     nz = (x1-x2)/n;
-  } else if( abs(y2-y1) > 1e-3 ) {
+  } else if( std::abs(y2-y1) > 1e-3 ) {
     // Oz
     nx = (y2-y1)/n;
     ny = (x1-x2)/n;
@@ -1016,7 +1068,7 @@ void GLToolkit::printGlError(GLenum glError) {
   }
 }
 
-void GLToolkit::CheckGLErrors(char *compname) {
+void GLToolkit::CheckGLErrors(const char *compname) {
 	static bool savedOnGLError=false;   
 	GLenum glError = glGetError();
        if( glError != GL_NO_ERROR ) { 
@@ -1025,9 +1077,7 @@ void GLToolkit::CheckGLErrors(char *compname) {
          GLToolkit::Log(tmp);
          GLToolkit::printGlError(glError); 
          //Exit();
-#ifdef _DEBUG //stop 
-		 __debugbreak();
-#endif
+		 DEBUG_BREAK;
 		 /*if (!savedOnGLError) {
 			 extern SynRad*mApp;
 			 mApp->AutoSave();

@@ -13,8 +13,8 @@ public:
   ~GLMenuBar();
 
   // Component methods
-  void    Add(char *itemName);
-  GLMenu *GetSubMenu(char *itemName);
+  void    Add(const char *itemName);
+  GLMenu *GetSubMenu(const char *itemName);
   void    Close();
 
   // Implementation

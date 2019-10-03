@@ -10,7 +10,7 @@ class GLIcon : public GLComponent {
 public:
 
   // Construction
-  GLIcon(char *iconName);
+  GLIcon(const char *iconName);
 
   // Implementation
   void Paint();

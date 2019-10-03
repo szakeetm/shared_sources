@@ -6,6 +6,7 @@
 #include "GLWindowManager.h"
 #include "GLApp.h"
 #include "GLMenu.h"
+#include <cstring> //strcpy, etc.
 //#include <malloc.h>
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -213,17 +214,21 @@ void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
 
 bool GLWindow::IsCtrlDown() {
 	SDL_Keymod mod = SDL_GetModState();
-	return ((mod & KMOD_LCTRL) || (mod & KMOD_RCTRL));
+#ifdef __APPLE__
+	return mod & KMOD_GUI; //Mac command key
+#else
+	return mod & KMOD_CTRL;
+#endif
 }
 
 bool GLWindow::IsShiftDown() {
 	SDL_Keymod mod = SDL_GetModState();
-	return ((mod & KMOD_LSHIFT) || (mod & KMOD_RSHIFT));
+	return mod & KMOD_SHIFT;
 }
 
 bool GLWindow::IsAltDown() {
 	SDL_Keymod mod = SDL_GetModState();
-	return ((mod & KMOD_LALT) || (mod & KMOD_RALT));
+	return mod & KMOD_ALT;
 }
 
 bool GLWindow::IsSpaceDown() {
@@ -501,22 +506,14 @@ void GLWindow::DoModal() {
         theApp->Resize(evt.window.data1,evt.window.data2);
         needRedraw = true;
       }
-      ManageEvent(&evt);
+      if (evt.type!=SDL_MOUSEWHEEL) ManageEvent(&evt); //Prevent closing combos
       if(!evtProcessed && evt.type==SDL_MOUSEBUTTONDOWN && animateFocus) GLWindowManager::AnimateFocus(this);
       if(evt.type == SDL_WINDOWEVENT && evt.window.event ==SDL_WINDOWEVENT_EXPOSED) needRedraw = true;
     }
 
     theApp->UpdateStats();
 	//mApp->SendHeartBeat();
-    // Close modal window window on [ESC]
-    if( evt.type == SDL_KEYDOWN ) {
-      if(evt.key.keysym.sym == SDLK_ESCAPE ) SetVisible(false);
-	  if(evt.key.keysym.sym == SDLK_RETURN ) {
-		//Press Apply button
-		  GLComponent *child=GetFirstChildComp();
-
-	  };
-    }
+    
 
     if( visible ) {
 
@@ -716,7 +713,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
         } else {
 
           if( evt->type == SDL_MOUSEBUTTONDOWN) {
-            DWORD t = SDL_GetTicks();
+            size_t t = SDL_GetTicks();
             if( (t-lastClick) < 250 ) {
 
               // Maximize/Minimize (iconify non resizable window) on double click

@@ -18,9 +18,11 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Interface.h"
-#include <direct.h> //_getcwd()
-#include <io.h> // Check for recovery
+//#include <direct.h> //_getcwd()
+//#include <io.h> // Check for recovery
+
 #include <filesystem>
+#include <string>
 #include "AppUpdater.h"
 
 //#include "GLApp/GLFileBox.h"
@@ -28,7 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
-#include "GLApp\GLToolkit.h"
+#include "GLApp/GLToolkit.h"
 #include "GLApp/MathTools.h" //IDX
 #include "RecoveryDialog.h"
 #include "Facet_shared.h"
@@ -42,7 +44,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLMenuBar.h"
 #include "GLApp/GLWindowManager.h"
-#include "GLApp\GLToggle.h"
+#include "GLApp/GLToggle.h"
 
 //Windows
 #include "GeometryViewer.h"
@@ -75,12 +77,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "NativeFileDialog/nfd.h"
 
 //Updater
-#include <PugiXML\pugixml.hpp>
-#include "ZipUtils/zip.h"
-#include "ZipUtils/unzip.h"
+#include <PugiXML/pugixml.hpp>
 #include "File.h" //File utils (Get extension, etc)
 
 #include "versionId.h"
+
 
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;
@@ -102,7 +103,7 @@ extern std::string fileDesFilters;
 
 extern int   cSize;
 extern int   cWidth[];
-extern char *cName[];
+extern const char *cName[];
 
 
 Interface::Interface() {
@@ -114,6 +115,7 @@ Interface::Interface() {
 
 	antiAliasing = true;
 	whiteBg = false;
+	highlightNonplanarFacets = true;
 	leftHandedView = false;
 	autoUpdateFormulas = true;
 	compressSavedFiles = true;
@@ -301,7 +303,7 @@ void Interface::UpdateTitle() {
 // Name: FormatInt()
 // Desc: Format an integer in K,M,G,..
 
-char* Interface::FormatInt(llong v, char *unit)
+char* Interface::FormatInt(size_t v, const char *unit)
 {
 
 	double x = (double)v;
@@ -330,7 +332,7 @@ char* Interface::FormatInt(llong v, char *unit)
 // Name: FormatPS()
 // Desc: Format a double in K,M,G,.. per sec
 
-char *Interface::FormatPS(double v, char *unit)
+char *Interface::FormatPS(double v, const char *unit)
 {
 
 	static char ret[64];
@@ -385,7 +387,7 @@ char* Interface::FormatTime(float t) {
 	return ret;
 }
 
-void Interface::LoadSelection(char *fName) {
+void Interface::LoadSelection(const char *fName) {
 
 	std::string fileName = fName;
 	FileReader *f = NULL;
@@ -500,7 +502,7 @@ void Interface::ExportSelection() {
 }
 
 // Name: UpdateModelParams()
-// Desc: Update displayed model parameter on geometry ghange
+// Desc: Update displayed model parameter on geometry change
 
 void Interface::UpdateModelParams() {
 
@@ -509,7 +511,7 @@ void Interface::UpdateModelParams() {
 	double sumArea = 0;
 	facetList->SetSize(cSize, geom->GetNbFacet(), false, true);
 	facetList->SetColumnWidths((int*)cWidth);
-	facetList->SetColumnLabels((char **)cName);
+	facetList->SetColumnLabels((const char**)cName);
 	UpdateFacetHits(true);
 	UpdateFacetlistSelected();
 	AxisAlignedBoundingBox bb = geom->GetBB();
@@ -693,7 +695,7 @@ void Interface::UpdateViewers() {
 		viewer[i]->UpdateMatrix();
 }
 
-void Interface::SetFacetSearchPrg(bool visible, char *text) {
+void Interface::SetFacetSearchPrg(bool visible, const char *text) {
 	static Uint32 lastUpd = 0;
 	Uint32 now = SDL_GetTicks();
 	if (!visible || (now - lastUpd > 500)) {
@@ -712,12 +714,9 @@ int Interface::OnExit() {
 		appUpdater->IncreaseSessionCount();
 	}
 	remove(autosaveFilename.c_str());
-	//empty TMP directory
-	char tmp[1024];
-	char CWD[MAX_PATH];
-	_getcwd(CWD, MAX_PATH);
-	sprintf(tmp, "del /Q \"%s\\tmp\\*.*\"", CWD);
-	system(tmp);
+	auto cwd = std::filesystem::current_path();
+	auto tempDir = cwd / "tmp";
+	std::filesystem::remove_all(tempDir);
 	return GL_OK;
 }
 
@@ -802,11 +801,13 @@ void Interface::OneTimeSceneInit_shared_pre() {
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
-	menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
+#ifdef MOLFLOW
+    menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
+#endif
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
-	menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
+	//menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
 	menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
 	menu->GetSubMenu("Tools")->Add(NULL); // Separator
 	menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT,SDLK_r, CTRL_MODIFIER);
@@ -1213,7 +1214,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				SAFE_DELETE(formulaEditor);
 				formulaEditor = new FormulaEditor(&worker);
 				formulaEditor->Refresh();
-				formulaEditor->SetVisible(TRUE);
+				formulaEditor->SetVisible(true);
 			}
 			break;
 		case MENU_TOOLS_HISTOGRAMSETTINGS:
@@ -1265,11 +1266,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			std::string asciiName = tmp.str();
 			tmp.str("");
 			tmp.clear();
-			tmp << "Screenshots\\" << asciiName << ".png";
+			tmp << "Screenshots/" << asciiName << ".png";
 
-			if (!FileUtils::DirExists("Screenshots")) { //Actually, it isn't necessary to check if exists, CreateDirectory can silently fail.
-				CreateDirectory("Screenshots", NULL);
-			}
+			
+			std::filesystem::create_directory("Screenshots"); //Doesn't do anything if already exists
 
 			int x, y, width, height;
 			viewer[curViewer]->GetBounds(&x, &y, &width, &height);
@@ -1294,7 +1294,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				// Send to sub process
 				try { worker.Reload(); }
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 				}
 			}
 			return true;
@@ -1363,7 +1363,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 						err = geom->ExplodeSelected();
 					}
 					catch (Error &e) {
-						GLMessageBox::Display((char *)e.GetMsg(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
+						GLMessageBox::Display(e.GetMsg(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
 					}
 					if (err == -1) {
 						GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1378,7 +1378,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 						// Send to sub process
 						try { worker.Reload(); }
 						catch (Error &e) {
-							GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+							GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 						}
 					}
 				}
@@ -1399,7 +1399,11 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTTRANS:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->sh.opacity_paramId!=-1 || (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
+				if (
+#ifdef MOLFLOW
+				        geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
+#endif
+(geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1415,7 +1419,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTTEXT:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->sh.isTextured != NULL)
+				if (geom->GetFacet(i)->sh.isTextured)
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1423,7 +1427,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTPROF:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-				if (geom->GetFacet(i)->sh.isProfile != NULL)
+				if (geom->GetFacet(i)->sh.isProfile)
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1440,7 +1444,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				return true;
 			}
 			geom->UnselectAll();
-			std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacets(planarityThreshold);
+			std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacetIds(planarityThreshold);
 			for (const auto& i : nonPlanarFacetids)
 				geom->SelectFacet(i);
 			geom->UpdateSelection();
@@ -1480,12 +1484,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTABS:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++) {
-#ifdef MOLFLOW
 				if (geom->GetFacet(i)->facetHitCache.hit.nbAbsEquiv > 0)
-#endif
-#ifdef SYNRAD
-					if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
-#endif
 					geom->SelectFacet(i);
 			}
 			geom->UpdateSelection();
@@ -1495,13 +1494,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 		case MENU_FACET_SELECTHITS:
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-
-#ifdef MOLFLOW
 				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit > 0)
-#endif
-#ifdef SYNRAD
-					if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
-#endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1519,12 +1512,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			}
 			geom->UnselectAll();
 			for (int i = 0; i < geom->GetNbFacet(); i++)
-#ifdef MOLFLOW
 				if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
-#endif
-#ifdef SYNRAD
-				if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
-#endif
 					geom->SelectFacet(i);
 			geom->UpdateSelection();
 			UpdateFacetParams(true);
@@ -1578,7 +1566,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 					geom->CreatePolyFromVertices_Convex();
 				}
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
 				}
 				worker.Reload();
 			}
@@ -1589,16 +1577,9 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 					geom->CreatePolyFromVertices_Order();
 				}
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
 				}
-				//UpdateModelParams();
-				try {
-					worker.Reload();
-				}
-				catch (Error &e) {
-
-					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-				}
+				worker.Reload();
 			}
 			return true;
 		case MENU_FACET_CREATE_DIFFERENCE:
@@ -1656,7 +1637,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				}
 				try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
 				}
 			}
 			else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -1671,7 +1652,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 				/*
 				UpdateModelParams();
 				try { worker.Reload(); } catch(Error &e) {
-				GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
+				GLMessageBox::Display(e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
 				*/
 
 			}
@@ -1754,7 +1735,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 			aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId <<")";
 			aboutText << R"(
 Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
-Copyright:   E.S.R.F / CERN   (2018)
+Copyright:   E.S.R.F / CERN   (2019)
 Website:    https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
@@ -2054,32 +2035,32 @@ void Interface::ClearViewMenus() {
 
 void Interface::RebuildViewMenus() {
 	ClearViewMenus();
+	std::vector<int> fKeys = { SDLK_F1,SDLK_F2,SDLK_F3,SDLK_F5,SDLK_F6,SDLK_F7,SDLK_F8,SDLK_F9,SDLK_F10,SDLK_F11,SDLK_F12 }; //Skip ALT+F4 shortcut :)
 	for (int i = 0; i < nbView; i++) {
-		int id = i;
-		if (nbView >= 10) id = i - nbView + 8;
-		if (id >= 0 && id <= 8) {
-			viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i, SDLK_F1 + id, ALT_MODIFIER);
+		if (fKeys.empty()) {
+			viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i);
 		}
 		else {
-			viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i);
+			viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i, fKeys[0], ALT_MODIFIER);
+			fKeys.erase(fKeys.begin());
 		}
 		clearViewsMenu->Add(views[i].name, MENU_VIEW_CLEARVIEWS + i);
 		memorizeViewsMenu->Add(views[i].name, MENU_VIEW_MEMORIZEVIEWS + i);
 	}
 }
 
-void Interface::AddView(char *viewName, AVIEW v) {
+void Interface::AddView(const char *viewName, AVIEW v) {
 
 	if (nbView < MAX_VIEW) {
 		views[nbView] = v;
-		views[nbView].name = _strdup(viewName);
+		views[nbView].name = strdup(viewName);
 		nbView++;
 	}
 	else {
 		SAFE_FREE(views[0].name);
 		for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
 		views[MAX_VIEW - 1] = v;
-		views[MAX_VIEW - 1].name = _strdup(viewName);
+		views[MAX_VIEW - 1].name = strdup(viewName);
 	}
 	RebuildViewMenus();
 }
@@ -2103,7 +2084,7 @@ void Interface::OverWriteView(int idOvr) {
 	if (!viewName) return;
 
 	views[idOvr] = viewer[curViewer]->GetCurrentView();
-	views[idOvr].name = _strdup(viewName);
+	views[idOvr].name = strdup(viewName);
 	RebuildViewMenus();
 }
 
@@ -2116,14 +2097,14 @@ void Interface::AddView() {
 
 	if (nbView < MAX_VIEW) {
 		views[nbView] = viewer[curViewer]->GetCurrentView();
-		views[nbView].name = _strdup(viewName);
+		views[nbView].name = strdup(viewName);
 		nbView++;
 	}
 	else {
 		SAFE_FREE(views[0].name);
 		for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
 		views[MAX_VIEW - 1] = viewer[curViewer]->GetCurrentView();
-		views[MAX_VIEW - 1].name = _strdup(viewName);
+		views[MAX_VIEW - 1].name = strdup(viewName);
 	}
 	RebuildViewMenus();
 }
@@ -2166,7 +2147,7 @@ void Interface::AddRecent(const char *fileName) {
 		for (int j = i; j < nbRecent - 1; j++) {
 			recents[j] = recents[j + 1];
 		}
-		recents[nbRecent - 1] = _strdup(fileName);
+		recents[nbRecent - 1] = strdup(fileName);
 		// Update menu
 		GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
 		m->Clear();
@@ -2178,7 +2159,7 @@ void Interface::AddRecent(const char *fileName) {
 
 	// Add the new recent file
 	if (nbRecent < MAX_RECENT) {
-		recents[nbRecent] = _strdup(fileName);
+		recents[nbRecent] = strdup(fileName);
 		nbRecent++;
 	}
 	else {
@@ -2186,7 +2167,7 @@ void Interface::AddRecent(const char *fileName) {
 		SAFE_FREE(recents[0]);
 		for (int i = 0; i < MAX_RECENT - 1; i++)
 			recents[i] = recents[i + 1];
-		recents[MAX_RECENT - 1] = _strdup(fileName);
+		recents[MAX_RECENT - 1] = strdup(fileName);
 	}
 
 	// Update menu
@@ -2207,7 +2188,7 @@ void Interface::AddStruct() {
 	// Send to sub process
 	try { worker.Reload(); }
 	catch (Error &e) {
-		GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}
 }
@@ -2238,7 +2219,7 @@ void Interface::DeleteStruct() {
 	// Send to sub process
 	try { worker.Reload(); }
 	catch (Error &e) {
-		GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}
 }
@@ -2271,7 +2252,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
 	for (auto& f:formulas_n) {
-		if (OffsetFormula(f->GetExpression(), NULL, NULL, newRefs)) {
+		if (OffsetFormula(f->GetExpression(), 0, -1, newRefs)) {
 			f->Parse();
 		}
 	}
@@ -2439,7 +2420,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 							changed = true;
 						}
 						else { //Update facet number
-							char tmp[10];
+							char tmp[12];
 							sprintf(tmp, "%d", (*newRefs)[facetNumber - 1]+1);
 							newExpr.replace(minPos + maxLength, digitsLength, tmp);
 							changed = true;
@@ -2455,7 +2436,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
 	return changed;
 }
 
-int Interface::Resize(DWORD width, DWORD height, bool forceWindowed) {
+int Interface::Resize(size_t width, size_t height, bool forceWindowed) {
 	int r = GLApplication::Resize(width, height, forceWindowed);
 	PlaceComponents();
 	worker.RebuildTextures();
@@ -2475,7 +2456,7 @@ void Interface::UpdateFacetlistSelected() {
 	}
 }
 
-int Interface::GetVariable(char *name, char *prefix) {
+int Interface::GetVariable(const char *name, const char *prefix) {
 
 	char tmp[256];
 	int  idx;
@@ -2488,7 +2469,8 @@ int Interface::GetVariable(char *name, char *prefix) {
 	else {
 		strcpy(tmp, name);
 		tmp[lgthP] = 0;
-		if (_stricmp(tmp, prefix) == 0) {
+
+		if (iequals(tmp, prefix)) {
 			strcpy(tmp, name + lgthP);
 			int conv = sscanf(tmp, "%d", &idx);
 			if (conv) {
@@ -2595,12 +2577,12 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
 			}
 		}
 		catch (Error &e) {
-			GLMessageBox::Display((char *)e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
 		}
 		//UpdateModelParams();
 		try { worker.Reload(); }
 		catch (Error &e) {
-			GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 		}
 	}
 	else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -2766,7 +2748,7 @@ int Interface::FrameMove()
 					worker.Update(m_fTime);
 				}
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
 				}
 				// Simulation monitoring
 				UpdatePlotters();
@@ -2901,18 +2883,14 @@ bool Interface::AutoSave(bool crashSave) {
 	progressDlg2->SetProgress(0.0);
 	progressDlg2->SetVisible(true);
 	//GLWindowManager::Repaint();
-	char CWD[MAX_PATH];
-	_getcwd(CWD, MAX_PATH);
 
 	std::string shortFn(worker.GetCurrentShortFileName());
-#ifdef MOLFLOW
-	std::string newAutosaveFilename = "Molflow_Autosave";
+	std::string newAutosaveFilename = appName + "_Autosave";
 	if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";
+#ifdef MOLFLOW
 	newAutosaveFilename += ".zip";
 #endif
 #ifdef SYNRAD
-	std::string newAutosaveFilename = "Synrad_Autosave";
-	if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";
 	newAutosaveFilename += ".syn7z";
 #endif
 	char fn[1024];
@@ -2925,10 +2903,7 @@ bool Interface::AutoSave(bool crashSave) {
 		ResetAutoSaveTimer(); //deduct saving time from interval
 	}
 	catch (Error &e) {
-		//delete fn;
-		char errMsg[512];
-		sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn);
-		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(std::string(e.GetMsg()) + "\n" + fn, "Autosave error", { "OK" }, GLDLG_ICONERROR);
 		progressDlg2->SetVisible(false);
 		SAFE_DELETE(progressDlg2);
 		ResetAutoSaveTimer();
@@ -2943,31 +2918,23 @@ bool Interface::AutoSave(bool crashSave) {
 
 void Interface::CheckForRecovery() {
 	// Check for autosave files in current dir.
-	intptr_t file;
-	_finddata_t filedata;
-#ifdef MOLFLOW
-	file = _findfirst("Molflow_Autosave*.zip", &filedata);
-#endif
+	auto curPath = std::filesystem::current_path(); //string (POSIX) or wstring (Windows)
+	for (const auto & p : std::filesystem::directory_iterator(curPath)) {
+		
+		std::string path_str = p.path().u8string();
+		std::string fileName_str = p.path().filename().u8string();
 
-#ifdef SYNRAD
-	file = _findfirst("Synrad_Autosave*.syn*", &filedata);
-#endif
-
-	if (file != -1)
-	{
-		do
-		{
+		if (beginsWith(fileName_str, appName + "_Autosave")) {
 			std::ostringstream msg;
-			msg << "Autosave file found:\n" << filedata.name << "\n";
+			msg << "Autosave file found:\n" << fileName_str << "\n";
 			int rep = RecoveryDialog::Display(msg.str().c_str(), "Autosave recovery", GLDLG_LOAD | GLDLG_SKIP, GLDLG_DELETE);
 			if (rep == GLDLG_LOAD) {
-				LoadFile(filedata.name);
-				RemoveRecent(filedata.name);
+				LoadFile(path_str);
+				RemoveRecent(path_str.c_str());
 			}
 			else if (rep == GLDLG_CANCEL) return;
 			else if (rep == GLDLG_SKIP) continue;
-			else if (rep == GLDLG_DELETE) remove(filedata.name);
-		} while (_findnext(file, &filedata) == 0);
+			else if (rep == GLDLG_DELETE) remove(p.path());
+		}
 	}
-	_findclose(file);
 }

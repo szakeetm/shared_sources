@@ -2,7 +2,7 @@
 #ifndef _GLUNITDIALOGH_
 #define _GLUNITDIALGOH_
 
-//#include <SDL_opengl.h>
+//#include <SDL2/SDL_opengl.h>
 #include "GLWindow.h"
 
 // Buttons
@@ -23,12 +23,12 @@ class GLUnitDialog : private GLWindow {
 
 public:
   // Display a modal dialog and return the code of the pressed button
-  static int Display(char *message,char *title=NULL,int mode=GLDLG_MM|GLDLG_CM|GLDLG_M|GLDLG_INCH|GLDLG_FOOT|GLDLG_CANCEL_U,int icon=GLDLG_ICONNONE);
+  static int Display(const char *message, const char *title=NULL,int mode=GLDLG_MM|GLDLG_CM|GLDLG_M|GLDLG_INCH|GLDLG_FOOT|GLDLG_CANCEL_U,int icon=GLDLG_ICONNONE);
 
   int  rCode;
 
 private:
-  GLUnitDialog(char *message,char *title,int mode,int icon);
+  GLUnitDialog(const char *message, const char *title,int mode,int icon);
   void ProcessMessage(GLComponent *src,int message);
 
 };

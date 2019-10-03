@@ -21,28 +21,33 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <stdio.h>
 #include <iostream>
+#include "File.h"
+#include <cstring>
 #define NOMINMAX
+#ifdef _WIN32
 #include <Windows.h> //Showwindow
-#include <io.h>
-#include <direct.h>
+#endif
+
 #include <errno.h>
+#include <filesystem>
 
 std::string exec(std::string command);
-std::string exec_str(const char* cmd);
-bool Exist(std::string fileName);
-bool Exist(const char *fileName);
-std::string GetPath(const std::string& str);
+std::string exec(const char* cmd);
 
 int main(int argc,char* argv[]) {
+	std::cout << "MolFlow / SynRad wrapper for 7-zip executable\n";
+	std::cout << "Renames a file, compresses it and on success it deletes the original.\n\n";
 	char key;
 	std::string result;
 	for (int i = 0; i < argc; i++) {
 		std::cout << argv[i] << " ";
 	}
 	std::cout << "\n\n";
-	if (argc<3) {
-		std::cout<<"Usage: compress.exe FILE_TO_COMPRESS RENAMED_FILENAME {include_file1 include_file2 ...}";
+	if (argc < 3 || argc>4 || (argc == 4 && argv[3][0] != '@')) {
+		std::cout<<"Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\nType any letter and press ENTER to quit\n";
+#ifdef _WIN32
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );
+#endif
 		std::cin>>key;
 		return 0;
 	}
@@ -51,27 +56,42 @@ int main(int argc,char* argv[]) {
 	std::string fileNameWith7z;
 	std::string fileNameGeometry;
 	fileName = argv[1];
-	std::cout<<"\nargv0: "<<argv[0];
-	std::cout<<"\nargv1: "<<argv[1];
-	std::cout<<"\nargv2: "<<argv[2]<<"\n";
+	std::cout << "\nFile to compress: " << argv[1];
+	std::cout << "\nNew name in archive: " << argv[2] << "\n";
+	if (argc == 4) std::cout << "Additional file list: " << argv[3] << "\n";
+
 	fileNameWith7z = fileName + "7z";
-	if (!Exist("7za.exe")) {
-		printf("\n7za.exe not found. Cannot compress.\n");
+	std::string sevenZipName = "7za";
+#ifdef _WIN32
+	sevenZipName += ".exe";
+#else
+	sevenZipName = "./" + sevenZipName;
+#endif
+	if (!FileUtils::Exist(sevenZipName)) {
+		printf("%s",("\n" + sevenZipName + " not found. Cannot compress.\n").c_str());
 			std::cin>>key;
 			return 0;
 	}
 	
-	fileNameGeometry = GetPath(fileName) + argv[2];
+	fileNameGeometry = FileUtils::GetPath(fileName) + argv[2];
+	/*
 	command = "move \"" + fileName + "\" \"" + fileNameGeometry + "\"";
 	result=exec(command);
-	char CWD [MAX_PATH];
-	_getcwd( CWD, MAX_PATH );
-	command = "del \""+fileNameWith7z+"\"";
-	result = exec(command); 
-	command = "cmd /C \"pushd \"";
-	command+=CWD;
-	command+="\"&&7za.exe u -t7z \"" + fileNameWith7z + "\" \"" + fileNameGeometry + "\"";
-	for (int i=3;i<argc;i++) { //include files
+	*/
+	std::filesystem::rename(fileName, fileNameGeometry);
+	std::filesystem::remove(fileNameWith7z);
+	command = "";
+
+#ifdef _WIN32
+	//Trick so Windows command line supports UNC (network) paths
+	std::string cwd = FileUtils::get_working_path();
+	command += "cmd /C \"pushd \"" + cwd + "\"&&";
+#endif
+
+	command+=sevenZipName + " u -t7z \"" + fileNameWith7z + "\" \"" + fileNameGeometry + "\"";
+	if (argc==4) { //include file list
+		command = command + " " + argv[3];
+		/*
 		bool duplicate=false;
 		for (int j=3;!duplicate && j<i;j++) { //check for duplicate include files
 			if (strcmp(argv[i],argv[j])==0)
@@ -82,20 +102,37 @@ int main(int argc,char* argv[]) {
 			command += argv[i];
 			command += "\""; //add as new input file
 		}
+		*/
 	}
+#ifdef _WIN32
 	command+="&&popd\"";
-	std::cout<<"\nCommand: "<<command<<"\n\nStarting compression...\nYou can continue using Synrad while compressing.\n";
+#endif
+
+	std::cout << "\nCommand:\n" << command << "\n\nStarting compression...";
+#ifdef _WIN32
+	std::cout << "\nYou can continue using Molflow/Synrad while compressing.\n"; //On Windows, compress.exe is launched as a background process
+#endif
 	result=exec(command);
+
+	if (argc == 4) { //Delete list file
+		std::string listFile = argv[3];
+		listFile = listFile.substr(1, std::string::npos);
+		std::filesystem::remove(listFile);
+	}
+
 	size_t found;
 	found=result.find("Everything is Ok");
 	if (found!=std::string::npos) {
-		printf("\nCompression seems legit. Deleting GEO file.");
-		remove(fileNameGeometry.c_str());
+		printf("\nCompression seems legit. Deleting original GEO file.\n");
+		std::filesystem::remove(fileNameGeometry);
 		return 0;
 	}
-	ShowWindow( GetConsoleWindow(), SW_RESTORE );
-	command = "move \""+fileNameGeometry+"\" \""+fileName+"\"";
-	result=exec(command);
+
+	//Handle errors:
+#ifdef _WIN32
+	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
+#endif
+	std::filesystem::rename(fileNameGeometry, fileName);
 	printf("\nSomething went wrong during the compression, read above. GEO file kept."
 		"\nType any letter and press Enter to exit\n");
 	std::cin>>key;
@@ -103,42 +140,31 @@ int main(int argc,char* argv[]) {
 }
 
 std::string exec(std::string command) {
-	return exec_str(command.c_str());
+	return exec(command.c_str());
 }
 
-std::string exec_str(const char* cmd) {
-    FILE* pipe = _popen(cmd, "r");
+std::string exec(const char* cmd) { //Execute a command and return what it prints to the command line / terinal
+    FILE* pipe = 
+#ifdef _WIN32
+		_popen
+#else
+		popen
+#endif
+		(cmd, "r");
     if (!pipe) return "ERROR";
     char buffer[128];
     std::string result = "";
     while(!feof(pipe)) {
         if(fgets(buffer, 128, pipe) != NULL)
                 result += buffer;
-		        printf(buffer);
+		        printf("%s",buffer);
     }
 	result=result+'0';
-    _pclose(pipe);
+#ifdef _WIN32
+	_pclose
+#else
+	pclose
+#endif
+	(pipe);
     return result;
-}
-
-bool Exist(std::string fileName) {
-	return Exist(fileName.c_str());
-}
-
-bool Exist(const char *fileName) {
-	FILE *filepoint;
-
-	if ((fopen_s(&filepoint, fileName, "r")) != 0) {
-		return false;
-	}
-	else {
-		return true;
-	}
-}
-
-std::string GetPath(const std::string& str)
-{
-	size_t found = str.find_last_of("/\\");
-	if (found == std::string::npos) return ""; //not found, return empty string
-	else return str.substr(0, found)+"\\";
 }

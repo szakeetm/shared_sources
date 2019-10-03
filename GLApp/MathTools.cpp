@@ -25,6 +25,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <sstream>
 #include <iterator>
 #include "Random.h"
+#include <chrono>
+#include <string.h> //strdup
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
 	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
@@ -64,7 +66,7 @@ size_t GetPower2(size_t n) {
     // Get the power of 2 above
     int p = 0;
     while(n!=0) { n = n >> 1; p++; }
-    return 1i64 << p;
+    return (size_t)1 << p;
   }
 
 }
@@ -264,7 +266,7 @@ std::vector<std::string> SplitString(std::string const &input) {
 std::vector<std::string> SplitString(std::string const & input, const char & delimiter)
 {
 		std::vector<std::string> result;
-		const char* str = _strdup(input.c_str());
+		const char* str = strdup(input.c_str());
 		do
 		{
 			const char *begin = str;
@@ -285,8 +287,26 @@ bool endsWith(std::string const &fullString, std::string const &ending) {
 	}
 }
 
-bool beginsWith(std::string const &fullString, std::string const &ending) {
-	return (fullString.compare(0, ending.length(), ending) == 0);
+bool beginsWith(std::string const &fullString, std::string const &beginning) {
+	return (fullString.compare(0, beginning.length(), beginning) == 0);
+}
+
+std::string space2underscore(std::string text) {
+	for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
+		if (*it == ' ') {
+			*it = '_';
+		}
+	}
+	return text;
+}
+
+bool iequals(std::string a, std::string b)
+{
+	return std::equal(a.begin(), a.end(),
+		b.begin(), b.end(),
+		[](char a, char b) {
+		return tolower(a) == tolower(b);
+	});
 }
 
 int my_lower_bound(const double & key, double* A,const size_t& size)
@@ -416,9 +436,9 @@ double InterpolateXY(const double & lookupValue, const std::vector<std::pair<dou
 
 }
 
-double QuadraticInterpolateX(const double& y,
+/*double QuadraticInterpolateX(const double& y,
 	const double& a, const double& b, const double& c,
-	const double& FA, const double& FB, const double& FC) {
+	const double& FA, const double& FB, const double& FC, MersenneTwister& randomGenerator) {
 	double amb = a - b;
 	double amc = a - c;
 	double bmc = b - c;
@@ -445,7 +465,7 @@ double QuadraticInterpolateX(const double& y,
 				/ (amc_bmc)+(a*FC) / (amc_bmc)+(b*FC) / (amc_bmc)) - 4 * (-(FA / (amb_amc)) + FB / (amb_amc)+FB / (amc_bmc)-FC / (amc_bmc))*(-FA + (a*FA) / (amb)-(a*b*FA)
 					/ (amb_amc)-(a*FB) / (amb)+(a*b*FB) / (amb_amc)+(a*b*FB) / (amc_bmc)-(a*b*FC) / (amc_bmc)+y))) / divisor;
 	}
-}
+}*/
 
 int weighed_lower_bound_X(const double & key, const double & weigh, double * A, double * B, const size_t & size)
 {
@@ -498,6 +518,40 @@ double GetElement(const std::pair<double, std::vector<double>>& pair, const bool
 	return first ? pair.first : pair.second[elementIndex];
 }
 
+size_t GetSysTimeMs()
+{
+	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch()
+		);
+	return ms.count();
+}
+
 double Pow10(const double& a) {
 	return pow(10,a);
 }
+/*
+int isinf(double x)
+{
+#if defined _MSC_VER
+	typedef unsigned __int64 uint64;
+#else
+	typedef uint64_t uint64;
+#endif
+	union { uint64 u; double f; } ieee754;
+	ieee754.f = x;
+	return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) == 0x7ff00000 &&
+		((unsigned)ieee754.u == 0);
+}
+
+int isnan(double x)
+{
+#if defined _MSC_VER
+	typedef unsigned __int64 uint64;
+#else
+	typedef uint64_t uint64;
+#endif
+	union { uint64 u; double f; } ieee754;
+	ieee754.f = x;
+	return ((unsigned)(ieee754.u >> 32) & 0x7fffffff) +
+		((unsigned)ieee754.u != 0) > 0x7ff00000;
+}*/

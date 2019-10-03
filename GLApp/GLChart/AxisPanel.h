@@ -24,7 +24,7 @@ public:
 private:
 
   void commit();
-  void error(char *m);
+  void error(const char *m);
 
   GLAxis  *pAxis;
   GLChart *pChart;

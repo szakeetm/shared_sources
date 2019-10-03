@@ -16,7 +16,7 @@ public:
   double GetValue();
   void SetMinMax(double min,double max);
   void SetIncrement(double inc);
-  void SetFormat(char *format);
+  void SetFormat(const char *format);
 
   // Implementation
   void Paint();

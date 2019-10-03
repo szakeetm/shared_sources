@@ -69,9 +69,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define GL_FAIL 0
 
 // Type definitions
-
 typedef unsigned char BYTE;
-typedef unsigned __int64 llong;
 
 class Error {
 

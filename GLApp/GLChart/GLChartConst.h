@@ -21,7 +21,7 @@ extern double NaN;
 /* Chart properties menu item */
 #define MENU_CHARTPROP 1
 #define MENU_SAVETXT   2
-#define MENU_LOADTXT   3
+//#define MENU_LOADTXT   3
 #define MENU_COPYALL   4
 
 /* Data view properties menu */
@@ -240,6 +240,9 @@ public:
 		r = red;
 		g = green;
 		b = blue;
+	}
+	bool operator==(const GLColor& col) {
+		return r == col.r && g == col.g && b == col.b;
 	}
   int r;
   int g;

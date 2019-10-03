@@ -4,6 +4,7 @@
 #include "GLToolkit.h"
 #include "MathTools.h" //Min max
 #include "GLFont.h"
+#include <cstring> //strcpy, etc.
 
 GLTextField::GLTextField(int compId,const char *text):GLComponent(compId) {
 
@@ -171,7 +172,7 @@ void GLTextField::ScrollToVisible()
 
 }
 
-void GLTextField::InsertString(char *lpszString)
+void GLTextField::InsertString(const char *lpszString)
 {
   char tmp[MAX_TEXT_SIZE];
   if(!m_Editable) return;
@@ -198,12 +199,11 @@ void GLTextField::DeleteString(int count)
 {
   if(!m_Editable) return;
 
-  char tmp[MAX_TEXT_SIZE];
-  strcpy(tmp,m_Text);
-  tmp[m_CursorPos]=0;
-  strncat(tmp,m_Text+m_CursorPos+count,MAX_TEXT_SIZE);
-  m_CursorState=1;
-  UpdateText(tmp);
+  std::string tmp = m_Text;
+  tmp.erase(m_CursorPos, count);
+
+  m_CursorState = 1;
+  UpdateText(tmp.c_str());
   ScrollToVisible();
 }
 
@@ -335,13 +335,13 @@ void GLTextField::PasteClipboardText() {
 	//Cut trailing whitespace characters (Paste from Excel, for example)
 	for (int cursorPos = (int)strlen(text); cursorPos >= 0; cursorPos--) {
 		if (text[cursorPos] == '\t' || text[cursorPos] == '\r' || text[cursorPos] == '\n') {
-			text[cursorPos] = NULL;
+			text[cursorPos] = '\0';
 		}
 	}
 	InsertString(text);
 
 	/*
-#ifdef WIN
+#ifdef _WIN32
 
   if( OpenClipboard(NULL) ) {
     HGLOBAL hMem;
@@ -596,6 +596,7 @@ void GLTextField::ManageEvent(SDL_Event *evt) {
 		  break;
 
       case SDLK_RETURN:
+	  case SDLK_KP_ENTER:
         parent->ProcessMessage(this,MSG_TEXT);
         m_CursorPos=0;
         ScrollToVisible();

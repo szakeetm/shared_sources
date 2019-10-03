@@ -1,16 +1,17 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #include "GLChart.h"
-#include "..\GLMenu.h"
-#include "..\GLToolkit.h"
-#include "..\..\File.h"
+#include "../GLMenu.h"
+#include "../GLToolkit.h"
+#include "../../File.h"
 //#include "..\GLFileBox.h"
-#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
-#include "..\GLMessageBox.h"
-#include "..\GLButton.h"
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
+#include "../GLMessageBox.h"
+#include "../GLButton.h"
 
 //#include <malloc.h>
 #include <math.h>
 #include <sstream>
+#include <cstring> //strcpy, etc.
 
 double NaN;
 
@@ -43,6 +44,17 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	y2Axis = new GLAxis(this, VERTICAL_RIGHT);
 	displayDuration = 3600;
 
+	colors = {
+		GLColor(255,000,055), //red
+		GLColor(000,000,255), //blue
+		GLColor(000,204,051), //green
+		GLColor(000,000,000), //black
+		GLColor(255,153,051), //orange
+		GLColor(153,204,255), //light blue
+		GLColor(153,000,102), //violet
+		GLColor(255,230,005) //yellow
+	};
+
 	nbLabel = 0;
 	zoomDrag = false;
 	zoomDragAllowed = false;
@@ -54,8 +66,8 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	chartMenu->Add("Dataview Y2");
 	chartMenu->Add(NULL);
 	chartMenu->Add("Copy to Clipboard",MENU_COPYALL);
-	chartMenu->Add("Save file (TXT)",MENU_SAVETXT);
-	chartMenu->Add("Load file (TXT)",MENU_LOADTXT);
+	chartMenu->Add("Save file (csv,txt)",MENU_SAVETXT);
+	//chartMenu->Add("Load file (TXT)",MENU_LOADTXT);
 	dvMenuY1 = chartMenu->GetSubMenu("Dataview Y1");
 	dvMenuY2 = chartMenu->GetSubMenu("Dataview Y2");
 
@@ -67,12 +79,9 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	dvOptions = NULL;
 
 	// Load NaN constant
-	__int64 iNaN = 0x7ff0000bad0000ffL;
+	size_t iNaN = 0x7ff0000bad0000ffL;
 	memcpy(&NaN,&iNaN,8);
-
-	strcpy(lastDir,".");
-	strcpy(lastFile,"data.txt");
-
+	//bool test = isnan(NaN);
 }
 
 GLChart::~GLChart() {
@@ -346,6 +355,30 @@ void GLChart::RestoreDeviceObjects() {
 	RVALIDATE_DLG(dvOptions);
 	GLAxis::Revalidate();
 	GLComponent::RestoreDeviceObjects();
+}
+
+GLColor GLChart::GetFirstAvailableColor()
+	{
+		std::vector<size_t> colorCount(colors.size(), 0);
+		int nbViews = GetY1Axis()->GetViewNumber();
+		for (int i = 0; i < nbViews; i++) {
+			GLColor c = GetY1Axis()->GetDataView(i)->GetColor();
+			for (size_t ii = 0; ii < colors.size(); ii++) {
+				if (c == colors[ii]) {
+					colorCount[ii]++;
+				}
+			}
+		}
+		//Pick first available color
+		size_t min = 1000; size_t minIndex = 0;
+		for (size_t i = 0; i < colorCount.size(); i++) {
+			if (colorCount[i] < min) {
+				min = colorCount[i];
+				minIndex = i;
+			}
+		}
+		return colors[minIndex];
+	
 }
 
 void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
@@ -797,9 +830,9 @@ void GLChart::showChartMenu(int x,int y) {
 			CopyAllToClipboard();
 		} else if( menuId == MENU_SAVETXT ) {
 			SaveFile();
-		} else if( menuId == MENU_LOADTXT ) {
+		}/* else if( menuId == MENU_LOADTXT ) {
 			LoadFile();
-		} else if( menuId>=MENU_DVPROPY1 && menuId<MENU_DVPROPY1+nbV1) { 
+		}*/ else if( menuId>=MENU_DVPROPY1 && menuId<MENU_DVPROPY1+nbV1) { 
 			ShowDataOptionDialog(y1Axis->GetDataView(menuId-MENU_DVPROPY1));
 		} else if( menuId>=MENU_DVPROPY2 && menuId<MENU_DVPROPY2+nbV2) {
 			ShowDataOptionDialog(y2Axis->GetDataView(menuId-MENU_DVPROPY2));
@@ -923,25 +956,25 @@ char **GLChart::buildPanelString(SearchInfo *si) {
 	char *xValue;
 	if (xAxis->GetAnnotation() == TIME_ANNO) {
 		sprintf(tmp,"Time= %s",xAxis->FormatTimeValue(si->value->x));
-		xValue = _strdup(tmp);
+		xValue = strdup(tmp);
 	} else {
 		sprintf(tmp,"X= %g",si->value->x);
-		xValue = _strdup(tmp);
+		xValue = strdup(tmp);
 	}
 	if (xAxis->IsXY()) {
 		sprintf(tmp,"%s (Y%d)",si->dataView->GetExtendedName(),(si->axis==y1Axis?1:2));
-		str[0] = _strdup(tmp);
+		str[0] = strdup(tmp);
 		str[1] = xValue;
-		sprintf(tmp,"X= %s",si->xdataView->FormatValue(si->xdataView->GetTransformedValue(si->xvalue->y)));
-		str[2] = _strdup(tmp);
-		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)) , si->dataView->GetUnit());
-		str[3] = _strdup(tmp);
+		sprintf(tmp,"X= %s",si->xdataView->FormatValue(si->xdataView->GetTransformedValue(si->xvalue->y)).c_str());
+		str[2] = strdup(tmp);
+		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
+		str[3] = strdup(tmp);
 	} else {
 		sprintf(tmp,"%s (Y%d)",si->dataView->GetExtendedName(),(si->axis==y1Axis?1:2));
-		str[0] = _strdup(tmp);
+		str[0] = strdup(tmp);
 		str[1] = xValue;
-		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)) , si->dataView->GetUnit());
-		str[2] = _strdup(tmp);
+		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
+		str[2] = strdup(tmp);
 		str[3] = NULL;
 	}
 
@@ -960,14 +993,16 @@ void GLChart::SaveFile() {
 	int nbView = nbv1 + nbv2;
 	if(!nbView) return;
 
-	std::string fn = NFD_SaveFile_Cpp("csv", lastDir);
+	std::string fn = NFD_SaveFile_Cpp("csv,txt","");
 	if (!fn.empty()) {
+		if (FileUtils::GetExtension(fn) == "") fn += ".csv";
+		std::string separator;
+		if (FileUtils::GetExtension(fn) == "csv") separator = ",";
+		else separator = "\t";
 
 		FILE *f = fopen(fn.c_str(),"w");
 		if(f) {
 
-			strcpy(lastDir,FileUtils::GetPath(fn).c_str());
-			strcpy(lastFile,FileUtils::GetFilename(fn).c_str());
 
 			// Get DataList handle and write dataview name
 			DataList *ptr[MAX_VIEWS];
@@ -978,16 +1013,16 @@ void GLChart::SaveFile() {
 				sprintf(tmp,"%s",y1Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp)-1;
 				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				fprintf(f,"%s",tmp);
+				if(j<nbView) fprintf(f, "%s",separator.c_str());
 			}
 			for(int i=0;i<nbv2;i++) {
 				ptr[j++] = y2Axis->GetDataView(i)->GetData();
 				sprintf(tmp,"%s",y2Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp)-1;
 				if( l>=0 && tmp[l]>=128 ) tmp[l]=0;
-				fprintf(f,tmp);
-				if(j<nbView) fprintf(f,"\t");
+				fprintf(f, "%s",tmp);
+				if(j<nbView) fprintf(f, "%s",separator.c_str());
 			}
 			fprintf(f,"\n");
 
@@ -998,11 +1033,11 @@ void GLChart::SaveFile() {
 				if( !eof ) {
 					for(int i=0;i<nbView;i++) {
 						if( ptr[i] ) {
-							if (i==0) fprintf(f,"%g\t",ptr[i]->x);
+							if (i==0) fprintf(f,"%g%s",ptr[i]->x, separator.c_str());
 							fprintf(f,"%g",ptr[i]->y);
 							ptr[i]=ptr[i]->next;
 						}
-						if(i<nbView-1) fprintf(f,"\t");
+						if(i<nbView-1) fprintf(f,"%s", separator.c_str());
 					}
 					fprintf(f,"\n");
 				}
@@ -1075,7 +1110,7 @@ void GLChart::CopyAllToClipboard() {
 	*/
 
 	/*
-#ifdef WIN
+#ifdef _WIN32
 
 	if( !OpenClipboard(NULL) )
 		return;
@@ -1229,8 +1264,6 @@ void GLChart::LoadFile() {
 		if(f) {
 
 			Clear();
-			strcpy(lastDir, FileUtils::GetPath(fn).c_str());
-			strcpy(lastFile, FileUtils::GetFilename(fn).c_str());
 
 			fgets(tmp,128,f);
 			TRUNC(tmp);

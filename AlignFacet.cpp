@@ -21,12 +21,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp\GLToggle.h"
+#include "GLApp/GLToggle.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "GLApp\GLLabel.h"
-#include "GlApp\GLButton.h"
-#include "GLApp\MathTools.h" //Contains
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/MathTools.h" //Contains
 
 #include "Geometry_shared.h"
 
@@ -46,6 +46,11 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
+/**
+* \brief Constructor with initialisation for the AlignFacet window (Facet/Align to)
+* \param g pointer to the Geometry
+* \param w Worker handle
+*/
 AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 	int wD = 290;
@@ -120,6 +125,11 @@ AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 	switch(message) {
 	case MSG_BUTTON:
@@ -226,7 +236,7 @@ dirDestVertexId,
 				//mApp->UpdateModelParams();
 				try { work->Reload(); } catch(Error &e) {
 
-					GLMessageBox::Display((char *)e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
 				}
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
@@ -252,6 +262,9 @@ dirDestVertexId,
 	GLWindow::ProcessMessage(src,message);
 }
 
+/**
+* \brief Memorises current facet selection for the align process
+*/
 void AlignFacet::MemorizeSelection() {
 	memorizedSelection = geom->GetSelectedFacets();
 	oriPositions.clear();

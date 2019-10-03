@@ -9,10 +9,10 @@ class GLTitledPanel : public GLComponent {
 public:
 
   // Construction
-  GLTitledPanel(char *title);
+  GLTitledPanel(const char *title);
 
   // Component method
-  void SetTitle(char *title);
+  void SetTitle(const char *title);
   void SetTextColor(int r,int g,int b);
   void SetBold(bool b);
   void SetClosable(bool c);

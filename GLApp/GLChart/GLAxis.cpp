@@ -1,12 +1,15 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #include "GLChart.h"
-#include "..\GLToolkit.h"
-#include "..\GLApp.h"
+#include "../GLToolkit.h"
+#include "../GLApp.h"
 //#include <malloc.h>
 #include <float.h>
 #include <math.h>
 #include <time.h>
-#include <cimage.h>
+#define cimg_use_png 1
+#include <CImg/CImg.h>
+using namespace cimg_library;
+#include <cstring> //strcpy, etc
 
 // Static handle to marker texture
 GLuint dotTex = 0;
@@ -139,25 +142,24 @@ void GLAxis::Revalidate() {
 }
 
 // Initialise texture for dv markers
-GLuint GLAxis::initMarker(char *name) {
+GLuint GLAxis::initMarker(const char *name) {
 
   GLuint tex = 0;
 
-  CImage img;
-  if( img.LoadCImage(name) ) {
+  CImg<BYTE> img(name);
+  //if( img.LoadCImage(name) ) {
 
     // Make 32 Bit RGBA buffer
-    int fWidth  = img.Width();
-    int fHeight = img.Height();
+	int fWidth = img.width();
+    int fHeight = img.height();
     BYTE *buff32 = (BYTE *)malloc(fWidth*fHeight*4);
-	_ASSERTE(buff32);
-    BYTE *data   = img.GetData();
+	//BYTE *data = img.data();
     for(int y=0;y<fHeight;y++) {
       for(int x=0;x<fWidth;x++) {
-        buff32[x*4 + 0 + y*4*fWidth] = data[x*3+2 + y*3*fWidth];
-        buff32[x*4 + 1 + y*4*fWidth] = data[x*3+1 + y*3*fWidth];
-        buff32[x*4 + 2 + y*4*fWidth] = data[x*3+0 + y*3*fWidth];
-        buff32[x*4 + 3 + y*4*fWidth] = data[x*3+1 + y*3*fWidth]; // Green as alpha
+		  buff32[x * 4 + 0 + y * 4 * fWidth] = /*data[x*3+2 + y*3*fWidth];*/ *(img.data(x, y, 0, 0));
+        buff32[x*4 + 1 + y*4*fWidth] = /*data[x*3+1 + y*3*fWidth];*/ *(img.data(x, y, 0, 1));
+        buff32[x*4 + 2 + y*4*fWidth] = /*data[x*3+0 + y*3*fWidth];*/ *(img.data(x, y, 0, 2));
+        buff32[x*4 + 3 + y*4*fWidth] = /*data[x*3+1 + y*3*fWidth];*/ *(img.data(x, y, 0, 1));// Green as alpha
       }
     }
 
@@ -177,9 +179,9 @@ GLuint GLAxis::initMarker(char *name) {
     );   
 
     free(buff32);
-    img.Release();
+    //img.Release();
 
-  }
+  //}
 
   return tex;
 
@@ -756,7 +758,7 @@ GLuint GLAxis::initMarker(char *name) {
     if(getDV(v)>=0) return;
 
     if (!IsHorizontal()) {
-      for(int i=nbView;i>=index;i++)
+      for(int i=nbView;i>=index;i--)
         dataViews[i] = dataViews[i-1];
       dataViews[index]=v;
       nbView++;
@@ -902,7 +904,7 @@ GLuint GLAxis::initMarker(char *name) {
 
     double a = fabs(d);
     int e = 0;
-    char *f = "%.2fe%d";
+    std::string f = "%.2fe%d";
 
     if (a != 0) {
       if (a < 1) {
@@ -925,7 +927,7 @@ GLuint GLAxis::initMarker(char *name) {
 
     if (d < 0) a = -a;
 
-    sprintf(ret,f,a,e);
+    sprintf(ret,f.c_str(),a,e);
     return ret;
 
   }
@@ -936,7 +938,7 @@ GLuint GLAxis::initMarker(char *name) {
 
     double a = fabs(d);
     int e = 0;
-    char *f = "%de%d";
+    std::string f = "%de%d";
 
     if (a != 0) {
       if (a < 1) {
@@ -959,7 +961,7 @@ GLuint GLAxis::initMarker(char *name) {
 
     if (d < 0) a = -a;
 
-    sprintf(ret,f,(int)(a+0.5),e);
+    sprintf(ret,f.c_str(),(int)(a+0.5),e);
     return ret;
 
   }
@@ -999,7 +1001,7 @@ GLuint GLAxis::initMarker(char *name) {
       useFormat = "%Y"; // yearFormat
     } else {
       desiredPrec = timePrecs[i];
-      useFormat = (char *)timeFormats[i];
+      useFormat = timeFormats[i];
     }
 
   }
@@ -1008,7 +1010,7 @@ GLuint GLAxis::initMarker(char *name) {
    * Suppress last non significative zeros
    * @param n String representing a floating number
    */
-  char *GLAxis::suppressZero(char *n) {
+  std::string GLAxis::suppressZero(const char *n) {
 
     static char ret[64];
     bool hasDecimal = (strrchr(n,'.') != NULL);
@@ -1040,11 +1042,11 @@ GLuint GLAxis::initMarker(char *name) {
    * @param prec Desired precision (Pass 0 to not perform prec rounding).
    * @return A string continaing a formated representation of the given double.
    */
-   char *GLAxis::FormatValue(double vt, double prec) {
+   std::string GLAxis::FormatValue(double vt, double prec) {
 
-    static char ret[64];
+    static char ret[68];
     char format[64];
-    if(_isnan(vt))
+    if(isnan(vt))
       return "NaN";
 
     // Round value to nearest multiple of prec
@@ -1118,15 +1120,15 @@ GLuint GLAxis::initMarker(char *name) {
 
         } else {
 
-          int nbDigit = -(int)floor(log10(prec));
-          if( nbDigit<=0 ) {
+          //int nbDigit = -(int)floor(log10(prec));
+          //if( nbDigit<=0 ) {
             sprintf(ret,"%g",vt);
             return suppressZero(ret);
-          } else {
-            sprintf(format,"%%.%df",nbDigit);
-            sprintf(ret,format,vt);
-            return suppressZero(ret);
-          }
+          //} else {
+          //  sprintf(format,"%%.%df",nbDigit);
+          //  sprintf(ret,format,vt);
+          //  return suppressZero(ret);
+          //}
 
         }
 
@@ -1453,8 +1455,8 @@ GLuint GLAxis::initMarker(char *name) {
     }
 
     for (i = 0; i < nbLabel; i++) {
-      int lw = labels[i].size.width + abs(labels[i].offsetX);
-      int lh = labels[i].size.height + abs(labels[i].offsetY);
+      int lw = labels[i].size.width + std::abs(labels[i].offsetX);
+      int lh = labels[i].size.height + std::abs(labels[i].offsetY);
       if (lw > max_width)   max_width = lw;
       if (lh > max_height)  max_height = lh;
     }
@@ -1498,7 +1500,7 @@ GLuint GLAxis::initMarker(char *name) {
     double vx,vy;
 
     // Check validity
-    if (_isnan(y) || _isnan(x))
+    if (isnan(y) || isnan(x))
       return ret;
 
     if (xAxis->GetScale() == LOG_SCALE) {
@@ -1730,8 +1732,8 @@ GLuint GLAxis::initMarker(char *name) {
   // ****************************************************************
   // Label management
 
-  void GLAxis::addLabel(char *lab, int w, int h, double pos,int offX,int offY) {
-    labels[nbLabel].value = _strdup(lab);
+  void GLAxis::addLabel(const char *lab, int w, int h, double pos,int offX,int offY) {
+    labels[nbLabel].value = strdup(lab);
     labels[nbLabel].size.width = w;
     labels[nbLabel].size.height = h;
     labels[nbLabel].pos = pos;
@@ -1765,7 +1767,7 @@ GLuint GLAxis::initMarker(char *name) {
     double prec;
     double precDelta = sz / length;
     time_t timeval;
-    __int64 round;
+    size_t round;
 
     clearLabel();
 
@@ -1779,7 +1781,7 @@ GLuint GLAxis::initMarker(char *name) {
         computeDateformat(10);
 
         // round to multiple of prec
-        round = (__int64) (min / desiredPrec);
+        round = (size_t) (min / desiredPrec);
         startx = (round + 1) * desiredPrec;
 
         if (inverted)
@@ -1788,7 +1790,7 @@ GLuint GLAxis::initMarker(char *name) {
           pos = length * ((startx - min) / sz);
 
         timeval = (time_t)startx;
-        strftime(s,64,useFormat,localtime(&timeval));
+        strftime(s,64,useFormat.c_str(),localtime(&timeval));
         w = GLToolkit::GetDialogFont()->GetTextWidth(s);
         h = GLToolkit::GetDialogFont()->GetTextHeight();
         addLabel(s, w, h, pos);
@@ -1817,7 +1819,7 @@ GLuint GLAxis::initMarker(char *name) {
           // Check limit
           if (pos > 0 && pos < lgth) {
             timeval = (time_t)startx;
-            strftime(s,64,useFormat,localtime(&timeval));
+            strftime(s,64,useFormat.c_str(),localtime(&timeval));
             w = GLToolkit::GetDialogFont()->GetTextWidth(s);
             h = GLToolkit::GetDialogFont()->GetTextHeight();
             addLabel(s, w, h, pos);
@@ -1859,8 +1861,8 @@ GLuint GLAxis::initMarker(char *name) {
           }
 
           double mW;
-          mW = GLToolkit::GetDialogFont()->GetTextWidth(FormatValue(minT, prec));
-          w = GLToolkit::GetDialogFont()->GetTextWidth(FormatValue(maxT, prec));
+          mW = GLToolkit::GetDialogFont()->GetTextWidth(FormatValue(minT, prec).c_str());
+          w = GLToolkit::GetDialogFont()->GetTextWidth(FormatValue(maxT, prec).c_str());
           if(w>mW) mW = w;
           mW = 1.5*mW;
           nbMaxLab = (int) (length / mW);
@@ -1946,7 +1948,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           // round to multiple of prec (last not visible label)
 
-          round = (__int64)floor(min / prec);
+          round = (size_t)floor(min / prec);
           startx = (double)round * prec;
 
           // Compute real number of label
@@ -2037,24 +2039,24 @@ GLuint GLAxis::initMarker(char *name) {
           else
             vt = startx;
 
-          char *tempValue = FormatValue(vt, prec);
+		  std::string tempValue = FormatValue(vt, prec);
           double diff = 0;
           if (labelFormat != TIME_FORMAT && labelFormat != DATE_FORMAT)
           {
             double t;
-            sscanf(tempValue,"%lf",&t);
+            sscanf(tempValue.c_str(),"%lf",&t);
             diff = fabs(t - vt);
           }
-          if (strcmp(lastLabelText,tempValue)==0)
+          if (strcmp(lastLabelText,tempValue.c_str())==0)
           {
             //avoiding label duplication
             if (diff < lastDiff)
             {
-              strcpy(s,tempValue);
+              strcpy(s,tempValue.c_str());
               if (lastLabel != NULL)
               {
                 free(lastLabel->value);
-                lastLabel->value = _strdup("");
+                lastLabel->value = strdup("");
               }
             }
             else
@@ -2064,10 +2066,10 @@ GLuint GLAxis::initMarker(char *name) {
           }
           else
           {
-            strcpy(s,tempValue);
+            strcpy(s,tempValue.c_str());
           }
           lastDiff = diff;
-          strcpy(lastLabelText,tempValue);
+          strcpy(lastLabelText,tempValue.c_str());
 
           if (startx >= (min - precDelta)) {
             w = GLToolkit::GetDialogFont()->GetTextWidth(s);
@@ -2096,28 +2098,28 @@ GLuint GLAxis::initMarker(char *name) {
 
         if( IsHorizontal() && nbLabel==1 && labels[0].pos==0 && !inverted ) {
           // Add the max at the end
-          char *mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,max):max, prec);
-          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr);
-          addLabel(mStr,w,h,iLenght,0,0);
+		std::string mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,max):max, prec);
+          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr.c_str());
+          addLabel(mStr.c_str(),w,h,iLenght,0,0);
           tickStep = -1.0;
         }
 
         if( IsHorizontal() && nbLabel==1 && labels[0].pos==iLenght && !inverted ) {
           // Add the min at the begining
-          char *mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,min):min, prec);
-          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr);
-          addLabel(mStr,w,h,0,0,0);
+			std::string mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,min):min, prec);
+          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr.c_str());
+          addLabel(mStr.c_str(),w,h,0,0,0);
           tickStep = -1.0;
         }
 
         if( IsHorizontal() && nbLabel==0 && !inverted ) {
           // Add min and max
-          char *mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,max):max, prec);
-          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr);
-          addLabel(mStr,w,h,iLenght,0,0);
+		  std::string mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,max):max, prec);
+          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr.c_str());
+          addLabel(mStr.c_str(),w,h,iLenght,0,0);
           mStr = FormatValue((scale==LOG_SCALE)?pow(10.0,min):min, prec);
-          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr);
-          addLabel(mStr,w,h,0,0,0);
+          w = GLToolkit::GetDialogFont()->GetTextWidth(mStr.c_str());
+          addLabel(mStr.c_str(),w,h,0,0,0);
           tickStep = -1.0;
         }
 
@@ -2540,7 +2542,7 @@ GLuint GLAxis::initMarker(char *name) {
 
           // Compute transform here for performance
           vt = A0 + A1 * l->y + A2 * l->y * l->y;
-          valid = !_isnan(vt) && (sx != LOG_SCALE || l->x > 1e-100)
+          valid = !isnan(vt) && (sx != LOG_SCALE || l->x > 1e-100)
             && (scale != LOG_SCALE || vt > 1e-100);
 
           if (valid) {
@@ -2668,7 +2670,7 @@ GLuint GLAxis::initMarker(char *name) {
           vty = A0y + A1y * l.d1->y + A2y * l.d1->y * l.d1->y;
           vtx = A0x + A1x * l.d2->y + A2x * l.d2->y * l.d2->y;
 
-          valid = !_isnan(vtx) && !_isnan(vty) &&
+          valid = !isnan(vtx) && !isnan(vty) &&
             (sx != LOG_SCALE || vtx > 1e-100) &&
             (scale != LOG_SCALE || vty > 1e-100);
 
@@ -3427,8 +3429,8 @@ GLuint GLAxis::initMarker(char *name) {
    * @see #US_DATE_FORMAT
    * @see #FR_DATE_FORMAT
    */
-  void GLAxis::SetDateFormat (char *dateFormat)
+  void GLAxis::SetDateFormat (const char *dateFormat)
   {
-    this->dateFormat = dateFormat;
+    strcpy(this->dateFormat,dateFormat);
   }
 

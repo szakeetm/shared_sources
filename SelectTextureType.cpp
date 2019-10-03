@@ -18,15 +18,15 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "SelectTextureType.h"
-#include "GLApp\GLMessageBox.h"
+#include "GLApp/GLMessageBox.h"
 #include "Facet_shared.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
-#include "GLApp\GLTitledPanel.h"
-#include "GLApp\GLToggle.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\MathTools.h" //IsEqual
-#include "GLApp\GLButton.h"
+#include "GLApp/GLTitledPanel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/MathTools.h" //IsEqual
+#include "GLApp/GLButton.h"
 
 #include "Geometry_shared.h"
 

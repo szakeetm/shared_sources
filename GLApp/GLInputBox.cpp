@@ -5,11 +5,12 @@
 #include "GLTextField.h"
 #include "GLToolkit.h"
 #include "MathTools.h"
+#include <cstring> //strcpy, etc.
 
 static char ret[1024];
 
 // Construct a dialog box
-GLInputBox::GLInputBox(const char *message,char *label,char *title):GLWindow() {
+GLInputBox::GLInputBox(const char *message,const char *label,const char *title):GLWindow() {
 
   int wD;
   int hD=80;
@@ -71,6 +72,9 @@ void GLInputBox::ManageEvent(SDL_Event *evt) {
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 			return;
 		}
+		else { //Not Enter or ESC, pass event to window (which will relay to textbox)
+			GLWindow::ManageEvent(evt);
+		}
 	}
 	else {
 		GLWindow::ManageEvent(evt);
@@ -99,7 +103,7 @@ void GLInputBox::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-char *GLInputBox::GetInput(const char *message,char *label,char *title) {
+char *GLInputBox::GetInput(const char *message,const char *label,const char *title) {
 
   GLfloat old_mView[16];
   GLfloat old_mProj[16];

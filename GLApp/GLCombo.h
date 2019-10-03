@@ -19,7 +19,7 @@ public:
   void SetSize(size_t nbRow);
   void SetValueAt(size_t row,const char *value,int userValue=0);
   int  GetUserValueAt(size_t row);
-  void SetSelectedValue(char *value);
+  void SetSelectedValue(const char *value);
   void ScrollTextToEnd();
   void SetSelectedIndex(int idx);
   int  GetSelectedIndex();

@@ -123,7 +123,7 @@ class FileReader;
 #define WIREFRAME_COLOR_KW      85
 #define MAP_OPACITY_KW		    86
 
-static char *lexical_word[]= {
+static const char *lexical_word[]= {
 "NULL",
 "NUMBER",
 "STRING",

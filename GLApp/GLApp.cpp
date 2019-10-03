@@ -15,10 +15,14 @@
 #include "GLWindow.h"
 #include <math.h>
 #include <stdlib.h>
+#include <cstring> //strcpy, etc.
+#ifndef _WIN32
+#include <unistd.h> //_exit()
+#endif
 
 GLApplication *theApp=NULL;
 
-#ifdef WIN
+#ifdef _WIN32
 LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
 #endif
@@ -27,8 +31,8 @@ GLApplication::GLApplication() {
 
   m_bWindowed = true;
   m_strWindowTitle = "GL application";
-  strcpy((char *)m_strFrameStats,"");
-  strcpy((char *)m_strEventStats,"");
+  strcpy(m_strFrameStats,"");
+  strcpy(m_strEventStats,"");
   m_screenWidth = 640;
   m_screenHeight = 480;
   m_minScreenWidth = 640;
@@ -47,7 +51,7 @@ GLApplication::GLApplication() {
   fMoveTime = 0.0;
 #endif
 
-#ifdef WIN
+#ifdef _WIN32
   m_fscreenWidth = GetSystemMetrics(SM_CXSCREEN);
   m_fscreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
@@ -66,18 +70,7 @@ GLApplication::GLApplication() {
 
 double GLApplication::GetTick() {
 
-#ifdef WIN
- 
-  LARGE_INTEGER t,dt;
-  QueryPerformanceCounter( &t );
-  dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
-  return (double)(dt.QuadPart)/perfTicksPerSec;
-
-#else
-
-  return 0.0;
-
-#endif
+	return (double)SDL_GetTicks() / 1000.0;
 
 }
 
@@ -202,7 +195,7 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
 void GLApplication::Pause(bool bPause) {
 }
 
-int GLApplication::Resize( DWORD nWidth, DWORD nHeight, bool forceWindowed ) {
+int GLApplication::Resize( size_t nWidth, size_t nHeight, bool forceWindowed ) {
 
   int width  = Max((int)nWidth,m_minScreenWidth);
   int height = Max((int)nHeight,m_minScreenHeight);
@@ -235,7 +228,7 @@ void GLApplication::Add(GLComponent *comp) {
 void GLApplication::Exit() {
 
   char *logs = GLToolkit::GetLogs();
-#ifdef WIN
+#ifdef _WIN32
   if(logs) {
     strcat(logs,"\nDo you want to exit ?");
     if( MessageBox(NULL,logs,"[Unexpected error]",MB_YESNO)==IDNO ) {
@@ -246,7 +239,7 @@ void GLApplication::Exit() {
 #else
   if(logs) {
     printf("[Unexpected error]\n");
-    printf(logs);
+    printf("%s",logs);
   }
 #endif
   SAFE_FREE(logs);
@@ -258,7 +251,8 @@ void GLApplication::Exit() {
   SDL_GL_DeleteContext(mainContext);
   SDL_DestroyWindow(mainScreen);
   SDL_Quit();
-  _exit(0);
+  exit(0);
+  //_exit(0);
 
 }
 
@@ -405,7 +399,7 @@ void GLApplication::Run() {
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
 
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=NULL) wereEvents = true;
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {

@@ -3,7 +3,9 @@
 #define _GLCHARTH_
 
 //#include "..\GLWindow.h"
-#include "..\GLComponent.h"
+#include "../GLComponent.h"
+
+#include <vector>
 //#include "..\GLMenu.h"
 //#include "..\GLButton.h"
 
@@ -77,6 +79,8 @@ public:
   void InvalidateDeviceObjects();
   void RestoreDeviceObjects();
 
+  GLColor GetFirstAvailableColor();
+
 private:
 
   void paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w);
@@ -143,6 +147,8 @@ private:
   int xAxisThickness;
   int xAxisUpMargin;
 
+  std::vector<GLColor> colors;
+
   // Axis
   GLAxis *xAxis;
   GLAxis *y1Axis;
@@ -151,10 +157,6 @@ private:
   // Config dialog
   GLChartOptions *chartOptions;
   GLDataViewOptions *dvOptions;
-
-  // File name
-  char lastDir[512];
-  char lastFile[64];
 
 };
 

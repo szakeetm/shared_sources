@@ -155,7 +155,7 @@ void VertexCoordinates::Update() {
   int count=0;
   vertexListC->SetSize(4,s->GetNbSelectedVertex());
   vertexListC->SetColumnWidths((int*)flWidth);
-  vertexListC->SetColumnLabels((char **)flName);
+  vertexListC->SetColumnLabels(flName);
   vertexListC->SetColumnAligns((int *)flAligns);
   vertexListC->SetColumnEditable((int *)fEdits);
   for(size_t i=0;i<s->GetNbVertex();i++) {
@@ -261,7 +261,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
           try {
             worker->Reload();
           } catch(Error &e) {
-            GLMessageBox::Display((char *)e.GetMsg(),"Error",GLDLG_OK,GLDLG_ICONERROR);
+            GLMessageBox::Display(e.GetMsg(),"Error",GLDLG_OK,GLDLG_ICONERROR);
             return;
           }
           //GLWindowManager::FullRepaint();

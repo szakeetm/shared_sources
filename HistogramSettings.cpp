@@ -20,12 +20,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "HistogramSettings.h"
 #include "HistogramPlotter.h" //To call refresh
 
-#include "GLApp\GLToggle.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLButton.h"
-#include "GLApp\GLTitledPanel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
@@ -126,16 +126,16 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	globalTimeBinsizeText = new GLTextField(0, "");
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalTimeLimitText, globalTimeBinsizeText, 0, 25, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalTimeBinsizeText);
-#endif
 
 	globalMemoryEstimateLabel = new GLLabel("Memory estimate of global histogram:");
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel6, globalMemoryEstimateLabel, 0, 25, globalLabel3->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalMemoryEstimateLabel);
+#endif
 
 
 	//Facet histogram settings
 	facetSettingsPanel = new GLTitledPanel("Facet histogram");
-	SetCompBoundsRelativeTo(globalSettingsPanel, facetSettingsPanel, 0, globalSettingsPanel->GetHeight() + 10, globalSettingsPanel->GetWidth(), globalSettingsPanel->GetHeight());
+	SetCompBoundsRelativeTo(globalSettingsPanel, facetSettingsPanel, 0, globalSettingsPanel->GetHeight() + 5, globalSettingsPanel->GetWidth(), globalSettingsPanel->GetHeight());
 	Add(facetSettingsPanel);
 
 	facetRecordBounceToggle = new GLToggle(0, "Record bounces until absorbtion");
@@ -198,12 +198,11 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	facetTimeBinsizeText = new GLTextField(0, "");
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetTimeLimitText, facetTimeBinsizeText, 0, 25, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetTimeBinsizeText);
-#endif
 
 	facetMemoryEstimateLabel = new GLLabel("Memory estimate of facet histogram:");
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel6, facetMemoryEstimateLabel, 0, 25, facetLabel3->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetMemoryEstimateLabel);
-	
+#endif
 
 
 
@@ -213,7 +212,7 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	
 
 	// Right center
-	SetBounds(20,40,wD,hD); //Default position
+	SetBounds(5,35,wD,hD); //Default position
 
 	RestoreDeviceObjects();
 	
@@ -293,7 +292,7 @@ bool HistogramSettings::Apply() {
 		}
 
 #ifdef MOLFLOW
-		globalRecTime = globalRecordDistanceToggle->GetState();
+		globalRecTime = globalRecordTimeToggle->GetState();
 
 		if (globalRecTime) {
 			if (globalTimeLimitText->GetText() != "...") {
@@ -470,9 +469,11 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	}
 	facetRecordBounceToggle->SetEnabled(hasFacetSelected);
 	facetRecordDistanceToggle->SetEnabled(hasFacetSelected);
-	facetRecordTimeToggle->SetEnabled(hasFacetSelected);
-	
-	if (hasFacetSelected) {
+#ifdef MOLFLOW
+    facetRecordTimeToggle->SetEnabled(hasFacetSelected);
+#endif
+
+    if (hasFacetSelected) {
 		//Fill in facet-specific text
 		bool recordBounceEqual = true, bounceMaxEqual = true, bounceBinsizeEqual = true,
 			recordDistanceEqual = true, distanceMaxEqual = true, distanceBinsizeEqual = true;

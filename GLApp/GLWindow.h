@@ -2,8 +2,8 @@
 #ifndef _GLWINDOWH_
 #define _GLWINDOWH_
 
-//#include <SDL.h>
-//#include <SDL_opengl.h>
+//#include <SDL2/SDL.h>
+//#include <SDL2/SDL_opengl.h>
 #include "GLContainer.h"
 //#include "GLMenu.h"
 class GLMenu;
@@ -129,7 +129,7 @@ private:
   int  posYSave;
   int  widthSave;
   int  heightSave;
-  DWORD lastClick;
+  size_t lastClick;
 
 };
 

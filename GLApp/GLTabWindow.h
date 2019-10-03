@@ -4,6 +4,7 @@
 //#include "GLApp.h"
 #include "GLWindow.h"
 class GLComponent;
+class TabbedBar;
 
 typedef struct {
 
@@ -26,10 +27,11 @@ public:
   // Add/Remove components to this windows
   void Add(int panel,GLComponent *comp);
   void SetPanelNumber(int numP);
-  void SetPanelName(int idx,char *name);
+  void SetPanelName(int idx,const char *name);
   void Clear();
-  void Update();
+  void UpdateBar();
   void SetTextColor(int r,int g,int b);
+  int GetSelectedTabIndex();
 
   //Overrides
   void SetBounds(int x,int y,int w,int h);
@@ -41,7 +43,7 @@ private:
 
   APANEL *panels;
   int nbPanel;
-  void *bar;
+  TabbedBar *bar;
 
 };
 

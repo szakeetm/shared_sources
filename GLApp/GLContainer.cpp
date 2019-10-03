@@ -289,8 +289,8 @@ void GLContainer::ManageComp(GLComponent *comp,SDL_Event *evt) {
 
 void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
 
-  if(comp->IsEnabled() && comp->IsVisible() && !evtProcessed) {
-
+  if(comp->IsEnabled() && comp->IsVisible() && (!evtProcessed)) {
+	  
     // Focus
     if( evt->type == SDL_MOUSEBUTTONDOWN ) {
       if(parentWin->IsInComp(comp,evt->button.x+ox,evt->button.y+oy) && comp->IsFocusable()) {
@@ -313,7 +313,7 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
         draggedComp = comp;
       }
     }
-
+	
     // Relay events
     if( evt->type == SDL_MOUSEBUTTONUP || evt->type == SDL_MOUSEBUTTONDOWN ) {
       if(parentWin->IsInComp(comp,evt->button.x+ox,evt->button.y+oy)) {
@@ -334,14 +334,14 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
           ManageComp(comp,evt);
         }
       }
-    } else if( evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
+    } else if( evt->type == SDL_WINDOWEVENT && (evt->window.event == SDL_WINDOWEVENT_ENTER)) {
       ManageComp(comp,evt);
     } else {
       if( comp->HasFocus() ) {
         ManageComp(comp,evt);
       }
     }
-
+	
   }
 
 }

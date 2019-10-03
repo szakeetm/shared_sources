@@ -113,7 +113,7 @@ std::pair<double, double> rtnorm(
 			  );
 
 	  // If |b-a| is small, use rejection algorithm with a truncated exponential proposal
-	  if (abs(kb - ka) < kmin)
+	  if (std::abs(kb - ka) < kmin)
 	  {
 		  r = rtexp(gen, a, b);
 		  stop = true;

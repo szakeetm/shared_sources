@@ -61,6 +61,12 @@ Adding it to a program requires the following:
 	</LocalConfig>
 </UpdaterConfigFile>
 
+appLaunchedBeforeAsking meaning:
+default: 0
+already asked: -1
+increased at every session, except if already asked (-1)
+compared with askAfterNbLaunches
+
 ------------Example implementation in Molflow/Synrad--------------
 -----In Interface::OneTimeSceneInit_post()----------
 
@@ -116,7 +122,7 @@ if (appUpdater && appUpdater->IsUpdateAvailable()) {
 #include <vector>
 #include <thread>
 #include <tuple>
-#include <PugiXML\pugixml.hpp>
+#include <PugiXML/pugixml.hpp>
 using namespace pugi;
 #include "GLApp/GLWindow.h"
 #include "Interface.h" //DoEvents
@@ -150,8 +156,10 @@ public:
 	void ProcessMessage(GLComponent *src, int message);
 	void ClearLog();
 	void Log(const std::string& line);
+	void SetBounds(int x, int y, int w, int h) override;
 private:
 	void RebuildList();
+	
 	GLList *logList;
 	GLButton *okButton,*copyButton;
 	std::vector<std::string> lines;

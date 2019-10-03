@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include "Buffer_shared.h" //DirectionCell
 #include "File.h"
-#include "PugiXML\pugixml.hpp"
+#include "PugiXML/pugixml.hpp"
 using namespace pugi;
 #include "GLApp/GLToolkit.h"
 #include <cereal/archives/binary.hpp>
@@ -41,7 +41,7 @@ public:
 	//Old C-style array to save memory
 	Vector2d* points;
 	size_t nbPoints;
-	float   area;     // Area of element
+	double   area;     // Area of element
 	float   uCenter;  // Center coordinates
 	float   vCenter;  // Center coordinates
 					  //int     elemId;   // Element index (MESH array)
@@ -86,7 +86,7 @@ public:
 	void  InitVisibleEdge();
 	size_t   GetIndex(int idx);
 	size_t   GetIndex(size_t idx);
-	float GetMeshArea(size_t index, bool correct2sides = false);
+	double GetMeshArea(size_t index, bool correct2sides = false);
 	size_t GetMeshNbPoint(size_t index);
 	Vector2d GetMeshPoint(size_t index, size_t pointId);
 	Vector2d GetMeshCenter(size_t index);
@@ -145,6 +145,7 @@ public:
 	FacetProperties sh;
 	FacetHitBuffer facetHitCache;
 	FacetHistogramBuffer facetHistogramCache; //contains empty vectors when facet doesn't have it
+	DirectionCell   *dirCache;    // Direction field cache
 
 	// Normalized plane equation (ax + by + cz + d = 0)
 	double a;
@@ -161,10 +162,9 @@ public:
 	bool  collinear;      //All vertices are on a line (non-simple)
 	bool	volumeVisible;	//Draw volume?
 	bool    hasMesh;     // Has texture
-	DirectionCell   *dirCache;    // Direction field cache
 	bool textureError;   // Disable rendering if the texture has an error
 
-						 // GUI stuff
+	// GUI stuff
 	std::vector<bool>  visible;         // Edge visible flag
 	bool   selected;        // Selected flag
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element

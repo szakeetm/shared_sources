@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
-#include "GLApp/GlToggle.h"
+#include "GLApp/GLToggle.h"
 
 #include "Geometry_shared.h"
 #include "Facet_shared.h"

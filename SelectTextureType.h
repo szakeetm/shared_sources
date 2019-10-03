@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-#include "GLApp\GLWindow.h"
+#include "GLApp/GLWindow.h"
 
 class Worker;
 class Geometry;

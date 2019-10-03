@@ -30,7 +30,7 @@
 #ifndef __RTNORM_HPP
 #define __RTNORM_HPP
 
-#include "gsl\gsl_rng.h"
+#include "gsl/gsl_rng.h"
 #include <vector>
 
 

@@ -19,6 +19,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 
+#include <cereal/types/vector.hpp>
+#include <cereal/types/utility.hpp>
 
 
 
@@ -26,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class FileReader;
 #include <vector>
 #include <algorithm>
+#include <assert.h>
 
 template <class Datatype> class Distribution{ //All methods except Interpolate
 protected:
@@ -73,7 +76,7 @@ template <class Datatype> void Distribution<Datatype>::RemoveValue(const size_t&
 }
 
 template <class Datatype> void Distribution<Datatype>::SetPair(const size_t& index, const std::pair<double, Datatype>& pair) {
-	_ASSERTE(index < values.size());
+	assert(index < values.size());
 	values[index]=pair;
 }
 
@@ -83,17 +86,17 @@ template <class Datatype> void Distribution<Datatype>::SetPair(const size_t& ind
 
 
 template <class Datatype> void Distribution<Datatype>::SetX(const size_t& index, const double& x) {
-	_ASSERTE(index < values.size());
+	assert(index < values.size());
 	values[index].first = x;
 }
 
-template <class Datatype> void Distribution<Datatype>::SetY(const size_t& index, const Datatype& x) {
-	_ASSERTE(index < values.size());
+template <class Datatype> void Distribution<Datatype>::SetY(const size_t& index, const Datatype& y) {
+	assert(index < values.size());
 	values[index].second = y;
 }
 
 template <class Datatype> void Distribution<Datatype>::Resize(const size_t& N) {
-	values.swap(std::vector<std::pair<double, Datatype>> vecs(N));
+	std::vector<std::pair<double, Datatype>>(N).swap(values);
 }
 
 template <class Datatype> size_t Distribution<Datatype>::GetSize() {
@@ -101,12 +104,12 @@ template <class Datatype> size_t Distribution<Datatype>::GetSize() {
 }
 
 template <class Datatype> double Distribution<Datatype>::GetX(const size_t& index) {
-	_ASSERTE(index < values.size());
+	assert(index < values.size());
 	return values[index].first;
 }
 
 template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t& index) {
-	_ASSERTE(index < values.size());
+	assert(index < values.size());
 	return values[index].second;
 }
 
@@ -114,12 +117,29 @@ class Distribution2D:public Distribution<double> { //Standard x-y pairs of doubl
 public:
 	double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
 	double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
+
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(
+                CEREAL_NVP(values),
+                CEREAL_NVP(isLogLog)
+        );
+    }
 };
 
 class DistributionND:public Distribution<std::vector<double>> { //x-y pairs where y is a vector of double values
 public:
 	std::vector<double> InterpolateY(const double& x, const bool& allowExtrapolate);
 	double InterpolateX(const double& y, const size_t& elementIndex, const bool& allowExtrapolate);
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(
+                CEREAL_NVP(values),
+                CEREAL_NVP(isLogLog)
+        );
+    }
 };
 
 template <class Datatype> bool sorter (const std::pair<double, Datatype> &i, const std::pair<double, Datatype> &j) {

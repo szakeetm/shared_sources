@@ -2,14 +2,14 @@
 #ifndef _GLTOOLKITH_
 #define _GLTOOLKITH_
 
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include <string>
 #include <optional>
 #include <tuple>
 #include "GLTypes.h"
 #include "GLFont.h"
-#include "..\Vector.h"
+#include "Vector.h"
 //class GLFont2D;
 
 // Dashed line style
@@ -61,11 +61,11 @@ public:
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);
   static void SetCursor(int cursor);
   static int  GetCursor();
-  static void SetIcon32x32(char *pngName);
-  static void Log(char *message);
+  static void SetIcon32x32(const char *pngName);
+  static void Log(const char *message);
   static char *GetLogs();
   static void ClearLogs();
-  static void CheckGLErrors(char *compname);
+  static void CheckGLErrors(const char *compname);
 
   // Drawing functions
   static void DrawBox(const int &x,const int &y,const int &width,const int &height,
@@ -100,6 +100,7 @@ public:
   static void InvalidateDeviceObjects();
 
   static void CopyTextToClipboard(const std::string& text);
+  static std::string GetOSName();
 };
 
 #endif /* _GLTOOLKITH_ */

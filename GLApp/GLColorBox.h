@@ -1,6 +1,6 @@
 // Copyright (c) 2011 rubicon IT GmbH
 
-//#include <SDL_opengl.h>
+//#include <SDL2/SDL_opengl.h>
 
 #ifndef _GLCOLORBOXH_
 #define _GLCOLORBOXH_
@@ -10,7 +10,7 @@ class GLColorBox : private GLWindow {
 public:
   // Display a modal dialog and return 1 on ok, 0 on cancel. r,g and b 
   // contains the choosen color
-  static int Display(char *title,int *r,int *g,int *b);
+  static int Display(const char *title,int *r,int *g,int *b);
 
   int  rCode;
   int  curR;
@@ -40,20 +40,20 @@ private:
   float          curV;
   bool           draggV;
 
-  GLColorBox(char *title,int *r,int *g,int *b);
+  GLColorBox(const char *title,int *r,int *g,int *b);
   ~GLColorBox();
   void ProcessMessage(GLComponent *src,int message);
   void Paint();
   void ManageEvent(SDL_Event *evt);
 
   void rgb_to_hsv( int ri,int gi,int bi, float *h,float *s,float *v);
-  DWORD hsv_to_rgb( float h,float s,float v,bool swap=false );
-  float get_red( DWORD c );
-  float get_green( DWORD c );
-  float get_blue( DWORD c );
-  int   get_redi( DWORD c );
-  int   get_greeni( DWORD c );
-  int   get_bluei( DWORD c );
+  size_t hsv_to_rgb( float h,float s,float v,bool swap=false );
+  float get_red( size_t c );
+  float get_green( size_t c );
+  float get_blue( size_t c );
+  int   get_redi( size_t c );
+  int   get_greeni( size_t c );
+  int   get_bluei( size_t c );
   void  paintBox(int x,int y,int w,int h);
   void  updateColor(int r,int g,int b);
 

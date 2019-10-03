@@ -43,7 +43,7 @@ protected:
 
 class GLOverlayLabel : public GLLabel {
 public:
-	GLOverlayLabel(char *text);
+	GLOverlayLabel(const char *text);
 	void SetBackgroundColor(float r,float g,float b);
 	void Paint();
 	void SetTextSize(float s);

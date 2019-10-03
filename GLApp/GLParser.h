@@ -114,7 +114,7 @@ public:
   // Variable
   int    GetNbVariable();          // Return num of var created during parsing
   VLIST *GetVariableAt(int idx);   // Return var at specified index
-  void   SetVariable(char *name,double value); // Set the variable value
+  void   SetVariable(const char *name,double value); // Set the variable value
 
   std::string GetVariableEvalError();
   void SetVariableEvalError(std::string errMsg);
@@ -136,7 +136,7 @@ private:
   void   AddNode(int type,ETREE_NODE info,ETREE **t,ETREE *left,ETREE *right);
   VLIST *AddVar(const char *var_name,VLIST **l);
   VLIST *FindVar(const char *var_name,VLIST *l);
-  void   SetError( char *err,int p);
+  void   SetError(const char *err,int p);
   void   AV();
   char  *Extract(int lg);
 

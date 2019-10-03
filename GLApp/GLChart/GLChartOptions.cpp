@@ -10,6 +10,7 @@
 #include "../GLCombo.h"
 #include "../GLLabel.h"
 #include "../GLTextField.h"
+#include "../MathTools.h"
 #include "AxisPanel.h"
 
 static int textCR = 0;
@@ -206,7 +207,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
     closeBtn->SetBounds(215, 320, 80, 19);
     GLWindow::Add(closeBtn);
 
-    Update();
+    UpdateBar();
     SetTextColor(120,120,120);
 
     // Center dialog
@@ -340,7 +341,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == generalDurationText) {
 
-      if (_stricmp(generalDurationText->GetText().c_str(),"infinty")==0) {
+      if (iequals(generalDurationText->GetText().c_str(),"infinty")) {
         chart->SetDisplayDuration(MAX_VALUE);
         return;
       }
@@ -368,6 +369,6 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
   }
 
   // Error message
-  void GLChartOptions::error(char *m) {
+  void GLChartOptions::error(const char *m) {
     GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
   }

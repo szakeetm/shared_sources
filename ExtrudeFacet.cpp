@@ -24,10 +24,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/MathTools.h"
-#include "GLApp\GLToggle.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLButton.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLButton.h"
 
 #include "Geometry_shared.h"
 
@@ -47,6 +47,11 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
+/**
+* \brief Constructor with initialisation for the ExtrudeFacet window (Facet/Extrude)
+* \param g pointer to the Geometry
+* \param w Worker handle
+*/
 ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	int wD = 315;
@@ -348,6 +353,11 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 	double x0, y0, z0, dX, dY, dZ, dist, radiusLength, totalAngle, totalLength;
 	int noSteps;
@@ -444,16 +454,16 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				if ((mode!=1) && dX*dX + dY*dY + dZ*dZ < 1E-8) {
 				GLMessageBox::Display("Direction is a null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
-			} if (mode==3 && abs(radiusLength)<1E-8) {
+			} if (mode==3 && std::abs(radiusLength)<1E-8) {
 				GLMessageBox::Display("Radius length can't be 0", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
-			} if (mode == 1 && abs(dist)<1E-8) {
+			} if (mode == 1 && std::abs(dist)<1E-8) {
 				GLMessageBox::Display("Extrusion length can't be 0", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			} if (mode == 3 && (totalAngle<-360 || totalAngle>360)) {
 				int rep = GLMessageBox::Display("Total angle outside -360..+360 degree. Are you sure?", "Warning", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
 				if (rep!=GLDLG_OK) return;
-			} if (mode == 3 && (abs(totalAngle)<1E-8 || totalAngle>360)) {
+			} if (mode == 3 && (std::abs(totalAngle)<1E-8 || totalAngle>360)) {
 				GLMessageBox::Display("Total angle can't be 0", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			} if (mode == 3 && !(noSteps>0)) {
@@ -659,12 +669,19 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 	GLWindow::ProcessMessage(src,message);
 }
 
+/**
+* \brief Toggles check boxes check status in the window
+* \param leaveChecked if checked boxes shouldn't be toggled
+*/
 void ExtrudeFacet::ClearToggles(GLToggle* leaveChecked) {
 	std::vector<GLToggle*> toggles = { towardsNormalCheckbox,againstNormalCheckbox,offsetCheckbox,curveTowardsNormalCheckbox,curveAgainstNormalCheckbox };
 	for (auto& toggle : toggles) 
 		toggle->SetState(toggle==leaveChecked);
 }
 
+/**
+* \brief Toggles enable/disable status of checkboxes, buttons etc.
+*/
 void ExtrudeFacet::EnableDisableControls() {
 	distanceTextbox->SetEditable(towardsNormalCheckbox->GetState() || againstNormalCheckbox->GetState());
 	dxText->SetEditable(offsetCheckbox->GetState() != 0);
@@ -692,6 +709,10 @@ void ExtrudeFacet::EnableDisableControls() {
 	facetNZbutton->SetEnabled(curveTowardsNormalCheckbox->GetState() || curveAgainstNormalCheckbox->GetState());
 }
 
+/**
+* \brief Checks if there is exactly one Vertex selected
+* \return return only selected vertex if it's the only selected
+*/
 std::optional<size_t> ExtrudeFacet::AssertOneVertexSelected() {
 	auto selectedVertices = geom->GetSelectedVertices();
 	if (selectedVertices.size()==0) {
@@ -705,6 +726,10 @@ std::optional<size_t> ExtrudeFacet::AssertOneVertexSelected() {
 	else return selectedVertices[0];
 }
 
+/**
+* \brief Checks if there is exactly one Facet selected
+* \return return only selected facet if it's the only selected
+*/
 std::optional<size_t> ExtrudeFacet::AssertOneFacetSelected() {
 	auto selectedFacets = geom->GetSelectedFacets();
 	if (selectedFacets.size() == 0) {

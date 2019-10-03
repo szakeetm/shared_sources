@@ -43,12 +43,12 @@ public:
   // Component methods
   void SetWorker(Worker *w);
   void SetSize(size_t nbColumn,size_t nbRow,bool keepData=false,bool showProgress=false);
-  void SetColumnLabels(char **names);
-  void SetColumnLabel(size_t colId,char *name);
+  void SetColumnLabels(const char ** names);
+  void SetColumnLabel(size_t colId, const char *name);
   void SetAutoColumnLabel(bool enable);
   void SetColumnLabelVisible(bool visible);
-  void SetRowLabels(char **names);
-  void SetRowLabel(size_t rowId,char *name);
+  void SetRowLabels(const char **names);
+  void SetRowLabel(size_t rowId, const char *name);
   void SetRowLabelAlign(int align);
   void SetAutoRowLabel(bool enable);
   void SetRowLabelMargin(int margin);
@@ -69,12 +69,12 @@ public:
   void SetHScrollVisible(bool visible);
   void SetSelectionMode(int mode);
   void SetSelectedCell(size_t column,size_t row);
-  void SetCornerLabel(char *text);
+  void SetCornerLabel(const char *text);
   void Clear(bool keepColumns=false,bool showProgress=false);
   void ResetValues();
   size_t  GetNbRow();
   size_t  GetNbColumn();
-  void SetRow(size_t row,char **values);
+  void SetRow(size_t row, const char **values);
   void ScrollToVisible();
   void ScrollToVisible(size_t row, size_t col,bool searchIndex=false);
   void ScrollUp();

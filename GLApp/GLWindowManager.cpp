@@ -7,6 +7,7 @@
 #include "GLApp.h"
 #include "GLWindow.h"
 #include <sstream>
+#include <cstring> //strcpy, etc.
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -393,7 +394,7 @@ void GLWindowManager::Resize() {
   try {
 		  mApp->worker.Update(0.0f);
   } catch(Error &e) {
-	  GLMessageBox::Display((char *)e.GetMsg(),"Error (Worker::Update)",GLDLG_OK,GLDLG_ICONERROR);
+	  GLMessageBox::Display(e.GetMsg(),"Error (Worker::Update)",GLDLG_OK,GLDLG_ICONERROR);
   }
   */
   Repaint();
@@ -832,7 +833,11 @@ char *GLWindowManager::GetAccStr(int keyCode,int keyModifier) {
         strcpy(tmp,"Alt+");
         break;
       case CTRL_MODIFIER:
-        strcpy(tmp,"Ctrl+");
+#ifdef __APPLE__
+		strcpy(tmp, "Cmd+");
+#else
+		strcpy(tmp,"Ctrl+");
+#endif // __APPLE__
         break;
       case SHIFT_MODIFIER:
         strcpy(tmp,"Shift+");

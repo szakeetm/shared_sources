@@ -3,7 +3,7 @@
 #define _GLGRADIENTH_
 
 #include "GLComponent.h"
-#include "GLChart\GLChartConst.h" //linear, log scale constants
+#include "GLChart/GLChartConst.h" //linear, log scale constants
 #include <vector>
 class GLAxis;
 class GLLabel;
@@ -15,41 +15,41 @@ class GLGradient : public GLComponent {
 
 public:
 
-  // Construction
-  GLGradient(int compId);
-  ~GLGradient();
+	// Construction
+	GLGradient(int compId);
+	~GLGradient();
 
-  static std::vector<int> GenerateColorMap();
+	static std::vector<int> GenerateColorMap();
 
-  // Component methods
-  void SetMinMax(double min,double max);
-  void SetType(int type);
-  void SetScale(int scale);
-  int  GetScale();
-  void SetMouseCursor(bool enable);
+	// Component methods
+	void SetMinMax(double min, double max);
+	void SetType(int type);
+	void SetScale(int scale);
+	int  GetScale();
+	void SetMouseCursor(bool enable);
 
-  // Implementation
-  void Paint();
-  void InvalidateDeviceObjects();
-  void RestoreDeviceObjects();
-  void ManageEvent(SDL_Event *evt);
+	// Implementation
+	void Paint();
+	void InvalidateDeviceObjects();
+	void RestoreDeviceObjects();
+	void ManageEvent(SDL_Event *evt);
 
 private:
 
-  void UpdateValue();
+	void UpdateValue();
 
-  GLuint       colorTex;
-  GLuint       bwTex;
-  GLAxis       *axis;
-  GLLabel      *mouseValue;
-  bool         mouseCursor;
-  int          gType;
+	GLuint       colorTex;
+	GLuint       bwTex;
+	GLAxis       *axis;
+	GLLabel      *mouseValue;
+	bool         mouseCursor;
+	int          gType;
 
-  int          gWidth;
-  int          gHeight;
-  int          gPosX;
-  int          gPosY;
-  double       cursorPos;
+	int          gWidth;
+	int          gHeight;
+	int          gPosX;
+	int          gPosY;
+	double       cursorPos;
 
 };
 

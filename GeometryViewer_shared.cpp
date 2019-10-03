@@ -23,12 +23,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLToolkit.h"
 #include "GLApp/MathTools.h" //
 #include "GLApp/GLMatrix.h"
-#include "GLApp\GLCombo.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLButton.h"
+#include "GLApp/GLCombo.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLButton.h"
 
 #include "Geometry_shared.h"
-#include "SDL_SavePNG\savepng.h"
+#include "SDL_SavePNG/savepng.h"
 
 #include <math.h>
 //#include <malloc.h>
@@ -211,33 +211,32 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	autoBtn->SetIcon("images/icon_autoscale.png");
 	autoBtn->SetToggle(true);
 	Add(autoBtn);
-
-	
-	
+		
 	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
-	capsLockLabel->SetTextColor(255, 255, 255);
 	Add(capsLockLabel);
+
 	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
-	hideLotlabel->SetTextColor(255, 255, 255);
 	Add(hideLotlabel);
+
 	screenshotLabel = new GLLabel("Screenshot: Draw selection rectangle to capture box. Press CTRL+R again to capture whole scene. ESC to cancel");
-	screenshotLabel->SetTextColor(255, 255, 255);
 	Add(screenshotLabel);
+
 	selectLabel = new GLLabel("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/CTRL to add/remove to existing selection.");
-	selectLabel->SetTextColor(255, 255, 255);
 	Add(selectLabel);
+
 	rotateLabel = new GLLabel("Rotation mode: hold SHIFT to slow down rotation, hold CTRL to rotate around the third axis, and hold ALT to rotate lighting direction of volume view");
-	rotateLabel->SetTextColor(255, 255, 255);
 	Add(rotateLabel);
+
 	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning");
-	panLabel->SetTextColor(255, 255, 255);
 	Add(panLabel);
+
 	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
-	tabLabel->SetTextColor(255, 255, 255);
 	Add(tabLabel);
+	
 	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
-	nonPlanarLabel->SetTextColor(255, 0, 255);
 	Add(nonPlanarLabel);
+
+	UpdateLabelColors();
 
 	// Light
 	glShadeModel(GL_SMOOTH);
@@ -262,6 +261,19 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuseLight2);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, specularLight2);
 	glDisable(GL_LIGHT1);
+}
+
+void GeometryViewer::UpdateLabelColors()
+{
+	int textColor = mApp->whiteBg ? 0 : 255;
+	capsLockLabel->SetTextColor(textColor, textColor, textColor);
+	hideLotlabel->SetTextColor(textColor, textColor, textColor);
+	screenshotLabel->SetTextColor(textColor, textColor, textColor);
+	selectLabel->SetTextColor(textColor, textColor, textColor);
+	rotateLabel->SetTextColor(textColor, textColor, textColor);
+	panLabel->SetTextColor(textColor, textColor, textColor);
+	tabLabel->SetTextColor(textColor, textColor, textColor);
+	nonPlanarLabel->SetTextColor(255, 0, 255);
 }
 
 void GeometryViewer::ToOrigo() {
@@ -863,6 +875,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	if (!geom) return;
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
+	if (aspect == 0.0) aspect = 1.0; //To avoid division by zero
 	Vector3d org = geom->GetCenter();
 
 	// Reset offset, zoom
@@ -917,10 +930,10 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 void GeometryViewer::Zoom() {
 
-	if (abs(selX1 - selX2) >= 2 && abs(selY1 - selY2) >= 2 && work) {
+	if (std::abs(selX1 - selX2) >= 2 && std::abs(selY1 - selY2) >= 2 && work) {
 
-		int wS = abs(selX1 - selX2);
-		int hS = abs(selY1 - selY2);
+		int wS = std::abs(selX1 - selX2);
+		int hS = std::abs(selY1 - selY2);
 		double sAspect = (double)wS / (double)hS;
 		double aspect = (double)width / (double)(height - DOWN_MARGIN);
 		double x0, y0, w0, h0;
@@ -1016,7 +1029,7 @@ void GeometryViewer::Paint() {
 		PaintCompAndBorder();
 		return;
 	}
-	sprintf(tmp, "");
+	sprintf(tmp, "%s", "");
 	topBtn->SetState(false);
 	frontBtn->SetState(false);
 	sideBtn->SetState(false);
@@ -1121,7 +1134,6 @@ if( showVolume || showTexture ) {
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
 	int cullMode;
-	
 	if (showBack != SHOW_FRONTANDBACK && !mApp->leftHandedView) {
 		//Right-handed coord system: front and back inverse
 		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
@@ -1135,22 +1147,20 @@ if( showVolume || showTexture ) {
 
 	bool detailsSuppressed = hideLot != -1 && (geom->GetNbSelectedFacets() > hideLot);
 	bool displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
-
 	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
+	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	DrawRule();
-
+	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
-	
 	// Restore old transformation/viewport
 	GetWindow()->ClipToWindow();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	GLWindowManager::SetDefault();
-	
 	// Draw selection rectangle or circle
 	bool displaySelectionRectangle = (draggMode == DRAGG_SELECT || draggMode == DRAGG_SELECTVERTEX)
 		&& (mode == MODE_SELECT || mode == MODE_SELECTVERTEX || mode == MODE_ZOOM)
@@ -1208,7 +1218,6 @@ if( showVolume || showTexture ) {
 	bool displayPanLabel = draggMode == DRAGG_MOVE;
 	bool displayTabLabel = GetWindow()->IsTabDown();
 	bool displayNonPlanarLabel = geom->hasNonPlanar;
-
 	int offsetCount = 0;
 	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20*offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel;hideLotlabel->SetVisible(displayHideLotLabel);
 	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel;capsLockLabel->SetVisible(displayCapsLockLabel);
@@ -1218,7 +1227,7 @@ if( showVolume || showTexture ) {
 	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel;panLabel->SetVisible(displayPanLabel);
 	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel;tabLabel->SetVisible(displayTabLabel);
 	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel;nonPlanarLabel->SetVisible(displayNonPlanarLabel);
-		
+
 #ifdef MOLFLOW
 	if (work->displayedMoment)
 		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1]);
@@ -1231,16 +1240,13 @@ if( showVolume || showTexture ) {
 	if (screenshotStatus.requested >= 2) {
 		Screenshot();
 	}
-
 	PaintCompAndBorder();
 	
 }
 
 void GeometryViewer::PaintCompAndBorder() {
-
 	// Components
 	PaintComponents();
-
 	// Border
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_LIGHTING);
@@ -1509,28 +1515,17 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 	}
 
 	if (evt->type == SDL_MOUSEWHEEL) {
-		if (evt->wheel.y > 0) {
+#ifdef __APPLE__
+		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
+#else
+		int appleInversionFactor = 1;
+#endif
+		if (evt->wheel.y !=0) { //Vertical scroll
 			if (GetWindow()->IsShiftDown()) {
-				TranslateScale(-2.0); //Zoom slower when SHIFT is pressed
-			}
-			else if (GetWindow()->IsCtrlDown()) {
-				TranslateScale(-75.0); //Zoom faster when CTRL is pressed
+				TranslateScale(-2.0 * evt->wheel.y * appleInversionFactor); //Zoom slower when SHIFT is pressed
 			}
 			else {
-				TranslateScale(-20.0);
-			}
-			autoScaleOn = false;
-			autoBtn->SetState(false);
-		}
-		if (evt->wheel.y < 0) {
-			if (GetWindow()->IsShiftDown()) {
-				TranslateScale(2.0); //Zoom slower when SHIFT is pressed
-			}
-			else if (GetWindow()->IsCtrlDown()) {
-				TranslateScale(75.0); //Zoom faster when CTRL is pressed
-			}
-			else {
-				TranslateScale(20.0);
+				TranslateScale(-20.0 * evt->wheel.y * appleInversionFactor);
 			}
 			autoScaleOn = false;
 			autoBtn->SetState(false);
@@ -1559,7 +1554,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
 				selectionChange = true;
-				if (abs(selX1 - selX2) <= 1 && abs(selY1 - selY2) <= 1) {
+				if (std::abs(selX1 - selX2) <= 1 && std::abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect facet
 					//SetCursor(CURSOR_BUSY);
 					GLToolkit::SetCursor(CURSOR_BUSY);
@@ -1573,8 +1568,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 						this->GetBounds(&wx, &wy, &ww, &wh); wh -= 28;//Toolbar height
 						int sx = Min(selX1, selX2)/* - wx*/; sx = Max(sx, 0);
 						int sy = Min(selY1, selY2)/* - wy*/; sy = Max(sy, 0);
-						int sw = abs(selX2 - selX1); sw = Min(sw, ww - sx);
-						int sh = abs(selY2 - selY1); sh = Min(sh, wh - sy);
+						int sw = std::abs(selX2 - selX1); sw = Min(sw, ww - sx);
+						int sh = std::abs(selY2 - selY1); sh = Min(sh, wh - sy);
 						screenshotStatus.x = sx;
 						screenshotStatus.y = sy;
 						screenshotStatus.w = sw;
@@ -1594,7 +1589,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
 				//selectionChange = true;
-				if (abs(selX1 - selX2) <= 1 && abs(selY1 - selY2) <= 1) {
+				if (std::abs(selX1 - selX2) <= 1 && std::abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
 					geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
@@ -2018,7 +2013,8 @@ void GeometryViewer::Screenshot() {
 		memcpy((Uint8 *)(image->pixels) + image->pitch * (image->h - index - 1), temp_row, image->pitch);
 	}
 	free(temp_row);
-	SDL_SavePNG(image, screenshotStatus.fileName.c_str());
+	SDL_SavePNG_RW(image, SDL_RWFromFile(screenshotStatus.fileName.c_str(), "wb"), 1);
+	//SDL_SavePNG(image, screenshotStatus.fileName.c_str());
 	SDL_FreeSurface(image);
 
 	screenshotLabel->SetVisible(false);

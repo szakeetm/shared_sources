@@ -22,14 +22,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLButton.h"
-#include "GLApp\GLToggle.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLButton.h"
+#include "GLApp/GLToggle.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-#include "GLApp\MathTools.h" //Contains
-#include "GLApp\GLIcon.h"
+#include "GLApp/MathTools.h" //Contains
+#include "GLApp/GLIcon.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -47,6 +47,11 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
+/**
+* \brief Constructor with initialisation for the CreateShape window (Facet/Create shape)
+* \param g pointer to the Geometry
+* \param w Worker handle
+*/
 CreateShape::CreateShape(Geometry *g,Worker *w):GLWindow() {
 
 	int wD = 713;
@@ -281,6 +286,11 @@ CreateShape::CreateShape(Geometry *g,Worker *w):GLWindow() {
   normalStatusLabel->SetText("");
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void CreateShape::ProcessMessage(GLComponent *src,int message) {
 
   switch (message) {
@@ -388,6 +398,9 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  geom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
 			  break;
 		  }
+		  work->Reload();
+		  mApp->changedSinceSave = true;
+		  mApp->UpdateFacetlistSelected();
 	  }
 	  else if (src == fullCircleButton) {
 		  double axis1length, axis2length;
@@ -538,6 +551,9 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src, message);
 }
 
+/**
+* \brief Toggles visible shapes and active/inactive boxes
+*/
 void CreateShape::EnableDisableControls() {
 	rectangleCheckbox->SetState((int)(mode == MODE_RECTANGLE));
 	rectangleIcon->SetVisible(mode == MODE_RECTANGLE);

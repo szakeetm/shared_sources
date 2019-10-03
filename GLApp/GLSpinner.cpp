@@ -4,6 +4,7 @@
 #include "GLToolkit.h"
 #include "GLFont.h"
 #include "MathTools.h" //Saturate
+#include <cstring> //strcpy, etc.
 
 GLSpinner::GLSpinner(int compId):GLComponent(compId) {
 
@@ -29,7 +30,7 @@ void GLSpinner::SetIncrement(double inc) {
   increment = inc;
 }
 
-void GLSpinner::SetFormat(char *format) {
+void GLSpinner::SetFormat(const char *format) {
   if(format) strcpy(this->format,format);
 }
 

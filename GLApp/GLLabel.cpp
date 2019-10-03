@@ -3,6 +3,7 @@
 #include "GLLabel.h"
 #include "GLToolkit.h"
 #include "MathTools.h" //Min max
+#include <string.h>
 
 //#include <malloc.h>
 
@@ -53,13 +54,13 @@ void GLLabel::SetText(const char *text) {
 
   Clear();
 
-  mText=_strdup(text);
+  mText=strdup(text);
 
   // Split in multiline message
   int w;
   char *p;
   char *m = mText;
-  while( (p = strchr(m,'\n'))!=NULL ) {
+  while( (p = strchr(m,'\n'))!=NULL && nbLine<63 ) {
     *p = 0;
     lines[nbLine++] = m;
     w = font->GetTextWidth(m);
@@ -96,7 +97,6 @@ void GLLabel::GetTextBounds(int *w,int *h) {
 
 void GLLabel::Paint() {
   if(!parent) return;
-  
   GLComponent::Paint();
   //Message
   font->SetTextColor(rText,gText,bText);
@@ -106,7 +106,7 @@ void GLLabel::Paint() {
   GLToolkit::CheckGLErrors("GLLabel::Paint()");
 }
 
-GLOverlayLabel::GLOverlayLabel(char *text):GLLabel(text) {
+GLOverlayLabel::GLOverlayLabel(const char *text):GLLabel(text) {
 
   sizeFactor=3.0f;
   paintBg=false;

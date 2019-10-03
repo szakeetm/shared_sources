@@ -157,9 +157,9 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	SAFE_DELETE(prgList);
 }
 
-void GLList::SetCornerLabel(char *text) {
+void GLList::SetCornerLabel(const char *text) {
 	SAFE_FREE(cornerLabel);
-	if (text) cornerLabel = _strdup(text);
+	if (text) cornerLabel = strdup(text);
 }
 
 void GLList::SetWorker(Worker *w) {
@@ -263,7 +263,7 @@ void GLList::SetMotionSelection(bool enable) {
 }
 
 int GLList::GetUserValueAt(size_t col, size_t row) {
-	_ASSERTE(col < nbCol); _ASSERTE(row < nbRow);
+	assert(col < nbCol); assert(row < nbRow);
 	if (uValues)
 		return uValues[row*nbCol + col];
 	else
@@ -271,7 +271,7 @@ int GLList::GetUserValueAt(size_t col, size_t row) {
 }
 
 char *GLList::GetValueAt(size_t col, size_t row) {
-	_ASSERTE(!values || col < nbCol); _ASSERTE(!values || row < nbRow);
+	assert(!values || col < nbCol); assert(!values || row < nbRow);
 	if (values)
 		return values[row*nbCol + col];
 	else
@@ -369,7 +369,7 @@ void GLList::CreateAutoLabel() {
 		char tmp[256];
 		for (int i = 0; i < nbCol; i++) {
 			sprintf(tmp, "%d", i);
-			cNames[i] = _strdup(tmp);
+			cNames[i] = strdup(tmp);
 		}
 
 	}
@@ -383,7 +383,7 @@ void GLList::CreateAutoLabel() {
 		labWidth = 0;
 		for (int i = 0; i < nbRow; i++) {
 			sprintf(tmp, "%d", i);
-			rNames[i] = _strdup(tmp);
+			rNames[i] = strdup(tmp);
 			int w = GLToolkit::GetDialogFont()->GetTextWidth(rNames[i]);
 			if (w > labWidth) labWidth = w;
 		}
@@ -412,23 +412,23 @@ void GLList::UpdateSBRange() {
 
 }
 
-void GLList::SetColumnLabels(char **names) {
+void GLList::SetColumnLabels(const char ** names) {
 	if (cNames) {
 		for (int i = 0; i < nbCol; i++) {
 			SAFE_FREE(cNames[i]);
-			if (names[i]) cNames[i] = _strdup(names[i]);
+			if (names[i]) cNames[i] = strdup(names[i]);
 		}
 	}
 }
 
-void GLList::SetRowLabels(char **names) {
+void GLList::SetRowLabels(const char **names) {
 
 	if (rNames) {
 		labWidth = 0;
 		for (int i = 0; i < nbRow; i++) {
 			SAFE_FREE(rNames[i]);
 			if (names[i]) {
-				rNames[i] = _strdup(names[i]);
+				rNames[i] = strdup(names[i]);
 				int w = GLToolkit::GetDialogFont()->GetTextWidth(rNames[i]);
 				if (w > labWidth) labWidth = w;
 			}
@@ -489,18 +489,18 @@ void GLList::SetAllColumnColors(int color) {
 		for (int i = 0; i < nbCol; i++) cColors[i] = color;
 }
 
-void GLList::SetColumnLabel(size_t colId, char *name) {
+void GLList::SetColumnLabel(size_t colId, const char *name) {
 	if (cNames && colId < nbCol) {
 		SAFE_FREE(cNames[colId]);
-		if (name) cNames[colId] = _strdup(name);
+		if (name) cNames[colId] = strdup(name);
 	}
 }
 
-void GLList::SetRowLabel(size_t rowId, char *name) {
+void GLList::SetRowLabel(size_t rowId, const char *name) {
 	if (rNames && rowId < nbRow) {
 		SAFE_FREE(rNames[rowId]);
 		if (name) {
-			rNames[rowId] = _strdup(name);
+			rNames[rowId] = strdup(name);
 			int w = GLToolkit::GetDialogFont()->GetTextWidth(rNames[rowId]);
 			if (w > labWidth) labWidth = w;
 		}
@@ -526,13 +526,13 @@ void GLList::SetColumnColor(size_t colId, int color) {
 	}
 }
 
-void GLList::SetRow(size_t row, char **vals) {
+void GLList::SetRow(size_t row, const char **vals) {
 	for (int i = 0; i < nbCol; i++)
 		SetValueAt(i, row, vals[i]);
 }
 
 void GLList::SetValueAt(size_t col, size_t row, const char *value, int userData, bool searchIndex) {
-	_ASSERTE(col < nbCol); _ASSERTE(row < nbRow);
+	assert(col < nbCol); assert(row < nbRow);
 	if (this->values) {
 		if (col >= 0 && col < this->nbCol && row >= 0 && row < this->nbRow) {
 			size_t rowIndex = row;
@@ -546,11 +546,11 @@ void GLList::SetValueAt(size_t col, size_t row, const char *value, int userData,
 				if (cell) {
 					if (strcmp(value, cell) != 0) {
 						SAFE_FREE(cell);
-						this->values[(rowIndex*this->nbCol) + col] = _strdup(value);
+						this->values[(rowIndex*this->nbCol) + col] = strdup(value);
 					}
 				}
 				else {
-					this->values[(rowIndex*this->nbCol) + col] = _strdup(value);
+					this->values[(rowIndex*this->nbCol) + col] = strdup(value);
 				}
 			}
 			this->uValues[(rowIndex*this->nbCol) + col] = userData;
@@ -1313,24 +1313,26 @@ void GLList::CancelEdit() {
 int GLList::RelayToEditText(SDL_Event *evt) {
 
 	switch (evt->type) {
+		 
 	case SDL_MOUSEWHEEL:
-		if (evt->wheel.y > 0) {
-			if (selectedRows[0] > 0) {
+		return EDIT_IGNORE; //Don't use mousewheel while editing text. Causes problems on Apple devices
+	{
+#ifdef __APPLE__
+		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
+#else
+		int appleInversionFactor = 1;
+#endif
+		if (evt->wheel.y != 0) { //Vertical scroll
+			int newPos = (int)selectedRows[0] - appleInversionFactor * evt->wheel.y;
+			if ((0<=newPos)&&(newPos<=(nbRow-1))) {
 				UpdateCell();
-				selectedRows[0]--; //Can't go negative
+				selectedRows[0]=newPos;
 				MapEditText();
 			}
 			return EDIT_RELAY;
 		}
-		else if (evt->wheel.y < 0) {
-			if (selectedRows[0] < nbRow - 1) {
-				UpdateCell();
-				selectedRows[0]++;
-				MapEditText();
-			}
-			return EDIT_RELAY;
-		}
-		return EDIT_RELAY;
+	}
+	
 	case SDL_MOUSEBUTTONUP:
 			if (GetWindow()->IsInComp(edit, evt->button.x, evt->button.y) || edit->IsCaptured())
 				return EDIT_RELAY;
@@ -1353,6 +1355,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 		switch (evt->key.keysym.sym) {
 		case SDLK_DOWN:
 		case SDLK_RETURN:
+		case SDLK_KP_ENTER:
 			if (selectedRows[0] < nbRow - 1) {
 				UpdateCell();
 				selectedRows[0]++; lastRowSel = (int)selectedRows[0];
@@ -1416,7 +1419,7 @@ bool GLList::GetSelectionBox(size_t *row, size_t *col, size_t *rowLength, size_t
 		*col = Min(selectedCol, lastColSel);
 		*rowLength = Max((size_t)lastRowSel, selectedRows[0]) - Min((size_t)lastRowSel, selectedRows[0]) + 1;
 		*colLength = Max(lastColSel, selectedCol) - Min(lastColSel, selectedCol) + 1;
-		return *rowLength > 0 && colLength > 0;
+		return (*rowLength > 0) && (*colLength > 0);
 	}
 	return false;
 }
@@ -1426,27 +1429,23 @@ void GLList::HandleWheel(SDL_Event *evt) {
 	int mx = GetWindow()->GetX(this, evt);
 	int my = GetWindow()->GetY(this, evt);
 
-	if (evt->wheel.y > 0) {
-		if (selectedRows.size() == 1 && selectedRows[0] > 0) {
-			selectedRows[0]--; //Can't go negative
-			lastRowSel = (int)selectedRows[0];
-			parent->ProcessMessage(this, MSG_LIST);
-			ScrollToVisible();
-		}
-		else {
-			ScrollUp();
-		}
-	}
+#ifdef __APPLE__
+	int appleInversionFactor = -1; //Invert mousewheel on Apple devices
+#else
+	int appleInversionFactor = 1;
+#endif
 
-	if (evt->wheel.y < 0) {
-		if (selectedRows.size() == 1 && selectedRows[0] >= 0 && selectedRows[0] < nbRow - 1) {
-			selectedRows[0]++;
+	if (evt->wheel.y != 0 && !selectedRows.empty()) { //Vertical scroll
+		int newPos = (int)selectedRows[0] - appleInversionFactor * evt->wheel.y;
+		if (selectedRows.size() == 1 && selectedRows[0] >= 0 && newPos>=0 && newPos<=(nbRow-1)) {
+			selectedRows[0]=newPos; //Can't go negative
 			lastRowSel = (int)selectedRows[0];
 			parent->ProcessMessage(this, MSG_LIST);
 			ScrollToVisible();
 		}
 		else {
-			ScrollDown();
+			if ((evt->wheel.y * appleInversionFactor)>0) ScrollUp();
+			else ScrollDown();
 		}
 	}
 
@@ -1483,7 +1482,7 @@ void GLList::CopyToClipboard(size_t row, size_t col, size_t rowLght, size_t colL
 	}
 	if (!totalLength) return;
 
-#ifdef WIN
+#ifdef _WIN32
 
 	if (!OpenClipboard(NULL))
 		return;
@@ -2115,7 +2114,7 @@ void GLList::PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, i
 	if (!SDL_HasClipboardText()) return;
 	char* content = SDL_GetClipboardText();
 
-//#ifdef WIN
+//#ifdef _WIN32
 
 //	if (OpenClipboard(NULL)) {
 //		HGLOBAL hMem;
@@ -2163,19 +2162,19 @@ void GLList::PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, i
 				size_t length = strlen(content);
 
 				char tmp[MAX_TEXT_SIZE];
-				tmp[0] = NULL;
+				tmp[0] = '\0';
 				while (cursor < length) {
 					char c = content[cursor];
 					if (c == '\t') {
 						if (col < nbCol && row < nbRow) SetValueAt(col, row, tmp);
 						col++;
-						tmp[0] = NULL;
+						tmp[0] = '\0';
 					}
 					else if (c == '\r') {
 						if (((cursor + 1) < length) && content[cursor + 1] == '\n') cursor++; //Anticipating \n after \r
 						if (col < nbCol && row < nbRow) SetValueAt(col, row, tmp);
 						row++;
-						tmp[0] = NULL;
+						tmp[0] = '\0';
 						col = colBegin;
 					}
 					else if (strlen(tmp) < (MAX_TEXT_SIZE - 1)) {

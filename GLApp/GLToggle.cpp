@@ -3,8 +3,9 @@
 #include "GLToggle.h"
 #include "GLToolkit.h"
 #include "GLFont.h"
+#include <cstring> //strcpy, etc.
 
-GLToggle::GLToggle(int compId,char *text):GLComponent(compId) {
+GLToggle::GLToggle(int compId,const char *text):GLComponent(compId) {
   if(text) 
     strcpy(this->text,text);
   else

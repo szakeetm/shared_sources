@@ -2,8 +2,9 @@
 #include "GLWindow.h"
 #include "GLIcon.h"
 #include "GLToolkit.h"
+#include <cstring> //strcpy, etc.
 
-GLIcon::GLIcon(char *name):GLComponent(0) {
+GLIcon::GLIcon(const char *name):GLComponent(0) {
   strcpy(this->name,name);
   icon = NULL;
 }

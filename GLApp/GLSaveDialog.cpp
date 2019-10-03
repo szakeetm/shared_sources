@@ -7,7 +7,7 @@
 #include "MathTools.h" //Min max
 
 // Construct a message dialog box
-GLSaveDialog::GLSaveDialog(char *message,char *title,int mode,int icon):GLWindow() {
+GLSaveDialog::GLSaveDialog(const char *message, const char *title,int mode,int icon):GLWindow() {
 
   int xD,yD,wD,hD,iW,txtWidth,txtHeight;
   int nbButton=0;
@@ -95,7 +95,7 @@ void GLSaveDialog::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-int GLSaveDialog::Display(char *message,char *title,int mode,int icon) {
+int GLSaveDialog::Display(const char *message, const char *title,int mode,int icon) {
 
   GLfloat old_mView[16];
   GLfloat old_mProj[16];

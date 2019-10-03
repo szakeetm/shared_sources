@@ -2,6 +2,8 @@
 #ifndef _GLCHARTDATAVIEWH_
 #define _GLCHARTDATAVIEWH_
 
+#include <string>
+
 typedef struct {
 
   double x;
@@ -73,7 +75,7 @@ public:
   void SetLineWidth(int c);
   void SetName(const char *s);
   char *GetName();
-  void SetUnit(char *s);
+  void SetUnit(const char *s);
   char *GetUnit();
   char *GetExtendedName();
   int GetMarker();
@@ -111,9 +113,9 @@ public:
   void Reset();
   double GetYValueByIndex(int idx);
   double GetXValueByIndex(int idx);
-  void SetUserFormat(char *format);
+  void SetUserFormat(const char *format);
   char *GetUserFormat();
-  char *FormatValue(double v);
+  std::string FormatValue(double v);
   bool IsXDataSorted();
   void SetXDataSorted (bool dataSorted);
   APoint2D LinearInterpolate(APoint2D p1,APoint2D p2,double t);

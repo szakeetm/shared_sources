@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define _GEOMETRYVIEWERH_
 
 #include "GLApp/GLComponent.h"
-#include "GLApp\GLTypes.h"
+#include "GLApp/GLTypes.h"
 #include "Vector.h"
 #include <vector>
 
@@ -112,6 +112,8 @@ public:
 
   // Construction
   GeometryViewer(int id);
+
+  void UpdateLabelColors();
 
   // Component method
   void ToOrigo();

@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/MathTools.h" // MAX
 
 // Construct a message dialog box
-RecoveryDialog::RecoveryDialog(const char *message, char *title, int mode, int icon) :GLWindow() {
+RecoveryDialog::RecoveryDialog(const char *message, const char *title, int mode, int icon) :GLWindow() {
 
   int xD,yD,wD,hD,iW,txtWidth,txtHeight;
   int nbButton=4;
@@ -105,7 +105,7 @@ void RecoveryDialog::ProcessMessage(GLComponent *src, int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-int RecoveryDialog::Display(const char *message, char *title, int mode, int icon) {
+int RecoveryDialog::Display(const char *message, const char *title, int mode, int icon) {
 
   GLfloat old_mView[16];
   GLfloat old_mProj[16];

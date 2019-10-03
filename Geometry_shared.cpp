@@ -17,21 +17,21 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#pragma once
+
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-#include "GLApp\MathTools.h"
-#include "GLApp\GLMessageBox.h"
-#include "GLApp\GLToolkit.h"
+#include "GLApp/MathTools.h"
+#include "GLApp/GLMessageBox.h"
+#include "GLApp/GLToolkit.h"
 #include "SplitFacet.h"
 #include "BuildIntersection.h"
 #include "MirrorFacet.h"
 #include "MirrorVertex.h"
 #include "GLApp/GLList.h"
 
-#include "Clipper\clipper.hpp"
+#include "Clipper/clipper.hpp"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -739,7 +739,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 		if (auto screenCoords = GLToolkit::Get2DScreenCoord(*v)) { //To improve
 			auto[outX, outY] = *screenCoords;
 			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
-				distance = abs(A*v->x + B * v->y + C * v->z + D);
+				distance = std::abs(A*v->x + B * v->y + C * v->z + D);
 				if (distance < tolerance) { //vertex is on the plane
 					vertices3[i].selected = true;
 				}
@@ -875,11 +875,11 @@ int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int 
 
 	while (i < *nbRef && !found) {
 		//Sub(&n,p,refs + i);
-		double dx = abs(p.x - (refs + i)->x);
+		double dx = std::abs(p.x - (refs + i)->x);
 		if (dx < vT) {
-			double dy = abs(p.y - (refs + i)->y);
+			double dy = std::abs(p.y - (refs + i)->y);
 			if (dy < vT) {
-				double dz = abs(p.z - (refs + i)->z);
+				double dz = std::abs(p.z - (refs + i)->z);
 				if (dz < vT) {
 					found = (dx*dx + dy*dy + dz*dz < v2);
 				}
@@ -1025,7 +1025,7 @@ void Geometry::SwapNormal() {
 				SetFacetTexture(i, f->tRatio, f->hasMesh);
 			}
 			catch (Error &e) {
-				GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 		}
 	}
@@ -1141,7 +1141,7 @@ void Geometry::ShiftVertex() {
 				SetFacetTexture(i, f->tRatio, f->hasMesh);
 			}
 			catch (Error &e) {
-				GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 
 		}
@@ -1329,16 +1329,16 @@ void Geometry::Clear() {
 
 void  Geometry::SelectIsolatedVertices() {
 	
-	std::vector<bool> check(sh.nbVertex, false);
+	std::vector<bool> isolated(sh.nbVertex, true);
 
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		for (const auto& ind : facets[i]->indices) {
-			check[ind]=true;
+			isolated[ind]=false;
 		}
 	}
 
 	for (size_t i = 0; i < sh.nbVertex; i++) {
-		vertices3[i].selected = !check[i];
+		vertices3[i].selected = isolated[i];
 	}
 }
 
@@ -1619,7 +1619,7 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 	prgAlign->SetVisible(false);
@@ -1661,7 +1661,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 		}
 		catch (Error &e) {
-			GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 	}
@@ -1719,7 +1719,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 
@@ -1794,7 +1794,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		}
 		catch (Error &e) {
-			GLMessageBox::Display((char *)e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 
@@ -1929,10 +1929,10 @@ std::vector<size_t> Geometry::GetSelectedFacets() {
 	return selection;
 }
 
-std::vector<size_t> Geometry::GetNonPlanarFacets(const double& tolerance) {
+std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 	std::vector<size_t> nonPlanar;
 	for (size_t i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->nonSimple || abs(facets[i]->planarityError)>=tolerance) nonPlanar.push_back(i);
+		if (facets[i]->nonSimple || std::abs(facets[i]->planarityError)>=tolerance) nonPlanar.push_back(i);
 	return nonPlanar;
 }
 
@@ -1954,9 +1954,9 @@ void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown
 	mApp->UpdateFacetParams(true);
 }
 
-void Geometry::AddStruct(const char *name) {
-	strName[sh.nbSuper++] = _strdup(name);
-	BuildGLList();
+void Geometry::AddStruct(const char *name,bool deferDrawing) {
+	strName[sh.nbSuper++] = strdup(name);
+	if (!deferDrawing) BuildGLList();
 }
 
 void Geometry::DelStruct(int numToDel) {
@@ -1973,7 +1973,7 @@ void Geometry::DelStruct(int numToDel) {
 	SAFE_FREE(strFileName[numToDel]);
 	for (int j = numToDel; j < (sh.nbSuper - 1); j++)
 	{
-		//strName[j] = _strdup(strName[j + 1]);
+		//strName[j] = strdup(strName[j + 1]);
 		strName[j] = strName[j + 1];
 		strFileName[j] = strFileName[j + 1];
 	}
@@ -2462,7 +2462,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 			} while (V != clipVertices.end());
 			//Register new vertices and calc distance from clipping line
 			if (createdList.size() > 0) { //If there was a cut
-				_ASSERTE(createdList.size() % 2 == 0);
+				assert(createdList.size() % 2 == 0);
 				if (nbNewPoints) vertices3.resize(sh.nbVertex + nbNewPoints);
 				for (std::list<std::list<ClippingVertex>::iterator>::iterator newVertexIterator = createdList.begin(); newVertexIterator != createdList.end(); newVertexIterator++) {
 					if ((*newVertexIterator)->globalId >= sh.nbVertex) {
@@ -2507,7 +2507,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 				if (newFacetsIndices.size() > 0)
 					facets = (Facet**)realloc(facets, sizeof(Facet*)*(sh.nbFacet + newFacetsIndices.size()));
 				for (auto& newPolyIndices : newFacetsIndices) {
-					_ASSERTE(newPolyIndices.size() >= 3);
+					assert(newPolyIndices.size() >= 3);
 					Facet *newFacet = new Facet((int)newPolyIndices.size());
 					(*nbCreated)++;
 					for (size_t i = 0; i < newPolyIndices.size(); i++) {
@@ -2878,7 +2878,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 		f->nonSimple = true;
 	}
 
-	f->sh.area = abs(0.5 * area);
+	f->sh.area = std::abs(0.5 * area);
 
 	// Compute the 2D basis (O,U,V)
 	double uD = (BBmax.u - BBmin.u);
@@ -3142,7 +3142,7 @@ void Geometry::CreateLoft() {
 		}
 		if (incrementDir == -1) newFacet->SwapNormal();
 		CalculateFacetParams(newFacet);
-		if (abs(newFacet->planarityError) > 1E-5) {
+		if (std::abs(newFacet->planarityError) > 1E-5) {
 			//Split to two triangles
 			size_t ind4[] = { newFacet->indices[0],newFacet->indices[1], newFacet->indices[2], newFacet->indices[3] };
 			delete newFacet;
@@ -3269,6 +3269,11 @@ void Geometry::UpdateName(FileReader *file) {
 	UpdateName(file->GetName());
 }
 
+std::string Geometry::GetName() {
+	return sh.name;
+}
+
+
 void Geometry::UpdateName(const char *fileName) {
 	sh.name = FileUtils::GetFilename(fileName);
 }
@@ -3339,7 +3344,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 	memset(facets, 0, sh.nbFacet * sizeof(Facet *));
 	/*vertices3 = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
 	memset(vertices3, 0, wp.nbVertex * sizeof(InterfaceVertex));*/
-	vertices3.swap(std::vector<InterfaceVertex>(sh.nbVertex));
+	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
 
 	// Fill 
 	int nb = 0;
@@ -3360,8 +3365,8 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 
 	UpdateName(file);
 	sh.nbSuper = 1;
-	strName[0] = _strdup(sh.name.c_str());
-	strFileName[0] = _strdup(file->GetName());
+	strName[0] = strdup(sh.name.c_str());
+	strFileName[0] = strdup(file->GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3373,7 +3378,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 	char nPath[512];
 	char fPath[512];
-	char fName[512];
+	char fName[1028];
 	char sName[512];
 	/*size_t nF, nV;
 	Facet **F;
@@ -3396,7 +3401,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 		int i2 = file->ReadInt();
 		fr = NULL;
 		strcpy(sName, file->ReadWord());
-		strName[n] = _strdup(sName);
+		strName[n] = strdup(sName);
 		char *e = strrchr(strName[n], '.');
 		if (e) *e = 0;
 
@@ -3416,12 +3421,12 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 		}
 
 		if (!fr) {
-			char errMsg[512];
+			char errMsg[560];
 			sprintf(errMsg, "Cannot find %s", sName);
 			throw Error(errMsg);
 		}
 
-		strFileName[n] = _strdup(sName);
+		strFileName[n] = strdup(sName);
 		//LoadTXTGeom(fr, n);
 		InsertTXTGeom(fr, n, true);
 		/*
@@ -3466,7 +3471,7 @@ void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
 	if (!facets) throw Error("Out of memory: LoadSTL");
 	memset(facets, 0, sh.nbFacet * sizeof(Facet *));
 
-	vertices3.swap(std::vector<InterfaceVertex>(sh.nbVertex));
+	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
 
 	// Second pass
 	prg->SetMessage("Reading facets...");
@@ -3518,8 +3523,8 @@ void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
 
 	sh.nbSuper = 1;
 	UpdateName(file);
-	strName[0] = _strdup(sh.name.c_str());
-	strFileName[0] = _strdup(file->GetName());
+	strName[0] = strdup(sh.name.c_str());
+	strFileName[0] = strdup(file->GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	prg->SetMessage("Initializing geometry...");
@@ -3536,8 +3541,8 @@ void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
 	LoadTXTGeom(file, worker);
 	UpdateName(file);
 	sh.nbSuper = 1;
-	strName[0] = _strdup(sh.name.c_str());
-	strFileName[0] = _strdup(file->GetName());
+	strName[0] = strdup(sh.name.c_str());
+	strFileName[0] = strdup(file->GetName());
 
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
@@ -3555,8 +3560,8 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 	InsertTXTGeom(file, structId, newStr);
 	//UpdateName(file);
 	//wp.nbSuper = 1;
-	//strName[0] = _strdup(wp.name);
-	//strFileName[0] = _strdup(file->GetName());
+	//strName[0] = strdup(wp.name);
+	//strFileName[0] = strdup(file->GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3573,8 +3578,8 @@ void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, 
 	InsertSTLGeom(file, structId, scaleFactor, newStr);
 	//UpdateName(file);
 	//wp.nbSuper = 1;
-	//strName[0] = _strdup(wp.name);
-	//strFileName[0] = _strdup(file->GetName());
+	//strName[0] = strdup(wp.name);
+	//strFileName[0] = strdup(file->GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3591,8 +3596,8 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 	InsertGEOGeom(file, structId, newStr);
 	//UpdateName(file);
 	//wp.nbSuper = 1;
-	//strName[0] = _strdup(wp.name);
-	//strFileName[0] = _strdup(file->GetName());
+	//strName[0] = strdup(wp.name);
+	//strFileName[0] = strdup(file->GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3604,11 +3609,11 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	worker->globalHitCache.globalHits.hit.nbMCHit = file->ReadLLong();
+	worker->globalHitCache.globalHits.hit.nbMCHit = file->ReadSizeT();
 	worker->globalHitCache.globalHits.hit.nbHitEquiv = (double)worker->globalHitCache.globalHits.hit.nbMCHit; //Backward comp
-	worker->globalHitCache.nbLeakTotal = file->ReadLLong();
-	worker->globalHitCache.globalHits.hit.nbDesorbed = file->ReadLLong();
-	worker->ontheflyParams.desorptionLimit = file->ReadLLong();
+	worker->globalHitCache.nbLeakTotal = file->ReadSizeT();
+	worker->globalHitCache.globalHits.hit.nbDesorbed = file->ReadSizeT();
+	worker->ontheflyParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
 	sh.nbFacet = file->ReadInt();
@@ -3617,7 +3622,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	Facet   **f = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
 	memset(f, 0, sh.nbFacet * sizeof(Facet *));
 	
-	vertices3.swap(std::vector<InterfaceVertex>(sh.nbVertex));
+	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
 	/*
 	InterfaceVertex *v = (InterfaceVertex *)malloc(nV * sizeof(InterfaceVertex));
 	memset(v, 0, nV * sizeof(InterfaceVertex)); //avoid selected flag
@@ -3634,15 +3639,20 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		int nb = file->ReadInt();
 		f[i] = new Facet(nb);
-		for (int j = 0; j < nb; j++)
+		for (int j = 0; j < nb; j++) {
 			f[i]->indices[j] = file->ReadInt() - 1;
+			if (f[i]->indices[j] >= sh.nbVertex) {
+				std::string errMsg = "Facet " + std::to_string(i + 1) + " refers to non-existent vertex (" + std::to_string(f[i]->indices[j]+1)  + ")";
+				throw Error(errMsg.c_str());
+			}
+		}
 	}
 
 	// Read facets params
 	for (int i = 0; i < sh.nbFacet; i++) {
 		f[i]->LoadTXT(file);
 		while ((f[i]->sh.superDest) > sh.nbSuper) { //If facet refers to a structure that doesn't exist, create it
-			AddStruct("TXT linked");
+			AddStruct("TXT linked",true);
 		}
 		f[i]->sh.superIdx = static_cast<int>(strIdx);
 	}
@@ -3656,10 +3666,10 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
-	//loaded_nbMCHit = file->ReadLLong();
+	//loaded_nbMCHit = file->ReadSizeT();
 	//loaded_nbLeak = file->ReadInt();
-	//loaded_nbDesorption = file->ReadLLong();
-	//loaded_desorptionLimit = file->ReadLLong(); 
+	//loaded_nbDesorption = file->ReadSizeT();
+	//loaded_desorptionLimit = file->ReadSizeT(); 
 	for (int i = 0; i < 5; i++) file->ReadInt(); //leading lines
 
 	int nbNewVertex = file->ReadInt();
@@ -3689,11 +3699,11 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 
 	// Read geometry facets (indexed from 1)
 	for (size_t i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
-		size_t nb = file->ReadLLong();
+		size_t nb = file->ReadSizeT();
 		*(facets + i) = new Facet(nb);
 		(facets)[i]->selected = true;
 		for (size_t j = 0; j < nb; j++)
-			(facets)[i]->indices[j] = file->ReadLLong() - 1 + sh.nbVertex;
+			(facets)[i]->indices[j] = file->ReadSizeT() - 1 + sh.nbVertex;
 	}
 
 	// Read facets params
@@ -3731,14 +3741,14 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	}
 
 	file->ReadKeyword("totalHit"); file->ReadKeyword(":");
-	file->ReadLLong();
+	file->ReadSizeT();
 	file->ReadKeyword("totalDes"); file->ReadKeyword(":");
-	file->ReadLLong();
+	file->ReadSizeT();
 	file->ReadKeyword("totalLeak"); file->ReadKeyword(":");
-	file->ReadLLong();
+	file->ReadSizeT();
 	if (version2 >= 12) {
 		file->ReadKeyword("totalAbs"); file->ReadKeyword(":");
-		file->ReadLLong();
+		file->ReadSizeT();
 		if (version2 >= 15) {
 			file->ReadKeyword("totalDist_total");
 		}
@@ -3753,7 +3763,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		}
 	}
 	file->ReadKeyword("maxDes"); file->ReadKeyword(":");
-	file->ReadLLong();
+	file->ReadSizeT();
 	file->ReadKeyword("nbVertex"); file->ReadKeyword(":");
 	int nbNewVertex = file->ReadInt();
 	file->ReadKeyword("nbFacet"); file->ReadKeyword(":");
@@ -3850,7 +3860,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			SelectionGroup s;
 			char tmpName[256];
 			strcpy(tmpName, file->ReadString());
-			s.name = _strdup(tmpName);
+			s.name = strdup(tmpName);
 			int nbFS = file->ReadInt();
 
 			for (int j = 0; j < nbFS; j++) {
@@ -3867,11 +3877,11 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 #endif
 	file->ReadKeyword("structures"); file->ReadKeyword("{");
 	for (int i = 0; i < nbNewSuper; i++) {
-		strName[sh.nbSuper + i] = _strdup(file->ReadString());
+		strName[sh.nbSuper + i] = strdup(file->ReadString());
 		// For backward compatibilty with STR
 		/* //Commented out for GEO
 		sprintf(tmp, "%s.txt", strName[i]);
-		strFileName[i] = _strdup(tmp);
+		strFileName[i] = strdup(tmp);
 		*/
 	}
 	file->ReadKeyword("}");
@@ -3894,7 +3904,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	file->ReadKeyword("vertices"); file->ReadKeyword("{");
 	for (size_t i = sh.nbVertex; i < (sh.nbVertex + nbNewVertex); i++) {
 		// Check idx
-		size_t idx = file->ReadLLong();
+		size_t idx = file->ReadSizeT();
 		if (idx != i - sh.nbVertex + 1) throw Error(file->MakeError("Wrong vertex index !"));
 		vertices3[i].x = file->ReadDouble();
 		vertices3[i].y = file->ReadDouble();
@@ -3941,12 +3951,12 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	for (size_t i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
 		file->ReadKeyword("facet");
 		// Check idx
-		size_t idx = file->ReadLLong();
+		size_t idx = file->ReadSizeT();
 		if (idx != i + 1 - sh.nbFacet) throw Error(file->MakeError("Wrong facet index !"));
 		file->ReadKeyword("{");
 		file->ReadKeyword("nbIndex");
 		file->ReadKeyword(":");
-		size_t nb = file->ReadLLong();
+		size_t nb = file->ReadSizeT();
 
 		if (nb < 3) {
 			char errMsg[512];
@@ -4075,7 +4085,7 @@ void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 
 void Geometry::SaveSuper(int s) {
 
-	char fName[512];
+	char fName[512+128+1];
 	sprintf(fName, "%s/%s", strPath, strFileName[s]);
 	FileWriter *file = new FileWriter(fName);
 
@@ -4083,9 +4093,9 @@ void Geometry::SaveSuper(int s) {
 	file->Write(0, "\n");
 
 	//Extract data of the specified super structure
-	llong totHit = 0;
-	llong totAbs = 0;
-	llong totDes = 0;
+	size_t totHit = 0;
+	size_t totAbs = 0;
+	size_t totDes = 0;
 	int *refIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(refIdx, 0xFF, sh.nbVertex * sizeof(int));
 	int nbV = 0;
@@ -4353,12 +4363,13 @@ void  Geometry::EmptyGeometry() {
 
 	//Initialize a default structure:
 	sh.nbSuper = 1;
-	strName[0] = _strdup("");
+	strName[0] = strdup("");
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
 
 }
 
+#ifdef MOLFLOW
 PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* buff) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value
@@ -4417,3 +4428,4 @@ PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, con
 
 	return result;
 }
+#endif

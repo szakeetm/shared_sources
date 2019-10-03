@@ -22,8 +22,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <vector>
 #include "GLApp/GLTypes.h"
-#include "Smp.h"
+#include "SMP.h"
 #include "Buffer_shared.h" //LEAK, HIT
+#include <cereal/types/vector.hpp>
 
 class Geometry;
 class GLProgress;
@@ -71,8 +72,8 @@ public:
   
   // Export textures (throws Error)
   void ExportTextures(const char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
-  //void ExportRegionPoints(char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
-  //void ExportDesorption(char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
+  //void ExportRegionPoints(const char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
+  //void ExportDesorption(const char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
 
   std::vector<std::vector<std::string>> ImportCSV_string(FileReader *file);
   std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
@@ -85,7 +86,7 @@ public:
 
   void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
- // void SetMaxDesorption(llong max);// Set the number of maximum desorption
+ // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
   DWORD GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
@@ -107,7 +108,7 @@ public:
   void RemoveRegion(int index);
   void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
   void RecalcRegion(int regionId);
-  void SaveRegion(char *fileName,int position,bool overwrite=false);
+  void SaveRegion(const char *fileName,int position,bool overwrite=false);
   bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
 
 #ifdef MOLFLOW
@@ -115,7 +116,8 @@ public:
   void ExportProfiles(const char *fileName);
   void ExportAngleMaps(std::vector<size_t> faceList, std::string fileName);
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
-  void ImportDesorption_SYN(char *fileName, const size_t &source, const double &time,
+  FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
+  void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
 	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress *prg);
@@ -146,8 +148,10 @@ public:
   SynradGeometry* GetSynradGeometry();
   void AddMaterial(std::string *fileName);
   void ClearRegions();
-  //Different signature:
-  void SendToHitBuffer();// Send total and facet hit counts to subprocesses
+  void WriteHitBuffer();
+    //Different signature:
+    void SendFacetHitCounts();
+    void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
 #endif
 
@@ -155,9 +159,6 @@ public:
   OntheflySimulationParams ontheflyParams;
   WorkerParams wp;
   GlobalHitBuffer globalHitCache;
-  
-
-
   FacetHistogramBuffer globalHistogramCache;
 
   bool   isRunning;           // Started/Stopped state
@@ -176,6 +177,7 @@ public:
 
   std::vector<Parameter> parameters;
   int displayedMoment;
+  size_t InsertParametersBeforeCatalog(const std::vector<Parameter>& newParams);
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<std::vector<std::pair<double, double>>> IDs; //integrated distribution function for each time-dependent desorption type
@@ -239,9 +241,9 @@ private:
   bool Wait(size_t waitState, LoadStatus *statusWindow);
   void ResetWorkerStats();
   void ClearHits(bool noReload);
-  char *GetErrorDetails();
+  const char *GetErrorDetails();
   void ThrowSubProcError(std::string message);
-  void ThrowSubProcError(char *message = NULL);
+  void ThrowSubProcError(const char *message = NULL);
   void Start();
   void Stop();
   void InnerStop(float appTime);
@@ -249,6 +251,7 @@ private:
   // Geometry handle
 #ifdef MOLFLOW
   MolflowGeometry *geom;
+
 #endif
 #ifdef SYNRAD
   SynradGeometry *geom;

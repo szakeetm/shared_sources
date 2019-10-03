@@ -3,7 +3,7 @@
 #define _GLCHARTOPTIONSH_
 
 //#include "AxisPanel.h"
-#include "..\GLTabWindow.h"
+#include "../GLTabWindow.h"
 
 class GLTitledPanel;
 class GLChart;
@@ -27,7 +27,7 @@ public:
 
 private:
 
-  void error(char *m);
+  void error(const char *m);
   void commit();
 
   GLChart    *chart;

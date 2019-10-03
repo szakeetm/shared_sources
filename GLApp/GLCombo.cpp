@@ -6,6 +6,7 @@
 #include "GLList.h"
 #include "GLTextField.h"
 #include <string>
+#include <algorithm>
 
 // Popup -----------------------------------------------------------
 
@@ -81,6 +82,7 @@ void GLCombo::SetSize(size_t nbRow) {
 
 void GLCombo::SetValueAt(size_t row,const char *value,int userValue) {
   list->SetValueAt(0,row,value,userValue);
+  if (row == GetSelectedIndex()) text->SetText(value);
 }
 
 int GLCombo::GetUserValueAt(size_t row) {
@@ -95,7 +97,7 @@ size_t GLCombo::GetNbRow() {
   return list->GetNbRow();
 }
 
-void GLCombo::SetSelectedValue(char *value) {
+void GLCombo::SetSelectedValue(const char *value) {
   text->SetText(value);
   selectedRow = -1;
 }
@@ -232,15 +234,15 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
     }
 
 	if (evt->type == SDL_MOUSEWHEEL) {
-		if (evt->wheel.y>0) {
-			if (nbRow > 0 && selectedRow > 0) {
-				SetSelectedIndex(selectedRow - 1);
-				if (parent) parent->ProcessMessage(this, MSG_COMBO);
-			}
-		}
-		else if (evt->wheel.y < 0) {
-			if (nbRow > 0 && selectedRow < nbRow - 1) {
-				SetSelectedIndex(selectedRow + 1);
+#ifdef __APPLE__
+		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
+#else
+		int appleInversionFactor = 1;
+#endif
+		if (evt->wheel.y!=0) { //Vertical scroll
+			int newPos = selectedRow - evt->wheel.y * appleInversionFactor;
+			if (nbRow > 0 && newPos >= 0 && newPos <= (nbRow-1)) {
+				SetSelectedIndex(newPos);
 				if (parent) parent->ProcessMessage(this, MSG_COMBO);
 			}
 		}

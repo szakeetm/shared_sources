@@ -7993,7 +7993,7 @@ PUGI__NS_BEGIN
 	PUGI__FN bool is_nan(double value)
 	{
 	#if defined(PUGI__MSVC_CRT_VERSION) || defined(__BORLANDC__)
-		return !!_isnan(value);
+		return !!isnan(value);
 	#elif defined(fpclassify) && defined(FP_NAN)
 		return fpclassify(value) == FP_NAN;
 	#else
@@ -8007,7 +8007,7 @@ PUGI__NS_BEGIN
 	{
 	#if defined(PUGI__MSVC_CRT_VERSION) || defined(__BORLANDC__)
 		if (_finite(value)) return (value == 0) ? PUGIXML_TEXT("0") : 0;
-		if (_isnan(value)) return PUGIXML_TEXT("NaN");
+		if (isnan(value)) return PUGIXML_TEXT("NaN");
 		return value > 0 ? PUGIXML_TEXT("Infinity") : PUGIXML_TEXT("-Infinity");
 	#elif defined(fpclassify) && defined(FP_NAN) && defined(FP_INFINITE) && defined(FP_ZERO)
 		switch (fpclassify(value))

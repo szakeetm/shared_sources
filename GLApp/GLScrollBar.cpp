@@ -12,24 +12,24 @@ GLScrollBar::GLScrollBar(int compId) :GLComponent(compId) {
 	m_Pos = 0;
 	m_Max = 10;
 	m_Page = 10;
-	m_Wheel = 1;
+	m_Wheel_Delta = 1;
 	m_Drag = 0;
 	orientation = SB_VERTICAL;
 	SetBorder(BORDER_NONE);
 	SetBackgroundColor(230, 222, 215);
 }
 
-void GLScrollBar::SetRange(int max, int page, int wheel)
+void GLScrollBar::SetRange(int max, int page, int wheel_delta)
 {
 	if (page > max) {
 		m_Max = 10;
 		m_Page = 10;
-		m_Wheel = 1;
+		m_Wheel_Delta = 1;
 	}
 	else {
 		m_Max = max;
 		m_Page = page;
-		m_Wheel = wheel;
+		m_Wheel_Delta = wheel_delta;
 	}
 	Saturate(m_Pos, 0, m_Max - m_Page);
 	m_Drag = 0;
@@ -197,11 +197,13 @@ void GLScrollBar::ManageEvent(SDL_Event *evt) {
 	}
 
 	if (evt->type == SDL_MOUSEWHEEL) {
-		if (evt->wheel.y > 0) {
-			SetPos(m_Pos - m_Wheel);
-		}
-		if (evt->wheel.y < 0) {
-			SetPos(m_Pos + m_Wheel);
+#ifdef __APPLE__
+		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
+#else
+		int appleInversionFactor = 1;
+#endif
+		if (evt->wheel.y != 0) { //Vertical scroll
+			SetPos(m_Pos - evt->wheel.y * appleInversionFactor); //SetPos saturates new position
 		}
 	}
 

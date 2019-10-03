@@ -411,7 +411,7 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
     closeBtn->SetBounds(160, 188, 80, 19);
     GLWindow::Add(closeBtn);
 
-    Update();
+    UpdateBar();
     SetTextColor(120,120,120);
 
     // Center dialog
@@ -798,6 +798,6 @@ GLDataViewOptions::GLDataViewOptions(GLChart *chart) : GLTabWindow() {
 }
 
 // Error message
-void GLDataViewOptions::error(char *m) {
+void GLDataViewOptions::error(const char *m) {
   GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
 }

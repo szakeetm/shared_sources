@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Geometry_shared.h"
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
-#include "GLApp\GLToolkit.h"
+#include "GLApp/GLToolkit.h"
 #include <string.h>
 #include <math.h>
 #include "GLApp/GLMatrix.h"
@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
-#include "GLApp\GLList.h"
+#include "GLApp/GLList.h"
 #include "SmartSelection.h"
 #include "FacetCoordinates.h"
 #include "VertexCoordinates.h"
@@ -930,8 +930,6 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		GLToolkit::SetMaterial(&whiteMaterial);
 		glDisable(GL_LIGHTING);
-		//gldebug
-		GLToolkit::CheckGLErrors("GLContainer::PaintComponents()");
 	}
 	else {
 
@@ -1090,8 +1088,10 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			glEnable(GL_LINE_SMOOTH);
 		}
 		glBlendFunc(GL_ONE, GL_ZERO);
-		glColor3f(1.0f, 0.0f, 1.0f);    //purple
-		glCallList(nonPlanarList);
+		if (mApp->highlightNonplanarFacets) {
+			glColor3f(1.0f, 0.0f, 1.0f);    //purple
+			glCallList(nonPlanarList);
+		}
 		glColor3f(1.0f, 0.0f, 0.0f);    //red
 		if (showHidden) {
 			glDisable(GL_DEPTH_TEST);
@@ -1374,7 +1374,7 @@ void Geometry::BuildNonPlanarList() {
 	}
 	glLineWidth(2.0f);
 
-	auto nonPlanarFacetIds = GetNonPlanarFacets();
+	auto nonPlanarFacetIds = GetNonPlanarFacetIds();
 	hasNonPlanar = nonPlanarFacetIds.size() > 0;
 	for (const auto& np : nonPlanarFacetIds) {
 		Facet *f = facets[np];

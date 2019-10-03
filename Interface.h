@@ -26,8 +26,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryViewer.h"
 
 #include "GLApp/GLApp.h"
-#include "GLApp\GLParser.h"
-#include "Clipper\clipper.hpp"
+#include "GLApp/GLParser.h"
+#include "Clipper/clipper.hpp"
+#include "Random.h"
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -244,15 +245,16 @@ public:
 	double   dps;          // Desorption (or new particle) per second
 	double   lastHps;      // hps measurement
 	double   lastDps;      // dps measurement
-	llong    lastNbHit;    // measurement
-	llong    lastNbDes;    // measurement
-	llong    nbDesStart;   // measurement
-	llong    nbHitStart;   // measurement
+	size_t    lastNbHit;    // measurement
+	size_t    lastNbDes;    // measurement
+	size_t    nbDesStart;   // measurement
+	size_t    nbHitStart;   // measurement
 	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
 	size_t      numCPU;
 	float    lastAppTime;
 	bool     antiAliasing;
 	bool     whiteBg;
+	bool highlightNonplanarFacets;
 	bool	 leftHandedView;
 	float    lastMeasTime; // Last measurement time (for hps and dps)
 	double   coplanarityTolerance; //Select coplanar tolerance
@@ -274,9 +276,11 @@ public:
 	bool     updateRequested; //Force frame move
 	
 	std::vector<GLParser*> formulas_n;
-
-	HANDLE compressProcessHandle;
 	
+#ifdef _WIN32
+	HANDLE compressProcessHandle = NULL;
+#endif
+
 	// Worker handle
 	Worker worker;
 
@@ -341,7 +345,7 @@ public:
 
 	// Views
 	void SelectView(int v);
-	void AddView(char *selectionName, AVIEW v);
+	void AddView(const char *selectionName, AVIEW v);
 	void AddView();
 	void ClearViewMenus();
 	void ClearAllViews();
@@ -361,7 +365,7 @@ public:
 	
 	void UpdateFacetlistSelected();
 	
-	int  GetVariable(char * name, char * prefix);
+	int  GetVariable(const char * name, const char * prefix);
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
 	bool AskToSave();
@@ -422,12 +426,12 @@ public:
 
 	// Util functions
 	//void SendHeartBeat(bool forced=false);
-	char *FormatInt(llong v, char *unit);
-	char *FormatPS(double v, char *unit);
+	char *FormatInt(size_t v, const char *unit);
+	char *FormatPS(double v, const char *unit);
 	char *FormatSize(size_t size);
 	char *FormatTime(float t);
 	
-	void LoadSelection(char *fName = NULL);
+	void LoadSelection(const char *fName = NULL);
 	void SaveSelection();
 	void ExportSelection();
 	void UpdateModelParams();
@@ -443,11 +447,11 @@ public:
 
 	void Place3DViewer();
 	void UpdateViewers();
-	void SetFacetSearchPrg(bool visible, char *text);
+	void SetFacetSearchPrg(bool visible, const char *text);
 
 	void DisplayCollapseDialog();
 	void RenumberSelections(const std::vector<int> &newRefs);
-	int  Resize(DWORD width, DWORD height, bool forceWindowed);
+	int  Resize(size_t width, size_t height, bool forceWindowed);
 
 	// Formula management
 	//int nbFormula;

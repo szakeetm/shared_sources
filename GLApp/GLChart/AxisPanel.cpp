@@ -329,6 +329,6 @@ void AxisPanel::commit() {
   GLWindowManager::FullRepaint();
 }
 
-void AxisPanel::error(char *m) {
+void AxisPanel::error(const char *m) {
   GLMessageBox::Display(m,"Chart options",GLDLG_OK,GLDLG_ICONERROR);
 }

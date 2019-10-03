@@ -5,6 +5,7 @@
 //#include <malloc.h>
 #include <float.h>
 #include <math.h>
+#include <cstring> //strcpy, etc.
 
 GLDataView::GLDataView() {
 
@@ -554,7 +555,7 @@ char *GLDataView::GetName() {
  * @param s Dataview unit.
  * @see getUnit
  */
-void GLDataView::SetUnit(char *s) {
+void GLDataView::SetUnit(const char *s) {
   strcpy(unit,s);
 }
 
@@ -574,7 +575,7 @@ char *GLDataView::GetUnit() {
 char *GLDataView::GetExtendedName() {
 
   static char ret[256];
-  char *t = "";
+  std::string t;
   char tmp[128];
 
   if (HasTransform()) {
@@ -588,14 +589,14 @@ char *GLDataView::GetExtendedName() {
     }
     if (A1 != 0.0) {
       sprintf(tmp,"%g",A1);
-      strcat(ret,t);
+      strcat(ret,t.c_str());
       strcat(ret,tmp);
       strcat(ret,"*y");
       t = " + ";
     }
     if (A2 != 0.0) {
       sprintf(tmp,"%g",A1);
-      strcat(ret,t);
+      strcat(ret,t.c_str());
       strcat(ret,tmp);
       strcat(ret,"*y^2");
     }
@@ -888,7 +889,7 @@ void GLDataView::Add(double x, double y) {
 void GLDataView::Add(double x, double y,bool updateFilter) {
 
 	DataList *newData = (DataList *)malloc(sizeof(DataList));
-	_ASSERTE(newData);
+	assert(newData);
 	newData->x = x;
 	newData->y = y;
 	newData->next = NULL;
@@ -1210,9 +1211,9 @@ double GLDataView::GetXValueByIndex(int idx) {
  * By default, it uses the Axis format.
  * @param format Format (C style)
  */
-void GLDataView::SetUserFormat(char *format) {
+void GLDataView::SetUserFormat(const char *format) {
   // TODO
-  userFormat = format;
+	strcpy(userFormat, format);
 }
 
 /**
@@ -1227,11 +1228,11 @@ char *GLDataView::GetUserFormat() {
  * to the Axis format.
  * @param v Value to be formated
  */
-char *GLDataView::FormatValue(double v) {
+std::string GLDataView::FormatValue(double v) {
 
   static char ret[64];
 
-  if(_isnan(v)) {
+  if(isnan(v)) {
     return "NaN";
   }
 
@@ -1315,12 +1316,12 @@ Point2D GLDataView::getSource(DataList *src,int nbExtra,bool interpNan) {
   nextValue.y = NaN;
 
   while (f != NULL) {
-    if (!_isnan(f->y)) {
+    if (!isnan(f->y)) {
       addPts(&p,f->x, f->y);
     } else {
       if (interpNan) {
-        if (!_isnan(lastValue.y)) {
-          if (f->next != NULL && !_isnan(f->next->y)) {
+        if (!isnan(lastValue.y)) {
+          if (f->next != NULL && !isnan(f->next->y)) {
             // Linear interpolation possible
             nextValue.x = f->next->x;
             nextValue.y = f->next->y;
@@ -1712,7 +1713,7 @@ Point2D GLDataView::getSegments(DataList *l) {
 
   int nb = 0;
   DataList *head = l;
-  while(l!=NULL && !_isnan(l->y)) {nb++;l=l->next;}
+  while(l!=NULL && !isnan(l->y)) {nb++;l=l->next;}
   l=head;
   Point2D ret;
   ret.length = 0;

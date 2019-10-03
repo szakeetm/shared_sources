@@ -4,6 +4,7 @@
 #include "GLToolkit.h"
 #include "GLSprite.h"
 #include "GLFont.h"
+#include <cstring> //strcpy, etc.
 
 GLButton::GLButton(int compId,const char *text):GLComponent(compId) {
   SetText(text);
@@ -135,11 +136,11 @@ void GLButton::SetBounds(int x,int y,int width,int height) {
   if( iconD ) iconD->UpdateSprite(posX+1+state,posY+1+state,posX+17+state,posY+17+state);
 }
 
-void GLButton::SetIcon(char *fileName) {
+void GLButton::SetIcon(const char *fileName) {
   strncpy(iconName,fileName,256);
 }
 
-void GLButton::SetDisabledIcon(char *fileName) {
+void GLButton::SetDisabledIcon(const char *fileName) {
   strncpy(iconNameDisa,fileName,256);
 }
 

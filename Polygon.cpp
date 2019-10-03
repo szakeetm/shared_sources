@@ -111,7 +111,7 @@ bool IsOnSection(const double & u, const double & v, const double & baseU, const
 	//targetV=y2
 	double distU = targetU - baseU;
 	double distV = targetV - baseV;
-	double distance = fabs(distV*u - distU*v + targetU*baseV - targetV*baseU) / sqrt(pow(distV, 2) + pow(distU, 2));
+	double distance = std::fabs(distV*u - distU*v + targetU*baseV - targetV*baseU) / sqrt(pow(distV, 2) + pow(distU, 2));
 	return distance < tolerance;
 }
 
@@ -572,8 +572,8 @@ std::tuple<double,Vector2d,std::vector<Vector2d>> GetInterArea(const GLAppPolygo
       A += ((*polys)[i].pts[j].u*(*polys)[i].pts[j1].v - (*polys)[i].pts[j1].u*(*polys)[i].pts[j].v);
       lList[nbE++] = (*polys)[i].pts[j];
     }
-    if( i==0 ) A0 = fabs(0.5 * A);
-    sum += fabs(0.5 * A);
+    if( i==0 ) A0 = std::fabs(0.5 * A);
+    sum += std::fabs(0.5 * A);
   }
 
   // Centroid (polygon 0)
@@ -677,9 +677,53 @@ bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 		n_found++;
 	}
 
-	if (n_updown<0) n_updown = -n_updown;
-	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //(X & 1 means last bit of X is 1 i.e. the number is odd) The full expression means one is even and the other is odd
 
+
+
+    /*int    cn = 0;    // the  crossing number counter
+
+    // loop through all edges of the polygon
+    for (int i=0; i<nbSizeMinusOne; i++) {    // edge from V[i]  to V[i+1]
+        if (((polyPoints[i].v <= p.v) && (polyPoints[i+1].v > p.v))     // an upward crossing
+            || ((polyPoints[i].v > p.v) && (polyPoints[i+1].v <=  p.v))) { // a downward crossing
+            // compute  the actual edge-ray intersect x-coordinate
+            double vt = (double)(p.v  - polyPoints[i].v) / (polyPoints[i+1].v - polyPoints[i].v);
+            if (p.u <  polyPoints[i].u + vt * (polyPoints[i+1].u - polyPoints[i].u)) // P.u < intersect
+                ++cn;   // a valid crossing of y=P.y right of P.x
+        }
+    }
+    if (((polyPoints[0].v <= p.v) && (polyPoints[nbSizeMinusOne].v > p.v))     // an upward crossing
+        || ((polyPoints[0].v > p.v) && (polyPoints[nbSizeMinusOne].v <=  p.v))) { // a downward crossing
+        // compute  the actual edge-ray intersect x-coordinate
+        double vt = (double)(p.v  - polyPoints[0].v) / (polyPoints[nbSizeMinusOne].v - polyPoints[0].v);
+        if (p.u <  polyPoints[0].u + vt * (polyPoints[nbSizeMinusOne].u - polyPoints[0].u)) // P.u < intersect
+            ++cn;   // a valid crossing of y=P.y right of P.x
+    }*/
+
+    //return (cn&1);    // 0 if even (out), and 1 if  odd (in)
+
+    /*if(((n_found / 2) & 1) ^ ((n_updown / 2) & 1) != (cn&1)){
+        std::ofstream coordinatefile;
+        coordinatefile.open("inpolygon.txt", std::ios::out | std::ios::app);
+        coordinatefile << (int)(((n_found / 2) & 1) ^ ((n_updown / 2) & 1)) << " | " << (int)(((n_found) & 1) ^ ((n_updown) & 1)) <<
+        " = " << n_found << " " << n_updown <<
+        " | " <<(int)((n_found) & 1) << " " << (int)((n_updown) & 1) <<
+        " | " <<(int)((n_found / 2) & 1) << " " << (int)((n_updown / 2) & 1) <<
+        " -- new: " << (int)(cn&1) << " = " << cn <<std::endl;
+
+        coordinatefile.close();
+        coordinatefile.open("weird_poly.txt", std::ios::out | std::ios::app);
+        coordinatefile << "("<<p.u << " , " <<p.v << ") inside ";
+        for(auto vec : polyPoints){
+            coordinatefile << "("<<vec.u << " , " <<vec.v << ")";
+        }
+        coordinatefile << std::endl;
+        coordinatefile.close();
+    */
+
+    //if (n_updown<0) n_updown = -n_updown; //Not needed, oddity of negative numbers works the same way with (X/2)&1
+	//return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //(X & 1 means last bit of X is 1 i.e. the number is odd) The full expression means one is even and the other is odd
+	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1);
 }
 
 /*

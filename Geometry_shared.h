@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SMP.h"
 #include "GrahamScan.h"
 #include "PugiXML/pugixml.hpp"
-#include "Clipper\clipper.hpp"
+#include "Clipper/clipper.hpp"
 #include <vector>
 #include <sstream>
 #include <list>
@@ -186,7 +186,7 @@ public:
 	void CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
-	void AddStruct(const char *name);
+	void AddStruct(const char *name,bool deferDrawing=false);
 	void DelStruct(int numToDel);
 	std::vector<DeletedFacet> BuildIntersection(size_t *nbCreated);
 	void    MoveVertexTo(size_t idx, double x, double y, double z);
@@ -212,9 +212,10 @@ public:
 	void CreateRacetrack(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
 
 	void UpdateName(FileReader *file);
+	std::string GetName();
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
-	std::vector<size_t> GetNonPlanarFacets(const double& tolerance=1E-5);
+	std::vector<size_t> GetNonPlanarFacetIds(const double& tolerance=1E-5);
 	size_t GetNbSelectedFacets();
 	void SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown);
 	int  RestoreDeviceObjects();
@@ -261,6 +262,7 @@ public:
 	void ClearFacetMeshLists();
 	void BuildFacetMeshLists();
 #pragma endregion
+	//TEXTURE_SCALE_TYPE texture_limits[3];
 
 protected:
 	// Structure viewing (-1 => all)
@@ -278,6 +280,8 @@ protected:
 	bool  autoNorme;      // Auto normalize (direction field)
 	bool  centerNorme;    // Center vector (direction field)
 	bool isLoaded;  // Is loaded flag
+
+	
 
 	// Rendering/Selection stuff
 	size_t selectHist[SEL_HISTORY];
@@ -316,6 +320,13 @@ protected:
 #endif
 
 #ifdef SYNRAD
+        size_t loaded_nbMCHit;
+        double loaded_nbHitEquiv;
+        size_t loaded_nbDesorption;
+        size_t loaded_desorptionLimit;
+        size_t   loaded_nbLeak;
+        double loaded_nbAbsEquiv;
+        double loaded_distTraveledTotal;
 		// Texture scaling
 		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif

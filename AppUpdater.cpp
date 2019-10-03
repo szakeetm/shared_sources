@@ -19,11 +19,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
 #include "Web.h"
-#include "ZipUtils/zip.h"
-#include "ZipUtils/unzip.h"
+#include "ziplib/ZipArchive.h"
+#include "ziplib/ZipArchiveEntry.h"
+#include "ziplib/ZipFile.h"
+#include "File.h"
 //#include <Windows.h>
+#include <filesystem>
 #include <sstream>
-#include "GLApp\MathTools.h" //Contains
+#include "GLApp/MathTools.h" //Contains
 
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLList.h"
@@ -31,16 +34,27 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
 
-AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile)
-{
+#ifndef _WIN32
+#include <unistd.h> //Get user name
+#endif
+
+/**
+* \brief Constructor with initialisation for the App Updater
+* \param appName hardcoded name of the app (@see versionId.h)
+* \param versionId hardcoded version ID of the app (@see versionId.h)
+* \param configFile xml file with the updater config (usually in bin folder)
+*/
+AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile) {
 	applicationName = appName;
 	currentVersionId = versionId;
 	configFileName = configFile;
 	LoadConfig();
 }
 
-void AppUpdater::SaveConfig()
-{
+/**
+* \brief Save a updater config file in xml format
+*/
+void AppUpdater::SaveConfig() {
 	xml_document configDoc;
 	xml_node rootNode = configDoc.append_child("UpdaterConfigFile"); //XML specifications require a root node
 
@@ -64,8 +78,10 @@ void AppUpdater::SaveConfig()
 	configDoc.save_file(configFileName.c_str());
 }
 
-void AppUpdater::LoadConfig()
-{
+/**
+* \brief Load updater config file in xml format
+*/
+void AppUpdater::LoadConfig() {
 	xml_document loadXML;
 	xml_parse_result configDoc = loadXML.load_file(configFileName.c_str());
 	xml_node rootNode = loadXML.child("UpdaterConfigFile"); //XML specifications require a root node
@@ -88,28 +104,40 @@ void AppUpdater::LoadConfig()
 	}
 }
 
+/**
+* \brief Set user selection for automatic update checks
+* \param answer if user wants an automatic update check
+*/
 void AppUpdater::SetUserUpdatePreference(bool answer) {
 	allowUpdateCheck = answer;
 	appLaunchedWithoutAsking = -1; //Don't ask again
 	SaveConfig();
 }
 
-void AppUpdater::SkipAvailableUpdates()
-{
+/**
+* \brief If a new update shall be marked as skipped, skip and save info
+*/
+void AppUpdater::SkipAvailableUpdates() {
 	SkipVersions(availableUpdates);
 	SaveConfig();
 }
 
-void AppUpdater::InstallLatestUpdate(UpdateLogWindow* logWindow)
-{
+/**
+* \brief Downloads and installs latest update
+* \param logWindow window for update process
+*/
+void AppUpdater::InstallLatestUpdate(UpdateLogWindow* logWindow) {
 	UpdateManifest latestUpdate = GetLatest(availableUpdates);
-	std::thread t = std::thread(&AppUpdater::DownloadInstallUpdate,this,latestUpdate,logWindow);
+	std::thread t = std::thread(&AppUpdater::DownloadInstallUpdate, this, latestUpdate, logWindow);
 	t.detach();
 	//DownloadInstallUpdate(GetLatest(availableUpdates),logWindow);
 }
 
-void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates)
-{
+/**
+* \brief Mark updates as skipped
+* \param updates vector containing update IDs to skip
+*/
+void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates) {
 	for (auto& update : updates) {
 		if (!Contains(skippedVersionIds, update.versionId)) {
 			skippedVersionIds.push_back(update.versionId);
@@ -117,6 +145,10 @@ void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates)
 	}
 }
 
+/**
+* \brief Get permission to ask user if he wants to update
+* \return if or when user should be asked to update
+*/
 int AppUpdater::RequestUpdateCheck() {
 	if (appLaunchedWithoutAsking == -1) {
 		if (allowUpdateCheck) updateThread = std::thread(&AppUpdater::PerformUpdateCheck, (AppUpdater*)this); //Launch parallel update-checking thread
@@ -130,6 +162,9 @@ int AppUpdater::RequestUpdateCheck() {
 	}
 }
 
+/**
+* \brief Check for updates
+*/
 void AppUpdater::PerformUpdateCheck() {
 	//Update checker
 	if (allowUpdateCheck) { //One extra safeguard to ensure that we (still) have the permission
@@ -137,8 +172,9 @@ void AppUpdater::PerformUpdateCheck() {
 
 		std::string resultCategory;
 		std::stringstream resultDetail;
+		std::string os = GLToolkit::GetOSName();
 
-		auto [downloadResult, body] = DownloadString(feedUrl);
+		auto[downloadResult, body] = DownloadString(feedUrl);
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
 
@@ -174,10 +210,17 @@ void AppUpdater::PerformUpdateCheck() {
 
 		std::stringstream payload;
 		payload << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
+		payload << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
+		payload << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
 		SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 	}
 }
 
+/**
+* \brief Retrieve only the latest update
+* \param updates list with updates
+* \return latest update
+*/
 UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates) {
 	int maxVersion = 0;
 	size_t maxIndex = 0;
@@ -190,8 +233,14 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 	return updates[maxIndex];
 }
 
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName)
-{
+/**
+* \brief Retrieve list with all newer releases
+* \param updateDoc xml doc containing all info about the recent updates
+* \param currentVersionId version ID of current version
+* \param branchName name of update branch (related to OS)
+* \return vector with newer releases
+*/
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
 	std::vector<UpdateManifest> availableUpdates;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
@@ -222,6 +271,11 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 	return availableUpdates;
 }
 
+/**
+* \brief Retrieve string containing a changelog of all newer updates
+* \param updates list of updates
+* \return cumulative changelog as a string
+*/
 std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates) {
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
@@ -231,12 +285,22 @@ std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>
 	return cumulativeChangeLog.str();
 }
 
+/**
+* \brief Generate a user id based on hashed computer name and user name
+*/
 void AppUpdater::GenerateUserId() {
 	char computerName[1024];
 	char userName[1024];
+#ifdef _WIN32
 	DWORD size = 1024;
 	GetComputerName(computerName, &size);
 	GetUserName(userName, &size);
+#else
+	size_t size = 1024;
+	gethostname(computerName, size);
+	getlogin_r(userName, size);
+#endif
+
 	std::string id = computerName;
 	id += "/";
 	id += userName;
@@ -259,17 +323,25 @@ void AppUpdater::GenerateUserId() {
 	userId = "";
 	while (hashCode > 0) {
 		size_t dividend = (size_t)(hashCode / alphaNum.length());
-		size_t remainder = hashCode - dividend*alphaNum.length();
+		size_t remainder = hashCode - dividend * alphaNum.length();
 		hashCode = dividend;
 		userId = alphaNum[remainder] + userId;
 	}
 }
 
+/**
+* \brief Starts download and installation of the update
+* \param update update which should be downloaded
+* \param logWindow window for the update progress
+*/
 void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow) {
 	//logWindow->Log("[Background update thread started.]");
 
 	std::stringstream payload;
+	std::string os = GLToolkit::GetOSName();
 	payload << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << "updateStart" << "&ea=" << "updateStart_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
+	payload << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
+	payload << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 	logWindow->Log("Downloading update file...");
 
@@ -278,7 +350,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	std::stringstream userResult;
 
 	//Download the zipped new version to parent directory
-	std::stringstream zipDest; zipDest << "..\\" << update.zipName;
+	std::stringstream zipDest; zipDest << "../" << update.zipName;
 	CURLcode dlResult = DownloadFile(update.zipUrl, zipDest.str());
 	if (dlResult == CURLE_OK) { //Download success
 		userResult.str("");
@@ -286,116 +358,152 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 		userResult << "Downloaded " << update.zipUrl << " to " << zipDest.str();
 		logWindow->Log(userResult.str());
 
-		//Extract it to LOCAL directory (no way to directly extract to parent)
-		HZIP hz = OpenZip(zipDest.str().c_str(), 0);
-		ZIPENTRY ze;
-		ZRESULT zipResult = GetZipItem(hz, -1, &ze);
-		int numitems = ze.index;
-		if (zipResult == ZR_OK) {
-			userResult.str("");
-			userResult.clear();
-			userResult << update.zipName << " opened, it contains " << numitems << " files.";
-			logWindow->Log(userResult.str());
+		{
+			//Extract it to LOCAL directory (no way to directly extract to parent)
+			size_t numitems;
+			std::shared_ptr<ZipArchive> zip;
+			try {
+				zip = ZipFile::Open(zipDest.str());
+				numitems = zip->GetEntriesCount();
+				userResult.str("");
+				userResult.clear();
+				userResult << update.zipName << " opened, it contains " << numitems << " files.";
+				logWindow->Log(userResult.str());
+			}
+			catch (...) {
+				resultCategory = "zipItemError";
+				resultDetail << "zipItemError_cantOpenZip_" << applicationName << "_" << currentVersionId;
+				userResult.str(""); userResult.clear();
+				userResult << "Couldn't open " << update.zipName;
+				logWindow->Log(userResult.str());
+				logWindow->Log("Aborting update process.");
+				return;
+			}
 
-			// -1 gives overall information about the zipfile
 			for (int zi = 0; zi < numitems; zi++)
 			{
-				ZIPENTRY ze;
-				zipResult = GetZipItem(hz, zi, &ze); // fetch individual details
-				if (zipResult == ZR_OK) {
-					if (UnzipItem(hz, zi, ze.name) != ZR_OK) {
-						resultCategory = "zipExtractError";
-						resultDetail << "zipExtractError_" << zipResult << "_item_" << zi << "_" << applicationName << "_" << currentVersionId;
-						userResult.str(""); userResult.clear();
-						userResult << "Couldn't extract item " << zi << " of " << update.zipName << ". Maybe it already exists in your app folder (from a previous update), or you don't have permission to write in the destination.";
-						logWindow->Log(userResult.str());
-						logWindow->Log("Aborting update process.");
-						break;
+				auto name = zip->GetEntry(zi)->GetName(); //Filename only, empty for folders
+				auto fullName = zip->GetEntry(zi)->GetFullName(); //With path
+				//Debug
+				//logWindow->Log("name: \"" + name + "\" fullName: \"" + fullName + "\"");
+				//End debug
+				if (name.empty() /*&& endsWith(fullName, "/")*/) {
+					std::string dirName;
+					if (endsWith(fullName, "/")) {
+						dirName = fullName.substr(0, fullName.size() - 1);
 					}
+					else
+					{
+						dirName = fullName;
+					}
+					//Debug
+					//logWindow->Log("Creating directory " + dirName);
+					//End debug
+					try {
+						FileUtils::CreateDir(dirName);
+					}
+					catch (std::filesystem::filesystem_error err) {
+						resultCategory = "zipExtractFolderCreateError";
+						resultDetail << "zipExtractFolderCreateError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << space2underscore(name) << "_" << applicationName << "_" << currentVersionId;
+						userResult.str(""); userResult.clear();
+						userResult << "Item #" << (zi + 1) << ": couldn't create directory " << dirName << " Maybe it already exists in your app folder (from a previous update),";
+						logWindow->Log(userResult.str());
+						logWindow->Log("or you don't have permission to write in the destination.");
+						logWindow->Log("Aborting update process.");
+						return;
+					}
+					continue;
 				}
-				else {
-					resultCategory = "zipItemError";
-					resultDetail << "zipItemError_" << zipResult << "_item_" << zi << "_" << applicationName << "_" << currentVersionId;
+				auto dest = fullName;
+				/*
+				#ifdef _WIN32
+							std::replace(dest.begin(),dest.end(), '/', '\\');
+				#endif
+				*/
+				try {
+					//Debug
+					//logWindow->Log("Trying to extract " + fullName + " to " + dest);
+					//End debug
+					ZipFile::ExtractFile(zipDest.str(), fullName, dest);
+				}
+				catch (std::runtime_error err) {
+					resultCategory = "zipExtractError";
+					resultDetail << "zipExtractError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << name << "_" << applicationName << "_" << currentVersionId;
 					userResult.str(""); userResult.clear();
-					userResult << "Couldn't open item " << zi << " of " << update.zipName;
+					userResult << "Couldn't extract item #" << (zi + 1) << " (" << fullName << ") of " << update.zipName << " to " << dest << ". Maybe it already exists in your app folder (from a previous update),";
 					logWindow->Log(userResult.str());
+					logWindow->Log("or you don't have permission to write in the destination.");
 					logWindow->Log("Aborting update process.");
-					break;
+					return;
 				}
 			}
-			CloseZip(hz);
 
-			if (zipResult == ZR_OK) {
-				userResult.str(""); userResult.clear();
-				userResult << "All files extracted.";
-				logWindow->Log(userResult.str());
-
-				//ZIP file not required anymore
-				if (DeleteFile(zipDest.str().c_str()) == 0) {
-					resultCategory = "zipDeleteError";
-					resultDetail << "zipDeleteError_" << applicationName << "_" << currentVersionId;
-					userResult.str(""); userResult.clear();
-					userResult << "Couldn't delete " << update.zipName;
-					logWindow->Log(userResult.str());
-					logWindow->Log("Aborting update process.");
-				}
-				else {
-					userResult.str(""); userResult.clear();
-					userResult << update.zipName << " deleted.";
-					logWindow->Log(userResult.str());
-					//Move extracted dir to parent dir
-					std::stringstream folderDest; folderDest << "..\\" << update.folderName;
-					if (MoveFileEx(update.folderName.c_str(), folderDest.str().c_str(), MOVEFILE_WRITE_THROUGH) == 0) {
-						resultCategory = "folderMoveError";
-						resultDetail << "folderMoveError_" << applicationName << "_" << currentVersionId;
-						userResult.str(""); userResult.clear();
-						userResult << "Couldn't move " << update.folderName << " to " << folderDest.str() << "  The folder already exists or you don't have permission to write there.";
-						logWindow->Log(userResult.str());
-						logWindow->Log("Aborting update process.");
-
-					}
-					else {
-						userResult.str(""); userResult.clear();
-						userResult << "Moved the extracted folder " << update.folderName << " to " << folderDest.str();
-						logWindow->Log(userResult.str());
-						//Copy current config file to new version's dir
-						for (auto& copyFile : update.filesToCopy) {
-							std::stringstream configDest; configDest << folderDest.str() << "\\" << copyFile;
-							if (CopyFile(copyFile.c_str(), configDest.str().c_str(), false) == 0) {
-								resultCategory = "fileCopyWarning";
-								resultDetail << "fileCopyWarning_" << copyFile << "_" << applicationName << "_" << currentVersionId;
-								userResult.str(""); userResult.clear();
-								userResult << "Couldn't copy " << copyFile << " to " << configDest.str() << "  File skipped.";
-								logWindow->Log(userResult.str());
-								
-								std::stringstream payload2;
-								payload2 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
-								SendHTTPPostRequest("http://www.google-analytics.com/collect", payload2.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
-							}
-							else {
-								userResult.str(""); userResult.clear();
-								userResult << "Copied " << copyFile << " to " << configDest.str();
-								logWindow->Log(userResult.str());
-							}
-						}
-						resultCategory = "updateSuccess";
-						resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" <<update.versionId;
-						logWindow->Log("Update successful.");
-						userResult.str(""); userResult.clear();
-						userResult << "If you wish, you can now close this version and launch the new one in the adjacent " << folderDest.str() << " folder.";
-						logWindow->Log(userResult.str());
-					}
-				}
-			}
-		}
-		else {
-			CloseZip(hz);
-			resultCategory = "zipItemError";
-			resultDetail << "zipItemError_" << zipResult << "_item_-1_" << applicationName << "_" << currentVersionId;
 			userResult.str(""); userResult.clear();
-			userResult << "Couldn't open " << update.zipName;
+			userResult << "All files extracted.";
+			logWindow->Log(userResult.str());
+		} //Zip goes out of scope, handle released
+
+		//ZIP file not required anymore
+		if (remove(zipDest.str().c_str()) != 0) {
+			resultCategory = "zipDeleteError";
+			resultDetail << "zipDeleteError_" << applicationName << "_" << currentVersionId;
+			userResult.str(""); userResult.clear();
+			userResult << "Couldn't delete " << update.zipName;
 			logWindow->Log(userResult.str());
 			logWindow->Log("Aborting update process.");
+			return;
+		}
+		else {
+			userResult.str(""); userResult.clear();
+			userResult << update.zipName << " deleted.";
+			logWindow->Log(userResult.str());
+			//Move extracted dir to parent dir
+			std::stringstream folderDest; folderDest << "../" << update.folderName;
+			if (rename(update.folderName.c_str(), folderDest.str().c_str()) != 0) {
+				resultCategory = "folderMoveError";
+				resultDetail << "folderMoveError_" << applicationName << "_" << currentVersionId;
+				userResult.str(""); userResult.clear();
+				userResult << "Couldn't move " << update.folderName << " to " << folderDest.str() << "  The folder already exists or you don't have permission to write there.";
+				logWindow->Log(userResult.str());
+				logWindow->Log("Aborting update process.");
+				return;
+			}
+			else {
+				userResult.str(""); userResult.clear();
+				userResult << "Moved the extracted folder " << update.folderName << " to " << folderDest.str();
+				logWindow->Log(userResult.str());
+				//Copy current config file to new version's dir
+				for (auto& copyFile : update.filesToCopy) {
+					std::stringstream configDest; configDest << folderDest.str() << "/" << copyFile;
+					try {
+						std::filesystem::copy(copyFile, configDest.str(), std::filesystem::copy_options::overwrite_existing);
+					}
+					catch (std::filesystem::filesystem_error err) {
+						resultCategory = "fileCopyWarning";
+						resultDetail << "fileCopyWarning_" << space2underscore(copyFile) << "_" << applicationName << "_" << currentVersionId;
+						userResult.str(""); userResult.clear();
+						userResult << "Couldn't copy " << copyFile << " to " << configDest.str() << "  File skipped.";
+						logWindow->Log(userResult.str());
+
+						std::stringstream payload2;
+						payload2 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
+						payload2 << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
+						payload2 << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
+						SendHTTPPostRequest("http://www.google-analytics.com/collect", payload2.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+						return;
+
+					}
+					userResult.str(""); userResult.clear();
+					userResult << "Copied " << copyFile << " to " << configDest.str();
+					logWindow->Log(userResult.str());
+				}
+				resultCategory = "updateSuccess";
+				resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
+				logWindow->Log("Update successful.");
+				userResult.str(""); userResult.clear();
+				userResult << "If you wish, you can now close this version and launch the new one in the adjacent " << folderDest.str() << " folder.";
+				logWindow->Log(userResult.str());
+			}
 		}
 	}
 	else {
@@ -414,47 +522,70 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 
 	std::stringstream payload3;
 	payload3 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
+	payload3 << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
+	payload3 << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload3.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 
 	//logWindow->Log("[Background update thread closed.]");
 }
 
-void AppUpdater::IncreaseSessionCount()
-{
+/**
+* \brief Increase counter of how many  times the application got started
+*/
+void AppUpdater::IncreaseSessionCount() {
 	if (!(appLaunchedWithoutAsking == -1)) {
 		appLaunchedWithoutAsking++;
 		SaveConfig();
 	}
 }
 
-bool AppUpdater::IsUpdateAvailable()
-{
+/**
+* \brief Check if an update is available
+* \return true if update available
+*/
+bool AppUpdater::IsUpdateAvailable() {
 	return (availableUpdates.size() > 0);
 }
 
-bool AppUpdater::IsUpdateCheckAllowed()
-{
+/**
+* \brief Check if an update check is allowed
+* \return true if update check is allowed
+*/
+bool AppUpdater::IsUpdateCheckAllowed() {
 	return allowUpdateCheck;
 }
 
-void AppUpdater::ClearAvailableUpdates()
-{
+/**
+* \brief Clear vector of available updates
+*/
+void AppUpdater::ClearAvailableUpdates() {
 	availableUpdates.clear();
 }
 
-std::string AppUpdater::GetLatestUpdateName()
-{
+/**
+* \brief Return a string containing the name of the latest update
+* \return string of latest update
+*/
+std::string AppUpdater::GetLatestUpdateName() {
 	std::stringstream name;
-	UpdateManifest& latestUpdate = GetLatest(availableUpdates);
+	UpdateManifest latestUpdate = GetLatest(availableUpdates);
 	name << latestUpdate.name << " (released " << latestUpdate.date << ")";
 	return name.str();
 }
 
-std::string AppUpdater::GetCumulativeChangeLog()
-{
+/**
+* \brief Retrieve string containing a changelog of all newer updates
+* \return cumulative changelog as a string
+*/
+std::string AppUpdater::GetCumulativeChangeLog() {
 	return GetCumulativeChangeLog(availableUpdates);
 }
 
+/**
+* \brief Constructor with initialisation for the update check dialog
+* \param appName name of the application
+* \param appUpdater App Updater handle
+*/
 UpdateCheckDialog::UpdateCheckDialog(const std::string & appName, AppUpdater* appUpdater)
 {
 	updater = appUpdater;
@@ -500,6 +631,11 @@ UpdateCheckDialog::UpdateCheckDialog(const std::string & appName, AppUpdater* ap
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void UpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
 
 	switch (message) {
@@ -518,7 +654,7 @@ void UpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
 		}
 		else if (src == privacyButton) {
 			std::string privacyMessage =
-R"(When an update check is performed, the server collects visitor statistics
+				R"(When an update check is performed, the server collects visitor statistics
 through Google Analytics. The same information is collected as when you visit
 any website. To count unique visitors, a client identifier (cookie) is set
 on the first update check. This is an anonymous hash that does not contain
@@ -533,8 +669,14 @@ there isn't any network communication later.
 	GLWindow::ProcessMessage(src, message);
 }
 
-UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow)
-{
+/**
+* \brief Constructor with initialisation for the dialog window if an update has been found
+* \param appName name of the application
+* \param appVersionName string for the app version
+* \param appUpdater App Updater handle
+* \param logWindow window for update progress handle
+*/
+UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow) {
 	updater = appUpdater;
 	logWnd = logWindow;
 
@@ -584,6 +726,11 @@ UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::str
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 
 	switch (message) {
@@ -616,45 +763,52 @@ void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 	GLWindow::ProcessMessage(src, message);
 }
 
-UpdateLogWindow::UpdateLogWindow(Interface *app)
-{
+/**
+* \brief Constructor with initialisation for the update log window
+* \param app application handle
+*/
+UpdateLogWindow::UpdateLogWindow(Interface *app) {
 	isLocked = true;
 
 	mApp = app;
-	
+
 	int wD = 400;
 	int hD = 250;
 
 	logList = new GLList(0);
-	
+
 	logList->SetColumnLabelVisible(true);
 	logList->SetSize(1, 1);
-	logList->SetBounds(5, 5, wD - 10, hD - 60);
-	logList->SetColumnWidthForAll(600);
+	
+	//logList->SetColumnWidthForAll(600);
 	Add(logList);
 
 	okButton = new GLButton(0, "Dismiss");
-	okButton->SetBounds(10, hD - 45, 80, 19);
+	
 	Add(okButton);
 
 	copyButton = new GLButton(0, "Copy to clipboard");
-	copyButton->SetBounds(wD-115, hD - 45, 100, 19);
+	
 	Add(copyButton);
 
 	SetTitle("Update log");
 	//Set to lower right corner
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = (wS - wD) - 217;
+	//int wS, hS;
+	//GLToolkit::GetScreenSize(&wS, &hS);
+	//int xD = (wS - wD) - 217;
+	int xD = 10;
 	int yD = 50;
 	SetBounds(xD, yD, wD, hD);
+	SetResizable(true);
 
 	RestoreDeviceObjects();
 	isLocked = false;
 }
 
-void UpdateLogWindow::ClearLog()
-{
+/**
+* \brief Clears the log
+*/
+void UpdateLogWindow::ClearLog() {
 	lines.clear();
 	if (!isLocked) {
 		isLocked = true;
@@ -663,12 +817,15 @@ void UpdateLogWindow::ClearLog()
 		isLocked = false;
 	}
 	else {
-		__debugbreak();
+		DEBUG_BREAK;
 	}
 }
 
-void UpdateLogWindow::Log(const std::string & line)
-{
+/**
+* \brief Appends line to the log
+* \param line line that gets appended to the log
+*/
+void UpdateLogWindow::Log(const std::string & line) {
 	lines.push_back(line);
 	if (!isLocked) {
 		isLocked = true;
@@ -677,19 +834,42 @@ void UpdateLogWindow::Log(const std::string & line)
 		isLocked = false;
 	}
 	else {
-		__debugbreak();
+		DEBUG_BREAK;
 	}
 }
 
-void UpdateLogWindow::RebuildList()
-{
+/**
+* \brief Rebuilds the log
+*/
+void UpdateLogWindow::RebuildList() {
+	int oldColumnWidth = logList->GetColWidth(0);
 	logList->SetSize(1, lines.size(), false, false);
-	logList->SetColumnWidthForAll(600);
+	logList->SetColumnWidth(0, oldColumnWidth); //Restore after SetSize reset it to default
 	for (size_t i = 0; i < lines.size(); i++) {
 		logList->SetValueAt(0, i, lines[i].c_str());
 	}
 }
 
+/**
+* \brief Sets positions and sizes of the window
+* \param x x-coordinate of the element
+* \param y y-coordinate of the element
+* \param w width of the element
+* \param h height of the element
+*/
+void UpdateLogWindow::SetBounds(int x, int y, int w, int h) {
+	logList->SetBounds(5, 5, w - 10, h - 60);
+	logList->SetColumnWidth(0, w - 25); //Leave space for vertical scrollbar
+	okButton->SetBounds(10, h - 45, 80, 19);
+	copyButton->SetBounds(w - 115, h - 45, 100, 19);
+	GLWindow::SetBounds(x, y, w, h);
+}
+
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void UpdateLogWindow::ProcessMessage(GLComponent *src, int message) {
 
 	switch (message) {
@@ -702,10 +882,10 @@ void UpdateLogWindow::ProcessMessage(GLComponent *src, int message) {
 		else if (src == copyButton) {
 			std::ostringstream text;
 			for (auto& line : lines)
-				text << line <<"\n";
+				text << line << "\n";
 			GLToolkit::CopyTextToClipboard(text.str());
 		}
-		
+
 		break;
 	}
 	GLWindow::ProcessMessage(src, message);

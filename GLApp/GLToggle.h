@@ -10,7 +10,7 @@ class GLToggle : public GLComponent {
 public:
 
   // Construction
-  GLToggle(int compId,char *text);
+  GLToggle(int compId,const char *text);
 
   // Component method
   int  GetState();

@@ -3,8 +3,9 @@
 #include "GLTitledPanel.h"
 #include "GLToolkit.h"
 #include "GLFont.h"
+#include <cstring> //strcpy, etc.
 
-GLTitledPanel::GLTitledPanel(char *title):GLComponent(0) {
+GLTitledPanel::GLTitledPanel(const char *title):GLComponent(0) {
 
   isBold = true;
   SetTitle(title);
@@ -18,7 +19,7 @@ GLTitledPanel::GLTitledPanel(char *title):GLComponent(0) {
 
 }
 
-void GLTitledPanel::SetTitle(char *title) {
+void GLTitledPanel::SetTitle(const char *title) {
 
   if(title) {
     strcpy(this->title,title);

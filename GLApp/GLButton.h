@@ -16,8 +16,8 @@ public:
 
   // Components method
   void SetText(const char *text);
-  void SetIcon(char *fileName);
-  void SetDisabledIcon(char *fileName);
+  void SetIcon(const char *fileName);
+  void SetDisabledIcon(const char *fileName);
   void SetToggle(bool toggle);
   bool GetState();
   void SetState(bool checked);

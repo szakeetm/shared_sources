@@ -2,7 +2,7 @@
 #ifndef _GLCHARTDVOPTIONSH_
 #define _GLCHARTDVOPTIONSH_
 
-#include "..\GLTabWindow.h"
+#include "../GLTabWindow.h"
 class GLSpinner;
 
 class GLDataViewOptions : public GLTabWindow {
@@ -10,7 +10,7 @@ class GLDataViewOptions : public GLTabWindow {
 public:
 
   // Construction
-  GLDataViewOptions::GLDataViewOptions(GLChart *chart);
+  GLDataViewOptions(GLChart *chart);
   ~GLDataViewOptions();
 
   // Component methods
@@ -22,7 +22,7 @@ public:
 private:
 
   void updateControls();
-  void error(char *m);
+  void error(const char *m);
   void commit();
 
   // Global

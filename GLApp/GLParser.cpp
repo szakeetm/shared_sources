@@ -5,6 +5,8 @@
 #include <math.h>
 #include <errno.h>
 #include "GLParser.h"
+#include <cstring> //strcpy, etc.
+#include "MathTools.h"
 #ifdef MOLFLOW
 #include "MolFlow.h"
 #endif
@@ -116,7 +118,7 @@ void GLParser::AV()
 }
 
 // Set global error
-void GLParser::SetError( char *err,int p) {
+void GLParser::SetError(const char *err,int p) {
   sprintf(errMsg,"%s at %d",err,p);
   error=true;
 }
@@ -126,7 +128,7 @@ VLIST *GLParser::FindVar(const char *var_name,VLIST *l) {
   VLIST *p = l;
   bool found = false;
   while(!found && p) {
-    found = (_stricmp(p->name,var_name)==0);
+    found = (iequals(p->name,var_name));
     if(!found) p=p->next;
   }
   if( found ) return p;
@@ -278,32 +280,32 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
     
 
     case 'a':
-    case 'A': if ( _stricmp(Extract(4),"abs(")==0 ) {
+    case 'A': if ( iequals(Extract(4),"abs(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_ABS , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"asin(")==0 ) {
+              } else if ( iequals(Extract(5),"asin(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_ASIN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"acos(")==0 ) {
+              } else if ( iequals(Extract(5),"acos(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_ACOS , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else  if ( _stricmp(Extract(5),"atan(")==0 ) {
+              } else  if ( iequals(Extract(5),"atan(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_ATAN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
               }
-			  else if (_stricmp(Extract(4), "AVG(") == 0) {
+			  else if (iequals(Extract(4), "AVG(") ) {
 				  std::string avgExpression;
 				  avgExpression += EC;
 				  while (EC != ')') {
@@ -322,26 +324,26 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'S':
-    case 's': if ( _stricmp(Extract(4),"sin(")==0 ) {
+    case 's': if ( iequals(Extract(4),"sin(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_SIN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"sqrt(")==0 ) {
+              } else if ( iequals(Extract(5),"sqrt(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_SQRT , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"sinh(")==0 ) {
+              } else if ( iequals(Extract(5),"sinh(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_SINH , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
 			  }
-			  else if (_stricmp(Extract(4), "SUM(") == 0) {
+			  else if (iequals(Extract(4), "SUM(")) {
 				  std::string sumExpression;
 				  sumExpression+= EC;
 				  while (EC != ')') {
@@ -359,19 +361,19 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'C':
-    case 'c': if ( _stricmp(Extract(4),"cos(")==0 ) {
+    case 'c': if ( iequals(Extract(4),"cos(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_COS , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"cosh(")==0 ) {
+              } else if ( iequals(Extract(5),"cosh(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_COSH , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } /*else if ( _stricmp(Extract(5),"ci95(")==0 ) {
+              } /*else if ( iequals(Extract(5),"ci95(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 if (EC!=',') SetError(", expected",current);
@@ -388,7 +390,7 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'E':
-    case 'e': if ( _stricmp(Extract(4),"exp(")==0 ) {
+    case 'e': if ( iequals(Extract(4),"exp(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_EXP , elem , node , l_t , NULL);
@@ -402,7 +404,7 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'F':
-    case 'f': if ( _stricmp(Extract(5),"fact(")==0 ) {
+    case 'f': if ( iequals(Extract(5),"fact(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_FACT , elem , node , l_t , NULL);
@@ -416,7 +418,7 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'I':
-    case 'i': if ( _stricmp(Extract(4),"inv(")==0 ) {
+    case 'i': if ( iequals(Extract(4),"inv(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_INV , elem , node , l_t , NULL);
@@ -430,19 +432,19 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
     
     case 'L':
-    case 'l': if ( _stricmp(Extract(3),"ln(")==0 ) {
+    case 'l': if ( iequals(Extract(3),"ln(") ) {
                 AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_LN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"log2(")==0 ) {
+              } else if ( iequals(Extract(5),"log2(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_LOG2 , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(6),"log10(")==0 ) {
+              } else if ( iequals(Extract(6),"log10(") ) {
                 AV();AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_LOG10 , elem , node , l_t , NULL);
@@ -456,13 +458,13 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
               break;
 
     case 'T':
-    case 't': if ( _stricmp(Extract(4),"tan(")==0 ) {
+    case 't': if ( iequals(Extract(4),"tan(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_TAN , elem , node , l_t , NULL);
                 if (EC!=')') SetError(") expected",current);
                 AV();
-              } else if ( _stricmp(Extract(5),"tanh(")==0 ) {
+              } else if ( iequals(Extract(5),"tanh(") ) {
                 AV();AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 AddNode( OPER_TANH , elem , node , l_t , NULL);
@@ -480,11 +482,11 @@ void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
     
 
     case 'P':
-    case 'p': if ( _stricmp(Extract(2),"pi")==0 ) {
+    case 'p': if ( iequals(Extract(2),"pi") ) {
                 AV();AV();
                 elem.value=3.14159265358979323846;
                 AddNode( TDOUBLE , elem , node , NULL , NULL);
-              } else if ( _stricmp(Extract(4),"pow(")==0 ) {
+              } else if ( iequals(Extract(4),"pow(") ) {
                 AV();AV();AV();AV();
                 ReadExpression(&l_t,var_list);
                 if (EC!=',') SetError(", expected",current);
@@ -630,9 +632,9 @@ bool GLParser::Parse()
 double fact(double x) {
 
   int f = (int)(x+0.5);
-  __int64 r = 1;
+  size_t r = 1;
   for(int i=1;i<=f;i++) {
-    r = (__int64)i * r;
+    r = (size_t)i * r;
   }
   return (double)r;
 
@@ -838,7 +840,7 @@ VLIST *GLParser::GetVariableAt(int idx) {
   return p;
 }
 
-void   GLParser::SetVariable(char *name,double value) {
+void   GLParser::SetVariable(const char *name,double value) {
   VLIST *v = FindVar(name,varList);
   if( v ) v->value = value;
 }

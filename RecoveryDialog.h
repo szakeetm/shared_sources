@@ -39,11 +39,11 @@ class RecoveryDialog : private GLWindow {
 
 public:
   // Display a modal dialog and return the code of the pressed button
-  static int Display(const char *message,char *title=NULL,int mode=GLDLG_LOAD|GLDLG_SKIP|GLDLG_DELETE,int icon=GLDLG_ICONINFO);
+  static int Display(const char *message,const char *title=NULL,int mode=GLDLG_LOAD|GLDLG_SKIP|GLDLG_DELETE,int icon=GLDLG_ICONINFO);
   int  rCode;
 
 private:
-	RecoveryDialog(const char *message, char *title, int mode, int icon);
+	RecoveryDialog(const char *message, const char *title, int mode, int icon);
   void ProcessMessage(GLComponent *src,int message);
 
 };

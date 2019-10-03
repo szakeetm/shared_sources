@@ -337,8 +337,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 										&& rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
-										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->energy,
-										acos(Dot(sHandle->direction, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
+										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->currentParticle.energy,
+										acos(Dot(sHandle->currentParticle.direction, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 
@@ -535,7 +535,7 @@ Vector3d PolarToCartesian(SubprocessFacet* const collidedFacet, const double& th
 	// ! See Geometry::InitializeGeometry() for further informations on the (U,V,N) basis !
 	// (nU,nV,N) and (x,y,z) are both left handed
 
-	/*#ifdef WIN
+	/*#ifdef _WIN32
 	_asm {                    // FPU stack
 	fld qword ptr [theta]
 	fsincos                 // cos(t)        sin(t)

@@ -1,9 +1,10 @@
 #include "nfd_wrapper.h"
-#include "..\nfd.h"
+#include "../nfd.h"
+
 std::string NFD_OpenFile_Cpp(const std::string& fileFilters,const std::string& path) {
 	std::string resultStr;
-	const char* filters = NULL; if (!fileFilters.empty()) filters = fileFilters.c_str();
-	const char* defaultPath = NULL; if (!path.empty()) defaultPath = path.c_str();
+	const char* filters = fileFilters.c_str(); if (fileFilters.empty()) filters = NULL;
+	const char* defaultPath = path.c_str(); if (path.empty()) defaultPath = NULL;
 	nfdchar_t* fn;
 	nfdresult_t result = NFD_OpenDialog(filters, defaultPath, &fn);
 	if (result == NFD_OKAY) {
@@ -30,14 +31,14 @@ std::vector<std::string> NFD_OpenMultiple_Cpp(const std::string& fileFilters,con
 	std::vector<std::string> paths;
 	const char* filters = NULL; if (!fileFilters.empty()) filters = fileFilters.c_str();
 	const char* defaultPath = NULL; if (!path.empty()) defaultPath = path.c_str();
-	nfdpathset_t *outPaths=NULL;
-	nfdresult_t  result = NFD_OpenDialogMultiple(filters, defaultPath, outPaths );
-	size_t nb = NFD_PathSet_GetCount(outPaths);
-	if (nb!=0) {
+	nfdpathset_t outPaths;
+	nfdresult_t  result = NFD_OpenDialogMultiple(filters, defaultPath, &outPaths );
+	if (result == NFD_OKAY) {
+		size_t nb = NFD_PathSet_GetCount(&outPaths);
 		for (size_t i=0;i<nb;i++) {
-			paths.push_back(NFD_PathSet_GetPath( outPaths, i ));
+			paths.push_back(NFD_PathSet_GetPath( &outPaths, i ));
 		}
-		NFD_PathSet_Free(outPaths);
+		NFD_PathSet_Free(&outPaths);
 	}
 	return paths;	
 }

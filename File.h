@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <stdio.h>
 #include <string>
-#include "GLApp\GLTypes.h"
+#include "GLApp/GLTypes.h"
 
 #define READ_BUFFSIZE 4096
 
@@ -34,11 +34,13 @@ public:
   // Utils functions
 	static bool Exist(std::string fileName);
 	static bool Exist(const char *fileName);
-	static bool DirExists(std::string dirName);
 	static std::string GetPath(const std::string &str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
 	static std::string GetFilename(const std::string &str); //Extracts string after the last "\"
 	static std::string StripExtension(const std::string & str);
 	static std::string GetExtension(const std::string &str); //Extracts string after the last "."
+	//static bool Copy(const std::string& src, const std::string& dst);
+	static std::string get_working_path();
+	static void CreateDir(const std::string& path);
 };
 
 class FileReader {
@@ -56,18 +58,18 @@ public:
   int IsEol();
   char *ReadLine();
   char *ReadString();
-  llong ReadLLong();
+  size_t ReadSizeT();
   int ReadInt();
   double ReadDouble();
-  void ReadKeyword(char *keyword);
+  void ReadKeyword(const char *keyword);
   char *ReadWord();
-  void JumpSection(char *end);
+  void JumpSection(const char *end);
   void SeekStart();
-  bool SeekFor(char *keyword);
-  bool SeekForChar(char *c);
+  bool SeekFor(const char *keyword);
+  bool SeekForChar(const char *c);
   bool wasLineEnd;
 
-  Error MakeError(char *msg);
+  Error MakeError(const char *msg);
   int GetCurrentLine();
 
   void JumpComment();
@@ -99,9 +101,9 @@ public:
   char *GetName();
 
   // Write function
-  void Write(const size_t &v, char *sep = NULL);
-  void Write(const int &v,char *sep=NULL);
-  void Write(const double &v,char *sep=NULL);
+  void Write(const size_t &v, const char *sep = NULL);
+  void Write(const int &v, const char *sep=NULL);
+  void Write(const double &v, const char *sep=NULL);
   void Write(const char *s);
   void Write(std::string str);
   

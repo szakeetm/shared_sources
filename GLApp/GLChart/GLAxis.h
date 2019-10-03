@@ -2,6 +2,8 @@
 #ifndef _GLCHARTAXISH_
 #define _GLCHARTAXISH_
 
+#include <string>
+
 typedef struct {
 
   char *value;
@@ -80,7 +82,7 @@ public:
   GLCRectangle GetBoundRect();
   char  *ToScientific(double d);
   char  *ToScientificInt(double d);
-  char  *FormatValue(double vt, double prec);
+  std::string FormatValue(double vt, double prec);
   char  *FormatTimeValue(double vt);
   bool   IsHorizontal();
   void SetAxisDuration(double d);
@@ -105,7 +107,7 @@ public:
   bool  IsZeroAlwaysVisible();
   void  SetZeroAlwaysVisible(bool zeroAlwaysVisible);
   char *GetDateFormat();
-  void  SetDateFormat (char *dateFormat);
+  void  SetDateFormat (const char *dateFormat);
   static void  Invalidate();
   static void  Revalidate();
 
@@ -114,7 +116,7 @@ private:
   int    getDV(GLDataView *v);
   bool   insideRect(GLCRectangle *r,GLCPoint *p);
   void   computeDateformat(int maxLab);
-  char  *suppressZero(char *n);
+  std::string suppressZero(const char *n);
   double computeHighTen(double d);
   double computeLowTen(double d);
   void   computeAutoScale();
@@ -135,11 +137,11 @@ private:
   int  distance2(int x1, int y1, int x2, int y2);
   void paintBarBorder(int barWidth, int y0, int x, int y);
   void paintBar(int barWidth, GLColor background, int fillStyle, int y0, int x, int y);
-  void addLabel(char *lab, int w, int h, double pos,int offX=0,int offY=0);
+  void addLabel(const char *lab, int w, int h, double pos,int offX=0,int offY=0);
   void clearLabel();
   void clip(int x,int y,int width,int height);
   static void drawLine(GLColor c,int dash,int lWidth,int x1,int y1,int x2,int y2);
-  static GLuint initMarker(char *name);
+  static GLuint initMarker(const char *name);
   static void paintMarkerTex(GLuint mTex,int x,int y,int width,int height,int r,int g,int b);
 
   bool visible;
@@ -170,7 +172,7 @@ private:
   bool isZoomed;
   double percentScrollback;
   double axisDuration;
-  char *useFormat;
+  std::string useFormat;
   double desiredPrec;
   bool drawOpposite;
   int tickLength;

@@ -3,6 +3,7 @@
 #include "GLMenuBar.h"
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
+#include <cstring> //strcpy, etc.
 //#include <malloc.h>
 
 #define SIDE_MARGIN 7
@@ -23,7 +24,7 @@ GLMenuBar::~GLMenuBar() {
   }
 }
 
-void GLMenuBar::Add(char *itemName) {
+void GLMenuBar::Add(const char *itemName) {
 
   if(nbItem>=MAX_MENU_ITEM) return;
 
@@ -65,7 +66,7 @@ bool GLMenuBar::IsInItem(MENUITEM *p,int mx,int my) {
            my>=(p->y) && my<=(p->y)+(p->height);
 }
 
-GLMenu *GLMenuBar::GetSubMenu(char *itemName) {
+GLMenu *GLMenuBar::GetSubMenu(const char *itemName) {
 
   char tmpName[256];
   strcpy(tmpName,itemName);
@@ -190,7 +191,7 @@ void GLMenuBar::ManageEvent(SDL_Event *evt) {
   }
 
   // Active event (Mouse entering-leaving event)
-  if (evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
+  if (evt->type == SDL_WINDOWEVENT && (evt->window.event == SDL_WINDOWEVENT_ENTER)) {
 	  if( !autoDrop ) selMenu = -1;
     }
   

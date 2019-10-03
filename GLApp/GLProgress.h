@@ -12,7 +12,7 @@ class GLProgress : public GLWindow {
 
 public:
 
-  GLProgress(char *message,char *title);
+  GLProgress(const char *message,const char *title);
 
   // Update progress bar (0 to 1)
   void SetProgress(double value);

@@ -19,18 +19,23 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "File.h"
 #include <string.h>
-#include "GLApp\GLTypes.h"
+#include "GLApp/GLTypes.h"
+#include <sstream>
+#include <filesystem>
+#include <cstring> //strcpy, etc.
 
-#ifdef WIN
-#include <direct.h>
-#include <io.h>
-#include <iostream>
-//#include "GLApp\GLMessageBox.h"
-#endif
+//#ifdef _WIN32
+//#include <direct.h>
+//#include <io.h>
+//#include <iostream>
+//#include <fstream>
+//#include "GLApp/GLMessageBox.h"
+//#endif
 
 #define MAX_WORD_LENGTH 65536 //expected length of the longest line
 
 // Error class
+
 
 Error::Error(const char *message) {
   strncpy(msg,message,255);
@@ -44,28 +49,19 @@ const char *Error::GetMsg() {
 // FileUtils class
 
 bool FileUtils::Exist(std::string fileName) {
-	return Exist(fileName.c_str());
+	//return Exist(fileName.c_str());
+	return std::filesystem::exists(fileName);
 }
 
 bool FileUtils::Exist(const char *fileName) {
-
+	/*
 	if (FILE *file = fopen(fileName, "r")) {
 		fclose(file);
 		return true;
 	}
 	return false;
-}
-
-bool FileUtils::DirExists(std::string dirName)
-{
-	struct stat info;
-
-	if (stat(dirName.c_str(), &info) != 0)
-		return false;
-	else if (info.st_mode & S_IFDIR)
-		return true;
-	else
-		return false;
+	*/
+	return std::filesystem::exists(fileName);
 }
 
 // FileReader class
@@ -132,7 +128,7 @@ FileReader::~FileReader() {
   fclose(file);
 }
 
-Error FileReader::MakeError(char *msg) {
+Error FileReader::MakeError(const char *msg) {
   static char ret[4096];
   sprintf(ret,"%s (line %d)",msg,curLine);
   return Error(ret);
@@ -147,11 +143,11 @@ int FileReader::ReadInt() {
 
 }
 
-llong FileReader::ReadLLong() {
+size_t FileReader::ReadSizeT() {
 
-  llong ret;
+  size_t ret;
   char *w = ReadWord();
-  if (sscanf(w, "%I64d", &ret) <= 0) {
+  if (sscanf(w, "%zd", &ret) <= 0) {
 	  throw Error(MakeError("Wrong integer64 format"));
   }
   return ret;
@@ -166,14 +162,14 @@ void FileReader::SeekStart() {
   CurrentChar = ' ';
 }
 
-void FileReader::JumpSection(char *end) {
+void FileReader::JumpSection(const char *end) {
 
   char *w = ReadWord();
   while(strcmp(w,end)!=0) w=ReadWord();
 
 }
 
-void FileReader::ReadKeyword(char *keyword) {
+void FileReader::ReadKeyword(const char *keyword) {
 
   char *w = ReadWord();
   if( strcmp(w,keyword)!=0 ) {
@@ -194,7 +190,7 @@ double FileReader::ReadDouble() {
 
 }
 
-bool FileReader::SeekFor(char *keyword) {
+bool FileReader::SeekFor(const char *keyword) {
 	char *w;
 	int i=0;
 	bool notFound;
@@ -205,7 +201,7 @@ bool FileReader::SeekFor(char *keyword) {
 	return (isEof)?false:true;
 }
 
-bool FileReader::SeekForChar(char *c) {
+bool FileReader::SeekForChar(const char *c) {
 	char w;
 	int i=0;
 	bool notFound;
@@ -305,14 +301,14 @@ char *FileReader::ReadWord() {
     retWord[len]=CurrentChar;
     len++;
     ReadChar();
-    while( CurrentChar!='"' && CurrentChar!=NULL && CurrentChar!='\n' && len<MAX_WORD_LENGTH) {
+    while( CurrentChar!='"' && CurrentChar!=0 && CurrentChar!='\n' && len<MAX_WORD_LENGTH) {
       retWord[len]=CurrentChar;
       len++;
       ReadChar();
     }
     if( len>=MAX_WORD_LENGTH )
       throw MakeError("String too long");
-    if( CurrentChar==NULL || CurrentChar=='\n')
+    if( CurrentChar==0 || CurrentChar=='\n')
       throw MakeError("String not ended");
     retWord[len]=CurrentChar;
     len++;
@@ -363,24 +359,24 @@ FileWriter::~FileWriter() {
   fclose(file);
 }
 
-void FileWriter::Write(const int &v,char *sep) {
+void FileWriter::Write(const int &v, const char *sep) {
   if( !fprintf(file,"%d",v) )
     throw Error("Error while writing to file");
   if(sep) fprintf(file,"%s",sep);
 }
 
-void FileWriter::Write(const size_t & v, char * sep)
+void FileWriter::Write(const size_t & v, const char * sep)
 {
-#ifdef WIN
+//#ifdef _WIN32
 	if (!fprintf(file, "%zd", v))
 		throw Error("Error while writing to file");
-#else
-	throw Error("FileWriter::Write() not implemented");
-#endif
+//#else
+//	throw Error("FileWriter::Write() not implemented"); //commented out: fprintf works just as well on Linux
+//#endif
 	if (sep) fprintf(file, "%s", sep);
 }
 
-void FileWriter::Write(const double &v,char *sep) {
+void FileWriter::Write(const double &v, const char *sep) {
 
   //if(v>=0.0) fprintf(file," ");
 	fprintf(file," ");
@@ -394,7 +390,7 @@ void FileWriter::Write(std::string str) {
 }
 
 void FileWriter::Write(const char *s) {
-	if (*s==NULL) return; //null expression: don't do anything (for example formulas without name)
+	if (*s==0) return; //null expression: don't do anything (for example formulas without name)
 	if( !fprintf(file,"%s",s) )
     throw Error("Error while writing to file");
 }
@@ -417,11 +413,38 @@ std::string FileUtils::GetPath(const std::string& str)
 {
 	size_t found = str.find_last_of("/\\");
 	if (found == std::string::npos) return ""; //not found, return empty string
-	else return str.substr(0, found)+"\\";
+	else return str.substr(0, found+1);
 }
 
 std::string FileUtils::GetExtension(const std::string& str) {
 	size_t found = str.find_last_of(".");
 	if (found == std::string::npos) return ""; //not found
 	else return str.substr(found + 1);
+}
+
+/*
+bool FileUtils::Copy(const std::string & srcStr, const std::string & dstStr)
+{ //Cross-platform file copy, return false on error
+	try {
+		std::ifstream  src(srcStr, std::ios::binary);
+		std::ofstream  dst(dstStr, std::ios::binary);
+		dst << src.rdbuf();
+	}
+	catch (...) {
+		return false;
+	}
+	return true;
+}
+*/
+
+std::string FileUtils::get_working_path()
+{
+	return std::filesystem::current_path().u8string();
+}
+
+void FileUtils::CreateDir(const std::string & path)
+{
+	if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
+		std::filesystem::create_directory(path);
+	}
 }

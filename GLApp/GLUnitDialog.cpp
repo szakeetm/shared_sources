@@ -7,7 +7,7 @@
 #include "MathTools.h" //Min max
 
 // Construct a message dialog box
-GLUnitDialog::GLUnitDialog(char *message,char *title,int mode,int icon):GLWindow() {
+GLUnitDialog::GLUnitDialog(const char *message, const char *title,int mode,int icon):GLWindow() {
 
   int xD,yD,wD,hD,iW,txtWidth,txtHeight;
   int nbButton=5;
@@ -101,7 +101,7 @@ void GLUnitDialog::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
-int GLUnitDialog::Display(char *message,char *title,int mode,int icon) {
+int GLUnitDialog::Display(const char *message, const char *title,int mode,int icon) {
 
   GLfloat old_mView[16];
   GLfloat old_mProj[16];

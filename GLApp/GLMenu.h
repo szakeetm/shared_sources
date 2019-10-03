@@ -47,7 +47,7 @@ public:
   // Menu items
   GLMenu* Add(const char *itemName,int itemId=0,int accKeyCode=0,int accKeyModifier=0);
   int     GetNbItem();
-  GLMenu *GetSubMenu(char *itemName);
+  GLMenu *GetSubMenu(const char *itemName);
   void    SetCheck(int itemId,bool checked);
   bool    GetCheck(int itemId);
   void    SetEnabled(int itemId,bool enabled);

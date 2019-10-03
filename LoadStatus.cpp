@@ -30,7 +30,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLTitledPanel.h"
-#include "GLApp\GLList.h"
+#include "GLApp/GLList.h"
+
+#ifndef _WIN32
+//getpid in linux
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 extern GLApplication *theApp;
 
@@ -78,7 +84,7 @@ void LoadStatus::RefreshNbProcess()
 	int hD = 100 + (int)worker->GetProcNumber() * 15;
 	processList->SetSize(3, worker->GetProcNumber() + 1);
 	processList->SetColumnWidths((int*)plWidth);
-	processList->SetColumnLabels((char **)plName);
+	processList->SetColumnLabels(plName);
 	processList->SetColumnAligns((int *)plAligns);
 	processList->SetBounds(7, 8, wD - 17, hD - 55);
 	cancelButton->SetBounds(wD / 2 - 45, hD - 43, 90, 19);
@@ -110,20 +116,24 @@ void LoadStatus::SMPUpdate() {
 		processList->ResetValues();
 
 		//Interface
-		DWORD currpid = GetCurrentProcessId();
-		GetProcInfo(currpid, &pInfo);
+#ifdef _WIN32
+		size_t currPid = GetCurrentProcessId();
+#else
+		size_t currPid = getpid();
+#endif
+		GetProcInfo(currPid, &pInfo);
 		processList->SetValueAt(0, 0, "Interface");
 		sprintf(tmp, "%.0f MB", (double)pInfo.mem_use/(1024.0*1024.0));
 		processList->SetValueAt(1, 0, tmp);
 
 		
 		for(size_t i=0;i<worker->GetProcNumber();i++) {
-			DWORD pid = worker->GetPID(i);
+			size_t pid = worker->GetPID(i);
 			sprintf(tmp,"Subproc.%zd",i+1);
 			processList->SetValueAt(0,i+1,tmp);
 			if( !GetProcInfo(pid,&pInfo) ) {
-				processList->SetValueAt(1,i+1,"0 MB");
-				processList->SetValueAt(2,i+1,"Dead");
+				processList->SetValueAt(1,i + 1,"0 MB");
+				processList->SetValueAt(2,i + 1,"Dead");
 			} else {
 				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
 				processList->SetValueAt(1, i+1, tmp);

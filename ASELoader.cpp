@@ -22,12 +22,17 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include "Vector.h"
 #include <math.h>
 #include <string.h>
+#include <cstring> //strcpy, etc.
 //#include <malloc.h>
 
 #define SAFE_FREE(x) if(x) { free(x);x=NULL; }
 
 // Construction
 
+/**
+* \brief Constructor with a file handle f
+* \param f file handle
+*/
 ASELoader::ASELoader(FileReader *f) {
 
   this->f = f;
@@ -36,6 +41,9 @@ ASELoader::ASELoader(FileReader *f) {
 
 }
 
+/**
+* \brief Destructor with save free
+*/
 ASELoader::~ASELoader() {
 
   for(size_t i=0;i<nbObj;i++) {
@@ -51,6 +59,11 @@ ASELoader::~ASELoader() {
 /************************************************************/
 /* return the lexical classe of the next word               */
 /************************************************************/
+/**
+* \brief return the lexical classe of the next word
+* \param word char string to check the class for
+* \return integer describing the lexical class
+*/
 int ASELoader::class_lex(char *word) {
 
   int i,found=0;
@@ -85,6 +98,9 @@ int ASELoader::class_lex(char *word) {
 /***********************************/
 /* Load a ASE file (throw Error)   */
 /***********************************/
+/**
+* \brief Load a ASE file (throw Error)
+*/
 void ASELoader::Load()
 {
   char   *w;
@@ -971,11 +987,11 @@ void ASELoader::Load()
     ret_scn->obj[i].nbi = nb_opt_face*3;
     ret_scn->obj[i].ind = (LPWORD)malloc(nb_opt_face*3*sizeof(WORD));
     if( OBJ[i].mat==-1 ) {
-      ret_scn->obj[i].diff_name=_strdup( "none" );
-      ret_scn->obj[i].alpha_name=_strdup( "none" );
+      ret_scn->obj[i].diff_name=strdup( "none" );
+      ret_scn->obj[i].alpha_name=strdup( "none" );
     } else {
-      ret_scn->obj[i].diff_name=_strdup( materials[OBJ[i].mat].diff_name );
-      ret_scn->obj[i].alpha_name=_strdup( materials[OBJ[i].mat].alpha_name );
+      ret_scn->obj[i].diff_name=strdup( materials[OBJ[i].mat].diff_name );
+      ret_scn->obj[i].alpha_name=strdup( materials[OBJ[i].mat].alpha_name );
     }
 
     sprintf(tmp,"[%s] : Vertex:%d Face:%d",OBJ[i].name,idx,nb_opt_face);

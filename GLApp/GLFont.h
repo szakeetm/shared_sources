@@ -2,7 +2,7 @@
 #ifndef _GLFONT2DH_
 #define _GLFONT2DH_
 
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include "GLTypes.h"
 
 class GLFont2D {
@@ -13,15 +13,15 @@ public:
   GLFont2D();
 
   // Construct a font using the specified bitmap
-  GLFont2D(char *imgFileName);
+  GLFont2D(const char *imgFileName);
   
   // Initialise the font
   // return 1 when success, 0 otherwise
   int RestoreDeviceObjects(int srcWidth,int scrHeight);
   
   // Draw a 2D text (in viewport coordinates)
-  void DrawText(const int &x,const int &y,char *text,const bool &loadMatrix=true);
-  void DrawLargeText(int x,int y,char *text,float sizeFactor,bool loadMatrix=true);
+  void DrawText(const int &x,const int &y,const char *text,const bool &loadMatrix=true);
+  void DrawLargeText(int x,int y,const char *text,float sizeFactor,bool loadMatrix=true);
   void DrawTextFast(int cx,int cy,const char *text);
   void DrawTextV(int x,int y,char *text,bool loadMatrix=true);
 

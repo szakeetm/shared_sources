@@ -5,8 +5,8 @@
 //extern long long	  nbDesStart;
 //extern long long	  nbHitStart;
 
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include "GLTypes.h"  //GL_OK
 //#include "GLWindow.h"
 //#include "GLComponent.h"
@@ -50,7 +50,7 @@ public:
     // Functions to create, run, pause, and clean up the application
     virtual int  Create(int width, int height, bool bFullScreen);
     virtual void Pause(bool bPause);
-    virtual int  Resize(DWORD width, DWORD height, bool forceWindowed=false);
+    virtual int  Resize(size_t width, size_t height, bool forceWindowed=false);
     void  Run();
     void  Exit();
 

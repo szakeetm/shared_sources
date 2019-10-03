@@ -15,7 +15,7 @@ public:
   GLScrollBar(int compId);
 
   // Component methods
-  void SetRange(int max,int page,int wheel);
+  void SetRange(int max,int page,int wheel_delta);
   void SetPosition(int nPos);
   void SetPositionMax();
   int  GetPosition();
@@ -33,7 +33,7 @@ private:
   int      m_Pos;
   int      m_Max;
   int      m_Page;
-  int      m_Wheel;
+  int      m_Wheel_Delta;
   int      m_Drag;
   int      lastX;
   int      lastY;

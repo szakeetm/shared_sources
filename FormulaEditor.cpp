@@ -22,10 +22,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
-#include "GLApp\GLToggle.h"
-#include "GLApp\GLTitledPanel.h"
+#include "GLApp/GLToggle.h"
+#include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLList.h"
-#include "GLApp\MathTools.h"
+#include "GLApp/MathTools.h"
 #include <sstream>
 #include <algorithm>
 
@@ -88,7 +88,7 @@ FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
 	Add(moveDownButton);
 
 	panel2 = new GLTitledPanel("Format");
-	panel2->SetClosable(TRUE);
+	panel2->SetClosable(true);
 	panel2->Close();
 	Add(panel2);
 
@@ -133,7 +133,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			int selRow = formulaList->GetSelectedRow();
 			if (selRow <= 0) {
 				//Interface bug
-				__debugbreak();
+				DEBUG_BREAK;
 				return;
 			}
 			std::swap(mApp->formulas_n[selRow], mApp->formulas_n[selRow - 1]);
@@ -145,7 +145,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			int selRow = formulaList->GetSelectedRow();
 			if (selRow > mApp->formulas_n.size() - 2) {
 				//Interface bug
-				__debugbreak();
+				DEBUG_BREAK;
 				return;
 			}
 			std::swap(mApp->formulas_n[selRow], mApp->formulas_n[selRow + 1]);
@@ -162,7 +162,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			if (strcmp(formulaList->GetValueAt(0, row), userExpressions[row].c_str()) != 0) { //Expression changed
 				if (!(row < mApp->formulas_n.size())) {
 					//Interface bug
-					__debugbreak();
+					DEBUG_BREAK;
 					return;
 				}
 				if (*(formulaList->GetValueAt(0, row)) != 0 || *(formulaList->GetValueAt(1, row)) != 0) //Name or expr. not empty
@@ -285,7 +285,7 @@ void FormulaEditor::RebuildList() {
 	formulaList->SetSize(3, userExpressions.size() + 1);
 	for (size_t i = 0; i<3; i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
-	formulaList->SetColumnLabels((char **)flName);
+	formulaList->SetColumnLabels(flName);
 	formulaList->SetColumnAligns((int *)flAligns);
 	formulaList->SetColumnEditable((int *)fEdits);
 

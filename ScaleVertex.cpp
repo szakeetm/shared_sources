@@ -28,8 +28,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Facet_shared.h"
 
-#include "GLApp\GLToolkit.h"
-#include "GLApp\GLMessageBox.h"
+#include "GLApp/GLToolkit.h"
+#include "GLApp/GLMessageBox.h"
 #include "GLApp/GLButton.h"
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
@@ -308,7 +308,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				mApp->UpdateModelParams();
 				try { work->Reload(); }
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 				}
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();

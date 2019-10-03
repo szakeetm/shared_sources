@@ -5,6 +5,8 @@
 #include "GLWindowManager.h"
 #include "MathTools.h" //Saturate
 #include "GLApp.h"
+#include <cstring> //strcpy, etc.
+#include <thread> //sleep
 
 extern GLApplication* theApp;
 
@@ -148,7 +150,7 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
 
     GLWindowManager::RegisterKeyboardShortcut(this,accKeyCode,accKeyModifier,nbItem);
     hasAcc = true;
-    items[i].accName = _strdup( GLWindowManager::GetAccStr(accKeyCode,accKeyModifier) );
+    items[i].accName = strdup( GLWindowManager::GetAccStr(accKeyCode,accKeyModifier) );
     items[i].accWidth = GLToolkit::GetDialogFont()->GetTextWidth(items[i].accName);
 
   }
@@ -173,7 +175,7 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
   return items[i].subMenu;
 }
 
-GLMenu *GLMenu::GetSubMenu(char *itemName) {
+GLMenu *GLMenu::GetSubMenu(const char *itemName) {
 
   char tmpName[256];
   strcpy(tmpName,itemName);
@@ -253,7 +255,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   }
 
   // Active event (Mouse entering-leaving event)
-  if (evt->type == SDL_WINDOWEVENT && (evt->window.type == SDL_WINDOWEVENT_ENTER)) {
+  if (evt->type == SDL_WINDOWEVENT && (evt->window.event == SDL_WINDOWEVENT_ENTER)) {
       if( selMenu>=0 ) {
         if( !items[selMenu].subMenu )
           selMenu = -1;
@@ -325,7 +327,7 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
 
   if (IsVisible()) {
 	  /*GLWindowManager::Repaint();
-	  Sleep(30);*/
+	  std::this_thread::sleep_for(std::chrono::milliseconds(30));*/
 	  theApp->wereEvents = true;
   }
 }
@@ -541,7 +543,7 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
 
 	if( IsVisible() ) {
       GLWindowManager::Repaint();
-      Sleep(30);
+	  std::this_thread::sleep_for(std::chrono::milliseconds(30));
 		//theApp->wereEvents = true;
     }
 

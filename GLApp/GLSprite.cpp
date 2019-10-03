@@ -2,9 +2,12 @@
 #include "GLSprite.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#include <cimage.h>
+#define cimg_use_png 1
+#include <CImg/CImg.h>
+using namespace cimg_library;
 //#include <malloc.h>
 #include <stdio.h>
+#include <cstring>
 
 extern GLApplication *theApp;
 
@@ -52,20 +55,17 @@ void Sprite2D::SetColor(const float &r,const float &g,const float &b) {
   bC = b;
 }
 
-int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,int scrHeight) {
+int Sprite2D::RestoreDeviceObjects(const char *diffName, const char *alphaName,int scrWidth,int scrHeight) {
 
   GLint  bpp;
   GLenum format;
   BYTE *buff32;
   char tmp[512];
 
-  // Load the image
-  CImage img;
-  CImage imga;
-
+  CImg<BYTE> img, imga;
   
-  
-  if( !img.LoadCImage(diffName) ) {
+  try { img.load(diffName); }
+  catch (...) {
     sprintf(tmp,"Failed to load \"%s\"",diffName);
     GLToolkit::Log(tmp); //Commented out for File open dialog
     return 0;
@@ -74,7 +74,9 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
 
   hasAlpha = strcmp(alphaName,"none")!=0;
   if( hasAlpha ) {
-    if( !imga.LoadCImage(alphaName) ) {
+	  try {
+		  imga.load(alphaName);
+	  } catch (...) {
       sprintf(tmp,"Failed to load \"%s\"",alphaName);
       GLToolkit::Log(tmp);
       return 0;
@@ -82,23 +84,23 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
   }
 
   // Make 32 Bit RGB/RGBA buffer
-  int fWidth  = img.Width();
-  int fHeight = img.Height();
+  int fWidth  = img.width();
+  int fHeight = img.height();
 
   if( hasAlpha ) {
 
     format = GL_RGBA;
     bpp    = 4;
     buff32 = (BYTE *)malloc(fWidth*fHeight*4);
-    BYTE *data   = img.GetData();
-    BYTE *adata   = imga.GetData();
+    //BYTE *data   = img.data();
+    //BYTE *adata   = imga.data();
 
     for(int y=0;y<fHeight;y++) {
       for(int x=0;x<fWidth;x++) {
-        buff32[x*4 + 0 + y*4*fWidth] = data[x*3+2 + y*3*fWidth];
-        buff32[x*4 + 1 + y*4*fWidth] = data[x*3+1 + y*3*fWidth];
-        buff32[x*4 + 2 + y*4*fWidth] = data[x*3+0 + y*3*fWidth];
-        buff32[x*4 + 3 + y*4*fWidth] = adata[x*3+1 + y*3*fWidth];
+		  buff32[x * 4 + 0 + y * 4 * fWidth] = /*data[x*3+2 + y*3*fWidth];*/ *(img.data(x, y, 0, 0));
+        buff32[x*4 + 1 + y*4*fWidth] = /*data[x*3+1 + y*3*fWidth];*/ *(img.data(x, y, 0, 1));
+        buff32[x*4 + 2 + y*4*fWidth] =/* data[x*3+0 + y*3*fWidth];*/ *(img.data(x, y, 0, 2));
+		buff32[x * 4 + 3 + y * 4 * fWidth] = /*adata[x*3+1 + y*3*fWidth];*/ *(imga.data(x, y, 0, 1));
       }
     }
 
@@ -107,13 +109,13 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
     format = GL_RGB;
     bpp    = 3;
     buff32 = (BYTE *)malloc(fWidth*fHeight*3);
-    BYTE *data   = img.GetData();
+    //BYTE *data   = img.data();
 
     for(int y=0;y<fHeight;y++) {
       for(int x=0;x<fWidth;x++) {
-        buff32[x*3 + 0 + y*3*fWidth] = data[x*3+2 + y*3*fWidth];
-        buff32[x*3 + 1 + y*3*fWidth] = data[x*3+1 + y*3*fWidth];
-        buff32[x*3 + 2 + y*3*fWidth] = data[x*3+0 + y*3*fWidth];
+        buff32[x*3 + 0 + y*3*fWidth] = *(img.data(x, y, 0, 0));
+        buff32[x*3 + 1 + y*3*fWidth] = *(img.data(x, y, 0, 1));
+        buff32[x*3 + 2 + y*3*fWidth] = *(img.data(x, y, 0, 2));
       }
     }
 
@@ -135,8 +137,8 @@ int Sprite2D::RestoreDeviceObjects(char *diffName,char *alphaName,int scrWidth,i
   );   
 
   free(buff32);
-  img.Release();
-  imga.Release();
+  //img.Release();
+  //imga.Release();
 
   GLenum glError = glGetError();
   if( glError != GL_NO_ERROR )

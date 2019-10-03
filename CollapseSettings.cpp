@@ -17,14 +17,14 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#include "GLApp\GLToggle.h"
+#include "GLApp/GLToggle.h"
 
 #include "CollapseSettings.h"
-#include "GLApp\GLTextField.h"
+#include "GLApp/GLTextField.h"
 #include "GLApp/GLTitledPanel.h"
-#include "GLApp\GLLabel.h"
-#include "GLApp\GLTextField.h"
-#include "GLApp\GLButton.h"
+#include "GLApp/GLLabel.h"
+#include "GLApp/GLTextField.h"
+#include "GLApp/GLButton.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
@@ -52,6 +52,9 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
+/**
+* \brief Constructor with initialisation for the CollapseSettings window (Facet/Collapse)
+*/
 CollapseSettings::CollapseSettings():GLWindow() {
 
 	int wD = 270;
@@ -120,6 +123,11 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 }
 
+/**
+* \brief Constructor with initialisation for the CollapseSettings window (Facet/Collapse)
+* \param geom geometry used for the settings
+* \brief w Worker handle
+*/
 void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
 
 	char tmp[512];
@@ -137,6 +145,11 @@ void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
 
 }
 
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
 void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 	double vT,fT,lT;
 
@@ -197,7 +210,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				// Send to sub process
 				try { work->Reload(); }
 				catch (Error &e) {
-					GLMessageBox::Display((char *)e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 				}
 
 				progressDlg->SetVisible(false);

@@ -2,9 +2,12 @@
 #include "GLFont.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#include <cimage.h>
+#define cimg_use_png 1
+#include <CImg/CImg.h>
+using namespace cimg_library;
 //#include <malloc.h>
 #include <stdio.h>
+#include <cstring> //strcpy, etc.
 
 extern GLApplication *theApp;
 
@@ -15,7 +18,7 @@ GLFont2D::GLFont2D() {
   isVariable = false;
 }
 
-GLFont2D::GLFont2D(char *imgFileName) {
+GLFont2D::GLFont2D(const char *imgFileName) {
   strcpy(fileName,imgFileName);
   cHeight = 15;
   cWidth  = 9;
@@ -25,85 +28,92 @@ GLFont2D::GLFont2D(char *imgFileName) {
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 
   // Load the image
-  CImage img;
-  if( !img.LoadCImage(fileName) ) {
-    char tmp[512];
-    sprintf(tmp,"Failed to load \"%s\"",fileName);
-    GLToolkit::Log(tmp);
-    return 0;
-  }
+ // CImage img;
+  //if( !img.LoadCImage(fileName) ) {
 
-  // Make 32 Bit RGBA buffer
-  fWidth  = img.Width();
-  fHeight = img.Height();
-  BYTE *buff32 = (BYTE *)malloc(fWidth*fHeight*4);
-  BYTE *data   = img.GetData();
-  for(int y=0;y<fHeight;y++) {
-    for(int x=0;x<fWidth;x++) {
-      buff32[x*4 + 0 + y*4*fWidth] = data[x*3+2 + y*3*fWidth];
-      buff32[x*4 + 1 + y*4*fWidth] = data[x*3+1 + y*3*fWidth];
-      buff32[x*4 + 2 + y*4*fWidth] = data[x*3+0 + y*3*fWidth];
-      buff32[x*4 + 3 + y*4*fWidth] = data[x*3+1 + y*3*fWidth]; // Green as alpha
-    }
-  }
+	try {
+		CImg<BYTE> img(fileName);
+		// Make 32 Bit RGBA buffer
+		fWidth = img.width();
+		fHeight = img.height();
+		BYTE *buff32 = (BYTE *)malloc(fWidth*fHeight * 4);
+		//BYTE *data = img.data();
+		for (int y = 0; y < fHeight; y++) {
+			for (int x = 0; x < fWidth; x++) {
+				buff32[x * 4 + 0 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 0));
+				buff32[x * 4 + 1 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 1));
+				buff32[x * 4 + 2 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 2));
+				buff32[x * 4 + 3 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 1)); // Green as alpha
+			}
+		}
 
-  if( isVariable ) {
+		if (isVariable) {
 
-    // Compute width for each char
-    for(int i=0;i<256;i++) {
-      cVarWidth[i]=0;
-      int xO = ((i % 16) * 16 + 1);
-      int yO = ((i / 16) * 16    );
+			// Compute width for each char
+			for (int i = 0; i < 256; i++) {
+				cVarWidth[i] = 0;
+				int xO = ((i % 16) * 16 + 1);
+				int yO = ((i / 16) * 16);
 
-      //scan columns
-      bool black = true;
-      while(black && xO<img.Width()) {
-        for(int j=0;j<cHeight && black;j++)
-          black = (data[(xO)*3 + (yO+j)*3*fWidth] == 0);
-        cVarWidth[i]++;
-        xO++;
-      }
+				//scan columns
+				bool black = true;
+				while (black && xO < img.width()) {
+					for (int j = 0; j < cHeight && black; j++)
+						black = (/*data[(xO) * 3 + (yO + j) * 3 * fWidth]*/ *(img.data(xO,yO+j)) == 0);
+					cVarWidth[i]++;
+					xO++;
+				}
 
-      bool white = true;
-      while(white && xO<img.Width()) {
-        black = true;
-        for(int j=0;j<cHeight && black;j++)
-          black = (data[(xO)*3 + (yO+j)*3*fWidth] == 0);
-        white = !black;
-        if(white) cVarWidth[i]++;
-        xO++;
-      }
+				bool white = true;
+				while (white && xO < img.width()) {
+					black = true;
+					for (int j = 0; j < cHeight && black; j++)
+						black = (/*data[(xO) * 3 + (yO + j) * 3 * fWidth]*/ *(img.data(xO, yO+j)) == 0);
+					white = !black;
+					if (white) cVarWidth[i]++;
+					xO++;
+				}
 
-      if(cVarWidth[i]>cWidth) cVarWidth[i]=cWidth;
+				if (cVarWidth[i] > cWidth) cVarWidth[i] = cWidth;
 
-      //Comprime space char when variable width font
-      if(i==32) cVarWidth[i]=cWidth/3;
+				//Comprime space char when variable width font
+				if (i == 32) cVarWidth[i] = cWidth / 3;
 
-    }
-  }
+			}
+		}
 
-  glGenTextures(1,&texId);
-  glBindTexture(GL_TEXTURE_2D,texId);
+		glGenTextures(1, &texId);
+		glBindTexture(GL_TEXTURE_2D, texId);
 
-  glTexImage2D (
-    GL_TEXTURE_2D,      // Type
-    0,                  // No Mipmap
-    4,                  // Format RGBA
-    fWidth,             // Width
-    fHeight,            // Height
-    0,                  // Border
-    GL_RGBA,            // Format RGBA
-    GL_UNSIGNED_BYTE,   // 8 Bit/color
-    buff32              // Data
-  );   
+		glTexImage2D(
+			GL_TEXTURE_2D,      // Type
+			0,                  // No Mipmap
+			4,                  // Format RGBA
+			fWidth,             // Width
+			fHeight,            // Height
+			0,                  // Border
+			GL_RGBA,            // Format RGBA
+			GL_UNSIGNED_BYTE,   // 8 Bit/color
+			buff32              // Data
+		);
 
-  free(buff32);
-  img.Release();
+		free(buff32);
+		//img.Release();
+	}
+	catch (...) {
+		char tmp[600];
+		sprintf(tmp, "Failed to load \"%s\"", fileName);
+		GLToolkit::Log(tmp);
+		return 0;
+	}
+  //}
+
+
 
   GLenum glError = glGetError();
   if( glError != GL_NO_ERROR )
   {
-    char tmp[512];
+    char tmp[600];
     sprintf(tmp,"Failed to create GLFont2D \"%s\"",fileName);
     GLToolkit::Log(tmp);
     GLToolkit::printGlError(glError);
@@ -174,7 +184,7 @@ void GLFont2D::SetTextColor(const float &r,const float &g,const float &b) {
   bC = b;
 }
 
-void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,bool loadMatrix) {
+void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;
@@ -236,7 +246,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,char *text,float sizeFactor,bool load
 
 }
 
-void GLFont2D::DrawText(const int &cx,const int &cy,char *text,const bool &loadMatrix) {
+void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool &loadMatrix) {
 
   int lgth = (int)strlen(text);
   if( lgth==0 ) return;

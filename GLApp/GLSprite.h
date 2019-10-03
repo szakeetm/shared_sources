@@ -2,7 +2,7 @@
 #ifndef _SPRITE2DH_
 #define _SPRITE2DH_
 
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 
 class Sprite2D {
 
@@ -13,7 +13,7 @@ public:
   
   // Initialise the font
   // return 1 when success, 0 otherwise
-  int RestoreDeviceObjects(char *diffName,char *alphaName,int srcWidth,int scrHeight);
+  int RestoreDeviceObjects(const char *diffName, const char *alphaName,int srcWidth,int scrHeight);
 
   // Update sprite mapping and coordinates
   void UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2);

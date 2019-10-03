@@ -26,9 +26,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
-#include "GLApp/GlToggle.h"
+#include "GLApp/GLToggle.h"
 //#include "GLApp/GLFileBox.h"
-#include "NativeFileDialog\molflow_wrapper\nfd_wrapper.h"
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
@@ -167,13 +167,17 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 					bool ok = true;
 					
 					std::string formattedFileName = fn;
-					if (FileUtils::GetExtension(formattedFileName) == "") formattedFileName = formattedFileName + ".csv";
-					
-					if (FileUtils::Exist(formattedFileName)) {
-						std::ostringstream tmp;
-						tmp << "Overwrite existing file ?\n" << formattedFileName;
-						ok = (GLMessageBox::Display(tmp.str().c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) == GLDLG_OK);
+					if (FileUtils::GetExtension(formattedFileName) == "")
+					{
+						formattedFileName = formattedFileName + ".csv";
+
+						if (FileUtils::Exist(formattedFileName)) {
+							std::ostringstream tmp;
+							tmp << "Overwrite existing file ?\n" << formattedFileName;
+							ok = (GLMessageBox::Display(tmp.str().c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) == GLDLG_OK);
+						}
 					}
+					
 					if (ok) {
 						std::ofstream file(formattedFileName);
 						exportButton->SetText("Abort");

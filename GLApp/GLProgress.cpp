@@ -8,7 +8,7 @@
 #include "GLWindowManager.h"
 
 // Construct a message dialog box
-GLProgress::GLProgress(char *message,char *title):GLWindow() {
+GLProgress::GLProgress(const char *message,const char *title):GLWindow() {
 
   int xD,yD,wD,hD,txtWidth,txtHeight;
   int nbButton=0;

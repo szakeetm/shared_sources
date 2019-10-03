@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 #include "GLApp/GLWindow.h"
-#include "GLApp\GLParser.h"
+#include "GLApp/GLParser.h"
 class GLButton;
 class GLLabel;
 class GLTextField;

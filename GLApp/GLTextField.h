@@ -48,7 +48,7 @@ private:
   void   CopyClipboardText();
   void   PasteClipboardText();
   void   UpdateXpos();
-  void   InsertString(char *lpszString);
+  void   InsertString(const char *lpszString);
   void   DeleteString(int count);
   void   MoveCursor(int newPos);
   void   RemoveSel();
