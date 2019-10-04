@@ -435,7 +435,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 	if (n_updown<0) n_updown = -n_updown;
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
 	*/
-
+	
 	return IsInPoly(Vector2d(u, v), f.vertices2);
 
 }
@@ -454,7 +454,6 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
 
 	//Global variables, easier for recursion:
-	size_t intNbTHits = 0;
 
 	//Output values
 	bool found = false;

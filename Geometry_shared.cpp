@@ -1954,7 +1954,7 @@ void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown
 	mApp->UpdateFacetParams(true);
 }
 
-void Geometry::AddStruct(const char *name,bool deferDrawing) {
+void Geometry::AddStruct(const char *name, bool deferDrawing) {
 	strName[sh.nbSuper++] = strdup(name);
 	if (!deferDrawing) BuildGLList();
 }
@@ -3652,7 +3652,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		f[i]->LoadTXT(file);
 		while ((f[i]->sh.superDest) > sh.nbSuper) { //If facet refers to a structure that doesn't exist, create it
-			AddStruct("TXT linked",true);
+			AddStruct("TXT linked", true);
 		}
 		f[i]->sh.superIdx = static_cast<int>(strIdx);
 	}

@@ -174,7 +174,7 @@ void GLToolkit::SetCursor(int cursor) {
   switch(currentCursor) {
     case CURSOR_DEFAULT:
       SDL_SetCursor(defCursor);
-      break;
+	  break;
 	case CURSOR_BUSY:
 	  SDL_SetCursor(busyCursor);
 	  break;
@@ -212,7 +212,7 @@ void GLToolkit::SetCursor(int cursor) {
       SDL_SetCursor(rotateCursor);
       break;
 	case CURSOR_VERTEX:
-      SDL_SetCursor(vertexCursor);
+	  SDL_SetCursor(vertexCursor);
       break;
 	case CURSOR_VERTEX_ADD:
       SDL_SetCursor(vertexAddCursor);
