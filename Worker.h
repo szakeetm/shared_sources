@@ -114,7 +114,9 @@ public:
 #ifdef MOLFLOW
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
-  void ExportAngleMaps(std::vector<size_t> faceList, std::string fileName);
+  std::vector<std::string> ExportAngleMaps(std::string fileName, bool saveAll=false);
+  bool ImportAngleMaps(std::string fileName);
+
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
   FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
   void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,

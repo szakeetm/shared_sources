@@ -585,7 +585,12 @@ void Worker::Update(float appTime) {
 #endif
 #ifdef MOLFLOW
 				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
-				
+
+                //std::cout << "[AngBuffer] "<< this << " - "<< std::hex<< (void*) buffer << " - "<< (void*) (buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer)) << std::endl;
+                //std::cout << "[AddBuffer] " << " - "<< std::hex<< (void*)&buffer << " - "<< (void*)&(f->facetHitCache) << std::endl;
+                //std::cout << "[MomBuffer] " << " - "<< std::hex<< displayedMoment << " * "<< sizeof(FacetHitBuffer) << std::endl;
+
+
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
 						//Initialize angle map
@@ -605,8 +610,9 @@ void Worker::Update(float appTime) {
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-					memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
-				}
+                    memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
+
+                }
 				
 #endif
 #ifdef MOLFLOW

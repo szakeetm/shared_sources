@@ -279,7 +279,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 	// double: minimum distance
 
 	// Method: 3x3 Sytem solving for ray/rectangle intersection. 
-	// Solve the vector equation u*U + v*V + d*D = Z (using Cramer's rule)
+	// Solve the vectosr equation u*U + v*V + d*D = Z (using Cramer's rule)
 	// nuv = u^v (for faster calculation)
 
 	/*bool found = false;
