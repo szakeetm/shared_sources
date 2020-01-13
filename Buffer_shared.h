@@ -523,17 +523,18 @@ typedef union {
 		double absorbed;
 	} density;
 
+	//TODO: Check for correct serialization
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(nbDesorbed),
-			CEREAL_NVP(nbMCHit),
-			CEREAL_NVP(nbHitEquiv),
-			CEREAL_NVP(nbAbsEquiv),
-			CEREAL_NVP(sum_1_per_ort_velocity),
-			CEREAL_NVP(sum_1_per_velocity),
-			CEREAL_NVP(sum_v_ort)
+			CEREAL_NVP(hit.nbDesorbed),
+			CEREAL_NVP(hit.nbMCHit),
+			CEREAL_NVP(hit.nbHitEquiv),
+			CEREAL_NVP(hit.nbAbsEquiv),
+			CEREAL_NVP(hit.sum_1_per_ort_velocity),
+			CEREAL_NVP(hit.sum_1_per_velocity),
+			CEREAL_NVP(hit.sum_v_ort)
 			);
 	}
 } FacetHitBuffer;
@@ -557,12 +558,12 @@ public:
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(fluxAbs),
-			CEREAL_NVP(powerAbs),
-			CEREAL_NVP(nbMCHit),           // Number of hits
-			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-			CEREAL_NVP(nbAbsEquiv),      // Number of absorbed molec
-			CEREAL_NVP(nbDesorbed),
+			CEREAL_NVP(hit.fluxAbs),
+			CEREAL_NVP(hit.powerAbs),
+			CEREAL_NVP(hit.nbMCHit),           // Number of hits
+			CEREAL_NVP(hit.nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			CEREAL_NVP(hit.nbAbsEquiv),      // Number of absorbed molec
+			CEREAL_NVP(hit.nbDesorbed),
 			);
 	}
 

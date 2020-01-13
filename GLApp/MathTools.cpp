@@ -428,6 +428,7 @@ double InterpolateXY(const double & lookupValue, const std::vector<std::pair<dou
 		else return GetElement(table[lowerIndex], !first); //return last element
 	}
 
+	// linear interpolation
 	double delta = (logarithmic) ? log10(GetElement(table[lowerIndex + 1], first)) - log10(GetElement(table[lowerIndex], first)) : GetElement(table[lowerIndex + 1], first) - GetElement(table[lowerIndex], first);
 	double overshoot = (logarithmic) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first)) : lookupValue - GetElement(table[lowerIndex], first);
 

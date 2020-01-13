@@ -444,8 +444,11 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 	// Launch n subprocess
 	for(size_t i=0;i<n;i++) {
 		#ifdef MOLFLOW
-		sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
-		#endif
+		//if(i==0) sprintf(cmdLine,"C:\\Users\\pbahr\\Downloads\\Tools\\bin64\\drmemory.exe -dr_ops \"-msgbox_mask 15\" -- molflowSub.exe %d %zd",pid,i);
+        //else
+            sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
+
+#endif
 		#ifdef SYNRAD
 		sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
 		#endif
@@ -585,11 +588,6 @@ void Worker::Update(float appTime) {
 #endif
 #ifdef MOLFLOW
 				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
-
-                //std::cout << "[AngBuffer] "<< this << " - "<< std::hex<< (void*) buffer << " - "<< (void*) (buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer)) << std::endl;
-                //std::cout << "[AddBuffer] " << " - "<< std::hex<< (void*)&buffer << " - "<< (void*)&(f->facetHitCache) << std::endl;
-                //std::cout << "[MomBuffer] " << " - "<< std::hex<< displayedMoment << " * "<< sizeof(FacetHitBuffer) << std::endl;
-
 
 				if (f->sh.anglemapParams.record) {
 					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
@@ -809,3 +807,4 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     ResetWorkerStats();
 #endif
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   

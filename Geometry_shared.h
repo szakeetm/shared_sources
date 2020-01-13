@@ -264,16 +264,18 @@ public:
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
 
+public:
+    GeomProperties sh;
+    Facet    **facets;    // All facets of this geometry
 protected:
 	// Structure viewing (-1 => all)
-	GeomProperties sh;
 	Vector3d  center;                     // Center (3D space)
 	char      *strName[MAX_SUPERSTR];     // Structure name
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)
 
 										  // Geometry
-	Facet    **facets;    // All facets of this geometry
+
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)

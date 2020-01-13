@@ -209,6 +209,9 @@ typedef struct {
 
 #define MENU_QUICKPIPE            810
 
+#define MENU_TRIANGULATE          815
+
+
 #define MENU_ABOUT                1000
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1

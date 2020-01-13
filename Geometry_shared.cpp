@@ -197,7 +197,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 	//initGeoPrg->SetVisible(false);
 	//SAFE_DELETE(initGeoPrg);
-	_ASSERTE(_CrtCheckMemory());
+	assert(_CrtCheckMemory());
 }
 
 void Geometry::RecalcBoundingBox(int facet_number) {
@@ -1465,7 +1465,7 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool to
 			tempFacets[insertPos] = facets[insertPos - nbInsert];
 			newRefs[insertPos - nbInsert] = (int)insertPos;
 		}
-		_ASSERTE(_CrtCheckMemory());
+        assert(_CrtCheckMemory());
 		//Renumber things;
 		RenumberNeighbors(newRefs);
 		mApp->RenumberFormulas(&newRefs);
@@ -2829,7 +2829,6 @@ void Geometry::CalculateFacetParams(Facet* f) {
 	Vector2d BBmax; BBmax.u = 0.0; BBmax.v = 0.0;
 
 	for (size_t j = 1; j < f->sh.nbIndex; j++) {
-
 		Vector3d p = vertices3[f->indices[j]];
 		Vector3d v = p - p0;
 		f->vertices2[j].u = Dot(U, v);  // Project p on U along the V direction
@@ -2840,7 +2839,6 @@ void Geometry::CalculateFacetParams(Facet* f) {
 		BBmax.v = std::max(BBmax.v, f->vertices2[j].v);
 		BBmin.u = std::min(BBmin.u, f->vertices2[j].u);
 		BBmin.v = std::min(BBmin.v, f->vertices2[j].v);
-
 	}
 
 	// Calculate facet area (Meister/Gauss formula)
@@ -2902,7 +2900,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 
 	f->sh.Nuv = CrossProduct(f->sh.U,f->sh.V); //Not normalized normal vector
 
-	// Rescale u,v coordinates
+    // Rescale u,v coordinates
 	for (auto& p : f->vertices2) {
 		p.u = (p.u - BBmin.u) / uD;
 		p.v = (p.v - BBmin.v) / vD;

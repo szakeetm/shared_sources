@@ -154,6 +154,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nullRx,const bool& nullRy,const bool& nullRz,const Vector3d& inverseRayDir) {
 	double tNear, tFar;
 	//X component
+
 	if (nullRx) {
 		if (rayPos.x < node.bb.min.x || rayPos.x > node.bb.max.x) {
 			return false;
@@ -194,6 +195,7 @@ bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nul
 		tFar = std::min(tFar, std::max(intersection1, intersection2));
 		if (tNear>tFar || tFar<0.0) return false;
 	}
+
 	return true;
 }
 
@@ -289,7 +291,6 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 	if (node.left == NULL || node.right == NULL) { // Leaf
 
 		for (const auto& f : node.facets) {
-
 			// Do not check last collided facet
 			if (f == lastHitBefore)
 				continue;
@@ -435,7 +436,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 	if (n_updown<0) n_updown = -n_updown;
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
 	*/
-	
+
 	return IsInPoly(Vector2d(u, v), f.vertices2);
 
 }
@@ -639,3 +640,4 @@ AABBNODE::~AABBNODE()
 	SAFE_DELETE(left);
 	SAFE_DELETE(right);
 }
+                      
