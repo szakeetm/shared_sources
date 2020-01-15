@@ -27,10 +27,7 @@ void GeometryConverter::PolygonsToTriangles(Geometry* geometry){
     geometry->facets = (Facet **)realloc(geometry->facets, geometry->sh.nbFacet * sizeof(Facet *));
 
     // Update facet list
-    int i = 0;
-    for(Facet* facet : triangleFacets){
-        geometry->facets[i++] = facet;
-    }
+    memcpy(geometry->facets,triangleFacets.data(),triangleFacets.size()*sizeof(Facet*));
 
     // to recalculate various facet properties
     geometry->InitializeGeometry();

@@ -126,7 +126,8 @@ public:
 	Vector3d GetFacetCenter(int facet);
 	size_t      GetNbStructure();
 	char     *GetStructureName(int idx);
-	void AddFacet(const std::vector<size_t>& vertexIds);
+
+    void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
 	void CreateDifference(); //creates the difference from 2 selected facets. Not used anymore, superseded by ClipPolygon

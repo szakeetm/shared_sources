@@ -340,7 +340,7 @@ size_t Geometry::GetNbStructure() {
 }
 
 char *Geometry::GetStructureName(int idx) {
-	return strName[idx];
+    return strName[idx];
 }
 
 void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
