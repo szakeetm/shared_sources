@@ -53,5 +53,6 @@ private:
   GLTextField *x;
   GLTextField *y;
   GLTextField *z;
+    GLTextField *xyz;
 
 };

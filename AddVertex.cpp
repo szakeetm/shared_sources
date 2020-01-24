@@ -53,7 +53,7 @@ extern SynRad*mApp;
 AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
 
   int wD = 335;
-  int hD = 120;
+  int hD = 145;
 
   SetTitle("Add new vertex");
 
@@ -81,20 +81,30 @@ AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
   z->SetBounds(245,4,80,18);
   Add(z);
 
+    GLLabel *l4 = new GLLabel("XYZ:");
+    l4->SetBounds(10,30,30,18);
+    Add(l4);
+
+    xyz = new GLTextField(0,"(x,y,z)");
+    xyz->SetBounds(45,29,280,18);
+    Add(xyz);
+
+
+
   facetCenterButton = new GLButton(0, "Facet center");
-  facetCenterButton->SetBounds(10, 30, 75, 20);
+  facetCenterButton->SetBounds(10, 55, 75, 20);
   Add(facetCenterButton);
 
   facetUButton = new GLButton(0, "Facet \201");
-  facetUButton->SetBounds(90, 30, 75, 20);
+  facetUButton->SetBounds(90, 55, 75, 20);
   Add(facetUButton);
 
   facetVButton = new GLButton(0, "Facet \202");
-  facetVButton->SetBounds(170, 30, 75, 20);
+  facetVButton->SetBounds(170, 55, 75, 20);
   Add(facetVButton);
 
   facetNormalButton = new GLButton(0, "Facet N");
-  facetNormalButton->SetBounds(250, 30, 75, 20);
+  facetNormalButton->SetBounds(250, 55, 75, 20);
   Add(facetNormalButton);
 
   addButton = new GLButton(0,"Add vertex");
@@ -129,19 +139,48 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 
 	  if (src == addButton) {
 
-		  if (!x->GetNumber(&X)) {
-			  GLMessageBox::Display("Invalid X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  if (!y->GetNumber(&Y)) {
-			  GLMessageBox::Display("Invalid Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  if (!z->GetNumber(&Z)) {
-			  GLMessageBox::Display("Invalid Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  geom->AddVertex(X, Y, Z);
+	      // If xyz is not empty, take this
+              if (xyz->GetTextLength()) {
+                  vector<double> vect;
+                  std::stringstream xyzStr(xyz->GetText());
+                  double i;
+                  while(!xyzStr.eof()) {
+                      xyzStr >> std::ws;  // remove leading white spaces
+                      int c = xyzStr.peek();  // peek next character
+                      while(! std::isdigit(c)){
+                          xyzStr.ignore();
+                          c = xyzStr.peek();
+                          if ( c == EOF ) break;
+                      }
+                      if(xyzStr >> i) vect.push_back(i); //push only if a proper double value
+                  }
+                  if(vect.size()==3){
+                      geom->AddVertex(vect.at(0), vect.at(1), vect.at(2));
+                      x->SetText(vect.at(0));
+                      y->SetText(vect.at(1));
+                      z->SetText(vect.at(2));
+                  }
+                  else{
+                      GLMessageBox::Display("Invalid XYZ value", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                  }
+              }
+          else{
+              if (!x->GetNumber(&X)) {
+                  GLMessageBox::Display("Invalid X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                  return;
+              }
+              if (!y->GetNumber(&Y)) {
+                  GLMessageBox::Display("Invalid Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                  return;
+              }
+              if (!z->GetNumber(&Z)) {
+                  GLMessageBox::Display("Invalid Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                  return;
+              }
+              geom->AddVertex(X, Y, Z);
+          }
+
+
 	  }
 	  else if (Contains({ facetCenterButton,facetUButton,facetVButton,facetNormalButton }, src)) {
 		  auto selFacetIds = geom->GetSelectedFacets();
