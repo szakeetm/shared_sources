@@ -544,14 +544,16 @@ typedef union {
 class FacetHitBuffer {
 public:
     FacetHitBuffer();
+    void ResetBuffer();
+
     struct {
         // Counts
-        double fluxAbs;
-        double powerAbs;
-        size_t nbDesorbed;          // Number of desorbed molec
         size_t nbMCHit;               // Number of hits
+        size_t nbDesorbed;          // Number of desorbed molec
         double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
         double nbAbsEquiv;          // Equivalent number of absorbed molecules
+        double fluxAbs;         // Total desorbed Flux
+        double powerAbs;        // Total desorbed power
     } hit;
 
 	template<class Archive>

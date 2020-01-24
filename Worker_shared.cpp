@@ -807,4 +807,41 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     ResetWorkerStats();
 #endif
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
+/**
+* \brief Extract a 7z file and return the file handle
+* \param fileName name of the input file
+* \param geomName name of the geometry file
+* \return handle to opened decompressed file
+*/
+FileReader* Worker::ExtractFrom7zAndOpen(const std::string & fileName, const std::string & geomName)
+{
+	std::ostringstream cmd;
+	std::string sevenZipName = "7za";
+
+#ifdef _WIN32
+	//Necessary push/pop trick to support UNC (network) paths in Windows command-line
+	auto CWD = FileUtils::get_working_path();
+	cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
+	cmd << "7za.exe x -t7z -aoa \"" << fileName << "\" -otmp";
+#else
+	cmd << "./7za x -t7z -aoa \"" << fileName << "\" -otmp";
+#endif
+
+#ifdef _WIN32
+	cmd << "&&popd\"";
+#endif
+	system(cmd.str().c_str());
+
+	std::string toOpen, prefix;
+	std::string shortFileName = FileUtils::GetFilename(fileName);
+#ifdef _WIN32
+	prefix = CWD + "\\tmp\\";
+#else
+	prefix = "tmp/";
+#endif
+	toOpen = prefix + geomName;
+	if (!FileUtils::Exist(toOpen)) toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
+
+	return new FileReader(toOpen); //decompressed file opened
+}

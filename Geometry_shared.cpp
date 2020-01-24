@@ -3836,7 +3836,8 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			strcpy(tmpName, file->ReadString());
 			v.projMode = file->ReadInt();
 			v.camAngleOx = file->ReadDouble();
-			v.camAngleOy = file->ReadDouble();
+            v.camAngleOy = file->ReadDouble();
+            v.camAngleOz = 0.0; //No support for Z angle in current GEO version
 			v.camDist = file->ReadDouble();
 			v.camOffset.x = file->ReadDouble();
 			v.camOffset.y = file->ReadDouble();

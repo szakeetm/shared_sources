@@ -472,8 +472,7 @@ public:
 	void ExportTextures(int grouping, int mode);
 	
 	// Recent files
-	char *recents[MAX_RECENT];
-	int  nbRecent;
+    std::list<char *> recentsList;
 	void AddRecent(const char *fileName);
 	void RemoveRecent(const char *fileName);
 	void UpdateRecentMenu();

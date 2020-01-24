@@ -139,7 +139,6 @@ Interface::Interface() {
 
     lastUpdate = 0.0;
     //nbFormula = 0;
-    nbRecent = 0;
 
     nbView = 0;
     idView = 0;
@@ -1764,10 +1763,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 }
             }
             // Load recent menu
-            if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + nbRecent) {
+            if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {
                 if (AskToSave()) {
                     if (worker.isRunning) worker.Stop_Public();
-                    LoadFile(recents[src->GetId() - MENU_FILE_LOADRECENT]);
+                    auto recentEntry = recentsList.begin();
+                    std::advance(recentEntry,src->GetId() - MENU_FILE_LOADRECENT);
+                    LoadFile(*recentEntry);
                 }
                 return true;
             }
@@ -2121,25 +2122,25 @@ void Interface::AddView() {
 void Interface::RemoveRecent(const char *fileName) {
 
     if (!fileName) return;
-
     bool found = false;
-    int i = 0;
-    while (!found && i < nbRecent) {
-        found = strcmp(fileName, recents[i]) == 0;
-        if (!found) i++;
+
+    for(auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter){
+        found = strcmp(fileName, *recentIter) == 0;
+        if (found) {
+            SAFE_FREE(*recentIter);
+            recentsList.erase(recentIter);
+            break;
+        }
     }
     if (!found) return;
 
-    SAFE_FREE(recents[i]);
-    for (int j = i; j < nbRecent - 1; j++)
-        recents[j] = recents[j + 1];
-    nbRecent--;
+    // Remove oldest elements exceeding the limit
+    while(recentsList.size() >= MAX_RECENT){
+        recentsList.pop_front();
+    }
 
     // Update menu
-    GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
-    m->Clear();
-    for (i = nbRecent - 1; i >= 0; i--)
-        m->Add(recents[i], MENU_FILE_LOADRECENT + i);
+    UpdateRecentMenu();
     SaveConfig();
 }
 
@@ -2147,44 +2148,39 @@ void Interface::AddRecent(const char *fileName) {
 
     // Check if already exists
     bool found = false;
-    int i = 0;
-    while (!found && i < nbRecent) {
-        found = strcmp(fileName, recents[i]) == 0;
-        if (!found) i++;
-    }
-    if (found) {
-        for (int j = i; j < nbRecent - 1; j++) {
-            recents[j] = recents[j + 1];
+
+    for(auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter){
+        found = strcmp(fileName, *recentIter) == 0;
+        if (found) {
+            SAFE_FREE(*recentIter);
+            recentsList.erase(recentIter);
+            break;
         }
-        recents[nbRecent - 1] = strdup(fileName);
-        // Update menu
-        GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
-        m->Clear();
-        for (int i = nbRecent - 1; i >= 0; i--)
-            m->Add(recents[i], MENU_FILE_LOADRECENT + i);
-        SaveConfig();
-        return;
     }
 
-    // Add the new recent file
-    if (nbRecent < MAX_RECENT) {
-        recents[nbRecent] = strdup(fileName);
-        nbRecent++;
-    }
-    else {
-        // Shift
-        SAFE_FREE(recents[0]);
-        for (int i = 0; i < MAX_RECENT - 1; i++)
-            recents[i] = recents[i + 1];
-        recents[MAX_RECENT - 1] = strdup(fileName);
+    // Add new element
+    recentsList.emplace_back(strdup(fileName));
+
+    // Remove oldest elements exceedint the limit
+    while(recentsList.size() >= MAX_RECENT){
+        recentsList.pop_front();
     }
 
     // Update menu
+    UpdateRecentMenu();
+    SaveConfig();
+    return;
+}
+
+void Interface::UpdateRecentMenu(){
+    // Update menu
     GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
     m->Clear();
-    for (int i = nbRecent - 1; i >= 0; i--)
-        m->Add(recents[i], MENU_FILE_LOADRECENT + i);
-    SaveConfig();
+    int i=recentsList.size()-1;
+    for(auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
+        m->Add(*recentIter, MENU_FILE_LOADRECENT + i);
+        --i;
+    }
 }
 
 void Interface::AddStruct() {
@@ -2595,14 +2591,6 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
         }
     }
     else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
-}
-
-void Interface::UpdateRecentMenu(){
-    // Update menu
-    GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
-    m->Clear();
-    for (int i = nbRecent - 1; i >= 0; i--)
-        m->Add(recents[i], MENU_FILE_LOADRECENT + i);
 }
 
 void Interface::SaveFileAs() {
