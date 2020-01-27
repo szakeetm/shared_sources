@@ -1009,29 +1009,42 @@ void Geometry::MoveVertexTo(size_t idx, double x, double y, double z) {
 }
 
 void Geometry::SwapNormal() {
+    //Default: sweap selected facets
+    SwapNormal(GetSelectedFacets());
+}
 
-	if (!IsLoaded()) {
-		GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
-		return;
-	}
-	if (GetNbSelectedFacets() <= 0) return;
-	mApp->changedSinceSave = true;
-	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
-		if (f->selected) {
-			f->SwapNormal();
-			InitializeGeometry(i);
-			try {
-				SetFacetTexture(i, f->tRatio, f->hasMesh);
-			}
-			catch (Error &e) {
-				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-			}
-		}
-	}
+void Geometry::RevertFlippedNormals() {
+    std::vector<size_t> flippedFacetList;
+    auto selectedFacetList = GetSelectedFacets();
+    for (auto i : selectedFacetList) {
+        if (facets[i]->normalFlipped) {
+            flippedFacetList.push_back(i);
+        }
+    }
+    SwapNormal(flippedFacetList);
+}
 
-	DeleteGLLists(true, true);
-	BuildGLList();
+void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the normal for a list of facets
+
+    if (!IsLoaded()) {
+        GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+        return;
+    }
+    mApp->changedSinceSave = true;
+    for (auto i:facetList) {
+        Facet *f = facets[i];
+        f->SwapNormal();
+        InitializeGeometry((int)i);
+        try {
+            SetFacetTexture(i, f->tRatio, f->hasMesh);
+        }
+        catch (Error &e) {
+            GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        }
+    }
+
+    DeleteGLLists(true, true);
+    BuildGLList();
 
 }
 

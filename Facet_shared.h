@@ -154,7 +154,8 @@ public:
 	double d;
 	double planarityError;
 	bool nonSimple = false; // A non simple polygon has crossing sides
-	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
+    bool normalFlipped = false; // A flag that is true for concave facets where the normal has been flipped to obey the left-hand rule. We set it so the flip can be reverted
+    //int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
 	double tRatio;       // Texture sample per unit
