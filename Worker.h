@@ -92,6 +92,7 @@ public:
   void Reload();    // Reload simulation (throws Error)
   void RealReload(bool sendOnly=false);
   std::ostringstream SerializeForLoader();
+  void SerializeForExternal();
   void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource

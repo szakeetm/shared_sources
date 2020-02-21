@@ -28,7 +28,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <array>
 
 #ifdef MOLFLOW
-#include "MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
+#include "MolflowTypes.h" //Reflection, Anglemapparams
+#include "MolflowDisplayTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
 #ifdef SYNRAD

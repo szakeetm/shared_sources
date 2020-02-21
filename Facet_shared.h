@@ -26,6 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 using namespace pugi;
 #include "GLApp/GLToolkit.h"
 #include <cereal/archives/binary.hpp>
+#include <cereal/archives/xml.hpp>
 
 #ifdef SYNRAD
 #include "SynradDistributions.h" //material, for Save, etc.
@@ -192,7 +193,27 @@ public:
 #ifdef SYNRAD
 
 #endif
-	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
+    void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
+    void SerializeData(std::vector<double>& outgMapVector, std::vector<size_t>& angleMapVector, std::vector<double>& textIncVector);
+    template <class Archive>
+    void serialize( Archive & archive)
+    {
+        std::vector<double> outgMapVector;
+        std::vector<size_t> angleMapVector;
+        std::vector<double> textIncVector;
+
+        //TODO: Could only be valid for output
+        SerializeData(outgMapVector,angleMapVector,textIncVector);
+
+        archive(
+                cereal::make_nvp("FacetProperties",sh), //Contains anglemapParams
+                CEREAL_NVP(indices),
+                CEREAL_NVP(vertices2)
+                , CEREAL_NVP(outgMapVector)
+                , CEREAL_NVP(angleMapVector)
+                , CEREAL_NVP(textIncVector)
+        );
+    }
 };
 
 class FacetGroup {
