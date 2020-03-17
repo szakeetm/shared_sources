@@ -640,4 +640,3 @@ AABBNODE::~AABBNODE()
 	SAFE_DELETE(left);
 	SAFE_DELETE(right);
 }
-                      

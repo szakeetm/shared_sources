@@ -198,7 +198,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 	//initGeoPrg->SetVisible(false);
 	//SAFE_DELETE(initGeoPrg);
-	assert(_CrtCheckMemory());
+	//assert(_CrtCheckMemory());
 }
 
 void Geometry::RecalcBoundingBox(int facet_number) {
@@ -1492,7 +1492,7 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool to
 			tempFacets[insertPos] = facets[insertPos - nbInsert];
 			newRefs[insertPos - nbInsert] = (int)insertPos;
 		}
-        assert(_CrtCheckMemory());
+        //assert(_CrtCheckMemory());
 		//Renumber things;
 		RenumberNeighbors(newRefs);
 		mApp->RenumberFormulas(&newRefs);

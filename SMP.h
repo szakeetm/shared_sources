@@ -28,7 +28,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 extern "C" {
 #endif
 
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #define NOMINMAX
 #include <windows.h>
 
@@ -44,16 +47,34 @@ extern "C" {
  } Dataport;
 
 #else
-
+#include <sys/sem.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+ using DWORD = unsigned int;
+ using WORD = unsigned short;
+
+ union semun {
+    int                 val;   /* value for SETVAL             */
+    struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */
+    unsigned short     *array; /* array for GETALL, SETALL     */
+};
 
  // Linux shared memory
  typedef struct {
-   int              sema;
+/*   int              sema;
    int              shar;
    int              key;
    pid_t            creator_pid;
-   char             body;
+   char             body;*/
+    char              name[32]; //Unique identifier
+    char              semaname[32]; //Mutex unique identifier
+    int            sema; //Mutex handle (CreateMutex return value)
+    int            shmFd; //File mapping handle (CreateFileMapping return value)
+    int file;			//Physical file handle (if persistent)
+    size_t size;		//keep track of mapped size
+    void              *buff; //View handle (MapViewOfFile return value, pointer to data)
  } Dataport;
 
 #endif
@@ -77,7 +98,7 @@ bool CloseDataport(Dataport *dp);
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-DWORD         StartProc(const char *pname,int mode);
+DWORD         StartProc(const char *pname,int mode, char **argv);
 bool IsProcessRunning(DWORD pID);
 
 /*extern DWORD         StartProc_background(char *pname);

@@ -191,11 +191,11 @@ void SmpStatus::ProcessMessage(GLComponent *src,int message) {
       } else if (src==maxButton) {
         if( worker->GetGeometry()->IsLoaded() ) {
           char tmp[128];
-          sprintf(tmp,"%I64d",worker->desorptionLimit);
+          sprintf(tmp,"%zd",worker->desorptionLimit);
           char *val = GLInputBox::GetInput(tmp,"Desorption max (0=>endless)","Edit MAX");
           if( val ) {
             llong maxDes;
-            if( sscanf(val,"%I64d",&maxDes)==0 ) {
+            if( sscanf(val,"%zd",&maxDes)==0 ) {
               GLMessageBox::Display("Invalid 'maximum desorption' number","Error",GLDLG_OK,GLDLG_ICONERROR);
             } else {
               worker->SetMaxDesorption(maxDes);

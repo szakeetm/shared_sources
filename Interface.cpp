@@ -21,6 +21,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include <direct.h> //_getcwd()
 //#include <io.h> // Check for recovery
 
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+
+#else
+#include <sys/sysinfo.h>
+#endif
+
 #include <filesystem>
 #include <string>
 #include "AppUpdater.h"
@@ -110,9 +116,14 @@ extern const char *cName[];
 
 Interface::Interface() {
     //Get number of cores
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    compressProcessHandle = NULL;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     numCPU = (size_t)sysinfo.dwNumberOfProcessors;
+#else
+    numCPU = get_nprocs();
+#endif
     appUpdater = NULL; //We'll initialize later, when the app name and version id is known
 
     antiAliasing = true;
@@ -127,7 +138,6 @@ Interface::Interface() {
     autoSaveFrequency = 10.0; //in minutes
     autoSaveSimuOnly = false;
     autosaveFilename = "";
-    compressProcessHandle = NULL;
     autoFrameMove = true;
 
     lastSaveTime = 0.0f;
@@ -2508,10 +2518,10 @@ void Interface::UpdateFormula() {
 
 	for (int i = 0; i < nbFormula; i++) {
 
-		
+
 		GLParser *f = formulas[i].parser;
 		//f->Parse(); //If selection group changed
-		
+
 
 					// Evaluate variables
 		int nbVar = f->GetNbVariable();

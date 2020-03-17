@@ -17,8 +17,14 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 //#include <Windows.h>
+#include <Process.h>
+#include <direct.h>
+#else
+
+#endif
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -28,7 +34,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLList.h"
 #include <math.h>
 #include <stdlib.h>
-#include <Process.h>
 #include "GLApp/GLUnitDialog.h"
 #include "LoadStatus.h"
 #ifdef MOLFLOW
@@ -42,7 +47,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SynradGeometry.h"
 #endif
 
-#include <direct.h>
 #include "File.h" //File utils (Get extension, etc)
 
 /*
@@ -338,7 +342,15 @@ bool Worker::Wait(size_t readyState, LoadStatus *statusWindow) {
 				statusWindow->SMPUpdate();
 				mApp->DoEvents(); //Do a few refreshes during waiting for subprocesses
 			}
-			Sleep(250);
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+            Sleep(250);
+#else
+            struct timespec tv;
+            tv.tv_sec = 250/1000;
+            tv.tv_nsec = (250%1000)*1000000;
+            nanosleep(&tv,0);
+#endif
 			waitTime += 250;
 		}
 	}
@@ -364,7 +376,14 @@ bool Worker::ExecuteAndWait(int command, size_t readyState, size_t param) {
 	}
 	ReleaseDataport(dpControl);
 
-	Sleep(100);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    Sleep(100);
+#else
+    struct timespec tv;
+    tv.tv_sec = 100/1000;
+    tv.tv_nsec = (100%1000)*1000000;
+    nanosleep(&tv,0);
+#endif
 
 	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 	bool result = Wait(readyState, mApp->loadStatus);
@@ -443,17 +462,48 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
 	// Launch n subprocess
 	for(size_t i=0;i<n;i++) {
-		#ifdef MOLFLOW
-		//if(i==0) sprintf(cmdLine,"C:\\Users\\pbahr\\Downloads\\Tools\\bin64\\drmemory.exe -dr_ops \"-msgbox_mask 15\" -- molflowSub.exe %d %zd",pid,i);
+#ifdef MOLFLOW
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        //if(i==0) sprintf(cmdLine,"C:\\Users\\pbahr\\Downloads\\Tools\\bin64\\drmemory.exe -dr_ops \"-msgbox_mask 15\" -- molflowSub.exe %d %zd",pid,i);
         //else
-            sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
+        sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
+#else
+        char **argumente;
+        argumente = new char*[3];
+        for(int i=0;i<3;i++)
+            argumente[i] = new char[10];
+        sprintf(cmdLine,"./molflowSub");
+        sprintf(argumente[0],"%d",pid);
+        sprintf(argumente[1],"%u",i);
+        sprintf(argumente[2],"%s",'\0');
+        //argumente[2] = NULL;
+#endif
+#elif defined(SYNRAD)
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
+#else
+        char argumente[3][10];
+        sprintf(cmdLine,"./synradSub");
+        sprintf(argumente[0],"%d",pid);
+        sprintf(argumente[1],"%z",i);
+#endif
+#endif
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, nullptr);
+#else
+        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, static_cast<char **>(argumente));
 
 #endif
-		#ifdef SYNRAD
-		sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
-		#endif
-		pID[i] = StartProc(cmdLine,STARTPROC_NORMAL);
-		Sleep(25); // Wait a bit
+		// Wait a bit
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        Sleep(25);
+#else
+        struct timespec tv;
+        tv.tv_sec = 25/1000;
+        tv.tv_nsec = (25%1000)*1000000;
+        nanosleep(&tv,0);
+#endif
 		if( pID[i]==0 ) {
 			ontheflyParams.nbProcess = 0;
 			throw Error(cmdLine);
