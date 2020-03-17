@@ -1742,7 +1742,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                 case MENU_TRIANGULATE:
                     if (AskToSave()) GeometryConverter::PolygonsToTriangles(this->worker.GetGeometry());
                     return true;
-#ifdef MOLFLOW
+#if defined(MOLFLOW) && defined(GPUCOMPABILITY)
                 case MENU_SAVEGPUGEOM:
                     flowgeom::saveFromMolflow(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // polygon geometry
                     flowgeom::saveFromMolflowTriangle(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // triangle geometry
