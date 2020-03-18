@@ -32,9 +32,9 @@ class LoadStatus;
 
 
 #ifdef MOLFLOW
-#include "Parameter.h"
+#include "../src/Parameter.h"
 #include "Vector.h" //moving parts
-#include "MolflowTypes.h"
+#include "../src/MolflowTypes.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 

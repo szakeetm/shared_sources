@@ -101,6 +101,18 @@ bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
 DWORD         StartProc(const char *pname,int mode, char **argv);
 bool IsProcessRunning(DWORD pID);
 
+// Helper functions
+inline void ProcessSleep(const unsigned int milliseconds) {
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    Sleep(milliseconds);
+#else
+    struct timespec tv;
+    tv.tv_sec = milliseconds / 1000;
+    tv.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&tv, nullptr);
+#endif
+}
+
 /*extern DWORD         StartProc_background(char *pname);
 extern DWORD         StartProc_foreground(char *pname); //TODO: unite these three*/
 

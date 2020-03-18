@@ -35,8 +35,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Clipper/clipper.hpp"
 
 #ifdef MOLFLOW
-#include "MolFlow.h"
-#include "MolflowTypes.h"
+#include "../src/MolFlow.h"
+#include "../src/MolflowTypes.h"
 #endif
 
 #ifdef SYNRAD

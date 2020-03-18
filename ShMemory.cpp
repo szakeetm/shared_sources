@@ -37,6 +37,8 @@ void PrintLastErrorText(LPTSTR suff);
 #include <sys/socket.h>
 #include <memory.h>
 #include <sys/un.h>
+#include <time.h>
+
 void PrintLastErrorText( const char* errorMsg );
 int build_key (char *name)
 {
@@ -490,7 +492,6 @@ bool CloseDataport(Dataport *dp) {
 }
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-
 void PrintLastErrorText(LPTSTR suff) {
     DWORD dwRet;
     LPTSTR lpszTemp = NULL;

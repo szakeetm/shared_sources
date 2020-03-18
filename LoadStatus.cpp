@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "LoadStatus.h"
 #include "GLApp/GLToolkit.h"
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD

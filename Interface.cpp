@@ -89,7 +89,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //Test functions
 #include "GeometryConverter.h"
 
-#include "versionId.h"
+#include "../src/versionId.h"
 
 extern Worker worker;
 extern std::vector<string> formulaPrefixes;

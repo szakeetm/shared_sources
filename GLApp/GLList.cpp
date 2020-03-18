@@ -16,7 +16,7 @@
 #include <Vector.h>
 #include <iomanip> //stream setprecision
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD

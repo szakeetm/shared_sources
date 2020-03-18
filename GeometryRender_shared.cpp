@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMatrix.h"
 #include <tuple>
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../src/MolFlow.h"
 #include "Interface.h"
 #endif
 
