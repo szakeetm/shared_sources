@@ -65,6 +65,17 @@ int build_key (char *name)
 }
 #endif
 
+#if __APPLE__
+// according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
+#include <signal.h>
+#include <sys/ipc.h>
+volatile int alarm_triggered = 0;
+void alarm_handler(int sig)
+{
+    alarm_triggered = 1;
+}
+#endif
+
 #include "SMP.h"
 
 // create named semaphore related to dp->semaname
@@ -384,19 +395,42 @@ bool AccessDataport(Dataport *dp) {
         return true;
     else
         return false;
+#elif __APPLE__
+    struct sembuf   semBuf;
+    semBuf.sem_num = 0;
+    semBuf.sem_op = -1;
+    semBuf.sem_flg = SEM_UNDO | IPC_NOWAIT;
+
+    if (semop(dp->sema, &semBuf, 1) != 0) {
+        semBuf.sem_flg = SEM_UNDO;
+
+        /* set up signal handler */
+        signal(SIGALRM, alarm_handler);
+        int rc;
+        alarm(8); /* 8 second timeout */
+
+        if ((rc = semop(dp->sema, &semBuf, 1)) != 0) { // if (rc == -1 && errno == EINTR)
+            char errMsg[128];
+            sprintf(errMsg, "[%s / %d] Locking Mutex failed",dp->semaname,getpid());
+            PrintLastErrorText(errMsg);
+            return false;
+        }
+        alarm(0); /* disable alarm */
+    }
+    return true;
 #else
     struct sembuf   semBuf;
     semBuf.sem_num = 0;
     semBuf.sem_op = -1;
     semBuf.sem_flg = SEM_UNDO | IPC_NOWAIT;
 
-    struct timespec sem_timeout;
-    sem_timeout.tv_sec = 8;
-    sem_timeout.tv_nsec = 0;
 
     //printf("[%s / %d] Trying to lock! -> %d\n",dp->semaname,getpid(), semctl(dp->sema, 0, GETVAL));
     if (semop(dp->sema, &semBuf, 1) != 0) {
         semBuf.sem_flg = SEM_UNDO;
+        struct timespec sem_timeout;
+        sem_timeout.tv_sec = 8;
+        sem_timeout.tv_nsec = 0;
         if (semtimedop(dp->sema, &semBuf, 1, &sem_timeout) != 0) {
             char errMsg[128];
             sprintf(errMsg, "[%s / %d] Locking Mutex failed",dp->semaname,getpid());
@@ -418,15 +452,39 @@ bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
         return true;
     else
         return false;
+#elif defined(__APPLE__)
+    struct sembuf   semBuf;
+    semBuf.sem_num = 0;
+    semBuf.sem_op = -1;
+    semBuf.sem_flg = SEM_UNDO | IPC_NOWAIT;
+
+    if (semop(dp->sema, &semBuf, 1) != 0) {
+        semBuf.sem_flg = SEM_UNDO;
+
+        /* set up signal handler */
+        signal(SIGALRM, alarm_handler);
+        int rc;
+        ualarm(timeout / 1000); /* 8 second timeout */
+
+        if ((rc = semop(dp->sema, &semBuf, 1)) != 0) { // if (rc == -1 && errno == EINTR)
+            char errMsg[128];
+            sprintf(errMsg, "[%s / %d] Locking Mutex failed",dp->semaname,getpid());
+            PrintLastErrorText(errMsg);
+            return false;
+        }
+        alarm(0); /* disable alarm */
+    }
+    return true;
 #else
     struct sembuf   semBuf;
     semBuf.sem_num = 0;
     semBuf.sem_op = -1;
     semBuf.sem_flg = SEM_UNDO | IPC_NOWAIT;
-    struct timespec sem_timeout;
-    sem_timeout.tv_sec = timeout / 1000;
-    sem_timeout.tv_nsec = (timeout % 1000) * 1000000;
     if (semop(dp->sema, &semBuf, 1) != 0) {
+        semBuf.sem_flg = SEM_UNDO;
+        struct timespec sem_timeout;
+        sem_timeout.tv_sec = timeout / 1000;
+        sem_timeout.tv_nsec = (timeout % 1000) * 1000000;
         if (semtimedop(dp->sema, &semBuf, 1, &sem_timeout) != 0) {
             //char errMsg[128];
             //sprintf(errMsg, "[%s / %d] Locking Mutex failed",dp->semaname,getpid());
