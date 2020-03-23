@@ -18,37 +18,18 @@ add_subdirectory(TruncatedGaussian)
 
 set(PROJECT_NAME simulator_shared)
 
-
-
-IF (WIN32)
-    set(OS_NAME "win")
-ELSE()
-    IF(os_version_suffix STREQUAL ".el7")
-        set(OS_NAME "linux_fedora")
-    ELSE()
-        set(OS_NAME "linux_debian")
-    ENDIF()
-ENDIF()
-
-# Output Variables
-set(OUTPUT_DEBUG ../lib/${OS_NAME}/debug/)
-set(OUTPUT_REL ../lib/${OS_NAME}/release/)
 # Folders files
-set(CPP_DIR_2 ../src_shared)
-set(CPP_DIR_3 ../src_shared/GLApp)
-set(CPP_DIR_4 ../src_shared/GLApp/GLChart)
-set(HEADER_DIR_2 ../src_shared)
-set(HEADER_DIR_3 ../src_shared/GLApp)
-set(HEADER_DIR_4 ../src_shared/GLApp/GLChart)
-set(HEADER_DIR_5 ../include)
+set(HEADER_DIR_1 .)
+set(HEADER_DIR_2 ./GLApp)
+set(HEADER_DIR_3 ./GLApp/GLChart)
+set(HEADER_DIR_4 ../include)
 set(COPY_DIR ../copy_to_build/)
 
 IF (WIN32)
     # set stuff for windows
 
-    set(CPP_DIR_5 ../src_shared/windows_only)
-    set(HEADER_DIR_6 ../include/windows_only)
-    set(HEADER_DIR_7 ../include/windows_only/png)
+    set(HEADER_DIR_5 ../include/windows_only)
+    set(HEADER_DIR_6 ../include/windows_only/png)
 
     set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
     #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
@@ -56,11 +37,6 @@ IF (WIN32)
     #set(DLL_DIR ../../_molflow/molflow_project/lib/lib)
 ELSE()
     # set stuff for other systems
-
-    set(CPP_DIR_5 "")
-    set(HEADER_DIR_6 "")
-    set(HEADER_DIR_7 "")
-    set(HEADER_DIR_8 "")
 
     # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
     IF(os_version_suffix STREQUAL ".el7")
@@ -77,15 +53,20 @@ ENDIF()
 project(${PROJECT_NAME} CXX)
 
 # Definition of Macros
-add_definitions(-DMOLFLOW -DWIN -DCURL_STATICLIB -DNDEBUG -D_WINDOWS -D_WITHGL -D_CRT_SECURE_NO_DEPRECATE)
 add_definitions(
         -DCURL_STATICLIB
         -D_MBCS
-        -DMOLFLOW
         -D_CRT_SECURE_NO_WARNINGS
         -D_CRT_NONSTDC_NO_DEPRECATE
+        -D_CRT_SECURE_NO_DEPRECATE
 )
-
+IF (WIN32)
+    add_definitions(
+            -DWIN
+            -D_WINDOWS
+            -D_WITHGL
+    )
+ENDIF()
 
 ############## Artefacts Output ############################
 # Defines outputs , depending BUILD TYPE                   #
@@ -101,125 +82,121 @@ else()
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
 endif()
 
-# Messages
-message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")
-message("${PROJECT_NAME}: CURR PROJECT: ${CMAKE_CURRENT_SOURCE_DIR}")
-message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-# Messages
-message("${PROJECT_NAME}: CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-message("${PROJECT_NAME}: CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-message("${PROJECT_NAME}: CMAKE_EXECUTABLE_OUTPUT_DIRECTORY: ${CMAKE_EXECUTABLE_OUTPUT_DIRECTORY}")
-
-
 ############### Files & Targets ############################
 # Files of project and target to build                     #
 ############################################################
 
 set(SRC_FILES
-        ${CPP_DIR_2}/ASELoader.cpp
-        ${CPP_DIR_2}/AddVertex.cpp
-        ${CPP_DIR_2}/AlignFacet.cpp
-        ${CPP_DIR_2}/AppUpdater.cpp
-        ${CPP_DIR_2}/BuildIntersection.cpp
-        ${CPP_DIR_2}/CollapseSettings.cpp
-        ${CPP_DIR_2}/CreateShape.cpp
-        ${CPP_DIR_2}/Distributions.cpp
-        ${CPP_DIR_2}/ExtrudeFacet.cpp
-        ${CPP_DIR_2}/FacetCoordinates.cpp
-        ${CPP_DIR_2}/Facet_shared.cpp
-        ${CPP_DIR_2}/File.cpp
-        ${CPP_DIR_2}/FormulaEditor.cpp
-        ${CPP_DIR_2}/GeometryRender_shared.cpp
-        ${CPP_DIR_2}/GeometryViewer_shared.cpp
-        ${CPP_DIR_2}/Geometry_shared.cpp
-        ${CPP_DIR_2}/GrahamScan.cpp
-        ${CPP_DIR_2}/HistogramPlotter.cpp
-        ${CPP_DIR_2}/HistogramSettings.cpp
-        ${CPP_DIR_2}/Interface.cpp
-        ${CPP_DIR_2}/LoadStatus.cpp
-        ${CPP_DIR_2}/MirrorFacet.cpp
-        ${CPP_DIR_2}/MirrorVertex.cpp
-        ${CPP_DIR_2}/MoveFacet.cpp
-        ${CPP_DIR_2}/MoveVertex.cpp
-        ${CPP_DIR_2}/ParticleLogger.cpp
-        ${CPP_DIR_2}/Polygon.cpp
-        ${CPP_DIR_2}/Process.cpp
-        ${CPP_DIR_2}/Random.cpp
-        ${CPP_DIR_2}/RecoveryDialog.cpp
-        ${CPP_DIR_2}/RotateFacet.cpp
-        ${CPP_DIR_2}/RotateVertex.cpp
-        ${CPP_DIR_2}/ScaleFacet.cpp
-        ${CPP_DIR_2}/ScaleVertex.cpp
-        ${CPP_DIR_2}/SelectDialog.cpp
-        ${CPP_DIR_2}/SelectTextureType.cpp
-        ${CPP_DIR_2}/ShMemory.cpp
-        ${CPP_DIR_2}/SmartSelection.cpp
-        ${CPP_DIR_2}/SplitFacet.cpp
-        ${CPP_DIR_2}/Vector.cpp
-        ${CPP_DIR_2}/VertexCoordinates.cpp
-        ${CPP_DIR_2}/Web.cpp
-        ${CPP_DIR_2}/Worker_shared.cpp
-        ${CPP_DIR_2}/GeometryConverter.cpp
-        #${CPP_DIR_1}/GPUSim/MolflowModelParser.cpp
+        ASELoader.cpp
+        AddVertex.cpp
+        AlignFacet.cpp
+        AppUpdater.cpp
+        BuildIntersection.cpp
+        CollapseSettings.cpp
+        CreateShape.cpp
+        Distributions.cpp
+        ExtrudeFacet.cpp
+        FacetCoordinates.cpp
+        Facet_shared.cpp
+        File.cpp
+        FormulaEditor.cpp
+        GeometryRender_shared.cpp
+        GeometryViewer_shared.cpp
+        Geometry_shared.cpp
+        GrahamScan.cpp
+        HistogramPlotter.cpp
+        HistogramSettings.cpp
+        Interface.cpp
+        LoadStatus.cpp
+        MirrorFacet.cpp
+        MirrorVertex.cpp
+        MoveFacet.cpp
+        MoveVertex.cpp
+        ParticleLogger.cpp
+        Polygon.cpp
+        Process.cpp
+        Random.cpp
+        RecoveryDialog.cpp
+        RotateFacet.cpp
+        RotateVertex.cpp
+        ScaleFacet.cpp
+        ScaleVertex.cpp
+        SelectDialog.cpp
+        SelectTextureType.cpp
+        ShMemory.cpp
+        SmartSelection.cpp
+        SplitFacet.cpp
+        Vector.cpp
+        VertexCoordinates.cpp
+        Web.cpp
+        Worker_shared.cpp
+        GeometryConverter.cpp
 
         # subprocesses
-        ${CPP_DIR_2}/Distributions.cpp
-        ${CPP_DIR_2}/IntersectAABB_shared.cpp
-        ${CPP_DIR_2}/Polygon.cpp
-        ${CPP_DIR_2}/Random.cpp
-        ${CPP_DIR_2}/ShMemory.cpp
-        ${CPP_DIR_2}/Process.cpp
-        ${CPP_DIR_2}/Vector.cpp
+        Distributions.cpp
+        IntersectAABB_shared.cpp
+        Polygon.cpp
+        Random.cpp
+        ShMemory.cpp
+        Process.cpp
+        Vector.cpp
         )
 
-set(HEADER_FILES
-        ${HEADER_DIR_2}/ASELoader.h
-        ${HEADER_DIR_2}/AddVertex.h
-        ${HEADER_DIR_2}/AlignFacet.h
-        ${HEADER_DIR_2}/AppUpdater.h
-        ${HEADER_DIR_2}/Buffer_shared.h
-        ${HEADER_DIR_2}/BuildIntersection.h
-        ${HEADER_DIR_2}/CollapseSettings.h
-        ${HEADER_DIR_2}/CreateShape.h
-        ${HEADER_DIR_2}/Distributions.h
-        ${HEADER_DIR_2}/ExtrudeFacet.h
-        ${HEADER_DIR_2}/FacetCoordinates.h
-        ${HEADER_DIR_2}/Facet_shared.h
-        ${HEADER_DIR_2}/File.h
-        ${HEADER_DIR_2}/FormulaEditor.h
-        ${HEADER_DIR_2}/GeometryViewer.h
-        ${HEADER_DIR_2}/Geometry_shared.h
-        ${HEADER_DIR_2}/GrahamScan.h
-        ${HEADER_DIR_2}/HistogramPlotter.h
-        ${HEADER_DIR_2}/HistogramSettings.h
-        ${HEADER_DIR_2}/Interface.h
-        ${HEADER_DIR_2}/LoadStatus.h
-        ${HEADER_DIR_2}/MirrorFacet.h
-        ${HEADER_DIR_2}/MirrorVertex.h
-        ${HEADER_DIR_2}/MoveFacet.h
-        ${HEADER_DIR_2}/MoveVertex.h
-        ${HEADER_DIR_2}/ParticleLogger.h
-        ${HEADER_DIR_2}/Polygon.h
-        ${HEADER_DIR_2}/RecoveryDialog.h
-        ${HEADER_DIR_2}/RotateFacet.h
-        ${HEADER_DIR_2}/RotateVertex.h
-        ${HEADER_DIR_2}/ScaleFacet.h
-        ${HEADER_DIR_2}/ScaleVertex.h
-        ${HEADER_DIR_2}/SelectDialog.h
-        ${HEADER_DIR_2}/SelectTextureType.h
-        ${HEADER_DIR_2}/SmartSelection.h
-        ${HEADER_DIR_2}/SMP.h
-        ${HEADER_DIR_2}/SplitFacet.h
-        ${HEADER_DIR_2}/Vector.h
-        ${HEADER_DIR_2}/VertexCoordinates.h
-        ${HEADER_DIR_2}/Worker.h
-        ${HEADER_DIR_2}/GeometryConverter.h
-        #${HEADER_DIR_1}/GPUSim/MolflowModelParser.h
+file(GLOB GLOB_FILES
+        GLApp/*.cpp
+        GLApp/GLChart/*.cpp
+        #${HEADER_DIR_3}/*.h
+        #${HEADER_DIR_4}/*.h
         )
+
+#[[set(HEADER_FILES
+        ASELoader.h
+        AddVertex.h
+        AlignFacet.h
+        AppUpdater.h
+        Buffer_shared.h
+        BuildIntersection.h
+        CollapseSettings.h
+        CreateShape.h
+        Distributions.h
+        ExtrudeFacet.h
+        FacetCoordinates.h
+        Facet_shared.h
+        File.h
+        FormulaEditor.h
+        GeometryViewer.h
+        Geometry_shared.h
+        GrahamScan.h
+        HistogramPlotter.h
+        HistogramSettings.h
+        Interface.h
+        LoadStatus.h
+        MirrorFacet.h
+        MirrorVertex.h
+        MoveFacet.h
+        MoveVertex.h
+        ParticleLogger.h
+        Polygon.h
+        RecoveryDialog.h
+        RotateFacet.h
+        RotateVertex.h
+        ScaleFacet.h
+        ScaleVertex.h
+        SelectDialog.h
+        SelectTextureType.h
+        SmartSelection.h
+        SMP.h
+        SplitFacet.h
+        Vector.h
+        VertexCoordinates.h
+        Worker.h
+        GeometryConverter.h
+        #${HEADER_DIR_1}/GPUSim/MolflowModelParser.h
+        )]]
 
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC
-        ${SRC_FILES}
+        ${SRC_FILES} ${GLOB_FILES}
         )
 
 
@@ -230,8 +207,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_4}
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
-        ${HEADER_DIR_7}
-        ${HEADER_DIR_8}
         )
 
 ######################### Flags ############################

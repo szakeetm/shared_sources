@@ -93,7 +93,6 @@ int CreateSemaphore(Dataport* dp){
     }
 #else
     key_t 	       semKey;
-    struct sembuf   semBuf;
     int		flag;
     union semun      arg;
 
@@ -464,7 +463,7 @@ bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
         /* set up signal handler */
         signal(SIGALRM, alarm_handler);
         int rc;
-        ualarm(timeout / 1000); /* 8 second timeout */
+        alarm(std::min(1,timeout / 1000)); /* timeout in ms to seconds */
 
         if ((rc = semop(dp->sema, &semBuf, 1)) != 0) { // if (rc == -1 && errno == EINTR)
             char errMsg[128];

@@ -54,13 +54,13 @@ extern "C" {
 
  using DWORD = unsigned int;
  using WORD = unsigned short;
-
+#if not defined(__APPLE__)
  union semun {
     int                 val;   /* value for SETVAL             */
     struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */
     unsigned short     *array; /* array for GETALL, SETALL     */
 };
-
+#endif
  // Linux shared memory
  typedef struct {
 /*   int              sema;
