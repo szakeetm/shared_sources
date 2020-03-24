@@ -94,8 +94,11 @@ Dataport *OpenDataport(char *name, size_t size);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+bool CloseDataport(Dataport *dp);
+#else
 bool CloseDataport(Dataport *dp, bool unlinkShm);
-
+#endif
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);

@@ -76,6 +76,10 @@ IF (WIN32)
 ELSEIF(APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework AppKit")
 ELSE()
+    # Use the package PkgConfig to detect GTK+ headers/library files
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+
     # Setup CMake to use GTK+, tell the compiler where to look for headers
     # and to the linker where to look for libraries
     INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
