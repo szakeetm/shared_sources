@@ -209,6 +209,124 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_6}
         )
 
+if(NOT MSVC)
+
+    if(APPLE)
+        #link to self-build sdl shared lib
+        target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+        #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
+
+FIND_PACKAGE(SDL2 REQUIRED)
+Message("")
+Message( STATUS "FINDING SDL2" )
+IF (${SDL2_FOUND})
+    Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
+    Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
+    Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
+ELSE()
+    Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
+    Message( FATAL_ERROR "SDL2 NOT FOUND" )
+ENDIF()
+        #add_library( libSDL2 SHARED IMPORTED GLOBAL)
+        #get_filename_component(ABS_LINK_DIR_2 "${LINK_DIR_2}" REALPATH)
+        #set_target_properties( libSDL2 PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_2}/libSDL2-2.0.dylib)
+        #target_link_libraries(${PROJECT_NAME} libSDL2) # from ./lib/
+
+    else()
+        # Use the package PkgConfig to detect GTK+ headers/library files
+        FIND_PACKAGE(PkgConfig REQUIRED)
+        PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+
+        # Setup CMake to use GTK+, tell the compiler where to look for headers
+        # and to the linker where to look for libraries
+        INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
+        LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
+
+        # Add other flags to the compiler
+        ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
+
+        target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
+
+        find_package(X11 REQUIRED)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${X11_INCLUDE_DIRS})
+    endif()
+
+    find_package(OpenGL REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS})
+
+    find_package(SDL2 REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+    find_package(PNG REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PNG_INCLUDE_DIRS})
+
+    find_package(GSL REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${GSL_INCLUDE_DIRS})
+
+    find_package(CURL REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
+
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+
+    #GSLCBLAS or BLAS?
+    #find_package(GSLCBLAS REQUIRED)
+    #target_include_directories(${PROJECT_NAME} PRIVATE ${GSLCBLAS_INCLUDE_DIRS})
+
+    #find_package(stdc++fs REQUIRED)
+    #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
+
+    target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
+
+    target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${GSL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES})
+    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
+
+    #for shared memory
+    find_library(LIBRT rt)
+    if(LIBRT)
+        target_link_libraries(${PROJECT_NAME} ${LIBRT})
+    endif()
+
+    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+    if (NOT TARGET libzip)
+        add_library( libzip STATIC IMPORTED GLOBAL)
+    endif()
+    # You can define two import-locations: one for debug and one for release.
+    get_filename_component(ABS_LINK_DIR_1 "${LINK_DIR_1}" REALPATH)
+
+    # other static libraries need to be built with similar settings for clang (here: libc++)
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
+    else()
+        set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
+    endif()
+    target_link_libraries(${PROJECT_NAME} libzip) # from ./lib/
+
+    #use prebuild nfd for GCC on MacOS
+    if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_library( libnfd STATIC IMPORTED GLOBAL)
+        set_target_properties( libnfd PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libnfd.a )
+        target_link_libraries(${PROJECT_NAME} libnfd) # from ./lib/
+    endif()
+
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        target_link_libraries(${PROJECT_NAME} c++fs)
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+        #don´t add anything for filesystem
+    else()
+        target_link_libraries(${PROJECT_NAME} stdc++fs)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME} nativefiledialog)
+endif(NOT MSVC)
+
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################

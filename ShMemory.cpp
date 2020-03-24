@@ -38,6 +38,7 @@ void PrintLastErrorText(LPTSTR suff);
 #include <memory.h>
 #include <sys/un.h>
 #include <time.h>
+#include <algorithm> // std::min
 
 void PrintLastErrorText( const char* errorMsg );
 int build_key (char *name)
@@ -248,6 +249,20 @@ Dataport *CreateDataport(char *name, size_t size) {
         return NULL;
     }
 
+#if __APPLE__
+// Increase shared memory size from 0 to size
+    struct stat mapstat;
+if (-1 != fstat(dp->shmFd, &mapstat) && mapstat.st_size == 0) {
+    ftruncate(dp->shmFd, size);
+}
+else
+    return dp;
+    if (status != 0) {
+        PrintLastErrorText("CreateDataport(): ftruncate() failed");
+        free(dp);
+        return NULL;
+    }
+#else
     // Increase shared memory size from 0 to size
     status = ftruncate(dp->shmFd, size);
     if (status != 0) {
@@ -255,6 +270,7 @@ Dataport *CreateDataport(char *name, size_t size) {
         free(dp);
         return NULL;
     }
+#endif __APPLE__
 
 #endif
     /* ------------------- Create the semaphore ------------------- */
@@ -279,9 +295,8 @@ Dataport *CreateDataport(char *name, size_t size) {
     }
 #else
 
-
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL) {
+    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
         PrintLastErrorText("CreateDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
@@ -290,8 +305,6 @@ Dataport *CreateDataport(char *name, size_t size) {
     }
 #endif
     //memset(dp->buff, 0, size);//Debug
-
-    dp->size = size;
 
     return (dp);
 }
@@ -350,6 +363,7 @@ Dataport *OpenDataport(char *name, size_t size) {
 #else
     dp->shmFd = shm_open(name, O_RDWR, 0777);
     if (dp->shmFd < 0) {
+        PrintLastErrorText("OpenDataport(): shm_open() failed");
         close(dp->shmFd);
         free(dp);
         return NULL;
@@ -372,8 +386,8 @@ Dataport *OpenDataport(char *name, size_t size) {
     }
 #else
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL) {
-        PrintLastErrorText("CreateDataport(): mmap() failed");
+    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
+        PrintLastErrorText("OpenDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
         free(dp);
@@ -463,7 +477,7 @@ bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
         /* set up signal handler */
         signal(SIGALRM, alarm_handler);
         int rc;
-        alarm(std::min(1,timeout / 1000)); /* timeout in ms to seconds */
+        alarm(std::min(1u,timeout / 1000)); /* timeout in ms to seconds */
 
         if ((rc = semop(dp->sema, &semBuf, 1)) != 0) { // if (rc == -1 && errno == EINTR)
             char errMsg[128];
@@ -523,8 +537,11 @@ bool ReleaseDataport(Dataport *dp) {
 #endif
     return false;
 }
-
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 bool CloseDataport(Dataport *dp) {
+#else
+bool CloseDataport(Dataport *dp, bool unlinkShm) {
+#endif
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     UnmapViewOfFile(dp->buff);
     CloseHandle(dp->mem);
@@ -538,9 +555,13 @@ bool CloseDataport(Dataport *dp) {
         munmap(dp->buff, dp->size);
     }
     if (dp->shmFd) {
+        if(unlinkShm)
+            shm_unlink(dp->name);
         close(dp->shmFd);
     }
     if (dp->sema) {
+        if(unlinkShm)
+            shm_unlink(dp->semaname);
         close(dp->sema);
     }
     free(dp);

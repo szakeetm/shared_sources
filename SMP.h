@@ -47,6 +47,7 @@ extern "C" {
  } Dataport;
 
 #else
+#include <time.h>
 #include <sys/sem.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -93,7 +94,7 @@ Dataport *OpenDataport(char *name, size_t size);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);
-bool CloseDataport(Dataport *dp);
+bool CloseDataport(Dataport *dp, bool unlinkShm);
 
 // Process management
 bool          KillProc(DWORD pID);
@@ -116,8 +117,14 @@ inline void ProcessSleep(const unsigned int milliseconds) {
 /*extern DWORD         StartProc_background(char *pname);
 extern DWORD         StartProc_foreground(char *pname); //TODO: unite these three*/
 
+// seperate
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define CLOSEDP(dp) if(dp) { CloseDataport(dp);(dp)=NULL; }
-
+#define CLOSEDPSUB(dp) CLOSEDP(dp)
+#else
+#define CLOSEDP(dp) if(dp) { CloseDataport(dp,true);(dp)=NULL; }
+#define CLOSEDPSUB(dp) if(dp) { CloseDataport(dp,false);(dp)=NULL; }
+#endif
 #ifdef __cplusplus
 }
 #endif

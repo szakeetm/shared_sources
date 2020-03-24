@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 
 #else
-#include <sys/sysinfo.h>
+//#include <sys/sysinfo.h>
 #endif
 
 #include <filesystem>
@@ -122,7 +122,7 @@ Interface::Interface() {
     GetSystemInfo(&sysinfo);
     numCPU = (size_t)sysinfo.dwNumberOfProcessors;
 #else
-    numCPU = get_nprocs();
+    numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
     appUpdater = NULL; //We'll initialize later, when the app name and version id is known
 

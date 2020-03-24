@@ -24,6 +24,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <windows.h>
 //#include <winperf.h>
 #include<Psapi.h>
+#elif defined(__APPLE__)
+#include <mach/mach.h>
+#include <signal.h>
+#include <sys/resource.h>
+#include <sys/types.h>
 #else
 #include <sys/types.h>
 #include <signal.h>
@@ -32,7 +37,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <stdio.h>
 #include <cerrno>
 #include <cstring>
+
 #include "SMP.h"
+
+
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 // Get process info
@@ -55,6 +63,8 @@ static bool   counterInited = false;
 #else
 
 #endif
+
+
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 static bool privilegeEnabled = false;
@@ -247,15 +257,43 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 #else
     /* BSD, Linux, and OSX -------------------------------------- */
     //void mem_usage(double& vm_usage, double& resident_set) {
-   unsigned long vm_size = 0.0;
-   unsigned long resident_set = 0.0;
-   
+   unsigned long vm_size = 0u;
+   unsigned long resident_set = 0u;
+
+#if __APPLE__
+
+    if(processID!=getpid()){
+        vm_size = (size_t)0L;      /* Can't access? */
+        resident_set =  (size_t)0L;      /* Can't access? */
+    }
+    else{
+        struct rusage rusage;
+        getrusage( RUSAGE_SELF, &rusage );
+        vm_size = (size_t)rusage.ru_maxrss / 1024.0;
+
+        struct mach_task_basic_info info;
+        mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+        if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO,(task_info_t)&info, &infoCount ) != KERN_SUCCESS )
+            resident_set =  (size_t)0L;      /* Can't access? */
+        else
+            resident_set =  (size_t)info.resident_size / 1024.0;
+    }
+
+
+
+
+
+
+#else
    std::ifstream stat_stream("/proc/"+std::to_string(processID)+"/statm",std::ios_base::in); //get info from proc directory
    stat_stream >> vm_size >> resident_set; // don't care about the rest
    stat_stream.close();
+
    long page_size_kb = sysconf(_SC_PAGE_SIZE) /*/ 1024*/; // most commonly 4kB pages used
    vm_size = vm_size * page_size_kb / 1024.0;
    resident_set = resident_set * page_size_kb / 1024.0;
+
+#endif
 
 pInfo->mem_peak=vm_size;
 pInfo->mem_use=resident_set;
