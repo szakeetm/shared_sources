@@ -42,6 +42,10 @@ if(MSVC)
             #"../../include/windows_only"
             "${CMAKE_CURRENT_SOURCE_DIR}/../../include/windows_only"
             )
+    target_link_libraries(${PROJECT_NAME}
+            libgsl.lib
+            libgslcblas.lib
+            )
 endif(MSVC)
 if(NOT MSVC)
     find_package(GSL REQUIRED)

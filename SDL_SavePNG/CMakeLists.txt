@@ -24,8 +24,9 @@ project(${PROJECT_NAME} CXX)
 #   --   Add files to project.   --   #
 #######################################
 
-set(SRC_FILES ${CPP_DIR_1}/savepng.cpp
-        ${HEADER_DIR_1}/savepng.h
+
+set(SRC_FILES
+        ${CPP_DIR_1}/savepng.cpp
 )
 
 # Add library to build.
@@ -38,20 +39,14 @@ IF (WIN32)
             ${HEADER_DIR_2}
             ${HEADER_DIR_3}
             )
+
+    target_link_libraries(${PROJECT_NAME} png_zlib_win_library)
+
 ELSEIF(APPLE)
     # apple linking against a shipped version of SDL2
     target_include_directories(${PROJECT_NAME} PRIVATE
             ${HEADER_DIR_1}
             )
-
-    #find_package(SDL2 REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
-    #set(LINK_DIR_2 ../../lib_external/mac/SDL2)
-    #get_filename_component(ABS_LINK_DIR_2 "${LINK_DIR_2}" REALPATH)
-    #add_library( libSDL2 STATIC IMPORTED GLOBAL)
-    #set_target_properties( libSDL2 PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_2}/libSDL2.a )
-    #target_link_libraries(${PROJECT_NAME} libSDL2) # from ./lib/
-    #message(${ABS_LINK_DIR_2}/libSDL2.a)
 
     find_package(PNG REQUIRED)
     target_include_directories(${PROJECT_NAME} PRIVATE ${PNG_INCLUDE_DIRS})

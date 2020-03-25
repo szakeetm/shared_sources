@@ -35,6 +35,9 @@ IF (WIN32)
     #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
     #set(LINK_DIR_3 ../../lib_external/win/${MY_BUILD_TYPE})
     #set(DLL_DIR ../../_molflow/molflow_project/lib/lib)
+ELSEIF(APPLE)
+    # set stuff for mac os
+    set(LINK_DIR_1 ../../lib_external/mac)
 ELSE()
     # set stuff for other systems
 
@@ -142,61 +145,49 @@ set(SRC_FILES
         Vector.cpp
         )
 
-file(GLOB GLOB_FILES
-        GLApp/*.cpp
-        GLApp/GLChart/*.cpp
-        #${HEADER_DIR_3}/*.h
-        #${HEADER_DIR_4}/*.h
+set(SRC_FILES ${SRC_FILES}
+        GLApp/GLApp.cpp
+        GLApp/GLButton.cpp
+        GLApp/GLColorBox.cpp
+        GLApp/GLCombo.cpp
+        GLApp/GLComponent.cpp
+        GLApp/GLContainer.cpp
+        GLApp/GLFont.cpp
+        GLApp/GLGradient.cpp
+        GLApp/GLIcon.cpp
+        GLApp/GLInputBox.cpp
+        GLApp/GLLabel.cpp
+        GLApp/GLList.cpp
+        GLApp/GLMatrix.cpp
+        GLApp/GLMenu.cpp
+        GLApp/GLMenuBar.cpp
+        GLApp/GLMessageBox.cpp
+        GLApp/GLParser.cpp
+        GLApp/GLProgress.cpp
+        GLApp/GLSaveDialog.cpp
+        GLApp/GLScrollBar.cpp
+        GLApp/GLSpinner.cpp
+        GLApp/GLSprite.cpp
+        GLApp/GLTabWindow.cpp
+        GLApp/GLTextField.cpp
+        GLApp/GLTitledPanel.cpp
+        GLApp/GLToggle.cpp
+        GLApp/GLToolkit.cpp
+        GLApp/GLUnitDialog.cpp
+        GLApp/GLWindow.cpp
+        GLApp/GLWindowManager.cpp
+        GLApp/MathTools.cpp
+        GLApp/GLChart/AxisPanel.cpp
+        GLApp/GLChart/GLAxis.cpp
+        GLApp/GLChart/GLChart.cpp
+        GLApp/GLChart/GLChartOptions.cpp
+        GLApp/GLChart/GLDataView.cpp
+        GLApp/GLChart/GLDataViewOptions.cpp
         )
-
-#[[set(HEADER_FILES
-        ASELoader.h
-        AddVertex.h
-        AlignFacet.h
-        AppUpdater.h
-        Buffer_shared.h
-        BuildIntersection.h
-        CollapseSettings.h
-        CreateShape.h
-        Distributions.h
-        ExtrudeFacet.h
-        FacetCoordinates.h
-        Facet_shared.h
-        File.h
-        FormulaEditor.h
-        GeometryViewer.h
-        Geometry_shared.h
-        GrahamScan.h
-        HistogramPlotter.h
-        HistogramSettings.h
-        Interface.h
-        LoadStatus.h
-        MirrorFacet.h
-        MirrorVertex.h
-        MoveFacet.h
-        MoveVertex.h
-        ParticleLogger.h
-        Polygon.h
-        RecoveryDialog.h
-        RotateFacet.h
-        RotateVertex.h
-        ScaleFacet.h
-        ScaleVertex.h
-        SelectDialog.h
-        SelectTextureType.h
-        SmartSelection.h
-        SMP.h
-        SplitFacet.h
-        Vector.h
-        VertexCoordinates.h
-        Worker.h
-        GeometryConverter.h
-        #${HEADER_DIR_1}/GPUSim/MolflowModelParser.h
-        )]]
 
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC
-        ${SRC_FILES} ${GLOB_FILES}
+        ${SRC_FILES}
         )
 
 
@@ -209,6 +200,27 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_6}
         )
 
+if(MSVC)
+    # 1. link against external libs
+    target_link_libraries(${PROJECT_NAME}
+            bzip2.lib
+            libcurl_a_x64.lib
+            SDL2.lib
+            SDL2main.lib
+            #libgsl.lib
+            #libgslcblas.lib
+            lzma.lib
+            ZipLib.lib
+            #zlib.lib
+            opengl32.lib
+            user32.lib
+            shell32.lib
+            ole32.lib
+            )
+
+    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
+    #target_link_libraries(${PROJECT_NAME} nativefiledialog)
+endif(MSVC)
 if(NOT MSVC)
 
     if(APPLE)
@@ -216,17 +228,17 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} "-framework AppKit")
         #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
 
-FIND_PACKAGE(SDL2 REQUIRED)
-Message("")
-Message( STATUS "FINDING SDL2" )
-IF (${SDL2_FOUND})
-    Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-    Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
-    Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
-ELSE()
-    Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-    Message( FATAL_ERROR "SDL2 NOT FOUND" )
-ENDIF()
+    FIND_PACKAGE(SDL2 REQUIRED)
+    Message("")
+    Message( STATUS "FINDING SDL2" )
+    IF (${SDL2_FOUND})
+        Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
+        Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
+        Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
+    ELSE()
+        Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
+        Message( FATAL_ERROR "SDL2 NOT FOUND" )
+    ENDIF()
         #add_library( libSDL2 SHARED IMPORTED GLOBAL)
         #get_filename_component(ABS_LINK_DIR_2 "${LINK_DIR_2}" REALPATH)
         #set_target_properties( libSDL2 PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_2}/libSDL2-2.0.dylib)
@@ -310,7 +322,9 @@ ENDIF()
 
     #use prebuild nfd for GCC on MacOS
     if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_library( libnfd STATIC IMPORTED GLOBAL)
+        if (NOT TARGET libzip)
+            add_library( libnfd STATIC IMPORTED GLOBAL)
+        endif()
         set_target_properties( libnfd PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libnfd.a )
         target_link_libraries(${PROJECT_NAME} libnfd) # from ./lib/
     endif()

@@ -270,7 +270,7 @@ else
         free(dp);
         return NULL;
     }
-#endif __APPLE__
+#endif //__APPLE__
 
 #endif
     /* ------------------- Create the semaphore ------------------- */
