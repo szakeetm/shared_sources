@@ -20,21 +20,24 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Buffer_shared.h"
 
 FacetHitBuffer::FacetHitBuffer(){
-    this->hit.fluxAbs = 0.0;
-    this->hit.nbAbsEquiv = 0.0;
+    this->ResetBuffer();
+}
+
+void FacetHitBuffer::ResetBuffer(){
+    this->hit.nbMCHit = 0;
     this->hit.nbDesorbed = 0;
     this->hit.nbHitEquiv = 0.0;
-    this->hit.nbMCHit = 0;
+    this->hit.nbAbsEquiv = 0.0;
+    this->hit.fluxAbs = 0.0;
     this->hit.powerAbs = 0.0;
 }
 
-
 FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs){
-	this->hit.fluxAbs += rhs.hit.fluxAbs;
-	this->hit.nbAbsEquiv += rhs.hit.nbAbsEquiv;
-	this->hit.nbDesorbed += rhs.hit.nbDesorbed;
-	this->hit.nbHitEquiv += rhs.hit.nbHitEquiv;
-	this->hit.nbMCHit += rhs.hit.nbMCHit;
+    this->hit.nbMCHit += rhs.hit.nbMCHit;
+    this->hit.nbDesorbed += rhs.hit.nbDesorbed;
+    this->hit.nbHitEquiv += rhs.hit.nbHitEquiv;
+    this->hit.nbAbsEquiv += rhs.hit.nbAbsEquiv;
+    this->hit.fluxAbs += rhs.hit.fluxAbs;
 	this->hit.powerAbs += rhs.hit.powerAbs;
 	return *this;
 }

@@ -28,7 +28,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 extern "C" {
 #endif
 
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #define NOMINMAX
 #include <windows.h>
 
@@ -44,16 +47,35 @@ extern "C" {
  } Dataport;
 
 #else
-
+#include <time.h>
+#include <sys/sem.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+ using DWORD = unsigned int;
+ using WORD = unsigned short;
+#if not defined(__APPLE__)
+ union semun {
+    int                 val;   /* value for SETVAL             */
+    struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */
+    unsigned short     *array; /* array for GETALL, SETALL     */
+};
+#endif
  // Linux shared memory
  typedef struct {
-   int              sema;
+/*   int              sema;
    int              shar;
    int              key;
    pid_t            creator_pid;
-   char             body;
+   char             body;*/
+    char              name[32]; //Unique identifier
+    char              semaname[32]; //Mutex unique identifier
+    int            sema; //Mutex handle (CreateMutex return value)
+    int            shmFd; //File mapping handle (CreateFileMapping return value)
+    int file;			//Physical file handle (if persistent)
+    size_t size;		//keep track of mapped size
+    void              *buff; //View handle (MapViewOfFile return value, pointer to data)
  } Dataport;
 
 #endif
@@ -72,19 +94,40 @@ Dataport *OpenDataport(char *name, size_t size);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 bool CloseDataport(Dataport *dp);
-
+#else
+bool CloseDataport(Dataport *dp, bool unlinkShm);
+#endif
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-DWORD         StartProc(const char *pname,int mode);
+DWORD         StartProc(const char *pname,int mode, char **argv);
 bool IsProcessRunning(DWORD pID);
+
+// Helper functions
+inline void ProcessSleep(const unsigned int milliseconds) {
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    Sleep(milliseconds);
+#else
+    struct timespec tv;
+    tv.tv_sec = milliseconds / 1000;
+    tv.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&tv, nullptr);
+#endif
+}
 
 /*extern DWORD         StartProc_background(char *pname);
 extern DWORD         StartProc_foreground(char *pname); //TODO: unite these three*/
 
+// seperate
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define CLOSEDP(dp) if(dp) { CloseDataport(dp);(dp)=NULL; }
-
+#define CLOSEDPSUB(dp) CLOSEDP(dp)
+#else
+#define CLOSEDP(dp) if(dp) { CloseDataport(dp,true);(dp)=NULL; }
+#define CLOSEDPSUB(dp) if(dp) { CloseDataport(dp,false);(dp)=NULL; }
+#endif
 #ifdef __cplusplus
 }
 #endif

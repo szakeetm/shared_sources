@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Shared functions of the Molflow and Synrad interface
 #include <thread>
+#include <list> // for recents
 
 #include "Worker.h"
 #include "GeometryViewer.h"
@@ -140,6 +141,7 @@ typedef struct {
 #define MENU_FACET_ROTATE	   331
 #define MENU_FACET_ALIGN       332
 #define MENU_FACET_CREATESHAPE 333
+#define MENU_FACET_REVERTFLIP 334
 
 #define MENU_FACET_CREATE_DIFFERENCE 340
 #define MENU_FACET_CREATE_DIFFERENCE2 341
@@ -280,8 +282,8 @@ public:
 	bool     updateRequested; //Force frame move
 	
 	std::vector<GLParser*> formulas_n;
-	
-#ifdef _WIN32
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	HANDLE compressProcessHandle = NULL;
 #endif
 
@@ -473,8 +475,7 @@ public:
 	void ExportTextures(int grouping, int mode);
 	
 	// Recent files
-	char *recents[MAX_RECENT];
-	int  nbRecent;
+    std::list<char *> recentsList;
 	void AddRecent(const char *fileName);
 	void RemoveRecent(const char *fileName);
 	void UpdateRecentMenu();

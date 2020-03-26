@@ -76,7 +76,7 @@ typedef struct {
   double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
   double   camAngleOy; // Spheric coordinates Left-hand rotation (in left-hand c.sys)
 
-  double   camAngleOz;
+  double   camAngleOz; // Rotation around third axis
 
   double   camDist;    // Camera distance (or zoom in orthographic)
 

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <cstring> //strcpy, etc.
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD

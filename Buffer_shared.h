@@ -545,6 +545,8 @@ typedef union {
 class FacetHitBuffer {
 public:
     FacetHitBuffer();
+    void ResetBuffer();
+
     struct {
         // Counts
         double fluxAbs;

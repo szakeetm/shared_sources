@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD
@@ -79,7 +79,6 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.projMode = ORTHOGRAPHIC_PROJ;
 	view.camAngleOx = 0.0;
 	view.camAngleOy = 0.0;
-
 	view.camAngleOz = 0.0;
 
 	view.lightAngleOx = 0.0;

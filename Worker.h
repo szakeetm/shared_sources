@@ -32,9 +32,9 @@ class LoadStatus;
 
 
 #ifdef MOLFLOW
-#include "Parameter.h"
+#include "../src/Parameter.h"
 #include "Vector.h" //moving parts
-#include "MolflowTypes.h"
+#include "../src/MolflowTypes.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
@@ -112,6 +112,8 @@ public:
   void SaveRegion(const char *fileName,int position,bool overwrite=false);
   bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
 
+  FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
+
 #ifdef MOLFLOW
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
@@ -119,7 +121,6 @@ public:
   bool ImportAngleMaps(std::string fileName);
 
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
-  FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
   void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
 	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
@@ -194,8 +195,6 @@ public:
 #endif
 
 #ifdef SYNRAD
-	double totalFlux;         // Total desorbed Flux
-	double totalPower;        // Total desorbed power
 
 	double no_scans;           // = nbDesorption/nbTrajPoints. Stored separately for saving/loading
 

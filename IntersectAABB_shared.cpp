@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Polygon.h" //IsInPoly
 #include "GLApp/MathTools.h"
 #include <algorithm> //std::min
-#include "Simulation.h"
+#include "../src/Simulation.h"
 #include <tuple>
 
 // AABB tree stuff
@@ -640,4 +640,3 @@ AABBNODE::~AABBNODE()
 	SAFE_DELETE(left);
 	SAFE_DELETE(right);
 }
-                      

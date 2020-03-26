@@ -8,7 +8,7 @@
 #include <cstring> //strcpy, etc.
 #include "MathTools.h"
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD

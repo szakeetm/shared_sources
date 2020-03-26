@@ -126,7 +126,8 @@ public:
 	Vector3d GetFacetCenter(int facet);
 	size_t      GetNbStructure();
 	char     *GetStructureName(int idx);
-	void AddFacet(const std::vector<size_t>& vertexIds);
+
+    void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
 	void CreateDifference(); //creates the difference from 2 selected facets. Not used anymore, superseded by ClipPolygon
@@ -160,15 +161,19 @@ public:
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(Dataport *dhHit, bool saveSelected);
-	void SaveSuper(int s);
+    void SaveSTL(FileWriter* f, GLProgress* prg);
+    void SaveSuper(int s);
 	void SaveProfileTXT(FileWriter *file);
 	void UpdateSelection();
-	void SwapNormal();
-	void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
+    void SwapNormal(); //Swap normals of selected facets
+    void RevertFlippedNormals(); //Reverts flipping for facets with normalFlipped flag
+    void SwapNormal(const std::vector < size_t> & facetList); //Swap normals of a list of facets
+    void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
 	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
 	void RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd);
-	void RemoveSelectedVertex();
+    void AddFacets(std::vector<Facet*> facetList);
+    void RemoveSelectedVertex();
 	void RemoveFromStruct(int numToDel);
 	void CreateLoft();
 	bool RemoveCollinear();
@@ -264,19 +269,18 @@ public:
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
 
-public:
-    GeomProperties sh;
-    Facet    **facets;    // All facets of this geometry
 protected:
 	// Structure viewing (-1 => all)
-	Vector3d  center;                     // Center (3D space)
+    GeomProperties sh;
+    Vector3d  center;                     // Center (3D space)
 	char      *strName[MAX_SUPERSTR];     // Structure name
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)
 
 										  // Geometry
 
-	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
+    Facet    **facets;    // All facets of this geometry
+    std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)

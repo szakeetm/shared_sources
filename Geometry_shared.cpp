@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry_shared.h"
+#include "GeometryConverter.h"
 #include "Facet_shared.h"
 #include "GLApp/MathTools.h"
 #include "GLApp/GLMessageBox.h"
@@ -34,8 +35,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Clipper/clipper.hpp"
 
 #ifdef MOLFLOW
-#include "MolFlow.h"
-#include "MolflowTypes.h"
+#include "../src/MolFlow.h"
+#include "../src/MolflowTypes.h"
 #endif
 
 #ifdef SYNRAD
@@ -197,7 +198,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 	//initGeoPrg->SetVisible(false);
 	//SAFE_DELETE(initGeoPrg);
-	assert(_CrtCheckMemory());
+	//assert(_CrtCheckMemory());
 }
 
 void Geometry::RecalcBoundingBox(int facet_number) {
@@ -340,7 +341,7 @@ size_t Geometry::GetNbStructure() {
 }
 
 char *Geometry::GetStructureName(int idx) {
-	return strName[idx];
+    return strName[idx];
 }
 
 void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
@@ -1009,29 +1010,42 @@ void Geometry::MoveVertexTo(size_t idx, double x, double y, double z) {
 }
 
 void Geometry::SwapNormal() {
+    //Default: sweap selected facets
+    SwapNormal(GetSelectedFacets());
+}
 
-	if (!IsLoaded()) {
-		GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
-		return;
-	}
-	if (GetNbSelectedFacets() <= 0) return;
-	mApp->changedSinceSave = true;
-	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
-		if (f->selected) {
-			f->SwapNormal();
-			InitializeGeometry(i);
-			try {
-				SetFacetTexture(i, f->tRatio, f->hasMesh);
-			}
-			catch (Error &e) {
-				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-			}
-		}
-	}
+void Geometry::RevertFlippedNormals() {
+    std::vector<size_t> flippedFacetList;
+    auto selectedFacetList = GetSelectedFacets();
+    for (auto i : selectedFacetList) {
+        if (facets[i]->normalFlipped) {
+            flippedFacetList.push_back(i);
+        }
+    }
+    SwapNormal(flippedFacetList);
+}
 
-	DeleteGLLists(true, true);
-	BuildGLList();
+void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the normal for a list of facets
+
+    if (!IsLoaded()) {
+        GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+        return;
+    }
+    mApp->changedSinceSave = true;
+    for (auto i:facetList) {
+        Facet *f = facets[i];
+        f->SwapNormal();
+        InitializeGeometry((int)i);
+        try {
+            SetFacetTexture(i, f->tRatio, f->hasMesh);
+        }
+        catch (Error &e) {
+            GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        }
+    }
+
+    DeleteGLLists(true, true);
+    BuildGLList();
 
 }
 
@@ -1428,6 +1442,19 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	BuildGLList();
 }
 
+void Geometry::AddFacets(std::vector<Facet*> facetList) {
+    //Adds to end
+    std::vector<DeletedFacet> toRestore(facetList.size());
+    for (size_t i = 0;i < facetList.size();i++) {
+        DeletedFacet df;
+        df.f = facetList[i];
+        df.ori_pos = 0; //Unused
+        df.replaceOri = false; //Unused
+        toRestore[i] = df;
+    }
+    RestoreFacets(toRestore, true);
+}
+
 void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd) {
 	//size_t nbNew = 0;
 	std::vector<int> newRefs(sh.nbFacet, -1);
@@ -1465,7 +1492,7 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool to
 			tempFacets[insertPos] = facets[insertPos - nbInsert];
 			newRefs[insertPos - nbInsert] = (int)insertPos;
 		}
-        assert(_CrtCheckMemory());
+        //assert(_CrtCheckMemory());
 		//Renumber things;
 		RenumberNeighbors(newRefs);
 		mApp->RenumberFormulas(&newRefs);
@@ -3836,7 +3863,8 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			strcpy(tmpName, file->ReadString());
 			v.projMode = file->ReadInt();
 			v.camAngleOx = file->ReadDouble();
-			v.camAngleOy = file->ReadDouble();
+            v.camAngleOy = file->ReadDouble();
+            v.camAngleOz = 0.0; //No support for Z angle in current GEO version
 			v.camDist = file->ReadDouble();
 			v.camOffset.x = file->ReadDouble();
 			v.camOffset.y = file->ReadDouble();
@@ -4079,6 +4107,32 @@ void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 	for (int i = 0; i < sh.nbSuper; i++)
 		SaveSuper(i);
 
+}
+
+void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
+    prg->SetMessage("Triangulating geometry...");
+    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,prg);
+    prg->SetMessage("Saving STL file...");
+    f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
+    for (size_t i = 0;i < triangulatedGeometry.size();i++) {
+        prg->SetProgress((double)i / (double)triangulatedGeometry.size());
+        Facet* fac = triangulatedGeometry[i];
+        f->Write("\tfacet normal ");
+        f->Write(fac->sh.N.x);f->Write(fac->sh.N.y);f->Write(fac->sh.N.z,"\n");
+        f->Write("\t\touter loop\n");
+        for (size_t j = 0;j < fac->sh.nbIndex /*should be 3*/;j++) {
+            f->Write("\t\t\tvertex");
+            f->Write(GetVertex(fac->indices[j])->x);
+            f->Write(GetVertex(fac->indices[j])->y);
+            f->Write(GetVertex(fac->indices[j])->z, "\n");
+        }
+        f->Write("\t\tendloop\n\tendfacet\n");
+    }
+    f->Write("endsolid\n");
+    //Manually delete created facets
+    for (auto& f : triangulatedGeometry) {
+        SAFE_DELETE(f);
+    }
 }
 
 void Geometry::SaveSuper(int s) {
