@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Shared functions of the Molflow and Synrad interface
 #include <thread>
+#include <list> // for recents
 
 #include "Worker.h"
 #include "GeometryViewer.h"
@@ -280,8 +281,8 @@ public:
 	bool     updateRequested; //Force frame move
 	
 	std::vector<GLParser*> formulas_n;
-	
-#ifdef _WIN32
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	HANDLE compressProcessHandle = NULL;
 #endif
 

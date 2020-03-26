@@ -1,6 +1,6 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD

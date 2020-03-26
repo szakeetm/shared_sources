@@ -21,9 +21,15 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 #include <stdlib.h>
 #include "Random.h"
-#include "GLApp\MathTools.h"
+#include "GLApp/MathTools.h"
 
 #define  RK_STATE_LEN 624
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+
+#else
+#define __forceinline __attribute__((always_inline))
+#endif
 
 /* State of the RNG */
 typedef struct rk_state_
@@ -59,7 +65,7 @@ void rk_seed(unsigned long seed, rk_state *state)
 #define UPPER_MASK 0x80000000UL
 #define LOWER_MASK 0x7fffffffUL
 
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 // Disable "unary minus operator applied to unsigned type, result still unsigned" warning.
 #pragma warning(disable : 4146)
 #endif

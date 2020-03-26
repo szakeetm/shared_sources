@@ -17,13 +17,56 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 #include <windows.h>
 //#include <winperf.h>
 #include<Psapi.h>
+#elif defined(__APPLE__)
+#include <mach/mach.h>
+#include <signal.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#else
+#include <sys/types.h>
+#include <signal.h>
+#include <fstream>
+#endif
 #include <stdio.h>
+#include <cerrno>
+#include <cstring>
+
 #include "SMP.h"
 
+
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+// Get process info
+#define INITIAL_SIZE        51200
+#define EXTEND_SIZE         25600
+#define REGKEY_PERF         "software\\microsoft\\windows nt\\currentversion\\perflib"
+#define REGSUBKEY_COUNTERS  "Counters"
+#define PROCESS_COUNTER     "process"
+#define PROCESSID_COUNTER   "id process"
+#define PROCESSTIME_COUNTER "% Processor Time"
+#define PROCESSMEM_COUNTER  "Working Set"
+#define PROCESSMEMP_COUNTER "Working Set Peak"
+
+static DWORD  dwProcessIdTitle;
+static DWORD  dwProcessMempTitle;
+static DWORD  dwProcessMemTitle;
+static DWORD  dwProcessTimeTitle;
+static CHAR   keyPerfName[1024];
+static bool   counterInited = false;
+#else
+
+#endif
+
+
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 static bool privilegeEnabled = false;
 
 // Enable required process privilege for system tasks
@@ -77,324 +120,42 @@ static bool EnablePrivilege() {
   return privilegeEnabled;
 
 }
+#endif
 
 // Kill a process
-
 bool KillProc(DWORD pID) {
-
-  HANDLE p;
-
-  if( !EnablePrivilege() ) return false;
-	p = OpenProcess(PROCESS_ALL_ACCESS,false,pID);
-  if( p == NULL ) return false;
-  if( !TerminateProcess( p, 1 ) ) {
-    CloseHandle(p);
-    return false;
-  }
-  CloseHandle(p);
-  return true;
-
-}
-
-// Get process info
-
-#define INITIAL_SIZE        51200
-#define EXTEND_SIZE         25600
-#define REGKEY_PERF         "software\\microsoft\\windows nt\\currentversion\\perflib"
-#define REGSUBKEY_COUNTERS  "Counters"
-#define PROCESS_COUNTER     "process"
-#define PROCESSID_COUNTER   "id process"
-#define PROCESSTIME_COUNTER "% Processor Time"
-#define PROCESSMEM_COUNTER  "Working Set"
-#define PROCESSMEMP_COUNTER "Working Set Peak"
-
-static DWORD  dwProcessIdTitle;
-static DWORD  dwProcessMempTitle;
-static DWORD  dwProcessMemTitle;
-static DWORD  dwProcessTimeTitle;
-static CHAR   keyPerfName[1024];
-static bool   counterInited = false;
-
-// Search performance counter
-
-/*bool InitCounter() {
-
-  if( !counterInited ) {
-
-    DWORD                        rc;
-    HKEY                         hKeyNames;
-    DWORD                        dwType;
-    DWORD                        dwSize;
-    LPBYTE                       buf = NULL;
-    LANGID                       lid;
-    LPSTR                        p;
-    LPSTR                        lastP;
-    LPSTR                        buffSize;
-    int                          counterNum;
-
-    //
-    // Look for the list of counters.  Always use the neutral
-    // English version, regardless of the local language.  We
-    // are looking for some particular keys, and we are always
-    // going to do our looking in English.  We are not going
-    // to show the user the counter names, so there is no need
-    // to go find the corresponding name in the local language.
-    //
-    lid = MAKELANGID( LANG_ENGLISH, SUBLANG_NEUTRAL );
-    sprintf( keyPerfName, "%s\\%03x", REGKEY_PERF, lid );
-    rc = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
-                       keyPerfName,
-                       0,
-                       KEY_READ,
-                       &hKeyNames
-                     );
-
-    if (rc != ERROR_SUCCESS) {
-      return false;
-    }
-
-    //
-    // get the buffer size for the counter names
-    //
-    rc = RegQueryValueEx( hKeyNames,
-                          REGSUBKEY_COUNTERS,
-                          NULL,
-                          &dwType,
-                          NULL,
-                          &dwSize
-                        );
-
-    if (rc != ERROR_SUCCESS) {
-      RegCloseKey( hKeyNames );
-      return false;
-    }
-
-    //
-    // allocate the counter names buffer
-    //
-    buf = (LPBYTE) malloc( dwSize );
-    if (buf == NULL) {
-      RegCloseKey( hKeyNames );
-      return false;
-    }
-    memset( buf, 0, dwSize );
-
-    //
-    // read the counter names from the registry
-    //
-    rc = RegQueryValueEx( hKeyNames,
-                          REGSUBKEY_COUNTERS,
-                          NULL,
-                          &dwType,
-                          buf,
-                          &dwSize
-                        );
-
-    if (rc != ERROR_SUCCESS) {
-      free(buf);
-      RegCloseKey( hKeyNames );
-      return false;
-    }
-
-    //
-    // now loop thru the counter names looking for the following counters:
-    // the buffer contains multiple null terminated strings and then
-    // finally null terminated at the end.  the strings are in pairs of
-    // counter number and counter name.
-
-    p = (LPSTR)buf;
-    lastP = p;
-    buffSize = p + dwSize;
-    counterNum = 0;
-
-    while ( (p<buffSize) && (*p) && (counterNum<5) ) {
-
-        if (_stricmp(p, PROCESS_COUNTER) == 0) {
-          strcpy( keyPerfName, lastP );
-          counterNum++;
-        } else if (_stricmp(p, PROCESSID_COUNTER) == 0) {
-          dwProcessIdTitle = atol( lastP );
-          counterNum++;
-        } else if (_stricmp(p, PROCESSTIME_COUNTER) == 0) {
-          dwProcessTimeTitle = atol( lastP );
-          counterNum++;
-        } else if (_stricmp(p, PROCESSMEM_COUNTER) == 0) {
-          dwProcessMemTitle = atol( lastP );
-          counterNum++;
-        } else if (_stricmp(p, PROCESSMEMP_COUNTER) == 0) {
-          dwProcessMempTitle = atol( lastP );
-          counterNum++;
-        }
-
-        // next counter
-        lastP = p;
-        p += (strlen(p) + 1);
-
-    }
-
-    //
-    // free the counter names buffer
-    //
-    free( buf );
-    RegCloseKey( hKeyNames );
-    counterInited = true;
-
-  }
-  return counterInited;
-
-}*/
-
-/*
-bool GetProcInfo(DWORD pID,PROCESS_INFO *pInfo) {
-
-    DWORD                        rc;
-    DWORD                        dwType;
-    DWORD                        dwSize;
-    LPBYTE                       buf = NULL;
-    PPERF_DATA_BLOCK             pPerf;
-    PPERF_OBJECT_TYPE            pObj;
-    PPERF_INSTANCE_DEFINITION    pInst;
-    PPERF_COUNTER_BLOCK          pCounter;
-    PPERF_COUNTER_DEFINITION     pCounterDef;
-    DWORD                        i;
-  	DWORD                        dwProcessIdCounter;
-    DWORD                        dwProcessMempCounter;
-    DWORD                        dwProcessMemCounter;
-    DWORD                        dwProcessTimeCounter;
-
-    bool                         pFound = false;
-    DWORD                        dwProcessId;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    HANDLE p;
 
     if( !EnablePrivilege() ) return false;
-    if( !InitCounter() )     return false;
-
-    //
-    // allocate the initial buffer for the performance data
-    //
-    dwSize = INITIAL_SIZE;
-    buf = (LPBYTE)malloc( dwSize );
-    if (buf == NULL) 
-      return false;
-    memset( buf, 0, dwSize );
-
-    while (true) {
-
-        rc = RegQueryValueEx( HKEY_PERFORMANCE_DATA,
-                              keyPerfName,
-                              NULL,
-                              &dwType,
-                              buf,
-                              &dwSize
-                            );
-
-        pPerf = (PPERF_DATA_BLOCK) buf;
-
-        //
-        // check for success and valid perf data block signature
-        //
-        if ((rc == ERROR_SUCCESS) &&
-            (dwSize > 0) &&
-            (pPerf)->Signature[0] == (WCHAR)'P' &&
-            (pPerf)->Signature[1] == (WCHAR)'E' &&
-            (pPerf)->Signature[2] == (WCHAR)'R' &&
-            (pPerf)->Signature[3] == (WCHAR)'F' ) {
-            break;
-        }
-
-        //
-        // if buffer is not big enough, reallocate and try again
-        //
-        if (rc == ERROR_MORE_DATA) {
-          dwSize += EXTEND_SIZE;
-          buf = (LPBYTE)realloc( buf, dwSize );
-          memset( buf, 0, dwSize );
-        } else {
-          free( buf );
-          return false;
-        }
-
+        p = OpenProcess(PROCESS_ALL_ACCESS,false,pID);
+    if( p == NULL ) return false;
+    if( !TerminateProcess( p, 1 ) ) {
+        CloseHandle(p);
+        return false;
     }
-
-    //
-    // set the perf_object_type pointer
-    //
-    pObj = (PPERF_OBJECT_TYPE) ((BYTE *)pPerf + pPerf->HeaderLength);
-
-    //
-    // loop thru the performance counter definition records looking
-    // for the process id counter and then save its offset
-    //
-    pCounterDef = (PPERF_COUNTER_DEFINITION) ((BYTE *)pObj + pObj->HeaderLength);
-    for (i=0; i<(DWORD)pObj->NumCounters; i++) {
-        if (pCounterDef->CounterNameTitleIndex == dwProcessIdTitle) {
-            dwProcessIdCounter = pCounterDef->CounterOffset;
-        }
-        if (pCounterDef->CounterNameTitleIndex == dwProcessTimeTitle) {
-            dwProcessTimeCounter = pCounterDef->CounterOffset;
-        }
-        if (pCounterDef->CounterNameTitleIndex == dwProcessMemTitle) {
-            dwProcessMemCounter = pCounterDef->CounterOffset;
-        }
-        if (pCounterDef->CounterNameTitleIndex == dwProcessMempTitle) {
-            dwProcessMempCounter = pCounterDef->CounterOffset;
-        }
-
-        pCounterDef++;
-    }
-
-    pInst = (PPERF_INSTANCE_DEFINITION) ((BYTE *)pObj + pObj->DefinitionLength);
-
-    //
-    // loop thru the performance instance data extracting each process name
-    // and process id
-    //
-    i = 0;
-    while ( !pFound && (i<(DWORD)pObj->NumInstances) ) {
-
-  	  __int64 data;
-
-      //
-      // get the process id
-      //
-      pCounter = (PPERF_COUNTER_BLOCK) ((BYTE *)pInst + pInst->ByteLength);
-      dwProcessId = *((LPDWORD) ((BYTE *)pCounter + dwProcessIdCounter));
-      pFound = (dwProcessId == pID);
-      if( pFound ) {
-        // Get the cpu time
-        data = *(__int64 *)((PBYTE)pCounter + dwProcessTimeCounter);
-		    pInfo->cpu_time = (double)data / 10000000.0;
-        // get the actual memory
-	      pInfo->mem_use = *((LPDWORD) ((BYTE *)pCounter + dwProcessMemCounter));
-        // get the peak memory
-		    pInfo->mem_peak = *((LPDWORD) ((BYTE *)pCounter + dwProcessMempCounter));
-      } else {
-        pInst = (PPERF_INSTANCE_DEFINITION) ((BYTE *)pCounter + pCounter->ByteLength);
-        i++;
-      }
-
-		}
-
-    free( buf );
-    return pFound;
-
-}*/
+    CloseHandle(p);
+    return true;
+#else
+    return !kill(pID, SIGKILL); // true if (kill==0)
+#endif
+}
 
 // Launch the process pname and return its PID.
-
-DWORD StartProc(const char *pname,int mode) { //minimized in Debug mode, hidden in Release mode
-
-	PROCESS_INFORMATION pi;
+DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug mode, hidden in Release mode
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    PROCESS_INFORMATION pi;
 	STARTUPINFO si;
 
 	/* Launch */
 
-	memset( &si, 0, sizeof(si) );      
+	memset( &si, 0, sizeof(si) );
 	si.cb = sizeof(si);
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	DWORD launchMode;
 
 #ifndef _DEBUG
-	
+
 	if (mode == STARTPROC_NORMAL) {
 		si.wShowWindow = SW_SHOW;
 		launchMode = DETACHED_PROCESS;
@@ -419,7 +180,7 @@ DWORD StartProc(const char *pname,int mode) { //minimized in Debug mode, hidden 
 		si.wShowWindow = SW_SHOW;
 	}
 
-		  
+
 #endif
 	char* commandLine = _strdup(pname);
 	if (!CreateProcess(
@@ -440,83 +201,36 @@ DWORD StartProc(const char *pname,int mode) { //minimized in Debug mode, hidden 
 	}
 
 	return pi.dwProcessId;
+#else
+    pid_t process = fork();
+    //FILE* returnVal = popen(pname,"r");
 
+    char *argvloc[4];
+    argvloc[0] = const_cast<char *>(pname);
+    argvloc[1] = argv[0];
+    argvloc[2] = argv[1];
+    argvloc[3] = NULL;
+    //printf(" Molflowsub args: %s %s %s\n",cmd,argvloc[0],argvloc[1]);
+
+    if (process == 0) { // child process
+
+        if (0 > execvp(pname, argvloc)) {
+
+            fprintf(stderr," Molflowsub error: %s\n",std::strerror(errno));
+            //_exit(0);
+            return 0;
+        }
+        //printf(" Molflowsub args: %s %s %s\n",cmd,argvloc[0],argvloc[1]);
+    } else if (process < 0) {
+        return 0;
+    }
+    return process;
+#endif
 }
-
-/*
-DWORD StartProc_background(char *pname) { //always starts minimized
-
-	PROCESS_INFORMATION pi;
-	STARTUPINFO si;
-
-	
-
-	memset( &si, 0, sizeof(si) );      
-	si.cb = sizeof(si);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_MINIMIZE;
-
-	
-  if( !CreateProcess(
-          NULL,             // pointer to name of executable module
-		      pname,            // pointer to command line string
-          NULL,             // process security attributes
-          NULL,             // thread security attributes
-	        false,            // handle inheritance flag
-          CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS, // creation flags
-          NULL,             // pointer to new environment block
-		      NULL,             // pointer to current directory name
-		      &si,              // pointer to STARTUPINFO
-          &pi               // pointer to PROCESS_INFORMATION
-		  ) ) {
-		  
-
-	  return 0;
-
-	}
-
-	return pi.dwProcessId;
-
-}
-
-DWORD StartProc_foreground(char *pname) { //always starts minimized
-
-	PROCESS_INFORMATION pi;
-	STARTUPINFO si;
-
-	
-
-	memset( &si, 0, sizeof(si) );      
-	si.cb = sizeof(si);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_SHOW;
-
-	
-  if( !CreateProcess(
-          NULL,             // pointer to name of executable module
-		      pname,            // pointer to command line string
-          NULL,             // process security attributes
-          NULL,             // thread security attributes
-	        false,            // handle inheritance flag
-          CREATE_NEW_CONSOLE|BELOW_NORMAL_PRIORITY_CLASS, // creation flags
-          NULL,             // pointer to new environment block
-		      NULL,             // pointer to current directory name
-		      &si,              // pointer to STARTUPINFO
-          &pi               // pointer to PROCESS_INFORMATION
-		  ) ) {
-		  
-
-	  return 0;
-
-	}
-
-	return pi.dwProcessId;
-
-}
-*/
 
 bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
-	HANDLE hProcess;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;
 
 	HANDLE process = OpenProcess(SYNCHRONIZE, false, processID);
@@ -530,45 +244,9 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 
 	if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
 	{
-
 		pInfo->mem_peak=pmc.PeakWorkingSetSize;
 		pInfo->mem_use=pmc.WorkingSetSize;
-		/*
-		//Init
-		SYSTEM_INFO sysInfo;
-		FILETIME ftime, fsys, fuser;
-		ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
-		
-		GetSystemInfo(&sysInfo);
-
-		GetSystemTimeAsFileTime(&ftime);
-		memcpy(&lastCPU, &ftime, sizeof(FILETIME));
-
-		GetProcessTimes(hProcess, &ftime, &ftime, &fsys, &fuser);
-		memcpy(&lastSysCPU, &fsys, sizeof(FILETIME));
-		memcpy(&lastUserCPU, &fuser, sizeof(FILETIME));
-
-		
-		ULARGE_INTEGER now, sys, user;
-		double percent;
-
-		GetSystemTimeAsFileTime(&ftime);
-		memcpy(&now, &ftime, sizeof(FILETIME));
-
-		GetProcessTimes(hProcess, &ftime, &ftime, &fsys, &fuser);
-		memcpy(&sys, &fsys, sizeof(FILETIME));
-		memcpy(&user, &fuser, sizeof(FILETIME));
-		percent = (sys.QuadPart - lastSysCPU.QuadPart) +
-			(user.QuadPart - lastUserCPU.QuadPart);
-		percent /= (now.QuadPart - lastCPU.QuadPart);
-		percent /= sysInfo.dwNumberOfProcessors;
-		lastCPU = now;
-		lastUserCPU = user;
-		lastSysCPU = sys;
-
-		pInfo->cpu_time=percent * 100;
-		*/
-			pInfo->cpu_time = 0;
+        pInfo->cpu_time = 0;
 	}
 	else {
 		CloseHandle(hProcess);
@@ -576,12 +254,68 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 	}
 	CloseHandle(hProcess);
 	return true;
+#else
+    /* BSD, Linux, and OSX -------------------------------------- */
+    //void mem_usage(double& vm_usage, double& resident_set) {
+   unsigned long vm_size = 0u;
+   unsigned long resident_set = 0u;
+
+#if __APPLE__
+
+    if(processID!=getpid()){
+        vm_size = (size_t)0L;      /* Can't access? */
+        resident_set =  (size_t)0L;      /* Can't access? */
+    }
+    else{
+        struct rusage rusage;
+        getrusage( RUSAGE_SELF, &rusage );
+        vm_size = (size_t)rusage.ru_maxrss / 1024.0;
+
+        struct mach_task_basic_info info;
+        mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+        if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO,(task_info_t)&info, &infoCount ) != KERN_SUCCESS )
+            resident_set =  (size_t)0L;      /* Can't access? */
+        else
+            resident_set =  (size_t)info.resident_size / 1024.0;
+    }
+
+
+
+
+
+
+#else
+   std::ifstream stat_stream("/proc/"+std::to_string(processID)+"/statm",std::ios_base::in); //get info from proc directory
+   stat_stream >> vm_size >> resident_set; // don't care about the rest
+   stat_stream.close();
+
+   long page_size_kb = sysconf(_SC_PAGE_SIZE) /*/ 1024*/; // most commonly 4kB pages used
+   vm_size = vm_size * page_size_kb / 1024.0;
+   resident_set = resident_set * page_size_kb / 1024.0;
+
+#endif
+
+pInfo->mem_peak=vm_size;
+pInfo->mem_use=resident_set;
+pInfo->cpu_time = 0;
+return true;
+
+#endif
 }
 
 bool IsProcessRunning(DWORD pid)
 {
-	HANDLE process = OpenProcess(SYNCHRONIZE, false, pid);
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    HANDLE process = OpenProcess(SYNCHRONIZE, false, pid);
 	DWORD ret = WaitForSingleObject(process, 0);
 	CloseHandle(process);
 	return ret == WAIT_TIMEOUT;
+#else
+    if (0 == kill(pid, 0))
+        return true; // process is running
+    else
+        return false;
+
+#endif
 }

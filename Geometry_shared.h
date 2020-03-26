@@ -321,7 +321,7 @@ protected:
 		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
 #ifdef MOLFLOW
-#include "MolflowTypes.h"
+#include "../src/MolflowTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 

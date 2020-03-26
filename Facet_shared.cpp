@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #ifdef MOLFLOW
-#include "MolFlow.h"
+#include "../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD
