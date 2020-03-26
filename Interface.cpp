@@ -92,7 +92,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/versionId.h"
 
 #ifdef MOLFLOW
-#include "GPUSim/MolflowModelParser.h"
+#include "../src/GPUSim/MolflowModelParser.h"
 #endif
 
 extern Worker worker;
@@ -142,7 +142,7 @@ Interface::Interface() {
     autoSaveFrequency = 10.0; //in minutes
     autoSaveSimuOnly = false;
     autosaveFilename = "";
-	autosaveFilename = "";
+
     autoFrameMove = true;
 
     lastSaveTime = 0.0f;
@@ -1763,12 +1763,17 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     }
                     return true;
 #if defined(MOLFLOW) && defined(GPUCOMPABILITY)
-                case MENU_SAVEGPUGEOM:
-                    flowgeom::saveFromMolflow(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // polygon geometry
-                    flowgeom::saveFromMolflowTriangle(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // triangle geometry
+                case MENU_SAVEGPUGEOM:{
+                    //flowgeom::saveFromMolflow(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // polygon geometry
+                    //flowgeom::saveFromMolflowTriangle(*this->worker.GetGeometry(),this->worker.wp, this->worker.CDFs); // triangle geometry
+                    std::string fileName = NFD_SaveFile_Cpp("xml", "");
+                    if (fileName.empty()) {
+                        fileName = std::string("serialized_") + this->worker.GetGeometry()->GetName();
+                    }
+                    this->worker.SerializeForExternal(fileName);
                     return true;
+                }
 #endif
-
                 case MENU_ABOUT:
                 {
                     std::ostringstream aboutText;

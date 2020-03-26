@@ -28,12 +28,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <array>
 
 #ifdef MOLFLOW
-#include "MolflowTypes.h" //Reflection, Anglemapparams
-#include "MolflowDisplayTypes.h" //Texture Min Max of GlobalHitBuffer
+#include "../src/MolflowTypes.h" //Reflection, Anglemapparams
+#include "../src/MolflowDisplayTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
 #ifdef SYNRAD
-#include "SynradTypes.h" //Texture Min Max of GlobalHitBuffer
+#include "../src/SynradTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
 #define PROFILE_SIZE  (size_t)100 // Size of profile
@@ -549,12 +549,13 @@ public:
 
     struct {
         // Counts
-        double fluxAbs;
-        double powerAbs;
-        size_t nbDesorbed;          // Number of desorbed molec
+
         size_t nbMCHit;               // Number of hits
+        size_t nbDesorbed;          // Number of desorbed molec
         double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
         double nbAbsEquiv;          // Equivalent number of absorbed molecules
+        double fluxAbs;         // Total desorbed Flux
+        double powerAbs;        // Total desorbed power
     } hit;
 
 	template<class Archive>
