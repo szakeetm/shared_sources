@@ -320,15 +320,6 @@ if(NOT MSVC)
     endif()
     target_link_libraries(${PROJECT_NAME} libzip) # from ./lib/
 
-    #use prebuild nfd for GCC on MacOS
-    if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (NOT TARGET libzip)
-            add_library( libnfd STATIC IMPORTED GLOBAL)
-        endif()
-        set_target_properties( libnfd PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libnfd.a )
-        target_link_libraries(${PROJECT_NAME} libnfd) # from ./lib/
-    endif()
-
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} c++fs)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
