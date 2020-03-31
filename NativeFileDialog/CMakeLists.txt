@@ -51,10 +51,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
         )
-<<<<<<< HEAD
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_src)
-=======
->>>>>>> origin/master
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
