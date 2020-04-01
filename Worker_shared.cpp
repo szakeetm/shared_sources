@@ -623,17 +623,8 @@ void Worker::Update(float appTime) {
 				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
 
 				if (f->sh.anglemapParams.record) {
-					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
-						//Initialize angle map
-						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
-						if (!f->angleMapCache) {
-							std::stringstream tmp;
-							tmp << "Not enough memory for incident angle map on facet " << i + 1;
-							throw Error(tmp.str().c_str());
-						}
-						f->sh.anglemapParams.hasRecorded = true;
-						if (f->selected) needsAngleMapStatusRefresh = true;
-					}
+                    if (f->selected && f->angleMapCache.empty()) needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
+
 					//Retrieve angle map from hits dp
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
@@ -641,8 +632,8 @@ void Worker::Update(float appTime) {
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-                    memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
-
+                    f->angleMapCache.resize(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes)); //Will be filled with values
+                    memcpy(f->angleMapCache.data(), angleMapAddress, sizeof(size_t)*(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes)));
                 }
 				
 #endif
@@ -660,7 +651,8 @@ void Worker::Update(float appTime) {
 						+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 						+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 						+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0)
-						+ f->sh.anglemapParams.GetRecordedDataSize();
+						//+ f->sh.anglemapParams.GetRecordedDataSize();
+					    + sizeof(size_t)*(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes));
 					histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
 
 					memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress, f->sh.facetHistogramParams.GetBouncesDataSize());
@@ -670,15 +662,12 @@ void Worker::Update(float appTime) {
 
             }
 			try {
+
+                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
 #ifdef MOLFLOW
-                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
+        , wp.sMode // not necessary for Synrad
 #endif
-#ifdef SYNRAD
-                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);
-#endif
-
-
-
+                        );
             }
 			catch (Error &e) {
 				GLMessageBox::Display(e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
@@ -849,32 +838,47 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 */
 FileReader* Worker::ExtractFrom7zAndOpen(const std::string & fileName, const std::string & geomName)
 {
-	std::ostringstream cmd;
-	std::string sevenZipName = "7za";
+    std::ostringstream cmd;
+    std::string sevenZipName;
 
-#ifdef _WIN32
-	//Necessary push/pop trick to support UNC (network) paths in Windows command-line
-	auto CWD = FileUtils::get_working_path();
-	cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
-	cmd << "7za.exe x -t7z -aoa \"" << fileName << "\" -otmp";
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    //Necessary push/pop trick to support UNC (network) paths in Windows command-line
+    auto CWD = FileUtils::get_working_path();
+    cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
+#endif
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    sevenZipName += "7za.exe";
+#else //Linux, MacOS
+    if (FileUtils::Exist("./7za")) {
+		sevenZipName = "./7za"; //use 7za binary shipped with Molflow
+	}
+	else if (FileUtils::Exist("/usr/bin/7za")) {
+		sevenZipName = "/usr/bin/7za"; //use p7zip installed system-wide
+	}
+	else {
+		sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+	}
+#endif
+    if (!FileUtils::Exist(sevenZipName)) {
+        throw Error("7-zip compressor not found, can't extract file.");
+    }
+    cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    cmd << "&&popd\"";
+#endif
+    system(cmd.str().c_str());
+
+    std::string toOpen, prefix;
+    std::string shortFileName = FileUtils::GetFilename(fileName);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    prefix = CWD + "\\tmp\\";
 #else
-	cmd << "./7za x -t7z -aoa \"" << fileName << "\" -otmp";
+    prefix = "tmp/";
 #endif
+    toOpen = prefix + geomName;
+    if (!FileUtils::Exist(toOpen)) toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
 
-#ifdef _WIN32
-	cmd << "&&popd\"";
-#endif
-	system(cmd.str().c_str());
-
-	std::string toOpen, prefix;
-	std::string shortFileName = FileUtils::GetFilename(fileName);
-#ifdef _WIN32
-	prefix = CWD + "\\tmp\\";
-#else
-	prefix = "tmp/";
-#endif
-	toOpen = prefix + geomName;
-	if (!FileUtils::Exist(toOpen)) toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
-
-	return new FileReader(toOpen); //decompressed file opened
+    return new FileReader(toOpen); //decompressed file opened
 }

@@ -234,7 +234,7 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
     }
 
 	if (evt->type == SDL_MOUSEWHEEL) {
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
 #else
 		int appleInversionFactor = 1;

@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <windows.h>
 //#include <winperf.h>
 #include<Psapi.h>
-#elif defined(__APPLE__)
+#elif defined(__MACOSX__) || defined(__APPLE__)
 #include <mach/mach.h>
 #include <signal.h>
 #include <sys/resource.h>
@@ -260,7 +260,7 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
    unsigned long vm_size = 0u;
    unsigned long resident_set = 0u;
 
-#if __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 
     if(processID!=getpid()){
         vm_size = (size_t)0L;      /* Can't access? */

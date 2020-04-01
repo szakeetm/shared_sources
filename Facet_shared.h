@@ -154,8 +154,8 @@ public:
 	double d;
 	double planarityError;
 	bool nonSimple = false; // A non simple polygon has crossing sides
-    bool normalFlipped = false; // A flag that is true for concave facets where the normal has been flipped to obey the left-hand rule. We set it so the flip can be reverted
-    //int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
+	bool normalFlipped = false; // A flag that is true for concave facets where the normal has been flipped to obey the left-hand rule. We set it so the flip can be reverted
+	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
 	double tRatio;       // Texture sample per unit
@@ -178,8 +178,8 @@ public:
 	std::vector<NeighborFacet> neighbors;
 
 #ifdef MOLFLOW
-	double *outgassingMap; //outgassing map cell values (loaded from file)
-	size_t* angleMapCache; //Reading while loading then passing to dpHit
+	std::vector<double> outgassingMap; //outgassing map cell values (loaded from file)
+	std::vector<size_t> angleMapCache; //Stores either the recorded or the generating angle map. Worker::Update reads results here. A better implementation would be to separate recorded and generating angle maps
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
 	double totalFlux;
 	double totalDose;

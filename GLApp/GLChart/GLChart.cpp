@@ -1013,16 +1013,16 @@ void GLChart::SaveFile() {
 				sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp) - 1;
 				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
-				fprintf(f, tmp);
-				if (j < nbView) fprintf(f, separator.c_str());
+				fprintf(f,"%s",tmp);
+				if (j < nbView) fprintf(f, "%s",separator.c_str());
 			}
 			for (int i = 0; i < nbv2; i++) {
 				ptr[j++] = y2Axis->GetDataView(i)->GetData();
 				sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp) - 1;
 				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
-				fprintf(f, tmp);
-				if (j < nbView) fprintf(f, separator.c_str());
+				fprintf(f, "%s",tmp);
+				if (j < nbView) fprintf(f, "%s", separator.c_str());
 			}
 			fprintf(f, "\n");
 
@@ -1037,7 +1037,7 @@ void GLChart::SaveFile() {
 							fprintf(f, "%g", ptr[i]->y);
 							ptr[i] = ptr[i]->next;
 						}
-						if (i < nbView - 1) fprintf(f, separator.c_str());
+						if (i < nbView - 1) fprintf(f, "%s",separator.c_str());
 					}
 					fprintf(f, "\n");
 				}

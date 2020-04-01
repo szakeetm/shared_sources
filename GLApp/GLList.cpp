@@ -1317,7 +1317,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 	case SDL_MOUSEWHEEL:
 		return EDIT_IGNORE; //Don't use mousewheel while editing text. Causes problems on Apple devices
 	{
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
 #else
 		int appleInversionFactor = 1;
@@ -1429,7 +1429,7 @@ void GLList::HandleWheel(SDL_Event *evt) {
 	int mx = GetWindow()->GetX(this, evt);
 	int my = GetWindow()->GetY(this, evt);
 
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 	int appleInversionFactor = -1; //Invert mousewheel on Apple devices
 #else
 	int appleInversionFactor = 1;

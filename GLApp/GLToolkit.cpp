@@ -134,7 +134,7 @@ std::string GLToolkit::GetOSName() {
    //define something for Windows (32-bit only)
 	return "Win32";
 #endif
-#elif __APPLE__
+#elif defined(__MACOSX__) || defined(__APPLE__)
 #include "TargetConditionals.h"
 #if TARGET_IPHONE_SIMULATOR
 	// iOS Simulator

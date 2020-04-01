@@ -55,7 +55,7 @@ extern "C" {
 
  using DWORD = unsigned int;
  using WORD = unsigned short;
-#if not defined(__APPLE__)
+#if not defined(__MACOSX__) || not defined(__APPLE__)
  union semun {
     int                 val;   /* value for SETVAL             */
     struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */
@@ -64,11 +64,6 @@ extern "C" {
 #endif
  // Linux shared memory
  typedef struct {
-/*   int              sema;
-   int              shar;
-   int              key;
-   pid_t            creator_pid;
-   char             body;*/
     char              name[32]; //Unique identifier
     char              semaname[32]; //Mutex unique identifier
     int            sema; //Mutex handle (CreateMutex return value)
