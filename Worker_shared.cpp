@@ -43,8 +43,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
-#include "SynradGeometry.h"
+#include "../src/SynRad.h"
+#include "../src/SynradGeometry.h"
 #endif
 
 #include "File.h" //File utils (Get extension, etc)
@@ -878,7 +878,8 @@ FileReader* Worker::ExtractFrom7zAndOpen(const std::string & fileName, const std
     prefix = "tmp/";
 #endif
     toOpen = prefix + geomName;
-    if (!FileUtils::Exist(toOpen)) toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
+    if (!FileUtils::Exist(toOpen))
+        toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
 
     return new FileReader(toOpen); //decompressed file opened
 }

@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <windows.h>
 #include <stdio.h>
-
+#include <process.h>
 void PrintLastErrorText(LPTSTR suff);
 
 #else
@@ -39,6 +39,7 @@ void PrintLastErrorText(LPTSTR suff);
 #include <sys/un.h>
 #include <time.h>
 #include <algorithm> // std::min
+#include <sys/time.h>
 
 void PrintLastErrorText( const char* errorMsg );
 int build_key (char *name)
@@ -571,6 +572,64 @@ bool CloseDataport(Dataport *dp) {
 #endif
 }
 
+// Timing stuff
+
+#ifdef WIN
+bool usePerfCounter;         // Performance counter usage
+LARGE_INTEGER perfTickStart; // First tick
+double perfTicksPerSec;      // Performance counter (number of tick per second)
+#endif
+DWORD tickStart;
+
+void InitTick(){
+#ifdef WIN
+		LARGE_INTEGER qwTicksPerSec;
+		usePerfCounter = QueryPerformanceFrequency(&qwTicksPerSec);
+		if (usePerfCounter) {
+			QueryPerformanceCounter(&perfTickStart);
+			perfTicksPerSec = (double)qwTicksPerSec.QuadPart;
+		}
+		tickStart = GetTickCount();
+#else
+        tickStart = (DWORD)time(NULL);
+#endif
+};
+double GetTick() {
+
+    // Number of sec since the application startup
+#ifdef WIN
+    if (usePerfCounter) {
+		LARGE_INTEGER t, dt;
+		QueryPerformanceCounter(&t);
+		dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
+		return (double)(dt.QuadPart) / perfTicksPerSec;
+	}
+	else {
+		return (double)((GetTickCount() - tickStart) / 1000.0);
+	}
+
+#else
+    if (tickStart < 0)
+        tickStart = time(NULL);
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((double)(tv.tv_sec - tickStart)*1000.0 + (double)tv.tv_usec / 1000.0);
+#endif
+}
+
+DWORD GetSeed() {
+    int processId;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    processId = _getpid();
+#else
+    processId = ::getpid();
+#endif //  WIN
+
+    return (DWORD)((int)(GetTick()*1000.0)*processId);
+}
+
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 
 void PrintLastErrorText(LPTSTR suff) {
@@ -599,6 +658,7 @@ void PrintLastErrorText( const char* errorMsg )
 
 }
 #endif
+
 
 #ifdef LINUXOLDCODE
 

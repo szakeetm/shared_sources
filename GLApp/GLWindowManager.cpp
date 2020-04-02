@@ -13,7 +13,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 extern GLApplication *theApp;

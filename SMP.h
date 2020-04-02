@@ -97,8 +97,12 @@ bool CloseDataport(Dataport *dp, bool unlinkShm);
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-DWORD         StartProc(const char *pname,int mode, char **argv);
+DWORD         StartProc(const char *pname,int mode, char **argv = nullptr);
 bool IsProcessRunning(DWORD pID);
+
+void InitTick();
+double GetTick();
+DWORD GetSeed();
 
 // Helper functions
 inline void ProcessSleep(const unsigned int milliseconds) {

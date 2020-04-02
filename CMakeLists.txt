@@ -136,6 +136,7 @@ set(SRC_FILES
         GeometryConverter.cpp
 
         # subprocesses
+        Buffer_shared.cpp
         Distributions.cpp
         IntersectAABB_shared.cpp
         Polygon.cpp

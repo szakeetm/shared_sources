@@ -42,7 +42,7 @@ class MolflowGeometry;
 #endif
 
 #ifdef SYNRAD
-#include "Region_full.h"
+#include "../src/Region_full.h"
 
 class SynradGeometry;
 class Material;

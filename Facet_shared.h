@@ -28,7 +28,7 @@ using namespace pugi;
 #include <cereal/archives/binary.hpp>
 
 #ifdef SYNRAD
-#include "SynradDistributions.h" //material, for Save, etc.
+#include "../src/SynradDistributions.h" //material, for Save, etc.
 #endif
 
 struct NeighborFacet {

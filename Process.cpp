@@ -182,7 +182,7 @@ DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug 
 
 
 #endif
-	char* commandLine = _strdup(pname);
+	char* commandLine = strdup(pname);
 	if (!CreateProcess(
 		NULL,             // pointer to name of executable module
 		commandLine,            // pointer to command line string

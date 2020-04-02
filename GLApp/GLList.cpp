@@ -20,7 +20,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 #define ISBOLD(x) ((x)[0]==':' && (x)[1]=='B' && (x)[2]==':')

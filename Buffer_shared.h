@@ -32,7 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef SYNRAD
-#include "SynradTypes.h" //Texture Min Max of GlobalHitBuffer
+#include "../src/SynradTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
 #define PROFILE_SIZE  (size_t)100 // Size of profile
@@ -565,7 +565,7 @@ public:
 			CEREAL_NVP(hit.nbMCHit),           // Number of hits
 			CEREAL_NVP(hit.nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 			CEREAL_NVP(hit.nbAbsEquiv),      // Number of absorbed molec
-			CEREAL_NVP(hit.nbDesorbed),
+			CEREAL_NVP(hit.nbDesorbed)
 			);
 	}
 
