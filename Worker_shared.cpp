@@ -456,11 +456,11 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 #else
         char **argumente;
         argumente = new char*[2];
-        for(int i=0;i<2;i++)
-            argumente[i] = new char[10];
+        for(int arg=0;arg<2;arg++)
+            argumente[arg] = new char[10];
         sprintf(cmdLine,"./molflowSub");
         sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%u",i);
+        sprintf(argumente[1],"%zu",i);
         //sprintf(argumente[2],"%s",'\0');
         //argumente[2] = NULL;
 #endif
@@ -470,11 +470,11 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 #else
         char **argumente;
         argumente = new char*[2];
-        for(int i=0;i<2;i++)
-            argumente[i] = new char[10];
+        for(int arg=0;arg<2;arg++)
+            argumente[arg] = new char[10];
         sprintf(cmdLine,"./synradSub");
         sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%z",i);
+        sprintf(argumente[1],"%zu",i);
 #endif
 #endif
 
