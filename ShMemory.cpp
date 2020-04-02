@@ -644,7 +644,7 @@ void PrintLastErrorText(LPTSTR suff) {
                           0,
                           NULL);
 
-    printf(TEXT("%s:%s (0x%x)"), suff, lpszTemp, GetLastError());
+    printf(TEXT("%s:%s (%d [0x%x])"), suff, lpszTemp, GetLastError(), GetLastError());
 
     if (lpszTemp)
         LocalFree((HLOCAL) lpszTemp);
@@ -654,7 +654,7 @@ void PrintLastErrorText(LPTSTR suff) {
 #else
 void PrintLastErrorText( const char* errorMsg )
 {
-    fprintf(stderr,"%s:%s (%d - 0x%x)\n", errorMsg, strerror(errno), errno);
+    fprintf(stderr,"%s:%s (%d [0x%x])\n", errorMsg, strerror(errno), errno, errno);
 
 }
 #endif

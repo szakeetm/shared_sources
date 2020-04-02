@@ -310,7 +310,7 @@ void AppUpdater::GenerateUserId() {
 	size_t hashCode = 5381;
 	int c;
 	size_t index = 0;
-	while (c = id.c_str()[index++]) {
+	while ((c = id.c_str()[index++])) {
 		hashCode = ((hashCode << 5) + hashCode) + c; /* hash * 33 + c */
 	}
 

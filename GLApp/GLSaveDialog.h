@@ -1,6 +1,6 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #ifndef _GLSAVEDIALOGH_
-#define _GLSAVEDIALGOH_
+#define _GLSAVEDIALOGH_
 
 #include <SDL2/SDL_opengl.h>
 #include "GLWindow.h"

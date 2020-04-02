@@ -196,6 +196,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
+        )
+
+target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_4}
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
@@ -203,7 +206,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 if(MSVC)
     # 1. link against external libs
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
             libcurl_a_x64.lib
             SDL2.lib
@@ -219,7 +222,7 @@ if(MSVC)
             ole32.lib
             )
 
-    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
     #target_link_libraries(${PROJECT_NAME} nativefiledialog)
 endif(MSVC)
 if(NOT MSVC)
@@ -258,26 +261,26 @@ if(NOT MSVC)
         # Add other flags to the compiler
         ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
 
-        target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK3_LIBRARIES})
 
         find_package(X11 REQUIRED)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${X11_INCLUDE_DIRS})
+        target_include_directories(${PROJECT_NAME} PUBLIC ${X11_INCLUDE_DIRS})
     endif()
 
     find_package(OpenGL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 
     find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 
     find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${PNG_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
 
     find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${GSL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
     find_package(CURL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
@@ -329,8 +332,8 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
-    target_link_libraries(${PROJECT_NAME} nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME}  nativefiledialog)
 endif(NOT MSVC)
 
 ######################### Flags ############################
@@ -338,7 +341,11 @@ endif(NOT MSVC)
 ############################################################
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall>
+        $<$<CXX_COMPILER_ID:MSVC>:
+        /W4>)
 # Preprocessor definitions
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)

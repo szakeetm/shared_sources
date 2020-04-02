@@ -299,9 +299,9 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				}
 				N.x=a;N.y=b;N.z=c;
 				P0.x=0.0;P0.y=0;P0.z=0;
-				if (!a==0) P0.x=-d/a;
-				else if (!b==0) P0.y=-d/b;
-				else if (!c==0) P0.z=-d/c;
+				if (a!=0) P0.x=-d/a;
+				else if (b!=0) P0.y=-d/b;
+				else if (c!=0) P0.z=-d/c;
 			break;
 			default:
 					GLMessageBox::Display("Select a plane definition mode.","Error",GLDLG_OK,GLDLG_ICONERROR);

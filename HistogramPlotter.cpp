@@ -318,13 +318,13 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	else { //Facet histogram
 		if (modeId == HISTOGRAM_MODE_BOUNCES) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram);
-			(double)geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
+			//(double)geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
 			xSpacing = (double)(geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 		}
 		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.distanceHistogram);
-			geom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
+			//geom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
 			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 		}

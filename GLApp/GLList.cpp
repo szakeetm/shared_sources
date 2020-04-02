@@ -1044,6 +1044,7 @@ int GLList::GetValueInt(size_t row, size_t column) {
 		char errMsg[512];
 		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
+		return -1;
 	}
 }
 

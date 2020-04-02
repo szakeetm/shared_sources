@@ -153,7 +153,7 @@ public:
 	UpdateLogWindow(Interface* mApp);
 
 	// Implementation
-	void ProcessMessage(GLComponent *src, int message);
+	void ProcessMessage(GLComponent *src, int message) override;
 	void ClearLog();
 	void Log(const std::string& line);
 	void SetBounds(int x, int y, int w, int h) override;

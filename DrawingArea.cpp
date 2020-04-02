@@ -21,7 +21,7 @@
 #include "GLApp/GLToolkit.h"
 #include "GLApp\MathTools.h" //IDX
 #include <math.h>
-#include <malloc.h>
+//#include <malloc.h>
 
 DrawingArea::DrawingArea():GLComponent(0) {
 

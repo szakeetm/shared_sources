@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #ifndef _GLRECOVERYDIALOGH_
-#define _GLRECOVERYDIALGOH_
+#define _GLRECOVERYDIALOGH_
 
 //#include <SDL_opengl.h>
 #include "GLApp/GLWindow.h"
