@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Buffer_shared.h"
 
+#ifdef SYNRAD
 FacetHitBuffer::FacetHitBuffer(){
     this->ResetBuffer();
 }
@@ -41,3 +42,4 @@ FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs){
 	this->hit.powerAbs += rhs.hit.powerAbs;
 	return *this;
 }
+#endif
