@@ -129,6 +129,7 @@ Interface::Interface() {
     antiAliasing = true;
     whiteBg = false;
     highlightNonplanarFacets = true;
+    highlightSelection = true;
     leftHandedView = false;
     autoUpdateFormulas = true;
     compressSavedFiles = true;

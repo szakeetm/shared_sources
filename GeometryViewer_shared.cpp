@@ -779,6 +779,16 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 }
 
 void GeometryViewer::DrawNormal() {
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
+
+    if (mApp->antiAliasing) {
+        glEnable(GL_BLEND);
+        glEnable(GL_LINE_SMOOTH);
+    }
+
 	glLineWidth(2.0f);
 	glPointSize(3.0f);
 	glColor3f(1.0f, 0.0f, 0.0f);
@@ -798,6 +808,10 @@ void GeometryViewer::DrawNormal() {
 			glEnd();
 		}
 	}
+    if (mApp->antiAliasing) {
+        glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_BLEND);
+    }
 	glLineWidth(1.0f);
 }
 
@@ -1151,7 +1165,12 @@ if( showVolume || showTexture ) {
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
-	DrawRule();
+
+	// Draw opaque facets etc. just after everything else has been rendered
+    if(mApp->highlightSelection)
+	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+
+    DrawRule();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();

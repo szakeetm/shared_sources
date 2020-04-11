@@ -205,6 +205,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         )
 
 if(MSVC)
+    find_package(OpenGL REQUIRED)
     # 1. link against external libs
     target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
@@ -216,7 +217,7 @@ if(MSVC)
             lzma.lib
             ZipLib.lib
             #zlib.lib
-            opengl32.lib
+            opengl32#.lib
             user32.lib
             shell32.lib
             ole32.lib
@@ -350,7 +351,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)
+        target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)
         #for .pdb debugging files
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
         set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
@@ -360,7 +361,7 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /EHsc)
+        target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
     endif()
 endif()
 

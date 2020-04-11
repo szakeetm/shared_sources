@@ -17,6 +17,7 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+
 #include "Geometry_shared.h"
 #include "Worker.h"
 #include "GLApp/MathTools.h" //Min max
@@ -524,6 +525,26 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 	size_t nb = f->sh.nbIndex;
 	size_t i1;
 
+    /*// Draw transparent overlay
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    *//*glEnable(GL_POLYGON_OFFSET_LINE);
+    if (selOffset) {
+        glPolygonOffset(0.0f, 1.0f);
+    }
+    else {
+
+        glPolygonOffset(0.0f, 5.0f);
+    }*//*
+    glBegin(GL_POLYGON);
+    for (size_t j = 0; j < nb; j++) {
+        i1 = f->indices[j];
+        glEdgeFlag(f->visible[j] || showHidden);
+        glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
+    }
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //glDisable(GL_POLYGON_OFFSET_LINE);*/
+
 	if (offset) {
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -578,10 +599,10 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 			}
 			glEnd();
 		}
-
 	}
 
 }
+
 
 void Geometry::DrawPolys() {
 
@@ -592,7 +613,9 @@ void Geometry::DrawPolys() {
 	// Group TRI,QUAD and POLY
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		size_t nb = facets[i]->sh.nbIndex;
-		if (facets[i]->volumeVisible) {
+		if (facets[i]->volumeVisible
+		//&& !facets[i]->selected // don't draw part of the volume that is selected
+		) {
 			if (nb == 3) {
 				f3.push_back(i);
 			}
@@ -623,8 +646,114 @@ void Geometry::DrawPolys() {
 	for (const auto& i : f4)
 		FillFacet(facets[i], false);
 	glEnd();
+}
+
+// returns 1 if lhs is greater, -1 otherwise
+float Geometry::getMaxDistToCamera(Facet* f){
+
+    float rx, ry, rz, rw;
+
+    GLfloat mProj[16];
+    GLfloat mView[16];
+    GLVIEWPORT g;
+
+    glGetFloatv(GL_PROJECTION_MATRIX, mProj);
+    glGetFloatv(GL_MODELVIEW_MATRIX, mView);
+    glGetIntegerv(GL_VIEWPORT, (GLint *)&g);
+
+    GLMatrix proj; proj.LoadGL(mProj);
+    GLMatrix view; view.LoadGL(mView);
+    GLMatrix m; m.Multiply(&proj, &view);
+    float distToCamera = -99999.99f;
+
+    for(int i=0;i<f->sh.nbIndex;++i){
+        size_t idx = f->indices[i];
+        m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
+                      &rx, &ry, &rz, &rw);
+        distToCamera = std::max(rz,distToCamera);
+    }
+    return distToCamera;
+}
+
+// returns 1 if lhs is greater, -1 otherwise
+int Geometry::compareFacetDepth(Facet* lhs, Facet* rhs){
+
+    if(getMaxDistToCamera(lhs) > getMaxDistToCamera(rhs)){
+        return 1;
+    }
+    else return 0;
 
 }
+void Geometry::DrawTransparentPolys(std::vector<size_t> &selectedFacets) {
+
+    //std::vector<size_t> f3; f3.reserve(sh.nbFacet);
+    //std::vector<size_t> f4; f4.reserve(sh.nbFacet);
+    //std::vector<size_t> fp; fp.reserve(sh.nbFacet);
+
+
+    //---Draw transparent selected polygons
+    // Group TRI,QUAD and POLY
+    /*for (int i = 0; i < selectedFacets.size(); ++i) {
+        const size_t nb = facets[i]->sh.nbIndex;
+        if (nb == 3) {
+            f3.push_back(selectedFacets[i]);
+        }
+        else if (nb==4){
+            f4.push_back(selectedFacets[i]);
+        }
+        else{
+            fp.push_back(selectedFacets[i]);
+        }
+    }*/
+    /*std::list<size_t> sortedFacets;
+    for (int i = 0; i < selectedFacets.size(); ++i) {
+        *//*bool isBiggest = true;
+        for (std::list<size_t>::iterator it=sortedFacets.begin(); it!=sortedFacets.end(); ++it){
+            if(compareFacetDepth(facets[selectedFacets[i]],facets[*it])){
+                continue;
+            }
+            else{
+                isBiggest = false;
+                sortedFacets.insert(it,selectedFacets[i]);
+            }
+        }
+        if(isBiggest)*//*
+            sortedFacets.push_back(selectedFacets[i]);
+    }*/
+
+    // Draw
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glBegin(GL_TRIANGLES);
+    for (const auto& i : selectedFacets) {
+        size_t nb = facets[i]->sh.nbIndex;
+        if (nb == 3) {
+            FillFacet(facets[i], false);
+        }
+        else {
+            Triangulate(facets[i], false);
+        }
+    }
+    glEnd();
+
+
+    // Triangle
+    /*glBegin(GL_TRIANGLES);
+    for (const auto& i : f3)
+        FillFacet(facets[i], false);
+    // Triangulate polygon
+    for (const auto& i : fp)
+        Triangulate(facets[i], false);
+    glEnd();
+
+    // Quads
+    glBegin(GL_QUADS);
+    for (const auto& i : f4)
+        FillFacet(facets[i], false);
+    glEnd();*/
+    //---end transparent
+}
+
 void Geometry::SetCullMode(int mode) {
 
 	switch (mode) {
@@ -1116,6 +1245,34 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 }
 
+void Geometry::RenderOpaque(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+    if (mApp->antiAliasing) {
+        glEnable(GL_BLEND);
+        glEnable(GL_LINE_SMOOTH);
+    }
+
+    //glBlendFunc(GL_ONE, GL_ZERO);
+    //glColor4f(1.0f, 0.0f, 0.0f,0.4f);    //red
+
+    glColor4f(0.933f,0.067f,0.067f,0.15f);    //metro red
+    /*if (showHidden) {
+        glDisable(GL_DEPTH_TEST);
+        glCallList(selectHighlightList);
+        glEnable(GL_DEPTH_TEST);
+    }
+    else {*/
+        //glCallList(selectHighlightList);
+    //glDisable(GL_DEPTH_TEST);
+
+    glCallList(selectHighlightList);
+
+    //glEnable(GL_DEPTH_TEST);
+    if (mApp->antiAliasing) {
+        glDisable(GL_LINE_SMOOTH);
+        glDisable(GL_BLEND);
+    }
+}
+
 void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deleteLine) {
 		for (int i = 0; i < sh.nbSuper; i++)
@@ -1124,7 +1281,8 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deletePoly) DELETE_LIST(polyList);
 	DELETE_LIST(selectList);
 	DELETE_LIST(selectList2);
-	DELETE_LIST(selectList3);
+    DELETE_LIST(selectList3);
+    DELETE_LIST(selectHighlightList);
 }
 
 std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
@@ -1342,7 +1500,8 @@ void Geometry::BuildSelectList() {
 	glLineWidth(2.0f);
 
 	auto selectedFacets = GetSelectedFacets();
-	for (auto& sel : selectedFacets) {
+
+    for (auto& sel : selectedFacets) {
 		Facet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
 		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
@@ -1354,8 +1513,43 @@ void Geometry::BuildSelectList() {
 	}
 	glEndList();
 
+	if(mApp->highlightSelection){
+        // Fourth list with transparent highlighting for selected facets
+        selectHighlightList = glGenLists(1);
+        glNewList(selectHighlightList, GL_COMPILE);
+        glDepthMask(GL_FALSE);
+        /*glDisable(GL_CULL_FACE);
+        glDepthFunc(GL_LEQUAL);*/
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+        //glDisable(GL_BLEND);
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+        glEnable(GL_BLEND);
+        //glBlendEquation(GL_MAX);
+        //glEnable(GL_MULTISAMPLE);
+        //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+
+        DrawTransparentPolys(selectedFacets);
+
+        //glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        //glDisable(GL_MULTISAMPLE);
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+
+        glEndList();
+	}
+
+
 }
 
+void Geometry::BuildVolumeFacetList() {
+    polyList = glGenLists(1);
+    glNewList(polyList, GL_COMPILE);
+    DrawPolys();
+    glEndList();
+}
 
 void Geometry::BuildNonPlanarList() {
 
@@ -1411,11 +1605,7 @@ void Geometry::BuildGLList() {
 		glEndList();
 	}
 
-	polyList = glGenLists(1);
-	glNewList(polyList, GL_COMPILE);
-	DrawPolys();
-	glEndList();
-
+	BuildVolumeFacetList();
 	BuildNonPlanarList();
 	BuildSelectList();
 

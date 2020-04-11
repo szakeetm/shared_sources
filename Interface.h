@@ -259,6 +259,7 @@ public:
 	float    lastAppTime;
 	bool     antiAliasing;
 	bool     whiteBg;
+	bool highlightSelection;
 	bool highlightNonplanarFacets;
 	bool	 leftHandedView;
 	float    lastMeasTime; // Last measurement time (for hps and dps)

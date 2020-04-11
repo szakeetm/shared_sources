@@ -98,6 +98,10 @@ protected:
 	void BuildShapeList();
 	void BuildSelectList();
 	void BuildNonPlanarList();
+	void BuildVolumeFacetList();
+
+	float getMaxDistToCamera(Facet* f);
+	int compareFacetDepth(Facet* lhs, Facet* rhs);
 public:
 	Geometry();
 	~Geometry();
@@ -238,6 +242,7 @@ protected:
 	void FillFacet(Facet *f, bool addTextureCoord);
 	void AddTextureCoord(Facet *f, const Vector2d *p);
 	void DrawPolys();
+	void DrawTransparentPolys(std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
@@ -258,6 +263,7 @@ public:
 	std::vector<size_t> GetSelectedVertices();
 	size_t  GetNbSelectedVertex();
 	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
+	void RenderOpaque(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void ClearFacetTextures();
 	std::vector<bool> GetVertexBelongsToSelectedFacet();
 #pragma endregion
@@ -301,6 +307,7 @@ protected:
 	GLint selectList;             // Compiled geometry (selection)
 	GLint selectList2;            // Compiled geometry (selection with offset)
 	GLint selectList3;            // Compiled geometry (no offset,hidden visible)
+	GLint selectHighlightList;            // Compiled geometry (no offset,hidden visible)
 	GLint nonPlanarList;          // Non-planar facets with purple outline
 	GLint selectListVertex;             // Compiled geometry (selection)
 	GLint selectList2Vertex;            // Compiled geometry (selection with offset)

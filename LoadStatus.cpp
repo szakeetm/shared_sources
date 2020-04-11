@@ -126,7 +126,7 @@ void LoadStatus::SMPUpdate() {
 		sprintf(tmp, "%.0f MB", (double)pInfo.mem_use/(1024.0*1024.0));
 		processList->SetValueAt(1, 0, tmp);
 
-		
+
 		for(size_t i=0;i<worker->GetProcNumber();i++) {
 			size_t pid = worker->GetPID(i);
 			sprintf(tmp,"Subproc.%zd",i+1);
