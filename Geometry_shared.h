@@ -263,7 +263,7 @@ public:
 	std::vector<size_t> GetSelectedVertices();
 	size_t  GetNbSelectedVertex();
 	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
-	void RenderOpaque(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
+	void RenderTransparent();
 	void ClearFacetTextures();
 	std::vector<bool> GetVertexBelongsToSelectedFacet();
 #pragma endregion
@@ -300,7 +300,8 @@ protected:
 	std::vector<size_t> selectedVertexList_ordered; //Vertex selection history, used for creating ordered polygon
 
 	GLMATERIAL fillMaterial;
-	GLMATERIAL whiteMaterial;
+    GLMATERIAL whiteMaterial;
+    GLMATERIAL blackMaterial;
 	GLMATERIAL arrowMaterial;
 	GLint lineList[MAX_SUPERSTR]; // Compiled geometry (wire frame)
 	GLint polyList;               // Compiled geometry (polygon)

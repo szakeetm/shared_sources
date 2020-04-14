@@ -579,7 +579,6 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 			glEnd();
 		}
 		else {
-
 			glBegin(GL_LINES);
 			size_t i1, i2, j;
 			for (j = 0; j < nb - 1; j++) {
@@ -943,7 +942,6 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
-	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	/*size_t nbDrawn = 0;
 	size_t i;
 	if (mApp->leftHandedView) {
@@ -955,8 +953,29 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 			glNormal3d(f->wp.N.x, f->wp.N.y, f->wp.N.z);
 	}
 	for (; nbDrawn < f->wp.nbIndex; nbDrawn++) {*/
+
+	if(!mApp->antiAliasing){ // only use facet normal for shading
+        glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
+    }
 	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
+
+		if(mApp->antiAliasing){ // calculate vertex normals for smooth shading
+            Vector3d sharedNormal = -1.0*f->sh.N;
+            int nbShared = 1;
+            for(int fac = 0; fac < sh.nbFacet; fac++){
+                if(facets[fac] != f) {
+                    for(int v = 0; v < f->sh.nbIndex;v++){
+                        if(facets[fac]->indices[v] == idx){
+                            sharedNormal += -1.0 * facets[fac]->sh.N;
+                            nbShared++;
+                            continue;
+                        }
+                    }
+                }
+            }
+            glNormal3d(sharedNormal.x/(double)nbShared,sharedNormal.y/(double)nbShared,sharedNormal.z/(double)nbShared);
+        }
 		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]));
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
 		/*if (mApp->leftHandedView) {
@@ -1046,19 +1065,113 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 	
 	// Render Volume
 	if (renderVolume) {
-		glPolygonOffset(1.0f, 4.0f);
-		SetCullMode(showMode);
-		GLfloat global_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
-		glEnable(GL_LIGHT0);
-		glEnable(GL_LIGHT1);
-		glEnable(GL_LIGHTING);
-		GLToolkit::SetMaterial(&fillMaterial);
-		glEnable(GL_POLYGON_OFFSET_FILL);
-		glCallList(polyList);
-		glDisable(GL_POLYGON_OFFSET_FILL);
-		GLToolkit::SetMaterial(&whiteMaterial);
-		glDisable(GL_LIGHTING);
+	    if(1) {
+            //glDrawBuffer(GL_NONE);
+            //glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            //glEnable(GL_CULL_FACE);
+            if (showMode == 2) {
+                SetCullMode(2);
+            } else {
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT_AND_BACK);
+            }
+            /*if(showMode==2) SetCullMode(GL_FRONT); // show inner lines for show back
+            else if(showMode==1) SetCullMode(GL_BACK);
+            else SetCullMode(GL_FRONT_AND_BACK);*/
+            GLToolkit::SetMaterial(&fillMaterial);
+            glCallList(polyList);
+            GLToolkit::SetMaterial(&whiteMaterial);
+            //glDrawBuffer(GL_FRONT);
+            //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glDisable(GL_CULL_FACE);
+        }
+
+        if(!mApp->antiAliasing) glShadeModel(GL_FLAT);
+        else glShadeModel(GL_SMOOTH);
+
+        if(showMode==2){
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_GEQUAL);
+            glDepthMask(GL_FALSE);
+        }
+        else if(showMode==1){
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
+            glDepthMask(GL_TRUE);
+        }
+        else{
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
+            glDepthMask(GL_TRUE);
+        }
+        /*if(showMode==2) glPolygonOffset(1.0f, 4.0f);
+        else glPolygonOffset(1.0f, 4.0f);*/
+        glPolygonOffset(1.0f, 4.0f);
+        SetCullMode(showMode);
+        GLfloat global_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+        glEnable(GL_LIGHTING);
+        GLToolkit::SetMaterial(&fillMaterial);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glCallList(polyList);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        GLToolkit::SetMaterial(&whiteMaterial);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glShadeModel(GL_SMOOTH);
+
+        if(1){
+            // Default material
+            //GLToolkit::SetMaterial(&blackMaterial);
+            glLineWidth(2.0f);
+
+            float color = 0.0f;
+
+            // Draw lines
+            glDisable(GL_LIGHTING);
+            glColor4f(color, color, color, 0.2f);
+            if (mApp->antiAliasing) {
+                glEnable(GL_DEPTH_TEST);
+                if(showMode==2)
+                    glDepthFunc(GL_GREATER); // show inner lines for show back
+                else
+                    glDepthFunc(GL_LEQUAL);
+                glEnable(GL_LINE_SMOOTH);
+                glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            glPolygonOffset(1.0f, 5.0f);
+            glEnable(GL_POLYGON_OFFSET_LINE);
+            for (int i = 0;i < sh.nbSuper;i++)
+                glCallList(lineList[i]);
+            glDisable(GL_POLYGON_OFFSET_LINE);
+            if (mApp->antiAliasing) {
+                glDisable(GL_BLEND);
+                glDisable(GL_LINE_SMOOTH);
+                glDisable(GL_DEPTH_TEST);
+            }
+            glColor3f(0.0f, 0.0f, 0.0f);
+            GLToolkit::SetMaterial(&whiteMaterial);
+        }
+	    else{
+            glPolygonOffset(1.0f, 4.0f);
+            SetCullMode(showMode);
+            GLfloat global_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
+            glEnable(GL_LIGHT0);
+            glEnable(GL_LIGHT1);
+            glEnable(GL_LIGHTING);
+            GLToolkit::SetMaterial(&fillMaterial);
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glCallList(polyList);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+            GLToolkit::SetMaterial(&whiteMaterial);
+            glDisable(GL_LIGHTING);
+	    }
 	}
 	else {
 
@@ -1245,28 +1358,15 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 }
 
-void Geometry::RenderOpaque(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+void Geometry::RenderTransparent() {
     if (mApp->antiAliasing) {
         glEnable(GL_BLEND);
         glEnable(GL_LINE_SMOOTH);
     }
 
-    //glBlendFunc(GL_ONE, GL_ZERO);
-    //glColor4f(1.0f, 0.0f, 0.0f,0.4f);    //red
-
     glColor4f(0.933f,0.067f,0.067f,0.15f);    //metro red
-    /*if (showHidden) {
-        glDisable(GL_DEPTH_TEST);
-        glCallList(selectHighlightList);
-        glEnable(GL_DEPTH_TEST);
-    }
-    else {*/
-        //glCallList(selectHighlightList);
-    //glDisable(GL_DEPTH_TEST);
-
     glCallList(selectHighlightList);
 
-    //glEnable(GL_DEPTH_TEST);
     if (mApp->antiAliasing) {
         glDisable(GL_LINE_SMOOTH);
         glDisable(GL_BLEND);

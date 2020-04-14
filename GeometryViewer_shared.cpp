@@ -1084,10 +1084,11 @@ void GeometryViewer::Paint() {
 	glDisable(GL_BLEND);
 
 	// Draw geometry
-	if (showVolume || showTexture) glEnable(GL_DEPTH_TEST);
-			glClearDepth(1.0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			glDepthFunc(GL_LEQUAL);
+	//if (showVolume || showTexture)
+    glEnable(GL_DEPTH_TEST);
+    glClearDepth(1.0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glDepthFunc(GL_LEQUAL);
 	
 	/*if (view.projMode == ORTHOGRAPHIC_PROJ) {
 		if (mApp->leftHandedView) {
@@ -1168,7 +1169,7 @@ if( showVolume || showTexture ) {
 
 	// Draw opaque facets etc. just after everything else has been rendered
     if(mApp->highlightSelection)
-	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+        geom->RenderTransparent();
 
     DrawRule();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");

@@ -1322,8 +1322,15 @@ void Geometry::Clear() {
 	whiteMaterial.Ambient.g = 0.9f;
 	whiteMaterial.Ambient.b = 0.9f;
 
-	memset(&fillMaterial, 0, sizeof(GLMATERIAL));
+    memset(&blackMaterial, 0, sizeof(GLMATERIAL));
+    blackMaterial.Diffuse.r = 0.1f;
+    blackMaterial.Diffuse.g = 0.1f;
+    blackMaterial.Diffuse.b = 0.1f;
+    blackMaterial.Ambient.r = 0.1f;
+    blackMaterial.Ambient.g = 0.1f;
+    blackMaterial.Ambient.b = 0.1f;
 
+	memset(&fillMaterial, 0, sizeof(GLMATERIAL));
 	fillMaterial.Diffuse.r = 0.6f;
 	fillMaterial.Diffuse.g = 0.65f;
 	fillMaterial.Diffuse.b = 0.65f;
