@@ -27,8 +27,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMatrix.h"
 #include <tuple>
 #ifdef MOLFLOW
-#include "../src/MolFlow.h"
-#include "Interface.h"
+#include "../../src/MolFlow.h"
+#include "Interface/Interface.h"
 #endif
 
 #ifdef SYNRAD
@@ -37,9 +37,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLList.h"
-#include "SmartSelection.h"
-#include "FacetCoordinates.h"
-#include "VertexCoordinates.h"
+#include "Interface/SmartSelection.h"
+#include "Interface/FacetCoordinates.h"
+#include "Interface/VertexCoordinates.h"
 #include "Facet_shared.h"
 
 #ifdef MOLFLOW

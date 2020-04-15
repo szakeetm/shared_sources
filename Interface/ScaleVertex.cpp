@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define UNIFORMMODE 0
 #define DISTORTMODE 1
 
-#include "ScaleFacet.h"
+#include "ScaleVertex.h"
 
 #include "Facet_shared.h"
 
@@ -40,7 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Worker.h"
 
 #ifdef MOLFLOW
-#include "../src/MolFlow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 #ifdef SYNRAD
@@ -55,14 +55,14 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
+ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	int wD = 290;
 	int hD = 220;
 	invariantMode = XYZMODE;
 	scaleMode = UNIFORMMODE;
 
-	SetTitle("Scale selected facets");
+	SetTitle("Scale selected vertices");
 
 	iPanel = new GLTitledPanel("Invariant point definiton mode");
 	iPanel->SetBounds(5, 3, wD - 10, 97);
@@ -100,24 +100,24 @@ ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
 	//zText->SetEditable(false);
 	iPanel->Add(zText);
 
-	l2 = new GLToggle(0, "Selected Vertex");
+	l2 = new GLToggle(0, "Vertex #");
 	l2->SetBounds(10, 45, 100, 18);
 	iPanel->Add(l2);
+	
+	vertexNumber = new GLTextField(0, "0");
+	vertexNumber->SetBounds(115, 45, 50, 18);
+	vertexNumber->SetEditable(false);
+	iPanel->Add(vertexNumber);
 
-	l3 = new GLToggle(0, "Center of Facet #");
+	getSelVertexButton = new GLButton(0, "<-Get selected");
+	getSelVertexButton->SetBounds(170, 45, 80, 18);
+	iPanel->Add(getSelVertexButton);
+
+	l3 = new GLToggle(0, "Center of selected facet");
 	l3->SetBounds(10, 70, 100, 18);
-	iPanel->Add(l3);
+	iPanel->Add(l3);	
 
-	facetNumber = new GLTextField(0, "0");
-	facetNumber->SetBounds(115, 70, 60, 18);
-	facetNumber->SetEditable(false);
-	iPanel->Add(facetNumber);
-
-	getSelFacetButton = new GLButton(0, "<-Get selected");
-	getSelFacetButton->SetBounds(180, 70, 80, 18);
-	iPanel->Add(getSelFacetButton);
-
-	sPanel = new GLTitledPanel("Scale factor");
+	sPanel = new GLTitledPanel("Scale factor");	
 	sPanel->SetBounds(5, 101, wD - 10, 65);
 	Add(sPanel);
 
@@ -170,11 +170,11 @@ ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
 	factorNumberZ->SetEditable(false);
 	Add(factorNumberZ);
 
-	scaleButton = new GLButton(0, "Scale facet");
+	scaleButton = new GLButton(0, "Scale vertex");
 	scaleButton->SetBounds(5, hD - 44, 85, 21);
 	Add(scaleButton);
 
-	copyButton = new GLButton(0, "Copy facet");
+	copyButton = new GLButton(0, "Copy vertex");
 	copyButton->SetBounds(95, hD - 44, 85, 21);
 	Add(copyButton);
 
@@ -183,11 +183,11 @@ ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
 	Add(cancelButton);
 
 	// Center dialog
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = (wS - wD) / 2;
-	int yD = (hS - hD) / 2;
-	SetBounds(xD, yD, wD, hD);
+	int wS,hS;
+	GLToolkit::GetScreenSize(&wS,&hS);
+	int xD = (wS-wD)/2;
+	int yD = (hS-hD)/2;
+	SetBounds(xD,yD,wD,hD);
 
 	RestoreDeviceObjects();
 
@@ -196,9 +196,9 @@ ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
 
 }
 
-void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
+void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 	double x, y, z, factor, factorX, factorY, factorZ;
-	int facetNum;
+	int vertexNum;
 
 	switch (message) {
 		
@@ -213,9 +213,23 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 
 		}
+		else if (src == getSelVertexButton) {
+			if (geom->GetNbSelectedVertex() != 1) {
+				GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			UpdateToggle(l2);
+			int selVertexId = -1;
+			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
+				if (geom->GetVertex(i)->selected) {
+					selVertexId = i;
+				}
+			}
+			vertexNumber->SetText(selVertexId + 1);
+		}
 		else if (src == scaleButton || src == copyButton) {
-			if (geom->GetNbSelectedFacets() == 0) {
-				GLMessageBox::Display("No facets selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
+			if (geom->GetNbSelectedVertex() == 0) {
+				GLMessageBox::Display("No vertices selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 
@@ -241,22 +255,25 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				invariant.z = z;
 				break;
 			case FACETMODE:
-				if (!(facetNumber->GetNumberInt(&facetNum)) || facetNum<1 || facetNum>geom->GetNbFacet()) {
-					GLMessageBox::Display("Invalid facet number", "Error", GLDLG_OK, GLDLG_ICONERROR);
-					return;
-				}
-				invariant = geom->GetFacet(facetNum - 1)->sh.center;
-				break;
-			case VERTEXMODE:
-				if (!(geom->GetNbSelectedVertex() == 1)) {
-					GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				if (!(geom->GetNbSelectedFacets() == 1)) {
+					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				found = false;
-				for (int i = 0; !found && i < geom->GetNbVertex(); i++) {
-					if (geom->GetVertex(i)->selected)
-						invariant = *(geom->GetVertex(i));
+				for (int i = 0; !found && i<geom->GetNbFacet(); i++) {
+					if (geom->GetFacet(i)->selected) {
+						invariant = geom->GetFacet(i)->sh.center;
+						found = true;
+					}
 				}
+				break;
+			case VERTEXMODE:
+				
+				if (!(vertexNumber->GetNumberInt(&vertexNum)) || vertexNum<1 || vertexNum>geom->GetNbVertex()) {
+					GLMessageBox::Display("Invalid vertex number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					return;
+				}
+				invariant = *(geom->GetVertex(vertexNum - 1));
 				break;
 			default:
 				GLMessageBox::Display("Select an invariant definition mode.", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -287,7 +304,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 			if (mApp->AskToReset()) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
-				geom->ScaleSelectedFacets(invariant, factorX, factorY, factorZ, src == copyButton, work);
+				geom->ScaleSelectedVertices(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
 				try { work->Reload(); }
 				catch (Error &e) {
@@ -298,20 +315,6 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				mApp->changedSinceSave = true;
 				//GLWindowManager::FullRepaint();
 			}
-		}
-		else if (src == getSelFacetButton) {
-			if (geom->GetNbSelectedFacets() != 1) {
-				GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
-				return;
-			}
-			int selFacetId = -1;
-			for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-				if (geom->GetFacet(i)->selected) {
-					selFacetId = i;
-				}
-			}
-			facetNumber->SetText(selFacetId + 1);
-			UpdateToggle(l3);
 		}
 		break;
 	case MSG_TEXT_UPD:
@@ -333,15 +336,14 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 	GLWindow::ProcessMessage(src, message);
 }
 
-void ScaleFacet::UpdateToggle(GLComponent *src) {
-
+void ScaleVertex::UpdateToggle(GLComponent *src) {
 	if (src == l1 || src == l2 || src == l3) {
 
 		l1->SetState(src == l1);
 		l2->SetState(src == l2);
 		l3->SetState(src == l3);
 
-		facetNumber->SetEditable(src == l3);
+		vertexNumber->SetEditable(src == l2);
 		xText->SetEditable(src == l1);
 		yText->SetEditable(src == l1);
 		zText->SetEditable(src == l1);

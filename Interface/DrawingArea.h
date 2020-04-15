@@ -17,7 +17,7 @@
 */
 
 #include "GLApp/GLComponent.h"
-#include "../src/MolflowTypes.h"
+#include "MolflowTypes.h"
 #include "Polygon.h"
 
 class DrawingArea : public GLComponent {

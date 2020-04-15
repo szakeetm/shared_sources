@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include <stdlib.h>
 #include "GLApp/GLUnitDialog.h"
-#include "LoadStatus.h"
+#include "Interface/LoadStatus.h"
 #ifdef MOLFLOW
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"

@@ -30,14 +30,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMessageBox.h"
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-#include "../src/ProfilePlotter.h"
+#include "../../src/ProfilePlotter.h"
 #include "HistogramPlotter.h"
 #include "Geometry_shared.h"
 
 #ifdef MOLFLOW
-#include "../src/MolFlow.h"
-#include "../src/TimewisePlotter.h"
-#include "../src/PressureEvolution.h"
+#include "../../src/MolFlow.h"
+#include "../../src/TimewisePlotter.h"
+#include "../../src/PressureEvolution.h"
 #endif
 
 #ifdef SYNRAD

@@ -23,13 +23,15 @@ set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
+set(HEADER_DIR_5 ./Interface)
+
 set(COPY_DIR ../copy_to_build/)
 
 IF (WIN32)
     # set stuff for windows
 
-    set(HEADER_DIR_5 ../include/windows_only)
-    set(HEADER_DIR_6 ../include/windows_only/png)
+    set(HEADER_DIR_6 ../include/windows_only)
+    set(HEADER_DIR_7 ../include/windows_only/png)
 
     set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
     #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
@@ -90,47 +92,48 @@ endif()
 ############################################################
 
 set(SRC_FILES
+        Interface/AddVertex.cpp
+        Interface/AlignFacet.cpp
+        Interface/AppUpdater.cpp
+        Interface/BuildIntersection.cpp
+        Interface/CollapseSettings.cpp
+        Interface/CreateShape.cpp
+        Interface/ExtrudeFacet.cpp
+        Interface/FacetCoordinates.cpp
+        Interface/FormulaEditor.cpp
+        Interface/GeometryRender_shared.cpp
+        Interface/GeometryViewer_shared.cpp
+        Interface/HistogramPlotter.cpp
+        Interface/HistogramSettings.cpp
+        Interface/Interface.cpp
+        Interface/LoadStatus.cpp
+        Interface/MirrorFacet.cpp
+        Interface/MirrorVertex.cpp
+        Interface/MoveFacet.cpp
+        Interface/MoveVertex.cpp
+        Interface/ParticleLogger.cpp
+        Interface/RecoveryDialog.cpp
+        Interface/RotateFacet.cpp
+        Interface/RotateVertex.cpp
+        Interface/ScaleFacet.cpp
+        Interface/ScaleVertex.cpp
+        Interface/SelectDialog.cpp
+        Interface/SelectTextureType.cpp
+        Interface/SmartSelection.cpp
+        Interface/SplitFacet.cpp
+        Interface/VertexCoordinates.cpp
+
         ASELoader.cpp
-        AddVertex.cpp
-        AlignFacet.cpp
-        AppUpdater.cpp
-        BuildIntersection.cpp
-        CollapseSettings.cpp
-        CreateShape.cpp
         Distributions.cpp
-        ExtrudeFacet.cpp
-        FacetCoordinates.cpp
         Facet_shared.cpp
         File.cpp
-        FormulaEditor.cpp
-        GeometryRender_shared.cpp
-        GeometryViewer_shared.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
-        HistogramPlotter.cpp
-        HistogramSettings.cpp
-        Interface.cpp
-        LoadStatus.cpp
-        MirrorFacet.cpp
-        MirrorVertex.cpp
-        MoveFacet.cpp
-        MoveVertex.cpp
-        ParticleLogger.cpp
         Polygon.cpp
         Process.cpp
         Random.cpp
-        RecoveryDialog.cpp
-        RotateFacet.cpp
-        RotateVertex.cpp
-        ScaleFacet.cpp
-        ScaleVertex.cpp
-        SelectDialog.cpp
-        SelectTextureType.cpp
         ShMemory.cpp
-        SmartSelection.cpp
-        SplitFacet.cpp
         Vector.cpp
-        VertexCoordinates.cpp
         Web.cpp
         Worker_shared.cpp
         GeometryConverter.cpp
@@ -196,12 +199,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
+        ${HEADER_DIR_4}
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-        ${HEADER_DIR_4}
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
+        ${HEADER_DIR_7}
         )
 
 if(MSVC)

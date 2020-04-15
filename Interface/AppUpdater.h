@@ -125,7 +125,7 @@ if (appUpdater && appUpdater->IsUpdateAvailable()) {
 #include <PugiXML/pugixml.hpp>
 using namespace pugi;
 #include "GLApp/GLWindow.h"
-#include "Interface.h" //DoEvents
+#include "Interface/Interface.h" //DoEvents
 
 #define ANSWER_DONTASKYET 1
 #define ANSWER_ALREADYDECIDED 2
