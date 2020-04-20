@@ -35,6 +35,7 @@ class LoadStatus;
 #include "../src/Parameter.h"
 #include "Vector.h" //moving parts
 #include "../src/MolflowTypes.h"
+#include "SimulationManager.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
@@ -231,11 +232,12 @@ private:
   Dataport *dpHit;
   Dataport *dpLog;
 
-  char      ctrlDpName[32];
+    char      ctrlDpName[32];
   char      loadDpName[32];
   char      hitsDpName[32];
   char      logDpName[32];
 
+  SimulationManager simManager;
 
   // Methods
   bool ExecuteAndWait(int command, size_t waitState, size_t param = 0);

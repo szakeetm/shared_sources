@@ -307,6 +307,7 @@ Dataport *CreateDataport(char *name, size_t size) {
 #endif
     //memset(dp->buff, 0, size);//Debug
 
+    dp->size = size;
     return (dp);
 }
 
@@ -574,7 +575,7 @@ bool CloseDataport(Dataport *dp) {
 
 // Timing stuff
 
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 bool usePerfCounter;         // Performance counter usage
 LARGE_INTEGER perfTickStart; // First tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
@@ -582,7 +583,7 @@ double perfTicksPerSec;      // Performance counter (number of tick per second)
 DWORD tickStart;
 
 void InitTick(){
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 		LARGE_INTEGER qwTicksPerSec;
 		usePerfCounter = QueryPerformanceFrequency(&qwTicksPerSec);
 		if (usePerfCounter) {
@@ -597,7 +598,7 @@ void InitTick(){
 double GetTick() {
 
     // Number of sec since the application startup
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     if (usePerfCounter) {
 		LARGE_INTEGER t, dt;
 		QueryPerformanceCounter(&t);

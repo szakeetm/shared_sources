@@ -291,10 +291,10 @@ const char *Worker::GetErrorDetails() {
 		if (pID[i] != 0) {
 			size_t st = master->states[i];
 			if (st == PROCESS_ERROR) {
-				sprintf(tmp, "[#%zd] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
+				sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
 			}
 			else {
-				sprintf(tmp, "[#%zd] Process [PID %d] %s\n", i, pID[i], prStates[st]);
+				sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, pID[i], prStates[st]);
 			}
 		}
 		else {
@@ -318,7 +318,6 @@ bool Worker::Wait(size_t readyState, LoadStatus *statusWindow) {
 
 	// Wait for completion
 	while (!finished && !abortRequested) {
-
 		finished = true;
 		AccessDataport(dpControl);
 		SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
@@ -392,7 +391,9 @@ void Worker::ResetStatsAndHits(float appTime) {
 
 	try {
 		ResetWorkerStats();
-		if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
+		simManager.ForwardCommand(COMMAND_RESET);
+		if(simManager.WaitForProcStatus(PROCESS_READY))
+		//if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
 			ThrowSubProcError();
 		ClearHits(false);
 		Update(appTime);
@@ -435,55 +436,23 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 	char cmdLine[512];
 
 	// Kill all sub process
+	//simManager.KillAllSimUnits();
 	KillAll(keepDpHit);
 
+    // Restart Control Dataport if necessary
+    if (!keepDpHit) CLOSEDP(dpHit);
 	// Create new control dataport
-	if( !dpControl ) 
-		dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
-	if( !dpControl )
-		throw Error("Failed to create 'control' dataport");
-	AccessDataport(dpControl);
-	memset(dpControl->buff,0,sizeof(SHCONTROL));
-	ReleaseDataport(dpControl);
+	simManager.CreateControlDP();
 
+    simManager.useCPU = true;
+	simManager.nbCores = n;
+	if(simManager.InitSimUnits()){
+        throw Error("Starting subprocesses failed!");
+	}
 	// Launch n subprocess
 	for(size_t i=0;i<n;i++) {
-#ifdef MOLFLOW
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        //if(i==0) sprintf(cmdLine,"C:\\Users\\pbahr\\Downloads\\Tools\\bin64\\drmemory.exe -dr_ops \"-msgbox_mask 15\" -- molflowSub.exe %d %zd",pid,i);
-        //else
-        sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
-#else
-        char **argumente;
-        argumente = new char*[2];
-        for(int arg=0;arg<2;arg++)
-            argumente[arg] = new char[10];
-        sprintf(cmdLine,"./molflowSub");
-        sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%zu",i);
-        //sprintf(argumente[2],"%s",'\0');
-        //argumente[2] = NULL;
-#endif
-#elif defined(SYNRAD)
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
-#else
-        char **argumente;
-        argumente = new char*[2];
-        for(int arg=0;arg<2;arg++)
-            argumente[arg] = new char[10];
-        sprintf(cmdLine,"./synradSub");
-        sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%zu",i);
-#endif
-#endif
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, nullptr);
-#else
-        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, static_cast<char **>(argumente));
-
-#endif
+        pID[i] = simManager.simHandles.at(i).first;
 		// Wait a bit
         ProcessSleep(25);
 
@@ -495,9 +464,8 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
 	ontheflyParams.nbProcess = n;
 
-	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
-	bool result = Wait(PROCESS_READY, mApp->loadStatus);
-	if (!result)
+	//if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
+	if(simManager.WaitForProcStatus(PROCESS_READY))
 		ThrowSubProcError("Sub process(es) starting failure");
 }
 
