@@ -6,15 +6,24 @@
 #define MOLFLOW_PROJ_SIMULATIONMANAGER_H
 
 #include <vector>
-#include "SMP.h"
+//#include "SMP.h"
 #include "Buffer_shared.h" // TODO: Move process control defines out
 
 class SimulationCore;
+class Dataport;
 
 enum class SimType : uint8_t{
     simCPU,
     simGPU,
     simRemote
+};
+
+struct ProcInfo{
+    size_t procId;
+    size_t statusId;
+    size_t cmdParam;
+    size_t cmdParam2;
+    std::string statusString;
 };
 
 /*!
@@ -39,12 +48,13 @@ public:
     SimulationManager();
     ~SimulationManager();
 
-    int ForwardCommand(int command, size_t param = 0);
-    int WaitForProcStatus(const uint8_t procStatus);
+    int ForwardCommand(int command, size_t param = 0) const;
+    int WaitForProcStatus(uint8_t procStatus);
+    int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0);
 
     int InitSimUnits();
     int KillAllSimUnits();
-    int CreateLoaderDP(std::string loaderString);
+    int CreateLoaderDP(size_t loaderSize);
     int CreateControlDP();
     int CreateLogDP(size_t logDpSize);
     int CreateHitsDP(size_t hitSize);
@@ -56,6 +66,19 @@ public:
 
     int ClearHitsBuffer();
     int GetProcStatus(size_t *states, std::vector<std::string>& statusStrings);
+    int GetProcStatus(std::vector<ProcInfo>& procInfoList);
+
+    // Hit Buffer functions
+    BYTE* GetLockedHitBuffer();
+    int UnlockHitBuffer();
+    int UploadToHitBuffer(void *data, size_t size);
+
+    // Load Buffer functions
+    int UploadToLoader(void* data, size_t size);
+
+    // Log Buffer functions
+    BYTE* GetLockedLogBuffer();
+    int UnlockLogBuffer();
 
     // Flags
     bool useCPU;
@@ -64,6 +87,9 @@ public:
 
     bool useRemote;
     uint16_t nbCores;
+    uint16_t mainProcId;
+
+    bool allProcsDone;
 
     std::vector<std::pair<uint32_t,SimType>> simHandles; // Vector of a pair of pid , simulation type
 
@@ -83,7 +109,6 @@ private:
     char      hitsDpName[32];
     char      logDpName[32];
 
-    bool allProcsDone;
 
 protected:
     //std::vector<SimulationCore*> simHandles; // for threaded versions

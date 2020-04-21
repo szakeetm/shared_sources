@@ -167,7 +167,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 					bool ok = true;
 					
 					std::string formattedFileName = fn;
-					if (FileUtils::GetExtension(formattedFileName) == "")
+					if (FileUtils::GetExtension(formattedFileName).empty())
 					{
 						formattedFileName = formattedFileName + ".csv";
 

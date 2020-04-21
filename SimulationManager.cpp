@@ -3,9 +3,12 @@
 //
 
 #include <string>
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
+#endif
 #include "SimulationManager.h"
 #include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
+#include "SMP.h"
 
 SimulationManager::SimulationManager() {
     useCPU = false;
@@ -137,23 +140,23 @@ int SimulationManager::CreateRemoteHandle() {
     return 1;
 }
 
-int SimulationManager::CreateLoaderDP(std::string loaderString) {
+int SimulationManager::CreateLoaderDP(size_t loaderSize) {
 
     //std::string loaderString = SerializeForLoader().str();
-    size_t loadSize = loaderString.size();
-    dpLoader = CreateDataport(loadDpName, loadSize);
+    //size_t loadSize = loaderSize.size();
+    dpLoader = CreateDataport(loadDpName, loaderSize);
     if (!dpLoader)
         return 1;
         //throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
 
     //progressDlg->SetMessage("Accessing dataport...");
-    AccessDataportTimed(dpLoader, (DWORD)(3000 + nbCores*loadSize / 10000));
-    //progressDlg->SetMessage("Assembling geometry to pass...");
-
-    std::copy(loaderString.begin(), loaderString.end(), (BYTE*)dpLoader->buff);
-
-    //progressDlg->SetMessage("Releasing dataport...");
-    ReleaseDataport(dpLoader);
+//    AccessDataportTimed(dpLoader, (DWORD)(3000 + nbCores*loaderSize / 10000));
+//    //progressDlg->SetMessage("Assembling geometry to pass...");
+//
+//    std::copy(loaderSize.begin(), loaderSize.end(), (BYTE*)dpLoader->buff);
+//
+//    //progressDlg->SetMessage("Releasing dataport...");
+//    ReleaseDataport(dpLoader);
     return 0;
 }
 
@@ -207,6 +210,10 @@ int SimulationManager::CreateHitsDP(size_t hitSize) {
  */
 int SimulationManager::InitSimUnits() {
 
+    // First create Control DP, so subprocs can communicate
+    if(CreateControlDP())
+        return 1;
+
     if(useCPU){
         // Launch nbCores subprocesses
         auto nbActiveProcesses = simHandles.size();
@@ -222,9 +229,6 @@ int SimulationManager::InitSimUnits() {
         CreateRemoteHandle();
     }
 
-    if(CreateControlDP())
-        return 1;
-
     return WaitForProcStatus(PROCESS_READY);
 }
 
@@ -233,7 +237,7 @@ int SimulationManager::InitSimUnits() {
  * @param procStatus Process Status that should be waited for
  * @return 0 if wait is successful
  */
-int SimulationManager::WaitForProcStatus(uint8_t procStatus) {
+int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     // Wait for completion
     bool finished = false;
     bool error = false;
@@ -266,7 +270,7 @@ int SimulationManager::WaitForProcStatus(uint8_t procStatus) {
     return waitTime>=timeOutAt || error; // 0 = finished, 1 = timeout
 }
 
-int SimulationManager::ForwardCommand(int command, size_t param) {
+int SimulationManager::ForwardCommand(const int command, const size_t param) const {
     if(!dpControl) {
         return 1;
     }
@@ -283,6 +287,21 @@ int SimulationManager::ForwardCommand(int command, size_t param) {
     return 0;
 }
 
+/*!
+ * @brief Shortcut function combining ForwardCommand() and WaitForProcStatus() into a single call
+ * @param command execution command for the subprocesses
+ * @param procStatus status of subprocesses that has to be reached
+ * @param param additional command parameter
+ * @return 0=success, 1=fail
+ */
+int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param) {
+    if(!ForwardCommand(command, param)) { // execute
+        if (!WaitForProcStatus(procStatus)) { // and wait
+            return 0;
+        }
+    }
+    return 1;
+}
 
 int SimulationManager::KillAllSimUnits() {
     if( dpControl && simHandles.size()>0 ) {
@@ -338,6 +357,23 @@ int SimulationManager::CloseHitsDP() {
     return 0;
 }
 
+int SimulationManager::GetProcStatus(std::vector<ProcInfo>& procInfoList) {
+    AccessDataport(dpControl);
+    SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+    for(int i = 0; i<simHandles.size();++i){
+        ProcInfo pInfo;
+        pInfo.procId = simHandles[i].first;
+        pInfo.statusId = shMaster->states[i];
+        pInfo.statusString = shMaster->statusStr[i];
+        pInfo.cmdParam = shMaster->cmdParam[i];
+        pInfo.cmdParam2 = shMaster->cmdParam2[i];
+        procInfoList.emplace_back(pInfo);
+    }
+
+    ReleaseDataport(dpControl);
+    return 0;
+}
+
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
     AccessDataport(dpControl);
     SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
@@ -349,6 +385,58 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
         statusStrings[i] = tmp;
     }
     ReleaseDataport(dpControl);
+    return 0;
+}
+
+BYTE *SimulationManager::GetLockedHitBuffer() {
+    if (dpHit && AccessDataport(dpHit)) {
+        // A copy might result in too much memory requirement depending on the geometry
+        /*BYTE* bufferCopy;
+        bufferCopy = new BYTE[dpHit->size];
+        std::copy((BYTE*)dpHit->buff,(BYTE*)dpHit->buff + dpHit->size,bufferCopy);
+        ReleaseDataport(dpHit);*/
+        return (BYTE*)dpHit->buff;
+    }
     return nullptr;
 }
 
+int SimulationManager::UnlockHitBuffer() {
+    if (dpHit && ReleaseDataport(dpHit)) {
+        return 0;
+    }
+    return 1;
+}
+
+int SimulationManager::UploadToLoader(void *data, size_t size) {
+    if (dpLoader && AccessDataport(dpLoader)) {
+        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpLoader->buff);
+        ReleaseDataport(dpLoader);
+        return 0;
+    }
+
+    return 1;
+}
+
+int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
+    if (dpHit && AccessDataport(dpHit)) {
+        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpHit->buff);
+        ReleaseDataport(dpHit);
+        return 0;
+    }
+
+    return 1;
+}
+
+BYTE *SimulationManager::GetLockedLogBuffer() {
+    if (dpLog && AccessDataport(dpLog)) {
+        return (BYTE*)dpLog->buff;
+    }
+    return nullptr;
+}
+
+int SimulationManager::UnlockLogBuffer() {
+    if (dpLog && ReleaseDataport(dpLog)) {
+        return 0;
+    }
+    return 1;
+}

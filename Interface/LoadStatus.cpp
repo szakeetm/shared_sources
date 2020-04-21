@@ -101,7 +101,7 @@ LoadStatus::~LoadStatus()
 	//SAFE_DELETE(processList);
 }
 
-void LoadStatus::SMPUpdate() {
+/*void LoadStatus::SMPUpdate() {
 		
 	if ((processList->GetNbRow() - 1) != worker->ontheflyParams.nbProcess) RefreshNbProcess();
 
@@ -143,7 +143,7 @@ void LoadStatus::SMPUpdate() {
 
 			}
 		}
-}
+}*/
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 	switch (message) {

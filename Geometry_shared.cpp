@@ -56,12 +56,13 @@ extern SynRad*mApp;
 #endif
 
 Geometry::Geometry() {
-	facets = NULL;
+	facets = nullptr;
 	polyList = 0;
 	selectList = 0;
 	selectList2 = 0;
 	selectList3 = 0;
-	arrowList = 0;
+    selectHighlightList = 0;
+    arrowList = 0;
 	sphereList = 0;
 
 	autoNorme = true;
@@ -429,7 +430,6 @@ void Geometry::CreateDifference() {
 	//creates facet from selected vertices
 
 	mApp->changedSinceSave = true;
-	size_t nbSelectedVertex = 0;
 
 	auto selectedFacets = GetSelectedFacets();
 	if (selectedFacets.size() != 2) {
@@ -1712,7 +1712,6 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	std::vector<bool> alreadyMirrored(sh.nbVertex, false);
 
-	int nb = 0;
 	for (const auto& sel : selectedFacets) {
 		counter += 1.0;
 		prgMirror->SetProgress(counter / selectedFacets.size());
@@ -1802,7 +1801,6 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		std::vector<bool> alreadyRotated(sh.nbVertex, false);
 
-		int nb = 0;
 		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgRotate->SetProgress(counter / selectedFacets.size());
@@ -2049,7 +2047,6 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 
 	std::vector<bool> alreadyMoved(sh.nbVertex, false);
 
-	int nb = 0;
 	for (auto& i:selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / selected);
@@ -2578,7 +2575,6 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 	// Merge 2 facets into 1 when possible and create a new facet
 	// otherwise return NULL.
 	size_t  c1,c2,l;
-	bool end = false;
 	Facet *nF = NULL;
 
 	if (GetCommonEdges(f1, f2, &c1, &c2, &l)) {
@@ -2761,7 +2757,6 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 	double linTreshold = cos(lT*PI / 180);
 	// Merge collinear sides
 	for (int k = 0; (k < f->sh.nbIndex&&f->sh.nbIndex>3); k++) {
-		k = k;
 		do {
 			//collinear=false;
 			size_t p0 = f->indices[k];
@@ -3425,8 +3420,8 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 	for (int n = 0; n < sh.nbSuper; n++) {
 
-		int i1 = file->ReadInt();
-		int i2 = file->ReadInt();
+		file->ReadInt();
+		file->ReadInt();
 		fr = NULL;
 		strcpy(sName, file->ReadWord());
 		strName[n] = strdup(sName);
@@ -3951,7 +3946,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		file->ReadKeyword("nbLeak"); file->ReadKeyword(":");
 		int nbleak2 = file->ReadInt();
 		for (int i = 0; i < nbleak2; i++) {
-			int idx = file->ReadInt();
+			file->ReadInt();
 			//if( idx != i ) throw Error(file->MakeError("Wrong leak index !"));
 			file->ReadDouble();
 			file->ReadDouble();
@@ -3968,7 +3963,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		file->ReadKeyword("nbHHit"); file->ReadKeyword(":");
 		int nbHHit2 = file->ReadInt();
 		for (int i = 0; i < nbHHit2; i++) {
-			int idx = file->ReadInt();
+			file->ReadInt();
 			//if( idx != i ) throw Error(file->MakeError("Wrong hit cache index !"));
 			file->ReadDouble();
 			file->ReadDouble();
@@ -4103,7 +4098,7 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor
 	if (newStruct) AddStruct("Inserted STL file");
 }
 
-void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
+void Geometry::SaveSTR(bool saveSelected) {
 
 	if (!IsLoaded()) throw Error("Nothing to save !");
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
@@ -4151,9 +4146,7 @@ void Geometry::SaveSuper(int s) {
 	file->Write(0, "\n");
 
 	//Extract data of the specified super structure
-	size_t totHit = 0;
-	size_t totAbs = 0;
-	size_t totDes = 0;
+
 	int *refIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(refIdx, 0xFF, sh.nbVertex * sizeof(int));
 	int nbV = 0;

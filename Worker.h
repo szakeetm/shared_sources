@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <vector>
 #include "GLApp/GLTypes.h"
-#include "SMP.h"
+//#include "SMP.h"
 #include "Buffer_shared.h" //LEAK, HIT
 #include <cereal/types/vector.hpp>
 
@@ -69,8 +69,7 @@ public:
   
   // Save a geometry (throws Error)
   void SaveGeometry(std::string fileName,GLProgress *prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
-  bool IsDpInitialized();
-  
+
   // Export textures (throws Error)
   void ExportTextures(const char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
   //void ExportRegionPoints(const char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
@@ -88,7 +87,7 @@ public:
   void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber();  // Get number of processes
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
-  DWORD GetPID(size_t prIdx);// Get PID
+ size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
   void RealReload(bool sendOnly=false);
@@ -131,7 +130,7 @@ public:
   void ComputeAC(float appTime); // Send Compute AC matrix order
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
-  void SendFacetHitCounts(Dataport * dpHit);
+  void SendFacetHitCounts();
   int AddMoment(std::vector<double> newMoments); //Adds a time serie to moments and returns the number of elements
   std::vector<double> ParseMoment(std::string userInput); //Parses a user input and returns a vector of time moments
   void ResetMoments();
@@ -223,30 +222,30 @@ public:
 private:
 
   // Process management
-  DWORD  pID[MAX_PROCESS];
-  DWORD  pid;
-  bool   allDone;
-
-  // Dataport handles and names
-  Dataport *dpControl;
-  Dataport *dpHit;
-  Dataport *dpLog;
-
-    char      ctrlDpName[32];
-  char      loadDpName[32];
-  char      hitsDpName[32];
-  char      logDpName[32];
-
   SimulationManager simManager;
 
+  size_t  pID[MAX_PROCESS];
+  //DWORD  pid;
+  //bool   allDone;
+
+  //Dataport handles and names
+  //Dataport *dpControl;
+  //Dataport *dpHit;
+  //Dataport *dpLog;
+
+  //char      ctrlDpName[32];
+  //char      loadDpName[32];
+  //char      hitsDpName[32];
+  //char      logDpName[32];
+
   // Methods
-  bool ExecuteAndWait(int command, size_t waitState, size_t param = 0);
-  bool Wait(size_t waitState, LoadStatus *statusWindow);
+  //bool ExecuteAndWait(int command, size_t waitState, size_t param = 0);
+  //bool Wait(size_t waitState, LoadStatus *statusWindow);
   void ResetWorkerStats();
   void ClearHits(bool noReload);
   const char *GetErrorDetails();
   void ThrowSubProcError(std::string message);
-  void ThrowSubProcError(const char *message = NULL);
+  void ThrowSubProcError(const char *message = nullptr);
   void Start();
   void Stop();
   void InnerStop(float appTime);

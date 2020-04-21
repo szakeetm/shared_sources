@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Polygon.h"
 #include "File.h"
 #include "GLApp/GLProgress.h"
-#include "SMP.h"
+//#include "SMP.h"
 #include "GrahamScan.h"
 #include "PugiXML/pugixml.hpp"
 #include "Clipper/clipper.hpp"
@@ -104,13 +104,13 @@ protected:
 	int compareFacetDepth(Facet* lhs, Facet* rhs);
 public:
 	Geometry();
-	~Geometry();
+	virtual ~Geometry();
 
 #ifdef MOLFLOW
-	virtual void ExportTextures(FILE *f, int grouping, int mode, Dataport *dpHit, bool saveSelected) {}
+	virtual void ExportTextures(FILE *f, int grouping, int mode, BYTE *buffer, bool saveSelected) {}
 #endif
 #ifdef SYNRAD
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, Dataport *dpHit, bool saveSelected) {}
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
@@ -163,7 +163,7 @@ public:
 	void InsertGEO(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr);
 
-	void SaveSTR(Dataport *dhHit, bool saveSelected);
+	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter* f, GLProgress* prg);
 	void SaveSuper(int s);
 	void SaveProfileTXT(FileWriter *file);

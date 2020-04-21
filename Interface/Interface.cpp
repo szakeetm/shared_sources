@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #else
 //#include <sys/sysinfo.h>
+#include <unistd.h>
 #endif
 
 #include <filesystem>
@@ -2651,10 +2652,6 @@ void Interface::ExportTextures(int grouping, int mode) {
     Geometry *geom = worker.GetGeometry();
     if (geom->GetNbSelectedFacets() == 0) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-    if (!worker.IsDpInitialized()) {
-        GLMessageBox::Display("Worker Dataport not initialized yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
 

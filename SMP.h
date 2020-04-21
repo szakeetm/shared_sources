@@ -63,7 +63,7 @@ extern "C" {
 };
 #endif
  // Linux shared memory
- typedef struct {
+struct Dataport {
     char              name[32]; //Unique identifier
     char              semaname[32]; //Mutex unique identifier
     int            sema; //Mutex handle (CreateMutex return value)
@@ -71,7 +71,7 @@ extern "C" {
     int file;			//Physical file handle (if persistent)
     size_t size;		//keep track of mapped size
     void              *buff; //View handle (MapViewOfFile return value, pointer to data)
- } Dataport;
+ };
 
 #endif
 
