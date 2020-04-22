@@ -29,11 +29,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <sstream>
 #include <algorithm>
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -41,11 +41,11 @@ extern GLApplication *theApp;
 extern std::string formulaSyntax;
 extern int formulaSyntaxHeight;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -342,7 +342,7 @@ void FormulaEditor::ReEvaluate() {
 			else { //Variables OK but the formula itself can't be evaluated
 				formulaList->SetValueAt(2, i, mApp->formulas_n[i]->GetErrorMsg());
 			}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
 			formulaList->SetColumnColor(2,mApp->worker.displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif

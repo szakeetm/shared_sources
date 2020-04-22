@@ -15,11 +15,11 @@
 #include "GLWindowManager.h"
 #include <Vector.h>
 #include <iomanip> //stream setprecision
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -32,11 +32,11 @@ template<class T> int cmp_column(const void *lhs_, const void *rhs_);
 size_t clickedCol;
 bool sortDescending;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad *mApp;
 #endif
 
@@ -1042,7 +1042,7 @@ int GLList::GetValueInt(size_t row, size_t column) {
 	}
 	catch (Error &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
+		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return -1;
 	}
@@ -1057,7 +1057,7 @@ double GLList::GetValueDouble(size_t row, size_t column) {
 	}
 	catch (Error &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
+		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 }
@@ -1672,11 +1672,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						clickedCol = clickedColTmp;
 						if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 						//define sort variable type
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 						typedef int SORTVAR;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 						typedef double SORTVAR;
 #endif
 
@@ -1691,11 +1691,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						// Step 3) Use the table
 						for (int i = 0; i < nbRow; i++) {
 							for (int j = 0; j < nbCol; j++) {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 								table[i][j] = GetValueInt(i, j);
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 								table[i][j] = GetValueDouble(i, j);
 #endif
 							}

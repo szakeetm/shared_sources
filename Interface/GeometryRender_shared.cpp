@@ -26,12 +26,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include "GLApp/GLMatrix.h"
 #include <tuple>
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #include "Interface/Interface.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 #include "GLApp/GLWindowManager.h"
@@ -42,11 +42,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/VertexCoordinates.h"
 #include "Facet_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -1121,7 +1121,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		for (size_t i = 0;i < sh.nbFacet && renderTexture;i++) {
 			Facet *f = facets[i];
 			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
 #endif
 			if (paintRegularTexture) {

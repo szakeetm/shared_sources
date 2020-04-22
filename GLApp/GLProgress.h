@@ -29,7 +29,7 @@ private:
   int        xP,yP,wP,hP;
   Uint32     lastUpd;
 
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
 };
 

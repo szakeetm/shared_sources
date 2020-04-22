@@ -144,7 +144,7 @@ set(SRC_FILES
         IntersectAABB_shared.cpp
         Polygon.cpp
         Random.cpp
-        ShMemory.cpp
+        #ShMemory.cpp
         Process.cpp
         Vector.cpp
         SimulationManager.cpp)

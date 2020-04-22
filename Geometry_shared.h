@@ -106,10 +106,10 @@ public:
 	Geometry();
 	virtual ~Geometry();
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	virtual void ExportTextures(FILE *f, int grouping, int mode, BYTE *buffer, bool saveSelected) {}
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
@@ -325,12 +325,12 @@ protected:
 
 		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolflowTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		size_t loaded_nbMCHit;
 		double loaded_nbHitEquiv;
 		size_t loaded_nbDesorption;

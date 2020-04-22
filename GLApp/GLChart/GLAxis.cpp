@@ -2182,7 +2182,7 @@ GLuint GLAxis::initMarker(const char *name) {
     glVertex2i(x,y+height);
     glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
     theApp->nbPoly++;
 #endif
 

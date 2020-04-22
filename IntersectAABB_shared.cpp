@@ -327,13 +327,13 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 								// This check could be avoided on rectangular facet.
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 									double time = sHandle->currentParticle.flightTime + d / 100.0 / sHandle->currentParticle.velocity;
 									double currentOpacity = GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (rnd()<currentOpacity));
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 									hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
 										&& rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
@@ -468,7 +468,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 
 	if (found) {
 
-		collidedFacet->hitted = true;
+		collidedFacet->isHit = true;
 
 		// Second pass for transparent hits
 		for (const auto& tpFacet: sHandle->currentParticle.transparentHitBuffer){

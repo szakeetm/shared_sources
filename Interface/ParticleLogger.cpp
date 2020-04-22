@@ -35,19 +35,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <fstream>
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -268,12 +268,12 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 		<< "Dir_phi_[rad]" << separator
 		<< "LowFluxRatio" << separator;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	tmp << "Velocity_[m/s]" << separator
 		<< "HitTime_[s]" << separator
 		<< "ParticleDecayMoment_[s]" << separator;
 #endif // MOLFLOW
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	tmp << "Energy_[eV]" << separator
 		<< "Flux_[photon/s]" << separator
 		<< "Power_[W]" << separator;
@@ -314,12 +314,12 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 			<< log[i].hitPhi << separator
 			<< log[i].oriRatio << separator;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		tmp << log[i].velocity << separator
 			<< log[i].time << separator
 			<< log[i].particleDecayMoment << separator;
 #endif // MOLFLOW
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		tmp << log[i].energy << separator
 			<< log[i].dF << separator
 			<< log[i].dP << separator;

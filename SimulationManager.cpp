@@ -7,8 +7,9 @@
 #include <process.h>
 #endif
 #include "SimulationManager.h"
-#include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
+//#include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
 #include "SMP.h"
+#include "ProcessControl.h"
 
 SimulationManager::SimulationManager() {
     useCPU = false;

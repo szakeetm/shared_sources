@@ -27,7 +27,7 @@ using namespace pugi;
 #include "GLApp/GLToolkit.h"
 #include <cereal/archives/binary.hpp>
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynradDistributions.h" //material, for Save, etc.
 #endif
 
@@ -62,7 +62,7 @@ class Facet { //Interface facet
 public:
 
 	// Constructor/Desctructor/Initialisation
-	Facet(size_t nbIndex);
+	explicit Facet(size_t nbIndex);
 	~Facet();
 
 	//void  DetectOrientation();
@@ -105,7 +105,7 @@ public:
 	void  CopyFacetProperties(Facet *f, bool copyMesh = false);
 
 	//Different signature (and implementation)
-#ifdef MOLFLOW //Implementations in MolflowFacet.cpp
+#if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
 	void  ConvertOldDesorbType();
 	void  LoadSYN(FileReader *file, int version, size_t nbVertex);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
@@ -121,7 +121,7 @@ public:
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 	double DensityCorrection();
 #endif
-#ifdef SYNRAD //Implementations in SynradFacet.cpp
+#if defined(SYNRAD) //Implementations in SynradFacet.cpp
 	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
@@ -177,7 +177,7 @@ public:
 	//Smart selection
 	std::vector<NeighborFacet> neighbors;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	std::vector<double> outgassingMap; //outgassing map cell values (loaded from file)
 	std::vector<size_t> angleMapCache; //Stores either the recorded or the generating angle map. Worker::Update reads results here. A better implementation would be to separate recorded and generating angle maps
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
@@ -190,7 +190,7 @@ public:
 	std::string userOpacity;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 
 #endif
 	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);

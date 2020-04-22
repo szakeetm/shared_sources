@@ -232,7 +232,7 @@ protected:
 	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
-	virtual void BuildPipe(double ratio, int steps = 0) {}
+	virtual void BuildPipe(double ratio, int steps = 0) {};
 	virtual void EmptyGeometry() {}
 	virtual void LoadFile(std::string fileName = "") {}
 	virtual void InsertGeometry(bool newStr, std::string fileName = "") {}

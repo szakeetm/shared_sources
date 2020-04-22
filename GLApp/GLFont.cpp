@@ -241,7 +241,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,boo
   
   glEnd();
   //glScalef(1.0f/factor,1.0f/factor,1.0f/factor);
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -301,7 +301,7 @@ void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool 
   }
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -350,7 +350,7 @@ void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
   }
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -411,7 +411,7 @@ void GLFont2D::DrawTextV(int x,int y,char *text,bool loadMatrix) {
 
   }
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 

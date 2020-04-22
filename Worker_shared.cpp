@@ -36,8 +36,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <stdlib.h>
 #include "GLApp/GLUnitDialog.h"
 #include "Interface/LoadStatus.h"
+#include "ProcessControl.h" // defines for process commands
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
@@ -45,7 +46,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #include "../src/SynradGeometry.h"
 #endif
@@ -54,7 +55,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 /*
 //Leak detection
-#ifdef _DEBUG
+#if defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW
@@ -62,11 +63,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 using namespace pugi;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -121,69 +122,24 @@ void Worker::SetCurrentFileName(const char *fileName) {
 
 void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
 
-
-
     // Read a file
-    FILE *f = nullptr;
+    FILE *f = fopen(fileName, "w");
+    if (!f) {
+        char tmp[256];
+        sprintf(tmp, "Cannot open file for writing %s", fileName);
+        throw Error(tmp);
 
-    bool ok = true;
-
-    //NativeFileDialog already asks confirmation
-    /*
-    if (askConfirm) {
-        if (FileUtils::Exist(fileName)) {
-            sprintf(tmp, "Overwrite existing file ?\n%s", fileName);
-            ok = (GLMessageBox::Display(tmp, "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) == GLDLG_OK);
-        }
     }
-    */
-
-    if (ok) {
-        f = fopen(fileName, "w");
-        if (!f) {
-            char tmp[256];
-            sprintf(tmp, "Cannot open file for writing %s", fileName);
-            throw Error(tmp);
-
-        }
-        BYTE *buffer = simManager.GetLockedHitBuffer();
-#ifdef MOLFLOW
-        geom->ExportTextures(f, grouping, mode, buffer, saveSelected, wp.sMode);
+    BYTE *buffer = simManager.GetLockedHitBuffer();
+#if defined(MOLFLOW)
+    geom->ExportTextures(f, grouping, mode, buffer, saveSelected, wp.sMode);
 #endif
-#ifdef SYNRAD
-        geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
+#if defined(SYNRAD)
+    geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
 #endif
-        simManager.UnlockHitBuffer();
-        fclose(f);
-    }
-
+    simManager.UnlockHitBuffer();
+    fclose(f);
 }
-
-/*
-void Worker::SendLeakCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
-	if (dpHit) {
-		AccessDataport(dpHit);
-		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(LEAKCACHESIZE, globalHitCache.leakCacheSize);
-		gHits->leakCache = globalHitCache.leakCache;
-		gHits->lastLeakIndex = nbCopy-1;
-		gHits->leakCacheSize = globalHitCache.leakCacheSize;
-		ReleaseDataport(dpHit);
-	}
-}
-
-void Worker::SendHitCache(Dataport* dpHit) { //From worker.globalhitCache to dpHit
-	if (dpHit) {
-		AccessDataport(dpHit);
-		GlobalHitBuffer *gHits = (GlobalHitBuffer *)dpHit->buff;
-		size_t nbCopy = Min(HITCACHESIZE, globalHitCache.hitCacheSize);
-		gHits->hitCache = globalHitCache.hitCache;
-		gHits->lastHitIndex = nbCopy - 1;
-		gHits->hitCacheSize = globalHitCache.hitCacheSize;
-		ReleaseDataport(dpHit);
-	}
-}
-*/
 
 void Worker::Stop_Public() {
     // Stop
@@ -193,7 +149,7 @@ void Worker::Stop_Public() {
         Update(mApp->m_fTime);
     }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
 
@@ -206,7 +162,7 @@ BYTE *Worker::GetHits() {
         if (needsReload) RealReload();
     }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
     return simManager.GetLockedHitBuffer();
 }
@@ -216,7 +172,7 @@ std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
         if (needsReload) RealReload();
     }
     catch (Error &e) {
-        GLMessageBox::Display((char *) e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display((char *) e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
     size_t nbRec = 0;
     ParticleLoggerItem *logBuffPtr = NULL;
@@ -261,7 +217,7 @@ void Worker::SetMaxDesorption(size_t max) {
 
 	}
 	catch (Error &e) {
-		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 
 }
@@ -290,76 +246,6 @@ const char *Worker::GetErrorDetails() {
     return err;
 }
 
-/*bool Worker::Wait(size_t readyState, LoadStatus *statusWindow) {
-
-    abortRequested = false;
-    bool finished = false;
-    bool error = false;
-
-    int waitTime = 0;
-    allDone = true;
-
-    // Wait for completion
-    while (!finished && !abortRequested) {
-        finished = true;
-        AccessDataport(dpControl);
-        SHCONTROL *shMaster = (SHCONTROL *) dpControl->buff;
-
-        for (size_t i = 0; i < ontheflyParams.nbProcess; i++) {
-
-            finished = finished & (shMaster->states[i] == readyState || shMaster->states[i] == PROCESS_ERROR ||
-                                   shMaster->states[i] == PROCESS_DONE);
-            if (shMaster->states[i] == PROCESS_ERROR) {
-                error = true;
-            }
-            allDone = allDone & (shMaster->states[i] == PROCESS_DONE);
-        }
-        ReleaseDataport(dpControl);
-
-        if (!finished) {
-
-            if (statusWindow) {
-                if (waitTime >= 500) {
-                    statusWindow->SetVisible(true);
-                }
-                statusWindow->SMPUpdate();
-                mApp->DoEvents(); //Do a few refreshes during waiting for subprocesses
-            }
-
-            ProcessSleep(250);
-            waitTime += 250;
-        }
-    }
-
-    if (statusWindow) {
-        statusWindow->SetVisible(false);
-        statusWindow->EnableStopButton();
-    }
-    return finished && !error;
-
-}*/
-
-/*bool Worker::ExecuteAndWait(int command, size_t readyState, size_t param) {
-
-    if (!dpControl) return false;
-
-    // Send command
-    AccessDataport(dpControl);
-    SHCONTROL *shMaster = (SHCONTROL *) dpControl->buff;
-    for (size_t i = 0; i < ontheflyParams.nbProcess; i++) {
-        shMaster->states[i] = command;
-        shMaster->cmdParam[i] = param;
-    }
-    ReleaseDataport(dpControl);
-
-    ProcessSleep(100);
-
-    if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
-    bool result = Wait(readyState, mApp->loadStatus);
-    //SAFE_DELETE(statusWindow);
-    return result;
-}*/
-
 void Worker::ResetStatsAndHits(float appTime) {
 
     if (calcAC) {
@@ -375,15 +261,13 @@ void Worker::ResetStatsAndHits(float appTime) {
 
     try {
         ResetWorkerStats();
-        simManager.ForwardCommand(COMMAND_RESET);
-        if (simManager.WaitForProcStatus(PROCESS_READY))
-            //if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
+        if (simManager.ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
             ThrowSubProcError();
         ClearHits(false);
         Update(appTime);
     }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
 
@@ -397,31 +281,10 @@ void Worker::Stop() {
         ThrowSubProcError();
 }
 
-/*void Worker::KillAll(bool keepDpHit) {
-
-	if( dpControl && ontheflyParams.nbProcess>0 ) {
-		if( !ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED) ) {
-			AccessDataport(dpControl);
-			SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
-				if(shMaster->states[i]==PROCESS_KILLED) pID[i]=0;
-			ReleaseDataport(dpControl);
-			// Force kill
-			for(size_t i=0;i<ontheflyParams.nbProcess;i++)
-				if(pID[i]) KillProc(pID[i]);
-		}
-		if (!keepDpHit) CLOSEDP(dpHit);
-	}
-	ontheflyParams.nbProcess = 0;
-}*/
-
 void Worker::SetProcNumber(size_t n, bool keepDpHit) {
-
-    char cmdLine[512];
 
     // Kill all sub process
     simManager.KillAllSimUnits();
-    //KillAll(keepDpHit);
 
     // Restart Control Dataport if necessary
     if (!keepDpHit) simManager.CloseHitsDP();
@@ -430,31 +293,20 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
     simManager.useCPU = true;
     simManager.nbCores = n;
-    if (simManager.InitSimUnits()) {
-        throw Error("Starting subprocesses failed!");
-    }
     // Launch n subprocess
-    for (size_t i = 0; i < n; i++) {
 
-        pID[i] = simManager.simHandles.at(i).first;
-        // Wait a bit
-        //ProcessSleep(25);
-
-        if (pID[i] == 0) {
-            ontheflyParams.nbProcess = 0;
-            throw Error(cmdLine);
-        }
+    if (simManager.InitSimUnits()) {
+        ontheflyParams.nbProcess = 0;
+        throw Error("Starting subprocesses failed!");
     }
 
     ontheflyParams.nbProcess = n;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
-    if (simManager.WaitForProcStatus(PROCESS_READY))
-        ThrowSubProcError("Sub process(es) starting failure");
 }
 
 size_t Worker::GetPID(size_t prIdx) {
-    return pID[prIdx];
+    return simManager.simHandles.at(prIdx).first;
 }
 
 void Worker::RebuildTextures() {
@@ -466,10 +318,10 @@ void Worker::RebuildTextures() {
 
     if (mApp->needsTexture || mApp->needsDirection) {
         try {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
             geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
 #endif
         }
@@ -481,7 +333,7 @@ void Worker::RebuildTextures() {
     simManager.UnlockHitBuffer();
 }
 
-size_t Worker::GetProcNumber() {
+size_t Worker::GetProcNumber() const {
     return ontheflyParams.nbProcess;
 }
 
@@ -506,7 +358,7 @@ void Worker::Update(float appTime) {
         done = done && (procState == PROCESS_DONE);
         error = error && (procState == PROCESS_ERROR);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
         if (procState == PROCESS_RUNAC) calcACprg = procInfo[i].cmdParam;
 #endif
     }
@@ -530,11 +382,11 @@ void Worker::Update(float appTime) {
     globalHitCache = READBUFFER(GlobalHitBuffer);
 
     // Global hits and leaks
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     bool needsAngleMapStatusRefresh = false;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 
     if (globalHitCache.globalHits.hit.nbDesorbed && wp.nbTrajPoints) {
         no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)wp.nbTrajPoints;
@@ -547,16 +399,10 @@ void Worker::Update(float appTime) {
 
     //Copy global histogram
     //Prepare vectors to receive data
-    if (wp.globalHistogramParams.recordBounce)
-        globalHistogramCache.nbHitsHistogram.resize(wp.globalHistogramParams.GetBounceHistogramSize());
-    if (wp.globalHistogramParams.recordDistance)
-        globalHistogramCache.distanceHistogram.resize(wp.globalHistogramParams.GetDistanceHistogramSize());
-#ifdef MOLFLOW
-    if (wp.globalHistogramParams.recordTime)
-        globalHistogramCache.timeHistogram.resize(wp.globalHistogramParams.GetTimeHistogramSize());
-#endif
+    globalHistogramCache.Resize(wp.globalHistogramParams);
+
     BYTE *globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
 #endif
 
@@ -565,7 +411,7 @@ void Worker::Update(float appTime) {
     memcpy(globalHistogramCache.distanceHistogram.data(),
            globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(),
            wp.globalHistogramParams.GetDistanceDataSize());
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     memcpy(globalHistogramCache.timeHistogram.data(),
            globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() +
            wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
@@ -576,10 +422,10 @@ void Worker::Update(float appTime) {
     size_t nbFacet = geom->GetNbFacet();
     for (size_t i = 0; i < nbFacet; i++) {
         Facet *f = geom->GetFacet(i);
-#ifdef SYNRAD
+#if defined(SYNRAD)
         memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
         memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
                sizeof(FacetHitBuffer));
 
@@ -604,15 +450,10 @@ void Worker::Update(float appTime) {
         }
 
 #endif
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 
         //Prepare vectors for receiving data
-        if (f->sh.facetHistogramParams.recordBounce)
-            f->facetHistogramCache.nbHitsHistogram.resize(f->sh.facetHistogramParams.GetBounceHistogramSize());
-        if (f->sh.facetHistogramParams.recordDistance)
-            f->facetHistogramCache.distanceHistogram.resize(f->sh.facetHistogramParams.GetDistanceHistogramSize());
-        if (f->sh.facetHistogramParams.recordTime)
-            f->facetHistogramCache.timeHistogram.resize(f->sh.facetHistogramParams.GetTimeHistogramSize());
+        f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
 
         //Retrieve histogram map from hits dp
         BYTE *histogramAddress = buffer
@@ -644,17 +485,17 @@ void Worker::Update(float appTime) {
 
         if (mApp->needsTexture || mApp->needsDirection)
             geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
                     , wp.sMode // not necessary for Synrad
 #endif
             );
     }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         simManager.UnlockHitBuffer();
         return;
     }
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
 #endif
@@ -719,7 +560,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     // Create the temporary geometry shared structure
     size_t loadSize = sizeof(OntheflySimulationParams);
-#ifdef SYNRAD
+#if defined(SYNRAD)
     loadSize += regions.size() * sizeof(bool); //Show photons or not
 #endif
 
@@ -762,7 +603,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     WRITEBUFFER(ontheflyParams, OntheflySimulationParams);
 
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
     for (size_t i = 0; i < regions.size(); i++) {
         WRITEBUFFER(regions[i].params.showPhotons, bool);
     }
@@ -790,7 +631,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     progressDlg->SetVisible(false);
     SAFE_DELETE(progressDlg);
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
     //Reset leak and hit cache
     /*
     leakCacheSize = 0;

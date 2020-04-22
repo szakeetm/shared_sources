@@ -75,6 +75,27 @@ struct Dataport {
 
 #endif
 
+#define MAX_PROCESS (size_t)32    // Maximum number of process
+
+class SHCONTROL {
+public:
+    // Process control
+    size_t		states[MAX_PROCESS];        // Process states/commands
+    size_t    cmdParam[MAX_PROCESS];      // Command param 1
+    size_t		cmdParam2[MAX_PROCESS];     // Command param 2
+    char		statusStr[MAX_PROCESS][128]; // Status message
+    /*template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(
+                CEREAL_NVP(states),
+                CEREAL_NVP(cmdParam),
+                CEREAL_NVP(cmdParam2),
+                CEREAL_NVP(statusStr)
+        );
+    }*/
+};
+
 typedef struct {
 
   double cpu_time; // CPU time         (in second)

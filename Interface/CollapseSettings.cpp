@@ -34,21 +34,21 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "HistogramPlotter.h"
 #include "Geometry_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #include "../../src/TimewisePlotter.h"
 #include "../../src/PressureEvolution.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -200,17 +200,17 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
 				if (mApp->profilePlotter) mApp->profilePlotter->Refresh();
 				if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 				if (mApp->pressureEvolution) mApp->pressureEvolution->Refresh();
 				if (mApp->timewisePlotter) mApp->timewisePlotter->Refresh();
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 				if (mApp->spectrumPlotter) mApp->spectrumPlotter->Refresh();
 #endif
 				// Send to sub process
 				try { work->Reload(); }
 				catch (Error &e) {
-					GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 				}
 
 				progressDlg->SetVisible(false);

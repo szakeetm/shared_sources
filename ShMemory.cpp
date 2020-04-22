@@ -579,8 +579,10 @@ bool CloseDataport(Dataport *dp) {
 bool usePerfCounter;         // Performance counter usage
 LARGE_INTEGER perfTickStart; // First tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
-#endif
 DWORD tickStart;
+#else
+struct timespec tickStart;
+#endif
 
 void InitTick(){
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -592,7 +594,7 @@ void InitTick(){
 		}
 		tickStart = GetTickCount();
 #else
-        tickStart = (DWORD)time(NULL);
+    clock_gettime(CLOCK_MONOTONIC, &tickStart);
 #endif
 };
 double GetTick() {
@@ -610,12 +612,18 @@ double GetTick() {
 	}
 
 #else
-    if (tickStart < 0)
-        tickStart = time(NULL);
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((double)(tv.tv_sec - tickStart)*1000.0 + (double)tv.tv_usec / 1000.0);
+    struct timespec ts_end;
+    clock_gettime(CLOCK_MONOTONIC, &ts_end);
+    if ((ts_end.tv_nsec - tickStart.tv_nsec) < 0) {
+        ts_end.tv_sec = ts_end.tv_sec - tickStart.tv_sec - 1;
+        ts_end.tv_nsec = ts_end.tv_nsec - tickStart.tv_nsec + 1000000000;
+    } else {
+        ts_end.tv_sec = ts_end.tv_sec - tickStart.tv_sec;
+        ts_end.tv_nsec = ts_end.tv_nsec - tickStart.tv_nsec;
+    }
+    
+    return ((double)(ts_end.tv_sec) + (double)ts_end.tv_nsec / 1e9);
 #endif
 }
 

@@ -19,7 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Buffer_shared.h"
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 FacetHitBuffer::FacetHitBuffer(){
     this->ResetBuffer();
 }

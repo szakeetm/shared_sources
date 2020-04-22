@@ -6,8 +6,11 @@
 #define MOLFLOW_PROJ_SIMULATIONMANAGER_H
 
 #include <vector>
+
+typedef unsigned char BYTE;
+
 //#include "SMP.h"
-#include "Buffer_shared.h" // TODO: Move process control defines out
+//#include "Buffer_shared.h" // TODO: Move process control defines out
 
 class SimulationCore;
 class Dataport;

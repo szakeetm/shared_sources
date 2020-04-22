@@ -31,7 +31,7 @@ class GLProgress;
 class LoadStatus;
 
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/Parameter.h"
 #include "Vector.h" //moving parts
 #include "../src/MolflowTypes.h"
@@ -42,7 +42,7 @@ class LoadStatus;
 class MolflowGeometry;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/Region_full.h"
 
 class SynradGeometry;
@@ -85,7 +85,7 @@ public:
   void  SetCurrentFileName(const char *fileName);
 
   void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
-  size_t GetProcNumber();  // Get number of processes
+  size_t GetProcNumber() const;  // Get number of processes
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
  size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
@@ -113,7 +113,7 @@ public:
 
   FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
   std::vector<std::string> ExportAngleMaps(std::string fileName, bool saveAll=false);
@@ -147,7 +147,7 @@ public:
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
   SynradGeometry* GetSynradGeometry();
   void AddMaterial(std::string *fileName);
   void ClearRegions();
@@ -176,7 +176,7 @@ public:
 
   bool calcAC; //Not used in Synrad, kept for ResetStatsAndHits function shared with Molflow
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 
   std::vector<Parameter> parameters;
   int displayedMoment;
@@ -193,7 +193,7 @@ public:
   size_t    calcACprg;         // AC matrix progress
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 
 	double no_scans;           // = nbDesorption/nbTrajPoints. Stored separately for saving/loading
 
@@ -224,7 +224,7 @@ private:
   // Process management
   SimulationManager simManager;
 
-  size_t  pID[MAX_PROCESS];
+  //size_t  pID[MAX_PROCESS];
   //DWORD  pid;
   //bool   allDone;
 
@@ -251,11 +251,11 @@ private:
   void InnerStop(float appTime);
 
   // Geometry handle
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
   MolflowGeometry *geom;
 
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
   SynradGeometry *geom;
   Dataport *dpMat;
 #endif

@@ -34,12 +34,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Clipper/clipper.hpp"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #include "../src/MolflowTypes.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -47,11 +47,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include <algorithm>
 #include <list>
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -73,10 +73,10 @@ Geometry::Geometry() {
 	texColormap = true;
 
 	sh.nbSuper = 0;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	textureMode = 0; //PRESSURE
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	textureMode = 1; //FLUX
 #endif
 	viewStruct = -1;
@@ -157,7 +157,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 	
 	size_t nbMoments = 1; //Constant flow
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	nbMoments += mApp->worker.moments.size();
 #endif
 	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.wp.globalHistogramParams.GetDataSize();
@@ -180,11 +180,11 @@ void Geometry::InitializeGeometry(int facet_number) {
 			if (facet_number == -1) {
 				// Hit address
 				f->sh.hitOffset = fOffset; //For hits data serialization
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 				fOffset += f->GetHitsSize(mApp->worker.moments.size());
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 				fOffset += f->GetHitsSize();
 #endif
 			}
@@ -223,7 +223,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 			bb.max.z = std::max(bb.max.z, p.z);
 		}
 
-#ifdef SYNRAD //Regions
+#if defined(SYNRAD) //Regions
 		Worker *worker = &(mApp->worker);
 		for (int i = 0; i < (int)worker->regions.size(); i++) {
 			if (worker->regions[i].AABBmin.x < bb.min.x) bb.min.x = worker->regions[i].AABBmin.x;
@@ -821,7 +821,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 			if (v->z > sbb.max.z) sbb.max.z = v->z;
 		}
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		//Regions
 		Worker *worker = &(mApp->worker);
 		for (int i = 0; i < (int)worker->regions.size(); i++) {
@@ -1041,7 +1041,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 			SetFacetTexture(i, f->tRatio, f->hasMesh);
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}	
 	}
 
@@ -1156,7 +1156,7 @@ void Geometry::ShiftVertex() {
 				SetFacetTexture(i, f->tRatio, f->hasMesh);
 			}
 			catch (Error &e) {
-				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 
 		}
@@ -1647,7 +1647,7 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 	prgAlign->SetVisible(false);
@@ -1689,7 +1689,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 	}
@@ -1746,7 +1746,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 
@@ -1820,7 +1820,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 
@@ -2931,7 +2931,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 		p.v = (p.v - BBmin.v) / vD;
 	}
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.wp.gasMass);
 #endif
 }
@@ -3318,7 +3318,7 @@ void Geometry::AdjustProfile() {
 }
 
 void Geometry::ResetTextureLimits() {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	texture_limits[0].autoscale.min.all = texture_limits[0].autoscale.min.moments_only =
 		texture_limits[1].autoscale.min.all = texture_limits[1].autoscale.min.moments_only =
 		texture_limits[2].autoscale.min.all = texture_limits[2].autoscale.min.moments_only =
@@ -3332,7 +3332,7 @@ void Geometry::ResetTextureLimits() {
 		texture_limits[1].manual.max.all = texture_limits[1].manual.max.moments_only =
 		texture_limits[2].manual.max.all = texture_limits[2].manual.max.moments_only = 1.0;
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	textureMin_auto.count = 0;
 	textureMin_auto.flux = 0.0;
 	textureMin_auto.power = 0.0;
@@ -3847,7 +3847,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			strcpy(tmpExpr, file->ReadString());
 			//mApp->OffsetFormula(tmpExpr, wp.nbFacet);
 			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			std::vector<string> newFormula;
 			newFormula.push_back(tmpName);
 			mApp->OffsetFormula(tmpExpr, (int)sh.nbFacet); //offset formula
@@ -3897,7 +3897,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		}
 		file->ReadKeyword("}");
 	}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	for (int i = 0; i < nbF; i++) { //parse formulas now that selection groups are loaded
 		mApp->AddFormula(loadFormulas[i][0].c_str(), loadFormulas[i][1].c_str());
 	}
@@ -4371,7 +4371,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 	for (int i = 0; i < nbS; i++) {
 		for (auto& fac : blocks[i].facets) {
 			f[nb++] = fac;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			if (toMap) { //set outgassing values
 				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
 				if (f[nb - 1]->sh.outgassing > 0.0) {
@@ -4420,7 +4420,7 @@ void  Geometry::EmptyGeometry() {
 
 }
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* buff) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value

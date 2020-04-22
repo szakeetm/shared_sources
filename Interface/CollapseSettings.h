@@ -43,7 +43,7 @@ public:
   void SetGeometry(Geometry *s,Worker *w);
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 

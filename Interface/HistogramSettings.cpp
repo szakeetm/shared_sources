@@ -32,19 +32,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -54,7 +54,7 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	int panelHeight = 215;
 	int hD = 2*panelHeight+10;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	hD += 6 * 25; //Time parameters
 	panelHeight += 50;
 #endif
@@ -106,7 +106,7 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalDistanceLimitText, globalDistanceBinsizeText, 0, 25, globalHitLimitText->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalDistanceBinsizeText);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	globalRecordTimeToggle = new GLToggle(0, "Record flight time until absorption");
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel4, globalRecordTimeToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalRecordTimeToggle);
@@ -178,7 +178,7 @@ HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetDistanceLimitText, facetDistanceBinsizeText, 0, 25, facetHitLimitText->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetDistanceBinsizeText);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	facetRecordTimeToggle = new GLToggle(0, "Record flight time until absorption");
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel4, facetRecordTimeToggle, 0, 25, facetLabel1->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetRecordTimeToggle);
@@ -229,7 +229,7 @@ bool HistogramSettings::Apply() {
 	bool globalRecDistance;
 	double globalDistanceLimit; bool doGlobalDistanceLimit=false;
 	double globalDistanceBinsize; bool doGlobalDistanceBinsize=false;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	bool globalRecTime;
 	double globalTimeLimit; bool doGlobalTimeLimit=false;
 	double globalTimeBinsize; bool doGlobalTimeBinsize=false;
@@ -241,7 +241,7 @@ bool HistogramSettings::Apply() {
 	bool facetRecDistance; bool doFacetRecDistance = false;
 	double facetDistanceLimit; bool doFacetDistanceLimit = false;
 	double facetDistanceBinsize; bool doFacetDistanceBinsize = false;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	bool facetRecTime; bool doFacetRecTime = false;
 	double facetTimeLimit; bool doFacetTimeLimit = false;
 	double facetTimeBinsize; bool doFacetTimeBinsize = false;
@@ -291,7 +291,7 @@ bool HistogramSettings::Apply() {
 			}
 		}
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		globalRecTime = globalRecordTimeToggle->GetState();
 
 		if (globalRecTime) {
@@ -370,7 +370,7 @@ bool HistogramSettings::Apply() {
 			}
 		}
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		int facetRecTimeStatus = facetRecordTimeToggle->GetState();
 		if (facetRecTimeStatus != 2) {
 			facetRecTime = (bool)facetRecTimeStatus;
@@ -407,7 +407,7 @@ bool HistogramSettings::Apply() {
 		work->wp.globalHistogramParams.recordDistance = globalRecDistance;
 		if (doGlobalDistanceLimit) work->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
 		if (doGlobalDistanceBinsize) work->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		work->wp.globalHistogramParams.recordTime = globalRecTime;
 		if (doGlobalTimeLimit) work->wp.globalHistogramParams.timeMax = globalTimeLimit;
 		if (doGlobalTimeBinsize) work->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
@@ -422,7 +422,7 @@ bool HistogramSettings::Apply() {
 			if (doFacetRecDistance) f->sh.facetHistogramParams.recordDistance = facetRecDistance;
 			if (doFacetDistanceLimit) f->sh.facetHistogramParams.distanceMax = facetDistanceLimit;
 			if (doFacetDistanceBinsize) f->sh.facetHistogramParams.distanceBinsize = facetDistanceBinsize;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			if (doFacetRecTime) f->sh.facetHistogramParams.recordTime = facetRecTime;
 			if (doFacetTimeLimit) f->sh.facetHistogramParams.timeMax = facetTimeLimit;
 			if (doFacetTimeBinsize) f->sh.facetHistogramParams.timeBinsize = facetTimeBinsize;
@@ -447,7 +447,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	globalRecordDistanceToggle->SetState(work->wp.globalHistogramParams.recordDistance);
 	globalDistanceLimitText->SetText(work->wp.globalHistogramParams.distanceMax);
 	globalDistanceBinsizeText->SetText(work->wp.globalHistogramParams.distanceBinsize);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	globalRecordTimeToggle->SetState(work->wp.globalHistogramParams.recordTime);
 	globalTimeLimitText->SetText(work->wp.globalHistogramParams.timeMax);
 	globalTimeBinsizeText->SetText(work->wp.globalHistogramParams.timeBinsize);
@@ -461,7 +461,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		facetRecordDistanceToggle->SetState(false);
 		facetDistanceLimitText->SetText("");
 		facetDistanceBinsizeText->SetText("");
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		facetRecordTimeToggle->SetState(false);
 		facetTimeLimitText->SetText("");
 		facetTimeBinsizeText->SetText("");
@@ -469,7 +469,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	}
 	facetRecordBounceToggle->SetEnabled(hasFacetSelected);
 	facetRecordDistanceToggle->SetEnabled(hasFacetSelected);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     facetRecordTimeToggle->SetEnabled(hasFacetSelected);
 #endif
 
@@ -477,7 +477,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		//Fill in facet-specific text
 		bool recordBounceEqual = true, bounceMaxEqual = true, bounceBinsizeEqual = true,
 			recordDistanceEqual = true, distanceMaxEqual = true, distanceBinsizeEqual = true;
-#ifdef MOLFLOW	
+#if defined(MOLFLOW)
 		bool recordTimeEqual = true, timeMaxEqual = true, timeBinsizeEqual = true;
 #endif
 		Facet* f0 = geom->GetFacet(selectedFacetIds[0]);
@@ -487,7 +487,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		bool recDist = f0->sh.facetHistogramParams.recordDistance;
 		double distMax = f0->sh.facetHistogramParams.distanceMax;
 		double distBinsize = f0->sh.facetHistogramParams.distanceBinsize;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		bool recTime = f0->sh.facetHistogramParams.recordTime;
 		double timeMax = f0->sh.facetHistogramParams.timeMax;
 		double timeBinsize = f0->sh.facetHistogramParams.timeBinsize;
@@ -501,7 +501,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 			recordDistanceEqual = recordDistanceEqual && (f->sh.facetHistogramParams.recordDistance == recDist);
 			distanceMaxEqual = distanceMaxEqual && (f->sh.facetHistogramParams.distanceMax == distMax);
 			distanceBinsizeEqual = distanceBinsizeEqual && (f->sh.facetHistogramParams.distanceBinsize == distBinsize);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			recordTimeEqual = recordDistanceEqual && (f->sh.facetHistogramParams.recordDistance == recDist);
 			timeMaxEqual = timeMaxEqual && (f->sh.facetHistogramParams.timeMax == timeMax);
 			timeBinsizeEqual = timeBinsizeEqual && (f->sh.facetHistogramParams.timeBinsize == timeBinsize);
@@ -537,7 +537,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		else {
 			facetDistanceBinsizeText->SetText("...");
 		}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		facetRecordTimeToggle->AllowMixedState(!recordTimeEqual);
 		facetRecordTimeToggle->SetState(recordTimeEqual ? recTime : 2);
 		if (timeMaxEqual) {
@@ -564,7 +564,7 @@ void HistogramSettings::EnableDisableControls() {
 	globalHitBinsizeText->SetEditable(globalRecordBounceToggle->GetState());
 	globalDistanceLimitText->SetEditable(globalRecordDistanceToggle->GetState());
 	globalDistanceBinsizeText->SetEditable(globalRecordDistanceToggle->GetState());
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	globalTimeLimitText->SetEditable(globalRecordTimeToggle->GetState());
 	globalTimeBinsizeText->SetEditable(globalRecordTimeToggle->GetState());
 #endif
@@ -573,7 +573,7 @@ void HistogramSettings::EnableDisableControls() {
 	facetHitBinsizeText->SetEditable(facetRecordBounceToggle->GetState()==1);
 	facetDistanceLimitText->SetEditable(facetRecordDistanceToggle->GetState()==1);
 	facetDistanceBinsizeText->SetEditable(facetRecordDistanceToggle->GetState()==1);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	facetTimeLimitText->SetEditable(facetRecordTimeToggle->GetState()==1);
 	facetTimeBinsizeText->SetEditable(facetRecordTimeToggle->GetState()==1);
 #endif

@@ -45,7 +45,7 @@ public:
   bool Apply();
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
@@ -61,7 +61,7 @@ private:
   GLTextField *globalTimeBinsizeText, *facetTimeBinsizeText;
   GLToggle *globalRecordBounceToggle,*facetRecordBounceToggle;
   GLToggle *globalRecordDistanceToggle, *facetRecordDistanceToggle;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
   GLToggle *globalRecordTimeToggle, *facetRecordTimeToggle;
 #endif
   GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;

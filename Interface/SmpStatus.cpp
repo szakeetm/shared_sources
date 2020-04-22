@@ -171,7 +171,7 @@ void SmpStatus::RestartProc() {
          worker->SetProcNumber(nbProc);
          worker->Reload();
        } catch(Error &e) {
-         GLMessageBox::Display((char *)e.GetMsg(),"Error",GLDLG_OK,GLDLG_ICONERROR);
+         GLMessageBox::Display((char *)e.what(),"Error",GLDLG_OK,GLDLG_ICONERROR);
        }
      }
    }

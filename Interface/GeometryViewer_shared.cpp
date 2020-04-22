@@ -34,19 +34,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include <malloc.h>
 #include "Facet_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -115,11 +115,11 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	hideLot = 500;
 
 	showTP = true;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	showTime = false;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	shadeLines = true;
 	dispNumTraj = 500;
 #endif
@@ -176,13 +176,13 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	projCombo->SetSelectedIndex(1);
 	Add(projCombo);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	timeLabel = new GLOverlayLabel("");
 	timeLabel->SetTextColor(255, 255, 255);
 	Add(timeLabel);
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	selTrajBtn = new GLButton(0, "");
 	selTrajBtn->SetIcon("images/icon_traj_select.png");
 	Add(selTrajBtn);
@@ -351,7 +351,7 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 		}
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		else if (mode == MODE_SELECTTRAJ) {
 			if (GetWindow()->IsAltDown()) {
 				SetCursor(CURSOR_HAND);
@@ -1016,11 +1016,11 @@ void GeometryViewer::Paint() {
 			glColor3f(1.0f, 1.0f, 1.0f);
 		}
 		else {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			glColor3f(0.3f, 0.5f, 0.7f); //blue top
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			glColor3f(0.7f, 0.4f, 0.3f); //red top
 #endif
 		}
@@ -1153,7 +1153,7 @@ if( showVolume || showTexture ) {
 		else cullMode = SHOW_BACK;
 	} else cullMode = showBack;
 	geom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
@@ -1246,7 +1246,7 @@ if( showVolume || showTexture ) {
 	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel;tabLabel->SetVisible(displayTabLabel);
 	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel;nonPlanarLabel->SetVisible(displayNonPlanarLabel);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	if (work->displayedMoment)
 		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1]);
 	else
@@ -1512,7 +1512,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				if (!GetWindow()->IsTabDown()) draggMode = DRAGG_SELECTVERTEX;
 				else draggMode = DRAGG_SELECT;
 			}
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			else if (mode == MODE_SELECTTRAJ) draggMode = DRAGG_SELECTTRAJ;
 #endif
 			else if (mode == MODE_MOVE) draggMode = DRAGG_MOVE;
@@ -1556,7 +1556,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		case DRAGG_SELECT:
 		case DRAGG_SELECTVERTEX:
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		case DRAGG_SELECTTRAJ:
 #endif
 
@@ -1618,7 +1618,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
 				}
 			}
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			else if (mode == MODE_SELECTTRAJ) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
@@ -1782,7 +1782,7 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 		else if (src == selVxBtn) {
 			UpdateMouseCursor(MODE_SELECTVERTEX);
 		}
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		else if (src == selTrajBtn) {
 			UpdateMouseCursor(MODE_SELECTTRAJ);
 		}
@@ -1935,7 +1935,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 			TRANSFORMVERTEX(p->x, p->y, p->z);
 		}*/
 
-//#ifdef SYNRAD		
+//#if defined(SYNRAD)
 		//regions included
 		AxisAlignedBoundingBox bb = geom->GetBB();
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);

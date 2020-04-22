@@ -76,7 +76,7 @@ public:
 
 	bool wereEvents;
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;
     int  nbLine;
