@@ -31,6 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/MirrorFacet.h"
 #include "Interface/MirrorVertex.h"
 #include "GLApp/GLList.h"
+#include "GrahamScan.h"
 
 #include "Clipper/clipper.hpp"
 

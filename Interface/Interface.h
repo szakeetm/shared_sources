@@ -20,7 +20,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 //Shared functions of the Molflow and Synrad interface
-#include <thread>
 #include <list> // for recents
 
 #include "Worker.h"
@@ -29,7 +28,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
-#include "Random.h"
 class GLTextField;
 class GLToggle;
 class GLLabel;

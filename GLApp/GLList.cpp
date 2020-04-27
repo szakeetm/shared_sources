@@ -15,6 +15,8 @@
 #include "GLWindowManager.h"
 #include <Vector.h>
 #include <iomanip> //stream setprecision
+#include <sstream>
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif

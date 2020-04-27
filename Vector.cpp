@@ -212,7 +212,8 @@ double GetOrientedAngle(const Vector2d& v1,const Vector2d& v2) {
 }
 
 Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
-	Vector3d randomVector=Vector3d(rnd(), rnd(), rnd());
+    MersenneTwister randomGenerator;
+	Vector3d randomVector=Vector3d(randomGenerator.rnd(), randomGenerator.rnd(), randomGenerator.rnd());
 	Vector3d perpendicularVector=CrossProduct(randomVector,v);
 	return length*perpendicularVector.Normalized();
 }

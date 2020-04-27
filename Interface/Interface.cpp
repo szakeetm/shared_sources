@@ -93,7 +93,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../src/versionId.h"
 
 extern Worker worker;
-extern std::vector<string> formulaPrefixes;
+extern std::vector<std::string> formulaPrefixes;
 //extern const char* appTitle;
 
 /*
@@ -2405,24 +2405,24 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
     //If *newRefs is not NULL, a vector is passed containing the new references
     bool changed = false;
 
-    string newExpr = expression; //convert char* to string
+    std::string newExpr = expression; //convert char* to string
 
     size_t pos = 0; //analyzed until this position
     while (pos < newExpr.size()) { //while not end of expression
 
-        vector<size_t> location; //for each prefix, we store where it was found
+        std::vector<size_t> location; //for each prefix, we store where it was found
 
         for (size_t j = 0; j < formulaPrefixes.size(); j++) { //try all expressions
             location.push_back(newExpr.find(formulaPrefixes[j], pos));
         }
-        size_t minPos = string::npos;
+        size_t minPos = std::string::npos;
         size_t maxLength = 0;
         for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
             if (location[j] < minPos) minPos = location[j];
         for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
             if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
         int digitsLength = 0;
-        if (minPos != string::npos) { //found expression, let's find tailing facet number digits
+        if (minPos != std::string::npos) { //found expression, let's find tailing facet number digits
             while ((minPos + maxLength + digitsLength) < newExpr.length() && newExpr[minPos + maxLength + digitsLength] >= '0' && newExpr[minPos + maxLength + digitsLength] <= '9')
                 digitsLength++;
             if (digitsLength > 0) { //there was a digit after the prefix
@@ -2455,7 +2455,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
                 }
             }
         }
-        if (minPos != string::npos) pos = minPos + maxLength + digitsLength;
+        if (minPos != std::string::npos) pos = minPos + maxLength + digitsLength;
         else pos = minPos;
     }
     strcpy(expression, newExpr.c_str());

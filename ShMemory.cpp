@@ -610,20 +610,14 @@ double GetTick() {
 	else {
 		return (double)((GetTickCount() - tickStart) / 1000.0);
 	}
-
 #else
 
     struct timespec ts_end;
     clock_gettime(CLOCK_MONOTONIC, &ts_end);
-    if ((ts_end.tv_nsec - tickStart.tv_nsec) < 0) {
-        ts_end.tv_sec = ts_end.tv_sec - tickStart.tv_sec - 1;
-        ts_end.tv_nsec = ts_end.tv_nsec - tickStart.tv_nsec + 1000000000;
-    } else {
-        ts_end.tv_sec = ts_end.tv_sec - tickStart.tv_sec;
-        ts_end.tv_nsec = ts_end.tv_nsec - tickStart.tv_nsec;
-    }
+    uint64_t time_diff = (ts_end.tv_sec - tickStart.tv_sec) * 1000000000ULL + ts_end.tv_nsec -
+            tickStart.tv_nsec; // diff rounded to nsec to prevent errors
     
-    return ((double)(ts_end.tv_sec) + (double)ts_end.tv_nsec / 1e9);
+    return ((double)time_diff / 1e9);
 #endif
 }
 

@@ -19,14 +19,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 #include "Polygon.h"
-#include "File.h"
 #include "GLApp/GLProgress.h"
-//#include "SMP.h"
-#include "GrahamScan.h"
-#include "PugiXML/pugixml.hpp"
 #include "Clipper/clipper.hpp"
 #include <vector>
-#include <sstream>
 #include <list>
 #include "Buffer_shared.h"
 
@@ -37,7 +32,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class Facet;
 class DeletedFacet;
 class Worker;
-
+class FileReader;
+class FileWriter;
 union PhysicalValue{
 	//Unified return value that can return size_t, double or vector
 	size_t count;

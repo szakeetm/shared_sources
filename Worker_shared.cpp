@@ -37,6 +37,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLUnitDialog.h"
 #include "Interface/LoadStatus.h"
 #include "ProcessControl.h" // defines for process commands
+#include "SimulationManager.h"
 
 #if defined(MOLFLOW)
 
@@ -172,11 +173,11 @@ std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
         if (needsReload) RealReload();
     }
     catch (Error &e) {
-        GLMessageBox::Display((char *) e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
     size_t nbRec = 0;
     ParticleLoggerItem *logBuffPtr = NULL;
-    size_t *logBuff = (size_t *) simManager.UnlockLogBuffer();
+    size_t *logBuff = (size_t *) simManager.GetLockedLogBuffer();
     nbRec = *logBuff;
     logBuff++;
     logBuffPtr = (ParticleLoggerItem *) logBuff;
@@ -187,15 +188,11 @@ void Worker::ReleaseLogBuff() {
     simManager.UnlockLogBuffer();
 }
 
-void Worker::ThrowSubProcError(std::string message) {
-    throw Error(message.c_str());
-}
-
 void Worker::ThrowSubProcError(const char *message) {
 
     char errMsg[1024];
     if (!message)
-        sprintf(errMsg, "Bad response from sub process(es):\n%s", GetErrorDetails());
+        sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
     else
         sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
     throw Error(errMsg);
@@ -224,26 +221,7 @@ void Worker::SetMaxDesorption(size_t max) {
 */
 
 const char *Worker::GetErrorDetails() {
-
-    std::vector<ProcInfo> procInfo;
-    simManager.GetProcStatus(procInfo);
-
-    static char err[1024];
-    strcpy(err, "");
-
-    for (size_t i = 0; i < procInfo.size(); i++) {
-        char tmp[512];
-        size_t state = procInfo[i].statusId;
-        if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
-                    procInfo[i].statusString.c_str());
-            strcat(err, tmp);
-        } else {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, procInfo[i].procId, prStates[state]);
-        }
-    }
-
-    return err;
+    return simManager.GetErrorDetails();
 }
 
 void Worker::ResetStatsAndHits(float appTime) {
@@ -261,9 +239,8 @@ void Worker::ResetStatsAndHits(float appTime) {
 
     try {
         ResetWorkerStats();
-        if (simManager.ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
-            ThrowSubProcError();
-        ClearHits(false);
+        simManager.ResetHits();
+        if (needsReload) RealReload();
         Update(appTime);
     }
     catch (Error &e) {
@@ -272,31 +249,32 @@ void Worker::ResetStatsAndHits(float appTime) {
 }
 
 void Worker::Stop() {
-
-    if (ontheflyParams.nbProcess == 0)
-        throw Error("No sub process found. (Simulation not available)");
-
-    simManager.ForwardCommand(COMMAND_PAUSE);
-    if (simManager.WaitForProcStatus(PROCESS_READY))
-        ThrowSubProcError();
+    try {
+        if (simManager.StopSimulation()) {
+            throw std::logic_error("No active simulation to stop!");
+        }
+    }
+    catch (std::exception& e) {
+        throw Error(e.what());
+    }
+    isRunning = false;
 }
 
-void Worker::SetProcNumber(size_t n, bool keepDpHit) {
+void Worker::SetProcNumber(size_t n) {
 
     // Kill all sub process
-    simManager.KillAllSimUnits();
-
-    // Restart Control Dataport if necessary
-    if (!keepDpHit) simManager.CloseHitsDP();
-    // Create new control dataport
-    simManager.CreateControlDP();
+    try{
+        simManager.KillAllSimUnits();
+    }
+    catch (std::exception& e) {
+        throw Error("Killing subprocesses failed!");
+    }
 
     simManager.useCPU = true;
     simManager.nbCores = n;
     // Launch n subprocess
 
-    if (simManager.InitSimUnits()) {
-        ontheflyParams.nbProcess = 0;
+    if ((ontheflyParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }
 
@@ -350,7 +328,7 @@ void Worker::Update(float appTime) {
     bool done = true;
     bool error = true;
 
-    std::vector<ProcInfo> procInfo;
+    std::vector<SubProcInfo> procInfo;
     simManager.GetProcStatus(procInfo);
 
     for (size_t i = 0; i < procInfo.size() && done; i++) {
@@ -507,12 +485,15 @@ void Worker::Update(float appTime) {
 void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
 
     if (ontheflyParams.nbProcess == 0) return;
-
     simManager.GetProcStatus(states, statusStrings);
 }
 
+void Worker::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
+    simManager.GetProcStatus(procInfoList);
+}
+
 std::vector<std::vector<std::string>> Worker::ImportCSV_string(FileReader *file) {
-    std::vector<std::vector<string>> table; //reset table
+    std::vector<std::vector<std::string>> table; //reset table
     do {
         std::vector<std::string> row;
         std::string line = file->ReadLine();
@@ -550,6 +531,8 @@ std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
     return table;
 }
 
+
+
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
     if (ontheflyParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
@@ -558,87 +541,46 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     progressDlg->SetVisible(true);
     progressDlg->SetProgress(0.0);
 
-    // Create the temporary geometry shared structure
-    size_t loadSize = sizeof(OntheflySimulationParams);
-#if defined(SYNRAD)
-    loadSize += regions.size() * sizeof(bool); //Show photons or not
-#endif
-
     //To do: only close if parameters changed
-    simManager.CloseLogDP();
     progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
-    if (simManager.ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,
-                                  isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        char errMsg[1024];
-        sprintf(errMsg, "Subprocesses didn't release dpLog handle:\n%s", GetErrorDetails());
-        GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
-
+    try{
+        size_t logDpSize = 0;
+        if (ontheflyParams.enableLogging) {
+            logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
+        }
+        simManager.ReloadLogBuffer(logDpSize, false);
+    }
+    catch (std::exception& e) {
+        GLMessageBox::Display(e.what(), "Warning (ReloadLogBuffer)", GLDLG_OK, GLDLG_ICONWARNING);
         progressDlg->SetVisible(false);
         SAFE_DELETE(progressDlg);
         return;
     }
-    if (ontheflyParams.enableLogging) {
-        size_t logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
-        if (simManager.CreateLogDP(logDpSize)) {
-            progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);
-            throw Error(
-                    "Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
-        }
-        //Fills values with 0
-    }
 
-
-    //Dataport *loader = CreateDataport(loadDpName, loadSize);
-    if (simManager.CreateLoaderDP(loadSize)) {
-        progressDlg->SetVisible(false);
-        SAFE_DELETE(progressDlg);
-        throw Error(
-                "Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
-    }
+    progressDlg->SetProgress(0.5);
     progressDlg->SetMessage("Assembling parameters to pass...");
 
-    BYTE *buffer = new BYTE[loadSize]();
-    BYTE * bufferStart = buffer;
-    WRITEBUFFER(ontheflyParams, OntheflySimulationParams);
+    std::string loaderString = SerializeParamsForLoader().str();
+    try {
+        if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
+            char errMsg[1024];
+            sprintf(errMsg, "Failed to send params to sub process:\n");
+            GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
-
-#if defined(SYNRAD)
-    for (size_t i = 0; i < regions.size(); i++) {
-        WRITEBUFFER(regions[i].params.showPhotons, bool);
+            progressDlg->SetVisible(false);
+            SAFE_DELETE(progressDlg);
+            return;
+        }
     }
-#endif
-
-    progressDlg->SetMessage("Uploading new parameters...");
-    simManager.UploadToLoader(bufferStart, loadSize);
-    delete[] bufferStart;
-
-    // Pass to workers
-    progressDlg->SetMessage("Waiting for subprocesses to read mode...");
-    if (simManager.ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        simManager.CloseLoaderDP();
-        char errMsg[1024];
-        sprintf(errMsg, "Failed to send params to sub process:\n%s", GetErrorDetails());
-        GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
-
-        progressDlg->SetVisible(false);
-        SAFE_DELETE(progressDlg);
-        return;
+    catch (std::exception& e) {
+        GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
-    progressDlg->SetMessage("Closing dataport...");
-    simManager.CloseLoaderDP();
     progressDlg->SetVisible(false);
     SAFE_DELETE(progressDlg);
 
 #if defined(SYNRAD)
     //Reset leak and hit cache
-    /*
-    leakCacheSize = 0;
-    SetLeakCache(leakCache, &leakCacheSize, dpHit); //will only write leakCacheSize
-    hitCacheSize = 0;
-    SetHitCache(hitCache, &hitCacheSize, dpHit); //will only write hitCacheSize
-    */
     ResetWorkerStats();
 #endif
 }
@@ -693,4 +635,31 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
                                                     2); //Inside the zip, try original filename with extension changed from geo7z to geo
 
     return new FileReader(toOpen); //decompressed file opened
+}
+
+
+/**
+* \brief Function that updates the global hit counter with the cached value + releases the mutex
+* Send total hit counts to subprocesses
+*/
+void Worker::SendToHitBuffer() {
+    try{
+        simManager.ShareWithSimUnits(&globalHitCache, sizeof(GlobalHitBuffer),LoadType::LOADHITS);
+    }
+    catch (std::exception& e) {
+        throw Error(e.what());
+    }
+}
+
+/**
+* \brief Saves current facet hit counter from cache to results
+*/
+void Worker::SendFacetHitCounts() {
+    BYTE* buffer = simManager.GetLockedHitBuffer();
+    size_t nbFacet = geom->GetNbFacet();
+    for (size_t i = 0; i < nbFacet; i++) {
+        Facet *f = geom->GetFacet(i);
+        *((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
+    }
+    simManager.UnlockHitBuffer();
 }

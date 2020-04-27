@@ -21,10 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <string>
 #include <vector>
-#include "GLApp/GLTypes.h"
-//#include "SMP.h"
 #include "Buffer_shared.h" //LEAK, HIT
-#include <cereal/types/vector.hpp>
 
 class Geometry;
 class GLProgress;
@@ -33,8 +30,6 @@ class LoadStatus;
 
 #if defined(MOLFLOW)
 #include "../src/Parameter.h"
-#include "Vector.h" //moving parts
-#include "../src/MolflowTypes.h"
 #include "SimulationManager.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
@@ -84,7 +79,7 @@ public:
   //char *GetShortFileName(char* longFileName);
   void  SetCurrentFileName(const char *fileName);
 
-  void SetProcNumber(size_t n, bool keppDpHit=false);// Set number of processes [1..32] (throws Error)
+  void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber() const;  // Get number of processes
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
  size_t GetPID(size_t prIdx);// Get PID
@@ -92,7 +87,9 @@ public:
   void Reload();    // Reload simulation (throws Error)
   void RealReload(bool sendOnly=false);
   std::ostringstream SerializeForLoader();
-  void ChangeSimuParams();
+    virtual std::ostringstream SerializeParamsForLoader();
+
+    void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource
   void KillAll(bool keppDpHit=false);// Kill all sub processes
@@ -100,7 +97,9 @@ public:
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
-  BYTE *GetHits(); // Access to dataport (HIT)
+    void GetProcStatus(std::vector<SubProcInfo>& procInfoList);// Get process status
+
+    BYTE *GetHits(); // Access to dataport (HIT)
   std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();
   void ReleaseLogBuff();
   void ReleaseHits();
@@ -143,7 +142,7 @@ public:
   int GetCDFId(double temperature);
   int GetIDId(int paramId);
   //Different signature:
-  void SendToHitBuffer(bool skipFacetHits = false);// Send total and facet hit counts to subprocesses
+  void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
 #endif
 
@@ -242,9 +241,9 @@ private:
   //bool ExecuteAndWait(int command, size_t waitState, size_t param = 0);
   //bool Wait(size_t waitState, LoadStatus *statusWindow);
   void ResetWorkerStats();
-  void ClearHits(bool noReload);
+  //void ClearHits();
   const char *GetErrorDetails();
-  void ThrowSubProcError(std::string message);
+  //void ThrowSubProcError(std::string message);
   void ThrowSubProcError(const char *message = nullptr);
   void Start();
   void Stop();

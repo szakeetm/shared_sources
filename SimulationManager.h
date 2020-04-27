@@ -6,6 +6,7 @@
 #define MOLFLOW_PROJ_SIMULATIONMANAGER_H
 
 #include <vector>
+#include <string>
 
 typedef unsigned char BYTE;
 
@@ -13,20 +14,29 @@ typedef unsigned char BYTE;
 //#include "Buffer_shared.h" // TODO: Move process control defines out
 
 class SimulationCore;
+
 class Dataport;
 
-enum class SimType : uint8_t{
+enum class SimType : uint8_t {
     simCPU,
     simGPU,
     simRemote
 };
 
-struct ProcInfo{
+enum class LoadType : uint8_t {
+    LOADGEOM,
+    LOADPARAM,
+    LOADAC,
+    NLOADERTYPES,
+    LOADHITS
+};
+
+struct SubProcInfo {
     size_t procId;
     size_t statusId;
     size_t cmdParam;
-    size_t cmdParam2;
-    std::string statusString;
+    size_t oldState;
+    char statusString[128];
 };
 
 /*!
@@ -35,86 +45,113 @@ struct ProcInfo{
  */
 class SimulationManager {
     int CreateCPUHandle(uint16_t iProc);
+
     int CreateGPUHandle();
+
     int CreateRemoteHandle();
+
+    std::string MakeSubProcError(const char *message);
+
 protected:
     int LoadInput(); /*! Load/Forward serialized simulation data (pre-processed geometry data) */
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */
-    int ChangeSimuParams(); /*! Load changes to simulation parameters */
-    int StartSimulation();
-    int StopSimulation();
-    int TerminateSimHandles();
-    int FetchResults(); /*! Get results from simulations and clear local counters */
 
+    int TerminateSimHandles();
+
+    int FetchResults(); /*! Get results from simulations and clear local counters */
+    bool StartStopSimulation();
+
+    // Open/Close for shared memory
+    int CreateLoaderDP(size_t loaderSize);
+
+    int CloseLoaderDP();
+
+    int CreateControlDP();
+
+    int CloseControlDP();
+
+    int CreateLogDP(size_t logDpSize);
+
+    int CloseLogDP();
+
+    int CreateHitsDP(size_t hitSize);
+
+    int CloseHitsDP();
+
+    int ForwardCommand(int command, size_t param = 0) const;
+
+    int WaitForProcStatus(uint8_t procStatus);
+
+    // Load Buffer functions
+    int UploadToLoader(void *data, size_t size);
+
+    int UploadToHitBuffer(void *data, size_t size);
 
 public:
     SimulationManager();
+
     ~SimulationManager();
 
-    int ForwardCommand(int command, size_t param = 0) const;
-    int WaitForProcStatus(uint8_t procStatus);
+    int StartSimulation();
+    int StopSimulation();
+
+    int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
+
+    int ReloadLogBuffer(size_t logSize, bool ignoreSubs); /*! Reload the logger if necessary */
+    int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
+
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0);
 
     int InitSimUnits();
     int KillAllSimUnits();
-    int CreateLoaderDP(size_t loaderSize);
-    int CreateControlDP();
-    int CreateLogDP(size_t logDpSize);
-    int CreateHitsDP(size_t hitSize);
 
-    int CloseLoaderDP();
-    int CloseControlDP();
-    int CloseLogDP();
-    int CloseHitsDP();
+    int ResetSimulations();
+    int ResetHits();
+    int ClearLogBuffer();
 
-    int ClearHitsBuffer();
-    int GetProcStatus(size_t *states, std::vector<std::string>& statusStrings);
-    int GetProcStatus(std::vector<ProcInfo>& procInfoList);
+    int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
+    int GetProcStatus(std::vector<SubProcInfo> &procInfoList);
+    const char *GetErrorDetails();
 
     // Hit Buffer functions
-    BYTE* GetLockedHitBuffer();
+    BYTE *GetLockedHitBuffer();
     int UnlockHitBuffer();
-    int UploadToHitBuffer(void *data, size_t size);
-
-    // Load Buffer functions
-    int UploadToLoader(void* data, size_t size);
 
     // Log Buffer functions
-    BYTE* GetLockedLogBuffer();
+    BYTE *GetLockedLogBuffer();
     int UnlockLogBuffer();
 
-    // Flags
-    bool useCPU;
-
-    bool useGPU;
-
-    bool useRemote;
-    uint16_t nbCores;
-    uint16_t mainProcId;
-
-    bool allProcsDone;
-
-    std::vector<std::pair<uint32_t,SimType>> simHandles; // Vector of a pair of pid , simulation type
 
 private:
-
+    bool isRunning;
 
     // Dataport handles and names
     Dataport *dpControl;
     Dataport *dpHit;
-    size_t hitSize;
     Dataport *dpLog;
     Dataport *dpLoader;
 
     char appName[16];
-    char      ctrlDpName[32];
-    char      loadDpName[32];
-    char      hitsDpName[32];
-    char      logDpName[32];
+    char ctrlDpName[32];
+    char loadDpName[32];
+    char hitsDpName[32];
+    char logDpName[32];
 
 
 protected:
     //std::vector<SimulationCore*> simHandles; // for threaded versions
+public:
+    // Flags
+    bool useCPU;
+    bool useGPU;
+    bool useRemote;
+
+    uint16_t nbCores;
+    uint16_t mainProcId;
+
+    bool allProcsDone;
+    bool simulationChanged; // sendOnly functionality from Worker::RealReload
+    std::vector<std::pair<uint32_t, SimType>> simHandles; // Vector of a pair of pid , simulation type
 };
 
 

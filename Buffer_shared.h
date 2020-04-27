@@ -18,9 +18,8 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-#include <vector>
 #include "Vector.h"
-#include "GLApp/GLTypes.h"
+#include <vector>
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
@@ -121,7 +120,7 @@ public:
 	size_t    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
 	int	 teleportDest;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
 
-	bool   countAbs;       // Count absoprtion (MC texture)
+	bool   countAbs;       // Count absorption (MC texture)
 	bool   countRefl;      // Count reflection (MC texture)
 	bool   countTrans;     // Count transparent (MC texture)
 	bool   countDirection;

@@ -1704,7 +1704,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 		case DRAGG_ROTATE:
 
-			if (fabs(diffX) > 1.9 || fabs(diffY) > 1.9) {
+			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
 				double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 				if (GetWindow()->IsCtrlDown()) {
