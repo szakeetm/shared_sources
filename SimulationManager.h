@@ -35,6 +35,7 @@ struct SubProcInfo {
     size_t procId;
     size_t statusId;
     size_t cmdParam;
+    size_t cmdParam2;
     size_t oldState;
     char statusString[128];
 };
@@ -78,7 +79,7 @@ protected:
 
     int CloseHitsDP();
 
-    int ForwardCommand(int command, size_t param = 0) const;
+    int ForwardCommand(int command, size_t param, size_t param2);
 
     int WaitForProcStatus(uint8_t procStatus);
 
@@ -100,7 +101,7 @@ public:
     int ReloadLogBuffer(size_t logSize, bool ignoreSubs); /*! Reload the logger if necessary */
     int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
 
-    int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0);
+    int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
     int InitSimUnits();
     int KillAllSimUnits();

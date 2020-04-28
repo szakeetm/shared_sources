@@ -973,6 +973,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
     simuPanel->SetClosable(true);
     Add(simuPanel);
 
+    globalSettingsBtn = new GLButton(0, "<< Sim");
+    simuPanel->Add(globalSettingsBtn);
+
     startSimu = new GLButton(0, "Start/Stop");
     simuPanel->Add(startSimu);
 

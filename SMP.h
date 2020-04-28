@@ -82,6 +82,7 @@ public:
     // Process control
     size_t		states[MAX_PROCESS];        // Process states/commands
     size_t    cmdParam[MAX_PROCESS];      // Command param 1
+    size_t    cmdParam2[MAX_PROCESS];      // Command param 1
     size_t		oldStates[MAX_PROCESS];     // Command param 2
     char		statusStr[MAX_PROCESS][128]; // Status message
     /*template<class Archive>

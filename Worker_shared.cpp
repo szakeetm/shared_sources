@@ -243,7 +243,7 @@ void Worker::ResetStatsAndHits(float appTime) {
         if (needsReload) RealReload();
         Update(appTime);
     }
-    catch (Error &e) {
+    catch (std::exception &e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -599,19 +599,19 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
     //Necessary push/pop trick to support UNC (network) paths in Windows command-line
     auto CWD = FileUtils::get_working_path();
     cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
-#endif
-
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     sevenZipName += "7za.exe";
 #else //Linux, MacOS
-    if (FileUtils::Exist("./7za")) {
-        sevenZipName = "./7za"; //use 7za binary shipped with Molflow
-    } else if (FileUtils::Exist("/usr/bin/7za")) {
-        sevenZipName = "/usr/bin/7za"; //use p7zip installed system-wide
-    } else {
-        sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+    sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
+                                       "/usr/bin/7za", //use p7zip installed system-wide
+                                       "/usr/local/bin/7za"}; //use p7zip installed for user
+    for(auto& path : possibleLocations){
+        if (FileUtils::Exist(path)) {
+            sevenZipName = path;
+        }
     }
 #endif
+
     if (!FileUtils::Exist(sevenZipName)) {
         throw Error("7-zip compressor not found, can't extract file.");
     }

@@ -335,11 +335,11 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 #if defined(SYNRAD)
 									hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
-										&& rnd()>f->sh.opacity)
+										&& sHandle->randomGenerator.rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->currentParticle.energy,
-										acos(Dot(sHandle->currentParticle.direction, f->sh.N)) - PI / 2, rnd()) == REFL_TRANS));
+										acos(Dot(sHandle->currentParticle.direction, f->sh.N)) - PI / 2, sHandle->randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 

@@ -37,6 +37,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma warning(disable : 4146)
 #endif
 
+unsigned long GenerateSeed();
+
 class MersenneTwister {
 
 /* State of the RNG */
@@ -54,7 +56,6 @@ public:
 
     double Gaussian(const double &sigma);
 
-    unsigned long GenerateSeed();
     unsigned long GetSeed();
 
 private:
@@ -68,7 +69,21 @@ private:
 
 class TruncatedGaussian {
 public:
-    double GetGaussian(gsl_rng *gen, const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
+    TruncatedGaussian(){
+        //--- GSL random init ---
+        gsl_rng_env_setup();                          // Read variable environnement
+        const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
+        this->gen=gsl_rng_alloc (type);;
+        gsl_rng_set(this->gen,GenerateSeed());
+    }
+    ~TruncatedGaussian(){
+        gsl_rng_free(this->gen);
+    };
+
+    double GetGaussian(const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
+private:
+    gsl_rng *gen;
+
 };
 
 #endif /* _RANDOMH_ */

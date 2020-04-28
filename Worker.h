@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <vector>
 #include "Buffer_shared.h" //LEAK, HIT
+#include "SimulationManager.h"
 
 class Geometry;
 class GLProgress;
@@ -30,7 +31,6 @@ class LoadStatus;
 
 #if defined(MOLFLOW)
 #include "../src/Parameter.h"
-#include "SimulationManager.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
@@ -59,7 +59,7 @@ public:
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
-  void LoadTexturesSYN(FileReader* f,int version);  // Load a textures(throws Error)
+  void LoadTexturesSYN(FileReader* f, BYTE* buffer, int version);  // Load a textures(throws Error)
   void RebuildTextures();
   
   // Save a geometry (throws Error)

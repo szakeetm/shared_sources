@@ -3797,7 +3797,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	int nbNewFacets = file->ReadInt();
 	file->ReadKeyword("nbSuper"); file->ReadKeyword(":");
 	int nbNewSuper = file->ReadInt();
-	int nbF = 0; std::vector<std::vector<string>> loadFormulas;
+	int nbF = 0; std::vector<std::vector<std::string>> loadFormulas;
 	int nbV = 0;
 	if (version2 >= 2) {
 		file->ReadKeyword("nbFormula"); file->ReadKeyword(":");
@@ -3849,7 +3849,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			//mApp->OffsetFormula(tmpExpr, wp.nbFacet);
 			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
 #if defined(MOLFLOW)
-			std::vector<string> newFormula;
+			std::vector<std::string> newFormula;
 			newFormula.push_back(tmpName);
 			mApp->OffsetFormula(tmpExpr, (int)sh.nbFacet); //offset formula
 			newFormula.push_back(tmpExpr);

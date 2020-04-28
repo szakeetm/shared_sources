@@ -79,7 +79,6 @@ public:
         strncpy(msg,message,255);
         msg[255]='\0';
 	};
-	const char *GetMsg();
 
     virtual ~Error() throw() {}
     virtual const char* what() const throw()

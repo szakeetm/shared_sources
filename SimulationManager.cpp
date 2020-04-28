@@ -25,27 +25,27 @@ SimulationManager::SimulationManager() {
     dpLog = nullptr;
     dpLoader = nullptr;
 
+    uint32_t pid;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    pid = _getpid();
+    const char* dpPrefix = "";
+#else
+    pid = ::getpid();
+    const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
+#endif
+
     char dpName[5];
 #if defined(MOLFLOW)
     sprintf(appName,"molflow");
-    sprintf(dpName,"MFLW");
+    sprintf(dpName,"%sMFLW",dpPrefix);
 #elif defined(SYNRAD)
-    sprintf(appName,"synrad");
-    sprintf(dpName,"SNRD");
+    sprintf(appName, "synrad");
+    sprintf(dpName, "%sSNRD", dpPrefix);
 #endif
-
-    uint32_t  pid;
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    pid = _getpid();
-    const char* dpPrefix = "MFLW";
-#else
-    pid = ::getpid();
-        const char* dpPrefix = "/MFLW"; // creates semaphore as /dev/sem/%s_sema
-#endif
-    sprintf(ctrlDpName,"%sCTRL%u",dpPrefix,pid);
-    sprintf(loadDpName,"%sLOAD%u",dpPrefix,pid);
-    sprintf(hitsDpName,"%sHITS%u",dpPrefix,pid);
-    sprintf(logDpName, "%sLOG%u",dpPrefix,pid);
+    sprintf(ctrlDpName, "%sCTRL%u", dpName, pid);
+    sprintf(loadDpName, "%sLOAD%u", dpName, pid);
+    sprintf(hitsDpName, "%sHITS%u", dpName, pid);
+    sprintf(logDpName, "%sLOG%u", dpName, pid);
 
     allProcsDone = false;
 }
@@ -115,9 +115,10 @@ int SimulationManager::StartSimulation() {
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
-    if (ExecuteAndWait(COMMAND_START,PROCESS_RUN,0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
+    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
         throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
     }
+    isRunning = true;
     if(allProcsDone){
         return 1;
     }
@@ -128,8 +129,9 @@ int SimulationManager::StopSimulation() {
     if (simHandles.empty())
         return 1;
 
-    if (ExecuteAndWait(COMMAND_PAUSE,PROCESS_READY))
+    if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+    isRunning = false;
     return 0;
 }
 
@@ -170,7 +172,6 @@ bool SimulationManager::StartStopSimulation(){
         }
 
     }
-    isRunning = !isRunning; // switch state on success
     return isRunning; // return previous state
 }
 
@@ -362,7 +363,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     return waitTime>=timeOutAt || error; // 0 = finished, 1 = timeout
 }
 
-int SimulationManager::ForwardCommand(const int command, const size_t param) const {
+int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     if(!dpControl) {
         return 1;
     }
@@ -374,6 +375,7 @@ int SimulationManager::ForwardCommand(const int command, const size_t param) con
         shMaster->oldStates[i]=shMaster->states[i]; // use to solve old state
         shMaster->states[i]=command;
         shMaster->cmdParam[i]=param;
+        shMaster->cmdParam2[i]=param2;
     }
     ReleaseDataport(dpControl);
 
@@ -387,8 +389,9 @@ int SimulationManager::ForwardCommand(const int command, const size_t param) con
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param) {
-    if(!ForwardCommand(command, param)) { // execute
+int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param,
+                                      const size_t param2) {
+    if(!ForwardCommand(command, param, param2)) { // execute
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
@@ -398,7 +401,7 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 
 int SimulationManager::KillAllSimUnits() {
     if( dpControl && !simHandles.empty() ) {
-        if(ExecuteAndWait(COMMAND_EXIT,PROCESS_KILLED)){ // execute
+        if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
             AccessDataport(dpControl);
             SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
@@ -429,7 +432,7 @@ int SimulationManager::ClearLogBuffer() {
 }
 
 int SimulationManager::ResetSimulations() {
-    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY))
+    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     return 0;
 }
@@ -438,7 +441,7 @@ int SimulationManager::ResetHits() {
     if (!dpHit) {
         return 1;
     }
-    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
+    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     AccessDataport(dpHit);
     memset(dpHit->buff, 0, dpHit->size); //Also clears hits, leaks
@@ -605,7 +608,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
-            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size)) {
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -615,7 +618,8 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADPARAM:{
-            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size)) {
+
+            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -625,7 +629,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADAC:{
-            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size)) {
+            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());

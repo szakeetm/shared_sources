@@ -612,7 +612,7 @@ double GetTick() {
 	}
 #else
 
-    struct timespec ts_end;
+    struct timespec ts_end{};
     clock_gettime(CLOCK_MONOTONIC, &ts_end);
     uint64_t time_diff = (ts_end.tv_sec - tickStart.tv_sec) * 1000000000ULL + ts_end.tv_nsec -
             tickStart.tv_nsec; // diff rounded to nsec to prevent errors
