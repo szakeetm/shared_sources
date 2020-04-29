@@ -2,16 +2,23 @@
 // Created by pbahr on 15/04/2020.
 //
 
-#include <string>
+
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #endif
+
 #include "SimulationManager.h"
 //#include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
 #include "SMP.h"
 #include "ProcessControl.h"
 
-SimulationManager::SimulationManager() {
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     isRunning = 0;
     useCPU = false;
     nbCores = 0;
@@ -25,27 +32,20 @@ SimulationManager::SimulationManager() {
     dpLog = nullptr;
     dpLoader = nullptr;
 
-    uint32_t pid;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    pid = _getpid();
+    uint32_t pid = _getpid();
     const char* dpPrefix = "";
 #else
-    pid = ::getpid();
+    uint32_t pid = ::getpid();
     const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
 #endif
 
-    char dpName[5];
-#if defined(MOLFLOW)
-    sprintf(appName,"molflow");
-    sprintf(dpName,"%sMFLW",dpPrefix);
-#elif defined(SYNRAD)
-    sprintf(appName, "synrad");
-    sprintf(dpName, "%sSNRD", dpPrefix);
-#endif
-    sprintf(ctrlDpName, "%sCTRL%u", dpName, pid);
-    sprintf(loadDpName, "%sLOAD%u", dpName, pid);
-    sprintf(hitsDpName, "%sHITS%u", dpName, pid);
-    sprintf(logDpName, "%sLOG%u", dpName, pid);
+
+    sprintf(this->appName,"%s", appName.c_str());
+    sprintf(this->ctrlDpName,"%s", std::string(dpPrefix+dpName+"CTRL"+std::to_string(pid)).c_str());
+    sprintf(this->loadDpName,"%s", std::string(dpPrefix+dpName+"LOAD"+std::to_string(pid)).c_str());
+    sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(pid)).c_str());
+    sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
 
     allProcsDone = false;
 }
@@ -57,7 +57,17 @@ SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
 }
 
-int SimulationManager::LoadInput() {
+int SimulationManager::LoadInput(std::string fileName) {
+    std::ifstream inputFile(fileName);
+    inputFile.seekg(0, std::ios::end);
+    size_t size = inputFile.tellg();
+    std::string buffer(size, ' ');
+    inputFile.seekg(0);
+    inputFile.read(&buffer[0], size);
+
+    if (ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM)){
+        exit(0);
+    }
 
     return 0;
 }

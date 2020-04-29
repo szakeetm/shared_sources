@@ -473,7 +473,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 		// Second pass for transparent hits
 		for (const auto& tpFacet: sHandle->currentParticle.transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
-				tpFacet->RegisterTransparentPass();
+                RegisterTransparentPass(tpFacet);
 			}
 		}
 

@@ -10,10 +10,7 @@
 
 typedef unsigned char BYTE;
 
-//#include "SMP.h"
-//#include "Buffer_shared.h" // TODO: Move process control defines out
-
-class SimulationCore;
+class SimulationUnit;
 
 class Dataport;
 
@@ -54,7 +51,7 @@ class SimulationManager {
     std::string MakeSubProcError(const char *message);
 
 protected:
-    int LoadInput(); /*! Load/Forward serialized simulation data (pre-processed geometry data) */
+    /*! Load/Forward serialized simulation data (pre-processed geometry data) */
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */
 
     int TerminateSimHandles();
@@ -89,8 +86,7 @@ protected:
     int UploadToHitBuffer(void *data, size_t size);
 
 public:
-    SimulationManager();
-
+    SimulationManager(std::string appName , std::string dpName);
     ~SimulationManager();
 
     int StartSimulation();
@@ -123,6 +119,8 @@ public:
     int UnlockLogBuffer();
 
 
+    int LoadInput(std::string fileName);
+
 private:
     bool isRunning;
 
@@ -132,15 +130,13 @@ private:
     Dataport *dpLog;
     Dataport *dpLoader;
 
+protected:
     char appName[16];
     char ctrlDpName[32];
     char loadDpName[32];
     char hitsDpName[32];
     char logDpName[32];
-
-
-protected:
-    //std::vector<SimulationCore*> simHandles; // for threaded versions
+    //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
     // Flags
     bool useCPU;
