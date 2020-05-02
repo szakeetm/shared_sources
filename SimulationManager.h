@@ -53,7 +53,6 @@ class SimulationManager {
 protected:
     /*! Load/Forward serialized simulation data (pre-processed geometry data) */
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */
-
     int TerminateSimHandles();
 
     int FetchResults(); /*! Get results from simulations and clear local counters */
@@ -86,10 +85,12 @@ protected:
     int UploadToHitBuffer(void *data, size_t size);
 
 public:
-    SimulationManager(std::string appName , std::string dpName);
+    SimulationManager(std::string appName, std::string dpName);
+
     ~SimulationManager();
 
     int StartSimulation();
+
     int StopSimulation();
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
@@ -100,22 +101,29 @@ public:
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
     int InitSimUnits();
+
     int KillAllSimUnits();
 
     int ResetSimulations();
+
     int ResetHits();
+
     int ClearLogBuffer();
 
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
+
     int GetProcStatus(std::vector<SubProcInfo> &procInfoList);
+
     const char *GetErrorDetails();
 
     // Hit Buffer functions
     BYTE *GetLockedHitBuffer();
+
     int UnlockHitBuffer();
 
     // Log Buffer functions
     BYTE *GetLockedLogBuffer();
+
     int UnlockLogBuffer();
 
 
@@ -126,7 +134,7 @@ private:
 
     // Dataport handles and names
     Dataport *dpControl;
-    Dataport *dpHit;
+    Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
     Dataport *dpLog;
     Dataport *dpLoader;
 

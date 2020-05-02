@@ -6,6 +6,7 @@
 #define MOLFLOW_PROJ_SIMULATIONUNIT_H
 
 //#include "Simulation.h"
+#include <string>
 
 class SimulationUnit {
     int main(int argc, char *argv[]);

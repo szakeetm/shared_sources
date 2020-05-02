@@ -329,7 +329,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 									bool hardHit;
 #if defined(MOLFLOW)
 									double time = sHandle->currentParticle.flightTime + d / 100.0 / sHandle->currentParticle.velocity;
-									double currentOpacity = GetOpacityAt(f, time);
+									double currentOpacity = sHandle->GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (sHandle->randomGenerator.rnd()<currentOpacity));
 #endif
 
@@ -473,7 +473,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 		// Second pass for transparent hits
 		for (const auto& tpFacet: sHandle->currentParticle.transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
-                RegisterTransparentPass(tpFacet);
+                sHandle->RegisterTransparentPass(tpFacet);
 			}
 		}
 
