@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
@@ -28,14 +29,14 @@ enum class LoadType : uint8_t {
     LOADHITS
 };
 
-struct SubProcInfo {
+/*struct SubProcInfo {
     size_t procId;
     size_t statusId;
     size_t cmdParam;
     size_t cmdParam2;
     size_t oldState;
     char statusString[128];
-};
+};*/
 
 /*!
  * @brief Controls concrete Simulation instances and manages their I/O needs. Can act as a standalone (CLI mode) or as a middleman (GPU mode).

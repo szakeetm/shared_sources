@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <Parameter.h>
 #include <cereal/archives/binary.hpp>
-#include "Geometry_sub.h"
+#include "GeometrySimu.h"
 
 class FlowFormatter : public CLI::Formatter {
 public:
@@ -60,10 +60,8 @@ int parse_input(std::string serializedFile){
     inputArchive(md.temperatures);
     inputArchive(md.moments);
     inputArchive(md.desorptionParameterIDs);
-    std::cout << "Parsing nb super: " << md.sh.nbSuper << std::endl;
 
     md.structures.resize(md.sh.nbSuper); //Create structures
-
     //Facets
     for (size_t i = 0; i < md.sh.nbFacet; i++) { //Necessary because facets is not (yet) a vector in the interface
         SubprocessFacet f;
@@ -86,6 +84,9 @@ int parse_input(std::string serializedFile){
         }
     }
 
+    std::cout << "Parsed geometry " << md.sh.name << std::endl;
+    std::cout << " -> " << md.sh.nbFacet <<" facets" << std::endl;
+    std::cout << " -> " << md.sh.nbVertex <<" vertices" << std::endl;
 
     return 0;
 }
@@ -126,18 +127,30 @@ int main(int argc, char** argv) {
 
     simManager.nbCores = p;
     simManager.useCPU = true;
-    simManager.InitSimUnits();
+    if(simManager.InitSimUnits())
+        std::cout << "Error: Initialising subprocesses: " << simManager.simHandles.size() << std::endl;
+
 
     std::cout << "Active cores: " << simManager.simHandles.size() << std::endl;
 
     std::cout << "Parsing file: " << req_real_file << std::endl;
     parse_input(req_real_file);
     std::cout << "Forwarding serialization: " << req_real_file << std::endl;
-    simManager.LoadInput(req_real_file);
-
+    try {
+        simManager.LoadInput(req_real_file);
+    }
+    catch (std::runtime_error& e) {
+        std::cout << "ERROR: Loading Input: " << e.what() << std::endl;
+        exit(0);
+    }
     //simManager.ReloadHitBuffer();
-    simManager.StartSimulation();
-
+    try {
+        simManager.StartSimulation();
+    }
+    catch (std::runtime_error& e) {
+        std::cout << "ERROR: Starting simulation: " << e.what() << std::endl;
+        exit(0);
+    }
     /* Establish a handler for SIGALRM signals. */
     signal (SIGALRM, catch_alarm);
 
@@ -160,11 +173,10 @@ int main(int argc, char** argv) {
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
     simManager.StopSimulation();
-
+    simManager.KillAllSimUnits();
     // Export results
     // GlobalHitBuffer *gHits = (GlobalHitBuffer *)simManager.GetLockedHitBuffer();
-
-    simManager.UnlockHitBuffer();
+    //simManager.UnlockHitBuffer();
 
     return 0;
 }

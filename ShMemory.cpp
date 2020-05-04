@@ -74,6 +74,8 @@ int build_key (char *name)
 // according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
 #include <signal.h>
 #include <sys/ipc.h>
+#include <string>
+
 volatile int alarm_triggered = 0;
 void alarm_handler(int sig)
 {
@@ -366,7 +368,9 @@ Dataport *OpenDataport(char *name, size_t size) {
 #else
     dp->shmFd = shm_open(name, O_RDWR, 0777);
     if (dp->shmFd < 0) {
-        PrintLastErrorText("OpenDataport(): shm_open() failed");
+        std::string errorString = "OpenDataport(): shm_open() failed for file ";
+        errorString.append(name);
+        PrintLastErrorText(errorString.c_str());
         close(dp->shmFd);
         free(dp);
         return NULL;

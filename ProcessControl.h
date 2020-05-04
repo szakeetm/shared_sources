@@ -53,4 +53,13 @@ static const char *prStates[] = {
         "AC iteration step" //Molflow only
 };
 
+struct SubProcInfo {
+    size_t procId;
+    size_t statusId;
+    size_t cmdParam;
+    size_t cmdParam2;
+    size_t oldState;
+    char statusString[128];
+};
+
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H

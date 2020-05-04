@@ -65,10 +65,12 @@ int SimulationManager::LoadInput(std::string fileName) {
     inputFile.seekg(0);
     inputFile.read(&buffer[0], size);
 
-    if (ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM)){
-        exit(0);
+    try {
+        ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
     }
-
+    catch (std::runtime_error& e) {
+        throw e;
+    }
     return 0;
 }
 
@@ -641,7 +643,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         case LoadType::LOADAC:{
             if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
                 CloseLoaderDP();
-                std::string errString = "Failed to send geometry to sub process:\n";
+                std::string errString = "Failed to send AC geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
