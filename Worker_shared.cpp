@@ -178,9 +178,11 @@ std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
     size_t nbRec = 0;
     ParticleLoggerItem *logBuffPtr = NULL;
     size_t *logBuff = (size_t *) simManager.GetLockedLogBuffer();
-    nbRec = *logBuff;
-    logBuff++;
-    logBuffPtr = (ParticleLoggerItem *) logBuff;
+    if(logBuff) {
+        nbRec = *logBuff;
+        logBuff++;
+        logBuffPtr = (ParticleLoggerItem *) logBuff;
+    }
     return std::tie(nbRec, logBuffPtr);
 }
 
