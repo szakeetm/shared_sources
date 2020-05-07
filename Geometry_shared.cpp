@@ -46,6 +46,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ASELoader.h"
 //#include <algorithm>
 #include <list>
+#include <numeric> //std::iota
 
 #ifdef MOLFLOW
 extern MolFlow *mApp;
@@ -4115,9 +4116,17 @@ void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 
 }
 
+std::vector<size_t> Geometry::GetAllFacetIndices() {
+	//All facets
+    std::vector<size_t> facetIndices(GetNbFacet());
+    std::iota(std::begin(facetIndices), std::end(facetIndices), 0); // Fill with 0, 1, ..., GetNbFacet()
+	return facetIndices;
+}
+
 void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
     prg->SetMessage("Triangulating geometry...");
-    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,prg);
+	
+    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg->SetMessage("Saving STL file...");
     f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {
