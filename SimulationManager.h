@@ -11,7 +11,7 @@
 
 typedef unsigned char BYTE;
 
-class SimulationUnit;
+class SimulationController;
 
 class Dataport;
 

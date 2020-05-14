@@ -3,12 +3,13 @@
 //
 
 #include <cmath>
-#include "SimulationUnit.h"
+#include <sstream>
+#include "SimulationController.h"
 #include "ProcessControl.h"
 
 #define WAITTIME    100  // Answer in STOP mode
 
-SimulationUnit::SimulationUnit(const std::string appName , const std::string dpName, size_t parentPID, size_t procIdx){
+SimulationController::SimulationController(const std::string appName , const std::string dpName, size_t parentPID, size_t procIdx){
     this->prIdx = procIdx;
     this->parentPID = parentPID;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -29,11 +30,11 @@ SimulationUnit::SimulationUnit(const std::string appName , const std::string dpN
         exit(0);
     }
 
-    printf("Connected to %s (%zd bytes), molflowSub.exe #%d\n", ctrlDpName, sizeof(SHCONTROL), prIdx);
+    printf("Connected to %s (%zd bytes), %sSub.exe #%d\n", ctrlDpName, sizeof(SHCONTROL), appName.c_str(), prIdx);
     SetReady();
 };
 
-int SimulationUnit::StartSimulation() {
+int SimulationController::StartSimulation() {
     try{
         SanityCheckGeom();
     }
@@ -48,7 +49,7 @@ int SimulationUnit::StartSimulation() {
     return 0;
 }
 
-int SimulationUnit::RunSimulation() {
+int SimulationController::RunSimulation() {
     // 1s step
     size_t    nbStep = 1;
     if (stepsPerSec <= 0.0) {
@@ -73,7 +74,7 @@ int SimulationUnit::RunSimulation() {
     return 0;
 }
 
-int SimulationUnit::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
+int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
     procInfo.statusId = state;
     if (changeState) printf("\n setstate %zd \n", state);
@@ -88,7 +89,7 @@ int SimulationUnit::SetState(size_t state, const char *status, bool changeState,
     }
 }
 
-char *SimulationUnit::GetSimuStatus() {
+char *SimulationController::GetSimuStatus() {
     static char ret[128];
     size_t count = this->totalDesorbed;
     size_t max = 0;
@@ -105,7 +106,7 @@ char *SimulationUnit::GetSimuStatus() {
     return ret;
 }
 
-void SimulationUnit::GetState() {
+void SimulationController::GetState() {
     procInfo.statusId = PROCESS_READY;
     procInfo.cmdParam = 0;
 
@@ -120,24 +121,26 @@ void SimulationUnit::GetState() {
         ReleaseDataport(this->dpControl);
 
         if (!IsProcessRunning(parentPID)) {
-            printf("Host molflow.exe (process id %d) not running. Closing.", parentPID);
-            SetErrorSub("Host molflow.exe not running. Closing subprocess.");
+            std::stringstream errMsg;
+            errMsg << "Host "<<appName<<".exe (process id "<< parentPID << ") not running. Closing.";
+            printf("%s\n",errMsg.str().c_str());
+            SetErrorSub(errMsg.str().c_str());
             endState = true;
         }
     } else {
-        printf("Subprocess %d couldn't connect to Molflow.\n", prIdx);
+        printf("Subprocess %d couldn't connect to %s.\n", prIdx, appName);
         SetErrorSub("No connection to main program. Closing subprocess.");
         ProcessSleep(5000);
         endState = true;
     }
 }
 
-void SimulationUnit::SetErrorSub(const char *message) {
+void SimulationController::SetErrorSub(const char *message) {
     printf("Error: %s\n", message);
     SetState(PROCESS_ERROR, message);
 }
 
-void SimulationUnit::SetStatus(char *status) {
+void SimulationController::SetStatus(char *status) {
     if (AccessDataport(this->dpControl)) {
         SHCONTROL *master = (SHCONTROL *) this->dpControl->buff;
         strncpy(master->statusStr[prIdx], status, 127);
@@ -146,7 +149,7 @@ void SimulationUnit::SetStatus(char *status) {
     }
 }
 
-void SimulationUnit::SetReady() {
+void SimulationController::SetReady() {
 
     if (this->loadOK)
         SetState(PROCESS_READY, this->GetSimuStatus());
@@ -155,12 +158,12 @@ void SimulationUnit::SetReady() {
 
 }
 
-size_t SimulationUnit::GetLocalState() const {
+size_t SimulationController::GetLocalState() const {
     return procInfo.statusId;
 }
 
 // Main loop
-int SimulationUnit::mainLoop(int argc, char *argv[]){
+int SimulationController::controlledLoop(int argc, char **argv){
     endState = false;
     while (!endState) {
         GetState();

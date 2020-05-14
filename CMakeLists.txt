@@ -147,7 +147,7 @@ set(SRC_FILES
         #ShMemory.cpp
         Process.cpp
         Vector.cpp
-        SimulationManager.cpp SimulationUnit.cpp)
+        SimulationManager.cpp SimulationController.cpp)
 
 set(SRC_FILES ${SRC_FILES}
         GLApp/GLApp.cpp
