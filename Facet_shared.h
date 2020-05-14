@@ -179,7 +179,7 @@ public:
 
 #if defined(MOLFLOW)
 	std::vector<double> outgassingMap; //outgassing map cell values (loaded from file)
-	std::vector<size_t> angleMapCache; //Stores either the recorded or the generating angle map. Worker::Update reads results here. A better implementation would be to separate recorded and generating angle maps
+    size_t* angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
 	double totalFlux;
 	double totalDose;
