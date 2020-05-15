@@ -410,25 +410,26 @@ void Worker::Update(float appTime) {
                sizeof(FacetHitBuffer));
 
         if (f->sh.anglemapParams.record) {
-            if (f->selected && f->angleMapCache.empty())
-                needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
-
+            if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
+                //Initialize angle map
+                f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
+                if (!f->angleMapCache) {
+                    std::stringstream tmp;
+                    tmp << "Not enough memory for incident angle map on facet " << i + 1;
+                    throw Error(tmp.str().c_str());
+                }
+                f->sh.anglemapParams.hasRecorded = true;
+                if (f->selected) needsAngleMapStatusRefresh = true;
+            }
             //Retrieve angle map from hits dp
-            BYTE *angleMapAddress = buffer
+            BYTE* angleMapAddress = buffer
                                     + f->sh.hitOffset
                                     + (1 + moments.size()) * sizeof(FacetHitBuffer)
-                                    + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) * (1 + moments.size()) : 0)
-                                    + (f->sh.isTextured ? f->sh.texWidth * f->sh.texHeight * sizeof(TextureCell) *
-                                                          (1 + moments.size()) : 0)
-                                    + (f->sh.countDirection ? f->sh.texWidth * f->sh.texHeight * sizeof(DirectionCell) *
-                                                              (1 + moments.size()) : 0);
-            f->angleMapCache.resize(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes +
-                                                                     f->sh.anglemapParams.thetaHigherRes)); //Will be filled with values
-            memcpy(f->angleMapCache.data(), angleMapAddress, sizeof(size_t) * (f->sh.anglemapParams.phiWidth *
-                                                                               (f->sh.anglemapParams.thetaLowerRes +
-                                                                                f->sh.anglemapParams.thetaHigherRes)));
+                                    + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
+                                    + (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
+                                    + (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
+            memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
         }
-
 #endif
 #if defined(MOLFLOW)
 

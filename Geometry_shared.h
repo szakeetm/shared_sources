@@ -121,6 +121,7 @@ public:
 	void CorrectNonSimple(int *nonSimpleList, int nbNonSimple);
 	size_t AnalyzeNeighbors(Worker *work, GLProgress *prg);
 	std::vector<size_t> GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff);
+	std::vector<size_t> GetAllFacetIndices();
 	size_t      GetNbFacet();
 	size_t      GetNbVertex();
 	Vector3d GetFacetCenter(int facet);

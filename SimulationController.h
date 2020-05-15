@@ -2,8 +2,8 @@
 // Created by pbahr on 15/04/2020.
 //
 
-#ifndef MOLFLOW_PROJ_SIMULATIONUNIT_H
-#define MOLFLOW_PROJ_SIMULATIONUNIT_H
+#ifndef MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
+#define MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 
 //#include "Simulation.h"
 #include <string>
@@ -12,8 +12,15 @@
 #include "ProcessControl.h"
 
 class CurrentParticleStatus;
+class MCSimulation {
+public:
+    OntheflySimulationParams ontheflyParams;
+    GeomProperties sh;
+    // Particle coordinates (MC)
+    CurrentParticleStatus* currentParticle;
+};
 
-class SimulationUnit {
+class SimulationController {
     virtual bool Load() = 0;
 public:
     // tmp
@@ -45,8 +52,8 @@ protected:
     void SetReady();
     size_t GetLocalState() const;
 public:
-    SimulationUnit(std::string appName , std::string dpName, size_t parentPID, size_t procIdx);
-    int mainLoop(int argc = 0, char *argv[] = nullptr);
+    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx);
+    int controlledLoop(int argc = 0, char **argv = nullptr);
 
 protected:
     char appName[16];
@@ -74,4 +81,4 @@ protected:
     bool lastHitUpdateOK;
 };
 
-#endif //MOLFLOW_PROJ_SIMULATIONUNIT_H
+#endif //MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
