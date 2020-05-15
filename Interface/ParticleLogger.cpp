@@ -320,9 +320,10 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 			<< log[i].particleDecayMoment << separator;
 #endif // MOLFLOW
 #if defined(SYNRAD)
+        double numScans = work->no_scans>0.0 ? work->no_scans : 1.0; //Normalize dF and dP contribution by no_scans at time of export
 		tmp << log[i].energy << separator
-			<< log[i].dF << separator
-			<< log[i].dP << separator;
+			<< log[i].dF/numScans << separator
+			<< log[i].dP/numScans << separator;
 #endif // SYNRAD
 
 		tmp << "\n";

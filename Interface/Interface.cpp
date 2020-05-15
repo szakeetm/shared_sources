@@ -857,6 +857,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Facet")->Add("Collapse ...", MENU_FACET_COLLAPSE);
     menu->GetSubMenu("Facet")->Add("Explode", MENU_FACET_EXPLODE);
     menu->GetSubMenu("Facet")->Add("Revert flipped normals (old geometries)", MENU_FACET_REVERTFLIP);
+    menu->GetSubMenu("Facet")->Add("Triangulate", MENU_FACET_TRIANGULATE);
 
     //menu->GetSubMenu("Facet")->Add("Facet Details ...", MENU_FACET_DETAILS);
     //menu->GetSubMenu("Facet")->Add("Facet Mesh ...",MENU_FACET_MESH);
@@ -1646,6 +1647,23 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         buildIntersection->SetVisible(true);
                     }
                     return true;
+                case MENU_FACET_TRIANGULATE:
+                {
+                    auto selectedFacets = geom->GetSelectedFacets();
+                    if (selectedFacets.empty()) return true;
+                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+                    if (rep == GLDLG_OK) {
+                        if (AskToReset()) {
+                            
+                            GeometryConverter::PolygonsToTriangles(geom,selectedFacets);
+                        }
+                    }
+                    worker.Reload();
+                    UpdateModelParams();
+                    UpdateFacetlistSelected();
+                    UpdateViewers();
+                    return true;
+                }
                 case MENU_VERTEX_SELECT_COPLANAR:
                     char *input;
                     if (geom->IsLoaded()) {
