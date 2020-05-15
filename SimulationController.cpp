@@ -23,7 +23,8 @@ SimulationController::SimulationController(const std::string appName , const std
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(parentPID)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(parentPID)).c_str());
 
-
+    dpHit = nullptr;
+    dpLog = nullptr;
     dpControl = OpenDataport(ctrlDpName, sizeof(SHCONTROL));
     if (!dpControl) {
         printf("Cannot connect to %s\n", ctrlDpName);
@@ -71,7 +72,7 @@ int SimulationController::RunSimulation() {
     printf("Running: stepPerSec = %lf\n", stepsPerSec);
 #endif
 
-    return 0;
+    return !goOn;
 }
 
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
@@ -256,6 +257,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 break;
         }
     }
-
+    SetState(PROCESS_KILLED, "Process terminated peacefully");
     return 0;
 }
