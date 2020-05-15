@@ -87,6 +87,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
         }
         ReleaseDataport(this->dpControl);
     }
+    return 0;
 }
 
 char *SimulationController::GetSimuStatus() {
@@ -251,7 +252,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 break;
 
             default:
-
                 ProcessSleep(WAITTIME);
                 break;
         }

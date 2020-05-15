@@ -36,7 +36,7 @@ extern "C" {
 #include <windows.h>
 
  // Win32 shared memory
- typedef struct {
+    struct Dataport{
 	 char              name[32]; //Unique identifier
 	 char              semaname[32]; //Mutex unique identifier
      HANDLE            sema; //Mutex handle (CreateMutex return value)
@@ -44,7 +44,7 @@ extern "C" {
 	 HANDLE file;			//Physical file handle (if persistent)
 	 size_t size;		//keep track of mapped size
 	 void              *buff; //View handle (MapViewOfFile return value, pointer to data)
- } Dataport;
+ };
 
 #else
 #include <time.h>
