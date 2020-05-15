@@ -19,11 +19,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "LoadStatus.h"
 #include "GLApp/GLToolkit.h"
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -40,11 +40,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 extern GLApplication *theApp;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -101,7 +101,7 @@ LoadStatus::~LoadStatus()
 	//SAFE_DELETE(processList);
 }
 
-void LoadStatus::SMPUpdate() {
+/*void LoadStatus::SMPUpdate() {
 		
 	if ((processList->GetNbRow() - 1) != worker->ontheflyParams.nbProcess) RefreshNbProcess();
 
@@ -143,7 +143,7 @@ void LoadStatus::SMPUpdate() {
 
 			}
 		}
-}
+}*/
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 	switch (message) {

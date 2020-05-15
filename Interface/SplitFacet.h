@@ -43,7 +43,7 @@ public:
   // Construction
   SplitFacet(Geometry *geom,Worker *work);
   ~SplitFacet();
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
   void ClearUndoFacets();
 
   // Implementation

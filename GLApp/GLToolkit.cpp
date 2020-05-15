@@ -14,11 +14,11 @@
 #include <CImg/CImg.h>
 using namespace cimg_library;
 #include <cstring> //strcpy, etc.
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -691,7 +691,7 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
     _glVertex2i(x+width,y);
     glEnd();
 
-    #ifdef _DEBUG
+    #if defined(_DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -740,7 +740,7 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
     _glVertex2i(x,y+height);
     glEnd();
 
-    #ifdef _DEBUG
+    #if defined(_DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -773,7 +773,7 @@ void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &he
   glVertex2i(x,y+height);
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly++;
 #endif
 

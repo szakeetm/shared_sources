@@ -20,7 +20,7 @@ private:
   GLTextField *text;
 
   GLInputBox(const char *message,const char *label,const char *title);
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
   void ManageEvent(SDL_Event *evt); //Catch enter and esc
 };
 

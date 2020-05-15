@@ -1,9 +1,9 @@
 // Copyright (c) 2011 rubicon IT GmbH
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -45,7 +45,7 @@ GLApplication::GLApplication() {
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
   wnd->SetVisible(true); // Make top level shell
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbRestore = 0;
   fPaintTime = 0.0;
   fMoveTime = 0.0;
@@ -128,7 +128,7 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 	if (doFirstInit) OneTimeSceneInit();
 
   GLWindowManager::RestoreDeviceObjects();
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbRestore++;
 #endif
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
@@ -281,7 +281,7 @@ void GLApplication::UpdateStats() {
   //m_fElapsedTime = (fTick - lastFrTick) * 0.001f;
   //lastFrTick = fTick;
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbPoly=0;
   nbLine=0;
 #endif
@@ -350,11 +350,11 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
 }
 
 void GLApplication::Run() {
-	#ifdef MOLFLOW
+	#if defined(MOLFLOW)
 	extern MolFlow *mApp;
 	#endif
 
-	#ifdef SYNRAD
+	#if defined(SYNRAD)
 	extern SynRad*mApp;
 	#endif
   SDL_Event sdlEvent;
@@ -362,7 +362,7 @@ void GLApplication::Run() {
   bool   quit = false;
   int    ok;
   GLenum glError;
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   double t1,t0;
 //#endif
 
@@ -442,12 +442,12 @@ void GLApplication::Run() {
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
        // Call FrameMove
        ok = FrameMove();
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
        t1 = GetTick();
        fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0); //Moving average over 10 FrameMoves
 //#endif

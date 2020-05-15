@@ -22,11 +22,68 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "TruncatedGaussian/rtnorm.hpp"
 
-// Initialise the random generator with the specified seed
-extern void   rseed(unsigned long seed);
-// Returns a uniform distributed double value in the interval ]0,1[
-double rnd();
-double Gaussian(const double &sigma);
-double TruncatedGaussian(gsl_rng *gen, const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
+/* Maximum generated random value */
+#define RK_STATE_LEN 624
+#define RK_MAX 0xFFFFFFFFUL
+/* Magic Mersenne Twister constants */
+#define MERSENNE_N 624
+#define MERSENNE_M 397
+#define MATRIX_A 0x9908b0dfUL
+#define UPPER_MASK 0x80000000UL
+#define LOWER_MASK 0x7fffffffUL
+
+#ifdef WIN
+// Disable "unary minus operator applied to unsigned type, result still unsigned" warning.
+#pragma warning(disable : 4146)
+#endif
+
+unsigned long GenerateSeed();
+
+class MersenneTwister {
+
+/* State of the RNG */
+    struct rk_state
+    {
+        unsigned long key[RK_STATE_LEN];
+        int pos;
+    };
+    unsigned long seed;
+
+public:
+    MersenneTwister();
+    void   SetSeed(unsigned long seed); // Initialise the random generator with the specified seed
+    double rnd(); // Returns a uniform distributed double value in the interval ]0,1[
+
+    double Gaussian(const double &sigma);
+
+    unsigned long GetSeed();
+
+private:
+    rk_state localState;
+
+    /* Slightly optimised reference implementation of the Mersenne Twister */
+    unsigned long rk_random();
+
+    double rk_double();
+};
+
+class TruncatedGaussian {
+public:
+    TruncatedGaussian(){
+        //--- GSL random init ---
+        gsl_rng_env_setup();                          // Read variable environnement
+        const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
+        this->gen=gsl_rng_alloc (type);;
+        gsl_rng_set(this->gen,GenerateSeed());
+    }
+    ~TruncatedGaussian(){
+        gsl_rng_free(this->gen);
+    };
+
+    double GetGaussian(const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
+private:
+    gsl_rng *gen;
+
+};
 
 #endif /* _RANDOMH_ */

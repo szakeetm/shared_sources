@@ -18,21 +18,20 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-#include <vector>
 #include "Vector.h"
-#include "GLApp/GLTypes.h"
+#include <vector>
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 
 #include <array>
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolflowTypes.h" //Reflection, Anglemapparams
 #include "../src/MolflowDisplayTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynradTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
 
@@ -49,7 +48,7 @@ public:
 	bool recordDistance = false;
 	double distanceMax=10.0;
 	double distanceBinsize=0.001;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	bool recordTime = false;
 	double timeMax=0.1;
 	double timeBinsize=1E-5;
@@ -65,7 +64,7 @@ public:
 			CEREAL_NVP(recordDistance),
 			CEREAL_NVP(distanceMax),
 			CEREAL_NVP(distanceBinsize)
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			, CEREAL_NVP(recordTime)
 			, CEREAL_NVP(timeMax)
 			, CEREAL_NVP(timeBinsize)
@@ -79,7 +78,7 @@ public:
 	size_t GetDistanceHistogramSize() const {
 		return (size_t)(distanceMax / distanceBinsize) + 1; //+1: overrun
 	}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	size_t GetTimeHistogramSize() const {
 		return (size_t)(timeMax / timeBinsize) + 1; //+1: overrun
 	}
@@ -88,7 +87,7 @@ public:
 		size_t size = 0;
 		if (recordBounce) size += sizeof(double) * GetBounceHistogramSize();
 		if (recordDistance) size += sizeof(double) * GetDistanceHistogramSize();
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		if (recordTime) size += sizeof(double) * GetTimeHistogramSize();
 #endif
 		return size;
@@ -102,7 +101,7 @@ public:
 		if (!recordDistance) return 0;
 		else return sizeof(double)*GetDistanceHistogramSize();
 	}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	size_t GetTimeDataSize() const {
 		if (!recordTime) return 0;
 		else return sizeof(double)*GetTimeHistogramSize();
@@ -122,7 +121,7 @@ public:
 	size_t    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
 	int	 teleportDest;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
 
-	bool   countAbs;       // Count absoprtion (MC texture)
+	bool   countAbs;       // Count absorption (MC texture)
 	bool   countRefl;      // Count reflection (MC texture)
 	bool   countTrans;     // Count transparent (MC texture)
 	bool   countDirection;
@@ -162,7 +161,7 @@ public:
 
 	size_t   hitOffset;      // Hit address offset for this facet
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
 	double temperature;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
 	double outgassing;           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
@@ -203,7 +202,7 @@ public:
 	AnglemapParams anglemapParams;//Incident angle map
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	int    doScattering;   // Do rough surface scattering
 	double rmsRoughness;   // RMS height roughness, in meters
 	double autoCorrLength; // Autocorrelation length, in meters
@@ -265,7 +264,7 @@ public:
 
 			CEREAL_NVP(hitOffset)      // Hit address offset for this facet
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 								 // Molflow-specific facet parameters
 			, CEREAL_NVP(temperature),    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
 			CEREAL_NVP(outgassing),           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
@@ -308,7 +307,7 @@ public:
 #endif
 			
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			,
 			CEREAL_NVP(doScattering),   // Do rough surface scattering
 			CEREAL_NVP(rmsRoughness),   // RMS height roughness, in meters
@@ -320,10 +319,9 @@ public:
 	}
 };
 
-class WorkerParams { //Plain old data
-public:
+struct WorkerParams { //Plain old data
 	HistogramParams globalHistogramParams;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
 	double finalOutgassingRate; //Number of outgassing molecules / second at latest_moment (constant flow)
@@ -340,7 +338,7 @@ public:
 	Vector3d motionVector2; //rotation vector or velocity vector
 	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	size_t        nbRegion;  //number of magnetic regions
 	size_t        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
 	bool       newReflectionModel;
@@ -348,7 +346,7 @@ public:
 
 	template <class Archive> void serialize(Archive & archive) {
 		archive(
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			CEREAL_NVP(globalHistogramParams)
 
 
@@ -368,7 +366,7 @@ public:
 			, CEREAL_NVP(sMode)
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			CEREAL_NVP(nbRegion)  //number of magnetic regions
 			, CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
 			, CEREAL_NVP(newReflectionModel)
@@ -379,6 +377,7 @@ public:
 
 class GeomProperties {  //Formerly SHGEOM
 public:
+	GeomProperties () : nbFacet(0),nbVertex(0),nbSuper(0),name(""){};
 	size_t     nbFacet;   // Number of facets (total)
 	size_t     nbVertex;  // Number of 3D vertices
 	size_t     nbSuper;   // Number of superstructures
@@ -396,7 +395,7 @@ public:
 
 class OntheflySimulationParams {
 public:
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	int      generation_mode; // Fluxwise/powerwise
 #endif
 	bool	 lowFluxMode;
@@ -410,7 +409,7 @@ public:
 
 	template<class Archive> void serialize(Archive& archive) {
 		archive(
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			CEREAL_NVP(generation_mode),
 #endif
 			CEREAL_NVP(lowFluxMode),
@@ -429,7 +428,7 @@ class HIT {
 public:
 	Vector3d pos;
 	int    type;
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	double dF;
 	double dP;
 #endif
@@ -439,7 +438,7 @@ public:
 		archive(
 			CEREAL_NVP(pos),
 			CEREAL_NVP(type)
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			,CEREAL_NVP(dF),
 			CEREAL_NVP(dP)
 #endif
@@ -488,7 +487,9 @@ public:
 class FacetHistogramBuffer { //raw data containing histogram result
 public:
 	void Resize(const HistogramParams& params);
-	FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
+    void Reset();
+
+    FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
 	std::vector<double> distanceHistogram;
 	std::vector<double> timeHistogram;
@@ -503,7 +504,7 @@ public:
 	}
 };
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 typedef union {
 
 	struct {
@@ -541,7 +542,7 @@ typedef union {
 } FacetHitBuffer;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 class FacetHitBuffer {
 public:
     FacetHitBuffer();
@@ -549,7 +550,6 @@ public:
 
     struct {
         // Counts
-
         size_t nbMCHit;               // Number of hits
         size_t nbDesorbed;          // Number of desorbed molec
         double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
@@ -588,13 +588,13 @@ public:
 	size_t  nbLeakTotal;         // Total leaks
 	
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
 	double distTraveled_total;
 	double distTraveledTotal_fullHitsOnly;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	TextureCell hitMin, hitMax;
 	double distTraveledTotal;
 #endif
@@ -613,13 +613,13 @@ public:
 			CEREAL_NVP(nbLeakTotal),         // Total leaks
 			CEREAL_NVP(leakCache)      // Leak history
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			,CEREAL_NVP(texture_limits), //Min-max on texture
 			CEREAL_NVP(distTraveled_total),
 			CEREAL_NVP(distTraveledTotal_fullHitsOnly)
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			,CEREAL_NVP(hitMin),
 				CEREAL_NVP(hitMax),
 				CEREAL_NVP(distTraveledTotal)
@@ -633,10 +633,10 @@ public:
 	Vector2d facetHitPosition;
 	double hitTheta, hitPhi;
 	double oriRatio;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	double time, particleDecayMoment, velocity;
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	double energy, dF, dP;
 #endif
 	template<class Archive>
@@ -646,82 +646,12 @@ public:
 			CEREAL_NVP(facetHitPosition),
 			CEREAL_NVP(hitTheta), CEREAL_NVP(hitPhi),
 			CEREAL_NVP(oriRatio)
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			,CEREAL_NVP(time), CEREAL_NVP(particleDecayMoment), CEREAL_NVP(velocity)
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 			,CEREAL_NVP(energy), CEREAL_NVP(dF), CEREAL_NVP(dP)
 #endif
-		);
-	}
-};
-
-
-// Master control shared memory block  (name: MFLWCTRL[masterPID])
-// 
-
-#define PROCESS_STARTING 0   // Loading state
-#define PROCESS_RUN      1   // Running state
-#define PROCESS_READY    2   // Waiting state
-#define PROCESS_KILLED   3   // Process killed
-#define PROCESS_ERROR    4   // Process in error
-#define PROCESS_DONE     5   // Simulation ended
-#define PROCESS_RUNAC    6   // Computing AC matrix
-
-#define COMMAND_NONE     10  // No change
-#define COMMAND_LOAD     11  // Load geometry
-#define COMMAND_START    12  // Start simu
-#define COMMAND_PAUSE    13  // Pause simu
-#define COMMAND_RESET    14  // Reset simu
-#define COMMAND_EXIT     15  // Exit
-#define COMMAND_CLOSE    16  // Release handles
-#define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
-#define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
-#define COMMAND_LOADAC   19  // Load mesh and compute AC matrix
-#define COMMAND_STEPAC   20  // Perform single iteration step (AC)
-
-static const char *prStates[] = {
-
-	"Not started",
-	"Running",
-	"Waiting",
-	"Killed",
-	"Error",
-	"Done",
-	"Computing AC matrix", //Molflow only
-	"",
-	"",
-	"",
-	"No command",
-	"Loading",
-	"Starting",
-	"Stopping",
-	"Resetting",
-	"Exiting",
-	"Closing",
-	"Update params",
-	"Release dpLog",
-	"Load AC matrix", //Molflow only
-	"AC iteration step" //Molflow only
-};
-
-#define MAX_PROCESS (size_t)32    // Maximum number of process
-
-class SHCONTROL {
-public:
-	// Process control
-	size_t		states[MAX_PROCESS];        // Process states/commands
-	size_t    cmdParam[MAX_PROCESS];      // Command param 1
-	size_t		cmdParam2[MAX_PROCESS];     // Command param 2
-	char		statusStr[MAX_PROCESS][128]; // Status message
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(
-			CEREAL_NVP(states),
-			CEREAL_NVP(cmdParam),
-			CEREAL_NVP(cmdParam2),
-			CEREAL_NVP(statusStr)
 		);
 	}
 };

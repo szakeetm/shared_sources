@@ -63,7 +63,7 @@ extern "C" {
 };
 #endif
  // Linux shared memory
- typedef struct {
+struct Dataport {
     char              name[32]; //Unique identifier
     char              semaname[32]; //Mutex unique identifier
     int            sema; //Mutex handle (CreateMutex return value)
@@ -71,9 +71,31 @@ extern "C" {
     int file;			//Physical file handle (if persistent)
     size_t size;		//keep track of mapped size
     void              *buff; //View handle (MapViewOfFile return value, pointer to data)
- } Dataport;
+ };
 
 #endif
+
+#define MAX_PROCESS (size_t)32    // Maximum number of process
+
+class SHCONTROL {
+public:
+    // Process control
+    size_t		states[MAX_PROCESS];        // Process states/commands
+    size_t    cmdParam[MAX_PROCESS];      // Command param 1
+    size_t    cmdParam2[MAX_PROCESS];      // Command param 1
+    size_t		oldStates[MAX_PROCESS];     // Command param 2
+    char		statusStr[MAX_PROCESS][128]; // Status message
+    /*template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(
+                CEREAL_NVP(states),
+                CEREAL_NVP(cmdParam),
+                CEREAL_NVP(oldStates),
+                CEREAL_NVP(statusStr)
+        );
+    }*/
+};
 
 typedef struct {
 

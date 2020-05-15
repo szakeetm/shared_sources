@@ -19,7 +19,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Vector.h"
 #include "GLApp/MathTools.h" //PI
-#include "Random.h" //RandomPerpendicularVector
 #include <math.h> //sqrt
 
 Vector2d::Vector2d() {}
@@ -212,7 +211,11 @@ double GetOrientedAngle(const Vector2d& v1,const Vector2d& v2) {
 }
 
 Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
-	Vector3d randomVector=Vector3d(rnd(), rnd(), rnd());
+	Vector3d randomVector=Vector3d(
+            ((double) rand() / (RAND_MAX)) + 1,
+            ((double) rand() / (RAND_MAX)) + 1,
+            ((double) rand() / (RAND_MAX)) + 1
+    );
 	Vector3d perpendicularVector=CrossProduct(randomVector,v);
 	return length*perpendicularVector.Normalized();
 }

@@ -30,19 +30,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Geometry_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -230,13 +230,13 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				geom->AlignFacets(memorizedSelection,sourceFacetId, destFacetId,anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,
 dirDestVertexId,
 					invertNormal->GetState(),invertDir1->GetState(),invertDir2->GetState(),src==copyButton,work);
-				#ifdef MOLFLOW
+				#if defined(MOLFLOW)
 				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
 				try { work->Reload(); } catch(Error &e) {
 
-					GLMessageBox::Display(e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
+					GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
 				}
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	

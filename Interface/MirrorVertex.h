@@ -43,7 +43,7 @@ public:
   // Construction
   MirrorVertex(Geometry *geom,Worker *work);
   void ClearUndoVertices();
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
 private:

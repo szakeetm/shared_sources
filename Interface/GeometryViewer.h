@@ -133,7 +133,7 @@ public:
   void Paint();
   void ManageEvent(SDL_Event *evt);
   void SetBounds(int x,int y,int width,int height);
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
   void SetFocus(bool focus);
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
@@ -227,11 +227,11 @@ private:
   GLLabel		*tabLabel;
   GLLabel		*nonPlanarLabel;
 
-  #ifdef MOLFLOW
+  #if defined(MOLFLOW)
   GLOverlayLabel *timeLabel;
   #endif
   
-  #ifdef SYNRAD
+  #if defined(SYNRAD)
   GLButton      *selTrajBtn;
   #endif
   

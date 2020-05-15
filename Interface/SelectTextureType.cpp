@@ -30,19 +30,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Geometry_shared.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -179,7 +179,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 			bool match = f->sh.isTextured;
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatio);
 			if (minmaxRatio) match = match && (minRatio <= f->tRatio) && (f->tRatio <= maxRatio);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			if (desorbToggle->GetState() != 2) match = match && f->sh.countDes;
 #endif
 			if (absorbToggle->GetState() != 2) match = match && (absorbToggle->GetState()==1) == f->sh.countAbs;

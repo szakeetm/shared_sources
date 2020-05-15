@@ -50,7 +50,7 @@ public:
   // Display a modal dialog and return the code of the pressed button
   SelectTextureType(Worker *w);
   int  rCode;
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 private:
   Geometry     *geom;
   Worker	   *work;

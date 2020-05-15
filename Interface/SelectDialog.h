@@ -34,7 +34,7 @@ public:
   // Display a modal dialog and return the code of the pressed button
   SelectDialog(Geometry *g);
   int  rCode;
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 private:
  
 	GLButton * selButton, *addButton, *remButton;
