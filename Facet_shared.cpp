@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 #include "Facet_shared.h"
 #include "Polygon.h"
@@ -112,7 +112,7 @@ Facet::Facet(size_t nbIndex) {
 	selected = false;
 
 #ifdef MOLFLOW
-	angleMapCache = NULL;
+	
 
 	sh.temperature = 293.15; // 20degC
 	sh.outgassing = 0.0;           // 1 unit*l/s //will be outgasssing
@@ -139,10 +139,10 @@ Facet::Facet(size_t nbIndex) {
 	sh.isMoving = false;
 
 	hasOutgassingFile = false;
-	outgassingMap = NULL;
+	//outgassingMap = NULL;
 
 	sh.anglemapParams.record = false;
-	sh.anglemapParams.hasRecorded = false;
+
 	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
 	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
 
@@ -179,8 +179,8 @@ Facet::~Facet() {
 		  SAFE_FREE(meshvector[i].points);
 	  SAFE_FREE(meshvector);
 #ifdef MOLFLOW
-	  SAFE_FREE(outgassingMap);
-	  SAFE_FREE(angleMapCache);
+	  //SAFE_FREE(outgassingMap);
+	  //SAFE_FREE(angleMapCache);
 #endif
 }
 

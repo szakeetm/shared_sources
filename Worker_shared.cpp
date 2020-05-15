@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include <stdlib.h>
 #include "GLApp/GLUnitDialog.h"
-#include "LoadStatus.h"
+#include "Interface/LoadStatus.h"
 #ifdef MOLFLOW
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
@@ -43,8 +43,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
-#include "SynradGeometry.h"
+#include "../src/SynRad.h"
+#include "../src/SynradGeometry.h"
 #endif
 
 #include "File.h" //File utils (Get extension, etc)
@@ -291,10 +291,10 @@ const char *Worker::GetErrorDetails() {
 		if (pID[i] != 0) {
 			size_t st = master->states[i];
 			if (st == PROCESS_ERROR) {
-				sprintf(tmp, "[#%zd] Process [PID %d] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
+				sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, pID[i], prStates[st], master->statusStr[i]);
 			}
 			else {
-				sprintf(tmp, "[#%zd] Process [PID %d] %s\n", i, pID[i], prStates[st]);
+				sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, pID[i], prStates[st]);
 			}
 		}
 		else {
@@ -318,7 +318,6 @@ bool Worker::Wait(size_t readyState, LoadStatus *statusWindow) {
 
 	// Wait for completion
 	while (!finished && !abortRequested) {
-
 		finished = true;
 		AccessDataport(dpControl);
 		SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
@@ -392,7 +391,9 @@ void Worker::ResetStatsAndHits(float appTime) {
 
 	try {
 		ResetWorkerStats();
-		if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
+		simManager.ForwardCommand(COMMAND_RESET);
+		if(simManager.WaitForProcStatus(PROCESS_READY))
+		//if (!ExecuteAndWait(COMMAND_RESET, PROCESS_READY))
 			ThrowSubProcError();
 		ClearHits(false);
 		Update(appTime);
@@ -435,55 +436,23 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 	char cmdLine[512];
 
 	// Kill all sub process
+	//simManager.KillAllSimUnits();
 	KillAll(keepDpHit);
 
+    // Restart Control Dataport if necessary
+    if (!keepDpHit) CLOSEDP(dpHit);
 	// Create new control dataport
-	if( !dpControl ) 
-		dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
-	if( !dpControl )
-		throw Error("Failed to create 'control' dataport");
-	AccessDataport(dpControl);
-	memset(dpControl->buff,0,sizeof(SHCONTROL));
-	ReleaseDataport(dpControl);
+	simManager.CreateControlDP();
 
+    simManager.useCPU = true;
+	simManager.nbCores = n;
+	if(simManager.InitSimUnits()){
+        throw Error("Starting subprocesses failed!");
+	}
 	// Launch n subprocess
 	for(size_t i=0;i<n;i++) {
-#ifdef MOLFLOW
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        //if(i==0) sprintf(cmdLine,"C:\\Users\\pbahr\\Downloads\\Tools\\bin64\\drmemory.exe -dr_ops \"-msgbox_mask 15\" -- molflowSub.exe %d %zd",pid,i);
-        //else
-        sprintf(cmdLine,"molflowSub.exe %d %zd",pid,i);
-#else
-        char **argumente;
-        argumente = new char*[2];
-        for(int i=0;i<2;i++)
-            argumente[i] = new char[10];
-        sprintf(cmdLine,"./molflowSub");
-        sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%u",i);
-        //sprintf(argumente[2],"%s",'\0');
-        //argumente[2] = NULL;
-#endif
-#elif defined(SYNRAD)
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        sprintf(cmdLine,"synradSub.exe %d %zd",pid,i);
-#else
-        char **argumente;
-        argumente = new char*[2];
-        for(int i=0;i<2;i++)
-            argumente[i] = new char[10];
-        sprintf(cmdLine,"./synradSub");
-        sprintf(argumente[0],"%d",pid);
-        sprintf(argumente[1],"%z",i);
-#endif
-#endif
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, nullptr);
-#else
-        pID[i] = StartProc(cmdLine, STARTPROC_NORMAL, static_cast<char **>(argumente));
-
-#endif
+        pID[i] = simManager.simHandles.at(i).first;
 		// Wait a bit
         ProcessSleep(25);
 
@@ -495,9 +464,8 @@ void Worker::SetProcNumber(size_t n, bool keepDpHit) {
 
 	ontheflyParams.nbProcess = n;
 
-	if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
-	bool result = Wait(PROCESS_READY, mApp->loadStatus);
-	if (!result)
+	//if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
+	if(simManager.WaitForProcStatus(PROCESS_READY))
 		ThrowSubProcError("Sub process(es) starting failure");
 }
 
@@ -623,17 +591,8 @@ void Worker::Update(float appTime) {
 				memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
 
 				if (f->sh.anglemapParams.record) {
-					if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
-						//Initialize angle map
-						f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
-						if (!f->angleMapCache) {
-							std::stringstream tmp;
-							tmp << "Not enough memory for incident angle map on facet " << i + 1;
-							throw Error(tmp.str().c_str());
-						}
-						f->sh.anglemapParams.hasRecorded = true;
-						if (f->selected) needsAngleMapStatusRefresh = true;
-					}
+                    if (f->selected && f->angleMapCache.empty()) needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
+
 					//Retrieve angle map from hits dp
 					BYTE* angleMapAddress = buffer
 					+ f->sh.hitOffset
@@ -641,8 +600,8 @@ void Worker::Update(float appTime) {
 					+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 					+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 					+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-                    memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
-
+                    f->angleMapCache.resize(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes)); //Will be filled with values
+                    memcpy(f->angleMapCache.data(), angleMapAddress, sizeof(size_t)*(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes)));
                 }
 				
 #endif
@@ -660,7 +619,8 @@ void Worker::Update(float appTime) {
 						+ (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
 						+ (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
 						+ (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0)
-						+ f->sh.anglemapParams.GetRecordedDataSize();
+						//+ f->sh.anglemapParams.GetRecordedDataSize();
+					    + sizeof(size_t)*(f->sh.anglemapParams.phiWidth * (f->sh.anglemapParams.thetaLowerRes + f->sh.anglemapParams.thetaHigherRes));
 					histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
 
 					memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress, f->sh.facetHistogramParams.GetBouncesDataSize());
@@ -670,15 +630,12 @@ void Worker::Update(float appTime) {
 
             }
 			try {
+
+                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
 #ifdef MOLFLOW
-                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
+        , wp.sMode // not necessary for Synrad
 #endif
-#ifdef SYNRAD
-                if (mApp->needsTexture || mApp->needsDirection) geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection);
-#endif
-
-
-
+                        );
             }
 			catch (Error &e) {
 				GLMessageBox::Display(e.GetMsg(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
@@ -849,32 +806,51 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 */
 FileReader* Worker::ExtractFrom7zAndOpen(const std::string & fileName, const std::string & geomName)
 {
-	std::ostringstream cmd;
-	std::string sevenZipName = "7za";
+    std::ostringstream cmd;
+    std::string sevenZipName;
 
-#ifdef _WIN32
-	//Necessary push/pop trick to support UNC (network) paths in Windows command-line
-	auto CWD = FileUtils::get_working_path();
-	cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
-	cmd << "7za.exe x -t7z -aoa \"" << fileName << "\" -otmp";
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    //Necessary push/pop trick to support UNC (network) paths in Windows command-line
+    auto CWD = FileUtils::get_working_path();
+    cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
+#endif
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    sevenZipName += "7za.exe";
+#else //Linux, MacOS
+    if (FileUtils::Exist("./7za")) {
+		sevenZipName = "./7za"; //use 7za binary shipped with Molflow
+	}
+	else if (FileUtils::Exist("/usr/bin/7za")) {
+		sevenZipName = "/usr/bin/7za"; //use p7zip installed system-wide
+	}
+	else if (FileUtils::Exist("/usr/local/bin/7za")) { //HomeBrew installation
+		sevenZipName = "/usr/local/bin/7za"; //use p7zip installed system-wide
+	}
+	else {
+		sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+	}
+#endif
+    if (!FileUtils::Exist(sevenZipName)) {
+        throw Error("7-zip compressor not found, can't extract file.");
+    }
+    cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    cmd << "&&popd\"";
+#endif
+    system(cmd.str().c_str());
+
+    std::string toOpen, prefix;
+    std::string shortFileName = FileUtils::GetFilename(fileName);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    prefix = CWD + "\\tmp\\";
 #else
-	cmd << "./7za x -t7z -aoa \"" << fileName << "\" -otmp";
+    prefix = "tmp/";
 #endif
+    toOpen = prefix + geomName;
+    if (!FileUtils::Exist(toOpen))
+        toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
 
-#ifdef _WIN32
-	cmd << "&&popd\"";
-#endif
-	system(cmd.str().c_str());
-
-	std::string toOpen, prefix;
-	std::string shortFileName = FileUtils::GetFilename(fileName);
-#ifdef _WIN32
-	prefix = CWD + "\\tmp\\";
-#else
-	prefix = "tmp/";
-#endif
-	toOpen = prefix + geomName;
-	if (!FileUtils::Exist(toOpen)) toOpen = prefix + (shortFileName).substr(0, shortFileName.length() - 2); //Inside the zip, try original filename with extension changed from geo7z to geo
-
-	return new FileReader(toOpen); //decompressed file opened
+    return new FileReader(toOpen); //decompressed file opened
 }

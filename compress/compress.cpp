@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "File.h"
 #include <cstring>
 #define NOMINMAX
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <Windows.h> //Showwindow
 #endif
 
@@ -45,7 +45,7 @@ int main(int argc,char* argv[]) {
 	std::cout << "\n\n";
 	if (argc < 3 || argc>4 || (argc == 4 && argv[3][0] != '@')) {
 		std::cout<<"Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\nType any letter and press ENTER to quit\n";
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );
 #endif
 		std::cin>>key;
@@ -61,11 +61,20 @@ int main(int argc,char* argv[]) {
 	if (argc == 4) std::cout << "Additional file list: " << argv[3] << "\n";
 
 	fileNameWith7z = fileName + "7z";
-	std::string sevenZipName = "7za";
-#ifdef _WIN32
-	sevenZipName += ".exe";
-#else
-	sevenZipName = "./" + sevenZipName;
+	std::string sevenZipName;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+	sevenZipName += "7za.exe";
+#else //Linux, MacOS
+	if (FileUtils::Exist("./7za")) {
+		sevenZipName = "./7za"; //use 7za binary shipped with Molflow
+	}
+	else if (FileUtils::Exist("/usr/bin/7za")) {
+		sevenZipName = "/usr/bin/7za"; //use p7zip installed system-wide
+	}
+	else
+	{
+		sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+	}
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
 		printf("%s",("\n" + sevenZipName + " not found. Cannot compress.\n").c_str());
@@ -82,7 +91,7 @@ int main(int argc,char* argv[]) {
 	std::filesystem::remove(fileNameWith7z);
 	command = "";
 
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	//Trick so Windows command line supports UNC (network) paths
 	std::string cwd = FileUtils::get_working_path();
 	command += "cmd /C \"pushd \"" + cwd + "\"&&";
@@ -104,12 +113,12 @@ int main(int argc,char* argv[]) {
 		}
 		*/
 	}
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	command+="&&popd\"";
 #endif
 
 	std::cout << "\nCommand:\n" << command << "\n\nStarting compression...";
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	std::cout << "\nYou can continue using Molflow/Synrad while compressing.\n"; //On Windows, compress.exe is launched as a background process
 #endif
 	result=exec(command);
@@ -129,7 +138,7 @@ int main(int argc,char* argv[]) {
 	}
 
 	//Handle errors:
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
@@ -145,7 +154,7 @@ std::string exec(std::string command) {
 
 std::string exec(const char* cmd) { //Execute a command and return what it prints to the command line / terinal
     FILE* pipe = 
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 		_popen
 #else
 		popen
@@ -160,7 +169,7 @@ std::string exec(const char* cmd) { //Execute a command and return what it print
 		        printf("%s",buffer);
     }
 	result=result+'0';
-#ifdef _WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	_pclose
 #else
 	pclose

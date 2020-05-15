@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <windows.h>
 #include <stdio.h>
-
+#include <process.h>
 void PrintLastErrorText(LPTSTR suff);
 
 #else
@@ -39,6 +39,7 @@ void PrintLastErrorText(LPTSTR suff);
 #include <sys/un.h>
 #include <time.h>
 #include <algorithm> // std::min
+#include <sys/time.h>
 
 void PrintLastErrorText( const char* errorMsg );
 int build_key (char *name)
@@ -66,7 +67,7 @@ int build_key (char *name)
 }
 #endif
 
-#if __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 // according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
 #include <signal.h>
 #include <sys/ipc.h>
@@ -81,7 +82,7 @@ void alarm_handler(int sig)
 
 // create named semaphore related to dp->semaname
 // ret -1 on fail
-int CreateSemaphore(Dataport* dp){
+int CreateSemaphore(Dataport *dp) {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     SetLastError(ERROR_SUCCESS);
     dp->sema = CreateMutex(NULL, false, dp->semaname);
@@ -132,12 +133,12 @@ int CreateSemaphore(Dataport* dp){
 
 #endif
 
-  return 0;
+    return 0;
 }
 
 // get access to semaphore related to dp->semaname
 // ret -1 on fail
-int LinkSemaphore(Dataport* dp){
+int LinkSemaphore(Dataport *dp) {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     //SetLastError (ERROR_SUCCESS);
     //dp->sema = CreateMutex (NULL, false, dp->semaname);
@@ -178,7 +179,7 @@ int LinkSemaphore(Dataport* dp){
         return -1;
     }
 #endif
-return 0;
+    return 0;
 }
 
 // CreateDataport: Create a block of shared memory
@@ -249,13 +250,13 @@ Dataport *CreateDataport(char *name, size_t size) {
         return NULL;
     }
 
-#if __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 // Increase shared memory size from 0 to size
     struct stat mapstat;
-if (-1 != fstat(dp->shmFd, &mapstat) && mapstat.st_size == 0) {
-    ftruncate(dp->shmFd, size);
-}
-else
+    if (-1 != fstat(dp->shmFd, &mapstat) && mapstat.st_size == 0) {
+        ftruncate(dp->shmFd, size);
+    }
+    else
     return dp;
     if (status != 0) {
         PrintLastErrorText("CreateDataport(): ftruncate() failed");
@@ -274,7 +275,7 @@ else
 
 #endif
     /* ------------------- Create the semaphore ------------------- */
-    if(CreateSemaphore(dp) == -1){
+    if (CreateSemaphore(dp) == -1) {
         return NULL;
     }
 
@@ -306,6 +307,7 @@ else
 #endif
     //memset(dp->buff, 0, size);//Debug
 
+    dp->size = size;
     return (dp);
 }
 
@@ -408,7 +410,7 @@ bool AccessDataport(Dataport *dp) {
         return true;
     else
         return false;
-#elif __APPLE__
+#elif defined(__MACOSX__) || defined(__APPLE__)
     struct sembuf   semBuf;
     semBuf.sem_num = 0;
     semBuf.sem_op = -1;
@@ -465,7 +467,7 @@ bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
         return true;
     else
         return false;
-#elif defined(__APPLE__)
+#elif defined(__MACOSX__) || defined(__APPLE__)
     struct sembuf   semBuf;
     semBuf.sem_num = 0;
     semBuf.sem_op = -1;
@@ -537,10 +539,12 @@ bool ReleaseDataport(Dataport *dp) {
 #endif
     return false;
 }
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+
 bool CloseDataport(Dataport *dp) {
 #else
-bool CloseDataport(Dataport *dp, bool unlinkShm) {
+    bool CloseDataport(Dataport *dp, bool unlinkShm) {
 #endif
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     UnmapViewOfFile(dp->buff);
@@ -569,7 +573,66 @@ bool CloseDataport(Dataport *dp, bool unlinkShm) {
 #endif
 }
 
+// Timing stuff
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+bool usePerfCounter;         // Performance counter usage
+LARGE_INTEGER perfTickStart; // First tick
+double perfTicksPerSec;      // Performance counter (number of tick per second)
+#endif
+DWORD tickStart;
+
+void InitTick(){
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+		LARGE_INTEGER qwTicksPerSec;
+		usePerfCounter = QueryPerformanceFrequency(&qwTicksPerSec);
+		if (usePerfCounter) {
+			QueryPerformanceCounter(&perfTickStart);
+			perfTicksPerSec = (double)qwTicksPerSec.QuadPart;
+		}
+		tickStart = GetTickCount();
+#else
+        tickStart = (DWORD)time(NULL);
+#endif
+};
+double GetTick() {
+
+    // Number of sec since the application startup
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    if (usePerfCounter) {
+		LARGE_INTEGER t, dt;
+		QueryPerformanceCounter(&t);
+		dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
+		return (double)(dt.QuadPart) / perfTicksPerSec;
+	}
+	else {
+		return (double)((GetTickCount() - tickStart) / 1000.0);
+	}
+
+#else
+    if (tickStart < 0)
+        tickStart = time(NULL);
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((double)(tv.tv_sec - tickStart)*1000.0 + (double)tv.tv_usec / 1000.0);
+#endif
+}
+
+DWORD GetSeed() {
+    int processId;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    processId = _getpid();
+#else
+    processId = ::getpid();
+#endif //  WIN
+
+    return (DWORD)((int)(GetTick()*1000.0)*processId);
+}
+
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+
 void PrintLastErrorText(LPTSTR suff) {
     DWORD dwRet;
     LPTSTR lpszTemp = NULL;
@@ -582,7 +645,7 @@ void PrintLastErrorText(LPTSTR suff) {
                           0,
                           NULL);
 
-    printf(TEXT("%s:%s (0x%x)"), suff, lpszTemp, GetLastError());
+    printf(TEXT("%s:%s (%d [0x%x])"), suff, lpszTemp, GetLastError(), GetLastError());
 
     if (lpszTemp)
         LocalFree((HLOCAL) lpszTemp);
@@ -592,10 +655,11 @@ void PrintLastErrorText(LPTSTR suff) {
 #else
 void PrintLastErrorText( const char* errorMsg )
 {
-    fprintf(stderr,"%s:%s (%d - 0x%x)\n", errorMsg, strerror(errno), errno);
+    fprintf(stderr,"%s:%s (%d [0x%x])\n", errorMsg, strerror(errno), errno, errno);
 
 }
 #endif
+
 
 #ifdef LINUXOLDCODE
 

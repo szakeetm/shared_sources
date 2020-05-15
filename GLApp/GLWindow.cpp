@@ -13,7 +13,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 extern GLApplication *theApp;
@@ -214,7 +214,7 @@ void GLWindow::GetBounds(int *x,int *y,int *w,int *h) {
 
 bool GLWindow::IsCtrlDown() {
 	SDL_Keymod mod = SDL_GetModState();
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 	return mod & KMOD_GUI; //Mac command key
 #else
 	return mod & KMOD_CTRL;

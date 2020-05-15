@@ -23,13 +23,15 @@ set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
+set(HEADER_DIR_5 ./Interface)
+
 set(COPY_DIR ../copy_to_build/)
 
 IF (WIN32)
     # set stuff for windows
 
-    set(HEADER_DIR_5 ../include/windows_only)
-    set(HEADER_DIR_6 ../include/windows_only/png)
+    set(HEADER_DIR_6 ../include/windows_only)
+    set(HEADER_DIR_7 ../include/windows_only/png)
 
     set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
     #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
@@ -90,52 +92,54 @@ endif()
 ############################################################
 
 set(SRC_FILES
+        Interface/AddVertex.cpp
+        Interface/AlignFacet.cpp
+        Interface/AppUpdater.cpp
+        Interface/BuildIntersection.cpp
+        Interface/CollapseSettings.cpp
+        Interface/CreateShape.cpp
+        Interface/ExtrudeFacet.cpp
+        Interface/FacetCoordinates.cpp
+        Interface/FormulaEditor.cpp
+        Interface/GeometryRender_shared.cpp
+        Interface/GeometryViewer_shared.cpp
+        Interface/HistogramPlotter.cpp
+        Interface/HistogramSettings.cpp
+        Interface/Interface.cpp
+        Interface/LoadStatus.cpp
+        Interface/MirrorFacet.cpp
+        Interface/MirrorVertex.cpp
+        Interface/MoveFacet.cpp
+        Interface/MoveVertex.cpp
+        Interface/ParticleLogger.cpp
+        Interface/RecoveryDialog.cpp
+        Interface/RotateFacet.cpp
+        Interface/RotateVertex.cpp
+        Interface/ScaleFacet.cpp
+        Interface/ScaleVertex.cpp
+        Interface/SelectDialog.cpp
+        Interface/SelectTextureType.cpp
+        Interface/SmartSelection.cpp
+        Interface/SplitFacet.cpp
+        Interface/VertexCoordinates.cpp
+
         ASELoader.cpp
-        AddVertex.cpp
-        AlignFacet.cpp
-        AppUpdater.cpp
-        BuildIntersection.cpp
-        CollapseSettings.cpp
-        CreateShape.cpp
         Distributions.cpp
-        ExtrudeFacet.cpp
-        FacetCoordinates.cpp
         Facet_shared.cpp
         File.cpp
-        FormulaEditor.cpp
-        GeometryRender_shared.cpp
-        GeometryViewer_shared.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
-        HistogramPlotter.cpp
-        HistogramSettings.cpp
-        Interface.cpp
-        LoadStatus.cpp
-        MirrorFacet.cpp
-        MirrorVertex.cpp
-        MoveFacet.cpp
-        MoveVertex.cpp
-        ParticleLogger.cpp
         Polygon.cpp
         Process.cpp
         Random.cpp
-        RecoveryDialog.cpp
-        RotateFacet.cpp
-        RotateVertex.cpp
-        ScaleFacet.cpp
-        ScaleVertex.cpp
-        SelectDialog.cpp
-        SelectTextureType.cpp
         ShMemory.cpp
-        SmartSelection.cpp
-        SplitFacet.cpp
         Vector.cpp
-        VertexCoordinates.cpp
         Web.cpp
         Worker_shared.cpp
         GeometryConverter.cpp
 
         # subprocesses
+        Buffer_shared.cpp
         Distributions.cpp
         IntersectAABB_shared.cpp
         Polygon.cpp
@@ -143,7 +147,7 @@ set(SRC_FILES
         ShMemory.cpp
         Process.cpp
         Vector.cpp
-        )
+        SimulationManager.cpp SimulationManager.h SimulationCore.h)
 
 set(SRC_FILES ${SRC_FILES}
         GLApp/GLApp.cpp
@@ -196,13 +200,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
+        )
+
+target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
+        ${HEADER_DIR_7}
         )
 
 if(MSVC)
+    find_package(OpenGL REQUIRED)
     # 1. link against external libs
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
             libcurl_a_x64.lib
             SDL2.lib
@@ -212,13 +221,13 @@ if(MSVC)
             lzma.lib
             ZipLib.lib
             #zlib.lib
-            opengl32.lib
+            opengl32#.lib
             user32.lib
             shell32.lib
             ole32.lib
             )
 
-    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
     #target_link_libraries(${PROJECT_NAME} nativefiledialog)
 endif(MSVC)
 if(NOT MSVC)
@@ -257,26 +266,26 @@ if(NOT MSVC)
         # Add other flags to the compiler
         ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
 
-        target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK3_LIBRARIES})
 
         find_package(X11 REQUIRED)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${X11_INCLUDE_DIRS})
+        target_include_directories(${PROJECT_NAME} PUBLIC ${X11_INCLUDE_DIRS})
     endif()
 
     find_package(OpenGL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 
     find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 
     find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${PNG_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
 
     find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${GSL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
     find_package(CURL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
@@ -320,15 +329,6 @@ if(NOT MSVC)
     endif()
     target_link_libraries(${PROJECT_NAME} libzip) # from ./lib/
 
-    #use prebuild nfd for GCC on MacOS
-    if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (NOT TARGET libzip)
-            add_library( libnfd STATIC IMPORTED GLOBAL)
-        endif()
-        set_target_properties( libnfd PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libnfd.a )
-        target_link_libraries(${PROJECT_NAME} libnfd) # from ./lib/
-    endif()
-
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} c++fs)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
@@ -337,8 +337,8 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME} pugixml clipper sdl_savepng truncatedgaussian)
-    target_link_libraries(${PROJECT_NAME} nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME}  nativefiledialog)
 endif(NOT MSVC)
 
 ######################### Flags ############################
@@ -346,12 +346,16 @@ endif(NOT MSVC)
 ############################################################
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall>
+        $<$<CXX_COMPILER_ID:MSVC>:
+        /W4>)
 # Preprocessor definitions
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)
+        target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)
         #for .pdb debugging files
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
         set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
@@ -361,7 +365,7 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /EHsc)
+        target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
     endif()
 endif()
 

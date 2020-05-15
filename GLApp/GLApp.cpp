@@ -4,7 +4,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 #include "GLApp.h"
@@ -22,10 +22,10 @@
 
 GLApplication *theApp=NULL;
 
-#ifdef _WIN32
+/*#ifdef _WIN32
 LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
-#endif
+#endif*/
 
 GLApplication::GLApplication() {
 
@@ -55,10 +55,10 @@ GLApplication::GLApplication() {
   m_fscreenWidth = GetSystemMetrics(SM_CXSCREEN);
   m_fscreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-  LARGE_INTEGER qwTicksPerSec;
+/*  LARGE_INTEGER qwTicksPerSec;
   QueryPerformanceFrequency( &qwTicksPerSec );
   QueryPerformanceCounter( &perfTickStart );
-  perfTicksPerSec = (double)qwTicksPerSec.QuadPart;
+  perfTicksPerSec = (double)qwTicksPerSec.QuadPart;*/
 
 #else
   // TODO

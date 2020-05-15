@@ -567,7 +567,7 @@ public:
 			CEREAL_NVP(hit.nbMCHit),           // Number of hits
 			CEREAL_NVP(hit.nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 			CEREAL_NVP(hit.nbAbsEquiv),      // Number of absorbed molec
-			CEREAL_NVP(hit.nbDesorbed),
+			CEREAL_NVP(hit.nbDesorbed)
 			);
 	}
 

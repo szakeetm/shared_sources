@@ -8,10 +8,10 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME nativefiledialog)
 
 # Folders files
-set(CPP_DIR_1 ../../src_shared/NativeFileDialog/molflow_wrapper)
-set(CPP_DIR_2 ../../src_shared/NativeFileDialog)
-set(HEADER_DIR_1 ../../src_shared/NativeFileDialog/molflow_wrapper)
-set(HEADER_DIR_2 ../../src_shared/NativeFileDialog)
+set(CPP_DIR_1 ./molflow_wrapper)
+set(CPP_DIR_2 .)
+set(HEADER_DIR_1 ./molflow_wrapper)
+set(HEADER_DIR_2 .)
 
 ################# CMake Project ############################
 # The main options of project                              #
@@ -24,48 +24,34 @@ project(${PROJECT_NAME} C CXX)
 ############################################################
 
 # Source Files
-# win, cocoa or gtk
-IF (WIN32)
-    file(GLOB SRC_FILES
-            ${CPP_DIR_1}/nfd_wrapper.cpp
-            ${CPP_DIR_2}/nfd_common.c
-            ${CPP_DIR_2}/nfd_win.cpp
-            ${HEADER_DIR_1}/nfd_wrapper.h
-            ${HEADER_DIR_2}/nfd.h
-            ${HEADER_DIR_2}/nfd_common.h
-            )
-ELSEIF(APPLE)
-    file(GLOB SRC_FILES
-            ${CPP_DIR_1}/nfd_wrapper.cpp
-            ${CPP_DIR_2}/nfd_common.c
-            ${CPP_DIR_2}/nfd_cocoa.m
-            ${HEADER_DIR_1}/nfd_wrapper.h
-            ${HEADER_DIR_2}/nfd.h
-            ${HEADER_DIR_2}/nfd_common.h
-            )
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        file(GLOB SRC_FILES
-                ${CPP_DIR_1}/nfd_wrapper.cpp
-                ${HEADER_DIR_1}/nfd_wrapper.h
-                )
-    endif()
-ELSE()
-    file(GLOB SRC_FILES
-            ${CPP_DIR_1}/nfd_wrapper.cpp
-            ${CPP_DIR_2}/nfd_common.c
-            ${CPP_DIR_2}/nfd_gtk.c
-            ${HEADER_DIR_1}/nfd_wrapper.h
-            ${HEADER_DIR_2}/nfd.h
-            ${HEADER_DIR_2}/nfd_common.h
-            )
-ENDIF()
 
-add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
+set(WRAPPER_SRC molflow_wrapper/nfd_wrapper.cpp)
+set(NFD_SRC nfd_common.c)
+# win, cocoa or gtk
+if (WIN32)
+    #REQUIRE_INCLUDE_FILE(windows.h HAS_WINDOWS)
+    list(APPEND NFD_SRC nfd_win.cpp)
+elseif (APPLE)
+    #REQUIRE_INCLUDE_FILE(AppKit/AppKit.h HAS_APPKIT)
+    # use custom compiler (gcc or clang) for the c++ wrapper
+    set(CMAKE_C_COMPILER clang)
+    list(APPEND NFD_SRC nfd_cocoa.m)
+elseif (UNIX)
+    #REQUIRE_INCLUDE_FILE(gtk/gtk.h HAS_GTK)
+    list(APPEND NFD_SRC nfd_gtk.c)
+elseif (UNIX)
+    message(FATAL_ERROR "Cannot detect your system, please report to https://github.com/aarcangeli/nativefiledialog-cmake/issues")
+endif ()
+
+add_library(${PROJECT_NAME} STATIC ${WRAPPER_SRC})
+add_library(${PROJECT_NAME}_src STATIC ${NFD_SRC})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_src)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
         )
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_src)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
@@ -74,7 +60,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 IF (WIN32)
 
 ELSEIF(APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+
+    target_link_libraries(${PROJECT_NAME}_src
+            "-framework AppKit"
+            )
 ELSE()
     # Use the package PkgConfig to detect GTK+ headers/library files
     FIND_PACKAGE(PkgConfig REQUIRED)
@@ -87,7 +76,7 @@ ELSE()
 
     # Add other flags to the compiler
     ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
-    target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}_src ${GTK3_LIBRARIES})
 ENDIF()
 
 # Preprocessor definitions

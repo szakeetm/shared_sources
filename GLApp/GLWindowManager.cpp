@@ -13,7 +13,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 extern GLApplication *theApp;
@@ -833,7 +833,7 @@ char *GLWindowManager::GetAccStr(int keyCode,int keyModifier) {
         strcpy(tmp,"Alt+");
         break;
       case CTRL_MODIFIER:
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 		strcpy(tmp, "Cmd+");
 #else
 		strcpy(tmp,"Ctrl+");

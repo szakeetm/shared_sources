@@ -20,7 +20,7 @@
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 #define ISBOLD(x) ((x)[0]==':' && (x)[1]=='B' && (x)[2]==':')
@@ -1044,6 +1044,7 @@ int GLList::GetValueInt(size_t row, size_t column) {
 		char errMsg[512];
 		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
+		return -1;
 	}
 }
 
@@ -1317,7 +1318,7 @@ int GLList::RelayToEditText(SDL_Event *evt) {
 	case SDL_MOUSEWHEEL:
 		return EDIT_IGNORE; //Don't use mousewheel while editing text. Causes problems on Apple devices
 	{
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 		int appleInversionFactor = -1; //Invert mousewheel on Apple devices
 #else
 		int appleInversionFactor = 1;
@@ -1429,7 +1430,7 @@ void GLList::HandleWheel(SDL_Event *evt) {
 	int mx = GetWindow()->GetX(this, evt);
 	int my = GetWindow()->GetY(this, evt);
 
-#ifdef __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 	int appleInversionFactor = -1; //Invert mousewheel on Apple devices
 #else
 	int appleInversionFactor = 1;

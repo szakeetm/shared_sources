@@ -26,10 +26,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/MathTools.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLToolkit.h"
-#include "SplitFacet.h"
-#include "BuildIntersection.h"
-#include "MirrorFacet.h"
-#include "MirrorVertex.h"
+#include "Interface/SplitFacet.h"
+#include "Interface/BuildIntersection.h"
+#include "Interface/MirrorFacet.h"
+#include "Interface/MirrorVertex.h"
 #include "GLApp/GLList.h"
 
 #include "Clipper/clipper.hpp"
@@ -40,7 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef SYNRAD
-#include "SynRad.h"
+#include "../src/SynRad.h"
 #endif
 
 #include "ASELoader.h"
@@ -133,6 +133,7 @@ void Geometry::CheckIsolatedVertex() {
 		sprintf(tmp, "Remove %d isolated vertices ?", nbI);
 		if (GLMessageBox::Display(tmp, "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
 			DeleteIsolatedVertices(false);
+			mApp->UpdateModelParams();
 		}
 	}
 }
@@ -177,7 +178,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 			if (facet_number == -1) {
 				// Hit address
-				f->sh.hitOffset = fOffset;
+				f->sh.hitOffset = fOffset; //For hits data serialization
 #ifdef MOLFLOW
 				fOffset += f->GetHitsSize(mApp->worker.moments.size());
 #endif
@@ -341,7 +342,7 @@ size_t Geometry::GetNbStructure() {
 }
 
 char *Geometry::GetStructureName(int idx) {
-    return strName[idx];
+	return strName[idx];
 }
 
 void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
@@ -1010,42 +1011,42 @@ void Geometry::MoveVertexTo(size_t idx, double x, double y, double z) {
 }
 
 void Geometry::SwapNormal() {
-    //Default: sweap selected facets
-    SwapNormal(GetSelectedFacets());
+	//Default: sweap selected facets
+	SwapNormal(GetSelectedFacets());
 }
 
 void Geometry::RevertFlippedNormals() {
-    std::vector<size_t> flippedFacetList;
-    auto selectedFacetList = GetSelectedFacets();
-    for (auto i : selectedFacetList) {
-        if (facets[i]->normalFlipped) {
-            flippedFacetList.push_back(i);
-        }
-    }
-    SwapNormal(flippedFacetList);
+	std::vector<size_t> flippedFacetList;
+	auto selectedFacetList = GetSelectedFacets();
+	for (auto i : selectedFacetList) {
+		if (facets[i]->normalFlipped) {
+			flippedFacetList.push_back(i);
+		}
+	}
+	SwapNormal(flippedFacetList);
 }
 
 void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the normal for a list of facets
 
-    if (!IsLoaded()) {
-        GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-    mApp->changedSinceSave = true;
-    for (auto i:facetList) {
-        Facet *f = facets[i];
-        f->SwapNormal();
-        InitializeGeometry((int)i);
-        try {
-            SetFacetTexture(i, f->tRatio, f->hasMesh);
-        }
-        catch (Error &e) {
-            GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-        }
-    }
+	if (!IsLoaded()) {
+		GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+		return;
+	}
+	mApp->changedSinceSave = true;
+	for (auto i:facetList) {
+		Facet *f = facets[i];
+		f->SwapNormal();
+		InitializeGeometry((int)i);
+		try {
+			SetFacetTexture(i, f->tRatio, f->hasMesh);
+		}
+		catch (Error &e) {
+			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		}	
+	}
 
-    DeleteGLLists(true, true);
-    BuildGLList();
+	DeleteGLLists(true, true);
+	BuildGLList();
 
 }
 
@@ -1443,16 +1444,16 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 }
 
 void Geometry::AddFacets(std::vector<Facet*> facetList) {
-    //Adds to end
-    std::vector<DeletedFacet> toRestore(facetList.size());
-    for (size_t i = 0;i < facetList.size();i++) {
-        DeletedFacet df;
-        df.f = facetList[i];
-        df.ori_pos = 0; //Unused
-        df.replaceOri = false; //Unused
-        toRestore[i] = df;
-    }
-    RestoreFacets(toRestore, true);
+	//Adds to end
+	std::vector<DeletedFacet> toRestore(facetList.size());
+	for (size_t i = 0;i < facetList.size();i++) {
+		DeletedFacet df;
+		df.f = facetList[i];
+		df.ori_pos = 0; //Unused
+		df.replaceOri = false; //Unused
+		toRestore[i] = df;
+	}
+	RestoreFacets(toRestore, true);
 }
 
 void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd) {
@@ -2881,6 +2882,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 	else if (area < 0.0) {
 		//f->sign = -1;
 		f->nonSimple = false;
+		
 		//This is a case where a concave facet doesn't obey the right-hand rule:
 		//it happens when the first rotation (usually around the second index) is the opposite as the general outline rotation
 		
@@ -2897,6 +2899,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 			BBmax.v = std::max(BBmax.v, v.v);
 			BBmin.v = std::min(BBmin.v, v.v);
 		}
+		f->normalFlipped = true; //So we can revert it later
 	}
 	else { //Area==0.0
 		//f->sign = 0;
@@ -2927,7 +2930,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 
 	f->sh.Nuv = CrossProduct(f->sh.U,f->sh.V); //Not normalized normal vector
 
-    // Rescale u,v coordinates
+	// Rescale u,v coordinates
 	for (auto& p : f->vertices2) {
 		p.u = (p.u - BBmin.u) / uD;
 		p.v = (p.v - BBmin.v) / vD;
@@ -3437,8 +3440,11 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 		}
 		else {
-
-			sprintf(fName, "%s\\%s", fPath, sName);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+            sprintf(fName, "%s\\%s", fPath, sName);
+#else
+            sprintf(fName, "%s/%s", fPath, sName);
+#endif
 			if (FileUtils::Exist(fName)) {
 				fr = new FileReader(fName);
 				strcpy(strPath, fPath);
@@ -3863,8 +3869,8 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			strcpy(tmpName, file->ReadString());
 			v.projMode = file->ReadInt();
 			v.camAngleOx = file->ReadDouble();
-            v.camAngleOy = file->ReadDouble();
-            v.camAngleOz = 0.0; //No support for Z angle in current GEO version
+			v.camAngleOy = file->ReadDouble();
+			v.camAngleOz = 0.0; //No support for Z angle in current GEO version
 			v.camDist = file->ReadDouble();
 			v.camOffset.x = file->ReadDouble();
 			v.camOffset.y = file->ReadDouble();

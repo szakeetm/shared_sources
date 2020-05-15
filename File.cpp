@@ -275,7 +275,7 @@ void FileReader::JumpControlChars() {
 }
 
 int FileReader::IsEol() {
-	return CurrentChar=='\n';
+	return (CurrentChar=='\n' || CurrentChar=='\r');
 }
 
 char *FileReader::ReadWord() {

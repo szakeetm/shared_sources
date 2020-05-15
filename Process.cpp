@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <windows.h>
 //#include <winperf.h>
 #include<Psapi.h>
-#elif defined(__APPLE__)
+#elif defined(__MACOSX__) || defined(__APPLE__)
 #include <mach/mach.h>
 #include <signal.h>
 #include <sys/resource.h>
@@ -182,7 +182,7 @@ DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug 
 
 
 #endif
-	char* commandLine = _strdup(pname);
+	char* commandLine = strdup(pname);
 	if (!CreateProcess(
 		NULL,             // pointer to name of executable module
 		commandLine,            // pointer to command line string
@@ -260,7 +260,7 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
    unsigned long vm_size = 0u;
    unsigned long resident_set = 0u;
 
-#if __APPLE__
+#if defined(__MACOSX__) || defined(__APPLE__)
 
     if(processID!=getpid()){
         vm_size = (size_t)0L;      /* Can't access? */
