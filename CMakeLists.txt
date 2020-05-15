@@ -144,10 +144,10 @@ set(SRC_FILES
         IntersectAABB_shared.cpp
         Polygon.cpp
         Random.cpp
-        ShMemory.cpp
+        #ShMemory.cpp
         Process.cpp
         Vector.cpp
-        SimulationManager.cpp SimulationManager.h SimulationCore.h)
+        SimulationManager.cpp SimulationController.cpp)
 
 set(SRC_FILES ${SRC_FILES}
         GLApp/GLApp.cpp

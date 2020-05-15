@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #else
 //#include <sys/sysinfo.h>
+#include <unistd.h>
 #endif
 
 #include <filesystem>
@@ -92,7 +93,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../src/versionId.h"
 
 extern Worker worker;
-extern std::vector<string> formulaPrefixes;
+extern std::vector<std::string> formulaPrefixes;
 //extern const char* appTitle;
 
 /*
@@ -155,10 +156,10 @@ Interface::Interface() {
     idView = 0;
     idSelection = 0;
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
     nbProc = 1;
 #else
-    Saturate(numCPU, 1, Min(MAX_PROCESS, (size_t)16)); //limit the auto-detected processes to the maximum available, at least one, and max 16 (above it speed improvement not obvious)
+    Saturate(numCPU, 1, (size_t)16);
 	nbProc = numCPU;
 #endif
 
@@ -428,7 +429,7 @@ void Interface::LoadSelection(const char *fName) {
     catch (Error &e) {
 
         char errMsg[512];
-        sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
+        sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 
     }
@@ -467,7 +468,7 @@ void Interface::SaveSelection() {
         }
         catch (Error &e) {
             char errMsg[512];
-            sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
+            sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 
@@ -503,7 +504,7 @@ void Interface::ExportSelection() {
         }
         catch (Error &e) {
             char errMsg[512];
-            sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fileName.c_str());
+            sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 
@@ -813,7 +814,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Tools")->Add(NULL); // Separator
     menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
 #endif
     menu->GetSubMenu("Tools")->Add(NULL); // Separator
@@ -856,6 +857,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Facet")->Add("Collapse ...", MENU_FACET_COLLAPSE);
     menu->GetSubMenu("Facet")->Add("Explode", MENU_FACET_EXPLODE);
     menu->GetSubMenu("Facet")->Add("Revert flipped normals (old geometries)", MENU_FACET_REVERTFLIP);
+    menu->GetSubMenu("Facet")->Add("Triangulate", MENU_FACET_TRIANGULATE);
 
     //menu->GetSubMenu("Facet")->Add("Facet Details ...", MENU_FACET_DETAILS);
     //menu->GetSubMenu("Facet")->Add("Facet Mesh ...",MENU_FACET_MESH);
@@ -972,6 +974,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
     simuPanel->SetClosable(true);
     Add(simuPanel);
 
+    globalSettingsBtn = new GLButton(0, "<< Sim");
+    simuPanel->Add(globalSettingsBtn);
+
     startSimu = new GLButton(0, "Start/Stop");
     simuPanel->Add(startSimu);
 
@@ -1064,7 +1069,7 @@ void Interface::OneTimeSceneInit_shared_post() {
     }
     catch (Error &e) {
         char errMsg[512];
-        sprintf(errMsg, "Failed to start working sub-process(es), simulation not available\n%s", e.GetMsg());
+        sprintf(errMsg, "Failed to start working sub-process(es), simulation not available\n%s", e.what());
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 
@@ -1309,7 +1314,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         // Send to sub process
                         try { worker.Reload(); }
                         catch (Error &e) {
-                            GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }
                     }
                     return true;
@@ -1385,7 +1390,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 err = geom->ExplodeSelected();
                             }
                             catch (Error &e) {
-                                GLMessageBox::Display(e.GetMsg(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
+                                GLMessageBox::Display(e.what(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
                             }
                             if (err == -1) {
                                 GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1400,7 +1405,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 // Send to sub process
                                 try { worker.Reload(); }
                                 catch (Error &e) {
-                                    GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+                                    GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
                                 }
                             }
                         }
@@ -1422,7 +1427,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++)
                         if (
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
 #endif
 (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
@@ -1588,7 +1593,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                             geom->CreatePolyFromVertices_Convex();
                         }
                         catch (Error &e) {
-                            GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
                     }
@@ -1599,7 +1604,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                             geom->CreatePolyFromVertices_Order();
                         }
                         catch (Error &e) {
-                            GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
                     }
@@ -1642,6 +1647,23 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         buildIntersection->SetVisible(true);
                     }
                     return true;
+                case MENU_FACET_TRIANGULATE:
+                {
+                    auto selectedFacets = geom->GetSelectedFacets();
+                    if (selectedFacets.empty()) return true;
+                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+                    if (rep == GLDLG_OK) {
+                        if (AskToReset()) {
+                            
+                            GeometryConverter::PolygonsToTriangles(geom,selectedFacets);
+                        }
+                    }
+                    worker.Reload();
+                    UpdateModelParams();
+                    UpdateFacetlistSelected();
+                    UpdateViewers();
+                    return true;
+                }
                 case MENU_VERTEX_SELECT_COPLANAR:
                     char *input;
                     if (geom->IsLoaded()) {
@@ -1659,7 +1681,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         }
                         try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
                         catch (Error &e) {
-                            GLMessageBox::Display(e.GetMsg(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
                         }
                     }
                     else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -1674,7 +1696,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         /*
                         UpdateModelParams();
                         try { worker.Reload(); } catch(Error &e) {
-                        GLMessageBox::Display(e.GetMsg(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
+                        GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
                         */
 
                     }
@@ -1809,7 +1831,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 DeleteStruct();
                 UpdateStructMenu();
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
                 worker.CalcTotalOutgassing();
 #endif
 
@@ -2213,7 +2235,7 @@ void Interface::AddStruct() {
     // Send to sub process
     try { worker.Reload(); }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
 }
@@ -2244,7 +2266,7 @@ void Interface::DeleteStruct() {
     // Send to sub process
     try { worker.Reload(); }
     catch (Error &e) {
-        GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
 }
@@ -2404,24 +2426,24 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
     //If *newRefs is not NULL, a vector is passed containing the new references
     bool changed = false;
 
-    string newExpr = expression; //convert char* to string
+    std::string newExpr = expression; //convert char* to string
 
     size_t pos = 0; //analyzed until this position
     while (pos < newExpr.size()) { //while not end of expression
 
-        vector<size_t> location; //for each prefix, we store where it was found
+        std::vector<size_t> location; //for each prefix, we store where it was found
 
         for (size_t j = 0; j < formulaPrefixes.size(); j++) { //try all expressions
             location.push_back(newExpr.find(formulaPrefixes[j], pos));
         }
-        size_t minPos = string::npos;
+        size_t minPos = std::string::npos;
         size_t maxLength = 0;
         for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
             if (location[j] < minPos) minPos = location[j];
         for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
             if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
         int digitsLength = 0;
-        if (minPos != string::npos) { //found expression, let's find tailing facet number digits
+        if (minPos != std::string::npos) { //found expression, let's find tailing facet number digits
             while ((minPos + maxLength + digitsLength) < newExpr.length() && newExpr[minPos + maxLength + digitsLength] >= '0' && newExpr[minPos + maxLength + digitsLength] <= '9')
                 digitsLength++;
             if (digitsLength > 0) { //there was a digit after the prefix
@@ -2454,7 +2476,7 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
                 }
             }
         }
-        if (minPos != string::npos) pos = minPos + maxLength + digitsLength;
+        if (minPos != std::string::npos) pos = minPos + maxLength + digitsLength;
         else pos = minPos;
     }
     strcpy(expression, newExpr.c_str());
@@ -2547,7 +2569,7 @@ void Interface::UpdateFormula() {
 			else { //Variables OK but the formula itself can't be evaluated
 				formulas[i].value->SetText(f->GetErrorMsg());
 			}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
 #endif
 		}
@@ -2578,7 +2600,7 @@ bool Interface::AskToSave() {
             }
             catch (Error &e) {
                 char errMsg[512];
-                sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
+                sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
                 GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
                 RemoveRecent(fn.c_str());
             }
@@ -2602,12 +2624,12 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
             }
         }
         catch (Error &e) {
-            GLMessageBox::Display(e.GetMsg(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
+            GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
         }
         //UpdateModelParams();
         try { worker.Reload(); }
         catch (Error &e) {
-            GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+            GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
         }
     }
     else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -2635,7 +2657,7 @@ void Interface::SaveFileAs() {
         }
         catch (Error &e) {
             char errMsg[512];
-            sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
+            sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
             RemoveRecent(fn.c_str());
         }
@@ -2653,10 +2675,6 @@ void Interface::ExportTextures(int grouping, int mode) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
-    if (!worker.IsDpInitialized()) {
-        GLMessageBox::Display("Worker Dataport not initialized yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
 
     //FILENAME *fn = GLFileBox::SaveFile(currentDir, NULL, "Save File", fileTexFilters, 0);
     std::string fn = NFD_SaveFile_Cpp(fileTexFilters, "");
@@ -2669,7 +2687,7 @@ void Interface::ExportTextures(int grouping, int mode) {
         }
         catch (Error &e) {
             char errMsg[512];
-            sprintf(errMsg, "%s\nFile:%s", e.GetMsg(), fn.c_str());
+            sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 
@@ -2765,7 +2783,7 @@ int Interface::FrameMove()
                     worker.Update(m_fTime);
                 }
                 catch (Error &e) {
-                    GLMessageBox::Display(e.GetMsg(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+                    GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
                 UpdatePlotters();
@@ -2794,7 +2812,7 @@ int Interface::FrameMove()
             }
         }
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
         if (worker.calcAC) {
             sprintf(tmp, "Calc AC: %s (%zd %%)", FormatTime(worker.simuTime + (m_fTime - worker.startTime)),
                     worker.calcACprg);
@@ -2802,7 +2820,7 @@ int Interface::FrameMove()
         else {
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
         }
 #endif
 
@@ -2904,10 +2922,10 @@ bool Interface::AutoSave(bool crashSave) {
     std::string shortFn(worker.GetCurrentShortFileName());
     std::string newAutosaveFilename = appName + "_Autosave";
     if (shortFn != "") newAutosaveFilename += "(" + shortFn + ")";
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
     newAutosaveFilename += ".zip";
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
     newAutosaveFilename += ".syn7z";
 #endif
     char fn[1024];
@@ -2920,7 +2938,7 @@ bool Interface::AutoSave(bool crashSave) {
         ResetAutoSaveTimer(); //deduct saving time from interval
     }
     catch (Error &e) {
-        GLMessageBox::Display(std::string(e.GetMsg()) + "\n" + fn, "Autosave error", { "OK" }, GLDLG_ICONERROR);
+        GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", { "OK" }, GLDLG_ICONERROR);
         progressDlg2->SetVisible(false);
         SAFE_DELETE(progressDlg2);
         ResetAutoSaveTimer();

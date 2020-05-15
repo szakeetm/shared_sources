@@ -18,7 +18,8 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-
+#include <exception>
+#include <cstring> // strncpy for Error
 // Messages
 
 #define MSG_NULL     0    // No message
@@ -71,12 +72,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 // Type definitions
 typedef unsigned char BYTE;
 
-class Error {
+class Error : public std::exception{
 
 public:
-	Error(const char *message);
-	const char *GetMsg();
+	explicit Error(const char *message) : msg{}{
+        strncpy(msg,message,255);
+        msg[255]='\0';
+	};
 
+    virtual ~Error() throw() {}
+    virtual const char* what() const throw()
+    {
+        return msg;
+    }
 private:
 	char msg[1024];
 

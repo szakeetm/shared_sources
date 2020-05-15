@@ -34,7 +34,7 @@ class Geometry;
 
 #define HISTOGRAM_MODE_BOUNCES 0
 #define HISTOGRAM_MODE_DISTANCE 1
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #define HISTOGRAM_MODE_TIME 2
 #endif
 
@@ -59,7 +59,7 @@ public:
   void Reset();
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
   void SetBounds(int x,int y,int w,int h);
 
 private:

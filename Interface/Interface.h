@@ -20,7 +20,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 //Shared functions of the Molflow and Synrad interface
-#include <thread>
 #include <list> // for recents
 
 #include "Worker.h"
@@ -29,7 +28,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
-#include "Random.h"
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -154,6 +152,7 @@ typedef struct {
 #define MENU_FACET_SPLIT   351
 #define MENU_FACET_LOFT          352
 #define MENU_FACET_INTERSECT     353
+#define MENU_FACET_TRIANGULATE   354
 
 #define MENU_TOOLS_TEXPLOTTER  401
 #define MENU_TOOLS_PROFPLOTTER 402
@@ -232,7 +231,7 @@ protected:
 	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
-	virtual void BuildPipe(double ratio, int steps = 0) {}
+	virtual void BuildPipe(double ratio, int steps = 0) {};
 	virtual void EmptyGeometry() {}
 	virtual void LoadFile(std::string fileName = "") {}
 	virtual void InsertGeometry(bool newStr, std::string fileName = "") {}
@@ -306,7 +305,10 @@ public:
 	GLToggle      *showIndex;
 	GLToggle      *showVertex;
 	GLButton      *viewerMoreButton;
-	GLButton      *startSimu;
+
+
+	GLButton      *globalSettingsBtn;
+    GLButton      *startSimu;
 	GLButton      *resetSimu;
 
 	GLCombo       *modeCombo;

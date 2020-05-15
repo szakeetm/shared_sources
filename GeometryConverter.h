@@ -30,8 +30,9 @@ class GeometryConverter {
     //void Triangulate(Facet *f);
     static Facet* GetTriangleFromEar(Facet *f, const GLAppPolygon& p, int ear);
 public:
-    static std::vector<Facet*> GetTriangulatedGeometry(Geometry* geometry, GLProgress* prg = NULL);
+    static std::vector<Facet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
     static void PolygonsToTriangles(Geometry* geometry);
+    static void PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices);
 };
 
 

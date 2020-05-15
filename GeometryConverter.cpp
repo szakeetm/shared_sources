@@ -21,25 +21,24 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <GLApp/MathTools.h>
 #include "GeometryConverter.h"
 #include "Facet_shared.h"
-#include <numeric> //std::iota
 
 
-std::vector<Facet*> GeometryConverter::GetTriangulatedGeometry(Geometry* geometry,GLProgress* prg)
+std::vector<Facet*> GeometryConverter::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg)
 {
     std::vector<Facet*> triangleFacets;
-    for (size_t i = 0; i < geometry->GetNbFacet(); i++) {
-        if (prg) prg->SetProgress((double)i/(double(geometry->GetNbFacet())));
-        size_t nb = geometry->GetFacet(i)->sh.nbIndex;
+    for (size_t i = 0; i < facetIndices.size(); i++) {
+        if (prg) prg->SetProgress((double)i/(double(facetIndices.size())));
+        size_t nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
         if (nb > 3) {
             // Create new triangle facets (does not invalidate old ones, you have to manually delete them)
-            std::vector<Facet*> newTriangles = Triangulate(geometry->GetFacet(i));
+            std::vector<Facet*> newTriangles = Triangulate(geometry->GetFacet(facetIndices[i]));
             triangleFacets.insert(std::end(triangleFacets), std::begin(newTriangles), std::end(newTriangles));
         }
         else {
             //Copy
             Facet* newFacet = new Facet(nb);
-            newFacet->indices = geometry->GetFacet(i)->indices;
-            newFacet->CopyFacetProperties(geometry->GetFacet(i), false);
+            newFacet->indices = geometry->GetFacet(facetIndices[i])->indices;
+            newFacet->CopyFacetProperties(geometry->GetFacet(facetIndices[i]), false);
             triangleFacets.push_back(newFacet);
         }
     }
@@ -137,12 +136,14 @@ Facet* GeometryConverter::GetTriangleFromEar(Facet *f, const GLAppPolygon& p, in
 
 // Update facet list of geometry by removing polygon facets and replacing them with triangular facets with the same properties
 void GeometryConverter::PolygonsToTriangles(Geometry* geometry) {
-    std::vector<Facet*> triangleFacets = GetTriangulatedGeometry(geometry);
+    auto allIndices = geometry->GetAllFacetIndices();
+    std::vector<Facet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices);
+    geometry->RemoveFacets(allIndices);
+    geometry->AddFacets(triangleFacets);
+}
 
-    //Clear all facets
-    std::vector<size_t> toDelete(geometry->GetNbFacet());
-    std::iota(std::begin(toDelete), std::end(toDelete), 0); // Fill with 0, 1, ..., GetNbFacet()
-    geometry->RemoveFacets(toDelete);
-    //Add new ones
+void GeometryConverter::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices) {
+    std::vector<Facet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices);
+    geometry->RemoveFacets(selectedIndices);
     geometry->AddFacets(triangleFacets);
 }

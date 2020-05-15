@@ -17,11 +17,11 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 #include "Facet_shared.h"
@@ -36,11 +36,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 using namespace pugi;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -111,7 +111,7 @@ Facet::Facet(size_t nbIndex) {
 	glSelElem = 0;
 	selected = false;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	
 
 	sh.temperature = 293.15; // 20degC
@@ -155,7 +155,7 @@ Facet::Facet(size_t nbIndex) {
 	userSticking = "";
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	sh.doScattering = false;
 	sh.rmsRoughness = 100.0E-9; //100nm
 	sh.autoCorrLength = 100 * 100E-9; //tau=autoCorr/RMS=100
@@ -178,7 +178,7 @@ Facet::~Facet() {
 	  for (size_t i = 0; i < meshvectorsize; i++)
 		  SAFE_FREE(meshvector[i].points);
 	  SAFE_FREE(meshvector);
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	  //SAFE_FREE(outgassingMap);
 	  //SAFE_FREE(angleMapCache);
 #endif
@@ -1051,7 +1051,7 @@ bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
 		(fabs(c - f->c) < threshold) &&
 		(fabs(d - f->d) < threshold) &&
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		(sh.desorbType == f->sh.desorbType) &&
 		IsEqual(sh.outgassing, f->sh.outgassing) &&
 		IsEqual(sh.reflection.diffusePart, f->sh.reflection.diffusePart) &&
@@ -1059,7 +1059,7 @@ bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
 		IsEqual(sh.reflection.cosineExponent, f->sh.reflection.cosineExponent) &&
 		(sh.temperature == f->sh.temperature) &&
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		(sh.reflectType == f->sh.reflectType) &&
 #endif
 		IsEqual(sh.sticking, f->sh.sticking) &&
@@ -1085,14 +1085,14 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 		sh.profileType = PROFILE_NONE;
 	}
 	sh.is2sided = f->sh.is2sided;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	sh.outgassing = f->sh.outgassing;
 	sh.desorbType = f->sh.desorbType;
 	sh.desorbTypeN = f->sh.desorbTypeN;
 	sh.reflection = f->sh.reflection;
 	sh.temperature = f->sh.temperature;
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	sh.reflectType = f->sh.reflectType;
 	sh.doScattering = f->sh.doScattering;
 	sh.rmsRoughness = f->sh.rmsRoughness;
@@ -1107,7 +1107,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 		sh.countAbs = f->sh.countAbs;
 		sh.countRefl = f->sh.countRefl;
 		sh.countTrans = f->sh.countTrans;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		sh.countDes = f->sh.countDes;
 		sh.countACD = f->sh.countACD;
 #endif

@@ -31,37 +31,40 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/MirrorFacet.h"
 #include "Interface/MirrorVertex.h"
 #include "GLApp/GLList.h"
+#include "GrahamScan.h"
 
 #include "Clipper/clipper.hpp"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #include "../src/MolflowTypes.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
 #include "ASELoader.h"
 //#include <algorithm>
 #include <list>
+#include <numeric> //std::iota
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
 Geometry::Geometry() {
-	facets = NULL;
+	facets = nullptr;
 	polyList = 0;
 	selectList = 0;
 	selectList2 = 0;
 	selectList3 = 0;
-	arrowList = 0;
+    selectHighlightList = 0;
+    arrowList = 0;
 	sphereList = 0;
 
 	autoNorme = true;
@@ -72,10 +75,10 @@ Geometry::Geometry() {
 	texColormap = true;
 
 	sh.nbSuper = 0;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	textureMode = 0; //PRESSURE
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	textureMode = 1; //FLUX
 #endif
 	viewStruct = -1;
@@ -156,7 +159,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 	
 	size_t nbMoments = 1; //Constant flow
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	nbMoments += mApp->worker.moments.size();
 #endif
 	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.wp.globalHistogramParams.GetDataSize();
@@ -179,11 +182,11 @@ void Geometry::InitializeGeometry(int facet_number) {
 			if (facet_number == -1) {
 				// Hit address
 				f->sh.hitOffset = fOffset; //For hits data serialization
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 				fOffset += f->GetHitsSize(mApp->worker.moments.size());
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 				fOffset += f->GetHitsSize();
 #endif
 			}
@@ -222,7 +225,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 			bb.max.z = std::max(bb.max.z, p.z);
 		}
 
-#ifdef SYNRAD //Regions
+#if defined(SYNRAD) //Regions
 		Worker *worker = &(mApp->worker);
 		for (int i = 0; i < (int)worker->regions.size(); i++) {
 			if (worker->regions[i].AABBmin.x < bb.min.x) bb.min.x = worker->regions[i].AABBmin.x;
@@ -429,7 +432,6 @@ void Geometry::CreateDifference() {
 	//creates facet from selected vertices
 
 	mApp->changedSinceSave = true;
-	size_t nbSelectedVertex = 0;
 
 	auto selectedFacets = GetSelectedFacets();
 	if (selectedFacets.size() != 2) {
@@ -821,7 +823,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 			if (v->z > sbb.max.z) sbb.max.z = v->z;
 		}
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		//Regions
 		Worker *worker = &(mApp->worker);
 		for (int i = 0; i < (int)worker->regions.size(); i++) {
@@ -1041,7 +1043,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 			SetFacetTexture(i, f->tRatio, f->hasMesh);
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}	
 	}
 
@@ -1156,7 +1158,7 @@ void Geometry::ShiftVertex() {
 				SetFacetTexture(i, f->tRatio, f->hasMesh);
 			}
 			catch (Error &e) {
-				GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 
 		}
@@ -1647,7 +1649,7 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 	prgAlign->SetVisible(false);
@@ -1689,7 +1691,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 	}
@@ -1712,7 +1714,6 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	std::vector<bool> alreadyMirrored(sh.nbVertex, false);
 
-	int nb = 0;
 	for (const auto& sel : selectedFacets) {
 		counter += 1.0;
 		prgMirror->SetProgress(counter / selectedFacets.size());
@@ -1747,7 +1748,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
 	catch (Error &e) {
-		GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
 
@@ -1802,7 +1803,6 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		std::vector<bool> alreadyRotated(sh.nbVertex, false);
 
-		int nb = 0;
 		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgRotate->SetProgress(counter / selectedFacets.size());
@@ -1822,7 +1822,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		}
 		catch (Error &e) {
-			GLMessageBox::Display(e.GetMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
 
@@ -2049,7 +2049,6 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 
 	std::vector<bool> alreadyMoved(sh.nbVertex, false);
 
-	int nb = 0;
 	for (auto& i:selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / selected);
@@ -2578,7 +2577,6 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 	// Merge 2 facets into 1 when possible and create a new facet
 	// otherwise return NULL.
 	size_t  c1,c2,l;
-	bool end = false;
 	Facet *nF = NULL;
 
 	if (GetCommonEdges(f1, f2, &c1, &c2, &l)) {
@@ -2761,7 +2759,6 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 	double linTreshold = cos(lT*PI / 180);
 	// Merge collinear sides
 	for (int k = 0; (k < f->sh.nbIndex&&f->sh.nbIndex>3); k++) {
-		k = k;
 		do {
 			//collinear=false;
 			size_t p0 = f->indices[k];
@@ -2936,7 +2933,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 		p.v = (p.v - BBmin.v) / vD;
 	}
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.wp.gasMass);
 #endif
 }
@@ -3323,7 +3320,7 @@ void Geometry::AdjustProfile() {
 }
 
 void Geometry::ResetTextureLimits() {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	texture_limits[0].autoscale.min.all = texture_limits[0].autoscale.min.moments_only =
 		texture_limits[1].autoscale.min.all = texture_limits[1].autoscale.min.moments_only =
 		texture_limits[2].autoscale.min.all = texture_limits[2].autoscale.min.moments_only =
@@ -3337,7 +3334,7 @@ void Geometry::ResetTextureLimits() {
 		texture_limits[1].manual.max.all = texture_limits[1].manual.max.moments_only =
 		texture_limits[2].manual.max.all = texture_limits[2].manual.max.moments_only = 1.0;
 #endif
-#ifdef SYNRAD
+#if defined(SYNRAD)
 	textureMin_auto.count = 0;
 	textureMin_auto.flux = 0.0;
 	textureMin_auto.power = 0.0;
@@ -3425,8 +3422,8 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 	for (int n = 0; n < sh.nbSuper; n++) {
 
-		int i1 = file->ReadInt();
-		int i2 = file->ReadInt();
+		file->ReadInt();
+		file->ReadInt();
 		fr = NULL;
 		strcpy(sName, file->ReadWord());
 		strName[n] = strdup(sName);
@@ -3801,7 +3798,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	int nbNewFacets = file->ReadInt();
 	file->ReadKeyword("nbSuper"); file->ReadKeyword(":");
 	int nbNewSuper = file->ReadInt();
-	int nbF = 0; std::vector<std::vector<string>> loadFormulas;
+	int nbF = 0; std::vector<std::vector<std::string>> loadFormulas;
 	int nbV = 0;
 	if (version2 >= 2) {
 		file->ReadKeyword("nbFormula"); file->ReadKeyword(":");
@@ -3852,8 +3849,8 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			strcpy(tmpExpr, file->ReadString());
 			//mApp->OffsetFormula(tmpExpr, wp.nbFacet);
 			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
-#ifdef MOLFLOW
-			std::vector<string> newFormula;
+#if defined(MOLFLOW)
+			std::vector<std::string> newFormula;
 			newFormula.push_back(tmpName);
 			mApp->OffsetFormula(tmpExpr, (int)sh.nbFacet); //offset formula
 			newFormula.push_back(tmpExpr);
@@ -3902,7 +3899,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		}
 		file->ReadKeyword("}");
 	}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	for (int i = 0; i < nbF; i++) { //parse formulas now that selection groups are loaded
 		mApp->AddFormula(loadFormulas[i][0].c_str(), loadFormulas[i][1].c_str());
 	}
@@ -3951,7 +3948,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		file->ReadKeyword("nbLeak"); file->ReadKeyword(":");
 		int nbleak2 = file->ReadInt();
 		for (int i = 0; i < nbleak2; i++) {
-			int idx = file->ReadInt();
+			file->ReadInt();
 			//if( idx != i ) throw Error(file->MakeError("Wrong leak index !"));
 			file->ReadDouble();
 			file->ReadDouble();
@@ -3968,7 +3965,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 		file->ReadKeyword("nbHHit"); file->ReadKeyword(":");
 		int nbHHit2 = file->ReadInt();
 		for (int i = 0; i < nbHHit2; i++) {
-			int idx = file->ReadInt();
+			file->ReadInt();
 			//if( idx != i ) throw Error(file->MakeError("Wrong hit cache index !"));
 			file->ReadDouble();
 			file->ReadDouble();
@@ -4103,7 +4100,7 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor
 	if (newStruct) AddStruct("Inserted STL file");
 }
 
-void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
+void Geometry::SaveSTR(bool saveSelected) {
 
 	if (!IsLoaded()) throw Error("Nothing to save !");
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
@@ -4115,9 +4112,17 @@ void Geometry::SaveSTR(Dataport *dpHit, bool saveSelected) {
 
 }
 
+std::vector<size_t> Geometry::GetAllFacetIndices() {
+	//All facets
+    std::vector<size_t> facetIndices(GetNbFacet());
+    std::iota(std::begin(facetIndices), std::end(facetIndices), 0); // Fill with 0, 1, ..., GetNbFacet()
+	return facetIndices;
+}
+
 void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
     prg->SetMessage("Triangulating geometry...");
-    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,prg);
+	
+    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg->SetMessage("Saving STL file...");
     f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {
@@ -4151,9 +4156,7 @@ void Geometry::SaveSuper(int s) {
 	file->Write(0, "\n");
 
 	//Extract data of the specified super structure
-	size_t totHit = 0;
-	size_t totAbs = 0;
-	size_t totDes = 0;
+
 	int *refIdx = (int *)malloc(sh.nbVertex * sizeof(int));
 	memset(refIdx, 0xFF, sh.nbVertex * sizeof(int));
 	int nbV = 0;
@@ -4378,7 +4381,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 	for (int i = 0; i < nbS; i++) {
 		for (auto& fac : blocks[i].facets) {
 			f[nb++] = fac;
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			if (toMap) { //set outgassing values
 				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
 				if (f[nb - 1]->sh.outgassing > 0.0) {
@@ -4427,7 +4430,7 @@ void  Geometry::EmptyGeometry() {
 
 }
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* buff) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value

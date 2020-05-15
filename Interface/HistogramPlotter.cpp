@@ -34,19 +34,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 #include <math.h>
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -73,7 +73,7 @@ HistogramPlotter::HistogramPlotter(Worker *w) :GLTabWindow() {
 	distanceMode.XaxisLabel = "Distance [cm]";
 	modes.push_back(distanceMode);
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	HistogramMode timeMode;
 	timeMode.name = "Flight time before absorption";
 	timeMode.XaxisLabel = "Time [s]";
@@ -183,7 +183,7 @@ void HistogramPlotter::Refresh() {
 
 	bool recordGlobal = ((modeId == HISTOGRAM_MODE_BOUNCES && worker->wp.globalHistogramParams.recordBounce)
 		|| (modeId == HISTOGRAM_MODE_DISTANCE && worker->wp.globalHistogramParams.recordDistance)
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		|| (modeId == HISTOGRAM_MODE_TIME && worker->wp.globalHistogramParams.recordTime)
 #endif
 		);
@@ -193,7 +193,7 @@ void HistogramPlotter::Refresh() {
 		if (
 			(modeId == HISTOGRAM_MODE_BOUNCES && geom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
 			|| (modeId == HISTOGRAM_MODE_DISTANCE && geom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 			|| (modeId == HISTOGRAM_MODE_TIME && geom->GetFacet(i)->sh.facetHistogramParams.recordTime)
 #endif
 			) {
@@ -306,7 +306,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 			xSpacing = worker->wp.globalHistogramParams.distanceBinsize;
 			nbBins = worker->wp.globalHistogramParams.GetDistanceHistogramSize();
 		}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(worker->globalHistogramCache.timeHistogram);
 			worker->wp.globalHistogramParams.timeMax;
@@ -328,7 +328,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
 			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 		}
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.timeHistogram);
 			geom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;

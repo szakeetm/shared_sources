@@ -73,7 +73,7 @@ public:
   void RemoveDataView(GLDataView *view);
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
   void Paint();
   void ManageEvent(SDL_Event *evt);
   void InvalidateDeviceObjects();

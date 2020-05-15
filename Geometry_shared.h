@@ -19,14 +19,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 #include "Polygon.h"
-#include "File.h"
 #include "GLApp/GLProgress.h"
-#include "SMP.h"
-#include "GrahamScan.h"
-#include "PugiXML/pugixml.hpp"
 #include "Clipper/clipper.hpp"
 #include <vector>
-#include <sstream>
 #include <list>
 #include "Buffer_shared.h"
 
@@ -37,7 +32,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class Facet;
 class DeletedFacet;
 class Worker;
-
+class FileReader;
+class FileWriter;
 union PhysicalValue{
 	//Unified return value that can return size_t, double or vector
 	size_t count;
@@ -104,13 +100,13 @@ protected:
 	int compareFacetDepth(Facet* lhs, Facet* rhs);
 public:
 	Geometry();
-	~Geometry();
+	virtual ~Geometry();
 
-#ifdef MOLFLOW
-	virtual void ExportTextures(FILE *f, int grouping, int mode, Dataport *dpHit, bool saveSelected) {}
+#if defined(MOLFLOW)
+	virtual void ExportTextures(FILE *f, int grouping, int mode, BYTE *buffer, bool saveSelected) {}
 #endif
-#ifdef SYNRAD
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, Dataport *dpHit, bool saveSelected) {}
+#if defined(SYNRAD)
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
@@ -125,6 +121,7 @@ public:
 	void CorrectNonSimple(int *nonSimpleList, int nbNonSimple);
 	size_t AnalyzeNeighbors(Worker *work, GLProgress *prg);
 	std::vector<size_t> GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff);
+	std::vector<size_t> GetAllFacetIndices();
 	size_t      GetNbFacet();
 	size_t      GetNbVertex();
 	Vector3d GetFacetCenter(int facet);
@@ -163,7 +160,7 @@ public:
 	void InsertGEO(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr);
 
-	void SaveSTR(Dataport *dhHit, bool saveSelected);
+	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter* f, GLProgress* prg);
 	void SaveSuper(int s);
 	void SaveProfileTXT(FileWriter *file);
@@ -325,12 +322,12 @@ protected:
 
 		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../src/MolflowTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 		size_t loaded_nbMCHit;
 		double loaded_nbHitEquiv;
 		size_t loaded_nbDesorption;

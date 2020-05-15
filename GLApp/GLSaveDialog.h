@@ -26,7 +26,7 @@ public:
 
 private:
   GLSaveDialog(const char *message, const char *title,int mode,int icon);
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
 };
 

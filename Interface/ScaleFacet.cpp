@@ -39,19 +39,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Geometry_shared.h"
 #include "Worker.h"
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
 
@@ -291,7 +291,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				mApp->UpdateModelParams();
 				try { work->Reload(); }
 				catch (Error &e) {
-					GLMessageBox::Display(e.GetMsg(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
 				}
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();

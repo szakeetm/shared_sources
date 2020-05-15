@@ -42,7 +42,7 @@ class ScaleVertex : public GLWindow {
 public:
   // Construction
   ScaleVertex(Geometry *geom,Worker *work);
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
 private:

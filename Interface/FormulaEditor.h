@@ -43,7 +43,7 @@ public:
   void ReEvaluate();
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
   void SetBounds(int x, int y, int w, int h);
   

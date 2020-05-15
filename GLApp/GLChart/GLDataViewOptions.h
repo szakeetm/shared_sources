@@ -17,7 +17,7 @@ public:
   void SetDataView(GLDataView *v);
 
   // Implementation
-  void ProcessMessage(GLComponent *src,int message);
+  void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 

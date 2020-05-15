@@ -8,11 +8,11 @@
 #include "GLMenu.h"
 #include <cstring> //strcpy, etc.
 //#include <malloc.h>
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
