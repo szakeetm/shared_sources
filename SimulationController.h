@@ -36,8 +36,8 @@ protected:
 
     int RunSimulation();
     virtual bool SimulationMCStep(size_t nbStep) = 0;
-    virtual int StopSim() {};
-    virtual int TerminateSim() {};
+    virtual int StopSim() {return 0;};
+    virtual int TerminateSim() {return 0;};
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;

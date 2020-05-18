@@ -26,6 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <windows.h>
 #include <stdio.h>
 #include <process.h>
+#include <malloc.h>
 void PrintLastErrorText(LPTSTR suff);
 
 #else

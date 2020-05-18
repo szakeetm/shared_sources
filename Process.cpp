@@ -127,9 +127,11 @@ bool KillProc(DWORD pID) {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     HANDLE p;
 
-    if( !EnablePrivilege() ) return false;
-        p = OpenProcess(PROCESS_ALL_ACCESS,false,pID);
-    if( p == NULL ) return false;
+    if( !EnablePrivilege() )
+        return false;
+    p = OpenProcess(PROCESS_ALL_ACCESS,false,pID);
+    if( p == NULL )
+        return false;
     if( !TerminateProcess( p, 1 ) ) {
         CloseHandle(p);
         return false;
