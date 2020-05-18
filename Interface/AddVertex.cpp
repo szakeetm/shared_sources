@@ -133,7 +133,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 
 	      // If xyz is not empty, take this
               if (xyz->GetTextLength()) {
-                  vector<double> vect;
+                  std::vector<double> vect;
                   std::stringstream xyzStr(xyz->GetText());
                   double i;
                   while(!xyzStr.eof()) {

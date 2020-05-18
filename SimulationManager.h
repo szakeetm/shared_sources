@@ -45,7 +45,7 @@ enum class LoadType : uint8_t {
 class SimulationManager {
     int CreateCPUHandle(uint16_t iProc);
 
-    int CreateGPUHandle();
+    int CreateGPUHandle(uint16_t iProc = 1);
 
     int CreateRemoteHandle();
 

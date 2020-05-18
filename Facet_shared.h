@@ -210,7 +210,7 @@ public:
                 cereal::make_nvp("FacetProperties",sh), //Contains anglemapParams
                 CEREAL_NVP(indices),
                 CEREAL_NVP(vertices2)
-                , CEREAL_NVP(outgMapVector)
+                , CEREAL_NVP(outgassingMap)
                 , CEREAL_NVP(angleMapVector)
                 , CEREAL_NVP(textIncVector)
         );

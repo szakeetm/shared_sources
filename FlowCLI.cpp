@@ -126,7 +126,9 @@ int main(int argc, char** argv) {
     std::cout << "Parameter value: " << p << std::endl;
 
     simManager.nbCores = p;
-    simManager.useCPU = true;
+    simManager.useCPU = false;
+    simManager.nbCores = 1;
+    simManager.useGPU = true;
     if(simManager.InitSimUnits())
         std::cout << "Error: Initialising subprocesses: " << simManager.simHandles.size() << std::endl;
 
@@ -151,6 +153,8 @@ int main(int argc, char** argv) {
         std::cout << "ERROR: Starting simulation: " << e.what() << std::endl;
         exit(0);
     }
+
+#if not defined(WIN32)
     /* Establish a handler for SIGALRM signals. */
     signal (SIGALRM, catch_alarm);
 
@@ -171,7 +175,7 @@ int main(int argc, char** argv) {
         std::cout << "\b\b\b\b....." << std::flush<< "\b\b\b\b\b";
     } while(keep_going);
     std::cout << "Simulation finished!" << std::endl << std::flush;
-
+#endif
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
     // Export results

@@ -272,8 +272,15 @@ void Worker::SetProcNumber(size_t n) {
         throw Error("Killing subprocesses failed!");
     }
 
+#if defined(GPUCOMPABILITY)
+    simManager.useGPU = true;
+    simManager.useCPU = false;
+    simManager.nbCores = 1;
+#else
     simManager.useCPU = true;
     simManager.nbCores = n;
+#endif
+
     // Launch n subprocess
 
     if ((ontheflyParams.nbProcess = simManager.InitSimUnits())) {

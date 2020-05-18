@@ -239,8 +239,48 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 }
 
 // return 1=error
-int SimulationManager::CreateGPUHandle() {
-    return 1;
+int SimulationManager::CreateGPUHandle(uint16_t iProc) {
+    char cmdLine[512];
+    uint32_t processId;
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    processId = _getpid();
+#else
+    processId = ::getpid();
+#endif //  WIN
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    sprintf(cmdLine,"gpuSub.exe %d %hu",processId,iProc);
+#else
+    char **arguments;
+    arguments = new char*[2];
+    for(int arg=0;arg<2;arg++)
+        arguments[arg] = new char[10];
+    sprintf(cmdLine,"./gpuSub",appName);
+    sprintf(arguments[0],"%d",processId);
+    sprintf(arguments[1],"%hu",iProc);
+    //sprintf(argumente[2],"%s",'\0');
+    //argumente[2] = NULL;
+#endif
+
+auto oldSize = simHandles.size();
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    simHandles.emplace_back(
+            StartProc(cmdLine, STARTPROC_NORMAL, nullptr),
+            SimType::simGPU);
+#else
+    simHandles.emplace_back(
+            StartProc(cmdLine, STARTPROC_NORMAL, static_cast<char **>(arguments)),
+            SimType::simGPU);
+#endif
+
+    if( oldSize >= simHandles.size())
+        return 0;
+
+    // Wait a bit
+    ProcessSleep(25);
+
+    return 0;
 }
 
 // return 1=error
@@ -323,12 +363,18 @@ int SimulationManager::InitSimUnits() {
         // Launch nbCores subprocesses
         auto nbActiveProcesses = simHandles.size();
         for(int iProc = 0; iProc < nbCores; ++iProc) {
-            if(CreateCPUHandle(iProc + nbActiveProcesses)) // abort initialization when creation fails
+            if(CreateCPUHandle(iProc + nbActiveProcesses)) { // abort initialization when creation fails
+                std::cout << "Error: Creating CPU handle: "<<nbActiveProcesses<<" / "<< simHandles.size()<< std::endl;
                 return simHandles.size();
+            }
         }
     }
     if(useGPU){
-        CreateGPUHandle();
+        auto nbActiveProcesses = simHandles.size();
+        if(CreateGPUHandle(1 + nbActiveProcesses)){ // abort initialization when creation fails
+            std::cout << "Error: Creating GPU handle: "<<nbActiveProcesses<<" / "<< simHandles.size()<< std::endl;
+            return simHandles.size();
+        }
     }
     if(useRemote){
         CreateRemoteHandle();
