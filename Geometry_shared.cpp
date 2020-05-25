@@ -4437,6 +4437,7 @@ PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, con
 	//buff is either NULL or a (BYTE*) pointer to texture or direction buffer, must be locked by AccessDataport before call
 	//texture position must be calculated before call (index=i+j*w)
 
+
 	PhysicalValue result;
 
 	if (index == -1) { //Facet mode
