@@ -78,27 +78,27 @@ public:
 	void  SelectElem(size_t u, size_t v, size_t width, size_t height);
 	void  RenderSelectedElem();
 	void  FillVertexArray(InterfaceVertex *v);
-	size_t GetTexSwapSize(bool useColormap);
-	size_t GetTexSwapSizeForRatio(double ratio, bool useColor);
-	size_t GetNbCell();
-	size_t GetNbCellForRatio(double ratio);
+	size_t GetTexSwapSize(bool useColormap) const;
+	size_t GetTexSwapSizeForRatio(double ratio, bool useColor) const;
+	size_t GetNbCell() const;
+	size_t GetNbCellForRatio(double ratio) const;
 	void  SwapNormal();
 	void  ShiftVertex(const int& offset = 1);
 	void  InitVisibleEdge();
-	size_t   GetIndex(int idx);
-	size_t   GetIndex(size_t idx);
-	double GetMeshArea(size_t index, bool correct2sides = false);
-	size_t GetMeshNbPoint(size_t index);
-	Vector2d GetMeshPoint(size_t index, size_t pointId);
-	Vector2d GetMeshCenter(size_t index);
-	double GetArea();
+	size_t   GetIndex(int idx) const;
+	size_t   GetIndex(size_t idx) const;
+	double GetMeshArea(size_t index, bool correct2sides = false) const;
+	size_t GetMeshNbPoint(size_t index) const;
+	Vector2d GetMeshPoint(size_t index, size_t pointId) const;
+	Vector2d GetMeshCenter(size_t index) const;
+	double GetArea() const;
 	bool  IsTXTLinkFacet();
 	Vector3d GetRealCenter();
 	void  UpdateFlags();
 	FacetGroup Explode();
 
 	//Different implementation within Molflow/Synrad
-	size_t GetGeometrySize();
+	size_t GetGeometrySize() const;
 	void  LoadTXT(FileReader *file);
 	void  SaveTXT(FileWriter *file);
 	void  LoadGEO(FileReader *file, int version, size_t nbVertex);
@@ -195,9 +195,9 @@ public:
 
 #endif
     void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
-    void SerializeData(std::vector<double>& outgMapVector, std::vector<size_t>& angleMapVector, std::vector<double>& textIncVector);
+    void SerializeData(std::vector<double>& outgMapVector, std::vector<size_t>& angleMapVector, std::vector<double>& textIncVector) const;
     template <class Archive>
-    void serialize( Archive & archive)
+    void save( Archive & archive) const
     {
         std::vector<double> outgMapVector;
         std::vector<size_t> angleMapVector;
@@ -205,6 +205,24 @@ public:
 
         //TODO: Could only be valid for output
         SerializeData(outgMapVector,angleMapVector,textIncVector);
+
+        archive(
+                cereal::make_nvp("FacetProperties",sh), //Contains anglemapParams
+                CEREAL_NVP(indices),
+                CEREAL_NVP(vertices2)
+                , CEREAL_NVP(outgassingMap)
+                , CEREAL_NVP(angleMapVector)
+                , CEREAL_NVP(textIncVector)
+        );
+    }
+
+    template <class Archive>
+    void load( Archive & archive)
+    {
+        // Load and discard only
+        std::vector<double> outgMapVector;
+        std::vector<size_t> angleMapVector;
+        std::vector<double> textIncVector;
 
         archive(
                 cereal::make_nvp("FacetProperties",sh), //Contains anglemapParams

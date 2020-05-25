@@ -691,7 +691,7 @@ void Facet::FillVertexArray(InterfaceVertex *v) {
 * \param useColormap if a colormap is used or not
 * \return texture swap size
 */
-size_t Facet::GetTexSwapSize(bool useColormap) {
+size_t Facet::GetTexSwapSize(bool useColormap)const {
 
 	size_t tSize = texDimW*texDimH;
 	if (useColormap) tSize = tSize * 4;
@@ -705,7 +705,7 @@ size_t Facet::GetTexSwapSize(bool useColormap) {
 * \param useColor if a colormap is used or not
 * \return texture swap size
 */
-size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
+size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) const {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -735,7 +735,7 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 * \brief Get number of texture cells
 * \return number of texture cells
 */
-size_t Facet::GetNbCell() {
+size_t Facet::GetNbCell() const {
 	return sh.texHeight * sh.texWidth;
 }
 
@@ -744,7 +744,7 @@ size_t Facet::GetNbCell() {
 * \param ratio ratio used for size conversion
 * \return number of texture cells
 */
-size_t Facet::GetNbCellForRatio(double ratio) {
+size_t Facet::GetNbCellForRatio(double ratio) const{
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -839,7 +839,7 @@ void Facet::InitVisibleEdge() {
 * \param idx index
 * \return vertex index
 */
-size_t Facet::GetIndex(int idx) {
+size_t Facet::GetIndex(int idx) const{
 	if (idx < 0) {
 		return indices[(sh.nbIndex + idx) % sh.nbIndex];
 	}
@@ -853,7 +853,7 @@ size_t Facet::GetIndex(int idx) {
 * \param idx index
 * \return vertex index
 */
-size_t Facet::GetIndex(size_t idx) {
+size_t Facet::GetIndex(size_t idx) const{
 		return indices[idx % sh.nbIndex];
 }
 
@@ -863,7 +863,7 @@ size_t Facet::GetIndex(size_t idx) {
 * \param correct2sides if correction for 2 sided meshes should be applied (use factor 2)
 * \return mesh area
 */
-double Facet::GetMeshArea(size_t index,bool correct2sides) {
+double Facet::GetMeshArea(size_t index,bool correct2sides) const{
 	if (!cellPropertiesIds) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
 		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatio*tRatio);
@@ -881,7 +881,7 @@ double Facet::GetMeshArea(size_t index,bool correct2sides) {
 * \param index of mesh
 * \return number of mesh points
 */
-size_t Facet::GetMeshNbPoint(size_t index) {
+size_t Facet::GetMeshNbPoint(size_t index) const {
 	size_t nbPts;
 	if (cellPropertiesIds[index] == -1) nbPts = 4;
 	else if (cellPropertiesIds[index] == -2) nbPts = 0;
@@ -895,7 +895,7 @@ size_t Facet::GetMeshNbPoint(size_t index) {
 * \param pointId id of the point in the mesh
 * \return Vector for mesh point
 */
-Vector2d Facet::GetMeshPoint(size_t index, size_t pointId) {
+Vector2d Facet::GetMeshPoint(size_t index, size_t pointId) const {
 	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
@@ -967,7 +967,7 @@ Vector2d Facet::GetMeshPoint(size_t index, size_t pointId) {
 * \param index of mesh
 * \return Vector for point in the center of a mesh
 */
-Vector2d Facet::GetMeshCenter(size_t index) {
+Vector2d Facet::GetMeshCenter(size_t index) const {
 	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
@@ -1005,7 +1005,7 @@ Vector2d Facet::GetMeshCenter(size_t index) {
 * \brief Get calculated area of a facet (depends on one or double sided)
 * \return facet area
 */
-double Facet::GetArea() {
+double Facet::GetArea() const {
 	return sh.area*(sh.is2sided ? 2.0 : 1.0);
 }
 

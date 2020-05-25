@@ -297,21 +297,21 @@ if(NOT MSVC)
     #find_package(stdc++fs REQUIRED)
     #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
 
-    target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
 
-    target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} ${GSL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} Threads::Threads)
-    target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES})
-    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
+    #target_link_libraries(${PROJECT_NAME} PUBLIC ${GSLCBLAS_LIBRARIES})
 
     #for shared memory
     find_library(LIBRT rt)
     if(LIBRT)
-        target_link_libraries(${PROJECT_NAME} ${LIBRT})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
     # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
@@ -327,18 +327,18 @@ if(NOT MSVC)
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
     endif()
-    target_link_libraries(${PROJECT_NAME} libzip) # from ./lib/
+    target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} c++fs)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
         #don´t add anything for filesystem
     else()
-        target_link_libraries(${PROJECT_NAME} stdc++fs)
+        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME}  pugixml clipper sdl_savepng truncatedgaussian)
-    target_link_libraries(${PROJECT_NAME}  nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME}  PRIVATE nativefiledialog)
 endif(NOT MSVC)
 
 ######################### Flags ############################

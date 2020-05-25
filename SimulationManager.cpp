@@ -371,7 +371,7 @@ int SimulationManager::InitSimUnits() {
     }
     if(useGPU){
         auto nbActiveProcesses = simHandles.size();
-        if(CreateGPUHandle(1 + nbActiveProcesses)){ // abort initialization when creation fails
+        if(CreateGPUHandle(nbActiveProcesses)){ // abort initialization when creation fails
             std::cout << "Error: Creating GPU handle: "<<nbActiveProcesses<<" / "<< simHandles.size()<< std::endl;
             return simHandles.size();
         }

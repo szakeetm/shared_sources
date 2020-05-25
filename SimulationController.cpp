@@ -33,6 +33,7 @@ SimulationController::SimulationController(const std::string appName , const std
 
     printf("Connected to %s (%zd bytes), %sSub.exe #%d\n", ctrlDpName, sizeof(SHCONTROL), appName.c_str(), prIdx);
     SetReady();
+    ProcessSleep(5000);
 };
 
 int SimulationController::StartSimulation() {
