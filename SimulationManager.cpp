@@ -403,7 +403,6 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
         SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
 
         for (size_t i = 0; i < simHandles.size(); i++) {
-std::cout << "Proc "<< i<< "status : "<<shMaster->states[i]<<" - " << shMaster->statusStr[i]<<std::endl;
             finished = finished & (shMaster->states[i]==procStatus || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
             if( shMaster->states[i]==PROCESS_ERROR ) {
                 error = true;

@@ -297,13 +297,15 @@ size_t Worker::GetPID(size_t prIdx) {
 }
 
 void Worker::RebuildTextures() {
-    BYTE *buffer = simManager.GetLockedHitBuffer();
-    if (!buffer)
-        return;
+
     if (needsReload)
         RealReload();
 
     if (mApp->needsTexture || mApp->needsDirection) {
+        BYTE *buffer = simManager.GetLockedHitBuffer();
+        if (!buffer)
+            return;
+
         try {
 #if defined(MOLFLOW)
             geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);

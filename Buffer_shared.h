@@ -505,8 +505,17 @@ public:
 };
 
 #if defined(MOLFLOW)
-typedef union {
+struct FacetHitBuffer {
 
+    FacetHitBuffer() {
+        hit.nbDesorbed = 0;
+        hit.nbMCHit = 0;
+        hit.nbHitEquiv = 0.0;
+        hit.nbAbsEquiv = 0.0;
+        hit.sum_1_per_ort_velocity = 0.0;
+        hit.sum_1_per_velocity = 0.0;
+        hit.sum_v_ort = 0.0;
+    }
 	struct {
 		// Counts
         size_t nbDesorbed;          // Number of desorbed molec
@@ -518,12 +527,12 @@ typedef union {
 		double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
 	} hit;
 
-	struct {
+	/*struct {
 		// density
 		double desorbed;
 		double value;
 		double absorbed;
-	} density;
+	} density;*/
 
 	//TODO: Check for correct serialization
 	template<class Archive>
@@ -539,7 +548,7 @@ typedef union {
 			CEREAL_NVP(hit.sum_v_ort)
 			);
 	}
-} FacetHitBuffer;
+};
 #endif
 
 #if defined(SYNRAD)
