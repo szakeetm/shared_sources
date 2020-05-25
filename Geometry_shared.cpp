@@ -422,7 +422,14 @@ void Geometry::CreatePolyFromVertices_Convex() {
 
 void Geometry::CreatePolyFromVertices_Order() {
 	//creates facet from selected vertices
-
+	if (selectedVertexList_ordered.size() < 3) {
+		char errMsg[512];
+		sprintf(errMsg, "Select at least 3 vertices.\n"
+		"For ordered polygon creation, you have to manually select vertices to add them to selection history\n"
+		"or use the Add Vertex dialog to create them in order.");
+		throw Error(errMsg);
+		return;
+	}//at least three vertices
 	AddFacet(selectedVertexList_ordered);
 }
 
@@ -1920,6 +1927,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 			}
 			else {
 				AddVertex(newLocation);
+				AddToSelectedVertexList(i);
 			}
 		}
 		if (!copy) InitializeGeometry(); //Geometry changed
@@ -1937,6 +1945,7 @@ void Geometry::AddVertex(const Vector3d& location, bool selected) {
 	newVertex.SetLocation(location);
 	newVertex.selected = selected;
 	vertices3.push_back(newVertex);
+	
 	/*
 	InterfaceVertex *verticesNew = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
 	memcpy(verticesNew, vertices3, (wp.nbVertex - 1) * sizeof(InterfaceVertex)); //copy old vertices
