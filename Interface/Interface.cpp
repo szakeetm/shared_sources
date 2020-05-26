@@ -92,10 +92,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "../../src/versionId.h"
 
-#ifdef MOLFLOW
-#include "../src/GPUSim/MolflowModelParser.h"
-#endif
-
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
 //extern const char* appTitle;
