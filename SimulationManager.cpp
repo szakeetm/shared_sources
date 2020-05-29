@@ -19,7 +19,7 @@
 #include <iostream>
 
 SimulationManager::SimulationManager(std::string appName , std::string dpName) {
-    isRunning = 0;
+    isRunning = false;
     useCPU = false;
     nbCores = 0;
 
@@ -40,7 +40,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
 #endif
 
-
     sprintf(this->appName,"%s", appName.c_str());
     sprintf(this->ctrlDpName,"%s", std::string(dpPrefix+dpName+"CTRL"+std::to_string(pid)).c_str());
     sprintf(this->loadDpName,"%s", std::string(dpPrefix+dpName+"LOAD"+std::to_string(pid)).c_str());
@@ -57,7 +56,7 @@ SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
 }
 
-int SimulationManager::LoadInput(std::string fileName) {
+int SimulationManager::LoadInput(const std::string& fileName) {
     std::ifstream inputFile(fileName);
     inputFile.seekg(0, std::ios::end);
     size_t size = inputFile.tellg();
@@ -218,8 +217,6 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     sprintf(cmdLine,"./%sSub",appName);
     sprintf(arguments[0],"%d",processId);
     sprintf(arguments[1],"%hu",iProc);
-    //sprintf(argumente[2],"%s",'\0');
-    //argumente[2] = NULL;
 #endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -465,6 +462,8 @@ int SimulationManager::KillAllSimUnits() {
             for(size_t i=0;i<simHandles.size();i++) {
                 if (shMaster->states[i] != PROCESS_KILLED){
                     if(!KillProc(simHandles[i].first)) {
+                        //assume that the process doesn't exist, so remove it from our management structure
+                        simHandles.erase((simHandles.begin()+i));
                         ReleaseDataport(dpControl);
                         throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
                     }

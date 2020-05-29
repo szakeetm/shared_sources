@@ -128,7 +128,7 @@ public:
     int UnlockLogBuffer();
 
 
-    int LoadInput(std::string fileName);
+    int LoadInput(const std::string& fileName);
 
 private:
     bool isRunning;
@@ -140,11 +140,11 @@ private:
     Dataport *dpLoader;
 
 protected:
-    char appName[16];
-    char ctrlDpName[32];
-    char loadDpName[32];
-    char hitsDpName[32];
-    char logDpName[32];
+    char appName[16]{};
+    char ctrlDpName[32]{};
+    char loadDpName[32]{};
+    char hitsDpName[32]{};
+    char logDpName[32]{};
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
     // Flags
@@ -153,10 +153,10 @@ public:
     bool useRemote;
 
     uint16_t nbCores;
-    uint16_t mainProcId;
+    uint16_t mainProcId{};
 
     bool allProcsDone;
-    bool simulationChanged; // sendOnly functionality from Worker::RealReload
+    bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
     std::vector<std::pair<uint32_t, SimType>> simHandles; // Vector of a pair of pid , simulation type
 };
 
