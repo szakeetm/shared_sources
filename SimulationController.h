@@ -14,7 +14,6 @@
 class SimulationController {
     bool Load();
     bool UpdateParams();
-    bool UpdateOntheflySimuParams(Dataport *loader);
     int StartSimulation();
     int RunSimulation();
 
@@ -33,6 +32,7 @@ protected:
     size_t GetLocalState() const;
 public:
     SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);
+    ~SimulationController();
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
 protected:

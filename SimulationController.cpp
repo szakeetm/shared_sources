@@ -36,7 +36,11 @@ SimulationController::SimulationController(std::string appName , std::string dpN
 
     printf("Connected to %s (%zd bytes), %sSub.exe #%d\n", ctrlDpName, sizeof(SHCONTROL), appName.c_str(), prIdx);
     SetReady();
-};
+}
+
+SimulationController::~SimulationController(){
+    delete simulation;
+}
 
 int SimulationController::StartSimulation() {
     try{
@@ -341,7 +345,7 @@ bool SimulationController::UpdateParams() {
     }
     printf("Connected to %s\n", loadDpName);
 
-    bool result = UpdateOntheflySimuParams(loader);
+    bool result = simulation->UpdateOntheflySimuParams(loader);
     CLOSEDPSUB(loader);
 
     if (simulation->ontheflyParams.enableLogging) {
@@ -361,26 +365,4 @@ bool SimulationController::UpdateParams() {
     simulation->ReinitializeParticleLog();
 
     return result;
-}
-
-bool SimulationController::UpdateOntheflySimuParams(Dataport *loader) {
-    // Connect the dataport
-
-
-    if (!AccessDataportTimed(loader, 2000)) {
-        SetErrorSub("Failed to connect to loader DP");
-        return false;
-    }
-    std::string inputString(loader->size,'\0');
-    BYTE* buffer = (BYTE*)loader->buff;
-    std::copy(buffer, buffer + loader->size, inputString.begin());
-    std::stringstream inputStream;
-    inputStream << inputString;
-    cereal::BinaryInputArchive inputArchive(inputStream);
-
-    inputArchive(simulation->ontheflyParams);
-
-    ReleaseDataport(loader);
-
-    return true;
 }
