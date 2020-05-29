@@ -4,12 +4,13 @@
 
 #include <cmath>
 #include <sstream>
+#include <cereal/archives/binary.hpp>
 #include "SimulationController.h"
 #include "ProcessControl.h"
 
 #define WAITTIME    100  // Answer in STOP mode
 
-SimulationController::SimulationController(const std::string appName , const std::string dpName, size_t parentPID, size_t procIdx){
+SimulationController::SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance){
     this->prIdx = procIdx;
     this->parentPID = parentPID;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -23,6 +24,8 @@ SimulationController::SimulationController(const std::string appName , const std
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(parentPID)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(parentPID)).c_str());
 
+    simulation = simulationInstance;
+    loadOK = false;
     dpHit = nullptr;
     dpLog = nullptr;
     dpControl = OpenDataport(ctrlDpName, sizeof(SHCONTROL));
@@ -37,7 +40,7 @@ SimulationController::SimulationController(const std::string appName , const std
 
 int SimulationController::StartSimulation() {
     try{
-        SanityCheckGeom();
+        simulation->SanityCheckGeom();
     }
     catch (std::runtime_error& e) {
         return 1;
@@ -62,7 +65,7 @@ int SimulationController::RunSimulation() {
 
 
     double t0 = GetTick();
-    bool goOn = SimulationMCStep(nbStep);
+    bool goOn = simulation->SimulationMCStep(nbStep);
     double t1 = GetTick();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
@@ -93,16 +96,16 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 
 char *SimulationController::GetSimuStatus() {
     static char ret[128];
-    size_t count = this->totalDesorbed;
+    size_t count = simulation->totalDesorbed;
     size_t max = 0;
-    if (this->ontheflyParams.nbProcess)
-        max = this->ontheflyParams.desorptionLimit / this->ontheflyParams.nbProcess;
+    if (simulation->ontheflyParams.nbProcess)
+        max = simulation->ontheflyParams.desorptionLimit / simulation->ontheflyParams.nbProcess;
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
-        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", this->sh.name.c_str(), count, max, percent);
+        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", simulation->sh.name.c_str(), count, max, percent);
     } else {
-        sprintf(ret, "(%s) MC %zd", this->sh.name.c_str(), count);
+        sprintf(ret, "(%s) MC %zd", simulation->sh.name.c_str(), count);
     }
 
     return ret;
@@ -174,6 +177,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_LOAD:
                 printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
+                SetState(PROCESS_STARTING, "Loading simulation");
                 loadOK = Load();
                 if (loadOK) {
                     //desorptionLimit = procInfo.cmdParam2; // 0 for endless
@@ -211,15 +215,19 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 printf("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                 if (!lastHitUpdateOK) {
                     // Last update not successful, retry with a longer timeout
-                    if (dpHit && (GetLocalState() != PROCESS_ERROR))
-                        UpdateHits(dpHit, dpLog, prIdx, 60000);
+                    if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
+                        SetState(PROCESS_STARTING, "Updating hits...", false, true);
+                        simulation->UpdateHits(dpHit, dpLog, prIdx, 60000);
+                        SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
+                    }
                 }
                 SetReady();
                 break;
 
             case COMMAND_RESET:
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
-                ResetSimulation();
+                SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+                simulation->ResetSimulation();
                 SetReady();
                 break;
 
@@ -230,7 +238,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_CLOSE:
                 printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
-                ClearSimulation();
+                loadOK = false;
+                simulation->ClearSimulation();
                 CLOSEDPSUB(dpHit);
                 CLOSEDPSUB(dpLog);
                 SetReady();
@@ -240,7 +249,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
                 if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
-                    UpdateHits(dpHit, dpLog, prIdx,
+                    simulation->UpdateHits(dpHit, dpLog, prIdx,
                                20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
@@ -259,4 +268,119 @@ int SimulationController::controlledLoop(int argc, char **argv){
     }
     SetState(PROCESS_KILLED, "Process terminated peacefully");
     return 0;
+}
+
+bool SimulationController::Load() {
+
+    Dataport *loader;
+    size_t hSize;
+
+    // Load geometry
+    loader = OpenDataport(loadDpName, procInfo.cmdParam);
+    if (!loader) {
+        char err[512];
+        sprintf(err, "Failed to connect to 'loader' dataport %s (%zd Bytes)", loadDpName, procInfo.cmdParam);
+        SetErrorSub(err);
+        return this->loadOK;
+    }
+
+    printf("Connected to %s\n", loadDpName);
+
+    SetState(PROCESS_STARTING, "Loading simulation");
+    if (!simulation->LoadSimulation(loader)) {
+        CLOSEDPSUB(loader);
+        return this->loadOK;
+    }
+    CLOSEDPSUB(loader);
+
+    //Connect to log dataport
+    if (simulation->ontheflyParams.enableLogging) {
+        this->dpLog = OpenDataport(logDpName,
+                                   sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+        if (!this->dpLog) {
+            char err[512];
+            sprintf(err, "Failed to connect to 'this->dpLog' dataport %s (%zd Bytes)", logDpName,
+                    sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+            SetErrorSub(err);
+            this->loadOK = false;
+            return this->loadOK;
+        }
+        //*((size_t*)this->dpLog->buff) = 0; //Autofill with 0. Besides, we don't write without access!
+    }
+
+    // Connect to hit dataport
+    hSize = simulation->GetHitsSize();
+    this->dpHit = OpenDataport(hitsDpName, hSize);
+
+    if (!this->dpHit) { // in case of unknown size, create the DP itself
+        this->dpHit = CreateDataport(hitsDpName, hSize);
+    }
+    if (!this->dpHit) {
+        char err[512];
+        sprintf(err, "Failed to connect to 'hits' dataport (%zd Bytes)", hSize);
+        SetErrorSub(err);
+        this->loadOK = false;
+        return this->loadOK;
+    }
+
+    printf("Connected to %s (%zd bytes)\n", hitsDpName, hSize);
+    this->loadOK = true;
+
+    return this->loadOK;
+}
+
+bool SimulationController::UpdateParams() {
+
+    // Load geometry
+    Dataport *loader = OpenDataport(loadDpName, procInfo.cmdParam);
+    if (!loader) {
+        char err[512];
+        sprintf(err, "Failed to connect to 'loader' dataport %s (%zd Bytes)", loadDpName, procInfo.cmdParam);
+        SetErrorSub(err);
+        return false;
+    }
+    printf("Connected to %s\n", loadDpName);
+
+    bool result = UpdateOntheflySimuParams(loader);
+    CLOSEDPSUB(loader);
+
+    if (simulation->ontheflyParams.enableLogging) {
+        this->dpLog = OpenDataport(logDpName,
+                                   sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+        if (!this->dpLog) {
+            char err[512];
+            sprintf(err, "Failed to connect to 'this->dpLog' dataport %s (%zd Bytes)", logDpName,
+                    sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+            SetErrorSub(err);
+            return false;
+        }
+        //*((size_t*)sHandle->dpLog->buff) = 0; //Autofill with 0, besides we would need access first
+    }
+
+    //TODO: Move to Simulation method call
+    simulation->ReinitializeParticleLog();
+
+    return result;
+}
+
+bool SimulationController::UpdateOntheflySimuParams(Dataport *loader) {
+    // Connect the dataport
+
+
+    if (!AccessDataportTimed(loader, 2000)) {
+        SetErrorSub("Failed to connect to loader DP");
+        return false;
+    }
+    std::string inputString(loader->size,'\0');
+    BYTE* buffer = (BYTE*)loader->buff;
+    std::copy(buffer, buffer + loader->size, inputString.begin());
+    std::stringstream inputStream;
+    inputStream << inputString;
+    cereal::BinaryInputArchive inputArchive(inputStream);
+
+    inputArchive(simulation->ontheflyParams);
+
+    ReleaseDataport(loader);
+
+    return true;
 }
