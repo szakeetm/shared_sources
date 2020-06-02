@@ -57,9 +57,9 @@ int parse_input(std::string serializedFile){
     inputArchive(md.CDFs);
     inputArchive(md.IDs);
     inputArchive(md.parameters);
-    inputArchive(md.temperatures);
+    //inputArchive(md.temperatures);
     inputArchive(md.moments);
-    inputArchive(md.desorptionParameterIDs);
+    //inputArchive(md.desorptionParameterIDs);
 
     md.structures.resize(md.sh.nbSuper); //Create structures
     //Facets
