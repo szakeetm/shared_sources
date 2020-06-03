@@ -336,7 +336,7 @@ void Worker::Update(float appTime) {
     simManager.GetProcStatus(procInfo);
 
     for (size_t i = 0; i < procInfo.size() && done; i++) {
-        const size_t procState = procInfo[i].statusId;
+        const size_t procState = procInfo[i].masterCmd;
         done = done && (procState == PROCESS_DONE);
         error = error && (procState == PROCESS_ERROR);
 

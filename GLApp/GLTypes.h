@@ -55,8 +55,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 // Macros
 #define DELETE_LIST(l) if(l) { glDeleteLists(l,1);l=0; }
 #define DELETE_TEX(t)  if(t) { glDeleteTextures(1,&t);t=0; }
-#define SAFE_DELETE(x) if(x) { delete x;x=NULL; }
-#define SAFE_FREE(x) if(x) { free(x);x=NULL; }
+#define SAFE_DELETE(x) if(x) { delete x;x=nullptr; }
+#define SAFE_FREE(x) if(x) { free(x);x=nullptr; }
 #define SAFE_CLEAR(vect) if(vect) {vect.clear();}
 #define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
 #define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();

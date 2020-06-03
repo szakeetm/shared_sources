@@ -29,6 +29,8 @@ protected:
     void SetErrorSub(const char *message);
     void SetStatus(char *status);
     void SetReady();
+    int ClearCommand();
+    int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
     SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);

@@ -20,6 +20,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef _SMPH_
 #define _SMPH_
 
+#include "ProcessControl.h"
+
 #define STARTPROC_NORMAL 0
 #define STARTPROC_BACKGROUND 1
 #define STARTPROC_FOREGROUND 2
@@ -77,33 +79,12 @@ struct Dataport {
 
 #define MAX_PROCESS (size_t)32    // Maximum number of process
 
-class SHCONTROL {
-public:
+struct SHCONTROL {
     // Process control
-    size_t		states[MAX_PROCESS];        // Process states/commands
-    size_t    cmdParam[MAX_PROCESS];      // Command param 1
-    size_t    cmdParam2[MAX_PROCESS];      // Command param 1
-    size_t		oldStates[MAX_PROCESS];     // Command param 2
-    char		statusStr[MAX_PROCESS][128]; // Status message
-    /*template<class Archive>
-    void serialize(Archive & archive)
-    {
-        archive(
-                CEREAL_NVP(states),
-                CEREAL_NVP(cmdParam),
-                CEREAL_NVP(oldStates),
-                CEREAL_NVP(statusStr)
-        );
-    }*/
+    SubProcInfo procInformation[MAX_PROCESS];
 };
 
-typedef struct {
 
-  double cpu_time; // CPU time         (in second)
-  size_t  mem_use;  // Memory usage     (in byte)
-  size_t  mem_peak; // MAx Memory usage (in byte)
-
-} PROCESS_INFO;
 
 // Shared memory
 Dataport *CreateDataport(char *name, size_t size);
