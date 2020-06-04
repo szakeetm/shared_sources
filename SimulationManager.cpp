@@ -83,8 +83,8 @@ int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send 
         throw std::logic_error("No active simulation handles!");
 
     if(!ignoreSubs) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,
-                           isRunning ? PROCESS_RUN : PROCESS_READY)) {
+        //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
+        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
         }
     }
@@ -397,14 +397,15 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         finished = true;
         AccessDataport(dpControl);
-        SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+        auto *shMaster = (SHCONTROL *)dpControl->buff;
 
         for (size_t i = 0; i < simHandles.size(); i++) {
-            finished = finished & (shMaster->states[i]==procStatus || shMaster->states[i]==PROCESS_ERROR || shMaster->states[i]==PROCESS_DONE);
-            if( shMaster->states[i]==PROCESS_ERROR ) {
+            auto procState = shMaster->procInformation[i].slaveState;
+            finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
+            if( procState==PROCESS_ERROR ) {
                 error = true;
             }
-            allProcsDone = allProcsDone & (shMaster->states[i] == PROCESS_DONE);
+            allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
         ReleaseDataport(dpControl);
 
@@ -424,12 +425,18 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
 
     // Send command
     AccessDataport(dpControl);
-    SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+    auto *shMaster = (SHCONTROL *)dpControl->buff;
     for(size_t i=0;i<simHandles.size();i++) {
-        shMaster->oldStates[i]=shMaster->states[i]; // use to solve old state
-        shMaster->states[i]=command;
-        shMaster->cmdParam[i]=param;
-        shMaster->cmdParam2[i]=param2;
+        auto procState = shMaster->procInformation[i].slaveState;
+        if(procState == PROCESS_READY
+           || procState == PROCESS_RUN
+              || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
+            shMaster->procInformation[i].slaveState = PROCESS_STARTING;
+            shMaster->procInformation[i].oldState = shMaster->procInformation[i].masterCmd; // use to solve old state
+            shMaster->procInformation[i].masterCmd = command;
+            shMaster->procInformation[i].cmdParam = param;
+            shMaster->procInformation[i].cmdParam2 = param2;
+        }
     }
     ReleaseDataport(dpControl);
 
@@ -458,9 +465,9 @@ int SimulationManager::KillAllSimUnits() {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
             AccessDataport(dpControl);
-            SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+            auto *shMaster = (SHCONTROL *)dpControl->buff;
             for(size_t i=0;i<simHandles.size();i++) {
-                if (shMaster->states[i] != PROCESS_KILLED){
+                if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
                     if(!KillProc(simHandles[i].first)) {
                         //assume that the process doesn't exist, so remove it from our management structure
                         simHandles.erase((simHandles.begin()+i));
@@ -530,14 +537,17 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
         return 1;
 
     AccessDataport(dpControl);
-    SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
+    auto *shMaster = (SHCONTROL *)dpControl->buff;
     for(int i = 0; i<simHandles.size();++i){
         SubProcInfo pInfo{};
         pInfo.procId = simHandles[i].first;
-        pInfo.statusId = shMaster->states[i];
-        strncpy(pInfo.statusString,shMaster->statusStr[i],128);
-        pInfo.cmdParam = shMaster->cmdParam[i];
-        pInfo.oldState = shMaster->oldStates[i];
+        pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
+        pInfo.masterCmd = shMaster->procInformation[i].slaveState;
+        strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
+        pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
+        pInfo.oldState = shMaster->procInformation[i].oldState;
+        pInfo.runtimeInfo = shMaster->procInformation[i].runtimeInfo;
+
         procInfoList.emplace_back(pInfo);
     }
     ReleaseDataport(dpControl);
@@ -547,11 +557,13 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
     AccessDataport(dpControl);
-    SHCONTROL *shMaster = (SHCONTROL *)dpControl->buff;
-    memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
+    auto *shMaster = (SHCONTROL *)dpControl->buff;
+    //memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
     for (size_t i = 0; i < MAX_PROCESS; i++) {
+        //states[i] = shMaster->procInformation[i].masterCmd;
+        states[i] = shMaster->procInformation[i].slaveState;
         char tmp[128];
-        strncpy(tmp, shMaster->statusStr[i], 127);
+        strncpy(tmp, shMaster->procInformation[i].statusString, 127);
         tmp[127] = 0;
         statusStrings[i] = tmp;
     }
@@ -626,7 +638,7 @@ const char *SimulationManager::GetErrorDetails() {
 
     for (size_t i = 0; i < procInfo.size(); i++) {
         char tmp[512];
-        size_t state = procInfo[i].statusId;
+        size_t state = procInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
             sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
                     procInfo[i].statusString);
@@ -675,13 +687,17 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         }
         case LoadType::LOADPARAM:{
 
-            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+            //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
             CloseLoaderDP();
+            if(isRunning) { // restart
+                StartSimulation();
+            }
             break;
         }
         case LoadType::LOADAC:{

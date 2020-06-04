@@ -9,13 +9,6 @@
 #include "Buffer_shared.h"
 
 class CurrentParticleStatus;
-/*class MCSimulation {
-public:
-    OntheflySimulationParams ontheflyParams;
-    GeomProperties sh;
-    // Particle coordinates (MC)
-    CurrentParticleStatus* currentParticle;
-};*/
 
 class SimulationUnit {
 public:

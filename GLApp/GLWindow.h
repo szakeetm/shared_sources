@@ -15,7 +15,7 @@ public:
 
   // Construction
   GLWindow();
-  virtual ~GLWindow();
+  ~GLWindow();
 
   // Window methods
   void GetBounds(int *x,int *y,int *w,int *h);

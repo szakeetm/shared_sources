@@ -34,7 +34,7 @@ public:
 
   // Construction
   GLContainer();
-  ~GLContainer();
+  virtual ~GLContainer();
 
   // Parent window
   void SetWindow(GLWindow *parent);

@@ -34,6 +34,8 @@ SimulationController::SimulationController(std::string appName , std::string dpN
         exit(0);
     }
 
+    SetRuntimeInfo();
+
     printf("Connected to %s (%zd bytes), %sSub.exe #%d\n", ctrlDpName, sizeof(SHCONTROL), appName.c_str(), prIdx);
     SetReady();
 }
@@ -82,16 +84,59 @@ int SimulationController::RunSimulation() {
     return !goOn;
 }
 
+int SimulationController::SetRuntimeInfo() {
+
+    if (AccessDataport(this->dpControl)) {
+        auto *master = (SHCONTROL *) this->dpControl->buff;
+        // Update runtime information
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        procInfo.procId = _getpid();
+#else
+        procInfo.procId = ::getpid();
+#endif //  WIN
+
+        GetProcInfo(procInfo.procId,&master->procInformation[prIdx].runtimeInfo);
+        ReleaseDataport(this->dpControl);
+    }
+    else{
+        return 1; // could not get access to dataport
+    }
+    return 0;
+}
+
+int SimulationController::ClearCommand() {
+
+    procInfo.masterCmd = COMMAND_NONE;
+
+    if (AccessDataport(this->dpControl)) {
+        auto *master = (SHCONTROL *) this->dpControl->buff;
+        master->procInformation[prIdx].masterCmd = COMMAND_NONE;
+        master->procInformation[prIdx].cmdParam = 0;
+        master->procInformation[prIdx].cmdParam2 = 0;
+        strncpy(master->procInformation[prIdx].statusString, GetSimuStatus(), 127);
+        master->procInformation[prIdx].statusString[127] = '\0';
+        ReleaseDataport(this->dpControl);
+    }
+    else{
+        return 1; // could not get access to dataport
+    }
+    return 0;
+}
+
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
-    procInfo.statusId = state;
+    //procInfo.masterCmd = state;
+    procInfo.slaveState = state;
     if (changeState) printf("\n setstate %zd \n", state);
     if (AccessDataport(this->dpControl)) {
-        SHCONTROL *master = (SHCONTROL *) this->dpControl->buff;
-        if (changeState) master->states[prIdx] = state;
+        auto *master = (SHCONTROL *) this->dpControl->buff;
+        if (changeState) {
+            //master->procInformation[prIdx].masterCmd = state;
+            master->procInformation[prIdx].slaveState = state;
+        }
         if (changeStatus) {
-            strncpy(master->statusStr[prIdx], status, 127);
-            master->statusStr[prIdx][127] = 0;
+            strncpy(master->procInformation[prIdx].statusString, status, 127);
+            master->procInformation[prIdx].statusString[127] = '\0';
         }
         ReleaseDataport(this->dpControl);
     }
@@ -116,14 +161,15 @@ char *SimulationController::GetSimuStatus() {
 }
 
 void SimulationController::GetState() {
-    procInfo.statusId = PROCESS_READY;
-    procInfo.cmdParam = 0;
+    //procInfo.masterCmd = PROCESS_READY;
+    //procInfo.slaveState = PROCESS_READY;
+    //procInfo.cmdParam = 0;
 
     if (AccessDataport(this->dpControl)) {
         auto master = (SHCONTROL *) this->dpControl->buff;
-        procInfo.statusId = master->states[prIdx];
-        procInfo.cmdParam = master->cmdParam[prIdx];
-        procInfo.cmdParam2 = master->oldStates[prIdx];
+        procInfo.masterCmd = master->procInformation[prIdx].masterCmd;
+        procInfo.cmdParam = master->procInformation[prIdx].cmdParam;
+        procInfo.cmdParam2 = master->procInformation[prIdx].oldState;
         //master->cmdParam[prIdx] = 0;
         //master->oldStates[prIdx] = 0;
 
@@ -151,9 +197,9 @@ void SimulationController::SetErrorSub(const char *message) {
 
 void SimulationController::SetStatus(char *status) {
     if (AccessDataport(this->dpControl)) {
-        SHCONTROL *master = (SHCONTROL *) this->dpControl->buff;
-        strncpy(master->statusStr[prIdx], status, 127);
-        master->statusStr[prIdx][127] = 0;
+        auto *master = (SHCONTROL *) this->dpControl->buff;
+        strncpy(master->procInformation[prIdx].statusString, status, 127);
+        master->procInformation[prIdx].statusString[127] = '\0';
         ReleaseDataport(this->dpControl);
     }
 }
@@ -165,10 +211,11 @@ void SimulationController::SetReady() {
     else
         SetState(PROCESS_READY, "(No geometry)");
 
+    ClearCommand();
 }
 
 size_t SimulationController::GetLocalState() const {
-    return procInfo.statusId;
+    return procInfo.slaveState;
 }
 
 // Main loop
@@ -177,7 +224,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
     while (!endState) {
         GetState();
         bool eos = false;
-        switch (procInfo.statusId) {
+        switch (procInfo.masterCmd) {
 
             case COMMAND_LOAD:
                 printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
@@ -185,34 +232,51 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 loadOK = Load();
                 if (loadOK) {
                     //desorptionLimit = procInfo.cmdParam2; // 0 for endless
+                    SetRuntimeInfo();
                     SetReady();
                 }
                 break;
 
             case COMMAND_UPDATEPARAMS:
+                SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                 if (UpdateParams()) {
-                    SetState(procInfo.cmdParam2, GetSimuStatus());
+                    SetReady();
+                    //SetState(procInfo.cmdParam2, GetSimuStatus());
+                } else{
+                    SetState(PROCESS_ERROR, "Could not update parameters");
                 }
                 break;
 
             case COMMAND_RELEASEDPLOG:
+                SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                 CLOSEDPSUB(dpLog);
-                SetState(procInfo.cmdParam, GetSimuStatus());
+                SetReady();
                 break;
 
             case COMMAND_START:
-                printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
+                if(GetLocalState() != PROCESS_RUN) {
+                    printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
+                    SetState(PROCESS_RUN, GetSimuStatus());
+                }
                 if (loadOK) {
-                    if (!StartSimulation())
-                        SetState(PROCESS_RUN, GetSimuStatus());
-                    else {
-                        if (GetLocalState() != PROCESS_ERROR)
-                            SetState(PROCESS_DONE, GetSimuStatus());
+                    SetStatus(GetSimuStatus()); //update hits only
+                    eos = RunSimulation();      // Run during 1 sec
+                    if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
+                        simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                     }
+                    if (eos) {
+                        if (GetLocalState() != PROCESS_ERROR) {
+                            // Max desorption reached
+                            SetState(PROCESS_DONE, GetSimuStatus());
+                            printf("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                        }
+                    }
+                    break;
                 } else
                     SetErrorSub("No geometry loaded");
+
                 break;
 
             case COMMAND_PAUSE:
@@ -253,8 +317,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
                 if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
-                    simulation->UpdateHits(dpHit, dpLog, prIdx,
-                               20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
@@ -319,7 +382,7 @@ bool SimulationController::Load() {
     if (!this->dpHit) { // in case of unknown size, create the DP itself
         this->dpHit = CreateDataport(hitsDpName, hSize);
     }
-    if (!this->dpHit) {
+    if (!this->dpHit) { // recheck after creation
         char err[512];
         sprintf(err, "Failed to connect to 'hits' dataport (%zd Bytes)", hSize);
         SetErrorSub(err);

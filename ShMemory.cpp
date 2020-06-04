@@ -194,20 +194,16 @@ Dataport *CreateDataport(char *name, size_t size) {
 
     dp = (Dataport *) malloc(sizeof(Dataport));
 
-    if (dp == NULL) {
+    if (dp == nullptr) {
 
         printf("CreateDataport(): Not enough memory...");
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 
     strcpy(dp->name, name);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(dp->semaname, "%s_sema", name);
-#else
-    sprintf(dp->semaname,"%s_sema",name); // creates semaphore as /dev/sem/%s_sema
-#endif
+    sprintf(dp->semaname,"%s_sema",name); // for linux creates semaphore as /dev/sem/%s_sema
     /* ------------------- Create shared memory ------------------- */
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -236,10 +232,10 @@ Dataport *CreateDataport(char *name, size_t size) {
 
     }
 
-    if (dp->mem == NULL) {
+    if (dp->mem == nullptr) {
         PrintLastErrorText("CreateDataport(): CreateFileMapping() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 
 #else
@@ -251,21 +247,21 @@ Dataport *CreateDataport(char *name, size_t size) {
     if (dp->shmFd < 0) {
         PrintLastErrorText("CreateDataport(): shm_open() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 
 #if defined(__MACOSX__) || defined(__APPLE__)
 // Increase shared memory size from 0 to size
     struct stat mapstat;
     if (-1 != fstat(dp->shmFd, &mapstat) && mapstat.st_size == 0) {
-        ftruncate(dp->shmFd, size);
+        status = ftruncate(dp->shmFd, size);
     }
     else
-    return dp;
+        return dp;
     if (status != 0) {
         PrintLastErrorText("CreateDataport(): ftruncate() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #else
     // Increase shared memory size from 0 to size
@@ -273,14 +269,14 @@ Dataport *CreateDataport(char *name, size_t size) {
     if (status != 0) {
         PrintLastErrorText("CreateDataport(): ftruncate() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif //__APPLE__
 
 #endif
     /* ------------------- Create the semaphore ------------------- */
     if (CreateSemaphore(dp) == -1) {
-        return NULL;
+        return nullptr;
     }
 
     /* ------------------- Map the memomy ------------------- */
@@ -289,24 +285,24 @@ Dataport *CreateDataport(char *name, size_t size) {
     dp->buff = MapViewOfFile(dp->mem, FILE_MAP_WRITE, 0, 0, 0); //With this function write access equals all_access
 
 
-    if (dp->buff == NULL) {
+    if (dp->buff == nullptr) {
 
         PrintLastErrorText("CreateDataport(): MapViewOfFile() failed");
         CloseHandle(dp->mem);
         CloseHandle(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 #else
 
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
+    if (dp->buff == nullptr || dp->buff == MAP_FAILED) {
         PrintLastErrorText("CreateDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
     //memset(dp->buff, 0, size);//Debug
@@ -323,11 +319,11 @@ Dataport *OpenDataport(char *name, size_t size) {
 
     dp = (Dataport *) malloc(sizeof(Dataport));
 
-    if (dp == NULL) {
+    if (dp == nullptr) {
 
         printf("OpenDataport(): Not enough memory...");
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 
@@ -374,7 +370,7 @@ Dataport *OpenDataport(char *name, size_t size) {
         PrintLastErrorText(errorString.c_str());
         close(dp->shmFd);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
     /* ------------------- Link to the semaphore ------------------- */
@@ -394,12 +390,12 @@ Dataport *OpenDataport(char *name, size_t size) {
     }
 #else
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
+    if (dp->buff == nullptr || dp->buff == MAP_FAILED) {
         PrintLastErrorText("OpenDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
 

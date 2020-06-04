@@ -31,7 +31,7 @@ enum class LoadType : uint8_t {
 
 /*struct SubProcInfo {
     size_t procId;
-    size_t statusId;
+    size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
     size_t oldState;

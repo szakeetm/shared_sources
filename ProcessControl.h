@@ -5,8 +5,7 @@
 #ifndef MOLFLOW_PROJ_PROCESSCONTROL_H
 #define MOLFLOW_PROJ_PROCESSCONTROL_H
 
-// Master control shared memory block  (name: MFLWCTRL[masterPID])
-//
+#include <cstddef> //size_t
 
 #define PROCESS_STARTING 0   // Loading state
 #define PROCESS_RUN      1   // Running state
@@ -15,6 +14,7 @@
 #define PROCESS_ERROR    4   // Process in error
 #define PROCESS_DONE     5   // Simulation ended
 #define PROCESS_RUNAC    6   // Computing AC matrix
+#define PROCESS_WAIT     7   // Command fully executed
 
 #define COMMAND_NONE     10  // No change
 #define COMMAND_LOAD     11  // Load geometry
@@ -53,13 +53,23 @@ static const char *prStates[] = {
         "AC iteration step" //Molflow only
 };
 
+struct PROCESS_INFO{
+
+    double cpu_time; // CPU time         (in second)
+    size_t  mem_use;  // Memory usage     (in byte)
+    size_t  mem_peak; // MAx Memory usage (in byte)
+
+};
+
 struct SubProcInfo {
     size_t procId;
-    size_t statusId;
+    size_t slaveState;
+    size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
     size_t oldState;
     char statusString[128];
+    PROCESS_INFO runtimeInfo;
 };
 
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H
