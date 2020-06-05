@@ -496,7 +496,7 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
         SubProcInfo pInfo{};
         pInfo.procId = simHandles[i].first;
         pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
-        pInfo.masterCmd = shMaster->procInformation[i].slaveState;
+        pInfo.slaveState = shMaster->procInformation[i].slaveState;
         strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
         pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
         pInfo.oldState = shMaster->procInformation[i].oldState;
