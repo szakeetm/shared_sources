@@ -8,6 +8,10 @@
 #include "SimulationController.h"
 #include "ProcessControl.h"
 
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#include <process.h>
+#endif
+
 #define WAITTIME    100  // Answer in STOP mode
 
 SimulationController::SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance){
