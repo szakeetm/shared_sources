@@ -360,6 +360,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             if( procState==PROCESS_ERROR ) {
                 error = true;
             }
+            else if(procState == PROCESS_STARTING){
+                timeOutAt = 20000; // if task properly started, increase allowed wait time
+            }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
         ReleaseDataport(dpControl);
