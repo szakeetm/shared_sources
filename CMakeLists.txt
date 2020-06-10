@@ -234,7 +234,7 @@ if(NOT MSVC)
 
     if(APPLE)
         #link to self-build sdl shared lib
-        target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-framework AppKit")
         #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
 
     FIND_PACKAGE(SDL2 REQUIRED)
