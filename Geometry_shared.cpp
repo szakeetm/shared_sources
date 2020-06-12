@@ -1047,7 +1047,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		f->SwapNormal();
 		InitializeGeometry((int)i);
 		try {
-			SetFacetTexture(i, f->tRatio, f->hasMesh);
+			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 		catch (Error &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1162,7 +1162,7 @@ void Geometry::ShiftVertex() {
 			f->ShiftVertex();
 			InitializeGeometry(i);// Reinitialise geom
 			try {
-				SetFacetTexture(i, f->tRatio, f->hasMesh);
+				SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 			}
 			catch (Error &e) {
 				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -3280,20 +3280,39 @@ void Geometry::Rebuild() {
 }
 
 
-
 void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
+
+    Facet *f = facets[facetId];
+    double nU = f->sh.U.Norme();
+    double nV = f->sh.V.Norme();
+
+    if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
+        char errMsg[512];
+        sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
+        throw Error(errMsg);
+    }
+    f->tRatioU = ratio;
+    f->tRatioV = ratio;
+
+    BuildFacetList(f);
+
+}
+
+void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
 	Facet *f = facets[facetId];
 	double nU = f->sh.U.Norme();
 	double nV = f->sh.V.Norme();
 
-	if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
+	if (!f->SetTexture(nU*ratioU, nV*ratioV, mesh)) {
 		char errMsg[512];
 		sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
 		throw Error(errMsg);
 	}
-	f->tRatio = ratio;
-	BuildFacetList(f);
+    f->tRatioU = ratioU;
+    f->tRatioV = ratioV;
+
+    BuildFacetList(f);
 
 }
 

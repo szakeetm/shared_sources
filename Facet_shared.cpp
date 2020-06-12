@@ -89,7 +89,8 @@ Facet::Facet(size_t nbIndex) {
 
 	texDimW = 0;
 	texDimH = 0;
-	tRatio = 0.0;
+    tRatioU = 0.0;
+    tRatioV = 0.0;
 
 	//mesh = NULL;
 	//meshPts = NULL;
@@ -271,10 +272,11 @@ bool Facet::SetTexture(double width, double height, bool useMesh) {
 	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
-		sh.texWidthD = width;
+        const double ceilCutoff = 0.9999999;
+        sh.texWidthD = width;
 		sh.texHeightD = height;
-		sh.texWidth = (int)ceil(width *0.9999999); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
-		sh.texHeight = (int)ceil(height *0.9999999);
+		sh.texWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
+		sh.texHeight = (int)ceil(height * ceilCutoff);
 		dimOK = (sh.texWidth > 0 && sh.texHeight > 0);
 	}
 	else {
@@ -733,10 +735,10 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 /**
 * \brief Get number of texture cells
-* \return number of texture cells
+* \return pair of number of texture cells in both directions
 */
-size_t Facet::GetNbCell() {
-	return sh.texHeight * sh.texWidth;
+std::pair<size_t, size_t> Facet::GetNbCell() {
+	return std::make_pair(sh.texHeight, sh.texWidth);
 }
 
 /**
@@ -754,15 +756,36 @@ size_t Facet::GetNbCellForRatio(double ratio) {
 	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
-		int iwidth = (int)ceil(width);
-		int iheight = (int)ceil(height);
-		return iwidth*iheight;
+        int iWidth = (int)ceil(width);
+        int iHeight = (int)ceil(height);
+        return iWidth * iHeight;
 	}
-	else {
+    return 0;
+}
 
-		return 0;
-	}
+/**
+* \brief Get number of cells calculated with a size ratio
+* \param ratioU ratio in U direction used for size conversion
+* \param ratioV ratio in V direction used for size conversion
+* \return number of texture cells
+*/
+std::pair<size_t, size_t> Facet::GetNbCellForRatio(double ratioU, double ratioV) {
 
+    double nU = sh.U.Norme();
+    double nV = sh.V.Norme();
+    double width = nU*ratioU;
+    double height = nV*ratioV;
+
+    bool dimOK = (width*height > 0.0000001);
+    if (dimOK) {
+        const double ceilCutoff = 0.9999999;
+        int iWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
+        int iHeight = (int)ceil(height * ceilCutoff);
+        return std::make_pair(iWidth, iHeight);
+    }
+    else {
+        return std::make_pair(0, 0);
+    }
 }
 
 /**
@@ -866,7 +889,7 @@ size_t Facet::GetIndex(size_t idx) {
 double Facet::GetMeshArea(size_t index,bool correct2sides) {
 	if (!cellPropertiesIds) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
-		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatio*tRatio);
+		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatioU*tRatioV);
 	}
 	else if (cellPropertiesIds[index] == -2) {
 		return 0.0;
@@ -1113,8 +1136,9 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 #endif
 		sh.countDirection = f->sh.countDirection;
 		hasMesh = f->hasMesh;
-		tRatio = f->tRatio;
-	}
+        tRatioU = f->tRatioU;
+        tRatioV = f->tRatioV;
+    }
 	this->UpdateFlags();
 	textureVisible = f->textureVisible;
 	volumeVisible = f->volumeVisible;

@@ -197,7 +197,9 @@ public:
 	void    MoveVertexTo(size_t idx, double x, double y, double z);
 	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
-	void    Rebuild();
+    void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
+
+    void    Rebuild();
 	void	MergecollinearSides(Facet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();
