@@ -1429,3 +1429,46 @@ void GLChart::RemoveDataView(GLDataView *view) {
 		}
 	}
 }
+
+void GLChart::SetColorSchemeColorblind(){
+
+    // Paul Tol
+    static std::vector<GLColor> colorSchemeTol = {
+            GLColor(238,119,51), //orange
+            GLColor(0,119,187), //blue
+            GLColor(51,187,238), //cyan
+            GLColor(238,51,119), //magenta
+            GLColor(204,51,17), //red
+            GLColor(0,153,136), //teal
+            GLColor(187,187,187) // grey
+    };
+
+    //Okabe and Ito
+    static std::vector<GLColor> colorSchemeIto = {
+            GLColor(230,159,0), //orange
+            GLColor(86,180,233), //sky blue
+            GLColor(0,158,115), //blueish green
+            GLColor(240,228,66), //yellow
+            GLColor(0,114,178), //blue
+            GLColor(213,94,0), //vermillion
+            GLColor(204,121,167), //reddish purple
+            GLColor(0,0,0) //black
+    };
+
+    this->colors = colorSchemeIto;
+}
+
+void GLChart::SetColorSchemeDefault(){
+    static std::vector<GLColor> colorScheme = {
+            GLColor(255,000,055), //red
+            GLColor(000,000,255), //blue
+            GLColor(000,204,051), //green
+            GLColor(000,000,000), //black
+            GLColor(255,153,051), //orange
+            GLColor(153,204,255), //light blue
+            GLColor(153,000,102), //violet
+            GLColor(255,230,005) //yellow
+    };
+
+    this->colors = colorScheme;
+}

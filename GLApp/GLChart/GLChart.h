@@ -80,6 +80,8 @@ public:
   void RestoreDeviceObjects();
 
   GLColor GetFirstAvailableColor();
+    void SetColorSchemeColorblind();
+    void SetColorSchemeDefault();
 
 private:
 
