@@ -34,6 +34,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
 
+#include "GoogleAnalytics.h"
+
 #ifndef _WIN32
 #include <unistd.h> //Get user name
 #endif
@@ -48,7 +50,35 @@ AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const s
 	applicationName = appName;
 	currentVersionId = versionId;
 	configFileName = configFile;
-	LoadConfig();
+
+	if(!std::filesystem::exists(configFileName))
+	    MakeDefaultConfig();
+    LoadConfig();
+
+}
+
+/**
+* \brief Creates a default config from GoogleAnalytics.h info
+*/
+void AppUpdater::MakeDefaultConfig(){
+    xml_document configDoc;
+    xml_node rootNode = configDoc.append_child("UpdaterConfigFile"); //XML specifications require a root node
+
+    xml_node serverNode = rootNode.append_child("ServerConfig");
+    serverNode.append_child("RemoteFeed").append_attribute("url") = REMOTE_FEED;
+    serverNode.append_child("PublicWebsite").append_attribute("url") = PUBLIC_WEBSITE;
+    serverNode.child("PublicWebsite").append_attribute("downloadsPage") = DOWNLOAD_PAGE;
+    serverNode.append_child("GoogleAnalytics").append_attribute("projectId") = GA_PROJECT_ID;
+
+    xml_node localConfigNode = rootNode.append_child("LocalConfig");
+    localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = "false";
+    localConfigNode.child("Permission").append_attribute("appLaunchedBeforeAsking") = "0";
+    localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = "3";
+    localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX;
+    localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
+    localConfigNode.append_child("SkippedVersions");
+
+    configDoc.save_file(configFileName.c_str());
 }
 
 /**
