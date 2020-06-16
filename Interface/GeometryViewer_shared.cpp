@@ -31,6 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SDL_SavePNG/savepng.h"
 
 #include <math.h>
+#include <cstdlib>
 //#include <malloc.h>
 #include "Facet_shared.h"
 
@@ -103,7 +104,8 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	showLine = false;
 	showVolume = false;
 	showTexture = false;
-	showHidden = false;
+    showFacetId = false;
+    showHidden = false;
 	showHiddenVertex = true;
 	showMesh = false;
 	showDir = true;
@@ -851,6 +853,60 @@ void GeometryViewer::DrawUV() {
 	}
 }
 
+void GeometryViewer::DrawFacetId() {
+
+    char tmp[256];
+
+    // Draw index number
+    // Get selected vertex
+    Geometry *geom = work->GetGeometry();
+    size_t nbVertex = geom->GetNbVertex();
+    std::vector<size_t> selectedFacets = geom->GetSelectedFacets();
+    if (nbVertex <= 0 || selectedFacets.empty()) return;
+
+    //Mark vertices of selected facets
+    std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
+    std::vector<size_t> vertexId(nbVertex);
+    for (auto& selId:selectedFacets) {
+        Facet *f = geom->GetFacet(selId);
+        for (size_t i = 0; i < f->sh.nbIndex; i++) {
+            vertexOnSelectedFacet[f->indices[i]] = true;
+            vertexId[f->indices[i]] = i;
+        }
+    }
+
+    // Save context
+    GLToolkit::DrawStringInit();
+    GLToolkit::GetDialogFont()->SetTextColor(0.9f, 0.1f, 0.1f);
+
+    // Draw Labels
+    for (auto& selId:selectedFacets) {
+        Facet *f = geom->GetFacet(selId);
+        Vector3d center = geom->GetFacetCenter(selId);
+        Vector3d origin = geom->GetFacetCenter(selId);
+        Vector3d labelVec = geom->GetFacetCenter(selId);
+        double labelDist = 99999999.0;
+        for (size_t i = 1; i < f->sh.nbIndex; i++) {
+            Vector3d *v = geom->GetVertex(f->indices[i]);
+
+            // Look for the closest Vertex between Origin and Center as a label position
+            double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
+            if(distance < labelDist){
+                labelVec = *v;
+                labelDist = distance;
+            }
+
+
+        }
+        labelVec = center;
+        sprintf(tmp, " [#%zd] ", selId);
+        GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z, tmp, GLToolkit::GetDialogFont(), -10, -10);
+    }
+
+    //Restore
+    GLToolkit::DrawStringRestore();
+}
+
 void GeometryViewer::DrawLeak() {
 
 	// Draw leak
@@ -1171,7 +1227,11 @@ if( showVolume || showTexture ) {
 	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
 
     DrawRule();
-	GLToolkit::CheckGLErrors("GLLabel::Paint()");
+
+    // Draw on top of everything
+    if (showFacetId && (!detailsSuppressed)) DrawFacetId();
+
+    GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
 	// Restore old transformation/viewport

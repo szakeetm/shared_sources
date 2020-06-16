@@ -151,6 +151,7 @@ public:
   bool showLine;
   bool showVolume;
   bool showTexture;
+  bool showFacetId;
   int  showBack;
   bool showFilter;
  // bool showColormap;
@@ -186,6 +187,7 @@ private:
   void DrawRule();
   void DrawNormal();
   void DrawUV();
+  void DrawFacetId();
   void DrawLeak();
   void DrawLinesAndHits();
   void Zoom();

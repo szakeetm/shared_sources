@@ -303,6 +303,7 @@ public:
 	GLToggle      *showLine;
 	GLToggle      *showVolume;
 	GLToggle      *showTexture;
+    GLToggle      *showFacetId;
 	GLToggle      *showFilter;
 	GLToggle      *showIndex;
 	GLToggle      *showVertex;

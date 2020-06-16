@@ -216,6 +216,8 @@ void Interface::UpdateViewerFlags() {
     viewer[curViewer]->showLine = showLine->GetState();
     viewer[curViewer]->showVolume = showVolume->GetState();
     viewer[curViewer]->showTexture = showTexture->GetState();
+    viewer[curViewer]->showFacetId = showFacetId->GetState();
+
     bool neededTexture = needsTexture;
     CheckNeedsTexture();
 
@@ -657,6 +659,7 @@ void Interface::UpdateViewerPanel() {
     showVolume->SetState(viewer[curViewer]->showVolume);
     showLine->SetState(viewer[curViewer]->showLine);
     showTexture->SetState(viewer[curViewer]->showTexture);
+    showFacetId->SetState(viewer[curViewer]->showFacetId);
     showFilter->SetState(viewer[curViewer]->showFilter);
     showVertex->SetState(viewer[curViewer]->showVertex);
     showIndex->SetState(viewer[curViewer]->showIndex);
@@ -963,6 +966,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     showTexture = new GLToggle(0, "Texture");
     togglePanel->Add(showTexture);
+
+    showFacetId = new GLToggle(0, "FacetIDs");
+    togglePanel->Add(showFacetId);
 
     showIndex = new GLToggle(0, "Indices");
     togglePanel->Add(showIndex);
