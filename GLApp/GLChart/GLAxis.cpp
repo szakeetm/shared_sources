@@ -96,6 +96,9 @@ GLAxis::GLAxis(GLComponent *parent,int orientation) {
   autoLabeling = true;
   dateFormat = (char *)FR_DATE_FORMAT;
   nbLabel = 0;
+    gridColor.r = 128;
+    gridColor.g = 128;
+    gridColor.b = 128;
   labelColor.r = 0;
   labelColor.g = 0;
   labelColor.b = 0;
@@ -3111,7 +3114,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x0 + (csize.width + 1), y, x0 + (csize.width + 1) + la, y);
+            drawLine(gridColor,gridStyle,1,x0 + (csize.width + 1), y, x0 + (csize.width + 1) + la, y);
           }
 
           //Draw sub tick
@@ -3156,7 +3159,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x0, y, x0- la, y);
+            drawLine(gridColor,gridStyle,1,x0, y, x0- la, y);
           }
 
           //Draw sub tick
