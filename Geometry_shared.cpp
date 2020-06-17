@@ -4458,6 +4458,14 @@ void  Geometry::EmptyGeometry() {
 
 }
 
+void Geometry::SetPlottedFacets(std::map<int,GLColor> setMap) {
+	plottedFacets = setMap;
+}
+
+std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
+	return plottedFacets;
+}
+
 #if defined(MOLFLOW)
 PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* buff) {
 																																	  

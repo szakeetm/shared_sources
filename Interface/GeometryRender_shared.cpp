@@ -684,7 +684,7 @@ int Geometry::compareFacetDepth(Facet* lhs, Facet* rhs){
     else return 0;
 
 }
-void Geometry::DrawTransparentPolys(std::vector<size_t> &selectedFacets) {
+void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 
     //std::vector<size_t> f3; f3.reserve(sh.nbFacet);
     //std::vector<size_t> f4; f4.reserve(sh.nbFacet);
@@ -721,17 +721,26 @@ void Geometry::DrawTransparentPolys(std::vector<size_t> &selectedFacets) {
             sortedFacets.push_back(selectedFacets[i]);
     }*/
 
+    const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
     // Draw
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glBegin(GL_TRIANGLES);
-    for (const auto& i : selectedFacets) {
-        size_t nb = facets[i]->sh.nbIndex;
+    for (const auto& sel : selectedFacets) {
+        auto it = colorHighlighting.find(sel);
+        // Check if element exists in map or not
+        if (it != colorHighlighting.end()){
+            glColor4f(it->second.r / 255.0F, it->second.g / 255.0F, it->second.b / 255.0F, 0.3f);    //red
+        }
+        else{
+            glColor4f(1.0f, 0.0f, 0.0f, 0.3f);    //red
+        }
+        size_t nb = facets[sel]->sh.nbIndex;
         if (nb == 3) {
-            FillFacet(facets[i], false);
+            FillFacet(facets[sel], false);
         }
         else {
-            Triangulate(facets[i], false);
+            Triangulate(facets[sel], false);
         }
     }
     glEnd();
@@ -1499,11 +1508,20 @@ void Geometry::BuildSelectList() {
 	}
 	glLineWidth(2.0f);
 
-	auto selectedFacets = GetSelectedFacets();
+	const auto selectedFacets = GetSelectedFacets();
+    const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 
     for (auto& sel : selectedFacets) {
 		Facet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
+		auto it = colorHighlighting.find(sel);
+        // Check if element exists in map or not
+        if (it != colorHighlighting.end()){
+            glColor3f(it->second.r / 255.0F, it->second.g / 255.0F, it->second.b / 255.0F);    //red
+        }
+        else{
+            glColor3f(1.0f, 0.0f, 0.0f);    //red
+        }
 		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
 	}
 	glLineWidth(1.0f);
