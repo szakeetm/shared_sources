@@ -76,7 +76,8 @@ public:
   static void DrawStringInit();
   static void DrawStringRestore();
   static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0);
-  static void DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,int nbPoint,int *pointX,int *pointY);
+  static void DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int nbPoint, int *pointX, int *pointY,
+                       bool useSmooth);
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
   static void DrawRule(double length,bool invertX=false,bool invertY=false,bool invertZ=false,double n=1.0);
   static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2,double nr=1.0);

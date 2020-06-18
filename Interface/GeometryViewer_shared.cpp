@@ -880,13 +880,8 @@ void GeometryViewer::DrawFacetId() {
     GLToolkit::DrawStringInit();
     GLToolkit::GetDialogFont()->SetTextColor(0.9f, 0.1f, 0.1f);
 
-    if (mApp->antiAliasing) {
-        glEnable(GL_LINE_SMOOTH);
-        //glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        //glColor4f(0.0f,0.0f,1.0f,0.5f);
-        glEnable(GL_DEPTH_TEST);
-    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
     // Draw Labels
     for (auto& selId:selectedFacets) {
@@ -908,7 +903,7 @@ void GeometryViewer::DrawFacetId() {
 
         }
         labelVec = center;
-        sprintf(tmp, " [#%zd] ", selId);
+        sprintf(tmp, " F#%zd ", selId);
         GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10);
     }
 
@@ -1231,12 +1226,12 @@ if( showVolume || showTexture ) {
 	DrawLeak();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 
-    // Draw on top of everything
-    if (showFacetId && (!detailsSuppressed)) DrawFacetId();
-
 	// Draw opaque facets etc. just after everything else has been rendered
     if(mApp->highlightSelection)
 	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+
+    // Draw on top of everything
+    if (showFacetId && (!detailsSuppressed)) DrawFacetId();
 
     DrawRule();
 

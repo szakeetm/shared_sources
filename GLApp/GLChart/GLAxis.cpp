@@ -96,9 +96,9 @@ GLAxis::GLAxis(GLComponent *parent,int orientation) {
   autoLabeling = true;
   dateFormat = (char *)FR_DATE_FORMAT;
   nbLabel = 0;
-    gridColor.r = 128;
-    gridColor.g = 128;
-    gridColor.b = 128;
+    gridColor.r = 127;
+    gridColor.g = 127;
+    gridColor.b = 127;
   labelColor.r = 0;
   labelColor.g = 0;
   labelColor.b = 0;
@@ -2154,7 +2154,7 @@ GLuint GLAxis::initMarker(const char *name) {
       pointY[0] = lp.y;
       pointY[1] =  p.y;
       GLColor c = v->GetColor();
-      GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,2,pointX,pointY);
+        GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 2, pointX, pointY, false);
 
     }
 
@@ -2291,7 +2291,7 @@ GLuint GLAxis::initMarker(const char *name) {
       pointX[1] = x+40;
       pointY[0] = y;
       pointY[1] = y;
-      GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,2,pointX,pointY);
+        GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 2, pointX, pointY, false);
       GLAxis::PaintMarker(v->GetMarkerColor(), v->GetMarker(), v->GetMarkerSize(), x + 20, y);
 
     } else if( v->GetViewType() == TYPE_BAR ) {
@@ -2310,7 +2310,7 @@ GLuint GLAxis::initMarker(const char *name) {
         pointX[2] = x+24;pointY[2] = y+4;
         pointX[3] = x+16;pointY[3] = y+4;
         pointX[4] = x+16;pointY[4] = y-4;
-        GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,5,pointX,pointY);
+          GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 5, pointX, pointY, false);
 
       }
 
@@ -2329,7 +2329,7 @@ GLuint GLAxis::initMarker(const char *name) {
     pointX[1] = x2;
     pointY[0] = y1;
     pointY[1] = y2;
-    GLToolkit::DrawPoly(lWidth,dash,c.r,c.g,c.b,2,pointX,pointY);
+      GLToolkit::DrawPoly(lWidth, dash, c.r, c.g, c.b, 2, pointX, pointY, false);
   }
 
   //   Expert usage
@@ -2481,11 +2481,9 @@ GLuint GLAxis::initMarker(const char *name) {
 
       if (v->GetLineWidth() > 0) {
         GLColor c = v->GetColor();
-        GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,nb,pointX,pointY);
+          GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, nb, pointX, pointY, true);
       }
-
     }
-
   }
 
    void GLAxis::paintDataViewNormal(GLDataView *v, GLAxis *xAxis, int xOrg, int yOrg) {
