@@ -9,6 +9,7 @@
 #include "../GLButton.h"
 
 //#include <malloc.h>
+#include <list>
 #include <cmath>
 #include <sstream>
 #include <cstring> //strcpy, etc.

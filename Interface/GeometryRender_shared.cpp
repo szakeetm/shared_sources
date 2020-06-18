@@ -727,13 +727,17 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 
     glBegin(GL_TRIANGLES);
     for (const auto& sel : selectedFacets) {
-        auto it = colorHighlighting.find(sel);
-        // Check if element exists in map or not
-        if (it != colorHighlighting.end()){
-            glColor4f(it->second.r / 255.0F, it->second.g / 255.0F, it->second.b / 255.0F, 0.3f);    //red
+        if(!colorHighlighting.empty()) {
+            auto it = colorHighlighting.find(sel);
+            // Check if element exists in map or not
+            if (it != colorHighlighting.end()) {
+                continue;
+            } else {
+                glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
+            }
         }
         else{
-            glColor4f(1.0f, 0.0f, 0.0f, 0.3f);    //red
+            glColor4f(0.933f, 0.067f, 0.067f, 0.15f);    //metro red
         }
         size_t nb = facets[sel]->sh.nbIndex;
         if (nb == 3) {
@@ -743,23 +747,27 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
             Triangulate(facets[sel], false);
         }
     }
+    for (const auto& sel : selectedFacets) {
+        if(!colorHighlighting.empty()) {
+            auto it = colorHighlighting.find(sel);
+            // Check if element exists in map or not
+            if (it != colorHighlighting.end()) {
+                float r = static_cast<float>(it->second.r) / 255.0f;
+                float g = static_cast<float>(it->second.g) / 255.0f;
+                float b = static_cast<float>(it->second.b) / 255.0f;
+                glColor4f(r, g, b, 0.5f);
+                size_t nb = facets[sel]->sh.nbIndex;
+                if (nb == 3) {
+                    FillFacet(facets[sel], false);
+                }
+                else {
+                    Triangulate(facets[sel], false);
+                }
+            }
+        }
+    }
     glEnd();
 
-
-    // Triangle
-    /*glBegin(GL_TRIANGLES);
-    for (const auto& i : f3)
-        FillFacet(facets[i], false);
-    // Triangulate polygon
-    for (const auto& i : fp)
-        Triangulate(facets[i], false);
-    glEnd();
-
-    // Quads
-    glBegin(GL_QUADS);
-    for (const auto& i : f4)
-        FillFacet(facets[i], false);
-    glEnd();*/
     //---end transparent
 }
 
@@ -1263,7 +1271,6 @@ void Geometry::RenderOpaque(GLfloat *matView, bool renderVolume, bool renderText
     //glBlendFunc(GL_ONE, GL_ZERO);
     //glColor4f(1.0f, 0.0f, 0.0f,0.4f);    //red
 
-    glColor4f(0.933f,0.067f,0.067f,0.15f);    //metro red
     /*if (showHidden) {
         glDisable(GL_DEPTH_TEST);
         glCallList(selectHighlightList);
@@ -1429,6 +1436,94 @@ void Geometry::BuildShapeList() {
 
 }
 
+void RGBtoHSV(float& R, float& G, float& B) {
+    float H = 0.0f;
+    float S = 0.0f;
+    float V = 0.0f;
+    
+    float maxColor = std::max(std::max(R, G), B);
+    float minColor = std::min(std::min(R, G), B);
+    float colorDelta = maxColor - minColor;
+
+    if(colorDelta > 0) {
+        if(maxColor == R) {
+            H = 60.0f * (std::fmod(((G - B) / colorDelta), 6.0f));
+        } else if(maxColor == G) {
+            H = 60.0f * (((B - R) / colorDelta) + 2.0f);
+        } else {
+            H = 60.0f * (((R - G) / colorDelta) + 4.0f);
+        }
+
+        if(maxColor > 0.0) {
+            S = colorDelta / maxColor;
+        } else {
+            S = 0.0;
+        }
+
+        V = maxColor;
+    } else {
+        H = 0.0;
+        S = 0.0;
+        V = maxColor;
+    }
+
+    if(H < 0.0) {
+        H += 360.0f;
+    }
+    R=H;
+    G=S;
+    B=V;
+}
+
+void HSVtoRGB(float& H, float& S, float& V) {
+    float R = 0.0f;
+    float G = 0.0f;
+    float B = 0.0f;
+
+    float chromaVal = V * S;
+    float hVal = std::fmod(H / 60.0f, 6.0f);
+    float xVal = chromaVal * (1.0f - std::fabs(std::fmod(hVal, 2.0f) - 1.0f));
+    float modVal = V - chromaVal;
+
+    if(0.0f <= hVal && hVal < 1.0f) {
+        R = chromaVal;
+        G = xVal;
+        B = 0.0f;
+    } else if(hVal < 2.0f) {
+        R = xVal;
+        G = chromaVal;
+        B = 0.0f;
+    } else if(hVal < 3.0f) {
+        R = 0.0f;
+        G = chromaVal;
+        B = xVal;
+    } else if(hVal < 4.0f) {
+        R = 0.0f;
+        G = xVal;
+        B = chromaVal;
+    } else if(hVal < 5.0f) {
+        R = xVal;
+        G = 0.0f;
+        B = chromaVal;
+    } else if(hVal < 6.0f) {
+        R = chromaVal;
+        G = 0.0f;
+        B = xVal;
+    } else {
+        R = 0.0f;
+        G = 0.0f;
+        B = 0.0f;
+    }
+
+    R += modVal;
+    G += modVal;
+    B += modVal;
+
+    H = R;
+    S = G;
+    V = B;
+}
+
 void Geometry::BuildSelectList() {
 
 	selectList = glGenLists(1);
@@ -1514,16 +1609,50 @@ void Geometry::BuildSelectList() {
     for (auto& sel : selectedFacets) {
 		Facet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
-		auto it = colorHighlighting.find(sel);
-        // Check if element exists in map or not
-        if (it != colorHighlighting.end()){
-            glColor3f(it->second.r / 255.0F, it->second.g / 255.0F, it->second.b / 255.0F);    //red
+        if(!colorHighlighting.empty()){
+            auto it = colorHighlighting.find(sel);
+            // Check if element exists in map or not
+            if (it != colorHighlighting.end()) {
+                continue;
+            } else {
+                glLineWidth(1.5f);
+                glColor3f(0.937f,0.957f,1.0f);    //metro light blue
+            }
         }
         else{
             glColor3f(1.0f, 0.0f, 0.0f);    //red
         }
 		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
-	}
+        glLineWidth(2.0f);
+    }
+    // give profiled selection priority for being rendered last
+    for (auto& sel : selectedFacets) {
+        if(!colorHighlighting.empty()){
+            auto it = colorHighlighting.find(sel);
+            // Check if element exists in map or not
+            if (it != colorHighlighting.end()) {
+                glLineWidth(3.0f);
+                float r = static_cast<float>(it->second.r) / 255.0f;
+                float g = static_cast<float>(it->second.g) / 255.0f;
+                float b = static_cast<float>(it->second.b) / 255.0f;
+
+                RGBtoHSV(r, g, b);
+                g = std::clamp(g*1.2f,0.0f,1.0f); // change Saturity
+                b = std::clamp(b*1.2f,0.0f,1.0f); // change brighness Value
+                HSVtoRGB(r, g, b);
+                g = std::clamp(g,0.0f,1.0f); // account for conversion overflow
+                b = std::clamp(b,0.0f,1.0f);
+
+                r = r / 1.0f;
+                g = g / 1.0f;
+                b = b / 1.0f;
+                glColor3f(r, g, b);
+                Facet *f = facets[sel];
+                DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
+                glLineWidth(2.0f);
+            }
+        }
+    }
 	glLineWidth(1.0f);
 	if (mApp->antiAliasing) {
 		glDisable(GL_BLEND);
@@ -1587,7 +1716,7 @@ void Geometry::BuildNonPlanarList() {
 	glLineWidth(2.0f);
 
 	auto nonPlanarFacetIds = GetNonPlanarFacetIds();
-	hasNonPlanar = nonPlanarFacetIds.size() > 0;
+	hasNonPlanar = !nonPlanarFacetIds.empty();
 	for (const auto& np : nonPlanarFacetIds) {
 		Facet *f = facets[np];
 		//DrawFacet(f,false,true,true);
