@@ -3227,7 +3227,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x, y0, x, y0 - la);
+            drawLine(gridColor,gridStyle,1,x, y0, x, y0 - la);
           }
 
           //Draw tick
