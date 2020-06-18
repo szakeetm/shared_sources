@@ -150,6 +150,10 @@ set(SRC_FILES
         SimulationManager.cpp SimulationController.cpp)
 
 set(SRC_FILES ${SRC_FILES}
+        Helper/StringHelper.cpp
+        )
+
+set(SRC_FILES ${SRC_FILES}
         GLApp/GLApp.cpp
         GLApp/GLButton.cpp
         GLApp/GLColorBox.cpp
