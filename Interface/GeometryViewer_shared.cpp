@@ -903,7 +903,7 @@ void GeometryViewer::DrawFacetId() {
 
         }
         labelVec = center;
-        sprintf(tmp, " F#%zd ", selId);
+        sprintf(tmp, " F#%zd ", selId+1);
         GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10);
     }
 
