@@ -80,9 +80,10 @@ public:
 	void  FillVertexArray(InterfaceVertex *v);
 	size_t GetTexSwapSize(bool useColormap) const;
 	size_t GetTexSwapSizeForRatio(double ratio, bool useColor) const;
-	size_t GetNbCell() const;
+	std::pair<size_t, size_t> GetNbCell() const;
 	size_t GetNbCellForRatio(double ratio) const;
-	void  SwapNormal();
+    std::pair<size_t, size_t> GetNbCellForRatio(double ratioU, double ratioV) const;
+    void  SwapNormal();
 	void  ShiftVertex(const int& offset = 1);
 	void  InitVisibleEdge();
 	size_t   GetIndex(int idx) const;
@@ -114,8 +115,10 @@ public:
 	void  SaveXML_geom(pugi::xml_node f);
 	size_t GetHitsSize(size_t nbMoments);
 	size_t GetTexRamSize(size_t nbMoments);
-	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir, size_t nbMoments);
-	void  BuildTexture(TextureCell *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
+    size_t GetTexRamSizeForCellNumber(int width, int height, bool useMesh, bool countDir, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratio, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV, size_t nbMoments);
+    void  BuildTexture(TextureCell *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
 	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
 	void Sum_Neighbor(const int& i, const int& j, const double& weight, TextureCell *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
@@ -159,8 +162,9 @@ public:
 	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
-	double tRatio;       // Texture sample per unit
-	bool	textureVisible; //Draw the texture?
+    double tRatioU;       // Texture sample per unit
+    double tRatioV;       // Texture sample per unit
+    bool	textureVisible; //Draw the texture?
 	bool  collinear;      //All vertices are on a line (non-simple)
 	bool	volumeVisible;	//Draw volume?
 	bool    hasMesh;     // Has texture

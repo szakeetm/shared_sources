@@ -197,7 +197,9 @@ public:
 	void    MoveVertexTo(size_t idx, double x, double y, double z);
 	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
-	void    Rebuild();
+    void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
+
+    void    Rebuild();
 	void	MergecollinearSides(Facet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();
@@ -232,9 +234,6 @@ public:
 protected:
 	void AddToSelectionHist(size_t f);
 	bool AlreadySelected(size_t f);
-	void EmptySelectedVertexList();
-	void RemoveFromSelectedVertexList(size_t vertexId);
-	void AddToSelectedVertexList(size_t vertexId);
 	void DrawFacet(Facet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void FillFacet(Facet *f, bool addTextureCoord);
 	void AddTextureCoord(Facet *f, const Vector2d *p);
@@ -249,6 +248,9 @@ protected:
 public:
 	void SelectAll();
 	void UnselectAll();
+	void AddToSelectedVertexList(size_t vertexId);
+	void EmptySelectedVertexList();
+	void RemoveFromSelectedVertexList(size_t vertexId);
 	void SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection);
 	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
 	void SelectFacet(size_t facetId);

@@ -143,8 +143,8 @@ bool KillProc(DWORD pID) {
 #endif
 }
 
-// Launch the process pname and return its PID.
-DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug mode, hidden in Release mode
+// Launch the process procv[0] and return its PID.
+DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in Release mode
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     PROCESS_INFORMATION pi;
 	STARTUPINFO si;
@@ -156,8 +156,7 @@ DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug 
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	DWORD launchMode;
 
-#ifndef _DEBUG
-
+#if not defined(_DEBUG) || not defined(DEBUG)
 	if (mode == STARTPROC_NORMAL) {
 		si.wShowWindow = SW_SHOW;
 		launchMode = DETACHED_PROCESS;
@@ -184,10 +183,9 @@ DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug 
 
 
 #endif
-	char* commandLine = strdup(pname);
 	if (!CreateProcess(
 		NULL,             // pointer to name of executable module
-		commandLine,            // pointer to command line string
+		procv[0],            // pointer to command line string
 		NULL,             // process security attributes
 		NULL,             // thread security attributes
 		false,            // handle inheritance flag
@@ -205,24 +203,12 @@ DWORD StartProc(const char *pname,int mode, char **argv) { //minimized in Debug 
 	return pi.dwProcessId;
 #else
     pid_t process = fork();
-    //FILE* returnVal = popen(pname,"r");
-
-    char *argvloc[4];
-    argvloc[0] = const_cast<char *>(pname);
-    argvloc[1] = argv[0];
-    argvloc[2] = argv[1];
-    argvloc[3] = NULL;
-    //printf(" Molflowsub args: %s %s %s\n",cmd,argvloc[0],argvloc[1]);
 
     if (process == 0) { // child process
-
-        if (0 > execvp(pname, argvloc)) {
-
-            fprintf(stderr," Molflowsub error: %s\n",std::strerror(errno));
-            //_exit(0);
+        if (0 > execvp(procv[0], procv)) {
+            fprintf(stderr," StartProc error: %s\n",std::strerror(errno));
             return 0;
         }
-        //printf(" Molflowsub args: %s %s %s\n",cmd,argvloc[0],argvloc[1]);
     } else if (process < 0) {
         return 0;
     }

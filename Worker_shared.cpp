@@ -40,11 +40,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SimulationManager.h"
 
 #if defined(MOLFLOW)
-
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
 #include "../src/FacetAdvParams.h"
-
 #endif
 
 #if defined(SYNRAD)
@@ -343,7 +341,7 @@ void Worker::Update(float appTime) {
     simManager.GetProcStatus(procInfo);
 
     for (size_t i = 0; i < procInfo.size() && done; i++) {
-        const size_t procState = procInfo[i].masterCmd;
+        const size_t procState = procInfo[i].slaveState;
         done = done && (procState == PROCESS_DONE);
         error = error && (procState == PROCESS_ERROR);
 

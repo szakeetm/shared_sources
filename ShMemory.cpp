@@ -71,7 +71,8 @@ int build_key (char *name)
 }
 #endif
 
-#if defined(__MACOSX__) || defined(__APPLE__)
+#if not (defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64))
+//#if defined(__MACOSX__) || defined(__APPLE__)
 // according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
 #include <signal.h>
 #include <sys/ipc.h>

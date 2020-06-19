@@ -424,7 +424,14 @@ void Geometry::CreatePolyFromVertices_Convex() {
 
 void Geometry::CreatePolyFromVertices_Order() {
 	//creates facet from selected vertices
-
+	if (selectedVertexList_ordered.size() < 3) {
+		char errMsg[512];
+		sprintf(errMsg, "Select at least 3 vertices.\n"
+		"For ordered polygon creation, you have to manually select vertices to add them to selection history\n"
+		"or use the Add Vertex dialog to create them in order.");
+		throw Error(errMsg);
+		return;
+	}//at least three vertices
 	AddFacet(selectedVertexList_ordered);
 }
 
@@ -1040,7 +1047,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		f->SwapNormal();
 		InitializeGeometry((int)i);
 		try {
-			SetFacetTexture(i, f->tRatio, f->hasMesh);
+			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 		catch (Error &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1155,7 +1162,7 @@ void Geometry::ShiftVertex() {
 			f->ShiftVertex();
 			InitializeGeometry(i);// Reinitialise geom
 			try {
-				SetFacetTexture(i, f->tRatio, f->hasMesh);
+				SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 			}
 			catch (Error &e) {
 				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1919,6 +1926,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 			}
 			else {
 				AddVertex(newLocation);
+				AddToSelectedVertexList(i);
 			}
 		}
 		if (!copy) InitializeGeometry(); //Geometry changed
@@ -1936,6 +1944,7 @@ void Geometry::AddVertex(const Vector3d& location, bool selected) {
 	newVertex.SetLocation(location);
 	newVertex.selected = selected;
 	vertices3.push_back(newVertex);
+	
 	/*
 	InterfaceVertex *verticesNew = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
 	memcpy(verticesNew, vertices3, (wp.nbVertex - 1) * sizeof(InterfaceVertex)); //copy old vertices
@@ -3271,20 +3280,39 @@ void Geometry::Rebuild() {
 }
 
 
-
 void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
+
+    Facet *f = facets[facetId];
+    double nU = f->sh.U.Norme();
+    double nV = f->sh.V.Norme();
+
+    if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
+        char errMsg[512];
+        sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
+        throw Error(errMsg);
+    }
+    f->tRatioU = ratio;
+    f->tRatioV = ratio;
+
+    BuildFacetList(f);
+
+}
+
+void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
 	Facet *f = facets[facetId];
 	double nU = f->sh.U.Norme();
 	double nV = f->sh.V.Norme();
 
-	if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
+	if (!f->SetTexture(nU*ratioU, nV*ratioV, mesh)) {
 		char errMsg[512];
 		sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
 		throw Error(errMsg);
 	}
-	f->tRatio = ratio;
-	BuildFacetList(f);
+    f->tRatioU = ratioU;
+    f->tRatioV = ratioV;
+
+    BuildFacetList(f);
 
 }
 

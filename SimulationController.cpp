@@ -8,6 +8,10 @@
 #include "SimulationController.h"
 #include "ProcessControl.h"
 
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#include <process.h>
+#endif
+
 #define WAITTIME    100  // Answer in STOP mode
 
 SimulationController::SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance){
@@ -256,6 +260,13 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 break;
 
             case COMMAND_START:
+                // Check end of simulation
+                if (simulation->ontheflyParams.desorptionLimit > 0) {
+                    if (simulation->totalDesorbed >= simulation->ontheflyParams.desorptionLimit / simulation->ontheflyParams.nbProcess) {
+                        ClearCommand();
+                        SetState(PROCESS_DONE, GetSimuStatus());
+                    }
+                }
                 if(GetLocalState() != PROCESS_RUN) {
                     printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
@@ -269,6 +280,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
                             // Max desorption reached
+                            ClearCommand();
                             SetState(PROCESS_DONE, GetSimuStatus());
                             printf("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
                         }
@@ -322,6 +334,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
                         // Max desorption reached
+                        ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
                         printf("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
                     }

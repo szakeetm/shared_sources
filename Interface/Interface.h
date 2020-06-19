@@ -257,7 +257,9 @@ public:
 	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
 	size_t      numCPU;
 	float    lastAppTime;
-	bool     antiAliasing;
+
+    bool useOldXMLFormat;
+    bool     antiAliasing;
 	bool     whiteBg;
 	bool highlightSelection;
 	bool highlightNonplanarFacets;

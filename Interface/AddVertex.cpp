@@ -170,6 +170,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
                   return;
               }
               geom->AddVertex(X, Y, Z);
+	    geom->AddToSelectedVertexList(geom->GetNbVertex()-1);
           }
 
 
@@ -195,6 +196,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 			  location = sh.center + sh.N;
 		  }
 		  geom->AddVertex(location);
+      geom->AddToSelectedVertexList(geom->GetNbVertex()-1);
 	  }
 	  break;
   }

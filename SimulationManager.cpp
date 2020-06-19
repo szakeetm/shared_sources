@@ -6,6 +6,8 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
+#else if not(defined(__MACOSX__) || defined(__APPLE__))
+#include <cstring> //memset on unix
 #endif
 
 #include "SimulationManager.h"
@@ -207,27 +209,26 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
+    char *arguments[4];
+    for(int arg=0;arg<3;arg++)
+        arguments[arg] = new char[512];
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     sprintf(cmdLine,"%sSub.exe %d %hu",appName,processId,iProc);
+    sprintf(arguments[0],"%s",cmdLine);
 #else
-    char **arguments;
-    arguments = new char*[2];
-    for(int arg=0;arg<2;arg++)
-        arguments[arg] = new char[10];
     sprintf(cmdLine,"./%sSub",appName);
-    sprintf(arguments[0],"%d",processId);
-    sprintf(arguments[1],"%hu",iProc);
+    sprintf(arguments[0],"%s",cmdLine);
+    sprintf(arguments[1],"%d",processId);
+    sprintf(arguments[2],"%hu",iProc);
+    arguments[3] = nullptr;
 #endif
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     simHandles.emplace_back(
-            StartProc(cmdLine, STARTPROC_NORMAL, nullptr),
+            StartProc(arguments, STARTPROC_NORMAL),
             SimType::simCPU);
-#else
-    simHandles.emplace_back(
-            StartProc(cmdLine, STARTPROC_NORMAL, static_cast<char **>(arguments)),
-            SimType::simCPU);
-#endif
+
+    for(int arg=0;arg<3;arg++)
+        if(arguments[arg] != nullptr) delete[] arguments[arg];
 
     // Wait a bit
     ProcessSleep(25);
@@ -405,6 +406,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             if( procState==PROCESS_ERROR ) {
                 error = true;
             }
+            else if(procState == PROCESS_STARTING){
+                timeOutAt = 20000; // if task properly started, increase allowed wait time
+            }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
         ReleaseDataport(dpControl);
@@ -542,7 +546,7 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
         SubProcInfo pInfo{};
         pInfo.procId = simHandles[i].first;
         pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
-        pInfo.masterCmd = shMaster->procInformation[i].slaveState;
+        pInfo.slaveState = shMaster->procInformation[i].slaveState;
         strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
         pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
         pInfo.oldState = shMaster->procInformation[i].oldState;

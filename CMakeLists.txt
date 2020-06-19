@@ -234,7 +234,7 @@ if(NOT MSVC)
 
     if(APPLE)
         #link to self-build sdl shared lib
-        target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-framework AppKit")
         #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
 
     FIND_PACKAGE(SDL2 REQUIRED)
@@ -337,8 +337,8 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME}  PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
-    target_link_libraries(${PROJECT_NAME}  PRIVATE nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
+    target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
 ######################### Flags ############################
