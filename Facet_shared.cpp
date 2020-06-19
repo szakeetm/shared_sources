@@ -769,7 +769,7 @@ size_t Facet::GetNbCellForRatio(double ratio) const{
 * \param ratioV ratio in V direction used for size conversion
 * \return number of texture cells
 */
-std::pair<size_t, size_t> Facet::GetNbCellForRatio(double ratioU, double ratioV) {
+std::pair<size_t, size_t> Facet::GetNbCellForRatio(double ratioU, double ratioV) const{
 
     double nU = sh.U.Norme();
     double nV = sh.V.Norme();
