@@ -1068,28 +1068,32 @@ bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
 
 	// Detect if 2 facets are in the same plane (orientation preserving)
 	// and have same parameters (used by collapse)
-
-	return (fabs(a - f->a) < threshold) &&
+	bool equal =
+		(fabs(a - f->a) < threshold) &&
 		(fabs(b - f->b) < threshold) &&
 		(fabs(c - f->c) < threshold) &&
 		(fabs(d - f->d) < threshold) &&
-
-#if defined(MOLFLOW)
-		(sh.desorbType == f->sh.desorbType) &&
-		IsEqual(sh.outgassing, f->sh.outgassing) &&
-		IsEqual(sh.reflection.diffusePart, f->sh.reflection.diffusePart) &&
-		IsEqual(sh.reflection.specularPart, f->sh.reflection.specularPart) &&
-		IsEqual(sh.reflection.cosineExponent, f->sh.reflection.cosineExponent) &&
-		(sh.temperature == f->sh.temperature) &&
-#endif
-#if defined(SYNRAD)
-		(sh.reflectType == f->sh.reflectType) &&
-#endif
 		IsEqual(sh.sticking, f->sh.sticking) &&
 		IsEqual(sh.opacity, f->sh.opacity) &&
 		(sh.is2sided == f->sh.is2sided);
-	//TODO: Add other properties!
 
+#if defined(MOLFLOW)
+	equal = equal &&
+		(sh.desorbType == f->sh.desorbType) &&
+		IsEqual(sh.reflection.diffusePart, f->sh.reflection.diffusePart) &&
+		IsEqual(sh.reflection.specularPart, f->sh.reflection.specularPart) &&
+		IsEqual(sh.reflection.cosineExponent, f->sh.reflection.cosineExponent) &&
+		(sh.temperature == f->sh.temperature);
+	if (sh.area > 0.0 && f->sh.area > 0.0) { //Compare per-area outgassing
+		equal = equal &&  IsEqual(sh.outgassing/sh.area,f->sh.outgassing/f->sh.area);
+	}
+#endif
+#if defined(SYNRAD)
+	equal = equal &&
+		(sh.reflectType == f->sh.reflectType);
+#endif
+		
+	return equal;
 }
 
 /**
@@ -1165,6 +1169,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 FacetGroup Facet::Explode() {
 	FacetGroup result;
 	result.nbV = 0;
+	result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0.0;
 	size_t nonZeroElems = 0, nb = 0;
 	for (size_t i = 0; i < sh.texHeight*sh.texWidth; i++) {
 		if (cellPropertiesIds[i] != -2) {
@@ -1172,7 +1177,7 @@ FacetGroup Facet::Explode() {
 				size_t nbPoints = GetMeshNbPoint(i);
 				result.nbV += nbPoints;
 				Facet *f = new Facet(nbPoints);
-				f->CopyFacetProperties(this);
+				f->CopyFacetProperties(this); //Copies absolute outgassing
 				result.facets.push_back(f);
 			}
 			catch (...) {
