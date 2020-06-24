@@ -2550,13 +2550,13 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 						newFacet->indices[i] = newPolyIndices[i];
 					}
 					newFacet->CopyFacetProperties(f); //Copy physical parameters, structure, etc. - will copy absolute outgassing
-					
+#ifdef MOLFLOW
 					if (f->sh.outgassing > 0.0 && f->sh.area> 0.0) {
 						//Copy per-area outgassing
 						CalculateFacetParams(newFacet); //Get area of new facet
 						newFacet->sh.outgassing = newFacet->sh.area / f->sh.area * f->sh.outgassing; //Scale outgassing with facet area
 					}
-
+#endif //MOLFLOW
 					/*if (f->wp.area > 0.0) {*/
 					if (Dot(f->sh.N, newFacet->sh.N) < 0) {
 						newFacet->SwapNormal();
@@ -2681,10 +2681,12 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 					if (merged) {
 						// Replace the old 2 facets by the new one
 						merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
+#ifdef MOLFLOW
 						if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
 							CalculateFacetParams(merged); //get area
 							merged->sh.outgassing = merged->sh.area / fi->sh.area * fi->sh.outgassing; //Maintain per-area outgassing
 						} 
+#endif //MOLFLOW
 						SAFE_DELETE(fi);
 						SAFE_DELETE(fj);
 						newRef[i] = newRef[j] = -1;

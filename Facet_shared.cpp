@@ -1169,7 +1169,10 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 FacetGroup Facet::Explode() {
 	FacetGroup result;
 	result.nbV = 0;
-	result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0.0;
+#ifdef MOLFLOW
+result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0.0;
+#endif // MOLFLOW
+
 	size_t nonZeroElems = 0, nb = 0;
 	for (size_t i = 0; i < sh.texHeight*sh.texWidth; i++) {
 		if (cellPropertiesIds[i] != -2) {
