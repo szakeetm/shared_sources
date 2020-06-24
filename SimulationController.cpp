@@ -239,6 +239,10 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     SetRuntimeInfo();
                     SetReady();
                 }
+                else{
+                    SetState(PROCESS_ERROR, "Error loading simulation");
+                    ClearCommand();
+                }
                 break;
 
             case COMMAND_UPDATEPARAMS:
