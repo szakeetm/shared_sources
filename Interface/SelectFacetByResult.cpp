@@ -177,13 +177,8 @@ remSelectButton = new GLButton(GLDLG_SELECT_REM, "Remove from sel.");
 	
 	startY+=25;
 
-	// Center dialog
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	if (wD > wS) wD = wS;
-	xD = (wS - wD) / 2;
-	yD = (hS - startY) / 2;
-	SetBounds(xD, yD, wD, startY+30);
+	// Top left
+	SetBounds(10, 30, wD, startY+30);
 
 	// Create objects
 	RestoreDeviceObjects();
@@ -304,6 +299,31 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 		}
 		#endif
 
+		if (src==selectButton) geom->UnselectAll();
+		//Form valid, let's do the work
+		size_t nbFacet = geom->GetNbFacet();
+		for (size_t i=0;i<nbFacet;i++) {
+			Facet* f=geom->GetFacet(i);
+			bool match=true;
+			if (do_hitLess) match = match && (f->facetHitCache.hit.nbMCHit<hitLess);
+			if (do_hitMore) match = match && (f->facetHitCache.hit.nbMCHit>hitMore);
+			if (do_absLess) match = match && (f->facetHitCache.hit.nbAbsEquiv<absLess);
+			if (do_absMore) match = match && (f->facetHitCache.hit.nbAbsEquiv>absMore);
+			#ifdef MOLFLOW
+			if (do_desLess) match = match && (f->facetHitCache.hit.nbDesorbed<hitLess);
+			if (do_desMore) match = match && (f->facetHitCache.hit.nbDesorbed>hitMore);
+			#endif
+			#ifdef SYNRAD
+			if (do_fluxLess) match = match && (f->facetHitCache.hit.fluxAbs/work->no_scans < fluxLess);
+			if (do_fluxMore) match = match && (f->facetHitCache.hit.fluxAbs/work->no_scans > fluxMore);
+			if (do_powerLess) match = match && (f->facetHitCache.hit.powerAbs/work->no_scans < powerLess);
+			if (do_powerMore) match = match && (f->facetHitCache.hit.powerAbs/work->no_scans > powerMore);
+			#endif
+			if (match) f->selected = (src!=remSelectButton);
+		}
+		geom->UpdateSelection();
+		mApp->UpdateFacetParams(true);
+		mApp->UpdateFacetlistSelected();
 
 	}
 	
