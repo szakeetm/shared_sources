@@ -58,19 +58,13 @@ private:
 	  *selectButton,
 	  *addSelectButton,
 	  *remSelectButton;
-  GLTextField
-	  *ratioText,
-	  *ratioMinText,
-	  *ratioMaxText;
-  GLToggle
-	  *ratioToggle,
-	  *ratioMinMaxToggle,
-	  *desorbToggle,
-	  *absorbToggle,
-	  *reflectToggle,
-	  *transparentToggle,
-	  *directionToggle;
-  GLTitledPanel
-	  *resolutionpanel,
-	  *textureTypePanel;
+  GLTextField *hitsLessThanText,*hitsMoreThanText;
+	 GLTextField *absLessThanText,*absMoreThanText;
+	 #ifdef MOLFLOW
+	  GLTextField *desLessThanText,*desMoreThanText;
+	  #endif
+	  #ifdef SYNRAD
+	   GLTextField *fluxLessThanText,*fluxMoreThanText;
+	   GLTextField *powerLessThanText,*powerMoreThanText;	  
+	   #endif
 };

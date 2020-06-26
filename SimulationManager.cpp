@@ -220,6 +220,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     sprintf(arguments[0],"%s",cmdLine);
     sprintf(arguments[1],"%d",processId);
     sprintf(arguments[2],"%hu",iProc);
+    arguments[3] = nullptr;
 #endif
 
     simHandles.emplace_back(
