@@ -220,6 +220,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     sprintf(arguments[0],"%s",cmdLine);
     sprintf(arguments[1],"%d",processId);
     sprintf(arguments[2],"%hu",iProc);
+    arguments[3] = nullptr;
 #endif
 
     simHandles.emplace_back(
@@ -358,6 +359,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 error = true;
+            }
+            else if(procState == PROCESS_STARTING){
+                timeOutAt = 20000; // if task properly started, increase allowed wait time
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
