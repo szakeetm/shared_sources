@@ -1021,14 +1021,19 @@ void GeometryViewer::Paint() {
 #endif
 
 #if defined(SYNRAD)
-			glColor3f(0.7f, 0.4f, 0.3f); //red top
+			glColor3ub(255, 200, 145); //red top
 #endif
 		}
 		glVertex2i(x, y);
 		glVertex2i(x + width, y);
 
 		if (!mApp->whiteBg) {
+#if defined(MOLFLOW)
 			glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
+#endif
+#if defined(SYNRAD)
+			glColor3f(0.2f, 0.2f, 0.2f); //light grey bottom
+#endif
 		}
 		glVertex2i(x + width, y + height);
 		glVertex2i(x, y + height);
