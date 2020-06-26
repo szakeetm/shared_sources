@@ -131,13 +131,8 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 	remSelectButton->SetBounds(startX, startY, 90, 20);
 	Add(remSelectButton);
 
-	// Center dialog
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	if (wD > wS) wD = wS;
-	xD = (wS - wD) / 2;
-	yD = (hS - hD) / 2;
-	SetBounds(xD, yD, wD, hD);
+	// Top left
+	SetBounds(10, 30, wD, hD);
 
 	// Create objects
 	RestoreDeviceObjects();

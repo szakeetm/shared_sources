@@ -61,6 +61,7 @@ class SmartSelection;
 class LoadStatus;
 class SelectDialog;
 class SelectTextureType;
+class SelectFacetByResult;
 class AlignFacet;
 class AddVertex;
 class FormulaEditor;
@@ -130,16 +131,17 @@ typedef struct {
 #define MENU_FACET_SELECTNONPLANAR 322
 #define MENU_FACET_SELECTHITS        323
 #define MENU_FACET_SELECTNOHITS_AREA 324
-#define MENU_FACET_SAVESEL     325
-#define MENU_FACET_LOADSEL     326
-#define MENU_FACET_INVERTSEL   327
-#define MENU_FACET_MOVE		   328
-#define MENU_FACET_SCALE       329
-#define MENU_FACET_MIRROR	   330
-#define MENU_FACET_ROTATE	   331
-#define MENU_FACET_ALIGN       332
-#define MENU_FACET_CREATESHAPE 333
-#define MENU_FACET_REVERTFLIP 334
+#define MENU_FACET_SELECT_BY_RESULT 325
+#define MENU_FACET_SAVESEL     326
+#define MENU_FACET_LOADSEL     327
+#define MENU_FACET_INVERTSEL   328
+#define MENU_FACET_MOVE		   329
+#define MENU_FACET_SCALE       330
+#define MENU_FACET_MIRROR	   331
+#define MENU_FACET_ROTATE	   332
+#define MENU_FACET_ALIGN       333
+#define MENU_FACET_CREATESHAPE 334
+#define MENU_FACET_REVERTFLIP 335
 
 #define MENU_FACET_CREATE_DIFFERENCE 340
 #define MENU_FACET_CREATE_DIFFERENCE2 341
@@ -406,6 +408,7 @@ public:
 	ScaleVertex        *scaleVertex;
 	SelectDialog       *selectDialog;
 	SelectTextureType  *selectTextureType;
+	SelectFacetByResult *selectFacetByResult;
 	ExtrudeFacet	   *extrudeFacet;
 	MoveFacet	  	   *moveFacet;
 	ParticleLogger     *particleLogger;
