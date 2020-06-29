@@ -23,6 +23,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Clipper/clipper.hpp"
 #include <vector>
 #include <list>
+#include <map>
+#include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
 
 #define SEL_HISTORY  100
@@ -141,6 +143,8 @@ public:
 	InterfaceVertex *GetVertex(size_t idx);
 	AxisAlignedBoundingBox     GetBB();
 	Vector3d GetCenter();
+    void SetPlottedFacets(std::map<int,GLColor> setMap);
+    std::map<int,GLColor> GetPlottedFacets( ) const;
 
 	// Collapsing stuff
 	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
@@ -238,7 +242,7 @@ protected:
 	void FillFacet(Facet *f, bool addTextureCoord);
 	void AddTextureCoord(Facet *f, const Vector2d *p);
 	void DrawPolys();
-	void DrawTransparentPolys(std::vector<size_t> &selectedFacets);
+	void DrawTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
@@ -297,6 +301,7 @@ protected:
 	size_t nbSelectedHist;
 
 	std::vector<size_t> selectedVertexList_ordered; //Vertex selection history, used for creating ordered polygon
+	std::map<int,GLColor> plottedFacets;
 
 	GLMATERIAL fillMaterial;
 	GLMATERIAL whiteMaterial;

@@ -781,8 +781,8 @@ void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &he
 
 }
 
-void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
-                         int nbPoint,int *pointX,int *pointY) {
+void GLToolkit::DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int nbPoint, int *pointX, int *pointY,
+                         bool useSmooth) {
 
   // Draw unclosed polygon
   if( lineWidth==0 ) return;
@@ -791,8 +791,15 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
   glDisable(GL_CULL_FACE);
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-  glLineWidth((float)lineWidth);
+  if(useSmooth) {
+      glEnable(GL_BLEND);
+      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+      glEnable(GL_LINE_SMOOTH);
+  }
+  else{
+      glDisable(GL_BLEND);
+  }
+    glLineWidth((float)lineWidth);
 
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;
@@ -827,7 +834,11 @@ void GLToolkit::DrawPoly(int lineWidth,int dashStyle,int r,int g,int b,
     _glVertex2i(pointX[i],pointY[i]);
   glEnd();
 
-  glDisable(GL_LINE_STIPPLE);
+    if(useSmooth) {
+        glDisable(GL_BLEND);
+        glDisable(GL_LINE_SMOOTH);
+    }
+    glDisable(GL_LINE_STIPPLE);
 
 }
 

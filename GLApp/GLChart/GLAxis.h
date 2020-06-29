@@ -151,7 +151,8 @@ private:
   double maximum;
   bool autoScale;
   int scale;
-  GLColor labelColor;
+    GLColor gridColor;
+    GLColor labelColor;
   int labelFormat;
   LabelInfo labels[MAX_VIEWS];
   int nbLabel;

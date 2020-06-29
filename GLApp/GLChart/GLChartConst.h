@@ -233,8 +233,7 @@ typedef struct {
 
 } GLCPoint;
 
-class GLColor {
-public:
+struct GLColor {
 	GLColor() {}
 	GLColor(int red, int green, int blue) {
 		r = red;
@@ -247,7 +246,6 @@ public:
   int r;
   int g;
   int b;
-
 };
 
 #endif /* _GLCHARTCONSTH_ */

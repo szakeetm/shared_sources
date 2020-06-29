@@ -76,6 +76,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "LoadStatus.h"
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
+#include "SelectFacetByResult.h"
 #include "AlignFacet.h"
 #include "AddVertex.h"
 #include "FormulaEditor.h"
@@ -178,6 +179,7 @@ Interface::Interface() {
     scaleFacet = NULL;
     selectDialog = NULL;
     selectTextureType = NULL;
+    selectFacetByResult = NULL;
     moveFacet = NULL;
     createShape = NULL;
     extrudeFacet = NULL;
@@ -217,6 +219,8 @@ void Interface::UpdateViewerFlags() {
     viewer[curViewer]->showLine = showLine->GetState();
     viewer[curViewer]->showVolume = showVolume->GetState();
     viewer[curViewer]->showTexture = showTexture->GetState();
+    viewer[curViewer]->showFacetId = showFacetId->GetState();
+
     bool neededTexture = needsTexture;
     CheckNeedsTexture();
 
@@ -658,6 +662,7 @@ void Interface::UpdateViewerPanel() {
     showVolume->SetState(viewer[curViewer]->showVolume);
     showLine->SetState(viewer[curViewer]->showLine);
     showTexture->SetState(viewer[curViewer]->showTexture);
+    showFacetId->SetState(viewer[curViewer]->showFacetId);
     showFilter->SetState(viewer[curViewer]->showFilter);
     showVertex->SetState(viewer[curViewer]->showVertex);
     showIndex->SetState(viewer[curViewer]->showIndex);
@@ -783,7 +788,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add(NULL); // Separator
     menu->GetSubMenu("Selection")->Add("Select Abs > 0", MENU_FACET_SELECTABS);
     menu->GetSubMenu("Selection")->Add("Select Hit > 0", MENU_FACET_SELECTHITS);
-    menu->GetSubMenu("Selection")->Add("Select large with no hits", MENU_FACET_SELECTNOHITS_AREA);
+    menu->GetSubMenu("Selection")->Add("Select large with no hits...", MENU_FACET_SELECTNOHITS_AREA);
+    menu->GetSubMenu("Selection")->Add("Select by facet result...", MENU_FACET_SELECT_BY_RESULT);
     menu->GetSubMenu("Selection")->Add(NULL); // Separator
 
     menu->GetSubMenu("Selection")->Add("Select link facets", MENU_FACET_SELECTDEST);
@@ -966,6 +972,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
     showTexture = new GLToggle(0, "Texture");
     togglePanel->Add(showTexture);
 
+    showFacetId = new GLToggle(0, "FacetIDs");
+    togglePanel->Add(showFacetId);
+
     showIndex = new GLToggle(0, "Indices");
     togglePanel->Add(showIndex);
 
@@ -1101,6 +1110,7 @@ int Interface::RestoreDeviceObjects_shared() {
     RVALIDATE_DLG(scaleVertex);
     RVALIDATE_DLG(scaleFacet);
     RVALIDATE_DLG(selectDialog);
+    RVALIDATE_DLG(selectFacetByResult);
     RVALIDATE_DLG(selectTextureType);
     RVALIDATE_DLG(moveFacet);
     RVALIDATE_DLG(createShape);
@@ -1143,6 +1153,7 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(scaleFacet);
     IVALIDATE_DLG(selectDialog);
     IVALIDATE_DLG(selectTextureType);
+    IVALIDATE_DLG(selectFacetByResult);
     IVALIDATE_DLG(moveFacet);
     IVALIDATE_DLG(createShape);
     IVALIDATE_DLG(extrudeFacet);
@@ -1545,6 +1556,10 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                             geom->SelectFacet(i);
                     geom->UpdateSelection();
                     UpdateFacetParams(true);
+                    return true;
+                case MENU_FACET_SELECT_BY_RESULT:
+                    if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);
+                    selectFacetByResult->SetVisible(true);
                     return true;
                 case MENU_FACET_INVERTSEL:
                     for (int i = 0; i < geom->GetNbFacet(); i++)

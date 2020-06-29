@@ -118,6 +118,7 @@ set(SRC_FILES
         Interface/ScaleFacet.cpp
         Interface/ScaleVertex.cpp
         Interface/SelectDialog.cpp
+        Interface/SelectFacetByResult.cpp
         Interface/SelectTextureType.cpp
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
@@ -148,6 +149,10 @@ set(SRC_FILES
         Process.cpp
         Vector.cpp
         SimulationManager.cpp SimulationController.cpp)
+
+set(SRC_FILES ${SRC_FILES}
+        Helper/StringHelper.cpp
+        )
 
 set(SRC_FILES ${SRC_FILES}
         GLApp/GLApp.cpp

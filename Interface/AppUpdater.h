@@ -183,6 +183,8 @@ private:
 };
 
 class AppUpdater {
+private:
+    void MakeDefaultConfig();
 public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
 

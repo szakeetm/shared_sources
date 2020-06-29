@@ -243,6 +243,7 @@ class FacetGroup {
 public:
 	size_t nbV;
 	std::vector<Facet*> facets;
+	double originalPerAreaOutgassing; //Per-area outgassing of the exploded facet
 };
 
 class DeletedFacet {

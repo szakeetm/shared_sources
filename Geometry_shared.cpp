@@ -2549,8 +2549,14 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 					for (size_t i = 0; i < newPolyIndices.size(); i++) {
 						newFacet->indices[i] = newPolyIndices[i];
 					}
-					newFacet->CopyFacetProperties(f); //Copy physical parameters, structure, etc. - will cause problems with outgassing, though
-					CalculateFacetParams(newFacet);
+					newFacet->CopyFacetProperties(f); //Copy physical parameters, structure, etc. - will copy absolute outgassing
+#ifdef MOLFLOW
+					if (f->sh.outgassing > 0.0 && f->sh.area> 0.0) {
+						//Copy per-area outgassing
+						CalculateFacetParams(newFacet); //Get area of new facet
+						newFacet->sh.outgassing = newFacet->sh.area / f->sh.area * f->sh.outgassing; //Scale outgassing with facet area
+					}
+#endif //MOLFLOW
 					/*if (f->wp.area > 0.0) {*/
 					if (Dot(f->sh.N, newFacet->sh.N) < 0) {
 						newFacet->SwapNormal();
@@ -2592,7 +2598,7 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 		size_t commonNo = f1->sh.nbIndex + f2->sh.nbIndex - 2 * l;
 		if (commonNo == 0) { //two identical facets, so return a copy of f1
 			nF = new Facet(f1->sh.nbIndex);
-			nF->CopyFacetProperties(f1);
+			//nF->CopyFacetProperties(f1); //Commented out: will do it in the main Collapse() function
 			for (int i = 0; i < f1->sh.nbIndex; i++)
 				nF->indices[i] = f1->GetIndex(i);
 			return nF;
@@ -2601,8 +2607,7 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 		int nbI = 0;
 		nF = new Facet(commonNo);
 		// Copy params from f1
-		//nF->CopyFacetProperties(f1);
-		nF->CopyFacetProperties(f1);
+		//nF->CopyFacetProperties(f1); //Commented out: will do it in the main Collapse() function
 
 		if (l == f1->sh.nbIndex) {
 
@@ -2675,6 +2680,13 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 
 					if (merged) {
 						// Replace the old 2 facets by the new one
+						merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
+#ifdef MOLFLOW
+						if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
+							CalculateFacetParams(merged); //get area
+							merged->sh.outgassing = merged->sh.area / fi->sh.area * fi->sh.outgassing; //Maintain per-area outgassing
+						} 
+#endif //MOLFLOW
 						SAFE_DELETE(fi);
 						SAFE_DELETE(fj);
 						newRef[i] = newRef[j] = -1;
@@ -4386,8 +4398,6 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 			nb++;
 		}
 	}
-	/*SAFE_FREE(vertices3);
-	vertices3 = nVert;*/
 
 	for (size_t i = sh.nbVertex; i < sh.nbVertex + VtoAdd; i++)
 		vertices3[i].selected = false;
@@ -4421,6 +4431,10 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 					f[nb - 1]->sh.desorbType = DES_NONE;
 					f[nb - 1]->selected = false;
 				}
+			}
+			else { //set per-area outgassing to match original
+				CalculateFacetParams(f[nb - 1]); //Get area
+				f[nb - 1]->sh.outgassing = blocks[i].originalPerAreaOutgassing * f[nb - 1]->sh.area;
 			}
 #endif
 		}
@@ -4456,6 +4470,14 @@ void  Geometry::EmptyGeometry() {
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
 
+}
+
+void Geometry::SetPlottedFacets(std::map<int,GLColor> setMap) {
+	plottedFacets = setMap;
+}
+
+std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
+	return plottedFacets;
 }
 
 #if defined(MOLFLOW)

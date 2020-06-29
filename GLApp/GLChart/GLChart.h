@@ -2,12 +2,7 @@
 #ifndef _GLCHARTH_
 #define _GLCHARTH_
 
-//#include "..\GLWindow.h"
-#include "../GLComponent.h"
 
-#include <vector>
-//#include "..\GLMenu.h"
-//#include "..\GLButton.h"
 
 class GLChart;
 class GLAxis;
@@ -15,6 +10,7 @@ class SearchInfo;
 class GLMenu;
 class GLButton;
 
+#include "../GLComponent.h"
 #include "GLChartConst.h"
 #include "DataList.h"
 #include "GLDataView.h"
@@ -22,6 +18,8 @@ class GLButton;
 #include "SearchInfo.h"
 #include "GLChartOptions.h"
 #include "GLDataViewOptions.h"
+
+#include <vector>
 
 typedef struct {
 
@@ -79,7 +77,11 @@ public:
   void InvalidateDeviceObjects();
   void RestoreDeviceObjects();
 
-  GLColor GetFirstAvailableColor();
+    const std::vector<GLColor> &GetColorScheme() const;
+    GLColor GetFirstAvailableColor();
+    int GetFirstAvailableLinestyle(GLColor availableColor);
+    void SetColorSchemeColorblind();
+    void SetColorSchemeDefault();
 
 private:
 
