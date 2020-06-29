@@ -118,6 +118,7 @@ set(SRC_FILES
         Interface/ScaleFacet.cpp
         Interface/ScaleVertex.cpp
         Interface/SelectDialog.cpp
+        Interface/SelectFacetByResult.cpp
         Interface/SelectTextureType.cpp
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
