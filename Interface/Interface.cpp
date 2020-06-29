@@ -230,7 +230,7 @@ void Interface::UpdateViewerFlags() {
         worker.RebuildTextures();
     }
     viewer[curViewer]->showFilter = showFilter->GetState();
-    viewer[curViewer]->showVertex = showVertex->GetState();
+    viewer[curViewer]->showVertexId = showVertexId->GetState();
     viewer[curViewer]->showIndex = showIndex->GetState();
     //worker.Update(0.0);
 }
@@ -663,7 +663,7 @@ void Interface::UpdateViewerPanel() {
     showTexture->SetState(viewer[curViewer]->showTexture);
     showFacetId->SetState(viewer[curViewer]->showFacetId);
     showFilter->SetState(viewer[curViewer]->showFilter);
-    showVertex->SetState(viewer[curViewer]->showVertex);
+    showVertexId->SetState(viewer[curViewer]->showVertexId);
     showIndex->SetState(viewer[curViewer]->showIndex);
 
     // Force all views to have the same showColormap
@@ -976,8 +976,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     showIndex = new GLToggle(0, "Indices");
     togglePanel->Add(showIndex);
 
-    showVertex = new GLToggle(0, "Vertices");
-    togglePanel->Add(showVertex);
+    showVertexId = new GLToggle(0, "VertexIDs");
+    togglePanel->Add(showVertexId);
 
     simuPanel = new GLTitledPanel("Simulation");
     simuPanel->SetClosable(true);

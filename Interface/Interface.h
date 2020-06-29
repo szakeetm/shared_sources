@@ -308,7 +308,7 @@ public:
     GLToggle      *showFacetId;
 	GLToggle      *showFilter;
 	GLToggle      *showIndex;
-	GLToggle      *showVertex;
+	GLToggle      *showVertexId;
 	GLButton      *viewerMoreButton;
 
 

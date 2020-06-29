@@ -95,7 +95,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.name = NULL;
 	view.performXY = XYZ_NONE;
 	showIndex = false;
-	showVertex = false;
+	showVertexId = false;
 	showNormal = false;
 	showUV = false;
 	showRule = true;
@@ -686,10 +686,10 @@ void GeometryViewer::DrawIndex() {
 	// Draw Labels
 	for (size_t i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
-			if (showIndex && showVertex) {
+			if (showIndex && showVertexId) {
 				sprintf(tmp, "%zd,%zd ", vertexId[i] + 1, i + 1);
 			}
-			else if (showIndex && !showVertex) {
+			else if (showIndex && !showVertexId) {
 				sprintf(tmp, "%zd ", vertexId[i] + 1);
 			}
 			else {
@@ -1224,8 +1224,8 @@ if( showVolume || showTexture ) {
 #endif
 
 	bool detailsSuppressed = hideLot != -1 && (geom->GetNbSelectedFacets() > hideLot);
-	bool displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
-	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
+	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
+	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
