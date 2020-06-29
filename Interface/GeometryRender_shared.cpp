@@ -773,7 +773,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 	double arrowLength = 30.0 / Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
 
 	glPushAttrib(GL_ENABLE_BIT);
-	glLineStipple(2, 0xAAAA);  /*  dash/dot/dash  */
+	glLineStipple(2, 0xAAAA);
 	glEnable(GL_LINE_STIPPLE);
 	for (const auto& arr : arrowsToDraw) {
 		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
