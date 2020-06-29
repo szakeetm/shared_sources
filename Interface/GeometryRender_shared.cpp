@@ -731,7 +731,10 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
             if (it != colorHighlighting.end()) {
-                continue;
+				float r = static_cast<float>(it->second.r) / 255.0f;
+				float g = static_cast<float>(it->second.g) / 255.0f;
+				float b = static_cast<float>(it->second.b) / 255.0f;
+				glColor4f(r, g, b, 0.5f);
             } else {
                 glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
             }
@@ -745,25 +748,6 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
         }
         else {
             Triangulate(facets[sel], false);
-        }
-    }
-    for (const auto& sel : selectedFacets) {
-        if(!colorHighlighting.empty()) {
-            auto it = colorHighlighting.find(sel);
-            // Check if element exists in map or not
-            if (it != colorHighlighting.end()) {
-                float r = static_cast<float>(it->second.r) / 255.0f;
-                float g = static_cast<float>(it->second.g) / 255.0f;
-                float b = static_cast<float>(it->second.b) / 255.0f;
-                glColor4f(r, g, b, 0.5f);
-                size_t nb = facets[sel]->sh.nbIndex;
-                if (nb == 3) {
-                    FillFacet(facets[sel], false);
-                }
-                else {
-                    Triangulate(facets[sel], false);
-                }
-            }
         }
     }
     glEnd();
