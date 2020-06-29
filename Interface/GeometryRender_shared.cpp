@@ -743,7 +743,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 				float g = static_cast<float>(it->second.g) / 255.0f;
 				float b = static_cast<float>(it->second.b) / 255.0f;
 				glColor4f(r, g, b, 0.5f);
-				arrow.color = {r, g, b, 0.5f};
+				arrow.color = {r, g, b, 0.3f};
             } else {
                 glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
 				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
@@ -751,8 +751,8 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
 				Vector3d& center = facets[sel]->sh.center;
 				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
-				arrow.startPoint = center - 0.5 * dir;
-				arrow.endPoint = center + 0.5 * dir;
+				arrow.startPoint = center - .5 * dir;
+				arrow.endPoint = center + .5* dir;
 				arrowsToDraw.push_back(arrow);
 			}
         }
@@ -769,10 +769,18 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     }
     glEnd();
 
+	AxisAlignedBoundingBox bb = GetBB();
+	double arrowLength = 30.0 / Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
+
+	glPushAttrib(GL_ENABLE_BIT);
+	glLineStipple(2, 0xAAAA);  /*  dash/dot/dash  */
+	glEnable(GL_LINE_STIPPLE);
 	for (const auto& arr : arrowsToDraw) {
 		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
-		GLToolkit::DrawVector(arr.startPoint.x, arr.startPoint.y, arr.startPoint.z, arr.endPoint.x, arr.endPoint.y, arr.endPoint.z, 1.0);
+
+		GLToolkit::DrawVector(arr.startPoint.x, arr.startPoint.y, arr.startPoint.z, arr.endPoint.x, arr.endPoint.y, arr.endPoint.z, arrowLength);
 	}
+	glPopAttrib();
     //---end transparent
 }
 
