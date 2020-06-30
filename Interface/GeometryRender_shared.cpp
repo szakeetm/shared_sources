@@ -726,7 +726,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct ArrowToDraw {
-		Vector3d startPoint, endPoint;
+		Vector3d startPoint, endPoint, normal;
 		std::array<float,4> color; //to pass components to glColor4f
 	};
 	std::vector<ArrowToDraw> arrowsToDraw;
@@ -748,11 +748,12 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
                 glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
 				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
             }
-			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
+			if ( PROFILE_U || profileMode == PROFILE_V) {
 				Vector3d& center = facets[sel]->sh.center;
 				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
 				arrow.endPoint = center + .5* dir;
+				arrow.normal = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
 				arrowsToDraw.push_back(arrow);
 			}
         }
@@ -777,8 +778,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 	glEnable(GL_LINE_STIPPLE);
 	for (const auto& arr : arrowsToDraw) {
 		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
-
-		GLToolkit::DrawVector(arr.startPoint.x, arr.startPoint.y, arr.startPoint.z, arr.endPoint.x, arr.endPoint.y, arr.endPoint.z, arrowLength);
+		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.normal,arrowLength);
 	}
 	glPopAttrib();
     //---end transparent
