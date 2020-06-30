@@ -184,7 +184,7 @@ private:
 
   double ToDeg(double radians);
   void DrawIndex();
-  void DrawRule();
+  void DrawCoordinateAxes();
   void DrawNormal();
   void DrawUV();
   void DrawFacetId();

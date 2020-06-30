@@ -939,11 +939,17 @@ void GLToolkit::DrawStringRestore() {
 
 }
 
-void GLToolkit::DrawRule(double length,bool invertX,bool invertY,bool invertZ,double n) {
-
-  DrawVector(0.0,0.0,0.0,(invertX)?-length:length,0.0,0.0,n);
-  DrawVector(0.0,0.0,0.0,0.0,(invertY)?-length:length,0.0,n);
-  DrawVector(0.0,0.0,0.0,0.0,0.0,(invertZ)?-length:length,n);
+void GLToolkit::DrawCoordinateAxes(double length,bool invertX,bool invertY,bool invertZ,double n) {
+    Vector3d O(0.0, 0.0, 0.0);
+    Vector3d X(1.0, 0.0, 0.0);
+    Vector3d Y(0.0, 1.0, 0.0);
+    Vector3d Z(0.0, 0.0, 1.0);
+    Vector3d X_end = length * X;
+    Vector3d Y_end = length * Y;
+    Vector3d Z_end = length * Z;
+    DrawVector(O, X_end, Y, n);
+    DrawVector(O, Y_end, Z, n);
+    DrawVector(O, Z_end, X, n);
   glPointSize(4.0f);
   glBegin(GL_POINTS);
   glVertex3d(0.0,0.0,0.0);

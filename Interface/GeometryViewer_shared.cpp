@@ -704,7 +704,7 @@ void GeometryViewer::DrawIndex() {
 	GLToolkit::DrawStringRestore();
 }
 
-void GeometryViewer::DrawRule() {
+void GeometryViewer::DrawCoordinateAxes() {
 
 	if (showRule) {
 		glLineWidth(1.0f);
@@ -720,7 +720,7 @@ void GeometryViewer::DrawRule() {
 		}
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawRule(vectorLength, false, false, false, arrowLength);
+		GLToolkit::DrawCoordinateAxes(vectorLength, false, false, false, arrowLength);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
 		GLToolkit::DrawString((float)vectorLength, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
@@ -1240,7 +1240,7 @@ if( showVolume || showTexture ) {
     // Draw on top of everything
     if (showFacetId && (!detailsSuppressed)) DrawFacetId();
 
-    DrawRule();
+    DrawCoordinateAxes();
 
     GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	PaintSelectedVertices(showHiddenVertex);
