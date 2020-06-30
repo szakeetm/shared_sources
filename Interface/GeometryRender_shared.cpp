@@ -748,7 +748,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
                 glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
 				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
             }
-			if ( PROFILE_U || profileMode == PROFILE_V) {
+			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
 				Vector3d& center = facets[sel]->sh.center;
 				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
