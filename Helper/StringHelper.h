@@ -9,6 +9,7 @@
 #include <vector>
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets);
+std::string AbbreviateString(const std::string& input, size_t maxLength);
 
 
 #endif //MOLFLOW_PROJ_STRINGHELPER_H
