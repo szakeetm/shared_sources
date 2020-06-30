@@ -822,9 +822,11 @@ void GeometryViewer::DrawUV() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		Facet *f = geom->GetFacet(i);
 		if (f->selected) {
-			Vector3d O = f->sh.O;
-			Vector3d U = f->sh.U;
-			Vector3d V = f->sh.V;
+			const Vector3d& O = f->sh.O;
+			const Vector3d& U = f->sh.U;
+			const Vector3d& V = f->sh.V;
+			Vector3d U_endpoint = O + U;
+			Vector3d V_endpoint = O + V;
 			GLToolkit::SetMaterial(&blueMaterial);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
@@ -834,8 +836,8 @@ void GeometryViewer::DrawUV() {
 				glEnable(GL_DEPTH_TEST);
 			}
 			glLineWidth(1.0f);
-			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + U.x, O.y + U.y, O.z + U.z, arrowLength);
-			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + V.x, O.y + V.y, O.z + V.z, arrowLength);
+			GLToolkit::DrawVector(O, U_endpoint, f->sh.nV, arrowLength);
+			GLToolkit::DrawVector(O, V_endpoint, f->sh.nU, arrowLength);
 			if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
 			glPointSize(3.0f);
 			glColor3f(0.5f, 1.0f, 1.0f);
@@ -845,8 +847,8 @@ void GeometryViewer::DrawUV() {
 			//glEnable(GL_BLEND);
 			GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.6f, 1.0f);
 			GLToolkit::DrawStringInit();
-			GLToolkit::DrawString((float)(O.x + U.x), (float)(O.y + U.y), (float)(O.z + U.z), "\201", GLToolkit::GetDialogFont());
-			GLToolkit::DrawString((float)(O.x + V.x), (float)(O.y + V.y), (float)(O.z + V.z), "\202", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(U_endpoint.x), (float)(U_endpoint.y), (float)(U_endpoint.z), "\201", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(V_endpoint.x), (float)(V_endpoint.y), (float)(V_endpoint.z), "\202", GLToolkit::GetDialogFont());
 			GLToolkit::DrawStringRestore();
 			//glDisable(GL_BLEND);
 		}
