@@ -90,6 +90,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Test functions
 #include "GeometryConverter.h"
+#include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 
 #include "../../src/versionId.h"
 
@@ -2235,7 +2236,7 @@ void Interface::UpdateRecentMenu(){
     m->Clear();
     int i=recentsList.size()-1;
     for(auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
-        m->Add(*recentIter, MENU_FILE_LOADRECENT + i);
+        m->Add(AbbreviateString(*recentIter, MAX_ITEM_LGTH-1).c_str(), MENU_FILE_LOADRECENT + i);
         --i;
     }
 }
