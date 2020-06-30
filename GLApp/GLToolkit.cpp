@@ -939,7 +939,7 @@ void GLToolkit::DrawStringRestore() {
 
 }
 
-void GLToolkit::DrawCoordinateAxes(double length,bool invertX,bool invertY,bool invertZ,double n) {
+void GLToolkit::DrawCoordinateAxes(double length, double n) {
     Vector3d O(0.0, 0.0, 0.0);
     Vector3d X(1.0, 0.0, 0.0);
     Vector3d Y(0.0, 1.0, 0.0);

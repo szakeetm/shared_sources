@@ -720,7 +720,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 		}
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawCoordinateAxes(vectorLength, false, false, false, arrowLength);
+		GLToolkit::DrawCoordinateAxes(vectorLength, arrowLength);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
 		GLToolkit::DrawString((float)vectorLength, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
@@ -2009,6 +2009,8 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 //#if defined(SYNRAD)
 		//regions included
 		AxisAlignedBoundingBox bb = geom->GetBB();
+		vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+		arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);
