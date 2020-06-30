@@ -79,8 +79,9 @@ public:
   static void DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int nbPoint, int *pointX, int *pointY,
                        bool useSmooth);
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
-  static void DrawRule(double length,bool invertX=false,bool invertY=false,bool invertZ=false,double n=1.0);
-  static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2,double nr=1.0);
+  static void DrawCoordinateAxes(double length,double n=1.0);
+  static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& nr=1.0); //Auto-choose a normal and draw vector
+  static void DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, const double& nr = 1.0); //Draw vector with passed normal
   static void DrawButtonBack(const int &x,const int &y,const int &width,
 	  const int &height,const int &state);
   static void DrawSmallButton(int x,int y,int state);

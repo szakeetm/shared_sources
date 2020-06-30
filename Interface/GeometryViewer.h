@@ -142,7 +142,6 @@ public:
 
   // Flag view
   bool showIndex;
-  bool showVertex;
   bool showNormal;
   bool showRule;
   bool showUV;
@@ -152,6 +151,7 @@ public:
   bool showVolume;
   bool showTexture;
   bool showFacetId;
+  bool showVertexId;
   int  showBack;
   bool showFilter;
  // bool showColormap;
@@ -184,7 +184,7 @@ private:
 
   double ToDeg(double radians);
   void DrawIndex();
-  void DrawRule();
+  void DrawCoordinateAxes();
   void DrawNormal();
   void DrawUV();
   void DrawFacetId();

@@ -95,7 +95,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.name = NULL;
 	view.performXY = XYZ_NONE;
 	showIndex = false;
-	showVertex = false;
+	showVertexId = false;
 	showNormal = false;
 	showUV = false;
 	showRule = true;
@@ -686,10 +686,10 @@ void GeometryViewer::DrawIndex() {
 	// Draw Labels
 	for (size_t i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
-			if (showIndex && showVertex) {
+			if (showIndex && showVertexId) {
 				sprintf(tmp, "%zd,%zd ", vertexId[i] + 1, i + 1);
 			}
-			else if (showIndex && !showVertex) {
+			else if (showIndex && !showVertexId) {
 				sprintf(tmp, "%zd ", vertexId[i] + 1);
 			}
 			else {
@@ -704,7 +704,7 @@ void GeometryViewer::DrawIndex() {
 	GLToolkit::DrawStringRestore();
 }
 
-void GeometryViewer::DrawRule() {
+void GeometryViewer::DrawCoordinateAxes() {
 
 	if (showRule) {
 		glLineWidth(1.0f);
@@ -720,7 +720,7 @@ void GeometryViewer::DrawRule() {
 		}
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawRule(vectorLength, false, false, false, arrowLength);
+		GLToolkit::DrawCoordinateAxes(vectorLength, arrowLength);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
 		GLToolkit::DrawString((float)vectorLength, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
@@ -822,9 +822,11 @@ void GeometryViewer::DrawUV() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		Facet *f = geom->GetFacet(i);
 		if (f->selected) {
-			Vector3d O = f->sh.O;
-			Vector3d U = f->sh.U;
-			Vector3d V = f->sh.V;
+			const Vector3d& O = f->sh.O;
+			const Vector3d& U = f->sh.U;
+			const Vector3d& V = f->sh.V;
+			Vector3d U_endpoint = O + U;
+			Vector3d V_endpoint = O + V;
 			GLToolkit::SetMaterial(&blueMaterial);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
@@ -834,8 +836,8 @@ void GeometryViewer::DrawUV() {
 				glEnable(GL_DEPTH_TEST);
 			}
 			glLineWidth(1.0f);
-			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + U.x, O.y + U.y, O.z + U.z, arrowLength);
-			GLToolkit::DrawVector(O.x, O.y, O.z, O.x + V.x, O.y + V.y, O.z + V.z, arrowLength);
+			GLToolkit::DrawVector(O, U_endpoint, f->sh.nV, arrowLength);
+			GLToolkit::DrawVector(O, V_endpoint, f->sh.nU, arrowLength);
 			if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
 			glPointSize(3.0f);
 			glColor3f(0.5f, 1.0f, 1.0f);
@@ -845,8 +847,8 @@ void GeometryViewer::DrawUV() {
 			//glEnable(GL_BLEND);
 			GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.6f, 1.0f);
 			GLToolkit::DrawStringInit();
-			GLToolkit::DrawString((float)(O.x + U.x), (float)(O.y + U.y), (float)(O.z + U.z), "\201", GLToolkit::GetDialogFont());
-			GLToolkit::DrawString((float)(O.x + V.x), (float)(O.y + V.y), (float)(O.z + V.z), "\202", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(U_endpoint.x), (float)(U_endpoint.y), (float)(U_endpoint.z), "\201", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(V_endpoint.x), (float)(V_endpoint.y), (float)(V_endpoint.z), "\202", GLToolkit::GetDialogFont());
 			GLToolkit::DrawStringRestore();
 			//glDisable(GL_BLEND);
 		}
@@ -1224,8 +1226,8 @@ if( showVolume || showTexture ) {
 #endif
 
 	bool detailsSuppressed = hideLot != -1 && (geom->GetNbSelectedFacets() > hideLot);
-	bool displayWarning = (showIndex || showVertex || showNormal || showUV) && detailsSuppressed;
-	if ((showIndex || showVertex) && (!detailsSuppressed)) DrawIndex();
+	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
+	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
@@ -1238,7 +1240,7 @@ if( showVolume || showTexture ) {
     // Draw on top of everything
     if (showFacetId && (!detailsSuppressed)) DrawFacetId();
 
-    DrawRule();
+    DrawCoordinateAxes();
 
     GLToolkit::CheckGLErrors("GLLabel::Paint()");
 	PaintSelectedVertices(showHiddenVertex);
@@ -2007,6 +2009,8 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 //#if defined(SYNRAD)
 		//regions included
 		AxisAlignedBoundingBox bb = geom->GetBB();
+		vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+		arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);

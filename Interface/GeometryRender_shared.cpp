@@ -725,16 +725,37 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     // Draw
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	struct ArrowToDraw {
+		Vector3d startPoint, endPoint, normal;
+		std::array<float,4> color; //to pass components to glColor4f
+	};
+	std::vector<ArrowToDraw> arrowsToDraw;
+
     glBegin(GL_TRIANGLES);
     for (const auto& sel : selectedFacets) {
         if(!colorHighlighting.empty()) {
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
-            if (it != colorHighlighting.end()) {
-                continue;
+			auto profileMode = facets[sel]->sh.profileType;
+			ArrowToDraw arrow;
+			if (it != colorHighlighting.end()) {
+				float r = static_cast<float>(it->second.r) / 255.0f;
+				float g = static_cast<float>(it->second.g) / 255.0f;
+				float b = static_cast<float>(it->second.b) / 255.0f;
+				glColor4f(r, g, b, 0.5f);
+				arrow.color = {r, g, b, 0.3f};
             } else {
                 glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
+				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
             }
+			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
+				Vector3d& center = facets[sel]->sh.center;
+				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
+				arrow.startPoint = center - .5 * dir;
+				arrow.endPoint = center + .5* dir;
+				arrow.normal = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
+				arrowsToDraw.push_back(arrow);
+			}
         }
         else{
             glColor4f(0.933f, 0.067f, 0.067f, 0.15f);    //metro red
@@ -747,27 +768,19 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
             Triangulate(facets[sel], false);
         }
     }
-    for (const auto& sel : selectedFacets) {
-        if(!colorHighlighting.empty()) {
-            auto it = colorHighlighting.find(sel);
-            // Check if element exists in map or not
-            if (it != colorHighlighting.end()) {
-                float r = static_cast<float>(it->second.r) / 255.0f;
-                float g = static_cast<float>(it->second.g) / 255.0f;
-                float b = static_cast<float>(it->second.b) / 255.0f;
-                glColor4f(r, g, b, 0.5f);
-                size_t nb = facets[sel]->sh.nbIndex;
-                if (nb == 3) {
-                    FillFacet(facets[sel], false);
-                }
-                else {
-                    Triangulate(facets[sel], false);
-                }
-            }
-        }
-    }
     glEnd();
 
+	AxisAlignedBoundingBox bb = GetBB();
+	double arrowLength = 30.0 / Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
+
+	glPushAttrib(GL_ENABLE_BIT);
+	glLineStipple(2, 0xAAAA);
+	glEnable(GL_LINE_STIPPLE);
+	for (const auto& arr : arrowsToDraw) {
+		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
+		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.normal,arrowLength);
+	}
+	glPopAttrib();
     //---end transparent
 }
 
