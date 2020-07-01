@@ -224,7 +224,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #endif
 
     simHandles.emplace_back(
-            StartProc(arguments, STARTPROC_BACKGROUND),
+            StartProc(arguments, STARTPROC_NOWIN),
             SimType::simCPU);
 
     for(int arg=0;arg<3;arg++)
