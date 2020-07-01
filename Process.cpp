@@ -165,6 +165,10 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 		si.wShowWindow = SW_MINIMIZE;
 		launchMode = CREATE_NEW_CONSOLE;
 	}
+    else if (mode == STARTPROC_NOWIN) {
+        si.wShowWindow = SW_MINIMIZE;
+        launchMode = CREATE_NO_WINDOW;
+    }
 	else {
 		si.wShowWindow = SW_SHOW;
 		launchMode = CREATE_NEW_CONSOLE;
@@ -177,10 +181,13 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 	else if (mode == STARTPROC_BACKGROUND) {
 		si.wShowWindow = SW_MINIMIZE;
 	}
+    else if (mode == STARTPROC_NOWIN) {
+        si.wShowWindow = SW_MINIMIZE;
+        //launchMode = CREATE_NO_WINDOW;
+    }
 	else {
 		si.wShowWindow = SW_SHOW;
 	}
-
 
 #endif
 	if (!CreateProcess(

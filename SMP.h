@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define STARTPROC_NORMAL 0
 #define STARTPROC_BACKGROUND 1
 #define STARTPROC_FOREGROUND 2
+#define STARTPROC_NOWIN 3
 
 #ifdef __cplusplus
 extern "C" {
