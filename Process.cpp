@@ -18,10 +18,6 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#if not (defined(DEBUG) || defined(_DEBUG))
-#define NODEBUG 1
-#endif
-
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 #include <windows.h>
@@ -42,12 +38,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring>
 
 #include "SMP.h"
-
-#if defined(NODEBUG)
-#undef DEBUG
-#undef _DEBUG
-#endif
-
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 // Get process info
