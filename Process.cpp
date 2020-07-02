@@ -190,6 +190,9 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 	}
 
 #endif
+    //Temporary patch
+    launchMode = CREATE_NO_WINDOW;
+    //End patch
 	if (!CreateProcess(
 		NULL,             // pointer to name of executable module
 		procv[0],            // pointer to command line string

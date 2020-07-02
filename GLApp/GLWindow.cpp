@@ -508,7 +508,9 @@ void GLWindow::DoModal() {
       }
       if (evt.type!=SDL_MOUSEWHEEL) ManageEvent(&evt); //Prevent closing combos
       if(!evtProcessed && evt.type==SDL_MOUSEBUTTONDOWN && animateFocus) GLWindowManager::AnimateFocus(this);
-      if(evt.type == SDL_WINDOWEVENT && evt.window.event ==SDL_WINDOWEVENT_EXPOSED) needRedraw = true;
+      if (evt.type == SDL_WINDOWEVENT && evt.window.event == SDL_WINDOWEVENT_EXPOSED) {
+          needRedraw = true;
+      }
     }
 
     theApp->UpdateStats();
