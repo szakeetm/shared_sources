@@ -2917,10 +2917,11 @@ int Interface::FrameMove()
     }
     */
 
-    const double delayTime = 0.03 - (wereEvents?fPaintTime:0.0) - fMoveTime;
-    const uint32_t delay_u = static_cast<uint32_t>(1000.0*delayTime);
-    if (delay_u > 0 && delay_u < 50)
+    double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
+    uint32_t delay_u = static_cast<uint32_t>(1000.0*delayTime);
+    if (delay_u > 0 && delay_u < 50) {
         SDL_Delay(delay_u); //Limits framerate at about 60fps
+    }
     return GL_OK;
 }
 
