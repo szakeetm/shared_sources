@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define STARTPROC_NORMAL 0
 #define STARTPROC_BACKGROUND 1
 #define STARTPROC_FOREGROUND 2
+#define STARTPROC_NOWIN 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +58,7 @@ extern "C" {
 
  using DWORD = unsigned int;
  using WORD = unsigned short;
-#if not defined(__MACOSX__) && not defined(__APPLE__)
+#if !defined(__MACOSX__) && !defined(__APPLE__)
  union semun {
     int                 val;   /* value for SETVAL             */
     struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */

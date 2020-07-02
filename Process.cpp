@@ -18,7 +18,6 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 #include <windows.h>
@@ -39,8 +38,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring>
 
 #include "SMP.h"
-
-
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 // Get process info
@@ -156,8 +153,23 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	DWORD launchMode;
 
-#if not defined(_DEBUG) || not defined(DEBUG)
-	if (mode == STARTPROC_NORMAL) {
+#if defined(_DEBUG) || defined(DEBUG)
+    launchMode = CREATE_NEW_CONSOLE;
+    if (mode == STARTPROC_NORMAL) {
+        si.wShowWindow = SW_MINIMIZE;
+    }
+    else if (mode == STARTPROC_BACKGROUND) {
+        si.wShowWindow = SW_MINIMIZE;
+    }
+    else if (mode == STARTPROC_NOWIN) {
+        si.wShowWindow = SW_MINIMIZE;
+        //launchMode = CREATE_NO_WINDOW;
+    }
+    else {
+        si.wShowWindow = SW_SHOW;
+    }
+#else
+    if (mode == STARTPROC_NORMAL) {
 		si.wShowWindow = SW_SHOW;
 		launchMode = DETACHED_PROCESS;
 	}
@@ -165,22 +177,15 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 		si.wShowWindow = SW_MINIMIZE;
 		launchMode = CREATE_NEW_CONSOLE;
 	}
+    else if (mode == STARTPROC_NOWIN) {
+        si.wShowWindow = SW_MINIMIZE;
+        launchMode = CREATE_NO_WINDOW;
+    }
 	else {
 		si.wShowWindow = SW_SHOW;
 		launchMode = CREATE_NEW_CONSOLE;
 	}
-#else
-	launchMode = CREATE_NEW_CONSOLE;
-	if (mode == STARTPROC_NORMAL) {
-		si.wShowWindow = SW_MINIMIZE;
-	}
-	else if (mode == STARTPROC_BACKGROUND) {
-		si.wShowWindow = SW_MINIMIZE;
-	}
-	else {
-		si.wShowWindow = SW_SHOW;
-	}
-
+    launchMode = CREATE_NO_WINDOW;
 
 #endif
 	if (!CreateProcess(
