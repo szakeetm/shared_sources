@@ -7,6 +7,7 @@
 #include <numeric>
 #include <GLApp/GLTypes.h>
 #include "GLApp/MathTools.h"
+#include "StringHelper.h"
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
     auto ranges = SplitString(inputString, ',');
@@ -69,4 +70,18 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
     }
 
     return;
+}
+
+std::string AbbreviateString(const std::string& input, size_t maxLength)
+{
+    //abbreviates string by replacing middle part with ...
+    //intended to abbreviate long paths
+    //maxLength defines returned string length if input is longer
+
+    if (maxLength>=input.length()) return std::string(input); //return a copy, not a reference to the input
+    if (maxLength <= 5) return "...";
+    size_t fromBeginning = (maxLength - 3) / 2;
+    size_t fromEnd = (maxLength - 2) / 2;
+    std::string result = input.substr(0, fromBeginning) + "..." + input.substr(input.length() - fromEnd);
+    return result;
 }

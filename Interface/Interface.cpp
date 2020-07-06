@@ -90,6 +90,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Test functions
 #include "GeometryConverter.h"
+#include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 
 #include "../../src/versionId.h"
 
@@ -1813,8 +1814,8 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     std::ostringstream aboutText;
                     aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId <<")";
                     aboutText << R"(
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
-Copyright:   E.S.R.F / CERN   (2019)
+Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAHR / Jean-Luc PONS
+Copyright:   CERN / E.S.R.F.   (2020)
 Website:    https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
@@ -2249,7 +2250,7 @@ void Interface::UpdateRecentMenu(){
     m->Clear();
     int i=recentsList.size()-1;
     for(auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
-        m->Add(*recentIter, MENU_FILE_LOADRECENT + i);
+        m->Add(AbbreviateString(*recentIter, MAX_ITEM_LGTH-1).c_str(), MENU_FILE_LOADRECENT + i);
         --i;
     }
 }
@@ -2930,10 +2931,13 @@ int Interface::FrameMove()
     }
     */
 
-    const double delayTime = 0.03 - (wereEvents?fPaintTime:0.0) - fMoveTime;
-    const uint32_t delay_u = static_cast<uint32_t>(1000.0*delayTime);
-    if (delay_u > 0 && delay_u < 50)
-        SDL_Delay(delay_u); //Limits framerate at about 60fps
+    double delayTime = 0.03 - (wereEvents ? fPaintTime  :0.0) - fMoveTime;
+    if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!
+        uint32_t delay_u = static_cast<uint32_t>(1000.0 * delayTime);
+        if (delay_u < 50) {
+            SDL_Delay(delay_u); //Limits framerate at about 60fps
+        }
+    }
     return GL_OK;
 }
 
