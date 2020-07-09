@@ -47,19 +47,17 @@ size_t IDX(const size_t& i, const size_t& nb) {
 size_t Next(const int& i, const size_t& nb, const bool& inverseDir) {
 	//Returns the next element of a circular index (next of last is first)
 	//inverseDir is a helper: when true, returns the previous
-	if (!inverseDir) {
-		size_t next=i+1;
-		if (next==nb) next=0;
-		return next;
-	} else return Previous(i,nb,inverseDir);
+	return Next((size_t)i,nb,inverseDir);
 }
 
 size_t Next(const size_t& i, const size_t& nb, const bool& inverseDir) {
 	//Returns the next element of a circular index (next of last is first)
 	//inverseDir is a helper: when true, returns the previous
 	if (!inverseDir) {
-		return IDX(i+1,nb);
-	} else return Previous(i,nb,inverseDir);
+		size_t next=i+1;
+		if (next==nb) next = 0;
+		return next;
+	} else return Previous(i,nb,false);
 }
 
 size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir) {
@@ -68,14 +66,11 @@ size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir) {
 	if (!inverseDir) {
 		if (i==0) return nb-1;
 		else return i-1;
-	} else return Next(i,nb,inverseDir);
+	} else return Next(i,nb,false);
 }
 
 size_t Previous(const int& i, const size_t& nb, const bool& inverseDir) {
-	if (!inverseDir) {
-		if (i==0) return nb-1;
-		else return i-1;
-	} else return Next(i,nb,inverseDir);
+	return Previous((size_t)i,nb,inverseDir);
 }
 
 
