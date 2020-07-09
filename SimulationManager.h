@@ -51,6 +51,7 @@ class SimulationManager {
 
     std::string MakeSubProcError(const char *message);
 
+    int refreshProcStatus();
 protected:
     /*! Load/Forward serialized simulation data (pre-processed geometry data) */
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */

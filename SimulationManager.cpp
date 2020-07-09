@@ -58,6 +58,20 @@ SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
 }
 
+int SimulationManager::refreshProcStatus() {
+    int nbDead = 0;
+    for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
+        if(!IsProcessRunning((*proc).first)){
+            proc = this->simHandles.erase(proc);
+            ++nbDead;
+        }
+        else{
+            ++proc;
+        }
+    }
+    return nbDead;
+}
+
 int SimulationManager::LoadInput(const std::string& fileName) {
     std::ifstream inputFile(fileName);
     inputFile.seekg(0, std::ios::end);
@@ -125,6 +139,7 @@ int SimulationManager::ReloadHitBuffer(size_t hitSize) {
  * @return 0=start successful, 1=PROCESS_DONE state entered
  */
 int SimulationManager::StartSimulation() {
+    refreshProcStatus();
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
@@ -139,6 +154,7 @@ int SimulationManager::StartSimulation() {
 }
 
 int SimulationManager::StopSimulation() {
+    refreshProcStatus();
     if (simHandles.empty())
         return 1;
 
@@ -224,7 +240,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #endif
 
     simHandles.emplace_back(
-            StartProc(arguments, STARTPROC_NORMAL),
+            StartProc(arguments, STARTPROC_NOWIN),
             SimType::simCPU);
 
     for(int arg=0;arg<3;arg++)
