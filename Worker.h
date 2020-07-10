@@ -34,6 +34,9 @@ class LoadStatus;
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
+typedef std::pair<std::string,double> UserMoment;
+typedef std::pair<double,double> Moment;
+
 class MolflowGeometry;
 #endif
 
@@ -130,8 +133,9 @@ public:
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
-  int AddMoment(std::vector<double> newMoments); //Adds a time serie to moments and returns the number of elements
-  std::vector<double> ParseMoment(std::string userInput); //Parses a user input and returns a vector of time moments
+    static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
+    int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
+  std::vector<Moment> ParseMoment(std::string userInput, double timeWindow); //Parses a user input and returns a vector of time moments
   void ResetMoments();
   double GetMoleculesPerTP(size_t moment);
   std::vector<std::pair<double, double>> Generate_ID(int paramId);
@@ -184,10 +188,9 @@ public:
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<std::vector<std::pair<double, double>>> IDs; //integrated distribution function for each time-dependent desorption type
   std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
-  std::vector<double> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
-  std::vector<std::string> userMoments;    //user-defined text values for defining time moments (can be time or time series)
-
+    std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
+    std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
 
   size_t    calcACprg;         // AC matrix progress
 #endif
