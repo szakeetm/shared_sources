@@ -32,30 +32,48 @@ bool IsEqual(const double &a, const double &b, double toleranceRatio) {
 	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
 }
 
-size_t  IDX(int i, size_t nb) {
-	return (i < 0) ? (nb + i) : (i%nb);
+size_t IDX(const int& i, const size_t& nb) {
+	//Return circular index restrained within 0..nb, allows negative index (Python logics: -1=last)
+    int ret = i%nb;
+    return (ret>=0)?(ret):(ret+nb);
 }
 
-size_t IDX(size_t i, size_t nb) {
+size_t IDX(const size_t& i, const size_t& nb) {
+	//Return circular index restrained within 0..nb
 	return i%nb;
 }
 
 
-size_t Next(int i, size_t nb) {
-	return (i+1)%nb;
+size_t Next(const int& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the next element of a circular index (next of last is first)
+	//inverseDir is a helper: when true, returns the previous
+	return Next((size_t)i,nb,inverseDir);
 }
 
-size_t Next(size_t i, size_t nb) {
-	return (i+1)%nb;
+size_t Next(const size_t& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the next element of a circular index (next of last is first)
+	//inverseDir is a helper: when true, returns the previous
+	if (!inverseDir) {
+		size_t next=i+1;
+		if (next==nb) next = 0;
+		return next;
+	} else return Previous(i,nb,false);
 }
 
-size_t Previous(int i, size_t nb) {
-	return IDX(i - 1, nb);
+size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the previous element of a circular index (previous of first is last)
+	//inverseDir is a helper: when true, returns the next
+	if (!inverseDir) {
+		if (i==0) return nb-1;
+		else return i-1;
+	} else return Next(i,nb,false);
 }
 
-size_t Previous(size_t i, size_t nb) {
-	return IDX((int)i - 1, nb);
+size_t Previous(const int& i, const size_t& nb, const bool& inverseDir) {
+	return Previous((size_t)i,nb,inverseDir);
 }
+
+
 
 size_t GetPower2(size_t n) {
 // Return a power of 2 which is greater or equal than n
