@@ -19,6 +19,8 @@ class GLButton;
 #include "GLChartOptions.h"
 #include "GLDataViewOptions.h"
 
+#include "GUIDefines.h"
+
 #include <vector>
 
 typedef struct {

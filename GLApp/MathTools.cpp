@@ -423,6 +423,22 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
 	return l-1;
 }
 
+/*!
+ * @brief Lookup the index of the interval related to a given key
+ * @param key specific moment
+ * @param moments vector of time intervals
+ * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
+ */
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
+    int lowerBound = my_lower_bound(key, moments, true);
+    if(lowerBound != -1 && lowerBound < moments.size()){
+        if(moments[lowerBound].first <= key && key < moments[lowerBound].second){
+            return lowerBound + 1;
+        }
+    }
+    return -1;
+}
+
 double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool & first, const bool & logarithmic, const bool & allowExtrapolate) {
 	//InterpolateX and InterpolateY
 	//Avoids repeated code with minor changes only
@@ -529,11 +545,11 @@ int weighed_lower_bound_X(const double & key, const double & weigh, double * A, 
 	
 }
 
-double GetElement(const std::pair<double, double>& pair, const bool & first) {
+inline double GetElement(const std::pair<double, double>& pair, const bool & first) {
 	return first ? pair.first : pair.second;
 }
 
-double GetElement(const std::pair<double, std::vector<double>>& pair, const bool & first, const size_t & elementIndex) {
+inline double GetElement(const std::pair<double, std::vector<double>>& pair, const bool & first, const size_t & elementIndex) {
 	return first ? pair.first : pair.second[elementIndex];
 }
 

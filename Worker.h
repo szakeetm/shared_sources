@@ -34,9 +34,6 @@ class LoadStatus;
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
-typedef std::pair<std::string,double> UserMoment;
-typedef std::pair<double,double> Moment;
-
 class MolflowGeometry;
 #endif
 
@@ -134,7 +131,9 @@ public:
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
     static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
-    int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
+    static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
+
+        int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
   std::vector<Moment> ParseMoment(std::string userInput, double timeWindow); //Parses a user input and returns a vector of time moments
   void ResetMoments();
   double GetMoleculesPerTP(size_t moment);

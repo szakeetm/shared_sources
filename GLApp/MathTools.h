@@ -95,6 +95,8 @@ double GetElement(const std::pair<double, std::vector<double>> & pair, const boo
 
 size_t GetSysTimeMs();
 
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
+
 //Elementwise addition of two vectors:
 #include <algorithm>
 #include <functional>
