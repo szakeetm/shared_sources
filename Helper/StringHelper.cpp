@@ -72,12 +72,14 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
     return;
 }
 
+/// <summary>
+/// Abbreviates string by replacing middle part with "..."
+/// </summary>
+/// <param name="input">The string to abbreviate</param>
+/// <param name="maxLength">The maximal returned string length</param>
+/// <returns>Returns the original string if its length is smaller than maxLength, otherwise a maxLength long abbreviated string</returns>
 std::string AbbreviateString(const std::string& input, size_t maxLength)
 {
-    //abbreviates string by replacing middle part with ...
-    //intended to abbreviate long paths
-    //maxLength defines returned string length if input is longer
-
     if (maxLength>=input.length()) return std::string(input); //return a copy, not a reference to the input
     if (maxLength <= 5) return "...";
     size_t fromBeginning = (maxLength - 3) / 2;
