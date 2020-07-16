@@ -455,11 +455,13 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
  */
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
 
-    auto lowerBound = std::lower_bound(moments.begin()+startIndex, moments.end(), std::make_pair(key,key));
-    --lowerBound; //even moments.end() can be a bound
+    if(!moments.empty()) {
+        auto lowerBound = std::lower_bound(moments.begin() + startIndex, moments.end(), std::make_pair(key, key));
+        --lowerBound; //even moments.end() can be a bound
 
-    if(lowerBound->first <= key && key < lowerBound->second){
-        return std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1;
+        if (lowerBound->first <= key && key < lowerBound->second) {
+            return std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1;
+        }
     }
     return -1;
 }
