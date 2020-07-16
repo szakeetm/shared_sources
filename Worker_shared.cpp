@@ -289,10 +289,12 @@ size_t Worker::GetPID(size_t prIdx) {
 
 void Worker::RebuildTextures() {
 
-    if (needsReload)
-        RealReload();
-
     if (mApp->needsTexture || mApp->needsDirection) {
+
+        // Only reload if we are even rebuilding textures
+        if (needsReload)
+            RealReload();
+
         BYTE *buffer = simManager.GetLockedHitBuffer();
         if (!buffer)
             return;
