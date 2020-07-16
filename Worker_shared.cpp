@@ -200,6 +200,8 @@ void Worker::ThrowSubProcError(const char *message) {
 }
 
 void Worker::Reload() {
+    //Schedules a reload
+    //Actual reloading is done by RealReload() method
     needsReload = true;
 }
 
@@ -406,7 +408,7 @@ void Worker::Update(float appTime) {
         memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #if defined(MOLFLOW)
-        memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
+            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
                sizeof(FacetHitBuffer));
 
         if (f->sh.anglemapParams.record) {
