@@ -430,11 +430,36 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
  * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
  */
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
-    int lowerBound = my_lower_bound(key, moments, true);
+    /*int lowerBound = my_lower_bound(key, moments, true);
     if(lowerBound != -1 && lowerBound < moments.size()){
         if(moments[lowerBound].first <= key && key < moments[lowerBound].second){
             return lowerBound + 1;
         }
+    }
+    return -1;*/
+    auto lowerBound = std::lower_bound(moments.begin(), moments.end(), std::make_pair(key,key));
+    --lowerBound; //even moments.end() can be a bound
+
+    if(lowerBound->first <= key && key < lowerBound->second){
+        return std::distance(moments.begin(), lowerBound) + 1;
+    }
+    return -1;
+}
+
+/*!
+ * @brief Lookup the index of the interval related to a given key and a start position for accelerated lookup
+ * @param key specific moment
+ * @param moments vector of time intervals
+ * @param startIndex offset to only look in a subset of moments
+ * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
+ */
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
+
+    auto lowerBound = std::lower_bound(moments.begin()+startIndex, moments.end(), std::make_pair(key,key));
+    --lowerBound; //even moments.end() can be a bound
+
+    if(lowerBound->first <= key && key < lowerBound->second){
+        return std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1;
     }
     return -1;
 }
