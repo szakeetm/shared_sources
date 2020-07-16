@@ -232,7 +232,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_LOAD:
                 printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
-                SetState(PROCESS_STARTING, "Loading simulation");
+                SetState(PROCESS_STARTING, "Loading simulation...");
                 loadOK = Load();
                 if (loadOK) {
                     //desorptionLimit = procInfo.cmdParam2; // 0 for endless
@@ -265,12 +265,12 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_START:
                 // Check end of simulation
-                if (simulation->ontheflyParams.desorptionLimit > 0) {
+                /*if (simulation->ontheflyParams.desorptionLimit > 0) {
                     if (simulation->totalDesorbed >= simulation->ontheflyParams.desorptionLimit / simulation->ontheflyParams.nbProcess) {
                         ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
                     }
-                }
+                }*/
                 if(GetLocalState() != PROCESS_RUN) {
                     printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
@@ -322,6 +322,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_CLOSE:
                 printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
+                SetState(PROCESS_STARTING, "Closing simulation...");
                 loadOK = false;
                 simulation->ClearSimulation();
                 CLOSEDPSUB(dpHit);

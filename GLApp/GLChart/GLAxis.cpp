@@ -1052,6 +1052,8 @@ GLuint GLAxis::initMarker(const char *name) {
     char format[64];
     if(isnan(vt))
       return "NaN";
+    if (isinf(vt))
+        return "Inf";
 
     // Round value to nearest multiple of prec
     // TODO: rounding in LOG_SCALE
