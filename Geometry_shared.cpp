@@ -4421,7 +4421,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 			f[nb++] = fac;
 #if defined(MOLFLOW)
 			if (toMap) { //set outgassing values
-				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
+				f[nb - 1]->sh.outgassing = *(values + count++) * MBARLS_TO_PAM3S; //0.1: mbar*l/s->Pa*m3/s
 				if (f[nb - 1]->sh.outgassing > 0.0) {
 					f[nb - 1]->sh.desorbType = desType + 1;
 					f[nb - 1]->selected = true;
