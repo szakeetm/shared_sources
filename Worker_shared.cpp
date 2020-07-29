@@ -499,32 +499,6 @@ void Worker::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
     simManager.GetProcStatus(procInfoList);
 }
 
-std::vector<std::vector<std::string>> Worker::ImportCSV_string(FileReader *file) {
-    std::vector<std::vector<std::string>> table; //reset table
-    do {
-        std::vector<std::string> row;
-        std::string line = file->ReadLine();
-        std::stringstream token;
-        size_t cursor = 0;
-        size_t length = line.length();
-        while (cursor < length) {
-            char c = line[cursor];
-            if (c == ',') {
-                row.push_back(token.str());
-                token.str("");
-                token.clear();
-            } else {
-                token << c;
-            }
-            cursor++;
-        }
-        if (token.str().length() > 0) row.push_back(token.str());
-
-        table.push_back(row);
-    } while (!file->IsEof());
-    return table;
-}
-
 std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
     std::vector<std::vector<double>> table;
     do {
