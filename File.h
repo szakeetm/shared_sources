@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <stdio.h>
 #include <string>
+#include <vector>
 #include "GLApp/GLTypes.h"
 
 #define READ_BUFFSIZE 4096
@@ -74,6 +75,8 @@ public:
 
   void JumpComment();
   void JumpControlChars();
+
+  std::vector<std::vector<std::string>> ImportCSV_string();
 private:
 
   void RefillBuffer();

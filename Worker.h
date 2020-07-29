@@ -70,7 +70,6 @@ public:
   //void ExportRegionPoints(const char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
   //void ExportDesorption(const char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
 
-  std::vector<std::vector<std::string>> ImportCSV_string(FileReader *file);
   std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
 
   // Return/Set the current filename
@@ -130,11 +129,7 @@ public:
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
-    static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
-    static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
 
-        int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
-  std::vector<Moment> ParseMoment(std::string userInput, double timeWindow); //Parses a user input and returns a vector of time moments
   void ResetMoments();
   double GetMoleculesPerTP(size_t moment);
   std::vector<std::pair<double, double>> Generate_ID(int paramId);

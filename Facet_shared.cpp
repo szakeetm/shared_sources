@@ -48,7 +48,7 @@ extern SynRad*mApp;
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-Facet::Facet(size_t nbIndex) {
+Facet::Facet(size_t nbIndex) : sh(0) {
 	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
 	vertices2.resize(nbIndex);
 	visible.resize(nbIndex);

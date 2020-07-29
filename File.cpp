@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLTypes.h"
 #include <cstring> //strcpy, etc.
 #include <filesystem>
+#include <sstream>
 
 #define MAX_WORD_LENGTH 65536 // expected length of the longest line
 
@@ -288,6 +289,32 @@ char *FileReader::ReadWord() {
 
     retWord[len] = '\0';
     return retWord;
+}
+
+std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
+    std::vector<std::vector<std::string>> table; //reset table
+    do {
+        std::vector<std::string> row;
+        std::string line = this->ReadLine();
+        std::stringstream token;
+        size_t cursor = 0;
+        size_t length = line.length();
+        while (cursor < length) {
+            char c = line[cursor];
+            if (c == ',') {
+                row.push_back(token.str());
+                token.str("");
+                token.clear();
+            } else {
+                token << c;
+            }
+            cursor++;
+        }
+        if (token.str().length() > 0) row.push_back(token.str());
+
+        table.push_back(row);
+    } while (!this->IsEof());
+    return table;
 }
 
 // FileWriter class
