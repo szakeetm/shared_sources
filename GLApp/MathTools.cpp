@@ -490,6 +490,8 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
 
     if(!moments.empty()) {
         auto lowerBound = std::lower_bound(moments.begin() + startIndex, moments.end(), std::make_pair(key, key));
+        if(lowerBound == moments.begin())
+            return -1;
         --lowerBound; //even moments.end() can be a bound
 
         if (lowerBound->first <= key && key < lowerBound->second) {
