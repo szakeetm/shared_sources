@@ -61,7 +61,7 @@ double my_erf(double x);
 double Weigh(const double& a, const double& b, const double& weigh);
 double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
 double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
-double InterpolateXY(const double& lookupValue, const std::vector<std::pair<double, double>>& table, const bool& first, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate);
+double InterpolateXY(const double& lookupValue, const std::vector<std::pair<double, double>>& table, const bool& first, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
 std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
 double InterpolateVectorX(const double& y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t& elementIndex, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
 //double QuadraticInterpolateX(const double & y, const double & a, const double & b, const double & c, const double & FA, const double & FB, const double & FC);
