@@ -151,14 +151,14 @@ char *SimulationController::GetSimuStatus() {
     static char ret[128];
     size_t count = simulation->totalDesorbed;
     size_t max = 0;
-    if (simulation->ontheflyParams.nbProcess)
-        max = simulation->ontheflyParams.desorptionLimit / simulation->ontheflyParams.nbProcess;
+    if (simulation->model.otfParams.nbProcess)
+        max = simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess;
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
-        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", simulation->sh.name.c_str(), count, max, percent);
+        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", simulation->model.sh.name.c_str(), count, max, percent);
     } else {
-        sprintf(ret, "(%s) MC %zd", simulation->sh.name.c_str(), count);
+        sprintf(ret, "(%s) MC %zd", simulation->model.sh.name.c_str(), count);
     }
 
     return ret;
@@ -261,8 +261,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_START:
                 // Check end of simulation
-                if (simulation->ontheflyParams.desorptionLimit > 0) {
-                    if (simulation->totalDesorbed >= simulation->ontheflyParams.desorptionLimit / simulation->ontheflyParams.nbProcess) {
+                if (simulation->model.otfParams.desorptionLimit > 0) {
+                    if (simulation->totalDesorbed >= simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess) {
                         ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
                     }
@@ -374,13 +374,13 @@ bool SimulationController::Load() {
     CLOSEDPSUB(loader);
 
     //Connect to log dataport
-    if (simulation->ontheflyParams.enableLogging) {
+    if (simulation->model.otfParams.enableLogging) {
         this->dpLog = OpenDataport(logDpName,
-                                   sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+                                   sizeof(size_t) + simulation->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
         if (!this->dpLog) {
             char err[512];
             sprintf(err, "Failed to connect to 'this->dpLog' dataport %s (%zd Bytes)", logDpName,
-                    sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+                    sizeof(size_t) + simulation->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
             SetErrorSub(err);
             this->loadOK = false;
             return this->loadOK;
@@ -424,13 +424,13 @@ bool SimulationController::UpdateParams() {
     bool result = simulation->UpdateOntheflySimuParams(loader);
     CLOSEDPSUB(loader);
 
-    if (simulation->ontheflyParams.enableLogging) {
+    if (simulation->model.otfParams.enableLogging) {
         this->dpLog = OpenDataport(logDpName,
-                                   sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+                                   sizeof(size_t) + simulation->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
         if (!this->dpLog) {
             char err[512];
             sprintf(err, "Failed to connect to 'this->dpLog' dataport %s (%zd Bytes)", logDpName,
-                    sizeof(size_t) + simulation->ontheflyParams.logLimit * sizeof(ParticleLoggerItem));
+                    sizeof(size_t) + simulation->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
             SetErrorSub(err);
             return false;
         }

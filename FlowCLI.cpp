@@ -5,24 +5,25 @@
 #include <cereal/archives/xml.hpp>
 #include "SimulationManager.h"
 #include "SMP.h"
-#include "CLI11/CLI11.hpp"
 #include "Buffer_shared.h"
 #include <signal.h>
 #include <Parameter.h>
 #include <cereal/archives/binary.hpp>
+#include <LoaderXML.h>
+#include <WriterXML.h>
 #include "GeometrySimu.h"
+#include "Initializer.h"
 
-class FlowFormatter : public CLI::Formatter {
-public:
-    std::string make_usage(const CLI::App *app, std::string name) const override {
-        return "Usage: ./"
-        +std::filesystem::path(name).filename().string()
-        +" [options]";
-    }
-};
+static constexpr const char* molflowCliLogo = R"(
+  __  __     _  __ _             ___ _    ___
+ |  \/  |___| |/ _| |_____ __ __/ __| |  |_ _|
+ | |\/| / _ \ |  _| / _ \ V  V / (__| |__ | |
+ |_|  |_\___/_|_| |_\___/\_/\_/ \___|____|___|
+    )";
 
-class MolflowData{
-public:
+
+
+struct MolflowData{
     // Geometry
     WorkerParams wp;
     GeomProperties sh;
@@ -38,7 +39,7 @@ public:
     std::vector<Parameter> parameters; //Time-dependent parameters
 };
 
-int parse_input(std::string serializedFile){
+/*int parse_input(std::string serializedFile){
     std::ifstream inputFile(serializedFile);
     inputFile.seekg(0, std::ios::end);
     size_t size = inputFile.tellg();
@@ -89,7 +90,7 @@ int parse_input(std::string serializedFile){
     std::cout << " -> " << md.sh.nbVertex <<" vertices" << std::endl;
 
     return 0;
-}
+}*/
 /* This flag controls termination of the main loop. */
 volatile sig_atomic_t keep_going = 1;
 
@@ -101,48 +102,13 @@ void catch_alarm (int sig)
 }
 
 int main(int argc, char** argv) {
-    std::cout << R"(
-  __  __     _  __ _             ___ _    ___
- |  \/  |___| |/ _| |_____ __ __/ __| |  |_ _|
- | |\/| / _ \ |  _| / _ \ V  V / (__| |__ | |
- |_|  |_\___/_|_| |_\___/\_/\_/ \___|____|___|
-    )" << std::endl;
+    std::cout << molflowCliLogo << std::endl;
 
     SimulationManager simManager("molflow","MFLW");
-    CLI::App app{"Molflow+/Synrad+ Simulation Management"};
-    app.formatter(std::make_shared<FlowFormatter>());
+    SimulationModel model{};
 
-    // Define options
-    double p = 0;
-    app.add_option("-p,--procs", p, "# CPU cores");
-    uint64_t simDuration = 10;
-    app.add_option("-t,--time", simDuration, "Simulation duration in seconds");
-    std::string req_real_file;
-    app.add_option("-f,--file", req_real_file, "Require an existing file")
-            ->required()
-            ->check(CLI::ExistingFile);
-    CLI11_PARSE(app, argc, argv);
+    Initializer::init(argc, argv, &simManager, &model);
 
-    std::cout << "Parameter value: " << p << std::endl;
-
-    simManager.nbCores = p;
-    simManager.useCPU = true;
-    if(simManager.InitSimUnits())
-        std::cout << "Error: Initialising subprocesses: " << simManager.simHandles.size() << std::endl;
-
-
-    std::cout << "Active cores: " << simManager.simHandles.size() << std::endl;
-
-    std::cout << "Parsing file: " << req_real_file << std::endl;
-    parse_input(req_real_file);
-    std::cout << "Forwarding serialization: " << req_real_file << std::endl;
-    try {
-        simManager.LoadInput(req_real_file);
-    }
-    catch (std::runtime_error& e) {
-        std::cout << "ERROR: Loading Input: " << e.what() << std::endl;
-        exit(0);
-    }
     //simManager.ReloadHitBuffer();
     try {
         simManager.StartSimulation();
@@ -154,8 +120,8 @@ int main(int argc, char** argv) {
     /* Establish a handler for SIGALRM signals. */
     signal (SIGALRM, catch_alarm);
 
-    alarm(simDuration);
-    std::cout << "Commencing simulation for " << simDuration << " seconds."<<std::endl;
+    alarm(Settings::simDuration);
+    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
 
     std::cout << "." << std::flush << '\b';
     do {
@@ -175,8 +141,10 @@ int main(int argc, char** argv) {
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
     // Export results
-    // GlobalHitBuffer *gHits = (GlobalHitBuffer *)simManager.GetLockedHitBuffer();
-    //simManager.UnlockHitBuffer();
+    BYTE *buffer = simManager.GetLockedHitBuffer();
+    FlowIO::WriterXML writer;
+    writer.SaveSimulationState(Settings::req_real_file, &model, buffer);
+    simManager.UnlockHitBuffer();
 
     return 0;
 }

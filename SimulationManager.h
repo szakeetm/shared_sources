@@ -13,7 +13,7 @@ typedef unsigned char BYTE;
 
 class SimulationController;
 
-class Dataport;
+struct Dataport;
 
 enum class SimType : uint8_t {
     simCPU,
@@ -139,6 +139,12 @@ private:
     Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
     Dataport *dpLog;
     Dataport *dpLoader;
+
+    // Direct implementation for threads
+    std::vector<SubProcInfo> procInformation; // ctrl
+    // SimulationModel* model; // load
+    // hits
+
 
 protected:
     char appName[16]{};

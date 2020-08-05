@@ -7,6 +7,7 @@
 
 #include "SMP.h"
 #include "Buffer_shared.h"
+#include "../src/GeometrySimu.h"
 
 class CurrentParticleStatus;
 
@@ -31,8 +32,9 @@ public:
     virtual size_t GetHitsSize() = 0;
 
 public:
-    OntheflySimulationParams ontheflyParams;
-    GeomProperties sh;
+    SimulationModel model;
+    //OntheflySimulationParams ontheflyParams;
+    //GeomProperties sh;
     // Particle coordinates (MC)
     CurrentParticleStatus* currentParticle;
 
