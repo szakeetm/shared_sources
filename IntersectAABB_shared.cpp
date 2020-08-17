@@ -462,7 +462,7 @@ std::tuple<bool, SubprocessFacet*, double> Intersect(Simulation* sHandle, const 
 	sHandle->currentParticle.transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-	IntersectTree(sHandle, *sHandle->structures[sHandle->currentParticle.structureId].aabbTree, rayPos, -1.0*rayDir, sHandle->currentParticle.lastHitFacet,
+	IntersectTree(sHandle, *sHandle->model.structures[sHandle->currentParticle.structureId].aabbTree, rayPos, -1.0*rayDir, sHandle->currentParticle.lastHitFacet,
 		nullRx, nullRy, nullRz, inverseRayDir,
 		/*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
 
@@ -617,7 +617,7 @@ bool Visible(Simulation* sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f
 	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
 	sHandle->currentParticle.transparentHitBuffer.clear();
 
-	IntersectTree(sHandle, *sHandle->structures[0].aabbTree, rayPos, -1.0*rayDir,
+	IntersectTree(sHandle, *sHandle->model.structures[0].aabbTree, rayPos, -1.0*rayDir,
 		f1, nullRx, nullRy, nullRz, inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
 
 	if (found) {

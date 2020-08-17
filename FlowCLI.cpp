@@ -13,6 +13,7 @@
 #include <WriterXML.h>
 #include "GeometrySimu.h"
 #include "Initializer.h"
+#include "GLApp/MathTools.h"
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___
@@ -106,8 +107,8 @@ int main(int argc, char** argv) {
 
     SimulationManager simManager("molflow","MFLW");
     SimulationModel model{};
-
-    Initializer::init(argc, argv, &simManager, &model);
+    GlobalSimuState globState{};
+    Initializer::init(argc, argv, &simManager, &model, &globState);
 
     //simManager.ReloadHitBuffer();
     try {
@@ -139,12 +140,23 @@ int main(int argc, char** argv) {
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
     simManager.StopSimulation();
+    for(const auto& subHandle : simManager.simHandles){
+        const size_t sub_pid = subHandle.first;
+        GlobalSimuState* localState = simManager.FetchResults(sub_pid);
+        std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit << " += "<< localState->globalHits.globalHits.hit.nbMCHit<<std::endl;
+        globState.globalHits.globalHits += localState->globalHits.globalHits;
+        globState.globalHistograms += localState->globalHistograms;
+        globState.facetStates += localState->facetStates;
+        delete localState;
+    }
+
     simManager.KillAllSimUnits();
     // Export results
-    BYTE *buffer = simManager.GetLockedHitBuffer();
+    //BYTE *buffer = simManager.GetLockedHitBuffer();
     FlowIO::WriterXML writer;
-    writer.SaveSimulationState(Settings::req_real_file, &model, buffer);
-    simManager.UnlockHitBuffer();
+    //writer.SaveSimulationState(Settings::req_real_file, &model, buffer);
+    writer.SaveSimulationState(Settings::req_real_file, &model, globState);
+    //simManager.UnlockHitBuffer();
 
     return 0;
 }

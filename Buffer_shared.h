@@ -516,7 +516,9 @@ struct FacetHitBuffer {
         hit.sum_1_per_velocity = 0.0;
         hit.sum_v_ort = 0.0;
     }
-	struct {
+    FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
+
+    struct {
 		// Counts
         size_t nbDesorbed;          // Number of desorbed molec
         size_t nbMCHit;               // Number of hits
@@ -595,7 +597,7 @@ public:
 	size_t  lastLeakIndex;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 	size_t  leakCacheSize;        //Number of valid leaks in the cache
 	size_t  nbLeakTotal;         // Total leaks
-	
+
 
 #if defined(MOLFLOW)
 	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
@@ -664,3 +666,4 @@ public:
 		);
 	}
 };
+

@@ -6,7 +6,7 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
-#else if not(defined(__MACOSX__) || defined(__APPLE__))
+#elif not(defined(__MACOSX__) || defined(__APPLE__))
 #include <cstring> //memset on unix
 #endif
 
@@ -19,6 +19,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <cereal/archives/binary.hpp>
 
 SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     isRunning = false;
@@ -210,9 +211,30 @@ int SimulationManager::TerminateSimHandles() {
     return 0;
 }
 
-int SimulationManager::FetchResults() {
+GlobalSimuState * SimulationManager::FetchResults(size_t procId) {
+    ExecuteAndWait(COMMAND_FETCH,PROCESS_STARTING, procId);
+    do{
+        ProcessSleep(100);
+    }while(WaitForProcStatus(PROCESS_READY));
+    GlobalSimuState* localState = new GlobalSimuState;
 
-    return 0;
+    std::string inputString(dpHit->size,'\0');
+    BYTE* buffer = GetLockedHitBuffer();
+    std::copy(buffer, buffer + dpHit->size, inputString.begin());
+    UnlockHitBuffer();
+    {
+        std::stringstream inputStream;
+        inputStream << inputString;
+        cereal::BinaryInputArchive inputArchive(inputStream);
+
+        inputArchive(
+            localState->globalHits,
+            localState->globalHistograms,
+            localState->facetStates
+        );
+    }
+
+    return localState;
 }
 
 int SimulationManager::CreateCPUHandle(uint16_t iProc) {

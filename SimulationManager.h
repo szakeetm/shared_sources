@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include "../src/GeometrySimu.h"
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
@@ -57,7 +58,7 @@ protected:
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */
     int TerminateSimHandles();
 
-    int FetchResults(); /*! Get results from simulations and clear local counters */
+    /*! Get results from simulations and clear local counters */
     bool StartStopSimulation();
 
     // Open/Close for shared memory
@@ -130,6 +131,8 @@ public:
 
 
     int LoadInput(const std::string& fileName);
+
+    GlobalSimuState *FetchResults(size_t procId);
 
 private:
     bool isRunning;

@@ -325,6 +325,15 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetReady();
                 break;
 
+            case COMMAND_FETCH:
+                printf("[%d] COMMAND: FETCH (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
+                if(procInfo.procId == procInfo.cmdParam) {
+                    SetState(PROCESS_STARTING,"Preparing to upload hits");
+                    simulation->UploadHits(dpHit, dpLog, prIdx, 10000);
+                }
+                SetReady();
+                break;
+
             case PROCESS_RUN:
                 SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
@@ -389,7 +398,18 @@ bool SimulationController::Load() {
     }
 
     // Connect to hit dataport
-    hSize = simulation->GetHitsSize();
+    std::ostringstream result;
+    {
+        cereal::BinaryOutputArchive outputArchive(result);
+
+        outputArchive(
+                cereal::make_nvp("GlobalHits", this->simulation->tmpResults.globalHits),
+                cereal::make_nvp("GlobalHistograms", this->simulation->tmpResults.globalHistograms),
+                cereal::make_nvp("FacetStates", this->simulation->tmpResults.facetStates)
+        );
+    }
+
+    hSize = result.str().size();//simulation->GetHitsSize();
     this->dpHit = OpenDataport(hitsDpName, hSize);
 
     if (!this->dpHit) { // in case of unknown size, create the DP itself

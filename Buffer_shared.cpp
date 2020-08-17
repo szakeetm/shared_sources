@@ -19,6 +19,23 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Buffer_shared.h"
 
+#if defined(MOLFLOW)
+/**
+* \brief += operator, with simple += of underlying structures
+* \param rhs reference object on the right hand
+* \return address of this (lhs)
+*/
+FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
+    this->hit.nbDesorbed+=rhs.hit.nbDesorbed;
+    this->hit.nbMCHit+=rhs.hit.nbMCHit;
+    this->hit.nbHitEquiv+=rhs.hit.nbHitEquiv;
+    this->hit.nbAbsEquiv+=rhs.hit.nbAbsEquiv;
+    this->hit.sum_1_per_ort_velocity+=rhs.hit.sum_1_per_ort_velocity;
+    this->hit.sum_1_per_velocity+=rhs.hit.sum_1_per_velocity;
+    this->hit.sum_v_ort+=rhs.hit.sum_v_ort;
+    return *this;
+}
+#endif
 #if defined(SYNRAD)
 FacetHitBuffer::FacetHitBuffer(){
     this->ResetBuffer();

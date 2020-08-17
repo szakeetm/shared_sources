@@ -27,6 +27,7 @@
 #define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
 #define COMMAND_LOADAC   19  // Load mesh and compute AC matrix
 #define COMMAND_STEPAC   20  // Perform single iteration step (AC)
+#define COMMAND_FETCH   21  // Subprocess should upload local hits data
 
 static const char *prStates[] = {
 
