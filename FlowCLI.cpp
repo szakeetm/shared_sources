@@ -119,26 +119,29 @@ int main(int argc, char** argv) {
         exit(0);
     }
     /* Establish a handler for SIGALRM signals. */
-    signal (SIGALRM, catch_alarm);
+    size_t timeNow = GetSysTimeMs();
 
-    alarm(Settings::simDuration);
     std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
+    //ProcessSleep(1000*Settings::simDuration);
+    size_t timeEnd = GetSysTimeMs() + 1000 * Settings::simDuration;
 
     std::cout << "." << std::flush << '\b';
     do {
-        usleep(1000000);
+        ProcessSleep(1000);
+        //usleep(1000000);
         std::cout << "." << std::flush;
-        usleep(1000000);
+        ProcessSleep(1000);
         std::cout << "\b.." << std::flush;
-        usleep(1000000);
+        ProcessSleep(1000);
         std::cout << "\b\b..." << std::flush;
-        usleep(1000000);
+        ProcessSleep(1000);
         std::cout << "\b\b\b...." << std::flush;
-        usleep(1000000);
+        ProcessSleep(1000);
         std::cout << "\b\b\b\b....." << std::flush<< "\b\b\b\b\b";
-    } while(keep_going);
+    } while(GetSysTimeMs() < timeEnd);
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
+    // Stop and copy results
     simManager.StopSimulation();
     for(const auto& subHandle : simManager.simHandles){
         const size_t sub_pid = subHandle.first;
