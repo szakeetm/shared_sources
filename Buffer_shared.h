@@ -589,7 +589,9 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-	FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
+    GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
+
+    FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
 	size_t hitCacheSize;              // Number of valid hits in cache
 	size_t lastHitIndex;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
 	HIT hitCache[HITCACHESIZE];       // Hit history

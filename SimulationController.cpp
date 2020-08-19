@@ -79,7 +79,7 @@ int SimulationController::RunSimulation() {
     double t1 = GetTick();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-        stepsPerSec = (1.0 * nbStep) / (t1 - t0); // every 1.0 second
+        stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
 
 #if defined(_DEBUG)
     printf("Running: stepPerSec = %lf\n", stepsPerSec);
@@ -275,7 +275,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     SetStatus(GetSimuStatus()); //update hits only
                     eos = RunSimulation();      // Run during 1 sec
                     if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
-                        simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                        //simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                     }
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
@@ -362,7 +362,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
 bool SimulationController::Load() {
 
     Dataport *loader;
-    size_t hSize;
 
     // Load geometry
     loader = OpenDataport(loadDpName, procInfo.cmdParam);
@@ -376,7 +375,8 @@ bool SimulationController::Load() {
     printf("Connected to %s\n", loadDpName);
 
     SetState(PROCESS_STARTING, "Loading simulation");
-    if (!simulation->LoadSimulation(loader)) {
+    size_t hitSize = simulation->LoadSimulation(loader);
+    if (!hitSize) {
         CLOSEDPSUB(loader);
         return this->loadOK;
     }
@@ -398,32 +398,20 @@ bool SimulationController::Load() {
     }
 
     // Connect to hit dataport
-    std::ostringstream result;
-    {
-        cereal::BinaryOutputArchive outputArchive(result);
-
-        outputArchive(
-                cereal::make_nvp("GlobalHits", this->simulation->tmpResults.globalHits),
-                cereal::make_nvp("GlobalHistograms", this->simulation->tmpResults.globalHistograms),
-                cereal::make_nvp("FacetStates", this->simulation->tmpResults.facetStates)
-        );
-    }
-
-    hSize = result.str().size();//simulation->GetHitsSize();
-    this->dpHit = OpenDataport(hitsDpName, hSize);
+    this->dpHit = OpenDataport(hitsDpName, hitSize);
 
     if (!this->dpHit) { // in case of unknown size, create the DP itself
-        this->dpHit = CreateDataport(hitsDpName, hSize);
+        this->dpHit = CreateDataport(hitsDpName, hitSize);
     }
     if (!this->dpHit) { // recheck after creation
         char err[512];
-        sprintf(err, "Failed to connect to 'hits' dataport (%zd Bytes)", hSize);
+        sprintf(err, "Failed to connect to 'hits' dataport (%zd Bytes)", hitSize);
         SetErrorSub(err);
         this->loadOK = false;
         return this->loadOK;
     }
 
-    printf("Connected to %s (%zd bytes)\n", hitsDpName, hSize);
+    printf("Connected to %s (%zd bytes)\n", hitsDpName, hitSize);
     this->loadOK = true;
 
     return this->loadOK;

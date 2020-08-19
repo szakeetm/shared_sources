@@ -163,6 +163,7 @@ public:
     bool useRemote;
 
     uint16_t nbCores;
+    uint16_t nbThreads;
     uint16_t mainProcId{};
 
     bool allProcsDone;

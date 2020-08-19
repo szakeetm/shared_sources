@@ -27,6 +27,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <process.h>
 #else
 #include <unistd.h>
+#include <omp.h>
+
 #endif // def WIN
 
 #define  RK_STATE_LEN 624
@@ -85,9 +87,10 @@ unsigned long GenerateSeed() {
 #else
     processId = ::getpid();
 #endif //  WIN
-
+    int index = omp_get_thread_num();
+    //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId))));
+    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+index))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */

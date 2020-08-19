@@ -19,6 +19,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Buffer_shared.h"
 
+GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
+    this->globalHits += src.globalHits;
+
+    this->distTraveled_total += src.distTraveled_total;
+    this->distTraveledTotal_fullHitsOnly += src.distTraveledTotal_fullHitsOnly;
+    this->nbLeakTotal += src.nbLeakTotal;
+
+    return *this;
+}
+
 #if defined(MOLFLOW)
 /**
 * \brief += operator, with simple += of underlying structures

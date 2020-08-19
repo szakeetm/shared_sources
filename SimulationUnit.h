@@ -17,7 +17,7 @@ public:
     virtual ~SimulationUnit()= default;;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual bool LoadSimulation(Dataport *loader) = 0;
+    virtual size_t LoadSimulation(Dataport *loader) = 0;
     virtual void UpdateHits(Dataport *dpHit, Dataport* dpLog,int prIdx, DWORD timeout) = 0;
     virtual bool UploadHits(Dataport *dpHit, Dataport* dpLog, int prIdx, DWORD timeout) = 0;
 
@@ -38,8 +38,8 @@ public:
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)
-    CurrentParticleStatus* currentParticle;
-    GlobalSimuState tmpResults;
+    //CurrentParticleStatus* currentParticle;
+    //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"
 };

@@ -247,18 +247,19 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
-    char *arguments[4];
-    for(int arg=0;arg<3;arg++)
+    char *arguments[5];
+    for(int arg=0;arg<4;arg++)
         arguments[arg] = new char[512];
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine,"%sSub.exe %d %hu",appName,processId,iProc);
+    sprintf(cmdLine,"%sSub.exe %d %hu %hu",appName,processId,iProc,nbThreads);
     sprintf(arguments[0],"%s",cmdLine);
 #else
     sprintf(cmdLine,"./%sSub",appName);
     sprintf(arguments[0],"%s",cmdLine);
     sprintf(arguments[1],"%d",processId);
     sprintf(arguments[2],"%hu",iProc);
-    arguments[3] = nullptr;
+    sprintf(arguments[3],"%hu",nbThreads);
+    arguments[4] = nullptr;
 #endif
 
     simHandles.emplace_back(
