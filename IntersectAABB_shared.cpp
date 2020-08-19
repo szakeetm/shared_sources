@@ -328,7 +328,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = sHandle->currentParticle.flightTime + d / 100.0 / sHandle->currentParticle.velocity;
+									double time = sHandle->currentParticle.particleTime + d / 100.0 / sHandle->currentParticle.velocity;
 									double currentOpacity = sHandle->GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (sHandle->randomGenerator.rnd()<currentOpacity));
 #endif
