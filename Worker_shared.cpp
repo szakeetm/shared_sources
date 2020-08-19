@@ -358,8 +358,7 @@ void Worker::Update(float appTime) {
     if (!bufferStart)
         return;
 
-    BYTE *buffer = bufferStart;
-
+    BYTE *buffer = bufferStart; //buffer is incremented by each READBUFFER call
 
     mApp->changedSinceSave = true;
     // Globals
@@ -380,26 +379,8 @@ void Worker::Update(float appTime) {
     }
 #endif
 
+    RetrieveGlobalHistogramCache(buffer);
 
-    //Copy global histogram
-    //Prepare vectors to receive data
-    globalHistogramCache.Resize(wp.globalHistogramParams);
-
-    BYTE *globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
-#if defined(MOLFLOW)
-    globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
-#endif
-
-    memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress,
-           wp.globalHistogramParams.GetBouncesDataSize());
-    memcpy(globalHistogramCache.distanceHistogram.data(),
-           globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(),
-           wp.globalHistogramParams.GetDistanceDataSize());
-#if defined(MOLFLOW)
-    memcpy(globalHistogramCache.timeHistogram.data(),
-           globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() +
-           wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
-#endif
     buffer = bufferStart;
 
     // Refresh local facet hit cache for the displayed moment
@@ -669,4 +650,31 @@ void Worker::SendFacetHitCounts() {
         *((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
     }
     simManager.UnlockHitBuffer();
+}
+
+void Worker::RetrieveGlobalHistogramCache(BYTE* globalHistogramAddress)
+{
+	//Copy global histogram from hit dataport to local cache
+	//The hit dataport contains histograms for all moments, the cache only for the displayed
+
+	//Prepare vectors to receive data
+	globalHistogramCache.Resize(wp.globalHistogramParams);
+
+	BYTE* currentMomentGloablHistogramAddress = globalHistogramAddress; //Make a copy, since we'll increase it to match displayed moment
+
+#if defined(MOLFLOW) //In Synrad there are no moments, so there's only one global histogram
+	currentMomentGloablHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
+#endif
+
+	memcpy(globalHistogramCache.nbHitsHistogram.data(), currentMomentGloablHistogramAddress,
+		wp.globalHistogramParams.GetBouncesDataSize());
+	memcpy(globalHistogramCache.distanceHistogram.data(),
+		currentMomentGloablHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(),
+		wp.globalHistogramParams.GetDistanceDataSize());
+#if defined(MOLFLOW)
+	memcpy(globalHistogramCache.timeHistogram.data(),
+		currentMomentGloablHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() +
+		wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
+#endif
+
 }
