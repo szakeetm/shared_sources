@@ -94,7 +94,7 @@ public:
   //void Exit(); // Free all allocated resource
   void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
-  void RetrieveGlobalHistogramCache(BYTE* globalHistogramAddress);
+  void RetrieveHistogramCache(BYTE* dpHitStartAddress);
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status

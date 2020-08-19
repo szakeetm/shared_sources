@@ -379,9 +379,9 @@ void Worker::Update(float appTime) {
     }
 #endif
 
-    RetrieveGlobalHistogramCache(buffer);
+    RetrieveHistogramCache(bufferStart);
 
-    buffer = bufferStart;
+    //buffer = bufferStart; //Commented out as not used anymore
 
     // Refresh local facet hit cache for the displayed moment
     size_t nbFacet = geom->GetNbFacet();
@@ -391,7 +391,7 @@ void Worker::Update(float appTime) {
         memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #if defined(MOLFLOW)
-            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
+            memcpy(&(f->facetHitCache), bufferStart + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
                sizeof(FacetHitBuffer));
 
         if (f->sh.anglemapParams.record) {
@@ -407,7 +407,7 @@ void Worker::Update(float appTime) {
                 if (f->selected) needsAngleMapStatusRefresh = true;
             }
             //Retrieve angle map from hits dp
-            BYTE* angleMapAddress = buffer
+            BYTE* angleMapAddress = bufferStart
                                     + f->sh.hitOffset
                                     + (1 + moments.size()) * sizeof(FacetHitBuffer)
                                     + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
@@ -416,41 +416,12 @@ void Worker::Update(float appTime) {
             memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
         }
 #endif
-#if defined(MOLFLOW)
-
-        //Prepare vectors for receiving data
-        f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
-
-        //Retrieve histogram map from hits dp
-        BYTE *histogramAddress = buffer
-                                 + f->sh.hitOffset
-                                 + (1 + moments.size()) * sizeof(FacetHitBuffer)
-                                 + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) * (1 + moments.size()) : 0)
-                                 + (f->sh.isTextured ? f->sh.texWidth * f->sh.texHeight * sizeof(TextureCell) *
-                                                       (1 + moments.size()) : 0)
-                                 + (f->sh.countDirection ? f->sh.texWidth * f->sh.texHeight * sizeof(DirectionCell) *
-                                                           (1 + moments.size()) : 0)
-                                 //+ f->sh.anglemapParams.GetRecordedDataSize();
-                                 + sizeof(size_t) * (f->sh.anglemapParams.phiWidth *
-                                                     (f->sh.anglemapParams.thetaLowerRes +
-                                                      f->sh.anglemapParams.thetaHigherRes));
-        histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
-
-        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress,
-               f->sh.facetHistogramParams.GetBouncesDataSize());
-        memcpy(f->facetHistogramCache.distanceHistogram.data(),
-               histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize(),
-               f->sh.facetHistogramParams.GetDistanceDataSize());
-        memcpy(f->facetHistogramCache.timeHistogram.data(),
-               histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() +
-               f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
-#endif
-
     }
+    RetrieveHistogramCache(bufferStart);
     try {
 
         if (mApp->needsTexture || mApp->needsDirection)
-            geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
+            geom->BuildFacetTextures(bufferStart, mApp->needsTexture, mApp->needsDirection
 #if defined(MOLFLOW)
                     , wp.sMode // not necessary for Synrad
 #endif
@@ -652,15 +623,17 @@ void Worker::SendFacetHitCounts() {
     simManager.UnlockHitBuffer();
 }
 
-void Worker::RetrieveGlobalHistogramCache(BYTE* globalHistogramAddress)
+void Worker::RetrieveHistogramCache(BYTE* dpHitStartAddress)
 {
-	//Copy global histogram from hit dataport to local cache
+	//Copy histograms from hit dataport to local cache
 	//The hit dataport contains histograms for all moments, the cache only for the displayed
+    //dpHitStartAddress is the beginning of the dpHit buffer
 
+    //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
 	globalHistogramCache.Resize(wp.globalHistogramParams);
 
-	BYTE* currentMomentGloablHistogramAddress = globalHistogramAddress; //Make a copy, since we'll increase it to match displayed moment
+	BYTE* currentMomentGloablHistogramAddress = dpHitStartAddress + sizeof(GlobalHitBuffer); //Make a copy, since we'll increase it to match displayed moment
 
 #if defined(MOLFLOW) //In Synrad there are no moments, so there's only one global histogram
 	currentMomentGloablHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
@@ -677,4 +650,37 @@ void Worker::RetrieveGlobalHistogramCache(BYTE* globalHistogramAddress)
 		wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
 #endif
 
+    //FACET HISTOGRAMS
+    for (size_t i = 0;i < geom->GetNbFacet();i++) {
+        Facet* f = geom->GetFacet(i);
+#if defined(MOLFLOW)
+
+        //Prepare vectors for receiving data
+        f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
+
+        //Retrieve histogram from hits dp
+        BYTE* facetHistogramAddress = dpHitStartAddress
+            + f->sh.hitOffset
+            + (1 + moments.size()) * sizeof(FacetHitBuffer)
+            + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) * (1 + moments.size()) : 0)
+            + (f->sh.isTextured ? f->sh.texWidth * f->sh.texHeight * sizeof(TextureCell) *
+                (1 + moments.size()) : 0)
+            + (f->sh.countDirection ? f->sh.texWidth * f->sh.texHeight * sizeof(DirectionCell) *
+                (1 + moments.size()) : 0)
+            //+ f->sh.anglemapParams.GetRecordedDataSize();
+            + sizeof(size_t) * (f->sh.anglemapParams.phiWidth *
+                (f->sh.anglemapParams.thetaLowerRes +
+                    f->sh.anglemapParams.thetaHigherRes));
+        facetHistogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
+
+        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), facetHistogramAddress,
+            f->sh.facetHistogramParams.GetBouncesDataSize());
+        memcpy(f->facetHistogramCache.distanceHistogram.data(),
+            facetHistogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize(),
+            f->sh.facetHistogramParams.GetDistanceDataSize());
+        memcpy(f->facetHistogramCache.timeHistogram.data(),
+            facetHistogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() +
+            f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
+#endif
+    }
 }
