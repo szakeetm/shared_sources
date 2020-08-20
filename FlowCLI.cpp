@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
     // Stop and copy results
     simManager.StopSimulation();
     for(const auto& subHandle : simManager.simHandles){
-        const size_t sub_pid = subHandle.first;
+        const size_t sub_pid = 0;
         GlobalSimuState* localState = simManager.FetchResults(sub_pid);
         std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit << " += "<< localState->globalHits.globalHits.hit.nbMCHit<<std::endl;
         globState.globalHits.globalHits += localState->globalHits.globalHits;

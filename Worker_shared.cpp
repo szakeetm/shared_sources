@@ -286,7 +286,7 @@ void Worker::SetProcNumber(size_t n) {
 }
 
 size_t Worker::GetPID(size_t prIdx) {
-    return simManager.simHandles.at(prIdx).first;
+    return 0;
 }
 
 void Worker::RebuildTextures() {

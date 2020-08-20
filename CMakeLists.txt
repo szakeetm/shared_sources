@@ -24,6 +24,7 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
+set(HEADER_DIR_EXT ../src/)
 
 set(COPY_DIR ../copy_to_build/)
 
@@ -142,13 +143,15 @@ set(SRC_FILES
         # subprocesses
         Buffer_shared.cpp
         Distributions.cpp
-        IntersectAABB_shared.cpp
+        #IntersectAABB_shared.cpp
         Polygon.cpp
         Random.cpp
         #ShMemory.cpp
         Process.cpp
         Vector.cpp
-        SimulationManager.cpp SimulationController.cpp)
+        SimulationManager.cpp
+        SimulationController.cpp
+        )
 
 set(SRC_FILES ${SRC_FILES}
         Helper/StringHelper.cpp

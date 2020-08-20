@@ -5,12 +5,11 @@
 #ifndef MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 #define MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 
-//#include "Simulation.h"
 #include <string>
 #include "SMP.h"
 #include "ProcessControl.h"
-#include "SimulationUnit.h"
 
+class Simulation;
 class SimulationController {
     bool Load();
     bool UpdateParams();
@@ -33,7 +32,7 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);
+    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, Simulation *simulationInstance);
     ~SimulationController();
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
@@ -48,7 +47,7 @@ protected:
     Dataport *dpHit;
     Dataport *dpLog;
 
-    SimulationUnit* simulation; //
+    Simulation* simulation; //
 protected:
 
     double stepsPerSec;

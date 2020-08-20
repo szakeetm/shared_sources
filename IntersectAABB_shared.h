@@ -21,9 +21,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Temporary transparent hit
 #include "Vector.h" //AABB
-#include "../src/Simulation.h" //SubprocessFacet
+//#include "../src/Simulation.h" //SubprocessFacet
 
 // AABBTree node
+class Simulation;
+class SubprocessFacet;
+class CurrentParticleStatus;
 
 class AABBNODE {
 public:

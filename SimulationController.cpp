@@ -8,13 +8,17 @@
 #include "SimulationController.h"
 #include "ProcessControl.h"
 
+#if defined(MOLFLOW)
+#include "../src/Simulation.h"
+#endif
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #endif
 
 #define WAITTIME    100  // Answer in STOP mode
 
-SimulationController::SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance){
+SimulationController::SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, Simulation *simulationInstance){
     this->prIdx = procIdx;
     this->parentPID = parentPID;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -28,7 +32,7 @@ SimulationController::SimulationController(std::string appName , std::string dpN
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(parentPID)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(parentPID)).c_str());
 
-    simulation = simulationInstance;
+    simulation = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
     loadOK = false;
     dpHit = nullptr;
     dpLog = nullptr;
@@ -79,7 +83,7 @@ int SimulationController::RunSimulation() {
     double t1 = GetTick();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-        stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
+        stepsPerSec = (2.0 * nbStep) / (t1 - t0); // every 1.0 second
 
 #if defined(_DEBUG)
     printf("Running: stepPerSec = %lf\n", stepsPerSec);
@@ -228,6 +232,9 @@ int SimulationController::controlledLoop(int argc, char **argv){
     while (!endState) {
         GetState();
         bool eos = false;
+#ifdef DEBUG
+        printf("[%d] COMMAND: %zu (%zd,%zu)\n", prIdx, procInfo.masterCmd, procInfo.cmdParam, procInfo.cmdParam2);
+#endif
         switch (procInfo.masterCmd) {
 
             case COMMAND_LOAD:

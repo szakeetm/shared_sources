@@ -168,7 +168,9 @@ public:
 
     bool allProcsDone;
     bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
-    std::vector<std::pair<uint32_t, SimType>> simHandles; // Vector of a pair of pid , simulation type
+    std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
+    //std::vector<std::thread> cpuSim;
+    std::vector<SimulationController> simController;
 };
 
 

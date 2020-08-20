@@ -610,7 +610,7 @@ double GetTick() {
 		dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
 		return (double)(dt.QuadPart) / perfTicksPerSec;
 	}
-	else {
+    else {
 		return (double)((GetTickCount() - tickStart) / 1000.0);
 	}
 #else

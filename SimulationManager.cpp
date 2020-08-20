@@ -3,7 +3,7 @@
 //
 
 
-
+#include <thread>
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #elif not(defined(__MACOSX__) || defined(__APPLE__))
@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iostream>
 #include <cereal/archives/binary.hpp>
+#include <../src/Simulation.h>
 
 SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     isRunning = false;
@@ -62,7 +63,7 @@ SimulationManager::~SimulationManager() {
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
-        if(!IsProcessRunning((*proc).first)){
+        if(!IsProcessRunning((*proc).first.joinable())){
             proc = this->simHandles.erase(proc);
             ++nbDead;
         }
@@ -262,9 +263,23 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     arguments[4] = nullptr;
 #endif
 
+    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, new Simulation(nbThreads)});
     simHandles.emplace_back(
-            StartProc(arguments, STARTPROC_NOWIN),
+            /*StartProc(arguments, STARTPROC_NOWIN),*/
+            std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
             SimType::simCPU);
+    auto myHandle = simHandles.back().first.native_handle();
+#ifdef _WIN32
+    SetThreadPriority(myHandle, THREAD_PRIORITY_NORMAL);
+#else
+    int policy;
+			struct sched_param param;
+
+			pthread_getschedparam(myHandle, &policy, &param);
+			param.sched_priority = sched_get_priority_min(policy);
+			pthread_setschedparam(myHandle, policy, &param);
+			//Check! Some documentation says it's always 0
+#endif
 
     for(int arg=0;arg<3;arg++)
         if(arguments[arg] != nullptr) delete[] arguments[arg];
@@ -465,7 +480,9 @@ int SimulationManager::KillAllSimUnits() {
             auto *shMaster = (SHCONTROL *)dpControl->buff;
             for(size_t i=0;i<simHandles.size();i++) {
                 if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
-                    if(!KillProc(simHandles[i].first)) {
+                    auto nativeHandle = simHandles[i].first.native_handle();
+
+                    if(::SuspendThread(nativeHandle) != -1) {
                         //assume that the process doesn't exist, so remove it from our management structure
                         simHandles.erase((simHandles.begin()+i));
                         ReleaseDataport(dpControl);
@@ -537,7 +554,7 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
     auto *shMaster = (SHCONTROL *)dpControl->buff;
     for(int i = 0; i<simHandles.size();++i){
         SubProcInfo pInfo{};
-        pInfo.procId = simHandles[i].first;
+        pInfo.procId = 0;
         pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
         pInfo.slaveState = shMaster->procInformation[i].slaveState;
         strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
