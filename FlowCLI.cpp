@@ -143,14 +143,16 @@ int main(int argc, char** argv) {
 
     // Stop and copy results
     simManager.StopSimulation();
-    for(const auto& subHandle : simManager.simHandles){
+    for(const auto& subHandle : simManager.simUnits){
         const size_t sub_pid = 0;
-        GlobalSimuState* localState = simManager.FetchResults(sub_pid);
-        std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit << " += "<< localState->globalHits.globalHits.hit.nbMCHit<<std::endl;
-        globState.globalHits.globalHits += localState->globalHits.globalHits;
-        globState.globalHistograms += localState->globalHistograms;
-        globState.facetStates += localState->facetStates;
-        delete localState;
+        //GlobalSimuState* localState = simManager.FetchResults(sub_pid);
+        const GlobalSimuState& localState = subHandle.tmpGlobalResults.front();
+        std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit + localState.globalHits.globalHits.hit.nbMCHit
+            << " : " << globState.globalHits.globalHits.hit.nbMCHit << " += " << localState.globalHits.globalHits.hit.nbMCHit <<std::endl;
+        globState.globalHits.globalHits += localState.globalHits.globalHits;
+        globState.globalHistograms += localState.globalHistograms;
+        globState.facetStates += localState.facetStates;
+        //delete localState;
     }
 
     simManager.KillAllSimUnits();

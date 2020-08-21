@@ -8,6 +8,7 @@
 #include <string>
 #include "SMP.h"
 #include "ProcessControl.h"
+#include "SimulationUnit.h"
 
 class Simulation;
 class SimulationController {
@@ -32,7 +33,7 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, Simulation *simulationInstance);
+    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);
     ~SimulationController();
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
@@ -44,10 +45,10 @@ protected:
     char logDpName[32];
 
     Dataport *dpControl;
-    Dataport *dpHit;
+    //Dataport *dpHit;
     Dataport *dpLog;
 
-    Simulation* simulation; //
+    SimulationUnit* simulation; //
 protected:
 
     double stepsPerSec;

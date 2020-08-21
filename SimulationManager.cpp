@@ -34,7 +34,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     dpControl = nullptr;
     dpHit = nullptr;
     dpLog = nullptr;
-    dpLoader = nullptr;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     uint32_t pid = _getpid();
@@ -55,7 +54,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
 
 SimulationManager::~SimulationManager() {
     CLOSEDP(dpControl);
-    CLOSEDP(dpLoader);
     CLOSEDP(dpHit);
     CLOSEDP(dpLog);
 }
@@ -309,26 +307,6 @@ int SimulationManager::CreateRemoteHandle() {
     return 1;
 }
 
-int SimulationManager::CreateLoaderDP(size_t loaderSize) {
-
-    //std::string loaderString = SerializeForLoader().str();
-    //size_t loadSize = loaderSize.size();
-    dpLoader = CreateDataport(loadDpName, loaderSize);
-    if (!dpLoader)
-        return 1;
-        //throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
-
-    //progressDlg->SetMessage("Accessing dataport...");
-//    AccessDataportTimed(dpLoader, (DWORD)(3000 + nbCores*loaderSize / 10000));
-//    //progressDlg->SetMessage("Assembling geometry to pass...");
-//
-//    std::copy(loaderSize.begin(), loaderSize.end(), (BYTE*)dpLoader->buff);
-//
-//    //progressDlg->SetMessage("Releasing dataport...");
-//    ReleaseDataport(dpLoader);
-    return 0;
-}
-
 int SimulationManager::CreateControlDP() {
     if( !dpControl )
         dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
@@ -559,11 +537,6 @@ int SimulationManager::ResetHits() {
     return 0;
 }
 
-int SimulationManager::CloseLoaderDP() {
-    CLOSEDP(dpLoader);
-    return 0;
-}
-
 int SimulationManager::CloseControlDP() {
     CLOSEDP(dpControl);
     return 0;
@@ -637,16 +610,6 @@ int SimulationManager::UnlockHitBuffer() {
     return 1;
 }
 
-int SimulationManager::UploadToLoader(void *data, size_t size) {
-    if (dpLoader && AccessDataport(dpLoader)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpLoader->buff);
-        ReleaseDataport(dpLoader);
-        return 0;
-    }
-
-    return 1;
-}
-
 int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
     if (dpHit && AccessDataport(dpHit)) {
         std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpHit->buff);
@@ -714,34 +677,34 @@ std::string SimulationManager::MakeSubProcError(const char *message) {
 
 int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType) {
     if(loadType < LoadType::NLOADERTYPES){
-        if(CreateLoaderDP(size))
+        /*if(CreateLoaderDP(size))
             return 1;
         if(UploadToLoader(data, size))
-            return 1;
+            return 1;*/
     }
 
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
             if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
-                CloseLoaderDP();
+                //CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
-            CloseLoaderDP();
+            //CloseLoaderDP();
             break;
         }
         case LoadType::LOADPARAM:{
 
             //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
             if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
-                CloseLoaderDP();
+                //CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
-            CloseLoaderDP();
+            //CloseLoaderDP();
             if(isRunning) { // restart
                 StartSimulation();
             }
@@ -749,12 +712,12 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         }
         case LoadType::LOADAC:{
             if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
-                CloseLoaderDP();
+                //CloseLoaderDP();
                 std::string errString = "Failed to send AC geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
-            CloseLoaderDP();
+            //CloseLoaderDP();
             break;
         }
         case LoadType::LOADHITS:{

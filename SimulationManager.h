@@ -143,7 +143,6 @@ private:
     Dataport *dpControl;
     Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
     Dataport *dpLog;
-    Dataport *dpLoader;
 
     // Direct implementation for threads
     std::vector<SubProcInfo> procInformation; // ctrl
