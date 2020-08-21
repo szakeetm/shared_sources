@@ -49,7 +49,7 @@ SimulationController::SimulationController(std::string appName , std::string dpN
 }
 
 SimulationController::~SimulationController(){
-    delete simulation;
+    //delete simulation; // doesn't manage it
 }
 
 int SimulationController::StartSimulation() {
@@ -97,10 +97,11 @@ int SimulationController::SetRuntimeInfo() {
     if (AccessDataport(this->dpControl)) {
         auto *master = (SHCONTROL *) this->dpControl->buff;
         // Update runtime information
+        procInfo.procId = 0; // TODO: There is no more procId
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        procInfo.procId = _getpid();
+        //procInfo.procId = _getpid();
 #else
-        procInfo.procId = ::getpid();
+        //procInfo.procId = ::getpid();
 #endif //  WIN
 
         GetProcInfo(procInfo.procId,&master->procInformation[prIdx].runtimeInfo);
@@ -232,9 +233,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
     while (!endState) {
         GetState();
         bool eos = false;
-#ifdef DEBUG
-        printf("[%d] COMMAND: %zu (%zd,%zu)\n", prIdx, procInfo.masterCmd, procInfo.cmdParam, procInfo.cmdParam2);
-#endif
         switch (procInfo.masterCmd) {
 
             case COMMAND_LOAD:

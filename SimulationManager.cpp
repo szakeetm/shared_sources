@@ -63,7 +63,15 @@ SimulationManager::~SimulationManager() {
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
-        if(!IsProcessRunning((*proc).first.joinable())){
+        if(!(*proc).first.joinable()){
+            auto myHandle = (*proc).first.native_handle();
+#ifdef _WIN32
+            //Windows
+            TerminateThread(myHandle, 1);
+#else
+            //Linux
+            pthread_cancel(myHandle);
+#endif
             proc = this->simHandles.erase(proc);
             ++nbDead;
         }
@@ -263,7 +271,8 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     arguments[4] = nullptr;
 #endif
 
-    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, new Simulation(nbThreads)});
+    simUnits.emplace_back(Simulation{nbThreads});
+    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, &simUnits.back()});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
@@ -481,17 +490,41 @@ int SimulationManager::KillAllSimUnits() {
             for(size_t i=0;i<simHandles.size();i++) {
                 if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
                     auto nativeHandle = simHandles[i].first.native_handle();
+#ifdef _WIN32
+                    //Windows
+				    TerminateThread(nativeHandle, 1);
+#else
+                    //Linux
+                    pthread_cancel(nativeHandle);
+#endif
+                    //assume that the process doesn't exist, so remove it from our management structure
+                    simHandles.erase((simHandles.begin()+i));
+                    ReleaseDataport(dpControl);
+                    throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
 
-                    if(::SuspendThread(nativeHandle) != -1) {
-                        //assume that the process doesn't exist, so remove it from our management structure
-                        simHandles.erase((simHandles.begin()+i));
-                        ReleaseDataport(dpControl);
-                        throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
-                    }
                 }
             }
             ReleaseDataport(dpControl);
         }
+
+        AccessDataport(dpControl);
+        auto *shMaster = (SHCONTROL *)dpControl->buff;
+        for(size_t i=0;i<simHandles.size();i++) {
+            if (shMaster->procInformation[i].slaveState == PROCESS_KILLED) {
+                simHandles[i].first.join();
+            }
+            else{
+                auto nativeHandle = simHandles[i].first.native_handle();
+#ifdef _WIN32
+                //Windows
+                TerminateThread(nativeHandle, 1);
+#else
+                //Linux
+                pthread_cancel(nativeHandle);
+#endif
+            }
+        }
+        ReleaseDataport(dpControl);
         simHandles.clear();
     }
     nbCores = 0;
