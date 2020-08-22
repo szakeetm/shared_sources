@@ -351,13 +351,11 @@ std::string space2underscore(std::string text) {
 	return text;
 }
 
-bool iequals(std::string a, std::string b)
+bool iequals(std::string str1, std::string str2)
 {
-	return std::equal(a.begin(), a.end(),
-		b.begin(), b.end(),
-		[](char a, char b) {
-		return tolower(a) == tolower(b);
-	});
+	//From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
+	return str1.size() == str2.size() 
+	&& std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
 }
 
 int my_lower_bound(const double & key, double* A,const size_t& size)
