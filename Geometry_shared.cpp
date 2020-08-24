@@ -3049,7 +3049,7 @@ void Geometry::CreateLoft() {
 
 	//Find boundaries of regions on the first facet that are the closest to the same point on facet 2
 	for (size_t i = 0; i < closestIndices1.size(); i++) {
-		size_t previousId = Previous(i + closestIndices1.size() , closestIndices1.size());
+		size_t previousId = Previous(i , closestIndices1.size());
 		size_t nextId = Next(i , closestIndices1.size());
 		closestIndices1[i].boundary = (closestIndices1[i].index != closestIndices1[nextId].index) || (closestIndices1[i].index != closestIndices1[previousId].index);
 	}
@@ -3122,7 +3122,7 @@ void Geometry::CreateLoft() {
 
 	//Detect boundaries on facet 2
 	for (size_t i = 0; i < closestIndices2.size(); i++) {
-		size_t previousId = Previous(i + closestIndices2.size() , closestIndices2.size());
+		size_t previousId = Previous(i  , closestIndices2.size());
 		size_t nextId = Next(i , closestIndices2.size());
 		closestIndices2[i].boundary = (closestIndices2[i].index != closestIndices2[nextId].index) || (closestIndices2[i].index != closestIndices2[previousId].index);
 		closestIndices2[i].visited = false; //Reset this flag, will use to make sure we don't miss anything on facet2
