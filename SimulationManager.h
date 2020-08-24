@@ -140,7 +140,7 @@ private:
     bool isRunning;
 
     // Dataport handles and names
-    Dataport *dpControl;
+    //SubProcInfo procInformation[MAX_PROCESS];
     Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
     Dataport *dpLog;
 

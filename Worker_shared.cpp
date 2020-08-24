@@ -131,7 +131,7 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
     }
     BYTE *buffer = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
-    geom->ExportTextures(f, grouping, mode, buffer, saveSelected, wp.sMode);
+    geom->ExportTextures(f, grouping, mode, buffer, saveSelected, model.wp.sMode);
 #endif
 #if defined(SYNRAD)
     geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
@@ -236,7 +236,7 @@ void Worker::ResetStatsAndHits(float appTime) {
     startTime = 0.0f;
     simuTime = 0.0f;
     isRunning = false;
-    if (ontheflyParams.nbProcess == 0)
+    if (model.otfParams.nbProcess == 0)
         return;
 
     try {
@@ -276,11 +276,11 @@ void Worker::SetProcNumber(size_t n) {
     simManager.nbCores = n;
     // Launch n subprocess
 
-    if ((ontheflyParams.nbProcess = simManager.InitSimUnits())) {
+    if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }
 
-    ontheflyParams.nbProcess = n;
+    model.otfParams.nbProcess = n;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -303,7 +303,7 @@ void Worker::RebuildTextures() {
 
         try {
 #if defined(MOLFLOW)
-            geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, wp.sMode);
+            geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
 #endif
 #if defined(SYNRAD)
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
@@ -318,7 +318,7 @@ void Worker::RebuildTextures() {
 }
 
 size_t Worker::GetProcNumber() const {
-    return ontheflyParams.nbProcess;
+    return model.otfParams.nbProcess;
 }
 
 void Worker::Update(float appTime) {
@@ -372,8 +372,8 @@ void Worker::Update(float appTime) {
 
 #if defined(SYNRAD)
 
-    if (globalHitCache.globalHits.hit.nbDesorbed && wp.nbTrajPoints) {
-        no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)wp.nbTrajPoints;
+    if (globalHitCache.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
+        no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
     }
     else {
         no_scans = 1.0;
@@ -383,22 +383,22 @@ void Worker::Update(float appTime) {
 
     //Copy global histogram
     //Prepare vectors to receive data
-    globalHistogramCache.Resize(wp.globalHistogramParams);
+    globalHistogramCache.Resize(model.wp.globalHistogramParams);
 
     BYTE *globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
 #if defined(MOLFLOW)
-    globalHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
+    globalHistogramAddress += displayedMoment * model.wp.globalHistogramParams.GetDataSize();
 #endif
 
     memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress,
-           wp.globalHistogramParams.GetBouncesDataSize());
+           model.wp.globalHistogramParams.GetBouncesDataSize());
     memcpy(globalHistogramCache.distanceHistogram.data(),
-           globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(),
-           wp.globalHistogramParams.GetDistanceDataSize());
+           globalHistogramAddress + model.wp.globalHistogramParams.GetBouncesDataSize(),
+           model.wp.globalHistogramParams.GetDistanceDataSize());
 #if defined(MOLFLOW)
     memcpy(globalHistogramCache.timeHistogram.data(),
-           globalHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() +
-           wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
+           globalHistogramAddress + model.wp.globalHistogramParams.GetBouncesDataSize() +
+           model.wp.globalHistogramParams.GetDistanceDataSize(), model.wp.globalHistogramParams.GetTimeDataSize());
 #endif
     buffer = bufferStart;
 
@@ -471,7 +471,7 @@ void Worker::Update(float appTime) {
         if (mApp->needsTexture || mApp->needsDirection)
             geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
 #if defined(MOLFLOW)
-                    , wp.sMode // not necessary for Synrad
+                    , model.wp.sMode // not necessary for Synrad
 #endif
             );
     }
@@ -491,7 +491,7 @@ void Worker::Update(float appTime) {
 
 void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
 
-    if (ontheflyParams.nbProcess == 0) return;
+    if (model.otfParams.nbProcess == 0) return;
     simManager.GetProcStatus(states, statusStrings);
 }
 
@@ -515,7 +515,7 @@ std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
 
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
-    if (ontheflyParams.nbProcess == 0 || !geom->IsLoaded()) return;
+    if (model.otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
     GLProgress *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
@@ -526,8 +526,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
     try{
         size_t logDpSize = 0;
-        if (ontheflyParams.enableLogging) {
-            logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
+        if (model.otfParams.enableLogging) {
+            logDpSize = sizeof(size_t) + model.otfParams.logLimit * sizeof(ParticleLoggerItem);
         }
         simManager.ReloadLogBuffer(logDpSize, false);
     }

@@ -156,8 +156,7 @@ public:
 #endif
 
   // Global simulation parameters
-  OntheflySimulationParams ontheflyParams;
-  WorkerParams wp;
+  SimulationModel model;
   GlobalHitBuffer globalHitCache;
   FacetHistogramBuffer globalHistogramCache;
 
@@ -219,24 +218,10 @@ private:
 
   // Process management
   SimulationManager simManager;
+    GlobalSimuState globState;
 
-  //size_t  pID[MAX_PROCESS];
-  //DWORD  pid;
-  //bool   allDone;
-
-  //Dataport handles and names
-  //Dataport *dpControl;
-  //Dataport *dpHit;
-  //Dataport *dpLog;
-
-  //char      ctrlDpName[32];
-  //char      loadDpName[32];
-  //char      hitsDpName[32];
-  //char      logDpName[32];
 
   // Methods
-  //bool ExecuteAndWait(int command, size_t waitState, size_t param = 0);
-  //bool Wait(size_t waitState, LoadStatus *statusWindow);
   void ResetWorkerStats();
   //void ClearHits();
   const char *GetErrorDetails();

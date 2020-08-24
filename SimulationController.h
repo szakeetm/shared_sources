@@ -33,29 +33,23 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);
+    SimulationController(std::string appName, std::string dpName, size_t parentPID,
+                         size_t procIdx, SimulationUnit *simulationInstance, SubProcInfo *pInfo);
     ~SimulationController();
+    SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
 protected:
     char appName[16];
-    char ctrlDpName[32];
-    char loadDpName[32];
-    char hitsDpName[32];
-    char logDpName[32];
-
-    Dataport *dpControl;
-    //Dataport *dpHit;
-    Dataport *dpLog;
 
     SimulationUnit* simulation; //
+    SubProcInfo* procInfo;
 protected:
 
     double stepsPerSec;
 
     int prIdx;
     size_t parentPID;
-    SubProcInfo procInfo;
     bool endState;
     bool lastHitUpdateOK;
 

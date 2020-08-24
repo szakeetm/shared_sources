@@ -162,7 +162,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 #if defined(MOLFLOW)
 	nbMoments += mApp->worker.moments.size();
 #endif
-	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.wp.globalHistogramParams.GetDataSize();
+	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.model.wp.globalHistogramParams.GetDataSize();
 
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
@@ -2955,7 +2955,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 	}
 
 #if defined(MOLFLOW)
-	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.wp.gasMass);
+	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model.wp.gasMass);
 #endif
 }
 
@@ -3681,7 +3681,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	worker->globalHitCache.globalHits.hit.nbHitEquiv = (double)worker->globalHitCache.globalHits.hit.nbMCHit; //Backward comp
 	worker->globalHitCache.nbLeakTotal = file->ReadSizeT();
 	worker->globalHitCache.globalHits.hit.nbDesorbed = file->ReadSizeT();
-	worker->ontheflyParams.desorptionLimit = file->ReadSizeT();
+	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
 	sh.nbFacet = file->ReadInt();

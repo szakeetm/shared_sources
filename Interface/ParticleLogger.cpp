@@ -143,9 +143,9 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 					GLMessageBox::Display("Invalid max rec. number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				work->ontheflyParams.enableLogging = (enableCheckbox->GetState() == 1);
-				work->ontheflyParams.logFacetId = facetId;
-				work->ontheflyParams.logLimit = nbRec;
+				work->model.otfParams.enableLogging = (enableCheckbox->GetState() == 1);
+				work->model.otfParams.logFacetId = facetId;
+				work->model.otfParams.logLimit = nbRec;
 				work->ChangeSimuParams();
 				UpdateStatus();
 			}
@@ -294,7 +294,7 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 	for (size_t i = 0; !work->abortRequested && i < nbRec; i++) {
 		prg->SetProgress((double)i / (double)nbRec);
 		mApp->DoEvents(); //To catch eventual abort button click
-		Facet* f = work->GetGeometry()->GetFacet(work->ontheflyParams.logFacetId);
+		Facet* f = work->GetGeometry()->GetFacet(work->model.otfParams.logFacetId);
 		Vector3d hitPos = f->sh.O + log[i].facetHitPosition.u*f->sh.U + log[i].facetHitPosition.v*f->sh.V;
 		
 		double u = sin(log[i].hitTheta)*cos(log[i].hitPhi);

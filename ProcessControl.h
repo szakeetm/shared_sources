@@ -71,6 +71,9 @@ struct SubProcInfo {
     size_t oldState;
     char statusString[128];
     PROCESS_INFO runtimeInfo;
+
+    SubProcInfo();
+    SubProcInfo& operator=(const SubProcInfo & src);
 };
 
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H

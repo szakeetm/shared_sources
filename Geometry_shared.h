@@ -285,7 +285,7 @@ protected:
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)
 
-										  // Geometry
+  // Geometry
 	Facet    **facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)

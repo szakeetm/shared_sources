@@ -31,7 +31,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
 
     useRemote = false;
 
-    dpControl = nullptr;
     dpHit = nullptr;
     dpLog = nullptr;
 
@@ -53,7 +52,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
 }
 
 SimulationManager::~SimulationManager() {
-    CLOSEDP(dpControl);
     CLOSEDP(dpHit);
     CLOSEDP(dpLog);
 }
@@ -245,7 +243,6 @@ GlobalSimuState * SimulationManager::FetchResults(size_t procId) {
 }
 
 int SimulationManager::CreateCPUHandle(uint16_t iProc) {
-    char cmdLine[512];
     uint32_t processId;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -254,23 +251,9 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
-    char *arguments[5];
-    for(int arg=0;arg<4;arg++)
-        arguments[arg] = new char[512];
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine,"%sSub.exe %d %hu %hu",appName,processId,iProc,nbThreads);
-    sprintf(arguments[0],"%s",cmdLine);
-#else
-    sprintf(cmdLine,"./%sSub",appName);
-    sprintf(arguments[0],"%s",cmdLine);
-    sprintf(arguments[1],"%d",processId);
-    sprintf(arguments[2],"%hu",iProc);
-    sprintf(arguments[3],"%hu",nbThreads);
-    arguments[4] = nullptr;
-#endif
-
     simUnits.emplace_back(Simulation{nbThreads});
-    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, &simUnits.back()});
+    procInformation.emplace_back(SubProcInfo{});
+    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, &simUnits.back(), &procInformation.back()});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
@@ -288,12 +271,6 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 			//Check! Some documentation says it's always 0
 #endif
 
-    for(int arg=0;arg<3;arg++)
-        if(arguments[arg] != nullptr) delete[] arguments[arg];
-
-    // Wait a bit
-    ProcessSleep(25);
-
     return 0;
 }
 
@@ -305,19 +282,6 @@ int SimulationManager::CreateGPUHandle() {
 // return 1=error
 int SimulationManager::CreateRemoteHandle() {
     return 1;
-}
-
-int SimulationManager::CreateControlDP() {
-    if( !dpControl )
-        dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
-    if( !dpControl )
-        return 1;
-        //throw Error("Failed to create 'control' dataport");
-    AccessDataport(dpControl);
-    memset(dpControl->buff,0,sizeof(SHCONTROL));
-    ReleaseDataport(dpControl);
-
-    return 0;
 }
 
 //TODO: This is Molflow only
@@ -354,23 +318,22 @@ int SimulationManager::CreateHitsDP(size_t hitSize) {
  */
 int SimulationManager::InitSimUnits() {
 
-    // First create Control DP, so subprocs can communicate
-    if(CreateControlDP())
-        throw std::runtime_error("Could not create control dataport!");
-
     if(useCPU){
         // Launch nbCores subprocesses
         auto nbActiveProcesses = simHandles.size();
         for(int iProc = 0; iProc < nbCores; ++iProc) {
             if(CreateCPUHandle(iProc + nbActiveProcesses)) // abort initialization when creation fails
                 return simHandles.size();
+            //procInformation.push_back(simController.back().procInfo);
         }
     }
     if(useGPU){
         CreateGPUHandle();
+        //procInformation.push_back(simController.back().procInfo);
     }
     if(useRemote){
         CreateRemoteHandle();
+        //procInformation.push_back(simController.back().procInfo);
     }
 
     return WaitForProcStatus(PROCESS_READY);
@@ -392,11 +355,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     do {
 
         finished = true;
-        AccessDataport(dpControl);
-        auto *shMaster = (SHCONTROL *)dpControl->buff;
 
         for (size_t i = 0; i < simHandles.size(); i++) {
-            auto procState = shMaster->procInformation[i].slaveState;
+            auto procState = procInformation[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 error = true;
@@ -406,7 +367,6 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
-        ReleaseDataport(dpControl);
 
         if (!finished) {
             ProcessSleep(250);
@@ -418,26 +378,20 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 }
 
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
-    if(!dpControl) {
-        return 1;
-    }
-
     // Send command
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
+
     for(size_t i=0;i<simHandles.size();i++) {
-        auto procState = shMaster->procInformation[i].slaveState;
+        auto procState = procInformation[i].slaveState;
         if(procState == PROCESS_READY
            || procState == PROCESS_RUN
               || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
-            shMaster->procInformation[i].slaveState = PROCESS_STARTING;
-            shMaster->procInformation[i].oldState = shMaster->procInformation[i].masterCmd; // use to solve old state
-            shMaster->procInformation[i].masterCmd = command;
-            shMaster->procInformation[i].cmdParam = param;
-            shMaster->procInformation[i].cmdParam2 = param2;
+            procInformation[i].slaveState = PROCESS_STARTING;
+            procInformation[i].oldState = procInformation[i].masterCmd; // use to solve old state
+            procInformation[i].masterCmd = command;
+            procInformation[i].cmdParam = param;
+            procInformation[i].cmdParam2 = param2;
         }
     }
-    ReleaseDataport(dpControl);
 
     return 0;
 }
@@ -460,13 +414,12 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if( dpControl && !simHandles.empty() ) {
+    if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-            AccessDataport(dpControl);
-            auto *shMaster = (SHCONTROL *)dpControl->buff;
+
             for(size_t i=0;i<simHandles.size();i++) {
-                if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
+                if (procInformation[i].slaveState != PROCESS_KILLED){
                     auto nativeHandle = simHandles[i].first.native_handle();
 #ifdef _WIN32
                     //Windows
@@ -477,18 +430,14 @@ int SimulationManager::KillAllSimUnits() {
 #endif
                     //assume that the process doesn't exist, so remove it from our management structure
                     simHandles.erase((simHandles.begin()+i));
-                    ReleaseDataport(dpControl);
                     throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
 
                 }
             }
-            ReleaseDataport(dpControl);
         }
 
-        AccessDataport(dpControl);
-        auto *shMaster = (SHCONTROL *)dpControl->buff;
         for(size_t i=0;i<simHandles.size();i++) {
-            if (shMaster->procInformation[i].slaveState == PROCESS_KILLED) {
+            if (procInformation[i].slaveState == PROCESS_KILLED) {
                 simHandles[i].first.join();
             }
             else{
@@ -502,7 +451,6 @@ int SimulationManager::KillAllSimUnits() {
 #endif
             }
         }
-        ReleaseDataport(dpControl);
         simHandles.clear();
     }
     nbCores = 0;
@@ -537,11 +485,6 @@ int SimulationManager::ResetHits() {
     return 0;
 }
 
-int SimulationManager::CloseControlDP() {
-    CLOSEDP(dpControl);
-    return 0;
-}
-
 int SimulationManager::CloseLogDP() {
     CLOSEDP(dpLog);
     return 0;
@@ -555,39 +498,24 @@ int SimulationManager::CloseHitsDP() {
 int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
     if(simHandles.empty())
         return 1;
-
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
+    
     for(int i = 0; i<simHandles.size();++i){
-        SubProcInfo pInfo{};
-        pInfo.procId = 0;
-        pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
-        pInfo.slaveState = shMaster->procInformation[i].slaveState;
-        strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
-        pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
-        pInfo.oldState = shMaster->procInformation[i].oldState;
-        pInfo.runtimeInfo = shMaster->procInformation[i].runtimeInfo;
-
-        procInfoList.emplace_back(pInfo);
+        procInfoList.emplace_back(SubProcInfo {procInformation[i]});
     }
-    ReleaseDataport(dpControl);
 
     return 0;
 }
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    //memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
-    for (size_t i = 0; i < MAX_PROCESS; i++) {
+
+    for (size_t i = 0; i < procInformation.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = shMaster->procInformation[i].slaveState;
+        states[i] = procInformation[i].slaveState;
         char tmp[128];
-        strncpy(tmp, shMaster->procInformation[i].statusString, 127);
+        strncpy(tmp, procInformation[i].statusString, 127);
         tmp[127] = 0;
         statusStrings[i] = tmp;
     }
-    ReleaseDataport(dpControl);
     return 0;
 }
 

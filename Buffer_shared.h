@@ -320,7 +320,8 @@ public:
 };
 
 struct WorkerParams { //Plain old data
-	HistogramParams globalHistogramParams;
+	WorkerParams();
+    HistogramParams globalHistogramParams;
 #if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
@@ -377,7 +378,7 @@ struct WorkerParams { //Plain old data
 
 class GeomProperties {  //Formerly SHGEOM
 public:
-	GeomProperties () : nbFacet(0),nbVertex(0),nbSuper(0),name(""){};
+	GeomProperties () : nbFacet(0),nbVertex(0),nbSuper(0),name(){};
 	size_t     nbFacet;   // Number of facets (total)
 	size_t     nbVertex;  // Number of 3D vertices
 	size_t     nbSuper;   // Number of superstructures
@@ -395,6 +396,7 @@ public:
 
 class OntheflySimulationParams {
 public:
+    OntheflySimulationParams();
 #if defined(SYNRAD)
 	int      generation_mode; // Fluxwise/powerwise
 #endif
