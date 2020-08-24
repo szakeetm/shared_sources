@@ -26,6 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
+#include <../src/GeometrySimu.h>
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
@@ -112,7 +113,7 @@ public:
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
-	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* texture); //Returns the physical value of either a facet or a texture cell
+	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
@@ -129,6 +130,7 @@ public:
 	Vector3d GetFacetCenter(int facet);
 	size_t      GetNbStructure();
 	char     *GetStructureName(int idx);
+	GeomProperties* GetGeomProperties();
 	void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order

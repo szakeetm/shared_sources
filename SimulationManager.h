@@ -134,8 +134,6 @@ public:
 
     int LoadInput(const std::string& fileName);
 
-    GlobalSimuState *FetchResults(size_t procId);
-
 private:
     bool isRunning;
 

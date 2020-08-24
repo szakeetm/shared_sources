@@ -25,13 +25,12 @@ SimulationController::SimulationController(std::string appName, std::string dpNa
     sprintf(this->appName,"%s", appName.c_str());
 
     simulation = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
-    loadOK = false;
     procInfo = pInfo; // Set from outside to link with general structure
 
     SetRuntimeInfo();
 
     printf("Controller created (%zd bytes)\n", sizeof(SHCONTROL));
-    SetReady();
+    SetReady(false);
 }
 
 SimulationController::~SimulationController(){
@@ -56,7 +55,6 @@ SimulationController::SimulationController(SimulationController&& o) noexcept{
     parentPID = o.parentPID;
     endState = o.endState;
     lastHitUpdateOK = o.lastHitUpdateOK;
-    loadOK = o.loadOK;
 }
 
 int SimulationController::StartSimulation() {
@@ -182,9 +180,9 @@ void SimulationController::SetStatus(char *status) {
 
 }
 
-void SimulationController::SetReady() {
+void SimulationController::SetReady(const bool loadOk) {
 
-    if (this->loadOK)
+    if (loadOk)
         SetState(PROCESS_READY, this->GetSimuStatus());
     else
         SetState(PROCESS_READY, "(No geometry)");
@@ -199,6 +197,7 @@ size_t SimulationController::GetLocalState() const {
 // Main loop
 int SimulationController::controlledLoop(int argc, char **argv){
     endState = false;
+    bool loadOk = false;
     while (!endState) {
         GetState();
         bool eos = false;
@@ -207,19 +206,20 @@ int SimulationController::controlledLoop(int argc, char **argv){
             case COMMAND_LOAD:
                 printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
-                loadOK = Load();
-                if (loadOK) {
+                loadOk = Load();
+                if (loadOk) {
                     //desorptionLimit = procInfo->cmdParam2; // 0 for endless
                     SetRuntimeInfo();
-                    SetReady();
                 }
+                SetReady(loadOk);
+
                 break;
 
             case COMMAND_UPDATEPARAMS:
                 SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (UpdateParams()) {
-                    SetReady();
+                    SetReady(loadOk);
                     //SetState(procInfo->cmdParam2, GetSimuStatus());
                 } else{
                     SetState(PROCESS_ERROR, "Could not update parameters");
@@ -229,7 +229,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
             case COMMAND_RELEASEDPLOG:
                 SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                SetReady();
+                SetReady(loadOk);
                 break;
 
             case COMMAND_START:
@@ -244,7 +244,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
-                if (loadOK) {
+                if (loadOk) {
                     SetStatus(GetSimuStatus()); //update hits only
                     eos = RunSimulation();      // Run during 1 sec
                     if ((GetLocalState() != PROCESS_ERROR)) {
@@ -259,9 +259,10 @@ int SimulationController::controlledLoop(int argc, char **argv){
                         }
                     }
                     break;
-                } else
+                } else {
                     SetErrorSub("No geometry loaded");
-
+                    ClearCommand();
+                }
                 break;
 
             case COMMAND_PAUSE:
@@ -274,14 +275,14 @@ int SimulationController::controlledLoop(int argc, char **argv){
                         SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
                     }
                 }
-                SetReady();
+                SetReady(loadOk);
                 break;
 
             case COMMAND_RESET:
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
                 simulation->ResetSimulation();
-                SetReady();
+                SetReady(loadOk);
                 break;
 
             case COMMAND_EXIT:
@@ -291,9 +292,9 @@ int SimulationController::controlledLoop(int argc, char **argv){
 
             case COMMAND_CLOSE:
                 printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                loadOK = false;
                 simulation->ClearSimulation();
-                SetReady();
+                loadOk = false;
+                SetReady(loadOk);
                 break;
 
             case COMMAND_FETCH:
@@ -302,7 +303,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     SetState(PROCESS_STARTING,"Preparing to upload hits");
                     //simulation->UploadHits(dpHit, dpLog, prIdx, 10000);
                 }
-                SetReady();
+                SetReady(loadOk);
                 break;
 
             case PROCESS_RUN:
@@ -337,17 +338,15 @@ bool SimulationController::Load() {
         char err[512];
         sprintf(err, "Loaded empty 'geometry' (%zd Bytes)", procInfo->cmdParam);
         SetErrorSub(err);
-        return this->loadOK;
+        return false;
     }
 
     SetState(PROCESS_STARTING, "Loading simulation");
     if (simulation->LoadSimulation()) {
-        return this->loadOK;
+        return false;
     }
 
-    this->loadOK = true;
-
-    return this->loadOK;
+    return true;
 }
 
 bool SimulationController::UpdateParams() {

@@ -117,7 +117,7 @@ public:
     size_t GetTexRamSizeForCellNumber(int width, int height, bool useMesh, bool countDir, size_t nbMoments);
     size_t GetTexRamSizeForRatio(double ratio, size_t nbMoments);
     size_t GetTexRamSizeForRatio(double ratioU, double ratioV, size_t nbMoments);
-    void  BuildTexture(TextureCell *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
+    void  BuildTexture(const std::vector<TextureCell> &texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
 	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
 	void Sum_Neighbor(const int& i, const int& j, const double& weight, TextureCell *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated

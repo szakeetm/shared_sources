@@ -216,32 +216,6 @@ int SimulationManager::TerminateSimHandles() {
     return 0;
 }
 
-GlobalSimuState * SimulationManager::FetchResults(size_t procId) {
-    ExecuteAndWait(COMMAND_FETCH,PROCESS_STARTING, procId);
-    do{
-        ProcessSleep(100);
-    }while(WaitForProcStatus(PROCESS_READY));
-    GlobalSimuState* localState = new GlobalSimuState;
-
-    std::string inputString(dpHit->size,'\0');
-    BYTE* buffer = GetLockedHitBuffer();
-    std::copy(buffer, buffer + dpHit->size, inputString.begin());
-    UnlockHitBuffer();
-    {
-        std::stringstream inputStream;
-        inputStream << inputString;
-        cereal::BinaryInputArchive inputArchive(inputStream);
-
-        inputArchive(
-            localState->globalHits,
-            localState->globalHistograms,
-            localState->facetStates
-        );
-    }
-
-    return localState;
-}
-
 int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     uint32_t processId;
 
@@ -263,12 +237,12 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     SetThreadPriority(myHandle, THREAD_PRIORITY_NORMAL);
 #else
     int policy;
-			struct sched_param param;
+    struct sched_param param{};
 
-			pthread_getschedparam(myHandle, &policy, &param);
-			param.sched_priority = sched_get_priority_min(policy);
-			pthread_setschedparam(myHandle, policy, &param);
-			//Check! Some documentation says it's always 0
+    pthread_getschedparam(myHandle, &policy, &param);
+    param.sched_priority = sched_get_priority_min(policy);
+    pthread_setschedparam(myHandle, policy, &param);
+    //Check! Some documentation says it's always 0
 #endif
 
     return 0;
@@ -474,14 +448,8 @@ int SimulationManager::ResetSimulations() {
 }
 
 int SimulationManager::ResetHits() {
-    if (!dpHit) {
-        return 1;
-    }
     if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
-    AccessDataport(dpHit);
-    memset(dpHit->buff, 0, dpHit->size); //Also clears hits, leaks
-    ReleaseDataport(dpHit);
     return 0;
 }
 

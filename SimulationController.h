@@ -28,7 +28,7 @@ protected:
     char *GetSimuStatus();
     void SetErrorSub(const char *message);
     void SetStatus(char *status);
-    void SetReady();
+    void SetReady(const bool loadOk);
     int ClearCommand();
     int SetRuntimeInfo();
     size_t GetLocalState() const;
@@ -53,9 +53,6 @@ protected:
     bool endState;
     bool lastHitUpdateOK;
 
-public:
-    // tmp
-    bool loadOK;
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONCONTROLLER_H

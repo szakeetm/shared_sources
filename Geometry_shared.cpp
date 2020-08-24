@@ -348,6 +348,11 @@ char *Geometry::GetStructureName(int idx) {
 	return strName[idx];
 }
 
+GeomProperties* Geometry::GetGeomProperties(){
+    return &sh;
+}
+
+
 void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	//Creates a facet connecting vertexIds in order
 	//Recalculates geometry after execution, so shouldn't be used repetitively
@@ -3677,10 +3682,10 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	worker->globalHitCache.globalHits.hit.nbMCHit = file->ReadSizeT();
-	worker->globalHitCache.globalHits.hit.nbHitEquiv = (double)worker->globalHitCache.globalHits.hit.nbMCHit; //Backward comp
-	worker->globalHitCache.nbLeakTotal = file->ReadSizeT();
-	worker->globalHitCache.globalHits.hit.nbDesorbed = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.hit.nbMCHit = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.hit.nbHitEquiv = (double)worker->globState.globalHits.globalHits.hit.nbMCHit; //Backward comp
+	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.hit.nbDesorbed = file->ReadSizeT();
 	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
@@ -4481,7 +4486,7 @@ std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
 }
 
 #if defined(MOLFLOW)
-PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* buff) {
+PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value
 	//buff is either NULL or a (BYTE*) pointer to texture or direction buffer, must be locked by AccessDataport before call
@@ -4499,41 +4504,41 @@ PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, con
 			result.value = f->GetMeshArea(index);
 			break;
 		case PhysicalMode::MCHits:
-			result.value = ((TextureCell*)buff)[index].countEquiv;
+			result.value = facetSnap.texture[index].countEquiv;
 			break;
 		case PhysicalMode::ImpingementRate:
 		{
 			double area = (f->GetMeshArea(index, true));
 			if (area == 0.0) area = 1.0;
-			result.value = ((TextureCell*)buff)[index].countEquiv / (area * 1E-4) * moleculesPerTP;
+			result.value = facetSnap.texture[index].countEquiv / (area * 1E-4) * moleculesPerTP;
 			break;
 		}
 		case PhysicalMode::ParticleDensity:
 		{
-			double density = ((TextureCell*)buff)[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
+			double density = facetSnap.texture[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
 			result.value = density;
 			break;
 		}
 		case PhysicalMode::GasDensity:
 		{
-			double density = ((TextureCell*)buff)[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
+			double density = facetSnap.texture[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
 			result.value = density * gasMass / 1000.0 / 6E23;
 			break;
 		}
 		case PhysicalMode::Pressure:
-			result.value = ((TextureCell*)buff)[index].sum_v_ort_per_area * 1E4 * (gasMass / 1000 / 6E23) * 0.0100 * moleculesPerTP;  //1E4 is conversion from m2 to cm2; 0.01 is Pa->mbar
+			result.value = facetSnap.texture[index].sum_v_ort_per_area * 1E4 * (gasMass / 1000 / 6E23) * 0.0100 * moleculesPerTP;  //1E4 is conversion from m2 to cm2; 0.01 is Pa->mbar
 			break;
 		case PhysicalMode::AvgGasVelocity:
-			result.value = 4.0*((TextureCell*)buff)[index].countEquiv / ((TextureCell*)buff)[index].sum_1_per_ort_velocity;
+			result.value = 4.0 * facetSnap.texture[index].countEquiv / facetSnap.texture[index].sum_1_per_ort_velocity;
 			break;
 		case PhysicalMode::GasVelocityVector:
 		{
-			double denominator = (((DirectionCell*)buff)[index].count > 0) ? (1.0 / ((DirectionCell*)buff)[index].count) : 1.0;
-			result.vect = ((DirectionCell*)buff)[index].dir * denominator;
+			double denominator = (facetSnap.direction[index].count > 0) ? (1.0 / facetSnap.direction[index].count) : 1.0;
+			result.vect = facetSnap.direction[index].dir * denominator;
 			break;
 		}
 		case PhysicalMode::NbVelocityVectors:
-			result.count = ((DirectionCell*)buff)[index].count;
+			result.count = facetSnap.direction[index].count;
 			break;
 		}
 	}

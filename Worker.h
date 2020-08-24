@@ -102,8 +102,9 @@ public:
   std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();
   void ReleaseLogBuff();
   void ReleaseHits();
- 
-  void RemoveRegion(int index);
+    bool MolflowGeomToSimModel();
+
+    void RemoveRegion(int index);
   void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
   void RecalcRegion(int regionId);
   void SaveRegion(const char *fileName,int position,bool overwrite=false);
@@ -125,7 +126,6 @@ public:
   void LoadTexturesGEO(FileReader *f, int version);
   void OneACStep();
   void StepAC(float appTime); // AC iteration single step
-  void ComputeAC(float appTime); // Send Compute AC matrix order
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
@@ -157,7 +157,6 @@ public:
 
   // Global simulation parameters
   SimulationModel model;
-  GlobalHitBuffer globalHitCache;
   FacetHistogramBuffer globalHistogramCache;
 
   bool   isRunning;           // Started/Stopped state
@@ -218,7 +217,6 @@ private:
 
   // Process management
   SimulationManager simManager;
-    GlobalSimuState globState;
 
 
   // Methods
@@ -240,4 +238,7 @@ private:
   SynradGeometry *geom;
   Dataport *dpMat;
 #endif
+
+public:
+    GlobalSimuState globState;
 };

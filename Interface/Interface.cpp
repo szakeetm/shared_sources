@@ -2737,7 +2737,7 @@ void Interface::DoEvents(bool forced)
 
 bool Interface::AskToReset(Worker *work) {
     if (work == NULL) work = &worker;
-    if (work->globalHitCache.globalHits.hit.nbMCHit > 0) {
+    if (work->globState.globalHits.globalHits.hit.nbMCHit > 0) {
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
             work->ResetStatsAndHits(m_fTime);
@@ -2811,18 +2811,18 @@ int Interface::FrameMove()
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
                 // Update timing measurements
-                if (worker.globalHitCache.globalHits.hit.nbMCHit != lastNbHit || worker.globalHitCache.globalHits.hit.nbDesorbed != lastNbDes) {
+                if (worker.globState.globalHits.globalHits.hit.nbMCHit != lastNbHit || worker.globState.globalHits.globalHits.hit.nbDesorbed != lastNbDes) {
                     double dTime = (double)(m_fTime - lastMeasTime);
-                    hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - lastNbHit) / dTime;
-                    dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
+                    hps = (double)(worker.globState.globalHits.globalHits.hit.nbMCHit - lastNbHit) / dTime;
+                    dps = (double)(worker.globState.globalHits.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
                     if (lastHps != 0.0) {
                         hps = 0.2*(hps)+0.8*lastHps;
                         dps = 0.2*(dps)+0.8*lastDps;
                     }
                     lastHps = hps;
                     lastDps = dps;
-                    lastNbHit = worker.globalHitCache.globalHits.hit.nbMCHit;
-                    lastNbDes = worker.globalHitCache.globalHits.hit.nbDesorbed;
+                    lastNbHit = worker.globState.globalHits.globalHits.hit.nbMCHit;
+                    lastNbDes = worker.globState.globalHits.globalHits.hit.nbDesorbed;
                     lastMeasTime = m_fTime;
                 }
             }
@@ -2845,8 +2845,8 @@ int Interface::FrameMove()
     }
     else {
         if (worker.simuTime > 0.0) {
-            hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
-            dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
+            hps = (double)(worker.globState.globalHits.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
+            dps = (double)(worker.globState.globalHits.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
         }
         else {
             hps = 0.0;
@@ -2880,20 +2880,20 @@ int Interface::FrameMove()
         }
     }
 
-    if (worker.globalHitCache.nbLeakTotal) {
-        sprintf(tmp, "%g (%.4f%%)", (double)worker.globalHitCache.nbLeakTotal, (double)(worker.globalHitCache.nbLeakTotal)*100.0 / (double)worker.globalHitCache.globalHits.hit.nbDesorbed);
+    if (worker.globState.globalHits.nbLeakTotal) {
+        sprintf(tmp, "%g (%.4f%%)", (double)worker.globState.globalHits.nbLeakTotal, (double)(worker.globState.globalHits.nbLeakTotal)*100.0 / (double)worker.globState.globalHits.globalHits.hit.nbDesorbed);
         leakNumber->SetText(tmp);
     }
     else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!worker.isRunning&&worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!worker.isRunning&&worker.globState.globalHits.globalHits.hit.nbDesorbed > 0);
 
     if (worker.isRunning) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
     }
-    else if (worker.globalHitCache.globalHits.hit.nbMCHit > 0) {
+    else if (worker.globState.globalHits.globalHits.hit.nbMCHit > 0) {
         startSimu->SetText("Resume");
         //startSimu->SetFontColor(0, 140, 0);
     }
@@ -2954,7 +2954,7 @@ bool Interface::AutoSave(bool crashSave) {
     try {
         worker.SaveGeometry(fn, progressDlg2, false, false, true, crashSave);
         //Success:
-        if (autosaveFilename != "" && autosaveFilename != newAutosaveFilename) remove(autosaveFilename.c_str());
+        if (!autosaveFilename.empty() && autosaveFilename != newAutosaveFilename) remove(autosaveFilename.c_str());
         autosaveFilename = newAutosaveFilename;
         ResetAutoSaveTimer(); //deduct saving time from interval
     }

@@ -38,6 +38,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/LoadStatus.h"
 #include "ProcessControl.h" // defines for process commands
 #include "SimulationManager.h"
+#include "Buffer_shared.h"
 
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
@@ -127,11 +128,11 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
         char tmp[256];
         sprintf(tmp, "Cannot open file for writing %s", fileName);
         throw Error(tmp);
-
     }
-    BYTE *buffer = simManager.GetLockedHitBuffer();
+
+    BYTE *buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
-    geom->ExportTextures(f, grouping, mode, buffer, saveSelected, model.wp.sMode);
+    geom->ExportTextures(f, grouping, mode, globState, saveSelected, model.wp.sMode);
 #endif
 #if defined(SYNRAD)
     geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
@@ -273,14 +274,16 @@ void Worker::SetProcNumber(size_t n) {
     }
 
     simManager.useCPU = true;
-    simManager.nbCores = n;
+    simManager.nbCores = 1;
+    simManager.nbThreads = n;
+
     // Launch n subprocess
 
     if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }
 
-    model.otfParams.nbProcess = n;
+    model.otfParams.nbProcess = simManager.nbCores;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -297,13 +300,14 @@ void Worker::RebuildTextures() {
         if (needsReload)
             RealReload();
 
-        BYTE *buffer = simManager.GetLockedHitBuffer();
-        if (!buffer)
+        BYTE *buffer_old = simManager.GetLockedHitBuffer();
+        if (!buffer_old)
             return;
+
 
         try {
 #if defined(MOLFLOW)
-            geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
+            geom->BuildFacetTextures(&globState, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
 #endif
 #if defined(SYNRAD)
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
@@ -354,122 +358,71 @@ void Worker::Update(float appTime) {
     }
 
     // Retrieve hit count recording from the shared memory
-    BYTE *bufferStart = simManager.GetLockedHitBuffer();
-    if (!bufferStart)
+    BYTE *bufferStart_old = simManager.GetLockedHitBuffer();
+    if (!bufferStart_old)
         return;
 
-    BYTE *buffer = bufferStart;
+    BYTE *buffer_old = bufferStart_old;
 
 
     mApp->changedSinceSave = true;
     // Globals
-    globalHitCache = READBUFFER(GlobalHitBuffer);
+    if(simManager.simUnits.empty()) return;
 
-    // Global hits and leaks
 #if defined(MOLFLOW)
     bool needsAngleMapStatusRefresh = false;
 #endif
 
+    for(auto& simUnit : simManager.simUnits) {
+        if(simUnit.tmpGlobalResults.empty()) continue;
+
+        globState.globalHits = simUnit.tmpGlobalResults[0].globalHits;
+
+        // Global hits and leaks
+
 #if defined(SYNRAD)
 
-    if (globalHitCache.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
-        no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
-    }
-    else {
-        no_scans = 1.0;
-    }
-#endif
-
-
-    //Copy global histogram
-    //Prepare vectors to receive data
-    globalHistogramCache.Resize(model.wp.globalHistogramParams);
-
-    BYTE *globalHistogramAddress = buffer; //Already increased by READBUFFER(GlobalHitBuffer) above
-#if defined(MOLFLOW)
-    globalHistogramAddress += displayedMoment * model.wp.globalHistogramParams.GetDataSize();
-#endif
-
-    memcpy(globalHistogramCache.nbHitsHistogram.data(), globalHistogramAddress,
-           model.wp.globalHistogramParams.GetBouncesDataSize());
-    memcpy(globalHistogramCache.distanceHistogram.data(),
-           globalHistogramAddress + model.wp.globalHistogramParams.GetBouncesDataSize(),
-           model.wp.globalHistogramParams.GetDistanceDataSize());
-#if defined(MOLFLOW)
-    memcpy(globalHistogramCache.timeHistogram.data(),
-           globalHistogramAddress + model.wp.globalHistogramParams.GetBouncesDataSize() +
-           model.wp.globalHistogramParams.GetDistanceDataSize(), model.wp.globalHistogramParams.GetTimeDataSize());
-#endif
-    buffer = bufferStart;
-
-    // Refresh local facet hit cache for the displayed moment
-    size_t nbFacet = geom->GetNbFacet();
-    for (size_t i = 0; i < nbFacet; i++) {
-        Facet *f = geom->GetFacet(i);
-#if defined(SYNRAD)
-        memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
-#endif
-#if defined(MOLFLOW)
-            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
-               sizeof(FacetHitBuffer));
-
-        if (f->sh.anglemapParams.record) {
-            if (!f->sh.anglemapParams.hasRecorded) { //It was released by the user maybe
-                //Initialize angle map
-                f->angleMapCache = (size_t*)malloc(f->sh.anglemapParams.GetDataSize());
-                if (!f->angleMapCache) {
-                    std::stringstream tmp;
-                    tmp << "Not enough memory for incident angle map on facet " << i + 1;
-                    throw Error(tmp.str().c_str());
-                }
-                f->sh.anglemapParams.hasRecorded = true;
-                if (f->selected) needsAngleMapStatusRefresh = true;
-            }
-            //Retrieve angle map from hits dp
-            BYTE* angleMapAddress = buffer
-                                    + f->sh.hitOffset
-                                    + (1 + moments.size()) * sizeof(FacetHitBuffer)
-                                    + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) *(1 + moments.size()) : 0)
-                                    + (f->sh.isTextured ? f->sh.texWidth*f->sh.texHeight * sizeof(TextureCell) *(1 + moments.size()) : 0)
-                                    + (f->sh.countDirection ? f->sh.texWidth*f->sh.texHeight * sizeof(DirectionCell)*(1 + moments.size()) : 0);
-            memcpy(f->angleMapCache, angleMapAddress, f->sh.anglemapParams.GetRecordedDataSize());
+        if (globState.globalHits.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
+            no_scans = (double)globState.globalHits.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
+        }
+        else {
+            no_scans = 1.0;
         }
 #endif
-#if defined(MOLFLOW)
 
-        //Prepare vectors for receiving data
-        f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
 
-        //Retrieve histogram map from hits dp
-        BYTE *histogramAddress = buffer
-                                 + f->sh.hitOffset
-                                 + (1 + moments.size()) * sizeof(FacetHitBuffer)
-                                 + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) * (1 + moments.size()) : 0)
-                                 + (f->sh.isTextured ? f->sh.texWidth * f->sh.texHeight * sizeof(TextureCell) *
-                                                       (1 + moments.size()) : 0)
-                                 + (f->sh.countDirection ? f->sh.texWidth * f->sh.texHeight * sizeof(DirectionCell) *
-                                                           (1 + moments.size()) : 0)
-                                 //+ f->sh.anglemapParams.GetRecordedDataSize();
-                                 + sizeof(size_t) * (f->sh.anglemapParams.phiWidth *
-                                                     (f->sh.anglemapParams.thetaLowerRes +
-                                                      f->sh.anglemapParams.thetaHigherRes));
-        histogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
+        //Copy global histogram
+        //Prepare vectors to receive data
+        if (!simUnit.tmpGlobalResults[0].globalHistograms.empty())
+            globalHistogramCache = simUnit.tmpGlobalResults[0].globalHistograms[displayedMoment];
 
-        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), histogramAddress,
-               f->sh.facetHistogramParams.GetBouncesDataSize());
-        memcpy(f->facetHistogramCache.distanceHistogram.data(),
-               histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize(),
-               f->sh.facetHistogramParams.GetDistanceDataSize());
-        memcpy(f->facetHistogramCache.timeHistogram.data(),
-               histogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() +
-               f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
+        // Refresh local facet hit cache for the displayed moment
+        size_t nbFacet = geom->GetNbFacet();
+        for (size_t i = 0; i < nbFacet; i++) {
+            Facet *f = geom->GetFacet(i);
+#if defined(SYNRAD)
+            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
+#if defined(MOLFLOW)
+            //memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
+            f->facetHitCache = simUnit.tmpGlobalResults[0].facetStates[i].momentResults[displayedMoment].hits;
 
+            if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
+                if (f->selected && f->sh.anglemapParams.hasRecorded)
+                    needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
+                //Retrieve angle map from hits dp
+                f->angleMapCache = simUnit.tmpGlobalResults[0].facetStates[i].recordedAngleMapPdf.data(); // TODO: Transform anglemapcache to vector
+            }
+
+            //Prepare vectors for receiving data
+            f->facetHistogramCache = simUnit.tmpGlobalResults[0].facetStates[i].momentResults[displayedMoment].histogram;
+#endif
+        }
     }
     try {
 
         if (mApp->needsTexture || mApp->needsDirection)
-            geom->BuildFacetTextures(buffer, mApp->needsTexture, mApp->needsDirection
+            geom->BuildFacetTextures(&globState, mApp->needsTexture, mApp->needsDirection
 #if defined(MOLFLOW)
                     , model.wp.sMode // not necessary for Synrad
 #endif
@@ -612,8 +565,9 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 #endif
     toOpen = prefix + geomName;
     if (!FileUtils::Exist(toOpen))
-        toOpen = prefix + (shortFileName).substr(0, shortFileName.length() -
-                                                    2); //Inside the zip, try original filename with extension changed from geo7z to geo
+        //Inside the zip, try original filename with extension changed from geo7z to geo
+        toOpen = prefix + (shortFileName).substr(0,shortFileName.length() - 2);
+
 
     return new FileReader(toOpen); //decompressed file opened
 }
@@ -624,23 +578,25 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    try{
-        simManager.ShareWithSimUnits(&globalHitCache, sizeof(GlobalHitBuffer),LoadType::LOADHITS);
+    BYTE* buffer_old = simManager.GetLockedHitBuffer();
+    for(auto& simUnit : simManager.simUnits){
+        simUnit.tmpGlobalResults[0].globalHits = globState.globalHits;
     }
-    catch (std::exception& e) {
-        throw Error(e.what());
-    }
+    simManager.UnlockHitBuffer();
 }
 
 /**
 * \brief Saves current facet hit counter from cache to results
 */
 void Worker::SendFacetHitCounts() {
-    BYTE* buffer = simManager.GetLockedHitBuffer();
+    BYTE* buffer_old = simManager.GetLockedHitBuffer();
     size_t nbFacet = geom->GetNbFacet();
     for (size_t i = 0; i < nbFacet; i++) {
         Facet *f = geom->GetFacet(i);
-        *((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
+        for(auto& simUnit : simManager.simUnits){
+            simUnit.tmpGlobalResults[0].facetStates[i].momentResults[0].hits = f->facetHitCache;
+        }
+        //*((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
     }
     simManager.UnlockHitBuffer();
 }
