@@ -388,7 +388,7 @@ void Worker::Update(float appTime) {
     for (size_t i = 0; i < nbFacet; i++) {
         Facet *f = geom->GetFacet(i);
 #if defined(SYNRAD)
-        memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
+        memcpy(&(f->facetHitCache), bufferStart + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #if defined(MOLFLOW)
             memcpy(&(f->facetHitCache), bufferStart + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
@@ -417,7 +417,7 @@ void Worker::Update(float appTime) {
         }
 #endif
     }
-    RetrieveHistogramCache(bufferStart);
+    
     try {
 
         if (mApp->needsTexture || mApp->needsDirection)
