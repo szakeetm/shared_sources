@@ -61,8 +61,7 @@ int SimulationManager::refreshProcStatus() {
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
         if(!(*proc).first.joinable()){
             auto myHandle = (*proc).first.native_handle();
-#ifdef _WIN32
-            //Windows
+#if defined(_WIN32) && defined(_MSC_VER)
             TerminateThread(myHandle, 1);
 #else
             //Linux
@@ -227,13 +226,13 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 
     simUnits.emplace_back(Simulation{nbThreads});
     procInformation.emplace_back(SubProcInfo{});
-    simController.emplace_back(SimulationController{"molflow", "MFLW", processId, iProc, &simUnits.back(), &procInformation.back()});
+    simController.emplace_back(SimulationController{"molflow", processId, iProc, &simUnits.back(), &procInformation.back()});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
             SimType::simCPU);
     auto myHandle = simHandles.back().first.native_handle();
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_MSC_VER)
     SetThreadPriority(myHandle, THREAD_PRIORITY_NORMAL);
 #else
     int policy;
@@ -395,7 +394,7 @@ int SimulationManager::KillAllSimUnits() {
             for(size_t i=0;i<simHandles.size();i++) {
                 if (procInformation[i].slaveState != PROCESS_KILLED){
                     auto nativeHandle = simHandles[i].first.native_handle();
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_MSC_VER)
                     //Windows
 				    TerminateThread(nativeHandle, 1);
 #else
@@ -416,7 +415,7 @@ int SimulationManager::KillAllSimUnits() {
             }
             else{
                 auto nativeHandle = simHandles[i].first.native_handle();
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_MSC_VER)
                 //Windows
                 TerminateThread(nativeHandle, 1);
 #else
@@ -535,11 +534,11 @@ const char *SimulationManager::GetErrorDetails() {
         char tmp[512];
         size_t state = procInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
+            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo[i].procId, prStates[state],
                     procInfo[i].statusString);
             strncat(err, tmp, 512);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, procInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo[i].procId, prStates[state]);
         }
     }
     return err;

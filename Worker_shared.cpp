@@ -360,9 +360,6 @@ void Worker::Update(float appTime) {
     }
 
     // Retrieve hit count recording from the shared memory
-    bool bufferStart_old = simManager.GetLockedHitBuffer();
-    if (!bufferStart_old)
-        return;
     // Globals
     if(simManager.simUnits.empty())
         return;
@@ -381,6 +378,9 @@ void Worker::Update(float appTime) {
 
     for(auto& simUnit : simManager.simUnits) {
         if(simUnit.tmpGlobalResults.empty()) continue;
+        if (!simUnit.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
+            continue;
+        }
         lastAccessTime = appTime;
         globState.globalHits = simUnit.tmpGlobalResults[0].globalHits;
 
@@ -424,6 +424,8 @@ void Worker::Update(float appTime) {
             f->facetHistogramCache = simUnit.tmpGlobalResults[0].facetStates[i].momentResults[displayedMoment].histogram;
 #endif
         }
+
+        simUnit.tMutex.unlock();
     }
     try {
 
@@ -443,9 +445,6 @@ void Worker::Update(float appTime) {
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
 #endif
-    simManager.UnlockHitBuffer();
-
-
 }
 
 void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
@@ -584,11 +583,12 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    bool buffer_old = simManager.GetLockedHitBuffer();
     for(auto& simUnit : simManager.simUnits){
+        if(!simUnit.tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
         simUnit.tmpGlobalResults[0].globalHits = globState.globalHits;
+        simUnit.tMutex.unlock();
     }
-    simManager.UnlockHitBuffer();
 }
 
 /**
@@ -597,12 +597,14 @@ void Worker::SendToHitBuffer() {
 void Worker::SendFacetHitCounts() {
     bool buffer_old = simManager.GetLockedHitBuffer();
     size_t nbFacet = geom->GetNbFacet();
-    for (size_t i = 0; i < nbFacet; i++) {
-        Facet *f = geom->GetFacet(i);
-        for(auto& simUnit : simManager.simUnits){
+    for(auto& simUnit : simManager.simUnits){
+        if(!simUnit.tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
+        for (size_t i = 0; i < nbFacet; i++) {
+            Facet *f = geom->GetFacet(i);
             simUnit.tmpGlobalResults[0].facetStates[i].momentResults[0].hits = f->facetHitCache;
         }
+        simUnit.tMutex.unlock();
         //*((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
     }
-    simManager.UnlockHitBuffer();
 }

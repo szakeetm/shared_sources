@@ -350,15 +350,15 @@ IntersectTree(const SimulationModel &model, const AABBNODE &node, const Vector3d
 											minLength = d;
 											collidedFacet = f;
 											found = true;
-											f->colU = u;
-											f->colV = v;
+                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
+                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
 										}
 									}
 									else {
-											f->colDist = d;
-											f->colU = u;
-											f->colV = v;
-											currentParticle.transparentHitBuffer.push_back(f);
+                                        currentParticle.tmpFacetVars[collidedFacet->globalId].colDistTranspPass = d;
+                                        currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
+                                        currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
+                                        currentParticle.transparentHitBuffer.push_back(f);
 									}
 								} // IsInFacet
 							} // d range
@@ -477,7 +477,7 @@ Intersect(const SimulationModel &model, const Vector3d &rayPos, const Vector3d &
 
 	if (found) {
 
-		collidedFacet->isHit = true;
+        currentParticle.tmpFacetVars[collidedFacet->globalId].isHit = true;
 
 		// Second pass for transparent hits
 		/*for (const auto& tpFacet : currentParticle.transparentHitBuffer){
@@ -486,8 +486,8 @@ Intersect(const SimulationModel &model, const Vector3d &rayPos, const Vector3d &
 			}
 		}*/
         // Second pass for transparent hits
-        for (auto tpFacet : currentParticle.transparentHitBuffer){
-            if (tpFacet->colDist >= minLength) {
+        for (SubprocessFacet* tpFacet : currentParticle.transparentHitBuffer){
+            if (currentParticle.tmpFacetVars[tpFacet->globalId].colU >= minLength) {
                 tpFacet = nullptr;
             }
         }

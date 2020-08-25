@@ -17,8 +17,8 @@
 
 #define WAITTIME    100  // Answer in STOP mode
 
-SimulationController::SimulationController(std::string appName, std::string dpName, size_t parentPID,
-                                           size_t procIdx, SimulationUnit *simulationInstance, SubProcInfo *pInfo) {
+SimulationController::SimulationController(std::string appName, size_t parentPID, size_t procIdx,
+                                           SimulationUnit *simulationInstance, SubProcInfo *pInfo) : appName{}{
     this->prIdx = procIdx;
     this->parentPID = parentPID;
 
@@ -26,6 +26,10 @@ SimulationController::SimulationController(std::string appName, std::string dpNa
 
     simulation = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
     procInfo = pInfo; // Set from outside to link with general structure
+
+    stepsPerSec = -1.0;
+    endState = false;
+    lastHitUpdateOK = false;
 
     SetRuntimeInfo();
 
@@ -37,11 +41,7 @@ SimulationController::~SimulationController(){
     //delete simulation; // doesn't manage it
 }
 
-SimulationController::SimulationController(SimulationController&& o) noexcept{
-    sprintf(this->appName,"%s", o.appName);
-    sprintf(this->appName,"%s", o.appName);
-    sprintf(this->appName,"%s", o.appName);
-    sprintf(this->appName,"%s", o.appName);
+SimulationController::SimulationController(SimulationController&& o) noexcept : appName{}{
     sprintf(this->appName,"%s", o.appName);
 
     simulation = o.simulation;
@@ -51,10 +51,11 @@ SimulationController::SimulationController(SimulationController&& o) noexcept{
     o.procInfo = nullptr;
 
     stepsPerSec = o.stepsPerSec;
-    prIdx = o.prIdx;
-    parentPID = o.parentPID;
     endState = o.endState;
     lastHitUpdateOK = o.lastHitUpdateOK;
+
+    prIdx = o.prIdx;
+    parentPID = o.parentPID;
 }
 
 int SimulationController::StartSimulation() {
@@ -82,13 +83,17 @@ int SimulationController::RunSimulation() {
         nbStep = std::ceil(stepsPerSec + 0.5);
     }
 
-
     double t0 = GetTick();
     bool goOn = simulation->SimulationMCStep(nbStep);
     double t1 = GetTick();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-        stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
+    {
+        if (t1 - t0 != 0.0)
+            stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
+        else
+            stepsPerSec = (100.0 * nbStep); // in case of fast initial run
+    }
 
 #if defined(_DEBUG)
     printf("Running: stepPerSec = %lf\n", stepsPerSec);

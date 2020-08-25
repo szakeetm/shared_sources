@@ -3,7 +3,7 @@
 //
 
 #include "ProcessControl.h"
-#include <string>
+#include <cstring>
 
 SubProcInfo::SubProcInfo() {
     procId = 0;
@@ -12,7 +12,7 @@ SubProcInfo::SubProcInfo() {
     cmdParam = 0;
     cmdParam2 = 0;
     oldState = 0;
-    memset(statusString, '\0', 128*sizeof(char));
+    std::memset(statusString, '\0', 128*sizeof(char));
     runtimeInfo = PROCESS_INFO();
 }
 /**

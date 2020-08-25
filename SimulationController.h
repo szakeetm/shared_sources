@@ -33,8 +33,8 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName, std::string dpName, size_t parentPID,
-                         size_t procIdx, SimulationUnit *simulationInstance, SubProcInfo *pInfo);
+    SimulationController(std::string appName, size_t parentPID, size_t procIdx,
+                         SimulationUnit *simulationInstance, SubProcInfo *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
