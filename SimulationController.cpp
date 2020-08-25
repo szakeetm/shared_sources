@@ -88,7 +88,7 @@ int SimulationController::RunSimulation() {
     double t1 = GetTick();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-        stepsPerSec = (2.0 * nbStep) / (t1 - t0); // every 1.0 second
+        stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
 
 #if defined(_DEBUG)
     printf("Running: stepPerSec = %lf\n", stepsPerSec);

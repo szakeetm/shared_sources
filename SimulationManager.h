@@ -122,7 +122,7 @@ public:
     const char *GetErrorDetails();
 
     // Hit Buffer functions
-    BYTE *GetLockedHitBuffer();
+    bool GetLockedHitBuffer();
 
     int UnlockHitBuffer();
 

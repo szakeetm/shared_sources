@@ -272,7 +272,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
-IntersectTree(Simulation *sHandle, const AABBNODE &node, const Vector3d &rayPos, const Vector3d &rayDirOpposite,
+IntersectTree(const SimulationModel &model, const AABBNODE &node, const Vector3d &rayPos, const Vector3d &rayDirOpposite,
               SubprocessFacet *const lastHitBefore, const bool &nullRx, const bool &nullRy, const bool &nullRz,
               const Vector3d &inverseRayDir, bool &found, SubprocessFacet *&collidedFacet, double &minLength,
               CurrentParticleStatus &currentParticle) {
@@ -331,7 +331,7 @@ IntersectTree(Simulation *sHandle, const AABBNODE &node, const Vector3d &rayPos,
 									bool hardHit;
 #if defined(MOLFLOW)
 									double time = currentParticle.flightTime + d / 100.0 / currentParticle.velocity;
-									double currentOpacity = sHandle->GetOpacityAt(f, time);
+									double currentOpacity = model.GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
 #endif
 
@@ -371,12 +371,12 @@ IntersectTree(Simulation *sHandle, const AABBNODE &node, const Vector3d &rayPos,
 	} /* end Leaf */ else {
 
 		if (IntersectBB_new(*(node.left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
-            IntersectTree(sHandle, *(node.left), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
+            IntersectTree(model, *(node.left), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
                           inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength,
                           currentParticle);
 		}
 		if (IntersectBB_new(*(node.right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
-            IntersectTree(sHandle, *(node.right), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
+            IntersectTree(model, *(node.right), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
                           inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength,
                           currentParticle);
 		}
@@ -448,7 +448,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 }
 
 std::tuple<bool, SubprocessFacet *, double>
-Intersect(Simulation *sHandle, const Vector3d &rayPos, const Vector3d &rayDir,
+Intersect(const SimulationModel &model, const Vector3d &rayPos, const Vector3d &rayDir,
           CurrentParticleStatus &currentParticle) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
@@ -470,7 +470,7 @@ Intersect(Simulation *sHandle, const Vector3d &rayPos, const Vector3d &rayDir,
 	currentParticle.transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-    IntersectTree(sHandle, *sHandle->model.structures[currentParticle.structureId].aabbTree, rayPos, -1.0 * rayDir,
+    IntersectTree(model, *model.structures[currentParticle.structureId].aabbTree, rayPos, -1.0 * rayDir,
                   currentParticle.lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength, currentParticle); //output params
@@ -480,53 +480,17 @@ Intersect(Simulation *sHandle, const Vector3d &rayPos, const Vector3d &rayDir,
 		collidedFacet->isHit = true;
 
 		// Second pass for transparent hits
-		for (const auto& tpFacet: currentParticle.transparentHitBuffer){
+		/*for (const auto& tpFacet : currentParticle.transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
-                sHandle->RegisterTransparentPass(tpFacet, currentParticle);
+                model->RegisterTransparentPass(tpFacet, currentParticle);
 			}
-		}
-
-		/*
-		// Compute intersection with spheric volume element
-		if (sHandle->hasDirection) {
-
-		for (j = 0; j < sHandle->sh.nbSuper; j++) {
-		for (i = 0; i < sHandle->structures[j].nbFacet; i++) {
-		f = sHandle->structures[j].facets[i];
-		if (f->direction && f->sh.countDirection) {
-
-		int      x, y;
-		Vector3d center;
-		double   d;
-		double   r = f->rw*0.45; // rw/2 - 10% (avoid side FX)
-
-		for (x = 0; x < f->sh.texWidth; x++) {
-		for (y = 0; y < f->sh.texHeight; y++) {
-		int add = x + y*f->sh.texWidth;
-		if (isFull) {
-
-		double uC = ((double)x + 0.5) * f->iw;
-		double vC = ((double)y + 0.5) * f->ih;
-		center.x = f->sh.O.x + f->sh.U.x*uC + f->sh.V.x*vC;
-		center.y = f->sh.O.y + f->sh.U.y*uC + f->sh.V.y*vC;
-		center.z = f->sh.O.z + f->sh.U.z*uC + f->sh.V.z*vC;
-		if (RaySphereIntersect(&center, r, rPos, rDir, &d)) {
-		if (d < intMinLgth) {
-		f->direction[add].dir.x += sHandle->currentParticle.direction.x;
-		f->direction[add].dir.y += sHandle->currentParticle.direction.y;
-		f->direction[add].dir.z += sHandle->currentParticle.direction.z;
-		f->direction[add].count++;
-		}
-		}
-
-		}
-		}
-		}
-		}
-		}
-		}
 		}*/
-
+        // Second pass for transparent hits
+        for (auto tpFacet : currentParticle.transparentHitBuffer){
+            if (tpFacet->colDist >= minLength) {
+                tpFacet = nullptr;
+            }
+        }
 	}
 	return { found, collidedFacet, minLength };
 
@@ -601,7 +565,7 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const V
 	return { inTheta, inPhi };
 }
 
-bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
+/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticle) {
 	//For AC matrix calculation, used only in MolFlow
 
@@ -627,8 +591,8 @@ bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f
 	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
 	currentParticle.transparentHitBuffer.clear();
 
-    IntersectTree(sHandle, *sHandle->model.structures[0].aabbTree, rayPos, -1.0 * rayDir,
-                  f1, nullRx, nullRy, nullRz, inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet,
+    IntersectTree(model, *sHandle->model.structures[0].aabbTree, rayPos, -1.0 * rayDir,
+                  f1, nullRx, nullRy, nullRz, inverseRayDir, *//*transparentHitFacetPointers,*//* found, collidedFacet,
                   minLength, currentParticle);
 
 	if (found) {
@@ -639,7 +603,7 @@ bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f
 	}
 
 	return true;
-}
+}*/
 
 AABBNODE::AABBNODE()
 {

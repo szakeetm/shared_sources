@@ -130,7 +130,7 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
         throw Error(tmp);
     }
 
-    BYTE *buffer_old = simManager.GetLockedHitBuffer();
+    bool buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
     geom->ExportTextures(f, grouping, mode, globState, saveSelected, model.wp.sMode);
 #endif
@@ -157,14 +157,15 @@ void Worker::ReleaseHits() {
     simManager.UnlockHitBuffer();
 }
 
-BYTE *Worker::GetHits() {
+bool Worker::GetHits() {
     try {
         if (needsReload) RealReload();
     }
     catch (Error &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        return false;
     }
-    return simManager.GetLockedHitBuffer();
+    return true;
 }
 
 std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
@@ -275,7 +276,7 @@ void Worker::SetProcNumber(size_t n) {
 
     simManager.useCPU = true;
     simManager.nbCores = 1;
-    simManager.nbThreads = n;
+    simManager.nbThreads = 0;
 
     // Launch n subprocess
 
@@ -300,14 +301,14 @@ void Worker::RebuildTextures() {
         if (needsReload)
             RealReload();
 
-        BYTE *buffer_old = simManager.GetLockedHitBuffer();
+        bool buffer_old = simManager.GetLockedHitBuffer();
         if (!buffer_old)
             return;
 
 
         try {
 #if defined(MOLFLOW)
-            geom->BuildFacetTextures(&globState, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
+            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
 #endif
 #if defined(SYNRAD)
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
@@ -325,6 +326,7 @@ size_t Worker::GetProcNumber() const {
     return model.otfParams.nbProcess;
 }
 
+static float lastAccessTime = 0.0f;
 void Worker::Update(float appTime) {
     //Refreshes interface cache:
     //Global statistics, leak/hits, global histograms
@@ -358,24 +360,28 @@ void Worker::Update(float appTime) {
     }
 
     // Retrieve hit count recording from the shared memory
-    BYTE *bufferStart_old = simManager.GetLockedHitBuffer();
+    bool bufferStart_old = simManager.GetLockedHitBuffer();
     if (!bufferStart_old)
         return;
-
-    BYTE *buffer_old = bufferStart_old;
-
+    // Globals
+    if(simManager.simUnits.empty())
+        return;
+    if(isRunning && appTime - lastAccessTime < 1.0) {
+        return;
+    }
 
     mApp->changedSinceSave = true;
-    // Globals
-    if(simManager.simUnits.empty()) return;
+
 
 #if defined(MOLFLOW)
     bool needsAngleMapStatusRefresh = false;
 #endif
 
+
+
     for(auto& simUnit : simManager.simUnits) {
         if(simUnit.tmpGlobalResults.empty()) continue;
-
+        lastAccessTime = appTime;
         globState.globalHits = simUnit.tmpGlobalResults[0].globalHits;
 
         // Global hits and leaks
@@ -422,7 +428,7 @@ void Worker::Update(float appTime) {
     try {
 
         if (mApp->needsTexture || mApp->needsDirection)
-            geom->BuildFacetTextures(&globState, mApp->needsTexture, mApp->needsDirection
+            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection
 #if defined(MOLFLOW)
                     , model.wp.sMode // not necessary for Synrad
 #endif
@@ -578,7 +584,7 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    BYTE* buffer_old = simManager.GetLockedHitBuffer();
+    bool buffer_old = simManager.GetLockedHitBuffer();
     for(auto& simUnit : simManager.simUnits){
         simUnit.tmpGlobalResults[0].globalHits = globState.globalHits;
     }
@@ -589,7 +595,7 @@ void Worker::SendToHitBuffer() {
 * \brief Saves current facet hit counter from cache to results
 */
 void Worker::SendFacetHitCounts() {
-    BYTE* buffer_old = simManager.GetLockedHitBuffer();
+    bool buffer_old = simManager.GetLockedHitBuffer();
     size_t nbFacet = geom->GetNbFacet();
     for (size_t i = 0; i < nbFacet; i++) {
         Facet *f = geom->GetFacet(i);

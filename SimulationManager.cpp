@@ -487,23 +487,12 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
     return 0;
 }
 
-BYTE *SimulationManager::GetLockedHitBuffer() {
-    if (dpHit && AccessDataport(dpHit)) {
-        // A copy might result in too much memory requirement depending on the geometry
-        /*BYTE* bufferCopy;
-        bufferCopy = new BYTE[dpHit->size];
-        std::copy((BYTE*)dpHit->buff,(BYTE*)dpHit->buff + dpHit->size,bufferCopy);
-        ReleaseDataport(dpHit);*/
-        return (BYTE*)dpHit->buff;
-    }
-    return nullptr;
+bool SimulationManager::GetLockedHitBuffer() {
+    return true;
 }
 
 int SimulationManager::UnlockHitBuffer() {
-    if (dpHit && ReleaseDataport(dpHit)) {
-        return 0;
-    }
-    return 1;
+    return 0;
 }
 
 int SimulationManager::UploadToHitBuffer(void *data, size_t size) {

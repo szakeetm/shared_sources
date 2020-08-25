@@ -88,7 +88,7 @@ unsigned long GenerateSeed() {
 #else
     processId = ::getpid();
 #endif //  WIN
-    int index = omp_get_thread_num();
+    const int index = omp_get_thread_num();
     //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
     return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+index))));
