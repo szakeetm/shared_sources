@@ -45,7 +45,7 @@ public:
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
-  void SetBounds(int x, int y, int w, int h);
+  void SetBounds(int x, int y, int w, int h) override;
   
 
 private:

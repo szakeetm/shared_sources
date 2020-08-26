@@ -123,18 +123,18 @@ public:
   void ToSideView();
   void ToFrontView();
   bool SelectionChanged();
-  bool IsDragging();
+  bool IsDragging() override;
   AVIEW GetCurrentView();
   void  SetCurrentView(AVIEW v);
   bool IsSelected();
   void SetSelected(bool s);
 
   // Implementation
-  void Paint();
-  void ManageEvent(SDL_Event *evt);
-  void SetBounds(int x,int y,int width,int height);
+  void Paint() override;
+  void ManageEvent(SDL_Event *evt) override;
+  void SetBounds(int x,int y,int width,int height) override;
   void ProcessMessage(GLComponent *src,int message) override;
-  void SetFocus(bool focus);
+  void SetFocus(bool focus) override;
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();

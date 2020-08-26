@@ -34,7 +34,7 @@ public:
   int GetSelectedTabIndex();
 
   //Overrides
-  void SetBounds(int x,int y,int w,int h);
+  void SetBounds(int x,int y,int w,int h) override;
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
