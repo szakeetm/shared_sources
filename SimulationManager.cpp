@@ -239,7 +239,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     struct sched_param param{};
 
     pthread_getschedparam(myHandle, &policy, &param);
-    param.sched_priority = sched_get_priority_min(policy);
+    param.sched_priority = sched_get_priority_max(policy);
     pthread_setschedparam(myHandle, policy, &param);
     //Check! Some documentation says it's always 0
 #endif

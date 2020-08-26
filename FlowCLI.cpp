@@ -110,6 +110,8 @@ int main(int argc, char** argv) {
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
 
+    for(auto& simUnit : simManager.simUnits)
+        simUnit.globState = &globState;
     //simManager.ReloadHitBuffer();
     try {
         simManager.StartSimulation();
@@ -146,7 +148,7 @@ int main(int argc, char** argv) {
     for(const auto& subHandle : simManager.simUnits){
         const size_t sub_pid = 0;
         //GlobalSimuState* localState = simManager.FetchResults(sub_pid);
-        const GlobalSimuState& localState = subHandle.tmpGlobalResults.front();
+        const GlobalSimuState& localState = *subHandle.globState;
         std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit + localState.globalHits.globalHits.hit.nbMCHit
             << " : " << globState.globalHits.globalHits.hit.nbMCHit << " += " << localState.globalHits.globalHits.hit.nbMCHit <<std::endl;
         globState.globalHits.globalHits += localState.globalHits.globalHits;
