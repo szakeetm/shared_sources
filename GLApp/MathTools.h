@@ -34,12 +34,12 @@ int isnan(double x);
 template <typename TYPE> TYPE Min(const TYPE& x, const TYPE& y) { return (x < y) ? x : y; }
 template <typename TYPE> TYPE Max(const TYPE& x, const TYPE& y) { return (x < y) ? y : x; }
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
-size_t IDX(int i, size_t nb);
-size_t IDX(size_t i, size_t nb);
-size_t Next(int i, size_t nb);
-size_t Next(size_t i, size_t nb);
-size_t Previous(int i, size_t nb);
-size_t Previous(size_t i, size_t nb);
+size_t IDX(const int& i, const size_t& nb);
+size_t IDX(const size_t& i, const size_t& nb);
+size_t Next(const int& i, const size_t& nb, const bool& inverseDir=false);
+size_t Next(const size_t& i, const size_t& nb, const bool& inverseDir=false);
+size_t Previous(const int& i, const size_t& nb, const bool& inverseDir=false);
+size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir=false);
 #define NEXT_OF(list,element) (std::next(element)==(list).end())?(list).begin():std::next(element);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }
@@ -94,6 +94,9 @@ double GetElement(const std::pair<double, double>& pair, const bool& first);
 double GetElement(const std::pair<double, std::vector<double>> & pair, const bool& first, const size_t& elementIndex);
 
 size_t GetSysTimeMs();
+
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
 
 //Elementwise addition of two vectors:
 #include <algorithm>

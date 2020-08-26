@@ -32,30 +32,48 @@ bool IsEqual(const double &a, const double &b, double toleranceRatio) {
 	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
 }
 
-size_t  IDX(int i, size_t nb) {
-	return (i < 0) ? (nb + i) : (i%nb);
+size_t IDX(const int& i, const size_t& nb) {
+	//Return circular index restrained within 0..nb, allows negative index (Python logics: -1=last)
+    int ret = i%nb;
+    return (ret>=0)?(ret):(ret+nb);
 }
 
-size_t IDX(size_t i, size_t nb) {
+size_t IDX(const size_t& i, const size_t& nb) {
+	//Return circular index restrained within 0..nb
 	return i%nb;
 }
 
 
-size_t Next(int i, size_t nb) {
-	return (i+1)%nb;
+size_t Next(const int& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the next element of a circular index (next of last is first)
+	//inverseDir is a helper: when true, returns the previous
+	return Next((size_t)i,nb,inverseDir);
 }
 
-size_t Next(size_t i, size_t nb) {
-	return (i+1)%nb;
+size_t Next(const size_t& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the next element of a circular index (next of last is first)
+	//inverseDir is a helper: when true, returns the previous
+	if (!inverseDir) {
+		size_t next=i+1;
+		if (next==nb) next = 0;
+		return next;
+	} else return Previous(i,nb,false);
 }
 
-size_t Previous(int i, size_t nb) {
-	return IDX(i - 1, nb);
+size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir) {
+	//Returns the previous element of a circular index (previous of first is last)
+	//inverseDir is a helper: when true, returns the next
+	if (!inverseDir) {
+		if (i==0) return nb-1;
+		else return i-1;
+	} else return Next(i,nb,false);
 }
 
-size_t Previous(size_t i, size_t nb) {
-	return IDX((int)i - 1, nb);
+size_t Previous(const int& i, const size_t& nb, const bool& inverseDir) {
+	return Previous((size_t)i,nb,inverseDir);
 }
+
+
 
 size_t GetPower2(size_t n) {
 // Return a power of 2 which is greater or equal than n
@@ -405,6 +423,51 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
 	return l-1;
 }
 
+/*!
+ * @brief Lookup the index of the interval related to a given key
+ * @param key specific moment
+ * @param moments vector of time intervals
+ * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
+ */
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
+    /*int lowerBound = my_lower_bound(key, moments, true);
+    if(lowerBound != -1 && lowerBound < moments.size()){
+        if(moments[lowerBound].first <= key && key < moments[lowerBound].second){
+            return lowerBound + 1;
+        }
+    }
+    return -1;*/
+    auto lowerBound = std::lower_bound(moments.begin(), moments.end(), std::make_pair(key,key));
+    --lowerBound; //even moments.end() can be a bound
+
+    if(lowerBound->first <= key && key < lowerBound->second){
+        return std::distance(moments.begin(), lowerBound) + 1;
+    }
+    return -1;
+}
+
+/*!
+ * @brief Lookup the index of the interval related to a given key and a start position for accelerated lookup
+ * @param key specific moment
+ * @param moments vector of time intervals
+ * @param startIndex offset to only look in a subset of moments
+ * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
+ */
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
+
+    if(!moments.empty()) {
+        auto lowerBound = std::lower_bound(moments.begin() + startIndex, moments.end(), std::make_pair(key, key));
+        if(lowerBound == moments.begin())
+            return -1;
+        --lowerBound; //even moments.end() can be a bound
+
+        if (lowerBound->first <= key && key < lowerBound->second) {
+            return std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1;
+        }
+    }
+    return -1;
+}
+
 double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool & first, const bool & logarithmic, const bool & allowExtrapolate) {
 	//InterpolateX and InterpolateY
 	//Avoids repeated code with minor changes only
@@ -511,11 +574,11 @@ int weighed_lower_bound_X(const double & key, const double & weigh, double * A, 
 	
 }
 
-double GetElement(const std::pair<double, double>& pair, const bool & first) {
+inline double GetElement(const std::pair<double, double>& pair, const bool & first) {
 	return first ? pair.first : pair.second;
 }
 
-double GetElement(const std::pair<double, std::vector<double>>& pair, const bool & first, const size_t & elementIndex) {
+inline double GetElement(const std::pair<double, std::vector<double>>& pair, const bool & first, const size_t & elementIndex) {
 	return first ? pair.first : pair.second[elementIndex];
 }
 

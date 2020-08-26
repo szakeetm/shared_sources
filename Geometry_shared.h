@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
-#define GEOVERSION   15
+#define GEOVERSION   16
 
 class Facet;
 class DeletedFacet;

@@ -200,6 +200,8 @@ void Worker::ThrowSubProcError(const char *message) {
 }
 
 void Worker::Reload() {
+    //Schedules a reload
+    //Actual reloading is done by RealReload() method
     needsReload = true;
 }
 
@@ -296,10 +298,12 @@ size_t Worker::GetPID(size_t prIdx) {
 
 void Worker::RebuildTextures() {
 
-    if (needsReload)
-        RealReload();
-
     if (mApp->needsTexture || mApp->needsDirection) {
+
+        // Only reload if we are even rebuilding textures
+        if (needsReload)
+            RealReload();
+
         BYTE *buffer = simManager.GetLockedHitBuffer();
         if (!buffer)
             return;
@@ -413,7 +417,7 @@ void Worker::Update(float appTime) {
         memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #if defined(MOLFLOW)
-        memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
+            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer),
                sizeof(FacetHitBuffer));
 
         if (f->sh.anglemapParams.record) {
