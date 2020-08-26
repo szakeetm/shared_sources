@@ -501,7 +501,8 @@ void Interface::ExportSelection() {
     progressDlg2->SetVisible(true);
     //GLWindowManager::Repaint();
     if (!fileName.empty()) {
-
+        std::string ext = FileUtils::GetExtension(fileName);
+        if (ext.empty()) fileName += (compressSavedFiles ? ".zip" : ".xml"); //This is also done within worker.SaveGeometry but we need it to add to recents
         try {
             worker.SaveGeometry(fileName.c_str(), progressDlg2, true, true);
             AddRecent(fileName.c_str());

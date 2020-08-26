@@ -201,8 +201,6 @@ void HistogramPlotter::Refresh() {
 		}
 	}
 	
-
-
 	//Construct combo
 	histCombo->SetSize(histogramFacetIds.size());
 	size_t nbProf = 0;

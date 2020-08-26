@@ -155,21 +155,54 @@ double Weigh(const double & a, const double & b, const double & weigh)
 	return a + (b - a)*weigh;
 }
 
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
-	return InterpolateXY(x, table, true, logarithmic, allowExtrapolate);
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logX, const bool& logY, const bool& allowExtrapolate) {
+	return InterpolateXY(x, table, true, logX, logY, allowExtrapolate);
 }
 
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
-	return InterpolateXY(y, table, false, logarithmic, allowExtrapolate);
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logX, const bool& logY, const bool& allowExtrapolate) {
+	return InterpolateXY(y, table, false, logX, logY, allowExtrapolate);
 }
 
-double InterpolateVectorX(const double& y, const std::vector < std::pair<double, std::vector<double>>> & table, const size_t& elementIndex, const bool& logarithmic, const bool& allowExtrapolate) {
-	//InterpolateX and InterpolateY
+double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool & first, const bool& logX, const bool& logY, const bool & allowExtrapolate) {
+	//InterpolateX and InterpolateY, only differing by first param
+	//Avoids repeated code with minor changes only
+	//returns double
+	//First: if true, interpolate Y for supplied X, otherwise vica versa
+
+	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
+	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
+
+	if (table.size() == 1) return GetElement(table[0], !first);
+
+	int lowerIndex = my_lower_bound(lookupValue, table, first);
+
+	if (lowerIndex == -1) {
+		lowerIndex = 0;
+		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first); //return first element
+	}
+	else if (lowerIndex == (table.size() - 1)) {
+		if (allowExtrapolate) {
+			lowerIndex = (int)table.size() - 2;
+		}
+		else return GetElement(table[lowerIndex], !first); //return last element
+	}
+
+	double delta = (first ? logX : logY) ? log10(GetElement(table[lowerIndex + 1], first)) - log10(GetElement(table[lowerIndex], first)) : GetElement(table[lowerIndex + 1], first) - GetElement(table[lowerIndex], first);
+	double overshoot = (first ? logX : logY) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first)) : lookupValue - GetElement(table[lowerIndex], first);
+
+	if (first ? logY : logX) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first)),log10(GetElement(table[lowerIndex + 1], !first)),overshoot / delta));
+	else return Weigh(GetElement(table[lowerIndex], !first),GetElement(table[lowerIndex + 1], !first),overshoot / delta);
+
+}
+
+double InterpolateVectorX(const double& y, const std::vector < std::pair<double, std::vector<double>>> & table, const size_t& elementIndex, const bool& logX, const bool& logY, const bool& allowExtrapolate) {
+	//Interpolate X belonging to supplied Y
 	//Avoids repeated code with minor changes only
 	//returns double
 
 	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
 	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
+	//elementIndex: which index of the vector to use for interpolation
 	bool first = false;
 	double lookupValue = y;
 
@@ -188,14 +221,14 @@ double InterpolateVectorX(const double& y, const std::vector < std::pair<double,
 		else return GetElement(table[lowerIndex], !first, elementIndex); //return last element
 	}
 
-	double delta = (logarithmic) ? log10(GetElement(table[lowerIndex + 1], first, elementIndex)) - log10(GetElement(table[lowerIndex], first, elementIndex)) : GetElement(table[lowerIndex + 1], first, elementIndex) - GetElement(table[lowerIndex], first, elementIndex);
-	double overshoot = (logarithmic) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first, elementIndex)) : lookupValue - GetElement(table[lowerIndex], first, elementIndex);
+	double delta = (first ? logX : logY) ? log10(GetElement(table[lowerIndex + 1], first, elementIndex)) - log10(GetElement(table[lowerIndex], first, elementIndex)) : GetElement(table[lowerIndex + 1], first, elementIndex) - GetElement(table[lowerIndex], first, elementIndex);
+	double overshoot = (first ? logX : logY) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first, elementIndex)) : lookupValue - GetElement(table[lowerIndex], first, elementIndex);
 
-	if (logarithmic) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first, elementIndex)),log10(GetElement(table[lowerIndex + 1], !first, elementIndex)),overshoot / delta)); //log-log interpolation
+	if (first? logY : logX) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first, elementIndex)),log10(GetElement(table[lowerIndex + 1], !first, elementIndex)),overshoot / delta));
 	else return Weigh(GetElement(table[lowerIndex], !first, elementIndex),GetElement(table[lowerIndex + 1], !first, elementIndex),overshoot / delta);
 }
 
-std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logarithmic, const bool& allowExtrapolate) {
+std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logX, const bool& logY, const bool& allowExtrapolate) {
 	//Same as InterpolateY but returns a vector.
 	//Must repeat most of code because C++ doesn't allow runtime evaluated return-type (and only 'bool first' decides what to return)
 	if (table.size() == 1) return table[0].second;
@@ -213,14 +246,14 @@ std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::p
 		else return table[lowerIndex].second; //return last element
 	}
 
-	double delta = (logarithmic) ? log10(table[lowerIndex + 1].first) - log10(table[lowerIndex].first) : table[lowerIndex + 1].first - table[lowerIndex].first;
-	double overshoot = (logarithmic) ? log10(x) - log10(table[lowerIndex].first) : x - table[lowerIndex].first;
+	double delta = (logX) ? log10(table[lowerIndex + 1].first) - log10(table[lowerIndex].first) : table[lowerIndex + 1].first - table[lowerIndex].first;
+	double overshoot = (logX) ? log10(x) - log10(table[lowerIndex].first) : x - table[lowerIndex].first;
 
 	size_t distrYsize = table[0].second.size();
 	std::vector<double> result; result.resize(distrYsize);
 	for (size_t e = 0; e < distrYsize; e++)
 	{
-		if (logarithmic) result[e]=Pow10(Weigh(log10(table[lowerIndex].second[e]),log10(table[lowerIndex + 1].second[e]), overshoot / delta)); //log-log interpolation
+		if (logY) result[e]=Pow10(Weigh(log10(table[lowerIndex].second[e]),log10(table[lowerIndex + 1].second[e]), overshoot / delta)); //log-log interpolation
 		else result[e]=Weigh(table[lowerIndex].second[e],table[lowerIndex + 1].second[e],overshoot / delta);
 	}
 	return result;
@@ -318,13 +351,11 @@ std::string space2underscore(std::string text) {
 	return text;
 }
 
-bool iequals(std::string a, std::string b)
+bool iequals(std::string str1, std::string str2)
 {
-	return std::equal(a.begin(), a.end(),
-		b.begin(), b.end(),
-		[](char a, char b) {
-		return tolower(a) == tolower(b);
-	});
+	//From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
+	return str1.size() == str2.size() 
+	&& std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
 }
 
 int my_lower_bound(const double & key, double* A,const size_t& size)
@@ -468,37 +499,6 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
     return -1;
 }
 
-double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool & first, const bool & logarithmic, const bool & allowExtrapolate) {
-	//InterpolateX and InterpolateY
-	//Avoids repeated code with minor changes only
-	//returns double
-
-	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
-	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
-
-	if (table.size() == 1) return GetElement(table[0], !first);
-
-	int lowerIndex = my_lower_bound(lookupValue, table, first);
-
-	if (lowerIndex == -1) {
-		lowerIndex = 0;
-		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first); //return first element
-	}
-	else if (lowerIndex == (table.size() - 1)) {
-		if (allowExtrapolate) {
-			lowerIndex = (int)table.size() - 2;
-		}
-		else return GetElement(table[lowerIndex], !first); //return last element
-	}
-
-	// linear interpolation
-	double delta = (logarithmic) ? log10(GetElement(table[lowerIndex + 1], first)) - log10(GetElement(table[lowerIndex], first)) : GetElement(table[lowerIndex + 1], first) - GetElement(table[lowerIndex], first);
-	double overshoot = (logarithmic) ? log10(lookupValue) - log10(GetElement(table[lowerIndex], first)) : lookupValue - GetElement(table[lowerIndex], first);
-
-	if (logarithmic) return Pow10(Weigh(log10(GetElement(table[lowerIndex], !first)),log10(GetElement(table[lowerIndex + 1], !first)),overshoot / delta)); //log-log interpolation
-	else return Weigh(GetElement(table[lowerIndex], !first),GetElement(table[lowerIndex + 1], !first),overshoot / delta);
-
-}
 
 /*double QuadraticInterpolateX(const double& y,
 	const double& a, const double& b, const double& c,

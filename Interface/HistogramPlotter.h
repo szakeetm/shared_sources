@@ -54,9 +54,9 @@ public:
   HistogramPlotter(Worker *w);
 
   // Component method
-  void Refresh();
-  void Update(float appTime,bool force=false);
-  void Reset();
+  void Refresh(); //Rebuild combo and call refreshChart()
+  void Update(float appTime,bool force=false); //Checks appTime and calls refreshChart() if >1 second since update or if force==true
+  void Reset(); //Removes all views, then calls Refresh()
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -66,7 +66,7 @@ private:
 
   void addView(int facetId);
   void remView(int facetId);
-  void refreshChart();
+  void refreshChart(); //refreshes chart values
 
   std::tuple<std::vector<double>*, double, double,size_t> GetHistogramValues(int facetId, size_t modeId);
 

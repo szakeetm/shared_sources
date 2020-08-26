@@ -3049,7 +3049,7 @@ void Geometry::CreateLoft() {
 
 	//Find boundaries of regions on the first facet that are the closest to the same point on facet 2
 	for (size_t i = 0; i < closestIndices1.size(); i++) {
-		size_t previousId = Previous(i + closestIndices1.size() , closestIndices1.size());
+		size_t previousId = Previous(i , closestIndices1.size());
 		size_t nextId = Next(i , closestIndices1.size());
 		closestIndices1[i].boundary = (closestIndices1[i].index != closestIndices1[nextId].index) || (closestIndices1[i].index != closestIndices1[previousId].index);
 	}
@@ -3122,7 +3122,7 @@ void Geometry::CreateLoft() {
 
 	//Detect boundaries on facet 2
 	for (size_t i = 0; i < closestIndices2.size(); i++) {
-		size_t previousId = Previous(i + closestIndices2.size() , closestIndices2.size());
+		size_t previousId = Previous(i  , closestIndices2.size());
 		size_t nextId = Next(i , closestIndices2.size());
 		closestIndices2[i].boundary = (closestIndices2[i].index != closestIndices2[nextId].index) || (closestIndices2[i].index != closestIndices2[previousId].index);
 		closestIndices2[i].visited = false; //Reset this flag, will use to make sure we don't miss anything on facet2
@@ -4044,10 +4044,10 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			if (facets[i]->sh.superDest > 0) facets[i]->sh.superDest += sh.nbSuper;
 		}
 		else {
-
 			facets[i]->sh.superIdx += static_cast<int>(strIdx);
 			if (facets[i]->sh.superDest > 0) facets[i]->sh.superDest += strIdx;
 		}
+		if (facets[i]->sh.teleportDest>0) facets[i]->sh.teleportDest += sh.nbFacet; //Offset teleport target
 	}
 
 	sh.nbVertex += nbNewVertex;
@@ -4421,7 +4421,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 			f[nb++] = fac;
 #if defined(MOLFLOW)
 			if (toMap) { //set outgassing values
-				f[nb - 1]->sh.outgassing = *(values + count++) *0.100; //0.1: mbar*l/s->Pa*m3/s
+				f[nb - 1]->sh.outgassing = *(values + count++) * MBARLS_TO_PAM3S; //0.1: mbar*l/s->Pa*m3/s
 				if (f[nb - 1]->sh.outgassing > 0.0) {
 					f[nb - 1]->sh.desorbType = desType + 1;
 					f[nb - 1]->selected = true;

@@ -341,7 +341,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == generalDurationText) {
 
-      if (iequals(generalDurationText->GetText().c_str(),"infinty")) {
+      if (iequals(generalDurationText->GetText().c_str(),"infinity")) {
         chart->SetDisplayDuration(MAX_VALUE);
         return;
       }

@@ -95,6 +95,7 @@ public:
   //void Exit(); // Free all allocated resource
   void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
+  void RetrieveHistogramCache(BYTE* dpHitStartAddress);
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
@@ -131,14 +132,13 @@ public:
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
-    static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
-    static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
-
-        int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
+  static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
+  static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
+  int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
   std::vector<Moment> ParseMoment(std::string userInput, double timeWindow); //Parses a user input and returns a vector of time moments
   void ResetMoments();
   double GetMoleculesPerTP(size_t moment);
-  std::vector<std::pair<double, double>> Generate_ID(int paramId);
+  IntegratedDesorption Generate_ID(int paramId);
   int GenerateNewID(int paramId);
   std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
   int GenerateNewCDF(double temperature);
@@ -186,7 +186,7 @@ public:
   size_t InsertParametersBeforeCatalog(const std::vector<Parameter>& newParams);
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
-  std::vector<std::vector<std::pair<double, double>>> IDs; //integrated distribution function for each time-dependent desorption type
+  std::vector<IntegratedDesorption> IDs; //integrated distribution function for each time-dependent desorption type
   std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
     std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
