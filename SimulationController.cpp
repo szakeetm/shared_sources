@@ -91,7 +91,7 @@ int SimulationController::RunSimulation() {
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
     {
         if (t1 - t0 != 0.0)
-            stepsPerSec = (5.0 * nbStep) / (t1 - t0); // every 1.0 second
+            stepsPerSec = (1.0 * nbStep) / (t1 - t0); // every 1.0 second
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
     }
@@ -254,7 +254,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     SetStatus(GetSimuStatus()); //update hits only
                     eos = RunSimulation();      // Run during 1 sec
                     if ((GetLocalState() != PROCESS_ERROR)) {
-                        //simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                        simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                     }
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
