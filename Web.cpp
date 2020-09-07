@@ -72,7 +72,12 @@ std::tuple<CURLcode, long> DownloadFile(std::string url, std::string fileName) {
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 		result = curl_easy_perform(curl);
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &respCode);
+		if (result == CURLE_OK) {
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &respCode);
+		}
+		else {
+			respCode = 0;
+		}
 		curl_easy_cleanup(curl);
 		fclose(fp);
 		return { result,respCode };
