@@ -11,6 +11,7 @@
 #include "../GLLabel.h"
 #include "../GLTextField.h"
 #include "../MathTools.h"
+#include "Helper/StringHelper.h"
 #include "AxisPanel.h"
 
 static int textCR = 0;

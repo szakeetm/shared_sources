@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <filesystem>
 #include <sstream>
 #include "GLApp/MathTools.h" //Contains
+#include "Helper/StringHelper.h"
 
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLList.h"
@@ -373,6 +374,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	payload << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
 	payload << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+	logWindow->Log("Current directory: " + std::filesystem::current_path().u8string());
 	logWindow->Log("Downloading update file...");
 
 	std::string resultCategory;
@@ -381,8 +383,8 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 
 	//Download the zipped new version to parent directory
 	std::stringstream zipDest; zipDest << "../" << update.zipName;
-	CURLcode dlResult = DownloadFile(update.zipUrl, zipDest.str());
-	if (dlResult == CURLE_OK) { //Download success
+	auto [dlResult,httpResponse] = DownloadFile(update.zipUrl, zipDest.str());
+	if (dlResult == CURLE_OK && httpResponse == 200) { //Download success
 		userResult.str("");
 		userResult.clear();
 		userResult << "Downloaded " << update.zipUrl << " to " << zipDest.str();
@@ -538,13 +540,14 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	}
 	else {
 		resultCategory = "zipDownloadError";
-		resultDetail << "zipDownloadError_" << dlResult << "_" << applicationName << "_" << currentVersionId;
+		resultDetail << "zipDownloadError_curl" << dlResult << "_http" << httpResponse << "_" << applicationName << "_" << currentVersionId;
 		userResult.str(""); userResult.clear();
 		if (dlResult == CURLE_WRITE_ERROR) {
 			userResult << "Couldn't write local file " << zipDest.str() << "\nCheck if you have access to write there.";
 		}
 		else {
 			userResult << "Couldn't download " << update.zipUrl << " to " << zipDest.str() << "\nNo network connection or the file doesn't exist on the server.";
+			userResult << "\nHttp response code: " << httpResponse;
 		}
 		logWindow->Log(userResult.str());
 		logWindow->Log("Aborting update process.");
@@ -855,8 +858,9 @@ void UpdateLogWindow::ClearLog() {
 * \brief Appends line to the log
 * \param line line that gets appended to the log
 */
-void UpdateLogWindow::Log(const std::string & line) {
-	lines.push_back(line);
+void UpdateLogWindow::Log(const std::string & text) {
+	auto newLines = SplitString(text, '\n');
+	lines.insert(lines.end(),newLines.begin(),newLines.end());
 	if (!isLocked) {
 		isLocked = true;
 		RebuildList();
