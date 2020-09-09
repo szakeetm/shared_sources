@@ -1233,9 +1233,10 @@ if( showVolume || showTexture ) {
 	DrawLeak();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 
-	// Draw opaque facets etc. just after everything else has been rendered
+	// Draw semi-transparent facets etc. just after everything else has been rendered
     if(mApp->highlightSelection)
-	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+        geom->RenderSemiTransparent((GLfloat *) matView, showVolume, showTexture, cullMode, showFilter, showHidden,
+                                    showMesh, showDir);
 
     // Draw on top of everything
     if (showFacetId && (!detailsSuppressed)) DrawFacetId();

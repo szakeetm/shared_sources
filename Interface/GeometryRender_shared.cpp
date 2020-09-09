@@ -26,6 +26,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include "GLApp/GLMatrix.h"
 #include <tuple>
+#include <Helper/GraphicsHelper.h>
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #include "Interface/Interface.h"
@@ -524,26 +526,6 @@ void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset)
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
 	size_t i1;
-
-    /*// Draw transparent overlay
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    *//*glEnable(GL_POLYGON_OFFSET_LINE);
-    if (selOffset) {
-        glPolygonOffset(0.0f, 1.0f);
-    }
-    else {
-
-        glPolygonOffset(0.0f, 5.0f);
-    }*//*
-    glBegin(GL_POLYGON);
-    for (size_t j = 0; j < nb; j++) {
-        i1 = f->indices[j];
-        glEdgeFlag(f->visible[j] || showHidden);
-        glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
-    }
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //glDisable(GL_POLYGON_OFFSET_LINE);*/
 
 	if (offset) {
 
@@ -1275,27 +1257,14 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 }
 
-void Geometry::RenderOpaque(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+void Geometry::RenderSemiTransparent(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
     if (mApp->antiAliasing) {
         glEnable(GL_BLEND);
         glEnable(GL_LINE_SMOOTH);
     }
 
-    //glBlendFunc(GL_ONE, GL_ZERO);
-    //glColor4f(1.0f, 0.0f, 0.0f,0.4f);    //red
-
-    /*if (showHidden) {
-        glDisable(GL_DEPTH_TEST);
-        glCallList(selectHighlightList);
-        glEnable(GL_DEPTH_TEST);
-    }
-    else {*/
-        //glCallList(selectHighlightList);
-    //glDisable(GL_DEPTH_TEST);
-
     glCallList(selectHighlightList);
 
-    //glEnable(GL_DEPTH_TEST);
     if (mApp->antiAliasing) {
         glDisable(GL_LINE_SMOOTH);
         glDisable(GL_BLEND);
@@ -1449,94 +1418,6 @@ void Geometry::BuildShapeList() {
 
 }
 
-void RGBtoHSV(float& R, float& G, float& B) {
-    float H = 0.0f;
-    float S = 0.0f;
-    float V = 0.0f;
-    
-    float maxColor = std::max(std::max(R, G), B);
-    float minColor = std::min(std::min(R, G), B);
-    float colorDelta = maxColor - minColor;
-
-    if(colorDelta > 0) {
-        if(maxColor == R) {
-            H = 60.0f * (std::fmod(((G - B) / colorDelta), 6.0f));
-        } else if(maxColor == G) {
-            H = 60.0f * (((B - R) / colorDelta) + 2.0f);
-        } else {
-            H = 60.0f * (((R - G) / colorDelta) + 4.0f);
-        }
-
-        if(maxColor > 0.0) {
-            S = colorDelta / maxColor;
-        } else {
-            S = 0.0;
-        }
-
-        V = maxColor;
-    } else {
-        H = 0.0;
-        S = 0.0;
-        V = maxColor;
-    }
-
-    if(H < 0.0) {
-        H += 360.0f;
-    }
-    R=H;
-    G=S;
-    B=V;
-}
-
-void HSVtoRGB(float& H, float& S, float& V) {
-    float R = 0.0f;
-    float G = 0.0f;
-    float B = 0.0f;
-
-    float chromaVal = V * S;
-    float hVal = std::fmod(H / 60.0f, 6.0f);
-    float xVal = chromaVal * (1.0f - std::fabs(std::fmod(hVal, 2.0f) - 1.0f));
-    float modVal = V - chromaVal;
-
-    if(0.0f <= hVal && hVal < 1.0f) {
-        R = chromaVal;
-        G = xVal;
-        B = 0.0f;
-    } else if(hVal < 2.0f) {
-        R = xVal;
-        G = chromaVal;
-        B = 0.0f;
-    } else if(hVal < 3.0f) {
-        R = 0.0f;
-        G = chromaVal;
-        B = xVal;
-    } else if(hVal < 4.0f) {
-        R = 0.0f;
-        G = xVal;
-        B = chromaVal;
-    } else if(hVal < 5.0f) {
-        R = xVal;
-        G = 0.0f;
-        B = chromaVal;
-    } else if(hVal < 6.0f) {
-        R = chromaVal;
-        G = 0.0f;
-        B = xVal;
-    } else {
-        R = 0.0f;
-        G = 0.0f;
-        B = 0.0f;
-    }
-
-    R += modVal;
-    G += modVal;
-    B += modVal;
-
-    H = R;
-    S = G;
-    V = B;
-}
-
 void Geometry::BuildSelectList() {
 
 	selectList = glGenLists(1);
@@ -1649,16 +1530,9 @@ void Geometry::BuildSelectList() {
                 float g = static_cast<float>(it->second.g) / 255.0f;
                 float b = static_cast<float>(it->second.b) / 255.0f;
 
-                RGBtoHSV(r, g, b);
-                g = std::clamp(g*1.2f,0.0f,1.0f); // change Saturity
-                b = std::clamp(b*1.2f,0.0f,1.0f); // change brighness Value
-                HSVtoRGB(r, g, b);
-                g = std::clamp(g,0.0f,1.0f); // account for conversion overflow
-                b = std::clamp(b,0.0f,1.0f);
+                // incrase brightness and saturity
+                modifyRGBColor(r, g, b, 1.2f, 1.2f);
 
-                r = r / 1.0f;
-                g = g / 1.0f;
-                b = b / 1.0f;
                 glColor3f(r, g, b);
                 Facet *f = facets[sel];
                 DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
