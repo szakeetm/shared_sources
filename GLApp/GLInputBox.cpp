@@ -4,7 +4,7 @@
 #include "GLLabel.h"
 #include "GLTextField.h"
 #include "GLToolkit.h"
-#include "MathTools.h"
+#include "Helper/MathTools.h"
 #include <cstring> //strcpy, etc.
 
 static char ret[1024];

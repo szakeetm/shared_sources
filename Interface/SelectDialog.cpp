@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 
 #include "Geometry_shared.h"
-#include "GLApp/MathTools.h" //Splitstring
+#include "Helper/MathTools.h" //Splitstring
 #include <numeric> //iota
 #include <Helper/StringHelper.h>
 

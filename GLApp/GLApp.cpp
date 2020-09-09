@@ -8,7 +8,7 @@
 #endif
 
 #include "GLApp.h"
-#include "MathTools.h" //Min, max
+#include "Helper/MathTools.h" //Min, max
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
 #include "GLComponent.h"

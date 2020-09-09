@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include <Windows.h>
 #include <filesystem>
 #include <sstream>
-#include "GLApp/MathTools.h" //Contains
+#include "Helper/MathTools.h" //Contains
 #include "Helper/StringHelper.h"
 
 #include "GLApp/GLToolkit.h"

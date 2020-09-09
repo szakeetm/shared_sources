@@ -4,7 +4,7 @@
 #include "GLLabel.h"
 #include "GLIcon.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Min max Saturate
+#include "Helper/MathTools.h" //Min max Saturate
 #include "GLWindowManager.h"
 
 // Construct a message dialog box

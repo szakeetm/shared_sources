@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "GLScrollBar.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include "GLFont.h"
 
 // Minimum slider width

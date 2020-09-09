@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Geometry_shared.h"
 #include "Worker.h"
-#include "GLApp/MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 #include "GLApp/GLToolkit.h"
 #include <string.h>
 #include <math.h>

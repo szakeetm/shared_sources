@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLTextField.h"
 #include "GLApp/GLLabel.h"
-#include "GLApp/MathTools.h" //IsEqual
+#include "Helper/MathTools.h" //IsEqual
 #include "GLApp/GLButton.h"
 
 #include "Geometry_shared.h"

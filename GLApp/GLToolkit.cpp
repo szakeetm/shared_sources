@@ -1,6 +1,6 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #include "GLToolkit.h"
-#include "MathTools.h" //Min max saturate
+#include "Helper/MathTools.h" //Min max saturate
 #include "GLFont.h"
 #include "GLApp.h"
 #include "GLWindow.h"

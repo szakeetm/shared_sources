@@ -1,7 +1,7 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #include "GLChart.h"
 #include "../GLTypes.h"
-#include "../MathTools.h" //PI
+#include "Helper/MathTools.h" //PI
 //#include <malloc.h>
 #include <float.h>
 #include <math.h>

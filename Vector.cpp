@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Vector.h"
-#include "GLApp/MathTools.h" //PI
+#include "Helper/MathTools.h" //PI
 #include <math.h> //sqrt
 
 Vector2d::Vector2d() {}

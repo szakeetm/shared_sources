@@ -7,7 +7,7 @@
 #include "GLButton.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 //#include <malloc.h>
 #define cimg_display 0
 #define cimg_use_png 1

@@ -18,28 +18,27 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "MathTools.h"
-#include "GLTypes.h" //bool
-#include <math.h>
+#include "Random.h"
+
+#include <cmath>
 #include <cstdio>
 #include <algorithm> //std::Lower_bound
-#include <sstream>
 #include <iterator>
-#include "Random.h"
 #include <chrono>
-#include <string.h> //strdup
+#include <cstring> //strdup
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
 	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
 }
 
 size_t IDX(const int& i, const size_t& nb) {
-	//Return circular index restrained within 0..nb, allows negative index (Python logics: -1=last)
-    int ret = i%nb;
+	//Return circular index restrained within [0..nb[, allows negative index (Python logics: -1=last)
+    int ret = i%(int)nb;
     return (ret>=0)?(ret):(ret+nb);
 }
 
 size_t IDX(const size_t& i, const size_t& nb) {
-	//Return circular index restrained within 0..nb
+	//Return circular index restrained within [0..nb[
 	return i%nb;
 }
 

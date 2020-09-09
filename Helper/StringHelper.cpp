@@ -5,8 +5,10 @@
 #include <stdexcept>
 #include <sstream>
 #include <numeric>
+#include <iterator>
+
 #include <GLApp/GLTypes.h>
-#include "GLApp/MathTools.h"
+#include "MathTools.h"
 #include "StringHelper.h"
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
