@@ -187,7 +187,6 @@ set(SRC_FILES ${SRC_FILES}
         GLApp/GLUnitDialog.cpp
         GLApp/GLWindow.cpp
         GLApp/GLWindowManager.cpp
-        GLApp/MathTools.cpp
         GLApp/GLChart/AxisPanel.cpp
         GLApp/GLChart/GLAxis.cpp
         GLApp/GLChart/GLChart.cpp
