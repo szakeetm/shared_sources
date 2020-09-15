@@ -939,6 +939,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("Test")->Add(NULL);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
+    menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     geomNumber = new GLTextField(0, NULL);
     geomNumber->SetEditable(false);
@@ -1796,6 +1797,16 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         this->worker.Reload();
                     }
                     return true;
+                case MENU_CMP_RES: {
+                    std::string fileName = NFD_OpenFile_Cpp("xml", "");
+                    std::string fileName_rhs = NFD_OpenFile_Cpp("xml", "");
+
+                    if (fileName.empty() || fileName_rhs.empty()) {
+                        return false;
+                    }
+                    worker.GetGeometry()->CompareXML_simustate(fileName, fileName_rhs, 1e-3);
+                    return true;
+                }
                 case MENU_ABOUT:
                 {
                     std::ostringstream aboutText;
