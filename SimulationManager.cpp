@@ -364,11 +364,23 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     int timeOutAt = 10000; // 10 sec
     allProcsDone = true;
 
+    std::vector<char[128]> prevStateStrings(simHandles.size());
+    std::vector<char[128]> stateStrings(simHandles.size());
+
+    AccessDataport(dpControl);
+    {
+        auto *shMaster = (SHCONTROL *) dpControl->buff;
+        for (size_t i = 0; i < simHandles.size(); i++) {
+            snprintf(prevStateStrings[i], 128, shMaster->procInformation[i].statusString);
+        }
+    }
+    ReleaseDataport(dpControl);
+
     do {
 
         finished = true;
         AccessDataport(dpControl);
-        auto *shMaster = (SHCONTROL *)dpControl->buff;
+        auto *shMaster = (SHCONTROL *) dpControl->buff;
 
         for (size_t i = 0; i < simHandles.size(); i++) {
             auto procState = shMaster->procInformation[i].slaveState;
@@ -377,7 +389,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
                 error = true;
             }
             else if(procState == PROCESS_STARTING){
-                timeOutAt = 20000; // if task properly started, increase allowed wait time
+                snprintf(stateStrings[i], 128, shMaster->procInformation[i].statusString);
+                if(strcmp(prevStateStrings[i], stateStrings[i])) // if strings are different
+                    timeOutAt += 10000; // if task properly started, increase allowed wait time
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
