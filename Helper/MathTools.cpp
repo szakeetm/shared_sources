@@ -18,28 +18,27 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "MathTools.h"
-#include "GLTypes.h" //bool
-#include <math.h>
+#include "Random.h"
+
+#include <cmath>
 #include <cstdio>
 #include <algorithm> //std::Lower_bound
-#include <sstream>
 #include <iterator>
-#include "Random.h"
 #include <chrono>
-#include <string.h> //strdup
+#include <cstring> //strdup
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
 	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
 }
 
 size_t IDX(const int& i, const size_t& nb) {
-	//Return circular index restrained within 0..nb, allows negative index (Python logics: -1=last)
-    int ret = i%nb;
+	//Return circular index restrained within [0..nb[, allows negative index (Python logics: -1=last)
+    int ret = i%(int)nb;
     return (ret>=0)?(ret):(ret+nb);
 }
 
 size_t IDX(const size_t& i, const size_t& nb) {
-	//Return circular index restrained within 0..nb
+	//Return circular index restrained within [0..nb[
 	return i%nb;
 }
 
@@ -303,60 +302,6 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 }
 */
 
-std::vector<std::string> SplitString(std::string const &input) {
-	//Split string by whitespaces
-	std::istringstream buffer(input);
-	std::vector<std::string> ret;
-
-	std::copy(std::istream_iterator<std::string>(buffer),
-		std::istream_iterator<std::string>(),
-		std::back_inserter(ret));
-	return ret;
-}
-
-std::vector<std::string> SplitString(std::string const & input, const char & delimiter)
-{
-		std::vector<std::string> result;
-		const char* str = strdup(input.c_str());
-		do
-		{
-			const char *begin = str;
-			while (*str != delimiter && *str)
-				str++;
-
-			result.push_back(std::string(begin, str));
-		} while (0 != *str++);
-		return result;
-}
-
-bool endsWith(std::string const &fullString, std::string const &ending) {
-	if (fullString.length() >= ending.length()) {
-		return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
-	}
-	else {
-		return false;
-	}
-}
-
-bool beginsWith(std::string const &fullString, std::string const &beginning) {
-	return (fullString.compare(0, beginning.length(), beginning) == 0);
-}
-
-std::string space2underscore(std::string text) {
-	for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
-		if (*it == ' ') {
-			*it = '_';
-		}
-	}
-	return text;
-}
-
-bool iequals(std::string str1, std::string str2)
-{
-	//From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
-	return str1.size() == str2.size() 
-	&& std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
-}
 
 int my_lower_bound(const double & key, double* A,const size_t& size)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm

@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "GLLabel.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 #include <string.h>
 
 //#include <malloc.h>

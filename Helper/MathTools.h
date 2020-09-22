@@ -75,14 +75,6 @@ template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const T
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
-std::vector<std::string> SplitString(std::string const &input);
-std::vector<std::string> SplitString(std::string const &input,const char &delimiter);
-
-bool endsWith(std::string const & fullString, std::string const & ending);
-bool beginsWith(std::string const & fullString, std::string const & beginning);
-std::string space2underscore(std::string text);
-bool iequals(std::string a,std::string b);
-
 int my_lower_bound(const double& key, double* A,const size_t& size);
 int my_lower_bound(const double& key, const std::vector<double>& A);
 int my_lower_bound(const double& key, const std::vector<std::pair<double, double>>& A, const bool& first);
@@ -96,7 +88,7 @@ double GetElement(const std::pair<double, std::vector<double>> & pair, const boo
 size_t GetSysTimeMs();
 
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, size_t startIndex);
 
 //Elementwise addition of two vectors:
 #include <algorithm>

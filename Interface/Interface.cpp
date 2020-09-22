@@ -38,7 +38,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLInputBox.h"
 #include "GLApp/GLSaveDialog.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp/MathTools.h" //IDX
+#include "Helper/MathTools.h" //IDX
 #include "RecoveryDialog.h"
 #include "Facet_shared.h"
 

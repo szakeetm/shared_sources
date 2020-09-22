@@ -5,8 +5,10 @@
 #include <stdexcept>
 #include <sstream>
 #include <numeric>
+#include <iterator>
+
 #include <GLApp/GLTypes.h>
-#include "GLApp/MathTools.h"
+#include "MathTools.h"
 #include "StringHelper.h"
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
@@ -86,4 +88,59 @@ std::string AbbreviateString(const std::string& input, size_t maxLength)
     size_t fromEnd = (maxLength - 2) / 2;
     std::string result = input.substr(0, fromBeginning) + "..." + input.substr(input.length() - fromEnd);
     return result;
+}
+
+std::vector<std::string> SplitString(std::string const& input) {
+    //Split string by whitespaces
+    std::istringstream buffer(input);
+    std::vector<std::string> ret;
+
+    std::copy(std::istream_iterator<std::string>(buffer),
+        std::istream_iterator<std::string>(),
+        std::back_inserter(ret));
+    return ret;
+}
+
+std::vector<std::string> SplitString(std::string const& input, const char& delimiter)
+{
+    std::vector<std::string> result;
+    const char* str = strdup(input.c_str());
+    do
+    {
+        const char* begin = str;
+        while (*str != delimiter && *str)
+            str++;
+
+        result.push_back(std::string(begin, str));
+    } while (0 != *str++);
+    return result;
+}
+
+bool endsWith(std::string const& fullString, std::string const& ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    }
+    else {
+        return false;
+    }
+}
+
+bool beginsWith(std::string const& fullString, std::string const& beginning) {
+    return (fullString.compare(0, beginning.length(), beginning) == 0);
+}
+
+std::string space2underscore(std::string text) {
+    for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
+        if (*it == ' ') {
+            *it = '_';
+        }
+    }
+    return text;
+}
+
+bool iequals(std::string str1, std::string str2)
+{
+    //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
+    return str1.size() == str2.size()
+        && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
 }

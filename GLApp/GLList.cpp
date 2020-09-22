@@ -7,7 +7,7 @@
 #include "GLMenu.h"
 #include "GLToolkit.h"
 #include "GLTextField.h"
-#include "MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 //#include <malloc.h>
 #include  <math.h>
 #include <algorithm> //Sort

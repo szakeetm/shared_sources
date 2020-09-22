@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "GLGradient.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include "GLChart/GLChart.h"
 #include "GLLabel.h"
 #include "GLApp.h"

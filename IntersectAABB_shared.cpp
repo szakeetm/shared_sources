@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "IntersectAABB_shared.h"
 #include "Random.h"
 #include "Polygon.h" //IsInPoly
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 #include <algorithm> //std::min
 #include "../src/Simulation.h"
 #include <tuple>

@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GeometryViewer.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp/MathTools.h" //
+#include "Helper/MathTools.h" //
 #include "GLApp/GLMatrix.h"
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLLabel.h"
@@ -1233,9 +1233,10 @@ if( showVolume || showTexture ) {
 	DrawLeak();
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 
-	// Draw opaque facets etc. just after everything else has been rendered
+	// Draw semi-transparent facets etc. just after everything else has been rendered
     if(mApp->highlightSelection)
-	    geom->RenderOpaque((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+        geom->RenderSemiTransparent((GLfloat *) matView, showVolume, showTexture, cullMode, showFilter, showHidden,
+                                    showMesh, showDir);
 
     // Draw on top of everything
     if (showFacetId && (!detailsSuppressed)) DrawFacetId();

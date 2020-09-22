@@ -3,7 +3,7 @@
 #include "GLSpinner.h"
 #include "GLToolkit.h"
 #include "GLFont.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include <cstring> //strcpy, etc.
 
 GLSpinner::GLSpinner(int compId):GLComponent(compId) {

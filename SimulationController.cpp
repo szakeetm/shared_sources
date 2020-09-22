@@ -371,10 +371,15 @@ bool SimulationController::Load() {
 
     printf("Connected to %s\n", loadDpName);
 
+
     SetState(PROCESS_STARTING, "Loading simulation");
-    if (!simulation->LoadSimulation(loader)) {
-        CLOSEDPSUB(loader);
-        return this->loadOK;
+    {
+        auto *master = (SHCONTROL *) this->dpControl->buff;
+
+        if (!simulation->LoadSimulation(loader, master->procInformation[prIdx].statusString)) {
+            CLOSEDPSUB(loader);
+            return this->loadOK;
+        }
     }
     CLOSEDPSUB(loader);
 

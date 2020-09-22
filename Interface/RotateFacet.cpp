@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "RotateFacet.h"
 #include "Facet_shared.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 #include "GLApp/GLMessageBox.h"
 
 #include "GLApp/GLButton.h"

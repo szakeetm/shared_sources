@@ -3,7 +3,7 @@
 #include "GLMenuBar.h"
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include "GLApp.h"
 #include <cstring> //strcpy, etc.
 #include <thread> //sleep
