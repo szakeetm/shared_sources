@@ -107,14 +107,23 @@ double GLProgress::GetProgress() {
 
 }
 
-void GLProgress::SetMessage(std::string msg) {
-	SetMessage(msg.c_str());
+void GLProgress::SetMessage(std::string msg, const bool& force) {
+	SetMessage(msg.c_str(),force);
 }
 
-void GLProgress::SetMessage(const char *msg) {
+void GLProgress::SetMessage(const char *msg, const bool& force) {
 
     label->SetText(msg);
-	GLWindowManager::Repaint();
+	if (force) {
+		GLWindowManager::Repaint();
+	}
+	else {
+		Uint32 now = SDL_GetTicks();
+		if (IsVisible() && (now - lastUpd) > 500) {
+			GLWindowManager::Repaint();
+			lastUpd = now;
+		}
+	}
 	//this->Paint();
 	//SDL_GL_SwapBuffers();
 }
