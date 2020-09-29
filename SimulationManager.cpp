@@ -436,6 +436,9 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
                 snprintf(stateStrings[i], 128, shMaster->procInformation[i].statusString);
                 if(strcmp(prevStateStrings[i], stateStrings[i])) // if strings are different
                     timeOutAt += 10000; // if task properly started, increase allowed wait time
+                else if(waitTime <= 0.1)
+                    timeOutAt += 10000;
+
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
@@ -493,7 +496,7 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if( dpControl && !simHandles.empty() ) {
+    if( !simHandles.empty() && dpControl ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
             AccessDataport(dpControl);
