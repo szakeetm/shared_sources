@@ -277,7 +277,8 @@ public:
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
 
-	static bool CompareXML_simustate(const std::string &fileName_lhs, const std::string &fileName_rhs, double cmpThreshold);
+	static bool CompareXML_simustate(const std::string &fileName_lhs, const std::string &fileName_rhs,
+                                     const std::string &fileName_out, double cmpThreshold);
 
 protected:
 	// Structure viewing (-1 => all)
