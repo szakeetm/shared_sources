@@ -313,25 +313,12 @@ void FormulaEditor::Refresh() {
 void FormulaEditor::ReEvaluate() {
 	
 	//       NEW CODE
-	
 
+	// First
+	mApp->InitializeFormulas();
 	for (size_t i = 0; i < mApp->formulas_n.size(); i++) {
-
-		// Evaluate variables
-		int nbVar = mApp->formulas_n[i]->GetNbVariable();
-		bool ok = true;
-		for (int j = 0; j < nbVar && ok; j++) {
-			VLIST *v = mApp->formulas_n[i]->GetVariableAt(j);
-			ok = mApp->EvaluateVariable(v);
-			if (!ok) {
-				std::stringstream tmp;
-				tmp << "Invalid variable " << v->name;
-				formulaList->SetValueAt(2, i, tmp.str().c_str());
-			}
-		}
-
 		// Evaluation
-		if (ok) { //Variables succesfully evaluated
+		if (!mApp->formulas_n[i]->hasVariableEvalError) { //Variables succesfully evaluated
 			double r;
 			mApp->formulas_n[i]->hasVariableEvalError = false;
 			if (mApp->formulas_n[i]->Evaluate(&r)) {

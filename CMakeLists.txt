@@ -97,6 +97,7 @@ set(SRC_FILES
         Interface/AppUpdater.cpp
         Interface/BuildIntersection.cpp
         Interface/CollapseSettings.cpp
+        Interface/ConvergencePlotter.cpp
         Interface/CreateShape.cpp
         Interface/ExtrudeFacet.cpp
         Interface/FacetCoordinates.cpp

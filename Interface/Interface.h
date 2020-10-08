@@ -69,6 +69,7 @@ class UpdateCheckDialog;
 class UpdateFoundDialog;
 class UpdateLogWindow;
 class ParticleLogger;
+class ConvergencePlotter;
 
 class Geometry;
 
@@ -162,6 +163,7 @@ typedef struct {
 #define MENU_TOOLS_HISTOGRAMSETTINGS 404
 #define MENU_TOOLS_HISTOGRAMPLOTTER 405
 #define MENU_TOOLS_SCREENSHOT 406
+#define MENU_TOOLS_CONVPLOTTER 407
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -285,6 +287,7 @@ public:
 	bool     updateRequested; //Force frame move
 	
 	std::vector<GLParser*> formulas_n;
+	std::vector<std::vector<std::pair<size_t,double>>> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	HANDLE compressProcessHandle = NULL;
@@ -427,6 +430,7 @@ public:
 	VertexCoordinates	*vertexCoordinates;
 	SmartSelection		*smartSelection;
 	FormulaEditor		*formulaEditor;
+	ConvergencePlotter   *convergencePlotter;
 
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
@@ -479,6 +483,7 @@ public:
 	//void UpdateFormula();
 	void RenumberFormulas(std::vector<int> *newRefs);
 	void ClearFormulas();
+    virtual bool InitializeFormulas() = 0;
 
 	void ExportTextures(int grouping, int mode);
 	
