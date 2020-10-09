@@ -484,7 +484,6 @@ public:
 	//void UpdateFormula();
 	void RenumberFormulas(std::vector<int> *newRefs);
 	void ClearFormulas();
-    virtual bool InitializeFormulas() = 0;
 
 	void ExportTextures(int grouping, int mode);
 	

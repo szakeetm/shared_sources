@@ -31,25 +31,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <sstream>
 #include <algorithm>
 
-#if defined(MOLFLOW)
-#include "../../src/MolFlow.h"
-#endif
+#include "Worker.h"
 
-#if defined(SYNRAD)
-#include "../src/SynRad.h"
-#endif
-
-extern GLApplication *theApp;
 extern std::string formulaSyntax;
 extern int formulaSyntaxHeight;
-
-#if defined(MOLFLOW)
-extern MolFlow *mApp;
-#endif
-
-#if defined(SYNRAD)
-extern SynRad*mApp;
-#endif
 
 static const char *flName[] = { "Expression","Name (optional)","Value" };
 static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
@@ -86,7 +71,7 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
 
     sampleConvergenceTgl = new GLToggle(0, "Sample for convergence");
     sampleConvergenceTgl->SetState(true);
-    w->sampleConvValues = sampleConvergenceTgl->GetState();
+    formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
     Add(sampleConvergenceTgl);
 
     moveUpButton = new GLButton(0, "Move Up");
@@ -168,7 +153,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		break;
     case MSG_TOGGLE:
         if (src == sampleConvergenceTgl) {
-            work->sampleConvValues = sampleConvergenceTgl->GetState();
+            formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
         }
         break;
 	case MSG_TEXT:
@@ -334,7 +319,7 @@ void FormulaEditor::ReEvaluate() {
 	//       NEW CODE
 
 	// First
-	mApp->InitializeFormulas();
+    formula_ptr->InitializeFormulas();
 	for (size_t i = 0; i < formula_ptr->formulas_n.size(); i++) {
 		// Evaluation
 		if (!formula_ptr->formulas_n.at(i)->hasVariableEvalError) { //Variables succesfully evaluated
@@ -350,7 +335,7 @@ void FormulaEditor::ReEvaluate() {
 			}
 #if defined(MOLFLOW)
 			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
-			formulaList->SetColumnColor(2,mApp->worker.displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
+			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif
 		}
 		else { //Error while evaluating variables

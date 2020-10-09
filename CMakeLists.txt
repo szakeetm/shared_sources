@@ -129,6 +129,7 @@ set(SRC_FILES
         Distributions.cpp
         Facet_shared.cpp
         File.cpp
+        Formulas.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
         Polygon.cpp

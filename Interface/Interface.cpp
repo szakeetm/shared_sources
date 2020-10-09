@@ -2828,8 +2828,8 @@ int Interface::FrameMove() {
                     formulaEditor = new FormulaEditor(&worker, formula_ptr);
                     formulaEditor->Refresh();
                 }
-                if (autoUpdateFormulas && worker.sampleConvValues) {
-                    InitializeFormulas();
+                if (autoUpdateFormulas && formula_ptr->sampleConvValues) {
+                    formula_ptr->InitializeFormulas();
                     //formulaEditor->Refresh();
                     //formulaEditor->ReEvaluate();
                     convergencePlotter->Update(lastAppTime);
