@@ -21,6 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Shared functions of the Molflow and Synrad interface
 #include <list> // for recents
+#include <memory>
+#include <Formulas.h>
 
 #include "Worker.h"
 #include "GeometryViewer.h"
@@ -285,12 +287,11 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
-	
-	std::vector<GLParser*> formulas_n;
-	std::vector<std::vector<std::pair<size_t,double>>> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
+
+    std::shared_ptr<Formulas> formula_ptr;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-	HANDLE compressProcessHandle = NULL;
+	HANDLE compressProcessHandle;
 #endif
 
 	// Worker handle

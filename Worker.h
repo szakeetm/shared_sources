@@ -176,6 +176,7 @@ public:
   bool needsReload;
   bool abortRequested;
 
+  bool sampleConvValues;
   bool calcAC; //Not used in Synrad, kept for ResetStatsAndHits function shared with Molflow
 
 #if defined(MOLFLOW)

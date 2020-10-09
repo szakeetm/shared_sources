@@ -210,6 +210,8 @@ Interface::Interface() {
     coplanarityTolerance = 1e-8;
     largeAreaThreshold = 1.0;
     planarityThreshold = 1e-5;
+
+    formula_ptr = std::make_shared<Formulas>();
 }
 
 void Interface::UpdateViewerFlags() {
@@ -812,10 +814,10 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->Add("Tools");
 
     menu->GetSubMenu("Tools")->Add("Formula editor", MENU_TOOLS_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
+    menu->GetSubMenu("Tools")->Add("Convergence Plotter ...", MENU_TOOLS_CONVPLOTTER, SDLK_c, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add(NULL); // Separator
     menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
-    menu->GetSubMenu("Tools")->Add("Convergence Plotter ...", MENU_TOOLS_CONVPLOTTER, SDLK_c, ALT_MODIFIER);
 #if defined(MOLFLOW)
     menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
 #endif
@@ -1086,6 +1088,7 @@ void Interface::OneTimeSceneInit_shared_post() {
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 
+
     EmptyGeometry();
 
     appUpdater = new AppUpdater(appName, appVersionId, "updater_config.xml");
@@ -1244,7 +1247,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                     if (!formulaEditor || !formulaEditor->IsVisible()) {
                         SAFE_DELETE(formulaEditor);
-                        formulaEditor = new FormulaEditor(&worker);
+                        formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
                         formulaEditor->SetVisible(true);
                     }
@@ -1267,8 +1270,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     return true;
                 case MENU_TOOLS_CONVPLOTTER:
                     if (!convergencePlotter)
-                        convergencePlotter = new ConvergencePlotter(&worker, &formulas_n,
-                                                                    &convergenceValues);
+                        convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
                     convergencePlotter->Display(&worker);
                     return true;
                 case MENU_TOOLS_PARTICLELOGGER:
@@ -2313,7 +2315,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
-    for (auto &f:formulas_n) {
+    for (auto &f:formula_ptr->formulas_n) {
         if (OffsetFormula(f->GetExpression(), 0, -1, newRefs)) {
             f->Parse();
         }
@@ -2380,7 +2382,7 @@ void Interface::AddFormula(const char *fName, const char *formula) {
     f2->SetExpression(formula);
     f2->SetName(fName);
     f2->Parse();
-    formulas_n.push_back(f2);
+    formula_ptr->formulas_n.push_back(f2);
 }
 
 void Interface::ClearFormulas() {
@@ -2399,9 +2401,9 @@ void Interface::ClearFormulas() {
     PlaceComponents();
     */
 
-    for (auto &f : formulas_n)
+    for (auto &f : formula_ptr->formulas_n)
         SAFE_DELETE(f);
-    formulas_n.clear();
+    formula_ptr->formulas_n.clear();
     if (formulaEditor) formulaEditor->Refresh();
 
 }
@@ -2789,6 +2791,10 @@ int Interface::FrameMove() {
                 }
                 // Simulation monitoring
                 UpdatePlotters();
+                if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
+                    convergencePlotter->Refresh();
+                    formulaEditor->formula_ptr->formulasChanged = false;
+                }
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
@@ -2815,16 +2821,16 @@ int Interface::FrameMove() {
             }
 
             // First sample every second, fine tune later
-            if (!formulas_n.empty()) {
+            if (!formula_ptr->formulas_n.empty()) {
                 if (!convergencePlotter)
-                    convergencePlotter = new ConvergencePlotter(&worker, &formulas_n,
-                                                                &convergenceValues);
+                    convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
                 if (!formulaEditor) {
-                    formulaEditor = new FormulaEditor(&worker);
+                    formulaEditor = new FormulaEditor(&worker, formula_ptr);
                     formulaEditor->Refresh();
                 }
-                if (autoUpdateFormulas) {
-                    formulaEditor->Refresh();
+                if (autoUpdateFormulas && worker.sampleConvValues) {
+                    InitializeFormulas();
+                    //formulaEditor->Refresh();
                     //formulaEditor->ReEvaluate();
                     convergencePlotter->Update(lastAppTime);
                 }

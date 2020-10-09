@@ -29,74 +29,75 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLList.h"
 #include "GLApp/GLChart/GLChart.h"
 #include "GLApp/GLParser.h"
-
+#include "Formulas.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
+
 #include <cmath>
 #include <Helper/StringHelper.h>
 
 #if defined(MOLFLOW)
+
 #include "../../src/MolFlow.h"
+
 #endif
 
 #if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-constexpr size_t max_vector_size() {return 2048;};
+constexpr size_t max_vector_size() { return 2048; };
 
 /**
 * \brief Constructor with initialisation for Convergence plotter window (Tools/Convergence Plotter)
 */
-ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::vector<GLParser *> *formulaPtr,
-                                       std::vector<std::vector<std::pair<size_t, double>>> *convValuesPtr)
-        :GLWindow() , views{}{
+ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formulas> formulas)
+        : GLWindow(), views{} {
 
-	int wD = 625;
-	int hD = 375;
+    int wD = 625;
+    int hD = 375;
 
-	SetTitle("Convergence plotter");
-	SetIconfiable(true);
-	nbView = 0;
+    SetTitle("Convergence plotter");
+    SetIconfiable(true);
+    nbView = 0;
     worker = appWorker;
-    formulas_vecPtr = formulaPtr;
-    convValues_vecPtr = convValuesPtr;
+    formula_ptr = formulas;
 
-	lastUpdate = 0.0f;
+    lastUpdate = 0.0f;
 
-	chart = new GLChart(0);
-	chart->SetBorder(BORDER_BEVEL_IN);
-	chart->GetY1Axis()->SetGridVisible(true);
-	chart->GetXAxis()->SetGridVisible(true);
-	chart->GetY1Axis()->SetAutoScale(true);
-	chart->GetY2Axis()->SetAutoScale(true);
-	chart->GetY1Axis()->SetAnnotation(VALUE_ANNO);
-	chart->GetXAxis()->SetAnnotation(VALUE_ANNO);
-	Add(chart);
+    chart = new GLChart(0);
+    chart->SetBorder(BORDER_BEVEL_IN);
+    chart->GetY1Axis()->SetGridVisible(true);
+    chart->GetXAxis()->SetGridVisible(true);
+    chart->GetY1Axis()->SetAutoScale(true);
+    chart->GetY2Axis()->SetAutoScale(true);
+    chart->GetY1Axis()->SetAnnotation(VALUE_ANNO);
+    chart->GetXAxis()->SetAnnotation(VALUE_ANNO);
+    Add(chart);
 
-	dismissButton = new GLButton(0, "Dismiss");
-	Add(dismissButton);
+    dismissButton = new GLButton(0, "Dismiss");
+    Add(dismissButton);
 
     pruneEveryNButton = new GLButton(0, "Remove every 4th");
     Add(pruneEveryNButton);
     pruneFirstNButton = new GLButton(0, "Remove first 100");
     Add(pruneFirstNButton);
 
-	addButton = new GLButton(0, "Add curve");
-	Add(addButton);
+    addButton = new GLButton(0, "Add curve");
+    Add(addButton);
 
-	removeButton = new GLButton(0, "Remove curve");
-	Add(removeButton);
+    removeButton = new GLButton(0, "Remove curve");
+    Add(removeButton);
 
-	removeAllButton = new GLButton(0, "Remove all");
-	Add(removeAllButton);
+    removeAllButton = new GLButton(0, "Remove all");
+    Add(removeAllButton);
 
-	profCombo = new GLCombo(0);
-	profCombo->SetEditable(true);
+    profCombo = new GLCombo(0);
+    profCombo->SetEditable(true);
     Add(profCombo);
 
-	logYToggle = new GLToggle(0, "Log Y");
-	Add(logYToggle);
+    logYToggle = new GLToggle(0, "Log Y");
+    Add(logYToggle);
 
     colorToggle = new GLToggle(0, "Colorblind mode");
     Add(colorToggle);
@@ -109,21 +110,21 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::vector<GLParser *
     fixedLineWidthField->SetEditable(true);
     Add(fixedLineWidthField);
 
-	formulaText = new GLTextField(0, "");
-	formulaText->SetEditable(true);
-	Add(formulaText);
+    formulaText = new GLTextField(0, "");
+    formulaText->SetEditable(true);
+    Add(formulaText);
 
-	formulaBtn = new GLButton(0, "-> Plot expression");
-	Add(formulaBtn);
+    formulaBtn = new GLButton(0, "-> Plot expression");
+    Add(formulaBtn);
 
-	// Center dialog
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = (wS - wD) / 2;
-	int yD = (hS - hD) / 2;
-	SetBounds(xD, yD, wD, hD);
-	SetResizable(true);
-	SetMinimumSize(wD, 220);
+    // Center dialog
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) / 2;
+    int yD = (hS - hD) / 2;
+    SetBounds(xD, yD, wD, hD);
+    SetResizable(true);
+    SetMinimumSize(wD, 220);
 
     RestoreDeviceObjects();
 
@@ -137,21 +138,21 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::vector<GLParser *
 * \param h height of the element
 */
 void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
-	
-	chart->SetBounds(7, 5, w - 15, h - 110);
+
+    chart->SetBounds(7, 5, w - 15, h - 110);
 
     size_t lineHeightDiff = 45;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
-	formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
-	dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
+    formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
+    dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
 
     lineHeightDiff += 25;
     colorToggle->SetBounds(7, h - lineHeightDiff, 105, 19);
     fixedLineWidthText->SetBounds(112, h - lineHeightDiff, 93, 19);
     fixedLineWidthField->SetBounds(206, h - lineHeightDiff, 30, 19);
     fixedLineWidthButton->SetBounds(240, h - lineHeightDiff, 100, 19);
-    pruneEveryNButton->SetBounds(w-215, h - lineHeightDiff, 100, 19);
-    pruneFirstNButton->SetBounds(w-110, h - lineHeightDiff, 100, 19);
+    pruneEveryNButton->SetBounds(w - 215, h - lineHeightDiff, 100, 19);
+    pruneFirstNButton->SetBounds(w - 110, h - lineHeightDiff, 100, 19);
 
     lineHeightDiff += 25;
     profCombo->SetBounds(7, h - lineHeightDiff, 160, 19);
@@ -169,10 +170,10 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 */
 void ConvergencePlotter::UpdateVector() {
     //Rebuild vector size
-    size_t nbFormulas = formulas_vecPtr->size();
-    if(convValues_vecPtr->size() != nbFormulas) {
-        convValues_vecPtr->clear();
-        convValues_vecPtr->resize(nbFormulas);
+    size_t nbFormulas = formula_ptr->formulas_n.size();
+    if (formula_ptr->convergenceValues.size() != nbFormulas) {
+        //formula_ptr->convergenceValues.clear();
+        formula_ptr->convergenceValues.resize(nbFormulas);
     }
 }
 
@@ -181,28 +182,30 @@ void ConvergencePlotter::UpdateVector() {
 */
 void ConvergencePlotter::ResetData() {
     //Rebuild vector size
-    for(auto& convVec : *convValues_vecPtr){
+    for (auto &convVec : formula_ptr->convergenceValues) {
         convVec.clear();
     }
 }
 
 /**
 * \brief Removes every everyN-th element from the convergence vector in case the max size has been reached
+* \param everyN specifies stepsize for backwards delete
+* \param formulaId formula whose convergence values shall be pruned
 */
-void ConvergencePlotter::pruneEveryN(size_t everyN) {
-    for(auto& convVec : *convValues_vecPtr){
-        for (int i = convVec.size()-everyN; i > 0; i=i-everyN)
-            convVec.erase(convVec.begin()+i);
-    }
+void ConvergencePlotter::pruneEveryN(size_t everyN, int formulaId) {
+    auto& convVec = formula_ptr->convergenceValues[formulaId];
+    for (int i = convVec.size() - everyN; i > 0; i = i - everyN)
+        convVec.erase(convVec.begin() + i);
 }
 
 /**
 * \brief Removes first n elements from the convergence vector
+ * \param n amount of elements that should be removed from the front
+ * \param formulaId formula whose convergence values shall be pruned
 */
-void ConvergencePlotter::pruneFirstN(size_t n) {
-    for(auto& convVec : *convValues_vecPtr){
-            convVec.erase(convVec.begin(),convVec.begin()+std::min(n,convVec.size()));
-    }
+void ConvergencePlotter::pruneFirstN(size_t n, int formulaId) {
+    auto& convVec = formula_ptr->convergenceValues[formulaId];
+    convVec.erase(convVec.begin(), convVec.begin() + std::min(n, convVec.size()));
 }
 
 /**
@@ -210,30 +213,42 @@ void ConvergencePlotter::pruneFirstN(size_t n) {
 */
 void ConvergencePlotter::Refresh() {
 
-	//Rebuild selection combo box
-	size_t nbFormulas = formulas_vecPtr->size(); // minimum 1 for custom input
-	profCombo->Clear();
-	if (nbFormulas) profCombo->SetSize(nbFormulas);
+    //Rebuild selection combo box
+    size_t nbFormulas = formula_ptr->formulas_n.size(); // minimum 1 for custom input
+    profCombo->Clear();
+    if (nbFormulas) profCombo->SetSize(nbFormulas);
 
     for (size_t i = 0; i < nbFormulas; i++) {
         char tmp[128];
-        sprintf(tmp, "[%zd] %s", i + 1, (*formulas_vecPtr)[i]->GetExpression());
-        profCombo->SetValueAt(i, tmp, (int)i);
-	}
-	profCombo->SetSelectedIndex(nbFormulas-1 ? 0 : -1);
+        sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i]->GetExpression());
+        profCombo->SetValueAt(i, tmp, (int) i);
+    }
+    profCombo->SetSelectedIndex(nbFormulas ? 0 : -1);
 
-	//Remove profiles that aren't present anymore
-	for (int v = nbView - 1; v >= 0; v--) { //int because it can be -1, nbView is also int
-		if (views[v]->userData1 >= formulas_vecPtr->size()) {
-			chart->GetY1Axis()->RemoveDataView(views[v]);
-			SAFE_DELETE(views[v]);
-			for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
-			nbView--;
-		}
-	}
+    //Remove profiles that aren't present anymore
+    for (int v = nbView - 1; v >= 0; v--) { //int because it can be -1, nbView is also int
+        if (formula_ptr->formulas_n.empty()) {
+            chart->GetY1Axis()->RemoveDataView(views[v]);
+            SAFE_DELETE(views[v]);
+            for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
+            nbView--;
+            continue;
+        }
+        int formId = 0;
+        while (views[v]->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
+            ++formId;
+            if (formId >= formula_ptr->formulas_n.size()) {
+                chart->GetY1Axis()->RemoveDataView(views[v]);
+                SAFE_DELETE(views[v]);
+                for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
+                nbView--;
+                break;
+            }
+        }
+    }
 
-	//Update values
-	refreshViews();
+    //Update values
+    refreshViews();
 }
 
 
@@ -243,11 +258,11 @@ void ConvergencePlotter::Refresh() {
 */
 void ConvergencePlotter::Display(Worker *w) {
 
-	
+
     SetWorker(w);
     UpdateVector();
-	Refresh();
-	SetVisible(true);
+    Refresh();
+    SetVisible(true);
 
 }
 
@@ -257,28 +272,27 @@ void ConvergencePlotter::Display(Worker *w) {
 */
 void ConvergencePlotter::Update(float appTime) {
 
-	if (!formulas_vecPtr->empty()) {
-	    UpdateVector();
+    if (!formula_ptr->formulas_n.empty()) {
+        UpdateVector();
         size_t lastNbDes = worker->globalHitCache.globalHits.hit.nbDesorbed;
-        for(int formulaId = 0 ; formulaId < formulas_vecPtr->size();++formulaId){
+        for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
             // TODO: Cross check integrity of formula with editor!?
-            if((*convValues_vecPtr)[formulaId].size() >= max_vector_size()){
-                pruneEveryN(4); // delete every 4th element for now
+            if (formula_ptr->convergenceValues[formulaId].size() >= max_vector_size()) {
+                pruneEveryN(4, formulaId); // delete every 4th element for now
             }
             double r;
-            (*formulas_vecPtr)[formulaId]->hasVariableEvalError = false;
-            if ((*formulas_vecPtr)[formulaId]->Evaluate(&r)) {
-                (*convValues_vecPtr)[formulaId].emplace_back(std::make_pair(lastNbDes,r));
+            formula_ptr->formulas_n[formulaId]->hasVariableEvalError = false;
+            if (formula_ptr->formulas_n[formulaId]->Evaluate(&r)) {
+                formula_ptr->convergenceValues[formulaId].emplace_back(std::make_pair(lastNbDes, r));
             }
         }
-		refreshViews();
-		lastUpdate = appTime;
-		return;
-	}
-	else if ((appTime - lastUpdate > 1.0f) && nbView) {
-		if (worker->isRunning) refreshViews();
-		lastUpdate = appTime;
-	}
+        refreshViews();
+        lastUpdate = appTime;
+        return;
+    } else if ((appTime - lastUpdate > 1.0f) && nbView) {
+        if (worker->isRunning) refreshViews();
+        lastUpdate = appTime;
+    }
 
 }
 
@@ -287,73 +301,71 @@ void ConvergencePlotter::Update(float appTime) {
 */
 void ConvergencePlotter::plot() {
 
-	GLParser *parser = new GLParser();
-	parser->SetExpression(formulaText->GetText().c_str());
-	if (!parser->Parse()) {
-		GLMessageBox::Display(parser->GetErrorMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-		SAFE_DELETE(parser);
-		return;
-	}
+    GLParser *parser = new GLParser();
+    parser->SetExpression(formulaText->GetText().c_str());
+    if (!parser->Parse()) {
+        GLMessageBox::Display(parser->GetErrorMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        SAFE_DELETE(parser);
+        return;
+    }
 
-	int nbVar = parser->GetNbVariable();
-	if (nbVar == 0) {
-		GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
-		SAFE_DELETE(parser);
-		return;
-	}
-	if (nbVar > 1) {
-		GLMessageBox::Display("Too much variables or unknown constant", "Error", GLDLG_OK, GLDLG_ICONERROR);
-		SAFE_DELETE(parser);
-		return;
-	}
-	VLIST *var = parser->GetVariableAt(0);
-	if (!iequals(var->name, "x")) {
-		GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
-		SAFE_DELETE(parser);
-		return;
-	}
+    int nbVar = parser->GetNbVariable();
+    if (nbVar == 0) {
+        GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
+        SAFE_DELETE(parser);
+        return;
+    }
+    if (nbVar > 1) {
+        GLMessageBox::Display("Too much variables or unknown constant", "Error", GLDLG_OK, GLDLG_ICONERROR);
+        SAFE_DELETE(parser);
+        return;
+    }
+    VLIST *var = parser->GetVariableAt(0);
+    if (!iequals(var->name, "x")) {
+        GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
+        SAFE_DELETE(parser);
+        return;
+    }
 
-	GLDataView *v;
+    GLDataView *v;
 
-	// Check that view is not already added
-	bool found = false;
-	int i = 0;
-	while (i < nbView && !found) {
-		found = (views[i]->userData1 == -1);
-		if (!found) i++;
-	}
+    // Check that view is not already added
+    bool found = false;
+    int i = 0;
+    while (i < nbView && !found) {
+        found = (views[i]->userData1 == -1);
+        if (!found) i++;
+    }
 
-	if (found) {
-		v = views[i];
-		v->SetName(formulaText->GetText().c_str());
-		v->Reset();
-	}
-	else {
+    if (found) {
+        v = views[i];
+        v->SetName(formulaText->GetText().c_str());
+        v->Reset();
+    } else {
 
-		if (nbView < 50) {
-			v = new GLDataView();
-			v->SetName(formulaText->GetText().c_str());
-			v->userData1 = -1;
-			chart->GetY1Axis()->AddDataView(v);
-			views[nbView] = v;
-			nbView++;
-		}
-		else {
-			return;
-		}
-	}
+        if (nbView < 50) {
+            v = new GLDataView();
+            v->SetName(formulaText->GetText().c_str());
+            v->userData1 = -1;
+            chart->GetY1Axis()->AddDataView(v);
+            views[nbView] = v;
+            nbView++;
+        } else {
+            return;
+        }
+    }
 
-	// Plot
-	for (i = 0; i < 1000; i++) {
-		double x = (double)i;
-		double y;
-		var->value = x;
-		parser->Evaluate(&y);
-		v->Add(x, y, false);
-	}
-	v->CommitChange();
+    // Plot
+    for (i = 0; i < 1000; i++) {
+        double x = (double) i;
+        double y;
+        var->value = x;
+        parser->Evaluate(&y);
+        v->Add(x, y, false);
+    }
+    v->CommitChange();
 
-	delete parser;
+    delete parser;
 
 }
 
@@ -362,83 +374,98 @@ void ConvergencePlotter::plot() {
 */
 void ConvergencePlotter::refreshViews() {
 
-	// Lock during update
+    // Lock during update
 
-	for (int i = 0; i < nbView; i++) {
+    for (int i = 0; i < nbView; i++) {
 
-		GLDataView *v = views[i];
-		if (v->userData1 >= 0 && v->userData1 < convValues_vecPtr->size()) {
-			v->Reset();
+        GLDataView *v = views[i];
+        if (formula_ptr->formulas_n.empty()) return;
+        int formId = 0;
+        while (v->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
+            ++formId;
+            if (formId >= formula_ptr->formulas_n.size())
+                return;
+        }
 
-			if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0){
-                for (int j = 0; j < (*convValues_vecPtr)[v->userData1].size(); j++)
-                    v->Add((*convValues_vecPtr)[v->userData1][j].first, (*convValues_vecPtr)[v->userData1][j].second, false);
-			}
-			v->CommitChange();
-		}
-	}
+        v->Reset();
+        if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
+            for (int j = 0; j < formula_ptr->convergenceValues[formId].size(); j++)
+                v->Add(formula_ptr->convergenceValues[formId][j].first, formula_ptr->convergenceValues[formId][j].second, false);
+        }
+        v->CommitChange();
+
+    }
 }
 
 /**
 * \brief Adds view/plot for a specific facet
-* \param formulaId specific facet ID
+* \param formulaHash specific facet ID
 * \return 0 if okay, 1 if already plotted
 */
-int ConvergencePlotter::addView(int formulaId) {
+int ConvergencePlotter::addView(int formulaHash) {
 
-	char tmp[128];
+    char tmp[128];
 
-	// Check that view is not already added
-	bool found = false;
-	int i = 0;
-	while (i < nbView && !found) {
-		found = (views[i]->userData1 == formulaId);
-		if (!found) i++;
-	}
-	if (found) {
-		return 1;
-	}
-	if (nbView < MAX_VIEWS) {
-		GLDataView *v = new GLDataView();
-		sprintf(tmp, "%s", (*formulas_vecPtr)[formulaId]->GetExpression());
-		v->SetName(tmp);
-		//Look for first available color
-		GLColor col = chart->GetFirstAvailableColor();
+    // Check that view is not already added
+    bool found = false;
+    int i = 0;
+    while (i < nbView && !found) {
+        found = (views[i]->userData1 == formulaHash);
+        if (!found) i++;
+    }
+    if (found) {
+        return 1;
+    }
+    if (nbView < MAX_VIEWS) {
+        GLParser *formula = nullptr;
+        for (GLParser *f : formula_ptr->formulas_n) {
+            int str_hash = std::hash<std::string>{}(f->GetExpression());
+            if (str_hash == formulaHash) {
+                formula = f;
+                break;
+            }
+        }
+        if (formula_ptr->formulas_n.empty()) return 0;
+        GLDataView *v = new GLDataView();
+        sprintf(tmp, "%s", formula->GetExpression());
+        v->SetName(tmp);
+        //Look for first available color
+        GLColor col = chart->GetFirstAvailableColor();
         int lineStyle = chart->GetFirstAvailableLinestyle(col);
-		v->SetColor(col);
-		v->SetMarkerColor(col);
-		v->SetStyle(lineStyle);
-		v->SetLineWidth(2);
-		v->userData1 = formulaId;
+        v->SetColor(col);
+        v->SetMarkerColor(col);
+        v->SetStyle(lineStyle);
+        v->SetLineWidth(2);
+        v->userData1 = formulaHash;
 
-		chart->GetY1Axis()->AddDataView(v);
-		views[nbView] = v;
-		nbView++;
+        chart->GetY1Axis()->AddDataView(v);
+        views[nbView] = v;
+        nbView++;
     }
 
-	return 0;
+    return 0;
 }
 
 /**
 * \brief Removes view/plot for a specific facet
-* \param formulaId specific facet ID
+* \param formulaHash specific facet ID
 * \return 0 if okay, 1 if not plotted
 */
-int ConvergencePlotter::remView(int formulaId) {
+int ConvergencePlotter::remView(int formulaHash) {
 
-	bool found = false;
-	int i = 0;
-	while (i < nbView && !found) {
-		found = (views[i]->userData1 == formulaId);
-		if (!found) i++;
-	}
-	if (!found) {
-		return 1;
-	}
-	chart->GetY1Axis()->RemoveDataView(views[i]);
-	SAFE_DELETE(views[i]);
-	for (int j = i; j < nbView - 1; j++) views[j] = views[j + 1];
-	nbView--;
+    bool found = false;
+    int i = 0;
+    while (i < nbView && !found) {
+        found = (views[i]->userData1 == formulaHash);
+        if (!found) i++;
+    }
+    if (!found) {
+        return 1;
+    }
+    chart->GetY1Axis()->RemoveDataView(views[i]);
+    SAFE_DELETE(views[i]);
+    for (int j = i; j < nbView - 1; j++) views[j] = views[j + 1];
+    nbView--;
 
     return 0;
 }
@@ -448,9 +475,9 @@ int ConvergencePlotter::remView(int formulaId) {
 */
 void ConvergencePlotter::Reset() {
 
-	chart->GetY1Axis()->ClearDataView();
-	for (int i = 0; i < nbView; i++) SAFE_DELETE(views[i]);
-	nbView = 0;
+    chart->GetY1Axis()->ClearDataView();
+    for (int i = 0; i < nbView; i++) SAFE_DELETE(views[i]);
+    nbView = 0;
 }
 
 /**
@@ -460,82 +487,82 @@ void ConvergencePlotter::Reset() {
 */
 void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
 
-	switch (message) {
-	case MSG_BUTTON:
-		if (src == dismissButton) {
-			SetVisible(false);
-		}
-		else if (src == pruneEveryNButton) {
-            pruneEveryN(4);
-        }
-		else if (src == pruneFirstNButton) {
-            pruneFirstN(100);
-        }
-		else if (src == addButton) {
-			int idx = profCombo->GetSelectedIndex();
-			if (idx >= 0) { //Something selected (not -1)
-                if(addView(profCombo->GetUserValueAt(idx)))
-                    GLMessageBox::Display("Profile already plotted", "Info", GLDLG_OK, GLDLG_ICONINFO);
-				refreshViews();
-            }
-		}
-		else if (src == removeButton) {
-
-			int idx = profCombo->GetSelectedIndex();
-            if (idx >= 0) { //Something selected (not -1)
-                if(remView(profCombo->GetUserValueAt(idx))){
-                    GLMessageBox::Display("Profile not plotted", "Error", GLDLG_OK, GLDLG_ICONERROR);
+    switch (message) {
+        case MSG_BUTTON:
+            if (src == dismissButton) {
+                SetVisible(false);
+            } else if (src == pruneEveryNButton) {
+                for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
+                    pruneEveryN(4, formulaId);
                 }
-                refreshViews();
-            }
-		}
-		else if (src == removeAllButton) {
-			Reset();
-		}
-		else if (src == formulaBtn) {
-			plot();
-		}
-		else if(src == fixedLineWidthButton) {
-            int linW;
-            fixedLineWidthField->GetNumberInt(&linW);
-            for(int viewId = 0; viewId < nbView; viewId++){
-                GLDataView *v = views[viewId];
-                v->SetLineWidth(linW);
-            }
-        }
-		break;
-	case MSG_COMBO:
-		if(src == profCombo){
-            int profMode = profCombo->GetSelectedIndex();
-        }
-		break;
-	case MSG_TOGGLE:
-		if (src == logYToggle) {
-			chart->GetY1Axis()->SetScale(logYToggle->GetState());
-		}
-		else if(src == colorToggle) {
-		    if(!colorToggle->GetState())
-                chart->SetColorSchemeDefault();
-		    else
-		        chart->SetColorSchemeColorblind();
+            } else if (src == pruneFirstNButton) {
+                for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
+                    pruneFirstN(100, formulaId);
+                }
+            } else if (src == addButton) {
+                int idx = profCombo->GetSelectedIndex();
+                if (idx >= 0) { //Something selected (not -1)
+                    int str_hash = std::hash<std::string>{}(
+                            formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
+                    if (addView(str_hash))
+                        GLMessageBox::Display("Profile already plotted", "Info", GLDLG_OK, GLDLG_ICONINFO);
+                    refreshViews();
+                }
+            } else if (src == removeButton) {
 
-		    const auto& colors = chart->GetColorScheme();
-		    for(int viewId = 0; viewId < nbView; viewId++){
-                GLDataView *v = views[viewId];
-                auto col = colors[viewId%colors.size()];
-                int lineStyle = chart->GetFirstAvailableLinestyle(col);
-                v->SetColor(col);
-                v->SetMarkerColor(col);
-                v->SetStyle(lineStyle);
+                int idx = profCombo->GetSelectedIndex();
+                if (idx >= 0) { //Something selected (not -1)
+                    int str_hash = std::hash<std::string>{}(
+                            formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
+                    if (remView(str_hash)) {
+                        GLMessageBox::Display("Profile not plotted", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                    }
+                    refreshViews();
+                }
+            } else if (src == removeAllButton) {
+                Reset();
+            } else if (src == formulaBtn) {
+                plot();
+            } else if (src == fixedLineWidthButton) {
+                int linW;
+                fixedLineWidthField->GetNumberInt(&linW);
+                for (int viewId = 0; viewId < nbView; viewId++) {
+                    GLDataView *v = views[viewId];
+                    v->SetLineWidth(linW);
+                }
+            }
+            break;
+        case MSG_COMBO:
+            if (src == profCombo) {
+                int profMode = profCombo->GetSelectedIndex();
+            }
+            break;
+        case MSG_TOGGLE:
+            if (src == logYToggle) {
+                chart->GetY1Axis()->SetScale(logYToggle->GetState());
+            } else if (src == colorToggle) {
+                if (!colorToggle->GetState())
+                    chart->SetColorSchemeDefault();
+                else
+                    chart->SetColorSchemeColorblind();
 
-                std::string facId(v->GetName());
-                facId = facId.substr(facId.find('#') + 1);
-		    }
-		}
-		break;
-	}
+                const auto &colors = chart->GetColorScheme();
+                for (int viewId = 0; viewId < nbView; viewId++) {
+                    GLDataView *v = views[viewId];
+                    auto col = colors[viewId % colors.size()];
+                    int lineStyle = chart->GetFirstAvailableLinestyle(col);
+                    v->SetColor(col);
+                    v->SetMarkerColor(col);
+                    v->SetStyle(lineStyle);
+
+                    std::string facId(v->GetName());
+                    facId = facId.substr(facId.find('#') + 1);
+                }
+            }
+            break;
+    }
     //this->worker->GetGeometry()->SetPlottedFacets(plottedFacets);
-	GLWindow::ProcessMessage(src, message);
+    GLWindow::ProcessMessage(src, message);
 
 }
 
@@ -544,11 +571,11 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
 * \param updatedViews vector containing the ids of the views
 */
 void ConvergencePlotter::SetViews(const std::vector<int> &updatedViews) {
-	Reset();
-	for (int view : updatedViews)
-		if (view< formulas_vecPtr->size())
-			addView(view);
-	//Refresh(); //Commented out: at this point, simulation results are not yet loaded
+    Reset();
+    for (int view : updatedViews)
+        if (view < formula_ptr->formulas_n.size())
+            addView(view);
+    //Refresh(); //Commented out: at this point, simulation results are not yet loaded
 }
 
 /**
@@ -556,11 +583,11 @@ void ConvergencePlotter::SetViews(const std::vector<int> &updatedViews) {
 * \return vector containing the IDs of the views
 */
 std::vector<int> ConvergencePlotter::GetViews() {
-	std::vector<int>v;
-	v.reserve(nbView);
-	for (size_t i = 0; i < nbView; i++)
-		v.push_back(views[i]->userData1);
-	return v;
+    std::vector<int> v;
+    v.reserve(nbView);
+    for (size_t i = 0; i < nbView; i++)
+        v.push_back(views[i]->userData1);
+    return v;
 }
 
 /**
@@ -568,16 +595,16 @@ std::vector<int> ConvergencePlotter::GetViews() {
 * \return bool that expresses if Y axis is logarithmically scaled
 */
 bool ConvergencePlotter::IsLogScaled() {
-	return chart->GetY1Axis()->GetScale();
+    return chart->GetY1Axis()->GetScale();
 }
 
 /**
 * \brief Sets type of scale (logarithmic or not)
 * \param bool that expresses if Y axis should be logarithmically scaled or not
 */
-void ConvergencePlotter::SetLogScaled(bool logScale){
-	chart->GetY1Axis()->SetScale(logScale);
-	logYToggle->SetState(logScale);
+void ConvergencePlotter::SetLogScaled(bool logScale) {
+    chart->GetY1Axis()->SetScale(logScale);
+    logYToggle->SetState(logScale);
 }
 
 /**
@@ -586,6 +613,6 @@ void ConvergencePlotter::SetLogScaled(bool logScale){
 */
 void ConvergencePlotter::SetWorker(Worker *w) { //for loading views before the full geometry
 
-	worker = w;
+    worker = w;
 
 }

@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLChart/GLChartConst.h"
 #include <vector>
 #include <map>
+#include <memory>
 
 class GLChart;
 class GLLabel;
@@ -35,14 +36,14 @@ class GLToggle;
 class GLTextField;
 class Worker;
 class Geometry;
+struct Formulas;
 
 class ConvergencePlotter : public GLWindow {
 
 public:
 
   // Construction
-  ConvergencePlotter(Worker *appWorker, std::vector<GLParser *> *formulaPtr,
-                     std::vector<std::vector<std::pair<size_t, double>>> *convValuesPtr);
+  ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formulas> formulas);
 
   // Component method
   void Display(Worker *w);
@@ -53,7 +54,7 @@ public:
     // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
   void SetBounds(int x,int y,int w,int h);
-  int addView(int formulaId);
+  int addView(int formulaHash);
   std::vector<int> GetViews();
   void SetViews(const std::vector<int> &updatedViews);
   bool IsLogScaled();
@@ -63,11 +64,11 @@ public:
     void ResetData();
 
 private:  
-  int remView(int formulaId);
+  int remView(int formulaHash);
   void refreshViews();
   void plot();
-    void pruneEveryN(size_t everyN);
-    void pruneFirstN(size_t n);
+    void pruneEveryN(size_t everyN, int formulaId);
+    void pruneFirstN(size_t n, int formulaId);
   Worker      *worker;
   GLButton    *dismissButton;
   GLChart     *chart;
@@ -93,8 +94,7 @@ private:
   int          nbView;
   float        lastUpdate;
 
-  std::vector<GLParser*>* formulas_vecPtr;
-  std::vector<std::vector<std::pair<size_t,double>>>* convValues_vecPtr;
+  std::shared_ptr<Formulas> formula_ptr;
 
 };
 
