@@ -222,10 +222,15 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	screenshotLabel = new GLLabel("Screenshot: Draw selection rectangle to capture box. Press CTRL+R again to capture whole scene. ESC to cancel");
 	Add(screenshotLabel);
 
-	selectLabel = new GLLabel("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/CTRL to add/remove to existing selection.");
+#if defined(__MACOSX__) || defined(__APPLE__)
+	std::string altText = "CMD";
+#else
+	std::string altText = "ALT";
+#endif
+	selectLabel = new GLLabel(("Selection mode: hold SPACE to move anchor, hold " + altText + " to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/CTRL to add/remove to existing selection.").c_str());
 	Add(selectLabel);
 
-	rotateLabel = new GLLabel("Rotation mode: hold SHIFT to slow down rotation, hold CTRL to rotate around the third axis, and hold ALT to rotate lighting direction of volume view");
+	rotateLabel = new GLLabel(("Rotation mode: hold SHIFT to slow down rotation, hold CTRL to rotate around the third axis, and hold " + altText + " to rotate lighting direction of volume view").c_str());
 	Add(rotateLabel);
 
 	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning");
