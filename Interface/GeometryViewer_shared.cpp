@@ -1625,6 +1625,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
+#if defined(__MACOSX__) || defined(__APPLE__)
+		if (evt->wheel.x !=0) { //Shift+wheel on an external mouse is horizontal scroll on MacOS
+			TranslateScale(-2.0 * evt->wheel.x); //As if SHIFT was down and appleInversionFactor==-1
+			autoScaleOn = false;
+			autoBtn->SetState(false);
+		}
+#endif
 	}
 
 	if (evt->type == SDL_MOUSEBUTTONUP) {
