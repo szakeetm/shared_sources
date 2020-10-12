@@ -210,8 +210,6 @@ Interface::Interface() {
     coplanarityTolerance = 1e-8;
     largeAreaThreshold = 1.0;
     planarityThreshold = 1e-5;
-
-    formula_ptr = std::make_shared<Formulas>();
 }
 
 void Interface::UpdateViewerFlags() {
@@ -2517,33 +2515,6 @@ void Interface::UpdateFacetlistSelected() {
     } else {
         facetList->SetSelectedRows(selectedFacets, true);
     }
-}
-
-int Interface::GetVariable(const char *name, const char *prefix) {
-
-    char tmp[256];
-    int idx;
-    int lgthP = (int) strlen(prefix);
-    int lgthN = (int) strlen(name);
-
-    if (lgthP >= lgthN) {
-        return -1;
-    } else {
-        strcpy(tmp, name);
-        tmp[lgthP] = 0;
-
-        if (iequals(tmp, prefix)) {
-            strcpy(tmp, name + lgthP);
-            int conv = sscanf(tmp, "%d", &idx);
-            if (conv) {
-                return idx;
-            } else {
-                return -1;
-            }
-        }
-    }
-    return -1;
-
 }
 
 /*

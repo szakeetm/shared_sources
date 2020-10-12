@@ -382,7 +382,6 @@ public:
 	
 	void UpdateFacetlistSelected();
 	
-	int  GetVariable(const char * name, const char * prefix);
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
 	bool AskToSave();

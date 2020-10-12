@@ -130,6 +130,7 @@ set(SRC_FILES
         Facet_shared.cpp
         File.cpp
         Formulas.cpp
+        FormulaEvaluator.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
         Polygon.cpp
