@@ -408,14 +408,18 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     int timeOutAt = 10000; // 10 sec
     allProcsDone = true;
 
-    std::vector<char[128]> prevStateStrings(simHandles.size());
-    std::vector<char[128]> stateStrings(simHandles.size());
+    // struct, because vector of char arrays is forbidden w/ clang
+    struct StateString {
+        char s[128];
+    };
+    std::vector<StateString> prevStateStrings(simHandles.size());
+    std::vector<StateString> stateStrings(simHandles.size());
 
     AccessDataport(dpControl);
     {
         auto *shMaster = (SHCONTROL *) dpControl->buff;
         for (size_t i = 0; i < simHandles.size(); i++) {
-            snprintf(prevStateStrings[i], 128, shMaster->procInformation[i].statusString);
+            snprintf(prevStateStrings[i].s, 128, shMaster->procInformation[i].statusString);
         }
     }
     ReleaseDataport(dpControl);
@@ -433,8 +437,8 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
                 error = true;
             }
             else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i], 128, shMaster->procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i], stateStrings[i])) // if strings are different
+                snprintf(stateStrings[i].s, 128, shMaster->procInformation[i].statusString);
+                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) // if strings are different
                     timeOutAt += 10000; // if task properly started, increase allowed wait time
                 else if(waitTime <= 0.1)
                     timeOutAt += 10000;
