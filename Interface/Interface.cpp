@@ -58,6 +58,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "CollapseSettings.h"
 #include "HistogramSettings.h"
 #include "HistogramPlotter.h"
+#include "ConvergencePlotter.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
 #include "ScaleFacet.h"
@@ -112,22 +113,22 @@ extern std::string fileTexFilters;
 extern std::string fileDesFilters;
 
 
-extern int   cSize;
-extern int   cWidth[];
+extern int cSize;
+extern int cWidth[];
 extern const char *cName[];
 
 
 Interface::Interface() {
     //Get number of cores
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    compressProcessHandle = NULL;
+    compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
-    numCPU = (size_t)sysinfo.dwNumberOfProcessors;
+    numCPU = (size_t) sysinfo.dwNumberOfProcessors;
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
-    appUpdater = NULL; //We'll initialize later, when the app name and version id is known
+    appUpdater = nullptr; //We'll initialize later, when the app name and version id is known
 
     antiAliasing = true;
     whiteBg = false;
@@ -163,7 +164,7 @@ Interface::Interface() {
     nbProc = 1;
 #else
     Saturate(numCPU, 1, (size_t)16);
-	nbProc = numCPU;
+    nbProc = numCPU;
 #endif
 
     curViewer = 0;
@@ -171,35 +172,36 @@ Interface::Interface() {
     strcpy(currentSelDir, ".");
     //memset(formulas, 0, sizeof formulas);
 
-    //formulaSettings = NULL;
-    collapseSettings = NULL;
-    histogramSettings = NULL;
-    histogramPlotter = NULL;
-    moveVertex = NULL;
-    scaleVertex = NULL;
-    scaleFacet = NULL;
-    selectDialog = NULL;
-    selectTextureType = NULL;
-    selectFacetByResult = NULL;
-    moveFacet = NULL;
-    createShape = NULL;
-    extrudeFacet = NULL;
-    mirrorFacet = NULL;
-    mirrorVertex = NULL;
-    splitFacet = NULL;
-    buildIntersection = NULL;
-    rotateFacet = NULL;
-    rotateVertex = NULL;
-    alignFacet = NULL;
-    addVertex = NULL;
-    loadStatus = NULL;
-    facetCoordinates = NULL;
-    vertexCoordinates = NULL;
-    smartSelection = NULL;
-    updateCheckDialog = NULL;
-    updateFoundDialog = NULL;
-    updateLogWindow = NULL;
-    particleLogger = NULL;
+    //formulaSettings = nullptr;
+    collapseSettings = nullptr;
+    histogramSettings = nullptr;
+    histogramPlotter = nullptr;
+    moveVertex = nullptr;
+    scaleVertex = nullptr;
+    scaleFacet = nullptr;
+    selectDialog = nullptr;
+    selectTextureType = nullptr;
+    selectFacetByResult = nullptr;
+    moveFacet = nullptr;
+    createShape = nullptr;
+    extrudeFacet = nullptr;
+    mirrorFacet = nullptr;
+    mirrorVertex = nullptr;
+    splitFacet = nullptr;
+    buildIntersection = nullptr;
+    rotateFacet = nullptr;
+    rotateVertex = nullptr;
+    alignFacet = nullptr;
+    addVertex = nullptr;
+    loadStatus = nullptr;
+    facetCoordinates = nullptr;
+    vertexCoordinates = nullptr;
+    smartSelection = nullptr;
+    updateCheckDialog = nullptr;
+    updateFoundDialog = nullptr;
+    updateLogWindow = nullptr;
+    particleLogger = nullptr;
+    convergencePlotter = nullptr;
 
     m_strWindowTitle = appTitle;
     wnd->SetBackgroundColor(212, 208, 200);
@@ -227,8 +229,7 @@ void Interface::UpdateViewerFlags() {
 
     if (!needsTexture && neededTexture) { //We just disabled mesh
         worker.GetGeometry()->ClearFacetTextures();
-    }
-    else if (needsTexture && !neededTexture) { //We just enabled mesh
+    } else if (needsTexture && !neededTexture) { //We just enabled mesh
         worker.RebuildTextures();
     }
     viewer[curViewer]->showFilter = showFilter->GetState();
@@ -241,13 +242,18 @@ void Interface::ResetSimulation(bool askConfirm) {
 
     bool ok = true;
     if (askConfirm)
-        ok = GLMessageBox::Display("Reset simulation ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
+        ok = GLMessageBox::Display("Reset simulation ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) ==
+             GLDLG_OK;
 
     if (ok) {
         worker.ResetStatsAndHits(m_fTime);
 
         nbDesStart = 0;
         nbHitStart = 0;
+        if (convergencePlotter) {
+            convergencePlotter->ResetData();
+            convergencePlotter->Refresh();
+        }
     }
     UpdatePlotters();
 }
@@ -305,13 +311,12 @@ void Interface::UpdateTitle() {
 
     if (!geom->IsLoaded()) {
         title = appTitle;
-    }
-    else {
+    } else {
         if (geom->viewStruct < 0) {
             title = appTitle + " [" + worker.GetCurrentShortFileName() + "]";
-        }
-        else {
-            title = appTitle + " [" + worker.GetCurrentShortFileName() + ": Struct #" + std::to_string(geom->viewStruct + 1) +" " + geom->GetStructureName(geom->viewStruct) +"]";
+        } else {
+            title = appTitle + " [" + worker.GetCurrentShortFileName() + ": Struct #" +
+                    std::to_string(geom->viewStruct + 1) + " " + geom->GetStructureName(geom->viewStruct) + "]";
         }
     }
 
@@ -322,25 +327,20 @@ void Interface::UpdateTitle() {
 // Name: FormatInt()
 // Desc: Format an integer in K,M,G,..
 
-char* Interface::FormatInt(size_t v, const char *unit)
-{
+char *Interface::FormatInt(size_t v, const char *unit) {
 
-    double x = (double)v;
+    double x = (double) v;
 
     static char ret[64];
     if (x < 1E3) {
-        sprintf(ret, "%g %s", (double)x, unit);
-    }
-    else if (x < 1E6) {
+        sprintf(ret, "%g %s", (double) x, unit);
+    } else if (x < 1E6) {
         sprintf(ret, "%.1f K%s", x / 1E3, unit);
-    }
-    else if (x < 1E9) {
+    } else if (x < 1E9) {
         sprintf(ret, "%.2f M%s", x / 1E6, unit);
-    }
-    else if (x < 1E12) {
+    } else if (x < 1E12) {
         sprintf(ret, "%.2f G%s", x / 1E9, unit);
-    }
-    else {
+    } else {
         sprintf(ret, "%.2f T%s", x / 1E12, unit);
     }
 
@@ -351,20 +351,16 @@ char* Interface::FormatInt(size_t v, const char *unit)
 // Name: FormatPS()
 // Desc: Format a double in K,M,G,.. per sec
 
-char *Interface::FormatPS(double v, const char *unit)
-{
+char *Interface::FormatPS(double v, const char *unit) {
 
     static char ret[64];
     if (v < 1000.0) {
         sprintf(ret, "%.1f %s/s", v, unit);
-    }
-    else if (v < 1000000.0) {
+    } else if (v < 1000000.0) {
         sprintf(ret, "%.1f K%s/s", v / 1000.0, unit);
-    }
-    else if (v < 1000000000.0) {
+    } else if (v < 1000000000.0) {
         sprintf(ret, "%.1f M%s/s", v / 1000000.0, unit);
-    }
-    else {
+    } else {
         sprintf(ret, "%.1f G%s/s", v / 1000000000.0, unit);
     }
 
@@ -375,21 +371,17 @@ char *Interface::FormatPS(double v, const char *unit)
 // Name: FormatSize()
 // Desc: Format a double in K,M,G,.. per sec
 
-char *Interface::FormatSize(size_t size)
-{
+char *Interface::FormatSize(size_t size) {
 
     static char ret[64];
     if (size < 1024UL) {
         sprintf(ret, "%zd Bytes", size);
-    }
-    else if (size < 1048576UL) {
-        sprintf(ret, "%.1f KB", (double)size / 1024.0);
-    }
-    else if (size < 1073741824UL) {
-        sprintf(ret, "%.1f MB", (double)size / 1048576.0);
-    }
-    else {
-        sprintf(ret, "%.1f GB", (double)size / 1073741824.0);
+    } else if (size < 1048576UL) {
+        sprintf(ret, "%.1f KB", (double) size / 1024.0);
+    } else if (size < 1073741824UL) {
+        sprintf(ret, "%.1f MB", (double) size / 1048576.0);
+    } else {
+        sprintf(ret, "%.1f GB", (double) size / 1073741824.0);
     }
 
     return ret;
@@ -399,9 +391,9 @@ char *Interface::FormatSize(size_t size)
 // Name: FormatTime()
 // Desc: Format time in HH:MM:SS
 
-char* Interface::FormatTime(float t) {
+char *Interface::FormatTime(float t) {
     static char ret[64];
-    int nbSec = (int)(t + 0.5f);
+    int nbSec = (int) (t + 0.5f);
     sprintf(ret, "%02d:%02d:%02d", nbSec / 3600, (nbSec % 3600) / 60, nbSec % 60);
     return ret;
 }
@@ -502,7 +494,9 @@ void Interface::ExportSelection() {
     //GLWindowManager::Repaint();
     if (!fileName.empty()) {
         std::string ext = FileUtils::GetExtension(fileName);
-        if (ext.empty()) fileName += (compressSavedFiles ? ".zip" : ".xml"); //This is also done within worker.SaveGeometry but we need it to add to recents
+        if (ext.empty())
+            fileName += (compressSavedFiles ? ".zip"
+                                            : ".xml"); //This is also done within worker.SaveGeometry but we need it to add to recents
         try {
             worker.SaveGeometry(fileName.c_str(), progressDlg2, true, true);
             AddRecent(fileName.c_str());
@@ -530,15 +524,15 @@ void Interface::UpdateModelParams() {
     char tmp[256];
     double sumArea = 0;
     facetList->SetSize(cSize, geom->GetNbFacet(), false, true);
-    facetList->SetColumnWidths((int*)cWidth);
-    facetList->SetColumnLabels((const char**)cName);
+    facetList->SetColumnWidths((int *) cWidth);
+    facetList->SetColumnLabels((const char **) cName);
     UpdateFacetHits(true);
     UpdateFacetlistSelected();
     AxisAlignedBoundingBox bb = geom->GetBB();
 
     for (int i = 0; i < geom->GetNbFacet(); i++) {
         Facet *f = geom->GetFacet(i);
-        if (f->sh.area>0) sumArea += f->GetArea();
+        if (f->sh.area > 0) sumArea += f->GetArea();
     }
 
     sprintf(tmp, "V:%zd F:%zd Dim:(%g,%g,%g) Area:%g", geom->GetNbVertex(), geom->GetNbFacet(),
@@ -559,7 +553,7 @@ void Interface::AnimateViewerChange(int next) {
 
     // Reset to layout and make all visible
 
-    for (int i = 0; i < MAX_VIEWER; i++)  viewer[i]->SetVisible(true);
+    for (int i = 0; i < MAX_VIEWER; i++) viewer[i]->SetVisible(true);
     viewer[0]->SetBounds(3, 3, Width2, Height2);
     viewer[1]->SetBounds(6 + Width2, 3, Width2, Height2);
     viewer[2]->SetBounds(3, 6 + Height2, Width2, Height2);
@@ -568,76 +562,75 @@ void Interface::AnimateViewerChange(int next) {
     if (modeSolo) {
 
         // Go from single to layout
-        xs1 = (double)3;
-        ys1 = (double)3;
-        xs2 = (double)fWidth + xs1;
-        ys2 = (double)fHeight + ys1;
+        xs1 = (double) 3;
+        ys1 = (double) 3;
+        xs2 = (double) fWidth + xs1;
+        ys2 = (double) fHeight + ys1;
 
         switch (next) {
             case 0:
-                xe1 = (double)(3);
-                ye1 = (double)(3);
+                xe1 = (double) (3);
+                ye1 = (double) (3);
                 break;
             case 1:
-                xe1 = (double)(5 + Width2);
-                ye1 = (double)(3);
+                xe1 = (double) (5 + Width2);
+                ye1 = (double) (3);
                 break;
             case 2:
-                xe1 = (double)(3);
-                ye1 = (double)(5 + Height2);
+                xe1 = (double) (3);
+                ye1 = (double) (5 + Height2);
                 break;
             case 3:
-                xe1 = (double)(5 + Width2);
-                ye1 = (double)(5 + Height2);
+                xe1 = (double) (5 + Width2);
+                ye1 = (double) (5 + Height2);
                 break;
         }
 
-        xe2 = (double)(Width2)+xe1;
-        ye2 = (double)(Height2)+ye1;
+        xe2 = (double) (Width2) + xe1;
+        ye2 = (double) (Height2) + ye1;
 
-    }
-    else {
+    } else {
 
         // Go from layout to single
-        xe1 = (double)3;
-        ye1 = (double)3;
-        xe2 = (double)fWidth + xe1;
-        ye2 = (double)fHeight + ye1;
+        xe1 = (double) 3;
+        ye1 = (double) 3;
+        xe2 = (double) fWidth + xe1;
+        ye2 = (double) fHeight + ye1;
 
         switch (next) {
             case 0:
-                xs1 = (double)(3);
-                ys1 = (double)(3);
+                xs1 = (double) (3);
+                ys1 = (double) (3);
                 break;
             case 1:
-                xs1 = (double)(5 + Width2);
-                ys1 = (double)(3);
+                xs1 = (double) (5 + Width2);
+                ys1 = (double) (3);
                 break;
             case 2:
-                xs1 = (double)(3);
-                ys1 = (double)(5 + Height2);
+                xs1 = (double) (3);
+                ys1 = (double) (5 + Height2);
                 break;
             case 3:
-                xs1 = (double)(5 + Width2);
-                ys1 = (double)(5 + Height2);
+                xs1 = (double) (5 + Width2);
+                ys1 = (double) (5 + Height2);
                 break;
         }
 
-        xs2 = (double)(Width2)+xs1;
-        ys2 = (double)(Height2)+ys1;
+        xs2 = (double) (Width2) + xs1;
+        ys2 = (double) (Height2) + ys1;
 
     }
 
-    double t0 = (double)SDL_GetTicks() / 1000.0;
+    double t0 = (double) SDL_GetTicks() / 1000.0;
     double t1 = t0;
     double T = 0.15;
 
     while ((t1 - t0) < T) {
         double t = (t1 - t0) / T;
-        int x1 = (int)(xs1 + t*(xe1 - xs1) + 0.5);
-        int y1 = (int)(ys1 + t*(ye1 - ys1) + 0.5);
-        int x2 = (int)(xs2 + t*(xe2 - xs2) + 0.5);
-        int y2 = (int)(ys2 + t*(ye2 - ys2) + 0.5);
+        int x1 = (int) (xs1 + t * (xe1 - xs1) + 0.5);
+        int y1 = (int) (ys1 + t * (ye1 - ys1) + 0.5);
+        int x2 = (int) (xs2 + t * (xe2 - xs2) + 0.5);
+        int y2 = (int) (ys2 + t * (ye2 - ys2) + 0.5);
         viewer[next]->SetBounds(x1, y1, x2 - x1, y2 - y1);
         wnd->Paint();
         // Overides moving component
@@ -646,7 +639,7 @@ void Interface::AnimateViewerChange(int next) {
         int n;
         n = GLWindowManager::GetNbWindow();
         GLWindowManager::RepaintRange(1, n);
-        t1 = (double)SDL_GetTicks() / 1000.0;
+        t1 = (double) SDL_GetTicks() / 1000.0;
     }
 
     modeSolo = !modeSolo;
@@ -700,8 +693,7 @@ void Interface::Place3DViewer() {
             viewer[i]->SetVisible(false);
         viewer[curViewer]->SetBounds(3, 3, fWidth, fHeight);
         viewer[curViewer]->SetVisible(true);
-    }
-    else {
+    } else {
         for (int i = 0; i < MAX_VIEWER; i++)
             viewer[i]->SetVisible(true);
         viewer[0]->SetBounds(3, 3, Width2, Height2);
@@ -779,7 +771,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Smart Select facets...", MENU_SELECTION_SMARTSELECTION, SDLK_s, ALT_MODIFIER);
     menu->GetSubMenu("Selection")->Add(NULL); // Separator
     menu->GetSubMenu("Selection")->Add("Select All Facets", MENU_FACET_SELECTALL, SDLK_a, CTRL_MODIFIER);
-    menu->GetSubMenu("Selection")->Add("Select by Facet Number...", MENU_SELECTION_SELECTFACETNUMBER, SDLK_n, ALT_MODIFIER);
+    menu->GetSubMenu("Selection")->Add("Select by Facet Number...", MENU_SELECTION_SELECTFACETNUMBER, SDLK_n,
+                                       ALT_MODIFIER);
     menu->GetSubMenu("Selection")->Add("Select Sticking", MENU_FACET_SELECTSTICK);
     menu->GetSubMenu("Selection")->Add("Select Transparent", MENU_FACET_SELECTTRANS);
     menu->GetSubMenu("Selection")->Add("Select 2 sided", MENU_FACET_SELECT2SIDE);
@@ -820,6 +813,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->Add("Tools");
 
     menu->GetSubMenu("Tools")->Add("Formula editor", MENU_TOOLS_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
+    menu->GetSubMenu("Tools")->Add("Convergence Plotter ...", MENU_TOOLS_CONVPLOTTER, SDLK_c, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add(NULL); // Separator
     menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
@@ -832,7 +826,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     //menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
     menu->GetSubMenu("Tools")->Add(NULL); // Separator
-    menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT,SDLK_r, CTRL_MODIFIER);
+    menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT, SDLK_r, CTRL_MODIFIER);
 
     menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_TSCALING, 137, 24);
     menu->GetSubMenu("Tools")->SetIcon(MENU_TOOLS_FORMULAEDITOR, 155, 24);
@@ -854,11 +848,15 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Facet")->Add("Create shape...", MENU_FACET_CREATESHAPE);
     menu->GetSubMenu("Facet")->Add("Create two facets' ...");
     menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Difference");
-    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Auto (non-zero)", MENU_FACET_CREATE_DIFFERENCE_AUTO);
-    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("First - Second", MENU_FACET_CREATE_DIFFERENCE);
-    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Second - First", MENU_FACET_CREATE_DIFFERENCE2);
+    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Auto (non-zero)",
+                                                                                                   MENU_FACET_CREATE_DIFFERENCE_AUTO);
+    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("First - Second",
+                                                                                                   MENU_FACET_CREATE_DIFFERENCE);
+    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->GetSubMenu("Difference")->Add("Second - First",
+                                                                                                   MENU_FACET_CREATE_DIFFERENCE2);
     menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Union", MENU_FACET_CREATE_UNION);
-    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Intersection", MENU_FACET_CREATE_INTERSECTION);
+    menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("Intersection",
+                                                                         MENU_FACET_CREATE_INTERSECTION);
     menu->GetSubMenu("Facet")->GetSubMenu("Create two facets' ...")->Add("XOR", MENU_FACET_CREATE_XOR);
     menu->GetSubMenu("Facet")->Add("Transition between 2", MENU_FACET_LOFT);
     menu->GetSubMenu("Facet")->Add("Build intersection...", MENU_FACET_INTERSECT);
@@ -879,14 +877,18 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_SHIFTVERTEX, 90, 77);
     menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_COORDINATES, 209, 24);
     menu->GetSubMenu("Facet")->SetIcon(MENU_TOOLS_PROFPLOTTER, 227, 24);
+
     menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_DETAILS, 54, 77);
     //menu->GetSubMenu("Facet")->SetIcon(MENU_FACET_MESH,72,77);
     menu->GetSubMenu("Facet")->SetIcon(MENU_TOOLS_TEXPLOTTER, 108, 77);
 
     menu->Add("Vertex");
     menu->GetSubMenu("Vertex")->Add("Create Facet from Selected");
-    menu->GetSubMenu("Vertex")->GetSubMenu("Create Facet from Selected")->Add("Convex Hull", MENU_VERTEX_CREATE_POLY_CONVEX, SDLK_v, ALT_MODIFIER);
-    menu->GetSubMenu("Vertex")->GetSubMenu("Create Facet from Selected")->Add("Keep selection order", MENU_VERTEX_CREATE_POLY_ORDER);
+    menu->GetSubMenu("Vertex")->GetSubMenu("Create Facet from Selected")->Add("Convex Hull",
+                                                                              MENU_VERTEX_CREATE_POLY_CONVEX, SDLK_v,
+                                                                              ALT_MODIFIER);
+    menu->GetSubMenu("Vertex")->GetSubMenu("Create Facet from Selected")->Add("Keep selection order",
+                                                                              MENU_VERTEX_CREATE_POLY_ORDER);
     menu->GetSubMenu("Vertex")->Add("Clear isolated", MENU_VERTEX_CLEAR_ISOLATED);
     menu->GetSubMenu("Vertex")->Add("Remove selected", MENU_VERTEX_REMOVE);
     menu->GetSubMenu("Vertex")->Add("Vertex coordinates...", MENU_VERTEX_COORDINATES);
@@ -1086,6 +1088,7 @@ void Interface::OneTimeSceneInit_shared_post() {
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 
+
     EmptyGeometry();
 
     appUpdater = new AppUpdater(appName, appVersionId, "updater_config.xml");
@@ -1207,21 +1210,18 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     if (geom->IsLoaded()) {
                         if (worker.isRunning) worker.Stop_Public();
                         InsertGeometry(false);
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_INSERTGEO_NEWSTR:
                     if (geom->IsLoaded()) {
                         if (worker.isRunning) worker.Stop_Public();
                         InsertGeometry(true);
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_SAVEAS:
                     if (geom->IsLoaded()) {
                         SaveFileAs();
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_EXPORT_SELECTION:
                     ExportSelection();
@@ -1247,7 +1247,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                     if (!formulaEditor || !formulaEditor->IsVisible()) {
                         SAFE_DELETE(formulaEditor);
-                        formulaEditor = new FormulaEditor(&worker);
+                        formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
                         formulaEditor->SetVisible(true);
                     }
@@ -1268,6 +1268,11 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     histogramPlotter->Refresh();
                     histogramPlotter->SetVisible(true);
                     return true;
+                case MENU_TOOLS_CONVPLOTTER:
+                    if (!convergencePlotter)
+                        convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
+                    convergencePlotter->Display(&worker);
+                    return true;
                 case MENU_TOOLS_PARTICLELOGGER:
                     if (!particleLogger || !particleLogger->IsVisible()) {
                         SAFE_DELETE(particleLogger);
@@ -1277,13 +1282,12 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     particleLogger->SetVisible(true);
                     return true;
 
-                case MENU_TOOLS_SCREENSHOT:
-                {
+                case MENU_TOOLS_SCREENSHOT: {
                     std::ostringstream tmp;
 
-                    time_t     now = time(0);
-                    struct tm  tstruct;
-                    char       buf[80];
+                    time_t now = time(0);
+                    struct tm tstruct;
+                    char buf[80];
                     tstruct = *localtime(&now);
                     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
                     // for more information about date/time format
@@ -1314,14 +1318,15 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     int topMargin = 0;
                     int bottomMargin = 28; //Toolbar
 
-                    viewer[curViewer]->RequestScreenshot(tmp.str(), leftMargin, topMargin, width - leftMargin - rightMargin, height - topMargin - bottomMargin);
+                    viewer[curViewer]->RequestScreenshot(tmp.str(), leftMargin, topMargin,
+                                                         width - leftMargin - rightMargin,
+                                                         height - topMargin - bottomMargin);
                     return true;
                 }
                 case MENU_FACET_COLLAPSE:
                     if (geom->IsLoaded()) {
                         DisplayCollapseDialog();
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FACET_SWAPNORMAL:
                     if (AskToReset()) {
@@ -1373,8 +1378,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
 
                         scaleFacet->SetVisible(true);
 
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FACET_MIRROR:
                     if (!mirrorFacet) mirrorFacet = new MirrorFacet(geom, &worker);
@@ -1398,7 +1402,8 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     return true;
 
                 case MENU_FACET_EXPLODE:
-                    if (GLMessageBox::Display("Explode selected facet?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+                    if (GLMessageBox::Display("Explode selected facet?", "Question", GLDLG_OK | GLDLG_CANCEL,
+                                              GLDLG_ICONINFO) == GLDLG_OK) {
                         if (AskToReset()) {
                             int err;
                             try {
@@ -1409,18 +1414,19 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             }
                             if (err == -1) {
                                 GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                            }
-                            else if (err == -2) {
-                                GLMessageBox::Display("All selected facets must have a mesh with boudary correction enabled", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                            }
-                            else if (err == 0) {
+                            } else if (err == -2) {
+                                GLMessageBox::Display(
+                                        "All selected facets must have a mesh with boudary correction enabled", "Error",
+                                        GLDLG_OK, GLDLG_ICONERROR);
+                            } else if (err == 0) {
 
                                 UpdateModelParams();
                                 UpdateFacetParams(true);
                                 // Send to sub process
                                 try { worker.Reload(); }
                                 catch (Error &e) {
-                                    GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
+                                    GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK,
+                                                          GLDLG_ICONERROR);
                                 }
                             }
                         }
@@ -1443,7 +1449,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     for (int i = 0; i < geom->GetNbFacet(); i++)
                         if (
 #if defined(MOLFLOW)
-geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
+geom->GetFacet(i)->sh.opacity_paramId != -1 ||
 #endif
 (geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
                             geom->SelectFacet(i);
@@ -1475,8 +1481,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     UpdateFacetParams(true);
                     return true;
 
-                case MENU_FACET_SELECTNONPLANAR:
-                {
+                case MENU_FACET_SELECTNONPLANAR: {
                     sprintf(tmp, "%g", planarityThreshold);
                     //sprintf(title,"Pipe L/R = %g",L/R);
                     input = GLInputBox::GetInput(tmp, "Planarity larger than:", "Select non planar facets");
@@ -1487,7 +1492,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     }
                     geom->UnselectAll();
                     std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacetIds(planarityThreshold);
-                    for (const auto& i : nonPlanarFacetids)
+                    for (const auto &i : nonPlanarFacetids)
                         geom->SelectFacet(i);
                     geom->UpdateSelection();
                     UpdateFacetParams(true);
@@ -1554,7 +1559,8 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     }
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 && geom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                        if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 &&
+                            geom->GetFacet(i)->sh.area >= largeAreaThreshold)
                             geom->SelectFacet(i);
                     geom->UpdateSelection();
                     UpdateFacetParams(true);
@@ -1586,8 +1592,9 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                 case MENU_SELECTION_ADDNEW:
                     AddSelection();
                     return true;
-                case  MENU_SELECTION_CLEARALL:
-                    if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+                case MENU_SELECTION_CLEARALL:
+                    if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL,
+                                              GLDLG_ICONINFO) == GLDLG_OK) {
                         ClearAllSelections();
                     }
                     return true;
@@ -1648,7 +1655,8 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     return true;
                 case MENU_FACET_LOFT:
                     if (geom->GetNbSelectedFacets() != 2) {
-                        GLMessageBox::Display("Select exactly 2 facets", "Can't create loft", GLDLG_OK, GLDLG_ICONERROR);
+                        GLMessageBox::Display("Select exactly 2 facets", "Can't create loft", GLDLG_OK,
+                                              GLDLG_ICONERROR);
                         return true;
                     }
                     if (AskToReset()) {
@@ -1666,15 +1674,15 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         buildIntersection->SetVisible(true);
                     }
                     return true;
-                case MENU_FACET_TRIANGULATE:
-                {
+                case MENU_FACET_TRIANGULATE: {
                     auto selectedFacets = geom->GetSelectedFacets();
                     if (selectedFacets.empty()) return true;
-                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change",
+                                                    GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
                     if (rep == GLDLG_OK) {
                         if (AskToReset()) {
-                            
-                            GeometryConverter::PolygonsToTriangles(geom,selectedFacets);
+
+                            GeometryConverter::PolygonsToTriangles(geom, selectedFacets);
                         }
                     }
                     worker.Reload();
@@ -1687,7 +1695,8 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     char *input;
                     if (geom->IsLoaded()) {
                         if (geom->GetNbSelectedVertex() != 3) {
-                            GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK,
+                                                  GLDLG_ICONERROR);
                             return true;
                         }
                         sprintf(tmp, "%g", coplanarityTolerance);
@@ -1700,10 +1709,10 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         }
                         try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
                         catch (Error &e) {
-                            GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK,
+                                                  GLDLG_ICONERROR);
                         }
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_MOVE:
                     if (geom->IsLoaded()) {
@@ -1718,15 +1727,13 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                         GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
                         */
 
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_SCALE:
                     if (geom->IsLoaded()) {
                         if (!scaleVertex) scaleVertex = new ScaleVertex(geom, &worker);
                         scaleVertex->SetVisible(true);
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_MIRROR:
                     if (!mirrorVertex) mirrorVertex = new MirrorVertex(geom, &worker);
@@ -1747,16 +1754,14 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     if (geom->IsLoaded()) {
                         if (!addVertex) addVertex = new AddVertex(geom, &worker);
                         addVertex->SetVisible(true);
-                    }
-                    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+                    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
 
                 case MENU_VIEW_FULLSCREEN:
                     if (m_bWindowed) {
                         ToggleFullscreen();
                         PlaceComponents();
-                    }
-                    else {
+                    } else {
                         Resize(1024, 800, true);
                     }
                     menu->GetSubMenu("View")->SetCheck(MENU_VIEW_FULLSCREEN, !m_bWindowed);
@@ -1766,8 +1771,9 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     AddView();
                     return true;
                     return true;
-                case  MENU_VIEW_CLEARALL:
-                    if (GLMessageBox::Display("Clear all views ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+                case MENU_VIEW_CLEARALL:
+                    if (GLMessageBox::Display("Clear all views ?", "Question", GLDLG_OK | GLDLG_CANCEL,
+                                              GLDLG_ICONINFO) == GLDLG_OK) {
                         ClearAllViews();
                     }
                     return true;
@@ -1790,7 +1796,7 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     if (AskToSave()) BuildPipe(10000.0);
                     return true;
                 case MENU_QUICKPIPE:
-                    if (AskToSave()) BuildPipe(5.0,5);
+                    if (AskToSave()) BuildPipe(5.0, 5);
                     return true;
                 case MENU_TRIANGULATE:
                     if (AskToSave()) {
@@ -1810,10 +1816,9 @@ geom->GetFacet(i)->sh.opacity_paramId!=-1 ||
                     return true;
                 }
 #endif
-                case MENU_ABOUT:
-                {
+                case MENU_ABOUT: {
                     std::ostringstream aboutText;
-                    aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId <<")";
+                    aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
 Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAHR / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2020)
@@ -1840,25 +1845,24 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 if (AskToSave()) {
                     if (worker.isRunning) worker.Stop_Public();
                     auto recentEntry = recentsList.begin();
-                    std::advance(recentEntry,src->GetId() - MENU_FILE_LOADRECENT);
+                    std::advance(recentEntry, src->GetId() - MENU_FILE_LOADRECENT);
                     LoadFile(*recentEntry);
                 }
                 return true;
             }
 
                 // Show structure menu
-            else if (src->GetId() >= MENU_VIEW_STRUCTURE && src->GetId() <= MENU_VIEW_STRUCTURE + geom->GetNbStructure()) {
+            else if (src->GetId() >= MENU_VIEW_STRUCTURE &&
+                     src->GetId() <= MENU_VIEW_STRUCTURE + geom->GetNbStructure()) {
                 geom->viewStruct = src->GetId() - MENU_VIEW_STRUCTURE - 1;
                 if (src->GetId() > MENU_VIEW_STRUCTURE) geom->UnselectAll();
                 UpdateStructMenu();
                 return true;
-            }
-            else if (src->GetId() == MENU_VIEW_NEWSTRUCT) {
+            } else if (src->GetId() == MENU_VIEW_NEWSTRUCT) {
                 AddStruct();
                 UpdateStructMenu();
                 return true;
-            }
-            else if (src->GetId() == MENU_VIEW_DELSTRUCT) {
+            } else if (src->GetId() == MENU_VIEW_DELSTRUCT) {
                 DeleteStruct();
                 UpdateStructMenu();
 
@@ -1867,46 +1871,46 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
                 return true;
-            }
-            else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-                geom->viewStruct = (int)Previous(geom->viewStruct, geom->GetNbStructure());
+            } else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
+                geom->viewStruct = (int) Previous(geom->viewStruct, geom->GetNbStructure());
                 geom->UnselectAll();
                 UpdateStructMenu();
                 return true;
-            }
-            else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
-                geom->viewStruct = (int)Next(geom->viewStruct, geom->GetNbStructure());
+            } else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
+                geom->viewStruct = (int) Next(geom->viewStruct, geom->GetNbStructure());
                 geom->UnselectAll();
                 UpdateStructMenu();
                 return true;
             }
 
                 // Select selection
-            else if (MENU_SELECTION_SELECTIONS + selections.size() > src->GetId() && src->GetId() >= MENU_SELECTION_SELECTIONS) { //Choose selection by number
+            else if (MENU_SELECTION_SELECTIONS + selections.size() > src->GetId() &&
+                     src->GetId() >= MENU_SELECTION_SELECTIONS) { //Choose selection by number
                 SelectSelection(src->GetId() - MENU_SELECTION_SELECTIONS);
                 return true;
-            }
-            else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size())) { //Previous selection
+            } else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size())) { //Previous selection
                 SelectSelection(Previous(idSelection, selections.size()));
                 return true;
-            }
-            else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size() + 1)) { //Next selection
+            } else if (src->GetId() == (MENU_SELECTION_SELECTIONS + selections.size() + 1)) { //Next selection
                 SelectSelection(Next(idSelection, selections.size()));
                 return true;
             }
 
                 // Clear selection
-            else if (src->GetId() >= MENU_SELECTION_CLEARSELECTIONS && src->GetId() < MENU_SELECTION_CLEARSELECTIONS + selections.size()) {
+            else if (src->GetId() >= MENU_SELECTION_CLEARSELECTIONS &&
+                     src->GetId() < MENU_SELECTION_CLEARSELECTIONS + selections.size()) {
                 char tmpname[256];
                 sprintf(tmpname, "Clear %s?", selections[src->GetId() - MENU_SELECTION_CLEARSELECTIONS].name.c_str());
-                if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+                if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) ==
+                    GLDLG_OK) {
                     ClearSelection(src->GetId() - MENU_SELECTION_CLEARSELECTIONS);
                 }
                 return true;
             }
 
                 // Memorize selection
-            else if (src->GetId() >= MENU_SELECTION_MEMORIZESELECTIONS && src->GetId() < MENU_SELECTION_MEMORIZESELECTIONS + selections.size()) {
+            else if (src->GetId() >= MENU_SELECTION_MEMORIZESELECTIONS &&
+                     src->GetId() < MENU_SELECTION_MEMORIZESELECTIONS + selections.size()) {
                 OverWriteSelection(src->GetId() - MENU_SELECTION_MEMORIZESELECTIONS);
                 return true;
             }
@@ -1920,7 +1924,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             else if (src->GetId() >= MENU_VIEW_CLEARVIEWS && src->GetId() < MENU_VIEW_CLEARVIEWS + nbView) {
                 char tmpname[256];
                 sprintf(tmpname, "Clear %s?", views[src->GetId() - MENU_VIEW_CLEARVIEWS].name);
-                if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+                if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) ==
+                    GLDLG_OK) {
                     ClearView(src->GetId() - MENU_VIEW_CLEARVIEWS);
                 }
                 return true;
@@ -1937,7 +1942,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             if (src == facetList && geom->IsLoaded()) {
                 auto selRows = facetList->GetSelectedRows(true);
                 geom->UnselectAll();
-                for (auto& sel:selRows)
+                for (auto &sel:selRows)
                     geom->SelectFacet(sel);
                 geom->UpdateSelection();
                 UpdateFacetParams();
@@ -1946,18 +1951,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             break;
 
             //GEOMVIEWER ------------------------------------------------------------------
-        case MSG_GEOMVIEWER_MAXIMISE:
-        {
+        case MSG_GEOMVIEWER_MAXIMISE: {
             if (src == viewer[0]) {
                 AnimateViewerChange(0);
-            }
-            else if (src == viewer[1]) {
+            } else if (src == viewer[1]) {
                 AnimateViewerChange(1);
-            }
-            else if (src == viewer[2]) {
+            } else if (src == viewer[2]) {
                 AnimateViewerChange(2);
-            }
-            else if (src == viewer[3]) {
+            } else if (src == viewer[3]) {
                 AnimateViewerChange(3);
             }
             Place3DViewer();
@@ -1969,15 +1970,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
             if (!needsTexture && neededTexture) { //We just disabled textures
                 worker.GetGeometry()->ClearFacetTextures();
-            }
-            else if (needsTexture && !neededTexture) { //We just enabled textures
+            } else if (needsTexture && !neededTexture) { //We just enabled textures
                 worker.RebuildTextures();
             }
 
             if (!needsMesh && neededMesh) { //We just disabled mesh
                 geom->ClearFacetMeshLists();
-            }
-            else if (needsMesh && !neededMesh) { //We just enabled mesh
+            } else if (needsMesh && !neededMesh) { //We just enabled mesh
                 geom->BuildFacetMeshLists();
             }
 
@@ -1994,13 +1993,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 changedSinceSave = true;
                 ResetSimulation();
                 return true;
-            }
-            else if (src == forceFrameMoveButton) {
+            } else if (src == forceFrameMoveButton) {
                 updateRequested = true;
                 FrameMove();
                 return true;
-            }
-            else if (src == facetCoordBtn) {
+            } else if (src == facetCoordBtn) {
                 if (!facetCoordinates) facetCoordinates = new FacetCoordinates();
                 facetCoordinates->Display(&worker);
                 return true;
@@ -2015,10 +2012,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
     return false;
 }
 
-void Interface::CheckNeedsTexture()
-{
+void Interface::CheckNeedsTexture() {
     needsMesh = needsTexture = needsDirection = false;
-    for (int i = 0;i < MAX_VIEWER;i++) {
+    for (int i = 0; i < MAX_VIEWER; i++) {
         needsMesh = needsMesh || (viewer[i]->IsVisible() && viewer[i]->showMesh);
         needsTexture = needsTexture || (viewer[i]->IsVisible() && viewer[i]->showTexture);
         needsDirection = needsDirection || (viewer[i]->IsVisible() && viewer[i]->showDir);
@@ -2033,7 +2029,8 @@ void Interface::SelectView(int v) {
 
 void Interface::SelectSelection(size_t v) {
     Geometry *geom = worker.GetGeometry();
-    geom->SetSelection(selections[v].selection, viewer[0]->GetWindow()->IsShiftDown(), viewer[0]->GetWindow()->IsCtrlDown());
+    geom->SetSelection(selections[v].selection, viewer[0]->GetWindow()->IsShiftDown(),
+                       viewer[0]->GetWindow()->IsCtrlDown());
     idSelection = v;
 }
 
@@ -2052,17 +2049,18 @@ void Interface::RebuildSelectionMenus() {
     size_t i;
     for (i = 0; i < selections.size(); i++) {
         if (i <= 8) {
-            selectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_SELECTIONS + (int)i, SDLK_1 + (int)i, ALT_MODIFIER);
+            selectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_SELECTIONS + (int) i, SDLK_1 + (int) i,
+                                ALT_MODIFIER);
+        } else {
+            selectionsMenu->Add(selections[i].name.c_str(),
+                                MENU_SELECTION_SELECTIONS + (int) i); //no place for ALT+shortcut
         }
-        else {
-            selectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_SELECTIONS + (int)i); //no place for ALT+shortcut
-        }
-        clearSelectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_CLEARSELECTIONS + (int)i);
-        memorizeSelectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_MEMORIZESELECTIONS + (int)i);
+        clearSelectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_CLEARSELECTIONS + (int) i);
+        memorizeSelectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_MEMORIZESELECTIONS + (int) i);
     }
     selectionsMenu->Add(NULL); //Separator
-    selectionsMenu->Add("Select previous", MENU_SELECTION_SELECTIONS + (int)i, SDLK_F11, ALT_MODIFIER);
-    selectionsMenu->Add("Select next", MENU_SELECTION_SELECTIONS + (int)i + 1, SDLK_F12, ALT_MODIFIER);
+    selectionsMenu->Add("Select previous", MENU_SELECTION_SELECTIONS + (int) i, SDLK_F11, ALT_MODIFIER);
+    selectionsMenu->Add("Select next", MENU_SELECTION_SELECTIONS + (int) i + 1, SDLK_F12, ALT_MODIFIER);
 }
 
 void Interface::AddSelection(SelectionGroup s) {
@@ -2082,7 +2080,8 @@ void Interface::ClearAllSelections() {
 
 void Interface::OverWriteSelection(size_t idOvr) {
     Geometry *geom = worker.GetGeometry();
-    char *selectionName = GLInputBox::GetInput(selections[idOvr].name.c_str(), "Selection name", "Enter selection name");
+    char *selectionName = GLInputBox::GetInput(selections[idOvr].name.c_str(), "Selection name",
+                                               "Enter selection name");
     if (!selectionName) return;
 
     selections[idOvr].selection = geom->GetSelectedFacets();
@@ -2118,12 +2117,12 @@ void Interface::ClearViewMenus() {
 
 void Interface::RebuildViewMenus() {
     ClearViewMenus();
-    std::vector<int> fKeys = { SDLK_F1,SDLK_F2,SDLK_F3,SDLK_F5,SDLK_F6,SDLK_F7,SDLK_F8,SDLK_F9,SDLK_F10,SDLK_F11,SDLK_F12 }; //Skip ALT+F4 shortcut :)
+    std::vector<int> fKeys = {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F5, SDLK_F6, SDLK_F7, SDLK_F8, SDLK_F9, SDLK_F10,
+                              SDLK_F11, SDLK_F12}; //Skip ALT+F4 shortcut :)
     for (int i = 0; i < nbView; i++) {
         if (fKeys.empty()) {
             viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i);
-        }
-        else {
+        } else {
             viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i, fKeys[0], ALT_MODIFIER);
             fKeys.erase(fKeys.begin());
         }
@@ -2138,8 +2137,7 @@ void Interface::AddView(const char *viewName, AVIEW v) {
         views[nbView] = v;
         views[nbView].name = strdup(viewName);
         nbView++;
-    }
-    else {
+    } else {
         SAFE_FREE(views[0].name);
         for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
         views[MAX_VIEW - 1] = v;
@@ -2182,8 +2180,7 @@ void Interface::AddView() {
         views[nbView] = viewer[curViewer]->GetCurrentView();
         views[nbView].name = strdup(viewName);
         nbView++;
-    }
-    else {
+    } else {
         SAFE_FREE(views[0].name);
         for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
         views[MAX_VIEW - 1] = viewer[curViewer]->GetCurrentView();
@@ -2197,7 +2194,7 @@ void Interface::RemoveRecent(const char *fileName) {
     if (!fileName) return;
     bool found = false;
 
-    for(auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter){
+    for (auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter) {
         found = strcmp(fileName, *recentIter) == 0;
         if (found) {
             SAFE_FREE(*recentIter);
@@ -2208,7 +2205,7 @@ void Interface::RemoveRecent(const char *fileName) {
     if (!found) return;
 
     // Remove oldest elements exceeding the limit
-    while(recentsList.size() >= MAX_RECENT){
+    while (recentsList.size() >= MAX_RECENT) {
         recentsList.pop_front();
     }
 
@@ -2222,7 +2219,7 @@ void Interface::AddRecent(const char *fileName) {
     // Check if already exists
     bool found = false;
 
-    for(auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter){
+    for (auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter) {
         found = strcmp(fileName, *recentIter) == 0;
     if (found) {
             SAFE_FREE(*recentIter);
@@ -2235,7 +2232,7 @@ void Interface::AddRecent(const char *fileName) {
     recentsList.emplace_back(strdup(fileName));
 
     // Remove oldest elements exceedint the limit
-    while(recentsList.size() >= MAX_RECENT){
+    while (recentsList.size() >= MAX_RECENT) {
         recentsList.pop_front();
     }
 
@@ -2245,13 +2242,13 @@ void Interface::AddRecent(const char *fileName) {
         return;
     }
 
-void Interface::UpdateRecentMenu(){
+void Interface::UpdateRecentMenu() {
     // Update menu
     GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
     m->Clear();
-    int i=recentsList.size()-1;
-    for(auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
-        m->Add(AbbreviateString(*recentIter, MAX_ITEM_LGTH-1).c_str(), MENU_FILE_LOADRECENT + i);
+    int i = recentsList.size() - 1;
+    for (auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
+        m->Add(AbbreviateString(*recentIter, MAX_ITEM_LGTH - 1).c_str(), MENU_FILE_LOADRECENT + i);
         --i;
     }
 }
@@ -2280,7 +2277,7 @@ void Interface::DeleteStruct() {
         GLMessageBox::Display("Invalid structure number");
         return;
     }
-    if (structNumInt<1 || structNumInt>geom->GetNbStructure()) {
+    if (structNumInt < 1 || structNumInt > geom->GetNbStructure()) {
         GLMessageBox::Display("Invalid structure number");
         return;
     }
@@ -2289,7 +2286,8 @@ void Interface::DeleteStruct() {
         if (geom->GetFacet(i)->sh.superIdx == (structNumInt - 1)) hasFacets = true;
     }
     if (hasFacets) {
-        int rep = GLMessageBox::Display("This structure has facets. They will be deleted with the structure.", "Structure delete", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+        int rep = GLMessageBox::Display("This structure has facets. They will be deleted with the structure.",
+                                        "Structure delete", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
         if (rep != GLDLG_OK) return;
     }
     if (!AskToReset()) return;
@@ -2311,17 +2309,17 @@ void Interface::DisplayCollapseDialog() {
 
 void Interface::RenumberSelections(const std::vector<int> &newRefs) {
     for (int i = 0; i < selections.size(); i++) {
-        for (int j = 0; i>=0 && i < selections.size() && j>=0 && j < selections[i].selection.size(); j++) {
-            if (selections[i].selection[j] >= newRefs.size() || newRefs[selections[i].selection[j]] == -1) { //remove from selection
-                selections[i].selection.erase(selections[i].selection.begin()+j);
+        for (int j = 0; i >= 0 && i < selections.size() && j >= 0 && j < selections[i].selection.size(); j++) {
+            if (selections[i].selection[j] >= newRefs.size() ||
+                newRefs[selections[i].selection[j]] == -1) { //remove from selection
+                selections[i].selection.erase(selections[i].selection.begin() + j);
                 j--; //Do again the element as now it's the next
                 if (selections[i].selection.size() == 0) {
                     ClearSelection(i); //last facet removed from selection
                     i--;
                 }
 
-            }
-            else { //renumber
+            } else { //renumber
                 selections[i].selection[j] = newRefs[selections[i].selection[j]];
             }
         }
@@ -2329,7 +2327,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) {
-    for (auto& f:formulas_n) {
+    for (auto &f:formula_ptr->formulas_n) {
         if (OffsetFormula(f->GetExpression(), 0, -1, newRefs)) {
             f->Parse();
         }
@@ -2396,7 +2394,7 @@ void Interface::AddFormula(const char *fName, const char *formula) {
     f2->SetExpression(formula);
     f2->SetName(fName);
     f2->Parse();
-    formulas_n.push_back(f2);
+    formula_ptr->formulas_n.push_back(f2);
 }
 
 void Interface::ClearFormulas() {
@@ -2415,9 +2413,9 @@ void Interface::ClearFormulas() {
     PlaceComponents();
     */
 
-    for (auto& f : formulas_n)
+    for (auto &f : formula_ptr->formulas_n)
         SAFE_DELETE(f);
-    formulas_n.clear();
+    formula_ptr->formulas_n.clear();
     if (formulaEditor) formulaEditor->Refresh();
 
 }
@@ -2451,7 +2449,7 @@ void Interface::DeleteFormula(int i) {
 }
 */
 
-bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vector<int> *newRefs) {
+bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vector<int> *newRefs) {
     //will increase or decrease facet numbers in a formula
     //only applies to facet numbers larger than "filter" parameter
     //If *newRefs is not NULL, a vector is passed containing the new references
@@ -2475,7 +2473,9 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
             if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
         int digitsLength = 0;
         if (minPos != std::string::npos) { //found expression, let's find tailing facet number digits
-            while ((minPos + maxLength + digitsLength) < newExpr.length() && newExpr[minPos + maxLength + digitsLength] >= '0' && newExpr[minPos + maxLength + digitsLength] <= '9')
+            while ((minPos + maxLength + digitsLength) < newExpr.length() &&
+                   newExpr[minPos + maxLength + digitsLength] >= '0' &&
+                   newExpr[minPos + maxLength + digitsLength] <= '9')
                 digitsLength++;
             if (digitsLength > 0) { //there was a digit after the prefix
                 int facetNumber;
@@ -2486,20 +2486,18 @@ bool Interface::OffsetFormula(char* expression, int offset, int filter, std::vec
                             sprintf(tmp, "%d", facetNumber + offset);
                             newExpr.replace(minPos + maxLength, digitsLength, tmp);
                             changed = true;
-                        }
-                        else if ((facetNumber - 1) == filter) {
+                        } else if ((facetNumber - 1) == filter) {
                             newExpr.replace(minPos + maxLength, digitsLength, "0");
                             changed = true;
                         }
-                    }
-                    else { //newRefs mode
-                        if ((facetNumber - 1) >= (*newRefs).size() || (*newRefs)[facetNumber - 1] == -1) { //Facet doesn't exist anymore
+                    } else { //newRefs mode
+                        if ((facetNumber - 1) >= (*newRefs).size() ||
+                            (*newRefs)[facetNumber - 1] == -1) { //Facet doesn't exist anymore
                             newExpr.replace(minPos + maxLength, digitsLength, "0");
                             changed = true;
-                        }
-                        else { //Update facet number
+                        } else { //Update facet number
                             char tmp[12];
-                            sprintf(tmp, "%d", (*newRefs)[facetNumber - 1]+1);
+                            sprintf(tmp, "%d", (*newRefs)[facetNumber - 1] + 1);
                             newExpr.replace(minPos + maxLength, digitsLength, tmp);
                             changed = true;
                         }
@@ -2528,39 +2526,9 @@ void Interface::UpdateFacetlistSelected() {
     if (selectedFacets.size() > 1000) {
         facetList->ReOrder();
         facetList->SetSelectedRows(selectedFacets, false);
-    }
-    else {
+    } else {
         facetList->SetSelectedRows(selectedFacets, true);
     }
-}
-
-int Interface::GetVariable(const char *name, const char *prefix) {
-
-    char tmp[256];
-    int  idx;
-    int lgthP = (int)strlen(prefix);
-    int lgthN = (int)strlen(name);
-
-    if (lgthP >= lgthN) {
-        return -1;
-    }
-    else {
-        strcpy(tmp, name);
-        tmp[lgthP] = 0;
-
-        if (iequals(tmp, prefix)) {
-            strcpy(tmp, name + lgthP);
-            int conv = sscanf(tmp, "%d", &idx);
-            if (conv) {
-                return idx;
-            }
-            else {
-                return -1;
-            }
-        }
-    }
-    return -1;
-
 }
 
 /*
@@ -2613,7 +2581,8 @@ void Interface::UpdateFormula() {
 
 bool Interface::AskToSave() {
     if (!changedSinceSave) return true;
-    int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved", GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
+    int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved",
+                                    GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
     if (ret == GLDLG_SAVE) {
         //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
         std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
@@ -2638,10 +2607,8 @@ bool Interface::AskToSave() {
             progressDlg2->SetVisible(false);
             SAFE_DELETE(progressDlg2);
             return true;
-        }
-        else return false;
-    }
-    else if (ret == GLDLG_DISCARD) return true;
+        } else return false;
+    } else if (ret == GLDLG_DISCARD) return true;
     return false;
 }
 
@@ -2651,7 +2618,7 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
         try {
             if (AskToReset()) {
                 //geom->CreateDifference();
-                geom->ClipSelectedPolygons(type,reverseOrder);
+                geom->ClipSelectedPolygons(type, reverseOrder);
             }
         }
         catch (Error &e) {
@@ -2662,8 +2629,7 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
         catch (Error &e) {
             GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
         }
-    }
-    else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
+    } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 }
 
 void Interface::SaveFileAs() {
@@ -2726,8 +2692,7 @@ void Interface::ExportTextures(int grouping, int mode) {
 
 }
 
-void Interface::DoEvents(bool forced)
-{
+void Interface::DoEvents(bool forced) {
     static int lastChkEvent = 0;
     static int lastRepaint = 0;
     int time = SDL_GetTicks();
@@ -2753,23 +2718,16 @@ void Interface::DoEvents(bool forced)
 bool Interface::AskToReset(Worker *work) {
     if (work == NULL) work = &worker;
     if (work->globalHitCache.globalHits.hit.nbMCHit > 0) {
-        int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+        int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
+                                        GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
-            work->ResetStatsAndHits(m_fTime);
-            nbDesStart = 0;
-            nbHitStart = 0;
-
-            //resetSimu->SetEnabled(false);
-            UpdatePlotters();
+            ResetSimulation(false);
             return true;
-        }
-        else return false;
-    }
-    else return true;
+        } else return false;
+    } else return true;
 }
 
-int Interface::FrameMove()
-{
+int Interface::FrameMove() {
     char tmp[256];
     Geometry *geom = worker.GetGeometry();
 
@@ -2778,13 +2736,13 @@ int Interface::FrameMove()
     if (geom->IsLoaded()) {
         if (autoSaveSimuOnly) {
             if (worker.isRunning) {
-                if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >= (float)autoSaveFrequency*60.0f) {
+                if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >=
+                    (float) autoSaveFrequency * 60.0f) {
                     timeForAutoSave = true;
                 }
             }
-        }
-        else {
-            if ((m_fTime - lastSaveTime) >= (float)autoSaveFrequency*60.0f) {
+        } else {
+            if ((m_fTime - lastSaveTime) >= (float) autoSaveFrequency * 60.0f) {
                 timeForAutoSave = true;
             }
         }
@@ -2818,6 +2776,10 @@ int Interface::FrameMove()
                 }
                 // Simulation monitoring
                 UpdatePlotters();
+                if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
+                    convergencePlotter->Refresh();
+                    formulaEditor->formula_ptr->formulasChanged = false;
+                }
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
@@ -2826,13 +2788,14 @@ int Interface::FrameMove()
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
                 // Update timing measurements
-                if (worker.globalHitCache.globalHits.hit.nbMCHit != lastNbHit || worker.globalHitCache.globalHits.hit.nbDesorbed != lastNbDes) {
-                    double dTime = (double)(m_fTime - lastMeasTime);
-                    hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - lastNbHit) / dTime;
-                    dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
+                if (worker.globalHitCache.globalHits.hit.nbMCHit != lastNbHit ||
+                    worker.globalHitCache.globalHits.hit.nbDesorbed != lastNbDes) {
+                    double dTime = (double) (m_fTime - lastMeasTime);
+                    hps = (double) (worker.globalHitCache.globalHits.hit.nbMCHit - lastNbHit) / dTime;
+                    dps = (double) (worker.globalHitCache.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
                     if (lastHps != 0.0) {
-                        hps = 0.2*(hps)+0.8*lastHps;
-                        dps = 0.2*(dps)+0.8*lastDps;
+                        hps = 0.2 * (hps) + 0.8 * lastHps;
+                        dps = 0.2 * (dps) + 0.8 * lastDps;
                     }
                     lastHps = hps;
                     lastDps = dps;
@@ -2841,29 +2804,31 @@ int Interface::FrameMove()
                     lastMeasTime = m_fTime;
                 }
             }
-        }
 
-#if defined(MOLFLOW)
-        if (worker.calcAC) {
-            sprintf(tmp, "Calc AC: %s (%zd %%)", FormatTime(worker.simuTime + (m_fTime - worker.startTime)),
-                    worker.calcACprg);
+            // First sample every second, fine tune later
+            if (!formula_ptr->formulas_n.empty()) {
+                if (!convergencePlotter)
+                    convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
+                if (!formulaEditor) {
+                    formulaEditor = new FormulaEditor(&worker, formula_ptr);
+                    formulaEditor->Refresh();
+                }
+                if (autoUpdateFormulas && formula_ptr->sampleConvValues) {
+                    formula_ptr->InitializeFormulas();
+                    //formulaEditor->Refresh();
+                    //formulaEditor->ReEvaluate();
+                    convergencePlotter->Update(lastAppTime);
+                }
+            }
         }
-        else {
-#endif
-
-#if defined(MOLFLOW)
-        }
-#endif
 
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
-    }
-    else {
+    } else {
         if (worker.simuTime > 0.0) {
-            hps = (double)(worker.globalHitCache.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
-            dps = (double)(worker.globalHitCache.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
-        }
-        else {
+            hps = (double) (worker.globalHitCache.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
+            dps = (double) (worker.globalHitCache.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
+        } else {
             hps = 0.0;
             dps = 0.0;
         }
@@ -2896,23 +2861,22 @@ int Interface::FrameMove()
     }
 
     if (worker.globalHitCache.nbLeakTotal) {
-        sprintf(tmp, "%g (%.4f%%)", (double)worker.globalHitCache.nbLeakTotal, (double)(worker.globalHitCache.nbLeakTotal)*100.0 / (double)worker.globalHitCache.globalHits.hit.nbDesorbed);
+        sprintf(tmp, "%g (%.4f%%)", (double) worker.globalHitCache.nbLeakTotal,
+                (double) (worker.globalHitCache.nbLeakTotal) * 100.0 /
+                (double) worker.globalHitCache.globalHits.hit.nbDesorbed);
         leakNumber->SetText(tmp);
-    }
-    else {
+    } else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!worker.isRunning&&worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!worker.isRunning && worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
 
     if (worker.isRunning) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
-    }
-    else if (worker.globalHitCache.globalHits.hit.nbMCHit > 0) {
+    } else if (worker.globalHitCache.globalHits.hit.nbMCHit > 0) {
         startSimu->SetText("Resume");
         //startSimu->SetFontColor(0, 140, 0);
-    }
-    else {
+    } else {
         startSimu->SetText("Begin");
         //startSimu->SetFontColor(0, 140, 0);
     }
@@ -2932,7 +2896,7 @@ int Interface::FrameMove()
     }
     */
 
-    double delayTime = 0.03 - (wereEvents ? fPaintTime  :0.0) - fMoveTime;
+    double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!
         uint32_t delay_u = static_cast<uint32_t>(1000.0 * delayTime);
         if (delay_u < 50) {
@@ -2974,7 +2938,7 @@ bool Interface::AutoSave(bool crashSave) {
         ResetAutoSaveTimer(); //deduct saving time from interval
     }
     catch (Error &e) {
-        GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", { "OK" }, GLDLG_ICONERROR);
+        GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", {"OK"}, GLDLG_ICONERROR);
         progressDlg2->SetVisible(false);
         SAFE_DELETE(progressDlg2);
         ResetAutoSaveTimer();
@@ -2990,7 +2954,7 @@ bool Interface::AutoSave(bool crashSave) {
 void Interface::CheckForRecovery() {
     // Check for autosave files in current dir.
     auto curPath = std::filesystem::current_path(); //string (POSIX) or wstring (Windows)
-    for (const auto & p : std::filesystem::directory_iterator(curPath)) {
+    for (const auto &p : std::filesystem::directory_iterator(curPath)) {
 
         std::string path_str = p.path().u8string();
         std::string fileName_str = p.path().filename().u8string();
@@ -2998,12 +2962,12 @@ void Interface::CheckForRecovery() {
         if (beginsWith(fileName_str, appName + "_Autosave")) {
             std::ostringstream msg;
             msg << "Autosave file found:\n" << fileName_str << "\n";
-            int rep = RecoveryDialog::Display(msg.str().c_str(), "Autosave recovery", GLDLG_LOAD | GLDLG_SKIP, GLDLG_DELETE);
+            int rep = RecoveryDialog::Display(msg.str().c_str(), "Autosave recovery", GLDLG_LOAD | GLDLG_SKIP,
+                                              GLDLG_DELETE);
             if (rep == GLDLG_LOAD) {
                 LoadFile(path_str);
                 RemoveRecent(path_str.c_str());
-            }
-            else if (rep == GLDLG_CANCEL) return;
+            } else if (rep == GLDLG_CANCEL) return;
             else if (rep == GLDLG_SKIP) continue;
             else if (rep == GLDLG_DELETE) remove(p.path());
         }

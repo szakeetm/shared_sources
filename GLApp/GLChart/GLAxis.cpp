@@ -1235,17 +1235,20 @@ GLuint GLAxis::initMarker(const char *name) {
       if( scale==LOG_SCALE && prec<1.0 )
         prec=1.0;
 
+      double relDiff = 0.005;
+      if(max>0)
+          relDiff = (max + min) != 0.0 ? (0.5 * (max - min) / (max + min)) : ((max - min) / (max));
       if (min < 0)
         min = ((int) (min / prec) - 1) * prec;
       else
         if ( scale==LOG_SCALE) min = (int) (min / prec) * prec;
-		else min*=0.95;
+		else min*=std::max(1.0 - relDiff, 0.95);
 
       if (max < 0)
         max = (int) (max / prec) * prec;
       else
         if ( scale==LOG_SCALE) max = ((int) (max / prec) + 1) * prec;
-		else max*=1.05;
+		else max*=std::min(1.0 + relDiff, 1.05);
 
     } // end ( if autoScale )
 

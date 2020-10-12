@@ -97,6 +97,7 @@ set(SRC_FILES
         Interface/AppUpdater.cpp
         Interface/BuildIntersection.cpp
         Interface/CollapseSettings.cpp
+        Interface/ConvergencePlotter.cpp
         Interface/CreateShape.cpp
         Interface/ExtrudeFacet.cpp
         Interface/FacetCoordinates.cpp
@@ -128,6 +129,8 @@ set(SRC_FILES
         Distributions.cpp
         Facet_shared.cpp
         File.cpp
+        Formulas.cpp
+        FormulaEvaluator.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
         Polygon.cpp

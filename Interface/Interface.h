@@ -21,6 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Shared functions of the Molflow and Synrad interface
 #include <list> // for recents
+#include <memory>
+#include <Formulas.h>
 
 #include "Worker.h"
 #include "GeometryViewer.h"
@@ -69,6 +71,7 @@ class UpdateCheckDialog;
 class UpdateFoundDialog;
 class UpdateLogWindow;
 class ParticleLogger;
+class ConvergencePlotter;
 
 class Geometry;
 
@@ -162,6 +165,7 @@ typedef struct {
 #define MENU_TOOLS_HISTOGRAMSETTINGS 404
 #define MENU_TOOLS_HISTOGRAMPLOTTER 405
 #define MENU_TOOLS_SCREENSHOT 406
+#define MENU_TOOLS_CONVPLOTTER 407
 
 #define MENU_SELECTION_ADDNEW             501
 #define MENU_SELECTION_CLEARALL           502
@@ -284,11 +288,11 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
-	
-	std::vector<GLParser*> formulas_n;
+
+    std::shared_ptr<Formulas> formula_ptr;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-	HANDLE compressProcessHandle = NULL;
+	HANDLE compressProcessHandle;
 #endif
 
 	// Worker handle
@@ -379,7 +383,6 @@ public:
 	
 	void UpdateFacetlistSelected();
 	
-	int  GetVariable(const char * name, const char * prefix);
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
 	bool AskToSave();
@@ -428,6 +431,7 @@ public:
 	VertexCoordinates	*vertexCoordinates;
 	SmartSelection		*smartSelection;
 	FormulaEditor		*formulaEditor;
+	ConvergencePlotter   *convergencePlotter;
 
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
