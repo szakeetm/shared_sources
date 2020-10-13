@@ -46,7 +46,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/SynRad.h"
 #endif
 
-constexpr size_t max_vector_size() { return 2048; };
+constexpr size_t max_vector_size() { return 16384; };
 
 /**
 * \brief Constructor with initialisation for Convergence plotter window (Tools/Convergence Plotter)
