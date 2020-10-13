@@ -172,7 +172,6 @@ void ConvergencePlotter::UpdateVector() {
     //Rebuild vector size
     size_t nbFormulas = formula_ptr->formulas_n.size();
     if (formula_ptr->convergenceValues.size() != nbFormulas) {
-        //formula_ptr->convergenceValues.clear();
         formula_ptr->convergenceValues.resize(nbFormulas);
     }
 }
@@ -573,8 +572,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
 void ConvergencePlotter::SetViews(const std::vector<int> &updatedViews) {
     Reset();
     for (int view : updatedViews)
-        if (view < formula_ptr->formulas_n.size())
-            addView(view);
+        addView(view);
     //Refresh(); //Commented out: at this point, simulation results are not yet loaded
 }
 
