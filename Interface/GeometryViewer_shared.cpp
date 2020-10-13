@@ -219,10 +219,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
 	Add(hideLotlabel);
 
+	std::string ctrlText = "CTRL";
 #if defined(__MACOSX__) || defined(__APPLE__)
-	std::string ctrlText = "CMD";
-#else
-	std::string altText = "Ctrl";
+	ctrlText = "CMD";
 #endif
 
 	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel").c_str());
