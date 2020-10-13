@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 #include "FormulaEditor.h"
+#include "ConvergencePlotter.h"
 #include "Formulas.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLMessageBox.h"
@@ -33,6 +34,17 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "Worker.h"
 
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+extern MolFlow *mApp;
+#endif
+
+#if defined(SYNRAD)
+#include "../src/SynRad.h"
+extern SynRad*mApp;
+#endif
+
+
 extern std::string formulaSyntax;
 extern int formulaSyntaxHeight;
 
@@ -44,8 +56,8 @@ static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
     columnRatios = { 0.333,0.333,0.333 };
 
-    int wD = 420;
-    int hD = 200; //Height extended runtime when formula syntax panel is expanded
+    int wD = 460;
+    int hD = 230; //Height extended runtime when formula syntax panel is expanded
 
     work = w;
     formula_ptr = formulas;
@@ -68,6 +80,9 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
 
     recalcButton = new GLButton(0, "Recalculate now");
     Add(recalcButton);
+
+    convPlotterButton = new GLButton(0, "<< Conv.plotter");
+    GLWindow::Add(convPlotterButton);
 
     sampleConvergenceTgl = new GLToggle(0, "Sample for convergence");
     sampleConvergenceTgl->SetState(true);
@@ -124,6 +139,17 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		if (src == recalcButton) {
 			ReEvaluate();
 		}
+        else if (src == convPlotterButton) {
+            if (!mApp->convergencePlotter || !mApp->convergencePlotter->IsVisible())
+            {
+                SAFE_DELETE(mApp->convergencePlotter);
+                mApp->convergencePlotter = new ConvergencePlotter(work, mApp->formula_ptr);
+                mApp->convergencePlotter->Refresh();
+                mApp->convergencePlotter->SetVisible(true);
+            } else {
+                mApp->convergencePlotter->SetVisible(false);
+            }
+        }
 		else if (src == moveUpButton) {
 			int selRow = formulaList->GetSelectedRow();
 			if (selRow <= 0) {
@@ -223,6 +249,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		EnableDisableMoveButtons();
+		formula_ptr->formulasChanged = true;
 		break;
 	}
 	case MSG_LIST_COL:
@@ -244,14 +271,17 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 
 void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
-	panel1->SetBounds(5, 5, w - 10, h - 90 - formulaHeight);
-	formulaList->SetBounds(10, 22, w - 20, h - 115 - formulaHeight);
+	panel1->SetBounds(5, 5, w - 10, h - 120 - formulaHeight);
+	formulaList->SetBounds(10, 22, w - 20, h - 145 - formulaHeight);
 	for (size_t i=0;i<3;i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
-	recalcButton->SetBounds(10, h - 80 - formulaHeight, 95, 20);
-    sampleConvergenceTgl->SetBounds(115, h - 80 - formulaHeight, 120, 20);
-	moveUpButton->SetBounds(w - 150, h - 80 - formulaHeight, 65, 20);
-	moveDownButton->SetBounds(w - 80, h - 80 - formulaHeight, 65, 20);
+	recalcButton->SetBounds(10, h - 110 - formulaHeight, 95, 20);
+
+	moveUpButton->SetBounds(w - 150, h - 110 - formulaHeight, 65, 20);
+	moveDownButton->SetBounds(w - 80, h - 110 - formulaHeight, 65, 20);
+
+    convPlotterButton->SetBounds(10, h - 80 - formulaHeight, 90, 20);
+    sampleConvergenceTgl->SetBounds(110, h - 80 - formulaHeight, 120, 20);
 
 	panel2->SetBounds(5, h - 50 - formulaHeight, w - 10, 20 + formulaHeight); //Height will be extended runtime
 	panel2->SetCompBounds(descL, 10, 15, w-30, formulaHeight);

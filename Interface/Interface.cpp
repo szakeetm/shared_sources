@@ -2762,10 +2762,6 @@ int Interface::FrameMove() {
                 }
                 // Simulation monitoring
                 UpdatePlotters();
-                if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
-                    convergencePlotter->Refresh();
-                    formulaEditor->formula_ptr->formulasChanged = false;
-                }
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
@@ -2865,6 +2861,11 @@ int Interface::FrameMove() {
     } else {
         startSimu->SetText("Begin");
         //startSimu->SetFontColor(0, 140, 0);
+    }
+
+    if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
+        convergencePlotter->Refresh();
+        formula_ptr->formulasChanged = false;
     }
 
     /*

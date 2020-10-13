@@ -73,6 +73,8 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
     chart->GetY2Axis()->SetAutoScale(true);
     chart->GetY1Axis()->SetAnnotation(VALUE_ANNO);
     chart->GetXAxis()->SetAnnotation(VALUE_ANNO);
+    chart->GetXAxis()->SetName("Number of desorptions");
+
     Add(chart);
 
     dismissButton = new GLButton(0, "Dismiss");
@@ -192,7 +194,7 @@ void ConvergencePlotter::ResetData() {
 * \param formulaId formula whose convergence values shall be pruned
 */
 void ConvergencePlotter::pruneEveryN(size_t everyN, int formulaId) {
-    auto& convVec = formula_ptr->convergenceValues[formulaId];
+    auto &convVec = formula_ptr->convergenceValues[formulaId];
     for (int i = convVec.size() - everyN; i > 0; i = i - everyN)
         convVec.erase(convVec.begin() + i);
 }
@@ -203,7 +205,7 @@ void ConvergencePlotter::pruneEveryN(size_t everyN, int formulaId) {
  * \param formulaId formula whose convergence values shall be pruned
 */
 void ConvergencePlotter::pruneFirstN(size_t n, int formulaId) {
-    auto& convVec = formula_ptr->convergenceValues[formulaId];
+    auto &convVec = formula_ptr->convergenceValues[formulaId];
     convVec.erase(convVec.begin(), convVec.begin() + std::min(n, convVec.size()));
 }
 
@@ -215,14 +217,22 @@ void ConvergencePlotter::Refresh() {
     //Rebuild selection combo box
     size_t nbFormulas = formula_ptr->formulas_n.size(); // minimum 1 for custom input
     profCombo->Clear();
-    if (nbFormulas) profCombo->SetSize(nbFormulas);
-
-    for (size_t i = 0; i < nbFormulas; i++) {
+    if (nbFormulas) {
+        profCombo->SetSize(nbFormulas);
+        for (size_t i = 0; i < nbFormulas; i++) {
+            char tmp[128];
+            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i]->GetExpression());
+            profCombo->SetValueAt(i, tmp, (int) i);
+        }
+        profCombo->SetEditable(true);
+    } else {
+        profCombo->SetSize(1);
         char tmp[128];
-        sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i]->GetExpression());
-        profCombo->SetValueAt(i, tmp, (int) i);
+        sprintf(tmp, "%s", "No formula found");
+        profCombo->SetValueAt(0, tmp, (int) -1);
+        profCombo->SetEditable(false);
     }
-    profCombo->SetSelectedIndex(nbFormulas ? 0 : -1);
+    profCombo->SetSelectedIndex(0);
 
     //Remove profiles that aren't present anymore
     for (int v = nbView - 1; v >= 0; v--) { //int because it can be -1, nbView is also int
@@ -234,7 +244,8 @@ void ConvergencePlotter::Refresh() {
             continue;
         }
         int formId = 0;
-        while (views[v]->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
+        while (views[v]->userData1 !=
+               (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
             ++formId;
             if (formId >= formula_ptr->formulas_n.size()) {
                 chart->GetY1Axis()->RemoveDataView(views[v]);
@@ -389,7 +400,8 @@ void ConvergencePlotter::refreshViews() {
         v->Reset();
         if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
             for (int j = 0; j < formula_ptr->convergenceValues[formId].size(); j++)
-                v->Add(formula_ptr->convergenceValues[formId][j].first, formula_ptr->convergenceValues[formId][j].second, false);
+                v->Add(formula_ptr->convergenceValues[formId][j].first,
+                       formula_ptr->convergenceValues[formId][j].second, false);
         }
         v->CommitChange();
 
