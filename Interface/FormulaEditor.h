@@ -28,15 +28,19 @@ class GLToggle;
 class GLTitledPanel;
 class GLList;
 class Worker;
+struct Formulas;
+
 #include <vector>
 #include <string>
+#include <memory>
 
 class FormulaEditor : public GLWindow {
 
 public:
 
   // Construction
-  FormulaEditor(Worker *work);
+  FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas);
+
   void RebuildList();
   void Refresh();
 
@@ -52,8 +56,10 @@ private:
 
   Worker	   *work;
 
+  GLToggle  *sampleConvergenceTgl;
   GLButton    *recalcButton;
-  GLButton		*moveUpButton;
+    GLButton    *convPlotterButton;
+    GLButton		*moveUpButton;
   GLButton		*moveDownButton;
   GLLabel     *l1;
   GLLabel     *descL;
@@ -68,4 +74,6 @@ private:
 
   void EnableDisableMoveButtons();
 
+public:
+    std::shared_ptr<Formulas> formula_ptr;
 };
