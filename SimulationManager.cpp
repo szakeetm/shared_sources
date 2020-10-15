@@ -360,8 +360,10 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     // Wait for completion
     bool finished = false;
     bool error = false;
+    const int waitAmount = 250;
+    int prevIncTime = 0; // save last time a wait increment has been set; allows for a dynamic/reasonable increase
     int waitTime = 0;
-    int timeOutAt = 10000; // 10 sec
+    int timeOutAt = 10000; // 10 sec; max time for an idle operation to timeout
     allProcsDone = true;
 
     // struct, because vector of char arrays is forbidden w/ clang
@@ -394,16 +396,19 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             }
             else if(procState == PROCESS_STARTING){
                 snprintf(stateStrings[i].s, 128, shMaster->procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) // if strings are different
-                    timeOutAt += 10000; // if task properly started, increase allowed wait time
+                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) { // if strings are different
+                    timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
+                                                                                10000); // if task properly started, increase allowed wait time
+                    prevIncTime = waitTime;
+                }
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
         ReleaseDataport(dpControl);
 
         if (!finished) {
-            ProcessSleep(250);
-            waitTime += 250;
+            ProcessSleep(waitAmount);
+            waitTime += waitAmount;
         }
     } while (!finished && waitTime<timeOutAt);
 
