@@ -1855,7 +1855,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 return true;
             }
             else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-                geom->viewStruct = (int)Previous(geom->viewStruct, geom->GetNbStructure());
+                if (geom->viewStruct == -1) geom->viewStruct = geom->GetNbStructure() - 1;
+                else
+                    geom->viewStruct = (int)Previous(geom->viewStruct, geom->GetNbStructure());
                 geom->UnselectAll();
                 UpdateStructMenu();
                 return true;
