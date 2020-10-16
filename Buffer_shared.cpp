@@ -70,3 +70,22 @@ FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs){
 	return *this;
 }
 #endif
+
+void FacetHistogramBuffer::Resize(const HistogramParams& params) {
+    this->nbHitsHistogram.resize(params.recordBounce ? params.GetBounceHistogramSize() : 0);
+    this->nbHitsHistogram.shrink_to_fit();
+    this->distanceHistogram.resize(params.recordDistance ? params.GetDistanceHistogramSize() : 0);
+    this->distanceHistogram.shrink_to_fit();
+    #ifdef MOLFLOW
+    this->timeHistogram.resize(params.recordTime ? params.GetTimeHistogramSize() : 0);
+    this->timeHistogram.shrink_to_fit();
+    #endif
+}
+
+void FacetHistogramBuffer::Reset() {
+    ZEROVECTOR(nbHitsHistogram);
+    ZEROVECTOR(distanceHistogram);
+    #ifdef MOLFLOW
+    ZEROVECTOR(timeHistogram);
+    #endif
+}

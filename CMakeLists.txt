@@ -98,6 +98,7 @@ set(SRC_FILES
         Interface/AppUpdater.cpp
         Interface/BuildIntersection.cpp
         Interface/CollapseSettings.cpp
+        Interface/ConvergencePlotter.cpp
         Interface/CreateShape.cpp
         Interface/ExtrudeFacet.cpp
         Interface/FacetCoordinates.cpp
@@ -129,6 +130,8 @@ set(SRC_FILES
         Distributions.cpp
         Facet_shared.cpp
         File.cpp
+        Formulas.cpp
+        FormulaEvaluator.cpp
         Geometry_shared.cpp
         GrahamScan.cpp
         Polygon.cpp
@@ -157,6 +160,8 @@ set(SRC_FILES
 
 set(SRC_FILES ${SRC_FILES}
         Helper/StringHelper.cpp
+        Helper/MathTools.cpp
+        Helper/GraphicsHelper.cpp
         )
 
 set(SRC_FILES ${SRC_FILES}
@@ -190,7 +195,6 @@ set(SRC_FILES ${SRC_FILES}
         GLApp/GLUnitDialog.cpp
         GLApp/GLWindow.cpp
         GLApp/GLWindowManager.cpp
-        GLApp/MathTools.cpp
         GLApp/GLChart/AxisPanel.cpp
         GLApp/GLChart/GLAxis.cpp
         GLApp/GLChart/GLChart.cpp
@@ -340,7 +344,7 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PRIVATE stdc++)
+        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
         #don´t add anything for filesystem
     else()

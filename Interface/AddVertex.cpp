@@ -27,7 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-#include "GLApp/MathTools.h" //Contains
+#include "Helper/MathTools.h" //Contains
 
 #if defined(MOLFLOW)
 //#include "../../src/MolFlow.h"

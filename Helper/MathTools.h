@@ -59,11 +59,11 @@ char  *FormatMemoryLL(long long size);
 
 double my_erf(double x);
 double Weigh(const double& a, const double& b, const double& weigh);
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logarithmic = false, const bool& allowExtrapolate = false );
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logarithmic = false, const bool& allowExtrapolate = false);
-double InterpolateXY(const double& lookupValue, const std::vector<std::pair<double, double>>& table, const bool& first, const bool& logarithmic, const bool& allowExtrapolate);
-std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logarithmic = false, const bool& allowExtrapolate = false );
-double InterpolateVectorX(const double& y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t& elementIndex, const bool& logarithmic = false, const bool& allowExtrapolate = false);
+double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
+double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
+double InterpolateXY(const double& lookupValue, const std::vector<std::pair<double, double>>& table, const bool& first, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
+std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
+double InterpolateVectorX(const double& y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t& elementIndex, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
 //double QuadraticInterpolateX(const double & y, const double & a, const double & b, const double & c, const double & FA, const double & FB, const double & FC);
 //double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& allowExtrapolate = false);
 
@@ -74,14 +74,6 @@ template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE&
 template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
-
-std::vector<std::string> SplitString(std::string const &input);
-std::vector<std::string> SplitString(std::string const &input,const char &delimiter);
-
-bool endsWith(std::string const & fullString, std::string const & ending);
-bool beginsWith(std::string const & fullString, std::string const & beginning);
-std::string space2underscore(std::string text);
-bool iequals(std::string a,std::string b);
 
 int my_lower_bound(const double& key, double* A,const size_t& size);
 int my_lower_bound(const double& key, const std::vector<double>& A);
@@ -96,7 +88,7 @@ double GetElement(const std::pair<double, std::vector<double>> & pair, const boo
 size_t GetSysTimeMs();
 
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, size_t startIndex);
 
 //Elementwise addition of two vectors:
 #include <algorithm>

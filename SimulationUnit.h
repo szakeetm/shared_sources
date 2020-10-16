@@ -31,9 +31,9 @@ public:
     virtual ~SimulationUnit()= default;;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual size_t LoadSimulation() = 0;
-    virtual void UpdateHits(int prIdx, DWORD timeout) = 0;
-    //virtual bool UploadHits(Dataport *dpHit, Dataport* dpLog, int prIdx, DWORD timeout) = 0;
+    virtual size_t LoadSimulation(char *loadStatus) = 0;
+    virtual bool UpdateHits(int prIdx, DWORD timeout) = 0;
+
     //virtual bool UpdateOntheflySimuParams(Dataport *loader) = 0;
     virtual int ReinitializeParticleLog() = 0;
 

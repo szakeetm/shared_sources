@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "GLComponent.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include "GLWindowManager.h"
 #include "GLApp.h"
 #include "GLMenu.h"

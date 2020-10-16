@@ -1,8 +1,9 @@
 /*
 Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron
-radiation Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY Copyright:
-E.S.R.F / CERN Website:     https://cern.ch/molflow
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

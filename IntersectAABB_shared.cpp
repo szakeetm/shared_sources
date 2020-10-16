@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "IntersectAABB_shared.h"
 #include "Random.h"
 #include "Polygon.h" //IsInPoly
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 #include <algorithm> //std::min
 #include "../src/Simulation.h"
 #include <tuple>
@@ -330,7 +330,7 @@ IntersectTree(const SimulationModel &model, const AABBNODE &node, const Vector3d
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = currentParticle.flightTime + d / 100.0 / currentParticle.velocity;
+									double time = currentParticle.particleTime + d / 100.0 / currentParticle.velocity;
 									double currentOpacity = model.GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
 #endif

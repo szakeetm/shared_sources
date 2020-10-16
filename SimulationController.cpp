@@ -28,9 +28,8 @@ SimulationController::SimulationController(std::string appName, size_t parentPID
     simulation = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
     procInfo = pInfo; // Set from outside to link with general structure
 
-    stepsPerSec = -1.0;
-    endState = false;
-    lastHitUpdateOK = false;
+    loadOK = false;
+    resetControls();
 
     SetRuntimeInfo();
 
@@ -57,6 +56,15 @@ SimulationController::SimulationController(SimulationController&& o) noexcept : 
 
     prIdx = o.prIdx;
     parentPID = o.parentPID;
+}
+
+int SimulationController::resetControls(){
+    lastHitUpdateOK = true;
+    endState = false;
+
+    stepsPerSec = 0.0;
+
+    return 0;
 }
 
 int SimulationController::StartSimulation() {
@@ -119,13 +127,13 @@ int SimulationController::SetRuntimeInfo() {
 }
 
 int SimulationController::ClearCommand() {
-    
+
     procInfo->masterCmd = COMMAND_NONE;
     procInfo->cmdParam = 0;
     procInfo->cmdParam2 = 0;
     strncpy(procInfo->statusString, GetSimuStatus(), 127);
     procInfo->statusString[127] = '\0';
-    
+
     return 0;
 }
 
@@ -140,7 +148,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
         strncpy(procInfo->statusString, status, 127);
         procInfo->statusString[127] = '\0';
     }
- 
+
     return 0;
 }
 
@@ -277,7 +285,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     // Last update not successful, retry with a longer timeout
                     if ((GetLocalState() != PROCESS_ERROR)) {
                         SetState(PROCESS_STARTING, "Updating hits...", false, true);
-                        simulation->UpdateHits(prIdx, 60000);
+                        lastHitUpdateOK = simulation->UpdateHits(prIdx, 60000);
                         SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
                     }
                 }
@@ -287,6 +295,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
             case COMMAND_RESET:
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+                resetControls();
                 simulation->ResetSimulation();
                 SetReady(loadOk);
                 break;
@@ -316,7 +325,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
                 if ((GetLocalState() != PROCESS_ERROR)) {
-                    simulation->UpdateHits(prIdx, 20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    lastHitUpdateOK = simulation->UpdateHits(prIdx, 20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
@@ -346,6 +355,7 @@ bool SimulationController::Load() {
         SetErrorSub(err);
         return false;
     }
+
 
     SetState(PROCESS_STARTING, "Loading simulation");
     if (simulation->LoadSimulation()) {

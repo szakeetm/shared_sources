@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLIcon.h"
 #include "GLApp/GLToolkit.h"
-#include "GLApp/MathTools.h" // MAX
+#include "Helper/MathTools.h" // MAX
 
 // Construct a message dialog box
 RecoveryDialog::RecoveryDialog(const char *message, const char *title, int mode, int icon) :GLWindow() {

@@ -34,7 +34,6 @@ template <class Datatype> class Distribution{ //All methods except Interpolate
 protected:
 	std::vector<std::pair<double,Datatype>> values;
 public:
-	Distribution(); //Sets loglog to false
 	void AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered=false);
 	void AddPair(const double& x, const Datatype& y, const bool& keepOrdered=false);
 	void RemoveValue(const size_t& pos);
@@ -47,13 +46,10 @@ public:
 	size_t GetSize();
 	double GetX(const size_t& index);
 	Datatype GetY(const size_t& index); //GetYValue seems reserved
-	bool isLogLog;
+	const std::vector<std::pair<double,Datatype>> GetValues(){return (const std::vector<std::pair<double,Datatype>>)values;}
+	bool logXinterp=false;
+	bool logYinterp=false;
 };
-
-template <class Datatype> Distribution<Datatype>::Distribution() {
-	//Placeholder to allow simple initialization
-	isLogLog = false;
-}
 
 template <class Datatype> void Distribution<Datatype>::AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered) {
 	if (keepOrdered) {
@@ -123,7 +119,8 @@ public:
     {
         archive(
                 CEREAL_NVP(values),
-                CEREAL_NVP(isLogLog)
+                CEREAL_NVP(logXinterp),
+				CEREAL_NVP(logYinterp)
         );
     }
 };
@@ -137,7 +134,8 @@ public:
     {
         archive(
                 CEREAL_NVP(values),
-                CEREAL_NVP(isLogLog)
+                CEREAL_NVP(logXinterp),
+				CEREAL_NVP(logYinterp)
         );
     }
 };

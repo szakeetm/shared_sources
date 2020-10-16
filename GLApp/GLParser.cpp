@@ -6,7 +6,8 @@
 #include <errno.h>
 #include "GLParser.h"
 #include <cstring> //strcpy, etc.
-#include "MathTools.h"
+#include "Helper/MathTools.h"
+#include "Helper/StringHelper.h"
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif

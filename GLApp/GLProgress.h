@@ -17,8 +17,8 @@ public:
   // Update progress bar (0 to 1)
   void SetProgress(double value);
   double GetProgress();
-  void SetMessage(const char *msg);
-  void SetMessage(std::string msg);
+  void SetMessage(const char *msg, const bool& force=true);
+  void SetMessage(std::string msg, const bool& force=true);
 
 private:
 

@@ -4,7 +4,7 @@
 #include "GLLabel.h"
 #include "GLIcon.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 
 // Construct a message dialog box
 GLMessageBox::GLMessageBox(const std::string & message, const std::string & title, const std::vector<std::string> & buttonList, int icon) :GLWindow() {

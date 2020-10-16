@@ -59,21 +59,28 @@ CURLcode SendHTTPPostRequest(std::string hostname, std::string payload) {
 	return retVal;
 }
 
-CURLcode DownloadFile(std::string url,std::string fileName) {
-    CURL *curl;
-    FILE *fp;
-    CURLcode result;
-    curl = curl_easy_init();
-    if (curl) {
-        fp = fopen(fileName.c_str(),"wb");
-		if (fp == NULL) return CURLE_WRITE_ERROR;
+std::tuple<CURLcode, long> DownloadFile(std::string url, std::string fileName) {
+	CURL* curl;
+	FILE* fp;
+	CURLcode result;
+	long respCode;
+	curl = curl_easy_init();
+	if (curl) {
+		fp = fopen(fileName.c_str(), "wb");
+		if (fp == NULL) return { CURLE_WRITE_ERROR,0 };
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        result = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        fclose(fp);
-		return result;
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+		result = curl_easy_perform(curl);
+		if (result == CURLE_OK) {
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &respCode);
+		}
+		else {
+			respCode = 0;
+		}
+		curl_easy_cleanup(curl);
+		fclose(fp);
+		return { result,respCode };
 	}
-	else return CURLE_FAILED_INIT;
+	else return {CURLE_FAILED_INIT, 0};
 }

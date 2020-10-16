@@ -16,6 +16,7 @@ class SimulationController {
     bool UpdateParams();
     int StartSimulation();
     int RunSimulation();
+    int resetControls();
 
 protected:
 
@@ -44,14 +45,14 @@ protected:
 
     SimulationUnit* simulation; //
     SubProcInfo* procInfo;
-protected:
-
-    double stepsPerSec;
-
-    int prIdx;
     size_t parentPID;
+
+private:
+    // tmp
+    double stepsPerSec;
     bool endState;
     bool lastHitUpdateOK;
+    bool loadOK;
 
 };
 

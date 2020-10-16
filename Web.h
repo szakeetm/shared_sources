@@ -6,4 +6,4 @@ size_t AppendDataToStringCurlCallback(void *ptr, size_t size, size_t nmemb, void
 
 std::tuple<CURLcode,std::string> DownloadString(std::string url);
 CURLcode SendHTTPPostRequest(std::string hostname, std::string payload);
-CURLcode DownloadFile(std::string url,std::string fileName);
+std::tuple<CURLcode,long> DownloadFile(std::string url,std::string fileName);

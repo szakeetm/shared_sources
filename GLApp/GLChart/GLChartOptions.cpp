@@ -10,7 +10,8 @@
 #include "../GLCombo.h"
 #include "../GLLabel.h"
 #include "../GLTextField.h"
-#include "../MathTools.h"
+#include "Helper/MathTools.h"
+#include "Helper/StringHelper.h"
 #include "AxisPanel.h"
 
 static int textCR = 0;
@@ -341,7 +342,7 @@ GLChartOptions::GLChartOptions(GLChart *chart) : GLTabWindow() {
 
     } else if (src == generalDurationText) {
 
-      if (iequals(generalDurationText->GetText().c_str(),"infinty")) {
+      if (iequals(generalDurationText->GetText().c_str(),"infinity")) {
         chart->SetDisplayDuration(MAX_VALUE);
         return;
       }

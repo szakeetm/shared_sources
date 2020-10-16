@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "LoadStatus.h"
 #include "GLApp/GLToolkit.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
@@ -31,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLList.h"
+#include "SMP.h"
 
 #ifndef _WIN32
 //getpid in linux
@@ -101,7 +103,7 @@ LoadStatus::~LoadStatus()
 	//SAFE_DELETE(processList);
 }
 
-/*void LoadStatus::SMPUpdate() {
+void LoadStatus::SMPUpdate() {
 		
 	if ((processList->GetNbRow() - 1) != worker->model.otfParams.nbProcess) RefreshNbProcess();
 
@@ -113,13 +115,17 @@ LoadStatus::~LoadStatus()
 		memset(states,0,MAX_PROCESS*sizeof(int));
 		worker->GetProcStatus(states,statusStrings);
 
+    std::vector<SubProcInfo> procInfo;
+    worker->GetProcStatus(procInfo);
 		processList->ResetValues();
 
 		//Interface
 #ifdef _WIN32
 		size_t currPid = GetCurrentProcessId();
+		double memDenominator = (1024.0*1024.0);
 #else
 		size_t currPid = getpid();
+		double memDenominator = (1024.0);
 #endif
 		GetProcInfo(currPid, &pInfo);
 		processList->SetValueAt(0, 0, "Interface");
@@ -135,15 +141,14 @@ LoadStatus::~LoadStatus()
 				processList->SetValueAt(1,i + 1,"0 MB");
 				processList->SetValueAt(2,i + 1,"Dead");
 			} else {
-				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
+				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / memDenominator);
 				processList->SetValueAt(1, i+1, tmp);
 				// State/Status
 				strncpy(tmp, statusStrings[i].c_str(), 127); tmp[127] = 0;
 				processList->SetValueAt(2,i+1,tmp);
-
 			}
 		}
-}*/
+}
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 	switch (message) {

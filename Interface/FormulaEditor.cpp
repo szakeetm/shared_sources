@@ -17,7 +17,10 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+
 #include "FormulaEditor.h"
+#include "ConvergencePlotter.h"
+#include "Formulas.h"
 #include "GLApp/GLToolkit.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLButton.h"
@@ -25,85 +28,92 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLToggle.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLList.h"
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 #include <sstream>
 #include <algorithm>
 
+#include "Worker.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-#endif
-
-#if defined(SYNRAD)
-#include "../src/SynRad.h"
-#endif
-
-extern GLApplication *theApp;
-extern std::string formulaSyntax;
-extern int formulaSyntaxHeight;
-
-#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
 #if defined(SYNRAD)
+#include "../src/SynRad.h"
 extern SynRad*mApp;
 #endif
+
+
+extern std::string formulaSyntax;
+extern int formulaSyntaxHeight;
 
 static const char *flName[] = { "Expression","Name (optional)","Value" };
 static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 
-FormulaEditor::FormulaEditor(Worker *w) :GLWindow() {
-	columnRatios = { 0.333,0.333,0.333 };
 
-	int wD = 400;
-	int hD = 200; //Height extended runtime when formula syntax panel is expanded
+FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
+    columnRatios = { 0.333,0.333,0.333 };
 
-	work = w;
+    int wD = 460;
+    int hD = 230; //Height extended runtime when formula syntax panel is expanded
 
-	SetTitle("Formula Editor");
-	SetIconfiable(true);
-	
-	SetResizable(true);
+    work = w;
+    formula_ptr = formulas;
+    formula_ptr->formulasChanged = false;
 
-	panel1 = new GLTitledPanel("Formula list");
-	Add(panel1);
+    SetTitle("Formula Editor");
+    SetIconfiable(true);
 
-	formulaList = new GLList(0);
-	formulaList->SetColumnLabelVisible(true);
-	formulaList->SetRowLabelVisible(true);
-	formulaList->SetHScrollVisible(false);
-	formulaList->SetGrid(true);
-	Add(formulaList);
+    SetResizable(true);
 
-	recalcButton = new GLButton(0, "Recalculate now");
-	Add(recalcButton);
+    panel1 = new GLTitledPanel("Formula list");
+    Add(panel1);
 
-	moveUpButton = new GLButton(0, "Move Up");
-	moveUpButton->SetEnabled(false);
-	Add(moveUpButton);
+    formulaList = new GLList(0);
+    formulaList->SetColumnLabelVisible(true);
+    formulaList->SetRowLabelVisible(true);
+    formulaList->SetHScrollVisible(false);
+    formulaList->SetGrid(true);
+    Add(formulaList);
 
-	moveDownButton = new GLButton(0, "Move Down");
-	moveDownButton->SetEnabled(false);
-	Add(moveDownButton);
+    recalcButton = new GLButton(0, "Recalculate now");
+    Add(recalcButton);
 
-	panel2 = new GLTitledPanel("Format");
-	panel2->SetClosable(true);
-	panel2->Close();
-	Add(panel2);
+    convPlotterButton = new GLButton(0, "<< Conv.plotter");
+    GLWindow::Add(convPlotterButton);
 
-	descL = new GLLabel(formulaSyntax.c_str());
-	descL->SetVisible(false); //Set visible runtime
-	Add(descL);
+    sampleConvergenceTgl = new GLToggle(0, "Sample for convergence");
+    sampleConvergenceTgl->SetState(true);
+    formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
+    Add(sampleConvergenceTgl);
 
-	// Place in top left corner
-	//int wS, hS;
-	//GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = /*(wS - wD - 215)*/ 10;
-	int yD = 30;
-	SetBounds(xD, yD, wD, hD);
+    moveUpButton = new GLButton(0, "Move Up");
+    moveUpButton->SetEnabled(false);
+    Add(moveUpButton);
 
-	RestoreDeviceObjects();
+    moveDownButton = new GLButton(0, "Move Down");
+    moveDownButton->SetEnabled(false);
+    Add(moveDownButton);
+
+    panel2 = new GLTitledPanel("Format");
+    panel2->SetClosable(true);
+    panel2->Close();
+    Add(panel2);
+
+    descL = new GLLabel(formulaSyntax.c_str());
+    descL->SetVisible(false); //Set visible runtime
+    Add(descL);
+
+    // Place in top left corner
+    //int wS, hS;
+    //GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = /*(wS - wD - 215)*/ 10;
+    int yD = 30;
+    SetBounds(xD, yD, wD, hD);
+
+    RestoreDeviceObjects();
 
 }
 
@@ -129,6 +139,17 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		if (src == recalcButton) {
 			ReEvaluate();
 		}
+        else if (src == convPlotterButton) {
+            if (!mApp->convergencePlotter || !mApp->convergencePlotter->IsVisible())
+            {
+                SAFE_DELETE(mApp->convergencePlotter);
+                mApp->convergencePlotter = new ConvergencePlotter(work, mApp->formula_ptr);
+                mApp->convergencePlotter->Refresh();
+                mApp->convergencePlotter->SetVisible(true);
+            } else {
+                mApp->convergencePlotter->SetVisible(false);
+            }
+        }
 		else if (src == moveUpButton) {
 			int selRow = formulaList->GetSelectedRow();
 			if (selRow <= 0) {
@@ -136,45 +157,52 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				DEBUG_BREAK;
 				return;
 			}
-			std::swap(mApp->formulas_n[selRow], mApp->formulas_n[selRow - 1]);
-			formulaList->SetSelectedRow(selRow - 1);
+			std::swap(formula_ptr->formulas_n.at(selRow), formula_ptr->formulas_n.at(selRow - 1));
+            std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow - 1]);
+            formulaList->SetSelectedRow(selRow - 1);
 			EnableDisableMoveButtons();
 			Refresh();
 		}
 		else if (src == moveDownButton) {
 			int selRow = formulaList->GetSelectedRow();
-			if (selRow > mApp->formulas_n.size() - 2) {
+			if (selRow > formula_ptr->formulas_n.size() - 2) {
 				//Interface bug
 				DEBUG_BREAK;
 				return;
 			}
-			std::swap(mApp->formulas_n[selRow], mApp->formulas_n[selRow + 1]);
-			formulaList->SetSelectedRow(selRow + 1);
+			std::swap(formula_ptr->formulas_n.at(selRow), formula_ptr->formulas_n.at(selRow + 1));
+            std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow + 1]);
+            formulaList->SetSelectedRow(selRow + 1);
 			EnableDisableMoveButtons();
 			Refresh();
 		}
 		break;
+    case MSG_TOGGLE:
+        if (src == sampleConvergenceTgl) {
+            formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
+        }
+        break;
 	case MSG_TEXT:
 	case MSG_LIST:
 	{
 		for (size_t row = 0; row < (formulaList->GetNbRow() - 1); row++) { //regular lines
 
 			if (strcmp(formulaList->GetValueAt(0, row), userExpressions[row].c_str()) != 0) { //Expression changed
-				if (!(row < mApp->formulas_n.size())) {
+				if (!(row < formula_ptr->formulas_n.size())) {
 					//Interface bug
 					DEBUG_BREAK;
 					return;
 				}
 				if (*(formulaList->GetValueAt(0, row)) != 0 || *(formulaList->GetValueAt(1, row)) != 0) //Name or expr. not empty
 				{
-					mApp->formulas_n[row]->SetExpression(formulaList->GetValueAt(0, row));
-					mApp->formulas_n[row]->Parse();
+                    formula_ptr->formulas_n.at(row)->SetExpression(formulaList->GetValueAt(0, row));
+                    formula_ptr->formulas_n.at(row)->Parse();
 					Refresh();
 				}
 				else
 				{
-					SAFE_DELETE(mApp->formulas_n[row]);
-					mApp->formulas_n.erase(mApp->formulas_n.begin() + row);
+					SAFE_DELETE(formula_ptr->formulas_n.at(row));
+                    formula_ptr->formulas_n.erase(formula_ptr->formulas_n.begin() + row);
 					Refresh();
 				}
 				EnableDisableMoveButtons();
@@ -184,13 +212,13 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			if (strcmp(formulaList->GetValueAt(1, row), userFormulaNames[row].c_str()) != 0) { //Name changed
 				if (*(formulaList->GetValueAt(0, row)) != 0 || *(formulaList->GetValueAt(1, row)) != 0) //Name or expr. not empty
 				{
-					mApp->formulas_n[row]->SetName(formulaList->GetValueAt(1, row));
+					formula_ptr->formulas_n.at(row)->SetName(formulaList->GetValueAt(1, row));
 					Refresh();
 				}
 				else
 				{
-					SAFE_DELETE(mApp->formulas_n[row]);
-					mApp->formulas_n.erase(mApp->formulas_n.begin() + row);
+					SAFE_DELETE(formula_ptr->formulas_n.at(row));
+					formula_ptr->formulas_n.erase(formula_ptr->formulas_n.begin() + row);
 					Refresh();
 				}
 				EnableDisableMoveButtons();
@@ -205,7 +233,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				newF->SetExpression(formulaList->GetValueAt(0, formulaList->GetNbRow() - 1));
 				newF->SetName("");
 				newF->Parse();
-				mApp->formulas_n.push_back(newF);
+				formula_ptr->formulas_n.push_back(newF);
 				Refresh();
 			}
 		}
@@ -216,11 +244,12 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				newF->SetExpression("");
 				newF->SetName(formulaList->GetValueAt(1, formulaList->GetNbRow() - 1));
 				newF->Parse();
-				mApp->formulas_n.push_back(newF);
+				formula_ptr->formulas_n.push_back(newF);
 				Refresh();
 			}
 		}
 		EnableDisableMoveButtons();
+		formula_ptr->formulasChanged = true;
 		break;
 	}
 	case MSG_LIST_COL:
@@ -242,13 +271,17 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 
 void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
-	panel1->SetBounds(5, 5, w - 10, h - 90 - formulaHeight);
-	formulaList->SetBounds(10, 22, w - 20, h - 115 - formulaHeight);
+	panel1->SetBounds(5, 5, w - 10, h - 120 - formulaHeight);
+	formulaList->SetBounds(10, 22, w - 20, h - 145 - formulaHeight);
 	for (size_t i=0;i<3;i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
-	recalcButton->SetBounds(10, h - 80 - formulaHeight, 95, 20);
-	moveUpButton->SetBounds(w - 160, h - 80 - formulaHeight, 65, 20);
-	moveDownButton->SetBounds(w - 90, h - 80 - formulaHeight, 65, 20);
+	recalcButton->SetBounds(10, h - 110 - formulaHeight, 95, 20);
+
+	moveUpButton->SetBounds(w - 150, h - 110 - formulaHeight, 65, 20);
+	moveDownButton->SetBounds(w - 80, h - 110 - formulaHeight, 65, 20);
+
+    convPlotterButton->SetBounds(10, h - 80 - formulaHeight, 90, 20);
+    sampleConvergenceTgl->SetBounds(110, h - 80 - formulaHeight, 120, 20);
 
 	panel2->SetBounds(5, h - 50 - formulaHeight, w - 10, 20 + formulaHeight); //Height will be extended runtime
 	panel2->SetCompBounds(descL, 10, 15, w-30, formulaHeight);
@@ -299,52 +332,40 @@ void FormulaEditor::RebuildList() {
 
 void FormulaEditor::Refresh() {
 	//Load contents of window from global (interface/app) formulas
-	size_t nbFormula = mApp->formulas_n.size();
+	size_t nbFormula = formula_ptr->formulas_n.size();
 	userExpressions.resize(nbFormula);
 	userFormulaNames.resize(nbFormula);
 	for (size_t i = 0; i < nbFormula; i++) {
-		userExpressions[i] = mApp->formulas_n[i]->GetExpression();
-		userFormulaNames[i] = mApp->formulas_n[i]->GetName();
+		userExpressions[i] = formula_ptr->formulas_n.at(i)->GetExpression();
+		userFormulaNames[i] = formula_ptr->formulas_n.at(i)->GetName();
 	}
 	RebuildList();
 	ReEvaluate();
+    formula_ptr->formulasChanged = true;
 }
 
 void FormulaEditor::ReEvaluate() {
 	
 	//       NEW CODE
-	
 
-	for (size_t i = 0; i < mApp->formulas_n.size(); i++) {
-
-		// Evaluate variables
-		int nbVar = mApp->formulas_n[i]->GetNbVariable();
-		bool ok = true;
-		for (int j = 0; j < nbVar && ok; j++) {
-			VLIST *v = mApp->formulas_n[i]->GetVariableAt(j);
-			ok = mApp->EvaluateVariable(v);
-			if (!ok) {
-				std::stringstream tmp;
-				tmp << "Invalid variable " << v->name;
-				formulaList->SetValueAt(2, i, tmp.str().c_str());
-			}
-		}
-
+	// First
+    formula_ptr->InitializeFormulas();
+	for (size_t i = 0; i < formula_ptr->formulas_n.size(); i++) {
 		// Evaluation
-		if (ok) { //Variables succesfully evaluated
+		if (!formula_ptr->formulas_n.at(i)->hasVariableEvalError) { //Variables succesfully evaluated
 			double r;
-			mApp->formulas_n[i]->hasVariableEvalError = false;
-			if (mApp->formulas_n[i]->Evaluate(&r)) {
+			formula_ptr->formulas_n.at(i)->hasVariableEvalError = false;
+			if (formula_ptr->formulas_n.at(i)->Evaluate(&r)) {
 				std::stringstream tmp;
 				tmp << r;
 				formulaList->SetValueAt(2, i, tmp.str().c_str());
 			}
 			else { //Variables OK but the formula itself can't be evaluated
-				formulaList->SetValueAt(2, i, mApp->formulas_n[i]->GetErrorMsg());
+				formulaList->SetValueAt(2, i, formula_ptr->formulas_n.at(i)->GetErrorMsg());
 			}
 #if defined(MOLFLOW)
 			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
-			formulaList->SetColumnColor(2,mApp->worker.displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
+			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif
 		}
 		else { //Error while evaluating variables
