@@ -16,7 +16,7 @@ public:
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual bool LoadSimulation(Dataport *loader, char *loadStatus) = 0;
-    virtual void UpdateHits(Dataport *dpHit, Dataport* dpLog,int prIdx, DWORD timeout) = 0;
+    virtual bool UpdateHits(Dataport *dpHit, Dataport* dpLog, int prIdx, DWORD timeout) = 0;
 
     virtual bool UpdateOntheflySimuParams(Dataport *loader) = 0;
     virtual int ReinitializeParticleLog() = 0;

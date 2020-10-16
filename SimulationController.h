@@ -16,6 +16,7 @@ class SimulationController {
     bool UpdateParams();
     int StartSimulation();
     int RunSimulation();
+    int resetControls();
 
 protected:
 
@@ -51,17 +52,18 @@ protected:
     SimulationUnit* simulation; //
 protected:
 
-    double stepsPerSec;
-
     int prIdx;
     size_t parentPID;
     SubProcInfo procInfo;
+
+
+private:
+    // tmp
+    double stepsPerSec;
     bool endState;
     bool lastHitUpdateOK;
-
-public:
-    // tmp
     bool loadOK;
+
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONCONTROLLER_H

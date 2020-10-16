@@ -28,8 +28,9 @@ SimulationController::SimulationController(std::string appName , std::string dpN
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(parentPID)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(parentPID)).c_str());
 
+    resetControls();
+
     simulation = simulationInstance;
-    loadOK = false;
     dpHit = nullptr;
     dpLog = nullptr;
     dpControl = OpenDataport(ctrlDpName, sizeof(SHCONTROL));
@@ -46,6 +47,16 @@ SimulationController::SimulationController(std::string appName , std::string dpN
 
 SimulationController::~SimulationController(){
     delete simulation;
+}
+
+int SimulationController::resetControls(){
+    lastHitUpdateOK = true;
+    endState = false;
+    loadOK = false;
+
+    stepsPerSec = 0.0;
+
+    return 0;
 }
 
 int SimulationController::StartSimulation() {
@@ -301,7 +312,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     // Last update not successful, retry with a longer timeout
                     if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
                         SetState(PROCESS_STARTING, "Updating hits...", false, true);
-                        simulation->UpdateHits(dpHit, dpLog, prIdx, 60000);
+                        lastHitUpdateOK = simulation->UpdateHits(dpHit, dpLog, prIdx, 60000);
                         SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
                     }
                 }
@@ -311,6 +322,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
             case COMMAND_RESET:
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo.cmdParam, procInfo.cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+                resetControls();
                 simulation->ResetSimulation();
                 SetReady();
                 break;
@@ -334,7 +346,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
                 if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
-                    simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    lastHitUpdateOK = simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
