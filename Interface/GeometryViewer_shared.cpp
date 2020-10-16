@@ -219,13 +219,18 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	hideLotlabel = new GLLabel("Large number of selected facets: normals, \201 \202 and vertices hidden");
 	Add(hideLotlabel);
 
-	screenshotLabel = new GLLabel("Screenshot: Draw selection rectangle to capture box. Press CTRL+R again to capture whole scene. ESC to cancel");
+	std::string ctrlText = "CTRL";
+#if defined(__MACOSX__) || defined(__APPLE__)
+	ctrlText = "CMD";
+#endif
+
+	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel").c_str());
 	Add(screenshotLabel);
 
-	selectLabel = new GLLabel("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/CTRL to add/remove to existing selection.");
+	selectLabel = new GLLabel(("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/" + ctrlText + " to add/remove to existing selection.").c_str());
 	Add(selectLabel);
 
-	rotateLabel = new GLLabel("Rotation mode: hold SHIFT to slow down rotation, hold CTRL to rotate around the third axis, and hold ALT to rotate lighting direction of volume view");
+	rotateLabel = new GLLabel(("Rotation mode: hold SHIFT to slow down rotation, hold " + ctrlText + " to rotate around the third axis, and hold ALT to rotate lighting direction of volume view").c_str());
 	Add(rotateLabel);
 
 	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning");
@@ -1620,6 +1625,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoScaleOn = false;
 			autoBtn->SetState(false);
 		}
+#if defined(__MACOSX__) || defined(__APPLE__)
+		if (evt->wheel.x !=0) { //Shift+wheel on an external mouse is horizontal scroll on MacOS
+			TranslateScale(-2.0 * evt->wheel.x); //As if SHIFT was down and appleInversionFactor==-1
+			autoScaleOn = false;
+			autoBtn->SetState(false);
+		}
+#endif
 	}
 
 	if (evt->type == SDL_MOUSEBUTTONUP) {

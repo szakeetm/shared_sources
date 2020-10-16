@@ -12,7 +12,9 @@
 
 struct Formulas {
 
-    Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true){evaluator=eval;};
+    Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true){
+        evaluator=eval;
+    };
     ~Formulas(){delete evaluator;};
 
     bool InitializeFormulas();

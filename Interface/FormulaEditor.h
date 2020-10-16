@@ -58,7 +58,8 @@ private:
 
   GLToggle  *sampleConvergenceTgl;
   GLButton    *recalcButton;
-  GLButton		*moveUpButton;
+    GLButton    *convPlotterButton;
+    GLButton		*moveUpButton;
   GLButton		*moveDownButton;
   GLLabel     *l1;
   GLLabel     *descL;

@@ -1871,12 +1871,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
                 return true;
-            } else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-                geom->viewStruct = (int) Previous(geom->viewStruct, geom->GetNbStructure());
+            }
+            else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
+                if (geom->viewStruct == -1) geom->viewStruct = geom->GetNbStructure() - 1;
+                else
+                    geom->viewStruct = (int)Previous(geom->viewStruct, geom->GetNbStructure());
                 geom->UnselectAll();
                 UpdateStructMenu();
                 return true;
-            } else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
+            }
+            else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
                 geom->viewStruct = (int) Next(geom->viewStruct, geom->GetNbStructure());
                 geom->UnselectAll();
                 UpdateStructMenu();
@@ -2776,10 +2780,6 @@ int Interface::FrameMove() {
                 }
                 // Simulation monitoring
                 UpdatePlotters();
-                if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
-                    convergencePlotter->Refresh();
-                    formulaEditor->formula_ptr->formulasChanged = false;
-                }
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
@@ -2879,6 +2879,11 @@ int Interface::FrameMove() {
     } else {
         startSimu->SetText("Begin");
         //startSimu->SetFontColor(0, 140, 0);
+    }
+
+    if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
+        convergencePlotter->Refresh();
+        formula_ptr->formulasChanged = false;
     }
 
     /*
