@@ -28,6 +28,7 @@ SimulationController::SimulationController(std::string appName , std::string dpN
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(parentPID)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(parentPID)).c_str());
 
+    loadOK = false;
     resetControls();
 
     simulation = simulationInstance;
@@ -52,7 +53,6 @@ SimulationController::~SimulationController(){
 int SimulationController::resetControls(){
     lastHitUpdateOK = true;
     endState = false;
-    loadOK = false;
 
     stepsPerSec = 0.0;
 
