@@ -13,7 +13,7 @@
 #include <WriterXML.h>
 #include "GeometrySimu.h"
 #include "Initializer.h"
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___

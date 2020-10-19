@@ -46,6 +46,7 @@ protected:
     SimulationUnit* simulation; //
     SubProcInfo* procInfo;
     size_t parentPID;
+    int prIdx;
 
 private:
     // tmp

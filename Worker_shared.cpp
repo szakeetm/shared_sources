@@ -398,7 +398,7 @@ void Worker::Update(float appTime) {
         //Prepare vectors to receive data
         if (!globState.globalHistograms.empty())
             globalHistogramCache = globState.globalHistograms[displayedMoment];
-    RetrieveHistogramCache(bufferStart);
+        RetrieveHistogramCache();
 
     //buffer = bufferStart; //Commented out as not used anymore
 
@@ -607,7 +607,7 @@ void Worker::SendFacetHitCounts() {
     }
 }
 
-void Worker::RetrieveHistogramCache(BYTE* dpHitStartAddress)
+void Worker::RetrieveHistogramCache()
 {
 	//Copy histograms from hit dataport to local cache
 	//The hit dataport contains histograms for all moments, the cache only for the displayed
@@ -615,23 +615,18 @@ void Worker::RetrieveHistogramCache(BYTE* dpHitStartAddress)
 
     //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
-	globalHistogramCache.Resize(wp.globalHistogramParams);
+	globalHistogramCache.Resize(model.wp.globalHistogramParams);
 
-	BYTE* currentMomentGloablHistogramAddress = dpHitStartAddress + sizeof(GlobalHitBuffer); //Make a copy, since we'll increase it to match displayed moment
+	auto& currentMomentGloablHistogram = globState.globalHistograms.at(displayedMoment); //Make a copy, since we'll increase it to match displayed moment
 
-#if defined(MOLFLOW) //In Synrad there are no moments, so there's only one global histogram
-	currentMomentGloablHistogramAddress += displayedMoment * wp.globalHistogramParams.GetDataSize();
-#endif
-
-	memcpy(globalHistogramCache.nbHitsHistogram.data(), currentMomentGloablHistogramAddress,
-		wp.globalHistogramParams.GetBouncesDataSize());
+	memcpy(globalHistogramCache.nbHitsHistogram.data(), currentMomentGloablHistogram.nbHitsHistogram.data(),
+           model.wp.globalHistogramParams.GetBouncesDataSize());
 	memcpy(globalHistogramCache.distanceHistogram.data(),
-		currentMomentGloablHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize(),
-		wp.globalHistogramParams.GetDistanceDataSize());
+           currentMomentGloablHistogram.distanceHistogram.data(),
+           model.wp.globalHistogramParams.GetDistanceDataSize());
 #if defined(MOLFLOW)
 	memcpy(globalHistogramCache.timeHistogram.data(),
-		currentMomentGloablHistogramAddress + wp.globalHistogramParams.GetBouncesDataSize() +
-		wp.globalHistogramParams.GetDistanceDataSize(), wp.globalHistogramParams.GetTimeDataSize());
+           currentMomentGloablHistogram.timeHistogram.data(), model.wp.globalHistogramParams.GetTimeDataSize());
 #endif
 
     //FACET HISTOGRAMS
@@ -642,29 +637,15 @@ void Worker::RetrieveHistogramCache(BYTE* dpHitStartAddress)
         //Prepare vectors for receiving data
         f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
 
-        //Retrieve histogram from hits dp
-        BYTE* facetHistogramAddress = dpHitStartAddress
-            + f->sh.hitOffset
-            + (1 + moments.size()) * sizeof(FacetHitBuffer)
-            + (f->sh.isProfile ? PROFILE_SIZE * sizeof(ProfileSlice) * (1 + moments.size()) : 0)
-            + (f->sh.isTextured ? f->sh.texWidth * f->sh.texHeight * sizeof(TextureCell) *
-                (1 + moments.size()) : 0)
-            + (f->sh.countDirection ? f->sh.texWidth * f->sh.texHeight * sizeof(DirectionCell) *
-                (1 + moments.size()) : 0)
-            //+ f->sh.anglemapParams.GetRecordedDataSize();
-            + sizeof(size_t) * (f->sh.anglemapParams.phiWidth *
-                (f->sh.anglemapParams.thetaLowerRes +
-                    f->sh.anglemapParams.thetaHigherRes));
-        facetHistogramAddress += displayedMoment * f->sh.facetHistogramParams.GetDataSize();
+        auto& facetHistogram = globState.facetStates[i].momentResults.at(displayedMoment).histogram;
 
-        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), facetHistogramAddress,
+        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), facetHistogram.nbHitsHistogram.data(),
             f->sh.facetHistogramParams.GetBouncesDataSize());
         memcpy(f->facetHistogramCache.distanceHistogram.data(),
-            facetHistogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize(),
+            facetHistogram.distanceHistogram.data(),
             f->sh.facetHistogramParams.GetDistanceDataSize());
         memcpy(f->facetHistogramCache.timeHistogram.data(),
-            facetHistogramAddress + f->sh.facetHistogramParams.GetBouncesDataSize() +
-            f->sh.facetHistogramParams.GetDistanceDataSize(), f->sh.facetHistogramParams.GetTimeDataSize());
+            facetHistogram.timeHistogram.data(), f->sh.facetHistogramParams.GetTimeDataSize());
 #endif
     }
 }

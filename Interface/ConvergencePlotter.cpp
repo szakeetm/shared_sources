@@ -284,7 +284,7 @@ void ConvergencePlotter::Update(float appTime) {
 
     if (!formula_ptr->formulas_n.empty()) {
         UpdateVector();
-        size_t lastNbDes = worker->globalHitCache.globalHits.hit.nbDesorbed;
+        size_t lastNbDes = worker->globState.globalHits.globalHits.hit.nbDesorbed;
         for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
             // TODO: Cross check integrity of formula with editor!?
             if (formula_ptr->convergenceValues[formulaId].size() >= max_vector_size()) {
@@ -398,7 +398,7 @@ void ConvergencePlotter::refreshViews() {
         }
 
         v->Reset();
-        if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
+        if (worker->globState.globalHits.globalHits.hit.nbDesorbed > 0) {
             for (int j = 0; j < formula_ptr->convergenceValues[formId].size(); j++)
                 v->Add(formula_ptr->convergenceValues[formId][j].first,
                        formula_ptr->convergenceValues[formId][j].second, false);

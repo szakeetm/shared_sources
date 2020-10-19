@@ -46,7 +46,7 @@ public:
 	size_t GetSize();
 	double GetX(const size_t& index);
 	Datatype GetY(const size_t& index); //GetYValue seems reserved
-	const std::vector<std::pair<double,Datatype>> GetValues(){return (const std::vector<std::pair<double,Datatype>>)values;}
+	const std::vector<std::pair<double,Datatype>> GetValues() const {return (const std::vector<std::pair<double,Datatype>>)values;}
 	bool logXinterp=false;
 	bool logYinterp=false;
 };

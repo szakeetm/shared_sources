@@ -358,7 +358,7 @@ bool SimulationController::Load() {
 
 
     SetState(PROCESS_STARTING, "Loading simulation");
-    if (simulation->LoadSimulation()) {
+    if (simulation->LoadSimulation(procInfo->statusString)) {
         return false;
     }
 
