@@ -95,7 +95,7 @@ private:
     GLTextField    *convBandLenField;
     GLTextField    *shapeParamField;
     GLButton    *convApplyButton;
-
+    GLToggle* absOrRelToggle;
     GLDataView  *views[MAX_VIEWS];
   int          nbView;
   float        lastUpdate;

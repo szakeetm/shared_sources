@@ -139,6 +139,9 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
 
     shapeParamField = new GLTextField(0, "0");
     panel2->Add(shapeParamField);
+    absOrRelToggle = new GLToggle(0, "Absolute precision");
+    absOrRelToggle->SetState(formula_ptr->useAbsEps);
+    panel2->Add(absOrRelToggle);
 
     // Center dialog
     int wS, hS;
@@ -163,7 +166,10 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
 void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 
     size_t lineHeightDiff = 45 + 25;
-    panel2->SetBounds(5, h - lineHeightDiff, w - 10, 25+19);
+    panel2->SetBounds(5, h - lineHeightDiff - 25, w - 10, 25*2+19);
+    absOrRelToggle->SetBounds(12, h - lineHeightDiff + 15, 105, 19);
+
+    lineHeightDiff += 25;
     convEpsText->SetBounds(12, h - lineHeightDiff + 15, 170, 19);
     convEpsField->SetBounds(182, h - lineHeightDiff + 15, 30, 19);
     convBandLenText->SetBounds(220, h - lineHeightDiff + 15, 145, 19);
@@ -562,6 +568,10 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                     std::string facId(v->GetName());
                     facId = facId.substr(facId.find('#') + 1);
                 }
+            } else if(src == absOrRelToggle){
+                formula_ptr->useAbsEps = absOrRelToggle->GetState();
+                for(int id = 0; id < formula_ptr->convergenceValues.size(); ++id)
+                    formula_ptr->RestartASCBR(id);
             }
             break;
     }

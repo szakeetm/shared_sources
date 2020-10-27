@@ -155,7 +155,6 @@ bool Formulas::CheckASCBR(int formulaId) {
     // Initialize
     auto& convData = convergenceValues[formulaId];
 
-    const double eps = 0.5 * std::pow(10.0, -1.0*epsilon); // half-width of convergence band, exponent d = significant digits after decimal point
     const size_t cb_len = cb_length; // convergence band length
 
     // Step 1: increment step, +1 MC event
@@ -172,6 +171,10 @@ bool Formulas::CheckASCBR(int formulaId) {
     bool withinBounds = (conv_mean_local >= convData.lower_bound && conv_mean_local <= convData.upper_bound) ? true : false;
 
     if(!withinBounds){
+        // half-width of convergence band
+        const double eps = useAbsEps ? 0.5 * std::pow(10.0, -1.0*epsilon) : 0.5 * conv_mean_local * std::pow(10.0, -1.0*epsilon);
+        // absolute: exponent d = significant digits after decimal point
+
         // Step 4: Update bounds
         convData.upper_bound = conv_mean_local + eps;
         convData.lower_bound = conv_mean_local - eps;

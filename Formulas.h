@@ -24,7 +24,7 @@ struct ConvergenceData {
 
 struct Formulas {
 
-    Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51){
+    Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){
         evaluator=eval;
     };
     ~Formulas(){delete evaluator;};
@@ -45,7 +45,8 @@ struct Formulas {
     bool formulasChanged;
     bool sampleConvValues;
 
-    size_t epsilon;
+    bool useAbsEps;
+    int epsilon;
     size_t cb_length;
     FormulaEvaluator* evaluator;
 };
