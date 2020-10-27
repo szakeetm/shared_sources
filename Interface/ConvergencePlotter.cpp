@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLTextField.h"
+#include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToggle.h"
 #include "Helper/MathTools.h"
 #include "GLApp/GLList.h"
@@ -55,7 +56,7 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
         : GLWindow(), views{} {
 
     int wD = 625;
-    int hD = 375;
+    int hD = 400;
 
     SetTitle("Convergence plotter");
     SetIconfiable(true);
@@ -119,6 +120,26 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
     formulaBtn = new GLButton(0, "-> Plot expression");
     Add(formulaBtn);
 
+    panel2 = new GLTitledPanel("Convergence Band Rule");
+    panel2->SetClosable(false);
+    Add(panel2);
+    convEpsText = new GLLabel("Convergence precision {10^-d}: d=");
+    panel2->Add(convEpsText);
+    convEpsField = new GLTextField(0, "5");
+    convEpsField->SetEditable(true);
+    panel2->Add(convEpsField);
+    convBandLenText = new GLLabel("Convergence band length: C=");
+    panel2->Add(convBandLenText);
+    convBandLenField = new GLTextField(0, "51");
+    convBandLenField->SetEditable(true);
+    panel2->Add(convBandLenField);
+
+    convApplyButton = new GLButton(0, "-> Apply changes");
+    panel2->Add(convApplyButton);
+
+    shapeParamField = new GLTextField(0, "0");
+    panel2->Add(shapeParamField);
+
     // Center dialog
     int wS, hS;
     GLToolkit::GetScreenSize(&wS, &hS);
@@ -141,9 +162,16 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
 */
 void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 
-    chart->SetBounds(7, 5, w - 15, h - 110);
+    size_t lineHeightDiff = 45 + 25;
+    panel2->SetBounds(5, h - lineHeightDiff, w - 10, 25+19);
+    convEpsText->SetBounds(12, h - lineHeightDiff + 15, 170, 19);
+    convEpsField->SetBounds(182, h - lineHeightDiff + 15, 30, 19);
+    convBandLenText->SetBounds(220, h - lineHeightDiff + 15, 145, 19);
+    convBandLenField->SetBounds(368, h - lineHeightDiff + 15, 30, 19);
+    convApplyButton->SetBounds(406, h - lineHeightDiff + 15, 100, 19);
+    shapeParamField->SetBounds(w-60, h - lineHeightDiff + 15, 50, 19);
 
-    size_t lineHeightDiff = 45;
+    lineHeightDiff += 25;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
     formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
     dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
@@ -163,19 +191,10 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
     removeButton->SetBounds(w - 180, h - lineHeightDiff, 80, 19);
     removeAllButton->SetBounds(w - 90, h - lineHeightDiff, 80, 19);
 
+    chart->SetBounds(7, 5, w - 15, h - lineHeightDiff - 10);
+
     GLWindow::SetBounds(x, y, w, h);
 
-}
-
-/**
-* \brief Resizes Vector storing convergence values if needed (change of expressions, etc.)
-*/
-void ConvergencePlotter::UpdateVector() {
-    //Rebuild vector size
-    size_t nbFormulas = formula_ptr->formulas_n.size();
-    if (formula_ptr->convergenceValues.size() != nbFormulas) {
-        formula_ptr->convergenceValues.resize(nbFormulas);
-    }
 }
 
 /**
@@ -184,29 +203,8 @@ void ConvergencePlotter::UpdateVector() {
 void ConvergencePlotter::ResetData() {
     //Rebuild vector size
     for (auto &convVec : formula_ptr->convergenceValues) {
-        convVec.clear();
+        convVec = ConvergenceData();
     }
-}
-
-/**
-* \brief Removes every everyN-th element from the convergence vector in case the max size has been reached
-* \param everyN specifies stepsize for backwards delete
-* \param formulaId formula whose convergence values shall be pruned
-*/
-void ConvergencePlotter::pruneEveryN(size_t everyN, int formulaId) {
-    auto &convVec = formula_ptr->convergenceValues[formulaId];
-    for (int i = convVec.size() - everyN; i > 0; i = i - everyN)
-        convVec.erase(convVec.begin() + i);
-}
-
-/**
-* \brief Removes first n elements from the convergence vector
- * \param n amount of elements that should be removed from the front
- * \param formulaId formula whose convergence values shall be pruned
-*/
-void ConvergencePlotter::pruneFirstN(size_t n, int formulaId) {
-    auto &convVec = formula_ptr->convergenceValues[formulaId];
-    convVec.erase(convVec.begin(), convVec.begin() + std::min(n, convVec.size()));
 }
 
 /**
@@ -270,7 +268,7 @@ void ConvergencePlotter::Display(Worker *w) {
 
 
     SetWorker(w);
-    UpdateVector();
+    formula_ptr->UpdateVectorSize();
     Refresh();
     SetVisible(true);
 
@@ -281,29 +279,13 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-
-    if (!formula_ptr->formulas_n.empty()) {
-        UpdateVector();
-        size_t lastNbDes = worker->globalHitCache.globalHits.hit.nbDesorbed;
-        for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-            // TODO: Cross check integrity of formula with editor!?
-            if (formula_ptr->convergenceValues[formulaId].size() >= max_vector_size()) {
-                pruneEveryN(4, formulaId); // delete every 4th element for now
-            }
-            double r;
-            formula_ptr->formulas_n[formulaId]->hasVariableEvalError = false;
-            if (formula_ptr->formulas_n[formulaId]->Evaluate(&r)) {
-                formula_ptr->convergenceValues[formulaId].emplace_back(std::make_pair(lastNbDes, r));
-            }
-        }
-        refreshViews();
-        lastUpdate = appTime;
-        return;
-    } else if ((appTime - lastUpdate > 1.0f) && nbView) {
+    bool hasChanged = formula_ptr->FetchNewConvValue(worker->globalHitCache.globalHits.hit.nbDesorbed);
+    if (hasChanged || ((appTime - lastUpdate > 1.0f) && nbView)) {
         if (worker->isRunning) refreshViews();
         lastUpdate = appTime;
+        shapeParamField->SetText(formula_ptr->ApproxShapeParameter());
     }
-
+    return;
 }
 
 /**
@@ -399,9 +381,9 @@ void ConvergencePlotter::refreshViews() {
 
         v->Reset();
         if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
-            for (int j = 0; j < formula_ptr->convergenceValues[formId].size(); j++)
-                v->Add(formula_ptr->convergenceValues[formId][j].first,
-                       formula_ptr->convergenceValues[formId][j].second, false);
+            auto& conv_vec = formula_ptr->convergenceValues[formId].conv_vec;
+            for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
+                v->Add(conv_vec[j].first, conv_vec[j].second, false);
         }
         v->CommitChange();
 
@@ -436,7 +418,7 @@ int ConvergencePlotter::addView(int formulaHash) {
                 break;
             }
         }
-        if (formula_ptr->formulas_n.empty()) return 0;
+        if (!formula || formula_ptr->formulas_n.empty()) return 0;
         GLDataView *v = new GLDataView();
         sprintf(tmp, "%s", formula->GetExpression());
         v->SetName(tmp);
@@ -504,11 +486,11 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 SetVisible(false);
             } else if (src == pruneEveryNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-                    pruneEveryN(4, formulaId);
+                    formula_ptr->pruneEveryN(4, formulaId, 0);
                 }
             } else if (src == pruneFirstNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-                    pruneFirstN(100, formulaId);
+                    formula_ptr->pruneFirstN(100, formulaId);
                 }
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
@@ -540,6 +522,17 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 for (int viewId = 0; viewId < nbView; viewId++) {
                     GLDataView *v = views[viewId];
                     v->SetLineWidth(linW);
+                }
+            } else if (src == convApplyButton) {
+                int newEps, newCBLen;
+                convEpsField->GetNumberInt(&newEps);
+                convBandLenField->GetNumberInt(&newCBLen);
+
+                if(newEps != formula_ptr->epsilon || newCBLen != formula_ptr->cb_length){
+                    formula_ptr->epsilon = newEps;
+                    formula_ptr->cb_length = newCBLen;
+                    for(int id = 0; id < formula_ptr->convergenceValues.size(); ++id)
+                        formula_ptr->RestartASCBR(id);
                 }
             }
             break;
