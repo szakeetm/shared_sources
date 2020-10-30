@@ -26,6 +26,7 @@ struct Formulas {
 
     Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){
         evaluator=eval;
+        freq_accum.resize(cb_length);
     };
     ~Formulas(){delete evaluator;};
 
@@ -42,6 +43,7 @@ struct Formulas {
 
     std::vector<GLParser*> formulas_n;
     std::vector<ConvergenceData> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
+    std::vector<size_t> freq_accum;
     bool formulasChanged;
     bool sampleConvValues;
 

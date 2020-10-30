@@ -6,9 +6,8 @@
 #include <cmath>
 
 // convergence constants
-constexpr size_t max_vector_size() { return 16384; };
+constexpr size_t max_vector_size() { return 65536; };
 constexpr size_t d_precision() { return 5; };
-static size_t freq_accum[51]{0};
 
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
@@ -142,8 +141,8 @@ void Formulas::RestartASCBR(int formulaId){
     convData.chain_length = 0;
     convData.upper_bound = convData.lower_bound = 0.0;
 
-    for(int i=0;i<51;++i)
-        freq_accum[i]=0;
+    freq_accum.clear();
+    freq_accum.resize(cb_length);
 }
 
 /**
@@ -154,6 +153,7 @@ void Formulas::RestartASCBR(int formulaId){
 bool Formulas::CheckASCBR(int formulaId) {
     // Initialize
     auto& convData = convergenceValues[formulaId];
+    if(convData.conv_vec.empty()) return false;
 
     const size_t cb_len = cb_length; // convergence band length
 
@@ -179,7 +179,7 @@ bool Formulas::CheckASCBR(int formulaId) {
         convData.upper_bound = conv_mean_local + eps;
         convData.lower_bound = conv_mean_local - eps;
         // Step 5: Update length of inbound "chain"
-        ++freq_accum[(convData.chain_length>=51)?0:convData.chain_length];
+        ++freq_accum[(convData.chain_length>=cb_length)?0:convData.chain_length];
         convData.chain_length = 0;
     }
     else{
@@ -194,7 +194,7 @@ double Formulas::ApproxShapeParameter() {
     // Initialize
     double shape_param = 0.0;
     double den = 0.0;
-    for(int i = 1; i <= 50; ++i){
+    for(int i = 1; i < cb_length; ++i){
         den += (double) i * freq_accum[i];
     }
     if(den <= 1e-8) den = 1.0;
