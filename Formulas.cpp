@@ -202,3 +202,16 @@ double Formulas::ApproxShapeParameter() {
 
     return shape_param;
 }
+
+double Formulas::ApproxShapeParameter2() {
+    // Initialize
+    double shape_param = 0.0;
+    double den = 0.0;
+    for(int i = 1; i < cb_length; ++i){
+        den += (double) i * freq_accum[i];
+    }
+    if(den <= 1e-8) den = 1.0;
+    shape_param = 1.0 - freq_accum[0] / den;
+
+    return shape_param;
+}

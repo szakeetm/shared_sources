@@ -137,6 +137,8 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
 
     shapeParamField = new GLTextField(0, "0");
     panel2->Add(shapeParamField);
+    shapeParamField2 = new GLTextField(0, "0");
+    panel2->Add(shapeParamField2);
     absOrRelToggle = new GLToggle(0, "Absolute precision");
     absOrRelToggle->SetState(formula_ptr->useAbsEps);
     panel2->Add(absOrRelToggle);
@@ -174,6 +176,7 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
     convBandLenField->SetBounds(368, h - lineHeightDiff + 15, 30, 19);
     convApplyButton->SetBounds(406, h - lineHeightDiff + 15, 100, 19);
     shapeParamField->SetBounds(w-60, h - lineHeightDiff + 15, 50, 19);
+    shapeParamField2->SetBounds(w-115, h - lineHeightDiff + 15, 50, 19);
 
     lineHeightDiff += 25;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
@@ -288,6 +291,7 @@ void ConvergencePlotter::Update(float appTime) {
         if (worker->isRunning) refreshViews();
         lastUpdate = appTime;
         shapeParamField->SetText(formula_ptr->ApproxShapeParameter());
+        shapeParamField2->SetText(formula_ptr->ApproxShapeParameter2());
     }
     return;
 }

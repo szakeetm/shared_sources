@@ -37,6 +37,7 @@ struct Formulas {
     void RestartASCBR(int formulaId);
     bool CheckASCBR(int formulaId);
     double ApproxShapeParameter();
+    double ApproxShapeParameter2();
 
     void pruneEveryN(size_t everyN, int formulaId, size_t skipLastN);
     void pruneFirstN(size_t n, int formulaId);

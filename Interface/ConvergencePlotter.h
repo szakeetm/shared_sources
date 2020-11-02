@@ -94,6 +94,7 @@ private:
     GLLabel    *convBandLenText;
     GLTextField    *convBandLenField;
     GLTextField    *shapeParamField;
+    GLTextField    *shapeParamField2;
     GLButton    *convApplyButton;
     GLToggle* absOrRelToggle;
     GLDataView  *views[MAX_VIEWS];
