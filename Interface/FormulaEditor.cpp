@@ -48,14 +48,14 @@ extern SynRad*mApp;
 extern std::string formulaSyntax;
 extern int formulaSyntaxHeight;
 
-static const size_t nbCol = 4;
-static const char *flName[] = { "Expression","Name (optional)","Value", "z -> C" };
-static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
-static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0,0 };
+static const size_t nbCol = 3;
+static const char *flName[] = { "Expression","Name (optional)","Value" };
+static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
+static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 
 
 FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
-    columnRatios = { 0.285,0.285,0.285,0.145 };
+    columnRatios = { 0.333,0.333,0.333 };
 
     int wD = 460;
     int hD = 230; //Height extended runtime when formula syntax panel is expanded
@@ -360,13 +360,9 @@ void FormulaEditor::ReEvaluate() {
 				std::stringstream tmp;
 				tmp << r;
 				formulaList->SetValueAt(2, i, tmp.str().c_str());
-				tmp.str("");
-				tmp << formula_ptr->convergenceValues[i].chain_length << " -> " << formula_ptr->cb_length;
-				formulaList->SetValueAt(3,i,tmp.str().c_str());
 			}
 			else { //Variables OK but the formula itself can't be evaluated
 				formulaList->SetValueAt(2, i, formula_ptr->formulas_n.at(i)->GetErrorMsg());
-                formulaList->SetValueAt(3,i,"0");
             }
 #if defined(MOLFLOW)
 			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);

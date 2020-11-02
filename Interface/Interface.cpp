@@ -2804,11 +2804,6 @@ int Interface::FrameMove() {
                     //formulaEditor->Refresh();
                     //formulaEditor->ReEvaluate();
                     convergencePlotter->Update(lastAppTime);
-                    bool shouldStop = false;
-                    for(int formulaId = 0; formulaId < formula_ptr->convergenceValues.size(); ++formulaId)
-                        shouldStop |= formula_ptr->CheckASCBR(formulaId);
-                    if(shouldStop)
-                        worker.StartStop(m_fTime, 0);
                 }
             }
         }

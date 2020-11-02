@@ -463,7 +463,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 }
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
-                if (idx >= 0) { //Something selected (not -1)
+                if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
                     int str_hash = std::hash<std::string>{}(
                             formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
                     if (addView(str_hash))
@@ -473,7 +473,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == removeButton) {
 
                 int idx = profCombo->GetSelectedIndex();
-                if (idx >= 0) { //Something selected (not -1)
+                if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
                     int str_hash = std::hash<std::string>{}(
                             formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
                     if (remView(str_hash)) {
