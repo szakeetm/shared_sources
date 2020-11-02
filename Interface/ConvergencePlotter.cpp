@@ -464,6 +464,10 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
+                    if(formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->hasVariableEvalError){
+                        GLMessageBox::Display("Formula can't be evaluated.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        break;
+                    }
                     int str_hash = std::hash<std::string>{}(
                             formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
                     if (addView(str_hash))

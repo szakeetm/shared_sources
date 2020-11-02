@@ -25,6 +25,7 @@ bool Formulas::InitializeFormulas(){
             formulas_n.at(i)->hasVariableEvalError = false;
         }
         else{
+            formulas_n.at(i)->SetVariableEvalError("Unknown formula specifier");
             allOk = false;
         }
     }
@@ -49,12 +50,14 @@ bool Formulas::FetchNewConvValue(size_t nbDesorbed){
         for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
             // TODO: Cross check integrity of formula with editor!?
             auto& conv_vec = convergenceValues[formulaId].conv_vec;
+            if(formulas_n.at(formulaId)->hasVariableEvalError) {
+                continue;
+            }
             if (conv_vec.size() >= max_vector_size()) {
                 pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
                 hasChanged = true;
             }
             double r;
-            formulas_n[formulaId]->hasVariableEvalError = false;
             if (formulas_n[formulaId]->Evaluate(&r)) {
                 // TODO: This could lead to false negatives for stop criterion when we don't generate more sample points
                 if(conv_vec.empty() || (conv_vec.back().first != nbDesorbed && conv_vec.back().second != r)) {

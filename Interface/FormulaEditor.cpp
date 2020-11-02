@@ -355,7 +355,6 @@ void FormulaEditor::ReEvaluate() {
 		// Evaluation
 		if (!formula_ptr->formulas_n.at(i)->hasVariableEvalError) { //Variables succesfully evaluated
 			double r;
-			formula_ptr->formulas_n.at(i)->hasVariableEvalError = false;
 			if (formula_ptr->formulas_n.at(i)->Evaluate(&r)) {
 				std::stringstream tmp;
 				tmp << r;
