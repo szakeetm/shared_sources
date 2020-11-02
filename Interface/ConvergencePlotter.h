@@ -34,6 +34,7 @@ class GLParser;
 class GLDataView;
 class GLToggle;
 class GLTextField;
+class GLTitledPanel;
 class Worker;
 class Geometry;
 struct Formulas;
@@ -60,15 +61,13 @@ public:
   bool IsLogScaled();
   void SetLogScaled(bool logScale);
   void SetWorker(Worker *w);
-  void UpdateVector();
     void ResetData();
 
 private:  
   int remView(int formulaHash);
   void refreshViews();
   void plot();
-    void pruneEveryN(size_t everyN, int formulaId);
-    void pruneFirstN(size_t n, int formulaId);
+
   Worker      *worker;
   GLButton    *dismissButton;
   GLChart     *chart;
@@ -89,7 +88,15 @@ private:
     GLButton    *fixedLineWidthButton;
     GLTextField    *fixedLineWidthField;
 
-
+    GLTitledPanel *panel2;
+    GLLabel    *convEpsText;
+    GLTextField    *convEpsField;
+    GLLabel    *convBandLenText;
+    GLTextField    *convBandLenField;
+    GLTextField    *shapeParamField;
+    GLTextField    *shapeParamField2;
+    GLButton    *convApplyButton;
+    GLToggle* absOrRelToggle;
     GLDataView  *views[MAX_VIEWS];
   int          nbView;
   float        lastUpdate;

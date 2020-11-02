@@ -168,45 +168,13 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 }
 
 /**
-* \brief Resizes Vector storing convergence values if needed (change of expressions, etc.)
-*/
-void ConvergencePlotter::UpdateVector() {
-    //Rebuild vector size
-    size_t nbFormulas = formula_ptr->formulas_n.size();
-    if (formula_ptr->convergenceValues.size() != nbFormulas) {
-        formula_ptr->convergenceValues.resize(nbFormulas);
-    }
-}
-
-/**
 * \brief Resets convergence data e.g. when simulation resets
 */
 void ConvergencePlotter::ResetData() {
     //Rebuild vector size
     for (auto &convVec : formula_ptr->convergenceValues) {
-        convVec.clear();
+        convVec = ConvergenceData();
     }
-}
-
-/**
-* \brief Removes every everyN-th element from the convergence vector in case the max size has been reached
-* \param everyN specifies stepsize for backwards delete
-* \param formulaId formula whose convergence values shall be pruned
-*/
-void ConvergencePlotter::pruneEveryN(size_t everyN, int formulaId) {
-    auto &convVec = formula_ptr->convergenceValues[formulaId];
-    for (int i = convVec.size() - everyN; i > 0; i = i - everyN)
-        convVec.erase(convVec.begin() + i);
-}
-
-/**
-* \brief Removes first n elements from the convergence vector
- * \param n amount of elements that should be removed from the front
- * \param formulaId formula whose convergence values shall be pruned
-*/
-void ConvergencePlotter::pruneFirstN(size_t n, int formulaId) {
-    auto &convVec = formula_ptr->convergenceValues[formulaId];
-    convVec.erase(convVec.begin(), convVec.begin() + std::min(n, convVec.size()));
 }
 
 /**
@@ -270,7 +238,7 @@ void ConvergencePlotter::Display(Worker *w) {
 
 
     SetWorker(w);
-    UpdateVector();
+    formula_ptr->UpdateVectorSize();
     Refresh();
     SetVisible(true);
 
@@ -281,29 +249,12 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-
-    if (!formula_ptr->formulas_n.empty()) {
-        UpdateVector();
-        size_t lastNbDes = worker->globalHitCache.globalHits.hit.nbDesorbed;
-        for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-            // TODO: Cross check integrity of formula with editor!?
-            if (formula_ptr->convergenceValues[formulaId].size() >= max_vector_size()) {
-                pruneEveryN(4, formulaId); // delete every 4th element for now
-            }
-            double r;
-            formula_ptr->formulas_n[formulaId]->hasVariableEvalError = false;
-            if (formula_ptr->formulas_n[formulaId]->Evaluate(&r)) {
-                formula_ptr->convergenceValues[formulaId].emplace_back(std::make_pair(lastNbDes, r));
-            }
-        }
-        refreshViews();
-        lastUpdate = appTime;
-        return;
-    } else if ((appTime - lastUpdate > 1.0f) && nbView) {
+    bool hasChanged = formula_ptr->FetchNewConvValue(worker->globalHitCache.globalHits.hit.nbDesorbed);
+    if (hasChanged || ((appTime - lastUpdate > 1.0f) && nbView)) {
         if (worker->isRunning) refreshViews();
         lastUpdate = appTime;
     }
-
+    return;
 }
 
 /**
@@ -399,9 +350,9 @@ void ConvergencePlotter::refreshViews() {
 
         v->Reset();
         if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
-            for (int j = 0; j < formula_ptr->convergenceValues[formId].size(); j++)
-                v->Add(formula_ptr->convergenceValues[formId][j].first,
-                       formula_ptr->convergenceValues[formId][j].second, false);
+            auto& conv_vec = formula_ptr->convergenceValues[formId].conv_vec;
+            for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
+                v->Add(conv_vec[j].first, conv_vec[j].second, false);
         }
         v->CommitChange();
 
@@ -436,7 +387,7 @@ int ConvergencePlotter::addView(int formulaHash) {
                 break;
             }
         }
-        if (formula_ptr->formulas_n.empty()) return 0;
+        if (!formula || formula_ptr->formulas_n.empty()) return 0;
         GLDataView *v = new GLDataView();
         sprintf(tmp, "%s", formula->GetExpression());
         v->SetName(tmp);
@@ -504,11 +455,11 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 SetVisible(false);
             } else if (src == pruneEveryNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-                    pruneEveryN(4, formulaId);
+                    formula_ptr->pruneEveryN(4, formulaId, 0);
                 }
             } else if (src == pruneFirstNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
-                    pruneFirstN(100, formulaId);
+                    formula_ptr->pruneFirstN(100, formulaId);
                 }
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();

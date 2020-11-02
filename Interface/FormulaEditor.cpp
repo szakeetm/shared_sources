@@ -48,13 +48,14 @@ extern SynRad*mApp;
 extern std::string formulaSyntax;
 extern int formulaSyntaxHeight;
 
-static const char *flName[] = { "Expression","Name (optional)","Value" };
-static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
-static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
+static const size_t nbCol = 4;
+static const char *flName[] = { "Expression","Name (optional)","Value", "z -> C" };
+static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
+static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0,0 };
 
 
 FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
-    columnRatios = { 0.333,0.333,0.333 };
+    columnRatios = { 0.285,0.285,0.285,0.145 };
 
     int wD = 460;
     int hD = 230; //Height extended runtime when formula syntax panel is expanded
@@ -256,11 +257,11 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		int x,y,w,h;
 		GetBounds(&x, &y, &w, &h);
 		double sum = (double)(w - 45);
-		std::vector<double> colWidths(3);
-		for (size_t i = 0; i < 3; i++) {
+		std::vector<double> colWidths(nbCol);
+		for (size_t i = 0; i < nbCol; i++) {
 			colWidths[i]=(double)formulaList->GetColWidth(i);
 		}
-		for (size_t i = 0; i < 3; i++) {
+		for (size_t i = 0; i < nbCol; i++) {
 			columnRatios[i] = colWidths[i] / sum;
 		}
 		break;
@@ -273,7 +274,7 @@ void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
 	panel1->SetBounds(5, 5, w - 10, h - 120 - formulaHeight);
 	formulaList->SetBounds(10, 22, w - 20, h - 145 - formulaHeight);
-	for (size_t i=0;i<3;i++)
+	for (size_t i=0;i<nbCol;i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
 	recalcButton->SetBounds(10, h - 110 - formulaHeight, 95, 20);
 
@@ -315,8 +316,8 @@ void FormulaEditor::RebuildList() {
 	//Rebuild list based on locally stored userExpressions
 	int x, y, w, h;
 	GetBounds(&x, &y, &w, &h);
-	formulaList->SetSize(3, userExpressions.size() + 1);
-	for (size_t i = 0; i<3; i++)
+	formulaList->SetSize(nbCol, userExpressions.size() + 1);
+	for (size_t i = 0; i<nbCol; i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
 	formulaList->SetColumnLabels(flName);
 	formulaList->SetColumnAligns((int *)flAligns);
@@ -359,10 +360,14 @@ void FormulaEditor::ReEvaluate() {
 				std::stringstream tmp;
 				tmp << r;
 				formulaList->SetValueAt(2, i, tmp.str().c_str());
+				tmp.str("");
+				tmp << formula_ptr->convergenceValues[i].chain_length << " -> " << formula_ptr->cb_length;
+				formulaList->SetValueAt(3,i,tmp.str().c_str());
 			}
 			else { //Variables OK but the formula itself can't be evaluated
 				formulaList->SetValueAt(2, i, formula_ptr->formulas_n.at(i)->GetErrorMsg());
-			}
+                formulaList->SetValueAt(3,i,"0");
+            }
 #if defined(MOLFLOW)
 			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
 			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
