@@ -251,7 +251,7 @@ void ConvergencePlotter::Display(Worker *w) {
 void ConvergencePlotter::Update(float appTime) {
     bool hasChanged = formula_ptr->FetchNewConvValue(worker->globalHitCache.globalHits.hit.nbDesorbed);
     if (hasChanged || ((appTime - lastUpdate > 1.0f) && nbView)) {
-        if (worker->isRunning) refreshViews();
+        refreshViews();
         lastUpdate = appTime;
     }
     return;
