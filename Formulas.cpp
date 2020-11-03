@@ -9,6 +9,23 @@
 constexpr size_t max_vector_size() { return 65536; };
 constexpr size_t d_precision() { return 5; };
 
+void Formulas::AddFormula(const char *fName, const char *formula) {
+    GLParser *f2 = new GLParser();
+    f2->SetExpression(formula);
+    f2->SetName(fName);
+    f2->Parse();
+
+    formulas_n.push_back(f2);
+    UpdateVectorSize();
+}
+
+void Formulas::ClearFormulas() {
+    for (auto &f : formulas_n)
+        SAFE_DELETE(f);
+    formulas_n.clear();
+    UpdateVectorSize();
+}
+
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
     for (size_t i = 0; i < formulas_n.size(); i++) {
@@ -41,31 +58,51 @@ void Formulas::UpdateVectorSize() {
     if (convergenceValues.size() != nbFormulas) {
         convergenceValues.resize(nbFormulas);
     }
+    if (lastFormulaValues.size() != nbFormulas) {
+        lastFormulaValues.resize(nbFormulas);
+    }
 }
 
-bool Formulas::FetchNewConvValue(size_t nbDesorbed){
+bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
+    // First fetch new variable values
+    InitializeFormulas();
+
+    // Next evaluate each formula and cache values for later usage
+    // in FormulaEditor, ConvergencePlotter
+    if (!formulas_n.empty()) {
+        for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
+            double r;
+            if (formulas_n[formulaId]->Evaluate(&r)) {
+                lastFormulaValues[formulaId] = std::make_pair(nbDesorbed, r);
+            }
+            else{
+                formulas_n[formulaId]->SetVariableEvalError(formulas_n.at(formulaId)->GetErrorMsg());
+            }
+        }
+        FetchNewConvValue();
+    }
+
+    return true;
+}
+
+bool Formulas::FetchNewConvValue() {
     bool hasChanged = false;
     if (!formulas_n.empty()) {
         UpdateVectorSize();
         for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
-            // TODO: Cross check integrity of formula with editor!?
-            auto& conv_vec = convergenceValues[formulaId].conv_vec;
             if(formulas_n.at(formulaId)->hasVariableEvalError) {
                 continue;
             }
+            auto& conv_vec = convergenceValues[formulaId].conv_vec;
             if (conv_vec.size() >= max_vector_size()) {
                 pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
                 hasChanged = true;
             }
-            double r;
-            if (formulas_n[formulaId]->Evaluate(&r)) {
-                // TODO: This could lead to false negatives for stop criterion when we don't generate more sample points
-                if(conv_vec.empty() || (conv_vec.back().first != nbDesorbed && conv_vec.back().second != r)) {
-                    conv_vec.emplace_back(std::make_pair(nbDesorbed, r));
-                    convergenceValues[formulaId].n_samples += 1;
-                    convergenceValues[formulaId].conv_total += r;
-                    hasChanged = true;
-                }
+            if(conv_vec.empty() || (lastFormulaValues[formulaId].first != conv_vec.back().first && lastFormulaValues[formulaId].second != conv_vec.back().second)) {
+                conv_vec.emplace_back(lastFormulaValues[formulaId]);
+                convergenceValues[formulaId].n_samples += 1;
+                convergenceValues[formulaId].conv_total += lastFormulaValues[formulaId].second;
+                hasChanged = true;
             }
         }
     }

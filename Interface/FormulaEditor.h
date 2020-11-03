@@ -44,7 +44,7 @@ public:
   void RebuildList();
   void Refresh();
 
-  void ReEvaluate();
+  void UpdateValues();
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;

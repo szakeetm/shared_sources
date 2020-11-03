@@ -30,9 +30,13 @@ struct Formulas {
     };
     ~Formulas(){delete evaluator;};
 
+    void AddFormula(const char *fName, const char *formula);
+    void ClearFormulas();
+
     void UpdateVectorSize();
     bool InitializeFormulas();
-    bool FetchNewConvValue(size_t nbDesorbed);
+    bool UpdateFormulaValues(size_t nbDesorbed);
+    bool FetchNewConvValue();
     double GetConvRate(int formulaId);
     void RestartASCBR(int formulaId);
     bool CheckASCBR(int formulaId);
@@ -43,6 +47,7 @@ struct Formulas {
     void pruneFirstN(size_t n, int formulaId);
 
     std::vector<GLParser*> formulas_n;
+    std::vector<std::pair<size_t,double>> lastFormulaValues;
     std::vector<ConvergenceData> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
     std::vector<size_t> freq_accum;
     bool formulasChanged;

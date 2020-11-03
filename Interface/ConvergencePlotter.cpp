@@ -238,7 +238,6 @@ void ConvergencePlotter::Display(Worker *w) {
 
 
     SetWorker(w);
-    formula_ptr->UpdateVectorSize();
     Refresh();
     SetVisible(true);
 
@@ -249,11 +248,13 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-    bool hasChanged = formula_ptr->FetchNewConvValue(worker->globalHitCache.globalHits.hit.nbDesorbed);
-    if (hasChanged || ((appTime - lastUpdate > 1.0f) && nbView)) {
-        refreshViews();
-        lastUpdate = appTime;
+    if (formula_ptr->formulas_n.empty() || !formula_ptr->sampleConvValues || !nbView) {
+        return;
     }
+
+    refreshViews();
+    lastUpdate = appTime;
+
     return;
 }
 
