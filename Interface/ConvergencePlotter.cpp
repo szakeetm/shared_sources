@@ -458,10 +458,12 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
                     formula_ptr->pruneEveryN(4, formulaId, 0);
                 }
+                refreshViews();
             } else if (src == pruneFirstNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
                     formula_ptr->pruneFirstN(100, formulaId);
                 }
+                refreshViews();
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
