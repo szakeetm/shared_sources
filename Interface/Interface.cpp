@@ -254,6 +254,7 @@ void Interface::ResetSimulation(bool askConfirm) {
             convergencePlotter->ResetData();
             convergencePlotter->Refresh();
         }
+        if(formulaEditor) formulaEditor->UpdateValues();
     }
     UpdatePlotters();
 }
@@ -2387,41 +2388,12 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 }*/
 
 void Interface::AddFormula(const char *fName, const char *formula) {
-
-    /*GLParser *f = new GLParser();
-    f->SetExpression(formula);
-    f->SetName(fName);
-    f->Parse();
-    AddFormula(f, false);*/
-
-    GLParser *f2 = new GLParser();
-    f2->SetExpression(formula);
-    f2->SetName(fName);
-    f2->Parse();
-    formula_ptr->formulas_n.push_back(f2);
+    formula_ptr->AddFormula(fName, formula);
 }
 
 void Interface::ClearFormulas() {
-
-    /*for (int i = 0; i < nbFormula; i++) {
-        wnd->PostDelete(formulas[i].name);
-        wnd->PostDelete(formulas[i].value);
-        wnd->PostDelete(formulas[i].setBtn);
-        formulas[i].name = NULL;
-        formulas[i].value = NULL;
-        formulas[i].setBtn = NULL;
-        SAFE_DELETE(formulas[i].parser);
-    }
-    nbFormula = 0;
-
-    PlaceComponents();
-    */
-
-    for (auto &f : formula_ptr->formulas_n)
-        SAFE_DELETE(f);
-    formula_ptr->formulas_n.clear();
+    formula_ptr->ClearFormulas();
     if (formulaEditor) formulaEditor->Refresh();
-
 }
 
 /*
@@ -2779,11 +2751,14 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
+                formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.hit.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
-                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
+                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
+                    formulaEditor->UpdateValues();
+                }
                 if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
@@ -2802,22 +2777,6 @@ int Interface::FrameMove() {
                     lastNbHit = worker.globalHitCache.globalHits.hit.nbMCHit;
                     lastNbDes = worker.globalHitCache.globalHits.hit.nbDesorbed;
                     lastMeasTime = m_fTime;
-                }
-            }
-
-            // First sample every second, fine tune later
-            if (!formula_ptr->formulas_n.empty()) {
-                if (!convergencePlotter)
-                    convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
-                if (!formulaEditor) {
-                    formulaEditor = new FormulaEditor(&worker, formula_ptr);
-                    formulaEditor->Refresh();
-                }
-                if (autoUpdateFormulas && formula_ptr->sampleConvValues) {
-                    formula_ptr->InitializeFormulas();
-                    //formulaEditor->Refresh();
-                    //formulaEditor->ReEvaluate();
-                    convergencePlotter->Update(lastAppTime);
                 }
             }
         }
