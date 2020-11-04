@@ -142,13 +142,14 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
             UpdateValues();
 		}
         else if (src == convPlotterButton) {
-            if (!mApp->convergencePlotter || !mApp->convergencePlotter->IsVisible())
-            {
-                SAFE_DELETE(mApp->convergencePlotter);
+            if (!mApp->convergencePlotter) {
                 mApp->convergencePlotter = new ConvergencePlotter(work, mApp->formula_ptr);
+            }
+            if(!mApp->convergencePlotter->IsVisible()){
                 mApp->convergencePlotter->Refresh();
                 mApp->convergencePlotter->SetVisible(true);
-            } else {
+            }
+            else {
                 mApp->convergencePlotter->SetVisible(false);
             }
         }
