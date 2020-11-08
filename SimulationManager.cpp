@@ -639,10 +639,10 @@ const char *SimulationManager::GetErrorDetails() {
         if (state == PROCESS_ERROR) {
             sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
                     procInfo[i].statusString);
-            strncat(err, tmp, 512);
         } else {
             sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, procInfo[i].procId, prStates[state]);
         }
+        strncat(err, tmp, 512);
     }
     return err;
 }
