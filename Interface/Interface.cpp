@@ -1195,25 +1195,25 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
             switch (src->GetId()) {
                 case MENU_FILE_NEW:
                     if (AskToSave()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         EmptyGeometry();
                     }
                     return true;
                 case MENU_FILE_LOAD:
                     if (AskToSave()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         LoadFile();
                     }
                     return true;
                 case MENU_FILE_INSERTGEO:
                     if (geom->IsLoaded()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(false);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_INSERTGEO_NEWSTR:
                     if (geom->IsLoaded()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(true);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
@@ -1830,7 +1830,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             // Load recent menu
             if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {
                 if (AskToSave()) {
-                    if (worker.isRunning) worker.Stop_Public();
+                    if (worker.IsRunning()) worker.Stop_Public();
                     auto recentEntry = recentsList.begin();
                     std::advance(recentEntry, src->GetId() - MENU_FILE_LOADRECENT);
                     LoadFile(*recentEntry);
@@ -2693,11 +2693,12 @@ int Interface::FrameMove() {
     char tmp[256];
     Geometry *geom = worker.GetGeometry();
 
+    bool runningState = worker.IsRunning();
     //Autosave routines
     bool timeForAutoSave = false;
     if (geom->IsLoaded()) {
         if (autoSaveSimuOnly) {
-            if (worker.isRunning) {
+            if (runningState) {
                 if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >=
                     (float) autoSaveFrequency * 60.0f) {
                     timeForAutoSave = true;
@@ -2710,7 +2711,7 @@ int Interface::FrameMove() {
         }
     }
 
-    if (worker.isRunning) {
+    if (runningState) {
         if (m_fTime - lastUpdate >= 1.0f) {
 
             sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
@@ -2813,9 +2814,9 @@ int Interface::FrameMove() {
     } else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!worker.isRunning && worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!runningState && worker.globalHitCache.globalHits.hit.nbDesorbed > 0);
 
-    if (worker.isRunning) {
+    if (runningState) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
     } else if (worker.globalHitCache.globalHits.hit.nbMCHit > 0) {
