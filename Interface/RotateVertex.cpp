@@ -352,7 +352,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 			if (mApp->AskToReset()) {
-				if (work->isRunning) work->Stop_Public();
+				if (work->IsRunning()) work->Stop_Public();
 
 				geom->RotateSelectedVertices(AXIS_P0, AXIS_DIR, rad, src == copyButton, work);
 				work->Reload();
