@@ -319,6 +319,10 @@ size_t Worker::GetProcNumber() const {
     return ontheflyParams.nbProcess;
 }
 
+bool Worker::IsRunning(){
+    return simManager.GetRunningStatus();
+}
+
 void Worker::Update(float appTime) {
     //Refreshes interface cache:
     //Global statistics, leak/hits, global histograms
