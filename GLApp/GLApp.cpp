@@ -251,7 +251,8 @@ void GLApplication::Exit() {
   SDL_GL_DeleteContext(mainContext);
   SDL_DestroyWindow(mainScreen);
   SDL_Quit();
-  exit(0);
+  this->quit = true;
+  //exit(0);
   //_exit(0);
 
 }
@@ -359,7 +360,7 @@ void GLApplication::Run() {
 	#endif
   SDL_Event sdlEvent;
 
-  bool   quit = false;
+  quit = false;
   int    ok;
   GLenum glError;
 //#if defined(_DEBUG)
