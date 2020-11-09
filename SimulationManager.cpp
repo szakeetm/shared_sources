@@ -5,7 +5,9 @@
 
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+
 #include <process.h>
+
 #else if not(defined(__MACOSX__) || defined(__APPLE__))
 #include <cstring> //memset on unix
 #endif
@@ -20,8 +22,11 @@
 #include <fstream>
 #include <iostream>
 
-SimulationManager::SimulationManager(std::string appName , std::string dpName) {
+SimulationManager::SimulationManager(std::string appName, std::string dpName) {
     isRunning = false;
+    hasErrorStatus = false;
+    allProcsDone = false;
+
     useCPU = false;
     nbCores = 0;
 
@@ -36,19 +41,18 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     uint32_t pid = _getpid();
-    const char* dpPrefix = "";
+    const char *dpPrefix = "";
 #else
     uint32_t pid = ::getpid();
     const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
 #endif
 
-    sprintf(this->appName,"%s", appName.c_str());
-    sprintf(this->ctrlDpName,"%s", std::string(dpPrefix+dpName+"CTRL"+std::to_string(pid)).c_str());
-    sprintf(this->loadDpName,"%s", std::string(dpPrefix+dpName+"LOAD"+std::to_string(pid)).c_str());
-    sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(pid)).c_str());
-    sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
+    sprintf(this->appName, "%s", appName.c_str());
+    sprintf(this->ctrlDpName, "%s", std::string(dpPrefix + dpName + "CTRL" + std::to_string(pid)).c_str());
+    sprintf(this->loadDpName, "%s", std::string(dpPrefix + dpName + "LOAD" + std::to_string(pid)).c_str());
+    sprintf(this->hitsDpName, "%s", std::string(dpPrefix + dpName + "HITS" + std::to_string(pid)).c_str());
+    sprintf(this->logDpName, "%s", std::string(dpPrefix + dpName + "LOG" + std::to_string(pid)).c_str());
 
-    allProcsDone = false;
 }
 
 SimulationManager::~SimulationManager() {
@@ -60,19 +64,18 @@ SimulationManager::~SimulationManager() {
 
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
-    for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
-        if(!IsProcessRunning((*proc).first)){
+    for (auto proc = simHandles.begin(); proc != simHandles.end();) {
+        if (!IsProcessRunning((*proc).first)) {
             proc = this->simHandles.erase(proc);
             ++nbDead;
-        }
-        else{
+        } else {
             ++proc;
         }
     }
     return nbDead;
 }
 
-int SimulationManager::LoadInput(const std::string& fileName) {
+int SimulationManager::LoadInput(const std::string &fileName) {
     std::ifstream inputFile(fileName);
     inputFile.seekg(0, std::ios::end);
     size_t size = inputFile.tellg();
@@ -83,7 +86,7 @@ int SimulationManager::LoadInput(const std::string& fileName) {
     try {
         ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
     }
-    catch (std::runtime_error& e) {
+    catch (std::runtime_error &e) {
         throw e;
     }
     return 0;
@@ -94,13 +97,14 @@ int SimulationManager::ResetStatsAndHits() {
     return 0;
 }
 
-int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send simulation mode changes to subprocesses without reloading the whole geometry
+int SimulationManager::ReloadLogBuffer(size_t logSize,
+                                       bool ignoreSubs) {//Send simulation mode changes to subprocesses without reloading the whole geometry
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
-    if(!ignoreSubs) {
+    if (!ignoreSubs) {
         //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
+        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY, isRunning ? PROCESS_RUN : PROCESS_READY)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
         }
     }
@@ -110,7 +114,7 @@ int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send 
     } else {
         CloseLogDP();
         if (logSize)
-            if(CreateLogDP(logSize)) {
+            if (CreateLogDP(logSize)) {
                 throw std::runtime_error(
                         "Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
             }
@@ -120,11 +124,10 @@ int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send 
 }
 
 int SimulationManager::ReloadHitBuffer(size_t hitSize) {
-    if(dpHit && hitSize == dpHit->size){
+    if (dpHit && hitSize == dpHit->size) {
         // Just reset the buffer
         ResetHits();
-    }
-    else{
+    } else {
         CloseHitsDP();
         if (CreateHitsDP(hitSize)) {
             throw std::runtime_error("Failed to create 'hits' dataport: out of memory.");
@@ -143,24 +146,26 @@ int SimulationManager::StartSimulation() {
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
-    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
+    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) { // TODO: 0=MC_MODE, AC_MODE should be seperated completely
         throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
     }
-    isRunning = true;
-    if(allProcsDone){
+
+    if (allProcsDone) {
+        isRunning = false;
         return 1;
     }
+    isRunning = true;
     return 0;
 }
 
 int SimulationManager::StopSimulation() {
+    isRunning = false;
     refreshProcStatus();
     if (simHandles.empty())
         return 1;
 
     if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
-    isRunning = false;
     return 0;
 }
 
@@ -169,7 +174,7 @@ int SimulationManager::StopSimulation() {
  * @return 0=success, 1=else
  * @todo add benchmark
  */
-bool SimulationManager::StartStopSimulation(){
+bool SimulationManager::StartStopSimulation() {
     if (isRunning) {
 
         // Stop
@@ -196,6 +201,7 @@ bool SimulationManager::StartStopSimulation(){
 
         // Particular case when simulation ends before getting RUN state
         if (allProcsDone) {
+            isRunning = false;
             //Update(appTime);
             //GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
         }
@@ -226,11 +232,11 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #endif //  WIN
 
     char *arguments[4];
-    for(int arg=0;arg<3;arg++)
+    for (int arg = 0; arg < 3; arg++)
         arguments[arg] = new char[512];
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine,"%sSub.exe %d %hu",appName,processId,iProc);
-    sprintf(arguments[0],"%s",cmdLine);
+    sprintf(cmdLine, "%sSub.exe %d %hu", appName, processId, iProc);
+    sprintf(arguments[0], "%s", cmdLine);
 #else
     sprintf(cmdLine,"./%sSub",appName);
     sprintf(arguments[0],"%s",cmdLine);
@@ -243,8 +249,8 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
             StartProc(arguments, STARTPROC_NOWIN),
             SimType::simCPU);
 
-    for(int arg=0;arg<3;arg++)
-        if(arguments[arg] != nullptr) delete[] arguments[arg];
+    for (int arg = 0; arg < 3; arg++)
+        if (arguments[arg] != nullptr) delete[] arguments[arg];
 
     // Wait a bit
     ProcessSleep(25);
@@ -263,14 +269,14 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
-auto oldSize = simHandles.size();
+    auto oldSize = simHandles.size();
 
     char *arguments[4];
-    for(int arg=0;arg<3;arg++)
+    for (int arg = 0; arg < 3; arg++)
         arguments[arg] = new char[512];
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine,"gpuSub.exe %d %hu",processId,iProc);
-    sprintf(arguments[0],"%s",cmdLine);
+    sprintf(cmdLine, "gpuSub.exe %d %hu", processId, iProc);
+    sprintf(arguments[0], "%s", cmdLine);
 #else
     sprintf(cmdLine,"./gpuSub");
     sprintf(arguments[0],"%s",cmdLine);
@@ -283,10 +289,10 @@ auto oldSize = simHandles.size();
             StartProc(arguments, STARTPROC_NORMAL),
             SimType::simGPU);
 
-    for(int arg=0;arg<3;arg++)
-        if(arguments[arg] != nullptr) delete[] arguments[arg];
+    for (int arg = 0; arg < 3; arg++)
+        if (arguments[arg] != nullptr) delete[] arguments[arg];
 
-    if( oldSize >= simHandles.size())
+    if (oldSize >= simHandles.size())
         return 0;
 
     // Wait a bit
@@ -307,7 +313,7 @@ int SimulationManager::CreateLoaderDP(size_t loaderSize) {
     dpLoader = CreateDataport(loadDpName, loaderSize);
     if (!dpLoader)
         return 1;
-        //throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
+    //throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
 
     //progressDlg->SetMessage("Accessing dataport...");
 //    AccessDataportTimed(dpLoader, (DWORD)(3000 + nbCores*loaderSize / 10000));
@@ -321,13 +327,13 @@ int SimulationManager::CreateLoaderDP(size_t loaderSize) {
 }
 
 int SimulationManager::CreateControlDP() {
-    if( !dpControl )
-        dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
-    if( !dpControl )
+    if (!dpControl)
+        dpControl = CreateDataport(ctrlDpName, sizeof(SHCONTROL));
+    if (!dpControl)
         return 1;
-        //throw Error("Failed to create 'control' dataport");
+    //throw Error("Failed to create 'control' dataport");
     AccessDataport(dpControl);
-    memset(dpControl->buff,0,sizeof(SHCONTROL));
+    memset(dpControl->buff, 0, sizeof(SHCONTROL));
     ReleaseDataport(dpControl);
 
     return 0;
@@ -368,27 +374,28 @@ int SimulationManager::CreateHitsDP(size_t hitSize) {
 int SimulationManager::InitSimUnits() {
 
     // First create Control DP, so subprocs can communicate
-    if(CreateControlDP())
+    if (CreateControlDP())
         throw std::runtime_error("Could not create control dataport!");
 
-    if(useCPU){
+    if (useCPU) {
         // Launch nbCores subprocesses
         auto nbActiveProcesses = simHandles.size();
-        for(int iProc = 0; iProc < nbCores; ++iProc) {
-            if(CreateCPUHandle(iProc + nbActiveProcesses)) { // abort initialization when creation fails
-                std::cout << "Error: Creating CPU handle: "<<nbActiveProcesses<<" / "<< simHandles.size()<< std::endl;
+        for (int iProc = 0; iProc < nbCores; ++iProc) {
+            if (CreateCPUHandle(iProc + nbActiveProcesses)) { // abort initialization when creation fails
+                std::cout << "Error: Creating CPU handle: " << nbActiveProcesses << " / " << simHandles.size()
+                          << std::endl;
                 return simHandles.size();
             }
         }
     }
-    if(useGPU){
+    if (useGPU) {
         auto nbActiveProcesses = simHandles.size();
-        if(CreateGPUHandle(nbActiveProcesses)){ // abort initialization when creation fails
-            std::cout << "Error: Creating GPU handle: "<<nbActiveProcesses<<" / "<< simHandles.size()<< std::endl;
+        if (CreateGPUHandle(nbActiveProcesses)) { // abort initialization when creation fails
+            std::cout << "Error: Creating GPU handle: " << nbActiveProcesses << " / " << simHandles.size() << std::endl;
             return simHandles.size();
         }
     }
-    if(useRemote){
+    if (useRemote) {
         CreateRemoteHandle();
     }
 
@@ -403,7 +410,8 @@ int SimulationManager::InitSimUnits() {
 int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     // Wait for completion
     bool finished = false;
-    bool error = false;
+    const int waitAmount = 250;
+    int prevIncTime = 0; // save last time a wait increment has been set; allows for a dynamic/reasonable increase
     int waitTime = 0;
     int timeOutAt = 10000; // 10 sec
     allProcsDone = true;
@@ -432,15 +440,14 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         for (size_t i = 0; i < simHandles.size(); i++) {
             auto procState = shMaster->procInformation[i].slaveState;
-            finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
-            if( procState==PROCESS_ERROR ) {
-                error = true;
-            }
-            else if(procState == PROCESS_STARTING){
+            finished = finished & (procState == procStatus || procState == PROCESS_ERROR || procState == PROCESS_DONE);
+            if (procState == PROCESS_ERROR) {
+                hasErrorStatus = true;
+            } else if (procState == PROCESS_STARTING) {
                 snprintf(stateStrings[i].s, 128, shMaster->procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) // if strings are different
+                if (strcmp(prevStateStrings[i].s, stateStrings[i].s)) // if strings are different
                     timeOutAt += 10000; // if task properly started, increase allowed wait time
-                else if(waitTime <= 0.1)
+                else if (waitTime <= 0.1)
                     timeOutAt += 10000;
 
             }
@@ -452,24 +459,25 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             ProcessSleep(250);
             waitTime += 250;
         }
-    } while (!finished && waitTime<timeOutAt);
+    } while (!finished && waitTime < timeOutAt);
 
-    return waitTime>=timeOutAt || error; // 0 = finished, 1 = timeout
+    return waitTime >= timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
 }
 
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
-    if(!dpControl) {
+    if (!dpControl) {
         return 1;
     }
 
     // Send command
     AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    for(size_t i=0;i<simHandles.size();i++) {
+    auto *shMaster = (SHCONTROL *) dpControl->buff;
+    for (size_t i = 0; i < simHandles.size(); i++) {
         auto procState = shMaster->procInformation[i].slaveState;
-        if(procState == PROCESS_READY
-           || procState == PROCESS_RUN
-              || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
+        if (procState == PROCESS_READY
+            || procState == PROCESS_RUN
+            || procState == PROCESS_ERROR ||
+            procState == PROCESS_DONE) { // check if it'' ready before sending a new command
             shMaster->procInformation[i].slaveState = PROCESS_STARTING;
             shMaster->procInformation[i].oldState = shMaster->procInformation[i].masterCmd; // use to solve old state
             shMaster->procInformation[i].masterCmd = command;
@@ -491,7 +499,7 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
  */
 int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param,
                                       const size_t param2) {
-    if(!ForwardCommand(command, param, param2)) { // execute
+    if (!ForwardCommand(command, param, param2)) { // execute
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
@@ -500,18 +508,19 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if( !simHandles.empty() && dpControl ) {
-        if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
+    if (!simHandles.empty() && dpControl) {
+        if (ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) { // execute
             // Force kill
             AccessDataport(dpControl);
-            auto *shMaster = (SHCONTROL *)dpControl->buff;
-            for(size_t i=0;i<simHandles.size();i++) {
-                if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
-                    if(!KillProc(simHandles[i].first)) {
+            auto *shMaster = (SHCONTROL *) dpControl->buff;
+            for (size_t i = 0; i < simHandles.size(); i++) {
+                if (shMaster->procInformation[i].slaveState != PROCESS_KILLED) {
+                    if (!KillProc(simHandles[i].first)) {
                         //assume that the process doesn't exist, so remove it from our management structure
-                        simHandles.erase((simHandles.begin()+i));
+                        simHandles.erase((simHandles.begin() + i));
                         ReleaseDataport(dpControl);
-                        throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
+                        throw std::runtime_error(
+                                MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
                     }
                 }
             }
@@ -540,6 +549,7 @@ int SimulationManager::ResetSimulations() {
 }
 
 int SimulationManager::ResetHits() {
+    isRunning = false;
     if (!dpHit) {
         return 1;
     }
@@ -571,18 +581,18 @@ int SimulationManager::CloseHitsDP() {
     return 0;
 }
 
-int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
-    if(simHandles.empty())
+int SimulationManager::GetProcStatus(std::vector<SubProcInfo> &procInfoList) {
+    if (simHandles.empty())
         return 1;
 
     AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    for(int i = 0; i<simHandles.size();++i){
+    auto *shMaster = (SHCONTROL *) dpControl->buff;
+    for (int i = 0; i < simHandles.size(); ++i) {
         SubProcInfo pInfo{};
         pInfo.procId = simHandles[i].first;
         pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
         pInfo.slaveState = shMaster->procInformation[i].slaveState;
-        strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
+        strncpy(pInfo.statusString, shMaster->procInformation[i].statusString, 128);
         pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
         pInfo.oldState = shMaster->procInformation[i].oldState;
         pInfo.runtimeInfo = shMaster->procInformation[i].runtimeInfo;
@@ -594,9 +604,9 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
     return 0;
 }
 
-int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
+int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
     AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
+    auto *shMaster = (SHCONTROL *) dpControl->buff;
     //memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
     for (size_t i = 0; i < MAX_PROCESS; i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
@@ -617,7 +627,7 @@ BYTE *SimulationManager::GetLockedHitBuffer() {
         bufferCopy = new BYTE[dpHit->size];
         std::copy((BYTE*)dpHit->buff,(BYTE*)dpHit->buff + dpHit->size,bufferCopy);
         ReleaseDataport(dpHit);*/
-        return (BYTE*)dpHit->buff;
+        return (BYTE *) dpHit->buff;
     }
     return nullptr;
 }
@@ -631,7 +641,7 @@ int SimulationManager::UnlockHitBuffer() {
 
 int SimulationManager::UploadToLoader(void *data, size_t size) {
     if (dpLoader && AccessDataport(dpLoader)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpLoader->buff);
+        std::copy((BYTE *) data, (BYTE *) data + size, (BYTE *) dpLoader->buff);
         ReleaseDataport(dpLoader);
         return 0;
     }
@@ -641,7 +651,7 @@ int SimulationManager::UploadToLoader(void *data, size_t size) {
 
 int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
     if (dpHit && AccessDataport(dpHit)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpHit->buff);
+        std::copy((BYTE *) data, (BYTE *) data + size, (BYTE *) dpHit->buff);
         ReleaseDataport(dpHit);
         return 0;
     }
@@ -651,7 +661,7 @@ int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
 
 BYTE *SimulationManager::GetLockedLogBuffer() {
     if (dpLog && AccessDataport(dpLog)) {
-        return (BYTE*)dpLog->buff;
+        return (BYTE *) dpLog->buff;
     }
     return nullptr;
 }
@@ -661,6 +671,28 @@ int SimulationManager::UnlockLogBuffer() {
         return 0;
     }
     return 1;
+}
+
+/*!
+ * @brief Actively check running state (evaluate done & error)
+ * @return 1 if simulation processes are running, 0 else
+ */
+bool SimulationManager::GetRunningStatus() {
+
+    auto *shMaster = (SHCONTROL *) dpControl->buff;
+    bool done = true;
+    for (size_t i = 0; i < simHandles.size(); i++) {
+        auto procState = shMaster->procInformation[i].slaveState;
+        done = done & (procState == PROCESS_ERROR || procState == PROCESS_DONE);
+        if (procState == PROCESS_ERROR) {
+            hasErrorStatus = true;
+        }
+    }
+
+    allProcsDone = done;
+    isRunning = isRunning && !allProcsDone;
+
+    return isRunning;
 }
 
 /*!
@@ -681,21 +713,20 @@ const char *SimulationManager::GetErrorDetails() {
         if (state == PROCESS_ERROR) {
             sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
                     procInfo[i].statusString);
-            strncat(err, tmp, 512);
         } else {
             sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, procInfo[i].procId, prStates[state]);
         }
+        strncat(err, tmp, 512);
     }
     return err;
 }
 
 std::string SimulationManager::MakeSubProcError(const char *message) {
     std::string errString;
-    if (!message){
+    if (!message) {
         errString.append("Bad response from sub process(es):\n");
         errString.append(GetErrorDetails());
-    }
-    else{
+    } else {
         errString.append(message);
         errString.append(":\n");
         errString.append(GetErrorDetails());
@@ -705,16 +736,16 @@ std::string SimulationManager::MakeSubProcError(const char *message) {
 
 
 int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType) {
-    if(loadType < LoadType::NLOADERTYPES){
-        if(CreateLoaderDP(size))
+    if (loadType < LoadType::NLOADERTYPES) {
+        if (CreateLoaderDP(size))
             return 1;
-        if(UploadToLoader(data, size))
+        if (UploadToLoader(data, size))
             return 1;
     }
 
 
     switch (loadType) {
-        case LoadType::LOADGEOM:{
+        case LoadType::LOADGEOM: {
             if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
@@ -724,7 +755,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             CloseLoaderDP();
             break;
         }
-        case LoadType::LOADPARAM:{
+        case LoadType::LOADPARAM: {
 
             //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
             if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
@@ -734,12 +765,12 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
                 throw std::runtime_error(errString);
             }
             CloseLoaderDP();
-            if(isRunning) { // restart
+            if (isRunning) { // restart
                 StartSimulation();
             }
             break;
         }
-        case LoadType::LOADAC:{
+        case LoadType::LOADAC: {
             if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send AC geometry to sub process:\n";
@@ -749,12 +780,12 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             CloseLoaderDP();
             break;
         }
-        case LoadType::LOADHITS:{
-            if(UploadToHitBuffer(data, size))
+        case LoadType::LOADHITS: {
+            if (UploadToHitBuffer(data, size))
                 throw std::runtime_error(MakeSubProcError("Failed to access hit buffer"));
             break;
         }
-        default:{
+        default: {
             // Unspecified load type
             return 1;
         }
