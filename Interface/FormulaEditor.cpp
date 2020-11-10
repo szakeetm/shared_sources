@@ -138,7 +138,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	}
 	case MSG_BUTTON:
 		if (src == recalcButton) {
-            formula_ptr->UpdateFormulaValues(work->globalHitCache.globalHits.hit.nbDesorbed);
+            formula_ptr->UpdateFormulaValues(work->globState.globalHits.globalHits.hit.nbDesorbed);
             UpdateValues();
 		}
 		else if (src == convPlotterButton) {

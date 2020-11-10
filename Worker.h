@@ -247,4 +247,5 @@ private:
 
 public:
     GlobalSimuState globState;
+    GlobalHitBuffer globalHitCache;
 };

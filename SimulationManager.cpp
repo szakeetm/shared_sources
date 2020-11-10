@@ -56,6 +56,11 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
 SimulationManager::~SimulationManager() {
     CLOSEDP(dpHit);
     CLOSEDP(dpLog);
+    KillAllSimUnits();
+    /*for(auto& handle : simHandles){
+
+        handle.first.join();
+    }*/
 }
 
 int SimulationManager::refreshProcStatus() {
@@ -549,10 +554,9 @@ int SimulationManager::UnlockLogBuffer() {
  */
 bool SimulationManager::GetRunningStatus(){
 
-    auto *shMaster = (SHCONTROL *) dpControl->buff;
     bool done = true;
     for (size_t i = 0; i < simHandles.size(); i++) {
-        auto procState = shMaster->procInformation[i].slaveState;
+        auto procState = procInformation[i].slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {
             hasErrorStatus = true;

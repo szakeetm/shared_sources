@@ -2738,7 +2738,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.hit.nbDesorbed);
+                formula_ptr->UpdateFormulaValues(worker.globState.globalHits.globalHits.hit.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
