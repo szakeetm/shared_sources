@@ -430,8 +430,13 @@ bool HistogramSettings::Apply() {
 		}
 
 		mApp->changedSinceSave = true;
-		work->RealReload();
-		work->Update(mApp->m_fTime); //To refresh histogram cache
+		work->needsReload = true; // to trigger realreload in update
+		try{
+		    work->Update(mApp->m_fTime); //To refresh histogram cache
+        }
+        catch (std::exception& e) {
+            GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
+        }
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
 	}
 	

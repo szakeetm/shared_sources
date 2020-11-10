@@ -39,12 +39,12 @@ class FormulaEditor : public GLWindow {
 public:
 
   // Construction
-  FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas);
+  FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas);
 
   void RebuildList();
   void Refresh();
 
-  void ReEvaluate();
+  void UpdateValues();
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -61,13 +61,10 @@ private:
     GLButton    *convPlotterButton;
     GLButton		*moveUpButton;
   GLButton		*moveDownButton;
-  GLLabel     *l1;
   GLLabel     *descL;
   GLList      *formulaList;
   GLTitledPanel *panel1;
   GLTitledPanel *panel2;
-
-  int descLabelHeight;
 
   std::vector<std::string> userExpressions,userFormulaNames;
   std::vector<double> columnRatios;

@@ -92,6 +92,11 @@ int SimulationController::RunSimulation() {
         nbStep = std::ceil(stepsPerSec + 0.5);
     }
 
+    {
+        char tmp[128];
+        snprintf(tmp, 128, "%s [%u event/s]", GetSimuStatus(), nbStep);
+        SetStatus(tmp); //update hits only
+    }
     double t0 = omp_get_wtime();
     bool goOn = simulation->SimulationMCStep(nbStep);
     double t1 = omp_get_wtime();
@@ -259,7 +264,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
                 if (loadOk) {
-                    SetStatus(GetSimuStatus()); //update hits only
                     eos = RunSimulation();      // Run during 1 sec
                     if ((GetLocalState() != PROCESS_ERROR)) {
                         simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
@@ -322,7 +326,6 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 break;
 
             case PROCESS_RUN:
-                SetStatus(GetSimuStatus()); //update hits only
                 eos = RunSimulation();      // Run during 1 sec
                 if ((GetLocalState() != PROCESS_ERROR)) {
                     lastHitUpdateOK = simulation->UpdateHits(prIdx, 20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).

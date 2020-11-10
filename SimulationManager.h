@@ -131,11 +131,11 @@ public:
 
     int UnlockLogBuffer();
 
+    bool GetRunningStatus();
 
     int LoadInput(const std::string& fileName);
 
 private:
-    bool isRunning;
 
     // Dataport handles and names
     //SubProcInfo procInformation[MAX_PROCESS];
@@ -165,7 +165,9 @@ public:
     uint16_t nbThreads;
     uint16_t mainProcId{};
 
+    bool isRunning;
     bool allProcsDone;
+    bool hasErrorStatus;
     bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;

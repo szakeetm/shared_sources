@@ -111,6 +111,7 @@ private:
    int  nbExpose;
    int  firstTick;
 
+   bool quit;
 };
 
 #endif /* _GLAPPH_ */

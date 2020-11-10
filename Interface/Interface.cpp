@@ -253,6 +253,7 @@ void Interface::ResetSimulation(bool askConfirm) {
             convergencePlotter->ResetData();
             convergencePlotter->Refresh();
         }
+        if(formulaEditor) formulaEditor->UpdateValues();
     }
     UpdatePlotters();
 }
@@ -1194,25 +1195,25 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
             switch (src->GetId()) {
                 case MENU_FILE_NEW:
                     if (AskToSave()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         EmptyGeometry();
                     }
                     return true;
                 case MENU_FILE_LOAD:
                     if (AskToSave()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         LoadFile();
                     }
                     return true;
                 case MENU_FILE_INSERTGEO:
                     if (geom->IsLoaded()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(false);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_INSERTGEO_NEWSTR:
                     if (geom->IsLoaded()) {
-                        if (worker.isRunning) worker.Stop_Public();
+                        if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(true);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
@@ -1829,7 +1830,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             // Load recent menu
             if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {
                 if (AskToSave()) {
-                    if (worker.isRunning) worker.Stop_Public();
+                    if (worker.IsRunning()) worker.Stop_Public();
                     auto recentEntry = recentsList.begin();
                     std::advance(recentEntry, src->GetId() - MENU_FILE_LOADRECENT);
                     LoadFile(*recentEntry);
@@ -2373,41 +2374,12 @@ void Interface::ProcessFormulaButtons(GLComponent *src) {
 }*/
 
 void Interface::AddFormula(const char *fName, const char *formula) {
-
-    /*GLParser *f = new GLParser();
-    f->SetExpression(formula);
-    f->SetName(fName);
-    f->Parse();
-    AddFormula(f, false);*/
-
-    GLParser *f2 = new GLParser();
-    f2->SetExpression(formula);
-    f2->SetName(fName);
-    f2->Parse();
-    formula_ptr->formulas_n.push_back(f2);
+    formula_ptr->AddFormula(fName, formula);
 }
 
 void Interface::ClearFormulas() {
-
-    /*for (int i = 0; i < nbFormula; i++) {
-        wnd->PostDelete(formulas[i].name);
-        wnd->PostDelete(formulas[i].value);
-        wnd->PostDelete(formulas[i].setBtn);
-        formulas[i].name = NULL;
-        formulas[i].value = NULL;
-        formulas[i].setBtn = NULL;
-        SAFE_DELETE(formulas[i].parser);
-    }
-    nbFormula = 0;
-
-    PlaceComponents();
-    */
-
-    for (auto &f : formula_ptr->formulas_n)
-        SAFE_DELETE(f);
-    formula_ptr->formulas_n.clear();
+    formula_ptr->ClearFormulas();
     if (formulaEditor) formulaEditor->Refresh();
-
 }
 
 /*
@@ -2721,11 +2693,12 @@ int Interface::FrameMove() {
     char tmp[256];
     Geometry *geom = worker.GetGeometry();
 
+    bool runningState = worker.IsRunning();
     //Autosave routines
     bool timeForAutoSave = false;
     if (geom->IsLoaded()) {
         if (autoSaveSimuOnly) {
-            if (worker.isRunning) {
+            if (runningState) {
                 if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >=
                     (float) autoSaveFrequency * 60.0f) {
                     timeForAutoSave = true;
@@ -2738,7 +2711,7 @@ int Interface::FrameMove() {
         }
     }
 
-    if (worker.isRunning) {
+    if (runningState) {
         if (m_fTime - lastUpdate >= 1.0f) {
 
             sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
@@ -2765,11 +2738,14 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
+                formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.hit.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
                 //if (autoUpdateFormulas) UpdateFormula();
-                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) formulaEditor->ReEvaluate();
+                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
+                    formulaEditor->UpdateValues();
+                }
                 if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
@@ -2788,22 +2764,6 @@ int Interface::FrameMove() {
                     lastNbHit = worker.globState.globalHits.globalHits.hit.nbMCHit;
                     lastNbDes = worker.globState.globalHits.globalHits.hit.nbDesorbed;
                     lastMeasTime = m_fTime;
-                }
-            }
-
-            // First sample every second, fine tune later
-            if (!formula_ptr->formulas_n.empty()) {
-                if (!convergencePlotter)
-                    convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
-                if (!formulaEditor) {
-                    formulaEditor = new FormulaEditor(&worker, formula_ptr);
-                    formulaEditor->Refresh();
-                }
-                if (autoUpdateFormulas && formula_ptr->sampleConvValues) {
-                    formula_ptr->InitializeFormulas();
-                    //formulaEditor->Refresh();
-                    //formulaEditor->ReEvaluate();
-                    convergencePlotter->Update(lastAppTime);
                 }
             }
         }
@@ -2854,9 +2814,9 @@ int Interface::FrameMove() {
     } else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!worker.isRunning && worker.globState.globalHits.globalHits.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!runningState && worker.globState.globalHits.globalHits.hit.nbDesorbed > 0);
 
-    if (worker.isRunning) {
+    if (runningState) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
     } else if (worker.globState.globalHits.globalHits.hit.nbMCHit > 0) {

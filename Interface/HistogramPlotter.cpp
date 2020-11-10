@@ -228,18 +228,12 @@ void HistogramPlotter::Update(float appTime, bool force) {
 		lastUpdate = appTime;
 		return;
 	}
-
-	size_t modeId = GetSelectedTabIndex();
-	if ((appTime - lastUpdate > 1.0f || force) && modes[modeId].views.size() > 0) {
-		if (worker->isRunning) refreshChart();
-		lastUpdate = appTime;
-	}
-
 }
 
 void HistogramPlotter::refreshChart() {
 	//refreshes chart values
 	size_t modeId = GetSelectedTabIndex();
+    if (modes[modeId].views.empty()) return;
 
 	int yScaleMode = yScaleCombo->GetSelectedIndex();
 	Geometry *geom = worker->GetGeometry();

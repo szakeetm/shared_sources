@@ -197,7 +197,7 @@ void Worker::ThrowSubProcError(const char *message) {
         sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
     else
         sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
-    throw Error(errMsg);
+    throw std::runtime_error(errMsg);
 
 }
 
@@ -237,7 +237,6 @@ void Worker::ResetStatsAndHits(float appTime) {
     stopTime = 0.0f;
     startTime = 0.0f;
     simuTime = 0.0f;
-    isRunning = false;
     if (model.otfParams.nbProcess == 0)
         return;
 
@@ -261,7 +260,6 @@ void Worker::Stop() {
     catch (std::exception& e) {
         throw Error(e.what());
     }
-    isRunning = false;
 }
 
 void Worker::SetProcNumber(size_t n) {
@@ -326,6 +324,10 @@ size_t Worker::GetProcNumber() const {
     return model.otfParams.nbProcess;
 }
 
+bool Worker::IsRunning(){
+    return simManager.GetRunningStatus();
+}
+
 static float lastAccessTime = 0.0f;
 void Worker::Update(float appTime) {
     //Refreshes interface cache:
@@ -336,27 +338,10 @@ void Worker::Update(float appTime) {
 
     if (needsReload) RealReload();
 
-    // Check calculation ending
-    bool done = true;
-    bool error = true;
-
-    std::vector<SubProcInfo> procInfo;
-    simManager.GetProcStatus(procInfo);
-
-    for (size_t i = 0; i < procInfo.size() && done; i++) {
-        const size_t procState = procInfo[i].slaveState;
-        done = done && (procState == PROCESS_DONE);
-        error = error && (procState == PROCESS_ERROR);
-
-#if defined(MOLFLOW)
-        if (procState == PROCESS_RUNAC) calcACprg = procInfo[i].cmdParam;
-#endif
-    }
-
     // End of simulation reached (Stop GUI)
-    if ((error || done) && isRunning && appTime != 0.0f) {
+    if ((simManager.allProcsDone || simManager.hasErrorStatus) && IsRunning() && appTime != 0.0f) {
         InnerStop(appTime);
-        if (error) ThrowSubProcError();
+        if (simManager.hasErrorStatus) ThrowSubProcError();
     }
 
     // Retrieve hit count recording from the shared memory

@@ -24,6 +24,9 @@
 
 SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     isRunning = false;
+    hasErrorStatus = false;
+    allProcsDone = false;
+
     useCPU = false;
     nbCores = 0;
 
@@ -48,7 +51,6 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(pid)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
 
-    allProcsDone = false;
 }
 
 SimulationManager::~SimulationManager() {
@@ -151,21 +153,23 @@ int SimulationManager::StartSimulation() {
     if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
         throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
     }
-    isRunning = true;
+
     if(allProcsDone){
+        isRunning = false;
         return 1;
     }
+    isRunning = true;
     return 0;
 }
 
 int SimulationManager::StopSimulation() {
+    isRunning = false;
     refreshProcStatus();
     if (simHandles.empty())
         return 1;
 
     if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
-    isRunning = false;
     return 0;
 }
 
@@ -201,6 +205,7 @@ bool SimulationManager::StartStopSimulation(){
 
         // Particular case when simulation ends before getting RUN state
         if (allProcsDone) {
+            isRunning = false;
             //Update(appTime);
             //GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
         }
@@ -320,7 +325,6 @@ int SimulationManager::InitSimUnits() {
 int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     // Wait for completion
     bool finished = false;
-    bool error = false;
     const int waitAmount = 250;
     int prevIncTime = 0; // save last time a wait increment has been set; allows for a dynamic/reasonable increase
     int waitTime = 0;
@@ -348,7 +352,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             auto procState = procInformation[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
-                error = true;
+                hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
                 snprintf(stateStrings[i].s, 128, procInformation[i].statusString);
@@ -367,7 +371,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
         }
     } while (!finished && waitTime<timeOutAt);
 
-    return waitTime>=timeOutAt || error; // 0 = finished, 1 = timeout
+    return waitTime>=timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
 }
 
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
@@ -467,6 +471,7 @@ int SimulationManager::ResetSimulations() {
 }
 
 int SimulationManager::ResetHits() {
+    isRunning = false;
     if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     return 0;
@@ -539,6 +544,28 @@ int SimulationManager::UnlockLogBuffer() {
 }
 
 /*!
+ * @brief Actively check running state (evaluate done & error)
+ * @return 1 if simulation processes are running, 0 else
+ */
+bool SimulationManager::GetRunningStatus(){
+
+    auto *shMaster = (SHCONTROL *) dpControl->buff;
+    bool done = true;
+    for (size_t i = 0; i < simHandles.size(); i++) {
+        auto procState = shMaster->procInformation[i].slaveState;
+        done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
+        if( procState==PROCESS_ERROR ) {
+            hasErrorStatus = true;
+        }
+    }
+
+    allProcsDone = done;
+    isRunning = isRunning && !allProcsDone;
+
+    return isRunning;
+}
+
+/*!
  * @brief Return error information or current running state in case of a hangup
  * @return char array containing proc status (and error message/s)
  */
@@ -556,10 +583,10 @@ const char *SimulationManager::GetErrorDetails() {
         if (state == PROCESS_ERROR) {
             sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo[i].procId, prStates[state],
                     procInfo[i].statusString);
-            strncat(err, tmp, 512);
         } else {
             sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo[i].procId, prStates[state]);
         }
+        strncat(err, tmp, 512);
     }
     return err;
 }

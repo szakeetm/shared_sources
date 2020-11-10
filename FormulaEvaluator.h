@@ -4,6 +4,7 @@
 
 class FormulaEvaluator {
 public:
+    virtual ~FormulaEvaluator() = default;
     virtual bool EvaluateVariable(VLIST *v) { return false; }
 
 protected:
