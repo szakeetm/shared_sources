@@ -340,7 +340,7 @@ void Worker::Update(float appTime) {
     if (needsReload) RealReload();
 
     // End of simulation reached (Stop GUI)
-    if (IsRunning() && appTime != 0.0f) {
+    if ((simManager.allProcsDone || simManager.hasErrorStatus) && IsRunning() && appTime != 0.0f) {
         InnerStop(appTime);
         if (simManager.hasErrorStatus) ThrowSubProcError();
     }
