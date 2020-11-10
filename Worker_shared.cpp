@@ -195,7 +195,7 @@ void Worker::ThrowSubProcError(const char *message) {
         sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
     else
         sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
-    throw Error(errMsg);
+    throw std::runtime_error(errMsg);
 
 }
 
@@ -324,6 +324,10 @@ void Worker::RebuildTextures() {
 
 size_t Worker::GetProcNumber() const {
     return ontheflyParams.nbProcess;
+}
+
+bool Worker::IsRunning(){
+    return simManager.GetRunningStatus();
 }
 
 void Worker::Update(float appTime) {

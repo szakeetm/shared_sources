@@ -148,8 +148,6 @@ public:
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
-    bool   IsRunning();           // Started/Stopped state
-
   #endif
 
 #if defined(SYNRAD)
@@ -162,6 +160,7 @@ public:
     void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
 #endif
+    bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
   OntheflySimulationParams ontheflyParams;
