@@ -203,6 +203,15 @@ set(SRC_FILES ${SRC_FILES}
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
+if (APPLE)
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+endif()
+
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC
         ${SRC_FILES}
@@ -221,6 +230,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
         )
+
+find_package(OpenMP REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 if(MSVC)
     find_package(OpenGL REQUIRED)

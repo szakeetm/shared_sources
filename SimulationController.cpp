@@ -8,6 +8,8 @@
 #include "SimulationController.h"
 #include "ProcessControl.h"
 #include <omp.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 /*#if defined(MOLFLOW)
 #include "../src/Simulation.h"
 #endif*/
@@ -18,10 +20,14 @@
 
 #define WAITTIME    100  // Answer in STOP mode
 
-SimulationController::SimulationController(std::string appName, size_t parentPID, size_t procIdx,
+SimulationController::SimulationController(const std::string &appName, size_t parentPID, size_t procIdx, size_t nbThreads,
                                            SimulationUnit *simulationInstance, SubProcInfo *pInfo) : appName{}{
     this->prIdx = procIdx;
     this->parentPID = parentPID;
+    if(nbThreads == 0)
+        this->nbThreads = omp_get_max_threads();
+    else
+        this->nbThreads = nbThreads;
 
     sprintf(this->appName,"%s", appName.c_str());
 
@@ -56,6 +62,8 @@ SimulationController::SimulationController(SimulationController&& o) noexcept : 
 
     prIdx = o.prIdx;
     parentPID = o.parentPID;
+    nbThreads =  o.nbThreads;
+
 }
 
 int SimulationController::resetControls(){
@@ -222,7 +230,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
         bool eos = false;
         switch (procInfo->masterCmd) {
 
-            case COMMAND_LOAD:
+            case COMMAND_LOAD: {
                 printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
                 loadOk = Load();
@@ -233,40 +241,52 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 SetReady(loadOk);
 
                 break;
-
-            case COMMAND_UPDATEPARAMS:
+            }
+            case COMMAND_UPDATEPARAMS: {
                 SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (UpdateParams()) {
                     SetReady(loadOk);
                     //SetState(procInfo->cmdParam2, GetSimuStatus());
-                } else{
+                } else {
                     SetState(PROCESS_ERROR, "Could not update parameters");
                 }
                 break;
-
-            case COMMAND_RELEASEDPLOG:
+            }
+            case COMMAND_RELEASEDPLOG: {
                 SetState(PROCESS_WAIT, GetSimuStatus());
                 printf("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetReady(loadOk);
                 break;
-
-            case COMMAND_START:
+            }
+            case COMMAND_START: {
                 // Check end of simulation
                 if (simulation->model.otfParams.desorptionLimit > 0) {
-                    if (simulation->totalDesorbed >= simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess) {
+                    if (simulation->totalDesorbed >=
+                        simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess) {
                         ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
                     }
                 }
-                if(GetLocalState() != PROCESS_RUN) {
+                if (GetLocalState() != PROCESS_RUN) {
                     printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
+                bool lastUpdateOk = true;
                 if (loadOk) {
-                    eos = RunSimulation();      // Run during 1 sec
-                    if ((GetLocalState() != PROCESS_ERROR)) {
-                        simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    size_t updateThread = 0;
+#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(stepsPerSec, lastUpdateOk, eos) shared(procInfo, updateThread, simulation)
+                    {
+                        do {
+                            eos = RunSimulation();      // Run during 1 sec
+                            if (updateThread == omp_get_thread_num() && (GetLocalState() != PROCESS_ERROR)) {
+                                size_t timeOut = lastHitUpdateOK ? 20 : 100; //ms
+                                lastUpdateOk = simulation->UpdateHits(omp_get_thread_num(),
+                                                                      timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                                updateThread = (updateThread+1) % omp_get_num_threads();
+                            }
+                        } while (procInfo->masterCmd == COMMAND_START && !eos);
+#pragma omp barrier
                     }
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
@@ -282,8 +302,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     ClearCommand();
                 }
                 break;
-
-            case COMMAND_PAUSE:
+            }
+            case COMMAND_PAUSE: {
                 printf("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (!lastHitUpdateOK) {
                     // Last update not successful, retry with a longer timeout
@@ -295,40 +315,41 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 }
                 SetReady(loadOk);
                 break;
-
-            case COMMAND_RESET:
+            }
+            case COMMAND_RESET: {
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
                 resetControls();
                 simulation->ResetSimulation();
                 SetReady(loadOk);
                 break;
-
-            case COMMAND_EXIT:
+            }
+            case COMMAND_EXIT: {
                 printf("[%d] COMMAND: EXIT (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 endState = true;
                 break;
-
-            case COMMAND_CLOSE:
+            }
+            case COMMAND_CLOSE: {
                 printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 simulation->ClearSimulation();
                 loadOk = false;
                 SetReady(loadOk);
                 break;
-
-            case COMMAND_FETCH:
+            }
+            case COMMAND_FETCH: {
                 printf("[%d] COMMAND: FETCH (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                if(procInfo->procId == procInfo->cmdParam) {
-                    SetState(PROCESS_STARTING,"Preparing to upload hits");
+                if (procInfo->procId == procInfo->cmdParam) {
+                    SetState(PROCESS_STARTING, "Preparing to upload hits");
                     //simulation->UploadHits(dpHit, dpLog, prIdx, 10000);
                 }
                 SetReady(loadOk);
                 break;
-
-            case PROCESS_RUN:
+            }
+            case PROCESS_RUN: {
                 eos = RunSimulation();      // Run during 1 sec
                 if ((GetLocalState() != PROCESS_ERROR)) {
-                    lastHitUpdateOK = simulation->UpdateHits(prIdx, 20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    lastHitUpdateOK = simulation->UpdateHits(prIdx,
+                                                             20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
@@ -339,10 +360,11 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     }
                 }
                 break;
-
-            default:
+            }
+            default: {
                 ProcessSleep(WAITTIME);
                 break;
+            }
         }
     }
     SetState(PROCESS_KILLED, "Process terminated peacefully");

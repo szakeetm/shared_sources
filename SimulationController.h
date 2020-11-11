@@ -34,7 +34,7 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName, size_t parentPID, size_t procIdx,
+    SimulationController(const std::string &appName, size_t parentPID, size_t procIdx, size_t nbThreads,
                          SimulationUnit *simulationInstance, SubProcInfo *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
@@ -46,6 +46,7 @@ protected:
     SimulationUnit* simulation; //
     SubProcInfo* procInfo;
     size_t parentPID;
+    size_t nbThreads;
     int prIdx;
 
 private:

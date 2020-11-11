@@ -749,14 +749,14 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("File")->Add("New, empty geometry", MENU_FILE_NEW);
     menu->GetSubMenu("File")->Add("&Load", MENU_FILE_LOAD, SDLK_o, CTRL_MODIFIER);
     menu->GetSubMenu("File")->Add("Load recent");
-    menu->GetSubMenu("File")->Add(NULL); //separator
+    menu->GetSubMenu("File")->Add(nullptr); //separator
     menu->GetSubMenu("File")->Add("&Insert geometry");
     menu->GetSubMenu("File")->GetSubMenu("Insert geometry")->Add("&To current structure", MENU_FILE_INSERTGEO);
     menu->GetSubMenu("File")->GetSubMenu("Insert geometry")->Add("&To new structure", MENU_FILE_INSERTGEO_NEWSTR);
-    menu->GetSubMenu("File")->Add(NULL); //separator
+    menu->GetSubMenu("File")->Add(nullptr); //separator
     menu->GetSubMenu("File")->Add("&Save", MENU_FILE_SAVE, SDLK_s, CTRL_MODIFIER);
     menu->GetSubMenu("File")->Add("&Save as", MENU_FILE_SAVEAS);
-    menu->GetSubMenu("File")->Add(NULL); //separator
+    menu->GetSubMenu("File")->Add(nullptr); //separator
 
     menu->GetSubMenu("File")->Add("Export selected facets", MENU_FILE_EXPORT_SELECTION);
 
@@ -769,7 +769,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->Add("Selection");
     menu->GetSubMenu("Selection")->Add("Smart Select facets...", MENU_SELECTION_SMARTSELECTION, SDLK_s, ALT_MODIFIER);
-    menu->GetSubMenu("Selection")->Add(NULL); // Separator
+    menu->GetSubMenu("Selection")->Add(nullptr); // Separator
     menu->GetSubMenu("Selection")->Add("Select All Facets", MENU_FACET_SELECTALL, SDLK_a, CTRL_MODIFIER);
     menu->GetSubMenu("Selection")->Add("Select by Facet Number...", MENU_SELECTION_SELECTFACETNUMBER, SDLK_n,
                                        ALT_MODIFIER);
@@ -780,12 +780,12 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Select by Texture type...", MENU_SELECTION_TEXTURETYPE);
     menu->GetSubMenu("Selection")->Add("Select Profile", MENU_FACET_SELECTPROF);
 
-    menu->GetSubMenu("Selection")->Add(NULL); // Separator
+    menu->GetSubMenu("Selection")->Add(nullptr); // Separator
     menu->GetSubMenu("Selection")->Add("Select Abs > 0", MENU_FACET_SELECTABS);
     menu->GetSubMenu("Selection")->Add("Select Hit > 0", MENU_FACET_SELECTHITS);
     menu->GetSubMenu("Selection")->Add("Select large with no hits...", MENU_FACET_SELECTNOHITS_AREA);
     menu->GetSubMenu("Selection")->Add("Select by facet result...", MENU_FACET_SELECT_BY_RESULT);
-    menu->GetSubMenu("Selection")->Add(NULL); // Separator
+    menu->GetSubMenu("Selection")->Add(nullptr); // Separator
 
     menu->GetSubMenu("Selection")->Add("Select link facets", MENU_FACET_SELECTDEST);
     menu->GetSubMenu("Selection")->Add("Select teleport facets", MENU_FACET_SELECTTELEPORT);
@@ -795,12 +795,12 @@ void Interface::OneTimeSceneInit_shared_pre() {
     //menu->GetSubMenu("Selection")->Add("Load selection",MENU_FACET_LOADSEL);
     //menu->GetSubMenu("Selection")->Add("Save selection",MENU_FACET_SAVESEL);
     menu->GetSubMenu("Selection")->Add("Invert selection", MENU_FACET_INVERTSEL, SDLK_i, CTRL_MODIFIER);
-    menu->GetSubMenu("Selection")->Add(NULL); // Separator
+    menu->GetSubMenu("Selection")->Add(nullptr); // Separator
 
     menu->GetSubMenu("Selection")->Add("Memorize selection to");
     memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Memorize selection to");
     memorizeSelectionsMenu->Add("Add new...", MENU_SELECTION_ADDNEW, SDLK_w, CTRL_MODIFIER);
-    memorizeSelectionsMenu->Add(NULL); // Separator
+    memorizeSelectionsMenu->Add(nullptr); // Separator
 
     menu->GetSubMenu("Selection")->Add("Select memorized");
     selectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Select memorized");
@@ -808,24 +808,24 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Clear memorized", MENU_SELECTION_CLEARSELECTIONS);
     clearSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Clear memorized");
     clearSelectionsMenu->Add("Clear All", MENU_SELECTION_CLEARALL);
-    clearSelectionsMenu->Add(NULL); // Separator
+    clearSelectionsMenu->Add(nullptr); // Separator
 
     menu->Add("Tools");
 
     menu->GetSubMenu("Tools")->Add("Formula editor", MENU_TOOLS_FORMULAEDITOR, SDLK_f, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Convergence Plotter ...", MENU_TOOLS_CONVPLOTTER, SDLK_c, ALT_MODIFIER);
-    menu->GetSubMenu("Tools")->Add(NULL); // Separator
+    menu->GetSubMenu("Tools")->Add(nullptr); // Separator
     menu->GetSubMenu("Tools")->Add("Texture Plotter ...", MENU_TOOLS_TEXPLOTTER, SDLK_t, ALT_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Profile Plotter ...", MENU_TOOLS_PROFPLOTTER, SDLK_p, ALT_MODIFIER);
 #if defined(MOLFLOW)
     menu->GetSubMenu("Tools")->Add("Histogram Plotter...", MENU_TOOLS_HISTOGRAMPLOTTER);
 #endif
-    menu->GetSubMenu("Tools")->Add(NULL); // Separator
+    menu->GetSubMenu("Tools")->Add(nullptr); // Separator
     menu->GetSubMenu("Tools")->Add("Texture scaling...", MENU_EDIT_TSCALING, SDLK_d, CTRL_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Particle logger...", MENU_TOOLS_PARTICLELOGGER);
     //menu->GetSubMenu("Tools")->Add("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER);
     menu->GetSubMenu("Tools")->Add("Global Settings ...", MENU_EDIT_GLOBALSETTINGS);
-    menu->GetSubMenu("Tools")->Add(NULL); // Separator
+    menu->GetSubMenu("Tools")->Add(nullptr); // Separator
     menu->GetSubMenu("Tools")->Add("Take screenshot", MENU_TOOLS_SCREENSHOT, SDLK_r, CTRL_MODIFIER);
 
     menu->GetSubMenu("Tools")->SetIcon(MENU_EDIT_TSCALING, 137, 24);
@@ -2678,8 +2678,8 @@ void Interface::DoEvents(bool forced) {
 }
 
 bool Interface::AskToReset(Worker *work) {
-    if (work == NULL) work = &worker;
-    if (work->globState.globalHits.globalHits.hit.nbMCHit > 0) {
+    if (work == nullptr) work = &worker;
+    if (work->globalHitCache.globalHits.hit.nbMCHit > 0) {
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
@@ -2711,6 +2711,7 @@ int Interface::FrameMove() {
         }
     }
 
+    auto& hitCache = worker.globalHitCache.globalHits;
     if (runningState) {
         if (m_fTime - lastUpdate >= 1.0f) {
 
@@ -2738,7 +2739,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                formula_ptr->UpdateFormulaValues(worker.globState.globalHits.globalHits.hit.nbDesorbed);
+                formula_ptr->UpdateFormulaValues(hitCache.hit.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
@@ -2750,19 +2751,19 @@ int Interface::FrameMove() {
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
                 // Update timing measurements
-                if (worker.globState.globalHits.globalHits.hit.nbMCHit != lastNbHit ||
-                    worker.globState.globalHits.globalHits.hit.nbDesorbed != lastNbDes) {
+                if (hitCache.hit.nbMCHit != lastNbHit ||
+                    hitCache.hit.nbDesorbed != lastNbDes) {
                     double dTime = (double) (m_fTime - lastMeasTime);
-                    hps = (double) (worker.globState.globalHits.globalHits.hit.nbMCHit - lastNbHit) / dTime;
-                    dps = (double) (worker.globState.globalHits.globalHits.hit.nbDesorbed - lastNbDes) / dTime;
+                    hps = (double) (hitCache.hit.nbMCHit - lastNbHit) / dTime;
+                    dps = (double) (hitCache.hit.nbDesorbed - lastNbDes) / dTime;
                     if (lastHps != 0.0) {
                         hps = 0.2 * (hps) + 0.8 * lastHps;
                         dps = 0.2 * (dps) + 0.8 * lastDps;
                     }
                     lastHps = hps;
                     lastDps = dps;
-                    lastNbHit = worker.globState.globalHits.globalHits.hit.nbMCHit;
-                    lastNbDes = worker.globState.globalHits.globalHits.hit.nbDesorbed;
+                    lastNbHit = hitCache.hit.nbMCHit;
+                    lastNbDes = hitCache.hit.nbDesorbed;
                     lastMeasTime = m_fTime;
                 }
             }
@@ -2772,8 +2773,8 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetText("Update");
     } else {
         if (worker.simuTime > 0.0) {
-            hps = (double) (worker.globState.globalHits.globalHits.hit.nbMCHit - nbHitStart) / worker.simuTime;
-            dps = (double) (worker.globState.globalHits.globalHits.hit.nbDesorbed - nbDesStart) / worker.simuTime;
+            hps = (double) (hitCache.hit.nbMCHit - nbHitStart) / worker.simuTime;
+            dps = (double) (hitCache.hit.nbDesorbed - nbDesStart) / worker.simuTime;
         } else {
             hps = 0.0;
             dps = 0.0;
@@ -2806,20 +2807,20 @@ int Interface::FrameMove() {
         }
     }
 
-    if (worker.globState.globalHits.nbLeakTotal) {
-        sprintf(tmp, "%g (%.4f%%)", (double) worker.globState.globalHits.nbLeakTotal,
-                (double) (worker.globState.globalHits.nbLeakTotal) * 100.0 /
-                (double) worker.globState.globalHits.globalHits.hit.nbDesorbed);
+    if (worker.globalHitCache.nbLeakTotal) {
+        sprintf(tmp, "%g (%.4f%%)", (double) worker.globalHitCache.nbLeakTotal,
+                (double) (worker.globalHitCache.nbLeakTotal) * 100.0 /
+                (double) hitCache.hit.nbDesorbed);
         leakNumber->SetText(tmp);
     } else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!runningState && worker.globState.globalHits.globalHits.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!runningState && hitCache.hit.nbDesorbed > 0);
 
     if (runningState) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
-    } else if (worker.globState.globalHits.globalHits.hit.nbMCHit > 0) {
+    } else if (hitCache.hit.nbMCHit > 0) {
         startSimu->SetText("Resume");
         //startSimu->SetFontColor(0, 140, 0);
     } else {

@@ -236,20 +236,19 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 
     simUnits.emplace_back(Simulation{nbThreads});
     procInformation.emplace_back(SubProcInfo{});
-    simController.emplace_back(SimulationController{"molflow", processId, iProc, &simUnits.back(), &procInformation.back()});
+    simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
             SimType::simCPU);
     auto myHandle = simHandles.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-    SetThreadPriority(myHandle, THREAD_PRIORITY_NORMAL);
+    SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
 #else
     int policy;
     struct sched_param param{};
-
     pthread_getschedparam(myHandle, &policy, &param);
-    param.sched_priority = sched_get_priority_max(policy);
+    param.sched_priority = sched_get_priority_min(policy);
     pthread_setschedparam(myHandle, policy, &param);
     //Check! Some documentation says it's always 0
 #endif

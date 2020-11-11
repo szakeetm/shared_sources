@@ -359,19 +359,23 @@ void Worker::Update(float appTime) {
 
 
 
-    for(auto& simUnit : simManager.simUnits) {
-        if (!simUnit.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
-            continue;
-        }
-        lastAccessTime = appTime;
-        //globState.globalHits = simUnit.globState.globalHits;
 
+        lastAccessTime = appTime;
+
+    //for(auto& simUnit : simManager.simUnits) {
+        /*if (!simUnit.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
+            continue;
+        }*/
         // Global hits and leaks
+        if (!globState.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
+            return;
+        }
+        globalHitCache = globState.globalHits;
 
 #if defined(SYNRAD)
 
-        if (globState.globalHits.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
-            no_scans = (double)globState.globalHits.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
+        if (globalHitCache.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
+            no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
         }
         else {
             no_scans = 1.0;
@@ -381,8 +385,6 @@ void Worker::Update(float appTime) {
 
         //Copy global histogram
         //Prepare vectors to receive data
-        if (!globState.globalHistograms.empty())
-            globalHistogramCache = globState.globalHistograms[displayedMoment];
         RetrieveHistogramCache();
 
     //buffer = bufferStart; //Commented out as not used anymore
@@ -392,26 +394,19 @@ void Worker::Update(float appTime) {
         for (size_t i = 0; i < nbFacet; i++) {
             Facet *f = geom->GetFacet(i);
 #if defined(SYNRAD)
-            memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
+            //memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
 #if defined(MOLFLOW)
-            //memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset + displayedMoment * sizeof(FacetHitBuffer), sizeof(FacetHitBuffer));
-            f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
-
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
                 if (f->selected && f->sh.anglemapParams.hasRecorded)
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
                 f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf.data(); // TODO: Transform anglemapcache to vector
             }
-
-            //Prepare vectors for receiving data
-            f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;
 #endif
         }
 
-        simUnit.tMutex.unlock();
-    }
+        //simUnit.tMutex.unlock();
 
     try {
 
@@ -423,9 +418,11 @@ void Worker::Update(float appTime) {
             );
     }
     catch (Error &e) {
+        globState.tMutex.unlock();
         GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
+    globState.tMutex.unlock();
 #if defined(MOLFLOW)
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
@@ -600,37 +597,14 @@ void Worker::RetrieveHistogramCache()
 
     //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
-	globalHistogramCache.Resize(model.wp.globalHistogramParams);
-
-	auto& currentMomentGloablHistogram = globState.globalHistograms.at(displayedMoment); //Make a copy, since we'll increase it to match displayed moment
-
-	memcpy(globalHistogramCache.nbHitsHistogram.data(), currentMomentGloablHistogram.nbHitsHistogram.data(),
-           model.wp.globalHistogramParams.GetBouncesDataSize());
-	memcpy(globalHistogramCache.distanceHistogram.data(),
-           currentMomentGloablHistogram.distanceHistogram.data(),
-           model.wp.globalHistogramParams.GetDistanceDataSize());
-#if defined(MOLFLOW)
-	memcpy(globalHistogramCache.timeHistogram.data(),
-           currentMomentGloablHistogram.timeHistogram.data(), model.wp.globalHistogramParams.GetTimeDataSize());
-#endif
+    globalHistogramCache = globState.globalHistograms[displayedMoment];
 
     //FACET HISTOGRAMS
     for (size_t i = 0;i < geom->GetNbFacet();i++) {
         Facet* f = geom->GetFacet(i);
 #if defined(MOLFLOW)
-
-        //Prepare vectors for receiving data
-        f->facetHistogramCache.Resize(f->sh.facetHistogramParams);
-
-        auto& facetHistogram = globState.facetStates[i].momentResults.at(displayedMoment).histogram;
-
-        memcpy(f->facetHistogramCache.nbHitsHistogram.data(), facetHistogram.nbHitsHistogram.data(),
-            f->sh.facetHistogramParams.GetBouncesDataSize());
-        memcpy(f->facetHistogramCache.distanceHistogram.data(),
-            facetHistogram.distanceHistogram.data(),
-            f->sh.facetHistogramParams.GetDistanceDataSize());
-        memcpy(f->facetHistogramCache.timeHistogram.data(),
-            facetHistogram.timeHistogram.data(), f->sh.facetHistogramParams.GetTimeDataSize());
+        f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
+        f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;
 #endif
     }
 }
