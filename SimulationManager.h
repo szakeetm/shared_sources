@@ -90,7 +90,7 @@ protected:
     int UploadToHitBuffer(void *data, size_t size);
 
 public:
-    SimulationManager(std::string appName, std::string dpName);
+    SimulationManager(const std::string &appName, const std::string &dpName);
 
     ~SimulationManager();
 

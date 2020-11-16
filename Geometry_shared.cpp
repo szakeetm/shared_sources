@@ -2173,7 +2173,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 						//selectedFacets[i].visitedFromThisIndice[index].push_back(f1->GetIndex(index + 1));
 						if (IntersectingPlaneWithLine(base, side, f2->sh.O, f2->sh.N, &intersectionPoint, true)) {
 							Vector2d projected = ProjectVertex(intersectionPoint, f2->sh.U, f2->sh.V, f2->sh.O);
-							bool inPoly = IsInPoly(projected, f2->vertices2);
+							bool inPoly = IsInPoly(projected.u, projected.v, f2->vertices2);
 							bool onEdge = IsOnPolyEdge(projected.u, projected.v, f2->vertices2, 1E-6);
 							//onEdge = false;
 							if (inPoly || onEdge) {

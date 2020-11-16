@@ -22,7 +22,7 @@
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation.h>
 
-SimulationManager::SimulationManager(std::string appName , std::string dpName) {
+SimulationManager::SimulationManager(const std::string &appName , const std::string &dpName) {
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
@@ -233,7 +233,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #else
     processId = ::getpid();
 #endif //  WIN
-
+    nbThreads = 12;
     simUnits.emplace_back(Simulation{nbThreads});
     procInformation.emplace_back(SubProcInfo{});
     simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});

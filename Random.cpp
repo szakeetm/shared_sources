@@ -81,7 +81,7 @@ unsigned long MersenneTwister::GetSeed() {
 }
 
 unsigned long GenerateSeed() {
-    size_t ms = GetSysTimeMs();
+    size_t ms = omp_get_wtime();
     int processId;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     processId = _getpid();

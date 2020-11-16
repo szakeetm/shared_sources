@@ -6,10 +6,12 @@
 #include <sstream>
 #include <cereal/archives/binary.hpp>
 #include "SimulationController.h"
+#include "../src/Simulation.h"
 #include "ProcessControl.h"
 #include <omp.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <thread>
 /*#if defined(MOLFLOW)
 #include "../src/Simulation.h"
 #endif*/
@@ -19,6 +21,76 @@
 #endif
 
 #define WAITTIME    100  // Answer in STOP mode
+
+SimThread::SimThread(size_t* state, size_t* master, SimulationUnit* simu){
+slaveState = state;
+masterState = master;
+simulation = simu;
+stepsPerSec= 1.0;
+this->status = nullptr;
+}
+SimThread::~SimThread(){}
+
+bool SimThread::runLoop(size_t threadNum) {
+    bool eos = false;
+    bool lastUpdateOk = true;
+    do {
+        eos = runSimulation(threadNum);      // Run during 1 sec
+        //if ((*slaveState != PROCESS_ERROR)) {
+            size_t timeOut = lastUpdateOk ? 20 : 100; //ms
+            lastUpdateOk = simulation->UpdateHits(threadNum,
+                                                  timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+        //}
+    } while (*masterState == COMMAND_START && !eos);
+    return eos;
+}
+[[nodiscard]] char *SimThread::getSimuStatus() const {
+    static char ret[128];
+    size_t count = simulation->totalDesorbed;
+    size_t max = 0;
+    if (simulation->model.otfParams.nbProcess)
+        max = simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess;
+
+    if (max != 0) {
+        double percent = (double) (count) * 100.0 / (double) (max);
+        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", simulation->model.sh.name.c_str(), count, max, percent);
+    } else {
+        sprintf(ret, "(%s) MC %zd", simulation->model.sh.name.c_str(), count);
+    }
+
+    return ret;
+}
+int SimThread::runSimulation(size_t threadNum) {
+    // 1s step
+    size_t    nbStep = 1;
+    if (stepsPerSec <= 0.0) {
+        nbStep = 250;
+    }
+    else {
+        nbStep = std::ceil(stepsPerSec + 0.5);
+    }
+
+    {
+        //snprintf(*status, 128, "%s [%zu event/s]", getSimuStatus(), nbStep);
+    }
+    double t0 = omp_get_wtime();
+    bool goOn = simulation->currentParticles[threadNum].SimulationMCStep(nbStep, threadNum);
+    double t1 = omp_get_wtime();
+
+    if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
+    {
+        if (t1 - t0 != 0.0)
+            stepsPerSec = (1.0 * nbStep) / (t1 - t0); // every 1.0 second
+        else
+            stepsPerSec = (100.0 * nbStep); // in case of fast initial run
+    }
+
+//#if defined(_DEBUG)
+    printf("Running: stepPerSec = %lf\n", stepsPerSec);
+//#endif
+
+    return !goOn;
+}
 
 SimulationController::SimulationController(const std::string &appName, size_t parentPID, size_t procIdx, size_t nbThreads,
                                            SimulationUnit *simulationInstance, SubProcInfo *pInfo) : appName{}{
@@ -102,11 +174,11 @@ int SimulationController::RunSimulation() {
 
     {
         char tmp[128];
-        snprintf(tmp, 128, "%s [%u event/s]", GetSimuStatus(), nbStep);
+        snprintf(tmp, 128, "%s [%zu event/s]", GetSimuStatus(), nbStep);
         SetStatus(tmp); //update hits only
     }
     double t0 = omp_get_wtime();
-    bool goOn = simulation->SimulationMCStep(nbStep);
+    bool goOn = simulation->currentParticles[0].SimulationMCStep(nbStep, 0);
     double t1 = omp_get_wtime();
 
     if(goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
@@ -275,19 +347,60 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 bool lastUpdateOk = true;
                 if (loadOk) {
                     size_t updateThread = 0;
-#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(stepsPerSec, lastUpdateOk, eos) shared(procInfo, updateThread, simulation)
+                    this->simulation->model.m.lock();
+                    std::vector<std::thread> threads = std::vector < std::thread> (nbThreads - 1);
+                    std::vector<SimThread> simThreads;
+                    for(int t = 0; t < nbThreads; t++)
+                        simThreads.emplace_back(SimThread(&procInfo->slaveState, &procInfo->masterCmd, simulation));
+                    size_t threadNum = 0;
+                    for(auto& thr : threads){
+                        thr = std::thread(&SimThread::runLoop,&simThreads[threadNum],threadNum); //Launch main loop
+                        threadNum++;
+
+                        auto myHandle = thr.native_handle();
+#ifdef _WIN32
+                        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+                        int policy;
+                        struct sched_param param;
+
+                        pthread_getschedparam(myHandle, &policy, &param);
+                        param.sched_priority = sched_get_priority_min(policy);
+                        pthread_setschedparam(myHandle, policy, &param);
+                        //Check! Some documentation says it's always 0
+#endif
+                    }
+                    auto thread_id = std::this_thread::get_id();
+                    auto myHandle = *reinterpret_cast<std::thread::native_handle_type*>(&thread_id);
+#ifdef _WIN32
+                    SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+                    int policy;
+                    struct sched_param param;
+
+                    pthread_getschedparam(myHandle, &policy, &param);
+                    param.sched_priority = sched_get_priority_min(policy);
+                    pthread_setschedparam(myHandle, policy, &param);
+                    //Check! Some documentation says it's always 0
+#endif
+                    simThreads[threadNum].runLoop(threadNum);
+                    for(auto& thread : threads){
+                        thread.join();
+                    }
+                    this->simulation->model.m.unlock();
+
+/*#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(stepsPerSec, lastUpdateOk, eos) shared(procInfo, updateThread, simulation)
                     {
                         do {
                             eos = RunSimulation();      // Run during 1 sec
                             if (updateThread == omp_get_thread_num() && (GetLocalState() != PROCESS_ERROR)) {
-                                size_t timeOut = lastHitUpdateOK ? 20 : 100; //ms
+                                size_t timeOut = lastUpdateOk ? 20 : 100; //ms
                                 lastUpdateOk = simulation->UpdateHits(omp_get_thread_num(),
                                                                       timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                                 updateThread = (updateThread+1) % omp_get_num_threads();
                             }
                         } while (procInfo->masterCmd == COMMAND_START && !eos);
-#pragma omp barrier
-                    }
+                    }*/
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
                             // Max desorption reached

@@ -11,6 +11,23 @@
 #include "SimulationUnit.h"
 
 class Simulation;
+
+class SimThread {
+public:
+    SimThread(size_t* state, size_t* master, SimulationUnit* simu);
+    ~SimThread();
+
+    size_t* slaveState;
+    size_t* masterState;
+    char** status;
+    double stepsPerSec;
+    SimulationUnit* simulation;
+
+    bool runLoop(size_t threadNum);
+    [[nodiscard]] char *getSimuStatus() const;
+    int runSimulation(size_t threadNum);
+};
+
 class SimulationController {
     bool Load();
     bool UpdateParams();

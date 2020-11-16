@@ -429,7 +429,7 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
  * @param startIndex offset to only look in a subset of moments
  * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
  */
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t &startIndex){
 
     if(!moments.empty()) {
         auto lowerBound = std::lower_bound(moments.begin() + startIndex, moments.end(), std::make_pair(key, key));

@@ -224,7 +224,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 			if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex)) {
 
-				found = IsInPoly(Vector2d((double)x,(double)y), v);
+				found = IsInPoly((double)x,(double)y, v);
 
 				if (found) {
 					if (unselect) {

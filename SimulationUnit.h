@@ -28,7 +28,9 @@ struct SubProcessFacetTempVar {
 
 class SimulationUnit {
 public:
-    virtual ~SimulationUnit()= default;;
+    SimulationUnit() : model(), totalDesorbed(0){};
+    SimulationUnit(const SimulationUnit& o) : model(o.model){totalDesorbed = o.totalDesorbed;};
+    virtual ~SimulationUnit()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
@@ -39,7 +41,7 @@ public:
 
     virtual int SanityCheckGeom() = 0;
 
-    virtual bool SimulationMCStep(size_t nbStep) = 0;
+    //virtual bool SimulationMCStep(size_t nbStep, size_t threadNum) = 0;
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;
@@ -51,7 +53,7 @@ public:
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)
-    //CurrentParticleStatus* currentParticle;
+    std::vector<CurrentParticleStatus> currentParticles;
     //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"

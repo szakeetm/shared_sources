@@ -14,6 +14,7 @@
 #include "GeometrySimu.h"
 #include "Initializer.h"
 #include "Helper/MathTools.h"
+#include <omp.h>
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___
@@ -119,11 +120,11 @@ int main(int argc, char** argv) {
         exit(0);
     }
     /* Establish a handler for SIGALRM signals. */
-    size_t timeNow = GetSysTimeMs();
+    double timeNow = GetSysTimeMs();
 
     std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
     //ProcessSleep(1000*Settings::simDuration);
-    size_t timeEnd = GetSysTimeMs() + 1000 * Settings::simDuration;
+    double timeEnd = omp_get_wtime() + 1.0 * Settings::simDuration;
 
     std::cout << "." << std::flush << '\b';
     do {
@@ -138,20 +139,22 @@ int main(int argc, char** argv) {
         std::cout << "\b\b\b...." << std::flush;
         ProcessSleep(1000);
         std::cout << "\b\b\b\b....." << std::flush<< "\b\b\b\b\b";
-    } while(GetSysTimeMs() < timeEnd);
+        timeNow = omp_get_wtime();
+        printf("%lf < %lf\n", timeNow, timeEnd);
+    } while(timeNow < timeEnd);
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
     // Stop and copy results
     simManager.StopSimulation();
     for(const auto& subHandle : simManager.simUnits){
-        /*const size_t sub_pid = 0;
+        const size_t sub_pid = 0;
         //GlobalSimuState* localState = simManager.FetchResults(sub_pid);
         const GlobalSimuState& localState = *subHandle.globState;
         std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit + localState.globalHits.globalHits.hit.nbMCHit
             << " : " << globState.globalHits.globalHits.hit.nbMCHit << " += " << localState.globalHits.globalHits.hit.nbMCHit <<std::endl;
         globState.globalHits.globalHits += localState.globalHits.globalHits;
         globState.globalHistograms += localState.globalHistograms;
-        globState.facetStates += localState.facetStates;*/
+        globState.facetStates += localState.facetStates;
         //delete localState;
     }
 
