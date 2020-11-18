@@ -234,13 +234,28 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
     nbThreads = 12;
-    simUnits.emplace_back(Simulation{nbThreads});
+    simUnits.reserve(nbThreads);
+    procInformation.reserve(nbThreads);
+    simController.reserve(1);
+    simHandles.reserve(nbThreads);
+    for(int t = 0; t < nbThreads; ++t){
+        simUnits.emplace_back(new Simulation{nbThreads});
+        procInformation.emplace_back(SubProcInfo{});
+
+    }
+    simController.emplace_back(SimulationController{"molflow", processId, iProc++, nbThreads,
+                                                    reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});
+    simHandles.emplace_back(
+            /*StartProc(arguments, STARTPROC_NOWIN),*/
+            std::thread(&SimulationController::controlledLoop,&simController[0],NULL,nullptr),
+            SimType::simCPU);
+    /*simUnits.emplace_back(Simulation{nbThreads});
     procInformation.emplace_back(SubProcInfo{});
     simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
     simHandles.emplace_back(
-            /*StartProc(arguments, STARTPROC_NOWIN),*/
+            *//*StartProc(arguments, STARTPROC_NOWIN),*//*
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
-            SimType::simCPU);
+            SimType::simCPU);*/
     auto myHandle = simHandles.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
     SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
@@ -334,16 +349,17 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     int waitTime = 0;
     int timeOutAt = 10000; // 10 sec; max time for an idle operation to timeout
     allProcsDone = true;
+    hasErrorStatus = false;
 
     // struct, because vector of char arrays is forbidden w/ clang
     struct StateString {
         char s[128];
     };
-    std::vector<StateString> prevStateStrings(simHandles.size());
-    std::vector<StateString> stateStrings(simHandles.size());
+    std::vector<StateString> prevStateStrings(procInformation.size());
+    std::vector<StateString> stateStrings(procInformation.size());
 
     {
-        for (size_t i = 0; i < simHandles.size(); i++) {
+        for (size_t i = 0; i < procInformation.size(); i++) {
             snprintf(prevStateStrings[i].s, 128, procInformation[i].statusString);
         }
     }
@@ -352,7 +368,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         finished = true;
 
-        for (size_t i = 0; i < simHandles.size(); i++) {
+        for (size_t i = 0; i < 1; i++) {
             auto procState = procInformation[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
@@ -360,7 +376,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             }
             else if(procState == PROCESS_STARTING){
                 snprintf(stateStrings[i].s, 128, procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) { // if strings are different
+                if(strcmp(prevStateStrings[i].s, stateStrings[i].s) != 0) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
                     prevIncTime = waitTime;
@@ -381,16 +397,16 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     // Send command
 
-    for(size_t i=0;i<simHandles.size();i++) {
-        auto procState = procInformation[i].slaveState;
+    for(auto & i : procInformation) {
+        auto procState = i.slaveState;
         if(procState == PROCESS_READY
            || procState == PROCESS_RUN
               || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
-            procInformation[i].slaveState = PROCESS_STARTING;
-            procInformation[i].oldState = procInformation[i].masterCmd; // use to solve old state
-            procInformation[i].masterCmd = command;
-            procInformation[i].cmdParam = param;
-            procInformation[i].cmdParam2 = param2;
+            i.slaveState = PROCESS_STARTING;
+            i.oldState = i.masterCmd; // use to solve old state
+            i.masterCmd = command;
+            i.cmdParam = param;
+            i.cmdParam2 = param2;
         }
     }
 

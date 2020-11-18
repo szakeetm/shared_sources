@@ -363,7 +363,7 @@ void Worker::Update(float appTime) {
         lastAccessTime = appTime;
 
     //for(auto& simUnit : simManager.simUnits) {
-        /*if (!simUnit.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
+        /*if (!simUnit->tMutex.try_lock_for(std::chrono::milliseconds (100))) {
             continue;
         }*/
         // Global hits and leaks
@@ -406,7 +406,7 @@ void Worker::Update(float appTime) {
 #endif
         }
 
-        //simUnit.tMutex.unlock();
+        //simUnit->tMutex.unlock();
 
     try {
 
@@ -566,10 +566,10 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 */
 void Worker::SendToHitBuffer() {
     for(auto& simUnit : simManager.simUnits){
-        if(!simUnit.tMutex.try_lock_for(std::chrono::seconds(10)))
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
-        simUnit.globState = &globState;
-        simUnit.tMutex.unlock();
+        simUnit->globState = &globState;
+        simUnit->tMutex.unlock();
     }
 }
 
@@ -579,13 +579,13 @@ void Worker::SendToHitBuffer() {
 void Worker::SendFacetHitCounts() {
     size_t nbFacet = geom->GetNbFacet();
     for(auto& simUnit : simManager.simUnits){
-        if(!simUnit.tMutex.try_lock_for(std::chrono::seconds(10)))
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
         for (size_t i = 0; i < nbFacet; i++) {
             Facet *f = geom->GetFacet(i);
-            simUnit.globState->facetStates[i].momentResults[0].hits = f->facetHitCache;
+            simUnit->globState->facetStates[i].momentResults[0].hits = f->facetHitCache;
         }
-        simUnit.tMutex.unlock();
+        simUnit->tMutex.unlock();
     }
 }
 

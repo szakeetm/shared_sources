@@ -28,13 +28,13 @@ struct SubProcessFacetTempVar {
 
 class SimulationUnit {
 public:
-    SimulationUnit() : model(), totalDesorbed(0){};
-    SimulationUnit(const SimulationUnit& o) : model(o.model){totalDesorbed = o.totalDesorbed;};
+    SimulationUnit() : model(), totalDesorbed(0), m(){};
+    SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {totalDesorbed = o.totalDesorbed;};
     virtual ~SimulationUnit()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
-    virtual bool UpdateHits(int prIdx, DWORD timeout) = 0;
+    //virtual bool UpdateHits(int prIdx, DWORD timeout) = 0;
 
     //virtual bool UpdateOntheflySimuParams(Dataport *loader) = 0;
     virtual int ReinitializeParticleLog() = 0;
@@ -47,16 +47,17 @@ public:
     virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
-
+    virtual CurrentParticleStatus* GetParticle() = 0;
 public:
     SimulationModel model;
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)
-    std::vector<CurrentParticleStatus> currentParticles;
+    GlobalSimuState* globState;
     //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"
+    std::timed_mutex m;
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

@@ -331,7 +331,7 @@ IntersectTree(CurrentParticleStatus &currentParticle, const AABBNODE &node, cons
 									bool hardHit;
 #if defined(MOLFLOW)
 									double time = currentParticle.particleTime + d / 100.0 / currentParticle.velocity;
-									double currentOpacity = currentParticle.model.GetOpacityAt(f, time);
+									double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
 #endif
 
@@ -469,7 +469,7 @@ Intersect(CurrentParticleStatus &currentParticle, const Vector3d &rayPos, const 
 	currentParticle.transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-    IntersectTree(currentParticle, *currentParticle.model.structures[currentParticle.structureId].aabbTree, rayPos, -1.0 * rayDir,
+    IntersectTree(currentParticle, *currentParticle.model->structures[currentParticle.structureId].aabbTree, rayPos, -1.0 * rayDir,
                   currentParticle.lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
