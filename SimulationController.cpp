@@ -9,8 +9,10 @@
 #include "../src/Simulation.h"
 #include "ProcessControl.h"
 #include <omp.h>
+#if not defined(_MSC_VER)
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 #include <thread>
 /*#if defined(MOLFLOW)
 #include "../src/Simulation.h"
@@ -36,16 +38,18 @@ bool SimThread::runLoop(size_t threadNum) {
 
     //double timeStart = omp_get_wtime();
     do {
-        std::cout << "Thread #" << threadNum << ": on CPU " << sched_getcpu() << "\n";
-        eos = runSimulation(threadNum);      // Run during 1 sec
+        //std::cout << "Thread #" << threadNum << ": on CPU " << sched_getcpu() << "\n";
+        simEos = runSimulation(threadNum);      // Run during 1 sec
         //if ((*slaveState != PROCESS_ERROR)) {
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particle->UpdateHits(simulation->globState,
                                                   timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
         //}
-        eos &= procInfo->masterCmd != COMMAND_START;
+        eos = simEos || (procInfo->masterCmd != COMMAND_START);
     } while (/*omp_get_wtime() - timeStart > 20.0 && */!eos);
-    return eos;
+
+    if(!lastUpdateOk) particle->UpdateHits(simulation->globState,20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
+    return simEos;
 }
 
 [[nodiscard]] char *SimThread::getSimuStatus() const {
@@ -237,11 +241,14 @@ int SimulationController::SetState(size_t state, const char *status, bool change
     if (changeState) {
         printf("\n setstate %zd \n", state);
         //master->procInformation[prIdx].masterCmd = state;
-        (*procInfo)[0].slaveState = state;
+        for(auto& pInfo : *procInfo)
+            pInfo.slaveState = state;
     }
     if (changeStatus) {
-        strncpy((*procInfo)[0].statusString, status, 127);
-        (*procInfo)[0].statusString[127] = '\0';
+        for(auto& pInfo : *procInfo) {
+            strncpy(pInfo.statusString, status, 127);
+            pInfo.statusString[127] = '\0';
+        }
     }
 
     return 0;
@@ -249,7 +256,9 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 
 char *SimulationController::GetSimuStatus() {
     static char ret[128];
-    size_t count = (*simulation)[0]->totalDesorbed;
+    size_t count = 0;
+    for(auto& sim : *simulation)
+        count += sim->totalDesorbed;
     size_t max = 0;
     if ((*simulation)[0]->model.otfParams.nbProcess)
         max = (*simulation)[0]->model.otfParams.desorptionLimit / (*simulation)[0]->model.otfParams.nbProcess;
@@ -284,9 +293,10 @@ void SimulationController::SetErrorSub(const char *message) {
 }
 
 void SimulationController::SetStatus(char *status) {
-    strncpy((*procInfo)[0].statusString, status, 127);
-    (*procInfo)[0].statusString[127] = '\0';
-
+    for(auto& pInfo : *procInfo) {
+        strncpy((*procInfo)[0].statusString, status, 127);
+        (*procInfo)[0].statusString[127] = '\0';
+    }
 }
 
 void SimulationController::SetReady(const bool loadOk) {
@@ -359,7 +369,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     size_t updateThread = 0;
                     /*SimThread simThread(&(*procInfo)[0].slaveState, &(*procInfo)[0].masterCmd, simulation);
                     simThread.runLoop(this->prIdx);*/
-                    nbThreads = 12;
+                    //nbThreads = 12;
                     //this->simulation->model.m.lock();
                     std::vector<std::thread> threads = std::vector < std::thread> (nbThreads - 1);
                     std::vector<SimThread> simThreads;
@@ -381,7 +391,7 @@ int SimulationController::controlledLoop(int argc, char **argv){
                     }*/
                     //this->simulation->model.m.unlock();
 
-#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(stepsPerSec, lastUpdateOk, eos) shared(procInfo, updateThread, simulation,simThreads)
+#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, /*simulation,*/simThreads)
                     {
                         simThreads[omp_get_thread_num()].runLoop(omp_get_thread_num());
                         /*do {
@@ -427,7 +437,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, (*procInfo)[0].cmdParam, (*procInfo)[0].cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
                 resetControls();
-                (*simulation)[0]->ResetSimulation();
+                for(auto& sim : *simulation)
+                    sim->ResetSimulation();
                 SetReady(loadOk);
                 break;
             }
@@ -438,7 +449,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
             }
             case COMMAND_CLOSE: {
                 printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, (*procInfo)[0].cmdParam, (*procInfo)[0].cmdParam2);
-                (*simulation)[0]->ClearSimulation();
+                for(auto& sim : *simulation)
+                    sim->ClearSimulation();
                 loadOk = false;
                 SetReady(loadOk);
                 break;
@@ -478,7 +490,8 @@ int SimulationController::controlledLoop(int argc, char **argv){
 }
 
 bool SimulationController::Load() {
-
+    SetState(PROCESS_STARTING, "Loading simulation");
+    bool loadError = false;
     // Load geometry
     int i=0;
     for(auto& sim : *simulation) {
@@ -486,16 +499,16 @@ bool SimulationController::Load() {
             char err[512];
             sprintf(err, "Loaded empty 'geometry' (%zd Bytes)", (*procInfo)[i].cmdParam);
             SetErrorSub(err);
-            return false;
+            loadError = true;
+            continue;
         }
 
 
-        SetState(PROCESS_STARTING, "Loading simulation");
         if (sim->LoadSimulation((*procInfo)[i++].statusString)) {
-            return false;
+            loadError = true;
         }
     }
-    return true;
+    return !loadError;
 }
 
 bool SimulationController::UpdateParams() {

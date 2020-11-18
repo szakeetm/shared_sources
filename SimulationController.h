@@ -17,6 +17,7 @@ public:
     SimThread(SubProcInfo* procInfo, SimulationUnit* simu);
     ~SimThread();
 
+    bool simEos;
     char** status;
     double stepsPerSec;
     SubProcInfo* procInfo;

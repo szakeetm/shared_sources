@@ -233,11 +233,20 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #else
     processId = ::getpid();
 #endif //  WIN
-    nbThreads = 12;
+
+    //Get number of cores
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
+#else
+    nbThreads = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+
     simUnits.reserve(nbThreads);
     procInformation.reserve(nbThreads);
     simController.reserve(1);
-    simHandles.reserve(nbThreads);
+    simHandles.reserve(1);
     for(int t = 0; t < nbThreads; ++t){
         simUnits.emplace_back(new Simulation{nbThreads});
         procInformation.emplace_back(SubProcInfo{});
@@ -250,7 +259,7 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
             std::thread(&SimulationController::controlledLoop,&simController[0],NULL,nullptr),
             SimType::simCPU);
     /*simUnits.emplace_back(Simulation{nbThreads});
-    procInformation.emplace_back(SubProcInfo{});
+    procInformation.emplace_back(SubDProcInfo{});
     simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
     simHandles.emplace_back(
             *//*StartProc(arguments, STARTPROC_NOWIN),*//*
@@ -368,7 +377,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         finished = true;
 
-        for (size_t i = 0; i < 1; i++) {
+        for (size_t i = 0; i < procInformation.size(); i++) {
             auto procState = procInformation[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
@@ -511,7 +520,7 @@ int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
     if(simHandles.empty())
         return 1;
 
-    for(int i = 0; i<simHandles.size();++i){
+    for(int i = 0; i<procInformation.size();++i){
         procInfoList.emplace_back(SubProcInfo {procInformation[i]});
     }
 
@@ -570,7 +579,7 @@ int SimulationManager::UnlockLogBuffer() {
 bool SimulationManager::GetRunningStatus(){
 
     bool done = true;
-    for (size_t i = 0; i < simHandles.size(); i++) {
+    for (size_t i = 0; i < procInformation.size(); i++) {
         auto procState = procInformation[i].slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {

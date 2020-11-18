@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
     SimulationModel model{};
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
+    size_t oldHitsNb = globState.globalHits.globalHits.hit.nbMCHit;
 
     //simManager.ReloadHitBuffer();
     try {
@@ -124,7 +125,8 @@ int main(int argc, char** argv) {
 
     std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
     //ProcessSleep(1000*Settings::simDuration);
-    double timeEnd = omp_get_wtime() + 1.0 * Settings::simDuration;
+    double timeStart = omp_get_wtime();
+    double timeEnd = timeStart + 1.0 * Settings::simDuration;
 
     std::cout << "." << std::flush << '\b';
     do {
@@ -146,17 +148,19 @@ int main(int argc, char** argv) {
 
     // Stop and copy results
     simManager.StopSimulation();
-    for(const auto& subHandle : simManager.simUnits){
+    /*for(const auto& subHandle : simManager.simUnits){
         const size_t sub_pid = 0;
         //GlobalSimuState* localState = simManager.FetchResults(sub_pid);
-        const GlobalSimuState& localState = *subHandle.globState;
+        const GlobalSimuState& localState = *subHandle->globState;
         std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit + localState.globalHits.globalHits.hit.nbMCHit
             << " : " << globState.globalHits.globalHits.hit.nbMCHit << " += " << localState.globalHits.globalHits.hit.nbMCHit <<std::endl;
         globState.globalHits.globalHits += localState.globalHits.globalHits;
         globState.globalHistograms += localState.globalHistograms;
         globState.facetStates += localState.facetStates;
         //delete localState;
-    }
+    }*/
+    std::cout << "["<<timeEnd-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
+              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeEnd-timeStart) > 1e-8 ? (timeEnd-timeStart) : 1.0) << std::endl;
 
     simManager.KillAllSimUnits();
     // Export results
