@@ -1079,7 +1079,8 @@ void Interface::OneTimeSceneInit_shared_post() {
     CheckNeedsTexture();
 
     try {
-        worker.SetProcNumber(nbProc);
+        worker.InitSimProc();
+        //worker.SetProcNumber(nbProc);
     }
     catch (Error &e) {
         char errMsg[512];

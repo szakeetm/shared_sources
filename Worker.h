@@ -78,6 +78,7 @@ public:
   //char *GetShortFileName(char* longFileName);
   void  SetCurrentFileName(const char *fileName);
 
+  void InitSimProc(); // Init default CPU proc with max threads
   void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber() const;  // Get number of processes
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption

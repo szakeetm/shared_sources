@@ -262,6 +262,22 @@ void Worker::Stop() {
     }
 }
 
+void Worker::InitSimProc() {
+
+    simManager.useCPU = true;
+    simManager.nbCores = 1;
+    simManager.nbThreads = 0;
+
+    // Launch n subprocess
+    if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
+        throw Error("Starting subprocesses failed!");
+    }
+
+    model.otfParams.nbProcess = simManager.nbCores;
+
+    //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
+}
+
 void Worker::SetProcNumber(size_t n) {
 
     // Kill all sub process
@@ -274,10 +290,9 @@ void Worker::SetProcNumber(size_t n) {
 
     simManager.useCPU = true;
     simManager.nbCores = 1;
-    simManager.nbThreads = 0;
+    simManager.nbThreads = n;
 
     // Launch n subprocess
-
     if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }

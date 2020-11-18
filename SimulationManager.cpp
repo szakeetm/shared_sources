@@ -222,20 +222,26 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #endif //  WIN
 
     //Get number of cores
+    if(nbThreads == 0) {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-    nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo(&sysinfo);
+        nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
 #else
-    nbThreads = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
+        nbThreads = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
 #endif
-
-    simUnits.reserve(nbThreads);
+    }
+    if(!simUnits.empty()){
+        for(auto& sim : simUnits){
+            delete sim;
+        }
+    }
+    simUnits.resize(nbThreads);
     procInformation.Resize(nbThreads);
-    simController.reserve(1);
-    simHandles.reserve(1);
+    simController.clear();
+    simHandles.clear();
     for(int t = 0; t < nbThreads; ++t){
-        simUnits.emplace_back(new Simulation{nbThreads});
+        simUnits[t] = new Simulation();
     }
     simController.emplace_back(SimulationController{"molflow", processId, iProc++, nbThreads,
                                                     reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});

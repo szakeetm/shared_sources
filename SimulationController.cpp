@@ -102,8 +102,7 @@ int SimThread::runSimulation(size_t threadNum) {
 
     if (goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
     {
-        const double elapsedTimeMs = (end_time -
-                                      start_time); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
+        const double elapsedTimeMs = (end_time - start_time); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
         if (elapsedTimeMs != 0.0)
             stepsPerSec = (1.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
         else
