@@ -64,30 +64,14 @@ protected:
     bool StartStopSimulation();
 
     // Open/Close for shared memory
-    int CreateLoaderDP(size_t loaderSize);
-
-    int CloseLoaderDP();
-
-    int CreateControlDP();
-
-    int CloseControlDP();
 
     int CreateLogDP(size_t logDpSize);
 
     int CloseLogDP();
 
-    int CreateHitsDP(size_t hitSize);
-
-    int CloseHitsDP();
-
     int ForwardCommand(int command, size_t param, size_t param2);
 
     int WaitForProcStatus(uint8_t procStatus);
-
-    // Load Buffer functions
-    int UploadToLoader(void *data, size_t size);
-
-    int UploadToHitBuffer(void *data, size_t size);
 
 public:
     SimulationManager(const std::string &appName, const std::string &dpName);
@@ -117,7 +101,7 @@ public:
 
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
-    int GetProcStatus(std::vector<SubProcInfo> &procInfoList);
+    int GetProcStatus(ProcComm &procInfoList);
 
     const char *GetErrorDetails();
 
@@ -139,11 +123,10 @@ private:
 
     // Dataport handles and names
     //SubProcInfo procInformation[MAX_PROCESS];
-    Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
     Dataport *dpLog;
 
     // Direct implementation for threads
-    std::vector<SubProcInfo> procInformation; // ctrl
+    ProcComm procInformation; // ctrl
     // SimulationModel* model; // load
     // hits
 

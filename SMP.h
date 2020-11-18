@@ -82,7 +82,7 @@ struct Dataport {
 
 struct SHCONTROL {
     // Process control
-    SubProcInfo procInformation[MAX_PROCESS];
+    ProcComm procInformation[MAX_PROCESS];
 };
 
 

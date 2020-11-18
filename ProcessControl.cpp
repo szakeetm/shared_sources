@@ -5,29 +5,33 @@
 #include "ProcessControl.h"
 #include <cstring>
 
-SubProcInfo::SubProcInfo() {
-    procId = 0;
-    slaveState = 0;
+ProcComm::ProcComm() {
     masterCmd = 0;
     cmdParam = 0;
     cmdParam2 = 0;
-    oldState = 0;
-    std::memset(statusString, '\0', 128*sizeof(char));
-    runtimeInfo = PROCESS_INFO();
 }
 /**
 * \brief Assign operator
 * \param src reference to source object
 * \return address of this
 */
-SubProcInfo& SubProcInfo::operator=(const SubProcInfo & src) {
-    procId = src.procId;
-    slaveState = src.slaveState;
+ProcComm& ProcComm::operator=(const ProcComm & src) {
     masterCmd = src.masterCmd;
     cmdParam = src.cmdParam;
     cmdParam2 = src.cmdParam2;
-    oldState = src.oldState;
-    std::strncpy(statusString,src.statusString,128);
-    runtimeInfo = src.runtimeInfo;
+    subProcInfo = src.subProcInfo;
+    return *this;
+}
+
+/**
+* \brief Assign operator
+* \param src reference to source object
+* \return address of this
+*/
+ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
+    masterCmd = src.masterCmd;
+    cmdParam = src.cmdParam;
+    cmdParam2 = src.cmdParam2;
+    subProcInfo = std::move(src.subProcInfo);
     return *this;
 }

@@ -435,7 +435,7 @@ void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrin
     simManager.GetProcStatus(states, statusStrings);
 }
 
-void Worker::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
+void Worker::GetProcStatus(ProcComm &procInfoList) {
     simManager.GetProcStatus(procInfoList);
 }
 
@@ -483,6 +483,9 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
+        for(auto& sim : simManager.simUnits){
+            sim->model.otfParams = model.otfParams;
+        }
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             char errMsg[1024];
             sprintf(errMsg, "Failed to send params to sub process:\n");

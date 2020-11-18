@@ -6,6 +6,7 @@
 #define MOLFLOW_PROJ_PROCESSCONTROL_H
 
 #include <cstddef> //size_t
+#include <vector>
 
 #define PROCESS_STARTING 0   // Loading state
 #define PROCESS_RUN      1   // Running state
@@ -62,18 +63,26 @@ struct PROCESS_INFO{
 
 };
 
-struct SubProcInfo {
-    size_t procId;
-    size_t slaveState;
+struct ProcComm {
+
+    struct SubProcInfo {
+        size_t procId;
+        size_t slaveState;
+        char statusString[128];
+        PROCESS_INFO runtimeInfo;
+    };
+
     size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
-    size_t oldState;
-    char statusString[128];
-    PROCESS_INFO runtimeInfo;
+    std::vector<SubProcInfo> subProcInfo;
 
-    SubProcInfo();
-    SubProcInfo& operator=(const SubProcInfo & src);
+    ProcComm();
+    explicit ProcComm(size_t nbProcs) : ProcComm() {Resize(nbProcs);};
+    void Resize(size_t nbProcs){subProcInfo.resize(nbProcs);};
+
+    ProcComm& operator=(const ProcComm & src);
+    ProcComm& operator=(ProcComm && src) noexcept ;
 };
 
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H

@@ -14,17 +14,18 @@ class Simulation;
 
 class SimThread {
 public:
-    SimThread(SubProcInfo* procInfo, SimulationUnit* simu);
+    SimThread(ProcComm* procInfo, SimulationUnit* simu);
     ~SimThread();
 
     bool simEos;
     char** status;
     double stepsPerSec;
-    SubProcInfo* procInfo;
+    ProcComm* procInfo;
     SimulationUnit* simulation;
     CurrentParticleStatus* particle;
     bool runLoop(size_t threadNum);
     [[nodiscard]] char *getSimuStatus() const;
+    void setSimState(ProcComm::SubProcInfo& pInfo);
     int runSimulation(size_t threadNum);
 };
 
@@ -52,7 +53,7 @@ protected:
     size_t GetLocalState() const;
 public:
     SimulationController(const std::string &appName, size_t parentPID, size_t procIdx, size_t nbThreads,
-                         std::vector<SimulationUnit*>*simulationInstance, std::vector<SubProcInfo>*pInfo);
+                         std::vector<SimulationUnit*>*simulationInstance, ProcComm *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
@@ -61,7 +62,7 @@ protected:
     char appName[16];
 
     std::vector<SimulationUnit*>* simulation; //
-    std::vector<SubProcInfo>* procInfo;
+    ProcComm* procInfo;
     size_t parentPID;
     size_t nbThreads;
     int prIdx;

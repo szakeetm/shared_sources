@@ -34,7 +34,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 
     useRemote = false;
 
-    dpHit = nullptr;
     dpLog = nullptr;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -54,7 +53,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 }
 
 SimulationManager::~SimulationManager() {
-    CLOSEDP(dpHit);
     CLOSEDP(dpLog);
     KillAllSimUnits();
     /*for(auto& handle : simHandles){
@@ -132,18 +130,7 @@ int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send 
 }
 
 int SimulationManager::ReloadHitBuffer(size_t hitSize) {
-    if(dpHit && hitSize == dpHit->size){
-        // Just reset the buffer
-        ResetHits();
-    }
-    else{
-        CloseHitsDP();
-        if (CreateHitsDP(hitSize)) {
-            throw std::runtime_error("Failed to create 'hits' dataport: out of memory.");
-        }
-    }
-
-    return 0;
+    return ResetHits();
 }
 
 /*!
@@ -244,13 +231,11 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
 #endif
 
     simUnits.reserve(nbThreads);
-    procInformation.reserve(nbThreads);
+    procInformation.Resize(nbThreads);
     simController.reserve(1);
     simHandles.reserve(1);
     for(int t = 0; t < nbThreads; ++t){
         simUnits.emplace_back(new Simulation{nbThreads});
-        procInformation.emplace_back(SubProcInfo{});
-
     }
     simController.emplace_back(SimulationController{"molflow", processId, iProc++, nbThreads,
                                                     reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});
@@ -304,20 +289,6 @@ int SimulationManager::CreateLogDP(size_t logDpSize) {
     return 0;
 }
 
-int SimulationManager::CreateHitsDP(size_t hitSize) {
-    //size_t hitSize = geom->GetHitsSize(&moments);
-    dpHit = CreateDataport(hitsDpName, hitSize);
-    //ClearHits(true);
-    if (!dpHit) {
-        return 1;
-        //throw Error("Failed to create 'hits' dataport: out of memory.");
-    }
-
-    // ClearHits
-    ResetHits(); //Also clears hits, leaks
-    return 0;
-}
-
 /*!
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
@@ -364,12 +335,12 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     struct StateString {
         char s[128];
     };
-    std::vector<StateString> prevStateStrings(procInformation.size());
-    std::vector<StateString> stateStrings(procInformation.size());
+    std::vector<StateString> prevStateStrings(procInformation.subProcInfo.size());
+    std::vector<StateString> stateStrings(procInformation.subProcInfo.size());
 
     {
-        for (size_t i = 0; i < procInformation.size(); i++) {
-            snprintf(prevStateStrings[i].s, 128, procInformation[i].statusString);
+        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+            snprintf(prevStateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
         }
     }
 
@@ -377,14 +348,14 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         finished = true;
 
-        for (size_t i = 0; i < procInformation.size(); i++) {
-            auto procState = procInformation[i].slaveState;
+        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+            auto procState = procInformation.subProcInfo[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i].s, 128, procInformation[i].statusString);
+                snprintf(stateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
                 if(strcmp(prevStateStrings[i].s, stateStrings[i].s) != 0) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
@@ -406,16 +377,13 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     // Send command
 
-    for(auto & i : procInformation) {
+    procInformation.masterCmd = command;
+    procInformation.cmdParam = param;
+    procInformation.cmdParam2 = param2;
+    for(auto & i : procInformation.subProcInfo) {
         auto procState = i.slaveState;
-        if(procState == PROCESS_READY
-           || procState == PROCESS_RUN
-              || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
+        if(procState == PROCESS_READY || procState == PROCESS_RUN || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
             i.slaveState = PROCESS_STARTING;
-            i.oldState = i.masterCmd; // use to solve old state
-            i.masterCmd = command;
-            i.cmdParam = param;
-            i.cmdParam2 = param2;
         }
     }
 
@@ -445,7 +413,7 @@ int SimulationManager::KillAllSimUnits() {
             // Force kill
 
             for(size_t i=0;i<simHandles.size();i++) {
-                if (procInformation[i].slaveState != PROCESS_KILLED){
+                if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED){
                     auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                     //Windows
@@ -463,7 +431,7 @@ int SimulationManager::KillAllSimUnits() {
         }
 
         for(size_t i=0;i<simHandles.size();i++) {
-            if (procInformation[i].slaveState == PROCESS_KILLED) {
+            if (procInformation.subProcInfo[i].slaveState == PROCESS_KILLED) {
                 simHandles[i].first.join();
             }
             else{
@@ -511,29 +479,25 @@ int SimulationManager::CloseLogDP() {
     return 0;
 }
 
-int SimulationManager::CloseHitsDP() {
-    CLOSEDP(dpHit);
-    return 0;
-}
-
-int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
+int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     if(simHandles.empty())
         return 1;
 
-    for(int i = 0; i<procInformation.size();++i){
-        procInfoList.emplace_back(SubProcInfo {procInformation[i]});
-    }
+    procInfoList.subProcInfo = procInformation.subProcInfo;
 
     return 0;
 }
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
-    for (size_t i = 0; i < procInformation.size(); i++) {
+    if(statusStrings.size() < procInformation.subProcInfo.size())
+        return 1;
+
+    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = procInformation[i].slaveState;
+        states[i] = procInformation.subProcInfo[i].slaveState;
         char tmp[128];
-        strncpy(tmp, procInformation[i].statusString, 127);
+        strncpy(tmp, procInformation.subProcInfo[i].statusString, 127);
         tmp[127] = 0;
         statusStrings[i] = tmp;
     }
@@ -546,16 +510,6 @@ bool SimulationManager::GetLockedHitBuffer() {
 
 int SimulationManager::UnlockHitBuffer() {
     return 0;
-}
-
-int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
-    if (dpHit && AccessDataport(dpHit)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpHit->buff);
-        ReleaseDataport(dpHit);
-        return 0;
-    }
-
-    return 1;
 }
 
 BYTE *SimulationManager::GetLockedLogBuffer() {
@@ -579,8 +533,8 @@ int SimulationManager::UnlockLogBuffer() {
 bool SimulationManager::GetRunningStatus(){
 
     bool done = true;
-    for (size_t i = 0; i < procInformation.size(); i++) {
-        auto procState = procInformation[i].slaveState;
+    for (auto & i : procInformation.subProcInfo) {
+        auto procState = i.slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {
             hasErrorStatus = true;
@@ -599,20 +553,20 @@ bool SimulationManager::GetRunningStatus(){
  */
 const char *SimulationManager::GetErrorDetails() {
 
-    std::vector<SubProcInfo> procInfo;
+    ProcComm procInfo;
     GetProcStatus(procInfo);
 
     static char err[1024];
     strcpy(err, "");
 
-    for (size_t i = 0; i < procInfo.size(); i++) {
+    for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
         char tmp[512];
-        size_t state = procInfo[i].slaveState;
+        size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo[i].procId, prStates[state],
-                    procInfo[i].statusString);
+            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo.subProcInfo[i].procId, prStates[state],
+                    procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo.subProcInfo[i].procId, prStates[state]);
         }
         strncat(err, tmp, 512);
     }
@@ -680,9 +634,6 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADHITS:{
-            if(UploadToHitBuffer(data, size))
-                throw std::runtime_error(MakeSubProcError("Failed to access hit buffer"));
-            break;
         }
         default:{
             // Unspecified load type

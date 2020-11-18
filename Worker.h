@@ -97,7 +97,7 @@ public:
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
-    void GetProcStatus(std::vector<SubProcInfo>& procInfoList);// Get process status
+    void GetProcStatus(ProcComm &procInfoList);// Get process status
 
     bool GetHits(); // Access to dataport (HIT)
   std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();

@@ -115,7 +115,7 @@ void LoadStatus::SMPUpdate() {
 		memset(states,0,MAX_PROCESS*sizeof(int));
 		worker->GetProcStatus(states,statusStrings);
 
-    std::vector<SubProcInfo> procInfo;
+    ProcComm procInfo;
     worker->GetProcStatus(procInfo);
 		processList->ResetValues();
 
