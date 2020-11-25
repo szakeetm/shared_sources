@@ -2918,7 +2918,7 @@ void Interface::CheckForRecovery() {
             if (rep == GLDLG_LOAD) {
                 LoadFile(path_str);
                 RemoveRecent(path_str.c_str());
-            } else if (rep == GLDLG_CANCEL) return;
+            } else if (rep == GLDLG_CANCEL_R) return;
             else if (rep == GLDLG_SKIP) continue;
             else if (rep == GLDLG_DELETE) remove(p.path());
         }
