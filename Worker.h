@@ -147,7 +147,7 @@ public:
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime,size_t sMode);    // Switch running/stopped
-#endif
+  #endif
 
 #if defined(SYNRAD)
   SynradGeometry* GetSynradGeometry();
@@ -159,6 +159,7 @@ public:
     void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
 #endif
+    bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
   OntheflySimulationParams ontheflyParams;
@@ -166,7 +167,6 @@ public:
   GlobalHitBuffer globalHitCache;
   FacetHistogramBuffer globalHistogramCache;
 
-  bool   isRunning;           // Started/Stopped state
   float  startTime;         // Start time
   float  stopTime;          // Stop time
   float  simuTime;          // Total simulation time

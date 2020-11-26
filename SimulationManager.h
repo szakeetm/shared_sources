@@ -128,11 +128,11 @@ public:
 
     int UnlockLogBuffer();
 
+    bool GetRunningStatus();
 
     int LoadInput(const std::string& fileName);
 
 private:
-    bool isRunning;
 
     // Dataport handles and names
     Dataport *dpControl;
@@ -156,7 +156,9 @@ public:
     uint16_t nbCores;
     uint16_t mainProcId{};
 
+    bool isRunning;
     bool allProcsDone;
+    bool hasErrorStatus;
     bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
     std::vector<std::pair<uint32_t, SimType>> simHandles; // Vector of a pair of pid , simulation type
 };

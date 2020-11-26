@@ -233,7 +233,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
         int rep = GLMessageBox::Display("Apply geometry changes ?","Question",GLDLG_OK|GLDLG_CANCEL,GLDLG_ICONWARNING);
         if( rep == GLDLG_OK ) {
 			if (mApp->AskToReset(worker)) {
-			//if (worker->isRunning) worker->Stop_Public();
+			//if (worker->IsRunning()) worker->Stop_Public();
 			mApp->changedSinceSave=true;
 			for(size_t i=0;i<vertexListC->GetNbRow();i++) {
 				double x,y,z;
