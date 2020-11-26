@@ -162,8 +162,8 @@ Interface::Interface() {
 #if defined(_DEBUG)
     nbProc = 1;
 #else
-    Saturate(numCPU, 1, (size_t)16);
-    nbProc = numCPU;
+    nbProc = numCPU; //numCPU also displayed in Global Settings
+    Saturate(nbProc, 1, (size_t)16); //don't start with more than 16 processes, but the user can increase
 #endif
 
     curViewer = 0;
