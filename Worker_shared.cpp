@@ -241,8 +241,9 @@ void Worker::ResetStatsAndHits(float appTime) {
         return;
 
     try {
-        ResetWorkerStats();
+        // First reset sim handles, then local states
         simManager.ResetHits();
+        ResetWorkerStats();
         if (needsReload) RealReload();
         Update(appTime);
     }
