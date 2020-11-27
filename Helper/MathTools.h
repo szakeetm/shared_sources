@@ -104,7 +104,7 @@ std::vector<T> operator+(const std::vector<T>& lhs, const std::vector<T>& rhs)
 	auto it2 = rhs.begin();
 	auto it3 = result.begin();
 
-	while (!(it1 == lhs.end())) {
+	while (it1 != lhs.end()) {
 		*it3 = *it1 + *it2;
 		it1++; it2++; it3++;
 	}
@@ -118,7 +118,7 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 
 	auto it1 = lhs.begin();
 	auto it2 = rhs.begin();
-	while (!(it1 == lhs.end())) {
+	while (it1 != lhs.end()) {
 		*it1 += *it2;
 		it1++; it2++;
 	}
