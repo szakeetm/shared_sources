@@ -53,8 +53,10 @@ SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
     KillAllSimUnits();
     for(int t = 0; t < nbThreads; ++t){
-        simUnits[t] = new Simulation();
+        delete simUnits[t];
+        simUnits[t] = nullptr;
     }
+
     /*for(auto& handle : simHandles){
 
         handle.first.join();

@@ -39,7 +39,7 @@ bool SimThread::runLoop() {
     bool eos;
     bool lastUpdateOk = false;
 
-    //double timeStart = omp_get_wtime();
+    double timeStart = omp_get_wtime();
     do {
         setSimState(getSimStatus());
         simEos = runSimulation();      // Run during 1 sec
@@ -53,7 +53,7 @@ bool SimThread::runLoop() {
             lastUpdateOk = false;
         }
         eos = simEos || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
-    } while (/*omp_get_wtime() - timeStart > 20.0 && */!eos);
+    } while (omp_get_wtime() - timeStart > 5.0 && !eos);
 
     if (!lastUpdateOk) {
         setSimState("Final update...");
@@ -110,7 +110,7 @@ int SimThread::runSimulation() {
     }
 
 #if defined(_DEBUG)
-    printf("Running: stepPerSec = %lf [%lu]\n", stepsPerSec, threadNum);
+    //printf("Running: stepPerSec = %lf [%lu]\n", stepsPerSec, threadNum);
 #endif
 
     return !goOn;
@@ -478,10 +478,10 @@ bool SimulationController::Load() {
         }
     }
 
-#pragma omp parallel for default(none) shared(loadError)
+//#pragma omp parallel for default(none) shared(loadError)
     for (size_t i = 0; i < simulation->size(); ++i) {
         if (simulation->at(i)->LoadSimulation(procInfo->subProcInfo[i].statusString)) {
-#pragma omp critical
+//#pragma omp critical
             loadError = true;
         }
     }

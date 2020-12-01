@@ -39,7 +39,6 @@ public:
 	AABBNODE *left;
 	AABBNODE *right;
 	std::vector<SubprocessFacet*> facets;
-
 };
 
 AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);

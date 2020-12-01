@@ -103,7 +103,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 	double m;
 	
 	maxDepth = std::max(depth, maxDepth); //debug
-	if (depth >= MAXDEPTH) return NULL;
+	if (depth >= MAXDEPTH) return nullptr;
 
 	AABBNODE *newNode = new AABBNODE();
 	newNode->facets = facets;
@@ -117,7 +117,6 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 		std::vector<SubprocessFacet*> lList(nbLeft);
 		std::vector<SubprocessFacet*> rList(nbRight);
 		switch (planeType) {
-
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
 			for (const auto& f : newNode->facets) {
@@ -141,7 +140,10 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 				else                   lList[nbl++] = f;
 			}
 			break;
-
+        default:
+            delete newNode;
+            std::cerr << "Unknown planeType: "<< planeType << "(/3)" << std::endl;
+            return nullptr;
 		}
 		newNode->left = BuildAABBTree(lList, depth + 1, maxDepth);
 		newNode->right = BuildAABBTree(rList, depth + 1, maxDepth);
