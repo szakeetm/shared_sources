@@ -591,6 +591,7 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
+    GlobalHitBuffer() = default;
     GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
 
     FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)

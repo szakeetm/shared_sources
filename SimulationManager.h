@@ -133,9 +133,6 @@ private:
 
 protected:
     char appName[16]{};
-    char ctrlDpName[32]{};
-    char loadDpName[32]{};
-    char hitsDpName[32]{};
     char logDpName[32]{};
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
@@ -152,10 +149,18 @@ public:
     bool allProcsDone;
     bool hasErrorStatus;
     bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
+
+private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;
     std::vector<SimulationController> simController;
     std::vector<Simulation*> simUnits;
+
+public:
+    void ForwardSimModel(SimulationModel* model);
+    void ForwardGlobalCounter(GlobalSimuState* simState);
+    void ForwardOtfParams(OntheflySimulationParams* otfParams);
+    void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 
 };
 

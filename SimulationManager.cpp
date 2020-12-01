@@ -45,9 +45,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 #endif
 
     sprintf(this->appName,"%s", appName.c_str());
-    sprintf(this->ctrlDpName,"%s", std::string(dpPrefix+dpName+"CTRL"+std::to_string(pid)).c_str());
-    sprintf(this->loadDpName,"%s", std::string(dpPrefix+dpName+"LOAD"+std::to_string(pid)).c_str());
-    sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(pid)).c_str());
     sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
 
 }
@@ -55,6 +52,9 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
     KillAllSimUnits();
+    for(int t = 0; t < nbThreads; ++t){
+        simUnits[t] = new Simulation();
+    }
     /*for(auto& handle : simHandles){
 
         handle.first.join();
@@ -305,8 +305,10 @@ int SimulationManager::InitSimUnits() {
         // Launch nbCores subprocesses
         auto nbActiveProcesses = simHandles.size();
         for(int iProc = 0; iProc < nbCores; ++iProc) {
-            if(CreateCPUHandle(iProc + nbActiveProcesses)) // abort initialization when creation fails
+            if(CreateCPUHandle(iProc + nbActiveProcesses)){ // abort initialization when creation fails
+                nbCores = simHandles.size();
                 return simHandles.size();
+            }
             //procInformation.push_back(simController.back().procInfo);
         }
     }
@@ -648,4 +650,40 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     }
 
     return 0;
+}
+
+void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState) {
+    for(auto& simUnit : simUnits) {
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
+        simUnit->globState = simState;
+        simUnit->tMutex.unlock();
+    }
+}
+
+// Create hard copy for local usage
+void SimulationManager::ForwardSimModel(SimulationModel *model) {
+    for(auto& sim : simUnits)
+        sim->model = *model;
+}
+
+// Create hard copy for local usage
+void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
+    for(auto& sim : simUnits)
+        sim->model.otfParams = *otfParams;
+}
+
+/**
+* \brief Saves current facet hit counter from cache to results
+*/
+void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
+    for(auto& simUnit : simUnits){
+        if(simUnit->globState->facetStates.size() != hitCaches.size()) return;
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
+        for (size_t i = 0; i < hitCaches.size(); i++) {
+            simUnit->globState->facetStates[i].momentResults[0].hits = *hitCaches[i];
+        }
+        simUnit->tMutex.unlock();
+    }
 }

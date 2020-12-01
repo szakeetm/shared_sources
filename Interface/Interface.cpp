@@ -231,7 +231,7 @@ void Interface::UpdateViewerFlags() {
     } else if (needsTexture && !neededTexture) { //We just enabled mesh
         worker.RebuildTextures();
     }
-    viewer[curViewer]->showFilter = showFilter->GetState();
+    viewer[curViewer]->showFilter = 0;//showFilter->GetState();
     viewer[curViewer]->showVertexId = showVertexId->GetState();
     viewer[curViewer]->showIndex = showIndex->GetState();
     //worker.Update(0.0);
@@ -658,7 +658,7 @@ void Interface::UpdateViewerPanel() {
     showLine->SetState(viewer[curViewer]->showLine);
     showTexture->SetState(viewer[curViewer]->showTexture);
     showFacetId->SetState(viewer[curViewer]->showFacetId);
-    showFilter->SetState(viewer[curViewer]->showFilter);
+    //showFilter->SetState(viewer[curViewer]->showFilter);
     showVertexId->SetState(viewer[curViewer]->showVertexId);
     showIndex->SetState(viewer[curViewer]->showIndex);
 

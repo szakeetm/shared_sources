@@ -72,6 +72,7 @@ extern SynRad*mApp;
 #endif
 
 Worker::~Worker() {
+    simManager.KillAllSimUnits(); // kill in case of preemptive Molflow close, prevents updates on already deleted globalsimustate
     delete geom;
 }
 
@@ -337,7 +338,8 @@ void Worker::RebuildTextures() {
 }
 
 size_t Worker::GetProcNumber() const {
-    return model.otfParams.nbProcess;
+    //return model.otfParams.nbProcess;
+    return simManager.nbThreads;
 }
 
 bool Worker::IsRunning(){
@@ -362,7 +364,7 @@ void Worker::Update(float appTime) {
 
     // Retrieve hit count recording from the shared memory
     // Globals
-    if(simManager.simUnits.empty())
+    if(!simManager.nbCores)
         return;
     if(!globState.initialized)
         return;
@@ -499,9 +501,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
-        for(auto& sim : simManager.simUnits){
-            sim->model.otfParams = model.otfParams;
-        }
+        simManager.ForwardOtfParams(&model.otfParams);
+
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             char errMsg[1024];
             sprintf(errMsg, "Failed to send params to sub process:\n");
@@ -584,12 +585,7 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    for(auto& simUnit : simManager.simUnits){
-        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
-            return;
-        simUnit->globState = &globState;
-        simUnit->tMutex.unlock();
-    }
+    simManager.ForwardGlobalCounter(&globState);
 }
 
 /**
@@ -597,15 +593,12 @@ void Worker::SendToHitBuffer() {
 */
 void Worker::SendFacetHitCounts() {
     size_t nbFacet = geom->GetNbFacet();
-    for(auto& simUnit : simManager.simUnits){
-        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
-            return;
-        for (size_t i = 0; i < nbFacet; i++) {
-            Facet *f = geom->GetFacet(i);
-            simUnit->globState->facetStates[i].momentResults[0].hits = f->facetHitCache;
-        }
-        simUnit->tMutex.unlock();
+    std::vector<FacetHitBuffer*> facetHitCaches;
+    for (size_t i = 0; i < nbFacet; i++) {
+        Facet *f = geom->GetFacet(i);
+        facetHitCaches.push_back(&f->facetHitCache);
     }
+    simManager.ForwardFacetHitCounts(facetHitCaches);
 }
 
 void Worker::RetrieveHistogramCache()
