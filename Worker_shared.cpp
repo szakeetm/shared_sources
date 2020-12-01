@@ -242,9 +242,10 @@ void Worker::ResetStatsAndHits(float appTime) {
         return;
 
     try {
-        // First reset sim handles, then local states
-        simManager.ResetHits();
+        // First reset local states, then sim handles (to communicate cleared stats)
         ResetWorkerStats();
+        simManager.ResetHits();
+
         if (needsReload) RealReload();
         Update(appTime);
     }

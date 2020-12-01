@@ -28,8 +28,13 @@ struct SubProcessFacetTempVar {
 
 class SimulationUnit {
 public:
-    SimulationUnit() : model(), totalDesorbed(0), m(){};
-    SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {totalDesorbed = o.totalDesorbed;};
+    SimulationUnit() : model(), totalDesorbed(0), m(){
+        globState = nullptr;
+    };
+    SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {
+        globState = nullptr;
+        totalDesorbed = o.totalDesorbed;
+    };
     virtual ~SimulationUnit()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */

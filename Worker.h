@@ -204,22 +204,6 @@ public:
 	std::vector<std::vector<double>> parallel_polarization; //ratio of parallel polarization for a given E/E_crit ratio and psi vertical angle
 	std::vector<std::vector<std::vector<double>>> chi_distros; //3 psi-chi    maps for full/parallel/orthogonal polarizations
 #endif
-	/*
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(
-			CEREAL_NVP(wp),
-			CEREAL_NVP(ontheflyParams),
-			CEREAL_NVP(CDFs),
-			CEREAL_NVP(IDs),
-			CEREAL_NVP(parameters),
-			CEREAL_NVP(temperatures),
-			CEREAL_NVP(moments),
-			CEREAL_NVP(desorptionParameterIDs)
-		);
-	}
-	*/
 private:
 
   // Process management

@@ -7,6 +7,7 @@
 
 #include <cstddef> //size_t
 #include <vector>
+#include <mutex>
 
 #define PROCESS_STARTING 0   // Loading state
 #define PROCESS_RUN      1   // Running state
@@ -28,7 +29,6 @@
 #define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
 #define COMMAND_LOADAC   19  // Load mesh and compute AC matrix
 #define COMMAND_STEPAC   20  // Perform single iteration step (AC)
-#define COMMAND_FETCH   21  // Subprocess should upload local hits data
 
 static const char *prStates[] = {
 
@@ -75,11 +75,14 @@ struct ProcComm {
     size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
+    size_t currentSubProc;
+    std::mutex m;
     std::vector<SubProcInfo> subProcInfo;
 
     ProcComm();
     explicit ProcComm(size_t nbProcs) : ProcComm() {Resize(nbProcs);};
     void Resize(size_t nbProcs){subProcInfo.resize(nbProcs);};
+    void NextSubProc();
 
     ProcComm& operator=(const ProcComm & src);
     ProcComm& operator=(ProcComm && src) noexcept ;

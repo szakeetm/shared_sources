@@ -4,67 +4,70 @@
 
 #include <cmath>
 #include <sstream>
-#include <cereal/archives/binary.hpp>
 #include "SimulationController.h"
 #include "../src/Simulation.h"
 #include "ProcessControl.h"
 #include <omp.h>
+#include <thread>
 
 #if not defined(_MSC_VER)
-
 #include <sys/time.h>
 #include <sys/resource.h>
-
 #endif
 
-#include <thread>
-/*#if defined(MOLFLOW)
-#include "../src/Simulation.h"
-#endif*/
+
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #endif
 
-#define WAITTIME    100  // Answer in STOP mode
+#define WAITTIME    500  // Answer in STOP mode
 
-SimThread::SimThread(ProcComm *procInfo, SimulationUnit *simu) {
+SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) {
+    this->threadNum = threadNum;
     this->procInfo = procInfo;
     this->status = nullptr;
-    simulation = simu;
+    simulation = sim;
     stepsPerSec = 1.0;
+    particle = nullptr;
+    simEos = false;
 }
 
 SimThread::~SimThread() = default;
 
-bool SimThread::runLoop(size_t threadNum) {
-    bool eos = false;
-    bool lastUpdateOk = true;
+bool SimThread::runLoop() {
+    bool eos;
+    bool lastUpdateOk = false;
 
     //double timeStart = omp_get_wtime();
     do {
-        setSimState(procInfo->subProcInfo[threadNum]);
-        //std::cout << "Thread #" << threadNum << ": on CPU " << sched_getcpu() << "\n";
-        simEos = runSimulation(threadNum);      // Run during 1 sec
-        //if ((*slaveState != PROCESS_ERROR)) {
-        size_t timeOut = lastUpdateOk ? 0 : 100; //ms
-        lastUpdateOk = particle->UpdateHits(simulation->globState,
-                                            timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-        //}
-        eos = simEos || (procInfo->masterCmd != COMMAND_START);
+        setSimState(getSimStatus());
+        simEos = runSimulation();      // Run during 1 sec
+        if (procInfo->currentSubProc == threadNum) {
+            size_t timeOut = lastUpdateOk ? 0 : 100; //ms
+            lastUpdateOk = particle->UpdateHits(simulation->globState,
+                                                timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+            procInfo->NextSubProc();
+        }
+        else{
+            lastUpdateOk = false;
+        }
+        eos = simEos || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (/*omp_get_wtime() - timeStart > 20.0 && */!eos);
 
-    if (!lastUpdateOk)
+    if (!lastUpdateOk) {
+        setSimState("Final update...");
         particle->UpdateHits(simulation->globState,
                              20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
+    }
     return simEos;
 }
 
-void SimThread::setSimState(ProcComm::SubProcInfo& pInfo) {
-    snprintf(pInfo.statusString, 128, "%s", getSimuStatus());
+void SimThread::setSimState(char *msg) const {
+    snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg);
 }
 
-[[nodiscard]] char *SimThread::getSimuStatus() const {
+[[nodiscard]] char *SimThread::getSimStatus() const {
     static char ret[128];
     size_t count = simulation->globState->globalHits.globalHits.hit.nbDesorbed;
     size_t max = 0;
@@ -80,17 +83,14 @@ void SimThread::setSimState(ProcComm::SubProcInfo& pInfo) {
     return ret;
 }
 
-int SimThread::runSimulation(size_t threadNum) {
+int SimThread::runSimulation() {
     // 1s step
-    size_t nbStep = 1;
-    if (stepsPerSec <= 0.0) {
-        nbStep = 250;
-    } else {
-        nbStep = std::ceil(stepsPerSec + 0.5);
-    }
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
 
     {
-        //snprintf(*status, 128, "%s [%zu event/s]", getSimuStatus(), nbStep);
+        char msg[128];
+        snprintf(msg, 128, "%s [%zu event/s]", getSimStatus(), nbStep);
+        setSimState(msg);
     }
 
     //auto start_time = std::chrono::high_resolution_clock::now();
@@ -109,9 +109,9 @@ int SimThread::runSimulation(size_t threadNum) {
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
     }
 
-//#if defined(_DEBUG)
+#if defined(_DEBUG)
     printf("Running: stepPerSec = %lf [%lu]\n", stepsPerSec, threadNum);
-//#endif
+#endif
 
     return !goOn;
 }
@@ -141,9 +141,7 @@ SimulationController::SimulationController(const std::string &appName, size_t pa
     SetReady(false);
 }
 
-SimulationController::~SimulationController() {
-    //delete simulation; // doesn't manage it
-}
+SimulationController::~SimulationController() = default;
 
 SimulationController::SimulationController(SimulationController &&o) noexcept: appName{} {
     sprintf(this->appName, "%s", o.appName);
@@ -190,36 +188,7 @@ int SimulationController::StartSimulation() {
 }
 
 int SimulationController::RunSimulation() {
-    // 1s step
-    size_t nbStep = 1;
-    if (stepsPerSec <= 0.0) {
-        nbStep = 250;
-    } else {
-        nbStep = std::ceil(stepsPerSec + 0.5);
-    }
-
-    {
-        char tmp[128];
-        snprintf(tmp, 128, "%s [%zu event/s]", GetSimuStatus(), nbStep);
-        SetStatus(tmp); //update hits only
-    }
-    double t0 = omp_get_wtime();
-    bool goOn = false;//(*simulation)[0]->currentParticle.SimulationMCStep(nbStep, 0);
-    double t1 = omp_get_wtime();
-
-    if (goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-    {
-        if (t1 - t0 != 0.0)
-            stepsPerSec = (1.0 * nbStep) / (t1 - t0); // every 1.0 second
-        else
-            stepsPerSec = (100.0 * nbStep); // in case of fast initial run
-    }
-
-//#if defined(_DEBUG)
-    printf("Running: stepPerSec = %lf\n", stepsPerSec);
-//#endif
-
-    return !goOn;
+    abort();
 }
 
 int SimulationController::SetRuntimeInfo() {
@@ -385,9 +354,9 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     std::vector<std::thread> threads = std::vector<std::thread>(nbThreads - 1);
                     std::vector<SimThread> simThreads;
                     simThreads.reserve(nbThreads);
-                    for (int t = 0; t < nbThreads; t++) {
+                    for (size_t t = 0; t < nbThreads; t++) {
                         simThreads.emplace_back(
-                                SimThread(procInfo, simulation->at(t)));
+                                SimThread(procInfo, simulation->at(t), t));
                         simThreads.back().particle = simulation->at(t)->GetParticle();
                     }
                     /*size_t threadNum = 0;
@@ -404,7 +373,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     bool simuEnd = false;
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd, /*simulation,*/simThreads)
                     {
-                        eos = simThreads[omp_get_thread_num()].runLoop(omp_get_thread_num());
+                        eos = simThreads[omp_get_thread_num()].runLoop();
 
 #pragma omp atomic
                         simuEnd |= eos;
@@ -469,15 +438,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 SetReady(loadOk);
                 break;
             }
-            case COMMAND_FETCH: {
-                printf("[%d] COMMAND: FETCH (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                if (prIdx == procInfo->cmdParam) {
-                    SetState(PROCESS_STARTING, "Preparing to upload hits");
-                    //(*simulation)[0]->UploadHits(dpHit, dpLog, prIdx, 10000);
-                }
-                SetReady(loadOk);
-                break;
-            }
             case PROCESS_RUN: {
                 eos = RunSimulation();      // Run during 1 sec
                 if ((GetLocalState() != PROCESS_ERROR)) {
@@ -508,18 +468,18 @@ bool SimulationController::Load() {
     bool loadError = false;
     // Load geometry
 
-#pragma omp parallel for default(none) shared(loadError)
-    for (size_t i = 0; i < simulation->size(); ++i) {
-        if (simulation->at(i)->model.vertices3.empty()) {
+    for (auto & sim : *simulation) {
+        if (sim->model.vertices3.empty()) {
             char err[512];
             sprintf(err, "Loaded empty 'geometry' (%zd Bytes)", procInfo->cmdParam);
             SetErrorSub(err);
-#pragma omp critical
             loadError = true;
-            continue;
+            return loadError;
         }
+    }
 
-
+#pragma omp parallel for default(none) shared(loadError)
+    for (size_t i = 0; i < simulation->size(); ++i) {
         if (simulation->at(i)->LoadSimulation(procInfo->subProcInfo[i].statusString)) {
 #pragma omp critical
             loadError = true;
@@ -538,8 +498,6 @@ bool SimulationController::UpdateParams() {
             printf("Logging with size limit %zd\n",
                    sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
         }
-
-        //TODO: Move to Simulation method call
         sim->ReinitializeParticleLog();
     }
     return true;

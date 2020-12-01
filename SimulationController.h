@@ -14,19 +14,21 @@ class Simulation;
 
 class SimThread {
 public:
-    SimThread(ProcComm* procInfo, SimulationUnit* simu);
+    SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
     ~SimThread();
 
-    bool simEos;
-    char** status;
+    size_t threadNum;
     double stepsPerSec;
+    bool simEos;
+
+    char** status;
     ProcComm* procInfo;
     SimulationUnit* simulation;
     CurrentParticleStatus* particle;
-    bool runLoop(size_t threadNum);
-    [[nodiscard]] char *getSimuStatus() const;
-    void setSimState(ProcComm::SubProcInfo& pInfo);
-    int runSimulation(size_t threadNum);
+    bool runLoop();
+    [[nodiscard]] char *getSimStatus() const;
+    void setSimState(char *msg) const;
+    int runSimulation();
 };
 
 class SimulationController {
