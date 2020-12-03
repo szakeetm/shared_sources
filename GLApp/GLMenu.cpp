@@ -550,7 +550,7 @@ int GLMenu::Track(GLWindow *assignedParent,int x,int y) {
 
   }
 
-  assignedParent->Remove(this, originalParent); //Reassign menu
+  assignedParent->ReassignMenu(this, originalParent); //Reassign menu
   assignedParent->UnfreezeComp();
   //GLWindowManager::FullRepaint();
   theApp->wereEvents = true;
