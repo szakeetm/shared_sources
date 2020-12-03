@@ -70,6 +70,7 @@ public:
   void SetMenuBar(GLComponent *bar,int hBar=20);
   void AddMenu(GLMenu *menu);
   void RemoveMenu(GLMenu *menu);
+  void ReassignMenu(GLMenu* menu, GLContainer* newParent);
   void CloseMenu();
 
   //Implementation

@@ -53,6 +53,34 @@ void GLContainer::SetWindow(GLWindow *parent) {
 
 }
 
+void GLContainer::Remove(GLComponent * comp, GLContainer* newParent) {
+    //unregisters and sets a new parent
+    //used after GLMenu::Track()
+
+    COMPLINK* node = list;
+    COMPLINK* prevNode = NULL;
+
+    bool found = false;
+    while (!found && node) {
+        found = (node->comp == comp);
+        if (!found) {
+            prevNode = node;
+            node = node->next;
+        }
+    }
+
+    if (found) {
+        if (prevNode) {
+            prevNode->next = node->next;
+        }
+        else {
+            list = list->next;
+        }
+        node->comp->SetParent(newParent);
+        SAFE_FREE(node);
+    }
+}
+
 GLWindow *GLContainer::GetWindow() {
   return parentWin;
 }
@@ -123,31 +151,7 @@ void GLContainer::PostDelete(GLComponent *comp) {
 
 }
 
-void GLContainer::Remove(GLComponent *comp) {
 
-  COMPLINK *node = list;
-  COMPLINK *prevNode = NULL;
-
-  bool found = false;
-  while(!found && node) {
-    found = (node->comp == comp);
-    if( !found ) {
-      prevNode = node;
-      node=node->next;
-    }
-  }
-
-  if( found ) {
-    if( prevNode ) {
-      prevNode->next = node->next;
-    } else {
-      list = list->next;
-    }
-    node->comp->SetParent(NULL);
-    SAFE_FREE(node);
-  }
-
-}
 
 void GLContainer::Add(GLComponent *comp) {
 

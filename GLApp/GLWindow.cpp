@@ -111,6 +111,12 @@ void GLWindow::RemoveMenu(GLMenu *menu) {
   if( menus ) menus->PostDelete(menu);
 }
 
+void GLWindow::ReassignMenu(GLMenu* menu, GLContainer* newParent) {
+    //unregisters and sets a new parent
+    //used after GLMenu::Track()
+    if (menus) menus->Remove(menu, newParent);
+}
+
 void GLWindow::CloseMenu() {
 
   if( menuBar ) {

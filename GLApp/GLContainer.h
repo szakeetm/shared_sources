@@ -43,7 +43,8 @@ public:
   // Components method
   void Add(GLComponent *comp);
   void SetCompBoundsRelativeTo(GLComponent * org, GLComponent * src, int dx, int dy, int w, int h);
-  void Remove(GLComponent *comp);
+  void Remove(GLComponent *comp,GLContainer* newParent=NULL);
+
   void SetFocus(GLComponent *src);
   void PaintComponents();
   void DoPostDelete();

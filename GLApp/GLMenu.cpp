@@ -490,9 +490,9 @@ void GLMenu::CloseSub(bool resetSel) {
 
 }
 
-int GLMenu::Track(GLWindow *parent,int x,int y) {
+int GLMenu::Track(GLWindow *assignedParent,int x,int y) {
 
-  if(!parent) parent = GLWindowManager::GetTopLevelWindow();
+  if(!assignedParent) assignedParent = GLWindowManager::GetTopLevelWindow();
 
   // Measure menu
   int menuWidth  = 0;
@@ -511,8 +511,9 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
   if( x+menuWidth  > wS    ) x -= menuWidth;
   if( y+menuHeight > hS-30 ) y -= menuHeight;
   SetBounds(x,y,menuWidth,menuHeight);
-  parent->FreezeComp();
-  parent->AddMenu(this);
+  assignedParent->FreezeComp();
+  auto originalParent = this->parent;
+  assignedParent->AddMenu(this); //registers it as component on parent->menus!
   SetParentMenu(this);
   SetVisible(true);
   rCode = -1;
@@ -524,10 +525,10 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
 
     //While there are events to handle
     while( SDL_PollEvent( &evt ) ) {
-      parent->ManageMenu(&evt);
+      assignedParent->ManageMenu(&evt);
     }
 
-    if(!parent->IsEventProcessed()) {
+    if(!assignedParent->IsEventProcessed()) {
       if( evt.type==SDL_MOUSEBUTTONDOWN )
         // Click outside
         Close();
@@ -549,7 +550,8 @@ int GLMenu::Track(GLWindow *parent,int x,int y) {
 
   }
 
-  parent->UnfreezeComp();
+  assignedParent->Remove(this, originalParent); //Reassign menu
+  assignedParent->UnfreezeComp();
   //GLWindowManager::FullRepaint();
   theApp->wereEvents = true;
   return rCode;
