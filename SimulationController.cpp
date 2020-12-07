@@ -53,7 +53,7 @@ bool SimThread::runLoop() {
             lastUpdateOk = false;
         }
         eos = simEos || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
-    } while (omp_get_wtime() - timeStart > 5.0 && !eos);
+    } while (!eos);
 
     if (!lastUpdateOk) {
         setSimState("Final update...");
@@ -65,6 +65,10 @@ bool SimThread::runLoop() {
 
 void SimThread::setSimState(char *msg) const {
     snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg);
+}
+
+void SimThread::setSimState(const std::string& msg) const {
+    snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg.c_str());
 }
 
 [[nodiscard]] char *SimThread::getSimStatus() const {

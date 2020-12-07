@@ -26,8 +26,11 @@ public:
     SimulationUnit* simulation;
     CurrentParticleStatus* particle;
     bool runLoop();
+
+private:
     [[nodiscard]] char *getSimStatus() const;
     void setSimState(char *msg) const;
+    void setSimState(const std::string& msg) const;
     int runSimulation();
 };
 
