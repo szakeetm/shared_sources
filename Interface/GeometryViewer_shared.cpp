@@ -224,7 +224,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	ctrlText = "CMD";
 #endif
 
-	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel").c_str());
+	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel. Saved in Molflow's Screenshots subdir.").c_str());
 	Add(screenshotLabel);
 
 	selectLabel = new GLLabel(("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/" + ctrlText + " to add/remove to existing selection.").c_str());
