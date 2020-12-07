@@ -35,7 +35,7 @@ int GLComponent::GetHeight() {
 void GLComponent::SetParent(GLContainer *parent) {
 
   this->parent =parent;
-  SetWindow(parent->GetWindow());
+  if (parent) SetWindow(parent->GetWindow());
 
 }
 

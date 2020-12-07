@@ -82,10 +82,10 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas) : G
     recalcButton = new GLButton(0, "Recalculate now");
     Add(recalcButton);
 
-    convPlotterButton = new GLButton(0, "<< Conv.plotter");
+    convPlotterButton = new GLButton(0, "Open convergence plotter >>");
     GLWindow::Add(convPlotterButton);
 
-    sampleConvergenceTgl = new GLToggle(0, "Sample for convergence");
+    sampleConvergenceTgl = new GLToggle(0, "Record values for convergence");
     sampleConvergenceTgl->SetState(true);
     formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
     Add(sampleConvergenceTgl);
@@ -282,9 +282,9 @@ void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	moveUpButton->SetBounds(w - 150, h - 110 - formulaHeight, 65, 20);
 	moveDownButton->SetBounds(w - 80, h - 110 - formulaHeight, 65, 20);
 
-    convPlotterButton->SetBounds(10, h - 80 - formulaHeight, 90, 20);
-    sampleConvergenceTgl->SetBounds(110, h - 80 - formulaHeight, 120, 20);
-
+    sampleConvergenceTgl->SetBounds(10, h - 80 - formulaHeight, 200, 20);
+	convPlotterButton->SetBounds(w-210, h - 80 - formulaHeight, 200, 20);
+    
 	panel2->SetBounds(5, h - 50 - formulaHeight, w - 10, 20 + formulaHeight); //Height will be extended runtime
 	panel2->SetCompBounds(descL, 10, 15, w-30, formulaHeight);
 

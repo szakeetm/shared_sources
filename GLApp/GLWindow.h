@@ -32,6 +32,7 @@ public:
   bool IsShiftDown();
   bool IsAltDown();
   bool IsSpaceDown();
+  bool IsDkeyDown();
   bool IsCapsLockOn();
   bool IsTabDown();
   //int  GetModState();
@@ -69,6 +70,7 @@ public:
   void SetMenuBar(GLComponent *bar,int hBar=20);
   void AddMenu(GLMenu *menu);
   void RemoveMenu(GLMenu *menu);
+  void ReassignMenu(GLMenu* menu, GLContainer* newParent);
   void CloseMenu();
 
   //Implementation
