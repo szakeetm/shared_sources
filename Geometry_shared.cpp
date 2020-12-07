@@ -1997,7 +1997,7 @@ void Geometry::AddStruct(const char *name, bool deferDrawing) {
 }
 
 void Geometry::DelStruct(int numToDel) {
-
+	if (viewStruct >= 0 && viewStruct >= numToDel) viewStruct--;
 	RemoveFromStruct(numToDel);
 	CheckIsolatedVertex();
 	mApp->UpdateModelParams();

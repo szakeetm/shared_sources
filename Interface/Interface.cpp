@@ -2261,15 +2261,19 @@ void Interface::AddStruct() {
 
 void Interface::DeleteStruct() {
     Geometry *geom = worker.GetGeometry();
+    if (geom->GetNbStructure() <= 1) {
+        GLMessageBox::Display("At least one structure needs to remain.");
+        return;
+    }
     char *structNum = GLInputBox::GetInput("", "Structure number", "Number of structure to delete:");
     if (!structNum) return;
     int structNumInt;
     if (!sscanf(structNum, "%d", &structNumInt)) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("Invalid structure number. Can't parse");
         return;
     }
     if (structNumInt < 1 || structNumInt > geom->GetNbStructure()) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("This structure doesn't exist.");
         return;
     }
     bool hasFacets = false;
