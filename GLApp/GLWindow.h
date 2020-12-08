@@ -33,6 +33,7 @@ public:
   bool IsAltDown();
   bool IsSpaceDown();
   bool IsDkeyDown();
+  bool IsZkeyDown();
   bool IsCapsLockOn();
   bool IsTabDown();
   //int  GetModState();

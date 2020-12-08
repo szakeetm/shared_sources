@@ -1580,6 +1580,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			selX1 = selX2 = mX;
 			selY1 = selY2 = mY;
 			if (GetWindow()->IsDkeyDown() || mode == MODE_MOVE) draggMode = DRAGG_MOVE;
+			else if (GetWindow()->IsZkeyDown()) draggMode = DRAGG_ZOOM;
 			else if (mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
 			else if (mode == MODE_SELECT) {
 				if (!GetWindow()->IsTabDown()) draggMode = DRAGG_SELECT;
@@ -1821,6 +1822,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			}
 
 			//UpdateMatrix();
+			break;
+
+		case DRAGG_ZOOM:
+			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
+				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
+				TranslateScale(diffY*factor);
+			}
 			break;
 		}
 	}
