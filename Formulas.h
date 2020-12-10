@@ -13,7 +13,7 @@
 struct ConvergenceData {
     ConvergenceData() : conv_total(0.0), n_samples(0), upper_bound(0.0), lower_bound(0.0), chain_length(0) {};
     std::vector<std::pair<size_t,double>> conv_vec;
-    double conv_total;
+    double conv_total; /* for now unused accumulator, where convegence values are summed up */
     size_t n_samples;
 
     // ASCBR values
