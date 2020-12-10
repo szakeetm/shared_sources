@@ -28,21 +28,21 @@ void Formulas::ClearFormulas() {
 
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
-    for (size_t i = 0; i < formulas_n.size(); i++) {
+    for (auto & i : formulas_n) {
 
         // Evaluate variables
-        int nbVar = formulas_n.at(i)->GetNbVariable();
+        int nbVar = i->GetNbVariable();
         bool ok = true;
         for (int j = 0; j < nbVar && ok; j++) {
-            VLIST *v = formulas_n.at(i)->GetVariableAt(j);
+            VLIST *v = i->GetVariableAt(j);
             ok = evaluator->EvaluateVariable(v);
         }
 
         if (ok) {
-            formulas_n.at(i)->hasVariableEvalError = false;
+            i->hasVariableEvalError = false;
         }
         else{
-            formulas_n.at(i)->SetVariableEvalError("Unknown formula specifier");
+            i->SetVariableEvalError("Unknown formula specifier");
             allOk = false;
         }
     }
@@ -93,34 +93,40 @@ bool Formulas::FetchNewConvValue() {
             if(formulas_n.at(formulaId)->hasVariableEvalError) {
                 continue;
             }
+
+            auto& currentValues = lastFormulaValues[formulaId];
+            // Check against potential nan values to skip
+            if(std::isnan(currentValues.second))
+                continue;
             auto& conv_vec = convergenceValues[formulaId].conv_vec;
             if (conv_vec.size() >= max_vector_size()) {
                 pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
                 hasChanged = true;
             }
-            if(conv_vec.empty() || (lastFormulaValues[formulaId].first != conv_vec.back().first && lastFormulaValues[formulaId].second != conv_vec.back().second)){
+            // Insert new value when completely new value pair inserted
+            if(conv_vec.empty() || (currentValues.first != conv_vec.back().first && currentValues.second != conv_vec.back().second)){
                 convergenceValues[formulaId].n_samples += 1;
-                convergenceValues[formulaId].conv_total += lastFormulaValues[formulaId].second;
-                conv_vec.emplace_back(lastFormulaValues[formulaId]);
+                convergenceValues[formulaId].conv_total += currentValues.second;
+                conv_vec.emplace_back(currentValues);
                 hasChanged = true;
             }
-            else if (lastFormulaValues[formulaId].first == conv_vec.back().first && lastFormulaValues[formulaId].second != conv_vec.back().second){
+            else if (currentValues.first == conv_vec.back().first && currentValues.second != conv_vec.back().second){
                 // if (for some reason) the nbDesorptions dont change but the formula value, only update the latter
-                convergenceValues[formulaId].conv_total -= conv_vec.back().second + lastFormulaValues[formulaId].second;
-                conv_vec.back().second = lastFormulaValues[formulaId].second;
+                convergenceValues[formulaId].conv_total -= conv_vec.back().second + currentValues.second;
+                conv_vec.back().second = currentValues.second;
                 hasChanged = true;
             }
-            else if (lastFormulaValues[formulaId].second == conv_vec.back().second){
-                if(conv_vec.size() > 1 && lastFormulaValues[formulaId].second == (conv_vec.rbegin()[1]).second){
+            else if (currentValues.second == conv_vec.back().second){
+                if(conv_vec.size() > 1 && currentValues.second == (conv_vec.rbegin()[1]).second){
                     // if the value remains constant, just update the nbDesorbptions
-                    conv_vec.back().first = lastFormulaValues[formulaId].first;
+                    conv_vec.back().first = currentValues.first;
                     hasChanged = true;
                 }
                 else {
                     // if there was no previous point with the same value, add a new one (only a second one to save space)
                     convergenceValues[formulaId].n_samples += 1;
-                    convergenceValues[formulaId].conv_total += lastFormulaValues[formulaId].second;
-                    conv_vec.emplace_back(lastFormulaValues[formulaId]);
+                    convergenceValues[formulaId].conv_total += currentValues.second;
+                    conv_vec.emplace_back(currentValues);
                     hasChanged = true;
                 }
             }

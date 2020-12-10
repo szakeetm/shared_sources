@@ -2,14 +2,33 @@
 // Created by pbahr on 18/06/2020.
 //
 
+#include "StringHelper.h"
+#include "MathTools.h"
+
 #include <stdexcept>
 #include <sstream>
 #include <numeric>
 #include <iterator>
 
 #include <GLApp/GLTypes.h>
-#include "MathTools.h"
-#include "StringHelper.h"
+
+// String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
+template <class T>
+T stringToNumber(std::string const& s, bool returnDefValOnErr) {
+    std::istringstream i(s);
+    T x;
+    if (!(i >> x)) {
+        if(returnDefValOnErr)
+            return T();
+        else
+            throw std::logic_error("stringToNumber(\"" + s + "\")");
+    }
+    return x;
+}
+
+template int stringToNumber<int>(std::string const& s, bool returnDefValOnErr);
+template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
+template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
     auto ranges = SplitString(inputString, ',');
