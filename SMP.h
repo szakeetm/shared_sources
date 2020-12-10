@@ -78,7 +78,7 @@ struct Dataport {
 
 #endif
 
-#define MAX_PROCESS (size_t)32    // Maximum number of process
+#define MAX_PROCESS (size_t)64    // Maximum number of process
 
 struct SHCONTROL {
     // Process control

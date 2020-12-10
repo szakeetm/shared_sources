@@ -111,6 +111,12 @@ void GLWindow::RemoveMenu(GLMenu *menu) {
   if( menus ) menus->PostDelete(menu);
 }
 
+void GLWindow::ReassignMenu(GLMenu* menu, GLContainer* newParent) {
+    //unregisters and sets a new parent
+    //used after GLMenu::Track()
+    if (menus) menus->Remove(menu, newParent);
+}
+
 void GLWindow::CloseMenu() {
 
   if( menuBar ) {
@@ -234,6 +240,16 @@ bool GLWindow::IsAltDown() {
 bool GLWindow::IsSpaceDown() {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
 	return state[SDL_GetScancodeFromKey(SDLK_SPACE)];
+}
+
+bool GLWindow::IsDkeyDown() {
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	return state[SDL_GetScancodeFromKey(SDLK_d)];
+}
+
+bool GLWindow::IsZkeyDown() {
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	return state[SDL_GetScancodeFromKey(SDLK_z)];
 }
 
 bool GLWindow::IsCapsLockOn() {

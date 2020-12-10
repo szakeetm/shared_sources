@@ -224,7 +224,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	ctrlText = "CMD";
 #endif
 
-	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel").c_str());
+	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel. Saved in Molflow's Screenshots subdir.").c_str());
 	Add(screenshotLabel);
 
 	selectLabel = new GLLabel(("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex mode, hold SHIFT/" + ctrlText + " to add/remove to existing selection.").c_str());
@@ -233,7 +233,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	rotateLabel = new GLLabel(("Rotation mode: hold SHIFT to slow down rotation, hold " + ctrlText + " to rotate around the third axis, and hold ALT to rotate lighting direction of volume view").c_str());
 	Add(rotateLabel);
 
-	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning");
+	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning. Panning is also possible by mid-mouse button or D and left mouse button.");
 	Add(panLabel);
 
 	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
@@ -318,11 +318,10 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 	if (!parent) return;
 
-	if (draggMode == DRAGG_ROTATE) {
-		SetCursor(CURSOR_ROTATE);
-	}
-	else if (draggMode == DRAGG_MOVE) {
+	if (draggMode == DRAGG_MOVE) {
 		SetCursor(CURSOR_HAND);
+	} else if (draggMode == DRAGG_ROTATE) {
+		SetCursor(CURSOR_ROTATE);
 	}
 	else {
 		if ((mode == MODE_SELECT && !GetWindow()->IsTabDown()) || (mode == MODE_SELECTVERTEX && GetWindow()->IsTabDown())) {
@@ -1580,7 +1579,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			// Selection dragging
 			selX1 = selX2 = mX;
 			selY1 = selY2 = mY;
-			if (mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
+			if (GetWindow()->IsDkeyDown() || mode == MODE_MOVE) draggMode = DRAGG_MOVE;
+			else if (GetWindow()->IsZkeyDown()) draggMode = DRAGG_ZOOM;
+			else if (mode == MODE_ZOOM) draggMode = DRAGG_SELECT;
 			else if (mode == MODE_SELECT) {
 				if (!GetWindow()->IsTabDown()) draggMode = DRAGG_SELECT;
 				else draggMode = DRAGG_SELECTVERTEX;
@@ -1592,8 +1593,6 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 #if defined(SYNRAD)
 			else if (mode == MODE_SELECTTRAJ) draggMode = DRAGG_SELECTTRAJ;
 #endif
-			else if (mode == MODE_MOVE) draggMode = DRAGG_MOVE;
-
 		}
 		if (evt->button.button == SDL_BUTTON_MIDDLE) {
 			// Camera translational dragging
@@ -1823,6 +1822,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			}
 
 			//UpdateMatrix();
+			break;
+
+		case DRAGG_ZOOM:
+			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
+				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
+				TranslateScale(diffY*factor);
+			}
 			break;
 		}
 	}

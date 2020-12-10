@@ -163,8 +163,8 @@ Interface::Interface() {
 #if defined(_DEBUG)
     nbProc = 1;
 #else
-    Saturate(numCPU, 1, (size_t)16);
-    nbProc = numCPU;
+    nbProc = numCPU; //numCPU also displayed in Global Settings
+    Saturate(nbProc, 1, (size_t)16); //don't start with more than 16 processes, but the user can increase
 #endif
 
     curViewer = 0;
@@ -2275,15 +2275,19 @@ void Interface::AddStruct() {
 
 void Interface::DeleteStruct() {
     Geometry *geom = worker.GetGeometry();
+    if (geom->GetNbStructure() <= 1) {
+        GLMessageBox::Display("At least one structure needs to remain.");
+        return;
+    }
     char *structNum = GLInputBox::GetInput("", "Structure number", "Number of structure to delete:");
     if (!structNum) return;
     int structNumInt;
     if (!sscanf(structNum, "%d", &structNumInt)) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("Invalid structure number. Can't parse");
         return;
     }
     if (structNumInt < 1 || structNumInt > geom->GetNbStructure()) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("This structure doesn't exist.");
         return;
     }
     bool hasFacets = false;
@@ -2932,7 +2936,7 @@ void Interface::CheckForRecovery() {
             if (rep == GLDLG_LOAD) {
                 LoadFile(path_str);
                 RemoveRecent(path_str.c_str());
-            } else if (rep == GLDLG_CANCEL) return;
+            } else if (rep == GLDLG_CANCEL_R) return;
             else if (rep == GLDLG_SKIP) continue;
             else if (rep == GLDLG_DELETE) remove(p.path());
         }
