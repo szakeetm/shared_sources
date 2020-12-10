@@ -73,7 +73,7 @@ bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
         for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
             double r;
             if (formulas_n[formulaId]->Evaluate(&r)) {
-                currentValues = std::make_pair(nbDesorbed, r);
+                lastFormulaValues[formulaId] = std::make_pair(nbDesorbed, r);
             }
             else{
                 formulas_n[formulaId]->SetVariableEvalError(formulas_n.at(formulaId)->GetErrorMsg());
