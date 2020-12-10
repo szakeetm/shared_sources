@@ -139,7 +139,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
                   while(!xyzStr.eof()) {
                       xyzStr >> std::ws;  // remove leading white spaces
                       int c = xyzStr.peek();  // peek next character
-                      while(! std::isdigit(c)){
+                      while(! std::isdigit(c) && c != '-'){
                           xyzStr.ignore();
                           c = xyzStr.peek();
                           if ( c == EOF ) break;
