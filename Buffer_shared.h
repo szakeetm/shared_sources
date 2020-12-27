@@ -591,7 +591,15 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-    GlobalHitBuffer() = default;
+    GlobalHitBuffer() :globalHits() {
+    	hitCacheSize = 0;
+    	lastHitIndex = 0;
+		lastLeakIndex = 0;
+		leakCacheSize = 0;
+		nbLeakTotal = 0;
+		distTraveled_total = 0.0;
+		distTraveledTotal_fullHitsOnly = 0.0;
+    };
     GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
 
     FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
@@ -605,7 +613,7 @@ public:
 
 
 #if defined(MOLFLOW)
-	TEXTURE_MIN_MAX texture_limits[3]; //Min-max on texture
+	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
 	double distTraveled_total;
 	double distTraveledTotal_fullHitsOnly;
 #endif
