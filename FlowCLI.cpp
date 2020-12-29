@@ -6,6 +6,7 @@
 #include "SMP.h"
 #include "Buffer_shared.h"
 #include <fstream>
+#include <filesystem>
 #include <Parameter.h>
 #include <LoaderXML.h>
 #include <WriterXML.h>
