@@ -7,6 +7,7 @@
 #include "SMP.h"
 #include "Buffer_shared.h"
 #include <signal.h>
+#include <fstream>
 #include <Parameter.h>
 #include <cereal/archives/binary.hpp>
 #include <LoaderXML.h>
@@ -157,6 +158,16 @@ int main(int argc, char** argv) {
         //printf("%d && %d\n", timeNow < timeEnd, endCondition);
         if(endCondition){
             printf("--- Trans Prob: %lu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed, globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
+            std::stringstream outFile;
+            outFile << "out_" << model.otfParams.desorptionLimit <<".xml";
+            try {
+                std::filesystem::copy_file(Settings::req_real_file, outFile.str(), std::filesystem::copy_options::overwrite_existing);
+            } catch(std::filesystem::filesystem_error& e) {
+                std::cout << "Could not copy sandbox/abc: " << e.what() << '\n';
+            }
+
+            //FlowIO::WriterXML::SaveGeometry(outFile.str(), &model);
+            FlowIO::WriterXML::SaveSimulationState(outFile.str(), &model, globState);
             // if there is a next des limit, handle that
             if(!Settings::desLimit.empty()) {
                 model.otfParams.desorptionLimit = Settings::desLimit.front();
@@ -198,9 +209,9 @@ int main(int argc, char** argv) {
     simManager.KillAllSimUnits();
     // Export results
     //BYTE *buffer = simManager.GetLockedHitBuffer();
-    FlowIO::WriterXML writer;
+    //FlowIO::WriterXML writer;
     //writer.SaveSimulationState(Settings::req_real_file, &model, buffer);
-    writer.SaveSimulationState(Settings::req_real_file, &model, globState);
+    FlowIO::WriterXML::SaveSimulationState(Settings::req_real_file, &model, globState);
     //simManager.UnlockHitBuffer();
 
     return 0;
