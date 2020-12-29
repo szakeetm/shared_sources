@@ -71,19 +71,32 @@ int main(int argc, char** argv) {
             exit(0);
         }
     }
+
     // Create copy of input file for autosave
     std::string autoSave;
     if(Settings::autoSaveDuration > 0)
     {
-        std::stringstream autosaveFile;
         autoSave = std::filesystem::path(Settings::req_real_file).filename();
-        autosaveFile << "autosave_"<< autoSave;
-        autoSave = autosaveFile.str();
-        try {
-            std::filesystem::copy_file(Settings::req_real_file, autoSave,
-                                       std::filesystem::copy_options::overwrite_existing);
-        } catch (std::filesystem::filesystem_error &e) {
-            std::cout << "Could not copy file: " << e.what() << '\n';
+
+        std::string autoSavePrefix = "autosave_";
+        if(autoSave.size() > autoSavePrefix.size() && std::search(autoSave.begin(), autoSave.begin()+autoSavePrefix.size(), autoSavePrefix.begin(), autoSavePrefix.end()) == autoSave.begin())
+        {
+            autoSave = std::filesystem::path(Settings::req_real_file).filename();
+            Settings::req_real_file = autoSave.substr( autoSavePrefix.size(), autoSave.size() - autoSavePrefix.size());
+            std::cout << "Using autosave file " << autoSave << " for "<<Settings::req_real_file<<'\n';
+        }
+        else {
+            // create autosavefile from copy of original
+            std::stringstream autosaveFile;
+            autosaveFile << autoSavePrefix<< autoSave;
+            autoSave = autosaveFile.str();
+
+            try {
+                std::filesystem::copy_file(Settings::req_real_file, autoSave,
+                                           std::filesystem::copy_options::overwrite_existing);
+            } catch (std::filesystem::filesystem_error &e) {
+                std::cout << "Could not copy file: " << e.what() << '\n';
+            }
         }
     }
 
