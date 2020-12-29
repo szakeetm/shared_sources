@@ -20,6 +20,7 @@ public:
     size_t threadNum;
     double stepsPerSec;
     bool simEos;
+    size_t localDesLimit;
 
     char** status;
     ProcComm* procInfo;

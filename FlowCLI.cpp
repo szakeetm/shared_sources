@@ -2,20 +2,18 @@
 // Created by Pascal Baehr on 28.04.20.
 //
 
-#include <cereal/archives/xml.hpp>
 #include "SimulationManager.h"
 #include "SMP.h"
 #include "Buffer_shared.h"
-#include <signal.h>
 #include <fstream>
 #include <Parameter.h>
-#include <cereal/archives/binary.hpp>
 #include <LoaderXML.h>
 #include <WriterXML.h>
 #include "GeometrySimu.h"
 #include "Initializer.h"
 #include "Helper/MathTools.h"
 #include <omp.h>
+#include <sstream>
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___
@@ -42,68 +40,6 @@ struct MolflowData{
     std::vector<Parameter> parameters; //Time-dependent parameters
 };
 
-/*int parse_input(std::string serializedFile){
-    std::ifstream inputFile(serializedFile);
-    inputFile.seekg(0, std::ios::end);
-    size_t size = inputFile.tellg();
-    std::string buffer(size, ' ');
-    inputFile.seekg(0);
-    inputFile.read(&buffer[0], size);
-    
-    std::stringstream inputStream;
-    inputStream << buffer;
-    cereal::BinaryInputArchive inputArchive(inputStream);
-
-    MolflowData md;
-    //Worker params
-    inputArchive(md.wp);
-    inputArchive(md.ontheflyParams);
-    inputArchive(md.CDFs);
-    inputArchive(md.IDs);
-    inputArchive(md.parameters);
-    //inputArchive(md.temperatures);
-    inputArchive(md.moments);
-    //inputArchive(md.desorptionParameterIDs);
-
-    md.structures.resize(md.sh.nbSuper); //Create structures
-    //Facets
-    for (size_t i = 0; i < md.sh.nbFacet; i++) { //Necessary because facets is not (yet) a vector in the interface
-        SubprocessFacet f;
-        inputArchive(
-                f.sh,
-                f.indices,
-                f.vertices2,
-                f.outgassingMap,
-                f.angleMap.pdf,
-                f.textureCellIncrements
-        );
-
-        if (f.sh.superIdx == -1) { //Facet in all structures
-            for (auto& s : md.structures) {
-                s.facets.push_back(f);
-            }
-        }
-        else {
-            md.structures[f.sh.superIdx].facets.push_back(f); //Assign to structure
-        }
-    }
-
-    std::cout << "Parsed geometry " << md.sh.name << std::endl;
-    std::cout << " -> " << md.sh.nbFacet <<" facets" << std::endl;
-    std::cout << " -> " << md.sh.nbVertex <<" vertices" << std::endl;
-
-    return 0;
-}*/
-/* This flag controls termination of the main loop. */
-volatile sig_atomic_t keep_going = 1;
-
-/* The signal handler just clears the flag and re-enables itself. */
-void catch_alarm (int sig)
-{
-    keep_going = 0;
-    signal (sig, catch_alarm);
-}
-
 int main(int argc, char** argv) {
     std::cout << molflowCliLogo << std::endl;
 
@@ -113,6 +49,36 @@ int main(int argc, char** argv) {
     Initializer::init(argc, argv, &simManager, &model, &globState);
     size_t oldHitsNb = globState.globalHits.globalHits.hit.nbMCHit;
     size_t oldDesNb = globState.globalHits.globalHits.hit.nbDesorbed;
+
+    // Skip desorptions if limit was already reached
+    {
+        size_t listSizeM1 = Settings::desLimit.size() - 1;
+        for(size_t l = 0; l < listSizeM1; ++l) {
+            if (oldDesNb > Settings::desLimit.front()){
+                printf("Skipping desorption limit: %llu\n",Settings::desLimit.front());
+                Settings::desLimit.pop_front();
+            }
+            else{
+                printf("Starting with desorption limit: %llu from %zu\n",Settings::desLimit.front(), oldDesNb);
+                break;
+            }
+        }
+    }
+    // Create copy of input file for autosave
+    std::string autoSave;
+    if(Settings::autoSaveDuration > 0)
+    {
+        std::stringstream autosaveFile;
+        autoSave = std::filesystem::path(Settings::req_real_file).filename();
+        autosaveFile << "autosave_"<< autoSave;
+        autoSave = autosaveFile.str();
+        try {
+            std::filesystem::copy_file(Settings::req_real_file, autoSave,
+                                       std::filesystem::copy_options::overwrite_existing);
+        } catch (std::filesystem::filesystem_error &e) {
+            std::cout << "Could not copy file: " << e.what() << '\n';
+        }
+    }
 
     //simManager.ReloadHitBuffer();
     try {
@@ -151,7 +117,7 @@ int main(int argc, char** argv) {
         if(model.otfParams.desorptionLimit != 0)
             endCondition = globState.globalHits.globalHits.hit.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
         //std::cout << "["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb<< " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
-        //printf("Des: %zu - %zu > %llu\n", globState.globalHits.globalHits.hit.nbDesorbed, oldDesNb, Settings::desLimit);
+        //printf("Des: %zu - %zu > %llu\n", globState.globalHits.globalHits.hit.nbDesorbed, oldDesNb, model.otfParams.desorptionLimit);
         //printf("Hit: %zu - %zu\n", globState.globalHits.globalHits.hit.nbMCHit, oldHitsNb);
         //printf("Trans Prob: %lu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed,globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
 
@@ -163,7 +129,7 @@ int main(int argc, char** argv) {
             try {
                 std::filesystem::copy_file(Settings::req_real_file, outFile.str(), std::filesystem::copy_options::overwrite_existing);
             } catch(std::filesystem::filesystem_error& e) {
-                std::cout << "Could not copy sandbox/abc: " << e.what() << '\n';
+                std::cout << "Could not copy file: " << e.what() << '\n';
             }
 
             //FlowIO::WriterXML::SaveGeometry(outFile.str(), &model);
@@ -184,6 +150,12 @@ int main(int argc, char** argv) {
                     endCondition = true;
                 }
             }
+        }
+        else if((uint64_t)(timeNow-timeStart)%Settings::autoSaveDuration==0){ // autosave every x seconds
+            printf("[%lf] %e Hit/s\n", timeNow-timeStart, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
+
+            printf("[%lf] Creating auto save file %s\n", timeNow-timeStart, autoSave.c_str());
+            FlowIO::WriterXML::SaveSimulationState(autoSave, &model, globState);
         }
     } while(timeNow < timeEnd && !endCondition);
     std::cout << "Simulation finished!" << std::endl << std::flush;

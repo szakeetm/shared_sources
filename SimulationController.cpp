@@ -31,6 +31,7 @@ SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) 
     stepsPerSec = 1.0;
     particle = nullptr;
     simEos = false;
+    localDesLimit = 0;
 }
 
 SimThread::~SimThread() = default;
@@ -39,10 +40,7 @@ bool SimThread::runLoop() {
     bool eos;
     bool lastUpdateOk = false;
 
-    size_t localDesLimit = 0;
-    if(simulation->model.otfParams.desorptionLimit > 0){
-        localDesLimit = (simulation->model.otfParams.desorptionLimit - simulation->globState->globalHits.globalHits.hit.nbDesorbed) / simulation->model.otfParams.nbProcess;
-    }
+    //printf("Lim[%zu] %lu --> %lu\n",threadNum, localDesLimit, simulation->globState->globalHits.globalHits.hit.nbDesorbed);
 
     double timeStart = omp_get_wtime();
     do {
@@ -52,7 +50,9 @@ bool SimThread::runLoop() {
         simEos = runSimulation(desorptions);      // Run during 1 sec
         //printf("Pos[%zu][%d] %lu + %lu / %lu\n",threadNum, simEos, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
 
-        if (procInfo->currentSubProc == threadNum) {
+        double timeEnd = omp_get_wtime();
+
+        if (procInfo->currentSubProc == threadNum || timeEnd-timeStart > 60) { // update after 60s of no update or when thread is called
             if(simulation->model.otfParams.desorptionLimit > 0){
                 if(localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed)
                     localDesLimit -= particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
@@ -63,10 +63,12 @@ bool SimThread::runLoop() {
             lastUpdateOk = particle->UpdateHits(simulation->globState,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
             procInfo->NextSubProc();
+            timeStart = omp_get_wtime();
         }
         else{
             lastUpdateOk = false;
         }
+        //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
         eos = simEos || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
 
@@ -407,6 +409,11 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     }*/
                     //this->simulation->model.m.unlock();
                     bool simuEnd = false;
+                    for(auto& thread : simThreads){
+                        if(thread.simulation->model.otfParams.desorptionLimit > 0){
+                            thread.localDesLimit = std::ceil(((double)thread.simulation->model.otfParams.desorptionLimit - thread.simulation->globState->globalHits.globalHits.hit.nbDesorbed) / thread.simulation->model.otfParams.nbProcess);
+                        }
+                    }
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd, /*simulation,*/simThreads)
                     {
                         eos = simThreads[omp_get_thread_num()].runLoop();
