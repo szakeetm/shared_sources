@@ -52,16 +52,22 @@ int main(int argc, char** argv) {
 
     // Skip desorptions if limit was already reached
     {
-        size_t listSizeM1 = Settings::desLimit.size() - 1;
-        for(size_t l = 0; l < listSizeM1; ++l) {
+        size_t listSize = Settings::desLimit.size();
+        for(size_t l = 0; l < listSize; ++l) {
             if (oldDesNb > Settings::desLimit.front()){
                 printf("Skipping desorption limit: %llu\n",Settings::desLimit.front());
                 Settings::desLimit.pop_front();
             }
             else{
                 printf("Starting with desorption limit: %llu from %zu\n",Settings::desLimit.front(), oldDesNb);
+                model.otfParams.desorptionLimit = Settings::desLimit.front();
+                simManager.ForwardOtfParams(&model.otfParams);
                 break;
             }
+        }
+        if(Settings::desLimit.empty()){
+            printf("All given desorption limits have been reached. Consider resetting the simulation results from the input file (--reset): Starting desorption %zu\n", oldDesNb);
+            exit(0);
         }
     }
     // Create copy of input file for autosave
@@ -151,28 +157,19 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        else if((uint64_t)(timeNow-timeStart)%Settings::autoSaveDuration==0){ // autosave every x seconds
-            printf("[%lf] %e Hit/s\n", timeNow-timeStart, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
-
-            printf("[%lf] Creating auto save file %s\n", timeNow-timeStart, autoSave.c_str());
+        else if(Settings::autoSaveDuration && (uint64_t)(timeNow-timeStart)%Settings::autoSaveDuration==0){ // autosave every x seconds
+            printf("[%.0lfs] Creating auto save file %s\n", timeNow-timeStart, autoSave.c_str());
             FlowIO::WriterXML::SaveSimulationState(autoSave, &model, globState);
+        }
+        else if(!Settings::autoSaveDuration && (uint64_t)(timeEnd-timeNow)%60==0){
+            printf("[%.0lfs] time remaining -- %e Hit/s\n", timeEnd-timeNow, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
         }
     } while(timeNow < timeEnd && !endCondition);
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
     // Stop and copy results
     simManager.StopSimulation();
-    /*for(const auto& subHandle : simManager.simUnits){
-        const size_t sub_pid = 0;
-        //GlobalSimuState* localState = simManager.FetchResults(sub_pid);
-        const GlobalSimuState& localState = *subHandle->globState;
-        std::cout << "["<<sub_pid<<"] "<< globState.globalHits.globalHits.hit.nbMCHit + localState.globalHits.globalHits.hit.nbMCHit
-            << " : " << globState.globalHits.globalHits.hit.nbMCHit << " += " << localState.globalHits.globalHits.hit.nbMCHit <<std::endl;
-        globState.globalHits.globalHits += localState.globalHits.globalHits;
-        globState.globalHistograms += localState.globalHistograms;
-        globState.facetStates += localState.facetStates;
-        //delete localState;
-    }*/
+
     std::cout << "Hit["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
               << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
     std::cout << "Des["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
@@ -180,11 +177,7 @@ int main(int argc, char** argv) {
 
     simManager.KillAllSimUnits();
     // Export results
-    //BYTE *buffer = simManager.GetLockedHitBuffer();
-    //FlowIO::WriterXML writer;
-    //writer.SaveSimulationState(Settings::req_real_file, &model, buffer);
     FlowIO::WriterXML::SaveSimulationState(Settings::req_real_file, &model, globState);
-    //simManager.UnlockHitBuffer();
 
     return 0;
 }
