@@ -31,7 +31,7 @@ private:
     [[nodiscard]] char *getSimStatus() const;
     void setSimState(char *msg) const;
     void setSimState(const std::string& msg) const;
-    int runSimulation();
+    int runSimulation(size_t desorptions);
 };
 
 class SimulationController {

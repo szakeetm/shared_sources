@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
     size_t oldHitsNb = globState.globalHits.globalHits.hit.nbMCHit;
+    size_t oldDesNb = globState.globalHits.globalHits.hit.nbDesorbed;
 
     //simManager.ReloadHitBuffer();
     try {
@@ -126,11 +127,13 @@ int main(int argc, char** argv) {
     std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
     //ProcessSleep(1000*Settings::simDuration);
     double timeStart = omp_get_wtime();
-    double timeEnd = timeStart + 1.0 * Settings::simDuration;
+    double timeEnd = (Settings::simDuration > 0) ? timeStart + 1.0 * Settings::simDuration : std::numeric_limits<double>::max();
 
-    std::cout << "." << std::flush << '\b';
+    bool endCondition = false;
+    //std::cout << "." << std::flush << '\b';
     do {
         ProcessSleep(1000);
+        /*ProcessSleep(1000);
         //usleep(1000000);
         std::cout << "." << std::flush;
         ProcessSleep(1000);
@@ -141,9 +144,37 @@ int main(int argc, char** argv) {
         std::cout << "\b\b\b...." << std::flush;
         ProcessSleep(1000);
         std::cout << "\b\b\b\b....." << std::flush<< "\b\b\b\b\b";
+        */
+
         timeNow = omp_get_wtime();
-        printf("%lf < %lf\n", timeNow, timeEnd);
-    } while(timeNow < timeEnd);
+        if(model.otfParams.desorptionLimit != 0)
+            endCondition = globState.globalHits.globalHits.hit.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
+        //std::cout << "["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb<< " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
+        //printf("Des: %zu - %zu > %llu\n", globState.globalHits.globalHits.hit.nbDesorbed, oldDesNb, Settings::desLimit);
+        //printf("Hit: %zu - %zu\n", globState.globalHits.globalHits.hit.nbMCHit, oldHitsNb);
+        //printf("Trans Prob: %lu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed,globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
+
+        //printf("%d && %d\n", timeNow < timeEnd, endCondition);
+        if(endCondition){
+            printf("--- Trans Prob: %lu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed, globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
+            // if there is a next des limit, handle that
+            if(!Settings::desLimit.empty()) {
+                model.otfParams.desorptionLimit = Settings::desLimit.front();
+                Settings::desLimit.pop_front();
+                simManager.ForwardOtfParams(&model.otfParams);
+                endCondition = false;
+                std::cout << " Handling next des limit " << model.otfParams.desorptionLimit << std::endl;
+                try {
+                    ProcessSleep(1000);
+                    simManager.StartSimulation();
+                }
+                catch (std::runtime_error& e) {
+                    std::cerr << "ERROR: Starting simulation: " << e.what() << std::endl;
+                    endCondition = true;
+                }
+            }
+        }
+    } while(timeNow < timeEnd && !endCondition);
     std::cout << "Simulation finished!" << std::endl << std::flush;
 
     // Stop and copy results
@@ -159,8 +190,10 @@ int main(int argc, char** argv) {
         globState.facetStates += localState.facetStates;
         //delete localState;
     }*/
-    std::cout << "["<<timeEnd-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
-              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeEnd-timeStart) > 1e-8 ? (timeEnd-timeStart) : 1.0) << std::endl;
+    std::cout << "Hit["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
+              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
+    std::cout << "Des["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
+              << " : " << (double)(globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
 
     simManager.KillAllSimUnits();
     // Export results
