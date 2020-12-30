@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     size_t oldDesNb = globState.globalHits.globalHits.hit.nbDesorbed;
 
     // Skip desorptions if limit was already reached
+    if(!Settings::desLimit.empty())
     {
         size_t listSize = Settings::desLimit.size();
         for(size_t l = 0; l < listSize; ++l) {
@@ -175,8 +176,8 @@ int main(int argc, char** argv) {
             printf("[%.0lfs] Creating auto save file %s\n", timeNow-timeStart, autoSave.c_str());
             FlowIO::WriterXML::SaveSimulationState(autoSave, &model, globState);
         }
-        else if(!Settings::autoSaveDuration && (uint64_t)(timeEnd-timeNow)%60==0){
-            printf("[%.0lfs] time remaining -- %e Hit/s\n", timeEnd-timeNow, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
+        else if(!Settings::autoSaveDuration && (uint64_t)(timeNow-timeStart)%60==0){
+            printf("[%.0lfs] time remaining -- [%lf] %lu : %e Hit/s\n", timeEnd-timeNow, timeNow-timeStart, globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
         }
     } while(timeNow < timeEnd && !endCondition);
     std::cout << "Simulation finished!" << std::endl << std::flush;
