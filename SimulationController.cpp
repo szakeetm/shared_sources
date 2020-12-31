@@ -289,10 +289,16 @@ int SimulationController::controlledLoop(int argc, char **argv){
                 if (loadOK) {
                     eos = RunSimulation();      // Run during 1 sec
                     if (dpHit && (GetLocalState() != PROCESS_ERROR)) {
-                        simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                        lastHitUpdateOK = simulation->UpdateHits(dpHit, dpLog, prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                     }
                     if (eos) {
                         if (GetLocalState() != PROCESS_ERROR) {
+                            if (!lastHitUpdateOK && dpHit) {
+                                // Last update not successful, retry with a longer timeout
+                                SetState(PROCESS_DONE, "Updating hits...", false, true);
+                                lastHitUpdateOK = simulation->UpdateHits(dpHit, dpLog, prIdx, 60000);
+                            }
+
                             // Max desorption reached
                             ClearCommand();
                             SetState(PROCESS_DONE, GetSimuStatus());

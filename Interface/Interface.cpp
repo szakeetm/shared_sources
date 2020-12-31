@@ -2698,6 +2698,7 @@ int Interface::FrameMove() {
     Geometry *geom = worker.GetGeometry();
 
     bool runningState = worker.IsRunning();
+
     //Autosave routines
     bool timeForAutoSave = false;
     if (geom->IsLoaded()) {
@@ -2715,7 +2716,8 @@ int Interface::FrameMove() {
         }
     }
 
-    if (runningState) {
+
+    if (runningState || (prevRunningState==true && runningState==false)) {
         if (m_fTime - lastUpdate >= 1.0f) {
 
             sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
@@ -2858,6 +2860,7 @@ int Interface::FrameMove() {
             SDL_Delay(delay_u); //Limits framerate at about 60fps
         }
     }
+
     return GL_OK;
 }
 
