@@ -247,6 +247,11 @@ bool GLWindow::IsDkeyDown() {
 	return state[SDL_GetScancodeFromKey(SDLK_d)];
 }
 
+bool GLWindow::IsZkeyDown() {
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	return state[SDL_GetScancodeFromKey(SDLK_z)];
+}
+
 bool GLWindow::IsCapsLockOn() {
   //return GLWindowManager::IsCapsLockOn();
 	return SDL_GetModState() & KMOD_CAPS;

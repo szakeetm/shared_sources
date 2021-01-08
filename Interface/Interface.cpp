@@ -2262,15 +2262,19 @@ void Interface::AddStruct() {
 
 void Interface::DeleteStruct() {
     Geometry *geom = worker.GetGeometry();
+    if (geom->GetNbStructure() <= 1) {
+        GLMessageBox::Display("At least one structure needs to remain.");
+        return;
+    }
     char *structNum = GLInputBox::GetInput("", "Structure number", "Number of structure to delete:");
     if (!structNum) return;
     int structNumInt;
     if (!sscanf(structNum, "%d", &structNumInt)) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("Invalid structure number. Can't parse");
         return;
     }
     if (structNumInt < 1 || structNumInt > geom->GetNbStructure()) {
-        GLMessageBox::Display("Invalid structure number");
+        GLMessageBox::Display("This structure doesn't exist.");
         return;
     }
     bool hasFacets = false;
@@ -2695,6 +2699,7 @@ int Interface::FrameMove() {
     Geometry *geom = worker.GetGeometry();
 
     bool runningState = worker.IsRunning();
+
     //Autosave routines
     bool timeForAutoSave = false;
     if (geom->IsLoaded()) {
@@ -2713,7 +2718,7 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if (runningState) {
+    if (runningState|| (prevRunningState==true && runningState==false)) {
         if (m_fTime - lastUpdate >= 1.0f) {
 
             sprintf(tmp, "Running: %s", FormatTime(worker.simuTime + (m_fTime - worker.startTime)));
@@ -2856,6 +2861,7 @@ int Interface::FrameMove() {
             SDL_Delay(delay_u); //Limits framerate at about 60fps
         }
     }
+
     return GL_OK;
 }
 
