@@ -5,7 +5,7 @@
 #include <cmath>
 #include <sstream>
 #include "SimulationController.h"
-#include "../src/Simulation.h"
+#include "../src/Simulation/Simulation.h"
 #include "ProcessControl.h"
 #include <omp.h>
 #include <thread>
@@ -35,6 +35,35 @@ SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) 
 }
 
 SimThread::~SimThread() = default;
+
+
+// todo: fuse with runSimulation()
+int SimThread::advanceForSteps(size_t desorptions) {
+
+}
+
+// run until end or until autosaveTime check
+int SimThread::advanceForTime(double simDuration) {
+
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
+
+    double timeStart = omp_get_wtime();
+    double timeEnd = timeStart;
+    do {
+        simEos = !particle->SimulationMCStep(nbStep, threadNum, 0);
+        timeEnd = omp_get_wtime();
+
+        const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
+        if (elapsedTimeMs > 1e-6)
+            stepsPerSec = (1.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
+        else
+            stepsPerSec = (100.0 * nbStep); // in case of fast initial run
+
+    } while (simDuration > timeEnd - timeStart);
+
+
+    return 0;
+}
 
 bool SimThread::runLoop() {
     bool eos;

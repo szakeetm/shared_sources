@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Polygon.h" //IsInPoly
 #include "Helper/MathTools.h"
 #include <algorithm> //std::min
-#include "../src/Simulation.h"
+#include "Simulation/Simulation.h"
 #include <tuple>
 
 // AABB tree stuff

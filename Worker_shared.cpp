@@ -43,7 +43,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
-#include "../src/FacetAdvParams.h"
+#include "../src/Interface/FacetAdvParams.h"
 #endif
 
 #if defined(SYNRAD)

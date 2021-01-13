@@ -20,7 +20,7 @@
 #include <fstream>
 #include <iostream>
 #include <cereal/archives/binary.hpp>
-#include <../src/Simulation.h>
+#include <../src/Simulation/Simulation.h>
 
 SimulationManager::SimulationManager(const std::string &appName , const std::string &dpName) {
     isRunning = false;
@@ -29,6 +29,7 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 
     useCPU = false;
     nbCores = 0;
+    nbThreads = 0;
 
     useGPU = false;
 

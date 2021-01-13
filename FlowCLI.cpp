@@ -8,8 +8,8 @@
 #include <fstream>
 #include <filesystem>
 #include <Parameter.h>
-#include <LoaderXML.h>
-#include <WriterXML.h>
+#include <IO/LoaderXML.h>
+#include <IO/WriterXML.h>
 #include "GeometrySimu.h"
 #include "Initializer.h"
 #include "Helper/MathTools.h"
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     /* Establish a handler for SIGALRM signals. */
     double timeNow = GetSysTimeMs();
 
-    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds." << std::endl;
+    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.hit.nbDesorbed << " desorptions." << std::endl;
     //ProcessSleep(1000*Settings::simDuration);
     double timeStart = omp_get_wtime();
     double timeEnd = (Settings::simDuration > 0) ? timeStart + 1.0 * Settings::simDuration : std::numeric_limits<double>::max();
@@ -186,9 +186,9 @@ int main(int argc, char** argv) {
     simManager.StopSimulation();
 
     std::cout << "Hit["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
-              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
+              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << "Hit/s" << std::endl;
     std::cout << "Des["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
-              << " : " << (double)(globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << std::endl;
+              << " : " << (double)(globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << "Des/s" << std::endl;
 
     simManager.KillAllSimUnits();
     // Export results

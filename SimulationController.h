@@ -21,6 +21,7 @@ public:
     double stepsPerSec;
     bool simEos;
     size_t localDesLimit;
+    double simDuration;
 
     char** status;
     ProcComm* procInfo;
@@ -33,6 +34,8 @@ private:
     void setSimState(char *msg) const;
     void setSimState(const std::string& msg) const;
     int runSimulation(size_t desorptions);
+    int advanceForSteps(size_t desorptions);
+    int advanceForTime(size_t desorptions);
 };
 
 class SimulationController {

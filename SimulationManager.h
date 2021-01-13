@@ -8,8 +8,8 @@
 #include <vector>
 #include <string>
 #include <thread>
-#include "../src/Simulation.h"
-#include "../src/GeometrySimu.h"
+#include "../src/Simulation/Simulation.h"
+#include <../src/GeometrySimu.h>
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;

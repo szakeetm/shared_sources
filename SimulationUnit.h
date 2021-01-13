@@ -8,7 +8,7 @@
 //#include "MolflowHitCounter.h"
 #include "SMP.h"
 #include "Buffer_shared.h"
-#include "../src/GeometrySimu.h"
+#include <../src/GeometrySimu.h>
 
 class CurrentParticleStatus;
 
