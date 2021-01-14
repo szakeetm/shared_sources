@@ -34,8 +34,8 @@ private:
     void setSimState(char *msg) const;
     void setSimState(const std::string& msg) const;
     int runSimulation(size_t desorptions);
+    int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
-    int advanceForTime(size_t desorptions);
 };
 
 class SimulationController {

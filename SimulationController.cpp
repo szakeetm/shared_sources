@@ -39,7 +39,25 @@ SimThread::~SimThread() = default;
 
 // todo: fuse with runSimulation()
 int SimThread::advanceForSteps(size_t desorptions) {
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
 
+    double timeStart = omp_get_wtime();
+    double timeEnd = timeStart;
+    do {
+        simEos = !particle->SimulationMCStep(nbStep, threadNum, desorptions);
+        timeEnd = omp_get_wtime();
+
+        const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
+        if (elapsedTimeMs > 1e-6)
+            stepsPerSec = (10.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
+        else
+            stepsPerSec = (100.0 * nbStep); // in case of fast initial run
+
+        desorptions -= particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
+    } while (desorptions);
+
+
+    return 0;
 }
 
 // run until end or until autosaveTime check
@@ -55,7 +73,7 @@ int SimThread::advanceForTime(double simDuration) {
 
         const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
         if (elapsedTimeMs > 1e-6)
-            stepsPerSec = (1.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
+            stepsPerSec = (10.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
 
