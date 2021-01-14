@@ -77,12 +77,12 @@ int main(int argc, char** argv) {
     std::string autoSave;
     if(Settings::autoSaveDuration > 0)
     {
-        autoSave = std::filesystem::path(Settings::req_real_file).filename();
+        autoSave = std::filesystem::path(Settings::req_real_file).filename().string();
 
         std::string autoSavePrefix = "autosave_";
         if(autoSave.size() > autoSavePrefix.size() && std::search(autoSave.begin(), autoSave.begin()+autoSavePrefix.size(), autoSavePrefix.begin(), autoSavePrefix.end()) == autoSave.begin())
         {
-            autoSave = std::filesystem::path(Settings::req_real_file).filename();
+            autoSave = std::filesystem::path(Settings::req_real_file).filename().string();
             Settings::req_real_file = autoSave.substr( autoSavePrefix.size(), autoSave.size() - autoSavePrefix.size());
             std::cout << "Using autosave file " << autoSave << " for "<<Settings::req_real_file<<'\n';
         }
