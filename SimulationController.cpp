@@ -432,10 +432,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 bool lastUpdateOk = true;
                 if (loadOk) {
                     size_t updateThread = 0;
-                    /*SimThread simThread(&procInfo->slaveState, &procInfo->masterCmd, simulation);
-                    simThread.runLoop(this->prIdx);*/
-                    //nbThreads = 12;
-                    //this->simulation->model.m.lock();
+
                     std::vector<std::thread> threads = std::vector<std::thread>(nbThreads - 1);
                     std::vector<SimThread> simThreads;
                     simThreads.reserve(nbThreads);
@@ -444,18 +441,8 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                                 SimThread(procInfo, simulation->at(t), t));
                         simThreads.back().particle = simulation->at(t)->GetParticle();
                     }
-                    /*size_t threadNum = 0;
-                    for(auto& thr : threads){
-                        thr = std::thread(&SimThread::runLoop,&simThreads[threadNum],threadNum); //Launch main loop
-                        threadNum++;
-                    }
 
-                    simThreads[threadNum].runLoop(threadNum);
-                    for(auto& thread : threads){
-                        thread.join();
-                    }*/
-                    //this->simulation->model.m.unlock();
-                    bool simuEnd = false;
+                    int simuEnd = 0;
                     for(auto& thread : simThreads){
                         if(thread.simulation->model.otfParams.desorptionLimit > 0){
                             thread.localDesLimit = std::ceil(((double)thread.simulation->model.otfParams.desorptionLimit - thread.simulation->globState->globalHits.globalHits.hit.nbDesorbed) / thread.simulation->model.otfParams.nbProcess);
@@ -467,15 +454,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
 
 #pragma omp atomic
                         simuEnd |= eos;
-                        /*do {
-                            eos = RunSimulation();      // Run during 1 sec
-                            if (updateThread == omp_get_thread_num() && (GetLocalState() != PROCESS_ERROR)) {
-                                size_t timeOut = lastUpdateOk ? 20 : 100; //ms
-                                lastUpdateOk = simulation->UpdateHits(omp_get_thread_num(),
-                                                                      timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-                                updateThread = (updateThread+1) % omp_get_num_threads();
-                            }
-                        } while (procInfo->masterCmd == COMMAND_START && !eos);*/
                     }
 
                     if (simuEnd) {
