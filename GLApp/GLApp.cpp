@@ -254,7 +254,6 @@ void GLApplication::Exit() {
   this->quit = true;
   //exit(0);
   //_exit(0);
-
 }
 
 void GLApplication::UpdateStats() {
@@ -478,4 +477,9 @@ void GLApplication::Run() {
   //Clean up and exit
   Exit();
   
+}
+
+void GLApplication::RequestExit()
+{
+    quit = true; //will be executed in next Run loop
 }

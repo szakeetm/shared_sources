@@ -1230,7 +1230,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_EXIT:
-                    if (AskToSave()) Exit();
+                    if (AskToSave()) RequestExit();
                     return true;
 
                     /*case MENU_EDIT_ADDFORMULA:

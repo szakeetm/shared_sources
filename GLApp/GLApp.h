@@ -52,6 +52,7 @@ public:
     virtual void Pause(bool bPause);
     virtual int  Resize(size_t width, size_t height, bool forceWindowed=false);
     void  Run();
+    void  RequestExit();
     void  Exit();
 
     // Statistics management (expert usage)
@@ -115,3 +116,4 @@ private:
 };
 
 #endif /* _GLAPPH_ */
+
