@@ -426,28 +426,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
-if(MSVC)
-    find_package(OpenGL REQUIRED)
-    # 1. link against external libs
-    target_link_libraries(${PROJECT_NAME} PUBLIC
-            bzip2.lib
-            libcurl_a_x64.lib
-            SDL2.lib
-            SDL2main.lib
-            #libgsl.lib
-            #libgslcblas.lib
-            lzma.lib
-            ZipLib.lib
-            #zlib.lib
-            opengl32#.lib
-            user32.lib
-            shell32.lib
-            ole32.lib
-            )
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
-    #target_link_libraries(${PROJECT_NAME} nativefiledialog)
-endif(MSVC)
 if(NOT MSVC)
 
     if(APPLE)
