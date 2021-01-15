@@ -239,10 +239,17 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
             delete sim;
         }
     }
-    simUnits.resize(nbThreads);
-    procInformation.Resize(nbThreads);
-    simController.clear();
-    simHandles.clear();
+    try{
+        simUnits.resize(nbThreads);
+        procInformation.Resize(nbThreads);
+        simController.clear();
+        simHandles.clear();
+    }
+    catch (std::exception& e){
+        std::cerr << "[SimManager] Invalid resize/clear "<<iProc<<" / " << nbThreads<< std::endl;
+        throw std::runtime_error(e.what());
+    }
+
     for(int t = 0; t < nbThreads; ++t){
         simUnits[t] = new Simulation();
     }
