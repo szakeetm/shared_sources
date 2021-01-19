@@ -232,6 +232,13 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 			}
 		}
 		break;
+	case MSG_CLOSE:
+		if (src == goButton) goButton->SetText("Collapse");
+		else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
+		isRunning = false;
+		work->abortRequested = true;
+		break;
+	}
 	}
 
 	GLWindow::ProcessMessage(src,message);

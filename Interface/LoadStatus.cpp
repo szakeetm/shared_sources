@@ -158,5 +158,10 @@ void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 			cancelButton->SetEnabled(false);
 			worker->abortRequested = true;
 		}
+	case MSG_CLOSE:
+			cancelButton->SetText("Stopping...");
+			cancelButton->SetEnabled(false);
+			worker->abortRequested = true;
+			break;
 	}
 }
