@@ -175,6 +175,10 @@ void GLWindow::SetPosition(int x,int y) {
   posY = y;
 }
 
+void GLWindow::SetClosable(bool c) {
+  this->closable = c;
+}
+
 void GLWindow::SetBounds(int x,int y,int w,int h) {
   posX = x;
   posY = y;
@@ -337,7 +341,7 @@ void GLWindow::ProcessMessage(GLComponent *src,int message) {
       Maximise(!maximized);
       break;
     case MSG_CLOSE:
-      SetVisible(false);
+      if (closable) SetVisible(false);
       break;
   }
 
@@ -913,14 +917,16 @@ void GLWindow::PaintTitle(int _width,int _height) {
 
   // System menu
   if( hasTitle ) {
-    GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
-    if(!closeState) {
-      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,false);
-      GLToolkit::GetDialogFont()->DrawText(posX+_width-15,posY+2,"x",false);
-    } else {
-      GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,true);
-      GLToolkit::GetDialogFont()->DrawText(posX+_width-14,posY+3,"x",false);
-    }
+    if (closable) GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
+    else GLToolkit::GetDialogFont()->SetTextColor(0.7f,0.7f,0.7f);
+      if(!closeState) {
+        GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,false);
+        GLToolkit::GetDialogFont()->DrawText(posX+_width-15,posY+2,"x",false);
+      } else {
+        GLToolkit::DrawBox(posX+_width-18,posY+4,13,12,212,208,200,true,true);
+        GLToolkit::GetDialogFont()->DrawText(posX+_width-14,posY+3,"x",false);
+      }
+    
     if( !isModal ) {
       if(!maxState) {
         if( isResizable && !iconified) GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);

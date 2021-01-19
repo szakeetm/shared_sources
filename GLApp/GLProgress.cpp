@@ -16,6 +16,7 @@ GLProgress::GLProgress(const char *message,const char *title):GLWindow() {
 
   if(title) SetTitle(title);
   else      SetTitle("Message");
+  SetClosable(false); //Progress bar can't be closed as it would hide an operation in progress
 
   // Label
   label = new GLLabel(message);

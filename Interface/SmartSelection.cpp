@@ -147,6 +147,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 		isRunning = false;
 		work->abortRequested = true;
 		analyzeButton->SetText("Analyze");
+		break;
 	}
 
 	GLWindow::ProcessMessage(src,message);
