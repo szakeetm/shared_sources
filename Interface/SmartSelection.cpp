@@ -137,12 +137,16 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				enableToggle->SetState(1);
 			}
 			else {
-				analyzeButton->SetText("Analyze");
 				isRunning = false;
 				work->abortRequested = true;
+				analyzeButton->SetText("Analyze");
 			}
 		}
 		break;
+	case MSG_CLOSE:
+		isRunning = false;
+		work->abortRequested = true;
+		analyzeButton->SetText("Analyze");
 	}
 
 	GLWindow::ProcessMessage(src,message);
