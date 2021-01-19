@@ -176,6 +176,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				}
 				if (!mApp->AskToReset(work)) return;
 				GLProgress *progressDlg = new GLProgress("Collapse", "Please wait");
+				progressDlg->SetClosable(false);
 				progressDlg->SetProgress(0.0);
 				progressDlg->SetVisible(true);
 				if (!l1->GetState()) vT = 0.0;
@@ -238,7 +239,6 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 		isRunning = false;
 		work->abortRequested = true;
 		break;
-	}
 	}
 
 	GLWindow::ProcessMessage(src,message);
