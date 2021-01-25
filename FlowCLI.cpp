@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     size_t oldDesNb = globState.globalHits.globalHits.hit.nbDesorbed;
 
     // Skip desorptions if limit was already reached
-    if(!Settings::desLimit.empty())
+    if(oldDesNb > model.otfParams.desorptionLimit && !Settings::desLimit.empty())
     {
         size_t listSize = Settings::desLimit.size();
         for(size_t l = 0; l < listSize; ++l) {
