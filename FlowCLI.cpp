@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
             std::stringstream outFile;
             outFile << "out_" << model.otfParams.desorptionLimit <<".xml";
             try {
-                std::filesystem::copy_file(Settings::req_real_file, outFile.str(), std::filesystem::copy_options::overwrite_existing);
+                std::filesystem::copy_file(Settings::inputFile, outFile.str(), std::filesystem::copy_options::overwrite_existing);
             } catch(std::filesystem::filesystem_error& e) {
                 std::cout << "Could not copy file: " << e.what() << '\n';
             }
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
               << " : " << (double)(globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << "Des/s" << std::endl;
 
     // Export results
-    FlowIO::WriterXML::SaveSimulationState(Settings::req_real_file, &model, globState);
+    FlowIO::WriterXML::SaveSimulationState(Settings::inputFile, &model, globState);
 
     return 0;
 }
