@@ -546,10 +546,10 @@ bool SimulationController::Load() {
         }
     }
 
-//#pragma omp parallel for default(none) shared(loadError)
-    for (size_t i = 0; i < simulation->size(); ++i) {
+#pragma omp parallel for default(none) shared(loadError)
+    for (int i = 0; i < simulation->size(); ++i) {
         if (simulation->at(i)->LoadSimulation(procInfo->subProcInfo[i].statusString)) {
-//#pragma omp critical
+#pragma omp critical
             loadError = true;
         }
     }
