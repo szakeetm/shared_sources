@@ -15,6 +15,7 @@
 #include "Helper/MathTools.h"
 #include <omp.h>
 #include <sstream>
+#include <Helper/Chronometer.h>
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___
@@ -62,19 +63,20 @@ int main(int argc, char** argv) {
         std::cerr << "[ERROR] Starting simulation: " << e.what() << std::endl;
         return 1;
     }
-    /* Establish a handler for SIGALRM signals. */
-    double timeNow = GetSysTimeMs();
+
+
 
     std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.hit.nbDesorbed << " desorptions." << std::endl;
-    //ProcessSleep(1000*Settings::simDuration);
-    double timeStart = omp_get_wtime();
-    double timeEnd = (Settings::simDuration > 0) ? timeStart + 1.0 * Settings::simDuration : std::numeric_limits<double>::max();
+
+    Chronometer simTimer;
+    simTimer.Start();
+    double elapsedTime;
 
     bool endCondition = false;
     do {
         ProcessSleep(1000);
 
-        timeNow = omp_get_wtime();
+        elapsedTime = simTimer.Elapsed();
         if(model.otfParams.desorptionLimit != 0)
             endCondition = globState.globalHits.globalHits.hit.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
 
@@ -106,26 +108,37 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        else if(Settings::autoSaveDuration && (uint64_t)(timeNow-timeStart)%Settings::autoSaveDuration==0){ // autosave every x seconds
-            printf("[%.0lfs] Creating auto save file %s\n", timeNow-timeStart, autoSave.c_str());
+        else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
+            printf("[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
             FlowIO::WriterXML::SaveSimulationState(autoSave, &model, globState);
         }
-        else if(!Settings::autoSaveDuration && (uint64_t)(timeNow-timeStart)%60==0){
-            printf("[%.0lfs] time remaining -- [%lf] %lu : %e Hit/s\n", timeEnd-timeNow, timeNow-timeStart, globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(timeNow-timeStart));
+        else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
+            if(Settings::simDuration > 0){
+                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", Settings::simDuration-elapsedTime, elapsedTime, globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(elapsedTime));
+            }
         }
-    } while(timeNow < timeEnd && !endCondition);
+
+        // Check for potential time end
+        if(Settings::simDuration > 0) {
+            endCondition |= elapsedTime >= Settings::simDuration;
+        }
+    } while(!endCondition);
+    simTimer.Stop();
 
     // Terminate simulation
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
 
     std::cout << "Simulation finished!" << std::endl << std::flush;
-    // Global result print --> TODO: ()
-    std::cout << "Hit["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
-              << " : " << (double)(globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << "Hit/s" << std::endl;
-    std::cout << "Des["<<timeNow-timeStart<<"s] "<< globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
-              << " : " << (double)(globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) / ((timeNow-timeStart) > 1e-8 ? (timeNow-timeStart) : 1.0) << "Des/s" << std::endl;
-
+    if(elapsedTime > 1e-4) {
+        // Global result print --> TODO: ()
+        std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
+                  << " : " << (double) (globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) /
+                              (elapsedTime) << "Hit/s" << std::endl;
+        std::cout << "[" << elapsedTime << "s] Des " << globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
+                  << " : " << (double) (globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) /
+                              (elapsedTime) << "Des/s" << std::endl;
+    }
     // Export results
     FlowIO::WriterXML::SaveSimulationState(Settings::inputFile, &model, globState);
 
