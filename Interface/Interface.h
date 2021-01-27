@@ -443,13 +443,6 @@ public:
 	void UpdateCurrentSelDir(const char *fileName);
 	char currentSelDir[1024];
 
-	// Util functions
-	//void SendHeartBeat(bool forced=false);
-	char *FormatInt(size_t v, const char *unit);
-	char *FormatPS(double v, const char *unit);
-	char *FormatSize(size_t size);
-	char *FormatTime(float t);
-	
 	void LoadSelection(const char *fName = NULL);
 	void SaveSelection();
 	void ExportSelection();

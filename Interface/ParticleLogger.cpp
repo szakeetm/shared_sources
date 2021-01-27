@@ -35,6 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <fstream>
 #include <cmath> // sin, cos
+#include <Helper/FormatHelper.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -203,7 +204,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 				bool ok = sizeof(clipBoardText[0])*clipBoardText.length() < 50 * 1024 * 1024;
 				if (!ok) {
 					std::ostringstream msg;
-					msg << "Careful! You're putting " << mApp->FormatSize(sizeof(clipBoardText[0])*clipBoardText.length()) << " to the clipboard.";
+					msg << "Careful! You're putting " << Util::formatSize(sizeof(clipBoardText[0])*clipBoardText.length()) << " to the clipboard.";
 					msg << "\nMaybe it's a better idea to save it as a file. Try anyway?";
 					int retVal = GLMessageBox::Display(msg.str(), "Large log size", { "Yes","Cancel" }, GLDLG_ICONWARNING);
 					ok = retVal == 0;
@@ -229,7 +230,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 void ParticleLogger::UpdateMemoryEstimate() {
 	int nbRec;
 	if (maxRecordedTextbox->GetNumberInt(&nbRec) && nbRec > 0) {
-		memoryLabel->SetText(mApp->FormatSize(2 * nbRec * sizeof(ParticleLoggerItem)));
+		memoryLabel->SetText(Util::formatSize(2 * nbRec * sizeof(ParticleLoggerItem)));
 	}
 }
 

@@ -152,7 +152,9 @@ set(HELPER_FILES
         Helper/StringHelper.cpp
         Helper/MathTools.cpp
         Helper/GraphicsHelper.cpp
-        Helper/Chronometer.cpp)
+        Helper/Chronometer.cpp
+        Helper/FormatHelper.cpp
+        )
 
 set(GL_FILES
         GLApp/GLApp.cpp
