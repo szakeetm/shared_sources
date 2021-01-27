@@ -46,7 +46,7 @@ enum class LoadType : uint8_t {
  * @todo Add logger capability to console OR sdl framework
  */
 class SimulationManager {
-    int CreateCPUHandle(uint16_t iProc);
+    int CreateCPUHandle();
 
     int CreateGPUHandle();
 
@@ -141,7 +141,6 @@ public:
     bool useGPU;
     bool useRemote;
 
-    uint16_t nbCores;
     uint16_t nbThreads;
     uint16_t mainProcId{};
 

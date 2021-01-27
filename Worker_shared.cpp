@@ -268,15 +268,14 @@ void Worker::Stop() {
 void Worker::InitSimProc() {
 
     simManager.useCPU = true;
-    simManager.nbCores = 1;
-    simManager.nbThreads = 0;
+    simManager.nbThreads = 0; // set to 0 to init max threads
 
     // Launch n subprocess
-    if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
-        throw Error("Starting subprocesses failed!");
+    if(simManager.InitSimUnits()) {
+        throw Error("Initialising simulation unit failed!");
     }
 
-    model.otfParams.nbProcess = simManager.nbCores;
+    model.otfParams.nbProcess = simManager.nbThreads;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -292,7 +291,6 @@ void Worker::SetProcNumber(size_t n) {
     }
 
     simManager.useCPU = true;
-    simManager.nbCores = 1;
     simManager.nbThreads = n;
 
     // Launch n subprocess
@@ -300,7 +298,7 @@ void Worker::SetProcNumber(size_t n) {
         throw Error("Starting subprocesses failed!");
     }
 
-    model.otfParams.nbProcess = simManager.nbCores;
+    model.otfParams.nbProcess = simManager.nbThreads;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -365,9 +363,7 @@ void Worker::Update(float appTime) {
 
     // Retrieve hit count recording from the shared memory
     // Globals
-    if(!simManager.nbCores)
-        return;
-    if(!globState.initialized)
+    if(!globState.initialized || !simManager.nbThreads)
         return;
     mApp->changedSinceSave = true;
 

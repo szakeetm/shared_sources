@@ -28,7 +28,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
     allProcsDone = false;
 
     useCPU = false;
-    nbCores = 0;
     nbThreads = 0;
 
     useGPU = false;
@@ -215,7 +214,7 @@ int SimulationManager::TerminateSimHandles() {
     return 0;
 }
 
-int SimulationManager::CreateCPUHandle(uint16_t iProc) {
+int SimulationManager::CreateCPUHandle() {
     uint32_t processId;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -246,14 +245,14 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
         simHandles.clear();
     }
     catch (std::exception& e){
-        std::cerr << "[SimManager] Invalid resize/clear "<<iProc<<" / " << nbThreads<< std::endl;
+        std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
         throw std::runtime_error(e.what());
     }
 
     for(int t = 0; t < nbThreads; ++t){
         simUnits[t] = new Simulation();
     }
-    simController.emplace_back(SimulationController{"molflow", processId, iProc++, nbThreads,
+    simController.emplace_back(SimulationController{"molflow", processId, 0, nbThreads,
                                                     reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
@@ -313,14 +312,7 @@ int SimulationManager::InitSimUnits() {
 
     if(useCPU){
         // Launch nbCores subprocesses
-        auto nbActiveProcesses = simHandles.size();
-        for(int iProc = 0; iProc < nbCores; ++iProc) {
-            if(CreateCPUHandle(iProc + nbActiveProcesses)){ // abort initialization when creation fails
-                nbCores = simHandles.size();
-                return simHandles.size();
-            }
-            //procInformation.push_back(simController.back().procInfo);
-        }
+        CreateCPUHandle();
     }
     if(useGPU){
         CreateGPUHandle();
@@ -465,7 +457,7 @@ int SimulationManager::KillAllSimUnits() {
         }
         simHandles.clear();
     }
-    nbCores = 0;
+    nbThreads = 0;
     return 0;
 }
 
