@@ -159,8 +159,6 @@ public:
 	double texWidthD;   // Actual texture resolution (U)
 	double texHeightD;  // Actual texture resolution (V)
 
-	size_t   hitOffset;      // Hit address offset for this facet
-
 #if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
 	double temperature;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
@@ -260,9 +258,7 @@ public:
 			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)
 			CEREAL_NVP(texHeight),   // Rounded texture resolution (V)
 			CEREAL_NVP(texWidthD),   // Actual texture resolution (U)
-			CEREAL_NVP(texHeightD),  // Actual texture resolution (V)
-
-			CEREAL_NVP(hitOffset)      // Hit address offset for this facet
+			CEREAL_NVP(texHeightD)  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 								 // Molflow-specific facet parameters

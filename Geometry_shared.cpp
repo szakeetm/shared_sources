@@ -157,12 +157,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 	// nU et nV (normalized U et V) are also stored in the Facet structure.
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
-	
-	size_t nbMoments = 1; //Constant flow
-#if defined(MOLFLOW)
-	nbMoments += mApp->worker.moments.size();
-#endif
-	size_t fOffset = sizeof(GlobalHitBuffer)+nbMoments * mApp->worker.model.wp.globalHistogramParams.GetDataSize();
 
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
@@ -178,18 +172,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Detect orientation
 			//f->DetectOrientation();
 			//f->sign = -1;
-
-			if (facet_number == -1) {
-				// Hit address
-				f->sh.hitOffset = fOffset; //For hits data serialization
-#if defined(MOLFLOW)
-				fOffset += f->GetHitsSize(mApp->worker.moments.size());
-#endif
-
-#if defined(SYNRAD)
-				fOffset += f->GetHitsSize();
-#endif
-			}
 		}
 	}
 
