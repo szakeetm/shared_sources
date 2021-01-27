@@ -139,8 +139,14 @@ int main(int argc, char** argv) {
                   << " : " << (double) (globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) /
                               (elapsedTime) << "Des/s" << std::endl;
     }
+
     // Export results
-    FlowIO::WriterXML::SaveSimulationState(Settings::inputFile, &model, globState);
+    if(Settings::inputFile != Settings::outputFile){
+        // Copy full file description first, in case outputFile is different
+        std::filesystem::copy_file(Settings::inputFile, Settings::outputFile,
+                                   std::filesystem::copy_options::overwrite_existing);
+    }
+    FlowIO::WriterXML::SaveSimulationState(Settings::outputFile, &model, globState);
 
     return 0;
 }
