@@ -5,6 +5,7 @@
 #ifndef MOLFLOW_PROJ_FORMATHELPER_H
 #define MOLFLOW_PROJ_FORMATHELPER_H
 
+#include <cstddef>
 namespace Util {
     char *formatInt(size_t v, const char *unit);
 
