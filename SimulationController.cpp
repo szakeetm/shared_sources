@@ -445,7 +445,10 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     int simuEnd = 0;
                     for(auto& thread : simThreads){
                         if(thread.simulation->model.otfParams.desorptionLimit > 0){
-                            thread.localDesLimit = std::ceil(((double)thread.simulation->model.otfParams.desorptionLimit - thread.simulation->globState->globalHits.globalHits.hit.nbDesorbed) / thread.simulation->model.otfParams.nbProcess);
+                            if(thread.simulation->model.otfParams.desorptionLimit > thread.simulation->globState->globalHits.globalHits.hit.nbDesorbed)
+                                thread.localDesLimit = std::ceil(((double)thread.simulation->model.otfParams.desorptionLimit - thread.simulation->globState->globalHits.globalHits.hit.nbDesorbed) / thread.simulation->model.otfParams.nbProcess);
+                            else // already done
+                                thread.localDesLimit = 0;
                         }
                     }
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd, /*simulation,*/simThreads)
