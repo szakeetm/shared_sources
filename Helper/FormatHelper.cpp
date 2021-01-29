@@ -73,4 +73,11 @@ namespace Util {
         sprintf(ret, "%02d:%02d:%02d", nbSec / 3600, (nbSec % 3600) / 60, nbSec % 60);
         return ret;
     }
+
+    char *formatTime(double t) {
+        static char ret[64];
+        int nbSec = (int) (t + 0.5f);
+        sprintf(ret, "%02d:%02d:%02d", nbSec / 3600, (nbSec % 3600) / 60, nbSec % 60);
+        return ret;
+    }
 }

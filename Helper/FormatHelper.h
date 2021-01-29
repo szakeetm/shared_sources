@@ -14,6 +14,7 @@ namespace Util {
     char *formatSize(size_t size);
 
     char *formatTime(float t);
+    char *formatTime(double t);
 }
 
 #endif //MOLFLOW_PROJ_FORMATHELPER_H

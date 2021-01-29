@@ -2631,7 +2631,7 @@ int Interface::FrameMove() {
     if (geom->IsLoaded()) {
         if (autoSaveSimuOnly) {
             if (runningState) {
-                if (((worker.simuTime + (m_fTime - worker.startTime)) - lastSaveTimeSimu) >=
+                if (((worker.simuTimer.Elapsed()) - lastSaveTimeSimu) >=
                     (float) autoSaveFrequency * 60.0f) {
                     timeForAutoSave = true;
                 }
@@ -2644,10 +2644,10 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if (runningState|| (prevRunningState==true && runningState==false)) {
-        if (m_fTime - lastUpdate >= 1.0f) {
+    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState==true && runningState==false)) {
+        {
 
-            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTime + (m_fTime - worker.startTime)));
+            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
             wereEvents = true; //Will repaint
 
@@ -2704,14 +2704,14 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
     } else {
-        if (worker.simuTime > 0.0) {
-            hps = (double) (hitCache.hit.nbMCHit - nbHitStart) / worker.simuTime;
-            dps = (double) (hitCache.hit.nbDesorbed - nbDesStart) / worker.simuTime;
+        if (worker.simuTimer.Elapsed() > 0.0) {
+            hps = (double) (hitCache.hit.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
+            dps = (double) (hitCache.hit.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
         } else {
             hps = 0.0;
             dps = 0.0;
         }
-        sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTime));
+        sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTimer.Elapsed()));
         sTime->SetText(tmp);
     }
 
@@ -2793,7 +2793,7 @@ int Interface::FrameMove() {
 
 void Interface::ResetAutoSaveTimer() {
     UpdateStats(); //updates m_fTime
-    if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTime + (m_fTime - worker.startTime);
+    if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTimer.Elapsed();
     else lastSaveTime = m_fTime;
 }
 

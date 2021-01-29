@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <string>
 #include <vector>
+#include <Helper/Chronometer.h>
 #include "Buffer_shared.h" //LEAK, HIT
 #include "SimulationManager.h"
 
@@ -167,9 +168,10 @@ public:
   SimulationModel model;
   FacetHistogramBuffer globalHistogramCache;
 
-  float  startTime;         // Start time
-  float  stopTime;          // Stop time
-  float  simuTime;          // Total simulation time
+  //float  startTime;         // Start time
+  //float  stopTime;          // Stop time
+  //float  simuTime;          // Total simulation time
+  Chronometer simuTimer;
 
   char fullFileName[512]; // Current loaded file
 

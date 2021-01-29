@@ -235,9 +235,10 @@ void Worker::ResetStatsAndHits(float appTime) {
         GLMessageBox::Display("Reset not allowed while calculating AC", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
-    stopTime = 0.0f;
-    startTime = 0.0f;
-    simuTime = 0.0f;
+    simuTimer.ReInit();
+    //stopTime = 0.0f;
+    //startTime = 0.0f;
+    //simuTime = 0.0f;
     if (model.otfParams.nbProcess == 0)
         return;
 
@@ -356,7 +357,7 @@ void Worker::Update(float appTime) {
     if (needsReload) RealReload();
 
     // End of simulation reached (Stop GUI)
-    if ((simManager.allProcsDone || simManager.hasErrorStatus) && IsRunning() && appTime != 0.0f) {
+    if ((simManager.allProcsDone || simManager.hasErrorStatus) && (IsRunning() || (!IsRunning() && simuTimer.isActive)) && (appTime != 0.0f)) {
         InnerStop(appTime);
         if (simManager.hasErrorStatus) ThrowSubProcError();
     }
@@ -382,8 +383,11 @@ void Worker::Update(float appTime) {
             continue;
         }*/
         // Global hits and leaks
-        if (!globState.tMutex.try_lock_for(std::chrono::milliseconds (100))) {
-            return;
+        {
+            size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
+            if (!globState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
+                return;
+            }
         }
         globalHitCache = globState.globalHits;
 

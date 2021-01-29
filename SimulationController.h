@@ -52,8 +52,9 @@ protected:
     virtual int TerminateSim() {return 0;};
 
     int SetState(size_t state, const char *status, bool changeState = true, bool changeStatus = true);
+    int SetState(size_t state, const std::vector<char [128]>& status, bool changeState = true, bool changeStatus = true);
     void GetState();
-    char *GetSimuStatus();
+    std::vector<char[128]> GetSimuStatus();
     void SetErrorSub(const char *message);
     void SetStatus(char *status);
     void SetReady(const bool loadOk);
@@ -68,9 +69,10 @@ public:
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
 protected:
-    char appName[16];
 
     std::vector<SimulationUnit*>* simulation; //
+    std::vector<SimThread> simThreads;
+
     ProcComm* procInfo;
     size_t parentPID;
     size_t nbThreads;
