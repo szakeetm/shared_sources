@@ -511,7 +511,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     }
 
                     int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
-#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd, /*simulation,*/simThreads)
+#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd/*, simulation,simThreads*/)
                     {
                         eos = simThreads[omp_get_thread_num()].runLoop();
 

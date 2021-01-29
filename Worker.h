@@ -127,8 +127,6 @@ public:
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress *prg);
   void LoadTexturesGEO(FileReader *f, int version);
-  void OneACStep();
-  void StepAC(float appTime); // AC iteration single step
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
@@ -149,7 +147,7 @@ public:
   int GetIDId(int paramId);
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
-  void StartStop(float appTime,size_t sMode);    // Switch running/stopped
+  void StartStop(float appTime);    // Switch running/stopped
   #endif
 
 #if defined(SYNRAD)
@@ -178,10 +176,7 @@ public:
   bool needsReload;
   bool abortRequested;
 
-  bool calcAC; //Not used in Synrad, kept for ResetStatsAndHits function shared with Molflow
-
 #if defined(MOLFLOW)
-
   std::vector<Parameter> parameters;
   int displayedMoment;
   size_t InsertParametersBeforeCatalog(const std::vector<Parameter>& newParams);
@@ -190,10 +185,8 @@ public:
   std::vector<IntegratedDesorption> IDs; //integrated distribution function for each time-dependent desorption type
   std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
-    std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
-    std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
-
-  size_t    calcACprg;         // AC matrix progress
+  std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
+  std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
 #endif
 
 #if defined(SYNRAD)

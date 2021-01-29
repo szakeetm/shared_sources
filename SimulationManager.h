@@ -27,7 +27,6 @@ enum class SimType : uint8_t {
 enum class LoadType : uint8_t {
     LOADGEOM,
     LOADPARAM,
-    LOADAC,
     NLOADERTYPES,
     LOADHITS
 };

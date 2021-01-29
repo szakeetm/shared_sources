@@ -2686,8 +2686,10 @@ int Interface::FrameMove() {
                 if (hitCache.hit.nbMCHit != lastNbHit ||
                     hitCache.hit.nbDesorbed != lastNbDes) {
                     double dTime = (double) (m_fTime - lastMeasTime);
-                    hps = (double) (hitCache.hit.nbMCHit - lastNbHit) / dTime;
-                    dps = (double) (hitCache.hit.nbDesorbed - lastNbDes) / dTime;
+                    if(dTime > 1e-6) {
+                        hps = (double) (hitCache.hit.nbMCHit - lastNbHit) / dTime;
+                        dps = (double) (hitCache.hit.nbDesorbed - lastNbDes) / dTime;
+                    }
                     if (lastHps != 0.0) {
                         hps = 0.2 * (hps) + 0.8 * lastHps;
                         dps = 0.2 * (dps) + 0.8 * lastDps;

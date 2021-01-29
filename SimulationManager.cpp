@@ -633,16 +633,6 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             }
             break;
         }
-        case LoadType::LOADAC:{
-            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
-                //CloseLoaderDP();
-                std::string errString = "Failed to send AC geometry to sub process:\n";
-                errString.append(GetErrorDetails());
-                throw std::runtime_error(errString);
-            }
-            //CloseLoaderDP();
-            break;
-        }
         case LoadType::LOADHITS:{
         }
         default:{

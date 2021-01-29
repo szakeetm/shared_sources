@@ -15,8 +15,7 @@
 #define PROCESS_KILLED   3   // Process killed
 #define PROCESS_ERROR    4   // Process in error
 #define PROCESS_DONE     5   // Simulation ended
-#define PROCESS_RUNAC    6   // Computing AC matrix
-#define PROCESS_WAIT     7   // Command fully executed
+#define PROCESS_WAIT     6   // Command fully executed
 
 #define COMMAND_NONE     10  // No change
 #define COMMAND_LOAD     11  // Load geometry
@@ -27,8 +26,6 @@
 #define COMMAND_CLOSE    16  // Release handles
 #define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
 #define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
-#define COMMAND_LOADAC   19  // Load mesh and compute AC matrix
-#define COMMAND_STEPAC   20  // Perform single iteration step (AC)
 
 static const char *prStates[] = {
 
@@ -38,7 +35,7 @@ static const char *prStates[] = {
         "Killed",
         "Error",
         "Done",
-        "Computing AC matrix", //Molflow only
+        "",
         "",
         "",
         "",
@@ -50,9 +47,7 @@ static const char *prStates[] = {
         "Exiting",
         "Closing",
         "Update params",
-        "Release dpLog",
-        "Load AC matrix", //Molflow only
-        "AC iteration step" //Molflow only
+        "Release dpLog"
 };
 
 struct PROCESS_INFO{

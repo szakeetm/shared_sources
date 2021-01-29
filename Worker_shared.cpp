@@ -133,7 +133,7 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
 
     bool buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
-    geom->ExportTextures(f, grouping, mode, globState, saveSelected, model.wp.sMode);
+    geom->ExportTextures(f, grouping, mode, globState, saveSelected);
 #endif
 #if defined(SYNRAD)
     geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
@@ -231,10 +231,6 @@ const char *Worker::GetErrorDetails() {
 
 void Worker::ResetStatsAndHits(float appTime) {
 
-    if (calcAC) {
-        GLMessageBox::Display("Reset not allowed while calculating AC", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
     simuTimer.ReInit();
     //stopTime = 0.0f;
     //startTime = 0.0f;
@@ -323,7 +319,7 @@ void Worker::RebuildTextures() {
 
         try {
 #if defined(MOLFLOW)
-            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection, model.wp.sMode);
+            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
 #endif
 #if defined(SYNRAD)
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
@@ -428,13 +424,8 @@ void Worker::Update(float appTime) {
         //simUnit->tMutex.unlock();
 
     try {
-
         if (mApp->needsTexture || mApp->needsDirection)
-            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection
-#if defined(MOLFLOW)
-                    , model.wp.sMode // not necessary for Synrad
-#endif
-            );
+            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
     }
     catch (Error &e) {
         globState.tMutex.unlock();

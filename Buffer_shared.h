@@ -333,7 +333,6 @@ struct WorkerParams { //Plain old data
 	int motionType;
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
-	size_t    sMode;                // Simu mode (MC_MODE or AC_MODE)
 #endif
 #if defined(SYNRAD)
 	size_t        nbRegion;  //number of magnetic regions
@@ -360,7 +359,6 @@ struct WorkerParams { //Plain old data
 			, CEREAL_NVP(motionType)
 			, CEREAL_NVP(motionVector1)
 			, CEREAL_NVP(motionVector2)
-			, CEREAL_NVP(sMode)
 #endif
 
 #if defined(SYNRAD)
