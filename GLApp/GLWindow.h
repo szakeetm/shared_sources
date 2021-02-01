@@ -20,6 +20,7 @@ public:
   // Window methods
   void GetBounds(int *x,int *y,int *w,int *h);
   void SetPosition(int x,int y);
+  void SetClosable(bool closable);
   int  GetHeight();
   int  GetWidth();
   void GetClientArea(int *x,int *y,int *w,int *h);
@@ -107,6 +108,7 @@ private:
   char title[128];
   char iconTitle[64];
   int  closeState;
+  bool closable=true;
   int  maxState;
   int  iconState;
   bool iconifiable;

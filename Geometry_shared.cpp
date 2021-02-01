@@ -276,14 +276,16 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 {
 	size_t i = 0;
 	work->abortRequested = false;
+	prg->SetMessage("Clearing previous neighborship data...");
 	for (i = 0; i < sh.nbFacet; i++) {
 		facets[i]->neighbors.clear();
 	}
+	prg->SetMessage("Comparing facets...");
 	for (i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-		mApp->DoEvents(); //Cathch possible cancel press
+		mApp->DoEvents(); //Catch possible cancel press
 		Facet *f1 = facets[i];
 		prg->SetProgress(double(i) / double(sh.nbFacet));
-		for (size_t j = i + 1; j < sh.nbFacet; j++) {
+		for (size_t j = i + 1; !work->abortRequested && j < sh.nbFacet; j++) {
 			Facet *f2 = facets[j];
 			size_t c1, c2, l;
 			if (GetCommonEdges(facets[i], facets[j], &c1, &c2, &l)) {

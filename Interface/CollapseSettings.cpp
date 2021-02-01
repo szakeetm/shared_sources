@@ -176,6 +176,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				}
 				if (!mApp->AskToReset(work)) return;
 				GLProgress *progressDlg = new GLProgress("Collapse", "Please wait");
+				progressDlg->SetClosable(false);
 				progressDlg->SetProgress(0.0);
 				progressDlg->SetVisible(true);
 				if (!l1->GetState()) vT = 0.0;
@@ -231,6 +232,12 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				work->abortRequested = true;
 			}
 		}
+		break;
+	case MSG_CLOSE:
+		if (src == goButton) goButton->SetText("Collapse");
+		else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
+		isRunning = false;
+		work->abortRequested = true;
 		break;
 	}
 
