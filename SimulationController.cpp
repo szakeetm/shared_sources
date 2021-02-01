@@ -19,6 +19,8 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
+#include <Helper/OutputHelper.h>
+
 #endif
 
 #define WAITTIME    500  // Answer in STOP mode
@@ -221,7 +223,7 @@ SimulationController::SimulationController(const std::string &appName, size_t pa
 
     SetRuntimeInfo();
 
-    printf("Controller created (%zd bytes)\n", sizeof(SHCONTROL));
+    //DEBUG_PRINT("Controller created (%zd bytes)\n", sizeof(SHCONTROL));
     SetReady(false);
 }
 
@@ -309,7 +311,7 @@ int SimulationController::ClearCommand() {
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        printf("\n setstate %zd \n", state);
+        DEBUG_PRINT("\n setstate %zd \n", state);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -328,7 +330,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 int SimulationController::SetState(size_t state, const std::vector<char [128]>& status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        printf("\n setstate %zd \n", state);
+        DEBUG_PRINT("\n setstate %zd \n", state);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -427,7 +429,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
         switch (procInfo->masterCmd) {
 
             case COMMAND_LOAD: {
-                printf("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
 
                 if(nbThreads != simThreads.size()) {
@@ -451,7 +453,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_UPDATEPARAMS: {
                 SetState(PROCESS_WAIT, GetSimuStatus());
-                printf("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (UpdateParams()) {
                     SetReady(loadOk);
                     //SetState(procInfo->cmdParam2, GetSimuStatus());
@@ -462,7 +464,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_RELEASEDPLOG: {
                 SetState(PROCESS_WAIT, GetSimuStatus());
-                printf("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetReady(loadOk);
                 break;
             }
@@ -478,7 +480,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     }
                 }
                 if (GetLocalState() != PROCESS_RUN) {
-                    printf("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                    DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
                 bool lastUpdateOk = true;
@@ -524,7 +526,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                             // Max desorption reached
                             ClearCommand();
                             SetState(PROCESS_DONE, GetSimuStatus());
-                            printf("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                            DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
                         }
                     }
                     break;
@@ -535,7 +537,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_PAUSE: {
-                printf("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (!lastHitUpdateOK) {
                     // Last update not successful, retry with a longer timeout
                     if ((GetLocalState() != PROCESS_ERROR)) {
@@ -548,7 +550,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_RESET: {
-                printf("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
                 resetControls();
                 for (auto &sim : *simulation)
@@ -557,12 +559,12 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_EXIT: {
-                printf("[%d] COMMAND: EXIT (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: EXIT (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 endState = true;
                 break;
             }
             case COMMAND_CLOSE: {
-                printf("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+                DEBUG_PRINT("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 for (auto &sim : *simulation)
                     sim->ClearSimulation();
                 loadOk = false;
@@ -579,7 +581,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                         // Max desorption reached
                         ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
-                        printf("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                        DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
                     }
                 }
                 break;

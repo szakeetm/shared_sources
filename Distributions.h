@@ -44,6 +44,7 @@ public:
 	void SetY(const size_t& index, const Datatype& y);
 	void Resize(const size_t& N); //Clear, resize and shrink.
 	size_t GetSize();
+	size_t GetMemSize();
 	double GetX(const size_t& index);
 	Datatype GetY(const size_t& index); //GetYValue seems reserved
 	const std::vector<std::pair<double,Datatype>> GetValues() const {return (const std::vector<std::pair<double,Datatype>>)values;}
@@ -97,6 +98,11 @@ template <class Datatype> void Distribution<Datatype>::Resize(const size_t& N) {
 
 template <class Datatype> size_t Distribution<Datatype>::GetSize() {
 	return values.size();
+}
+
+template <class Datatype> size_t Distribution<Datatype>::GetMemSize() {
+    return sizeof(std::vector<std::pair<double,Datatype>>)
+    + (sizeof(std::pair<double,Datatype>) * values.capacity());
 }
 
 template <class Datatype> double Distribution<Datatype>::GetX(const size_t& index) {
