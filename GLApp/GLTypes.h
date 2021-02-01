@@ -53,12 +53,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define SDL_MOUSEBUTTONDBLCLICK SDL_USEREVENT + 0
 
 // Macros
-template<typename T>
-void DELETE_LIST(T& l) {if(l) { glDeleteLists(l,1);l=0; }}
+#define DELETE_LIST(l) if(l) { glDeleteLists(l,1);l=0; }
 
-
-template<typename T>
-void DELETE_TEX(T& t) {if(t) { glDeleteTextures(1,&t);t=0; }}
+#define DELETE_TEX(t) if(t) { glDeleteTextures(1,&t);t=0; }
 //#define SAFE_DELETE(x) if(x) { delete x;x=nullptr; }
 template<typename T>
 constexpr void SAFE_DELETE(T& x) {if(x) {delete x; x=nullptr;}}
