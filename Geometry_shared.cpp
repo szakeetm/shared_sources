@@ -179,7 +179,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 	if (facet_number == -1) {
 		BuildGLList();
 		mApp->UpdateModelParams();
-		mApp->UpdateFacetParams();
+		mApp->UpdateFacetParams(false);
 	}
 
 	//initGeoPrg->SetVisible(false);
@@ -3880,9 +3880,9 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
 #if defined(MOLFLOW)
 			std::vector<std::string> newFormula;
-			newFormula.push_back(tmpName);
+			newFormula.emplace_back(tmpName);
 			mApp->OffsetFormula(tmpExpr, (int)sh.nbFacet); //offset formula
-			newFormula.push_back(tmpExpr);
+			newFormula.emplace_back(tmpExpr);
 			loadFormulas.push_back(newFormula);
 #endif
 		}

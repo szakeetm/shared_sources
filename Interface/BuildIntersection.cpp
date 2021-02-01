@@ -21,8 +21,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "BuildIntersection.h"
 #include "Facet_shared.h" //DeletedFacet
 #include "GLApp/GLTitledPanel.h"
-//#include "GLApp/GLToolkit.h"
-//#include "GLApp/GLWindowManager.h"
 #include "GLApp/GLMessageBox.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLButton.h"
@@ -47,10 +45,13 @@ extern SynRad*mApp;
 * \param g pointer to the Geometry
 * \param w Worker handle
 */
-BuildIntersection::BuildIntersection(Geometry *g, Worker *w) :GLWindow() {
+BuildIntersection::BuildIntersection(Geometry *g, Worker *w) : GLWindow() {
 
 	int wD = 330;
 	int hD = 130;
+
+    nbFacet = 0;
+    nbCreated = 0;
 
 	label1 = new GLLabel("Select all facets that form part of the intersection.\n"
 		"Then select vertices that you'd like to ensure are being kept.\n"
@@ -77,18 +78,17 @@ BuildIntersection::BuildIntersection(Geometry *g, Worker *w) :GLWindow() {
 	//int xD = (wS - wD) / 2;
 	//int yD = (hS - hD) / 2;
 	//SetBounds(xD, yD, wD, hD);
-	SetBounds(10, 30,wD,hD);
-	RestoreDeviceObjects();
+	GLWindow::SetBounds(10, 30,wD,hD);
+	GLContainer::RestoreDeviceObjects();
 
 	resultLabel->SetText("");
 	undoButton->SetEnabled(false);
 	geom = g;
 	work = w;
-
 }
 
 /**
-* \brief Deconstructor that will destroy old undo facets
+* \brief Destructor that will destroy old undo facets
 */
 BuildIntersection::~BuildIntersection() {
 	ClearUndoFacets();
@@ -112,10 +112,7 @@ void BuildIntersection::ClearUndoFacets() {
 */
 void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 
-	switch (message) {
-
-	case MSG_BUTTON:
-
+	if(message == MSG_BUTTON) {
 		if (src == undoButton) {
 			if (nbFacet == geom->GetNbFacet()) { //Assume no change since the split operation
 				std::vector<size_t> newlyCreatedList;
@@ -126,7 +123,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				geom->RestoreFacets(deletedFacetList, false); //Restore to original position
 			}
 			else {
-				int answer = GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
+				GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 				geom->RestoreFacets(deletedFacetList, true); //Restore to end
 			}
 			deletedFacetList.clear();
@@ -151,14 +148,13 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets intersected, creating " << nbCreated << " new.";
 				resultLabel->SetText(tmp.str().c_str());
-				if (deletedFacetList.size() > 0) undoButton->SetEnabled(true);
+				if (!deletedFacetList.empty()) undoButton->SetEnabled(true);
 				work->Reload();
 				mApp->UpdateModelParams();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 			}
 		}
-		break;
 	}
 
 	GLWindow::ProcessMessage(src, message);

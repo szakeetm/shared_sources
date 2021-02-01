@@ -45,7 +45,7 @@ extern SynRad*mApp;
 #endif
 
 
-extern std::string formulaSyntax;
+extern char formulaSyntax[];
 extern int formulaSyntaxHeight;
 
 static const size_t nbCol = 3;
@@ -103,7 +103,7 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas) : G
     panel2->Close();
     Add(panel2);
 
-    descL = new GLLabel(formulaSyntax.c_str());
+    descL = new GLLabel(formulaSyntax);
     descL->SetVisible(false); //Set visible runtime
     Add(descL);
 
@@ -193,7 +193,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		for (size_t row = 0; row < (formulaList->GetNbRow() - 1); row++) { //regular lines
 
 			if (strcmp(formulaList->GetValueAt(0, row), userExpressions[row].c_str()) != 0) { //Expression changed
-				if (!(row < formula_ptr->formulas_n.size())) {
+				if (row >= formula_ptr->formulas_n.size()) {
 					//Interface bug
 					DEBUG_BREAK;
 					return;
@@ -254,7 +254,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	case MSG_LIST_COL: {
         int x, y, w, h;
         GetBounds(&x, &y, &w, &h);
-        double sum = (double) (w - 45);
+        auto sum = (double) (w - 45);
         std::vector<double> colWidths(nbCol);
         for (size_t i = 0; i < nbCol; i++) {
             colWidths[i] = (double) formulaList->GetColWidth(i);

@@ -230,22 +230,22 @@ class Interface : public GLApplication {
 protected:
 	Interface();
 	virtual void PlaceComponents() {}
-	virtual void UpdateFacetHits(bool allRows=false) {}
+	virtual void UpdateFacetHits(bool allRows) {}
 	//virtual void UpdateFormula() {}
 	virtual bool EvaluateVariable(VLIST *v) { return false; }
 	virtual void ClearFacetParams() {}
 	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
-	virtual void BuildPipe(double ratio, int steps = 0) {};
+	virtual void BuildPipe(double ratio, int steps) {};
 	virtual void EmptyGeometry() {}
-	virtual void LoadFile(std::string fileName = "") {}
-	virtual void InsertGeometry(bool newStr, std::string fileName = "") {}
+	virtual void LoadFile(const std::string &fileName) {}
+	virtual void InsertGeometry(bool newStr, const std::string &fileName) {}
 	virtual void SaveFile() {}
-	int FrameMove();
+	int FrameMove() override;
 
 public:
-	virtual void UpdateFacetParams(bool updateSelection=false) {}
+	virtual void UpdateFacetParams(bool updateSelection) {}
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
 
@@ -261,7 +261,6 @@ public:
 	size_t    nbHitStart;   // measurement
 	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
 	size_t      numCPU;
-	float    lastAppTime;
 
     bool useOldXMLFormat;
     bool     antiAliasing;
@@ -311,7 +310,6 @@ public:
 	GLToggle      *showVolume;
 	GLToggle      *showTexture;
     GLToggle      *showFacetId;
-	GLToggle      *showFilter;
 	GLToggle      *showIndex;
 	GLToggle      *showVertexId;
 	GLButton      *viewerMoreButton;
@@ -321,7 +319,6 @@ public:
     GLButton      *startSimu;
 	GLButton      *resetSimu;
 
-	GLCombo       *modeCombo;
 	GLTextField   *hitNumber;
 	GLTextField   *desNumber;
 	GLTextField   *leakNumber;
@@ -365,7 +362,7 @@ public:
 	void SelectView(int v);
 	void AddView(const char *selectionName, AVIEW v);
 	void AddView();
-	void ClearViewMenus();
+	void ClearViewMenus() const;
 	void ClearAllViews();
 	void OverWriteView(int idOvr);
 	void ClearView(int idClr);
@@ -373,9 +370,9 @@ public:
 
 	// Selections
 	void SelectSelection(size_t v);
-	void AddSelection(SelectionGroup s);
+	void AddSelection(const SelectionGroup& s);
 	void AddSelection();
-	void ClearSelectionMenus();
+	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);
 	void ClearSelection(size_t idClr);
@@ -386,7 +383,7 @@ public:
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
 	bool AskToSave();
-	bool AskToReset(Worker *work = NULL);
+	bool AskToReset(Worker *work = nullptr);
 	void AddStruct();
 	void DeleteStruct();
 
@@ -397,7 +394,6 @@ public:
 
 	AVIEW   views[MAX_VIEW];
 	int     nbView;
-	int     idView;
 	int     curViewer;
 	int     modeSolo;
 
@@ -440,10 +436,11 @@ public:
 	// Current directory
 	void UpdateCurrentDir(const char *fileName);
 	char currentDir[1024];
-	void UpdateCurrentSelDir(const char *fileName);
+
+    [[maybe_unused]] void UpdateCurrentSelDir(const char *fileName);
 	char currentSelDir[1024];
 
-	void LoadSelection(const char *fName = NULL);
+	void LoadSelection(const char *fName = nullptr);
 	void SaveSelection();
 	void ExportSelection();
 	void UpdateModelParams();
@@ -463,20 +460,20 @@ public:
 
 	void DisplayCollapseDialog();
 	void RenumberSelections(const std::vector<int> &newRefs);
-	int  Resize(size_t width, size_t height, bool forceWindowed);
+	int  Resize(size_t width, size_t height, bool forceWindowed) override;
 
 	// Formula management
 	//int nbFormula;
 	//FORMULA formulas[MAX_FORMULA];
 	//void ProcessFormulaButtons(GLComponent *src);
 	//void AddFormula(GLParser *f, bool doUpdate = true);
-	void AddFormula(const char *fName, const char *formula); //file loading
+	void AddFormula(const char *fName, const char *formula) const; //file loading
 	//void UpdateFormulaName(int i);
 	//void DeleteFormula(int id);
-	bool OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = NULL);
+	static bool OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = nullptr);
 	//void UpdateFormula();
-	void RenumberFormulas(std::vector<int> *newRefs);
-	void ClearFormulas();
+	void RenumberFormulas(std::vector<int> *newRefs) const;
+	void ClearFormulas() const;
 
 	void ExportTextures(int grouping, int mode);
 	
@@ -498,5 +495,5 @@ protected:
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
 	bool ProcessMessage_shared(GLComponent *src, int message);
-	int  OnExit();
+	int  OnExit() override;
 };
