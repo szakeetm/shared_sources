@@ -54,9 +54,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Macros
 template<typename T>
-constexpr void DELETE_LIST(T& l) {if(l) { glDeleteLists(l,1);l=0; }}
+void DELETE_LIST(T& l) {if(l) { glDeleteLists(l,1);l=0; }}
+
+
 template<typename T>
-constexpr void DELETE_TEX(T& t) {if(t) { glDeleteTextures(1,&t);t=0; }}
+void DELETE_TEX(T& t) {if(t) { glDeleteTextures(1,&t);t=0; }}
 //#define SAFE_DELETE(x) if(x) { delete x;x=nullptr; }
 template<typename T>
 constexpr void SAFE_DELETE(T& x) {if(x) {delete x; x=nullptr;}}
