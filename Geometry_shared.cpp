@@ -4249,7 +4249,7 @@ void Geometry::CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, 
 	std::vector<size_t> vertexIds;
 	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
 	Vector3d axis2half = CrossProduct(normalDir.Normalized()*(axis2Length / axis1Length), axis1half); //left-hand coordinate system, V = N x U
-	for (double angle = 0.0; angle < (2 * PI); angle += ((2 * PI / ((double)nbSteps)))) {
+	for (double angle = 0.0; angle < (2 * PI - 1E-5); angle += ((2 * PI / ((double)nbSteps)))) {
 		double u = cos(angle);
 		double v = sin(angle);
 		AddVertex(center + u*axis1half + v*axis2half,false);
