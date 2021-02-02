@@ -52,9 +52,8 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 SimulationManager::~SimulationManager() {
     CLOSEDP(dpLog);
     KillAllSimUnits();
-    for(int t = 0; t < nbThreads; ++t){
-        delete simUnits[t];
-        simUnits[t] = nullptr;
+    for(auto& unit : simUnits){
+        delete unit;
     }
 
     /*for(auto& handle : simHandles){
@@ -238,8 +237,9 @@ int SimulationManager::CreateCPUHandle() {
             delete sim;
         }
     }
+    size_t nbSimUnits = 1; // nbThreads
     try{
-        simUnits.resize(nbThreads);
+        simUnits.resize(nbSimUnits);
         procInformation.Resize(nbThreads);
         simController.clear();
         simHandles.clear();
@@ -249,7 +249,7 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
-    for(int t = 0; t < nbThreads; ++t){
+    for(size_t t = 0; t < nbSimUnits; ++t){
         simUnits[t] = new Simulation();
     }
     simController.emplace_back(SimulationController{processId, 0, nbThreads,

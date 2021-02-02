@@ -53,6 +53,8 @@ public:
 
     virtual size_t GetHitsSize() = 0;
     virtual CurrentParticleStatus* GetParticle() = 0;
+    virtual CurrentParticleStatus* GetParticle(size_t i) = 0;
+    virtual void SetNParticle(size_t n) = 0;
 public:
     SimulationModel model;
     //OntheflySimulationParams ontheflyParams;

@@ -251,8 +251,8 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     simThreads.reserve(nbThreads);
     for (size_t t = 0; t < nbThreads; t++) {
         simThreads.emplace_back(
-                SimThread(procInfo, simulation->at(t), t));
-        simThreads.back().particle = simulation->at(t)->GetParticle();
+                SimThread(procInfo, simulation->at(0), t));
+        simThreads.back().particle = simulation->at(0)->GetParticle(t);
     }
 }
 
@@ -366,13 +366,16 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
     }
     else{
         size_t threadId = 0;
-        for(auto& sim : *simulation) {
-            if(!sim->GetParticle()->tmpState.initialized){
+        auto* sim = simulation->at(0);
+        for(size_t p = 0; p < nbThreads; ++p) {
+            auto* particle = (simulation->at(0))->GetParticle(p);
+            if(particle == nullptr) break;
+            if(!particle->tmpState.initialized){
                 ret_vec[threadId]= "[NONE]";
             }
             else {
                 size_t count = 0;
-                count = sim->GetParticle()->totalDesorbed + sim->GetParticle()->tmpState.globalHits.globalHits.hit.nbDesorbed;
+                count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
                 size_t max = 0;
                 if (sim->model.otfParams.nbProcess)
                     max = sim->model.otfParams.desorptionLimit / sim->model.otfParams.nbProcess + ((threadId < sim->model.otfParams.desorptionLimit % sim->model.otfParams.nbProcess) ? 1 : 0);
@@ -436,13 +439,14 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
 
-                if(nbThreads != simThreads.size()) {
+                simulation->at(0)->SetNParticle(nbThreads);
+                if(1){//if(nbThreads != simThreads.size()) {
                     simThreads.clear();
                     simThreads.reserve(nbThreads);
                     for (size_t t = 0; t < nbThreads; t++) {
                         simThreads.emplace_back(
-                                SimThread(procInfo, simulation->at(t), t));
-                        simThreads.back().particle = simulation->at(t)->GetParticle();
+                                SimThread(procInfo, simulation->at(0), t));
+                        simThreads.back().particle = simulation->at(0)->GetParticle(t);
                     }
                 }
 
