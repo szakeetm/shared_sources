@@ -252,7 +252,7 @@ int SimulationManager::CreateCPUHandle() {
     for(int t = 0; t < nbThreads; ++t){
         simUnits[t] = new Simulation();
     }
-    simController.emplace_back(SimulationController{"molflow", processId, 0, nbThreads,
+    simController.emplace_back(SimulationController{processId, 0, nbThreads,
                                                     reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/

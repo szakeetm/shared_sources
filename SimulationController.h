@@ -52,9 +52,9 @@ protected:
     virtual int TerminateSim() {return 0;};
 
     int SetState(size_t state, const char *status, bool changeState = true, bool changeStatus = true);
-    int SetState(size_t state, const std::vector<char [128]>& status, bool changeState = true, bool changeStatus = true);
+    int SetState(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     void GetState();
-    std::vector<char[128]> GetSimuStatus();
+    std::vector<std::string> GetSimuStatus();
     void SetErrorSub(const char *message);
     void SetStatus(char *status);
     void SetReady(const bool loadOk);
@@ -62,8 +62,8 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(const std::string &appName, size_t parentPID, size_t procIdx, size_t nbThreads,
-                         std::vector<SimulationUnit*>*simulationInstance, ProcComm *pInfo);
+    SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
+                         std::vector<SimulationUnit *> *simulationInstance, ProcComm *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);

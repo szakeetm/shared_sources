@@ -38,7 +38,7 @@ public:
     virtual ~SimulationUnit()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual size_t LoadSimulation(char *loadStatus) = 0;
+    virtual size_t LoadSimulation(SimulationModel *simModel, char *loadStatus) = 0;
     //virtual bool UpdateHits(int prIdx, DWORD timeout) = 0;
 
     //virtual bool UpdateOntheflySimuParams(Dataport *loader) = 0;
