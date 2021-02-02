@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 #include <stdexcept>
 #include <cstring> // strncpy for Error
+#include <algorithm> // fill
 // Messages
 
 #define MSG_NULL     0    // No message

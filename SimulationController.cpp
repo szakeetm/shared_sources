@@ -21,6 +21,7 @@
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #endif
+#include <Helper/OutputHelper.h>
 
 #define WAITTIME    500  // Answer in STOP mode
 
