@@ -21,7 +21,6 @@
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #endif
-#include <Helper/OutputHelper.h>
 
 #define WAITTIME    500  // Answer in STOP mode
 
@@ -207,7 +206,7 @@ int SimThread::runSimulation(size_t desorptions) {
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                                           std::vector<SimulationUnit *> *simulationInstance, ProcComm *pInfo) {
+                                           SimulationUnit *simulationInstance, ProcComm *pInfo) {
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)
@@ -252,8 +251,8 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     simThreads.reserve(nbThreads);
     for (size_t t = 0; t < nbThreads; t++) {
         simThreads.emplace_back(
-                SimThread(procInfo, simulation->at(0), t));
-        simThreads.back().particle = simulation->at(0)->GetParticle(t);
+                SimThread(procInfo, simulation, t));
+        simThreads.back().particle = simulation->GetParticle(t);
     }
 }
 
@@ -268,8 +267,8 @@ int SimulationController::resetControls() {
 
 int SimulationController::StartSimulation() {
     try {
-        for (auto &sim : *simulation)
-            sim->SanityCheckGeom();
+        auto* sim = simulation;
+        sim->SanityCheckGeom();
     }
     catch (std::runtime_error &e) {
         return 1;
@@ -362,14 +361,14 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
 std::vector<std::string> SimulationController::GetSimuStatus() {
 
     std::vector<std::string> ret_vec(nbThreads);
-    if (simulation->empty()) {
+    if (!simulation) {
         ret_vec.assign(nbThreads, "[NONE]");
     }
     else{
         size_t threadId = 0;
-        auto* sim = simulation->at(0);
+        auto* sim = simulation;
         for(size_t p = 0; p < nbThreads; ++p) {
-            auto* particle = (simulation->at(0))->GetParticle(p);
+            auto* particle = (simulation)->GetParticle(p);
             if(particle == nullptr) break;
             if(!particle->tmpState.initialized){
                 ret_vec[threadId]= "[NONE]";
@@ -440,14 +439,14 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
 
-                simulation->at(0)->SetNParticle(nbThreads);
+                simulation->SetNParticle(nbThreads);
                 if(1){//if(nbThreads != simThreads.size()) {
                     simThreads.clear();
                     simThreads.reserve(nbThreads);
                     for (size_t t = 0; t < nbThreads; t++) {
                         simThreads.emplace_back(
-                                SimThread(procInfo, simulation->at(0), t));
-                        simThreads.back().particle = simulation->at(0)->GetParticle(t);
+                                SimThread(procInfo, simulation, t));
+                        simThreads.back().particle = simulation->GetParticle(t);
                     }
                 }
 
@@ -480,17 +479,17 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             case COMMAND_START: {
                 // Check end of simulation
 
-                if ((*simulation)[0]->model.otfParams.desorptionLimit > 0) {
-                    if ((*simulation)[0]->totalDesorbed >=
-                        (*simulation)[0]->model.otfParams.desorptionLimit /
-                        (*simulation)[0]->model.otfParams.nbProcess) {
+                if (simulation->model.otfParams.desorptionLimit > 0) {
+                    if (simulation->totalDesorbed >=
+                        simulation->model.otfParams.desorptionLimit /
+                        simulation->model.otfParams.nbProcess) {
                         ClearCommand();
                         SetState(PROCESS_DONE, GetSimuStatus());
                     }
                 }
 
                 for(auto& thread : simThreads){
-                    thread.particle->model= &(*simulation)[0]->model;
+                    thread.particle->model= &simulation->model;
                 }
 
                 if (GetLocalState() != PROCESS_RUN) {
@@ -504,9 +503,9 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     // Calculate remaining work
                     size_t desPerThread = 0;
                     size_t remainder = 0;
-                    if(simulation->at(0)->model.otfParams.desorptionLimit > 0){
-                        if(simulation->at(0)->model.otfParams.desorptionLimit > (simulation->at(0)->globState->globalHits.globalHits.hit.nbDesorbed)) {
-                            size_t limitDes_global = simulation->at(0)->model.otfParams.desorptionLimit;
+                    if(simulation->model.otfParams.desorptionLimit > 0){
+                        if(simulation->model.otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.hit.nbDesorbed)) {
+                            size_t limitDes_global = simulation->model.otfParams.desorptionLimit;
                             desPerThread = limitDes_global / nbThreads;
                             remainder = limitDes_global % nbThreads;
                         }
@@ -546,7 +545,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     // Last update not successful, retry with a longer timeout
                     if ((GetLocalState() != PROCESS_ERROR)) {
                         SetState(PROCESS_STARTING, "Updating hits...", false, true);
-                        //lastHitUpdateOK = (*simulation)[0]->UpdateHits(prIdx, 60000);
+                        //lastHitUpdateOK = simulation->UpdateHits(prIdx, 60000);
                         SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
                     }
                 }
@@ -557,7 +556,8 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
                 resetControls();
-                for (auto &sim : *simulation)
+                auto* sim = simulation;
+                //for (auto &sim : *simulation)
                     sim->ResetSimulation();
                 SetReady(loadOk);
                 break;
@@ -569,7 +569,8 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_CLOSE: {
                 DEBUG_PRINT("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                for (auto &sim : *simulation)
+                auto* sim = simulation;
+                //for (auto &sim : *simulation)
                     sim->ClearSimulation();
                 loadOk = false;
                 SetReady(loadOk);
@@ -578,7 +579,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             case PROCESS_RUN: {
                 eos = RunSimulation();      // Run during 1 sec
                 if ((GetLocalState() != PROCESS_ERROR)) {
-                    //lastHitUpdateOK = (*simulation)[0]->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                    //lastHitUpdateOK = simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 }
                 if (eos) {
                     if (GetLocalState() != PROCESS_ERROR) {
@@ -605,7 +606,8 @@ bool SimulationController::Load() {
     bool loadError = false;
     // Load geometry
 
-    for (auto & sim : *simulation) {
+    auto* sim = simulation;
+    //for (auto & sim : *simulation) {
         if (sim->model.vertices3.empty()) {
             char err[512];
             sprintf(err, "Loaded empty 'geometry' (%zd Bytes)", procInfo->cmdParam);
@@ -613,14 +615,20 @@ bool SimulationController::Load() {
             loadError = true;
             return loadError;
         }
+    //}
+
+    {
+        size_t randomCounter = 0;
+#pragma omp parallel for default(none) shared(randomCounter)
+        for (int i = 0; i < (int)1e3; ++i) {
+#pragma omp critical
+            randomCounter += i ;
+        }
+        DEBUG_PRINT("[OMP] Init: %zu\n",randomCounter);
     }
 
-#pragma omp parallel for default(none) shared(loadError)
-    for (int i = 0; i < simulation->size(); ++i) {
-        if (simulation->at(i)->LoadSimulation(&simulation->at(0)->model, procInfo->subProcInfo[i].statusString)) {
-#pragma omp critical
-            loadError = true;
-        }
+    if (simulation->LoadSimulation(&simulation->model, procInfo->subProcInfo[0].statusString)) {
+        loadError = true;
     }
     return !loadError;
 }
@@ -630,12 +638,13 @@ bool SimulationController::UpdateParams() {
     // Load geometry
 
     //bool result = simulation->UpdateOntheflySimuParams(loader);
-    for (auto &sim : *simulation) {
+    auto* sim = simulation;
+    //for (auto &sim : *simulation) {
         if (sim->model.otfParams.enableLogging) {
             printf("Logging with size limit %zd\n",
                    sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
         }
         sim->ReinitializeParticleLog();
-    }
+    //}
     return true;
 }

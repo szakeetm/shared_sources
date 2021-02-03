@@ -63,14 +63,14 @@ protected:
     size_t GetLocalState() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                         std::vector<SimulationUnit *> *simulationInstance, ProcComm *pInfo);
+                         SimulationUnit *simulationInstance, ProcComm *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
 protected:
 
-    std::vector<SimulationUnit*>* simulation; //
+    SimulationUnit* simulation;
     std::vector<SimThread> simThreads;
 
     ProcComm* procInfo;

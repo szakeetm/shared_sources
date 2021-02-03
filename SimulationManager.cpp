@@ -253,7 +253,7 @@ int SimulationManager::CreateCPUHandle() {
         simUnits[t] = new Simulation();
     }
     simController.emplace_back(SimulationController{processId, 0, nbThreads,
-                                                    reinterpret_cast<std::vector<SimulationUnit *> *>(&simUnits), &procInformation});
+                                                    simUnits.back(), &procInformation});
     simHandles.emplace_back(
             /*StartProc(arguments, STARTPROC_NOWIN),*/
             std::thread(&SimulationController::controlledLoop,&simController[0],NULL,nullptr),
