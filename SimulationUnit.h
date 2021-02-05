@@ -8,9 +8,12 @@
 //#include "MolflowHitCounter.h"
 #include "SMP.h"
 #include "Buffer_shared.h"
+#include "../src/Simulation/Particle.h"
 #include <../src/GeometrySimu.h>
 
-class CurrentParticleStatus;
+namespace MFSim {
+    class Particle;
+}
 
 struct SubProcessFacetTempVar {
     // Temporary var (used in Intersect for collision)
@@ -52,7 +55,7 @@ public:
     virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
-    virtual CurrentParticleStatus* GetParticle(size_t i) = 0;
+    virtual MFSim::Particle * GetParticle(size_t i) = 0;
     virtual void SetNParticle(size_t n) = 0;
 public:
     SimulationModel model;

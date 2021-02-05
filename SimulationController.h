@@ -26,7 +26,7 @@ public:
     char** status;
     ProcComm* procInfo;
     SimulationUnit* simulation;
-    CurrentParticleStatus* particle;
+    MFSim::Particle* particle;
     bool runLoop();
 
 private:

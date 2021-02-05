@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <algorithm> //std::find
 #include <string>
 #include <cassert>
+#include <Vector.h>
 
 bool    IsEqual(const double &a, const double &b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
@@ -89,6 +90,11 @@ size_t GetSysTimeMs();
 
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t &startIndex);
+
+std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
+Vector3d
+PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+                 const bool &reverse); //sets sHandle->currentParticle.direction
 
 //Elementwise addition of two vectors:
 #include <algorithm>
