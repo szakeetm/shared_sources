@@ -130,8 +130,9 @@ public:
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();
 	size_t GetTexRamSize();
-	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir);
-	void  BuildTexture(TextureCell *texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
+	size_t GetTexRamSizeForRatio(double ratio) const;
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
+    void  BuildTexture(TextureCell *texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
 	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, TextureCell* texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
 	double GetSmooth(const int &i, const int &j, TextureCell *texture, const size_t& textureMode, const float &scaleF);
 #endif
