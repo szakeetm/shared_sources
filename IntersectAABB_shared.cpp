@@ -450,7 +450,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 }
 
 std::tuple<bool, SubprocessFacet *, double>
-Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir) {
+Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
 	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
@@ -471,7 +471,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 	currentParticle.transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-    IntersectTree(currentParticle, *currentParticle.model->structures[currentParticle.structureId].aabbTree, rayPos, -1.0 * rayDir,
+    IntersectTree(currentParticle, *bvh, rayPos, -1.0 * rayDir,
                   currentParticle.lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params

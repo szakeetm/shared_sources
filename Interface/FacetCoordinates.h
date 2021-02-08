@@ -28,7 +28,7 @@ class GLButton;
 #include <vector>
 
 class Worker;
-class Facet;
+class InterfaceFacet;
 
 struct line;
 
@@ -57,7 +57,7 @@ private:
   
 
   Worker       *worker;
-  Facet        *selFacet;
+  InterfaceFacet        *selFacet;
   GLList       *facetListC;
   GLButton     *dismissButton;
   GLButton     *updateButton; //apply

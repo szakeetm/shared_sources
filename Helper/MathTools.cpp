@@ -105,7 +105,7 @@ char* FormatMemoryLL(long long size) {
 
 	static char ret[256];
 	const char *suffixStr[] = { "KB", "MB", "GB", "TB", "PB" };
-	double dSize = (double)size;
+	auto dSize = static_cast<double>(size);
 	int suffix = 0;
 
 	while (dSize >= 1024.0 && suffix < 4) {
@@ -114,7 +114,7 @@ char* FormatMemoryLL(long long size) {
 	}
 
 	if (suffix == 0) {
-		sprintf(ret, "%u bytes", (unsigned int)size);
+		sprintf(ret, "%u bytes", static_cast<unsigned int>(size));
 	}
 	else {
 		if (fabs(dSize - floor(dSize)) < 1e-3)
@@ -126,7 +126,7 @@ char* FormatMemoryLL(long long size) {
 
 }
 
-double my_erf(double x)
+[[maybe_unused]] double my_erf(double x)
 {
 	// constants
 	double a1 = 0.254829592;
@@ -179,9 +179,9 @@ double InterpolateXY(const double & lookupValue, const std::vector<std::pair<dou
 		lowerIndex = 0;
 		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first); //return first element
 	}
-	else if (lowerIndex == (table.size() - 1)) {
+	else if (lowerIndex == (static_cast<int>(table.size()) - 1)) {
 		if (allowExtrapolate) {
-			lowerIndex = (int)table.size() - 2;
+			lowerIndex = static_cast<int>(table.size()) - 2;
 		}
 		else return GetElement(table[lowerIndex], !first); //return last element
 	}
@@ -202,7 +202,7 @@ double InterpolateVectorX(const double& y, const std::vector < std::pair<double,
 	//firstToSecond: either unused or selector between first and second element of pairs to search for lookupValue
 	//param2: either size of pointer A or index of element to search lookupValue in the second element of the pairs
 	//elementIndex: which index of the vector to use for interpolation
-	bool first = false;
+	const bool first = false;
 	double lookupValue = y;
 
 	if (table.size() == 1) return GetElement(table[0], !first, elementIndex);
@@ -213,9 +213,9 @@ double InterpolateVectorX(const double& y, const std::vector < std::pair<double,
 		lowerIndex = 0;
 		if (!allowExtrapolate) return GetElement(table[lowerIndex], !first, elementIndex); //return first element
 	}
-	else if (lowerIndex == (table.size() - 1)) {
+	else if (lowerIndex == (static_cast<int>(table.size()) - 1)) {
 		if (allowExtrapolate) {
-			lowerIndex = (int)table.size() - 2;
+			lowerIndex = static_cast<int>(table.size()) - 2;
 		}
 		else return GetElement(table[lowerIndex], !first, elementIndex); //return last element
 	}
@@ -238,9 +238,9 @@ std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::p
 		lowerIndex = 0;
 		if (!allowExtrapolate) return table[lowerIndex].second; //return first element
 	}
-	else if (lowerIndex == (table.size() - 1)) {
+	else if (lowerIndex == (static_cast<int>(table.size()) - 1)) {
 		if (allowExtrapolate) {
-			lowerIndex = (int)table.size() - 2;
+			lowerIndex = static_cast<int>(table.size()) - 2;
 		}
 		else return table[lowerIndex].second; //return last element
 	}
@@ -303,7 +303,7 @@ double FastLookupY(const double& x, const std::vector<std::pair<double, double>>
 */
 
 
-int my_lower_bound(const double & key, double* A,const size_t& size)
+int my_lower_bound(const double & key, const double* A,const size_t& size)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
 //key: searched value
 //A: the lookup table
@@ -405,7 +405,7 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
  * @param moments vector of time intervals
  * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
  */
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
+[[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
     /*int lowerBound = my_lower_bound(key, moments, true);
     if(lowerBound != -1 && lowerBound < moments.size()){
         if(moments[lowerBound].first <= key && key < moments[lowerBound].second){
@@ -417,7 +417,7 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
     --lowerBound; //even moments.end() can be a bound
 
     if(lowerBound->first <= key && key < lowerBound->second){
-        return std::distance(moments.begin(), lowerBound) + 1;
+        return static_cast<int>(std::distance(moments.begin(), lowerBound) + 1);
     }
     return -1;
 }
@@ -438,7 +438,7 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
         --lowerBound; //even moments.end() can be a bound
 
         if (lowerBound->first <= key && key < lowerBound->second) {
-            return std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1;
+            return static_cast<int>(std::distance(moments.begin() + startIndex, lowerBound) + startIndex + 1);
         }
     }
     return -1;
@@ -527,7 +527,8 @@ inline double GetElement(const std::pair<double, std::vector<double>>& pair, con
 	return first ? pair.first : pair.second[elementIndex];
 }
 
-size_t GetSysTimeMs()
+// Deprecated timer method, use Chronometer class now
+[[maybe_unused]] size_t GetSysTimeMs()
 {
 	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 		std::chrono::system_clock::now().time_since_epoch()

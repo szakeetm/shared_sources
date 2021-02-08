@@ -164,7 +164,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 		if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
 														   // Main facet params
 			// Current facet
-			Facet *f = facets[i];
+			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
 
 			// Detect non visible edge
@@ -238,7 +238,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 //Unused
 void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 	mApp->changedSinceSave = true;
-	Facet *f;
+	InterfaceFacet *f;
 	for (int i = 0; i < nbNonSimple; i++) {
 		f = GetFacet(nonSimpleList[i]);
 		if (f->nonSimple) {
@@ -265,10 +265,10 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 	prg->SetMessage("Comparing facets...");
 	for (i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
 		mApp->DoEvents(); //Catch possible cancel press
-		Facet *f1 = facets[i];
+		InterfaceFacet *f1 = facets[i];
 		prg->SetProgress(double(i) / double(sh.nbFacet));
 		for (size_t j = i + 1; !work->abortRequested && j < sh.nbFacet; j++) {
-			Facet *f2 = facets[j];
+			InterfaceFacet *f2 = facets[j];
 			size_t c1, c2, l;
 			if (GetCommonEdges(facets[i], facets[j], &c1, &c2, &l)) {
 				double dotProduct = Dot(f1->sh.N, f2->sh.N);
@@ -344,8 +344,8 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 
 	//a new facet
 	sh.nbFacet++;
-	facets = (Facet **)realloc(facets, sh.nbFacet * sizeof(Facet *));
-	facets[sh.nbFacet - 1] = new Facet(vertexIds.size());
+	facets = (InterfaceFacet **)realloc(facets, sh.nbFacet * sizeof(InterfaceFacet *));
+	facets[sh.nbFacet - 1] = new InterfaceFacet(vertexIds.size());
 	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	UnselectAll();
 	facets[sh.nbFacet - 1]->selected = true;
@@ -447,8 +447,8 @@ void Geometry::CreateDifference() {
 
 	//a new facet
 	sh.nbFacet++;
-	facets = (Facet **)realloc(facets, sh.nbFacet * sizeof(Facet *));
-	facets[sh.nbFacet - 1] = new Facet(facets[firstFacet]->sh.nbIndex + facets[secondFacet]->sh.nbIndex + 2);
+	facets = (InterfaceFacet **)realloc(facets, sh.nbFacet * sizeof(InterfaceFacet *));
+	facets[sh.nbFacet - 1] = new InterfaceFacet(facets[firstFacet]->sh.nbIndex + facets[secondFacet]->sh.nbIndex + 2);
 	facets[sh.nbFacet - 1]->sh.sticking = 0.0;
 	//set selection
 	UnselectAll();
@@ -515,7 +515,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 
 	//a new facet
 	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
-	facets = (Facet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(Facet *));
+	facets = (InterfaceFacet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(InterfaceFacet *));
 	//set selection
 	UnselectAll();
 	std::vector<InterfaceVertex> newVertices;
@@ -549,7 +549,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 			nbVertex += 2 + solution.Childs[i]->Childs[holeIndex]->Contour.size();
 		}
 
-		Facet *f = new Facet(nbVertex);
+		InterfaceFacet *f = new InterfaceFacet(nbVertex);
 		for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) {
 			Vector2d vert;
 			for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
@@ -685,7 +685,7 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
-void Geometry::RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
+void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
 	int foundId = -1;
 	for (size_t k = 0; foundId == -1 && k < facets[id1]->sh.nbIndex; k++) { //Check if part of facet 1
 		double dist = (vert - facets[id1]->vertices2[k]).Norme();
@@ -759,7 +759,7 @@ InterfaceVertex* Geometry::GetVertex(size_t idx) {
 	return &(vertices3[idx]);
 }
 
-Facet *Geometry::GetFacet(size_t facet) {
+InterfaceFacet *Geometry::GetFacet(size_t facet) {
 	if (facet >= sh.nbFacet || facet < 0) {
 		char errMsg[512];
 		sprintf(errMsg, "Geometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
@@ -931,7 +931,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 
 	// Update facets indices
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		prg->SetProgress(((double)i / (double)sh.nbFacet) * 0.05 + 0.45);
 		for (int j = 0; j < f->sh.nbIndex; j++)
 			f->indices[j] = idx[f->indices[j]];
@@ -942,7 +942,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 
 }
 
-bool Geometry::GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength) {
+bool Geometry::GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength) {
 
 	// Detect common edge between facet
 	size_t p11, p12, p21, p22, lgth, si, sj;
@@ -1033,7 +1033,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 	}
 	mApp->changedSinceSave = true;
 	for (auto i:facetList) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		f->SwapNormal();
 		InitializeGeometry((int)i);
 		try {
@@ -1085,7 +1085,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 			size_t nbNewFacets = facets[sourceFacetId]->sh.nbIndex;
 			if (mode == 3) nbNewFacets *= (steps);
 			nbNewFacets++; //End cap facet
-			facets = (Facet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(Facet *));
+			facets = (InterfaceFacet **)realloc(facets, (sh.nbFacet + nbNewFacets) * sizeof(InterfaceFacet *));
 
 			//create new vertices
 			if (mode == 1 || mode == 2) {
@@ -1107,7 +1107,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 
 			//Create end cap
 			size_t endCapId = sh.nbFacet + nbNewFacets - 1; //last facet
-			facets[endCapId] = new Facet(facets[sourceFacetId]->sh.nbIndex);
+			facets[endCapId] = new InterfaceFacet(facets[sourceFacetId]->sh.nbIndex);
 			facets[endCapId]->selected = true;
 			if (viewStruct != -1) facets[endCapId]->sh.superIdx = viewStruct;
 			for (int j = 0; j < facets[sourceFacetId]->sh.nbIndex; j++)
@@ -1118,7 +1118,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 			//if (Dot(&dir2, &facets[sourceFacetId]->wp.N) * distanceORradius < 0.0) direction *= -1; //extrusion towards normal or opposite?
 			for (size_t step = 0; step < ((mode == 3) ? steps : 1); step++) {
 				for (size_t j = 0; j < facets[sourceFacetId]->sh.nbIndex; j++) {
-					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j] = new Facet(4);
+					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j] = new InterfaceFacet(4);
 					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j]->indices[0] = (step == 0) ? facets[sourceFacetId]->indices[j] : sh.nbVertex + (step - 1)*facets[sourceFacetId]->sh.nbIndex + j;
 					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j]->indices[1] = sh.nbVertex + j + (step)*facets[sourceFacetId]->sh.nbIndex;
 					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j]->indices[2] = sh.nbVertex + (j + 1) % facets[sourceFacetId]->sh.nbIndex + (step)*facets[sourceFacetId]->sh.nbIndex;
@@ -1147,7 +1147,7 @@ void Geometry::ShiftVertex() {
 	mApp->changedSinceSave = true;
 	DeleteGLLists(true, true);
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (f->selected) {
 			f->ShiftVertex();
 			InitializeGeometry(i);// Reinitialise geom
@@ -1164,17 +1164,17 @@ void Geometry::ShiftVertex() {
 	BuildGLList();
 }
 
-void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF) {
+void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) {
 	mApp->changedSinceSave = true;
 	// Merge the current geometry with the specified one
 	if (!nbV || !nbF) return;
 
 	// Reallocate mem
-	Facet   **nFacets = (Facet **)malloc((sh.nbFacet + nbF) * sizeof(Facet *));
+	InterfaceFacet   **nFacets = (InterfaceFacet **)malloc((sh.nbFacet + nbF) * sizeof(InterfaceFacet *));
 	//InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((wp.nbVertex + nbV) * sizeof(InterfaceVertex));
 
-	if (sh.nbFacet) memcpy(nFacets, facets, sizeof(Facet *) * sh.nbFacet);
-	memcpy(nFacets + sh.nbFacet, nF, sizeof(Facet *) * nbF);
+	if (sh.nbFacet) memcpy(nFacets, facets, sizeof(InterfaceFacet *) * sh.nbFacet);
+	memcpy(nFacets + sh.nbFacet, nF, sizeof(InterfaceFacet *) * nbF);
 
 	//if (wp.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertex) * wp.nbVertex);
 	vertices3.resize(sh.nbVertex + nbV);
@@ -1188,7 +1188,7 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF) {
 
 	// Shift indices
 	for (int i = 0; i < nbF; i++) {
-		Facet *f = facets[sh.nbFacet + i];
+		InterfaceFacet *f = facets[sh.nbFacet + i];
 		for (int j = 0; j < f->sh.nbIndex; j++)
 			f->indices[j] += sh.nbVertex;
 	}
@@ -1205,7 +1205,7 @@ int Geometry::HasIsolatedVertices() {
 	memset(check, 0, sh.nbVertex * sizeof(int));
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		for (int j = 0; j < f->sh.nbIndex; j++) {
 			check[f->indices[j]]++;
 		}
@@ -1227,7 +1227,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 	std::vector<bool> isUsed(sh.nbVertex);
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		for (int j = 0; j < f->sh.nbIndex; j++) {
 			isUsed[f->indices[j]]=true;
 		}
@@ -1257,7 +1257,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 		}
 	}
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		for (int j = 0; j < f->sh.nbIndex; j++) {
 			f->indices[j] = newIndex[f->indices[j]];
 		}
@@ -1383,7 +1383,7 @@ void Geometry::RemoveSelectedVertex() {
 	}
 
 	for (size_t c = 0; c < facetsToChange.size(); c++) {
-		Facet* f = facets[facetsToChange[c]];
+		InterfaceFacet* f = facets[facetsToChange[c]];
 		size_t nbRemove = 0;
 		for (size_t i = 0; (int)i < f->sh.nbIndex; i++) //count how many to remove			
 			if (vertices3[f->indices[i]].selected)
@@ -1408,7 +1408,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 
 	if (facetIdList.size() == 0) return;
 	mApp->changedSinceSave = true;
-	Facet   **f = (Facet **)malloc((sh.nbFacet - facetIdList.size()) * sizeof(Facet *));
+	InterfaceFacet   **f = (InterfaceFacet **)malloc((sh.nbFacet - facetIdList.size()) * sizeof(InterfaceFacet *));
 	std::vector<bool> facetSelected(sh.nbFacet, false);
 	std::vector<int> newRefs(sh.nbFacet, -1);
 	for (size_t toRemove : facetIdList) {
@@ -1442,7 +1442,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	BuildGLList();
 }
 
-void Geometry::AddFacets(std::vector<Facet*> facetList) {
+void Geometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
 	//Adds to end
 	std::vector<DeletedFacet> toRestore(facetList.size());
 	for (size_t i = 0;i < facetList.size();i++) {
@@ -1460,7 +1460,7 @@ void Geometry::RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool to
 	std::vector<int> newRefs(sh.nbFacet, -1);
 	/*for (auto& restoreFacet : deletedFacetList)
 		if (restoreFacet.ori_pos >= wp.nbFacet || toEnd) nbNew++;*/
-	Facet** tempFacets = (Facet**)malloc(sizeof(Facet*)*(sh.nbFacet + /*nbNew*/ deletedFacetList.size()));
+	InterfaceFacet** tempFacets = (InterfaceFacet**)malloc(sizeof(InterfaceFacet*) * (sh.nbFacet + /*nbNew*/ deletedFacetList.size()));
 	size_t pos = 0;
 	size_t nbInsert = 0;
 	if (toEnd) { //insert to end
@@ -1879,9 +1879,9 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
 	sh.nbVertex = vertices3.size();
 
-	facets = (Facet **)realloc(facets, (sh.nbFacet + selectedFacetIds.size()) * sizeof(Facet *)); //make space for new facets
+	facets = (InterfaceFacet **)realloc(facets, (sh.nbFacet + selectedFacetIds.size()) * sizeof(InterfaceFacet *)); //make space for new facets
 	for (size_t i = 0; i < selectedFacetIds.size(); i++) {
-		facets[sh.nbFacet + i] = new Facet(facets[selectedFacetIds[i]]->sh.nbIndex); //create new facets
+		facets[sh.nbFacet + i] = new InterfaceFacet(facets[selectedFacetIds[i]]->sh.nbIndex); //create new facets
 		facets[sh.nbFacet + i]->CopyFacetProperties(facets[selectedFacetIds[i]], false); //get properties
 		//replace indices with clones
 		for (size_t j = 0; j < facets[selectedFacetIds[i]]->sh.nbIndex; j++) {
@@ -2097,7 +2097,7 @@ struct IntersectPoint {
 
 struct IntersectFacet {
 	size_t id;
-	Facet* f;
+	InterfaceFacet* f;
 	//std::vector<std::vector<size_t>> visitedFromThisIndice;
 	std::vector<std::vector<IntersectPoint>> intersectionPointId;
 	std::vector<IntersectPoint> intersectingPoints; //Intersection points with other facets, not on own edge
@@ -2130,9 +2130,9 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 		}
 	}
 	for (size_t i = 0; i < selectedFacets.size(); i++) {
-		Facet* f1 = selectedFacets[i].f;
+		InterfaceFacet* f1 = selectedFacets[i].f;
 		for (size_t j = 0; j < selectedFacets.size(); j++) {
-			Facet* f2 = selectedFacets[j].f;
+			InterfaceFacet* f2 = selectedFacets[j].f;
 			if (i != j) {
 				size_t c1, c2, l;
 				if (!GetCommonEdges(f1, f2, &c1, &c2, &l)) {
@@ -2202,7 +2202,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	UnselectAll();
 	for (size_t facetId = 0; facetId < selectedFacets.size(); facetId++) {
 		std::vector<std::vector<EdgePoint>> clipPaths;
-		Facet *f = selectedFacets[facetId].f;
+		InterfaceFacet *f = selectedFacets[facetId].f;
 		for (size_t vertexId = 0; vertexId < selectedFacets[facetId].f->sh.nbIndex; vertexId++) { //Go through indices
 			//testPath.push_back(f->indices[vertexId]);
 			for (size_t v = 0; v < selectedFacets[facetId].intersectionPointId[vertexId].size(); v++) { //If there are intersection points on this edge, go through them 
@@ -2332,7 +2332,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 						currentVertex = (currentVertex + 1) % f->sh.nbIndex;
 					} while (currentVertex != v);
 					if (clipPath.size() > 2) {
-						Facet *f = new Facet(clipPath.size());
+						InterfaceFacet *f = new InterfaceFacet(clipPath.size());
 						for (size_t i = 0; i < clipPath.size(); i++)
 							f->indices[i] = clipPath[i];
 						f->selected = true;
@@ -2346,7 +2346,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 							facets[selectedFacets[facetId].id] = f; //replace original
 						}
 						else {//create new
-							facets = (Facet**)realloc(facets, sizeof(Facet*)*(sh.nbFacet + 1));
+							facets = (InterfaceFacet**)realloc(facets, sizeof(InterfaceFacet*) * (sh.nbFacet + 1));
 							facets[sh.nbFacet++] = f;
 							(*nbCreated)++;
 						}
@@ -2392,7 +2392,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 	std::vector<DeletedFacet> deletedFacetList;
 	size_t oldNbFacets = sh.nbFacet;
 	for (size_t i = 0; i < oldNbFacets; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (f->selected) {
 			if (prg) prg->SetProgress(double(i) / double(sh.nbFacet));
 			Vector3d intersectionPoint, intersectLineDir;
@@ -2531,10 +2531,10 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 					}
 				} while (U != clipVertices.end());
 				if (newFacetsIndices.size() > 0)
-					facets = (Facet**)realloc(facets, sizeof(Facet*)*(sh.nbFacet + newFacetsIndices.size()));
+					facets = (InterfaceFacet**)realloc(facets, sizeof(InterfaceFacet*) * (sh.nbFacet + newFacetsIndices.size()));
 				for (auto& newPolyIndices : newFacetsIndices) {
 					assert(newPolyIndices.size() >= 3);
-					Facet *newFacet = new Facet((int)newPolyIndices.size());
+					InterfaceFacet *newFacet = new InterfaceFacet((int)newPolyIndices.size());
 					(*nbCreated)++;
 					for (size_t i = 0; i < newPolyIndices.size(); i++) {
 						newFacet->indices[i] = newPolyIndices[i];
@@ -2577,17 +2577,17 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 	return deletedFacetList;
 }
 
-Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
+InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 	mApp->changedSinceSave = true;
 	// Merge 2 facets into 1 when possible and create a new facet
 	// otherwise return NULL.
 	size_t  c1,c2,l;
-	Facet *nF = NULL;
+	InterfaceFacet *nF = NULL;
 
 	if (GetCommonEdges(f1, f2, &c1, &c2, &l)) {
 		size_t commonNo = f1->sh.nbIndex + f2->sh.nbIndex - 2 * l;
 		if (commonNo == 0) { //two identical facets, so return a copy of f1
-			nF = new Facet(f1->sh.nbIndex);
+			nF = new InterfaceFacet(f1->sh.nbIndex);
 			//nF->CopyFacetProperties(f1); //Commented out: will do it in the main Collapse() function
 			for (int i = 0; i < f1->sh.nbIndex; i++)
 				nF->indices[i] = f1->GetIndex(i);
@@ -2595,7 +2595,7 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 		}
 
 		int nbI = 0;
-		nF = new Facet(commonNo);
+		nF = new InterfaceFacet(commonNo);
 		// Copy params from f1
 		//nF->CopyFacetProperties(f1); //Commented out: will do it in the main Collapse() function
 
@@ -2633,8 +2633,8 @@ Facet *Geometry::MergeFacet(Facet *f1, Facet *f2) {
 void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg) {
 	mApp->changedSinceSave = true;
 	work->abortRequested = false;
-	Facet *fi, *fj;
-	Facet *merged;
+	InterfaceFacet *fi, *fj;
+	InterfaceFacet *merged;
 
 	double totalWork = (1.0 + (double)(fT > 0.0) + (double)(lT > 0.0)); //for progress indicator
 																	  // Collapse vertex
@@ -2746,7 +2746,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 
 void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 	for (size_t i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		for (int j = 0; j < f->neighbors.size(); j++) {
 			size_t oriId = f->neighbors[j].id;
 			if (oriId >= newRefs.size()) { //Refers to a facet that didn't exist even before
@@ -2764,7 +2764,7 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 	}
 }
 
-void Geometry::MergecollinearSides(Facet *f, double lT) {
+void Geometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 	mApp->changedSinceSave = true;
 	bool collinear;
 	double linTreshold = cos(lT*PI / 180);
@@ -2790,7 +2790,7 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 	}
 }
 
-void Geometry::CalculateFacetParams(Facet* f) {
+void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	// Calculate facet normal
 	Vector3d p0 = vertices3[f->indices[0]];
 	Vector3d v1;
@@ -2965,7 +2965,7 @@ void Geometry::CreateLoft() {
 	};
 	//Find first two selected facets
 	int nbFound = 0;
-	Facet *f1, *f2;
+	InterfaceFacet *f1, *f2;
 	for (size_t i = 0; nbFound < 2 && i < sh.nbFacet; i++) {
 		if (facets[i]->selected) {
 			if (nbFound == 0) f1 = facets[i];
@@ -3119,14 +3119,14 @@ void Geometry::CreateLoft() {
 	}
 
 	//Links created, now we have to build the facets
-	std::vector<Facet*> newFacets;
+	std::vector<InterfaceFacet*> newFacets;
 	for (size_t i1 = 0; i1 < f1->sh.nbIndex; i1++) { //Cycle through all facet1 indices to create triangles and rectangles
 
 		for (size_t i2 = Next(closestIndices1[i1].index , f2->sh.nbIndex); closestIndices2[i2].index == i1; i2 = Next(i2, f2->sh.nbIndex)) {
 			//In increasing direction, cycle through those indices on facet2 that are also linked with the actual facet1 index.
 			//When two consecutive indices on facet 2 are connected with the same facet1 index, create the following triangle:
 			
-			Facet *newFacet = new Facet(3);
+			InterfaceFacet *newFacet = new InterfaceFacet(3);
 			newFacet->indices[0] = f1->indices[i1]; //actual facet1 index 
 			newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true; //next facet2 index (i2 already incremented in for cycle head)
 			newFacet->indices[2] = f2->indices[Previous(i2, f2->sh.nbIndex)]; closestIndices2[Previous(i2, f2->sh.nbIndex)].visited = true; //actual facet2 index
@@ -3140,7 +3140,7 @@ void Geometry::CreateLoft() {
 			//In decreasing direction, cycle through those indices on facet2 that are also linked with the actual facet1 index.
 			//When two consecutive indices on facet 2 are connected with the same facet1 index, create the following triangle:
 
-			Facet *newFacet = new Facet(3);
+			InterfaceFacet *newFacet = new InterfaceFacet(3);
 			newFacet->indices[0] = f1->indices[i1]; //actual facet1 index
 			newFacet->indices[1] = f2->indices[Next(i2 , f2->sh.nbIndex)]; closestIndices2[Next(i2,f2->sh.nbIndex)].visited = true; //actual facet2 index
 			newFacet->indices[2] = f2->indices[i2]; closestIndices2[i2].visited = true; //previous facet2 index (i2 already decremented in for cycle head)
@@ -3152,7 +3152,7 @@ void Geometry::CreateLoft() {
 
 		//Trivial triangle connections created. Now we're up to create rectangles. Later, if those rectangles wouldn't be planar, we'll split them to two triangles
 		bool triangle = closestIndices1[Next(i1,f1->sh.nbIndex)].index == closestIndices1[i1].index; //If the current (i1) and also the next index on facet1 are connected with the same index on facet2, then create a triangle. Else a rectangle.
-		Facet *newFacet = new Facet(triangle ? 3 : 4);
+		InterfaceFacet *newFacet = new InterfaceFacet(triangle ? 3 : 4);
 		newFacet->indices[0] = f1->indices[i1]; //Actual facet1 index
 		newFacet->indices[1] = f1->indices[Next(i1,f1->sh.nbIndex)]; //Next facet1 index
 		
@@ -3182,7 +3182,7 @@ void Geometry::CreateLoft() {
 			//Split to two triangles
 			size_t ind4[] = { newFacet->indices[0],newFacet->indices[1], newFacet->indices[2], newFacet->indices[3] };
 			delete newFacet;
-			newFacet = new Facet(3);
+			newFacet = new InterfaceFacet(3);
 			Vector3d diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
 			Vector3d diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
 			bool connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side. To do: detect which split would create larger total surface and use that
@@ -3193,7 +3193,7 @@ void Geometry::CreateLoft() {
 			newFacet->SwapNormal();
 			newFacets.push_back(newFacet);
 
-			newFacet = new Facet(3);
+			newFacet = new InterfaceFacet(3);
 			newFacet->indices[0] = ind4[connect_0_2 ? 0 : 1];
 			newFacet->indices[1] = ind4[2];
 			newFacet->indices[2] = ind4[3];
@@ -3210,7 +3210,7 @@ void Geometry::CreateLoft() {
 
 			do {
 				//Connect with previous
-				Facet *newFacet = new Facet(3);
+				InterfaceFacet *newFacet = new InterfaceFacet(3);
 				newFacet->indices[0] = f1->indices[targetIndex];
 				newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true;
 				newFacet->indices[2] = f2->indices[Previous(i2, f2->sh.nbIndex)]; closestIndices2[Previous(i2, f2->sh.nbIndex)].visited = true;
@@ -3221,7 +3221,7 @@ void Geometry::CreateLoft() {
 			} while (closestIndices2[i2].visited == false);
 			//last
 				//Connect with next for the last unvisited
-			Facet *newFacet = new Facet(3);
+			InterfaceFacet *newFacet = new InterfaceFacet(3);
 			newFacet->indices[0] = f1->indices[targetIndex];
 			newFacet->indices[1] = f2->indices[i2]; closestIndices2[i2].visited = true;
 			newFacet->indices[2] = f2->indices[Previous(i2, f2->sh.nbIndex)]; closestIndices2[Previous(i2, f2->sh.nbIndex)].visited = true;
@@ -3233,7 +3233,7 @@ void Geometry::CreateLoft() {
 	
 
 	//Register new facets
-	if (newFacets.size() > 0) facets = (Facet**)realloc(facets, sizeof(Facet*)*(sh.nbFacet + newFacets.size()));
+	if (newFacets.size() > 0) facets = (InterfaceFacet**)realloc(facets, sizeof(InterfaceFacet*) * (sh.nbFacet + newFacets.size()));
 	for (size_t i = 0; i < newFacets.size(); i++)
 		facets[sh.nbFacet + i] = newFacets[i];
 	sh.nbFacet += newFacets.size();
@@ -3284,7 +3284,7 @@ void Geometry::Rebuild() {
 
 void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
-    Facet *f = facets[facetId];
+    InterfaceFacet *f = facets[facetId];
     double nU = f->sh.U.Norme();
     double nV = f->sh.V.Norme();
 
@@ -3302,7 +3302,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
 void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
-	Facet *f = facets[facetId];
+	InterfaceFacet *f = facets[facetId];
 	double nU = f->sh.U.Norme();
 	double nV = f->sh.V.Norme();
 
@@ -3337,7 +3337,7 @@ void Geometry::AdjustProfile() {
 
 	// Backward compatibily with TXT profile (To be improved)
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (f->sh.profileType == PROFILE_U) {
 			Vector3d v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
 			double n0 = v0.Norme();
@@ -3395,8 +3395,8 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 
 	// Allocate mem
 	sh.nbVertex = 3 * sh.nbFacet;
-	facets = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
-	memset(facets, 0, sh.nbFacet * sizeof(Facet *));
+	facets = (InterfaceFacet **)malloc(sh.nbFacet * sizeof(InterfaceFacet *));
+	memset(facets, 0, sh.nbFacet * sizeof(InterfaceFacet *));
 	/*vertices3 = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
 	memset(vertices3, 0, wp.nbVertex * sizeof(InterfaceVertex));*/
 	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
@@ -3409,7 +3409,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 			vertices3[3 * nb + 0].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v1]);
 			vertices3[3 * nb + 1].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v2]);
 			vertices3[3 * nb + 2].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v3]);
-			facets[nb] = new Facet(3);
+			facets[nb] = new InterfaceFacet(3);
 			facets[nb]->indices[0] = 3 * nb + 0;
 			facets[nb]->indices[1] = 3 * nb + 1;
 			facets[nb]->indices[2] = 3 * nb + 2;
@@ -3533,13 +3533,13 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 
 	// Allocate memory
 	if (!insert) { //load
-		facets = (Facet**)calloc(nbNewFacets , sizeof(Facet*));
+		facets = (InterfaceFacet**)calloc(nbNewFacets , sizeof(InterfaceFacet*));
 		if (!facets) throw Error("Out of memory: LoadSTL");
 		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
 	}
 	else { //insert
-		facets = (Facet**)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet**));
-		memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet*));
+		facets = (InterfaceFacet**)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(InterfaceFacet**));
+		memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(InterfaceFacet*));
 		vertices3.resize(sh.nbVertex + 3 * nbNewFacets);
 	}
 
@@ -3588,7 +3588,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 			file->ReadKeyword("endfacet");
 
 			try {
-				facets[oldFacetNb + globalId] = new Facet(3);
+				facets[oldFacetNb + globalId] = new InterfaceFacet(3);
 			}
 			catch (...) {
 				sh.nbFacet = oldFacetNb + globalId;
@@ -3708,8 +3708,8 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	sh.nbFacet = file->ReadInt();
 
 	// Allocate memory
-	Facet   **f = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
-	memset(f, 0, sh.nbFacet * sizeof(Facet *));
+	InterfaceFacet   **f = (InterfaceFacet **)malloc(sh.nbFacet * sizeof(InterfaceFacet *));
+	memset(f, 0, sh.nbFacet * sizeof(InterfaceFacet *));
 	
 	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
 	/*
@@ -3727,7 +3727,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	// Read geometry facets (indexed from 1)
 	for (int i = 0; i < sh.nbFacet; i++) {
 		int nb = file->ReadInt();
-		f[i] = new Facet(nb);
+		f[i] = new InterfaceFacet(nb);
 		for (int j = 0; j < nb; j++) {
 			f[i]->indices[j] = file->ReadInt() - 1;
 			if (f[i]->indices[j] >= sh.nbVertex) {
@@ -3765,8 +3765,8 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	int nbNewFacets = file->ReadInt();
 
 	// Allocate memory
-	facets = (Facet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet **));
-	memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet *));
+	facets = (InterfaceFacet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(InterfaceFacet **));
+	memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(InterfaceFacet *));
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
 	
 	/*
@@ -3789,7 +3789,7 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	// Read geometry facets (indexed from 1)
 	for (size_t i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
 		size_t nb = file->ReadSizeT();
-		*(facets + i) = new Facet(nb);
+		*(facets + i) = new InterfaceFacet(nb);
 		(facets)[i]->selected = true;
 		for (size_t j = 0; j < nb; j++)
 			(facets)[i]->indices[j] = file->ReadSizeT() - 1 + sh.nbVertex;
@@ -3977,8 +3977,8 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	file->ReadKeyword("}");
 
 	// Reallocate memory
-	facets = (Facet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet **));
-	memset(*facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet *));
+	facets = (InterfaceFacet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(InterfaceFacet **));
+	memset(*facets + sh.nbFacet, 0, nbNewFacets * sizeof(InterfaceFacet *));
 	/*
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
 	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertex));
@@ -4054,7 +4054,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 			throw Error(errMsg);
 		}
 
-		facets[i] = new Facet(nb);
+		facets[i] = new InterfaceFacet(nb);
 		facets[i]->LoadGEO(file, version2, nbNewVertex);
 		facets[i]->selected = true;
 		for (int j = 0; j < nb; j++)
@@ -4105,7 +4105,7 @@ void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
     f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {
         prg->SetProgress((double)i / (double)triangulatedGeometry.size());
-        Facet* fac = triangulatedGeometry[i];
+        InterfaceFacet* fac = triangulatedGeometry[i];
         f->Write("\tfacet normal ");
         f->Write(fac->sh.N.x);f->Write(fac->sh.N.y);f->Write(fac->sh.N.z,"\n");
         f->Write("\t\touter loop\n");
@@ -4141,7 +4141,7 @@ void Geometry::SaveSuper(int s) {
 	int nbF = 0;
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (f->sh.superIdx == s) {
 			for (int j = 0; j < f->sh.nbIndex; j++)
 				refIdx[f->indices[j]] = 1;
@@ -4175,7 +4175,7 @@ void Geometry::SaveSuper(int s) {
 
 	// Facets
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		int j;
 		if (f->sh.superIdx == s) {
 			file->Write(f->sh.nbIndex, " ");
@@ -4189,7 +4189,7 @@ void Geometry::SaveSuper(int s) {
 	for (int i = 0; i < sh.nbFacet; i++) {
 
 		// Update facet hits from shared mem
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (f->sh.superIdx == s) {
 			f->SaveTXT(file);
 		}
@@ -4342,7 +4342,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, double*
 	sh.nbVertex += VtoAdd;
 
 	// Update facet
-	Facet   **f = (Facet **)malloc((sh.nbFacet + FtoAdd - selectedFacets.size()) * sizeof(Facet *));
+	InterfaceFacet   **f = (InterfaceFacet **)malloc((sh.nbFacet + FtoAdd - selectedFacets.size()) * sizeof(InterfaceFacet *));
 
 	auto nbS = selectedFacets.size(); //to remember it after RemveSelected() routine
 									  // Delete selected facets
@@ -4419,7 +4419,7 @@ std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
 }
 
 #if defined(MOLFLOW)
-PhysicalValue Geometry::GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
+PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value
 	//buff is either NULL or a (BYTE*) pointer to texture or direction buffer, must be locked by AccessDataport before call

@@ -634,17 +634,12 @@ bool SimulationController::Load() {
 }
 
 bool SimulationController::UpdateParams() {
-
     // Load geometry
-
-    //bool result = simulation->UpdateOntheflySimuParams(loader);
     auto* sim = simulation;
-    //for (auto &sim : *simulation) {
-        if (sim->model.otfParams.enableLogging) {
-            printf("Logging with size limit %zd\n",
-                   sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
-        }
-        sim->ReinitializeParticleLog();
-    //}
+    if (sim->model.otfParams.enableLogging) {
+        printf("Logging with size limit %zd\n",
+               sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
+    }
+    sim->ReinitializeParticleLog();
     return true;
 }

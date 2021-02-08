@@ -26,11 +26,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class GeometryConverter {
 
     static int  FindEar(const GLAppPolygon& p);
-    static std::vector<Facet*> Triangulate(Facet *f);
+    static std::vector<InterfaceFacet*> Triangulate(InterfaceFacet *f);
     //void Triangulate(Facet *f);
-    static Facet* GetTriangleFromEar(Facet *f, const GLAppPolygon& p, int ear);
+    static InterfaceFacet* GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear);
 public:
-    static std::vector<Facet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
+    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
     static void PolygonsToTriangles(Geometry* geometry);
     static void PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices);
 };
