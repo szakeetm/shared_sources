@@ -451,7 +451,7 @@ void Interface::UpdateModelParams() {
     AxisAlignedBoundingBox bb = geom->GetBB();
 
     for (int i = 0; i < geom->GetNbFacet(); i++) {
-        Facet *f = geom->GetFacet(i);
+        InterfaceFacet *f = geom->GetFacet(i);
         if (f->sh.area > 0) sumArea += f->GetArea();
     }
 

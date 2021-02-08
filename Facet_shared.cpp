@@ -48,7 +48,7 @@ extern SynRad*mApp;
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-Facet::Facet(size_t nbIndex) : sh(0) {
+InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
 	vertices2.resize(nbIndex);
 	visible.resize(nbIndex);
@@ -140,7 +140,7 @@ Facet::Facet(size_t nbIndex) : sh(0) {
 	sh.isMoving = false;
 
 	hasOutgassingFile = false;
-	//outgassingMap = NULL;
+	//outgassingMapWindow = NULL;
 
 	sh.anglemapParams.record = false;
 
@@ -169,7 +169,7 @@ Facet::Facet(size_t nbIndex) : sh(0) {
 /**
 * \brief Destructor for safe deletion
 */
-Facet::~Facet() {
+InterfaceFacet::~InterfaceFacet() {
 	  SAFE_FREE(cellPropertiesIds);
 	  SAFE_FREE(dirCache);
 	  DELETE_TEX(glTex);
@@ -180,7 +180,7 @@ Facet::~Facet() {
 		  SAFE_FREE(meshvector[i].points);
 	  SAFE_FREE(meshvector);
 #if defined(MOLFLOW)
-	  //SAFE_FREE(outgassingMap);
+	  //SAFE_FREE(outgassingMapWindow);
 	  //SAFE_FREE(angleMapCache);
 #endif
 }
@@ -230,7 +230,7 @@ void Facet::DetectOrientation() {
 * \brief Restore texture and geometry information
 * \return if restoration was okay
 */
-int Facet::RestoreDeviceObjects() {
+int InterfaceFacet::RestoreDeviceObjects() {
 
 	// Initialize scene objects (OpenGL)
 	if (sh.isTextured) {
@@ -249,7 +249,7 @@ int Facet::RestoreDeviceObjects() {
 * \brief Invalidate texture and geometry information
 * \return if invalidation was okay
 */
-int Facet::InvalidateDeviceObjects() {
+int InterfaceFacet::InvalidateDeviceObjects() {
 
 	// Free all alocated resource (OpenGL)
 	DELETE_TEX(glTex);
@@ -267,7 +267,7 @@ int Facet::InvalidateDeviceObjects() {
 * \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
 * \return true if texture was set
 */
-bool Facet::SetTexture(double width, double height, bool useMesh) {
+bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	bool dimOK = (width*height > 0.0000001);
 
@@ -337,7 +337,7 @@ bool Facet::SetTexture(double width, double height, bool useMesh) {
 * \param u local u coordinate of facet
 * \param v local v coordinate of facet
 */
-void Facet::glVertex2u(double u, double v) {
+void InterfaceFacet::glVertex2u(double u, double v) {
 
 	glVertex3d(sh.O.x + sh.U.x*u + sh.V.x*v,
 		sh.O.y + sh.U.y*u + sh.V.y*v,
@@ -349,7 +349,7 @@ void Facet::glVertex2u(double u, double v) {
 * \brief Allocate memory for mesh and initialise
 * \return true if mesh properly build
 */
-bool Facet::BuildMesh() {
+bool InterfaceFacet::BuildMesh() {
 
 	if (!(cellPropertiesIds = (int *)malloc(sh.texWidth * sh.texHeight * sizeof(int))))
 	{
@@ -523,7 +523,7 @@ bool Facet::BuildMesh() {
 /**
 * \brief Build OpenGL geometry for meshing
 */
-void Facet::BuildMeshGLList() {
+void InterfaceFacet::BuildMeshGLList() {
 
 	if (!cellPropertiesIds)
 
@@ -574,7 +574,7 @@ void Facet::BuildMeshGLList() {
 /**
 * \brief Build GL List for selected elements
 */
-void Facet::BuildSelElemList() {
+void InterfaceFacet::BuildSelElemList() {
 
 	DELETE_LIST(glSelElem);
 	int nbSel = 0;
@@ -627,7 +627,7 @@ void Facet::BuildSelElemList() {
 /**
 * \brief Clear elements from selected List
 */
-void Facet::UnselectElem() {
+void InterfaceFacet::UnselectElem() {
 
 	DELETE_LIST(glSelElem);
 	selectedElem.width = 0;
@@ -642,7 +642,7 @@ void Facet::UnselectElem() {
 * \param width width of element
 * \param height height of element
 */
-void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
+void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 
 	UnselectElem();
 
@@ -663,7 +663,7 @@ void Facet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
 /**
 * \brief For specific rendering a selected element
 */
-void Facet::RenderSelectedElem() {
+void InterfaceFacet::RenderSelectedElem() {
 	if (glSelElem) glCallList(glSelElem);
 }
 
@@ -671,7 +671,7 @@ void Facet::RenderSelectedElem() {
 * \brief Fill vertex array
 * \param v Array of vertices
 */
-void Facet::FillVertexArray(InterfaceVertex *v) {
+void InterfaceFacet::FillVertexArray(InterfaceVertex *v) {
 
 	int nb = 0;
 	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
@@ -693,7 +693,7 @@ void Facet::FillVertexArray(InterfaceVertex *v) {
 * \param useColormap if a colormap is used or not
 * \return texture swap size
 */
-size_t Facet::GetTexSwapSize(bool useColormap) {
+size_t InterfaceFacet::GetTexSwapSize(bool useColormap) {
 
 	size_t tSize = texDimW*texDimH;
 	if (useColormap) tSize = tSize * 4;
@@ -707,7 +707,7 @@ size_t Facet::GetTexSwapSize(bool useColormap) {
 * \param useColor if a colormap is used or not
 * \return texture swap size
 */
-size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
+size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -737,7 +737,7 @@ size_t Facet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 * \brief Get number of texture cells
 * \return pair of number of texture cells in both directions
 */
-std::pair<size_t, size_t> Facet::GetNbCell() {
+std::pair<size_t, size_t> InterfaceFacet::GetNbCell() {
 	return std::make_pair(sh.texHeight, sh.texWidth);
 }
 
@@ -746,7 +746,7 @@ std::pair<size_t, size_t> Facet::GetNbCell() {
 * \param ratio ratio used for size conversion
 * \return number of texture cells
 */
-size_t Facet::GetNbCellForRatio(double ratio) {
+size_t InterfaceFacet::GetNbCellForRatio(double ratio) {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -769,7 +769,7 @@ size_t Facet::GetNbCellForRatio(double ratio) {
 * \param ratioV ratio in V direction used for size conversion
 * \return number of texture cells
 */
-std::pair<size_t, size_t> Facet::GetNbCellForRatio(double ratioU, double ratioV) {
+std::pair<size_t, size_t> InterfaceFacet::GetNbCellForRatio(double ratioU, double ratioV) {
 
     double nU = sh.U.Norme();
     double nV = sh.V.Norme();
@@ -791,7 +791,7 @@ std::pair<size_t, size_t> Facet::GetNbCellForRatio(double ratioU, double ratioV)
 /**
 * \brief Revert vertex order
 */
-void Facet::SwapNormal() {
+void InterfaceFacet::SwapNormal() {
 
 	// Revert vertex order (around the second point)
 
@@ -817,7 +817,7 @@ void Facet::SwapNormal() {
 * \brief Shift vertex order by offset to the left
 * \param offset offset for left shift
 */
-void Facet::ShiftVertex(const int& offset) {
+void InterfaceFacet::ShiftVertex(const int& offset) {
 	// Shift vertex
 	/*
 	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
@@ -833,7 +833,7 @@ void Facet::ShiftVertex(const int& offset) {
 /**
 * \brief Detect non visible edge (for polygon which contains holes)
 */
-void Facet::InitVisibleEdge() {
+void InterfaceFacet::InitVisibleEdge() {
 
 	// Detect non visible edge (for polygon which contains holes)
 	std::fill(visible.begin(), visible.end(), true);
@@ -862,7 +862,7 @@ void Facet::InitVisibleEdge() {
 * \param idx index
 * \return vertex index
 */
-size_t Facet::GetIndex(int idx) {
+size_t InterfaceFacet::GetIndex(int idx) {
 	if (idx < 0) {
 		return indices[(sh.nbIndex + idx) % sh.nbIndex];
 	}
@@ -876,7 +876,7 @@ size_t Facet::GetIndex(int idx) {
 * \param idx index
 * \return vertex index
 */
-size_t Facet::GetIndex(size_t idx) {
+size_t InterfaceFacet::GetIndex(size_t idx) {
 		return indices[idx % sh.nbIndex];
 }
 
@@ -886,7 +886,7 @@ size_t Facet::GetIndex(size_t idx) {
 * \param correct2sides if correction for 2 sided meshes should be applied (use factor 2)
 * \return mesh area
 */
-double Facet::GetMeshArea(size_t index,bool correct2sides) {
+double InterfaceFacet::GetMeshArea(size_t index, bool correct2sides) {
 	if (!cellPropertiesIds) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
 		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatioU*tRatioV);
@@ -904,7 +904,7 @@ double Facet::GetMeshArea(size_t index,bool correct2sides) {
 * \param index of mesh
 * \return number of mesh points
 */
-size_t Facet::GetMeshNbPoint(size_t index) {
+size_t InterfaceFacet::GetMeshNbPoint(size_t index) {
 	size_t nbPts;
 	if (cellPropertiesIds[index] == -1) nbPts = 4;
 	else if (cellPropertiesIds[index] == -2) nbPts = 0;
@@ -918,7 +918,7 @@ size_t Facet::GetMeshNbPoint(size_t index) {
 * \param pointId id of the point in the mesh
 * \return Vector for mesh point
 */
-Vector2d Facet::GetMeshPoint(size_t index, size_t pointId) {
+Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
@@ -990,7 +990,7 @@ Vector2d Facet::GetMeshPoint(size_t index, size_t pointId) {
 * \param index of mesh
 * \return Vector for point in the center of a mesh
 */
-Vector2d Facet::GetMeshCenter(size_t index) {
+Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
 	Vector2d result;
 	if (!cellPropertiesIds) {
 		result.u = 0.0;
@@ -1028,7 +1028,7 @@ Vector2d Facet::GetMeshCenter(size_t index) {
 * \brief Get calculated area of a facet (depends on one or double sided)
 * \return facet area
 */
-double Facet::GetArea() {
+double InterfaceFacet::GetArea() {
 	return sh.area*(sh.is2sided ? 2.0 : 1.0);
 }
 
@@ -1036,7 +1036,7 @@ double Facet::GetArea() {
 * \brief Check if facet is a link facet
 * \return true if link facet
 */
-bool Facet::IsTXTLinkFacet() {
+bool InterfaceFacet::IsTXTLinkFacet() {
 	return ((sh.opacity == 0.0) && (sh.sticking >= 1.0));
 }
 
@@ -1044,14 +1044,14 @@ bool Facet::IsTXTLinkFacet() {
 * \brief Real center coordinate in global space
 * \return 3d vector for real center coordinate
 */
-Vector3d Facet::GetRealCenter() {
+Vector3d InterfaceFacet::GetRealCenter() {
 	return Project(sh.center, sh.O, sh.N);
 }
 
 /**
 * \brief Update if profile and texture flag
 */
-void Facet::UpdateFlags() {
+void InterfaceFacet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
 	//wp.isOpaque = (wp.opacity != 0.0);
@@ -1064,7 +1064,7 @@ void Facet::UpdateFlags() {
 * \param threshold threshold for comparison
 * \return true if coplanar and equal
 */
-bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
+bool InterfaceFacet::IsCoplanarAndEqual(InterfaceFacet *f, double threshold) {
 
 	// Detect if 2 facets are in the same plane (orientation preserving)
 	// and have same parameters (used by collapse)
@@ -1101,7 +1101,7 @@ bool Facet::IsCoplanarAndEqual(Facet *f, double threshold) {
 * \param f second facet
 * \param copyMesh if mesh values (counters) should also be copied
 */
-void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
+void InterfaceFacet::CopyFacetProperties(InterfaceFacet *f, bool copyMesh) {
 	sh.sticking = f->sh.sticking;
 	sh.opacity = f->sh.opacity;
 
@@ -1166,7 +1166,7 @@ void Facet::CopyFacetProperties(Facet *f, bool copyMesh) {
 * \brief Divide a facet to new facets, each inheriting their parent's parameters. Create one new facet of each mesh cell.
 * \return Facetgroup 
 */
-FacetGroup Facet::Explode() {
+FacetGroup InterfaceFacet::Explode() {
 	FacetGroup result;
 	result.nbV = 0;
 #ifdef MOLFLOW
@@ -1179,7 +1179,7 @@ result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0
 			try {
 				size_t nbPoints = GetMeshNbPoint(i);
 				result.nbV += nbPoints;
-				Facet *f = new Facet(nbPoints);
+				InterfaceFacet *f = new InterfaceFacet(nbPoints);
 				f->CopyFacetProperties(this); //Copies absolute outgassing
 				result.facets.push_back(f);
 			}

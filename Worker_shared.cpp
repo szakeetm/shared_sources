@@ -407,7 +407,7 @@ void Worker::Update(float appTime) {
         // Refresh local facet hit cache for the displayed moment
         size_t nbFacet = geom->GetNbFacet();
         for (size_t i = 0; i < nbFacet; i++) {
-            Facet *f = geom->GetFacet(i);
+            InterfaceFacet *f = geom->GetFacet(i);
 #if defined(SYNRAD)
             //memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
@@ -587,7 +587,7 @@ void Worker::SendFacetHitCounts() {
     size_t nbFacet = geom->GetNbFacet();
     std::vector<FacetHitBuffer*> facetHitCaches;
     for (size_t i = 0; i < nbFacet; i++) {
-        Facet *f = geom->GetFacet(i);
+        InterfaceFacet *f = geom->GetFacet(i);
         facetHitCaches.push_back(&f->facetHitCache);
     }
     simManager.ForwardFacetHitCounts(facetHitCaches);
@@ -605,7 +605,7 @@ void Worker::RetrieveHistogramCache()
 
     //FACET HISTOGRAMS
     for (size_t i = 0;i < geom->GetNbFacet();i++) {
-        Facet* f = geom->GetFacet(i);
+        InterfaceFacet* f = geom->GetFacet(i);
 #if defined(MOLFLOW)
         f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
         f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;

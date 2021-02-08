@@ -32,7 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
-class Facet;
+class InterfaceFacet;
 class DeletedFacet;
 class Worker;
 class FileReader;
@@ -87,8 +87,8 @@ public:
 class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
-	void CalculateFacetParams(Facet *f);
-	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
+	void CalculateFacetParams(InterfaceFacet *f);
+	void Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF); // Merge geometry
 	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
@@ -98,21 +98,18 @@ protected:
 	void BuildNonPlanarList();
 	void BuildVolumeFacetList();
 
-	float getMaxDistToCamera(Facet* f);
-	int compareFacetDepth(Facet* lhs, Facet* rhs);
+	float getMaxDistToCamera(InterfaceFacet* f);
+	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs);
 public:
 	Geometry();
 	virtual ~Geometry();
 
-#if defined(MOLFLOW)
-	virtual void ExportTextures(FILE *f, int grouping, int mode, BYTE *buffer, bool saveSelected) {}
-#endif
 #if defined(SYNRAD)
 	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
-	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
+	PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
@@ -138,9 +135,9 @@ public:
 	void ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type);
 	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type);
 	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree & solution, ClipperLib::ClipType& type);
-	void RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
+	void RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
 	void SelectCoplanar(int width, int height, double tolerance);
-	Facet    *GetFacet(size_t facet);
+	InterfaceFacet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
 	AxisAlignedBoundingBox     GetBB();
 	Vector3d GetCenter();
@@ -150,8 +147,8 @@ public:
 	// Collapsing stuff
 	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
 	bool RemoveNullFacet();
-	Facet *MergeFacet(Facet *f1, Facet *f2);
-	bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
+	InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
+	bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 
@@ -177,7 +174,7 @@ public:
 	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
 	void RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd);
-	void AddFacets(std::vector<Facet*> facetList);
+	void AddFacets(std::vector<InterfaceFacet*> facetList);
 	void RemoveSelectedVertex();
 	void RemoveFromStruct(int numToDel);
 	void CreateLoft();
@@ -205,7 +202,7 @@ public:
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
 
     void    Rebuild();
-	void	MergecollinearSides(Facet *f, double fT);
+	void	MergecollinearSides(InterfaceFacet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();
 	void    DeleteIsolatedVertices(bool selectedOnly);
@@ -216,7 +213,7 @@ public:
 	bool    GetAutoNorme();
 	void    SetCenterNorme(bool enable);
 	bool    GetCenterNorme();
-	void    BuildFacetList(Facet *f);
+	void    BuildFacetList(InterfaceFacet *f);
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
 
 	void CreateRectangle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
@@ -239,17 +236,17 @@ public:
 protected:
 	void AddToSelectionHist(size_t f);
 	bool AlreadySelected(size_t f);
-	void DrawFacet(Facet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
-	void FillFacet(Facet *f, bool addTextureCoord);
-	void AddTextureCoord(Facet *f, const Vector2d *p);
+	void DrawFacet(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
+	void FillFacet(InterfaceFacet *f, bool addTextureCoord);
+	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p);
 	void DrawPolys();
 	void DrawTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
 	int  FindEar(const GLAppPolygon& p);
-	void Triangulate(Facet *f, bool addTextureCoord);
-	void DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
+	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
+	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
 	void SelectAll();
 	void UnselectAll();
@@ -286,8 +283,8 @@ protected:
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)
 
-  // Geometry
-	Facet    **facets;    // All facets of this geometry
+    // Geometry
+	InterfaceFacet    **facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)

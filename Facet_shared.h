@@ -50,7 +50,7 @@ public:
 
 class FacetGroup; //forward declaration as it's the return value of Explode()
 
-class Facet { //Interface facet
+class InterfaceFacet { //Interface facet
 
 	typedef struct {
 		size_t u;
@@ -62,8 +62,8 @@ class Facet { //Interface facet
 public:
 
 	// Constructor/Desctructor/Initialisation
-	explicit Facet(size_t nbIndex);
-	~Facet();
+	explicit InterfaceFacet(size_t nbIndex);
+	~InterfaceFacet();
 
 	//void  DetectOrientation();
 	int   RestoreDeviceObjects();
@@ -102,8 +102,8 @@ public:
 	void  LoadTXT(FileReader *file);
 	void  SaveTXT(FileWriter *file);
 	void  LoadGEO(FileReader *file, int version, size_t nbVertex);
-	bool  IsCoplanarAndEqual(Facet *f, double threshold);
-	void  CopyFacetProperties(Facet *f, bool copyMesh = false);
+	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold);
+	void  CopyFacetProperties(InterfaceFacet *f, bool copyMesh = false);
 
 	//Different signature (and implementation)
 #if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
@@ -182,7 +182,7 @@ public:
 	std::vector<NeighborFacet> neighbors;
 
 #if defined(MOLFLOW)
-	std::vector<double> outgassingMap; //outgassing map cell values (loaded from file)
+	OutgassingMap ogMap;
     size_t* angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
 	double totalFlux;
@@ -193,23 +193,19 @@ public:
 	std::string userSticking;
 	std::string userOpacity;
 #endif
-
-#if defined(SYNRAD)
-
-#endif
 	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };
 
 class FacetGroup {
 public:
 	size_t nbV;
-	std::vector<Facet*> facets;
+	std::vector<InterfaceFacet*> facets;
 	double originalPerAreaOutgassing; //Per-area outgassing of the exploded facet
 };
 
 class DeletedFacet {
 public:
-	Facet *f;
+	InterfaceFacet *f;
 	size_t ori_pos;
 	bool replaceOri;
 };

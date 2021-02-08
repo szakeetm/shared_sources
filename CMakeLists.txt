@@ -146,7 +146,7 @@ set(SIM_FILES
         Vector.cpp
         SimulationManager.cpp
         SimulationController.cpp
-        )
+        FacetData.cpp FacetData.h)
 
 set(HELPER_FILES
         Helper/StringHelper.cpp

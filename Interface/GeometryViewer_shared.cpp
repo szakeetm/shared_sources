@@ -658,7 +658,7 @@ void GeometryViewer::DrawIndex() {
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
 	std::vector<size_t> vertexId(nbVertex);
 	for (auto& selId:selectedFacets) {
-		Facet *f = geom->GetFacet(selId);
+		InterfaceFacet *f = geom->GetFacet(selId);
 			for (size_t i = 0; i < f->sh.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;
 				vertexId[f->indices[i]] = i;
@@ -801,7 +801,7 @@ void GeometryViewer::DrawNormal() {
 
 	Geometry *geom = work->GetGeometry();
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
-		Facet *f = geom->GetFacet(i);
+		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
 			Vector3d v1 = geom->GetFacetCenter(i);
 			Vector3d v2 = f->sh.N;
@@ -824,7 +824,7 @@ void GeometryViewer::DrawNormal() {
 void GeometryViewer::DrawUV() {
 	Geometry *geom = work->GetGeometry();
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
-		Facet *f = geom->GetFacet(i);
+		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
 			const Vector3d& O = f->sh.O;
 			const Vector3d& U = f->sh.U;
@@ -874,7 +874,7 @@ void GeometryViewer::DrawFacetId() {
     std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
     std::vector<size_t> vertexId(nbVertex);
     for (auto& selId:selectedFacets) {
-        Facet *f = geom->GetFacet(selId);
+        InterfaceFacet *f = geom->GetFacet(selId);
         for (size_t i = 0; i < f->sh.nbIndex; i++) {
             vertexOnSelectedFacet[f->indices[i]] = true;
             vertexId[f->indices[i]] = i;
@@ -891,7 +891,7 @@ void GeometryViewer::DrawFacetId() {
 
     // Draw Labels
     for (auto& selId:selectedFacets) {
-        Facet *f = geom->GetFacet(selId);
+        InterfaceFacet *f = geom->GetFacet(selId);
         Vector3d center = geom->GetFacetCenter(selId);
         Vector3d origin = geom->GetFacetCenter(selId);
         Vector3d labelVec = geom->GetFacetCenter(selId);
@@ -2050,7 +2050,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		// Get facet of the selected structure
 		size_t nbF = geom->GetNbFacet();
 		for (int i = 0; i < nbF; i++) {
-			Facet *f = geom->GetFacet(i);
+			InterfaceFacet *f = geom->GetFacet(i);
 			if (f->sh.superIdx == geom->viewStruct || f->sh.superIdx == -1) {
 				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
 			}

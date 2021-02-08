@@ -295,7 +295,7 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 	for (size_t i = 0; !work->abortRequested && i < nbRec; i++) {
 		prg->SetProgress((double)i / (double)nbRec);
 		mApp->DoEvents(); //To catch eventual abort button click
-		Facet* f = work->GetGeometry()->GetFacet(work->model.otfParams.logFacetId);
+		InterfaceFacet* f = work->GetGeometry()->GetFacet(work->model.otfParams.logFacetId);
 		Vector3d hitPos = f->sh.O + log[i].facetHitPosition.u*f->sh.U + log[i].facetHitPosition.v*f->sh.V;
 		
 		double u = sin(log[i].hitTheta)*cos(log[i].hitPhi);

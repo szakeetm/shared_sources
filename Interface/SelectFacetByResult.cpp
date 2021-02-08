@@ -303,7 +303,7 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 		//Form valid, let's do the work
 		size_t nbFacet = geom->GetNbFacet();
 		for (size_t i=0;i<nbFacet;i++) {
-			Facet* f=geom->GetFacet(i);
+			InterfaceFacet* f=geom->GetFacet(i);
 			bool match=true;
 			if (do_hitLess) match = match && (f->facetHitCache.hit.nbMCHit<hitLess);
 			if (do_hitMore) match = match && (f->facetHitCache.hit.nbMCHit>hitMore);

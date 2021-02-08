@@ -170,7 +170,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 		}
 		if (src == selectButton) geom->UnselectAll();
 		for (size_t i = 0; i < geom->GetNbFacet(); i++) {
-			Facet* f = geom->GetFacet(i);
+			InterfaceFacet* f = geom->GetFacet(i);
 			bool match = f->sh.isTextured;
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) && IsEqual(ratio, f->tRatioV);
 			if (minmaxRatio) match = match && (minRatio <= f->tRatioU) && (f->tRatioU <= maxRatio) && (minRatio <= f->tRatioV) && (f->tRatioV <= maxRatio);

@@ -23,20 +23,20 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 
-std::vector<Facet*> GeometryConverter::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg)
+std::vector<InterfaceFacet*> GeometryConverter::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg)
 {
-    std::vector<Facet*> triangleFacets;
+    std::vector<InterfaceFacet*> triangleFacets;
     for (size_t i = 0; i < facetIndices.size(); i++) {
         if (prg) prg->SetProgress((double)i/(double(facetIndices.size())));
         size_t nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
         if (nb > 3) {
             // Create new triangle facets (does not invalidate old ones, you have to manually delete them)
-            std::vector<Facet*> newTriangles = Triangulate(geometry->GetFacet(facetIndices[i]));
+            std::vector<InterfaceFacet*> newTriangles = Triangulate(geometry->GetFacet(facetIndices[i]));
             triangleFacets.insert(std::end(triangleFacets), std::begin(newTriangles), std::end(newTriangles));
         }
         else {
             //Copy
-            Facet* newFacet = new Facet(nb);
+            InterfaceFacet* newFacet = new InterfaceFacet(nb);
             newFacet->indices = geometry->GetFacet(facetIndices[i])->indices;
             newFacet->CopyFacetProperties(geometry->GetFacet(facetIndices[i]), false);
             triangleFacets.push_back(newFacet);
@@ -45,12 +45,12 @@ std::vector<Facet*> GeometryConverter::GetTriangulatedGeometry(Geometry* geometr
     return triangleFacets;
 }
 
-std::vector<Facet*> GeometryConverter::Triangulate(Facet *f) {
+std::vector<InterfaceFacet*> GeometryConverter::Triangulate(InterfaceFacet *f) {
 
     // Triangulate a facet (rendering purpose)
     // The facet must have at least 3 points
     // Use the very simple "Two-Ears" theorem. It computes in O(n^2).
-    std::vector<Facet*> triangleFacets;
+    std::vector<InterfaceFacet*> triangleFacets;
     if (f->nonSimple) {
         // Not a simple polygon
         // Abort triangulation
@@ -62,7 +62,7 @@ std::vector<Facet*> GeometryConverter::Triangulate(Facet *f) {
     p.pts = f->vertices2;
     //p.sign = f->sign;
 
-    std::unique_ptr<Facet> facetCopy(new Facet(f->sh.nbIndex)); //Create a copy and don't touch original
+    std::unique_ptr<InterfaceFacet> facetCopy(new InterfaceFacet(f->sh.nbIndex)); //Create a copy and don't touch original
     facetCopy->CopyFacetProperties(f);
     facetCopy->indices = f->indices;
 
@@ -72,7 +72,7 @@ std::vector<Facet*> GeometryConverter::Triangulate(Facet *f) {
         //DrawEar(f, p, e, addTextureCoord);
 
         // Create new triangle facet and copy polygon parameters, but change indices
-        Facet* triangle = GetTriangleFromEar(facetCopy.get(), p, e);
+        InterfaceFacet* triangle = GetTriangleFromEar(facetCopy.get(), p, e);
         triangleFacets.push_back(triangle);
 
         // Remove the ear
@@ -80,7 +80,7 @@ std::vector<Facet*> GeometryConverter::Triangulate(Facet *f) {
     }
 
     // Draw the last ear
-    Facet* triangle = GetTriangleFromEar(facetCopy.get(), p, 0);
+    InterfaceFacet* triangle = GetTriangleFromEar(facetCopy.get(), p, 0);
     triangleFacets.push_back(triangle);
     //DrawEar(f, p, 0, addTextureCoord);
 
@@ -107,7 +107,7 @@ int  GeometryConverter::FindEar(const GLAppPolygon& p){
 }
 
 // Return indices to vertices3d for new triangle facet
-Facet* GeometryConverter::GetTriangleFromEar(Facet *f, const GLAppPolygon& p, int ear) {
+InterfaceFacet* GeometryConverter::GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear) {
 
     //Commented out sections: theoretically in a right-handed system the vertex order is inverse
     //However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
@@ -119,7 +119,7 @@ Facet* GeometryConverter::GetTriangleFromEar(Facet *f, const GLAppPolygon& p, in
     indices[2] = f->indices[Next(ear, p.pts.size())];
 
     // Create new triangle facet and copy polygon parameters, but change indices
-    Facet* triangle = new Facet(3);
+    InterfaceFacet* triangle = new InterfaceFacet(3);
     triangle->CopyFacetProperties(f,0);
     for (size_t i = 0; i < 3; i++) {
         triangle->indices[i] = indices[i];
@@ -137,13 +137,13 @@ Facet* GeometryConverter::GetTriangleFromEar(Facet *f, const GLAppPolygon& p, in
 // Update facet list of geometry by removing polygon facets and replacing them with triangular facets with the same properties
 void GeometryConverter::PolygonsToTriangles(Geometry* geometry) {
     auto allIndices = geometry->GetAllFacetIndices();
-    std::vector<Facet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices);
+    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices);
     geometry->RemoveFacets(allIndices);
     geometry->AddFacets(triangleFacets);
 }
 
 void GeometryConverter::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices) {
-    std::vector<Facet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices);
+    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices);
     geometry->RemoveFacets(selectedIndices);
     geometry->AddFacets(triangleFacets);
 }
