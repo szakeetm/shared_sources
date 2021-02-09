@@ -314,7 +314,7 @@ int SimulationController::ClearCommand() {
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("\n setstate %zd \n", state);
+        DEBUG_PRINT("setstate %zd \n", state);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -333,7 +333,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 int SimulationController::SetState(size_t state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("\n setstate %zd \n", state);
+        DEBUG_PRINT("setstate %zd \n", state);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -440,7 +440,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 SetState(PROCESS_STARTING, "Loading simulation");
 
                 simulation->SetNParticle(nbThreads);
-                if(1){//if(nbThreads != simThreads.size()) {
+                {//if(nbThreads != simThreads.size()) {
                     simThreads.clear();
                     simThreads.reserve(nbThreads);
                     for (size_t t = 0; t < nbThreads; t++) {
