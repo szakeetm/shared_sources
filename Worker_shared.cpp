@@ -416,7 +416,7 @@ void Worker::Update(float appTime) {
                 if (f->selected && f->sh.anglemapParams.hasRecorded)
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
-                f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf.data(); // TODO: Transform anglemapcache to vector
+                f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
             }
 #endif
         }
