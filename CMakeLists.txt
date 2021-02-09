@@ -214,7 +214,6 @@ project(${PROJECT_NAME} CXX)
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC
         ${INTERFACE_FILES}
-        ${HELPER_FILES}
         ${GL_FILES}
         )
 
