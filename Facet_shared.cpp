@@ -147,6 +147,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
 	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
 
+	angleMapCache = NULL; //SAFE_DELETE called on it, must initialize
+
 	//sh.facetHistogramParams.record = false;
 
 	totalFlux = sh.totalOutgassing = totalDose = 0.0;
