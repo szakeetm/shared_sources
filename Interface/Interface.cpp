@@ -251,6 +251,7 @@ void Interface::ResetSimulation(bool askConfirm) {
             convergencePlotter->Refresh();
         }
         if(formulaEditor) formulaEditor->UpdateValues();
+        if(particleLogger) particleLogger->UpdateStatus();
     }
     UpdatePlotters();
 }

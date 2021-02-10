@@ -102,8 +102,8 @@ public:
     void GetProcStatus(ProcComm &procInfoList);// Get process status
 
     bool GetHits(); // Access to dataport (HIT)
-  std::tuple<size_t,ParticleLoggerItem*> GetLogBuff();
-  void ReleaseLogBuff();
+    ParticleLog & GetLog();
+    void UnlockLog();
   void ReleaseHits();
     bool MolflowGeomToSimModel();
 
@@ -227,6 +227,7 @@ private:
 #endif
 
 public:
+    ParticleLog particleLog; //replaces dpLog
     GlobalSimuState globState;
     GlobalHitBuffer globalHitCache;
 };

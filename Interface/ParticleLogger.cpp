@@ -161,9 +161,9 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == exportButton) {
 				//Export to CSV
-				
-				auto[nbRec, logBuff] = work->GetLogBuff();
-				//FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
+
+                auto& log = work->GetLog();
+                //FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
 				std::string fn = NFD_SaveFile_Cpp("csv", "");
 				if (!fn.empty()) {
 					bool ok = true;
@@ -184,23 +184,23 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 						std::ofstream file(formattedFileName);
 						exportButton->SetText("Abort");
 						isRunning = true;
-						ConvertLogToText(nbRec, logBuff, ",", &file);
+                        ConvertLogToText(log.pLog, ",", &file);
 						isRunning = false;
 						exportButton->SetText("Export to CSV");
 						file.close();
 					}
 				}
-				work->ReleaseLogBuff();
+                work->UnlockLog();
 			}
 			else if (src == copyButton) {
 				//Copy to clipboard
-				auto[nbRec, logBuff] = work->GetLogBuff();
+				auto& log = work->GetLog();
 				copyButton->SetText("Abort");
 				isRunning = true;
-				std::string clipBoardText = ConvertLogToText(nbRec, logBuff, "\t");
+				std::string clipBoardText = ConvertLogToText(log.pLog, "\t", nullptr);
 				isRunning = false;
 				copyButton->SetText("Copy to clipboard");
-				work->ReleaseLogBuff();
+                work->UnlockLog();
 				bool ok = sizeof(clipBoardText[0])*clipBoardText.length() < 50 * 1024 * 1024;
 				if (!ok) {
 					std::ostringstream msg;
@@ -236,24 +236,23 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
-	auto[nbRec, logBuff] = work->GetLogBuff();
-	work->ReleaseLogBuff();
-
-	if (nbRec == 0) {
-		statusLabel->SetText("No recording.");
-		return;
-	}
-	else {
-		std::ostringstream tmp;
-		tmp << nbRec << " particles logged";
-		statusLabel->SetText(tmp.str());
-	}
+	auto& log = work->GetLog();
+    work->UnlockLog(); // don't need write access
+    if (log.pLog.empty()) {
+        statusLabel->SetText("No recording.");
+    }
+    else {
+        std::ostringstream tmp;
+        tmp << log.pLog.size() << " particles logged";
+        statusLabel->SetText(tmp.str());
+    }
 }
 
-std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLoggerItem* log, const std::string& separator, std::ofstream* targetFile) {
+std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerItem> &log, const std::string &separator,
+                                             std::ofstream *targetFile) {
 	std::ostringstream targetString;
 	std::ostringstream tmp;
-	bool directWriteMode = targetFile != NULL;
+	bool directWriteMode = targetFile != nullptr;
 	//Header
 	work->abortRequested = false;
 	
@@ -292,8 +291,8 @@ std::string ParticleLogger::ConvertLogToText(const size_t& nbRec, ParticleLogger
 	//Lines
 	GLProgress* prg = new GLProgress("Assembling text", "Particle logger");
 	prg->SetVisible(true);
-	for (size_t i = 0; !work->abortRequested && i < nbRec; i++) {
-		prg->SetProgress((double)i / (double)nbRec);
+    for (size_t i = 0; !work->abortRequested && i < log.size(); i++) {
+        prg->SetProgress((double)i / (double)log.size());
 		mApp->DoEvents(); //To catch eventual abort button click
 		InterfaceFacet* f = work->GetGeometry()->GetFacet(work->model.otfParams.logFacetId);
 		Vector3d hitPos = f->sh.O + log[i].facetHitPosition.u*f->sh.U + log[i].facetHitPosition.v*f->sh.V;

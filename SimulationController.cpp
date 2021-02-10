@@ -109,7 +109,7 @@ bool SimThread::runLoop() {
             }
 
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
-            lastUpdateOk = particle->UpdateHits(simulation->globState,
+            lastUpdateOk = particle->UpdateHits(simulation->globState, simulation->globParticleLog,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
             procInfo->NextSubProc();
             timeStart = omp_get_wtime();
@@ -124,7 +124,7 @@ bool SimThread::runLoop() {
     if (!lastUpdateOk) {
         //printf("[%zu] Updating on finish!\n",threadNum);
         setSimState("Final update...");
-        particle->UpdateHits(simulation->globState,
+        particle->UpdateHits(simulation->globState, simulation->globParticleLog,
                              20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
     }
     return simEos;
@@ -468,12 +468,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 } else {
                     SetState(PROCESS_ERROR, "Could not update parameters");
                 }
-                break;
-            }
-            case COMMAND_RELEASEDPLOG: {
-                SetState(PROCESS_WAIT, GetSimuStatus());
-                DEBUG_PRINT("[%d] COMMAND: RELEASEDPLOG (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                SetReady(loadOk);
                 break;
             }
             case COMMAND_START: {

@@ -33,9 +33,11 @@ class SimulationUnit {
 public:
     SimulationUnit() : model(), totalDesorbed(0), m(){
         globState = nullptr;
+        globParticleLog = nullptr;
     };
     SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {
         globState = nullptr;
+        globParticleLog = nullptr;
         totalDesorbed = o.totalDesorbed;
     };
     virtual ~SimulationUnit()= default;
@@ -57,6 +59,7 @@ public:
     //GeomProperties sh;
     // Particle coordinates (MC)
     GlobalSimuState* globState;
+    ParticleLog* globParticleLog; //Recorded particle log since last UpdateMCHits
     //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"

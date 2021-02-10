@@ -169,26 +169,20 @@ bool Worker::GetHits() {
     return true;
 }
 
-std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
+ParticleLog & Worker::GetLog() {
     try {
+        if(!particleLog.tMutex.try_lock_for(std::chrono::seconds(1)))
+            throw std::runtime_error("Couldn't get log access");
         if (needsReload) RealReload();
     }
     catch (Error &e) {
-        GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(e.what(), "Error (GetLog)", GLDLG_OK, GLDLG_ICONERROR);
     }
-    size_t nbRec = 0;
-    ParticleLoggerItem *logBuffPtr = NULL;
-    size_t *logBuff = (size_t *) simManager.GetLockedLogBuffer();
-    if(logBuff) {
-        nbRec = *logBuff;
-        logBuff++;
-        logBuffPtr = (ParticleLoggerItem *) logBuff;
-    }
-    return std::tie(nbRec, logBuffPtr);
+    return particleLog;
 }
 
-void Worker::ReleaseLogBuff() {
-    simManager.UnlockLogBuffer();
+void Worker::UnlockLog() {
+    particleLog.tMutex.unlock();
 }
 
 void Worker::ThrowSubProcError(const char *message) {
@@ -474,19 +468,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     //To do: only close if parameters changed
     progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
-    try{
-        size_t logDpSize = 0;
-        if (model.otfParams.enableLogging) {
-            logDpSize = sizeof(size_t) + model.otfParams.logLimit * sizeof(ParticleLoggerItem);
-        }
-        simManager.ReloadLogBuffer(logDpSize, false);
-    }
-    catch (std::exception& e) {
-        GLMessageBox::Display(e.what(), "Warning (ReloadLogBuffer)", GLDLG_OK, GLDLG_ICONWARNING);
-        progressDlg->SetVisible(false);
-        SAFE_DELETE(progressDlg);
-        return;
-    }
+
+    particleLog.clear();
 
     progressDlg->SetProgress(0.5);
     progressDlg->SetMessage("Assembling parameters to pass...");
@@ -577,7 +560,7 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    simManager.ForwardGlobalCounter(&globState);
+    simManager.ForwardGlobalCounter(&globState, &particleLog);
 }
 
 /**

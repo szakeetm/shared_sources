@@ -34,8 +34,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 
     useRemote = false;
 
-    dpLog = nullptr;
-
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     uint32_t pid = _getpid();
     const char* dpPrefix = "";
@@ -50,16 +48,10 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
 }
 
 SimulationManager::~SimulationManager() {
-    CLOSEDP(dpLog);
     KillAllSimUnits();
     for(auto& unit : simUnits){
         delete unit;
     }
-
-    /*for(auto& handle : simHandles){
-
-        handle.first.join();
-    }*/
 }
 
 int SimulationManager::refreshProcStatus() {
@@ -103,35 +95,6 @@ int SimulationManager::LoadInput(const std::string& fileName) {
 int SimulationManager::ResetStatsAndHits() {
 
     return 0;
-}
-
-int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send simulation mode changes to subprocesses without reloading the whole geometry
-    if (simHandles.empty())
-        throw std::logic_error("No active simulation handles!");
-
-    if(!ignoreSubs) {
-        //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-            throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
-        }
-    }
-    //To do: only close if parameters changed
-    if (dpLog && logSize == dpLog->size) {
-        ClearLogBuffer(); //Fills values with 0
-    } else {
-        CloseLogDP();
-        if (logSize)
-            if(CreateLogDP(logSize)) {
-                throw std::runtime_error(
-                        "Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
-            }
-    }
-
-    return 0;
-}
-
-int SimulationManager::ReloadHitBuffer(size_t hitSize) {
-    return ResetHits();
 }
 
 /*!
@@ -288,20 +251,6 @@ int SimulationManager::CreateGPUHandle() {
 // return 1=error
 int SimulationManager::CreateRemoteHandle() {
     return 1;
-}
-
-//TODO: This is Molflow only
-int SimulationManager::CreateLogDP(size_t logDpSize) {
-    //size_t logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
-    dpLog = CreateDataport(logDpName, logDpSize);
-    if (!dpLog) {
-        //progressDlg->SetVisible(false);
-        //SAFE_DELETE(progressDlg);
-        return 1;
-        //throw Error("Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
-    }
-
-    return 0;
 }
 
 /*!
@@ -461,16 +410,6 @@ int SimulationManager::KillAllSimUnits() {
     return 0;
 }
 
-int SimulationManager::ClearLogBuffer() {
-    if (!dpLog) {
-        return 1;
-    }
-    AccessDataport(dpLog);
-    memset(dpLog->buff, 0, dpLog->size); //Also clears hits, leaks
-    ReleaseDataport(dpLog);
-    return 0;
-}
-
 int SimulationManager::ResetSimulations() {
     if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
@@ -481,11 +420,6 @@ int SimulationManager::ResetHits() {
     isRunning = false;
     if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
-    return 0;
-}
-
-int SimulationManager::CloseLogDP() {
-    CLOSEDP(dpLog);
     return 0;
 }
 
@@ -520,20 +454,6 @@ bool SimulationManager::GetLockedHitBuffer() {
 
 int SimulationManager::UnlockHitBuffer() {
     return 0;
-}
-
-BYTE *SimulationManager::GetLockedLogBuffer() {
-    if (dpLog && AccessDataport(dpLog)) {
-        return (BYTE*)dpLog->buff;
-    }
-    return nullptr;
-}
-
-int SimulationManager::UnlockLogBuffer() {
-    if (dpLog && ReleaseDataport(dpLog)) {
-        return 0;
-    }
-    return 1;
 }
 
 /*!
@@ -644,11 +564,12 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     return 0;
 }
 
-void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState) {
+void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog) {
     for(auto& simUnit : simUnits) {
         if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
         simUnit->globState = simState;
+        simUnit->globParticleLog = particleLog;
         simUnit->tMutex.unlock();
     }
 }

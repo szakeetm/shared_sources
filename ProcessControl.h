@@ -25,7 +25,6 @@
 #define COMMAND_EXIT     15  // Exit
 #define COMMAND_CLOSE    16  // Release handles
 #define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
-#define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
 
 static const char *prStates[] = {
 
@@ -46,8 +45,7 @@ static const char *prStates[] = {
         "Resetting",
         "Exiting",
         "Closing",
-        "Update params",
-        "Release dpLog"
+        "Update params"
 };
 
 struct PROCESS_INFO{

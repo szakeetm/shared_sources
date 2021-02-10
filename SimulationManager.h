@@ -83,9 +83,6 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
-    int ReloadLogBuffer(size_t logSize, bool ignoreSubs); /*! Reload the logger if necessary */
-    int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
-
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
     int InitSimUnits();
@@ -109,21 +106,11 @@ public:
 
     int UnlockHitBuffer();
 
-    // Log Buffer functions
-    BYTE *GetLockedLogBuffer();
-
-    int UnlockLogBuffer();
-
     bool GetRunningStatus();
 
     int LoadInput(const std::string& fileName);
 
 private:
-
-    // Dataport handles and names
-    //SubProcInfo procInformation[MAX_PROCESS];
-    Dataport *dpLog;
-
     // Direct implementation for threads
     ProcComm procInformation; // ctrl
     // SimulationModel* model; // load
@@ -156,7 +143,7 @@ private:
 
 public:
     void ForwardSimModel(SimulationModel* model);
-    void ForwardGlobalCounter(GlobalSimuState* simState);
+    void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 
