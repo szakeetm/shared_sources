@@ -490,6 +490,11 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
+                if(!simulation->globState) {
+                    loadOk = false;
+                    SetState(PROCESS_ERROR, GetSimuStatus());
+                }
+
                 bool lastUpdateOk = true;
                 if (loadOk) {
                     size_t updateThread = 0;
