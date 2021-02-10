@@ -3608,6 +3608,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 				sh.nbVertex = oldVertexNb + 3 * globalId;
 				throw Error("Out of memory");
 			}
+			//Molflow is right-handed normal, STL standard is left-handed
 			facets[oldFacetNb + globalId]->indices[0] = oldVertexNb + 3 * globalId + 0;
 			facets[oldFacetNb + globalId]->indices[1] = oldVertexNb + 3 * globalId + 2;
 			facets[oldFacetNb + globalId]->indices[2] = oldVertexNb + 3 * globalId + 1;
@@ -4122,11 +4123,12 @@ void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
         f->Write("\tfacet normal ");
         f->Write(fac->sh.N.x);f->Write(fac->sh.N.y);f->Write(fac->sh.N.z,"\n");
         f->Write("\t\touter loop\n");
-        for (size_t j = 0;j < fac->sh.nbIndex /*should be 3*/;j++) {
+		std::vector<size_t> vertexOrder = {0,2,1}; //Molflow uses right-handed normal, STL standard is left-handed
+        for (const auto& v:vertexOrder) {
             f->Write("\t\t\tvertex");
-            f->Write(GetVertex(fac->indices[j])->x);
-            f->Write(GetVertex(fac->indices[j])->y);
-            f->Write(GetVertex(fac->indices[j])->z, "\n");
+            f->Write(GetVertex(fac->indices[v])->x);
+            f->Write(GetVertex(fac->indices[v])->y);
+            f->Write(GetVertex(fac->indices[v])->z, "\n");
         }
         f->Write("\t\tendloop\n\tendfacet\n");
     }
