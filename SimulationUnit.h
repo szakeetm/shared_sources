@@ -15,20 +15,6 @@ namespace MFSim {
     class Particle;
 }
 
-struct SubProcessFacetTempVar {
-    // Temporary var (used in Intersect for collision)
-    SubProcessFacetTempVar(){
-        colDistTranspPass=1.0E99;
-        colU = 0.0;
-        colV = 0.0;
-        isHit=false;
-    }
-    double colDistTranspPass;
-    double colU;
-    double colV;
-    bool   isHit;
-};
-
 class SimulationUnit {
 public:
     SimulationUnit() : model(), totalDesorbed(0), m(){
