@@ -352,22 +352,15 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 											minLength = d;
 											collidedFacet = f;
 											found = true;
-                                            currentParticle.tmpFacetVars.colDistTranspPass = d;
-                                            currentParticle.tmpFacetVars.colU = u;
-                                            currentParticle.tmpFacetVars.colV = v;
-                                            currentParticle.tmpFacetVars.fac = f;
-
-                                            //currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
-                                            //currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
+                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
+                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
 										}
 									}
 									else {
-                                        SubProcessFacetTempVar tmpVar;
-                                        tmpVar.colDistTranspPass = d;
-                                        tmpVar.colU = u;
-                                        tmpVar.colV = v;
-                                        tmpVar.fac = f;
-                                        currentParticle.transparentHitBuffer.emplace_back(tmpVar);
+                                        currentParticle.tmpFacetVars[f->globalId].colDistTranspPass = d;
+                                        currentParticle.tmpFacetVars[f->globalId].colU = u;
+                                        currentParticle.tmpFacetVars[f->globalId].colV = v;
+                                        currentParticle.transparentHitBuffer.push_back(f);
 									}
 								} // IsInFacet
 							} // d range
@@ -485,16 +478,18 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 	if (found) {
 
+        currentParticle.tmpFacetVars[collidedFacet->globalId].isHit = true;
+
 		// Second pass for transparent hits
 		/*for (const auto& tpFacet : currentParticle.transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
                 model->RegisterTransparentPass(tpFacet, currentParticle);
 			}
 		}*/
-        // First pass to filter transparent hits
+        // Second pass for transparent hits
         for (auto& tpFacet : currentParticle.transparentHitBuffer){
-            if (currentParticle.tmpFacetVars.colDistTranspPass >= minLength) {
-                tpFacet.fac = nullptr;
+            if (currentParticle.tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
+                tpFacet = nullptr;
             }
         }
 	}
