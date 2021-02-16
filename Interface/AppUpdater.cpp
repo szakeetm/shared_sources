@@ -194,6 +194,14 @@ int AppUpdater::RequestUpdateCheck() {
 }
 
 /**
+* \brief Get permission to ask user if he wants to update
+* \return if or when user should be asked to update
+*/
+void AppUpdater::PerformImmediateCheck() {
+    PerformUpdateCheck();
+}
+
+/**
 * \brief Check for updates
 */
 void AppUpdater::PerformUpdateCheck() {
@@ -314,6 +322,21 @@ std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
 	return cumulativeChangeLog.str();
+}
+
+/**
+* \brief Retrieve string containing a changelog of all newer updates
+* \param updates list of updates
+* \return cumulative changelog as a string
+*/
+std::string AppUpdater::GetLatestChangeLog(const std::vector<UpdateManifest>& updates) {
+    if(updates.empty())
+        return "";
+    //No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
+    std::stringstream latestChangeLog;
+    auto update = GetLatest(updates);
+    latestChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
+    return latestChangeLog.str();
 }
 
 /**
@@ -615,6 +638,14 @@ std::string AppUpdater::GetCumulativeChangeLog() {
 }
 
 /**
+* \brief Retrieve string containing a changelog of the latest update
+* \return latest changelog as a string
+*/
+std::string AppUpdater::GetLatestChangeLog() {
+    return GetLatestChangeLog(availableUpdates);
+}
+
+/**
 * \brief Constructor with initialisation for the update check dialog
 * \param appName name of the application
 * \param appUpdater App Updater handle
@@ -709,41 +740,30 @@ there isn't any network communication later.
 * \param appUpdater App Updater handle
 * \param logWindow window for update progress handle
 */
-UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow) {
-	updater = appUpdater;
+ManualUpdateCheckDialog::ManualUpdateCheckDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow, UpdateFoundDialog* foundWindow) {
+	this->appName = appName;
+    this->appVersionName = appVersionName;
+    updater = appUpdater;
 	logWnd = logWindow;
+    foundWnd = foundWindow;
 
-	std::stringstream question;
-	question << appName << " " << appUpdater->GetLatestUpdateName() << " is available.\n";
-	question << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
-	question << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
-	question << appUpdater->GetCumulativeChangeLog();
+    std::ostringstream aboutText;
+    aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
 
-	questionLabel = new GLLabel(question.str().c_str());
+    questionLabel = new GLLabel(aboutText.str().c_str());
 	questionLabel->SetBounds(5, 5, 150, 60);
 	Add(questionLabel);
 
 	int textWidth, textHeight;
 	questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-	int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-	int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
-	updateButton = new GLButton(0, "Download");
-	updateButton->SetBounds(5, hD - 45, 80, 19);
-	Add(updateButton);
-
-	laterButton = new GLButton(0, "Ask later");
-	laterButton->SetBounds(90, hD - 45, 80, 19);
-	Add(laterButton);
-
-	skipButton = new GLButton(0, "Skip version(s)");
-	skipButton->SetBounds(175, hD - 45, 95, 19);
-	Add(skipButton);
-
-	disableButton = new GLButton(0, "Turn off update check");
-	disableButton->SetBounds(275, hD - 45, 120, 19);
-	Add(disableButton);
+    updateButton = new GLButton(0, "Download");
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    updateButton->SetEnabled(false);
+    Add(updateButton);
 
 	std::stringstream title;
 	title << appName << " updater";
@@ -757,6 +777,91 @@ UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::str
 
 	RestoreDeviceObjects();
 
+}
+
+/**
+* \brief Performs a new update check and refreshes window content
+*/
+void ManualUpdateCheckDialog::Refresh() {
+    bool updateAvailable = false;
+    std::ostringstream aboutText;
+    aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+
+    //Check if app updater has found updates
+    if (updater && logWnd) {
+        if (updater->IsUpdateAvailable()) {
+            if (!foundWnd) {
+                foundWnd = new UpdateFoundDialog(appName, appVersionName, updater, logWnd);
+                foundWnd->SetVisible(true);
+            }
+        }
+        else { // no updates found
+            aboutText << "This is already the latest version!" << std::endl;
+            updater->PerformImmediateCheck();
+            aboutText << updater->GetLatestChangeLog();
+            if(updater->IsUpdateAvailable())
+                updateAvailable = true;
+        }
+    }
+    else{ // app updater error
+        aboutText << "Could not check for updates!" << std::endl;
+        aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
+        aboutText << "    https://molflow.web.cern.ch/" << std::endl;
+    }
+
+    questionLabel->SetText(aboutText.str().c_str());
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    updateButton->SetEnabled(updateAvailable);
+
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+
+    RestoreDeviceObjects();
+}
+
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
+void ManualUpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
+    switch (message) {
+        case MSG_BUTTON:
+            if (src == updateButton) {
+                logWnd->ClearLog();
+                logWnd->SetVisible(true);
+                updater->InstallLatestUpdate(logWnd);
+                updater->ClearAvailableUpdates();
+                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+            }
+            /*else if (src == laterButton) {
+                updater->ClearAvailableUpdates();
+                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+            }
+            else if (src == skipButton) {
+                updater->SkipAvailableUpdates();
+                updater->ClearAvailableUpdates();
+                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+            }
+            else if (src == disableButton) {
+                updater->ClearAvailableUpdates();
+                updater->SetUserUpdatePreference(false);
+                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+            }*/
+            break;
+    }
+    GLWindow::ProcessMessage(src, message);
 }
 
 /**
@@ -794,6 +899,62 @@ void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 		break;
 	}
 	GLWindow::ProcessMessage(src, message);
+}
+
+/**
+* \brief Constructor with initialisation for the dialog window if an update has been found
+* \param appName name of the application
+* \param appVersionName string for the app version
+* \param appUpdater App Updater handle
+* \param logWindow window for update progress handle
+*/
+UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow) {
+    updater = appUpdater;
+    logWnd = logWindow;
+
+    std::stringstream question;
+    question << appName << " " << appUpdater->GetLatestUpdateName() << " is available.\n";
+    question << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+    question << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
+    question << appUpdater->GetCumulativeChangeLog();
+
+    questionLabel = new GLLabel(question.str().c_str());
+    questionLabel->SetBounds(5, 5, 150, 60);
+    Add(questionLabel);
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    updateButton = new GLButton(0, "Download");
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    Add(updateButton);
+
+    laterButton = new GLButton(0, "Ask later");
+    laterButton->SetBounds(90, hD - 45, 80, 19);
+    Add(laterButton);
+
+    skipButton = new GLButton(0, "Skip version(s)");
+    skipButton->SetBounds(175, hD - 45, 95, 19);
+    Add(skipButton);
+
+    disableButton = new GLButton(0, "Turn off update check");
+    disableButton->SetBounds(275, hD - 45, 120, 19);
+    Add(disableButton);
+
+    std::stringstream title;
+    title << appName << " updater";
+    SetTitle(title.str());
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+
+    RestoreDeviceObjects();
 }
 
 /**

@@ -67,9 +67,11 @@ class SelectFacetByResult;
 class AlignFacet;
 class AddVertex;
 class FormulaEditor;
+class AppUpdater;
 class UpdateCheckDialog;
 class UpdateFoundDialog;
 class UpdateLogWindow;
+class ManualUpdateCheckDialog;
 class ParticleLogger;
 class ConvergencePlotter;
 
@@ -220,11 +222,11 @@ typedef struct {
 
 
 #define MENU_ABOUT                1000
+#define MENU_UPDATE               1001
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-class AppUpdater;
 
 class Interface : public GLApplication {
 protected:
@@ -274,7 +276,6 @@ public:
 	double   planarityThreshold; //Planarity threshold
 	
 	AppUpdater* appUpdater;
-
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
 	int      autoSaveSimuOnly;
@@ -432,6 +433,7 @@ public:
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
 	UpdateLogWindow   *updateLogWindow;
+    ManualUpdateCheckDialog* manualUpdate;
 
 	// Current directory
 	void UpdateCurrentDir(const char *fileName);

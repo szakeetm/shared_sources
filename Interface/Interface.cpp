@@ -196,6 +196,7 @@ Interface::Interface() {
     updateCheckDialog = nullptr;
     updateFoundDialog = nullptr;
     updateLogWindow = nullptr;
+    manualUpdate = nullptr;
     particleLogger = nullptr;
     convergencePlotter = nullptr;
 
@@ -987,6 +988,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 void Interface::OneTimeSceneInit_shared_post() {
     menu->Add("About");
     menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
+    menu->GetSubMenu("About")->Add("Check for updates...", MENU_UPDATE);
 
     ClearFacetParams();
     LoadConfig();
@@ -1053,6 +1055,7 @@ int Interface::RestoreDeviceObjects_shared() {
     RVALIDATE_DLG(updateCheckDialog);
     RVALIDATE_DLG(updateFoundDialog);
     RVALIDATE_DLG(updateLogWindow);
+    RVALIDATE_DLG(manualUpdate);
 
     UpdateTitle();
 
@@ -1095,6 +1098,7 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(updateCheckDialog);
     IVALIDATE_DLG(updateFoundDialog);
     IVALIDATE_DLG(updateLogWindow);
+    IVALIDATE_DLG(manualUpdate);
 
     UpdateTitle();
 
@@ -1733,6 +1737,17 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 )";
                     GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
+                    return true;
+                }
+                case MENU_UPDATE: {
+                    if(!manualUpdate) {
+                        if (!updateLogWindow) {
+                            updateLogWindow = new UpdateLogWindow(this);
+                        }
+                        manualUpdate = new ManualUpdateCheckDialog(appName, appVersionName, appUpdater, updateLogWindow, updateFoundDialog);
+                    }
+                    manualUpdate->Refresh();
+                    manualUpdate->SetVisible(true);
                     return true;
                 }
             }

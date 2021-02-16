@@ -182,6 +182,22 @@ private:
 	UpdateLogWindow* logWnd;
 };
 
+class ManualUpdateCheckDialog : public GLWindow {
+public:
+    ManualUpdateCheckDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow, UpdateFoundDialog* foundWindow);
+    void Refresh();
+    // Implementation
+    void ProcessMessage(GLComponent *src, int message);
+private:
+    GLLabel *questionLabel;
+    GLButton *updateButton;
+    std::string appName;
+    std::string appVersionName;
+    AppUpdater* updater;
+    UpdateLogWindow* logWnd;
+    UpdateFoundDialog* foundWnd;
+};
+
 class AppUpdater {
 private:
     void MakeDefaultConfig();
@@ -193,8 +209,10 @@ public:
 	void ClearAvailableUpdates();
 	std::string GetLatestUpdateName();
 	std::string GetCumulativeChangeLog();
+    std::string GetLatestChangeLog();
 
 	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
+    void PerformImmediateCheck();
 
 	void SetUserUpdatePreference(bool answer);
 	void SkipAvailableUpdates();
@@ -231,8 +249,9 @@ private:
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
 	UpdateManifest GetLatest(const std::vector<UpdateManifest>& updates);
-	std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
-	void SkipVersions(const std::vector<UpdateManifest>& updates);
+    std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
+    std::string GetLatestChangeLog(const std::vector<UpdateManifest>& updates);
+    void SkipVersions(const std::vector<UpdateManifest>& updates);
 
 	void GenerateUserId();
 	
