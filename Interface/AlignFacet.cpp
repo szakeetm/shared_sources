@@ -234,10 +234,8 @@ dirDestVertexId,
 				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
-				try { work->Reload(); } catch(Error &e) {
+				work->Reload();
 
-					GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-				}
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();

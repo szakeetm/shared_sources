@@ -209,10 +209,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (mApp->spectrumPlotter) mApp->spectrumPlotter->Refresh();
 #endif
 				// Send to sub process
-				try { work->Reload(); }
-				catch (Error &e) {
-					GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-				}
+				work->Reload();
 
 				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);

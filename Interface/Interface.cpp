@@ -1247,10 +1247,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     if (AskToReset()) {
                         geom->SwapNormal();
                         // Send to sub process
-                        try { worker.Reload(); }
-                        catch (Error &e) {
-                            GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-                        }
+                        worker.Reload();
                     }
                     return true;
                 case MENU_FACET_REVERTFLIP:
@@ -1338,11 +1335,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 UpdateModelParams();
                                 UpdateFacetParams(true);
                                 // Send to sub process
-                                try { worker.Reload(); }
-                                catch (Error &e) {
-                                    GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK,
-                                                          GLDLG_ICONERROR);
-                                }
+                                worker.Reload();
                             }
                         }
                     }
@@ -2169,11 +2162,7 @@ void Interface::AddStruct() {
     if (!structName) return;
     geom->AddStruct(structName);
     // Send to sub process
-    try { worker.Reload(); }
-    catch (Error &e) {
-        GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
+    worker.Reload();
 }
 
 void Interface::DeleteStruct() {
@@ -2205,11 +2194,7 @@ void Interface::DeleteStruct() {
     if (!AskToReset()) return;
     geom->DelStruct(structNumInt - 1);
     // Send to sub process
-    try { worker.Reload(); }
-    catch (Error &e) {
-        GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
+    worker.Reload();
 }
 
 void Interface::DisplayCollapseDialog() {
@@ -2508,10 +2493,7 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
         }
         //UpdateModelParams();
-        try { worker.Reload(); }
-        catch (Error &e) {
-            GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-        }
+        worker.Reload();
     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 }
 
