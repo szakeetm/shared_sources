@@ -51,7 +51,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 if (facetId <= 0 || facetId > nbFacets) throw std::invalid_argument(tmp.str());
                 outputFacetIds.push_back(facetId - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] <<"\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
@@ -79,7 +79,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 outputFacetIds.resize(oldSize + facetId2 - facetId1 + 1);
                 std::iota(outputFacetIds.begin() + oldSize, outputFacetIds.end(), facetId1 - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());

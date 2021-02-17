@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "GLApp/GLComponent.h"
 #include "GLApp/GLTypes.h"
+#include "GeometryTypes.h"
 #include "Vector.h"
 #include <vector>
 
@@ -92,13 +93,6 @@ typedef struct {
   double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
 } AVIEW;
-
-typedef struct {
-
-  std::string    name;       // Selection name
-  std::vector<size_t> selection; // List of facets
-
-} SelectionGroup;
 
 typedef struct {
 	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
