@@ -600,7 +600,6 @@ public:
 
 
 #if defined(MOLFLOW)
-	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
 	double distTraveled_total;
 	double distTraveledTotal_fullHitsOnly;
 #endif
@@ -625,8 +624,7 @@ public:
 			CEREAL_NVP(leakCache)      // Leak history
 
 #if defined(MOLFLOW)
-			,CEREAL_NVP(texture_limits), //Min-max on texture
-			CEREAL_NVP(distTraveled_total),
+			,CEREAL_NVP(distTraveled_total),
 			CEREAL_NVP(distTraveledTotal_fullHitsOnly)
 #endif
 

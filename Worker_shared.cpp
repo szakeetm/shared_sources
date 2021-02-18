@@ -298,6 +298,83 @@ size_t Worker::GetPID(size_t prIdx) {
     return 0;
 }
 
+void Worker::CalculateTextureLimits(){
+    // first get tmp limit
+    TEXTURE_MIN_MAX limits[3];
+    for(auto& lim : limits){
+        lim.max.all = lim.max.moments_only = 0;
+        lim.min.all = lim.min.moments_only = HITMAX;
+    }
+
+    for (const auto &subF : model.facets) {
+        if (subF.sh.isTextured) {
+            for (size_t m = 0; m < ( 1 + model.tdParams.moments.size()); m++) {
+                {
+                    // go on if the facet was never hit before
+                    auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[m].hits;
+                    if (facetHitBuffer.hit.nbMCHit == 0 && facetHitBuffer.hit.nbDesorbed == 0) continue;
+                }
+
+                //double dCoef = globState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
+                const double timeCorrection =
+                        m == 0 ? model.wp.finalOutgassingRate : (model.wp.totalDesorbedMolecules) /
+                                                                 model.tdParams.moments[m - 1].second;
+                //model->wp.timeWindowSize;
+                //Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
+                const auto &texture = globState.facetStates[subF.globalId].momentResults[m].texture;
+                const size_t textureSize = texture.size();
+                for (size_t t = 0; t < textureSize; t++) {
+                    //Add temporary hit counts
+
+                    if (subF.largeEnough[t]) {
+                        double val[3];  //pre-calculated autoscaling values (Pressure, imp.rate, density)
+
+                        val[0] = texture[t].sum_v_ort_per_area * timeCorrection; //pressure without dCoef_pressure
+                        val[1] = texture[t].countEquiv * subF.textureCellIncrements[t] * timeCorrection; //imp.rate without dCoef
+                        val[2] = texture[t].sum_1_per_ort_velocity * subF.textureCellIncrements[t] * timeCorrection; //particle density without dCoef
+
+                        //Global autoscale
+                        for (int v = 0; v < 3; v++) {
+                            limits[v].max.all = std::max(val[v],limits[v].max.all);
+
+                            if (val[v] > 0.0) {
+                                limits[v].min.all = std::min(val[v],limits[v].min.all);
+                            }
+                            //Autoscale ignoring constant flow (moments only)
+                            if (m != 0) {
+                                limits[v].max.moments_only = std::max(val[v],limits[v].max.moments_only);;
+
+                                if (val[v] > 0.0)
+                                    limits[v].min.moments_only = std::min(val[v],limits[v].min.moments_only);;
+                            }
+                        }
+                    } // if largeenough
+                }
+            }
+        }
+    }
+
+    double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
+    //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
+    //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
+    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed * mApp->worker.model.wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed;
+
+    // Add coefficient scaling
+    for(int v = 0; v < 3; ++v) {
+        limits[v].max.all *= dCoef_custom[v];
+        limits[v].max.moments_only *= dCoef_custom[v];
+        limits[v].min.all *= dCoef_custom[v];
+        limits[v].min.moments_only *= dCoef_custom[v];
+    }
+
+    // Last put temp limits into global struct
+    for(int v = 0; v < 3; ++v) {
+        GetGeometry()->texture_limits[v].autoscale = limits[v];
+    }
+}
+
 void Worker::RebuildTextures() {
 
     if (mApp->needsTexture || mApp->needsDirection) {
@@ -313,6 +390,7 @@ void Worker::RebuildTextures() {
 
         try {
 #if defined(MOLFLOW)
+            CalculateTextureLimits();
             geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
 #endif
 #if defined(SYNRAD)
@@ -418,8 +496,10 @@ void Worker::Update(float appTime) {
         //simUnit->tMutex.unlock();
 
     try {
-        if (mApp->needsTexture || mApp->needsDirection)
+        if (mApp->needsTexture || mApp->needsDirection) {
+            CalculateTextureLimits();
             geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
+        }
     }
     catch (Error &e) {
         globState.tMutex.unlock();

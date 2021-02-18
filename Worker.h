@@ -62,7 +62,8 @@ public:
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
   void LoadTexturesSYN(FileReader* f, BYTE* buffer, int version);  // Load a textures(throws Error)
   void RebuildTextures();
-  
+    void CalculateTextureLimits();
+
   // Save a geometry (throws Error)
   void SaveGeometry(std::string fileName,GLProgress *prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
 
@@ -200,6 +201,7 @@ public:
 	std::vector<std::vector<double>> parallel_polarization; //ratio of parallel polarization for a given E/E_crit ratio and psi vertical angle
 	std::vector<std::vector<std::vector<double>>> chi_distros; //3 psi-chi    maps for full/parallel/orthogonal polarizations
 #endif
+
 private:
 
   // Process management
