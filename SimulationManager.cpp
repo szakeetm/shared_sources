@@ -22,7 +22,7 @@
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
 
-SimulationManager::SimulationManager(const std::string &appName , const std::string &dpName) {
+SimulationManager::SimulationManager() {
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
@@ -41,9 +41,6 @@ SimulationManager::SimulationManager(const std::string &appName , const std::str
     uint32_t pid = ::getpid();
     const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
 #endif
-
-    sprintf(this->appName,"%s", appName.c_str());
-    sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
 
 }
 

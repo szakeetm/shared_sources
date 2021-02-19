@@ -73,7 +73,7 @@ protected:
     int WaitForProcStatus(uint8_t procStatus);
 
 public:
-    SimulationManager(const std::string &appName, const std::string &dpName);
+    SimulationManager();
 
     ~SimulationManager();
 
@@ -118,8 +118,6 @@ private:
 
 
 protected:
-    char appName[16]{};
-    char logDpName[32]{};
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
     // Flags
