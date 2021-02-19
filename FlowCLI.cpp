@@ -45,7 +45,7 @@ struct MolflowData{
 int main(int argc, char** argv) {
     std::cout << molflowCliLogo << std::endl;
 
-    SimulationManager simManager();
+    SimulationManager simManager;
     SimulationModel model{};
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
