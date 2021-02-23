@@ -132,7 +132,7 @@ public:
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string); //Get ID of parameter name
   void SendFacetHitCounts();
-
+  void SendAngleMaps();
   static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
   static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
   int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements

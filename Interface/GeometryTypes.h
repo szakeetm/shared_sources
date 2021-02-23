@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+
 typedef struct {
     std::string    name;       // Selection name
     std::vector<size_t> selection; // List of facets
