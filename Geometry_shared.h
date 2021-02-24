@@ -113,6 +113,7 @@ public:
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
+    void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
 	void CheckCollinear();
 	void CheckNonSimple();
@@ -248,7 +249,10 @@ protected:
 	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
-	void SelectAll();
+    void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
+    void InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, Worker* work);
+
+    void SelectAll();
 	void UnselectAll();
 	void AddToSelectedVertexList(size_t vertexId);
 	void EmptySelectedVertexList();

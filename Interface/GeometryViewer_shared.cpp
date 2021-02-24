@@ -92,7 +92,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.vRight = 0.0;
 	view.vTop = 0.0;
 	view.vBottom = 0.0;
-	view.name = NULL;
+	view.name = "";
 	view.performXY = XYZ_NONE;
 	showIndex = false;
 	showVertexId = false;

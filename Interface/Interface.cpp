@@ -1838,7 +1838,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 // Clear view
             else if (src->GetId() >= MENU_VIEW_CLEARVIEWS && src->GetId() < MENU_VIEW_CLEARVIEWS + nbView) {
                 char tmpname[256];
-                sprintf(tmpname, "Clear %s?", views[src->GetId() - MENU_VIEW_CLEARVIEWS].name);
+                sprintf(tmpname, "Clear %s?", views[src->GetId() - MENU_VIEW_CLEARVIEWS].name.c_str());
                 if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) ==
                     GLDLG_OK) {
                     ClearView(src->GetId() - MENU_VIEW_CLEARVIEWS);
@@ -2038,13 +2038,13 @@ void Interface::RebuildViewMenus() {
                               SDLK_F11, SDLK_F12}; //Skip ALT+F4 shortcut :)
     for (int i = 0; i < nbView; i++) {
         if (fKeys.empty()) {
-            viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i);
+            viewsMenu->Add(views[i].name.c_str(), MENU_VIEW_VIEWS + i);
         } else {
-            viewsMenu->Add(views[i].name, MENU_VIEW_VIEWS + i, fKeys[0], ALT_MODIFIER);
+            viewsMenu->Add(views[i].name.c_str(), MENU_VIEW_VIEWS + i, fKeys[0], ALT_MODIFIER);
             fKeys.erase(fKeys.begin());
         }
-        clearViewsMenu->Add(views[i].name, MENU_VIEW_CLEARVIEWS + i);
-        memorizeViewsMenu->Add(views[i].name, MENU_VIEW_MEMORIZEVIEWS + i);
+        clearViewsMenu->Add(views[i].name.c_str(), MENU_VIEW_CLEARVIEWS + i);
+        memorizeViewsMenu->Add(views[i].name.c_str(), MENU_VIEW_MEMORIZEVIEWS + i);
     }
 }
 
@@ -2052,37 +2052,38 @@ void Interface::AddView(const char *viewName, AVIEW v) {
 
     if (nbView < MAX_VIEW) {
         views[nbView] = v;
-        views[nbView].name = strdup(viewName);
+        views[nbView].name = viewName;
         nbView++;
     } else {
-        SAFE_FREE(views[0].name);
+        views[0].name = "";
         for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
         views[MAX_VIEW - 1] = v;
-        views[MAX_VIEW - 1].name = strdup(viewName);
+        views[MAX_VIEW - 1].name = viewName;
     }
     RebuildViewMenus();
 }
 
 void Interface::ClearView(int idClr) {
-    SAFE_FREE(views[idClr].name);
+    views[idClr].name = "";
     for (int i = idClr; i < nbView - 1; i++) views[i] = views[i + 1];
     nbView--;
     RebuildViewMenus();
 }
 
 void Interface::ClearAllViews() {
-    for (int i = 0; i < nbView; i++) SAFE_FREE(views[i].name);
+    for (int i = 0; i < nbView; i++)
+        views[i].name = "";
     nbView = 0;
     ClearViewMenus();
 }
 
 void Interface::OverWriteView(int idOvr) {
     Geometry *geom = worker.GetGeometry();
-    char *viewName = GLInputBox::GetInput(views[idOvr].name, "View name", "Enter view name");
+    char *viewName = GLInputBox::GetInput(views[idOvr].name.c_str(), "View name", "Enter view name");
     if (!viewName) return;
 
     views[idOvr] = viewer[curViewer]->GetCurrentView();
-    views[idOvr].name = strdup(viewName);
+    views[idOvr].name = viewName;
     RebuildViewMenus();
 }
 
@@ -2095,13 +2096,13 @@ void Interface::AddView() {
 
     if (nbView < MAX_VIEW) {
         views[nbView] = viewer[curViewer]->GetCurrentView();
-        views[nbView].name = strdup(viewName);
+        views[nbView].name = viewName;
         nbView++;
     } else {
-        SAFE_FREE(views[0].name);
+        views[0].name = "";
         for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
         views[MAX_VIEW - 1] = viewer[curViewer]->GetCurrentView();
-        views[MAX_VIEW - 1].name = strdup(viewName);
+        views[MAX_VIEW - 1].name = viewName;
     }
     RebuildViewMenus();
 }

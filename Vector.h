@@ -57,6 +57,21 @@ public:
 
 class InterfaceVertex : public Vector3d { //For Interface
 public:
+    InterfaceVertex() = default;
+    InterfaceVertex(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
+    };
+    InterfaceVertex& operator=(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
+
+        return *this;
+    };
 	bool selected=false;
 	void SetLocation(const Vector3d& v);
 	/*template<class Archive>

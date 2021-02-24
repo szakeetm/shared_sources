@@ -71,7 +71,7 @@ class GLOverlayLabel;
 
 typedef struct {
 
-  char    *name;       // View name
+  std::string name;    // View name
 
   int      projMode;   // Projection type
   double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)

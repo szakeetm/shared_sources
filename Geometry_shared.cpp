@@ -188,6 +188,16 @@ void Geometry::InitializeGeometry(int facet_number) {
 	//assert(_CrtCheckMemory());
 }
 
+void Geometry::InitializeMesh() {
+    // Update mesh
+    for (size_t i = 0; i < sh.nbFacet; i++) {
+        /*double p = (double)i / (double)sh.nbFacet;
+        progressDlg->SetProgress(p);*/
+        InterfaceFacet *f = facets[i];
+        SetFacetTexture(i, f->sh.texWidthD / f->sh.U.Norme(), f->sh.texHeightD / f->sh.V.Norme(), f->hasMesh);
+    }
+}
+
 void Geometry::RecalcBoundingBox(int facet_number) {
 
 	if (facet_number == -1) { //bounding box for all vertices
@@ -4480,4 +4490,42 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 
 	return result;
 }
+
+void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
+    vertices3.clear();
+    for(auto& vert : vertices) {
+        vertices3.emplace_back(vert); // position data
+        vertices3.back().selected = false;
+    }
+
+    sh.nbVertex = vertices.size();
+}
+
+void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, Worker* work) {
+    //Facets
+    facets = (InterfaceFacet **)malloc(sFacets.size() * sizeof(InterfaceFacet *));
+    memset(facets, 0, sFacets.size() * sizeof(InterfaceFacet *));
+
+    size_t index = 0;
+    for(auto& fac : sFacets) {
+        facets[index] = new InterfaceFacet(fac.indices.size());
+        facets[index]->indices = fac.indices;
+        facets[index]->vertices2 = fac.vertices2;
+        facets[index]->sh = fac.sh;
+
+        // Molflow
+        facets[index]->ogMap = fac.ogMap;
+        facets[index]->angleMapCache = fac.angleMap.pdf;
+
+        //Set param names for interface
+        if (facets[index]->sh.sticking_paramId > -1) facets[index]->userSticking = work->parameters[facets[index]->sh.sticking_paramId].name;
+        if (facets[index]->sh.opacity_paramId > -1) facets[index]->userOpacity = work->parameters[facets[index]->sh.opacity_paramId].name;
+        if (facets[index]->sh.outgassing_paramId > -1) facets[index]->userOutgassing = work->parameters[facets[index]->sh.outgassing_paramId].name;
+
+        ++index;
+    }
+
+    sh.nbFacet = sFacets.size();
+}
+
 #endif
