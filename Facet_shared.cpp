@@ -94,7 +94,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 
 	//mesh = NULL;
 	//meshPts = NULL;
-	cellPropertiesIds = nullptr;
+	cellPropertiesIds.clear();
 	meshvector.clear();
 	meshvectorsize = 0;
 	hasMesh = false;
@@ -172,7 +172,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 * \brief Destructor for safe deletion
 */
 InterfaceFacet::~InterfaceFacet() {
-	  SAFE_DELETE(cellPropertiesIds);
+	  //SAFE_DELETE(cellPropertiesIds);
 	  SAFE_FREE(dirCache);
 	  DELETE_TEX(glTex);
 	  DELETE_LIST(glList);
@@ -306,7 +306,7 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	}*/
 
 	//SAFE_FREE(meshPts);
-	SAFE_FREE(cellPropertiesIds);
+	//SAFE_FREE(cellPropertiesIds);
 	//nbElem = 0;
 	UnselectElem();
 
@@ -352,17 +352,9 @@ void InterfaceFacet::glVertex2u(double u, double v) {
 * \return true if mesh properly build
 */
 bool InterfaceFacet::BuildMesh() {
-
-	if (!(cellPropertiesIds = new int[sh.texWidth * sh.texHeight]()))
-	{
-		//Couldn't allocate memory
-		return false;
-		//throw Error("malloc failed on Facet::BuildMesh()");
-	}
-	//memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
-
 	try{
-	    meshvector.resize(sh.texWidth * sh.texHeight); //will shrink at the end
+        cellPropertiesIds.resize(sh.texWidth * sh.texHeight, 0);
+	    meshvector.resize(sh.texWidth * sh.texHeight, CellProperties()); //will shrink at the end
 	}
     catch (std::exception& e) {
 		std::cerr << "Couldn't allocate memory" << std::endl;
@@ -531,8 +523,7 @@ bool InterfaceFacet::BuildMesh() {
 */
 void InterfaceFacet::BuildMeshGLList() {
 
-	if (!cellPropertiesIds)
-
+	if (cellPropertiesIds.empty())
 		return;
 
 	DELETE_LIST(glElem);
@@ -585,7 +576,7 @@ void InterfaceFacet::BuildSelElemList() {
 	DELETE_LIST(glSelElem);
 	int nbSel = 0;
 
-	if (cellPropertiesIds && selectedElem.width != 0 && selectedElem.height != 0) {
+	if (!cellPropertiesIds.empty() && selectedElem.width != 0 && selectedElem.height != 0) {
 
 		glSelElem = glGenLists(1);
 		glNewList(glSelElem, GL_COMPILE);
@@ -652,7 +643,7 @@ void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height)
 
 	UnselectElem();
 
-	if (cellPropertiesIds && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
+	if (cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
 
 		size_t maxW = sh.texWidth - u;
 		size_t maxH = sh.texHeight - v;
@@ -893,7 +884,7 @@ size_t InterfaceFacet::GetIndex(size_t idx) {
 * \return mesh area
 */
 double InterfaceFacet::GetMeshArea(size_t index, bool correct2sides) {
-	if (!cellPropertiesIds) return -1.0f;
+	if (cellPropertiesIds.empty()) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
 		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatioU*tRatioV);
 	}
@@ -926,7 +917,7 @@ size_t InterfaceFacet::GetMeshNbPoint(size_t index) {
 */
 Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 	Vector2d result;
-	if (!cellPropertiesIds) {
+	if (cellPropertiesIds.empty()) {
 		result.u = 0.0;
 		result.v = 0.0;
 		return result;
@@ -998,7 +989,7 @@ Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 */
 Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
 	Vector2d result;
-	if (!cellPropertiesIds) {
+	if (cellPropertiesIds.empty()) {
 		result.u = 0.0;
 		result.v = 0.0;
 		return result;

@@ -60,7 +60,7 @@ public:
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
-  void LoadTexturesSYN(FileReader* f, BYTE* buffer, int version);  // Load a textures(throws Error)
+  // void LoadTexturesSYN(FileReader* f, BYTE* buffer, int version);  // Load a textures(throws Error)
   void RebuildTextures();
     void CalculateTextureLimits();
 
@@ -72,11 +72,11 @@ public:
   //void ExportRegionPoints(const char *fileName,GLProgress *prg,int regionId,int exportFrequency,bool doFullScan);
   //void ExportDesorption(const char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
 
-  std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
+    [[maybe_unused]] static std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
 
   // Return/Set the current filename
-  char *GetCurrentFileName();
-  char *GetCurrentShortFileName();
+  std::string GetCurrentFileName() const;
+  std::string GetCurrentShortFileName() const;
   //char *GetShortFileName(char* longFileName);
   void  SetCurrentFileName(const char *fileName);
 
@@ -84,17 +84,17 @@ public:
   void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
   size_t GetProcNumber() const;  // Get number of processes
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
- size_t GetPID(size_t prIdx);// Get PID
+ static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
   void RealReload(bool sendOnly=false);
-  std::ostringstream SerializeForLoader();
+  //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
 
     void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
   //void Exit(); // Free all allocated resource
-  void KillAll(bool keppDpHit=false);// Kill all sub processes
+  //void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
   void RetrieveHistogramCache();
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
@@ -108,20 +108,14 @@ public:
   void ReleaseHits();
     bool MolflowGeomToSimModel();
 
-    void RemoveRegion(int index);
-  void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
-  void RecalcRegion(int regionId);
-  void SaveRegion(const char *fileName,int position,bool overwrite=false);
-  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
-
-  FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
+  static FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
-  std::vector<std::string> ExportAngleMaps(std::string fileName, bool saveAll=false);
+  std::vector<std::string> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
-    [[maybe_unused]] bool ImportAngleMaps(std::string fileName);
+    [[maybe_unused]] static bool ImportAngleMaps(const std::string& fileName);
 
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
   void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
@@ -130,29 +124,32 @@ public:
 	  GLProgress *prg);
   void LoadTexturesGEO(FileReader *f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
-  int GetParamId(const std::string); //Get ID of parameter name
+  int GetParamId(const std::string&); //Get ID of parameter name
   void SendFacetHitCounts();
   void SendAngleMaps();
-  static int CheckIntervalOverlap(const std::vector<Moment>& vecA, const std::vector<Moment>& vecB);
-  static std::pair<int, int> CheckIntervalOverlap(const std::vector<std::vector<Moment>>& vecParsedMoments);
-  int AddMoment(std::vector<Moment> newMoments); //Adds a time serie to moments and returns the number of elements
-  std::vector<Moment> ParseMoment(std::string userInput, double timeWindow); //Parses a user input and returns a vector of time moments
   void ResetMoments();
 
-  double GetMoleculesPerTP(size_t moment);
-  IntegratedDesorption Generate_ID(int paramId);
-  int GenerateNewID(int paramId);
-  std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
+  double GetMoleculesPerTP(size_t moment) const;
+  IntegratedDesorption Generate_ID(size_t paramId);
+  int GenerateNewID(size_t paramId);
+  static std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
   int GenerateNewCDF(double temperature);
   void CalcTotalOutgassing();
   int GetCDFId(double temperature);
-  int GetIDId(int paramId);
+  int GetIDId(size_t paramId);
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
   #endif
 
 #if defined(SYNRAD)
+    void RemoveRegion(int index);
+  void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
+  void RecalcRegion(int regionId);
+  void SaveRegion(const char *fileName,int position,bool overwrite=false);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+
+
   SynradGeometry* GetSynradGeometry();
   void AddMaterial(std::string *fileName);
   void ClearRegions();
@@ -173,7 +170,7 @@ public:
   //float  simuTime;          // Total simulation time
   Chronometer simuTimer;
 
-  char fullFileName[512]; // Current loaded file
+  std::string fullFileName; // Current loaded file
 
   bool needsReload;
   bool abortRequested;

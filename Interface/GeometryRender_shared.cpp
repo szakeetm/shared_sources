@@ -1171,7 +1171,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		for (int i = 0; i < sh.nbFacet;i++) {
 
 			InterfaceFacet *f = facets[i];
-			if (f->cellPropertiesIds  && f->textureVisible) {
+			if (!f->cellPropertiesIds.empty()  && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
 				glEnable(GL_POLYGON_OFFSET_LINE);

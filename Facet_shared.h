@@ -142,7 +142,7 @@ public:
 	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
 
 	//C-style arrays to save memory (textures can be huge):
-	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
+    std::vector<int> cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
     std::vector<CellProperties> meshvector;
 	size_t meshvectorsize;
 

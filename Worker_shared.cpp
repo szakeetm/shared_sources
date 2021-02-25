@@ -20,11 +20,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 //#include <Windows.h>
-#include <Process.h>
-#include <direct.h>
+//#include <Process.h>
+//#include <direct.h>
 #else
 
 #endif
+
+#include <cmath>
+#include <cstdlib>
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -32,13 +35,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMessageBox.h"
 #include "Helper/MathTools.h" //Min max
 #include "GLApp/GLList.h"
-#include <math.h>
-#include <stdlib.h>
+
 #include "GLApp/GLUnitDialog.h"
 #include "Interface/LoadStatus.h"
-#include "ProcessControl.h" // defines for process commands
-#include "SimulationManager.h"
-#include "Buffer_shared.h"
+//#include "ProcessControl.h" // defines for process commands
+//#include "SimulationManager.h"
+//#include "Buffer_shared.h"
 
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
@@ -51,7 +53,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/SynradGeometry.h"
 #endif
 
-#include "File.h" //File utils (Get extension, etc)
+//#include "File.h" //File utils (Get extension, etc)
 
 /*
 //Leak detection
@@ -80,23 +82,24 @@ Geometry *Worker::GetGeometry() {
     return geom;
 }
 
-char *Worker::GetCurrentFileName() {
+std::string Worker::GetCurrentFileName() const {
     return fullFileName;
 }
 
-char *Worker::GetCurrentShortFileName() {
-
-    static char ret[512];
-    char *r = strrchr(fullFileName, '/');
-    if (!r) r = strrchr(fullFileName, '\\');
-    if (!r) strcpy(ret, fullFileName);
+// Given an absolute path (e.g. dir1\\dir2\\filename) it extracts and returns only the filename
+std::string Worker::GetCurrentShortFileName() const {
+    std::string::size_type filePos = fullFileName.rfind('/');
+    if (filePos != std::string::npos)
+        ++filePos;
     else {
-        r++;
-        strcpy(ret, r);
+        filePos = fullFileName.rfind('\\');
+        if (filePos != std::string::npos)
+            ++filePos;
+        else
+            filePos = 0;
     }
 
-    return ret;
-
+    return fullFileName.substr(filePos);
 }
 
 /*
@@ -117,8 +120,7 @@ char *Worker::GetShortFileName(char* longFileName) {
 */
 
 void Worker::SetCurrentFileName(const char *fileName) {
-
-    strcpy(fullFileName, fileName);
+    fullFileName = fileName;
 }
 
 void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool askConfirm, bool saveSelected) {
@@ -131,14 +133,14 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
         throw Error(tmp);
     }
 
-    bool buffer_old = simManager.GetLockedHitBuffer();
+    //bool buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
     geom->ExportTextures(f, grouping, mode, globState, saveSelected);
 #endif
 #if defined(SYNRAD)
     geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
 #endif
-    simManager.UnlockHitBuffer();
+    //simManager.UnlockHitBuffer();
     fclose(f);
 }
 
@@ -414,7 +416,6 @@ bool Worker::IsRunning(){
     return simManager.GetRunningStatus();
 }
 
-static float lastAccessTime = 0.0f;
 void Worker::Update(float appTime) {
     //Refreshes interface cache:
     //Global statistics, leak/hits, global histograms
@@ -440,11 +441,6 @@ void Worker::Update(float appTime) {
 #if defined(MOLFLOW)
     bool needsAngleMapStatusRefresh = false;
 #endif
-
-
-
-
-        lastAccessTime = appTime;
 
     //for(auto& simUnit : simManager.simUnits) {
         /*if (!simUnit->tMutex.try_lock_for(std::chrono::milliseconds (100))) {
@@ -523,7 +519,7 @@ void Worker::GetProcStatus(ProcComm &procInfoList) {
     simManager.GetProcStatus(procInfoList);
 }
 
-std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
+[[maybe_unused]] std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
     std::vector<std::vector<double>> table;
     do {
         std::vector<double> currentRow;
@@ -542,7 +538,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     if (model.otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
-    GLProgress *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
+    auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
     progressDlg->SetVisible(true);
     progressDlg->SetProgress(0.0);
 

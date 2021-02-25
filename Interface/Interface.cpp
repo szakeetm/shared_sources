@@ -2529,9 +2529,9 @@ void Interface::SaveFileAs() {
             worker.SaveGeometry(fn, progressDlg2);
             ResetAutoSaveTimer();
             changedSinceSave = false;
-            UpdateCurrentDir(worker.fullFileName);
+            UpdateCurrentDir(worker.fullFileName.c_str());
             UpdateTitle();
-            AddRecent(worker.fullFileName);
+            AddRecent(worker.fullFileName.c_str());
         }
         catch (Error &e) {
             char errMsg[512];
