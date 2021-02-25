@@ -320,7 +320,7 @@ void Worker::CalculateTextureLimits(){
                 //double dCoef = globState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
                 const double timeCorrection =
                         m == 0 ? model.wp.finalOutgassingRate : (model.wp.totalDesorbedMolecules) /
-                                                                 model.tdParams.moments[m - 1].second;
+                                moments[m - 1].second;//model.tdParams.moments[m - 1].second;
                 //model->wp.timeWindowSize;
                 //Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
                 const auto &texture = globState.facetStates[subF.globalId].momentResults[m].texture;

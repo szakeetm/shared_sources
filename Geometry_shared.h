@@ -63,12 +63,12 @@ public:
 	ClippingVertex();
 	Vector2d vertex; //Storing the actual vertex
 	bool visited;
-	bool inside;
-	bool onClippingLine;
+	bool inside{};
+	bool onClippingLine{};
 	bool isLink;
-	double distance;
+	double distance{};
 	std::list<ClippingVertex>::iterator link;
-	size_t globalId;
+	size_t globalId{};
 };
 bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<ClippingVertex>::iterator& b);
 
@@ -109,7 +109,7 @@ public:
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
-	PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
+	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
@@ -121,11 +121,11 @@ public:
 	void CorrectNonSimple(int *nonSimpleList, int nbNonSimple);
 	size_t AnalyzeNeighbors(Worker *work, GLProgress *prg);
 	std::vector<size_t> GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff);
-	std::vector<size_t> GetAllFacetIndices();
-	size_t      GetNbFacet();
-	size_t      GetNbVertex();
+	std::vector<size_t> GetAllFacetIndices() const;
+	size_t      GetNbFacet() const;
+	size_t      GetNbVertex() const;
 	Vector3d GetFacetCenter(int facet);
-	size_t      GetNbStructure();
+	size_t      GetNbStructure() const;
 	char     *GetStructureName(int idx);
 	GeomProperties* GetGeomProperties();
 	void AddFacet(const std::vector<size_t>& vertexIds);
@@ -146,10 +146,10 @@ public:
     std::map<int,GLColor> GetPlottedFacets( ) const;
 
 	// Collapsing stuff
-	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
+	static int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
 	bool RemoveNullFacet();
-	InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
-	bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
+	static  InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
+	static bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 
@@ -158,7 +158,7 @@ public:
 	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
 	void LoadASE(FileReader *file, GLProgress *prg);
 
-	bool IsLoaded();
+	bool IsLoaded() const;
 	void InsertTXT(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertGEO(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr);
@@ -166,7 +166,7 @@ public:
 	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter* f, GLProgress* prg);
 	void SaveSuper(int s);
-	void SaveProfileTXT(FileWriter *file);
+	static void SaveProfileTXT(FileWriter *file);
 	void UpdateSelection();
 	void SwapNormal(); //Swap normals of selected facets
 	void RevertFlippedNormals(); //Reverts flipping for facets with normalFlipped flag
@@ -174,7 +174,7 @@ public:
 	void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
 	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
-	void RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd);
+	void RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, bool toEnd);
 	void AddFacets(std::vector<InterfaceFacet*> facetList);
 	void RemoveSelectedVertex();
 	void RemoveFromStruct(int numToDel);
@@ -183,14 +183,14 @@ public:
 	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
-	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = NULL);
-	bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
+	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = nullptr);
+	static bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
 	void MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	std::vector<UndoPoint> MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker);
 	std::vector<UndoPoint> MirrorProjectSelectedVertices(const Vector3d &P0, const Vector3d &N, bool project, bool copy, Worker *worker);
 	void RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
-	void AlignFacets(std::vector<size_t> memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
+	void AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
 	void CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
@@ -209,20 +209,20 @@ public:
 	void    DeleteIsolatedVertices(bool selectedOnly);
 	void	SelectIsolatedVertices();
 	void    SetNormeRatio(float r);
-	float   GetNormeRatio();
+	float   GetNormeRatio() const;
 	void    SetAutoNorme(bool enable);
-	bool    GetAutoNorme();
+	bool    GetAutoNorme() const;
 	void    SetCenterNorme(bool enable);
-	bool    GetCenterNorme();
+	bool    GetCenterNorme() const;
 	void    BuildFacetList(InterfaceFacet *f);
-	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
+	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
-	void CreateRectangle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
-	void CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
-	void CreateRacetrack(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
+	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
+	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
+	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
 
 	void UpdateName(FileReader *file);
-	std::string GetName();
+	std::string GetName() const;
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
 	std::vector<size_t> GetNonPlanarFacetIds(const double& tolerance=1E-5);
@@ -288,7 +288,7 @@ protected:
 	char      strPath[512];               // Path were are stored files (super structure)
 
     // Geometry
-	InterfaceFacet    **facets;    // All facets of this geometry
+	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
