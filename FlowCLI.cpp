@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             endCondition = globState.globalHits.globalHits.hit.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
 
         if(endCondition){
-            printf("--- Trans Prob: %lu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed, globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
+            printf("--- Trans Prob: %zu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed, globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
             std::stringstream outFile;
             outFile << "out_" << model.otfParams.desorptionLimit <<".xml";
             try {
@@ -90,7 +90,8 @@ int main(int argc, char** argv) {
                 std::cout << "Could not copy file: " << e.what() << '\n';
             }
 
-            FlowIO::WriterXML::SaveSimulationState(outFile.str(), &model, globState);
+            FlowIO::WriterXML writer;
+            writer.SaveSimulationState(outFile.str(), &model, globState);
             // if there is a next des limit, handle that
             if(!Settings::desLimit.empty()) {
                 model.otfParams.desorptionLimit = Settings::desLimit.front();
@@ -110,7 +111,8 @@ int main(int argc, char** argv) {
         }
         else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
             printf("[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
-            FlowIO::WriterXML::SaveSimulationState(autoSave, &model, globState);
+            FlowIO::WriterXML writer;
+            writer.SaveSimulationState(autoSave, &model, globState);
         }
         else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
             if(Settings::simDuration > 0){
@@ -146,7 +148,8 @@ int main(int argc, char** argv) {
         std::filesystem::copy_file(Settings::inputFile, Settings::outputFile,
                                    std::filesystem::copy_options::overwrite_existing);
     }
-    FlowIO::WriterXML::SaveSimulationState(Settings::outputFile, &model, globState);
+    FlowIO::WriterXML writer;
+    writer.SaveSimulationState(Settings::outputFile, &model, globState);
 
     return 0;
 }

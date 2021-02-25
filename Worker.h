@@ -189,7 +189,9 @@ public:
   std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
   std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
-#endif
+
+    UserInput uInput; // for loader and writer
+  #endif
 
 #if defined(SYNRAD)
 

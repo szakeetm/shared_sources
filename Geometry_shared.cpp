@@ -166,7 +166,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Current facet
 			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
-
 			// Detect non visible edge
 			f->InitVisibleEdge();
 
@@ -175,6 +174,15 @@ void Geometry::InitializeGeometry(int facet_number) {
 			//f->sign = -1;
 		}
 	}
+
+    // Update mesh
+    for (int i = 0; i < sh.nbFacet; i++) {
+        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
+            // Main facet params
+            InterfaceFacet *f = facets[i];
+            SetFacetTexture(i, f->sh.texWidthD / f->sh.U.Norme(), f->sh.texHeightD / f->sh.V.Norme(), f->hasMesh);
+        }
+    }
 
 	isLoaded = true;
 	if (facet_number == -1) {
@@ -4521,7 +4529,7 @@ void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, 
         if (facets[index]->sh.sticking_paramId > -1) facets[index]->userSticking = work->parameters[facets[index]->sh.sticking_paramId].name;
         if (facets[index]->sh.opacity_paramId > -1) facets[index]->userOpacity = work->parameters[facets[index]->sh.opacity_paramId].name;
         if (facets[index]->sh.outgassing_paramId > -1) facets[index]->userOutgassing = work->parameters[facets[index]->sh.outgassing_paramId].name;
-
+        if (facets[index]->sh.isTextured) facets[index]->hasMesh = true;
         ++index;
     }
 

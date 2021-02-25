@@ -94,8 +94,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 
 	//mesh = NULL;
 	//meshPts = NULL;
-	cellPropertiesIds = NULL;
-	meshvector = NULL;
+	cellPropertiesIds = nullptr;
+	meshvector.clear();
 	meshvectorsize = 0;
 	hasMesh = false;
 	//nbElem = 0;
@@ -103,7 +103,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	selectedElem.v = 0;
 	selectedElem.width = 0;
 	selectedElem.height = 0;
-	dirCache = NULL;
+	dirCache = nullptr;
 	textureError = false;
 
 	glTex = 0;
@@ -172,15 +172,15 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 * \brief Destructor for safe deletion
 */
 InterfaceFacet::~InterfaceFacet() {
-	  SAFE_FREE(cellPropertiesIds);
+	  SAFE_DELETE(cellPropertiesIds);
 	  SAFE_FREE(dirCache);
 	  DELETE_TEX(glTex);
 	  DELETE_LIST(glList);
 	  DELETE_LIST(glElem);
 	  DELETE_LIST(glSelElem);
-	  for (size_t i = 0; i < meshvectorsize; i++)
-		  SAFE_FREE(meshvector[i].points);
-	  SAFE_FREE(meshvector);
+	  /*for (size_t i = 0; i < meshvectorsize; i++)
+          SAFE_DELETE(meshvector[i].points);*/
+	  //SAFE_DELETE(meshvector);
 #if defined(MOLFLOW)
 	  //SAFE_FREE(outgassingMapWindow);
 	  //SAFE_FREE(angleMapCache);
@@ -292,9 +292,9 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	texDimH = 0;
 	hasMesh = false;
 	//SAFE_FREE(mesh);
-	for (size_t i = 0; i < meshvectorsize; i++)
-		SAFE_FREE(meshvector[i].points);
-	SAFE_FREE(meshvector);
+	/*for (size_t i = 0; i < meshvectorsize; i++)
+        SAFE_DELETE(meshvector[i].points);*/
+    //SAFE_DELETE(meshvector);
 	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
 	DELETE_TEX(glTex);
@@ -353,21 +353,23 @@ void InterfaceFacet::glVertex2u(double u, double v) {
 */
 bool InterfaceFacet::BuildMesh() {
 
-	if (!(cellPropertiesIds = (int *)malloc(sh.texWidth * sh.texHeight * sizeof(int))))
+	if (!(cellPropertiesIds = new int[sh.texWidth * sh.texHeight]()))
 	{
 		//Couldn't allocate memory
 		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
+	//memset(cellPropertiesIds, 0, sh.texWidth * sh.texHeight * sizeof(int));
 
-	if (!(meshvector = (CellProperties *)malloc(sh.texWidth * sh.texHeight * sizeof(CellProperties)))) //will shrink at the end
-	{
-		//Couldn't allocate memory
+	try{
+	    meshvector.resize(sh.texWidth * sh.texHeight); //will shrink at the end
+	}
+    catch (std::exception& e) {
+		std::cerr << "Couldn't allocate memory" << std::endl;
 		return false;
 		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
+	//memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
 	
 	meshvectorsize = 0;
 	hasMesh = true;
@@ -400,15 +402,15 @@ bool InterfaceFacet::BuildMesh() {
 			if (sh.nbIndex <= 4) {
 
 				// Optimization for quad and triangle
-				allInside = IsInPoly(u0, u1, vertices2)
-				 && IsInPoly(u0, u1, vertices2)
-				 && IsInPoly(u0, u1,vertices2)
-				 && IsInPoly(u0, u1, vertices2);
+                allInside = IsInPoly(Vector2d(u0,v0), vertices2)
+                            && IsInPoly(Vector2d(u0, v1), vertices2)
+                            && IsInPoly(Vector2d(u1, v0), vertices2)
+                            && IsInPoly(Vector2d(u1, v1), vertices2);
 
 			}
 
 			if (!allInside) {
-				CellProperties cellprop;
+				CellProperties cellprop{};
 
 				// Intersect element with the facet (facet boundaries)
 				P1.pts[0].u = u0;
@@ -433,7 +435,7 @@ bool InterfaceFacet::BuildMesh() {
 							cellprop.uCenter = (float)center.u;
 							cellprop.vCenter = (float)center.v;
 							cellprop.nbPoints = 0;
-							cellprop.points = NULL;
+							cellprop.points.clear();
 							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
 						}
@@ -456,8 +458,9 @@ bool InterfaceFacet::BuildMesh() {
 							//cellprop.elemId = nbElem;
 
 							// Mesh coordinates
-							cellprop.points = (Vector2d*)malloc(sizeof(vList[0])*vList.size());
-							memcpy(cellprop.points, vList.data(), sizeof(vList[0])*vList.size());
+							cellprop.points = //(Vector2d*)malloc(sizeof(vList[0])*vList.size());
+							    vList;
+							//memcpy(cellprop.points, vList.data(), sizeof(vList[0])*vList.size());
 							cellprop.nbPoints = vList.size();
 							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
@@ -507,7 +510,8 @@ bool InterfaceFacet::BuildMesh() {
 		}
 	}
 	//Shrink mesh vector
-	meshvector = (CellProperties*)realloc(meshvector, sizeof(CellProperties)*meshvectorsize);
+	//meshvector = (CellProperties*)realloc(meshvector, sizeof(CellProperties)*meshvectorsize);
+    meshvector.resize(meshvectorsize);
 
 	// Check meshing accuracy (TODO)
 	/*

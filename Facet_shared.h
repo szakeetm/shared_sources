@@ -39,7 +39,7 @@ struct NeighborFacet {
 class CellProperties {
 public:
 	//Old C-style array to save memory
-	Vector2d* points;
+	std::vector<Vector2d> points;
 	size_t nbPoints;
 	double   area;     // Area of element
 	float   uCenter;  // Center coordinates
@@ -143,7 +143,7 @@ public:
 
 	//C-style arrays to save memory (textures can be huge):
 	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
-	CellProperties* meshvector;
+    std::vector<CellProperties> meshvector;
 	size_t meshvectorsize;
 
 	FacetProperties sh;
