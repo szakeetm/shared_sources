@@ -1753,12 +1753,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     return true;
                 }
                 case MENU_IMGUI: {
-                    if(!imWin) {
-                        imWin = new ImguiWindow(this);
-                        imWin->init();
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
                     }
                     else{
-                        imWin->destruct();
+                        imWnd->destruct();
+                        delete imWnd;
                     }
                     return true;
                 }
@@ -2783,9 +2784,9 @@ int Interface::FrameMove() {
     */
 
 
-    if(imWin) {
+    /*if(imWin) {
         imWin->renderSingle();
-    }
+    }*/
 
     double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!

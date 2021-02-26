@@ -16,6 +16,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
+#include <imgui/imgui_impl_sdl.h>
+
 #ifndef _WIN32
 #include <unistd.h> //_exit()
 #endif
@@ -402,7 +404,7 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
-
+         ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
 		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
 
        UpdateEventCount(&sdlEvent);

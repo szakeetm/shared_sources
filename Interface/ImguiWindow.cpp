@@ -38,6 +38,11 @@ void ImguiWindow::init() {
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+
+    // Our state
+    show_demo_window = false;
+    show_another_window = true;
+    clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
 void ImguiWindow::destruct() {
@@ -134,11 +139,6 @@ void ImguiWindow::renderSingle() {
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-    // Our state
-    bool show_demo_window = false;
-    bool show_another_window = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     // Main loop
     bool done = false;
     //while (!done)
@@ -148,7 +148,7 @@ void ImguiWindow::renderSingle() {
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        SDL_Event event;
+        /*SDL_Event event;
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -156,7 +156,7 @@ void ImguiWindow::renderSingle() {
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(app->mainScreen))
                 done = true;
-        }
+        }*/
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
@@ -207,6 +207,6 @@ void ImguiWindow::renderSingle() {
         //glClear(GL_COLOR_BUFFER_BIT);
         //glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-        SDL_GL_SwapWindow(app->mainScreen);
+        //SDL_GL_SwapWindow(app->mainScreen);
     }
 }

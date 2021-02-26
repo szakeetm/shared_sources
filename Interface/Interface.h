@@ -30,7 +30,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
-#include "ImguiWindow.h"
 
 class GLTextField;
 class GLToggle;
@@ -78,7 +77,7 @@ class ParticleLogger;
 class ConvergencePlotter;
 
 class Geometry;
-
+class ImguiWindow;
 /*
 typedef struct {
 	GLLabel     *name;

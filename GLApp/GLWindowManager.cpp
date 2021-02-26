@@ -8,6 +8,8 @@
 #include "GLWindow.h"
 #include <sstream>
 #include <cstring> //strcpy, etc.
+#include "ImguiWindow.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
@@ -403,6 +405,9 @@ void GLWindowManager::Resize() {
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
+
+  if(theApp->imWnd)
+      theApp->imWnd->renderSingle();
   SDL_GL_SwapWindow(theApp->mainScreen);
 }
 
