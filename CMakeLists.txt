@@ -366,8 +366,9 @@ if(NOT MSVC)
 
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
-    target_link_libraries(${PROJECT_NAME}  PUBLIC imgui)
 endif(NOT MSVC)
+
+target_link_libraries(${PROJECT_NAME}  PUBLIC imgui)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

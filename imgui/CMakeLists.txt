@@ -51,11 +51,13 @@ target_include_directories( imgui
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
-    target_link_libraries(imguiPUBLIC
+    target_link_libraries(imgui PUBLIC
             SDL2.lib
             SDL2main.lib
             opengl32#.lib
             )
+    set(SDL_DIR ../../include/windows_only/SDL2)
+    target_include_directories(imgui PRIVATE ${SDL_DIR})
 endif(MSVC)
 if(NOT MSVC)
     if(APPLE)
@@ -94,4 +96,4 @@ message(¨Libs ${SDL2_LIBRARIES}¨)
 message(¨Lib ${SDL2_LIBRARY}¨)
 
 #target_compile_definitions( imgui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD )
-target_link_libraries( imgui #[[glfw glad]] ${OPENGL_gl_LIBRARY})
+target_link_libraries( imgui PUBLIC #[[glfw glad]] ${OPENGL_gl_LIBRARY})
