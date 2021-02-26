@@ -30,6 +30,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
+#include "ImguiWindow.h"
+
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -223,6 +225,7 @@ typedef struct {
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
+#define MENU_IMGUI                1002
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
@@ -276,6 +279,7 @@ public:
 	double   planarityThreshold; //Planarity threshold
 	
 	AppUpdater* appUpdater;
+    ImguiWindow* imWin;
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
 	int      autoSaveSimuOnly;

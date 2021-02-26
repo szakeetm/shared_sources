@@ -92,6 +92,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/FormatHelper.h" //unit formatting
 
 #include "../../src/versionId.h"
+#include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
@@ -989,6 +990,7 @@ void Interface::OneTimeSceneInit_shared_post() {
     menu->Add("About");
     menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
     menu->GetSubMenu("About")->Add("Check for updates...", MENU_UPDATE);
+    menu->GetSubMenu("About")->Add("ImGUI", MENU_IMGUI);
 
     ClearFacetParams();
     LoadConfig();
@@ -1748,6 +1750,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     }
                     manualUpdate->Refresh();
                     manualUpdate->SetVisible(true);
+                    return true;
+                }
+                case MENU_IMGUI: {
+                    if(!imWin) {
+                        imWin = new ImguiWindow(this);
+                        imWin->init();
+                    }
+                    else{
+                        imWin->destruct();
+                    }
                     return true;
                 }
             }
@@ -2769,6 +2781,11 @@ int Interface::FrameMove() {
         SDL_Delay(60); //was 60
     }
     */
+
+
+    if(imWin) {
+        imWin->renderSingle();
+    }
 
     double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!

@@ -11,6 +11,7 @@ add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(imgui)
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -127,7 +128,7 @@ set(INTERFACE_FILES
         Web.cpp
         Worker_shared.cpp
         GeometryConverter.cpp
-        )
+        Interface/ImguiWindow.cpp Interface/ImguiWindow.h)
 
 set(SIM_FILES
         Distributions.cpp
@@ -365,6 +366,7 @@ if(NOT MSVC)
 
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  PUBLIC imgui)
 endif(NOT MSVC)
 
 ######################### Flags ############################
