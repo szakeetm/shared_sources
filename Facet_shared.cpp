@@ -643,7 +643,7 @@ void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height)
 
 	UnselectElem();
 
-	if (cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
+	if (!cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
 
 		size_t maxW = sh.texWidth - u;
 		size_t maxH = sh.texHeight - v;
