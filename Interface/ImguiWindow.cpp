@@ -116,8 +116,34 @@ void ImguiWindow::render() {
         // 3. Show another simple window.
         if (show_another_window)
         {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
+            ImGui::Begin("Global settings", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            if (ImGui::BeginTable("split", 2))
+            {
+                ImGui::TableNextRow();
+                ImGui::Checkbox("Autosave only when simulation is running", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use .zip as default extension (otherwise .xml)", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Check for updates at startup", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Auto refresh formulas", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Anti-Aliasing", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("White Background", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Left-handed coord. system", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight non-planar facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight selected facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use old XML format", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::TableNextRow();
+                ImGui::Checkbox("Autosave only when simulation is running", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use .zip as default extension (otherwise .xml)", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Check for updates at startup", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Auto refresh formulas", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Anti-Aliasing", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("White Background", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Left-handed coord. system", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight non-planar facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight selected facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use old XML format", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::EndTable();
+            }
+
             if (ImGui::Button("Close Me"))
                 show_another_window = false;
             ImGui::End();
@@ -131,6 +157,64 @@ void ImguiWindow::render() {
         //glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->mainScreen);
+    }
+}
+
+// Make the UI compact because there are so many fields
+static void PushStyleCompact()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
+}
+
+static void PopStyleCompact()
+{
+    ImGui::PopStyleVar(2);
+}
+
+static void EditTableColumnsFlags(ImGuiTableColumnFlags* p_flags)
+{
+    ImGui::CheckboxFlags("_DefaultHide", p_flags, ImGuiTableColumnFlags_DefaultHide);
+    ImGui::CheckboxFlags("_DefaultSort", p_flags, ImGuiTableColumnFlags_DefaultSort);
+    if (ImGui::CheckboxFlags("_WidthStretch", p_flags, ImGuiTableColumnFlags_WidthStretch))
+        *p_flags &= ~(ImGuiTableColumnFlags_WidthMask_ ^ ImGuiTableColumnFlags_WidthStretch);
+    if (ImGui::CheckboxFlags("_WidthFixed", p_flags, ImGuiTableColumnFlags_WidthFixed))
+        *p_flags &= ~(ImGuiTableColumnFlags_WidthMask_ ^ ImGuiTableColumnFlags_WidthFixed);
+    ImGui::CheckboxFlags("_NoResize", p_flags, ImGuiTableColumnFlags_NoResize);
+    ImGui::CheckboxFlags("_NoReorder", p_flags, ImGuiTableColumnFlags_NoReorder);
+    ImGui::CheckboxFlags("_NoHide", p_flags, ImGuiTableColumnFlags_NoHide);
+    ImGui::CheckboxFlags("_NoClip", p_flags, ImGuiTableColumnFlags_NoClip);
+    ImGui::CheckboxFlags("_NoSort", p_flags, ImGuiTableColumnFlags_NoSort);
+    ImGui::CheckboxFlags("_NoSortAscending", p_flags, ImGuiTableColumnFlags_NoSortAscending);
+    ImGui::CheckboxFlags("_NoSortDescending", p_flags, ImGuiTableColumnFlags_NoSortDescending);
+    ImGui::CheckboxFlags("_NoHeaderWidth", p_flags, ImGuiTableColumnFlags_NoHeaderWidth);
+    ImGui::CheckboxFlags("_PreferSortAscending", p_flags, ImGuiTableColumnFlags_PreferSortAscending);
+    ImGui::CheckboxFlags("_PreferSortDescending", p_flags, ImGuiTableColumnFlags_PreferSortDescending);
+    ImGui::CheckboxFlags("_IndentEnable", p_flags, ImGuiTableColumnFlags_IndentEnable); ImGui::SameLine();
+    ImGui::CheckboxFlags("_IndentDisable", p_flags, ImGuiTableColumnFlags_IndentDisable); ImGui::SameLine();
+}
+
+static void ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
+{
+    ImGui::CheckboxFlags("_IsEnabled", &flags, ImGuiTableColumnFlags_IsEnabled);
+    ImGui::CheckboxFlags("_IsVisible", &flags, ImGuiTableColumnFlags_IsVisible);
+    ImGui::CheckboxFlags("_IsSorted", &flags, ImGuiTableColumnFlags_IsSorted);
+    ImGui::CheckboxFlags("_IsHovered", &flags, ImGuiTableColumnFlags_IsHovered);
+}
+
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
     }
 }
 
@@ -193,10 +277,71 @@ void ImguiWindow::renderSingle() {
         // 3. Show another simple window.
         if (show_another_window)
         {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
+            ImGui::Begin("Global settings", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            float gasMass = 2.4;
+            if (ImGui::BeginTable("split", 2))
+            {
+                PushStyleCompact();
+                ImGui::TableNextColumn();
+                ImGui::PushID(0);
+                //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
+                ImGui::Text("Global settings");
+                ImGui::Checkbox("Autosave only when simulation is running", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use .zip as default extension (otherwise .xml)", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Check for updates at startup", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Auto refresh formulas", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Anti-Aliasing", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("White Background", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Left-handed coord. system", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight non-planar facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Highlight selected facets", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Use old XML format", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::TableNextColumn();
+                ImGui::PushID(1);
+                //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
+                ImGui::Text("Simulation settings");
+                ImGui::PushItemWidth(100);
+                ImGui::InputFloat("Gas molecular mass (g/mol) ##1b", &gasMass);
+                ImGui::InputFloat("Gas half life (s) ##1b", &gasMass);
+                ImGui::DragFloat("Final outgassing rate (mbar*l/sec) ##1b", &gasMass);      // Edit bools storing our window open/close state
+                ImGui::DragFloat("Final outgassing rate (1/sec) ##1b", &gasMass);      // Edit bools storing our window open/close state
+                ImGui::DragFloat("Total desorbed molecules:", &gasMass);      // Edit bools storing our window open/close state
+                ImGui::Button("Recalc. outgassing");      // Edit bools storing our window open/close state
+                ImGui::Checkbox("Enable low flux mode", &show_demo_window);      // Edit bools storing our window open/close state
+                ImGui::SameLine(); HelpMarker(
+                        "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
+                        "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
+                ImGui::DragFloat("Cutoff ratio ##1b", &gasMass);      // Edit bools storing our window open/close state
+                ImGui::PopItemWidth();
+                PopStyleCompact();
+                ImGui::EndTable();
+            }
+
+
+            if (ImGui::Button("Apply above settings"))
                 show_another_window = false;
+
+            ImGui::Text("Process control");
+            static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+            if (ImGui::BeginTable("table2", 5, flags))
+            {
+                ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("Mem Usage", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("Mem Peak", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableHeadersRow();
+                for (int row = 0; row < 5; row++)
+                {
+                    ImGui::TableNextRow();
+                    for (int column = 0; column < 6; column++)
+                    {
+                        ImGui::TableSetColumnIndex(column);
+                        ImGui::Text("%s %d", (column >= 4) ? "X Y Z" : "", row);
+                    }
+                }
+                ImGui::EndTable();
+            }
             ImGui::End();
         }
 
