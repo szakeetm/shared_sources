@@ -135,10 +135,10 @@ int main(int argc, char** argv) {
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
         std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
-                  << " : " << (double) (globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) /
+                << " (" << globState.globalHits.globalHits.hit.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) /
                               (elapsedTime) << "Hit/s" << std::endl;
         std::cout << "[" << elapsedTime << "s] Des " << globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
-                  << " : " << (double) (globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) /
+                << " (" << globState.globalHits.globalHits.hit.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) /
                               (elapsedTime) << "Des/s" << std::endl;
     }
 

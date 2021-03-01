@@ -439,21 +439,38 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 SetState(PROCESS_STARTING, "Loading simulation");
 
-                simulation->SetNParticle(nbThreads);
-                {//if(nbThreads != simThreads.size()) {
-                    simThreads.clear();
-                    simThreads.reserve(nbThreads);
-                    for (size_t t = 0; t < nbThreads; t++) {
-                        simThreads.emplace_back(
-                                SimThread(procInfo, simulation, t));
-                        simThreads.back().particle = simulation->GetParticle(t);
-                    }
-                }
+                if(simulation->model.initialized && simulation->globState){
 
-                loadOk = Load();
-                if (loadOk) {
-                    //desorptionLimit = procInfo->cmdParam2; // 0 for endless
-                    SetRuntimeInfo();
+                    simulation->SetNParticle(nbThreads);
+                    {//if(nbThreads != simThreads.size()) {
+                        simThreads.clear();
+                        simThreads.reserve(nbThreads);
+                        for (size_t t = 0; t < nbThreads; t++) {
+                            simThreads.emplace_back(
+                                    SimThread(procInfo, simulation, t));
+                            simThreads.back().particle = simulation->GetParticle(t);
+                        }
+                    }
+
+                    loadOk = Load();
+                    if (loadOk) {
+                        //desorptionLimit = procInfo->cmdParam2; // 0 for endless
+
+                        // Calculate remaining work
+                        size_t desPerThread = 0;
+                        size_t remainder = 0;
+                        size_t des_global = simulation->globState->globalHits.globalHits.hit.nbDesorbed;
+                        if(des_global > 0) {
+                            desPerThread = des_global / nbThreads;
+                            remainder = des_global % nbThreads;
+                        }
+                        for(auto& thread : simThreads){
+                            thread.particle->totalDesorbed = desPerThread;
+                            thread.particle->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
+                        }
+
+                        SetRuntimeInfo();
+                    }
                 }
                 SetReady(loadOk);
 
@@ -472,6 +489,19 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_START: {
                 // Check end of simulation
+                if(!simulation->model.initialized){
+                    loadOk = false;
+                }
+
+                for(auto& thread : simThreads){
+                    if(!thread.particle)
+                        loadOk = false;
+                }
+
+                if(!simulation->globState || !loadOk) {
+                    loadOk = false;
+                    SetState(PROCESS_ERROR, GetSimuStatus());
+                }
 
                 if (simulation->model.otfParams.desorptionLimit > 0) {
                     if (simulation->totalDesorbed >=
@@ -482,18 +512,12 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     }
                 }
 
-                for(auto& thread : simThreads){
-                    thread.particle->model= &simulation->model;
-                }
-
                 if (GetLocalState() != PROCESS_RUN) {
                     DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                     SetState(PROCESS_RUN, GetSimuStatus());
                 }
-                if(!simulation->globState) {
-                    loadOk = false;
-                    SetState(PROCESS_ERROR, GetSimuStatus());
-                }
+
+
 
                 bool lastUpdateOk = true;
                 if (loadOk) {
@@ -510,7 +534,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                         }
                     }
                     for(auto& thread : simThreads){
-                        size_t localDes = desPerThread - thread.particle->totalDesorbed;
+                        size_t localDes = (desPerThread > thread.particle->totalDesorbed) ? desPerThread - thread.particle->totalDesorbed : 0;
                         thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
                     }
 

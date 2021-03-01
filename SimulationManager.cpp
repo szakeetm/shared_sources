@@ -103,7 +103,7 @@ int SimulationManager::StartSimulation() {
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
-    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
+    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){
         throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
     }
 
