@@ -4562,19 +4562,24 @@ void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, 
     size_t index = 0;
     for(auto& fac : sFacets) {
         facets[index] = new InterfaceFacet(fac.indices.size());
-        facets[index]->indices = fac.indices;
-        facets[index]->vertices2 = fac.vertices2;
-        facets[index]->sh = fac.sh;
+        auto& intFacet = facets[index];
+        intFacet->indices = fac.indices;
+        intFacet->vertices2 = fac.vertices2;
+        intFacet->sh = fac.sh;
 
         // Molflow
-        facets[index]->ogMap = fac.ogMap;
-        facets[index]->angleMapCache = fac.angleMap.pdf;
+        intFacet->ogMap = fac.ogMap;
+        intFacet->angleMapCache = fac.angleMap.pdf;
 
+        if(intFacet->ogMap.outgassingMapWidth > 0.0 || intFacet->ogMap.outgassingMapHeight > 0.0 || intFacet->ogMap.outgassingFileRatio > 0.0){
+            intFacet->hasOutgassingFile = true;
+        }
+        
         //Set param names for interface
-        if (facets[index]->sh.sticking_paramId > -1) facets[index]->userSticking = work->parameters[facets[index]->sh.sticking_paramId].name;
-        if (facets[index]->sh.opacity_paramId > -1) facets[index]->userOpacity = work->parameters[facets[index]->sh.opacity_paramId].name;
-        if (facets[index]->sh.outgassing_paramId > -1) facets[index]->userOutgassing = work->parameters[facets[index]->sh.outgassing_paramId].name;
-        if (facets[index]->sh.isTextured) facets[index]->hasMesh = true;
+        if (intFacet->sh.sticking_paramId > -1) intFacet->userSticking = work->parameters[intFacet->sh.sticking_paramId].name;
+        if (intFacet->sh.opacity_paramId > -1) intFacet->userOpacity = work->parameters[intFacet->sh.opacity_paramId].name;
+        if (intFacet->sh.outgassing_paramId > -1) intFacet->userOutgassing = work->parameters[intFacet->sh.outgassing_paramId].name;
+        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
         ++index;
     }
 

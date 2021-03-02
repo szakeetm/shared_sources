@@ -186,8 +186,6 @@ public:
 	OutgassingMap ogMap;
     std::vector<size_t> angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
-	double totalFlux;
-	double totalDose;
 
 	//Parametric stuff
 	std::string userOutgassing;

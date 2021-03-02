@@ -151,7 +151,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 
 	//sh.facetHistogramParams.record = false;
 
-	totalFlux = sh.totalOutgassing = totalDose = 0.0;
+    ogMap.totalFlux = sh.totalOutgassing = ogMap.totalDose = 0.0;
 
 	userOutgassing = "";
 	userOpacity = "";
