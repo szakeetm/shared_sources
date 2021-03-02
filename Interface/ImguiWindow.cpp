@@ -7,7 +7,9 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_opengl2.h"
+#include "../../src/MolFlow.h"
 
+#include <sstream>
 void ImguiWindow::init() {
 // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -277,72 +279,209 @@ void ImguiWindow::renderSingle() {
         // 3. Show another simple window.
         if (show_another_window)
         {
-            ImGui::Begin("Global settings", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            float gasMass = 2.4;
-            if (ImGui::BeginTable("split", 2))
-            {
-                PushStyleCompact();
-                ImGui::TableNextColumn();
-                ImGui::PushID(0);
-                //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
-                ImGui::Text("Global settings");
-                ImGui::Checkbox("Autosave only when simulation is running", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Use .zip as default extension (otherwise .xml)", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Check for updates at startup", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Auto refresh formulas", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Anti-Aliasing", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("White Background", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Left-handed coord. system", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Highlight non-planar facets", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Highlight selected facets", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Use old XML format", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::TableNextColumn();
-                ImGui::PushID(1);
-                //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
-                ImGui::Text("Simulation settings");
-                ImGui::PushItemWidth(100);
-                ImGui::InputFloat("Gas molecular mass (g/mol) ##1b", &gasMass);
-                ImGui::InputFloat("Gas half life (s) ##1b", &gasMass);
-                ImGui::DragFloat("Final outgassing rate (mbar*l/sec) ##1b", &gasMass);      // Edit bools storing our window open/close state
-                ImGui::DragFloat("Final outgassing rate (1/sec) ##1b", &gasMass);      // Edit bools storing our window open/close state
-                ImGui::DragFloat("Total desorbed molecules:", &gasMass);      // Edit bools storing our window open/close state
-                ImGui::Button("Recalc. outgassing");      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Enable low flux mode", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::SameLine(); HelpMarker(
-                        "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
-                        "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
-                ImGui::DragFloat("Cutoff ratio ##1b", &gasMass);      // Edit bools storing our window open/close state
-                ImGui::PopItemWidth();
-                PopStyleCompact();
-                ImGui::EndTable();
-            }
+            MolFlow* mApp = (MolFlow*) app;
+            if(mApp) {
 
-
-            if (ImGui::Button("Apply above settings"))
-                show_another_window = false;
-
-            ImGui::Text("Process control");
-            static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
-            if (ImGui::BeginTable("table2", 5, flags))
-            {
-                ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("Mem Usage", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("Mem Peak", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableHeadersRow();
-                for (int row = 0; row < 5; row++)
-                {
-                    ImGui::TableNextRow();
-                    for (int column = 0; column < 6; column++)
-                    {
-                        ImGui::TableSetColumnIndex(column);
-                        ImGui::Text("%s %d", (column >= 4) ? "X Y Z" : "", row);
-                    }
+                ImGui::Begin("Global settings",
+                             &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+                float gasMass = 2.4;
+                if (ImGui::BeginTable("split", 2)) {
+                    PushStyleCompact();
+                    ImGui::TableNextColumn();
+                    ImGui::PushID(0);
+                    //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
+                    ImGui::Text("Global settings");
+                    ImGui::Checkbox("Autosave only when simulation is running",
+                                    reinterpret_cast<bool *>(&mApp->autoSaveSimuOnly));      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Use .zip as default extension (otherwise .xml)",
+                                    reinterpret_cast<bool *>(&mApp->compressSavedFiles));      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Check for updates at startup",
+                                    reinterpret_cast<bool *>(&mApp->autoUpdateFormulas));      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Auto refresh formulas",
+                                    reinterpret_cast<bool *>(&mApp->autoUpdateFormulas));      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Anti-Aliasing",
+                                    &mApp->antiAliasing);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("White Background",
+                                    &mApp->whiteBg);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Left-handed coord. system",
+                                    &mApp->leftHandedView);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Highlight non-planar facets",
+                                    &mApp->highlightNonplanarFacets);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Highlight selected facets",
+                                    &mApp->highlightSelection);      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Use old XML format",
+                                    &mApp->useOldXMLFormat);      // Edit bools storing our window open/close state
+                    ImGui::TableNextColumn();
+                    ImGui::PushID(1);
+                    //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
+                    ImGui::Text("Simulation settings");
+                    ImGui::PushItemWidth(100);
+                    ImGui::InputDouble("Gas molecular mass (g/mol) ##1b", &mApp->worker.model.wp.gasMass);
+                    ImGui::InputDouble("Gas half life (s) ##1b", &mApp->worker.model.wp.halfLife);
+                    ImGui::InputDouble("Final outgassing rate (mbar*l/sec) ##1b",
+                                     &mApp->worker.model.wp.finalOutgassingRate);      // Edit bools storing our window open/close state
+                    ImGui::InputDouble("Final outgassing rate (1/sec) ##1b",
+                                     &mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec);      // Edit bools storing our window open/close state
+                    ImGui::InputDouble("Total desorbed molecules:",
+                                     &mApp->worker.model.wp.totalDesorbedMolecules);      // Edit bools storing our window open/close state
+                    ImGui::Button("Recalc. outgassing");      // Edit bools storing our window open/close state
+                    ImGui::Checkbox("Enable low flux mode",
+                                    &mApp->worker.model.otfParams.lowFluxMode);      // Edit bools storing our window open/close state
+                    ImGui::SameLine();
+                    HelpMarker(
+                            "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
+                            "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
+                    ImGui::InputDouble("Cutoff ratio ##1b",
+                                     &mApp->worker.model.otfParams.lowFluxCutoff);      // Edit bools storing our window open/close state
+                    ImGui::PopItemWidth();
+                    PopStyleCompact();
+                    ImGui::EndTable();
                 }
-                ImGui::EndTable();
+
+
+                if (ImGui::Button("Apply above settings"))
+                    show_another_window = false;
+
+                ImGui::Text("Process control");
+                static ImGuiTableFlags flags =
+                        ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
+                        ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+                if (ImGui::BeginTable("table2", 5, flags)) {
+                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Mem Usage", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Mem Peak", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+
+                    char tmp[512];
+                    size_t  states[MAX_PROCESS];
+                    std::vector<std::string> statusStrings(MAX_PROCESS);
+                    memset(states, 0, MAX_PROCESS * sizeof(int));
+                    mApp->worker.GetProcStatus(states, statusStrings);
+
+                    ProcComm procInfo;
+                    mApp->worker.GetProcStatus(procInfo);
+
+                    for (int row = 0; row < 5; row++) {
+                        ImGui::TableNextRow();
+
+                        //Interface
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+                        size_t currPid = GetCurrentProcessId();
+    PROCESS_INFO parentInfo;
+    GetProcInfo(currPid, &parentInfo);
+
+	ImGui::TableSetColumnIndex(0);
+    ImGui::Text("Interface");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Text("%zd", currPid);
+    ImGui::TableSetColumnIndex(2);
+    ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0*1024.0));
+    ImGui::TableSetColumnIndex(3);
+    ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0*1024.0));
+    ImGui::TableSetColumnIndex(4);
+    ImGui::Text("");
+    ImGui::TableSetColumnIndex(5);
+    ImGui::Text("");
+
+#else
+                        size_t currPid = getpid();
+                        PROCESS_INFO parentInfo;
+                        GetProcInfo(currPid, &parentInfo);
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("Interface");
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::Text("%zd", currPid);
+                        ImGui::TableSetColumnIndex(2);
+                        ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0));
+                        ImGui::TableSetColumnIndex(3);
+                        ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
+                        ImGui::TableSetColumnIndex(4);
+                        ImGui::Text("");
+                        ImGui::TableSetColumnIndex(5);
+                        ImGui::Text("");
+#endif
+                        size_t i = 1;
+                        for (auto& proc : procInfo.subProcInfo)
+                        {
+                            //auto& proc = procInfo.subProcInfo[0];
+                            DWORD pid = proc.procId;
+                            ImGui::TableSetColumnIndex(0);
+                            ImGui::Text("Subproc.%lu", i);
+                            ImGui::TableSetColumnIndex(1);
+                            ImGui::Text("%d", pid);
+                            ImGui::TableSetColumnIndex(2);
+                            ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0));
+                            ImGui::TableSetColumnIndex(3);
+                            ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
+                            ImGui::TableSetColumnIndex(4);
+                            ImGui::Text("");
+                            ImGui::TableSetColumnIndex(5);
+                            ImGui::Text("");
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+                            PROCESS_INFO pInfo = proc.runtimeInfo;
+        /*if (!GetProcInfo(pid, &pInfo)) {
+			processList->SetValueAt(2, i, "0 KB");
+			processList->SetValueAt(3, i, "0 KB");
+			//processList->SetValueAt(4,i,"0 %");
+			processList->SetValueAt(4, i, "Dead");
+		}
+		else*/
+        {
+            sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
+            processList->SetValueAt(2, i, tmp);
+            sprintf(tmp, "%.0f MB", (double)pInfo.mem_peak / (1024.0*1024.0));
+            processList->SetValueAt(3, i, tmp);
+
+			// State/Status
+			std::stringstream tmp; tmp << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
+			processList->SetValueAt(4, i, tmp.str().c_str());
+		}
+
+#else
+                            if (pid == currPid) { // TODO: Check if this is wanted
+                                ImGui::TableSetColumnIndex(2);
+                                ImGui::Text("0 KB");
+                                ImGui::TableSetColumnIndex(3);
+                                ImGui::Text("0 KB");
+                                ImGui::TableSetColumnIndex(4);
+                                ImGui::Text("Dead");
+                                ImGui::TableSetColumnIndex(5);
+                                ImGui::Text("");
+                            }
+                            else {
+                                PROCESS_INFO pInfo = proc.runtimeInfo;
+                                //GetProcInfo(pid, &pInfo);
+
+                                ImGui::TableSetColumnIndex(2);
+                                ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0));
+                                ImGui::TableSetColumnIndex(3);
+                                ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
+
+
+                                // State/Status
+
+                                std::stringstream tmp_ss; //tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
+                                tmp_ss << "[" << prStates[proc.slaveState] << "] " << proc.statusString;
+
+                                ImGui::TableSetColumnIndex(4);
+                                ImGui::Text("%s", tmp_ss.str().c_str());
+                                ImGui::TableSetColumnIndex(5);
+                                ImGui::Text("");
+                            }
+#endif
+                            ++i;
+                        }
+                        /*for (int column = 0; column < 6; column++) {
+                            ImGui::TableSetColumnIndex(column);
+                            ImGui::Text("%s %d", (column >= 4) ? "X Y Z" : "", row);
+                        }*/
+                    }
+                    ImGui::EndTable();
+                }
+                ImGui::End();
             }
-            ImGui::End();
         }
 
         // Rendering
