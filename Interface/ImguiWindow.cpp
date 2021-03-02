@@ -10,6 +10,8 @@
 #include "../../src/MolFlow.h"
 
 #include <sstream>
+#include <imgui/imgui_internal.h>
+
 void ImguiWindow::init() {
 // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -34,7 +36,7 @@ void ImguiWindow::init() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
@@ -285,18 +287,22 @@ void ImguiWindow::renderSingle() {
                 ImGui::Begin("Global settings",
                              &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
                 float gasMass = 2.4;
-                if (ImGui::BeginTable("split", 2)) {
-                    PushStyleCompact();
-                    ImGui::TableNextColumn();
-                    ImGui::PushID(0);
+                if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
+                    //PushStyleCompact();
+                    //ImGui::TableNextColumn();
+                    //ImGui::PushID(0);
                     //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
-                    ImGui::Text("Global settings");
+                    ImGui::TableSetupColumn("Global settings");
+                    ImGui::TableSetupColumn("Simulation settings");
+                    ImGui::TableHeadersRow();
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
                     ImGui::Checkbox("Autosave only when simulation is running",
                                     reinterpret_cast<bool *>(&mApp->autoSaveSimuOnly));      // Edit bools storing our window open/close state
                     ImGui::Checkbox("Use .zip as default extension (otherwise .xml)",
                                     reinterpret_cast<bool *>(&mApp->compressSavedFiles));      // Edit bools storing our window open/close state
                     ImGui::Checkbox("Check for updates at startup",
-                                    reinterpret_cast<bool *>(&mApp->autoUpdateFormulas));      // Edit bools storing our window open/close state
+                                    reinterpret_cast<bool *>(&mApp->updateRequested));      // Edit bools storing our window open/close state
                     ImGui::Checkbox("Auto refresh formulas",
                                     reinterpret_cast<bool *>(&mApp->autoUpdateFormulas));      // Edit bools storing our window open/close state
                     ImGui::Checkbox("Anti-Aliasing",
@@ -312,33 +318,50 @@ void ImguiWindow::renderSingle() {
                     ImGui::Checkbox("Use old XML format",
                                     &mApp->useOldXMLFormat);      // Edit bools storing our window open/close state
                     ImGui::TableNextColumn();
-                    ImGui::PushID(1);
+                    //ImGui::PushID(1);
                     //ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
-                    ImGui::Text("Simulation settings");
+                    //ImGui::TableSetupColumn("Simulation settings");
+                    //ImGui::TableHeadersRow();
                     ImGui::PushItemWidth(100);
                     ImGui::InputDouble("Gas molecular mass (g/mol) ##1b", &mApp->worker.model.wp.gasMass);
-                    ImGui::InputDouble("Gas half life (s) ##1b", &mApp->worker.model.wp.halfLife);
-                    ImGui::InputDouble("Final outgassing rate (mbar*l/sec) ##1b",
+
+                    ImGui::Checkbox("", &mApp->worker.model.wp.enableDecay);
+                    if(!mApp->worker.model.wp.enableDecay) ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                    ImGui::SameLine();
+                    ImGui::InputDouble("Gas half life (s) ##3b", &mApp->worker.model.wp.halfLife);
+                    if(!mApp->worker.model.wp.enableDecay) ImGui::PopItemFlag();
+
+                    ImGui::InputDouble("Final outgassing rate (mbar*l/sec) ##4b",
                                      &mApp->worker.model.wp.finalOutgassingRate);      // Edit bools storing our window open/close state
-                    ImGui::InputDouble("Final outgassing rate (1/sec) ##1b",
+                    ImGui::InputDouble("Final outgassing rate (1/sec) ##4a",
                                      &mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec);      // Edit bools storing our window open/close state
-                    ImGui::InputDouble("Total desorbed molecules:",
-                                     &mApp->worker.model.wp.totalDesorbedMolecules);      // Edit bools storing our window open/close state
+                    {
+                        char tmp[64];
+                        sprintf(tmp,"Tot.des. molecules [0 to %g s]",mApp->worker.model.wp.latestMoment);
+                        ImGui::InputDouble(tmp, &mApp->worker.model.wp.totalDesorbedMolecules);      // Edit bools storing our window open/close state
+                    }
                     ImGui::Button("Recalc. outgassing");      // Edit bools storing our window open/close state
                     ImGui::Checkbox("Enable low flux mode",
                                     &mApp->worker.model.otfParams.lowFluxMode);      // Edit bools storing our window open/close state
                     ImGui::SameLine();
                     HelpMarker(
-                            "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
-                            "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
+                            "Low flux mode helps to gain more statistics on low pressure parts of the system, at the expense\n"
+                            "of higher pressure parts. If a traced particle reflects from a high sticking factor surface, regardless of that probability,\n"
+                            "a reflected test particle representing a reduced flux will still be traced. Therefore test particles can reach low flux areas more easily, but\n"
+                            "at the same time tracing a test particle takes longer. The cutoff ratio defines what ratio of the originally generated flux\n"
+                            "can be neglected. If, for example, it is 0.001, then, when after subsequent reflections the test particle carries less than 0.1%\n"
+                            "of the original flux, it will be eliminated. A good advice is that if you'd like to see pressure across N orders of magnitude, set it to 1E-N");
                     ImGui::InputDouble("Cutoff ratio ##1b",
                                      &mApp->worker.model.otfParams.lowFluxCutoff);      // Edit bools storing our window open/close state
                     ImGui::PopItemWidth();
-                    PopStyleCompact();
+                    //PopStyleCompact();
                     ImGui::EndTable();
                 }
 
-
+                const std::string btnText = "Apply above settings";
+                float font_size = ImGui::GetFontSize() * btnText.size() / 2;
+                ImGui::NewLine(); ImGui::SameLine((ImGui::GetWindowSize().x / 2) -
+                                                  font_size + (font_size / 2));
                 if (ImGui::Button("Apply above settings"))
                     show_another_window = false;
 
@@ -346,7 +369,8 @@ void ImguiWindow::renderSingle() {
                 static ImGuiTableFlags flags =
                         ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
                         ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
-                if (ImGui::BeginTable("table2", 5, flags)) {
+                const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("000000").x;
+                if (ImGui::BeginTable("procTable", 5, flags)) {
                     ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
                     ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed);
                     ImGui::TableSetupColumn("Mem Usage", ImGuiTableColumnFlags_WidthFixed);
@@ -354,7 +378,6 @@ void ImguiWindow::renderSingle() {
                     ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
                     ImGui::TableHeadersRow();
 
-                    char tmp[512];
                     size_t  states[MAX_PROCESS];
                     std::vector<std::string> statusStrings(MAX_PROCESS);
                     memset(states, 0, MAX_PROCESS * sizeof(int));
@@ -363,7 +386,6 @@ void ImguiWindow::renderSingle() {
                     ProcComm procInfo;
                     mApp->worker.GetProcStatus(procInfo);
 
-                    for (int row = 0; row < 5; row++) {
                         ImGui::TableNextRow();
 
                         //Interface
@@ -382,9 +404,6 @@ void ImguiWindow::renderSingle() {
     ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0*1024.0));
     ImGui::TableSetColumnIndex(4);
     ImGui::Text("");
-    ImGui::TableSetColumnIndex(5);
-    ImGui::Text("");
-
 #else
                         size_t currPid = getpid();
                         PROCESS_INFO parentInfo;
@@ -407,36 +426,24 @@ void ImguiWindow::renderSingle() {
                         {
                             //auto& proc = procInfo.subProcInfo[0];
                             DWORD pid = proc.procId;
+                            ImGui::TableNextRow();
                             ImGui::TableSetColumnIndex(0);
-                            ImGui::Text("Subproc.%lu", i);
+                            ImGui::Text("Subproc.%zu", i);
                             ImGui::TableSetColumnIndex(1);
-                            ImGui::Text("%d", pid);
-                            ImGui::TableSetColumnIndex(2);
-                            ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0));
-                            ImGui::TableSetColumnIndex(3);
-                            ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
-                            ImGui::TableSetColumnIndex(4);
-                            ImGui::Text("");
-                            ImGui::TableSetColumnIndex(5);
-                            ImGui::Text("");
+                            ImGui::Text("%lu", pid);
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
                             PROCESS_INFO pInfo = proc.runtimeInfo;
-        /*if (!GetProcInfo(pid, &pInfo)) {
-			processList->SetValueAt(2, i, "0 KB");
-			processList->SetValueAt(3, i, "0 KB");
-			//processList->SetValueAt(4,i,"0 %");
-			processList->SetValueAt(4, i, "Dead");
-		}
-		else*/
         {
-            sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
-            processList->SetValueAt(2, i, tmp);
-            sprintf(tmp, "%.0f MB", (double)pInfo.mem_peak / (1024.0*1024.0));
-            processList->SetValueAt(3, i, tmp);
 
-			// State/Status
-			std::stringstream tmp; tmp << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
-			processList->SetValueAt(4, i, tmp.str().c_str());
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%.0f MB", (double)pInfo.mem_use / (1024.0*1024.0));
+            ImGui::TableSetColumnIndex(3);
+            ImGui::Text("%.0f MB", (double)pInfo.mem_peak / (1024.0*1024.0));
+            // State/Status
+            std::stringstream tmp_ss; //tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
+            tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
+            ImGui::TableSetColumnIndex(4);
+            ImGui::Text("%s", tmp_ss.str().c_str());
 		}
 
 #else
@@ -447,17 +454,15 @@ void ImguiWindow::renderSingle() {
                                 ImGui::Text("0 KB");
                                 ImGui::TableSetColumnIndex(4);
                                 ImGui::Text("Dead");
-                                ImGui::TableSetColumnIndex(5);
-                                ImGui::Text("");
                             }
                             else {
                                 PROCESS_INFO pInfo = proc.runtimeInfo;
                                 //GetProcInfo(pid, &pInfo);
 
                                 ImGui::TableSetColumnIndex(2);
-                                ImGui::Text("%.0f MB", (double)parentInfo.mem_use / (1024.0));
+                                ImGui::Text("%.0f MB", (double)pInfo.mem_use / (1024.0));
                                 ImGui::TableSetColumnIndex(3);
-                                ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
+                                ImGui::Text("%.0f MB", (double)pInfo.mem_peak / (1024.0));
 
 
                                 // State/Status
@@ -467,18 +472,27 @@ void ImguiWindow::renderSingle() {
 
                                 ImGui::TableSetColumnIndex(4);
                                 ImGui::Text("%s", tmp_ss.str().c_str());
-                                ImGui::TableSetColumnIndex(5);
-                                ImGui::Text("");
                             }
 #endif
                             ++i;
-                        }
-                        /*for (int column = 0; column < 6; column++) {
-                            ImGui::TableSetColumnIndex(column);
-                            ImGui::Text("%s %d", (column >= 4) ? "X Y Z" : "", row);
-                        }*/
                     }
                     ImGui::EndTable();
+
+                    ImGui::Text("Number of CPU cores:     %zd", mApp->numCPU);
+                    ImGui::Text("Number of subprocesses:  ");
+                    ImGui::SameLine();
+                    int nbProc = mApp->worker.GetProcNumber();
+                    ImGui::SetNextItemWidth(100.0f);
+                    if(ImGui::InputInt("", &nbProc))
+                        mApp->worker.SetProcNumber(nbProc);
+                    ImGui::SameLine();
+                    if (ImGui::Button("Apply and restart processes"))
+                        show_another_window = false;
+                    const std::string btnText2 = "Change MAX desorbed molecules";
+                    font_size = ImGui::GetFontSize() * btnText2.size() * 0.5f;
+                    ImGui::SameLine((ImGui::GetWindowSize().x) - font_size);
+                    if (ImGui::Button("Change MAX desorbed molecules"))
+                        show_another_window = false;
                 }
                 ImGui::End();
             }

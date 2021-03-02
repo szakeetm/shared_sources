@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <cmath>
 #include <cstdlib>
+#include <algorithm>
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -284,7 +285,7 @@ void Worker::SetProcNumber(size_t n) {
     }
 
     simManager.useCPU = true;
-    simManager.nbThreads = n;
+    simManager.nbThreads = std::clamp((size_t)n , (size_t)0 , MAX_PROCESS);
 
     // Launch n subprocess
     if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {

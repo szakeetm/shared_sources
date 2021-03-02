@@ -404,7 +404,8 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
-         ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
+         if(imWnd)
+            ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
 		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
 
        UpdateEventCount(&sdlEvent);

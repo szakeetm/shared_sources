@@ -74,7 +74,9 @@ struct ProcComm {
 
     ProcComm();
     explicit ProcComm(size_t nbProcs) : ProcComm() {Resize(nbProcs);};
-    void Resize(size_t nbProcs){subProcInfo.resize(nbProcs);};
+    void Resize(size_t nbProcs){
+        subProcInfo.resize(nbProcs);
+    };
     void NextSubProc();
 
     ProcComm& operator=(const ProcComm & src);

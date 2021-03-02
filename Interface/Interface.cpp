@@ -201,6 +201,8 @@ Interface::Interface() {
     particleLogger = nullptr;
     convergencePlotter = nullptr;
 
+    imWnd = nullptr;
+
     m_strWindowTitle = appTitle;
     wnd->SetBackgroundColor(212, 208, 200);
     m_bResizable = true;
@@ -1760,6 +1762,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     else{
                         imWnd->destruct();
                         delete imWnd;
+                        imWnd = nullptr;
                     }
                     return true;
                 }

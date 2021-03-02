@@ -278,7 +278,6 @@ public:
 	double   planarityThreshold; //Planarity threshold
 	
 	AppUpdater* appUpdater;
-    ImguiWindow* imWin;
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
 	int      autoSaveSimuOnly;
