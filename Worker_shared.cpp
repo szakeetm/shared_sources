@@ -304,8 +304,8 @@ void Worker::CalculateTextureLimits(){
     // first get tmp limit
     TEXTURE_MIN_MAX limits[3];
     for(auto& lim : limits){
-        lim.max.all = lim.max.moments_only = 0;
-        lim.min.all = lim.min.moments_only = HITMAX;
+        lim.max.steady_state = lim.max.moments_only = 0;
+        lim.min.steady_state = lim.min.moments_only = HITMAX;
     }
 
     for (const auto &subF : model.facets) {
@@ -337,13 +337,15 @@ void Worker::CalculateTextureLimits(){
 
                         //Global autoscale
                         for (int v = 0; v < 3; v++) {
-                            limits[v].max.all = std::max(val[v],limits[v].max.all);
+                            if (m == 0) {
+                                limits[v].max.steady_state = std::max(val[v], limits[v].max.steady_state);
 
-                            if (val[v] > 0.0) {
-                                limits[v].min.all = std::min(val[v],limits[v].min.all);
+                                if (val[v] > 0.0) {
+                                    limits[v].min.steady_state = std::min(val[v], limits[v].min.steady_state);
+                                }
                             }
                             //Autoscale ignoring constant flow (moments only)
-                            if (m != 0) {
+                            else { //if (m != 0)
                                 limits[v].max.moments_only = std::max(val[v],limits[v].max.moments_only);;
 
                                 if (val[v] > 0.0)
@@ -365,9 +367,9 @@ void Worker::CalculateTextureLimits(){
 
     // Add coefficient scaling
     for(int v = 0; v < 3; ++v) {
-        limits[v].max.all *= dCoef_custom[v];
+        limits[v].max.steady_state *= dCoef_custom[v];
         limits[v].max.moments_only *= dCoef_custom[v];
-        limits[v].min.all *= dCoef_custom[v];
+        limits[v].min.steady_state *= dCoef_custom[v];
         limits[v].min.moments_only *= dCoef_custom[v];
     }
 

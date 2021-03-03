@@ -3397,18 +3397,18 @@ void Geometry::AdjustProfile() {
 
 void Geometry::ResetTextureLimits() {
 #if defined(MOLFLOW)
-	texture_limits[0].autoscale.min.all = texture_limits[0].autoscale.min.moments_only =
-		texture_limits[1].autoscale.min.all = texture_limits[1].autoscale.min.moments_only =
-		texture_limits[2].autoscale.min.all = texture_limits[2].autoscale.min.moments_only =
-		texture_limits[0].manual.min.all = texture_limits[0].manual.min.moments_only =
-		texture_limits[1].manual.min.all = texture_limits[1].manual.min.moments_only =
-		texture_limits[2].manual.min.all = texture_limits[2].manual.min.moments_only = 0.0;
-	texture_limits[0].autoscale.max.all = texture_limits[0].autoscale.max.moments_only =
-		texture_limits[1].autoscale.max.all = texture_limits[1].autoscale.max.moments_only =
-		texture_limits[2].autoscale.max.all = texture_limits[2].autoscale.max.moments_only =
-		texture_limits[0].manual.max.all = texture_limits[0].manual.max.moments_only =
-		texture_limits[1].manual.max.all = texture_limits[1].manual.max.moments_only =
-		texture_limits[2].manual.max.all = texture_limits[2].manual.max.moments_only = 1.0;
+    texture_limits[0].autoscale.min.steady_state = texture_limits[0].autoscale.min.moments_only =
+    texture_limits[1].autoscale.min.steady_state = texture_limits[1].autoscale.min.moments_only =
+    texture_limits[2].autoscale.min.steady_state = texture_limits[2].autoscale.min.moments_only =
+    texture_limits[0].manual.min.steady_state = texture_limits[0].manual.min.moments_only =
+    texture_limits[1].manual.min.steady_state = texture_limits[1].manual.min.moments_only =
+    texture_limits[2].manual.min.steady_state = texture_limits[2].manual.min.moments_only = 0.0;
+    texture_limits[0].autoscale.max.steady_state = texture_limits[0].autoscale.max.moments_only =
+    texture_limits[1].autoscale.max.steady_state = texture_limits[1].autoscale.max.moments_only =
+    texture_limits[2].autoscale.max.steady_state = texture_limits[2].autoscale.max.moments_only =
+    texture_limits[0].manual.max.steady_state = texture_limits[0].manual.max.moments_only =
+    texture_limits[1].manual.max.steady_state = texture_limits[1].manual.max.moments_only =
+    texture_limits[2].manual.max.steady_state = texture_limits[2].manual.max.moments_only = 1.0;
 #endif
 #if defined(SYNRAD)
 	textureMin_auto.count = 0;
