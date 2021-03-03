@@ -161,7 +161,9 @@ static void InputRightSide(const char *desc, double *val, const char *format) {
         // Move to right side
         ImGui::SameLine((ImGui::GetContentRegionAvailWidth()) - 100.0f);
         ImGui::PushItemWidth(100.0f);
+        ImGui::PushID(desc);
         ImGui::InputDouble("", val, 0.00f, 0.0f, format);
+        ImGui::PopID();
         ImGui::PopItemWidth();
     }
 }
@@ -225,8 +227,6 @@ void ImguiWindow::ProcessControllTable(MolFlow *mApp) {
                     ImGui::TableSetColumnIndex(3);
                     ImGui::Text("%.0f MB", (double)parentInfo.mem_peak / (1024.0));
                     ImGui::TableSetColumnIndex(4);
-                    ImGui::Text("");
-                    ImGui::TableSetColumnIndex(5);
                     ImGui::Text("");
 #endif
         size_t i = 1;
@@ -315,6 +315,7 @@ void ImguiWindow::renderSingle() {
 
         bool nbProcChanged = false;
         bool recalcOutg = false;
+        bool changeDesLimit = false;
         static int nbProc = mApp->worker.GetProcNumber();
 
         // Start the Dear ImGui frame
@@ -400,51 +401,12 @@ void ImguiWindow::renderSingle() {
                     //ImGui::TableSetupColumn("Simulation settings");
                     //ImGui::TableHeadersRow();
                     ImGui::PushItemWidth(100);
-                    ImGui::InputDouble("Gas molecular mass (g/mol) ##1b", &mApp->worker.model.wp.gasMass);
-
-                    ImGui::Checkbox("", &mApp->worker.model.wp.enableDecay);
-                    if (!mApp->worker.model.wp.enableDecay) {
-                        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
-                    }
-                    ImGui::SameLine();
-                    ImGui::InputDouble("Gas half life (s)", &mApp->worker.model.wp.halfLife, 0.0f, 0.0f, "%g");
-                    if (!mApp->worker.model.wp.enableDecay) {
-                        ImGui::PopStyleColor();
-                        ImGui::PopItemFlag();
-                    }
-
-                    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                    ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
-
-                    // Add spacing of checkbox width
-                    ImGui::NewLine();
-                    ImGui::SameLine(ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 4);
-                    ImGui::InputDouble("Final outgassing rate (mbar*l/sec)",
-                                       &mApp->worker.model.wp.finalOutgassingRate, 0.0f, 0.0f,
-                                       "%g");      // Edit bools storing our window open/close state
-                    ImGui::NewLine();
-                    ImGui::SameLine(ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 4);
-                    ImGui::InputDouble("Final outgassing rate (1/sec)",
-                                       &mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec, 0.0f, 0.0f,
-                                       "%g");      // Edit bools storing our window open/close state
-                    {
-                        char tmp[64];
-                        sprintf(tmp, "Tot.des. molecules [0 to %g s]", mApp->worker.model.wp.latestMoment);
-                        ImGui::NewLine();
-                        ImGui::SameLine(ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 4);
-                        ImGui::InputDouble(tmp, &mApp->worker.model.wp.totalDesorbedMolecules, 0.0f, 0.0f,
-                                           "%g");      // Edit bools storing our window open/close state
-                        InputRightSide(tmp, &mApp->worker.model.wp.totalDesorbedMolecules, "%g");
-                    }
-
-                    ImGui::PopStyleColor();
-                    ImGui::PopItemFlag();
 
 
-                    /* --- Duplicate to test right side alignement ---*/
-                    ImGui::Separator();
+
+                    /* --- Simu settings ---*/
                     InputRightSide("Gas molecular mass (g/mol)", &mApp->worker.model.wp.gasMass, "%g");
+                    ImGui::AlignTextToFramePadding();
 
                     ImGui::Checkbox("", &mApp->worker.model.wp.enableDecay);
                     if (!mApp->worker.model.wp.enableDecay) {
@@ -462,15 +424,17 @@ void ImguiWindow::renderSingle() {
                     ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                     ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
 
-                    InputRightSide("Final outgassing rate (mbar*l/sec)", &mApp->worker.model.wp.finalOutgassingRate,
-                                   "%g");
+                    // Use tmp var to multiply by 10
+                    double outgRate10 = mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec * 10.00;
+                    InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
+                                   "%.4g"); //10: conversion Pa*m3/sec -> mbar*l/s
                     InputRightSide("Final outgassing rate (1/sec)",
-                                   &mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec, "%g");
+                                   &mApp->worker.model.wp.finalOutgassingRate, "%.4g"); //In molecules/sec
 
                     {
                         char tmp[64];
                         sprintf(tmp, "Tot.des. molecules [0 to %g s]", mApp->worker.model.wp.latestMoment);
-                        InputRightSide(tmp, &mApp->worker.model.wp.totalDesorbedMolecules, "%g");
+                        InputRightSide(tmp, &mApp->worker.model.wp.totalDesorbedMolecules, "%.4g");
                     }
 
                     ImGui::PopStyleColor();
@@ -571,7 +535,7 @@ void ImguiWindow::renderSingle() {
                     if (ImGui::Button("OK", ImVec2(120, 0))) {
                         mApp->worker.model.otfParams.desorptionLimit = maxDes;
                         //initMax = false;
-                        mApp->worker.ChangeSimuParams(); //Sync with subprocesses
+                        changeDesLimit = true;
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::SetItemDefaultFocus();
@@ -615,6 +579,9 @@ void ImguiWindow::renderSingle() {
                     }
                 }
             }
+        }
+        else if(changeDesLimit){
+            mApp->worker.ChangeSimuParams(); //Sync with subprocesses
         }
     }
 }
