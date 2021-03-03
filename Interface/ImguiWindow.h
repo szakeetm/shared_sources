@@ -9,6 +9,7 @@
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
 #include "AppUpdater.h"
+#include "../../src/MolFlow.h"
 
 class ImguiWindow {
 public:
@@ -25,6 +26,12 @@ protected:
     bool show_demo_window;
     bool show_another_window;
     ImVec4 clear_color;
+
+    static void restartProc(int nbProc, MolFlow *mApp);
+
+    static void ProcessControllTable(MolFlow *mApp);
+
+    //static bool InputRightSide(const char *desc, double *const &val, const char *format);
 };
 
 

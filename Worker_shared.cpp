@@ -539,17 +539,17 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     if (model.otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
-    auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
-    progressDlg->SetVisible(true);
-    progressDlg->SetProgress(0.0);
+    //auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
+    //progressDlg->SetVisible(true);
+    //progressDlg->SetProgress(0.0);
 
     //To do: only close if parameters changed
-    progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
+    //progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
 
     particleLog.clear();
 
-    progressDlg->SetProgress(0.5);
-    progressDlg->SetMessage("Assembling parameters to pass...");
+    //progressDlg->SetProgress(0.5);
+    //progressDlg->SetMessage("Assembling parameters to pass...");
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
@@ -558,19 +558,19 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             char errMsg[1024];
             sprintf(errMsg, "Failed to send params to sub process:\n");
-            GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+            //GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
-            progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);
+            //progressDlg->SetVisible(false);
+            //SAFE_DELETE(progressDlg);
             return;
         }
     }
     catch (std::exception& e) {
-        GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
+        //GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
-    progressDlg->SetVisible(false);
-    SAFE_DELETE(progressDlg);
+    //progressDlg->SetVisible(false);
+    //SAFE_DELETE(progressDlg);
 
 #if defined(SYNRAD)
     //Reset leak and hit cache
