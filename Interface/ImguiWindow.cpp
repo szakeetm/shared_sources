@@ -154,7 +154,31 @@ static void HelpMarker(const char *desc) {
     }
 }
 
-static void InputRightSide(const char *desc, double *val, const char *format) {
+static void PlaceAtWindowCenter(const char* str){
+    const std::string btnText = str;
+    float font_size = ImGui::GetFontSize() * btnText.size() / 2;
+    ImGui::NewLine();
+    ImGui::SameLine((ImGui::GetWindowSize().x / 2) -
+                    font_size + (font_size / 2));
+}
+
+static void PlaceAtRegionCenter(const char* str){
+    //float font_size = ImGui::GetFontSize() * btnText.size() / 2;
+    float font_size = ImGui::CalcTextSize(str).x;
+    ImGui::NewLine();
+    ImGui::SameLine((ImGui::GetContentRegionAvail().x * 0.5f) - (font_size / 2));
+}
+
+static void PlaceAtRegionRight(const char *str, bool sameLine) {
+    //float font_size = ImGui::GetFontSize() * btnText.size() / 2;
+    float font_size = ImGui::CalcTextSize(str).x;
+    if(!sameLine) ImGui::NewLine();
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - (font_size + ImGui::GetStyle().FramePadding.x * 2));
+}
+
+
+static bool InputRightSide(const char *desc, double *val, const char *format) {
+    double tmp = *val;
     ImGui::AlignTextToFramePadding();
     ImGui::Text("%s:", desc);
     {
@@ -166,6 +190,8 @@ static void InputRightSide(const char *desc, double *val, const char *format) {
         ImGui::PopID();
         ImGui::PopItemWidth();
     }
+
+    return *val != tmp; // true if changed
 }
 
 // Add spacing of checkbox width
@@ -174,7 +200,119 @@ static void AddCheckboxWidthSpacing(){
     ImGui::SameLine(ImGui::GetFrameHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 4);
 }
 
-void ImguiWindow::ProcessControllTable(MolFlow *mApp) {
+// Note that shortcuts are currently provided for display only
+// (future version will add explicit flags to BeginMenu() to request processing shortcuts)
+static void ShowExampleMenuFile()
+{
+    ImGui::MenuItem("(demo menu)", NULL, false, false);
+    if (ImGui::MenuItem("New")) {}
+    if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+    if (ImGui::BeginMenu("Open Recent"))
+    {
+        ImGui::MenuItem("fish_hat.c");
+        ImGui::MenuItem("fish_hat.inl");
+        ImGui::MenuItem("fish_hat.h");
+        if (ImGui::BeginMenu("More.."))
+        {
+            ImGui::MenuItem("Hello");
+            ImGui::MenuItem("Sailor");
+            if (ImGui::BeginMenu("Recurse.."))
+            {
+                ShowExampleMenuFile();
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+    if (ImGui::MenuItem("Save As..")) {}
+
+    ImGui::Separator();
+    if (ImGui::BeginMenu("Options"))
+    {
+        static bool enabled = true;
+        ImGui::MenuItem("Enabled", "", &enabled);
+        ImGui::BeginChild("child", ImVec2(0, 60), true);
+        for (int i = 0; i < 10; i++)
+            ImGui::Text("Scrolling Text %d", i);
+        ImGui::EndChild();
+        static float f = 0.5f;
+        static int n = 0;
+        ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
+        ImGui::InputFloat("Input", &f, 0.1f);
+        ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Colors"))
+    {
+        float sz = ImGui::GetTextLineHeight();
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
+            ImGui::Dummy(ImVec2(sz, sz));
+            ImGui::SameLine();
+            ImGui::MenuItem(name);
+        }
+        ImGui::EndMenu();
+    }
+
+    // Here we demonstrate appending again to the "Options" menu (which we already created above)
+    // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
+    // In a real code-base using it would make senses to use this feature from very different code locations.
+    if (ImGui::BeginMenu("Options")) // <-- Append!
+    {
+        static bool b = true;
+        ImGui::Checkbox("SomeOption", &b);
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Disabled", false)) // Disabled
+    {
+        IM_ASSERT(0);
+    }
+    if (ImGui::MenuItem("Checked", NULL, true)) {}
+    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+}
+
+//-----------------------------------------------------------------------------
+// [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
+//-----------------------------------------------------------------------------
+// - ShowExampleAppMainMenuBar()
+// - ShowExampleMenuFile()
+//-----------------------------------------------------------------------------
+
+// Demonstrate creating a "main" fullscreen menu bar and populating it.
+// Note the difference between BeginMainMenuBar() and BeginMenuBar():
+// - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
+// - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
+static void ShowExampleAppMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            ShowExampleMenuFile();
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+            ImGui::Separator();
+            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void ImguiWindow::ProcessControlTable(MolFlow *mApp) {
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders |
@@ -317,11 +455,14 @@ void ImguiWindow::renderSingle() {
         bool recalcOutg = false;
         bool changeDesLimit = false;
         static int nbProc = mApp->worker.GetProcNumber();
+        static bool show_app_main_menu_bar = false;
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplSDL2_NewFrame(app->mainScreen);
         ImGui::NewFrame();
+
+        if (show_app_main_menu_bar)       ShowExampleAppMainMenuBar();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
@@ -339,6 +480,7 @@ void ImguiWindow::renderSingle() {
                     "This is some useful text.");               // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float *) &clear_color); // Edit 3 floats representing a color
@@ -358,9 +500,13 @@ void ImguiWindow::renderSingle() {
         if (show_another_window) {
             if (mApp) {
 
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(800.f, 0)); // Lift normal size constraint, however the presence of a menu-bar will give us the minimum height we want.
+
                 ImGui::Begin("Global settings",
                              &show_another_window,
                              ImGuiWindowFlags_NoSavedSettings);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+                ImGui::PopStyleVar(1);
+
                 float gasMass = 2.4;
                 if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
                     //PushStyleCompact();
@@ -405,18 +551,23 @@ void ImguiWindow::renderSingle() {
 
 
                     /* --- Simu settings ---*/
-                    InputRightSide("Gas molecular mass (g/mol)", &mApp->worker.model.wp.gasMass, "%g");
-                    ImGui::AlignTextToFramePadding();
+                    static bool simChanged = false;
+                    static double gasMass = mApp->worker.model.wp.gasMass;
+                    static bool enableDecay = mApp->worker.model.wp.enableDecay;
+                    static double halfLife = mApp->worker.model.wp.halfLife;
+                    static bool lowFluxMode = mApp->worker.model.otfParams.lowFluxMode;
+                    static double lowFluxCutoff = mApp->worker.model.otfParams.lowFluxCutoff;
 
-                    ImGui::Checkbox("", &mApp->worker.model.wp.enableDecay);
-                    if (!mApp->worker.model.wp.enableDecay) {
+                    simChanged = InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+                    simChanged = ImGui::Checkbox("", &enableDecay);
+                    if (!enableDecay) {
                         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                         ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
                     }
                     ImGui::SameLine();
-                    InputRightSide("Gas half life (s)", &mApp->worker.model.wp.halfLife, "%g");
+                    simChanged = InputRightSide("Gas half life (s)", &halfLife, "%g");
 
-                    if (!mApp->worker.model.wp.enableDecay) {
+                    if (!enableDecay) {
                         ImGui::PopStyleColor();
                         ImGui::PopItemFlag();
                     }
@@ -426,8 +577,7 @@ void ImguiWindow::renderSingle() {
 
                     // Use tmp var to multiply by 10
                     double outgRate10 = mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec * 10.00;
-                    InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
-                                   "%.4g"); //10: conversion Pa*m3/sec -> mbar*l/s
+                    InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,"%.4g"); //10: conversion Pa*m3/sec -> mbar*l/s
                     InputRightSide("Final outgassing rate (1/sec)",
                                    &mApp->worker.model.wp.finalOutgassingRate, "%.4g"); //In molecules/sec
 
@@ -443,16 +593,13 @@ void ImguiWindow::renderSingle() {
 
                     {
                         const std::string btnText = "Recalc. outgassing";
-                        float font_size = ImGui::GetFontSize() * btnText.size() / 2;
-                        ImGui::NewLine();
-                        ImGui::SameLine((ImGui::GetContentRegionAvailWidth() / 2) -
-                                        font_size + (font_size / 2));
+                        PlaceAtRegionRight(btnText.c_str(), false);
                     }
 
                     if (ImGui::Button("Recalc. outgassing"))      // Edit bools storing our window open/close state
                         recalcOutg = true;
-                    ImGui::Checkbox("Enable low flux mode",
-                                    &mApp->worker.model.otfParams.lowFluxMode);      // Edit bools storing our window open/close state
+                    simChanged = ImGui::Checkbox("Enable low flux mode",
+                                    &lowFluxMode);      // Edit bools storing our window open/close state
                     ImGui::SameLine();
                     HelpMarker(
                             "Low flux mode helps to gain more statistics on low pressure parts of the system, at the expense\n"
@@ -461,35 +608,33 @@ void ImguiWindow::renderSingle() {
                             "at the same time tracing a test particle takes longer. The cutoff ratio defines what ratio of the originally generated flux\n"
                             "can be neglected. If, for example, it is 0.001, then, when after subsequent reflections the test particle carries less than 0.1%\n"
                             "of the original flux, it will be eliminated. A good advice is that if you'd like to see pressure across N orders of magnitude, set it to 1E-N");
-                    if (!mApp->worker.model.otfParams.lowFluxMode) {
+                    if (!lowFluxMode) {
                         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
                         ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
                     }
-                    ImGui::InputDouble("Cutoff ratio",
-                                       &mApp->worker.model.otfParams.lowFluxCutoff, 0.0f, 0.0f,
-                                       "%.2e");      // Edit bools storing our window open/close state
-                    if (!mApp->worker.model.otfParams.lowFluxMode) {
+                    simChanged = InputRightSide("Cutoff ratio", &lowFluxCutoff,"%.2e");      // Edit bools storing our window open/close state
+                    if (!lowFluxMode) {
                         ImGui::PopStyleColor();
                         ImGui::PopItemFlag();
                     }
 
+                    {
+                        PlaceAtRegionCenter("Apply above settings");
+                        if (ImGui::Button("Apply above settings")){
+                            simChanged = false;
+                            mApp->worker.model.wp.gasMass = gasMass;
+                            mApp->worker.model.wp.enableDecay = enableDecay;
+                            mApp->worker.model.wp.halfLife = halfLife;
+                            mApp->worker.model.otfParams.lowFluxMode = lowFluxMode;
+                            mApp->worker.model.otfParams.lowFluxCutoff = lowFluxCutoff;
+                        }
+                    }
                     ImGui::PopItemWidth();
                     //PopStyleCompact();
                     ImGui::EndTable();
                 }
 
-                {
-                    const std::string btnText = "Apply above settings";
-                    float font_size = ImGui::GetFontSize() * btnText.size() / 2;
-                    ImGui::NewLine();
-                    ImGui::SameLine((ImGui::GetWindowSize().x / 2) -
-                                    font_size + (font_size / 2));
-                }
-                if (ImGui::Button("Apply above settings"))
-                    show_another_window = false;
-
-                // TODO: Insert process control
-                ProcessControllTable(mApp);
+                ProcessControlTable(mApp);
 
                 ImGui::Text("Number of CPU cores:     %zd", mApp->numCPU);
                 ImGui::Text("Number of subprocesses:  ");
@@ -503,13 +648,10 @@ void ImguiWindow::renderSingle() {
                 if (ImGui::Button("Apply and restart processes"))
                     nbProcChanged = true;
                 {
-                    const std::string btnText2 = "Change MAX desorbed molecules";
-                    float font_size = ImGui::CalcTextSize(btnText2.c_str()).x;
-                    ImGui::SameLine((ImGui::GetContentRegionAvailWidth()) - font_size);
+                    PlaceAtRegionRight("Change MAX desorbed molecules", true);
+                    if (ImGui::Button("Change MAX desorbed molecules"))
+                        ImGui::OpenPopup("Edit MAX");
                 }
-                if (ImGui::Button("Change MAX desorbed molecules"))
-                    ImGui::OpenPopup("Edit MAX");
-
                 // Always center this window when appearing
                 ImVec2 center = ImGui::GetMainViewport()->GetCenter();
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

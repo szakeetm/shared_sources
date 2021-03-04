@@ -29,7 +29,7 @@ protected:
 
     static void restartProc(int nbProc, MolFlow *mApp);
 
-    static void ProcessControllTable(MolFlow *mApp);
+    static void ProcessControlTable(MolFlow *mApp);
 
     //static bool InputRightSide(const char *desc, double *const &val, const char *format);
 };
