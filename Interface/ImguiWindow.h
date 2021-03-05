@@ -13,18 +13,18 @@
 
 class ImguiWindow {
 public:
-    ImguiWindow(GLApplication* app) {this->app = app;};
+    explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
-    void render();
+    //void render();
     void renderSingle();
 
     GLApplication* app;
 
 protected:
     // Our state
-    bool show_demo_window;
-    bool show_another_window;
+    bool show_demo_window{false};
+    bool show_another_window{true};
     ImVec4 clear_color;
 
     static void restartProc(int nbProc, MolFlow *mApp);
