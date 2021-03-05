@@ -3574,12 +3574,14 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 			file->JumpSection("endfacet");
 			w = file->ReadWord();
 		}
+		//All facets read in the current body
 		bodyFacetCounts.push_back(bodyFacetCount);
 		nbNewFacets += bodyFacetCount;
 		if (w != "endsolid") {
 			std::string msg = "Unexpected or not supported STL keyword \"" + w + "\", 'endsolid' required\nMaybe the STL file was saved in binary instead of ASCII format?";
 			throw Error(msg.c_str());
 		}
+		if (!(file->IsEol())) file->ReadLine(); //Read the rest of the "endsolid" line (usually solid name). Eof() not a problem, will simply return NULL character
 	}
 
 	// Allocate memory
@@ -3671,6 +3673,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 			globalId++;
 		}
 		file->ReadKeyword("endsolid");
+		if (!(file->IsEol())) file->ReadLine(); //Read part after "endsolid"
 	}
 
 	sh.nbFacet += nbNewFacets;
