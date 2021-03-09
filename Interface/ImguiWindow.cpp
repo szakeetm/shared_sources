@@ -5,12 +5,16 @@
 #include "ImguiWindow.h"
 
 #include "../../src/MolFlow.h"
+#include "../../src/MolflowGeometry.h"
+#include "../../src_shared/Facet_shared.h"
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl2.h"
 #include "imgui/imgui_impl_sdl.h"
 
 #include <imgui/imgui_internal.h>
 #include <sstream>
+#include <imgui/IconsFontAwesome5.h>
 
 void ImguiWindow::init() {
   // Setup Dear ImGui context
@@ -48,6 +52,13 @@ void ImguiWindow::init() {
   // literal you need to write a double backslash \\ !
   // io.Fonts->AddFontDefault();
   io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
+
+    // merge in icons from Font Awesome
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+    ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = true;
+    io.Fonts->AddFontFromFileTTF( FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges );
+// use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
+
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
   // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
@@ -186,6 +197,96 @@ static void AddCheckboxWidthSpacing() {
                   ImGui::GetStyle().FramePadding.y * 4);
 }
 
+// Demonstrate creating a simple static window with no decoration
+// + a context-menu to choose which corner of the screen to use.
+static void ShowExampleAppSimpleOverlay(bool* p_open, Geometry * geom) {
+    const float PAD = 10.0f;
+    static int corner = 0;
+    ImGuiIO &io = ImGui::GetIO();
+
+    const ImGuiViewport *viewport = ImGui::GetMainViewport();
+    static bool use_work_area = true;
+    ImGui::SetNextWindowPos(use_work_area ?
+        ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.25f, viewport->WorkPos.y)
+        : viewport->Pos);
+    ImGui::SetNextWindowSize(use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y): viewport->Size);
+    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+
+    if (ImGui::Begin("Example: Fullscreen window", p_open, flags))
+    {
+        ImGui::Checkbox("Use work area instead of main area", &use_work_area);
+        ImGui::SameLine();
+        HelpMarker("Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
+
+        ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
+        ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
+        ImGui::Indent();
+        ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
+        ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
+        ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
+        ImGui::Unindent();
+
+        if (p_open && ImGui::Button("Close this window"))
+            *p_open = false;
+
+        char tmp[256];
+
+        try {
+            // Facet list
+            if (geom->IsLoaded()) {
+
+                /*if (worker.displayedMoment == 0) {
+                    int colors[] = { COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK };
+                    facetList->SetColumnColors(colors);
+                }
+                else
+                {
+                    int colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE };
+                    facetList->SetColumnColors(colors);
+                }*/
+                if (ImGui::BeginTable("table1", 4, flags))
+                {
+                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Hits", ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("Des", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("Abs", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableHeadersRow();
+                for (int i = 0; i < geom->GetNbFacet(); i++) {
+                    int facetId = (int)i;
+                    InterfaceFacet *f = geom->GetFacet(facetId);
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("%d", i+1);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%zd", f->facetHitCache.hit.nbMCHit);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%zd", f->facetHitCache.hit.nbDesorbed);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%g", f->facetHitCache.hit.nbAbsEquiv);
+                    ImGui::TableNextColumn();
+
+                    /*for (int column = 0; column < 3; column++)
+                        {
+                            ImGui::TableSetColumnIndex(column);
+                            ImGui::Text("%s %d,%d", (column == 2) ? "Stretch" : "Fixed", column, row);
+                        }*/
+
+                    }
+                    ImGui::EndTable();
+                }
+
+            }
+        }
+        catch(std::exception &e) {
+            char errMsg[512];
+            sprintf(errMsg, "%s\nError while updating facet hits", e.what());
+            /*GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);*/
+        }
+    }
+    ImGui::End();
+
+}
+
 // Note that shortcuts are currently provided for display only
 // (future version will add explicit flags to BeginMenu() to request processing
 // shortcuts)
@@ -280,12 +381,16 @@ static void ShowExampleMenuFile() {
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of
 // the main viewport + call BeginMenuBar() into it.
 static void ShowExampleAppMainMenuBar() {
-  if (ImGui::BeginMainMenuBar()) {
-    if (ImGui::BeginMenu("File")) {
+
+    //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 16.f));
+    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 16.0f));
+    if (ImGui::BeginMainMenuBar()) {
+        ImGui::AlignTextToFramePadding();
+        if (ImGui::BeginMenu("File")) {
       ShowExampleMenuFile();
       ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Selection")) {
+        if (ImGui::BeginMenu("Selection")) {
       if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
       }
         ImGui::Separator();
@@ -301,10 +406,10 @@ static void ShowExampleAppMainMenuBar() {
         } // Disabled item
       ImGui::EndMenu();
     }
-      if (ImGui::BeginMenu("Tools")) {
-          if (ImGui::MenuItem("...", "", false, false)) {
-          } // Disabled item
-          ImGui::EndMenu();
+    if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
+      if (ImGui::MenuItem("...", "", false, false)) {
+      } // Disabled item
+      ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Facet")) {
           if (ImGui::MenuItem("...", "", false, false)) {
@@ -336,8 +441,11 @@ static void ShowExampleAppMainMenuBar() {
           } // Disabled item
           ImGui::EndMenu();
       }
-    ImGui::EndMainMenuBar();
+
+        ImGui::EndMainMenuBar();
   }
+    //ImGui::PopStyleVar(1);
+
 }
 
 void ImguiWindow::ProcessControlTable(MolFlow *mApp) {
@@ -442,6 +550,7 @@ void ImguiWindow::renderSingle() {
     bool changeDesLimit = false;
     static int nbProc = mApp->worker.GetProcNumber();
     static bool show_app_main_menu_bar = false;
+    static bool show_app_sim_status = false;
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL2_NewFrame();
@@ -450,6 +559,9 @@ void ImguiWindow::renderSingle() {
 
     if (show_app_main_menu_bar)
       ShowExampleAppMainMenuBar();
+
+    if (show_app_sim_status)
+        ShowExampleAppSimpleOverlay(&show_app_sim_status, mApp->worker.GetGeometry());
 
     // 1. Show the big demo window (Most of the sample code is in
     // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -473,6 +585,7 @@ void ImguiWindow::renderSingle() {
           &show_demo_window); // Edit bools storing our window open/close state
       ImGui::Checkbox("Another Window", &show_another_window);
       ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
+      ImGui::Checkbox("Sidebar", &show_app_sim_status);
 
       ImGui::SliderFloat("float", &f, 0.0f,
                          1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
