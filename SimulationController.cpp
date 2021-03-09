@@ -101,7 +101,7 @@ bool SimThread::runLoop() {
 
         double timeEnd = omp_get_wtime();
 
-        if (procInfo->currentSubProc == threadNum || timeEnd-timeStart > 60) { // update after 60s of no update or when thread is called
+        if (procInfo->activeProcs.front() == threadNum || timeEnd-timeStart > 60) { // update after 60s of no update or when thread is called
             if(simulation->model.otfParams.desorptionLimit > 0){
                 if(localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed)
                     localDesLimit -= particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
@@ -121,6 +121,8 @@ bool SimThread::runLoop() {
         eos = simEos || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
 
+
+    procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         //printf("[%zu] Updating on finish!\n",threadNum);
         setSimState("Final update...");
@@ -521,7 +523,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
 
                 bool lastUpdateOk = true;
                 if (loadOk) {
-                    size_t updateThread = 0;
+                    procInfo->InitActiveProcList();
 
                     // Calculate remaining work
                     size_t desPerThread = 0;
@@ -539,7 +541,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                     }
 
                     int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
-#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/ updateThread, simuEnd/*, simulation,simThreads*/)
+#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)
                     {
                         eos = simThreads[omp_get_thread_num()].runLoop();
 

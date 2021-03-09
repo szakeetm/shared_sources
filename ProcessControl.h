@@ -8,6 +8,7 @@
 #include <cstddef> //size_t
 #include <vector>
 #include <mutex>
+#include <list>
 
 #define PROCESS_STARTING 0   // Loading state
 #define PROCESS_RUN      1   // Running state
@@ -68,17 +69,26 @@ struct ProcComm {
     size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
-    size_t currentSubProc;
+    std::list<size_t> activeProcs;
     std::mutex m;
     std::vector<SubProcInfo> subProcInfo;
 
     ProcComm();
-    explicit ProcComm(size_t nbProcs) : ProcComm() {Resize(nbProcs);};
-    void Resize(size_t nbProcs){subProcInfo.resize(nbProcs);};
+    explicit ProcComm(size_t nbProcs) : ProcComm() {
+        Resize(nbProcs);
+    };
+    void Resize(size_t nbProcs){
+        subProcInfo.resize(nbProcs);
+        InitActiveProcList();
+    };
     void NextSubProc();
 
     ProcComm& operator=(const ProcComm & src);
     ProcComm& operator=(ProcComm && src) noexcept ;
+
+    void RemoveAsActive(size_t id);
+
+    void InitActiveProcList();
 };
 
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H
