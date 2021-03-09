@@ -526,6 +526,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 #if defined(SYNRAD)
     //Reset leak and hit cache
     ResetWorkerStats();
+    Update(0.0f);
 #endif
 }
 
