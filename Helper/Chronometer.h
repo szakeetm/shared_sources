@@ -8,7 +8,7 @@
 #include <chrono>
 
 using clock_type = std::chrono::steady_clock;
-using time_ratio = std::chrono::milliseconds;
+using time_ratio = std::chrono::seconds;
 using time_type = std::chrono::time_point<clock_type>;
 
 class Chronometer {

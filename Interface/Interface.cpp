@@ -2701,7 +2701,10 @@ int Interface::FrameMove() {
             hps = 0.0;
             dps = 0.0;
         }
-        sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        if(runningState)
+            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        else
+            sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTimer.Elapsed()));
         sTime->SetText(tmp);
     }
 
