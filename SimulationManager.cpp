@@ -23,6 +23,7 @@
 #include <../src/Simulation/Simulation.h>
 
 SimulationManager::SimulationManager() {
+    interactiveMode = true;
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
@@ -99,12 +100,20 @@ int SimulationManager::ResetStatsAndHits() {
  * @return 0=start successful, 1=PROCESS_DONE state entered
  */
 int SimulationManager::StartSimulation() {
-    refreshProcStatus();
-    if (simHandles.empty())
-        throw std::logic_error("No active simulation handles!");
+    if(interactiveMode) {
+        refreshProcStatus();
+        if (simHandles.empty())
+            throw std::logic_error("No active simulation handles!");
 
-    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+        if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+        }
+    }
+    else {
+        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        for(auto& con : simController){
+            con.Start();
+        }
     }
 
     if(allProcsDone){
@@ -117,12 +126,43 @@ int SimulationManager::StartSimulation() {
 
 int SimulationManager::StopSimulation() {
     isRunning = false;
-    refreshProcStatus();
-    if (simHandles.empty())
-        return 1;
+    if(interactiveMode) {
+        refreshProcStatus();
+        if (simHandles.empty())
+            return 1;
 
-    if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+        if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+    }
+    else {
+        /*if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+        */
+        return 1;
+    }
+
+    return 0;
+}
+
+int SimulationManager::LoadSimulation(){
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+            std::string errString = "Failed to send geometry to sub process:\n";
+            errString.append(GetErrorDetails());
+            throw std::runtime_error(errString);
+        }
+    }
+    else{
+        bool errorOnLoad = false;
+        for(auto& con : simController){
+            errorOnLoad |= con.Load();
+        }
+        if(errorOnLoad){
+            std::cerr << "Failed to load simulation!" << std::endl;
+            return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -214,28 +254,30 @@ int SimulationManager::CreateCPUHandle() {
     }
     simController.emplace_back(SimulationController{processId, 0, nbThreads,
                                                     simUnits.back(), &procInformation});
-    simHandles.emplace_back(
-            /*StartProc(arguments, STARTPROC_NOWIN),*/
-            std::thread(&SimulationController::controlledLoop,&simController[0],NULL,nullptr),
-            SimType::simCPU);
-    /*simUnits.emplace_back(Simulation{nbThreads});
-    procInformation.emplace_back(SubDProcInfo{});
-    simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
-    simHandles.emplace_back(
-            *//*StartProc(arguments, STARTPROC_NOWIN),*//*
+    if(interactiveMode) {
+        simHandles.emplace_back(
+                /*StartProc(arguments, STARTPROC_NOWIN),*/
+                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                SimType::simCPU);
+        /*simUnits.emplace_back(Simulation{nbThreads});
+        procInformation.emplace_back(SubDProcInfo{});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        simHandles.emplace_back(
+                *//*StartProc(arguments, STARTPROC_NOWIN),*//*
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
             SimType::simCPU);*/
-    auto myHandle = simHandles.back().first.native_handle();
+        auto myHandle = simHandles.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-    SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
 #else
-    int policy;
-    struct sched_param param{};
-    pthread_getschedparam(myHandle, &policy, &param);
-    param.sched_priority = sched_get_priority_min(policy);
-    pthread_setschedparam(myHandle, policy, &param);
-    //Check! Some documentation says it's always 0
+        int policy;
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
 #endif
+    }
 
     return 0;
 }
@@ -408,8 +450,13 @@ int SimulationManager::KillAllSimUnits() {
 }
 
 int SimulationManager::ResetSimulations() {
-    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
+    }
+    else{
+        //simController.front().
+    }
     return 0;
 }
 
@@ -596,4 +643,53 @@ void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitC
         }
         simUnit->tMutex.unlock();
     }
+}
+
+int SimulationManager::IncreasePriority() {
+#if defined(_WIN32) && defined(_MSC_VER)
+    HANDLE hProcess = GetCurrentProcess();
+    SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
+#else
+
+#endif
+
+    for(auto& handle : simHandles) {
+        auto myHandle = handle.first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
+
+#else
+        int policy;
+            struct sched_param param{};
+            pthread_getschedparam(myHandle, &policy, &param);
+            param.sched_priority = sched_get_priority_min(policy);
+            pthread_setschedparam(myHandle, policy, &param);
+            //Check! Some documentation says it's always 0
+#endif
+    }
+
+    return 0;
+}
+
+int SimulationManager::DecreasePriority() {
+#if defined(_WIN32) && defined(_MSC_VER)
+    HANDLE hProcess = GetCurrentProcess();
+    SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS);
+#else
+
+#endif
+    for(auto& handle : simHandles) {
+        auto myHandle = handle.first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+        int policy;
+            struct sched_param param{};
+            pthread_getschedparam(myHandle, &policy, &param);
+            param.sched_priority = sched_get_priority_min(policy);
+            pthread_setschedparam(myHandle, policy, &param);
+            //Check! Some documentation says it's always 0
+#endif
+    }
+    return 0;
 }

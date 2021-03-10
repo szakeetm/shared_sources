@@ -45,7 +45,8 @@ struct MolflowData{
 int main(int argc, char** argv) {
     std::cout << molflowCliLogo << std::endl;
 
-    SimulationManager simManager;
+    SimulationManager simManager{};
+    simManager.interactiveMode = false;
     SimulationModel model{};
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
@@ -55,7 +56,10 @@ int main(int argc, char** argv) {
     // Get autosave file name
     std::string autoSave = Initializer::getAutosaveFile();
 
+    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.hit.nbDesorbed << " desorptions." << std::endl;
+
     //simManager.ReloadHitBuffer();
+    simManager.IncreasePriority();
     try {
         simManager.StartSimulation();
     }
@@ -63,10 +67,6 @@ int main(int argc, char** argv) {
         std::cerr << "[ERROR] Starting simulation: " << e.what() << std::endl;
         return 1;
     }
-
-
-
-    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.hit.nbDesorbed << " desorptions." << std::endl;
 
     Chronometer simTimer;
     simTimer.Start();

@@ -81,6 +81,8 @@ public:
 
     int StopSimulation();
 
+    int LoadSimulation();
+
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
@@ -110,6 +112,9 @@ public:
 
     int LoadInput(const std::string& fileName);
 
+    int IncreasePriority();
+    int DecreasePriority();
+
 private:
     // Direct implementation for threads
     ProcComm procInformation; // ctrl
@@ -128,6 +133,7 @@ public:
     uint16_t nbThreads;
     uint16_t mainProcId{};
 
+    bool interactiveMode;
     bool isRunning;
     bool allProcsDone;
     bool hasErrorStatus;

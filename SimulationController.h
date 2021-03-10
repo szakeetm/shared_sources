@@ -21,7 +21,7 @@ public:
     double stepsPerSec;
     bool simEos;
     size_t localDesLimit;
-    double simDuration;
+    double timeLimit;
 
     char** status;
     ProcComm* procInfo;
@@ -39,7 +39,6 @@ private:
 };
 
 class SimulationController {
-    bool Load();
     bool UpdateParams();
     int StartSimulation();
     int RunSimulation();
@@ -68,6 +67,8 @@ public:
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
+    int Start();
+    bool Load();
 protected:
 
     SimulationUnit* simulation;
@@ -83,7 +84,7 @@ private:
     double stepsPerSec;
     bool endState;
     bool lastHitUpdateOK;
-    bool loadOK;
+    bool loadOk;
 
 };
 

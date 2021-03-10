@@ -388,13 +388,14 @@ public:
 	int      generation_mode; // Fluxwise/powerwise
 #endif
 	bool	 lowFluxMode;
-	double	 lowFluxCutoff;
+    double	 lowFluxCutoff;
 
 	bool enableLogging;
 	size_t logFacetId, logLimit;
 
-	size_t desorptionLimit;
+    size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
+    double	 timeLimit;
 
 	template<class Archive> void serialize(Archive& archive) {
 		archive(
@@ -407,8 +408,9 @@ public:
 			CEREAL_NVP(logFacetId),
 			CEREAL_NVP(logLimit),
 			CEREAL_NVP(desorptionLimit),
-			CEREAL_NVP(nbProcess)
-		);
+            CEREAL_NVP(nbProcess),
+            CEREAL_NVP(timeLimit)
+        );
 	}
 
 }; //parameters that can be changed without restarting the simulation
