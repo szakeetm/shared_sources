@@ -249,6 +249,10 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		}
 		EnableDisableMoveButtons();
 		formula_ptr->formulasChanged = true;
+
+        formula_ptr->UpdateFormulaValues(work->globalHitCache.globalHits.hit.nbDesorbed);
+        UpdateValues();
+
 		break;
 	}
 	case MSG_LIST_COL: {
