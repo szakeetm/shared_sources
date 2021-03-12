@@ -24,12 +24,12 @@ public:
 protected:
     // Our state
     bool show_demo_window{false};
-    bool show_another_window{true};
+    bool show_global_settings{true};
     ImVec4 clear_color;
 
     static void restartProc(int nbProc, MolFlow *mApp);
 
-    static void ProcessControlTable(MolFlow *mApp);
+    //static void ProcessControlTable(MolFlow *mApp);
 
     //static bool InputRightSide(const char *desc, double *const &val, const char *format);
 };
