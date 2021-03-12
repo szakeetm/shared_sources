@@ -268,26 +268,6 @@ int SimulationController::resetControls() {
     return 0;
 }
 
-int SimulationController::StartSimulation() {
-    try {
-        auto* sim = simulation;
-        sim->SanityCheckGeom();
-    }
-    catch (std::runtime_error &e) {
-        return 1;
-    }
-
-    SetState(PROCESS_RUN, GetSimuStatus());
-    //if (!currentParticle.lastHitFacet) StartFromSource();
-    //return (currentParticle.lastHitFacet != nullptr);
-
-    return 0;
-}
-
-int SimulationController::RunSimulation() {
-    abort();
-}
-
 int SimulationController::SetRuntimeInfo() {
 
     // Update runtime information
@@ -494,21 +474,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 SetReady(loadOk);
                 break;
             }
-            case PROCESS_RUN: {
-                eos = RunSimulation();      // Run during 1 sec
-                if ((GetLocalState() != PROCESS_ERROR)) {
-                    //lastHitUpdateOK = simulation->UpdateHits(prIdx,20); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-                }
-                if (eos) {
-                    if (GetLocalState() != PROCESS_ERROR) {
-                        // Max desorption reached
-                        ClearCommand();
-                        SetState(PROCESS_DONE, GetSimuStatus());
-                        DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
-                    }
-                }
-                break;
-            }
             default: {
                 ProcessSleep(WAITTIME);
                 break;
@@ -523,51 +488,39 @@ bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Loading simulation");
 
-    if(simulation->model.initialized && simulation->globState) {
-
-        simulation->SetNParticle(nbThreads);
-        {//if(nbThreads != simThreads.size()) {
-            simThreads.clear();
-            simThreads.reserve(nbThreads);
-            for (size_t t = 0; t < nbThreads; t++) {
-                simThreads.emplace_back(
-                        SimThread(procInfo, simulation, t));
-                simThreads.back().particle = simulation->GetParticle(t);
-            }
-        }
-
+    if(!simulation->SanityCheckModel()) {
         SetState(PROCESS_STARTING, "Loading simulation");
         bool loadError = false;
-        // Load geometry
 
-        auto *sim = simulation;
-        //for (auto & sim : *simulation) {
-        if (sim->model.vertices3.empty()) {
-            char err[512];
-            sprintf(err, "Loaded empty 'geometry' (%zd Bytes)", procInfo->cmdParam);
-            SetErrorSub(err);
-            loadError = true;
-            return loadError;
-        }
-        //}
-
-        {
-            size_t randomCounter = 0;
-#pragma omp parallel for default(none) shared(randomCounter)
-            for (int i = 0; i < (int) 1e3; ++i) {
-#pragma omp critical
-                randomCounter += i;
-            }
-            DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
-        }
-
-        if (simulation->LoadSimulation(&simulation->model, procInfo->subProcInfo[0].statusString)) {
+        // Init particles / threads
+        simulation->SetNParticle(nbThreads);
+        if (simulation->LoadSimulation(procInfo->subProcInfo[0].statusString)) {
             loadError = true;
         }
 
         if (!loadError) { // loadOk = Load();
             loadOk = true;
-            //desorptionLimit = procInfo->cmdParam2; // 0 for endless
+
+            {//if(nbThreads != simThreads.size()) {
+                simThreads.clear();
+                simThreads.reserve(nbThreads);
+                for (size_t t = 0; t < nbThreads; t++) {
+                    simThreads.emplace_back(
+                            SimThread(procInfo, simulation, t));
+                    simThreads.back().particle = simulation->GetParticle(t);
+                }
+            }
+
+            // "Warm up" threads, to remove overhead for performance benchmarks
+            {
+                size_t randomCounter = 0;
+#pragma omp parallel for default(none) shared(randomCounter)
+                for (int i = 0; i < (int) 1e3; ++i) {
+#pragma omp critical
+                    randomCounter += i;
+                }
+                DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+            }
 
             // Calculate remaining work
             size_t desPerThread = 0;
@@ -584,6 +537,9 @@ bool SimulationController::Load() {
 
             SetRuntimeInfo();
         }
+    }
+    else {
+        loadOk = false;
     }
     SetReady(loadOk);
 
@@ -603,8 +559,8 @@ bool SimulationController::UpdateParams() {
 
 int SimulationController::Start() {
 
-    // Check end of simulation
-    if(!simulation->model.initialized){
+    // Check simulation model and geometry one last time
+    if(simulation->SanityCheckModel()){
         loadOk = false;
     }
 
@@ -613,9 +569,9 @@ int SimulationController::Start() {
             loadOk = false;
     }
 
-    if(!simulation->globState || !loadOk) {
-        loadOk = false;
+    if(!loadOk) {
         SetState(PROCESS_ERROR, GetSimuStatus());
+        return 1;
     }
 
     if (simulation->model.otfParams.desorptionLimit > 0) {

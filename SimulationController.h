@@ -40,8 +40,6 @@ private:
 
 class SimulationController {
     bool UpdateParams();
-    int StartSimulation();
-    int RunSimulation();
     int resetControls();
 
 protected:

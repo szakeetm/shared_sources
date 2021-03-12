@@ -647,6 +647,7 @@ void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitC
 
 int SimulationManager::IncreasePriority() {
 #if defined(_WIN32) && defined(_MSC_VER)
+    // https://cpp.hotexamples.com/de/examples/-/-/SetPriorityClass/cpp-setpriorityclass-function-examples.html
     HANDLE hProcess = GetCurrentProcess();
     SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
 #else

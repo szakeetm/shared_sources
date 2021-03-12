@@ -509,6 +509,7 @@ void Worker::Update(float appTime) {
         return;
     }
     globState.tMutex.unlock();
+
 #if defined(MOLFLOW)
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
@@ -523,6 +524,13 @@ void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrin
 
 void Worker::GetProcStatus(ProcComm &procInfoList) {
     simManager.GetProcStatus(procInfoList);
+}
+
+void Worker::ChangePriority(int prioLevel) {
+    if(prioLevel)
+        simManager.IncreasePriority();
+    else
+        simManager.DecreasePriority();
 }
 
 [[maybe_unused]] std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
