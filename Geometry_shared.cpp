@@ -3761,10 +3761,10 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	worker->globState.globalHits.globalHits.hit.nbMCHit = file->ReadSizeT();
-	worker->globState.globalHits.globalHits.hit.nbHitEquiv = (double)worker->globState.globalHits.globalHits.hit.nbMCHit; //Backward comp
+	worker->globState.globalHits.globalHits.nbMCHit = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.nbHitEquiv = (double)worker->globState.globalHits.globalHits.nbMCHit; //Backward comp
 	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
-	worker->globState.globalHits.globalHits.hit.nbDesorbed = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.nbDesorbed = file->ReadSizeT();
 	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();

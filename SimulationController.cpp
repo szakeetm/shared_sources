@@ -55,7 +55,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
 
-        desorptions -= particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
+        desorptions -= particle->tmpState.globalHits.globalHits.nbDesorbed;
     } while (desorptions);
 
 
@@ -104,8 +104,8 @@ bool SimThread::runLoop() {
 
         if (procInfo->activeProcs.front() == threadNum || timeEnd-timeLoopStart > 60) { // update after 60s of no update or when thread is called
             if(simulation->model.otfParams.desorptionLimit > 0){
-                if(localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed)
-                    localDesLimit -= particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
+                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
+                    localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
                 else localDesLimit = 0;
             }
 
@@ -143,7 +143,7 @@ void SimThread::setSimState(const std::string& msg) const {
 
 [[nodiscard]] char *SimThread::getSimStatus() const {
     static char ret[128];
-    size_t count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.hit.nbDesorbed;;
+    size_t count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
     if (simulation->model.otfParams.nbProcess)
@@ -174,13 +174,13 @@ int SimThread::runSimulation(size_t desorptions) {
     size_t remainingDes = 0;
 
     if (particle->model->otfParams.desorptionLimit > 0) {
-        if (desorptions <= particle->tmpState.globalHits.globalHits.hit.nbDesorbed){
+        if (desorptions <= particle->tmpState.globalHits.globalHits.nbDesorbed){
             //lastHitFacet = nullptr; // reset full particle status or go on from where we left
             goOn = false;
         }
         else {
             //if(particle->tmpState.globalHits.globalHits.hit.nbDesorbed <= (particle->model->otfParams.desorptionLimit - simulation->globState->globalHits.globalHits.hit.nbDesorbed)/ particle->model->otfParams.nbProcess)
-                remainingDes = desorptions - particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
+                remainingDes = desorptions - particle->tmpState.globalHits.globalHits.nbDesorbed;
         }
     }
     //auto start_time = std::chrono::high_resolution_clock::now();
@@ -358,7 +358,7 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
             }
             else {
                 size_t count = 0;
-                count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.hit.nbDesorbed;
+                count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;
                 size_t max = 0;
                 if (sim->model.otfParams.nbProcess)
                     max = sim->model.otfParams.desorptionLimit / sim->model.otfParams.nbProcess + ((threadId < sim->model.otfParams.desorptionLimit % sim->model.otfParams.nbProcess) ? 1 : 0);
@@ -525,7 +525,7 @@ bool SimulationController::Load() {
             // Calculate remaining work
             size_t desPerThread = 0;
             size_t remainder = 0;
-            size_t des_global = simulation->globState->globalHits.globalHits.hit.nbDesorbed;
+            size_t des_global = simulation->globState->globalHits.globalHits.nbDesorbed;
             if (des_global > 0) {
                 desPerThread = des_global / nbThreads;
                 remainder = des_global % nbThreads;
@@ -598,7 +598,7 @@ int SimulationController::Start() {
         size_t desPerThread = 0;
         size_t remainder = 0;
         if(simulation->model.otfParams.desorptionLimit > 0){
-            if(simulation->model.otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.hit.nbDesorbed)) {
+            if(simulation->model.otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
                 size_t limitDes_global = simulation->model.otfParams.desorptionLimit;
                 desPerThread = limitDes_global / nbThreads;
                 remainder = limitDes_global % nbThreads;

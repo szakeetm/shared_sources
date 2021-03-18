@@ -110,7 +110,7 @@ public:
 
 class FacetProperties { //Formerly SHFACET
 public:
-    FacetProperties(size_t nbIndices);
+    explicit FacetProperties(size_t nbIndices);
 	//For sync between interface and subprocess
 	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
 	double opacity;        // opacity  (0=>transparent , 1=>opaque)
@@ -417,6 +417,13 @@ public:
 
 class HIT {
 public:
+    HIT() : pos() {
+        type = 0;
+#if defined(SYNRAD)
+        dF = 0.0;
+	    dP = 0.0;
+#endif
+    }
 	Vector3d pos;
 	int    type;
 #if defined(SYNRAD)
@@ -499,47 +506,37 @@ public:
 struct FacetHitBuffer {
 
     FacetHitBuffer() {
-        hit.nbDesorbed = 0;
-        hit.nbMCHit = 0;
-        hit.nbHitEquiv = 0.0;
-        hit.nbAbsEquiv = 0.0;
-        hit.sum_1_per_ort_velocity = 0.0;
-        hit.sum_1_per_velocity = 0.0;
-        hit.sum_v_ort = 0.0;
+        nbDesorbed = 0;
+        nbMCHit = 0;
+        nbHitEquiv = 0.0;
+        nbAbsEquiv = 0.0;
+        sum_1_per_ort_velocity = 0.0;
+        sum_1_per_velocity = 0.0;
+        sum_v_ort = 0.0;
     }
     FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
 
-    struct {
-		// Counts
-        size_t nbDesorbed;          // Number of desorbed molec
-        size_t nbMCHit;               // Number of hits
-		double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-		double nbAbsEquiv;          // Equivalent number of absorbed molecules
-		double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
-		double sum_1_per_velocity;          //For average molecule speed calculation
-		double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
-	} hit;
+    // Counts
+    size_t nbDesorbed;          // Number of desorbed molec
+    size_t nbMCHit;               // Number of hits
+    double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+    double nbAbsEquiv;          // Equivalent number of absorbed molecules
+    double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
+    double sum_1_per_velocity;          //For average molecule speed calculation
+    double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
 
-	/*struct {
-		// density
-		double desorbed;
-		double value;
-		double absorbed;
-	} density;*/
-
-	//TODO: Check for correct serialization
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(hit.nbDesorbed),
-			CEREAL_NVP(hit.nbMCHit),
-			CEREAL_NVP(hit.nbHitEquiv),
-			CEREAL_NVP(hit.nbAbsEquiv),
-			CEREAL_NVP(hit.sum_1_per_ort_velocity),
-			CEREAL_NVP(hit.sum_1_per_velocity),
-			CEREAL_NVP(hit.sum_v_ort)
-			);
+			CEREAL_NVP(nbDesorbed),
+			CEREAL_NVP(nbMCHit),
+			CEREAL_NVP(nbHitEquiv),
+			CEREAL_NVP(nbAbsEquiv),
+			CEREAL_NVP(sum_1_per_ort_velocity),
+			CEREAL_NVP(sum_1_per_velocity),
+			CEREAL_NVP(sum_v_ort)
+        );
 	}
 };
 #endif
@@ -580,7 +577,7 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-    GlobalHitBuffer() :globalHits() {
+    GlobalHitBuffer() : globalHits() {
     	hitCacheSize = 0;
     	lastHitIndex = 0;
 		lastLeakIndex = 0;
@@ -594,11 +591,11 @@ public:
     FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
 	size_t hitCacheSize;              // Number of valid hits in cache
 	size_t lastHitIndex;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-	HIT hitCache[HITCACHESIZE];       // Hit history
-	LEAK leakCache[LEAKCACHESIZE];      // Leak history
 	size_t  lastLeakIndex;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 	size_t  leakCacheSize;        //Number of valid leaks in the cache
 	size_t  nbLeakTotal;         // Total leaks
+    HIT hitCache[HITCACHESIZE];       // Hit history
+    LEAK leakCache[LEAKCACHESIZE];      // Leak history
 
 
 #if defined(MOLFLOW)
@@ -643,6 +640,22 @@ public:
 
 class ParticleLoggerItem {
 public:
+    ParticleLoggerItem() : facetHitPosition() {
+        hitTheta = 0.0;
+        hitPhi = 0.0;
+        oriRatio = 0.0;
+
+#if defined(MOLFLOW)
+        time = 0.0;
+        particleDecayMoment = 0.0;
+        velocity = 0.0;
+#endif
+#if defined(SYNRAD)
+        energy = 0.0;
+        dF = 0.0;
+        dP = 0.0;
+#endif
+    }
 	Vector2d facetHitPosition;
 	double hitTheta, hitPhi;
 	double oriRatio;

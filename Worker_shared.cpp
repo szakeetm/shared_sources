@@ -314,7 +314,7 @@ void Worker::CalculateTextureLimits(){
                 {
                     // go on if the facet was never hit before
                     auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[m].hits;
-                    if (facetHitBuffer.hit.nbMCHit == 0 && facetHitBuffer.hit.nbDesorbed == 0) continue;
+                    if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
                 }
 
                 //double dCoef = globState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
@@ -361,9 +361,9 @@ void Worker::CalculateTextureLimits(){
     double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
     //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
     //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed * mApp->worker.model.wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
-    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed;
-    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.hit.nbDesorbed;
+    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model.wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
 
     // Add coefficient scaling
     for(int v = 0; v < 3; ++v) {
@@ -463,8 +463,8 @@ void Worker::Update(float appTime) {
 
 #if defined(SYNRAD)
 
-        if (globalHitCache.globalHits.hit.nbDesorbed && model.wp.nbTrajPoints) {
-            no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)model.wp.nbTrajPoints;
+        if (globalHitCache.globalHits.nbDesorbed && model.wp.nbTrajPoints) {
+            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model.wp.nbTrajPoints;
         }
         else {
             no_scans = 1.0;

@@ -50,13 +50,13 @@ int main(int argc, char** argv) {
     SimulationModel model{};
     GlobalSimuState globState{};
     Initializer::init(argc, argv, &simManager, &model, &globState);
-    size_t oldHitsNb = globState.globalHits.globalHits.hit.nbMCHit;
-    size_t oldDesNb = globState.globalHits.globalHits.hit.nbDesorbed;
+    size_t oldHitsNb = globState.globalHits.globalHits.nbMCHit;
+    size_t oldDesNb = globState.globalHits.globalHits.nbDesorbed;
 
     // Get autosave file name
     std::string autoSave = Initializer::getAutosaveFile();
 
-    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.hit.nbDesorbed << " desorptions." << std::endl;
+    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.nbDesorbed << " desorptions." << std::endl;
 
     //simManager.ReloadHitBuffer();
     simManager.IncreasePriority();
@@ -78,10 +78,10 @@ int main(int argc, char** argv) {
 
         elapsedTime = simTimer.Elapsed();
         if(model.otfParams.desorptionLimit != 0)
-            endCondition = globState.globalHits.globalHits.hit.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
+            endCondition = globState.globalHits.globalHits.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
 
         if(endCondition){
-            printf("--- Trans Prob: %zu -> %e\n", globState.globalHits.globalHits.hit.nbDesorbed, globState.facetStates[1].momentResults[0].hits.hit.nbAbsEquiv / globState.globalHits.globalHits.hit.nbDesorbed);
+            printf("--- Trans Prob: %zu -> %e\n", globState.globalHits.globalHits.nbDesorbed, globState.facetStates[1].momentResults[0].hits.nbAbsEquiv / globState.globalHits.globalHits.nbDesorbed);
             std::stringstream outFile;
             outFile << "out_" << model.otfParams.desorptionLimit <<".xml";
             try {
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
         }
         else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
             if(Settings::simDuration > 0){
-                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", Settings::simDuration-elapsedTime, elapsedTime, globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.hit.nbMCHit-oldHitsNb)/(elapsedTime));
+                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", Settings::simDuration-elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
             }
         }
 
@@ -134,11 +134,11 @@ int main(int argc, char** argv) {
     std::cout << "Simulation finished!" << std::endl << std::flush;
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
-        std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb
-                << " (" << globState.globalHits.globalHits.hit.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.hit.nbMCHit - oldHitsNb) /
+        std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
+                << " (" << globState.globalHits.globalHits.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
                               (elapsedTime) << "Hit/s" << std::endl;
-        std::cout << "[" << elapsedTime << "s] Des " << globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb
-                << " (" << globState.globalHits.globalHits.hit.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.hit.nbDesorbed - oldDesNb) /
+        std::cout << "[" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
+                << " (" << globState.globalHits.globalHits.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
                               (elapsedTime) << "Des/s" << std::endl;
     }
 

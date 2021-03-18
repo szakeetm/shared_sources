@@ -36,13 +36,13 @@ GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
 * \return address of this (lhs)
 */
 FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
-    this->hit.nbDesorbed+=rhs.hit.nbDesorbed;
-    this->hit.nbMCHit+=rhs.hit.nbMCHit;
-    this->hit.nbHitEquiv+=rhs.hit.nbHitEquiv;
-    this->hit.nbAbsEquiv+=rhs.hit.nbAbsEquiv;
-    this->hit.sum_1_per_ort_velocity+=rhs.hit.sum_1_per_ort_velocity;
-    this->hit.sum_1_per_velocity+=rhs.hit.sum_1_per_velocity;
-    this->hit.sum_v_ort+=rhs.hit.sum_v_ort;
+    this->nbDesorbed+=rhs.nbDesorbed;
+    this->nbMCHit+=rhs.nbMCHit;
+    this->nbHitEquiv+=rhs.nbHitEquiv;
+    this->nbAbsEquiv+=rhs.nbAbsEquiv;
+    this->sum_1_per_ort_velocity+=rhs.sum_1_per_ort_velocity;
+    this->sum_1_per_velocity+=rhs.sum_1_per_velocity;
+    this->sum_v_ort+=rhs.sum_v_ort;
     return *this;
 }
 #endif
