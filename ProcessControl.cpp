@@ -9,7 +9,6 @@ ProcComm::ProcComm() : m() {
     masterCmd = 0;
     cmdParam = 0;
     cmdParam2 = 0;
-    currentSubProc = 0;
 }
 /**
 * \brief Assign operator
@@ -21,7 +20,6 @@ ProcComm& ProcComm::operator=(const ProcComm & src) {
     cmdParam = src.cmdParam;
     cmdParam2 = src.cmdParam2;
     subProcInfo = src.subProcInfo;
-    currentSubProc = src.currentSubProc;
     return *this;
 }
 
@@ -34,13 +32,32 @@ ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
     masterCmd = src.masterCmd;
     cmdParam = src.cmdParam;
     cmdParam2 = src.cmdParam2;
-    currentSubProc = src.currentSubProc;
     subProcInfo = std::move(src.subProcInfo);
     return *this;
 }
 
 void ProcComm::NextSubProc() {
     this->m.lock();
-    currentSubProc = (currentSubProc+1) % subProcInfo.size();
+    activeProcs.emplace_back(activeProcs.front());
+    activeProcs.pop_front();
+    this->m.unlock();
+}
+
+void ProcComm::RemoveAsActive(size_t id) {
+    this->m.lock();
+    for(auto proc = activeProcs.begin(); proc != activeProcs.end(); ++proc){
+        if(id == (*proc)) {
+            activeProcs.erase(proc);
+            break;
+        }
+    }
+    this->m.unlock();
+}
+
+void ProcComm::InitActiveProcList() {
+    this->m.lock();
+    activeProcs.clear();
+    for(size_t id = 0; id < this->subProcInfo.size(); ++id)
+        activeProcs.emplace_back(id);
     this->m.unlock();
 }

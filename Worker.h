@@ -87,6 +87,7 @@ public:
  static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
+  void ReloadSim(bool sendOnly, GLProgress *progressDlg);
   void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
@@ -101,6 +102,7 @@ public:
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
   void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
     void GetProcStatus(ProcComm &procInfoList);// Get process status
+    void ChangePriority(int prioLevel);
 
     bool GetHits(); // Access to dataport (HIT)
     ParticleLog & GetLog();

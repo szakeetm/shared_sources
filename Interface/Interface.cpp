@@ -1174,7 +1174,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
                         // Load values on init
-                        formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.hit.nbDesorbed);
+                        formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.nbDesorbed);
                         formulaEditor->UpdateValues();
                         // ---
                         formulaEditor->SetVisible(true);
@@ -1459,7 +1459,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_SELECTABS:
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++) {
-                        if (geom->GetFacet(i)->facetHitCache.hit.nbAbsEquiv > 0)
+                        if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
                             geom->SelectFacet(i);
                     }
                     geom->UpdateSelection();
@@ -1469,7 +1469,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_SELECTHITS:
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit > 0)
+                        if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
                             geom->SelectFacet(i);
                     geom->UpdateSelection();
                     UpdateFacetParams(true);
@@ -1486,7 +1486,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     }
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 &&
+                        if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
                             geom->GetFacet(i)->sh.area >= largeAreaThreshold)
                             geom->SelectFacet(i);
                     geom->UpdateSelection();
@@ -2628,7 +2628,7 @@ void Interface::DoEvents(bool forced) {
 
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
-    if (work->globalHitCache.globalHits.hit.nbMCHit > 0) {
+    if (work->globalHitCache.globalHits.nbMCHit > 0) {
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
@@ -2689,7 +2689,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                formula_ptr->UpdateFormulaValues(hitCache.hit.nbDesorbed);
+                formula_ptr->UpdateFormulaValues(hitCache.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
@@ -2701,12 +2701,12 @@ int Interface::FrameMove() {
                 //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
                 // Update timing measurements
-                if (hitCache.hit.nbMCHit != lastNbHit ||
-                    hitCache.hit.nbDesorbed != lastNbDes) {
+                if (hitCache.nbMCHit != lastNbHit ||
+                    hitCache.nbDesorbed != lastNbDes) {
                     auto dTime = (double) (m_fTime - lastMeasTime);
                     if(dTime > 1e-6) {
-                        hps = (double) (hitCache.hit.nbMCHit - lastNbHit) / dTime;
-                        dps = (double) (hitCache.hit.nbDesorbed - lastNbDes) / dTime;
+                        hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
+                        dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
                     }
                     if (lastHps != 0.0) {
                         hps = 0.2 * (hps) + 0.8 * lastHps;
@@ -2714,8 +2714,8 @@ int Interface::FrameMove() {
                     }
                     lastHps = hps;
                     lastDps = dps;
-                    lastNbHit = hitCache.hit.nbMCHit;
-                    lastNbDes = hitCache.hit.nbDesorbed;
+                    lastNbHit = hitCache.nbMCHit;
+                    lastNbDes = hitCache.nbDesorbed;
                     lastMeasTime = m_fTime;
                 }
             }
@@ -2725,13 +2725,16 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetText("Update");
     } else {
         if (worker.simuTimer.Elapsed() > 0.0) {
-            hps = (double) (hitCache.hit.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
-            dps = (double) (hitCache.hit.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
+            hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
+            dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
         } else {
             hps = 0.0;
             dps = 0.0;
         }
-        sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        if(runningState)
+            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        else
+            sprintf(tmp, "Stopped: %s", Util::formatTime(worker.simuTimer.Elapsed()));
         sTime->SetText(tmp);
     }
 
@@ -2762,17 +2765,17 @@ int Interface::FrameMove() {
     if (worker.globalHitCache.nbLeakTotal) {
         sprintf(tmp, "%g (%.4f%%)", (double) worker.globalHitCache.nbLeakTotal,
                 (double) (worker.globalHitCache.nbLeakTotal) * 100.0 /
-                (double) hitCache.hit.nbDesorbed);
+                (double) hitCache.nbDesorbed);
         leakNumber->SetText(tmp);
     } else {
         leakNumber->SetText("None");
     }
-    resetSimu->SetEnabled(!runningState && hitCache.hit.nbDesorbed > 0);
+    resetSimu->SetEnabled(!runningState && hitCache.nbDesorbed > 0);
 
     if (runningState) {
         startSimu->SetText("Pause");
         //startSimu->SetFontColor(255, 204, 0);
-    } else if (hitCache.hit.nbMCHit > 0) {
+    } else if (hitCache.nbMCHit > 0) {
         startSimu->SetText("Resume");
         //startSimu->SetFontColor(0, 140, 0);
     } else {

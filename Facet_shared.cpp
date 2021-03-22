@@ -151,7 +151,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 
 	//sh.facetHistogramParams.record = false;
 
-	totalFlux = sh.totalOutgassing = totalDose = 0.0;
+    ogMap.totalFlux = sh.totalOutgassing = ogMap.totalDose = 0.0;
 
 	userOutgassing = "";
 	userOpacity = "";
@@ -643,7 +643,7 @@ void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height)
 
 	UnselectElem();
 
-	if (cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
+	if (!cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
 
 		size_t maxW = sh.texWidth - u;
 		size_t maxH = sh.texHeight - v;

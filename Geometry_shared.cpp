@@ -3397,18 +3397,18 @@ void Geometry::AdjustProfile() {
 
 void Geometry::ResetTextureLimits() {
 #if defined(MOLFLOW)
-	texture_limits[0].autoscale.min.all = texture_limits[0].autoscale.min.moments_only =
-		texture_limits[1].autoscale.min.all = texture_limits[1].autoscale.min.moments_only =
-		texture_limits[2].autoscale.min.all = texture_limits[2].autoscale.min.moments_only =
-		texture_limits[0].manual.min.all = texture_limits[0].manual.min.moments_only =
-		texture_limits[1].manual.min.all = texture_limits[1].manual.min.moments_only =
-		texture_limits[2].manual.min.all = texture_limits[2].manual.min.moments_only = 0.0;
-	texture_limits[0].autoscale.max.all = texture_limits[0].autoscale.max.moments_only =
-		texture_limits[1].autoscale.max.all = texture_limits[1].autoscale.max.moments_only =
-		texture_limits[2].autoscale.max.all = texture_limits[2].autoscale.max.moments_only =
-		texture_limits[0].manual.max.all = texture_limits[0].manual.max.moments_only =
-		texture_limits[1].manual.max.all = texture_limits[1].manual.max.moments_only =
-		texture_limits[2].manual.max.all = texture_limits[2].manual.max.moments_only = 1.0;
+    texture_limits[0].autoscale.min.steady_state = texture_limits[0].autoscale.min.moments_only =
+    texture_limits[1].autoscale.min.steady_state = texture_limits[1].autoscale.min.moments_only =
+    texture_limits[2].autoscale.min.steady_state = texture_limits[2].autoscale.min.moments_only =
+    texture_limits[0].manual.min.steady_state = texture_limits[0].manual.min.moments_only =
+    texture_limits[1].manual.min.steady_state = texture_limits[1].manual.min.moments_only =
+    texture_limits[2].manual.min.steady_state = texture_limits[2].manual.min.moments_only = 0.0;
+    texture_limits[0].autoscale.max.steady_state = texture_limits[0].autoscale.max.moments_only =
+    texture_limits[1].autoscale.max.steady_state = texture_limits[1].autoscale.max.moments_only =
+    texture_limits[2].autoscale.max.steady_state = texture_limits[2].autoscale.max.moments_only =
+    texture_limits[0].manual.max.steady_state = texture_limits[0].manual.max.moments_only =
+    texture_limits[1].manual.max.steady_state = texture_limits[1].manual.max.moments_only =
+    texture_limits[2].manual.max.steady_state = texture_limits[2].manual.max.moments_only = 1.0;
 #endif
 #if defined(SYNRAD)
 	textureMin_auto.count = 0;
@@ -3761,10 +3761,10 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
-	worker->globState.globalHits.globalHits.hit.nbMCHit = file->ReadSizeT();
-	worker->globState.globalHits.globalHits.hit.nbHitEquiv = (double)worker->globState.globalHits.globalHits.hit.nbMCHit; //Backward comp
+	worker->globState.globalHits.globalHits.nbMCHit = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.nbHitEquiv = (double)worker->globState.globalHits.globalHits.nbMCHit; //Backward comp
 	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
-	worker->globState.globalHits.globalHits.hit.nbDesorbed = file->ReadSizeT();
+	worker->globState.globalHits.globalHits.nbDesorbed = file->ReadSizeT();
 	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
@@ -4565,19 +4565,24 @@ void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, 
     size_t index = 0;
     for(auto& fac : sFacets) {
         facets[index] = new InterfaceFacet(fac.indices.size());
-        facets[index]->indices = fac.indices;
-        facets[index]->vertices2 = fac.vertices2;
-        facets[index]->sh = fac.sh;
+        auto& intFacet = facets[index];
+        intFacet->indices = fac.indices;
+        intFacet->vertices2 = fac.vertices2;
+        intFacet->sh = fac.sh;
 
         // Molflow
-        facets[index]->ogMap = fac.ogMap;
-        facets[index]->angleMapCache = fac.angleMap.pdf;
+        intFacet->ogMap = fac.ogMap;
+        intFacet->angleMapCache = fac.angleMap.pdf;
 
+        if(intFacet->ogMap.outgassingMapWidth > 0.0 || intFacet->ogMap.outgassingMapHeight > 0.0 || intFacet->ogMap.outgassingFileRatio > 0.0){
+            intFacet->hasOutgassingFile = true;
+        }
+        
         //Set param names for interface
-        if (facets[index]->sh.sticking_paramId > -1) facets[index]->userSticking = work->parameters[facets[index]->sh.sticking_paramId].name;
-        if (facets[index]->sh.opacity_paramId > -1) facets[index]->userOpacity = work->parameters[facets[index]->sh.opacity_paramId].name;
-        if (facets[index]->sh.outgassing_paramId > -1) facets[index]->userOutgassing = work->parameters[facets[index]->sh.outgassing_paramId].name;
-        if (facets[index]->sh.isTextured) facets[index]->hasMesh = true;
+        if (intFacet->sh.sticking_paramId > -1) intFacet->userSticking = work->parameters[intFacet->sh.sticking_paramId].name;
+        if (intFacet->sh.opacity_paramId > -1) intFacet->userOpacity = work->parameters[intFacet->sh.opacity_paramId].name;
+        if (intFacet->sh.outgassing_paramId > -1) intFacet->userOutgassing = work->parameters[intFacet->sh.outgassing_paramId].name;
+        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
         ++index;
     }
 

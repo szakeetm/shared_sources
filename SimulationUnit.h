@@ -43,9 +43,9 @@ public:
     virtual ~SimulationUnit()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual size_t LoadSimulation(SimulationModel *simModel, char *loadStatus) = 0;
+    virtual size_t LoadSimulation(char *loadStatus) = 0;
     virtual int ReinitializeParticleLog() = 0;
-    virtual int SanityCheckGeom() = 0;
+    virtual int SanityCheckModel() = 0;
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;

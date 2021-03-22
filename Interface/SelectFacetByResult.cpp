@@ -305,19 +305,19 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 		for (size_t i=0;i<nbFacet;i++) {
 			InterfaceFacet* f=geom->GetFacet(i);
 			bool match=true;
-			if (do_hitLess) match = match && (f->facetHitCache.hit.nbMCHit<hitLess);
-			if (do_hitMore) match = match && (f->facetHitCache.hit.nbMCHit>hitMore);
-			if (do_absLess) match = match && (f->facetHitCache.hit.nbAbsEquiv<absLess);
-			if (do_absMore) match = match && (f->facetHitCache.hit.nbAbsEquiv>absMore);
+			if (do_hitLess) match = match && (f->facetHitCache.nbMCHit<hitLess);
+			if (do_hitMore) match = match && (f->facetHitCache.nbMCHit>hitMore);
+			if (do_absLess) match = match && (f->facetHitCache.nbAbsEquiv<absLess);
+			if (do_absMore) match = match && (f->facetHitCache.nbAbsEquiv>absMore);
 			#ifdef MOLFLOW
-			if (do_desLess) match = match && (f->facetHitCache.hit.nbDesorbed<hitLess);
-			if (do_desMore) match = match && (f->facetHitCache.hit.nbDesorbed>hitMore);
+			if (do_desLess) match = match && (f->facetHitCache.nbDesorbed<hitLess);
+			if (do_desMore) match = match && (f->facetHitCache.nbDesorbed>hitMore);
 			#endif
 			#ifdef SYNRAD
-			if (do_fluxLess) match = match && (f->facetHitCache.hit.fluxAbs/work->no_scans < fluxLess);
-			if (do_fluxMore) match = match && (f->facetHitCache.hit.fluxAbs/work->no_scans > fluxMore);
-			if (do_powerLess) match = match && (f->facetHitCache.hit.powerAbs/work->no_scans < powerLess);
-			if (do_powerMore) match = match && (f->facetHitCache.hit.powerAbs/work->no_scans > powerMore);
+			if (do_fluxLess) match = match && (f->facetHitCache.fluxAbs/work->no_scans < fluxLess);
+			if (do_fluxMore) match = match && (f->facetHitCache.fluxAbs/work->no_scans > fluxMore);
+			if (do_powerLess) match = match && (f->facetHitCache.powerAbs/work->no_scans < powerLess);
+			if (do_powerMore) match = match && (f->facetHitCache.powerAbs/work->no_scans > powerMore);
 			#endif
 			if (match) f->selected = (src!=remSelectButton);
 		}
