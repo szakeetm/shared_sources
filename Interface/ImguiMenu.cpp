@@ -86,7 +86,7 @@ static void ShowSelectionModals() {
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             geom->UnselectAll();
             for (int i = 0; i < geom->GetNbFacet(); i++)
-                if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit == 0 &&
+                if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
                     geom->GetFacet(i)->sh.area >= largeAreaThreshold)
                     geom->SelectFacet(i);
             geom->UpdateSelection();
@@ -270,7 +270,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     if (ImGui::MenuItem("Select Abs > 0")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++) {
-            if (geom->GetFacet(i)->facetHitCache.hit.nbAbsEquiv > 0)
+            if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
                 geom->SelectFacet(i);
         }
         geom->UpdateSelection();
@@ -279,7 +279,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     if (ImGui::MenuItem("Select Hit > 0")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->facetHitCache.hit.nbMCHit > 0)
+            if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
                 geom->SelectFacet(i);
         geom->UpdateSelection();
         mApp->UpdateFacetParams(true);

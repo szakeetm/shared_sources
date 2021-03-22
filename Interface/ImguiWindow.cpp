@@ -326,9 +326,9 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
                         InterfaceFacet *f = geom->GetFacet(n);
                         FacetData& item = items[n];
                         item.ID = n;
-                        item.hits =  f->facetHitCache.hit.nbMCHit;
-                        item.des =  f->facetHitCache.hit.nbDesorbed;
-                        item.abs =  f->facetHitCache.hit.nbAbsEquiv;
+                        item.hits =  f->facetHitCache.nbMCHit;
+                        item.des =  f->facetHitCache.nbDesorbed;
+                        item.abs =  f->facetHitCache.nbAbsEquiv;
                     }
                 }
 
