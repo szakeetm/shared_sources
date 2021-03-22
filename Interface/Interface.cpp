@@ -1505,9 +1505,15 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_LOADSEL:
                     LoadSelection();
                     return true;
-                case MENU_SELECTION_ADDNEW:
-                    AddSelection();
+                case MENU_SELECTION_ADDNEW: {
+                    std::stringstream tmp_ss;
+                    tmp_ss << "Selection #" << (selections.size() + 1);
+                    char *selectionName = GLInputBox::GetInput(tmp_ss.str().c_str(), "Selection name",
+                                                               "Enter selection name");
+                    if (selectionName)
+                        AddSelection(selectionName);
                     return true;
+                }
                 case MENU_SELECTION_CLEARALL:
                     if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL,
                                               GLDLG_ICONINFO) == GLDLG_OK) {
@@ -2022,15 +2028,11 @@ void Interface::OverWriteSelection(size_t idOvr) {
     RebuildSelectionMenus();
 }
 
-void Interface::AddSelection() {
-    Geometry *geom = worker.GetGeometry();
-    std::stringstream tmp;
-    tmp << "Selection #" << (selections.size() + 1);
-    char *selectionName = GLInputBox::GetInput(tmp.str().c_str(), "Selection name", "Enter selection name");
-    if (!selectionName) return;
+void Interface::AddSelection(const std::string &selectionName) {
+    if (selectionName.empty()) return;
 
     SelectionGroup newSelection;
-    newSelection.selection = geom->GetSelectedFacets();
+    newSelection.selection = worker.GetGeometry()->GetSelectedFacets();
     newSelection.name = selectionName;
     selections.push_back(newSelection);
     RebuildSelectionMenus();

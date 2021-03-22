@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
 #include <imgui/imgui_impl_sdl.h>
+#include <imgui/imgui_internal.h>
 
 #ifndef _WIN32
 #include <unistd.h> //_exit()
@@ -404,8 +405,16 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
-         if(imWnd)
-            ImGui_ImplSDL2_ProcessEvent(&sdlEvent);
+         if(imWnd) {
+             auto ctx = ImGui::GetCurrentContext();
+
+             if ((ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)  || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1) || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1)) {
+                 wereEvents = true;
+                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
+                     continue;
+                 }
+             }
+         }
 		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
 
        UpdateEventCount(&sdlEvent);

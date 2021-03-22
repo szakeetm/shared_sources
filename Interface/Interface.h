@@ -374,7 +374,7 @@ public:
 	// Selections
 	void SelectSelection(size_t v);
 	void AddSelection(const SelectionGroup& s);
-	void AddSelection();
+	void AddSelection(const std::string &selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);

@@ -3,6 +3,7 @@
 //
 
 #include "ImguiWindow.h"
+#include "ImguiMenu.h"
 
 #include "../../src/MolFlow.h"
 #include "../../src/MolflowGeometry.h"
@@ -70,7 +71,7 @@ void ImguiWindow::init() {
 
     // Our state
     show_demo_window = false;
-    show_global_settings = true;
+    show_global_settings = false;
     clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
@@ -199,6 +200,71 @@ static void AddCheckboxWidthSpacing() {
                     ImGui::GetStyle().FramePadding.y * 4);
 }
 
+// Dummy data structure that we use for the Table demo.
+// (pre-C++11 doesn't allow us to instantiate ImVector<MyItem> template if this structure if defined inside the demo function)
+namespace
+{
+// We are passing our own identifier to TableSetupColumn() to facilitate identifying columns in the sorting code.
+// This identifier will be passed down into ImGuiTableSortSpec::ColumnUserID.
+// But it is possible to omit the user id parameter of TableSetupColumn() and just use the column index instead! (ImGuiTableSortSpec::ColumnIndex)
+// If you don't use sorting, you will generally never care about giving column an ID!
+    enum FacetDataColumnID
+    {
+        FacetDataColumnID_ID,
+        FacetDataColumnID_Hits,
+        FacetDataColumnID_Des,
+        FacetDataColumnID_Abs
+    };
+
+    struct FacetData
+    {
+        int         ID;
+        size_t         hits;
+        size_t         des;
+        double         abs;
+
+        // We have a problem which is affecting _only this demo_ and should not affect your code:
+        // As we don't rely on std:: or other third-party library to compile dear imgui, we only have reliable access to qsort(),
+        // however qsort doesn't allow passing user data to comparing function.
+        // As a workaround, we are storing the sort specs in a static/global for the comparing function to access.
+        // In your own use case you would probably pass the sort specs to your sorting/comparing functions directly and not use a global.
+        // We could technically call ImGui::TableGetSortSpecs() in CompareWithSortSpecs(), but considering that this function is called
+        // very often by the sorting algorithm it would be a little wasteful.
+        static const ImGuiTableSortSpecs* s_current_sort_specs;
+
+        // Compare function to be used by qsort()
+        static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs)
+        {
+            const FacetData* a = (const FacetData*)lhs;
+            const FacetData* b = (const FacetData*)rhs;
+            for (int n = 0; n < s_current_sort_specs->SpecsCount; n++)
+            {
+                // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
+                // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
+                const ImGuiTableColumnSortSpecs* sort_spec = &s_current_sort_specs->Specs[n];
+                int delta = 0;
+                switch (sort_spec->ColumnUserID)
+                {
+                    case FacetDataColumnID_ID:             delta = (a->ID - b->ID);                break;
+                    case FacetDataColumnID_Hits:           delta = (a->hits > b->hits) ? 1 : (a->hits == b->hits) ? 0 : -1;     break;
+                    case FacetDataColumnID_Des:       delta = (a->des > b->des) ? 1 : (a->des == b->des) ? 0 : -1;    break;
+                    case FacetDataColumnID_Abs:    delta = (a->abs > b->abs) ? 1 : (a->abs == b->abs) ? 0 : -1;     break;
+                    default: IM_ASSERT(0); break;
+                }
+                if (delta > 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
+                if (delta < 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
+            }
+
+            // qsort() is instable so always return a way to differenciate items.
+            // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
+            return (a->ID - b->ID);
+        }
+    };
+    const ImGuiTableSortSpecs* FacetData::s_current_sort_specs = NULL;
+}
+
 // Demonstrate creating a simple static window with no decoration
 // + a context-menu to choose which corner of the screen to use.
 static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
@@ -250,29 +316,64 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
                     facetList->SetColumnColors(colors);
                 }*/
 
-                if (ImGui::BeginTable("facetlist", 4, flags)) {
-                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("Hits", ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("Des", ImGuiTableColumnFlags_WidthStretch);
-                    ImGui::TableSetupColumn("Abs", ImGuiTableColumnFlags_WidthStretch);
+                // Create item list
+                static ImVector<FacetData> items;
+                if (items.Size == 0)
+                {
+                    items.resize(geom->GetNbFacet(), FacetData());
+                    for (int n = 0; n < items.Size; n++)
+                    {
+                        InterfaceFacet *f = geom->GetFacet(n);
+                        FacetData& item = items[n];
+                        item.ID = n;
+                        item.hits =  f->facetHitCache.hit.nbMCHit;
+                        item.des =  f->facetHitCache.hit.nbDesorbed;
+                        item.abs =  f->facetHitCache.hit.nbAbsEquiv;
+                    }
+                }
+
+                static ImGuiTableFlags tFlags =
+                        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
+                        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                        ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
+                        ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
+                                                      ImGuiTableFlags_Sortable;
+
+                if (ImGui::BeginTable("facetlist", 4, tFlags)) {
+                    ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
+                    ImGui::TableSetupColumn("Hits", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_Hits);
+                    ImGui::TableSetupColumn("Des", ImGuiTableColumnFlags_WidthStretch, 0.0f, FacetDataColumnID_Des);
+                    ImGui::TableSetupColumn("Abs", ImGuiTableColumnFlags_WidthStretch, 0.0f, FacetDataColumnID_Abs);
                     ImGui::TableHeadersRow();
+
+                    // Sort our data if sort specs have been changed!
+                    if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+                    if (sorts_specs->SpecsDirty){
+                        FacetData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
+                        if (items.Size > 1)
+                            qsort(&items[0], (size_t)items.Size, sizeof(items[0]), FacetData::CompareWithSortSpecs);
+                        FacetData::s_current_sort_specs = NULL;
+                        sorts_specs->SpecsDirty = false;
+                    }
+
                     // Demonstrate using clipper for large vertical lists
                     ImGuiListClipper clipper;
-                    clipper.Begin(geom->GetNbFacet());
+                    clipper.Begin(items.size());
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            int facetId = (int) i;
-                            InterfaceFacet *f = geom->GetFacet(facetId);
+                            FacetData* item = &items[i];
+                            //ImGui::PushID(item->ID);
                             ImGui::TableNextRow();
                             ImGui::TableSetColumnIndex(0);
-                            ImGui::Text("%d", i + 1);
+                            ImGui::Text("%d", item->ID);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%zd", f->facetHitCache.hit.nbMCHit);
+                            ImGui::Text("%zd", item->hits);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%zd", f->facetHitCache.hit.nbDesorbed);
+                            ImGui::Text("%zd", item->des);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%g", f->facetHitCache.hit.nbAbsEquiv);
-                            ImGui::TableNextColumn();
+                            ImGui::Text("%g", item->abs);
+                            //ImGui::PopID();
                         }
                     }
                     ImGui::EndTable();
@@ -290,166 +391,7 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
 
 }
 
-// Note that shortcuts are currently provided for display only
-// (future version will add explicit flags to BeginMenu() to request processing
-// shortcuts)
-static void ShowExampleMenuFile() {
-    ImGui::MenuItem("(demo menu)", NULL, false, false);
-    if (ImGui::MenuItem("New")) {
-    }
-    if (ImGui::MenuItem("Open", "Ctrl+O")) {
-    }
-    if (ImGui::BeginMenu("Open Recent")) {
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
-        if (ImGui::BeginMenu("More..")) {
-            ImGui::MenuItem("Hello");
-            ImGui::MenuItem("Sailor");
-            if (ImGui::BeginMenu("Recurse..")) {
-                ShowExampleMenuFile();
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenu();
-    }
-    if (ImGui::MenuItem("Save", "Ctrl+S")) {
-    }
-    if (ImGui::MenuItem("Save As..")) {
-    }
 
-    ImGui::Separator();
-    if (ImGui::BeginMenu("Options")) {
-        static bool enabled = true;
-        ImGui::MenuItem("Enabled", "", &enabled);
-        ImGui::BeginChild("child", ImVec2(0, 60), true);
-        for (int i = 0; i < 10; i++)
-            ImGui::Text("Scrolling Text %d", i);
-        ImGui::EndChild();
-        static float f = 0.5f;
-        static int n = 0;
-        ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
-        ImGui::InputFloat("Input", &f, 0.1f);
-        ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Colors")) {
-        float sz = ImGui::GetTextLineHeight();
-        for (int i = 0; i < ImGuiCol_COUNT; i++) {
-            const char *name = ImGui::GetStyleColorName((ImGuiCol) i);
-            ImVec2 p = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(
-                    p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol) i));
-            ImGui::Dummy(ImVec2(sz, sz));
-            ImGui::SameLine();
-            ImGui::MenuItem(name);
-        }
-        ImGui::EndMenu();
-    }
-
-    // Here we demonstrate appending again to the "Options" menu (which we already
-    // created above) Of course in this demo it is a little bit silly that this
-    // function calls BeginMenu("Options") twice. In a real code-base using it
-    // would make senses to use this feature from very different code locations.
-    if (ImGui::BeginMenu("Options")) // <-- Append!
-    {
-        static bool b = true;
-        ImGui::Checkbox("SomeOption", &b);
-        ImGui::EndMenu();
-    }
-
-    if (ImGui::BeginMenu("Disabled", false)) // Disabled
-    {
-        IM_ASSERT(0);
-    }
-    if (ImGui::MenuItem("Checked", NULL, true)) {
-    }
-    if (ImGui::MenuItem("Quit", "Alt+F4")) {
-    }
-}
-
-//-----------------------------------------------------------------------------
-// [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
-//-----------------------------------------------------------------------------
-// - ShowExampleAppMainMenuBar()
-// - ShowExampleMenuFile()
-//-----------------------------------------------------------------------------
-
-// Demonstrate creating a "main" fullscreen menu bar and populating it.
-// Note the difference between BeginMainMenuBar() and BeginMenuBar():
-// - BeginMenuBar() = menu-bar inside current window (which needs the
-// ImGuiWindowFlags_MenuBar flag!)
-// - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of
-// the main viewport + call BeginMenuBar() into it.
-static void ShowExampleAppMainMenuBar() {
-
-    //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 16.f));
-    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 16.0f));
-    if (ImGui::BeginMainMenuBar()) {
-        ImGui::AlignTextToFramePadding();
-        if (ImGui::BeginMenu("File")) {
-            ShowExampleMenuFile();
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Selection")) {
-            if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Select All Facets", "CTRL+A")) {
-            } // Disabled item
-            if (ImGui::MenuItem("Select by Facet Number...", "ALT+N")) {
-            }
-            if (ImGui::MenuItem("Select Sticking", "")) {
-            }
-            if (ImGui::MenuItem("Select Transparent", "")) {
-            }
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Facet")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Vertex")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Test")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Time")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("About")) {
-            if (ImGui::MenuItem("...", "", false, false)) {
-            } // Disabled item
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMainMenuBar();
-    }
-    //ImGui::PopStyleVar(1);
-
-}
 
 void ProcessControlTable(MolFlow *mApp) {
     ImGui::Text("Process control");
@@ -759,7 +701,7 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
     if (ImGui::BeginPopupModal("Edit MAX", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         // static bool initMax = false;
-        static double maxDes = mApp->worker.model.otfParams.desorptionLimit;;
+        static double maxDes = mApp->worker.model.otfParams.desorptionLimit;
         /*if(!initMax) {
             maxDes = mApp->worker.model.otfParams.desorptionLimit; // use
         double function to allow exponential format initMax = true;
@@ -798,7 +740,7 @@ void ImguiWindow::renderSingle() {
 
     MolFlow *mApp = (MolFlow *) app;
     if (mApp) {
-        static bool show_app_main_menu_bar = false;
+        static bool show_app_main_menu_bar = true;
         static bool show_app_sim_status = false;
 
         bool nbProcChanged = false;
@@ -813,7 +755,7 @@ void ImguiWindow::renderSingle() {
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
-            ShowExampleAppMainMenuBar();
+            ShowAppMainMenuBar();
 
         if (show_app_sim_status)
             ShowExampleAppSimpleOverlay(&show_app_sim_status, mApp->worker.GetGeometry());

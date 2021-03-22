@@ -118,6 +118,8 @@ set(INTERFACE_FILES
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
         Interface/VertexCoordinates.cpp
+        Interface/ImguiWindow.cpp
+        Interface/ImguiMenu.cpp
 
         ASELoader.cpp
         File.cpp
@@ -128,7 +130,7 @@ set(INTERFACE_FILES
         Web.cpp
         Worker_shared.cpp
         GeometryConverter.cpp
-        Interface/ImguiWindow.cpp Interface/ImguiWindow.h)
+        )
 
 set(SIM_FILES
         Distributions.cpp
