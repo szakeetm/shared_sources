@@ -1173,6 +1173,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         SAFE_DELETE(formulaEditor);
                         formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
+                        // Load values on init
+                        formula_ptr->UpdateFormulaValues(worker.globalHitCache.globalHits.hit.nbDesorbed);
+                        formulaEditor->UpdateValues();
+                        // ---
                         formulaEditor->SetVisible(true);
                     }
                     break;
@@ -1195,6 +1199,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                 case MENU_TOOLS_CONVPLOTTER:
                     if (!convergencePlotter)
                         convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
+                    else{
+                        if(!convergencePlotter->IsVisible()) {
+                            auto *newConv = new ConvergencePlotter(*convergencePlotter);
+                            //newConv->SetViews(convergencePlotter->GetViews());
+                            SAFE_DELETE(convergencePlotter);
+                            convergencePlotter = newConv;
+                        }
+                    }
                     convergencePlotter->Display(&worker);
                     return true;
                 case MENU_TOOLS_PARTICLELOGGER:
