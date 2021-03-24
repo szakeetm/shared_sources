@@ -152,9 +152,9 @@ void SimThread::setSimState(const std::string& msg) const {
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
-        sprintf(ret, "(%s) MC %zd/%zd (%.1f%%)", simulation->model.sh.name.c_str(), count, max, percent);
+        sprintf(ret, "MC %zd/%zd (%.1f%%)", count, max, percent);
     } else {
-        sprintf(ret, "(%s) MC %zd", simulation->model.sh.name.c_str(), count);
+        sprintf(ret, "MC %zd", count);
     }
     return ret;
 }
@@ -366,9 +366,9 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
                 char tmp[128];
                 if (max != 0) {
                     double percent = (double) (count) * 100.0 / (double) (max);
-                    sprintf(tmp, "(%s) MC %zd/%zd (%.1f%%)", sim->model.sh.name.c_str(), count, max, percent);
+                    sprintf(tmp, "MC %zd/%zd (%.1f%%)", count, max, percent);
                 } else {
-                    sprintf(tmp, "(%s) MC %zd", sim->model.sh.name.c_str(), count);
+                    sprintf(tmp, "MC %zd", count);
                 }
                 ret_vec[threadId] = tmp;
             }
