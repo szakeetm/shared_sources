@@ -80,7 +80,7 @@ unsigned long MersenneTwister::GetSeed() {
     return seed;
 }
 
-unsigned long GenerateSeed() {
+unsigned long GenerateSeed(size_t offsetIndex) {
     size_t ms = omp_get_wtime();
     int processId;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -88,10 +88,9 @@ unsigned long GenerateSeed() {
 #else
     processId = ::getpid();
 #endif //  WIN
-    const int index = omp_get_thread_num();
     //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+index))));
+    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+offsetIndex))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
@@ -142,7 +141,7 @@ MersenneTwister::MersenneTwister() {
 #if defined(DEBUG)
     SetSeed(42424242);
 #else
-    SetSeed(GenerateSeed());
+    SetSeed(GenerateSeed(0));
 #endif
 }
 
