@@ -2644,9 +2644,8 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
+    if (((runningState || worker.globState.stateChanged) && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
         {
-
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
             wereEvents = true; //Will repaint

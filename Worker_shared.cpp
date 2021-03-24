@@ -459,6 +459,8 @@ void Worker::Update(float appTime) {
                 return;
             }
         }
+
+        globState.stateChanged = false;
         globalHitCache = globState.globalHits;
 
 #if defined(SYNRAD)
