@@ -411,8 +411,9 @@ void GLApplication::Run() {
              if ((ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)  || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1) || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1)) {
                  wereEvents = true;
                  if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
-                     continue;
+
                  }
+                 continue;
              }
          }
 		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
