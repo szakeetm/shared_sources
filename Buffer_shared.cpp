@@ -23,7 +23,9 @@ GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
     this->globalHits += src.globalHits;
 
     this->distTraveled_total += src.distTraveled_total;
+#if defined(MOLFLOW)
     this->distTraveledTotal_fullHitsOnly += src.distTraveledTotal_fullHitsOnly;
+#endif
     this->nbLeakTotal += src.nbLeakTotal;
 
     return *this;
@@ -52,21 +54,21 @@ FacetHitBuffer::FacetHitBuffer(){
 }
 
 void FacetHitBuffer::ResetBuffer(){
-    this->hit.nbMCHit = 0;
-    this->hit.nbDesorbed = 0;
-    this->hit.nbHitEquiv = 0.0;
-    this->hit.nbAbsEquiv = 0.0;
-    this->hit.fluxAbs = 0.0;
-    this->hit.powerAbs = 0.0;
+    this->nbMCHit = 0;
+    this->nbDesorbed = 0;
+    this->nbHitEquiv = 0.0;
+    this->nbAbsEquiv = 0.0;
+    this->fluxAbs = 0.0;
+    this->powerAbs = 0.0;
 }
 
 FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs){
-    this->hit.nbMCHit += rhs.hit.nbMCHit;
-    this->hit.nbDesorbed += rhs.hit.nbDesorbed;
-    this->hit.nbHitEquiv += rhs.hit.nbHitEquiv;
-    this->hit.nbAbsEquiv += rhs.hit.nbAbsEquiv;
-    this->hit.fluxAbs += rhs.hit.fluxAbs;
-	this->hit.powerAbs += rhs.hit.powerAbs;
+    this->nbMCHit += rhs.nbMCHit;
+    this->nbDesorbed += rhs.nbDesorbed;
+    this->nbHitEquiv += rhs.nbHitEquiv;
+    this->nbAbsEquiv += rhs.nbAbsEquiv;
+    this->fluxAbs += rhs.fluxAbs;
+	this->powerAbs += rhs.powerAbs;
 	return *this;
 }
 void FacetHistogramBuffer::Resize(const HistogramParams& params) {
@@ -76,9 +78,12 @@ void FacetHistogramBuffer::Resize(const HistogramParams& params) {
     this->distanceHistogram.shrink_to_fit();
 }
 
-void FacetHistogramBuffer::Reset() {
+void FacetHistogramBuffer::Reset(){
     ZEROVECTOR(nbHitsHistogram);
     ZEROVECTOR(distanceHistogram);
+#if defined(MOLFLOW)
+    ZEROVECTOR(timeHistogram);
+#endif
 }
 #endif
 

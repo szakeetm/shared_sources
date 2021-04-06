@@ -330,6 +330,7 @@ struct WorkerParams { //Plain old data
 #if defined(SYNRAD)
 	size_t        nbRegion;  //number of magnetic regions
 	size_t        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
+	size_t        sourceArea;
 	bool       newReflectionModel;
 #endif
 
@@ -356,8 +357,9 @@ struct WorkerParams { //Plain old data
 
 #if defined(SYNRAD)
 			CEREAL_NVP(nbRegion)  //number of magnetic regions
-			, CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
-			, CEREAL_NVP(newReflectionModel)
+                , CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
+                , CEREAL_NVP(sourceArea)
+                , CEREAL_NVP(newReflectionModel)
 #endif
 		);
 	}
@@ -490,15 +492,19 @@ public:
     FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
 	std::vector<double> distanceHistogram;
+#ifdef MOLFLOW
 	std::vector<double> timeHistogram;
+#endif
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
 			CEREAL_NVP(nbHitsHistogram), 
-			CEREAL_NVP(distanceHistogram), 
-			CEREAL_NVP(timeHistogram)
-		);
+			CEREAL_NVP(distanceHistogram)
+#ifdef MOLFLOW
+        ,CEREAL_NVP(timeHistogram)
+#endif
+        );
 	}
 };
 
@@ -546,27 +552,25 @@ class FacetHitBuffer {
 public:
     FacetHitBuffer();
     void ResetBuffer();
-
-    struct {
-        // Counts
-        size_t nbMCHit;               // Number of hits
-        size_t nbDesorbed;          // Number of desorbed molec
-        double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-        double nbAbsEquiv;          // Equivalent number of absorbed molecules
-        double fluxAbs;         // Total desorbed Flux
-        double powerAbs;        // Total desorbed power
-    } hit;
+    
+    // Counts
+    size_t nbMCHit;               // Number of hits
+    size_t nbDesorbed;          // Number of desorbed molec
+    double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+    double nbAbsEquiv;          // Equivalent number of absorbed molecules
+    double fluxAbs;         // Total desorbed Flux
+    double powerAbs;        // Total desorbed power
 
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(hit.fluxAbs),
-			CEREAL_NVP(hit.powerAbs),
-			CEREAL_NVP(hit.nbMCHit),           // Number of hits
-			CEREAL_NVP(hit.nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-			CEREAL_NVP(hit.nbAbsEquiv),      // Number of absorbed molec
-			CEREAL_NVP(hit.nbDesorbed)
+			CEREAL_NVP(fluxAbs),
+			CEREAL_NVP(powerAbs),
+			CEREAL_NVP(nbMCHit),           // Number of hits
+			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			CEREAL_NVP(nbAbsEquiv),      // Number of absorbed molec
+			CEREAL_NVP(nbDesorbed)
 			);
 	}
 
@@ -584,7 +588,9 @@ public:
 		leakCacheSize = 0;
 		nbLeakTotal = 0;
 		distTraveled_total = 0.0;
-		distTraveledTotal_fullHitsOnly = 0.0;
+#if defined(MOLFLOW)
+        distTraveledTotal_fullHitsOnly = 0.0;
+#endif
     };
     GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
 
@@ -597,16 +603,15 @@ public:
     HIT hitCache[HITCACHESIZE];       // Hit history
     LEAK leakCache[LEAKCACHESIZE];      // Leak history
 
+    double distTraveled_total;
 
 #if defined(MOLFLOW)
+    double distTraveledTotal_fullHitsOnly;
 	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
-	double distTraveled_total;
-	double distTraveledTotal_fullHitsOnly;
 #endif
 
 #if defined(SYNRAD)
-	TextureCell hitMin, hitMax;
-	double distTraveledTotal;
+	TextureCell hitMin{}, hitMax{};
 #endif
 
 	template<class Archive>
@@ -621,18 +626,17 @@ public:
 			CEREAL_NVP(lastLeakIndex),		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 			CEREAL_NVP(leakCacheSize),        //Number of valid leaks in the cache
 			CEREAL_NVP(nbLeakTotal),         // Total leaks
-			CEREAL_NVP(leakCache)      // Leak history
+			CEREAL_NVP(leakCache),      // Leak history
+            CEREAL_NVP(distTraveled_total)
 
 #if defined(MOLFLOW)
-			,CEREAL_NVP(texture_limits), //Min-max on texture
-			CEREAL_NVP(distTraveled_total),
-			CEREAL_NVP(distTraveledTotal_fullHitsOnly)
+            ,CEREAL_NVP(distTraveledTotal_fullHitsOnly),
+			CEREAL_NVP(texture_limits) //Min-max on texture
 #endif
 
 #if defined(SYNRAD)
 			,CEREAL_NVP(hitMin),
-				CEREAL_NVP(hitMax),
-				CEREAL_NVP(distTraveledTotal)
+				CEREAL_NVP(hitMax)
 #endif
 		);
 	}

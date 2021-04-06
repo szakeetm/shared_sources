@@ -138,7 +138,7 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
     geom->ExportTextures(f, grouping, mode, globState, saveSelected);
 #endif
 #if defined(SYNRAD)
-    geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
+    geom->ExportTextures(f, grouping, mode, no_scans, globState, saveSelected);
 #endif
     //simManager.UnlockHitBuffer();
     fclose(f);
@@ -225,6 +225,48 @@ const char *Worker::GetErrorDetails() {
     return simManager.GetErrorDetails();
 }
 
+void Worker::InnerStop(float appTime) {
+    simuTimer.Stop();
+}
+
+void Worker::StartStop(float appTime) {
+    if( IsRunning() )  {
+
+        // Stop
+        InnerStop(appTime);
+        try {
+            Stop();
+            Update(appTime);
+
+        }
+        catch(Error &e) {
+            GLMessageBox::Display((char *)e.what(),"Error (Stop)",GLDLG_OK,GLDLG_ICONERROR);
+
+        }
+    }
+    else {
+
+        // Start
+        try {
+            if (needsReload) RealReload(); //Synchronize subprocesses to main process
+            Start();
+            simuTimer.Start();
+        }
+        catch (Error &e) {
+            //isRunning = false;
+            GLMessageBox::Display((char *)e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
+            return;
+        }
+
+        // Particular case when simulation ends before getting RUN state
+        if(simManager.allProcsDone) {
+            Update(appTime);
+            GLMessageBox::Display("Max desorption reached","Information (Start)",GLDLG_OK,GLDLG_ICONINFO);
+        }
+    }
+
+}
+
 void Worker::ResetStatsAndHits(float appTime) {
 
     simuTimer.ReInit();
@@ -300,6 +342,7 @@ size_t Worker::GetPID(size_t prIdx) {
     return 0;
 }
 
+#ifdef MOLFLOW
 void Worker::CalculateTextureLimits(){
     // first get tmp limit
     TEXTURE_MIN_MAX limits[3];
@@ -378,6 +421,74 @@ void Worker::CalculateTextureLimits(){
         GetGeometry()->texture_limits[v].autoscale = limits[v];
     }
 }
+#endif
+
+#ifdef SYNRAD
+void Worker::CalculateTextureLimits(){
+    // first get tmp limit
+    TextureCell limitMin, limitMax;
+    TEXTURE_MIN_MAX limits[3]; // count, flux, power
+    for(auto& lim : limits){
+        lim.max = 0;
+        lim.min = 0;
+    }
+
+    for (const auto &subF : model.facets) {
+        if (subF.sh.isTextured) {
+                {
+                    // go on if the facet was never hit before
+                    auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[0].hits;
+                    if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
+                }
+
+                const auto &texture = globState.facetStates[subF.globalId].momentResults[0].texture;
+                const size_t textureSize = texture.size();
+                for (size_t t = 0; t < textureSize; t++) {
+                    //Add temporary hit counts
+
+                    if (subF.largeEnough[t]) { // TODO: For count it wasn't applied in Synrad so far
+                        double val[3];  //pre-calculated autoscaling values (Pressure, imp.rate, density)
+
+                        val[0] = texture[t].count; //pressure without dCoef_pressure
+                        val[1] = texture[t].flux * subF.textureCellIncrements[t];
+                        val[2] = texture[t].power * subF.textureCellIncrements[t];
+
+                        //Global autoscale
+                        for (int v = 0; v < 3; v++) {
+                            limits[v].max = std::max(val[v], limits[v].max);
+
+                            if (val[v] > 0.0) {
+                                limits[v].min = std::min(val[v], limits[v].min);
+                            }
+                        }
+                    } // if largeenough
+                }
+        }
+    }
+
+    /*double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
+    //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
+    //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
+    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model.wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+
+    // Add coefficient scaling
+    for(int v = 0; v < 3; ++v) {
+        limits[v].max.steady_state *= dCoef_custom[v];
+        limits[v].max.moments_only *= dCoef_custom[v];
+        limits[v].min.steady_state *= dCoef_custom[v];
+        limits[v].min.moments_only *= dCoef_custom[v];
+    }*/
+
+    // Last put temp limits into global struct
+    for(int v = 0; v < 3; ++v) {
+        GetGeometry()->texture_limits[v].autoscale = limits[v];
+    }
+}
+#endif
+
+
 
 void Worker::RebuildTextures() {
 
@@ -393,13 +504,8 @@ void Worker::RebuildTextures() {
 
 
         try {
-#if defined(MOLFLOW)
             CalculateTextureLimits();
-            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
-#endif
-#if defined(SYNRAD)
-            geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
-#endif
+            geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
         }
         catch (Error &e) {
             simManager.UnlockHitBuffer();
@@ -677,14 +783,23 @@ void Worker::RetrieveHistogramCache()
 
     //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
+#if defined(MOLFLOW)
     globalHistogramCache = globState.globalHistograms[displayedMoment];
-
+#endif
+#if defined(SYNRAD)
+    if(!globState.globalHistograms.empty())
+        globalHistogramCache = globState.globalHistograms[0];
+#endif
     //FACET HISTOGRAMS
     for (size_t i = 0;i < geom->GetNbFacet();i++) {
         InterfaceFacet* f = geom->GetFacet(i);
 #if defined(MOLFLOW)
         f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
         f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;
+#endif
+#if defined(SYNRAD)
+        f->facetHitCache = globState.facetStates[i].momentResults[0].hits;
+        f->facetHistogramCache = globState.facetStates[i].momentResults[0].histogram;
 #endif
     }
 }

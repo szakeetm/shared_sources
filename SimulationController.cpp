@@ -338,6 +338,9 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
         }
     }
 
+    if(state == PROCESS_ERROR){
+        procInfo->masterCmd = PROCESS_WAIT;
+    }
     return 0;
 }
 

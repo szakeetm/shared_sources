@@ -46,8 +46,7 @@ class Material;
 #endif
 
 
-class Worker
-{
+class Worker {
 
 public:
 
@@ -60,7 +59,7 @@ public:
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
-  // void LoadTexturesSYN(FileReader* f, BYTE* buffer, int version);  // Load a textures(throws Error)
+  void LoadTexturesSYN(FileReader* f, GlobalSimuState &globState, int version);  // Load a textures(throws Error)
   void RebuildTextures();
     void CalculateTextureLimits();
 
@@ -108,7 +107,8 @@ public:
     ParticleLog & GetLog();
     void UnlockLog();
   void ReleaseHits();
-    bool MolflowGeomToSimModel();
+
+    bool InterfaceGeomToSimModel();
 
   static FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 

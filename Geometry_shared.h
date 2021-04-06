@@ -105,7 +105,7 @@ public:
 	virtual ~Geometry();
 
 #if defined(SYNRAD)
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState &globState, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
@@ -333,6 +333,10 @@ protected:
 
 #if defined(MOLFLOW)
 #include "../src/MolflowTypes.h"
+		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
+#endif
+#if defined(SYNRAD)
+    #include "../src/SynradTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 

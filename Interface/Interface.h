@@ -314,7 +314,7 @@ public:
 	GLToggle      *showIndex;
 	GLToggle      *showVertexId;
 	GLButton      *viewerMoreButton;
-
+    GLCombo       *modeCombo;
 
 	GLButton      *globalSettingsBtn;
     GLButton      *startSimu;
