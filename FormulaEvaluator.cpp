@@ -4,6 +4,7 @@
 
 #include "FormulaEvaluator.h"
 #include <Helper/StringHelper.h>
+#include <cstring>
 
 int FormulaEvaluator::GetVariable(const char *name, const char *prefix) {
     char tmp[256];
