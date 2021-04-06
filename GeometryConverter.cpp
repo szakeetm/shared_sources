@@ -28,7 +28,7 @@ std::vector<InterfaceFacet*> GeometryConverter::GetTriangulatedGeometry(Geometry
     std::vector<InterfaceFacet*> triangleFacets;
     for (size_t i = 0; i < facetIndices.size(); i++) {
         if (prg) prg->SetProgress((double)i/(double(facetIndices.size())));
-        size_t nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
+        size_t nb = geometry->GetFacet(facetIndices[i])->geo.nbIndex;
         if (nb > 3) {
             // Create new triangle facets (does not invalidate old ones, you have to manually delete them)
             std::vector<InterfaceFacet*> newTriangles = Triangulate(geometry->GetFacet(facetIndices[i]));
@@ -59,10 +59,10 @@ std::vector<InterfaceFacet*> GeometryConverter::Triangulate(InterfaceFacet *f) {
 
     // Build a Polygon
     GLAppPolygon p;
-    p.pts = f->vertices2;
+    p.pts = f->geo.vertices2;
     //p.sign = f->sign;
 
-    std::unique_ptr<InterfaceFacet> facetCopy(new InterfaceFacet(f->sh.nbIndex)); //Create a copy and don't touch original
+    std::unique_ptr<InterfaceFacet> facetCopy(new InterfaceFacet(f->geo.nbIndex)); //Create a copy and don't touch original
     facetCopy->CopyFacetProperties(f);
     facetCopy->indices = f->indices;
 

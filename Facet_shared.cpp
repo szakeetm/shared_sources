@@ -48,15 +48,13 @@ extern SynRad*mApp;
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
+InterfaceFacet::InterfaceFacet(size_t nbIndex) : geo(nbIndex), sh() {
 	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
-	vertices2.resize(nbIndex);
+	geo.vertices2.resize(nbIndex);
 	visible.resize(nbIndex);
 
 	memset(&facetHitCache, 0, sizeof(FacetHitBuffer));
-
-	sh.nbIndex = nbIndex;
-
+	
 	sh.sticking = 0.0;
 	sh.opacity = 1.0;
 
@@ -66,9 +64,6 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	sh.texHeight = 0;
 	sh.texWidthD = 0.0;
 	sh.texHeightD = 0.0;
-	sh.center.x = 0.0;
-	sh.center.y = 0.0;
-	sh.center.z = 0.0;
 
 	sh.is2sided = false;
 	sh.isProfile = false;
@@ -204,7 +199,7 @@ void Facet::DetectOrientation() {
 	while (i < p.pts.size() && !convexFound) {
 		
 		auto [empty,center] = EmptyTriangle(p, (int)i - 1, (int)i, (int)i + 1);
-		if (empty || sh.nbIndex == 3) {
+		if (empty || geo.nbIndex == 3) {
 			size_t _i1 = Previous(i, p.pts.size());
 			size_t _i2 = IDX(i, p.pts.size());
 			size_t _i3 = Next(i, p.pts.size());
@@ -341,9 +336,9 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 */
 void InterfaceFacet::glVertex2u(double u, double v) {
 
-	glVertex3d(sh.O.x + sh.U.x*u + sh.V.x*v,
-		sh.O.y + sh.U.y*u + sh.V.y*v,
-		sh.O.z + sh.U.z*u + sh.V.z*v);
+	glVertex3d(geo.O.x + geo.U.x*u + geo.V.x*v,
+		geo.O.y + geo.U.y*u + geo.V.y*v,
+		geo.O.z + geo.U.z*u + geo.V.z*v);
 
 }
 
@@ -370,13 +365,13 @@ bool InterfaceFacet::BuildMesh() {
 	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidthD;
 	double ih = 1.0 / (double)sh.texHeightD;
-	double rw = sh.U.Norme() * iw;
-	double rh = sh.V.Norme() * ih;
+	double rw = geo.U.Norme() * iw;
+	double rh = geo.V.Norme() * ih;
 	double fullCellArea = iw*ih;
 
 	std::vector<Vector2d>(4).swap(P1.pts);
 	//P1.sign = 1;
-	P2.pts = vertices2; 
+	P2.pts = geo.vertices2;
 	//P2.sign = -sign;
 
 	for (size_t j = 0;j < sh.texHeight;j++) {
@@ -391,13 +386,13 @@ bool InterfaceFacet::BuildMesh() {
 			double v1 = (sy + 1.0) * ih;
 			//mesh[i + j*wp.texWidth].elemId = -1;
 
-			if (sh.nbIndex <= 4) {
+			if (geo.nbIndex <= 4) {
 
 				// Optimization for quad and triangle
-                allInside = IsInPoly(Vector2d(u0,v0), vertices2)
-                            && IsInPoly(Vector2d(u0, v1), vertices2)
-                            && IsInPoly(Vector2d(u1, v0), vertices2)
-                            && IsInPoly(Vector2d(u1, v1), vertices2);
+                allInside = IsInPoly(Vector2d(u0,v0), geo.vertices2)
+                            && IsInPoly(Vector2d(u0, v1), geo.vertices2)
+                            && IsInPoly(Vector2d(u1, v0), geo.vertices2)
+                            && IsInPoly(Vector2d(u1, v1), geo.vertices2);
 
 			}
 
@@ -668,16 +663,16 @@ void InterfaceFacet::RenderSelectedElem() {
 * \brief Fill vertex array
 * \param v Array of vertices
 */
-void InterfaceFacet::FillVertexArray(InterfaceVertex *v) {
+void InterfaceFacet::FillVertexArray(Vector3d *v) {
 
 	int nb = 0;
 	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
 		if (cellPropertiesIds[i] != -2) {
 			for (size_t j = 0; j < GetMeshNbPoint(i); j++) {
 				Vector2d p = GetMeshPoint(i, j);
-				v[nb].x = sh.O.x + sh.U.x*p.u + sh.V.x*p.v;
-				v[nb].y = sh.O.y + sh.U.y*p.u + sh.V.y*p.v;
-				v[nb].z = sh.O.z + sh.U.z*p.u + sh.V.z*p.v;
+				v[nb].x = geo.O.x + geo.U.x*p.u + geo.V.x*p.v;
+				v[nb].y = geo.O.y + geo.U.y*p.u + geo.V.y*p.v;
+				v[nb].z = geo.O.z + geo.U.z*p.u + geo.V.z*p.v;
 				nb++;
 			}
 		}
@@ -706,8 +701,8 @@ size_t InterfaceFacet::GetTexSwapSize(bool useColormap) {
 */
 size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
-	double nU = sh.U.Norme();
-	double nV = sh.V.Norme();
+	double nU = geo.U.Norme();
+	double nV = geo.V.Norme();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -745,8 +740,8 @@ std::pair<size_t, size_t> InterfaceFacet::GetNbCell() {
 */
 size_t InterfaceFacet::GetNbCellForRatio(double ratio) {
 
-	double nU = sh.U.Norme();
-	double nV = sh.V.Norme();
+	double nU = geo.U.Norme();
+	double nV = geo.V.Norme();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -768,8 +763,8 @@ size_t InterfaceFacet::GetNbCellForRatio(double ratio) {
 */
 std::pair<size_t, size_t> InterfaceFacet::GetNbCellForRatio(double ratioU, double ratioV) {
 
-    double nU = sh.U.Norme();
-    double nV = sh.V.Norme();
+    double nU = geo.U.Norme();
+    double nV = geo.V.Norme();
     double width = nU*ratioU;
     double height = nV*ratioV;
 
@@ -793,9 +788,9 @@ void InterfaceFacet::SwapNormal() {
 	// Revert vertex order (around the second point)
 
 	/*
-	size_t* tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
-	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
-		tmp[(i + 1) % sh.nbIndex] = GetIndex((int)j + 1);
+	size_t* tmp = (size_t *)malloc(geo.nbIndex * sizeof(size_t));
+	for (size_t i = geo.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
+		tmp[(i + 1) % geo.nbIndex] = GetIndex((int)j + 1);
 	free(indices);
 	indices = tmp;
 	*/
@@ -817,8 +812,8 @@ void InterfaceFacet::SwapNormal() {
 void InterfaceFacet::ShiftVertex(const int& offset) {
 	// Shift vertex
 	/*
-	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
-	for (size_t i = 0; i < sh.nbIndex; i++)
+	size_t *tmp = (size_t *)malloc(geo.nbIndex * sizeof(size_t));
+	for (size_t i = 0; i < geo.nbIndex; i++)
 		tmp[i] = GetIndex((int)i + offset);
 	free(indices);
 	indices = tmp;
@@ -835,12 +830,12 @@ void InterfaceFacet::InitVisibleEdge() {
 	// Detect non visible edge (for polygon which contains holes)
 	std::fill(visible.begin(), visible.end(), true);
 
-	for (int i = 0;i < sh.nbIndex;i++) {
+	for (size_t i = 0;i < geo.nbIndex;i++) {
 
 		size_t p11 = GetIndex(i);
 		size_t p12 = GetIndex(i + 1);
 
-		for (size_t j = i + 1;j < sh.nbIndex;j++) {
+		for (size_t j = i + 1;j < geo.nbIndex;j++) {
 
 			size_t p21 = GetIndex((int)j);
 			size_t p22 = GetIndex((int)j + 1);
@@ -861,10 +856,10 @@ void InterfaceFacet::InitVisibleEdge() {
 */
 size_t InterfaceFacet::GetIndex(int idx) {
 	if (idx < 0) {
-		return indices[(sh.nbIndex + idx) % sh.nbIndex];
+		return indices[(geo.nbIndex + idx) % geo.nbIndex];
 	}
 	else {
-		return indices[idx % sh.nbIndex];
+		return indices[idx % geo.nbIndex];
 	}
 }
 
@@ -874,7 +869,7 @@ size_t InterfaceFacet::GetIndex(int idx) {
 * \return vertex index
 */
 size_t InterfaceFacet::GetIndex(size_t idx) {
-		return indices[idx % sh.nbIndex];
+		return indices[idx % geo.nbIndex];
 }
 
 /**
@@ -1025,8 +1020,8 @@ Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
 * \brief Get calculated area of a facet (depends on one or double sided)
 * \return facet area
 */
-double InterfaceFacet::GetArea() {
-	return sh.area*(sh.is2sided ? 2.0 : 1.0);
+double InterfaceFacet::GetArea() const {
+	return geo.area*(sh.is2sided ? 2.0 : 1.0);
 }
 
 /**
@@ -1042,7 +1037,7 @@ bool InterfaceFacet::IsTXTLinkFacet() {
 * \return 3d vector for real center coordinate
 */
 Vector3d InterfaceFacet::GetRealCenter() {
-	return Project(sh.center, sh.O, sh.N);
+	return Project(geo.center, geo.O, geo.N);
 }
 
 /**
@@ -1061,7 +1056,7 @@ void InterfaceFacet::UpdateFlags() {
 * \param threshold threshold for comparison
 * \return true if coplanar and equal
 */
-bool InterfaceFacet::IsCoplanarAndEqual(InterfaceFacet *f, double threshold) {
+bool InterfaceFacet::IsCoplanarAndEqual(InterfaceFacet *f, double threshold) const {
 
 	// Detect if 2 facets are in the same plane (orientation preserving)
 	// and have same parameters (used by collapse)
@@ -1081,8 +1076,8 @@ bool InterfaceFacet::IsCoplanarAndEqual(InterfaceFacet *f, double threshold) {
 		IsEqual(sh.reflection.specularPart, f->sh.reflection.specularPart) &&
 		IsEqual(sh.reflection.cosineExponent, f->sh.reflection.cosineExponent) &&
 		(sh.temperature == f->sh.temperature);
-	if (sh.area > 0.0 && f->sh.area > 0.0) { //Compare per-area outgassing
-		equal = equal &&  IsEqual(sh.outgassing/sh.area,f->sh.outgassing/f->sh.area);
+	if (geo.area > 0.0 && f->geo.area > 0.0) { //Compare per-area outgassing
+		equal = equal &&  IsEqual(sh.outgassing/geo.area,f->sh.outgassing/f->geo.area);
 	}
 #endif
 #if defined(SYNRAD)
@@ -1155,7 +1150,7 @@ void InterfaceFacet::CopyFacetProperties(InterfaceFacet *f, bool copyMesh) {
 	
 	//wp.area = f->wp.area;
 	//planarityError = f->planarityError;
-	sh.N = f->sh.N;
+	geo.N = f->geo.N;
 	
 }
 
@@ -1167,7 +1162,7 @@ FacetGroup InterfaceFacet::Explode() {
 	FacetGroup result;
 	result.nbV = 0;
 #ifdef MOLFLOW
-result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0.0;
+    result.originalPerAreaOutgassing = (geo.area > 0.0) ? sh.outgassing / geo.area : 0.0;
 #endif // MOLFLOW
 
 	size_t nonZeroElems = 0, nb = 0;
@@ -1181,8 +1176,8 @@ result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0
 				result.facets.push_back(f);
 			}
 			catch (...) {
-				for (size_t d = 0; d < i; d++)
-					SAFE_DELETE(result.facets[d]);
+				for (size_t del = 0; del < i; del++)
+					SAFE_DELETE(result.facets[del]);
 				throw Error("Cannot reserve memory for new facet(s)");
 			}
 		}

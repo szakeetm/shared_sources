@@ -245,7 +245,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 					GLMessageBox::Display("Invalid facet number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				invariant = geom->GetFacet(facetNum - 1)->sh.center;
+				invariant = geom->GetFacet(facetNum - 1)->geo.center;
 				break;
 			case VERTEXMODE:
 				if (!(geom->GetNbSelectedVertex() == 1)) {
@@ -254,7 +254,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				}
 				found = false;
 				for (int i = 0; !found && i < geom->GetNbVertex(); i++) {
-					if (geom->GetVertex(i)->selected)
+					if (geom->IsVertexSelected(i))
 						invariant = *(geom->GetVertex(i));
 				}
 				break;

@@ -108,13 +108,69 @@ public:
 #endif
 };
 
+class FacetGeometry { //Formerly SHFACET
+public:
+    explicit FacetGeometry(size_t nbIndices);
+
+    std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
+
+    double area;           // Facet area (m^2)
+
+    // Geometry
+    size_t nbIndex;   // Number of index/vertex
+    //double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
+
+    // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+    Vector3d   O;  // Origin
+    Vector3d   U;  // U vector
+    Vector3d   V;  // V vector
+    Vector3d   nU; // Normalized U
+    Vector3d   nV; // Normalized V
+
+    // Normal vector
+    Vector3d    N;    // normalized
+    Vector3d    Nuv;  // normal to (u,v) not normlized
+
+    // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
+    AxisAlignedBoundingBox       bb;
+    Vector3d   center;
+
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive(
+                CEREAL_NVP(area),          // Facet area (m^2)
+
+                // Geometry
+                CEREAL_NVP(nbIndex),   // Number of index/vertex
+                //CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
+
+                // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+                CEREAL_NVP(O),  // Origin
+                CEREAL_NVP(U),  // U vector
+                CEREAL_NVP(V),  // V vector
+                CEREAL_NVP(nU), // Normalized U
+                CEREAL_NVP(nV), // Normalized V
+
+                // Normal vector
+                CEREAL_NVP(N),    // normalized
+                CEREAL_NVP(Nuv),  // normal to (u,v) not normlized
+
+                // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
+                CEREAL_NVP(bb),
+                CEREAL_NVP(center)
+        );
+    }
+
+    void CalculateFacetParams(const std::vector<Vector3d> &vertices3, const std::vector<size_t> &indices);
+};
+
 class FacetProperties { //Formerly SHFACET
 public:
-    explicit FacetProperties(size_t nbIndices);
+    explicit FacetProperties();
 	//For sync between interface and subprocess
 	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
 	double opacity;        // opacity  (0=>transparent , 1=>opaque)
-	double area;           // Facet area (m^2)
 
 	int    profileType;    // Profile type
 	int    superIdx;       // Super structure index (Indexed from 0) -1: facet belongs to all structures (typically counter facets)
@@ -133,25 +189,6 @@ public:
 	bool   isProfile;    // Profile facet
 	bool   isTextured;   // texture
 	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
-
-						 // Geometry
-	size_t nbIndex;   // Number of index/vertex
-	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
-
-					  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
-	Vector3d   O;  // Origin
-	Vector3d   U;  // U vector
-	Vector3d   V;  // V vector
-	Vector3d   nU; // Normalized U
-	Vector3d   nV; // Normalized V
-
-				   // Normal vector
-	Vector3d    N;    // normalized
-	Vector3d    Nuv;  // normal to (u,v) not normlized
-
-					  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
-	AxisAlignedBoundingBox       bb;
-	Vector3d   center;
 
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)
@@ -211,7 +248,6 @@ public:
 		archive(
 			CEREAL_NVP(sticking),       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
 			CEREAL_NVP(opacity),        // opacity  (0=>transparent , 1=>opaque)
-			CEREAL_NVP(area),          // Facet area (m^2)
 
 			CEREAL_NVP(profileType),    // Profile type
 			CEREAL_NVP(superIdx),       // Super structure index (Indexed from 0)
@@ -230,25 +266,6 @@ public:
 			CEREAL_NVP(isProfile),    // Profile facet
 			CEREAL_NVP(isTextured),   // texture
 			CEREAL_NVP(isVolatile),   // Volatile facet (absorbtion facet which does not affect particule trajectory)
-
-							  // Geometry
-			CEREAL_NVP(nbIndex),   // Number of index/vertex
-			//CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
-
-							 // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
-			CEREAL_NVP(O),  // Origin
-			CEREAL_NVP(U),  // U vector
-			CEREAL_NVP(V),  // V vector
-			CEREAL_NVP(nU), // Normalized U
-			CEREAL_NVP(nV), // Normalized V
-
-						// Normal vector
-			CEREAL_NVP(N),    // normalized
-			CEREAL_NVP(Nuv),  // normal to (u,v) not normlized
-
-						  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
-			CEREAL_NVP(bb),
-			CEREAL_NVP(center),
 
 			// Hit/Abs/Des/Density recording on 2D texture map
 			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)

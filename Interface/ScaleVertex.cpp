@@ -221,7 +221,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 			UpdateToggle(l2);
 			int selVertexId = -1;
 			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->GetVertex(i)->selected) {
+				if (geom->IsVertexSelected(i)) {
 					selVertexId = i;
 				}
 			}
@@ -262,7 +262,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				found = false;
 				for (int i = 0; !found && i<geom->GetNbFacet(); i++) {
 					if (geom->GetFacet(i)->selected) {
-						invariant = geom->GetFacet(i)->sh.center;
+						invariant = geom->GetFacet(i)->geo.center;
 						found = true;
 					}
 				}

@@ -224,7 +224,7 @@ void MoveFacet::ProcessMessage(GLComponent *src,int message) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d facetNormal = geom->GetFacet(selFacets[0])->sh.N;
+			Vector3d facetNormal = geom->GetFacet(selFacets[0])->geo.N;
 			xText->SetText(facetNormal.x);
 			yText->SetText(facetNormal.y);
 			zText->SetText(facetNormal.z);
@@ -252,7 +252,7 @@ void MoveFacet::ProcessMessage(GLComponent *src,int message) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			baseLocation = geom->GetFacet(selFacets[0])->sh.center;
+			baseLocation = geom->GetFacet(selFacets[0])->geo.center;
 			std::stringstream tmp; tmp << "Center of facet " << selFacets[0] + 1;
 			baseStatusLabel->SetText(tmp.str());
 			dirFacetCenterButton->SetEnabled(true);
@@ -280,7 +280,7 @@ void MoveFacet::ProcessMessage(GLComponent *src,int message) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d translation = geom->GetFacet(selFacets[0])->sh.center - baseLocation;
+			Vector3d translation = geom->GetFacet(selFacets[0])->geo.center - baseLocation;
 
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);

@@ -421,7 +421,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetCenter = geom->GetFacet(selFacets[0])->sh.center;
+		  Vector3d facetCenter = geom->GetFacet(selFacets[0])->geo.center;
 		  
 		  centerXtext->SetText(facetCenter.x);
 		  centerYtext->SetText(facetCenter.y);
@@ -451,7 +451,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetU = geom->GetFacet(selFacets[0])->sh.U;
+		  Vector3d facetU = geom->GetFacet(selFacets[0])->geo.U;
 
 		  axisXtext->SetText(facetU.x);
 		  axisYtext->SetText(facetU.y);
@@ -497,7 +497,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetN = geom->GetFacet(selFacets[0])->sh.N;
+		  Vector3d facetN = geom->GetFacet(selFacets[0])->geo.N;
 
 		  normalXtext->SetText(facetN.x);
 		  normalYtext->SetText(facetN.y);

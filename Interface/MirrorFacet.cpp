@@ -224,7 +224,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 					return;
 				}
 				P0 = *geom->GetVertex(geom->GetFacet(facetNum - 1)->indices[0]);
-				N = geom->GetFacet(facetNum - 1)->sh.N;
+				N = geom->GetFacet(facetNum - 1)->geo.N;
 				break;
 			case THREEVERTEXMODE:
 			{
@@ -237,7 +237,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 				int v3Id = -1;
 
 				for (int i = 0; v3Id == -1 && i < geom->GetNbVertex(); i++) {
-					if (geom->GetVertex(i)->selected) {
+					if (geom->IsVertexSelected(i)) {
 						if (v1Id == -1) v1Id = i;
 						else if (v2Id == -1) v2Id = i;
 						else v3Id = i;
@@ -319,7 +319,8 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == undoProjectButton) {
 			if (!mApp->AskToReset(work)) return;
 			for (UndoPoint oriPoint : undoPoints) {
-				if (oriPoint.oriId < geom->GetNbVertex()) geom->GetVertex(oriPoint.oriId)->SetLocation(oriPoint.oriPos);
+				if (oriPoint.oriId < geom->GetNbVertex())
+				    geom->GetVerticesHandle()->UpdateVertex(oriPoint.oriId, oriPoint.oriPos);
 			}
 			undoProjectButton->SetEnabled(false);
 			geom->InitializeGeometry();

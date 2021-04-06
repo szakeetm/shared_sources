@@ -659,7 +659,7 @@ void GeometryViewer::DrawIndex() {
 	std::vector<size_t> vertexId(nbVertex);
 	for (auto& selId:selectedFacets) {
 		InterfaceFacet *f = geom->GetFacet(selId);
-			for (size_t i = 0; i < f->sh.nbIndex; i++) {
+			for (size_t i = 0; i < f->geo.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;
 				vertexId[f->indices[i]] = i;
 			}
@@ -741,7 +741,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 	//Populate selected vertices
 	for (size_t i = 0; i < geom->GetNbVertex(); i++) {
-		if (geom->GetVertex(i)->selected) {
+		if (geom->IsVertexSelected(i)) {
 			selectedVertexIds.push_back(i);
 		}
 	}
@@ -804,7 +804,7 @@ void GeometryViewer::DrawNormal() {
 		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
 			Vector3d v1 = geom->GetFacetCenter(i);
-			Vector3d v2 = f->sh.N;
+			Vector3d v2 = f->geo.N;
 			GLToolkit::SetMaterial(&blueMaterial);
 			
 			GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
@@ -826,9 +826,9 @@ void GeometryViewer::DrawUV() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
-			const Vector3d& O = f->sh.O;
-			const Vector3d& U = f->sh.U;
-			const Vector3d& V = f->sh.V;
+			const Vector3d& O = f->geo.O;
+			const Vector3d& U = f->geo.U;
+			const Vector3d& V = f->geo.V;
 			Vector3d U_endpoint = O + U;
 			Vector3d V_endpoint = O + V;
 			GLToolkit::SetMaterial(&blueMaterial);
@@ -840,8 +840,8 @@ void GeometryViewer::DrawUV() {
 				glEnable(GL_DEPTH_TEST);
 			}
 			glLineWidth(1.0f);
-			GLToolkit::DrawVector(O, U_endpoint, f->sh.nV, arrowLength);
-			GLToolkit::DrawVector(O, V_endpoint, f->sh.nU, arrowLength);
+			GLToolkit::DrawVector(O, U_endpoint, f->geo.nV, arrowLength);
+			GLToolkit::DrawVector(O, V_endpoint, f->geo.nU, arrowLength);
 			if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
 			glPointSize(3.0f);
 			glColor3f(0.5f, 1.0f, 1.0f);
@@ -875,7 +875,7 @@ void GeometryViewer::DrawFacetId() {
     std::vector<size_t> vertexId(nbVertex);
     for (auto& selId:selectedFacets) {
         InterfaceFacet *f = geom->GetFacet(selId);
-        for (size_t i = 0; i < f->sh.nbIndex; i++) {
+        for (size_t i = 0; i < f->geo.nbIndex; i++) {
             vertexOnSelectedFacet[f->indices[i]] = true;
             vertexId[f->indices[i]] = i;
         }
@@ -896,7 +896,7 @@ void GeometryViewer::DrawFacetId() {
         Vector3d origin = geom->GetFacetCenter(selId);
         Vector3d labelVec = geom->GetFacetCenter(selId);
         double labelDist = 99999999.0;
-        for (size_t i = 1; i < f->sh.nbIndex; i++) {
+        for (size_t i = 1; i < f->geo.nbIndex; i++) {
             Vector3d *v = geom->GetVertex(f->indices[i]);
 
             // Look for the closest Vertex between Origin and Center as a label position
@@ -2052,7 +2052,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		for (int i = 0; i < nbF; i++) {
 			InterfaceFacet *f = geom->GetFacet(i);
 			if (f->sh.superIdx == geom->viewStruct || f->sh.superIdx == -1) {
-				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
+				for (int j = 0; j < f->geo.nbIndex; j++) refIdx[f->indices[j]] = true;
 			}
 		}
 

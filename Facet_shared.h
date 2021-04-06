@@ -76,7 +76,7 @@ public:
 	void  UnselectElem();
 	void  SelectElem(size_t u, size_t v, size_t width, size_t height);
 	void  RenderSelectedElem();
-	void  FillVertexArray(InterfaceVertex *v);
+	void  FillVertexArray(Vector3d *v);
 	size_t GetTexSwapSize(bool useColormap);
 	size_t GetTexSwapSizeForRatio(double ratio, bool useColor);
 	std::pair<size_t, size_t> GetNbCell();
@@ -91,7 +91,7 @@ public:
 	size_t GetMeshNbPoint(size_t index);
 	Vector2d GetMeshPoint(size_t index, size_t pointId);
 	Vector2d GetMeshCenter(size_t index);
-	double GetArea();
+	double GetArea() const;
 	bool  IsTXTLinkFacet();
 	Vector3d GetRealCenter();
 	void  UpdateFlags();
@@ -102,7 +102,7 @@ public:
 	void  LoadTXT(FileReader *file);
 	void  SaveTXT(FileWriter *file);
 	void  LoadGEO(FileReader *file, int version, size_t nbVertex);
-	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold);
+	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold) const;
 	void  CopyFacetProperties(InterfaceFacet *f, bool copyMesh = false);
 
 	//Different signature (and implementation)
@@ -139,13 +139,14 @@ public:
 
 
 	std::vector<size_t>   indices;      // Indices (Reference to geometry vertex)
-	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
+	//std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
 
 	//C-style arrays to save memory (textures can be huge):
     std::vector<int> cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
     std::vector<CellProperties> meshvector;
 	size_t meshvectorsize;
 
+	FacetGeometry geo;
 	FacetProperties sh;
 	FacetHitBuffer facetHitCache;
 	FacetHistogramBuffer facetHistogramCache; //contains empty vectors when facet doesn't have it

@@ -10,11 +10,11 @@
 #include "Buffer_shared.h"
 
 struct Facet {
-    Facet() : sh(0) {};
-    Facet(size_t nbIndex) : sh(nbIndex) {};
+    Facet() : geo(0), sh() {};
+    Facet(size_t nbIndex) : geo(nbIndex), sh() {};
+    FacetGeometry geo;
     FacetProperties sh;
     std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
-    std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
 };
 
 
