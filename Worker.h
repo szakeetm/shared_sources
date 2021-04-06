@@ -93,7 +93,8 @@ public:
 
     void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
-  //void Exit(); // Free all allocated resource
+    void StartStop(float appTime);    // Switch running/stopped
+    //void Exit(); // Free all allocated resource
   //void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
   void RetrieveHistogramCache();
@@ -141,7 +142,6 @@ public:
   int GetIDId(size_t paramId);
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
-  void StartStop(float appTime);    // Switch running/stopped
   #endif
 
 #if defined(SYNRAD)
@@ -159,7 +159,6 @@ public:
     //Different signature:
     void SendFacetHitCounts();
     void SendToHitBuffer();// Send total and facet hit counts to subprocesses
-  void StartStop(float appTime);    // Switch running/stopped
 #endif
     bool   IsRunning();           // Started/Stopped state
 
