@@ -542,7 +542,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 
 	//set selection
 	UnselectAll();
-	InterfaceVertex newVertices;
+	InterfaceVertices newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
 		std::vector<size_t> closestIndexToChild(nbHoles), closestIndexToParent(nbHoles);
@@ -708,7 +708,7 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
-void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, InterfaceVertex &newVertices, size_t registerLocation) {
+void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, InterfaceVertices &newVertices, size_t registerLocation) {
 	int foundId = -1;
 	for (size_t k = 0; foundId == -1 && k < facets[id1]->geo.nbIndex; k++) { //Check if part of facet 1
 		double dist = (vert - facets[id1]->geo.vertices2[k]).Norme();
@@ -775,7 +775,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	}
 }
 
-InterfaceVertex* Geometry::GetVerticesHandle() {
+InterfaceVertices* Geometry::GetVerticesHandle() {
     return &(vertices3);
 }
 
@@ -958,7 +958,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	// Create the new vertex array
 	vertices3.Resize(nbRef); //vertices3.shrink_to_fit();
 
-	memcpy(vertices3.vertices3d.data(), refs, nbRef * sizeof(InterfaceVertex));
+	memcpy(vertices3.vertices3d.data(), refs, nbRef * sizeof(InterfaceVertices));
 	sh.nbVertex = nbRef;
 
 	// Update facets indices
@@ -1111,7 +1111,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 			//Resize vertex and facet arrays
 			size_t nbNewVertices = facets[sourceFacetId]->geo.nbIndex;
 			if (mode == 3) nbNewVertices *= (steps);
-			//vertices3 = (InterfaceVertex*)realloc(vertices3, (wp.nbVertex + nbNewVertices) * sizeof(InterfaceVertex));
+			//vertices3 = (InterfaceVertices*)realloc(vertices3, (wp.nbVertex + nbNewVertices) * sizeof(InterfaceVertices));
 			vertices3.Resize(sh.nbVertex + nbNewVertices);
 
 			size_t nbNewFacets = facets[sourceFacetId]->geo.nbIndex;
@@ -1207,7 +1207,7 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) 
 
 	// Reallocate mem
     std::vector<InterfaceFacet*> nFacets(sh.nbFacet + nbF, nullptr);
-    //InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((wp.nbVertex + nbV) * sizeof(InterfaceVertex));
+    //InterfaceVertices *nVertices3 = (InterfaceVertices *)malloc((wp.nbVertex + nbV) * sizeof(InterfaceVertices));
 
 	if (sh.nbFacet) nFacets.insert(std::begin(nFacets), std::begin(facets), std::end(facets));
 
@@ -1217,9 +1217,9 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) 
     }
     nFacets.insert(std::end(nFacets), std::begin(newFac), std::end(newFac));
 
-	//if (wp.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertex) * wp.nbVertex);
+	//if (wp.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertices) * wp.nbVertex);
 	vertices3.Resize(sh.nbVertex + nbV);
-	memcpy(&vertices3[sh.nbVertex], nV, sizeof(InterfaceVertex) * nbV);
+	memcpy(&vertices3[sh.nbVertex], nV, sizeof(InterfaceVertices) * nbV);
 
 	//SAFE_FREE(vertices3);
 	facets = nFacets;
@@ -1303,7 +1303,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 		}
 	}
 
-	InterfaceVertex nVert(nbVert);
+	InterfaceVertices nVert(nbVert);
 
 	for (int i = 0, n = 0; i < sh.nbVertex; i++) {
 		if (isUsed[i] || (selectedOnly && !IsVertexSelected(i))) {
@@ -1896,7 +1896,7 @@ void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &A
 void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	auto selectedFacetIds = GetSelectedFacets();
 	std::vector<bool> isCopied(sh.nbVertex, false); //we keep log of what has been copied to prevent creating duplicates
-	InterfaceVertex newVertices;		//vertices that we create
+	InterfaceVertices newVertices;		//vertices that we create
 	std::vector<size_t> newIndices(sh.nbVertex);    //which new vertex was created from this old one
 
 	for (const auto& sel : selectedFacetIds) {
@@ -1911,7 +1911,7 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	}
 
 	/*
-	vertices3 = (InterfaceVertex*)realloc(vertices3, (wp.nbVertex + newVertices.size()) * sizeof(InterfaceVertex)); //Increase vertices3 array
+	vertices3 = (InterfaceVertices*)realloc(vertices3, (wp.nbVertex + newVertices.size()) * sizeof(InterfaceVertices)); //Increase vertices3 array
 
 	//fill the new vertices with references to the old ones
 	for (size_t newVertexId = 0; newVertexId < newVertices.size(); newVertexId++) {
@@ -2157,7 +2157,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	mApp->changedSinceSave = true;
 	//UnselectAllVertex();
 	//std::vector<size_t> result;
-	InterfaceVertex newVertices;
+	InterfaceVertices newVertices;
 	std::vector<IntersectFacet> selectedFacets;
 	std::vector<DeletedFacet> deletedFacetList;
 	*nbCreated = 0; //Total number of new facets created
@@ -2232,8 +2232,8 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 		}
 	}
 	/*
-	vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(wp.nbVertex + newVertices.size()));
-	for (InterfaceVertex vertex : newVertices) {
+	vertices3 = (InterfaceVertices*)realloc(vertices3, sizeof(InterfaceVertices)*(wp.nbVertex + newVertices.size()));
+	for (InterfaceVertices vertex : newVertices) {
 		vertices3[wp.nbVertex] = vertex;
 		//result.push_back(wp.nbVertex);
 		wp.nbVertex++;
@@ -3441,8 +3441,8 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
         throw Error("Couldn't allocate memory for facets");
     }
 
-	/*vertices3 = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
-	memset(vertices3, 0, wp.nbVertex * sizeof(InterfaceVertex));*/
+	/*vertices3 = (InterfaceVertices *)malloc(wp.nbVertex * sizeof(InterfaceVertices));
+	memset(vertices3, 0, wp.nbVertex * sizeof(InterfaceVertices));*/
 	vertices3.Clear();
 	vertices3.Resize(sh.nbVertex);
 
@@ -3483,7 +3483,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 	char sName[512];
 	/*size_t nF, nV;
 	Facet **F;
-	InterfaceVertex *V;*/
+	InterfaceVertices *V;*/
 	FileReader *fr;
 
 	Clear();
@@ -3771,8 +3771,8 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
     vertices3.Clear();
     vertices3.Resize(sh.nbVertex);
 	/*
-	InterfaceVertex *v = (InterfaceVertex *)malloc(nV * sizeof(InterfaceVertex));
-	memset(v, 0, nV * sizeof(InterfaceVertex)); //avoid selected flag
+	InterfaceVertices *v = (InterfaceVertices *)malloc(nV * sizeof(InterfaceVertices));
+	memset(v, 0, nV * sizeof(InterfaceVertices)); //avoid selected flag
 	*/
 
 	// Read geometry vertices
@@ -3832,9 +3832,9 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
 	
 	/*
-	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + wp.nbVertex) * sizeof(InterfaceVertex));
-	memmove(tmp_vertices3, vertices3, (wp.nbVertex) * sizeof(InterfaceVertex));
-	memset(tmp_vertices3 + wp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
+	InterfaceVertices *tmp_vertices3 = (InterfaceVertices *)malloc((nbNewVertex + wp.nbVertex) * sizeof(InterfaceVertices));
+	memmove(tmp_vertices3, vertices3, (wp.nbVertex) * sizeof(InterfaceVertices));
+	memset(tmp_vertices3 + wp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertices));
 	SAFE_FREE(vertices3);
 	vertices3 = tmp_vertices3;
 	*/
@@ -4048,10 +4048,10 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 
 	/*
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
-	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertex));
+	InterfaceVertices *tmp_vertices3 = (InterfaceVertices *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertices));
 	if (!tmp_vertices3) throw Error("Out of memory: InsertGEOGeom");
-	memmove(tmp_vertices3, vertices3, (*nbVertex) * sizeof(InterfaceVertex));
-	memset(tmp_vertices3 + *nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
+	memmove(tmp_vertices3, vertices3, (*nbVertex) * sizeof(InterfaceVertices));
+	memset(tmp_vertices3 + *nbVertex, 0, nbNewVertex * sizeof(InterfaceVertices));
 	SAFE_FREE(vertices3);
 	vertices3 = tmp_vertices3;
 	*/
@@ -4387,8 +4387,8 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, const d
 	Vector3d *ptrVert;
 	size_t       vIdx;
 	/*
-	InterfaceVertex *nVert = (InterfaceVertex *)malloc((wp.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
-	memcpy(nVert, vertices3, wp.nbVertex * sizeof(InterfaceVertex));*/
+	InterfaceVertices *nVert = (InterfaceVertices *)malloc((wp.nbVertex + VtoAdd) * sizeof(InterfaceVertices));
+	memcpy(nVert, vertices3, wp.nbVertex * sizeof(InterfaceVertices));*/
 	vertices3.Resize(sh.nbVertex + VtoAdd);
 
 	ptrVert = &(vertices3[sh.nbVertex]);

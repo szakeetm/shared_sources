@@ -136,7 +136,7 @@ public:
 	void ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type);
 	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type);
 	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree & solution, ClipperLib::ClipType& type);
-	void RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, InterfaceVertex &newVertices, size_t registerLocation);
+	void RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, InterfaceVertices &newVertices, size_t registerLocation);
 	void SelectCoplanar(int width, int height, double tolerance);
 	InterfaceFacet    *GetFacet(size_t facet);
 	Vector3d * GetVertex(size_t idx);
@@ -289,7 +289,7 @@ protected:
 
     // Geometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
-	InterfaceVertex vertices3; // Vertices (3D space), can be selected
+	InterfaceVertices vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)
@@ -354,5 +354,5 @@ protected:
 
 	bool IsVertexSelected(size_t idx);
 
-	InterfaceVertex *GetVerticesHandle();
+	InterfaceVertices *GetVerticesHandle();
 };

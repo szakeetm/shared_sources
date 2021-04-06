@@ -220,25 +220,25 @@ Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
 	return length*perpendicularVector.Normalized();
 }
 
-void InterfaceVertex::AppendVertex(const Vector3d& v, bool selected) {
+void InterfaceVertices::AppendVertex(const Vector3d& v, bool selected) {
     vertices3d.push_back(v);
     this->selection.push_back(selected);
 }
 
-void InterfaceVertex::UpdateVertex(size_t index, const Vector3d& v, bool selected) {
+void InterfaceVertices::UpdateVertex(size_t index, const Vector3d& v, bool selected) {
     if(index < vertices3d.size()) {
         vertices3d[index] = v;
         selection[index] = selected;
     }
 }
 
-void InterfaceVertex::UpdateVertex(size_t index, const Vector3d &v) {
+void InterfaceVertices::UpdateVertex(size_t index, const Vector3d &v) {
     if(index < vertices3d.size()) {
         vertices3d[index] = v;
     }
 }
 
-void InterfaceVertex::Merge(const InterfaceVertex &rhs) {
+void InterfaceVertices::Merge(const InterfaceVertices &rhs) {
     vertices3d.insert(vertices3d.end(), rhs.vertices3d.begin(), rhs.vertices3d.end());
     selection.insert(selection.end(), rhs.selection.begin(), rhs.selection.end());
 }
