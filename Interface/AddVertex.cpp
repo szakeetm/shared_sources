@@ -143,18 +143,18 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 			  return;
 		  }
 		  Vector3d location;
-		  auto geo = geom->GetFacet(selFacetIds[0])->geo;
+		  auto sh = geom->GetFacet(selFacetIds[0])->sh;
 		  if (src == facetCenterButton) {
-			  location = geo.center;
+			  location = sh.center;
 		  }
 		  else if (src == facetUButton) {
-			  location = geo.O + geo.U;
+			  location = sh.O + sh.U;
 		  }
 		  else if (src == facetVButton) {
-			  location = geo.O + geo.V;
+			  location = sh.O + sh.V;
 		  }
 		  else if (src == facetNormalButton) {
-			  location = geo.center + geo.N;
+			  location = sh.center + sh.N;
 		  }
 		  geom->AddVertex(location);
       geom->AddToSelectedVertexList(geom->GetNbVertex()-1);

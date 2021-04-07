@@ -275,8 +275,8 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->geo.O;
-				AXIS_DIR = geom->GetFacet(selFacetId)->geo.U;
+				AXIS_P0 = geom->GetFacet(selFacetId)->sh.O;
+				AXIS_DIR = geom->GetFacet(selFacetId)->sh.U;
 				break;
 			}
 			case FACETVMODE:
@@ -292,8 +292,8 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->geo.O;
-				AXIS_DIR = geom->GetFacet(selFacetId)->geo.V;
+				AXIS_P0 = geom->GetFacet(selFacetId)->sh.O;
+				AXIS_DIR = geom->GetFacet(selFacetId)->sh.V;
 				break;
 			}
 			case FACETNMODE:
@@ -309,8 +309,8 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->geo.center;
-				AXIS_DIR = geom->GetFacet(selFacetId)->geo.N;
+				AXIS_P0 = geom->GetFacet(selFacetId)->sh.center;
+				AXIS_DIR = geom->GetFacet(selFacetId)->sh.N;
 				break;
 			}
 			case EQMODE:
@@ -367,7 +367,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			UpdateToggle(l8);
 			int selVertexId = -1;
 			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->IsVertexSelected(i)) {
+				if (geom->GetVertex(i)->selected) {
 					selVertexId = i;
 				}
 			}
@@ -396,7 +396,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			UpdateToggle(l8);
 			int selVertexId = -1;
 			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->IsVertexSelected(i)) {
+				if (geom->GetVertex(i)->selected) {
 					selVertexId = i;
 				}
 			}

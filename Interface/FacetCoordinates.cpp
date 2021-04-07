@@ -167,7 +167,7 @@ void FacetCoordinates::UpdateFromSelection() {
 
   Geometry *geom = worker->GetGeometry();
 
-  size_t nbIndex = selFacet->geo.nbIndex;
+  size_t nbIndex = selFacet->sh.nbIndex;
 
   lines=std::vector<line>();
 
@@ -409,10 +409,10 @@ void FacetCoordinates::ApplyChanges(){
 			mApp->changedSinceSave=true;
 
 			//Change number of vertices
-			selFacet->geo.nbIndex = (int)lines.size();
-			selFacet->indices.resize(selFacet->geo.nbIndex);
-			selFacet->geo.vertices2.resize(selFacet->geo.nbIndex);
-			selFacet->visible.resize(selFacet->geo.nbIndex);
+			selFacet->sh.nbIndex = (int)lines.size();
+			selFacet->indices.resize(selFacet->sh.nbIndex);
+			selFacet->vertices2.resize(selFacet->sh.nbIndex);
+			selFacet->visible.resize(selFacet->sh.nbIndex);
 
 			for(size_t i=0;i<lines.size();i++) {
 				geom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);

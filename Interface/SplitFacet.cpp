@@ -253,7 +253,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 					return;
 				}
 				P0=*geom->GetVertex(geom->GetFacet(facetNum-1)->indices[0]);
-				N=geom->GetFacet(facetNum-1)->geo.N;
+				N=geom->GetFacet(facetNum-1)->sh.N;
 				break;
 			case VERTEX_MODE:
 			{

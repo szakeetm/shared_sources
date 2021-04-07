@@ -159,7 +159,7 @@ void VertexCoordinates::Update() {
   vertexListC->SetColumnAligns((int *)flAligns);
   vertexListC->SetColumnEditable((int *)fEdits);
   for(size_t i=0;i<s->GetNbVertex();i++) {
-	  if(s->IsVertexSelected(i)) {
+	  if(s->GetVertex(i)->selected) {
 		  sprintf(tmp,"%zd",i+1);
 		  vertexListC->SetValueAt(0,count,tmp);
 		  //sprintf(tmp,"%d",idx+1);

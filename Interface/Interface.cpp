@@ -454,7 +454,7 @@ void Interface::UpdateModelParams() {
 
     for (int i = 0; i < geom->GetNbFacet(); i++) {
         InterfaceFacet *f = geom->GetFacet(i);
-        if (f->geo.area > 0) sumArea += f->GetArea();
+        if (f->sh.area > 0) sumArea += f->GetArea();
     }
 
     sprintf(tmp, "V:%zd F:%zd Dim:(%g,%g,%g) Area:%g", geom->GetNbVertex(), geom->GetNbFacet(),
@@ -1483,7 +1483,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     geom->UnselectAll();
                     for (int i = 0; i < geom->GetNbFacet(); i++)
                         if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                            geom->GetFacet(i)->geo.area >= largeAreaThreshold)
+                            geom->GetFacet(i)->sh.area >= largeAreaThreshold)
                             geom->SelectFacet(i);
                     geom->UpdateSelection();
                     UpdateFacetParams(true);

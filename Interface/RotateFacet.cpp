@@ -281,24 +281,24 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=geom->GetFacet(facetNum-1)->geo.O;
-				AXIS_DIR=geom->GetFacet(facetNum-1)->geo.U;
+				AXIS_P0=geom->GetFacet(facetNum-1)->sh.O;
+				AXIS_DIR=geom->GetFacet(facetNum-1)->sh.U;
 				break;
 			case FACETVMODE:
 				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>geom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=geom->GetFacet(facetNum-1)->geo.O;
-				AXIS_DIR=geom->GetFacet(facetNum-1)->geo.V;
+				AXIS_P0=geom->GetFacet(facetNum-1)->sh.O;
+				AXIS_DIR=geom->GetFacet(facetNum-1)->sh.V;
 				break;
 			case FACETNMODE:
 				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>geom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=geom->GetFacet(facetNum-1)->geo.center;
-				AXIS_DIR=geom->GetFacet(facetNum-1)->geo.N;
+				AXIS_P0=geom->GetFacet(facetNum-1)->sh.center;
+				AXIS_DIR=geom->GetFacet(facetNum-1)->sh.N;
 				break;
 			case TWOVERTEXMODE:
 				if (geom->GetNbSelectedVertex()!=2) {
@@ -308,7 +308,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				selVert1id = selVert2id = -1;
 
 				for(int i=0;selVert2id == -1 && i<geom->GetNbVertex();i++ ) {
-					if( geom->IsVertexSelected(i) ) {
+					if( geom->GetVertex(i)->selected ) {
 						if (selVert1id == -1) {
 							selVert1id = i;
 						}
@@ -391,7 +391,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			 UpdateToggle(l8);
 			 int selVertexId = -1;
 			 for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				 if (geom->IsVertexSelected(i)) {
+				 if (geom->GetVertex(i)->selected) {
 					 selVertexId = i;
 				 }
 			 }
@@ -420,7 +420,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			 UpdateToggle(l8);
 			 int selVertexId = -1;
 			 for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				 if (geom->IsVertexSelected(i)) {
+				 if (geom->GetVertex(i)->selected) {
 					 selVertexId = i;
 				 }
 			 }

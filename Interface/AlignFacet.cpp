@@ -189,8 +189,8 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			anchorSourceVertexId=anchorDestVertexId=dirSourceVertexId=dirDestVertexId=-1;
 
 			//find source anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(sourceFacetId)->geo.nbIndex;j++) {
-                if(geom->IsVertexSelected(geom->GetFacet(sourceFacetId)->indices[j])) {
+			for (int j=0;j<geom->GetFacet(sourceFacetId)->sh.nbIndex;j++) {
+				if (geom->GetVertex(geom->GetFacet(sourceFacetId)->indices[j])->selected) {
 					if (anchorSourceVertexId==-1 && dirSourceVertexId==-1) {
 						anchorSourceVertexId=(int)geom->GetFacet(sourceFacetId)->indices[j];
 					} else if (dirSourceVertexId==-1) {
@@ -208,8 +208,8 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 
 			//find destination anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(destFacetId)->geo.nbIndex;j++) {
-			    if(geom->IsVertexSelected(geom->GetFacet(destFacetId)->indices[j])) {
+			for (int j=0;j<geom->GetFacet(destFacetId)->sh.nbIndex;j++) {
+				if (geom->GetVertex(geom->GetFacet(destFacetId)->indices[j])->selected) {
 					if (anchorDestVertexId==-1 && dirDestVertexId==-1) {
 						anchorDestVertexId=(int)geom->GetFacet(destFacetId)->indices[j];
 					} else if (dirDestVertexId==-1) {
@@ -245,8 +245,8 @@ dirDestVertexId,
 			if (!mApp->AskToReset(work)) return;
 			for (size_t i=0;i<memorizedSelection.size();i++) {
 				InterfaceFacet *f=geom->GetFacet(memorizedSelection[i]);
-				for (size_t j=0;j<f->geo.nbIndex;j++) {
-				    geom->GetVerticesHandle()->UpdateVertex(f->indices[j], this->oriPositions[i][j]);
+				for (size_t j=0;j<f->sh.nbIndex;j++) {
+					geom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
 				}
 			}
 			geom->InitializeGeometry();
@@ -268,7 +268,7 @@ void AlignFacet::MemorizeSelection() {
 	oriPositions.clear();
 	for (auto& sel : memorizedSelection) {
 		std::vector<Vector3d> op;
-		for (size_t ind = 0; ind < geom->GetFacet(sel)->geo.nbIndex; ind++)
+		for (size_t ind = 0; ind < geom->GetFacet(sel)->sh.nbIndex; ind++)
 			op.push_back(*geom->GetVertex(geom->GetFacet(sel)->indices[ind]));
 		oriPositions.push_back(op);
 	}

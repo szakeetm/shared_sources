@@ -537,7 +537,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd center", *foundId + 1);
 				curveBaseLabel->SetText(tmp);
-				Vector3d center3d = geom->GetFacet(*foundId)->geo.center;
+				Vector3d center3d = geom->GetFacet(*foundId)->sh.center;
 				curveX0Text->SetText(center3d.x);
 				curveY0Text->SetText(center3d.y);
 				curveZ0Text->SetText(center3d.z);
@@ -569,9 +569,9 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd \201", *foundId + 1);
 				curveDirLabel->SetText(tmp);
-				curvedXText->SetText(geom->GetFacet(*foundId)->geo.U.x);
-				curvedYText->SetText(geom->GetFacet(*foundId)->geo.U.y);
-				curvedZText->SetText(geom->GetFacet(*foundId)->geo.U.z);
+				curvedXText->SetText(geom->GetFacet(*foundId)->sh.U.x);
+				curvedYText->SetText(geom->GetFacet(*foundId)->sh.U.y);
+				curvedZText->SetText(geom->GetFacet(*foundId)->sh.U.z);
 			}
 		}
 		else if (src == curveFacetVButton) {
@@ -579,9 +579,9 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd \202", *foundId + 1);
 				curveDirLabel->SetText(tmp);
-				curvedXText->SetText(geom->GetFacet(*foundId)->geo.V.x);
-				curvedYText->SetText(geom->GetFacet(*foundId)->geo.V.y);
-				curvedZText->SetText(geom->GetFacet(*foundId)->geo.V.z);
+				curvedXText->SetText(geom->GetFacet(*foundId)->sh.V.x);
+				curvedYText->SetText(geom->GetFacet(*foundId)->sh.V.y);
+				curvedZText->SetText(geom->GetFacet(*foundId)->sh.V.z);
 			}
 		}
 		else if (src == curveGetDirButton) {
@@ -603,8 +603,8 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				sprintf(tmp, "Facet %zd N x X", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(0);
-				curvedYText->SetText(geom->GetFacet(*foundId)->geo.N.z);
-				curvedZText->SetText(-geom->GetFacet(*foundId)->geo.N.y);
+				curvedYText->SetText(geom->GetFacet(*foundId)->sh.N.z);
+				curvedZText->SetText(-geom->GetFacet(*foundId)->sh.N.y);
 			}
 		}
 		else if (src == facetNYbutton) {
@@ -612,9 +612,9 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd N x Y", *foundId + 1);
 				curveDirLabel->SetText(tmp);
-				curvedXText->SetText(-geom->GetFacet(*foundId)->geo.N.z);
+				curvedXText->SetText(-geom->GetFacet(*foundId)->sh.N.z);
 				curvedYText->SetText(0);
-				curvedZText->SetText(geom->GetFacet(*foundId)->geo.N.x);
+				curvedZText->SetText(geom->GetFacet(*foundId)->sh.N.x);
 			}
 		}
 		else if (src == facetNZbutton) {
@@ -622,8 +622,8 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd N x Z", *foundId + 1);
 				curveDirLabel->SetText(tmp);
-				curvedXText->SetText(geom->GetFacet(*foundId)->geo.N.y);
-				curvedYText->SetText(-geom->GetFacet(*foundId)->geo.N.x);
+				curvedXText->SetText(geom->GetFacet(*foundId)->sh.N.y);
+				curvedYText->SetText(-geom->GetFacet(*foundId)->sh.N.x);
 				curvedZText->SetText(0);
 			}
 		}

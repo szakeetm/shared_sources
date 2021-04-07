@@ -107,7 +107,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 		InterfaceFacet *f = facets[i];
 		if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
 
-			size_t nb = facets[i]->geo.nbIndex;
+			size_t nb = facets[i]->sh.nbIndex;
 			bool isInside = true;
 			size_t j = 0;
 			bool hasSelectedVertex = false;
@@ -124,7 +124,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
 					else //circular selection
 						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
-					if (vertices3.selection[idx]) hasSelectedVertex = true;
+					if (vertices3[idx].selected) hasSelectedVertex = true;
 				}
 				else {
 
@@ -218,7 +218,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			if (vertexBound) { //CAPS LOCK on, select facets onyl with at least one seleted vertex
 				for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
 					size_t idx = facets[i]->indices[j];
-					if (vertices3.selection[idx]) hasSelectedVertex = true;
+					if (vertices3[idx].selected) hasSelectedVertex = true;
 				}
 			}
 
@@ -302,7 +302,7 @@ void Geometry::SelectVertex(int vertexId) {
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
 	if (!isLoaded) return;
-    vertices3.selection[vertexId] = true;
+	vertices3[vertexId].selected = true;
 }
 
 void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound) {
@@ -367,7 +367,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 			}
 
 			if (isInside) {
-                vertices3.selection[idx] = !ctrlDown;
+				vertices3[i].selected = !ctrlDown;
 				if (ctrlDown) RemoveFromSelectedVertexList(i);
 				else {
 					AddToSelectedVertexList(i);
@@ -415,7 +415,7 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 	int minId = -1;
 	for (i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		if (ok[i] && allXe[i] >= 0 && allYe[i] >= 0) { //calculate only for points on screen
+		if (ok[i] && !(allXe[i] < 0) && !(allYe[i] < 0)) { //calculate only for points on screen
 			distance = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
 			if (distance < minDist) {
 				minDist = distance;
@@ -430,7 +430,7 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 	}
 
 	if (minDist < 250.0) {
-        vertices3.selection[minId] = !ctrlDown;
+		vertices3[minId].selected = !ctrlDown;
 		if (ctrlDown) RemoveFromSelectedVertexList(minId);
 		else {
 			AddToSelectedVertexList(minId);
@@ -492,7 +492,7 @@ void Geometry::SelectAllVertex() {
 size_t Geometry::GetNbSelectedVertex() {
 	size_t nbSelectedVertex = 0;
 	for (int i = 0; i < sh.nbVertex; i++) {
-		if (vertices3.selection[i]) nbSelectedVertex++;
+		if (vertices3[i].selected) nbSelectedVertex++;
 	}
 	return nbSelectedVertex;
 }
@@ -507,7 +507,7 @@ void Geometry::UnselectAll() {
 
 void Geometry::UnselectAllVertex() {
 	for (int i = 0; i < sh.nbVertex; i++) {
-        vertices3.selection[i] = false;
+		vertices3[i].selected = false;
 		//facets[i]->UnselectElem(); //what is this?
 	}
 	//UpdateSelectionVertex();
@@ -517,14 +517,14 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 {
 	std::vector<size_t> sel;
 	for (size_t i = 0; i < sh.nbVertex; i++)
-		if (vertices3.selection[i]) sel.push_back(i);
+		if (vertices3[i].selected) sel.push_back(i);
 	return sel;
 }
 
 void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
-	size_t nb = f->geo.nbIndex;
+	size_t nb = f->sh.nbIndex;
 	size_t i1;
 
 	if (offset) {
@@ -594,7 +594,7 @@ void Geometry::DrawPolys() {
 
 	// Group TRI,QUAD and POLY
 	for (size_t i = 0; i < sh.nbFacet; i++) {
-		size_t nb = facets[i]->geo.nbIndex;
+		size_t nb = facets[i]->sh.nbIndex;
 		if (facets[i]->volumeVisible
 		//&& !facets[i]->selected // don't draw part of the volume that is selected
 		) {
@@ -648,7 +648,7 @@ float Geometry::getMaxDistToCamera(InterfaceFacet* f){
     GLMatrix m; m.Multiply(&proj, &view);
     float distToCamera = -99999.99f;
 
-    for(int i=0;i<f->geo.nbIndex;++i){
+    for(int i=0;i<f->sh.nbIndex;++i){
         size_t idx = f->indices[i];
         m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
                       &rx, &ry, &rz, &rw);
@@ -676,7 +676,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     //---Draw transparent selected polygons
     // Group TRI,QUAD and POLY
     /*for (int i = 0; i < selectedFacets.size(); ++i) {
-        const size_t nb = facets[i]->geo.nbIndex;
+        const size_t nb = facets[i]->sh.nbIndex;
         if (nb == 3) {
             f3.push_back(selectedFacets[i]);
         }
@@ -731,18 +731,18 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
             }
 			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
-				Vector3d& center = facets[sel]->geo.center;
-				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->geo.U : facets[sel]->geo.V;
+				Vector3d& center = facets[sel]->sh.center;
+				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
 				arrow.endPoint = center + .5* dir;
-				arrow.normal = profileMode == PROFILE_U ? facets[sel]->geo.nV : facets[sel]->geo.nU;
+				arrow.normal = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
 				arrowsToDraw.push_back(arrow);
 			}
         }
         else{
             glColor4f(0.933f, 0.067f, 0.067f, 0.15f);    //metro red
         }
-        size_t nb = facets[sel]->geo.nbIndex;
+        size_t nb = facets[sel]->sh.nbIndex;
         if (nb == 3) {
             FillFacet(facets[sel], false);
         }
@@ -955,7 +955,7 @@ void Geometry::FillFacet(InterfaceFacet *f, bool addTextureCoord) {
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
-	glNormal3d(-f->geo.N.x, -f->geo.N.y, -f->geo.N.z);
+	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	/*size_t nbDrawn = 0;
 	size_t i;
 	if (mApp->leftHandedView) {
@@ -967,9 +967,9 @@ void Geometry::FillFacet(InterfaceFacet *f, bool addTextureCoord) {
 			glNormal3d(f->wp.N.x, f->wp.N.y, f->wp.N.z);
 	}
 	for (; nbDrawn < f->wp.nbIndex; nbDrawn++) {*/
-	for (size_t i=0;i<f->geo.nbIndex;i++) {
+	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
-		if (addTextureCoord) AddTextureCoord(f, &(f->geo.vertices2[i]));
+		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]));
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
 		/*if (mApp->leftHandedView) {
 			i++;
@@ -1004,7 +1004,7 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool a
 		p3 = &(p.pts[Next(ear, p.pts.size())]);
 	//}
 
-	glNormal3d(-f->geo.N.x, -f->geo.N.y, -f->geo.N.z);
+	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p1);
 	f->glVertex2u(p1->u, p1->v);
 
@@ -1032,7 +1032,7 @@ void Geometry::Triangulate(InterfaceFacet *f, bool addTextureCoord) {
 
 	// Build a Polygon
 	GLAppPolygon p;
-	p.pts = f->geo.vertices2;
+	p.pts = f->vertices2;
 	//p.sign = f->sign;
 	
 	// Perform triangulation
@@ -1195,16 +1195,16 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			if (f->sh.countDirection && f->dirCache) {
 				double iw = 1.0 / (double)f->sh.texWidthD;
 				double ih = 1.0 / (double)f->sh.texHeightD;
-				double rw = f->geo.U.Norme() * iw;
+				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {
 						size_t add = x + y*f->sh.texWidth;
 						if (f->GetMeshArea(add) > 0.0) {
 							double uC = ((double)x + 0.5) * iw;
 							double vC = ((double)y + 0.5) * ih;
-							float xc = (float)(f->geo.O.x + f->geo.U.x*uC + f->geo.V.x*vC);
-							float yc = (float)(f->geo.O.y + f->geo.U.y*uC + f->geo.V.y*vC);
-							float zc = (float)(f->geo.O.z + f->geo.U.z*uC + f->geo.V.z*vC);
+							float xc = (float)(f->sh.O.x + f->sh.U.x*uC + f->sh.V.x*vC);
+							float yc = (float)(f->sh.O.y + f->sh.U.y*uC + f->sh.V.y*vC);
+							float zc = (float)(f->sh.O.z + f->sh.U.z*uC + f->sh.V.z*vC);
 
 							RenderArrow(matView,
 								(float)f->dirCache[add].dir.x,
@@ -1288,7 +1288,7 @@ std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
 	std::vector<size_t> selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
 		InterfaceFacet* f = facets[facetId];
-		for (size_t i = 0; i < f->geo.nbIndex; i++)
+		for (size_t i = 0; i < f->sh.nbIndex; i++)
 			result[f->indices[i]] = true;
 	}
 	return result;
@@ -1681,12 +1681,12 @@ void Geometry::BuildFacetList(InterfaceFacet *f) {
 
 		// Facet geometry
 		glNewList(f->glList, GL_COMPILE);
-		if (f->geo.nbIndex == 3) {
+		if (f->sh.nbIndex == 3) {
 			glBegin(GL_TRIANGLES);
 			FillFacet(f, true);
 			glEnd();
 		}
-		else if (f->geo.nbIndex == 4) {
+		else if (f->sh.nbIndex == 4) {
 
 			glBegin(GL_QUADS);
 			FillFacet(f, true);

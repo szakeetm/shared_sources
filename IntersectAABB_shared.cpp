@@ -50,9 +50,9 @@ std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
 	size_t nbLeft, nbRight;
 
 	for (const auto& f : facets) {
-		if (f->geo.center.x > centerX) rightFromCenterZ++;
-		if (f->geo.center.y > centerY) rightFromCenterY++;
-		if (f->geo.center.z > centerZ) rightFromCenterX++;
+		if (f->sh.center.x > centerX) rightFromCenterZ++;
+		if (f->sh.center.y > centerY) rightFromCenterY++;
+		if (f->sh.center.z > centerZ) rightFromCenterX++;
 	}
 
 	double deviationFromHalfHalf_X = fabs((double)rightFromCenterZ - (double)(facets.size()) / 2.0);
@@ -87,12 +87,12 @@ void AABBNODE::ComputeBB() {
 	bb.min=Vector3d(1e100,1e100,1e100);
 
 	for (const auto& f : facets) {
-		bb.min.x = std::min(f->geo.bb.min.x,bb.min.x);
-		bb.min.y = std::min(f->geo.bb.min.y, bb.min.y);
-		bb.min.z = std::min(f->geo.bb.min.z, bb.min.z);
-		bb.max.x = std::max(f->geo.bb.max.x, bb.max.x);
-		bb.max.y = std::max(f->geo.bb.max.y, bb.max.y);
-		bb.max.z = std::max(f->geo.bb.max.z, bb.max.z);
+		bb.min.x = std::min(f->sh.bb.min.x,bb.min.x);
+		bb.min.y = std::min(f->sh.bb.min.y, bb.min.y);
+		bb.min.z = std::min(f->sh.bb.min.z, bb.min.z);
+		bb.max.x = std::max(f->sh.bb.max.x, bb.max.x);
+		bb.max.y = std::max(f->sh.bb.max.y, bb.max.y);
+		bb.max.z = std::max(f->sh.bb.max.z, bb.max.z);
 	}
 
 }
@@ -120,7 +120,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->geo.center.x > m) rList[nbr++] = f;
+				if (f->sh.center.x > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -128,7 +128,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 		case 2: // xz
 			m = (newNode->bb.min.y + newNode->bb.max.y) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->geo.center.y > m) rList[nbr++] = f;
+				if (f->sh.center.y > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -136,7 +136,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
 		case 3: // xy
 			m = (newNode->bb.min.z + newNode->bb.max.z) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->geo.center.z > m) rList[nbr++] = f;
+				if (f->sh.center.z > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -299,7 +299,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 			if (f == lastHitBefore)
 				continue;
 
-			double det = Dot(f->geo.Nuv, rayDirOpposite);
+			double det = Dot(f->sh.Nuv, rayDirOpposite);
 			// Eliminate "back facet"
 			if ((f->sh.is2sided) || (det > 0.0)) { //If 2-sided or if ray going opposite facet normal
 
@@ -309,21 +309,21 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 				if (det != 0.0) {
 
 					double iDet = 1.0 / det;
-					Vector3d intZ = rayPos - f->geo.O;
+					Vector3d intZ = rayPos - f->sh.O;
 
-					u = iDet * DET33(intZ.x, f->geo.V.x, rayDirOpposite.x,
-						intZ.y, f->geo.V.y, rayDirOpposite.y,
-						intZ.z, f->geo.V.z, rayDirOpposite.z);
+					u = iDet * DET33(intZ.x, f->sh.V.x, rayDirOpposite.x,
+						intZ.y, f->sh.V.y, rayDirOpposite.y,
+						intZ.z, f->sh.V.z, rayDirOpposite.z);
 
 					if (u >= 0.0 && u <= 1.0) {
 
-						v = iDet * DET33(f->geo.U.x, intZ.x, rayDirOpposite.x,
-							f->geo.U.y, intZ.y, rayDirOpposite.y,
-							f->geo.U.z, intZ.z, rayDirOpposite.z);
+						v = iDet * DET33(f->sh.U.x, intZ.x, rayDirOpposite.x,
+							f->sh.U.y, intZ.y, rayDirOpposite.y,
+							f->sh.U.z, intZ.z, rayDirOpposite.z);
 
 						if (v >= 0.0 && v <= 1.0) {
 
-							d = iDet * Dot(f->geo.Nuv, intZ);
+							d = iDet * Dot(f->sh.Nuv, intZ);
 
 							if (d>0.0) {
 
@@ -343,7 +343,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& currentParticle.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& currentParticle.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-										acos(Dot(currentParticle.direction, f->geo.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+										acos(Dot(currentParticle.direction, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 
@@ -445,7 +445,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
 	*/
 
-	return IsInPoly(u, v, f.geo.vertices2);
+	return IsInPoly(u, v, f.vertices2);
 
 }
 

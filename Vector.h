@@ -55,32 +55,24 @@ public:
 	}
 };
 
-class InterfaceVertex { //For Interface
+class InterfaceVertex : public Vector3d { //For Interface
 public:
     InterfaceVertex() = default;
-    explicit InterfaceVertex(int size) {
-        Resize(size);
+    InterfaceVertex(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
     };
+    InterfaceVertex& operator=(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
 
-    InterfaceVertex(const std::vector<Vector3d>& src){
-        vertices3d = src;
-        vertices3d = src;
-        vertices3d = src;
-    };
-    InterfaceVertex& operator=(std::vector<Vector3d>&& src){
-        vertices3d = src;
         return *this;
     };
-    Vector3d& operator[](int index){
-        if(index < vertices3d.size())
-            return vertices3d.at(index);
-        else
-            throw std::runtime_error("Wrong vertices3d index");
-    };
-
-	//bool selected=false;
-    std::vector<bool> selection;
-    std::vector<Vector3d> vertices3d;
+	bool selected=false;
 	void SetLocation(const Vector3d& v);
 	/*template<class Archive>
 	void serialize(Archive & archive)
@@ -88,23 +80,6 @@ public:
 		archive(*((Vector3d*)this)); //Write base class
 		archive(selected);
 	}*/
-
-    void Merge(const InterfaceVertex &rhs);
-    void AppendVertex(const Vector3d &v, bool selected);
-    void UpdateVertex(size_t index, const Vector3d &v);
-    void UpdateVertex(size_t index, const Vector3d &v, bool selected);
-    void Resize(size_t newSize){
-        vertices3d.resize(newSize);
-        vertices3d.shrink_to_fit();
-        selection.resize(newSize, false);
-        selection.shrink_to_fit();
-    };
-    void Clear(){
-        vertices3d.clear();
-        vertices3d.shrink_to_fit();
-        selection.clear();
-        selection.shrink_to_fit();
-    };
 };
 
 class AxisAlignedBoundingBox{
