@@ -55,19 +55,19 @@ public:
 	}
 };
 
-class InterfaceVertices { //For Interface
+class InterfaceVertex { //For Interface
 public:
-    InterfaceVertices() = default;
-    explicit InterfaceVertices(int size) {
+    InterfaceVertex() = default;
+    explicit InterfaceVertex(int size) {
         Resize(size);
     };
 
-    InterfaceVertices(const std::vector<Vector3d>& src){
+    InterfaceVertex(const std::vector<Vector3d>& src){
         vertices3d = src;
         vertices3d = src;
         vertices3d = src;
     };
-    InterfaceVertices& operator=(std::vector<Vector3d>&& src){
+    InterfaceVertex& operator=(std::vector<Vector3d>&& src){
         vertices3d = src;
         return *this;
     };
@@ -89,7 +89,7 @@ public:
 		archive(selected);
 	}*/
 
-    void Merge(const InterfaceVertices &rhs);
+    void Merge(const InterfaceVertex &rhs);
     void AppendVertex(const Vector3d &v, bool selected);
     void UpdateVertex(size_t index, const Vector3d &v);
     void UpdateVertex(size_t index, const Vector3d &v, bool selected);
