@@ -40,6 +40,7 @@
 #ifndef _GLPARSERH_
 #define _GLPARSERH_
 
+#include "GLTypes.h" // For bool typedef
 #include <string>
 
 // Evaluation tree node type

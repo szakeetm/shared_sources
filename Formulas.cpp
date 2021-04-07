@@ -21,7 +21,7 @@ void Formulas::AddFormula(const char *fName, const char *formula) {
 
 void Formulas::ClearFormulas() {
     for (auto &f : formulas_n)
-        delete f;
+        SAFE_DELETE(f);
     formulas_n.clear();
     UpdateVectorSize();
 }
