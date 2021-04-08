@@ -20,28 +20,18 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 // Temporary transparent hit
-#include <GeometrySimu.h>
-#include <Simulation/Particle.h>
+//#include <Simulation/Particle.h>
 #include "Vector.h" //AABB
 //#include "../src/Simulation.h" //SubprocessFacet
 
 // AABBTree node
+namespace MFSim {
+    class Particle;
+}
+
+class AABBNODE;
 class Simulation;
 struct SubprocessFacet;
-
-class AABBNODE {
-public:
-	AABBNODE();
-	~AABBNODE();
-	void ComputeBB();
-	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
-	AxisAlignedBoundingBox             bb;
-	AABBNODE *left;
-	AABBNODE *right;
-	std::vector<SubprocessFacet*> facets;
-};
-
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);
 
 void IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
                    const Vector3d &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,

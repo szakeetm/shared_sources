@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMatrix.h"
 #include <tuple>
 #include <Helper/GraphicsHelper.h>
+#include <IntersectAABB_shared.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -51,6 +52,8 @@ extern MolFlow *mApp;
 #if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
+
+#include "AABB.h"
 
 void Geometry::SelectFacet(size_t facetId) {
 	if (!isLoaded) return;
@@ -585,6 +588,204 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 
 }
 
+void Geometry::DrawAABB() {
+    if(!mApp->worker.model.structures.empty()) {
+        std::vector<std::vector<SubprocessFacet*>> facetPointers;
+        facetPointers.resize(mApp->worker.model.sh.nbSuper);
+        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+            for(auto& sFac : mApp->worker.model.facets){
+                // TODO: Build structures
+                if (sFac.sh.superIdx == -1) { //Facet in all structures
+                    for (auto& fp_vec : facetPointers) {
+                        fp_vec.push_back(&sFac);
+                    }
+                }
+                else {
+                    facetPointers[sFac.sh.superIdx].push_back(&sFac); //Assign to structure
+                }
+            }
+        }
+
+        // Build all AABBTrees
+        size_t maxDepth=0;
+        AABBNODE* tree;
+        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+            auto& structure = mApp->worker.model.structures[s];
+            if(structure.aabbTree)
+                structure.aabbTree.reset();
+            tree = BuildAABBTree(facetPointers[s], 0, maxDepth);
+        }
+
+        if(tree) {
+            auto bb = tree->bb;
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_BLEND);
+            glDisable(GL_CULL_FACE);
+
+            glPointSize(15.0f);
+            glColor3f(1.0f, 0.2f, 0.2f);
+
+            glBegin(GL_POINTS);
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            if(tree->left) {
+                auto bb = tree->left->bb;
+
+                glPointSize(10.0f);
+                glColor3f(0.2f, 0.9f, 0.5f);
+
+                glBegin(GL_POINTS);
+                glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                glEnd();
+
+                if(tree->left->left) {
+                    auto bb = tree->left->left->bb;
+
+                    glPointSize(5.0f);
+                    glColor3f(0.9f, 0.3f, 0.5f);
+
+                    glBegin(GL_POINTS);
+                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                    glEnd();
+                }
+
+                if(tree->left->right) {
+                    auto bb = tree->left->right->bb;
+
+                    glPointSize(3.0f);
+                    glColor3f(0.7f, 0.3f, 0.4f);
+
+                    glBegin(GL_POINTS);
+                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                    glEnd();
+                }
+            }
+
+            if(tree->right) {
+                auto bb = tree->right->bb;
+
+                glPointSize(7.0f);
+                glColor3f(0.2f, 0.7f, 0.4f);
+
+                glBegin(GL_POINTS);
+                glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                glEnd();
+
+                if(tree->right->left) {
+                    auto bb = tree->right->left->bb;
+
+                    glPointSize(5.0f);
+                    glColor3f(0.2f, 0.5f, 0.9f);
+
+                    glBegin(GL_POINTS);
+                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                    glEnd();
+                }
+
+                if(tree->right->right) {
+                    auto bb = tree->right->right->bb;
+
+                    glPointSize(3.0f);
+                    glColor3f(0.2f, 0.4f, 0.7f);
+
+                    glBegin(GL_POINTS);
+                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+                    glEnd();
+                }
+            }
+            /*glLineWidth(3);
+            glColor4f(0.937f, 0.957f, 1.0f, 0.98f);    //metro light blue
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glEnd();
+
+            glLineWidth(3);
+            glColor4f(1.0f, 0.957f, 0.937f, 0.98f);    //metro light blue
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            glLineWidth(3);
+            glColor4f(1.0f, 0.f, 0.f, 0.98f);    //metro light blue
+
+            glBegin(GL_LINES);
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            glLineWidth(3);
+            glColor4f(0.f, 0.f, 1.0f, 0.98f);    //metro light blue
+            glBegin(GL_LINES);
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glEnd();*/
+
+        }
+        delete tree; // pointer unnecessary because of make_shared
+    }
+}
 
 void Geometry::DrawPolys() {
 
@@ -628,6 +829,97 @@ void Geometry::DrawPolys() {
 	for (const auto& i : f4)
 		FillFacet(facets[i], false);
 	glEnd();
+
+
+
+	if(!mApp->worker.model.structures.empty()) {
+        std::vector<std::vector<SubprocessFacet*>> facetPointers;
+        facetPointers.resize(mApp->worker.model.sh.nbSuper);
+        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+            for(auto& sFac : mApp->worker.model.facets){
+                // TODO: Build structures
+                if (sFac.sh.superIdx == -1) { //Facet in all structures
+                    for (auto& fp_vec : facetPointers) {
+                        fp_vec.push_back(&sFac);
+                    }
+                }
+                else {
+                    facetPointers[sFac.sh.superIdx].push_back(&sFac); //Assign to structure
+                }
+            }
+        }
+
+        // Build all AABBTrees
+        size_t maxDepth=0;
+        AABBNODE* tree;
+        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+            auto& structure = mApp->worker.model.structures[s];
+            if(structure.aabbTree)
+                structure.aabbTree.reset();
+            tree = BuildAABBTree(facetPointers[s], 0, maxDepth);
+        }
+
+	    if(tree) {
+            auto bb = tree->bb;
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_BLEND);
+            glDisable(GL_CULL_FACE);
+
+            glPointSize(10.0f);
+            glColor3f(1.0f, 0.2f, 0.2f);
+
+            glBegin(GL_POINTS);
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            /*glBegin(GL_LINE_LOOP);
+            glLineWidth(3);
+            glColor4f(0.937f, 0.957f, 1.0f, 0.98f);    //metro light blue
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glEnd();
+
+            glBegin(GL_LINE_LOOP);
+            glLineWidth(3);
+            glColor4f(1.0f, 0.957f, 0.937f, 0.98f);    //metro light blue
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            glBegin(GL_LINES);
+            glLineWidth(3);
+            glColor4f(1.0f, 0.f, 0.f, 0.98f);    //metro light blue
+            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
+            glEnd();
+
+            glBegin(GL_LINES);
+            glLineWidth(3);
+            glColor4f(0.f, 0.f, 1.0f, 0.98f);    //metro light blue
+            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
+            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
+            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
+            glEnd();*/
+
+        }
+        delete tree; // pointer unnecessary because of make_shared
+    }
 }
 
 // returns 1 if lhs is greater, -1 otherwise
@@ -1055,7 +1347,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 	// Render the geometry
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
-	
+
 	// Render Volume
 	if (renderVolume) {
 		glPolygonOffset(1.0f, 4.0f);
@@ -1217,6 +1509,10 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			}
 		}
 
+        // Selectable in white
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glCallList(aabbList);
+
 		// Restore default matrix
 		glLoadMatrixf(matView);
 	}
@@ -1277,7 +1573,8 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 			DELETE_LIST(lineList[i]);
 	}
 	if (deletePoly) DELETE_LIST(polyList);
-	DELETE_LIST(selectList);
+    DELETE_LIST(aabbList);
+    DELETE_LIST(selectList);
 	DELETE_LIST(selectList2);
     DELETE_LIST(selectList3);
     DELETE_LIST(selectHighlightList);
@@ -1578,6 +1875,13 @@ void Geometry::BuildSelectList() {
 
 }
 
+void Geometry::BuildAABBList() {
+    aabbList = glGenLists(1);
+    glNewList(aabbList, GL_COMPILE);
+    DrawAABB();
+    glEndList();
+}
+
 void Geometry::BuildVolumeFacetList() {
     polyList = glGenLists(1);
     glNewList(polyList, GL_COMPILE);
@@ -1638,7 +1942,7 @@ void Geometry::BuildGLList() {
 		}
 		glEndList();
 	}
-
+    BuildAABBList();
 	BuildVolumeFacetList();
 	BuildNonPlanarList();
 	BuildSelectList();

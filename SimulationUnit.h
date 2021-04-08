@@ -9,7 +9,7 @@
 #include "SMP.h"
 #include "Buffer_shared.h"
 #include "../src/Simulation/Particle.h"
-#include <../src/GeometrySimu.h>
+#include "../src/GeometrySimu.h"
 
 namespace MFSim {
     class Particle;

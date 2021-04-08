@@ -97,6 +97,7 @@ protected:
 	void BuildSelectList();
 	void BuildNonPlanarList();
 	void BuildVolumeFacetList();
+    void BuildAABBList();
 
 	float getMaxDistToCamera(InterfaceFacet* f);
 	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs);
@@ -310,7 +311,8 @@ protected:
 	GLMATERIAL arrowMaterial;
 	GLint lineList[MAX_SUPERSTR]; // Compiled geometry (wire frame)
 	GLint polyList;               // Compiled geometry (polygon)
-	GLint selectList;             // Compiled geometry (selection)
+    GLint aabbList;               // Compiled geometry (polygon)
+    GLint selectList;             // Compiled geometry (selection)
 	GLint selectList2;            // Compiled geometry (selection with offset)
 	GLint selectList3;            // Compiled geometry (no offset,hidden visible)
 	GLint selectHighlightList;            // Compiled geometry (no offset,hidden visible)
@@ -351,4 +353,6 @@ protected:
 		// Texture scaling
 		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif
+
+    void DrawAABB();
 };

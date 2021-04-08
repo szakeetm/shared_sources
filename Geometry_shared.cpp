@@ -62,7 +62,8 @@ extern SynRad*mApp;
 Geometry::Geometry() {
 	facets.clear();
 	polyList = 0;
-	selectList = 0;
+    aabbList = 0;
+    selectList = 0;
 	selectList2 = 0;
 	selectList3 = 0;
     selectHighlightList = 0;

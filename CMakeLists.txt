@@ -409,7 +409,7 @@ project(${PROJECT_NAME} CXX)
 add_library(${PROJECT_NAME} STATIC
         ${SIM_FILES}
         ${HELPER_FILES}
-        )
+        AABB.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
