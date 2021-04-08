@@ -1236,7 +1236,8 @@ if( showVolume || showTexture ) {
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
-	geom->DrawAABB();
+    /*glCallList(geom->aabbList);
+	geom->DrawAABB();*/
 	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered

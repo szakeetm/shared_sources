@@ -588,6 +588,117 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 
 }
 
+void Geometry::DrawAABBNode(AABBNODE* node, int level) {
+    if(node->facets.size() <= 1) return;
+
+    if(level == 2) {
+        const auto &bbox = node->bb;
+        /*glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_BLEND);
+        glDisable(GL_CULL_FACE);*/
+        if (mApp->antiAliasing) {
+            glEnable(GL_LINE_SMOOTH);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+        }
+
+        glPushAttrib(GL_LINE_BIT);
+        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + level - 1)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + level - 2)) : 0.2f,
+                std::min(1.0f, (level + 1) * 0.1f));
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+
+        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + level - 1)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + level - 2)) : 0.2f,
+                std::min(1.0f, (level + 1) * 0.1f + 0.3f));
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.4f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.4f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.4f,
+                std::min(1.0f, (level + 1) * 0.1f + 0.5f));
+
+        glLineWidth(3.0f);
+        glLineStipple(1, 0x0101);
+        glEnable(GL_LINE_STIPPLE);
+        glBegin(GL_LINE_STRIP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glDisable(GL_LINE_STIPPLE);
+
+        glPopAttrib();
+        //glLineWidth(1.0f);
+
+        if (mApp->antiAliasing) {
+            glDisable(GL_BLEND);
+            glDisable(GL_LINE_SMOOTH);
+        }
+    }
+
+    if(level < 3) {
+        if(node->left) DrawAABBNode(node->left, level+1);
+        if(node->right) DrawAABBNode(node->right, level+1);
+    }
+
+}
+
 void Geometry::DrawAABB() {
     if(!mApp->worker.model.structures.empty()) {
         std::vector<std::vector<SubprocessFacet*>> facetPointers;
@@ -609,142 +720,14 @@ void Geometry::DrawAABB() {
         // Build all AABBTrees
         size_t maxDepth=0;
         AABBNODE* tree;
+        // TODO: only works with one level so far
         for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-            auto& structure = mApp->worker.model.structures[s];
-            if(structure.aabbTree)
-                structure.aabbTree.reset();
             tree = BuildAABBTree(facetPointers[s], 0, maxDepth);
         }
 
         if(tree) {
-            auto bb = tree->bb;
+            DrawAABBNode(tree, 0);
 
-            glDisable(GL_TEXTURE_2D);
-            glDisable(GL_LIGHTING);
-            glDisable(GL_BLEND);
-            glDisable(GL_CULL_FACE);
-
-            glPointSize(15.0f);
-            glColor3f(1.0f, 0.2f, 0.2f);
-
-            glBegin(GL_POINTS);
-            glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-            glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-            glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-            glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-            glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-            glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-            glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-            glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-            glEnd();
-
-            if(tree->left) {
-                auto bb = tree->left->bb;
-
-                glPointSize(10.0f);
-                glColor3f(0.2f, 0.9f, 0.5f);
-
-                glBegin(GL_POINTS);
-                glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                glEnd();
-
-                if(tree->left->left) {
-                    auto bb = tree->left->left->bb;
-
-                    glPointSize(5.0f);
-                    glColor3f(0.9f, 0.3f, 0.5f);
-
-                    glBegin(GL_POINTS);
-                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                    glEnd();
-                }
-
-                if(tree->left->right) {
-                    auto bb = tree->left->right->bb;
-
-                    glPointSize(3.0f);
-                    glColor3f(0.7f, 0.3f, 0.4f);
-
-                    glBegin(GL_POINTS);
-                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                    glEnd();
-                }
-            }
-
-            if(tree->right) {
-                auto bb = tree->right->bb;
-
-                glPointSize(7.0f);
-                glColor3f(0.2f, 0.7f, 0.4f);
-
-                glBegin(GL_POINTS);
-                glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                glEnd();
-
-                if(tree->right->left) {
-                    auto bb = tree->right->left->bb;
-
-                    glPointSize(5.0f);
-                    glColor3f(0.2f, 0.5f, 0.9f);
-
-                    glBegin(GL_POINTS);
-                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                    glEnd();
-                }
-
-                if(tree->right->right) {
-                    auto bb = tree->right->right->bb;
-
-                    glPointSize(3.0f);
-                    glColor3f(0.2f, 0.4f, 0.7f);
-
-                    glBegin(GL_POINTS);
-                    glVertex3d(bb.min.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.min.y, bb.max.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.min.z);
-                    glVertex3d(bb.min.x, bb.max.y, bb.max.z);
-                    glVertex3d(bb.max.x, bb.max.y, bb.min.z);
-                    glVertex3d(bb.max.x, bb.min.y, bb.max.z);
-                    glEnd();
-                }
-            }
             /*glLineWidth(3);
             glColor4f(0.937f, 0.957f, 1.0f, 0.98f);    //metro light blue
             glBegin(GL_LINE_LOOP);
@@ -781,7 +764,6 @@ void Geometry::DrawAABB() {
             glVertex3d(bb.min.x, bb.max.y, bb.max.z);
             glVertex3d(bb.min.x, bb.max.y, bb.min.z);
             glEnd();*/
-
         }
         delete tree; // pointer unnecessary because of make_shared
     }
@@ -1509,9 +1491,8 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			}
 		}
 
-        // Selectable in white
-        glColor3f(1.0f, 0.0f, 0.0f);
         glCallList(aabbList);
+        //DrawAABB();
 
 		// Restore default matrix
 		glLoadMatrixf(matView);
@@ -1550,7 +1531,6 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		InterfaceFacet *f = facets[i];
 		f->RenderSelectedElem();
 	}
-
 }
 
 void Geometry::RenderSemiTransparent(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
@@ -1925,7 +1905,11 @@ void Geometry::BuildNonPlanarList() {
 
 void Geometry::UpdateSelection() {
 
-	DeleteGLLists();
+	//DeleteGLLists();
+    DELETE_LIST(selectList);
+    DELETE_LIST(selectList2);
+    DELETE_LIST(selectList3);
+    DELETE_LIST(selectHighlightList);
 	BuildSelectList();
 
 }

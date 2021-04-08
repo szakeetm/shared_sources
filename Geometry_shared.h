@@ -355,4 +355,6 @@ protected:
 #endif
 
     void DrawAABB();
+
+	void DrawAABBNode(AABBNODE *node, int level);
 };
