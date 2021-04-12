@@ -11,6 +11,7 @@ add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(imgui)
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -117,6 +118,8 @@ set(INTERFACE_FILES
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
         Interface/VertexCoordinates.cpp
+        Interface/ImguiWindow.cpp
+        Interface/ImguiMenu.cpp
 
         ASELoader.cpp
         File.cpp
@@ -366,6 +369,8 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
+
+target_link_libraries(${PROJECT_NAME}  PUBLIC imgui)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

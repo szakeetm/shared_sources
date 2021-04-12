@@ -30,6 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
+
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -76,7 +77,7 @@ class ParticleLogger;
 class ConvergencePlotter;
 
 class Geometry;
-
+class ImguiWindow;
 /*
 typedef struct {
 	GLLabel     *name;
@@ -223,6 +224,7 @@ typedef struct {
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
+#define MENU_IMGUI                1002
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
@@ -372,7 +374,7 @@ public:
 	// Selections
 	void SelectSelection(size_t v);
 	void AddSelection(const SelectionGroup& s);
-	void AddSelection();
+	void AddSelection(const std::string &selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);

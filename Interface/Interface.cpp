@@ -92,6 +92,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/FormatHelper.h" //unit formatting
 
 #include "../../src/versionId.h"
+#include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
@@ -199,6 +200,8 @@ Interface::Interface() {
     manualUpdate = nullptr;
     particleLogger = nullptr;
     convergencePlotter = nullptr;
+
+    imWnd = nullptr;
 
     m_strWindowTitle = appTitle;
     wnd->SetBackgroundColor(212, 208, 200);
@@ -989,6 +992,7 @@ void Interface::OneTimeSceneInit_shared_post() {
     menu->Add("About");
     menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
     menu->GetSubMenu("About")->Add("Check for updates...", MENU_UPDATE);
+    menu->GetSubMenu("About")->Add("ImGUI", MENU_IMGUI);
 
     ClearFacetParams();
     LoadConfig();
@@ -1513,9 +1517,15 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_LOADSEL:
                     LoadSelection();
                     return true;
-                case MENU_SELECTION_ADDNEW:
-                    AddSelection();
+                case MENU_SELECTION_ADDNEW: {
+                    std::stringstream tmp_ss;
+                    tmp_ss << "Selection #" << (selections.size() + 1);
+                    char *selectionName = GLInputBox::GetInput(tmp_ss.str().c_str(), "Selection name",
+                                                               "Enter selection name");
+                    if (selectionName)
+                        AddSelection(selectionName);
                     return true;
+                }
                 case MENU_SELECTION_CLEARALL:
                     if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL,
                                               GLDLG_ICONINFO) == GLDLG_OK) {
@@ -1760,6 +1770,18 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     }
                     manualUpdate->Refresh();
                     manualUpdate->SetVisible(true);
+                    return true;
+                }
+                case MENU_IMGUI: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    else{
+                        imWnd->destruct();
+                        delete imWnd;
+                        imWnd = nullptr;
+                    }
                     return true;
                 }
             }
@@ -2018,15 +2040,11 @@ void Interface::OverWriteSelection(size_t idOvr) {
     RebuildSelectionMenus();
 }
 
-void Interface::AddSelection() {
-    Geometry *geom = worker.GetGeometry();
-    std::stringstream tmp;
-    tmp << "Selection #" << (selections.size() + 1);
-    char *selectionName = GLInputBox::GetInput(tmp.str().c_str(), "Selection name", "Enter selection name");
-    if (!selectionName) return;
+void Interface::AddSelection(const std::string &selectionName) {
+    if (selectionName.empty()) return;
 
     SelectionGroup newSelection;
-    newSelection.selection = geom->GetSelectedFacets();
+    newSelection.selection = worker.GetGeometry()->GetSelectedFacets();
     newSelection.name = selectionName;
     selections.push_back(newSelection);
     RebuildSelectionMenus();
@@ -2783,6 +2801,11 @@ int Interface::FrameMove() {
         SDL_Delay(60); //was 60
     }
     */
+
+
+    /*if(imWin) {
+        imWin->renderSingle();
+    }*/
 
     double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!

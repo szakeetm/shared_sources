@@ -17,6 +17,7 @@ class GLWindow;
 //#include "GLFont.h"
 #include <string>
 
+class ImguiWindow;
 class GLApplication {
 
 protected:
@@ -89,6 +90,7 @@ public:
 
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
+    ImguiWindow  *imWnd;
 
 //#endif
 
