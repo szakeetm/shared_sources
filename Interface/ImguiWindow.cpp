@@ -734,6 +734,30 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
 
 }
 
+static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb) {
+    ImGui::PushStyleVar(
+            ImGuiStyleVar_WindowMinSize,
+            ImVec2(400.0f,0.0f)); // Lift normal size constraint, however the presence of
+    // a menu-bar will give us the minimum height we want.
+
+    ImGui::Begin(
+            "AABB viewer", show_aabb,
+            ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool
+
+    ImGui::PopStyleVar(1);
+
+    //ImGui::DragInt2("Show AABB level", mApp->showLevelAABB, 1.0f, -1, 10);
+    //ImGui::SliderInt2("Show AABB level", mApp->showLevelAABB, -1, 10);
+    ImGui::DragIntRange2("Show AABB level", &mApp->showLevelAABB[0], &mApp->showLevelAABB[1], 1.0f, -1, 10);
+    ImGui::Checkbox("Show left  branches", &mApp->showBranchSide[0]);
+    ImGui::Checkbox("Show right branches", &mApp->showBranchSide[1]);
+    ImGui::Checkbox("Show AABB leaves", &mApp->showAABBLeaves);
+    ImGui::Checkbox("Reverse Expansion", &mApp->reverseExpansion);
+
+    if (ImGui::Button("Apply aabb view"))
+        redrawAabb = true;
+}
+
 void ImguiWindow::renderSingle() {
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
@@ -746,6 +770,7 @@ void ImguiWindow::renderSingle() {
         bool nbProcChanged = false;
         bool recalcOutg = false;
         bool changeDesLimit = false;
+        bool redrawAabb = false;
         static int nbProc = mApp->worker.GetProcNumber();
 
 
@@ -807,6 +832,11 @@ void ImguiWindow::renderSingle() {
             ImGui::End();
         }
 
+        if (show_aabb) {
+            ShowAABB(mApp, &show_aabb, redrawAabb);
+            ImGui::End();
+        }
+
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
@@ -838,6 +868,9 @@ void ImguiWindow::renderSingle() {
             }
         } else if (changeDesLimit) {
             mApp->worker.ChangeSimuParams(); // Sync with subprocesses
+        }
+        else if(redrawAabb){
+            mApp->worker.GetGeometry()->BuildGLList();
         }
     }
 }

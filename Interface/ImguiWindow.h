@@ -25,6 +25,8 @@ protected:
     // Our state
     bool show_demo_window{false};
     bool show_global_settings{true};
+    bool show_aabb{true};
+
     ImVec4 clear_color;
 
     static void restartProc(int nbProc, MolFlow *mApp);

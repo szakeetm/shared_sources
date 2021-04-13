@@ -589,27 +589,89 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 }
 
 void Geometry::DrawAABBNode(AABBNODE* node, int level) {
-    if(node->facets.size() <= 1) return;
+    const int max_level = 8;
+    if(node->facets.size() <= 1 && !mApp->showAABBLeaves) return;
 
-    if(level == 2) {
-        const auto &bbox = node->bb;
+    if(mApp->showLevelAABB[0] == -1 || ((mApp->showLevelAABB[0] <= level) && (level <= mApp->showLevelAABB[1]))) {
+        auto bbox = node->bb;
+        auto delta = this->bb.max - this->bb.min;
+        bbox.Expand((mApp->reverseExpansion ? -0.0005 : 0.0005)*delta*level);
         /*glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
         glDisable(GL_CULL_FACE);*/
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
         if (mApp->antiAliasing) {
             glEnable(GL_LINE_SMOOTH);
             glEnable(GL_BLEND);
+            glEnable(GL_ALPHA_TEST);
+            glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
         }
+
+
+        // begin transparent sides
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + 0.15f));
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+        // end transparent sides
 
         glPushAttrib(GL_LINE_BIT);
         glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
         glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + level - 1)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + level - 2)) : 0.2f,
-                std::min(1.0f, (level + 1) * 0.1f));
+                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
+                std::min(1.0f, (level * 0.5f) + 0.1f));
 
         glBegin(GL_LINE_LOOP);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
@@ -640,28 +702,14 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
         glBegin(GL_LINES);
         glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
         glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
-        glEnd();
-
-        glBegin(GL_POLYGON);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
-        glEnd();
-
-        glBegin(GL_POLYGON);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
         glEnd();
 
         glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
         glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + level - 1)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + level - 2)) : 0.2f,
-                std::min(1.0f, (level + 1) * 0.1f + 0.3f));
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.02f) + 0.15f));
 
         glBegin(GL_POINTS);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
@@ -669,10 +717,10 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
         glEnd();
 
         glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.4f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.4f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.4f,
-                std::min(1.0f, (level + 1) * 0.1f + 0.5f));
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.05f) + 0.4f));
 
         glLineWidth(3.0f);
         glLineStipple(1, 0x0101);
@@ -687,14 +735,17 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
         //glLineWidth(1.0f);
 
         if (mApp->antiAliasing) {
+            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
             glDisable(GL_LINE_SMOOTH);
         }
+        glDepthMask(GL_TRUE);
     }
 
-    if(level < 3) {
-        if(node->left) DrawAABBNode(node->left, level+1);
-        if(node->right) DrawAABBNode(node->right, level+1);
+    if(level < max_level) {
+        if(node->left && mApp->showBranchSide[0]) DrawAABBNode(node->left, level+1);
+        if(node->right && mApp->showBranchSide[1]) DrawAABBNode(node->right, level+1);
     }
 
 }

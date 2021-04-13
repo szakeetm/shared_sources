@@ -87,12 +87,27 @@ public:
 
 	Vector3d min;
 	Vector3d max;
+
+    void Expand(const double amount)          {
+        auto& bb = *this;
+        bb.min.x -= amount;   bb.min.y -= amount;   bb.min.z -= amount;
+        bb.max.x += amount;   bb.max.y += amount;   bb.max.z += amount;
+    }
+
+    void Expand(const Vector3d& amount)          {
+        auto& bb = *this;
+        bb.min.x -= amount.x;   bb.min.y -= amount.y;   bb.min.z -= amount.z;
+        bb.max.x += amount.x;   bb.max.y += amount.y;   bb.max.z += amount.z;
+    }
+
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(CEREAL_NVP(min), CEREAL_NVP(max));
 	}
 } ;
+
+
 
 Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
