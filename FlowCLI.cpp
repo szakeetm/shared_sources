@@ -42,6 +42,15 @@ struct MolflowData{
     std::vector<Parameter> parameters; //Time-dependent parameters
 };
 
+std::string getTimepointString() {
+    auto time_point = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+    char s[256];
+    struct tm *p = localtime(&now_c);
+    strftime(s, 256, "%F_%T", p);
+    return s;
+}
+
 int main(int argc, char** argv) {
     std::cout << molflowCliLogo << std::endl;
 
@@ -56,10 +65,9 @@ int main(int argc, char** argv) {
     // Get autosave file name
     std::string autoSave = Initializer::getAutosaveFile();
 
-    std::cout << "Commencing simulation for " << Settings::simDuration << " seconds from "<< globState.globalHits.globalHits.nbDesorbed << " desorptions." << std::endl;
 
     //simManager.ReloadHitBuffer();
-    simManager.IncreasePriority();
+    //simManager.IncreasePriority();
     try {
         simManager.StartSimulation();
     }
@@ -67,6 +75,8 @@ int main(int argc, char** argv) {
         std::cerr << "[ERROR] Starting simulation: " << e.what() << std::endl;
         return 1;
     }
+
+    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     Chronometer simTimer;
     simTimer.Start();
@@ -126,12 +136,12 @@ int main(int argc, char** argv) {
         }
     } while(!endCondition);
     simTimer.Stop();
+    elapsedTime = simTimer.Elapsed();
 
     // Terminate simulation
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
-
-    std::cout << "Simulation finished!" << std::endl << std::flush;
+    printf("[%s][%.0lfs] Simulation finished!\n", getTimepointString().c_str(), elapsedTime);
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
         std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
