@@ -315,6 +315,32 @@ int SimulationManager::InitSimUnits() {
 }
 
 /*!
+ * @brief Creates Simulation Units and waits for their ready status
+ * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
+ */
+int SimulationManager::InitSimulation(SimulationModel *model, GlobalSimuState *globState) {
+    model->m.lock();
+
+    // Prepare simulation unit
+    std::cout << "[LoadGeom] Forwarding model to simulation units!" << std::endl;
+    ResetSimulations();
+    ForwardSimModel(model);
+    ForwardGlobalCounter(globState, nullptr);
+
+    bool validLoad = LoadSimulation();
+    model->m.unlock();
+
+    if(validLoad){
+        std::string errString = "Failed to send geometry to sub process:\n";
+        errString.append(GetErrorDetails());
+        throw std::runtime_error(errString);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Wait until all SimulationUnits are in procStatus or reach another endstate (error, done)
  * @param procStatus Process Status that should be waited for
  * @return 0 if wait is successful

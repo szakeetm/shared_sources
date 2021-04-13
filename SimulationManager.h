@@ -89,6 +89,8 @@ public:
 
     int InitSimUnits();
 
+    int InitSimulation(SimulationModel *model, GlobalSimuState *globState);
+
     int KillAllSimUnits();
 
     int ResetSimulations();
