@@ -746,13 +746,12 @@ static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb) {
 
     ImGui::PopStyleVar(1);
 
-    //ImGui::DragInt2("Show AABB level", mApp->showLevelAABB, 1.0f, -1, 10);
-    //ImGui::SliderInt2("Show AABB level", mApp->showLevelAABB, -1, 10);
-    ImGui::DragIntRange2("Show AABB level", &mApp->showLevelAABB[0], &mApp->showLevelAABB[1], 1.0f, -1, 10);
-    ImGui::Checkbox("Show left  branches", &mApp->showBranchSide[0]);
-    ImGui::Checkbox("Show right branches", &mApp->showBranchSide[1]);
-    ImGui::Checkbox("Show AABB leaves", &mApp->showAABBLeaves);
-    ImGui::Checkbox("Reverse Expansion", &mApp->reverseExpansion);
+    ImGui::DragIntRange2("Show AABB level", &mApp->aabbVisu.showLevelAABB[0], &mApp->aabbVisu.showLevelAABB[1], 1.0f, -1, 10);
+    ImGui::SliderFloat("AABB alpha", &mApp->aabbVisu.alpha, 0.0f, 1.0f);
+    ImGui::Checkbox("Show left  branches", &mApp->aabbVisu.showBranchSide[0]);
+    ImGui::Checkbox("Show right branches", &mApp->aabbVisu.showBranchSide[1]);
+    ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
+    ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
 
     if (ImGui::Button("Apply aabb view"))
         redrawAabb = true;

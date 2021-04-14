@@ -589,13 +589,13 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 }
 
 void Geometry::DrawAABBNode(AABBNODE* node, int level) {
-    const int max_level = 8;
-    if(node->facets.size() <= 1 && !mApp->showAABBLeaves) return;
+    const int max_level = (mApp->aabbVisu.showLevelAABB[1] == -1) ? 64 : mApp->aabbVisu.showLevelAABB[1];
+    if(node->facets.size() <= 1 && !mApp->aabbVisu.showAABBLeaves) return;
 
-    if(mApp->showLevelAABB[0] == -1 || ((mApp->showLevelAABB[0] <= level) && (level <= mApp->showLevelAABB[1]))) {
+    if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
         auto bbox = node->bb;
         auto delta = this->bb.max - this->bb.min;
-        bbox.Expand((mApp->reverseExpansion ? -0.0005 : 0.0005)*delta*level);
+        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
         /*glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
@@ -619,7 +619,7 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
                 (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
                 (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
                 (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + 0.15f));
+                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBegin(GL_POLYGON);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
@@ -665,6 +665,26 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
         glEnd();
         // end transparent sides
 
+        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.05f) + 0.4f));
+
+        glLineWidth(3.0f);
+
         glPushAttrib(GL_LINE_BIT);
         glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
         glColor4f(
@@ -704,25 +724,6 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
         glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
         glEnd();
 
-        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.02f) + 0.15f));
-
-        glBegin(GL_POINTS);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
-        glEnd();
-
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.05f) + 0.4f));
-
-        glLineWidth(3.0f);
         glLineStipple(1, 0x0101);
         glEnable(GL_LINE_STIPPLE);
         glBegin(GL_LINE_STRIP);
@@ -744,8 +745,8 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
     }
 
     if(level < max_level) {
-        if(node->left && mApp->showBranchSide[0]) DrawAABBNode(node->left, level+1);
-        if(node->right && mApp->showBranchSide[1]) DrawAABBNode(node->right, level+1);
+        if(node->left && mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(node->left, level+1);
+        if(node->right && mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(node->right, level+1);
     }
 
 }
