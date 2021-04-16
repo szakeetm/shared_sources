@@ -570,16 +570,16 @@ if(WIN32)
     include(ExternalProject)
     ExternalProject_Add(ziplib
             URL ${CMAKE_SOURCE_DIR}/src_shared/wbenny-ziplib-176e4b6d51fc
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/ziplib_build
+            PREFIX ${CMAKE_BINARY_DIR}/ziplib_build
             BUILD_IN_SOURCE TRUE
             CONFIGURE_COMMAND ""
             BUILD_COMMAND msbuild.exe .\\ZipLib.sln /p:Configuration=Release /p:Platform=x64
             INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
             INSTALL_COMMAND
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/ZipLib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/lzma.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/zlib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/bzip2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/ZipLib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/lzma.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/zlib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/bzip2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
     )
 endif()
 
