@@ -1,3 +1,17 @@
 .vs
 .DS_Store
 out/
+
+obj/
+Obj/
+**/obj/
+**/Obj/
+
+*.obj
+*.o
+**/*.obj
+**/*.o
+*.tlog
+
+**/*.vcxproj
+**/*.vcxproj*
