@@ -13,5 +13,4 @@ Obj/
 **/*.o
 *.tlog
 
-**/*.vcxproj
-**/*.vcxproj*
+**/*.vcxproj?*
