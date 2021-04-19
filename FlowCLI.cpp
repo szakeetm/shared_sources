@@ -154,6 +154,7 @@ int main(int argc, char** argv) {
 
     // Export results
     if(Settings::inputFile != Settings::outputFile){
+        if(Settings::outputFile.empty()) Settings::outputFile = "out_"+ Settings::inputFile;
         // Copy full file description first, in case outputFile is different
         std::filesystem::copy_file(Settings::inputFile, Settings::outputFile,
                                    std::filesystem::copy_options::overwrite_existing);
