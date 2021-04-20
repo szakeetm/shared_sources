@@ -25,5 +25,7 @@ bool beginsWith(std::string const& fullString, std::string const& beginning);
 std::string space2underscore(std::string text);
 bool iequals(std::string a, std::string b);
 
-
+namespace Util {
+    std::string getTimepointString();
+}
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

@@ -11,6 +11,7 @@
 #include <iterator>
 
 #include <GLApp/GLTypes.h>
+#include <chrono>
 
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
 template <class T>
@@ -162,4 +163,15 @@ bool iequals(std::string str1, std::string str2)
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
     return str1.size() == str2.size()
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
+}
+
+namespace Util {
+    std::string getTimepointString(){
+        auto time_point = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+        char s[256];
+        struct tm *p = localtime(&now_c);
+        strftime(s, 256, "%F_%T", p);
+        return s;
+    }
 }
