@@ -12,7 +12,9 @@
 
 #include <GLApp/GLTypes.h>
 #include <chrono>
-
+#if defined(WIN32) || defined(WIN64)
+#include <ctime> // for time_t
+#endif
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
 template <class T>
 T stringToNumber(std::string const& s, bool returnDefValOnErr) {
