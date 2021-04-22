@@ -28,7 +28,17 @@ Vector2d::Vector2d(const double &u, const double &v) {
 		this->v = v;
 }
 
-Vector3d::Vector3d() {}
+Vector3d::Vector3d() {
+    this->x = 0.0;
+    this->y = 0.0;
+    this->z = 0.0;
+}
+
+Vector3d::Vector3d(const double &val) {
+    this->x = val;
+    this->y = val;
+    this->z = val;
+}
 
 Vector3d::Vector3d(const double &x, const double &y,const double &z) {
 		this->x = x;
@@ -109,6 +119,18 @@ Vector3d & Vector3d::operator+=(const Vector3d & rhs)
 {
 	*this = *this + rhs;
 	return *this;
+}
+
+const double & Vector3d::operator[] (int dim) const{
+    if(dim == 0){
+        return x;
+    }
+    else if(dim == 1){
+        return y;
+    }
+    else {
+        return z;
+    }
 }
 
 double Vector2d::Norme() const {

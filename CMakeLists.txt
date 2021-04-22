@@ -146,7 +146,14 @@ set(SIM_FILES
         Vector.cpp
         SimulationManager.cpp
         SimulationController.cpp
-        FacetData.cpp FacetData.h)
+        FacetData.cpp
+        FacetData.h
+        RayTracing/BVH.cpp
+        RayTracing/BVH.h
+        RayTracing/Ray.h
+        RayTracing/Primitive.h
+        BoundingBox.cpp
+        BoundingBox.h RayTracing/RTHelper.h)
 
 set(HELPER_FILES
         Helper/StringHelper.cpp
