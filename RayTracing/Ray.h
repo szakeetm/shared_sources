@@ -8,6 +8,7 @@
 #include "Vector.h"
 
 struct SubProcessFacetTempVar;
+class MersenneTwister;
 
 struct HitChain{
     size_t hitId;
@@ -36,6 +37,7 @@ public:
     //const Medium *medium;
 
     HitChain* hitChain;
+    MersenneTwister* rng;
 };
 
 #endif //MOLFLOW_PROJ_RAY_H

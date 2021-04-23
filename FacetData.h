@@ -9,15 +9,32 @@
 #include <RayTracing/Primitive.h>
 #include "Vector.h"
 #include "Buffer_shared.h"
+#include <Random.h>
 
 class Surface {
 public:
-    bool IsHardHit(const Ray &r) { return false; };
+    virtual bool IsHardHit(const Ray &r) { return true; };
+};
+
+class TransparentSurface : public Surface{
+public:
+    bool IsHardHit(const Ray &r) override {
+        return false;
+    };
+};
+
+class AlphaSurface : public Surface{
+    double opacity{1.0};
+public:
+    AlphaSurface(double opacity) : opacity(opacity){}
+    bool IsHardHit(const Ray &r) override {
+        return (r.rng->rnd() < opacity);
+    };
 };
 
 struct Facet : public RTPrimitive {
-    Facet() : RTPrimitive(), sh(0){ surf = new Surface(); };
-    Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = new Surface(); };
+    Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
+    Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
     ~Facet(){
         if (surf) {
             delete surf;

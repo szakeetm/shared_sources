@@ -311,8 +311,8 @@ bool BVHAccel::Intersect(Ray &ray) const {
             if (node->nPrimitives > 0) {
                 // Intersect ray with primitives in leaf BVH node
                 for (int i = 0; i < node->nPrimitives; ++i) {
-                    // Do not check last collided facet
-                    if ((node->primitivesOffset + i) == ray.lastIntersected)
+                    // Do not check last collided facet to prevent self intersections
+                    if (primitives[node->primitivesOffset + i]->globalId == ray.lastIntersected)
                         continue;
                     else if (primitives[node->primitivesOffset + i]->Intersect(ray)) {
                         hit = true;

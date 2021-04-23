@@ -62,21 +62,26 @@ bool Facet::Intersect(Ray &ray) const {
                                 // Hard hit
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
-                                    ray.lastIntersected = 0; //this->sh.globalId;
-                                    ray.hitChain->next = new HitChain();
-                                    ray.hitChain = ray.hitChain->next;
+                                    //ray.lastIntersected = this->globalId;
+                                    if(ray.hitChain->hit){
+                                        ray.hitChain->next = new HitChain();
+                                        ray.hitChain = ray.hitChain->next;
+                                    }
                                     ray.hitChain->hit = new SubProcessFacetTempVar();
                                     ray.hitChain->hit->isHit = true;
                                     ray.hitChain->hit->colU = u;
                                     ray.hitChain->hit->colV = v;
+                                    ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;
                                 }
                             }
                             else {
-                                ray.hitChain->next = new HitChain();
-                                ray.hitChain = ray.hitChain->next;
+                                if(ray.hitChain->hit){
+                                    ray.hitChain->next = new HitChain();
+                                    ray.hitChain = ray.hitChain->next;
+                                }
                                 ray.hitChain->hit = new SubProcessFacetTempVar();
-                                ray.hitChain->hit->isHit = true;
+                                ray.hitChain->hit->isHit = false;
                                 ray.hitChain->hit->colU = u;
                                 ray.hitChain->hit->colV = v;
                                 ray.hitChain->hit->colDistTranspPass = d;
