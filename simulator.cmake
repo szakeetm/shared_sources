@@ -28,56 +28,6 @@ find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 if(NOT MSVC)
-
-    if(APPLE)
-        #link to self-build sdl shared lib
-        target_link_libraries(${PROJECT_NAME} PRIVATE "-framework AppKit")
-        #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
-
-        FIND_PACKAGE(SDL2 REQUIRED)
-        Message("")
-        Message( STATUS "FINDING SDL2" )
-        IF (${SDL2_FOUND})
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
-            Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
-        ELSE()
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( FATAL_ERROR "SDL2 NOT FOUND" )
-        ENDIF()
-        #add_library( libSDL2 SHARED IMPORTED GLOBAL)
-        #get_filename_component(ABS_LINK_DIR_2 "${LINK_DIR_2}" REALPATH)
-        #set_target_properties( libSDL2 PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_2}/libSDL2-2.0.dylib)
-        #target_link_libraries(${PROJECT_NAME} libSDL2) # from ./lib/
-
-    else()
-        # Use the package PkgConfig to detect GTK+ headers/library files
-        FIND_PACKAGE(PkgConfig REQUIRED)
-        PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
-
-        # Setup CMake to use GTK+, tell the compiler where to look for headers
-        # and to the linker where to look for libraries
-        INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
-        LINK_DIRECTORIES(${GTK3_LIBRARY_DIRS})
-
-        # Add other flags to the compiler
-        ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
-
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK3_LIBRARIES})
-
-        find_package(X11 REQUIRED)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${X11_INCLUDE_DIRS})
-    endif()
-
-    find_package(OpenGL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
-
-    find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-
-    find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
-
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
@@ -87,23 +37,10 @@ if(NOT MSVC)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    #GSLCBLAS or BLAS?
-    #find_package(GSLCBLAS REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${GSLCBLAS_INCLUDE_DIRS})
 
-    #find_package(stdc++fs REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
-
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
-
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
-    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
 
     #for shared memory
     find_library(LIBRT rt)
