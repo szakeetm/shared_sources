@@ -44,6 +44,14 @@ private:
     const SplitMethod splitMethod;
     std::vector<std::shared_ptr<Primitive>> primitives;
     LinearBVHNode *nodes = nullptr;
+
+    int SplitEqualCounts(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
+
+    int SplitMiddle(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                    AxisAlignedBoundingBox &centroidBounds);
+
+    int SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                 AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
 };
 
 
