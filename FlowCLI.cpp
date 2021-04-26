@@ -16,6 +16,7 @@
 #include <omp.h>
 #include <sstream>
 #include <Helper/Chronometer.h>
+#include <Helper/StringHelper.h>
 
 #if defined(USE_MPI)
 #include <mpi.h>
@@ -89,15 +90,6 @@ struct MolflowData{
     std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
     std::vector<Parameter> parameters; //Time-dependent parameters
 };
-
-std::string getTimepointString() {
-    auto time_point = std::chrono::system_clock::now();
-    std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
-    char s[256];
-    struct tm *p = localtime(&now_c);
-    strftime(s, 256, "%F_%T", p);
-    return s;
-}
 
 int main(int argc, char** argv) {
 
@@ -221,7 +213,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
+    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     Chronometer simTimer;
     simTimer.Start();
@@ -236,17 +228,17 @@ int main(int argc, char** argv) {
             endCondition = globState.globalHits.globalHits.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
 
         if(endCondition){
-            printf("--- Trans Prob: %zu -> %e\n", globState.globalHits.globalHits.nbDesorbed, globState.facetStates[1].momentResults[0].hits.nbAbsEquiv / globState.globalHits.globalHits.nbDesorbed);
             std::stringstream outFile;
-            outFile << "out_" << model.otfParams.desorptionLimit <<".xml";
+            outFile << Settings::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
+                 std::filesystem::path(Settings::outputFile).filename().string();
             try {
                 std::filesystem::copy_file(Settings::inputFile, outFile.str(), std::filesystem::copy_options::overwrite_existing);
+                FlowIO::WriterXML writer;
+                writer.SaveSimulationState(outFile.str(), &model, globState);
             } catch(std::filesystem::filesystem_error& e) {
-                std::cout << "Could not copy file: " << e.what() << '\n';
+                std::cout << "Could not create file: " << e.what() << '\n';
             }
 
-            FlowIO::WriterXML writer;
-            writer.SaveSimulationState(outFile.str(), &model, globState);
             // if there is a next des limit, handle that
             if(!Settings::desLimit.empty()) {
                 model.otfParams.desorptionLimit = Settings::desLimit.front();
@@ -286,7 +278,7 @@ int main(int argc, char** argv) {
     // Terminate simulation
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
-    printf("[%s][%.0lfs] Simulation finished!\n", getTimepointString().c_str(), elapsedTime);
+    printf("[%s][%.0lfs] Simulation finished!\n", Util::getTimepointString().c_str(), elapsedTime);
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
         std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
@@ -383,16 +375,30 @@ int main(int argc, char** argv) {
 
     if(MFMPI::world_rank == 0){
         // Export results
-        char outname[256]{};
-        sprintf(outname, "out%d_%s", MFMPI::world_rank, std::filesystem::path(Settings::outputFile).filename().c_str());
-        if(Settings::inputFile != outname){
+        //  a) Use existing autosave as base
+        //  b) Create copy of input file(TODO: yet w/o sweep)
+        // and simply update simulation results
+        if(std::filesystem::exists(autoSave)){
+            std::filesystem::rename(autoSave, Settings::outputPath+"/"+Settings::outputFile);
+        }
+        else if(Settings::inputFile != Settings::outputFile){     // TODO: Difficult to check when with complex paths
             // Copy full file description first, in case outputFile is different
-            printf("[%d] attempting to copy file %s to %s\n", MFMPI::world_rank, std::filesystem::relative(Settings::inputFile).c_str(), outname);
-            std::filesystem::copy_file( std::filesystem::relative(Settings::inputFile), outname,
-                                        std::filesystem::copy_options::overwrite_existing);
+            std::filesystem::copy_file(Settings::inputFile, Settings::outputPath+"/"+Settings::outputFile,
+                                       std::filesystem::copy_options::overwrite_existing);
         }
         FlowIO::WriterXML writer;
-        writer.SaveSimulationState(outname, &model, globState);
+        pugi::xml_document newDoc;
+        newDoc.load_file((Settings::outputPath+"/"+Settings::outputFile).c_str());
+        writer.SaveGeometry(newDoc, &model, false, true);
+        writer.SaveSimulationState(Settings::outputPath+"/"+Settings::outputFile, &model, globState);
+    }
+
+    // Cleanup
+    // a) tmp folder if it is not our output folder
+    if(std::filesystem::path(Settings::outputPath).relative_path().compare(std::filesystem::path("tmp"))
+       && std::filesystem::path(Settings::outputPath).parent_path().compare(std::filesystem::path("tmp"))){
+        //Settings::tmpfile_dir
+        std::filesystem::remove_all("tmp");
     }
 
     return 0;
