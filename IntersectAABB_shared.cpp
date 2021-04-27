@@ -97,7 +97,7 @@ void AABBNODE::ComputeBB() {
 
 }
 
-AABBNODE *BuildAABBTree(const std::vector<std::shared_ptr<SubprocessFacet>> &facets, const size_t depth, size_t& maxDepth) {
+AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size_t depth, size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;
 	double m;
@@ -114,8 +114,8 @@ AABBNODE *BuildAABBTree(const std::vector<std::shared_ptr<SubprocessFacet>> &fac
 	if (nbLeft >= MINBB && nbRight >= MINBB) {
 
 		// We can cut
-		std::vector<std::shared_ptr<SubprocessFacet>> lList(nbLeft);
-		std::vector<std::shared_ptr<SubprocessFacet>> rList(nbRight);
+		std::vector<SubprocessFacet*> lList(nbLeft);
+		std::vector<SubprocessFacet*> rList(nbRight);
 		switch (planeType) {
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
@@ -294,8 +294,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 
 	if (node.left == nullptr || node.right == nullptr) { // Leaf
 
-		for (const auto &fac : node.facets) {
-            auto f = fac.get();
+		for (const auto &f : node.facets) {
 			// Do not check last collided facet
 			if (f == lastHitBefore)
 				continue;
