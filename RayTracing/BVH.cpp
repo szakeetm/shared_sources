@@ -210,6 +210,13 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
 
 }
 
+BVHAccel::~BVHAccel(){
+    if(nodes) {
+        delete[] nodes;
+        nodes = nullptr;
+    }
+};
+
 BVHBuildNode *BVHAccel::recursiveBuild(
                                        std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
                                        int end, int *totalNodes,
@@ -359,3 +366,23 @@ bool BVHAccel::Intersect(Ray &ray) const {
     }
     return hit;
 }
+
+BVHAccel::BVHAccel(BVHAccel &&src)  noexcept : maxPrimsInNode(src.maxPrimsInNode) , splitMethod(src.splitMethod){
+    primitives = std::move(src.primitives);
+    nodes = src.nodes;
+    src.nodes = nullptr;
+    bb = src.bb;
+}
+
+BVHAccel::BVHAccel(const BVHAccel &src) noexcept : maxPrimsInNode(src.maxPrimsInNode) , splitMethod(src.splitMethod){
+    if(nodes)
+        exit(44);
+}
+
+BVHAccel &BVHAccel::operator=(const BVHAccel &src) noexcept {
+    if(nodes)
+        exit(44);
+
+    return *this;
+}
+

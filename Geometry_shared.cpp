@@ -4553,7 +4553,7 @@ void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
     sh.nbVertex = vertices.size();
 }
 
-void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, Worker* work) {
+void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sFacets, Worker* work) {
     //Facets
     try{
         facets.resize(sFacets.size(), nullptr);
@@ -4563,7 +4563,8 @@ void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, 
     }
 
     size_t index = 0;
-    for(auto& fac : sFacets) {
+    for(auto& sFac : sFacets) {
+		auto& fac = *sFac;
         facets[index] = new InterfaceFacet(fac.indices.size());
         auto& intFacet = facets[index];
         intFacet->indices = fac.indices;

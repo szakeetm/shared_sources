@@ -27,8 +27,13 @@ public:
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
              int maxPrimsInNode = 1,
              SplitMethod splitMethod = SplitMethod::SAH);
+    BVHAccel(BVHAccel && src) noexcept;
+    BVHAccel(const BVHAccel & src) noexcept;
+
+    BVHAccel& operator=(const BVHAccel & src) noexcept;
+    ~BVHAccel() override;
+
     bool Intersect(Ray &ray) const;
-    ~BVHAccel() override{if(nodes)free(nodes);};
 
 private:
     void ComputeBB() override;

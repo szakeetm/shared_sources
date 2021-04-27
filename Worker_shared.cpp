@@ -351,7 +351,8 @@ void Worker::CalculateTextureLimits(){
         lim.min.steady_state = lim.min.moments_only = HITMAX;
     }
 
-    for (const auto &subF : model.facets) {
+    for (const auto &sub : model.facets) {
+        auto& subF = *sub;
         if (subF.sh.isTextured) {
             for (size_t m = 0; m < ( 1 + model.tdParams.moments.size()); m++) {
                 {
