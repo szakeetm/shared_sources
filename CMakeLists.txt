@@ -154,7 +154,7 @@ set(HELPER_FILES
         Helper/GraphicsHelper.cpp
         Helper/Chronometer.cpp
         Helper/FormatHelper.cpp
-        )
+        Helper/ConsoleLogger.h)
 
 set(GL_FILES
         GLApp/GLApp.cpp

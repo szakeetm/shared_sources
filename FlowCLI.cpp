@@ -13,10 +13,10 @@
 #include "GeometrySimu.h"
 #include "Initializer.h"
 #include "Helper/MathTools.h"
-#include <omp.h>
 #include <sstream>
 #include <Helper/Chronometer.h>
 #include <Helper/StringHelper.h>
+#include <Helper/ConsoleLogger.h>
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _             ___ _    ___
@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
     }
 
     printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
+    Log::console_msg_master(1,"[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     Chronometer simTimer;
     simTimer.Start();
