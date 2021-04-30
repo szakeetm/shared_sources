@@ -454,13 +454,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_RESET: {
-                DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
-                resetControls();
-                auto* sim = simulation;
-                //for (auto &sim : *simulation)
-                    sim->ResetSimulation();
-                SetReady(loadOk);
+                Reset();
                 break;
             }
             case COMMAND_EXIT: {
@@ -633,5 +627,16 @@ int SimulationController::Start() {
         SetErrorSub("No geometry loaded");
         ClearCommand();
     }
+    return 0;
+}
+
+int SimulationController::Reset() {
+    DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
+    SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+    resetControls();
+    auto *sim = simulation;
+    sim->ResetSimulation();
+    SetReady(loadOk);
+
     return 0;
 }

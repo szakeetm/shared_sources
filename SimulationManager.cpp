@@ -454,8 +454,10 @@ int SimulationManager::ResetSimulations() {
         if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     }
-    else{
-        //simController.front().
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
     }
     return 0;
 }
