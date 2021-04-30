@@ -2,6 +2,12 @@
 // Created by pascal on 4/21/21.
 //
 
+/*
+ * BVH code based on pbrt-v3
+ * Copyright (c) 1998-2015, Matt Pharr, Greg Humphreys, and Wenzel Jakob.
+ */
+
+
 #include <BoundingBox.h>
 #include "BVH.h"
 #include "Ray.h"
@@ -131,7 +137,7 @@ int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
                 b1 = AxisAlignedBoundingBox::Union(b1, buckets[j].bounds);
                 count1 += buckets[j].count;
             }
-            cost[i] = 1.f + (count0 * b0.SurfaceArea() +
+            cost[i] = 0.5f + (count0 * b0.SurfaceArea() +
                              count1 * b1.SurfaceArea()) / bounds.SurfaceArea();
         }
         //<<Find bucket to split at that minimizes SAH metric>>
