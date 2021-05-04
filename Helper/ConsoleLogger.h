@@ -5,10 +5,15 @@
 #ifndef MOLFLOW_PROJ_CONSOLELOGGER_H
 #define MOLFLOW_PROJ_CONSOLELOGGER_H
 
-#define verbosity 3
+#define verbosity 0
 
 namespace Log {
-    bool master = true;
+
+    template<typename... P>
+    void console_error(const char * message, const P&... fmt){
+        fprintf(stderr, message, fmt...);
+    }
+
     template<typename... P>
     void console_msg(int level, const char * message, const P&... fmt){
         if (verbosity >= level) {
@@ -18,7 +23,7 @@ namespace Log {
 
     template<typename... P>
     void console_msg_master(int level, const char * message, const P&... fmt){
-        if (master && verbosity >= level) {
+        if (1 && verbosity >= level) {
 
             printf(message, fmt...);
         }

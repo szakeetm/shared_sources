@@ -19,29 +19,20 @@
 #include <Helper/ConsoleLogger.h>
 
 static constexpr const char* molflowCliLogo = R"(
-  __  __     _  __ _             ___ _    ___
- |  \/  |___| |/ _| |_____ __ __/ __| |  |_ _|
- | |\/| / _ \ |  _| / _ \ V  V / (__| |__ | |
- |_|  |_\___/_|_| |_\___/\_/\_/ \___|____|___|
+  __  __     _  __ _
+ |  \/  |___| |/ _| |_____ __ __
+ | |\/| / _ \ |  _| / _ \ V  V /
+ |_|  |_\___/_|_| |_\___/\_/\_/
     )";
 
-
-
-struct MolflowData{
-    // Geometry
-    WorkerParams wp;
-    GeomProperties sh;
-    OntheflySimulationParams ontheflyParams;
-
-    std::vector<Vector3d>   vertices3;        // Vertices
-    std::vector<SuperStructure> structures; //They contain the facets
-    std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
-    std::vector<std::vector<std::pair<double, double>>> IDs; //integrated distribution function for each time-dependent desorption type
-    std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
-    std::vector<double> moments;      //time values (seconds) when a simulation state is measured
-    std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
-    std::vector<Parameter> parameters; //Time-dependent parameters
-};
+/*static constexpr const char* molflowCliLogo = R"(
+ __
+ \ \      __  __     _  __ _
+  \ \    |  \/  |___| |/ _| |_____ __ __
+  / /    | |\/| / _ \ |  _| / _ \ V  V /
+ /_/_____|_|  |_\___/_|_| |_\___/\_/\_/
+   |_____|
+    )";*/
 
 int main(int argc, char** argv) {
     std::cout << molflowCliLogo << std::endl;
