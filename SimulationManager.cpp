@@ -536,15 +536,19 @@ const char *SimulationManager::GetErrorDetails() {
     strcpy(err, "");
 
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
-        char tmp[512];
+        char tmp[512]{'\0'};
         size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo.subProcInfo[i].procId, prStates[state],
+            sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
                     procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo.subProcInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[Thread #%zd] %s %s\n", i, prStates[state]);
         }
-        strncat(err, tmp, 512);
+        strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
+        if(strlen(err) >= 1024) {
+            err[1023] = '\0';
+            break;
+        }
     }
     return err;
 }

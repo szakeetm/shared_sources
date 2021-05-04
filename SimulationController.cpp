@@ -310,6 +310,9 @@ int SimulationController::SetState(size_t state, const char *status, bool change
         }
     }
 
+    if(state == PROCESS_ERROR){
+        procInfo->masterCmd = PROCESS_WAIT;
+    }
     return 0;
 }
 
@@ -485,7 +488,8 @@ bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Loading simulation");
 
-    if(!simulation->SanityCheckModel()) {
+    auto sane = simulation->SanityCheckModel(false);
+    if(!sane.first) {
         SetState(PROCESS_STARTING, "Loading simulation");
         bool loadError = false;
 
@@ -537,6 +541,7 @@ bool SimulationController::Load() {
     }
     else {
         loadOk = false;
+        SetState(PROCESS_ERROR, sane.second->c_str());
     }
     SetReady(loadOk);
 
@@ -557,7 +562,8 @@ bool SimulationController::UpdateParams() {
 int SimulationController::Start() {
 
     // Check simulation model and geometry one last time
-    if(simulation->SanityCheckModel()){
+    auto sane = simulation->SanityCheckModel(true);
+    if(sane.first){
         loadOk = false;
     }
 
@@ -567,7 +573,10 @@ int SimulationController::Start() {
     }
 
     if(!loadOk) {
-        SetState(PROCESS_ERROR, GetSimuStatus());
+        if(sane.second)
+            SetState(PROCESS_ERROR, sane.second->c_str());
+        else
+            SetState(PROCESS_ERROR, GetSimuStatus());
         return 1;
     }
 
