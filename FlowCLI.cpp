@@ -57,7 +57,10 @@ int main(int argc, char** argv) {
 
 
     if(Initializer::initFromArgv(argc, argv, &simManager, &model)){
-        exit(41);
+#if defined(USE_MPI)
+        MPI_Finalize();
+#endif
+        return 41;
     }
 
 #if defined(USE_MPI)
@@ -65,7 +68,10 @@ int main(int argc, char** argv) {
 #endif
 
     if(Initializer::initFromFile(&simManager, &model, &globState)){
-        exit(42);
+#if defined(USE_MPI)
+        MPI_Finalize();
+#endif
+        return 42;
     }
     size_t oldHitsNb = globState.globalHits.globalHits.nbMCHit;
     size_t oldDesNb = globState.globalHits.globalHits.nbDesorbed;
@@ -82,8 +88,11 @@ int main(int argc, char** argv) {
         simManager.StartSimulation();
     }
     catch (std::runtime_error& e) {
-        Log::console_error("[ERROR] Starting simulation: %s\n",e.what());
-        return 1;
+        Log::console_error("Starting simulation: %s\n",e.what());
+#if defined(USE_MPI)
+        MPI_Finalize();
+#endif
+        return 43;
     }
 
     Chronometer simTimer;
@@ -155,10 +164,11 @@ int main(int argc, char** argv) {
 #ifdef USE_MPI
     fflush(stdout);
     MPI_Barrier(MPI_COMM_WORLD);
-    Log::console_msg_master(1, "\n%-7s %-16s %-20s %-20s %-20s %-20s %-20s %-20s\n",
+    Log::console_msg_master(1, "\n%-6s %-14s %-20s %-20s %-20s %-20s %-20s %-20s\n",
                             "Node#", "Time",
                             "#Hits (run)", "#Hits (total)","Hit/sec",
                             "#Des (run)", "#Des (total)","Des/sec");
+    Log::console_msg_master(1, "%s\n",std::string(6+14+20+20+20+20+20+20,'-').c_str());
     if(!MFMPI::world_rank) fflush(stdout);
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -166,7 +176,7 @@ int main(int argc, char** argv) {
     //TODO: Send output to master node
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
-        Log::console_msg(1,"%-7d %-16.2lf %-20zu %-20zu %-20.2lf %-20zu %-20zu %-20.2lf\n",
+        Log::console_msg(1,"%-6d %-14.2lf %-20zu %-20zu %-20.2lf %-20zu %-20zu %-20.2lf\n",
                MFMPI::world_rank, elapsedTime,
                globState.globalHits.globalHits.nbMCHit - oldHitsNb, globState.globalHits.globalHits.nbMCHit,
                (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
@@ -189,17 +199,15 @@ int main(int argc, char** argv) {
     if(MFMPI::world_rank != 0){
         return 0;
     }
+    Log::console_msg_master(1, "%s\n",std::string(6+14+20+20+20+20+20+20,'=').c_str());
 #endif //USE_MPI
 
-    Log::console_msg(1,"Total after sum up hits: %zu\n", globState.globalHits.globalHits.nbMCHit);
     if(elapsedTime > 1e-4) {
-        Log::console_msg(1,"[%d][%lf sec] Hit %zu (%zu) : %lf Hit/sec\n",
-                         MFMPI::world_rank, elapsedTime,
+        Log::console_msg(1,"%-6s %-14.2lf %-20zu %-20zu %-20.2lf %-20zu %-20zu %-20.2lf\n",
+                         "x", elapsedTime,
                          globState.globalHits.globalHits.nbMCHit - oldHitsNb, globState.globalHits.globalHits.nbMCHit,
                          (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
-                         (elapsedTime));
-        Log::console_msg(1,"[%d][%lf sec] Des %zu (%zu) : %lf Des/sec\n",
-                         MFMPI::world_rank, elapsedTime,
+                         (elapsedTime),
                          globState.globalHits.globalHits.nbDesorbed - oldDesNb, globState.globalHits.globalHits.nbDesorbed,
                          (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
                          (elapsedTime));
