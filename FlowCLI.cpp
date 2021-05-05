@@ -48,8 +48,7 @@ int main(int argc, char** argv) {
     MFMPI::mpi_initialize();
 #endif
 
-    if(MFMPI::world_rank == 0)
-        std::cout << molflowCliLogo << std::endl;
+    Log::console_msg_master(0, "%s\n", molflowCliLogo);
 
     SimulationManager simManager{};
     simManager.interactiveMode = true;
@@ -65,7 +64,7 @@ int main(int argc, char** argv) {
     MFMPI::mpi_transfer_simu();
 #endif
 
-    if(Initializer::initFromFile(argc, argv, &simManager, &model, &globState)){
+    if(Initializer::initFromFile(&simManager, &model, &globState)){
         exit(42);
     }
     size_t oldHitsNb = globState.globalHits.globalHits.nbMCHit;
@@ -77,17 +76,15 @@ int main(int argc, char** argv) {
 
     //simManager.ReloadHitBuffer();
     //simManager.IncreasePriority();
-    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
+    Log::console_msg_master(1,"[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     try {
         simManager.StartSimulation();
     }
     catch (std::runtime_error& e) {
-        std::cerr << "[ERROR] Starting simulation: " << e.what() << std::endl;
+        Log::console_error("[ERROR] Starting simulation: %s\n",e.what());
         return 1;
     }
-
-    Log::console_msg_master(1,"[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     Chronometer simTimer;
     simTimer.Start();
@@ -110,7 +107,7 @@ int main(int argc, char** argv) {
                 FlowIO::WriterXML writer;
                 writer.SaveSimulationState(outFile.str(), &model, globState);
             } catch(std::filesystem::filesystem_error& e) {
-                std::cout << "Could not create file: " << e.what() << '\n';
+                Log::console_error("Warning: Could not create file: %s\n", e.what());
             }
 
             // if there is a next des limit, handle that
@@ -119,25 +116,26 @@ int main(int argc, char** argv) {
                 Settings::desLimit.pop_front();
                 simManager.ForwardOtfParams(&model.otfParams);
                 endCondition = false;
-                std::cout << " Handling next des limit " << model.otfParams.desorptionLimit << std::endl;
+                Log::console_msg_master(1, " Handling next des limit %z\n", model.otfParams.desorptionLimit);
+
                 try {
                     ProcessSleep(1000);
                     simManager.StartSimulation();
                 }
                 catch (std::runtime_error& e) {
-                    std::cerr << "ERROR: Starting simulation: " << e.what() << std::endl;
+                    Log::console_error("ERROR: Starting simulation: %s\n", e.what());
                     endCondition = true;
                 }
             }
         }
         else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
-            printf("[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
+            Log::console_msg_master(1,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
             FlowIO::WriterXML writer;
             writer.SaveSimulationState(autoSave, &model, globState);
         }
         else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
             if(Settings::simDuration > 0){
-                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", (double) Settings::simDuration - elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
+                Log::console_msg_master(1,"[%.0lfs / %lf] %llu Hit : %e Hit/s\n", (double) Settings::simDuration - elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
             }
         }
 
@@ -152,18 +150,34 @@ int main(int argc, char** argv) {
     // Terminate simulation
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
-    printf("[%d][%s] Simulation finished!\n", MFMPI::world_rank, Util::getTimepointString().c_str());
+    Log::console_msg(1,"[%d][%s] Simulation finished!\n", MFMPI::world_rank, Util::getTimepointString().c_str());
+
+#ifdef USE_MPI
+    fflush(stdout);
+    MPI_Barrier(MPI_COMM_WORLD);
+    Log::console_msg_master(1, "\n%-7s %-16s %-20s %-20s %-20s %-20s %-20s %-20s\n",
+                            "Node#", "Time",
+                            "#Hits (run)", "#Hits (total)","Hit/sec",
+                            "#Des (run)", "#Des (total)","Des/sec");
+    if(!MFMPI::world_rank) fflush(stdout);
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+    //TODO: Send output to master node
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
-        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
-                << " (" << globState.globalHits.globalHits.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
-                              (elapsedTime) << "Hit/s\n";
-        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
-                << " (" << globState.globalHits.globalHits.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
-                              (elapsedTime) << "Des/s\n";
+        Log::console_msg(1,"%-7d %-16.2lf %-20zu %-20zu %-20.2lf %-20zu %-20zu %-20.2lf\n",
+               MFMPI::world_rank, elapsedTime,
+               globState.globalHits.globalHits.nbMCHit - oldHitsNb, globState.globalHits.globalHits.nbMCHit,
+               (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
+               (elapsedTime),
+               globState.globalHits.globalHits.nbDesorbed - oldDesNb, globState.globalHits.globalHits.nbDesorbed,
+                         (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
+                         (elapsedTime));
     }
 
 #if defined(USE_MPI)
+    MPI_Barrier(MPI_COMM_WORLD);
     MFMPI::mpi_receive_states(model, globState);
     if(MFMPI::world_rank != 0){
         if(std::filesystem::exists(autoSave)){
@@ -177,15 +191,18 @@ int main(int argc, char** argv) {
     }
 #endif //USE_MPI
 
-    printf("Total after sum up hits: %zu\n", globState.globalHits.globalHits.nbMCHit);
+    Log::console_msg(1,"Total after sum up hits: %zu\n", globState.globalHits.globalHits.nbMCHit);
     if(elapsedTime > 1e-4) {
-        // Global result print --> TODO: ()
-        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
-                  << " (" << globState.globalHits.globalHits.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
-                                                                                  (elapsedTime) << "Hit/s\n";
-        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
-                  << " (" << globState.globalHits.globalHits.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
-                                                                                     (elapsedTime) << "Des/s\n";
+        Log::console_msg(1,"[%d][%lf sec] Hit %zu (%zu) : %lf Hit/sec\n",
+                         MFMPI::world_rank, elapsedTime,
+                         globState.globalHits.globalHits.nbMCHit - oldHitsNb, globState.globalHits.globalHits.nbMCHit,
+                         (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
+                         (elapsedTime));
+        Log::console_msg(1,"[%d][%lf sec] Des %zu (%zu) : %lf Des/sec\n",
+                         MFMPI::world_rank, elapsedTime,
+                         globState.globalHits.globalHits.nbDesorbed - oldDesNb, globState.globalHits.globalHits.nbDesorbed,
+                         (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
+                         (elapsedTime));
     }
 
     if(MFMPI::world_rank == 0){

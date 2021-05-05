@@ -5,7 +5,11 @@
 #ifndef MOLFLOW_PROJ_CONSOLELOGGER_H
 #define MOLFLOW_PROJ_CONSOLELOGGER_H
 
-#define verbosity 0
+#include "AppSettings.h"
+#include "FlowMPI.h"
+
+extern int Settings::verbosity;
+extern int MFMPI::world_rank;
 
 namespace Log {
 
@@ -16,17 +20,32 @@ namespace Log {
 
     template<typename... P>
     void console_msg(int level, const char * message, const P&... fmt){
-        if (verbosity >= level) {
+        if (Settings::verbosity >= level) {
+            if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
             printf(message, fmt...);
         }
     }
 
     template<typename... P>
     void console_msg_master(int level, const char * message, const P&... fmt){
-        if (1 && verbosity >= level) {
-
+        if (!MFMPI::world_rank && Settings::verbosity >= level) {
+            if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
             printf(message, fmt...);
         }
+    }
+
+    // First output message, then increase front spacing
+    template<typename... P>
+    void console_header(int level, const char * message, const P&... fmt){
+        console_msg_master(level, message, fmt...);
+        Settings::outputLevel++;
+    }
+
+    // First decrease front spacing, then output message
+    template<typename... P>
+    void console_footer(int level, const char * message, const P&... fmt){
+        Settings::outputLevel--;
+        console_msg_master(level, message, fmt...);
     }
 }
 #endif //MOLFLOW_PROJ_CONSOLELOGGER_H

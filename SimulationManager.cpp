@@ -21,6 +21,7 @@
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
+#include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager() {
     interactiveMode = true;
@@ -322,15 +323,14 @@ int SimulationManager::InitSimulation(SimulationModel *model, GlobalSimuState *g
     model->m.lock();
 
     // Prepare simulation unit
-    std::cout << "[LoadGeom] Forwarding model to simulation units!" << std::endl;
     ResetSimulations();
     ForwardSimModel(model);
     ForwardGlobalCounter(globState, nullptr);
 
-    bool validLoad = LoadSimulation();
+    bool invalidLoad = LoadSimulation();
     model->m.unlock();
 
-    if(validLoad){
+    if(invalidLoad){
         std::string errString = "Failed to send geometry to sub process:\n";
         errString.append(GetErrorDetails());
         throw std::runtime_error(errString);
@@ -570,6 +570,7 @@ const char *SimulationManager::GetErrorDetails() {
         } else {
             sprintf(tmp, "[Thread #%zd] %s %s\n", i, prStates[state]);
         }
+        // Append at most up to character 1024, strncat would otherwise overwrite in memory
         strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
         if(strlen(err) >= 1024) {
             err[1023] = '\0';

@@ -156,6 +156,7 @@ set(HELPER_FILES
         Helper/Chronometer.cpp
         Helper/FormatHelper.cpp
         Helper/ConsoleLogger.h
+        AppSettings.cpp
         )
 
 set(GL_FILES
