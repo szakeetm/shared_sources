@@ -18,6 +18,8 @@
 #include <Helper/StringHelper.h>
 #include <Helper/ConsoleLogger.h>
 
+#include "FlowMPI.h"
+
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _
  |  \/  |___| |/ _| |_____ __ __
@@ -35,13 +37,37 @@ static constexpr const char* molflowCliLogo = R"(
     )";*/
 
 int main(int argc, char** argv) {
-    std::cout << molflowCliLogo << std::endl;
+
+#if defined(WIN32) || defined(__APPLE__)
+    setlocale(LC_ALL, "C");
+#else
+    std::setlocale(LC_ALL, "C");
+#endif
+
+#if defined(USE_MPI)
+    MFMPI::mpi_initialize();
+#endif
+
+    if(MFMPI::world_rank == 0)
+        std::cout << molflowCliLogo << std::endl;
 
     SimulationManager simManager{};
-    simManager.interactiveMode = false;
+    simManager.interactiveMode = true;
     SimulationModel model{};
     GlobalSimuState globState{};
-    Initializer::init(argc, argv, &simManager, &model, &globState);
+
+
+    if(Initializer::initFromArgv(argc, argv, &simManager, &model)){
+        exit(41);
+    }
+
+#if defined(USE_MPI)
+    MFMPI::mpi_transfer_simu();
+#endif
+
+    if(Initializer::initFromFile(argc, argv, &simManager, &model, &globState)){
+        exit(42);
+    }
     size_t oldHitsNb = globState.globalHits.globalHits.nbMCHit;
     size_t oldDesNb = globState.globalHits.globalHits.nbDesorbed;
 
@@ -51,6 +77,8 @@ int main(int argc, char** argv) {
 
     //simManager.ReloadHitBuffer();
     //simManager.IncreasePriority();
+    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
+
     try {
         simManager.StartSimulation();
     }
@@ -59,12 +87,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
     Log::console_msg_master(1,"[%s] Commencing simulation for %lu seconds from %lu desorptions.\n", Util::getTimepointString().c_str(), Settings::simDuration, globState.globalHits.globalHits.nbDesorbed);
 
     Chronometer simTimer;
     simTimer.Start();
-    double elapsedTime;
+    double elapsedTime = 0.0;
 
     bool endCondition = false;
     do {
@@ -110,13 +137,13 @@ int main(int argc, char** argv) {
         }
         else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
             if(Settings::simDuration > 0){
-                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", Settings::simDuration-elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
+                printf("[%.0lfs / %lf] %llu Hit : %e Hit/s\n", (double) Settings::simDuration - elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
             }
         }
 
         // Check for potential time end
         if(Settings::simDuration > 0) {
-            endCondition |= elapsedTime >= Settings::simDuration;
+            endCondition |= (elapsedTime >= (double) Settings::simDuration);
         }
     } while(!endCondition);
     simTimer.Stop();
@@ -125,41 +152,67 @@ int main(int argc, char** argv) {
     // Terminate simulation
     simManager.StopSimulation();
     simManager.KillAllSimUnits();
-    printf("[%s][%.0lfs] Simulation finished!\n", Util::getTimepointString().c_str(), elapsedTime);
+    printf("[%d][%s] Simulation finished!\n", MFMPI::world_rank, Util::getTimepointString().c_str());
     if(elapsedTime > 1e-4) {
         // Global result print --> TODO: ()
-        std::cout << "[" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
+        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
                 << " (" << globState.globalHits.globalHits.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
-                              (elapsedTime) << "Hit/s" << std::endl;
-        std::cout << "[" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
+                              (elapsedTime) << "Hit/s\n";
+        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
                 << " (" << globState.globalHits.globalHits.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
-                              (elapsedTime) << "Des/s" << std::endl;
+                              (elapsedTime) << "Des/s\n";
     }
 
-    // Export results
-    //  a) Use existing autosave as base
-    //  b) Create copy of input file(TODO: yet w/o sweep)
-    // and simply update simulation results
-    if(std::filesystem::exists(autoSave)){
-        std::filesystem::rename(autoSave, Settings::outputPath+"/"+Settings::outputFile);
+#if defined(USE_MPI)
+    MFMPI::mpi_receive_states(model, globState);
+    if(MFMPI::world_rank != 0){
+        if(std::filesystem::exists(autoSave)){
+            std::filesystem::remove(autoSave);
+        }
     }
-    else if(Settings::inputFile != Settings::outputFile){     // TODO: Difficult to check when with complex paths
-        // Copy full file description first, in case outputFile is different
-        std::filesystem::copy_file(Settings::inputFile, Settings::outputPath+"/"+Settings::outputFile,
-                                   std::filesystem::copy_options::overwrite_existing);
+    // Finalize the MPI environment.
+    MPI_Finalize();
+    if(MFMPI::world_rank != 0){
+        return 0;
     }
-    FlowIO::WriterXML writer;
-    pugi::xml_document newDoc;
-    newDoc.load_file((Settings::outputPath+"/"+Settings::outputFile).c_str());
-    writer.SaveGeometry(newDoc, &model, false, true);
-    writer.SaveSimulationState(Settings::outputPath+"/"+Settings::outputFile, &model, globState);
+#endif //USE_MPI
+
+    printf("Total after sum up hits: %zu\n", globState.globalHits.globalHits.nbMCHit);
+    if(elapsedTime > 1e-4) {
+        // Global result print --> TODO: ()
+        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Hit " << globState.globalHits.globalHits.nbMCHit - oldHitsNb
+                  << " (" << globState.globalHits.globalHits.nbMCHit << ") : " << (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
+                                                                                  (elapsedTime) << "Hit/s\n";
+        std::cout << "[" << MFMPI::world_rank << "][" << elapsedTime << "s] Des " << globState.globalHits.globalHits.nbDesorbed - oldDesNb
+                  << " (" << globState.globalHits.globalHits.nbDesorbed << ") : " << (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
+                                                                                     (elapsedTime) << "Des/s\n";
+    }
+
+    if(MFMPI::world_rank == 0){
+        // Export results
+        //  a) Use existing autosave as base
+        //  b) Create copy of input file(TODO: yet w/o sweep)
+        // and simply update simulation results
+        if(std::filesystem::exists(autoSave)){
+            std::filesystem::rename(autoSave, Settings::outputPath+"/"+Settings::outputFile);
+        }
+        else if(Settings::inputFile != Settings::outputFile){     // TODO: Difficult to check when with complex paths
+            // Copy full file description first, in case outputFile is different
+            std::filesystem::copy_file(Settings::inputFile, Settings::outputPath+"/"+Settings::outputFile,
+                                       std::filesystem::copy_options::overwrite_existing);
+        }
+        FlowIO::WriterXML writer;
+        pugi::xml_document newDoc;
+        newDoc.load_file((Settings::outputPath+"/"+Settings::outputFile).c_str());
+        writer.SaveGeometry(newDoc, &model, false, true);
+        writer.SaveSimulationState(Settings::outputPath+"/"+Settings::outputFile, &model, globState);
+    }
 
     // Cleanup
     // a) tmp folder if it is not our output folder
     if(std::filesystem::path(Settings::outputPath).relative_path().compare(std::filesystem::path("tmp"))
-        && std::filesystem::path(Settings::outputPath).parent_path().compare(std::filesystem::path("tmp"))){
-        //Settings::tmpfile_dir)
-        std::cout << "NOT TMP DIR: " << Settings::outputPath << std::endl;
+       && std::filesystem::path(Settings::outputPath).parent_path().compare(std::filesystem::path("tmp"))){
+        //Settings::tmpfile_dir
         std::filesystem::remove_all("tmp");
     }
 
