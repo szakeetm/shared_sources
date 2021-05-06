@@ -142,11 +142,6 @@ int main(int argc, char** argv) {
             FlowIO::WriterXML writer;
             writer.SaveSimulationState(autoSave, &model, globState);
         }
-        else if(!Settings::autoSaveDuration && (uint64_t)(elapsedTime)%60==0){
-            if(Settings::simDuration > 0){
-                Log::console_msg_master(1,"[%.0lfs / %lf] %llu Hit : %e Hit/s\n", (double) Settings::simDuration - elapsedTime, elapsedTime, globState.globalHits.globalHits.nbMCHit - oldHitsNb, (double)(globState.globalHits.globalHits.nbMCHit-oldHitsNb)/(elapsedTime));
-            }
-        }
 
         // Check for potential time end
         if(Settings::simDuration > 0) {

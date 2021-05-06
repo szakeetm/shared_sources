@@ -6,11 +6,14 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 
 # First process subdirectories related to external projects
 add_subdirectory(compress)
-add_subdirectory(SDL_SavePNG)
-add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
-add_subdirectory(NativeFileDialog)
 add_subdirectory(TruncatedGaussian)
+
+if(NOT NO_INTERFACE)
+    add_subdirectory(SDL_SavePNG)
+    add_subdirectory(Clipper)
+    add_subdirectory(NativeFileDialog)
+endif()
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -207,7 +210,9 @@ if (APPLE)
     set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
+if(NOT NO_INTERFACE)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
+endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
 if(WIN32)
