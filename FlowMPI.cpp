@@ -4,7 +4,9 @@
 
 #include <Initializer.h>
 #include <fstream>
+#include <filesystem>
 #include <Helper/ConsoleLogger.h>
+#include <ziplib/ZipFile.h>
 #include "FlowMPI.h"
 #include "GeometrySimu.h"
 
@@ -45,14 +47,14 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file to %d.\n", i);
+                    Log::console_msg(4, "Attempt to transfer file %s to node %d.\n", Settings::inputFile.c_str(), i);
 
                     std::ifstream infile;
                     infile.open(Settings::inputFile, std::ios::binary);
                     std::string contents;
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
-                    Log::console_msg(4,"Attempt to write file to %d.\n", i);
+                    Log::console_msg(4,"Attempt to write file to node %d.\n", i);
                     MPI_Send(contents.c_str(), MPI::BYTE.Get_size() * contents.size(), MPI::BYTE, i, 0, MPI_COMM_WORLD);
                 }
 
@@ -76,13 +78,24 @@ namespace MFMPI {
                            number_bytes);
                     MPI_Recv(file_buffer, number_bytes, MPI::BYTE, 0, 0,
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    /*printf("1 dynamically received %d numbers from 0.\n",
-                           number_amount);*/
-                    std::ofstream outfile("workfile.xml");
-                    outfile << file_buffer;
+
+                    // use fallback dir
+                    Settings::outputPath = "tmp"+std::to_string(MFMPI::world_rank)+"/";
+                    try {
+                        std::filesystem::create_directory(Settings::outputPath);
+                    }
+                    catch (std::exception& e){
+                        Settings::outputPath = "./";
+                        Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", Settings::outputPath.c_str());
+                    }
+
+                    auto outputName = Settings::outputPath+"workfile"+std::filesystem::path(Settings::inputFile).extension().string();
+                    std::ofstream outfile(outputName);
+                    outfile.write(file_buffer, number_bytes);
+                    outfile.close();
                     free(file_buffer);
 
-                    Settings::inputFile = "workfile.xml";
+                    Settings::inputFile = outputName;
                 }
             }
         }

@@ -190,6 +190,10 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
     MFMPI::mpi_receive_states(model, globState);
     if(MFMPI::world_rank != 0){
+        // Cleanup all files from nodes tmp path
+        if (Settings::outputPath.find("tmp") != std::string::npos) {
+            std::filesystem::remove_all(Settings::outputPath);
+        }
         if(std::filesystem::exists(autoSave)){
             std::filesystem::remove(autoSave);
         }
