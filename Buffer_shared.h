@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 #include "Vector.h"
+#include "BoundingBox.h"
 #include <vector>
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>

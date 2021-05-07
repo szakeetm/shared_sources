@@ -171,7 +171,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 
 	if (node.left == nullptr || node.right == nullptr) { // Leaf
 
-		for (const auto& f : node.facets) {
+		for (const auto &f : node.facets) {
 			// Do not check last collided facet
 			if (f == lastHitBefore)
 				continue;

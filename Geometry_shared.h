@@ -251,7 +251,7 @@ protected:
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    void InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, Worker* work);
+    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();
