@@ -154,6 +154,8 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
+target_link_libraries(${PROJECT_NAME}  PUBLIC imgui)
+
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################

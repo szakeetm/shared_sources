@@ -758,13 +758,13 @@ void Geometry::DrawAABB() {
         for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
             for(auto& sFac : mApp->worker.model.facets){
                 // TODO: Build structures
-                if (sFac.sh.superIdx == -1) { //Facet in all structures
+                if (sFac->sh.superIdx == -1) { //Facet in all structures
                     for (auto& fp_vec : facetPointers) {
-                        fp_vec.push_back(&sFac);
+                        fp_vec.push_back(sFac.get());
                     }
                 }
                 else {
-                    facetPointers[sFac.sh.superIdx].push_back(&sFac); //Assign to structure
+                    facetPointers[sFac->sh.superIdx].push_back(sFac.get()); //Assign to structure
                 }
             }
         }
@@ -872,13 +872,13 @@ void Geometry::DrawPolys() {
         for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
             for(auto& sFac : mApp->worker.model.facets){
                 // TODO: Build structures
-                if (sFac.sh.superIdx == -1) { //Facet in all structures
+                if (sFac->sh.superIdx == -1) { //Facet in all structures
                     for (auto& fp_vec : facetPointers) {
-                        fp_vec.push_back(&sFac);
+                        fp_vec.push_back(sFac.get());
                     }
                 }
                 else {
-                    facetPointers[sFac.sh.superIdx].push_back(&sFac); //Assign to structure
+                    facetPointers[sFac->sh.superIdx].push_back(sFac.get()); //Assign to structure
                 }
             }
         }

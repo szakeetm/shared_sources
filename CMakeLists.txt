@@ -158,8 +158,10 @@ set(SIM_FILES
         RayTracing/BVH.h
         RayTracing/Ray.h
         RayTracing/Primitive.h
+        AABB.cpp
         BoundingBox.cpp
-        BoundingBox.h RayTracing/RTHelper.h
+        BoundingBox.h
+        RayTracing/RTHelper.h
         )
 
 set(HELPER_FILES
