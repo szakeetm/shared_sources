@@ -607,7 +607,7 @@ public:
 
 #if defined(MOLFLOW)
     double distTraveledTotal_fullHitsOnly;
-	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
+	//TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
 #endif
 
 #if defined(SYNRAD)
@@ -621,17 +621,17 @@ public:
 			CEREAL_NVP(globalHits),               // Global counts (as if the whole geometry was one extra facet)
 			CEREAL_NVP(hitCacheSize),              // Number of valid hits in cache
 			CEREAL_NVP(lastHitIndex),					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-			CEREAL_NVP(hitCache),       // Hit history
+			//CEREAL_NVP(hitCache),       // Hit history
 
 			CEREAL_NVP(lastLeakIndex),		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 			CEREAL_NVP(leakCacheSize),        //Number of valid leaks in the cache
 			CEREAL_NVP(nbLeakTotal),         // Total leaks
-			CEREAL_NVP(leakCache),      // Leak history
+			//CEREAL_NVP(leakCache),      // Leak history
             CEREAL_NVP(distTraveled_total)
 
 #if defined(MOLFLOW)
-            ,CEREAL_NVP(distTraveledTotal_fullHitsOnly),
-			CEREAL_NVP(texture_limits) //Min-max on texture
+            ,CEREAL_NVP(distTraveledTotal_fullHitsOnly)
+            //,CEREAL_NVP(texture_limits) //Min-max on texture
 #endif
 
 #if defined(SYNRAD)
