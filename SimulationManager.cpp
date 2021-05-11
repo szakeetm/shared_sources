@@ -490,8 +490,15 @@ int SimulationManager::ResetSimulations() {
 
 int SimulationManager::ResetHits() {
     isRunning = false;
-    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    }
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
+    }
     return 0;
 }
 
