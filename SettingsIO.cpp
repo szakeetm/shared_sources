@@ -15,6 +15,8 @@
 namespace SettingsIO {
     bool overwrite = false;
     bool isArchive = false;
+    std::string workFile;
+    std::string workPath;
     std::string inputFile;
     std::string inputPath;
     std::string outputFile;
@@ -137,9 +139,13 @@ namespace SettingsIO {
                 Log::console_error("Zip file does not contain a valid geometry file!\n");
                 return 1;
             }
-            SettingsIO::inputFile = parseFileName;
-            Log::console_msg_master(2, "New input file: %s\n", SettingsIO::inputFile.c_str());
+            SettingsIO::workFile = parseFileName;
+            Log::console_msg_master(2, "New input file: %s\n", SettingsIO::workFile.c_str());
         }
+        else {
+            SettingsIO::workFile = SettingsIO::inputFile;
+        }
+        return 0;
     }
 
     //Out

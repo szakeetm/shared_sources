@@ -10,6 +10,8 @@
 #include <vector>
 
 namespace SettingsIO {
+    extern std::string workFile;
+    extern std::string workPath;
     extern std::string inputFile;
     extern std::string inputPath;
     extern std::string outputFile;
