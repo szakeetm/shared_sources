@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
                     .append("desorped_")
                     .concat(std::to_string(model.otfParams.desorptionLimit))
                     .concat("_")
-                    .concat(std::filesystem::path(SettingsIO::outputFile).filename().string());
+                    .concat(std::filesystem::path(SettingsIO::outputFile).filename().string()).string();
             try {
                 std::filesystem::copy_file(SettingsIO::workFile, outFile, std::filesystem::copy_options::overwrite_existing);
                 FlowIO::WriterXML writer;
