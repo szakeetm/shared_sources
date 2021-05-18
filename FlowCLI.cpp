@@ -19,6 +19,7 @@
 #include <Helper/ConsoleLogger.h>
 
 #include "FlowMPI.h"
+#include "SettingsIO.h"
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _
@@ -109,10 +110,10 @@ int main(int argc, char** argv) {
 
         if(endCondition){
             std::stringstream outFile;
-            outFile << Settings::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
-                 std::filesystem::path(Settings::outputFile).filename().string();
+            outFile << SettingsIO::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
+                 std::filesystem::path(SettingsIO::outputFile).filename().string();
             try {
-                std::filesystem::copy_file(Settings::inputFile, outFile.str(), std::filesystem::copy_options::overwrite_existing);
+                std::filesystem::copy_file(SettingsIO::inputFile, outFile.str(), std::filesystem::copy_options::overwrite_existing);
                 FlowIO::WriterXML writer;
                 writer.SaveSimulationState(outFile.str(), &model, globState);
             } catch(std::filesystem::filesystem_error& e) {
@@ -186,8 +187,8 @@ int main(int argc, char** argv) {
     MFMPI::mpi_receive_states(model, globState);
     if(MFMPI::world_rank != 0){
         // Cleanup all files from nodes tmp path
-        if (Settings::outputPath.find("tmp") != std::string::npos) {
-            std::filesystem::remove_all(Settings::outputPath);
+        if (SettingsIO::outputPath.find("tmp") != std::string::npos) {
+            std::filesystem::remove_all(SettingsIO::outputPath);
         }
         if(std::filesystem::exists(autoSave)){
             std::filesystem::remove(autoSave);
@@ -215,30 +216,27 @@ int main(int argc, char** argv) {
     if(MFMPI::world_rank == 0){
         // Export results
         //  a) Use existing autosave as base
-        //  b) Create copy of input file(TODO: yet w/o sweep)
+        //  b) Create copy of input file
+        // update geometry info (in case of param sweep)
         // and simply update simulation results
+        std::string fullOutFile = std::filesystem::path(SettingsIO::outputPath).concat(SettingsIO::outputFile).string();
         if(std::filesystem::exists(autoSave)){
-            std::filesystem::rename(autoSave, Settings::outputPath+"/"+Settings::outputFile);
+            std::filesystem::rename(autoSave, fullOutFile);
         }
-        else if(Settings::inputFile != Settings::outputFile){     // TODO: Difficult to check when with complex paths
+        else if(!SettingsIO::overwrite){
             // Copy full file description first, in case outputFile is different
-            std::filesystem::copy_file(Settings::inputFile, Settings::outputPath+"/"+Settings::outputFile,
+            std::filesystem::copy_file(SettingsIO::inputFile, fullOutFile,
                                        std::filesystem::copy_options::overwrite_existing);
         }
         FlowIO::WriterXML writer;
         pugi::xml_document newDoc;
-        newDoc.load_file((Settings::outputPath+"/"+Settings::outputFile).c_str());
+        newDoc.load_file(fullOutFile.c_str());
         writer.SaveGeometry(newDoc, &model, false, true);
-        writer.SaveSimulationState(Settings::outputPath+"/"+Settings::outputFile, &model, globState);
+        writer.SaveSimulationState(fullOutFile, &model, globState);
     }
 
     // Cleanup
-    // a) tmp folder if it is not our output folder
-    if(std::filesystem::path(Settings::outputPath).relative_path().compare(std::filesystem::path("tmp"))
-       && std::filesystem::path(Settings::outputPath).parent_path().compare(std::filesystem::path("tmp"))){
-        //Settings::tmpfile_dir
-        std::filesystem::remove_all("tmp");
-    }
+    SettingsIO::cleanup_files();
 
     return 0;
 }

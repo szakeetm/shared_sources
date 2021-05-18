@@ -9,6 +9,7 @@
 #include <ziplib/ZipFile.h>
 #include "FlowMPI.h"
 #include "GeometrySimu.h"
+#include "SettingsIO.h"
 
 namespace MFMPI {
     // globals
@@ -47,10 +48,10 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file %s to node %d.\n", Settings::inputFile.c_str(), i);
+                    Log::console_msg(4, "Attempt to transfer file %s to node %d.\n", SettingsIO::inputFile.c_str(), i);
 
                     std::ifstream infile;
-                    infile.open(Settings::inputFile, std::ios::binary);
+                    infile.open(SettingsIO::inputFile, std::ios::binary);
                     std::string contents;
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
@@ -59,7 +60,7 @@ namespace MFMPI {
                 }
 
             } else if (MFMPI::world_rank == i) {
-                bool hasFile[]{false/*!Settings::inputFile.empty()*/};
+                bool hasFile[]{false/*!SettingsIO::inputFile.empty()*/};
                 MPI_Send(hasFile, 1, MPI::BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
@@ -80,22 +81,22 @@ namespace MFMPI {
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
                     // use fallback dir
-                    Settings::outputPath = "tmp"+std::to_string(MFMPI::world_rank)+"/";
+                    SettingsIO::outputPath = "tmp"+std::to_string(MFMPI::world_rank)+"/";
                     try {
-                        std::filesystem::create_directory(Settings::outputPath);
+                        std::filesystem::create_directory(SettingsIO::outputPath);
                     }
                     catch (std::exception& e){
-                        Settings::outputPath = "./";
-                        Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", Settings::outputPath.c_str());
+                        SettingsIO::outputPath = "./";
+                        Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", SettingsIO::outputPath.c_str());
                     }
 
-                    auto outputName = Settings::outputPath+"workfile"+std::filesystem::path(Settings::inputFile).extension().string();
+                    auto outputName = SettingsIO::outputPath+"workfile"+std::filesystem::path(SettingsIO::inputFile).extension().string();
                     std::ofstream outfile(outputName);
                     outfile.write(file_buffer, number_bytes);
                     outfile.close();
                     free(file_buffer);
 
-                    Settings::inputFile = outputName;
+                    SettingsIO::inputFile = outputName;
                 }
             }
         }

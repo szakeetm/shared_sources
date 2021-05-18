@@ -150,6 +150,8 @@ set(SIM_FILES
         SimulationManager.cpp
         SimulationController.cpp
         FacetData.cpp
+
+        SettingsIO.cpp
         )
 
 set(HELPER_FILES
