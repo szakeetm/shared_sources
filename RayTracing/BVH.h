@@ -21,7 +21,8 @@ struct LinearBVHNode;
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
-    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts };
+    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts, MolflowSplit
+    };
 
     // BVHAccel Public Methods
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,

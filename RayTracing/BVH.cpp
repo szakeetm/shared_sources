@@ -268,6 +268,22 @@ BVHBuildNode *BVHAccel::recursiveBuild(
         else {
             //<<Partition primitives based on splitMethod>>
             switch (splitMethod) {
+                case SplitMethod::MolflowSplit: {
+                    // Mix of Middle and EqualCounts
+                    // Find best middle cut (most equal counts) in all dimensions
+                    int tmpMid = 0;
+                    double bestDeviation = 1.0e99;
+                    for(auto itDim : {0,1,2}) {
+                        tmpMid = SplitMiddle(primitiveInfo, start, end, itDim, centroidBounds);
+                        double dev = std::abs((double)tmpMid - (double)((end - start)/2.0 + start));
+                        if(dev < bestDeviation) {
+                            bestDeviation = dev;
+                            mid = tmpMid;
+                            dim = itDim;
+                        }
+                    }
+                    break;
+                }
                 case SplitMethod::Middle: {
                     mid = SplitMiddle(primitiveInfo, start, end, dim, centroidBounds);
                     break;
