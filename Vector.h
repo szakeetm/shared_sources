@@ -59,7 +59,8 @@ public:
 	double Norme() const;
 	Vector3d Normalized() const;
 	Vector3d& operator+=(const Vector3d & rhs);
-    const double& operator[] (int) const;
+    double& operator[] (int);
+	const double& operator[] (int) const;
 
     template<class Archive>
 	void serialize(Archive & archive)

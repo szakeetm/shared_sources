@@ -52,6 +52,10 @@ AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBo
     unionbox.max.z = std::max(bb.max.z, p.z);
     return unionbox;
 }
+Vector3d &AxisAlignedBoundingBox::operator[](int ext) {
+    if(ext == 0) return min;
+    else return max;
+}
 
 const Vector3d &AxisAlignedBoundingBox::operator[](int ext) const {
     if(ext == 0) return min;
@@ -92,4 +96,27 @@ bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir
     if (tzMin > tMin) tMin = tzMin;
     if (tzMax < tMax) tMax = tzMax;
     return (tMin < ray.tMax) && (tMax > 0);
+}
+
+bool AxisAlignedBoundingBox::IntersectP(const Ray &ray, double *hitt0,
+                                   double *hitt1) const {
+    double t0 = 0, t1 = ray.tMax;
+    for (int i = 0; i < 3; ++i) {
+        // Update interval for _i_th bounding box slab
+        double invRayDir = 1 / ray.direction[i];
+        double tNear = (min[i] - ray.origin[i]) * invRayDir;
+        double tFar = (max[i] - ray.origin[i]) * invRayDir;
+
+        // Update parametric interval from slab intersection $t$ values
+        if (tNear > tFar) std::swap(tNear, tFar);
+
+        // Update _tFar_ to ensure robust ray--bounds intersection
+        tFar *= 1 + 2 * gamma(3);
+        t0 = tNear > t0 ? tNear : t0;
+        t1 = tFar < t1 ? tFar : t1;
+        if (t0 > t1) return false;
+    }
+    if (hitt0) *hitt0 = t0;
+    if (hitt1) *hitt1 = t1;
+    return true;
 }
