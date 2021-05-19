@@ -93,7 +93,7 @@ namespace SettingsIO {
                 std::filesystem::create_directory(SettingsIO::workPath);
         } catch (std::exception &e) {
             Log::console_error("Couldn't create directory [ %s ], falling back to "
-                               "binary folder for output files\n",
+                               "tmp folder for output files\n",
                                SettingsIO::workPath.c_str());
             ++err;
 
@@ -131,7 +131,7 @@ namespace SettingsIO {
             }
         }
 
-        return err;
+        return 0;
     }
 
     int initFromZip() {
