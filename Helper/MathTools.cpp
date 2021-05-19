@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring> //strdup
 
 bool IsEqual(const double &a, const double &b, double toleranceRatio) {
-	return fabs(a - b) < Max(1E-99, fabs(a)*toleranceRatio);
+	return std::abs(a - b) < Max(1E-99, Max(std::abs(a),std::abs(b))*toleranceRatio);
 }
 
 size_t IDX(const int& i, const size_t& nb) {

@@ -31,7 +31,7 @@ public:
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
     virtual int ReinitializeParticleLog() = 0;
-    virtual int SanityCheckModel() = 0;
+    virtual std::pair<int, std::optional<std::string>> SanityCheckModel(bool strictCheck) = 0;
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;

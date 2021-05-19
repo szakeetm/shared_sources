@@ -67,6 +67,8 @@ public:
 
     int Start();
     bool Load();
+    int Reset();
+
 protected:
 
     SimulationUnit* simulation;

@@ -21,6 +21,7 @@
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
+#include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager() {
     interactiveMode = true;
@@ -315,6 +316,31 @@ int SimulationManager::InitSimUnits() {
 }
 
 /*!
+ * @brief Creates Simulation Units and waits for their ready status
+ * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
+ */
+int SimulationManager::InitSimulation(SimulationModel *model, GlobalSimuState *globState) {
+    model->m.lock();
+
+    // Prepare simulation unit
+    ResetSimulations();
+    ForwardSimModel(model);
+    ForwardGlobalCounter(globState, nullptr);
+
+    bool invalidLoad = LoadSimulation();
+    model->m.unlock();
+
+    if(invalidLoad){
+        std::string errString = "Failed to send geometry to sub process:\n";
+        errString.append(GetErrorDetails());
+        throw std::runtime_error(errString);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Wait until all SimulationUnits are in procStatus or reach another endstate (error, done)
  * @param procStatus Process Status that should be waited for
  * @return 0 if wait is successful
@@ -454,16 +480,25 @@ int SimulationManager::ResetSimulations() {
         if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     }
-    else{
-        //simController.front().
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
     }
     return 0;
 }
 
 int SimulationManager::ResetHits() {
     isRunning = false;
-    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    }
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
+    }
     return 0;
 }
 
@@ -534,15 +569,20 @@ const char *SimulationManager::GetErrorDetails() {
     strcpy(err, "");
 
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
-        char tmp[512];
+        char tmp[512]{'\0'};
         size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo.subProcInfo[i].procId, prStates[state],
+            sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
                     procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo.subProcInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[Thread #%zd] %s %s\n", i, prStates[state]);
         }
-        strncat(err, tmp, 512);
+        // Append at most up to character 1024, strncat would otherwise overwrite in memory
+        strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
+        if(strlen(err) >= 1024) {
+            err[1023] = '\0';
+            break;
+        }
     }
     return err;
 }
