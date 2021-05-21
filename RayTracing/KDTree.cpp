@@ -94,6 +94,15 @@ struct BoundEdge {
     EdgeType type;
 };
 
+void KdTreeAccel::ComputeBB() {
+    bb = AxisAlignedBoundingBox();
+    if(nodes) {
+        for(auto prim : primitives){
+            bb = AxisAlignedBoundingBox::Union(bb, prim->bb);
+        }
+    }
+}
+
 // KdTreeAccel Method Definitions
 KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p,
                          int isectCost, int traversalCost, double emptyBonus,
@@ -188,7 +197,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     double bestCost = 1.0e99;
     double oldCost = isectCost * double(nPrimitives);
     double totalSA = nodeBounds.SurfaceArea();
-    double invTotalSA = 1 / totalSA;
+    double invTotalSA = 1.0 / totalSA;
     Vector3d d = nodeBounds.max - nodeBounds.min;
 
     // Choose which axis to split along
@@ -199,9 +208,9 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     // Initialize edges for _axis_
     for (int i = 0; i < nPrimitives; ++i) {
         int pn = primNums[i];
-        const AxisAlignedBoundingBox &bounds = allPrimBounds[pn];
-        edges[axis][2 * i] = BoundEdge(bounds.min[axis], pn, true);
-        edges[axis][2 * i + 1] = BoundEdge(bounds.max[axis], pn, false);
+        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
+        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
+        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
     }
 
     // Sort _edges_ for _axis_
@@ -290,7 +299,7 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
     }
 
     // Prepare to traverse kd-tree for ray
-    Vector3d invDir(1 / ray.direction.x, 1 / ray.direction.y, 1 / ray.direction.z);
+    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
     constexpr int maxTodo = 64;
     KdToDo todo[maxTodo];
     int todoPos = 0;
@@ -327,7 +336,7 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
             else if (tPlane < tMin)
                 node = secondChild;
             else {
-                // Enqueue _secondChild_ in todo list
+                // Enqueue _secondChild_ in KDtodo list
                 todo[todoPos].node = secondChild;
                 todo[todoPos].tMin = tPlane;
                 todo[todoPos].tMax = tMax;
@@ -342,18 +351,20 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
                 const std::shared_ptr<Primitive> &p =
                         primitives[node->onePrimitive];
                 // Check one primitive inside leaf node
-                if (p->Intersect(ray)) hit = true;
+                if (p->Intersect(ray))
+                    hit = true;
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
                     int index =
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->Intersect(ray)) hit = true;
+                    if (p->Intersect(ray))
+                        hit = true;
                 }
             }
 
-            // Grab next node to process from todo list
+            // Grab next node to process from kdtodo list
             if (todoPos > 0) {
                 --todoPos;
                 node = todo[todoPos].node;
@@ -364,4 +375,33 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
         }
     }
     return hit;
+}
+
+KdTreeAccel::KdTreeAccel(KdTreeAccel &&src) noexcept : isectCost(src.isectCost),
+                                                       traversalCost(src.traversalCost),
+                                                       maxPrims(src.maxPrims),
+                                                       emptyBonus(src.emptyBonus),
+                                                       primitives(std::move(src.primitives)) {
+    primitives = std::move(src.primitives);
+    nodes = src.nodes;
+    nAllocedNodes = src.nAllocedNodes;
+    nextFreeNode = src.nextFreeNode;
+    src.nodes = nullptr;
+    bb = src.bb;
+}
+
+KdTreeAccel::KdTreeAccel(const KdTreeAccel &src) noexcept : isectCost(src.isectCost),
+                                                            traversalCost(src.traversalCost),
+                                                            maxPrims(src.maxPrims),
+                                                            emptyBonus(src.emptyBonus),
+                                                            primitives(src.primitives) {
+    if(nodes)
+        exit(44);
+}
+
+KdTreeAccel &KdTreeAccel::operator=(const KdTreeAccel &src) noexcept {
+    if(nodes)
+        exit(44);
+
+    return *this;
 }

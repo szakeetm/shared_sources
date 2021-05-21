@@ -154,6 +154,7 @@ set(SIM_FILES
 
         SettingsIO.cpp
 
+        RayTracing/KDTree.h
         RayTracing/KDTree.cpp
         RayTracing/BVH.cpp
         RayTracing/BVH.h
