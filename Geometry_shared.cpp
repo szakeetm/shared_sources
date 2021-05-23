@@ -1875,7 +1875,7 @@ void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &A
 int Geometry::CloneSelectedFacets() { //create clone of selected facets
 	auto selectedFacetIds = GetSelectedFacets();
 	std::vector<bool> isCopied(sh.nbVertex, false); //we keep log of what has been copied to prevent creating duplicates
-	std::vector<InterfaceVertex> newVertices;		//vertices that we create
+	std::vector<size_t> newVertices;		//vertices that we create
 	std::vector<size_t> newIndices(sh.nbVertex);    //which new vertex was created from this old one
 
 	for (const auto& sel : selectedFacetIds) {
@@ -1884,11 +1884,24 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
 			if (!isCopied[vertexId]) {
 				isCopied[vertexId] = true; //mark as copied
 				newIndices[vertexId] = sh.nbVertex + newVertices.size(); //remember clone's index
-				newVertices.emplace_back(vertices3[vertexId]); //create clone
+				newVertices.emplace_back(vertexId); //create clone
 			}
 		}
 	}
 
+	size_t startInd = vertices3.size();
+	try {
+        vertices3.resize(vertices3.size() + newVertices.size());
+    }
+	catch(std::exception& ex){
+	    std::cerr << "[Error] Allocating memory for vertices:\n" << ex.what() << "\n";
+	    return 1;
+	}
+	int newInd = 0;
+	for(auto ind : newVertices){
+        vertices3[startInd] = vertices3[ind];
+        ++startInd;
+    }
 	/*
 	vertices3 = (InterfaceVertex*)realloc(vertices3, (wp.nbVertex + newVertices.size()) * sizeof(InterfaceVertex)); //Increase vertices3 array
 
@@ -1898,7 +1911,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
 	}
 	wp.nbVertex += newVertices.size(); //update number of vertices
 	*/
-	vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
+	//vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
 	sh.nbVertex = vertices3.size();
 
 	try {
