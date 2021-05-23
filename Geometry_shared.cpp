@@ -1677,8 +1677,11 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta ;
 
 	if (translation.Norme()>0.0) {
+		if (copy)
+			if(CloneSelectedFacets()) { //move
+				return;
+			}
 		mApp->changedSinceSave = true;
-		if (copy) CloneSelectedFacets(); //move
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
 		double counter = 1.0;
 
@@ -1720,7 +1723,10 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 
 	if (!mApp->AskToReset(worker)) return undoPoints;
 	int nbSelFacet = 0;
-	if (copy) CloneSelectedFacets();
+	if (copy)
+		if(CloneSelectedFacets()) { //move
+			return undoPoints;
+		}
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	std::vector<bool> alreadyMirrored(sh.nbVertex, false);
 
@@ -1808,7 +1814,10 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 	if (theta != 0.0) {
 		if (!mApp->AskToReset(worker)) return;
-		if (copy) CloneSelectedFacets();
+		if (copy)
+			if(CloneSelectedFacets()) { //move
+				return;
+			}
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
 
 		std::vector<bool> alreadyRotated(sh.nbVertex, false);
@@ -1863,7 +1872,7 @@ void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &A
 	}
 }
 
-void Geometry::CloneSelectedFacets() { //create clone of selected facets
+int Geometry::CloneSelectedFacets() { //create clone of selected facets
 	auto selectedFacetIds = GetSelectedFacets();
 	std::vector<bool> isCopied(sh.nbVertex, false); //we keep log of what has been copied to prevent creating duplicates
 	std::vector<InterfaceVertex> newVertices;		//vertices that we create
@@ -1892,7 +1901,14 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 	vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
 	sh.nbVertex = vertices3.size();
 
-	facets = (Facet **)realloc(facets, (sh.nbFacet + selectedFacetIds.size()) * sizeof(Facet *)); //make space for new facets
+	try {
+		facets = (Facet **) realloc(facets, (sh.nbFacet + selectedFacetIds.size()) *
+											sizeof(Facet * )); //make space for new facets
+	} catch(std::exception& ex){
+		std::cerr << "[Error] Allocating memory for facets:\n"<<ex.what()<<"\n";
+		return 1;
+	}
+
 	for (size_t i = 0; i < selectedFacetIds.size(); i++) {
 		facets[sh.nbFacet + i] = new Facet(facets[selectedFacetIds[i]]->sh.nbIndex); //create new facets
 		facets[sh.nbFacet + i]->CopyFacetProperties(facets[selectedFacetIds[i]], false); //get properties
@@ -1904,6 +1920,8 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 		facets[selectedFacetIds[i]]->selected = false; //Deselect original facets
 	}
 	sh.nbFacet += selectedFacetIds.size();
+
+	return 0;
 }
 
 void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
@@ -2053,7 +2071,10 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 	prgMove->SetVisible(true);
 
 	if (!mApp->AskToReset(worker)) return;
-	if (copy) CloneSelectedFacets();
+	if (copy)
+		if(CloneSelectedFacets()) { //move
+			return;
+		}
 	auto selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	double counter = 1.0;
 	double selected = (double)GetNbSelectedFacets();

@@ -191,7 +191,7 @@ public:
 	void RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void AlignFacets(std::vector<size_t> memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
-	void CloneSelectedFacets();
+	int CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
 	void AddStruct(const char *name,bool deferDrawing=false);
