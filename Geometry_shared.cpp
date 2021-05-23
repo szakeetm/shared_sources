@@ -1686,7 +1686,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 
 		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
-			prgMove->SetProgress(counter / selectedFacets.size());
+			prgMove->SetProgress(counter / (double)selectedFacets.size());
 			for (const auto& ind : facets[sel]->indices) {
 				if (!alreadyMoved[ind]) {
 					vertices3[ind].SetLocation(vertices3[ind] + translation);
@@ -1875,7 +1875,7 @@ void Geometry::CloneSelectedFacets() { //create clone of selected facets
 			if (!isCopied[vertexId]) {
 				isCopied[vertexId] = true; //mark as copied
 				newIndices[vertexId] = sh.nbVertex + newVertices.size(); //remember clone's index
-				newVertices.push_back(InterfaceVertex(vertices3[vertexId])); //create clone
+				newVertices.emplace_back(vertices3[vertexId]); //create clone
 			}
 		}
 	}
@@ -1990,7 +1990,7 @@ void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown
 		if (sel < sh.nbFacet) facets[sel]->selected = !isCtrlDown;
 	}
 	UpdateSelection();
-	if (selectedFacets.size()) mApp->facetList->ScrollToVisible(selectedFacets.back(), 0, true); //in facet list, select the last facet of selection group
+	if (!selectedFacets.empty()) mApp->facetList->ScrollToVisible(selectedFacets.back(), 0, true); //in facet list, select the last facet of selection group
 	mApp->UpdateFacetParams(true);
 }
 
