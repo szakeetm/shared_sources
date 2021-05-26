@@ -192,7 +192,7 @@ public:
 
 	//Outgassing map
 	bool   useOutgassingFile;   //has desorption file for cell elements
-	double outgassingFileRatio; //desorption file's sample/unit ratio
+	double outgassingFileRatioU,outgassingFileRatioV; //desorption file's sample/unit ratio
 	size_t   outgassingMapWidth; //rounded up outgassing file map width
 	size_t   outgassingMapHeight; //rounded up outgassing file map height
 
@@ -296,7 +296,8 @@ public:
 
 			//Outgassing map
 			CEREAL_NVP(useOutgassingFile),   //has desorption file for cell elements
-			CEREAL_NVP(outgassingFileRatio), //desorption file's sample/unit ratio
+			CEREAL_NVP(outgassingFileRatioU), //desorption file's sample/unit ratio U
+			CEREAL_NVP(outgassingFileRatioV), //desorption file's sample/unit ratio V
 			CEREAL_NVP(outgassingMapWidth), //rounded up outgassing file map width
 			CEREAL_NVP(outgassingMapHeight), //rounded up outgassing file map height
 
