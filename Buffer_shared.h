@@ -155,8 +155,8 @@ public:
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)
 	size_t    texHeight;   // Rounded texture resolution (V)
-	double texWidthD;   // Actual texture resolution (U)
-	double texHeightD;  // Actual texture resolution (V)
+	double texWidth_precise;   // Actual texture resolution (U)
+	double texHeight_precise;  // Actual texture resolution (V)
 
 	size_t   hitOffset;      // Hit address offset for this facet
 
@@ -258,8 +258,8 @@ public:
 			// Hit/Abs/Des/Density recording on 2D texture map
 			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)
 			CEREAL_NVP(texHeight),   // Rounded texture resolution (V)
-			CEREAL_NVP(texWidthD),   // Actual texture resolution (U)
-			CEREAL_NVP(texHeightD),  // Actual texture resolution (V)
+			CEREAL_NVP(texWidth_precise),   // Actual texture resolution (U)
+			CEREAL_NVP(texHeight_precise),  // Actual texture resolution (V)
 
 			CEREAL_NVP(hitOffset)      // Hit address offset for this facet
 
