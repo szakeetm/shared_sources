@@ -33,6 +33,69 @@ template int stringToNumber<int>(std::string const& s, bool returnDefValOnErr);
 template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
 template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
 
+void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit) {
+    auto ranges = SplitString(inputString, ',');
+    if (ranges.size() == 0) {
+        throw std::logic_error("Can't parse input");
+    }
+    for (const auto& range : ranges) {
+        auto tokens = SplitString(range, '-');
+        if (!Contains({ 1,2 },tokens.size())) {
+            std::ostringstream tmp;
+            tmp << "Can't parse \"" << range << "\". Input should be a number or a range.";
+            throw std::invalid_argument(tmp.str());
+        }
+        else if (tokens.size() == 1) {
+            //One facet
+            try {
+                int splitId = std::stoi(tokens[0]);
+                std::ostringstream tmp;
+                tmp << "Wrong id " << tokens[0];
+                if (splitId <= 0 || splitId > upperLimit) throw std::invalid_argument(tmp.str());
+                outputIds.push_back(splitId - 1);
+            }
+            catch (std::invalid_argument arg) {
+                std::ostringstream tmp;
+                tmp << "Invalid number " << tokens[0] <<"\n" << arg.what();
+                throw std::invalid_argument(tmp.str());
+            }
+        }
+        else if (tokens.size() == 2) {
+            //Range
+            try {
+                std::ostringstream tmp;
+                int id1 = std::stoi(tokens[0]);
+                if (id1 <= 0 || id1 > upperLimit) {
+                    tmp << "Wrong id " << tokens[0];
+                    throw std::invalid_argument(tmp.str());
+                }
+                int id2 = std::stoi(tokens[1]);
+                if (id2 <= 0 || id2 > upperLimit) {
+                    tmp << "Wrong id " << tokens[1];
+                    throw std::invalid_argument(tmp.str());
+                }
+                if (id2 <= id1) {
+                    tmp << "Invalid range " << id1 << "-" << id2;
+                    throw std::invalid_argument(tmp.str());
+                }
+                size_t oldSize = outputIds.size();
+                outputIds.resize(oldSize + id2 - id1 + 1);
+                std::iota(outputIds.begin() + oldSize, outputIds.end(), id1 - 1);
+            }
+            catch (std::invalid_argument arg) {
+                std::ostringstream tmp;
+                tmp << "Invalid input number " << tokens[0] << "\n" << arg.what();
+                throw std::invalid_argument(tmp.str());
+            }
+            catch (Error& err) {
+                throw std::runtime_error(err.what());
+            }
+        }
+    }
+
+    return;
+}
+
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
     auto ranges = SplitString(inputString, ',');
     if (ranges.size() == 0) {

@@ -15,6 +15,7 @@ extern template int stringToNumber<int>(std::string const& s, bool returnDefValO
 extern template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
 extern template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
 
+void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit);
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets);
 std::string AbbreviateString(const std::string& input, size_t maxLength);
 std::vector<std::string> SplitString(std::string const& input);
