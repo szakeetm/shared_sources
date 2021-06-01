@@ -181,7 +181,7 @@ void Geometry::InitializeGeometry(int facet_number) {
         if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
             // Main facet params
             InterfaceFacet *f = facets[i];
-            SetFacetTexture(i, f->sh.texWidthD / f->sh.U.Norme(), f->sh.texHeightD / f->sh.V.Norme(), f->hasMesh);
+            SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
         }
     }
 
@@ -203,7 +203,7 @@ void Geometry::InitializeMesh() {
         /*double p = (double)i / (double)sh.nbFacet;
         progressDlg->SetProgress(p);*/
         InterfaceFacet *f = facets[i];
-        SetFacetTexture(i, f->sh.texWidthD / f->sh.U.Norme(), f->sh.texHeightD / f->sh.V.Norme(), f->hasMesh);
+        SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
     }
 }
 
@@ -4602,7 +4602,7 @@ void Geometry::InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, 
         intFacet->ogMap = fac.ogMap;
         intFacet->angleMapCache = fac.angleMap.pdf;
 
-        if(intFacet->ogMap.outgassingMapWidth > 0.0 || intFacet->ogMap.outgassingMapHeight > 0.0 || intFacet->ogMap.outgassingFileRatio > 0.0){
+        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0 || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
             intFacet->hasOutgassingFile = true;
         }
 
