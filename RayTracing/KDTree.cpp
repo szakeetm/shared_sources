@@ -350,8 +350,9 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
             if (nPrimitives == 1) {
                 const std::shared_ptr<Primitive> &p =
                         primitives[node->onePrimitive];
+
                 // Check one primitive inside leaf node
-                if (p->Intersect(ray))
+                if (p->globalId != ray.lastIntersected && p->Intersect(ray))
                     hit = true;
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
@@ -359,7 +360,7 @@ bool KdTreeAccel::Intersect(Ray &ray) const {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->Intersect(ray))
+                    if (p->globalId != ray.lastIntersected && p->Intersect(ray))
                         hit = true;
                 }
             }
