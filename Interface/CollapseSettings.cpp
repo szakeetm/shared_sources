@@ -42,7 +42,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #if defined(SYNRAD)
 #include "../src/SynRad.h"
-#include "../src/SpectrumPlotter.h"
+#include "../src/Interface/SpectrumPlotter.h"
 #endif
 
 #if defined(MOLFLOW)
