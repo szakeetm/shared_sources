@@ -157,8 +157,8 @@ public:
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)
 	size_t    texHeight;   // Rounded texture resolution (V)
-	double texWidthD;   // Actual texture resolution (U)
-	double texHeightD;  // Actual texture resolution (V)
+	double texWidth_precise;   // Actual texture resolution (U)
+	double texHeight_precise;  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
@@ -192,6 +192,10 @@ public:
 
 	//Outgassing map
 	bool   useOutgassingFile;   //has desorption file for cell elements
+	double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
+    double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
+    size_t   outgassingMapWidth; //rounded up outgassing file map width
+	size_t   outgassingMapHeight; //rounded up outgassing file map height
 	double totalOutgassing; //total outgassing for the given facet
 
 	AnglemapParams anglemapParams;//Incident angle map
@@ -254,8 +258,8 @@ public:
 			// Hit/Abs/Des/Density recording on 2D texture map
 			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)
 			CEREAL_NVP(texHeight),   // Rounded texture resolution (V)
-			CEREAL_NVP(texWidthD),   // Actual texture resolution (U)
-			CEREAL_NVP(texHeightD)  // Actual texture resolution (V)
+			CEREAL_NVP(texWidth_precise),   // Actual texture resolution (U)
+			CEREAL_NVP(texHeight_precise)  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 								 // Molflow-specific facet parameters
@@ -290,6 +294,10 @@ public:
 
 			//Outgassing map
 			CEREAL_NVP(useOutgassingFile),   //has desorption file for cell elements
+            CEREAL_NVP(outgassingFileRatioU), //desorption file's sample/unit ratio U
+            CEREAL_NVP(outgassingFileRatioV), //desorption file's sample/unit ratio V
+            CEREAL_NVP(outgassingMapWidth), //rounded up outgassing file map width
+            CEREAL_NVP(outgassingMapHeight), //rounded up outgassing file map height
 
 			CEREAL_NVP(totalOutgassing), //total outgassing for the given facet
 
@@ -553,7 +561,7 @@ class FacetHitBuffer {
 public:
     FacetHitBuffer();
     void ResetBuffer();
-    
+
     // Counts
     size_t nbMCHit;               // Number of hits
     size_t nbDesorbed;          // Number of desorbed molec
