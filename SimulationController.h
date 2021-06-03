@@ -41,7 +41,6 @@ private:
 class SimulationController {
     bool UpdateParams();
     int resetControls();
-
 protected:
 
 
@@ -67,6 +66,7 @@ public:
 
     int Start();
     bool Load();
+    int RebuildAccel();
     int Reset();
 
 protected:

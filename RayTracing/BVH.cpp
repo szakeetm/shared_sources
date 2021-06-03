@@ -20,16 +20,28 @@ namespace STATS {
     static int totalLeafNodes = 0;
     static int interiorNodes = 0;
     static int leafNodes = 0;
+    void _reset(){
+        totalPrimitives = 0;
+        totalLeafNodes = 0;
+        interiorNodes = 0;
+        leafNodes = 0;
+    }
 }
 struct BVHPrimitiveInfo {
     BVHPrimitiveInfo() : primitiveNumber(0), bounds(),
-                         centroid(){ }
+                         centroid(), probability(0.0){ }
     BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds)
             : primitiveNumber(primitiveNumber), bounds(bounds),
-              centroid(.5f * bounds.min + .5f * bounds.max) { }
+              centroid(.5f * bounds.min + .5f * bounds.max),
+              probability(0.0){ }
+    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds, double probability)
+            : primitiveNumber(primitiveNumber), bounds(bounds),
+              centroid(.5f * bounds.min + .5f * bounds.max),
+              probability(probability){ }
     size_t primitiveNumber;
     AxisAlignedBoundingBox bounds;
     Vector3d centroid;
+    double probability; // For MCHitSplit
 };
 
 struct BVHBuildNode {
@@ -94,6 +106,144 @@ int BVHAccel::SplitMiddle(std::vector<BVHPrimitiveInfo> &primitiveInfo, int star
         return mid;
 
     return SplitEqualCounts(primitiveInfo, start, end, dim);
+}
+
+int BVHAccel::SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
+                          int end, int dim){
+    //<<Partition primitives through node’s midpoint>>
+    std::sort(&primitiveInfo[start], &primitiveInfo[end],
+               [](const BVHPrimitiveInfo& a, const BVHPrimitiveInfo& b) {
+                   return a.probability < b.probability;
+               });
+
+    double sumProb = 0.0;
+    for (int i = start; i < end; ++i) {
+        sumProb += primitiveInfo[i].probability;
+    }
+    sumProb *= 0.5; // take half as split point
+
+    double midProb = 0.0;
+    int mid = start;
+    for (; mid < end; mid+=2) {
+        midProb += primitiveInfo[mid].probability;
+        if(midProb > sumProb) break;
+    }
+
+    // If mid is valid, make swaps and return point
+    if (mid != start && mid < end) {
+        for (int i = start+1, j = mid; i < mid && j < end; i+=2, j+=2) {
+            std::swap(primitiveInfo[i], primitiveInfo[j]);
+        }
+        return mid;
+    }
+
+    return SplitEqualCounts(primitiveInfo, start, end, dim);
+}
+
+int BVHAccel::SplitProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
+                       int end, int dim, AxisAlignedBoundingBox& centroidBounds
+                        , AxisAlignedBoundingBox& bounds){
+    //<<Partition primitives using approximate SAH>>
+    int nPrimitives = end - start;
+    int mid = -1;
+    if (nPrimitives <= 2) {
+        //<<Partition primitives into equally sized subsets>>
+        mid = SplitEqualCounts(primitiveInfo, start, end, dim);
+    }
+    else if (nPrimitives > maxPrimsInNode){ // else return -1 to just create a leaf node
+        //<<Allocate BucketInfo for PROB partition buckets>>
+        constexpr int nBuckets = 12;
+        struct BucketInfo {
+            int count = 0;
+            double sumProb = 0.0;
+            AxisAlignedBoundingBox bounds;
+        };
+        BucketInfo buckets[nBuckets];
+        double maxProb = 0.0;
+        double minProb = 1.0;
+        //<<Initialize BucketInfo for PROB partition buckets>>
+        for (int i = start; i < end; ++i) {
+            int b = nBuckets *
+                    centroidBounds.Offset(primitiveInfo[i].centroid)[dim];
+            if (b == nBuckets) b = nBuckets - 1;
+            assert(b >= 0);
+            assert(b < nBuckets);
+            buckets[b].count++;
+            buckets[b].sumProb += primitiveInfo[i].probability;
+            maxProb = std::max(maxProb, primitiveInfo[i].probability);
+            minProb = std::min(minProb, primitiveInfo[i].probability);
+            buckets[b].bounds = AxisAlignedBoundingBox::Union(buckets[b].bounds, primitiveInfo[i].bounds);
+        }
+
+        //<<Compute costs for splitting after each bucket>>
+        double cost[nBuckets - 1];
+        double cost_min[nBuckets - 1];
+        double cost_mid[nBuckets - 1];
+        double cost_sah[nBuckets - 1];
+
+        double sumProb = 0.0;
+        for (int i = 0; i < nBuckets - 1; ++i) {
+            sumProb += buckets[i].sumProb;
+        }
+
+        int bestProbBucket = 0;
+        int bestCount = 0;
+        double prob = 0.0;
+        for (int i = 0; i < nBuckets - 1; ++i) {
+            prob += buckets[i].sumProb;
+            bestCount += buckets[i].count;
+            if(prob > sumProb * 0.5){
+                bestProbBucket = i;
+                break;
+            }
+        }
+
+        for (int i = 0; i < nBuckets - 1; ++i) {
+            double prob0 = 0.0, prob1 = 0.0;
+            AxisAlignedBoundingBox b0, b1;
+            int count0 = 0, count1 = 0;
+            for (int j = 0; j <= i; ++j) {
+                count0 += buckets[j].count;
+                prob0 += buckets[j].sumProb;
+                b0 = AxisAlignedBoundingBox::Union(b0, buckets[j].bounds);
+            }
+            for (int j = i+1; j < nBuckets; ++j) {
+                count1 += buckets[j].count;
+                prob1 += buckets[j].sumProb;
+                b1 = AxisAlignedBoundingBox::Union(b1, buckets[j].bounds);
+            }
+            cost[i] = 0.5f + std::abs(prob0 - prob1) / maxProb;
+            cost_min[i] = 0.5f + std::abs(prob0 - prob1) / minProb;
+            cost_mid[i] = 0.5f + std::abs(prob0 - prob1) / (maxProb - minProb);
+            cost_sah[i] = 0.5f + (count0 * b0.SurfaceArea() +
+                                  count1 * b1.SurfaceArea()) / bounds.SurfaceArea();
+        }
+
+        //<<Find bucket to split at that minimizes PROB metric>>
+        double minCost = cost_sah[0];
+        int minCostSplitBucket = 0;
+        for (int i = 1; i < nBuckets - 1; ++i) {
+            if (cost_sah[i] < minCost) {
+                minCost = cost_sah[i];
+                minCostSplitBucket = i;
+            }
+        }
+        //<<Either create leaf or split primitives at selected PROB bucket>>
+        double leafCost = nPrimitives;
+        if (minCost < leafCost) {
+            BVHPrimitiveInfo *pmid = std::partition(&primitiveInfo[start],
+                                                    &primitiveInfo[end-1]+1,
+                                                    [=](const BVHPrimitiveInfo &pi) {
+                                                        int b = nBuckets * centroidBounds.Offset(pi.centroid)[dim];
+                                                        if (b == nBuckets) b = nBuckets - 1;
+                                                        assert(b >= 0);
+                                                        assert(b < nBuckets);
+                                                        return b <= bestProbBucket;
+                                                    });
+            mid = pmid - &primitiveInfo[0];
+        }
+    }
+    return mid;
 }
 
 int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
@@ -168,20 +318,30 @@ int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
 }
 
 BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
-                   int maxPrimsInNode, SplitMethod splitMethod)
+                   int maxPrimsInNode, SplitMethod splitMethod,
+                   const std::vector<double>& probabilities)
         : maxPrimsInNode(std::min(255, maxPrimsInNode)),
           splitMethod(splitMethod),
           primitives(std::move(p)) {
 
     if (primitives.empty())
         return;
+    STATS::_reset();
+
     //<<Build BVH from primitives>>
     //<<Initialize primitiveInfo array for primitives>>
 
     std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
-    for (size_t i = 0; i < primitives.size(); ++i)
-        primitiveInfo[i] = { i, primitives[i]->sh.bb };
-
+    if(splitMethod == SplitMethod::ProbSplit){
+        if (primitives.size() > probabilities.size())
+            return;
+        for (size_t i = 0; i < primitives.size(); ++i)
+            primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[primitives[i]->globalId]};
+    }
+    else {
+        for (size_t i = 0; i < primitives.size(); ++i)
+            primitiveInfo[i] = {i, primitives[i]->sh.bb};
+    }
     //<<Build BVH tree for primitives using primitiveInfo>>
     //MemoryArena arena(1024 * 1024);
     int totalNodes = 0;
@@ -291,6 +451,12 @@ BVHBuildNode *BVHAccel::recursiveBuild(
                 case SplitMethod::EqualCounts: {
                     //<<Partition primitives into equally sized subsets>>
                     mid = SplitEqualCounts(primitiveInfo, start, end, dim);
+                    break;
+                }
+                case SplitMethod::ProbSplit: {
+                    //<<Partition primitives into equally sized subsets>>
+                    mid = SplitProb(primitiveInfo, start, end, dim, centroidBounds, bounds);
+                    //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
                     break;
                 }
                 case SplitMethod::SAH:

@@ -21,13 +21,13 @@ struct LinearBVHNode;
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
-    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts, MolflowSplit
+    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit
     };
 
     // BVHAccel Public Methods
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
              int maxPrimsInNode = 1,
-             SplitMethod splitMethod = SplitMethod::SAH);
+             SplitMethod splitMethod = SplitMethod::SAH, const std::vector<double>& probabilities = std::vector<double>{});
     BVHAccel(BVHAccel && src) noexcept;
     BVHAccel(const BVHAccel & src) noexcept;
 
@@ -56,8 +56,13 @@ private:
     int SplitMiddle(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                     AxisAlignedBoundingBox &centroidBounds);
 
+    int SplitProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                    AxisAlignedBoundingBox& centroidBounds, AxisAlignedBoundingBox& bounds);
+
     int SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                  AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
+
+    int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 };
 
 
