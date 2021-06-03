@@ -382,8 +382,8 @@ KdTreeAccel::KdTreeAccel(KdTreeAccel &&src) noexcept : isectCost(src.isectCost),
                                                        traversalCost(src.traversalCost),
                                                        maxPrims(src.maxPrims),
                                                        emptyBonus(src.emptyBonus),
-                                                       primitives(std::move(src.primitives)) {
-    primitives = std::move(src.primitives);
+                                                       primitives(std::move(src.primitives)),
+                                                       primitiveIndices(std::move(src.primitiveIndices)){
     nodes = src.nodes;
     nAllocedNodes = src.nAllocedNodes;
     nextFreeNode = src.nextFreeNode;
@@ -395,7 +395,8 @@ KdTreeAccel::KdTreeAccel(const KdTreeAccel &src) noexcept : isectCost(src.isectC
                                                             traversalCost(src.traversalCost),
                                                             maxPrims(src.maxPrims),
                                                             emptyBonus(src.emptyBonus),
-                                                            primitives(src.primitives) {
+                                                            primitives(src.primitives),
+                                                            primitiveIndices(src.primitiveIndices) {
     if(nodes)
         exit(44);
 }
