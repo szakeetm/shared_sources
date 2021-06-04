@@ -34,7 +34,7 @@ public:
     BVHAccel& operator=(const BVHAccel & src) noexcept;
     ~BVHAccel() override;
 
-    bool Intersect(Ray &ray) const;
+    bool Intersect(Ray &ray);
 
 private:
     void ComputeBB() override;

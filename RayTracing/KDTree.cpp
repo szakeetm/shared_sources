@@ -290,7 +290,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
               prims0, prims1 + nPrimitives, badRefines);
 }
 
-bool KdTreeAccel::Intersect(Ray &ray) const {
+bool KdTreeAccel::Intersect(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin, tMax;

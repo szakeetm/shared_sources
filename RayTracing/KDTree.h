@@ -27,7 +27,7 @@ public:
     KdTreeAccel& operator=(const KdTreeAccel & src) noexcept;
     ~KdTreeAccel() override;
 
-    bool Intersect(Ray &ray) const;
+    bool Intersect(Ray &ray);
 
 private:
     void ComputeBB() override;
