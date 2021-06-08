@@ -753,6 +753,24 @@ static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb) {
     ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
     ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
 
+    ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
+    ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
+    const char* items[] = { "SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit"};
+    if (ImGui::BeginListBox("Splitting technique"))
+    {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+        {
+            const bool is_selected = ((int)mApp->aabbVisu.splitTechnique == n);
+            if (ImGui::Selectable(items[n], is_selected))
+                mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod)n;
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndListBox();
+    }
+
     if (ImGui::Button("Apply aabb view"))
         redrawAabb = true;
 }

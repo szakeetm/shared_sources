@@ -357,4 +357,6 @@ protected:
     void DrawAABB();
 
 	void DrawAABBNode(AABBNODE *node, int level);
+    void DrawAABBNode(const BVHAccel &bvh);
+    void DrawAABBNode(const LinearBVHNode * lnode, int currentNodeIndex, int level);
 };

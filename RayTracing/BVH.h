@@ -16,7 +16,17 @@ struct BVHBuildNode;
 
 // BVHAccel Forward Declarations
 struct BVHPrimitiveInfo;
-struct LinearBVHNode;
+struct LinearBVHNode {
+    AxisAlignedBoundingBox bounds;
+    union {
+        int primitivesOffset;   // leaf
+        int secondChildOffset;  // interior
+    };
+    uint16_t nPrimitives;  // 0 -> interior node
+    uint8_t axis;          // interior node: xyz
+    uint8_t pad[1];        // ensure 32 byte total size
+    friend class Geometry;
+};
 
 class BVHAccel : public RTPrimitive {
 public:
@@ -63,6 +73,8 @@ private:
                  AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
 
     int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
+
+    friend class Geometry;
 };
 
 
