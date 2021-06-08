@@ -121,7 +121,19 @@ Vector3d & Vector3d::operator+=(const Vector3d & rhs)
 	return *this;
 }
 
-const double & Vector3d::operator[] (int dim) const{
+double & Vector3d::operator[] (int dim) {
+    if(dim == 0){
+        return x;
+    }
+    else if(dim == 1){
+        return y;
+    }
+    else {
+        return z;
+    }
+}
+
+const double& Vector3d::operator[] (int dim) const {
     if(dim == 0){
         return x;
     }

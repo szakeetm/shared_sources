@@ -1265,13 +1265,13 @@ void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
 	double vStep = 1.0 / (double)f->texDimH;
 
 #if 1
-	double fu = f->sh.texWidthD * uStep;
-	double fv = f->sh.texHeightD * vStep;
+	double fu = f->sh.texWidth_precise * uStep;
+	double fv = f->sh.texHeight_precise * vStep;
 	glTexCoord2f((float)(uStep + p->u*fu), (float)(vStep + p->v*fv));
 #else
 	// Show border (debugging purpose)
-	double fu = (f->sh.texWidthD + 2.0) * uStep;
-	double fv = (f->sh.texHeightD + 2.0) * vStep;
+	double fu = (f->sh.texWidth_precise + 2.0) * uStep;
+	double fv = (f->sh.texHeight_precise + 2.0) * vStep;
 	glTexCoord2f((float)(p->u*fu), (float)(p->v*fv));
 #endif
 
@@ -1519,8 +1519,8 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		for (int i = 0;i < sh.nbFacet;i++) {
 			InterfaceFacet *f = facets[i];
 			if (f->sh.countDirection && f->dirCache) {
-				double iw = 1.0 / (double)f->sh.texWidthD;
-				double ih = 1.0 / (double)f->sh.texHeightD;
+				double iw = 1.0 / (double)f->sh.texWidth_precise;
+				double ih = 1.0 / (double)f->sh.texHeight_precise;
 				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {

@@ -21,19 +21,20 @@ struct LinearBVHNode;
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
-    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts };
+    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit
+    };
 
     // BVHAccel Public Methods
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
              int maxPrimsInNode = 1,
-             SplitMethod splitMethod = SplitMethod::SAH);
+             SplitMethod splitMethod = SplitMethod::SAH, const std::vector<double>& probabilities = std::vector<double>{});
     BVHAccel(BVHAccel && src) noexcept;
     BVHAccel(const BVHAccel & src) noexcept;
 
     BVHAccel& operator=(const BVHAccel & src) noexcept;
     ~BVHAccel() override;
 
-    bool Intersect(Ray &ray) const;
+    bool Intersect(Ray &ray);
 
 private:
     void ComputeBB() override;
@@ -55,8 +56,13 @@ private:
     int SplitMiddle(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                     AxisAlignedBoundingBox &centroidBounds);
 
+    int SplitProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                    AxisAlignedBoundingBox& centroidBounds, AxisAlignedBoundingBox& bounds);
+
     int SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                  AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
+
+    int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 };
 
 

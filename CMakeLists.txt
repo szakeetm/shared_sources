@@ -154,6 +154,11 @@ set(SIM_FILES
         SimulationController.cpp
         FacetData.cpp
         FacetData.h
+
+        SettingsIO.cpp
+
+        RayTracing/KDTree.h
+        RayTracing/KDTree.cpp
         RayTracing/BVH.cpp
         RayTracing/BVH.h
         RayTracing/Ray.h

@@ -17,8 +17,11 @@
 #include <Helper/Chronometer.h>
 #include <Helper/StringHelper.h>
 #include <Helper/ConsoleLogger.h>
+#include <wbenny-ziplib-176e4b6d51fc/Source/ZipLib/ZipFile.h>
 
 #include "FlowMPI.h"
+#include "SettingsIO.h"
+#include "File.h"
 
 static constexpr const char* molflowCliLogo = R"(
   __  __     _  __ _
@@ -108,13 +111,18 @@ int main(int argc, char** argv) {
             endCondition = globState.globalHits.globalHits.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
 
         if(endCondition){
-            std::stringstream outFile;
-            outFile << Settings::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
-                 std::filesystem::path(Settings::outputFile).filename().string();
+            /*std::stringstream outFile;
+            outFile << SettingsIO::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
+                 std::filesystem::path(SettingsIO::outputFile).filename().string();*/
+            std::string outFile = std::filesystem::path(SettingsIO::outputPath)
+                    .append("desorped_")
+                    .concat(std::to_string(model.otfParams.desorptionLimit))
+                    .concat("_")
+                    .concat(std::filesystem::path(SettingsIO::outputFile).filename().string()).string();
             try {
-                std::filesystem::copy_file(Settings::inputFile, outFile.str(), std::filesystem::copy_options::overwrite_existing);
+                std::filesystem::copy_file(SettingsIO::workFile, outFile, std::filesystem::copy_options::overwrite_existing);
                 FlowIO::WriterXML writer;
-                writer.SaveSimulationState(outFile.str(), &model, globState);
+                writer.SaveSimulationState(outFile, &model, globState);
             } catch(std::filesystem::filesystem_error& e) {
                 Log::console_error("Warning: Could not create file: %s\n", e.what());
             }
@@ -186,8 +194,8 @@ int main(int argc, char** argv) {
     MFMPI::mpi_receive_states(model, globState);
     if(MFMPI::world_rank != 0){
         // Cleanup all files from nodes tmp path
-        if (Settings::outputPath.find("tmp") != std::string::npos) {
-            std::filesystem::remove_all(Settings::outputPath);
+        if (SettingsIO::outputPath.find("tmp") != std::string::npos) {
+            std::filesystem::remove_all(SettingsIO::outputPath);
         }
         if(std::filesystem::exists(autoSave)){
             std::filesystem::remove(autoSave);
@@ -215,30 +223,53 @@ int main(int argc, char** argv) {
     if(MFMPI::world_rank == 0){
         // Export results
         //  a) Use existing autosave as base
-        //  b) Create copy of input file(TODO: yet w/o sweep)
+        //  b) Create copy of input file
+        // update geometry info (in case of param sweep)
         // and simply update simulation results
+        bool createZip = std::filesystem::path(SettingsIO::outputFile).extension() == ".zip";
+        SettingsIO::outputFile = std::filesystem::path(SettingsIO::outputFile).replace_extension(".xml").string();
+
+        std::string fullOutFile = std::filesystem::path(SettingsIO::outputPath).append(SettingsIO::outputFile).string();
         if(std::filesystem::exists(autoSave)){
-            std::filesystem::rename(autoSave, Settings::outputPath+"/"+Settings::outputFile);
+            std::filesystem::rename(autoSave, fullOutFile);
         }
-        else if(Settings::inputFile != Settings::outputFile){     // TODO: Difficult to check when with complex paths
+        else if(!SettingsIO::overwrite){
             // Copy full file description first, in case outputFile is different
-            std::filesystem::copy_file(Settings::inputFile, Settings::outputPath+"/"+Settings::outputFile,
+            std::filesystem::copy_file(SettingsIO::workFile, fullOutFile,
                                        std::filesystem::copy_options::overwrite_existing);
         }
         FlowIO::WriterXML writer;
         pugi::xml_document newDoc;
-        newDoc.load_file((Settings::outputPath+"/"+Settings::outputFile).c_str());
+        newDoc.load_file(fullOutFile.c_str());
         writer.SaveGeometry(newDoc, &model, false, true);
-        writer.SaveSimulationState(Settings::outputPath+"/"+Settings::outputFile, &model, globState);
+        writer.SaveSimulationState(fullOutFile, &model, globState);
+
+        if(SettingsIO::isArchive){
+            Log::console_msg_master(3, "Compressing xml to zip...\n");
+
+            //Zipper library
+            std::string fileNameWithZIP = std::filesystem::path(SettingsIO::workFile).replace_extension(".zip").string();
+            if (std::filesystem::exists(fileNameWithZIP)) { // should be workFile == inputFile
+                try {
+                    std::filesystem::remove(fileNameWithZIP);
+                }
+                catch (std::exception &e) {
+                    Log::console_error("Error compressing to \n%s\nMaybe file is in use.\n",fileNameWithZIP.c_str());
+                }
+            }
+            ZipFile::AddFile(fileNameWithZIP, fullOutFile, FileUtils::GetFilename(fullOutFile));
+            //At this point, if no error was thrown, the compression is successful
+            try {
+                std::filesystem::remove(SettingsIO::workFile);
+            }
+            catch (std::exception &e) {
+                Log::console_error("Error removing\n%s\nMaybe file is in use.\n",SettingsIO::workFile.c_str());
+            }
+        }
     }
 
     // Cleanup
-    // a) tmp folder if it is not our output folder
-    if(std::filesystem::path(Settings::outputPath).relative_path().compare(std::filesystem::path("tmp"))
-       && std::filesystem::path(Settings::outputPath).parent_path().compare(std::filesystem::path("tmp"))){
-        //Settings::tmpfile_dir
-        std::filesystem::remove_all("tmp");
-    }
+    SettingsIO::cleanup_files();
 
     return 0;
 }

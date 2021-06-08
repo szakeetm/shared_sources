@@ -64,8 +64,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	
 	sh.texWidth = 0;
 	sh.texHeight = 0;
-	sh.texWidthD = 0.0;
-	sh.texHeightD = 0.0;
+	sh.texWidth_precise = 0.0;
+	sh.texHeight_precise = 0.0;
 	sh.center.x = 0.0;
 	sh.center.y = 0.0;
 	sh.center.z = 0.0;
@@ -275,8 +275,8 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	if (dimOK) {
         const double ceilCutoff = 0.9999999;
-        sh.texWidthD = width;
-		sh.texHeightD = height;
+        sh.texWidth_precise = width;
+		sh.texHeight_precise = height;
 		sh.texWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
 		sh.texHeight = (int)ceil(height * ceilCutoff);
 		dimOK = (sh.texWidth > 0 && sh.texHeight > 0);
@@ -284,8 +284,8 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	else {
 		sh.texWidth = 0;
 		sh.texHeight = 0;
-		sh.texWidthD = 0.0;
-		sh.texHeightD = 0.0;
+		sh.texWidth_precise = 0.0;
+		sh.texHeight_precise = 0.0;
 	}
 
 	texDimW = 0;
@@ -368,8 +368,8 @@ bool InterfaceFacet::BuildMesh() {
 	
 	GLAppPolygon P1, P2;
 	double sx, sy;
-	double iw = 1.0 / (double)sh.texWidthD;
-	double ih = 1.0 / (double)sh.texHeightD;
+	double iw = 1.0 / (double)sh.texWidth_precise;
+	double ih = 1.0 / (double)sh.texHeight_precise;
 	double rw = sh.U.Norme() * iw;
 	double rh = sh.V.Norme() * ih;
 	double fullCellArea = iw*ih;
@@ -941,8 +941,8 @@ Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 		}
 
 		else { //full elem
-			double iw = 1.0 / (double)sh.texWidthD;
-			double ih = 1.0 / (double)sh.texHeightD;
+			double iw = 1.0 / (double)sh.texWidth_precise;
+			double ih = 1.0 / (double)sh.texHeight_precise;
 			double sx = (double)(index%sh.texWidth);
 			double sy = (double)(index / sh.texWidth);
 			if (pointId == 0) {
@@ -1007,8 +1007,8 @@ Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
 		}
 	}
 	else {
-		double iw = 1.0 / (double)sh.texWidthD;
-		double ih = 1.0 / (double)sh.texHeightD;
+		double iw = 1.0 / (double)sh.texWidth_precise;
+		double ih = 1.0 / (double)sh.texHeight_precise;
 		double sx = (double)(index%sh.texWidth);
 		double sy = (double)(index / sh.texWidth);
 		double u0 = sx * iw;

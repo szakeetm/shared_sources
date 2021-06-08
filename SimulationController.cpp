@@ -484,6 +484,12 @@ int SimulationController::controlledLoop(int argc, char **argv) {
     return 0;
 }
 
+int SimulationController::RebuildAccel() {
+    if (simulation->RebuildAccelStructure()) {
+        return 1;
+    }
+    return 0;
+}
 bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Loading simulation");
@@ -579,6 +585,8 @@ int SimulationController::Start() {
             SetState(PROCESS_ERROR, GetSimuStatus());
         return 1;
     }
+
+    RebuildAccel();
 
     if (simulation->model.otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
