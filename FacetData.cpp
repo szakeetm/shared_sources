@@ -8,7 +8,7 @@
 #include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
 
 bool Facet::Intersect(Ray &ray) {
-    ++iSCount;
+    //++iSCount;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
     double det = Dot(this->sh.Nuv, rayDirOpposite);
 

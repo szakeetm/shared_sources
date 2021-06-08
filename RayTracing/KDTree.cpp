@@ -10,6 +10,7 @@
 
 #include <BoundingBox.h>
 #include <cmath>
+#include <set>
 #include "KDTree.h"
 #include "Ray.h"
 
@@ -54,6 +55,23 @@ inline int Log2Int(uint64_t v) {
 
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
 
+namespace STATS_KD {
+    //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
+    //STAT_RATIO("BVH/Primitives per leaf node", totalPrimitives, totalLeafNodes);
+
+    static int totalPrimitives = 0;
+    static int totalLeafNodes = 0;
+    static int interiorNodes = 0;
+    static int leafNodes = 0;
+
+    void _reset() {
+        totalPrimitives = 0;
+        totalLeafNodes = 0;
+        interiorNodes = 0;
+        leafNodes = 0;
+    }
+}
+
 // KdTreeAccel Local Declarations
 struct KdAccelNode {
     // KdAccelNode Methods
@@ -62,6 +80,7 @@ struct KdAccelNode {
         split = s;
         flags = axis;
         aboveChild |= (ac << 2);
+        STATS_KD::interiorNodes++;
     }
     double SplitPos() const { return split; }
     int nPrimitives() const { return nPrims >> 2; }
@@ -104,7 +123,7 @@ void KdTreeAccel::ComputeBB() {
 }
 
 // KdTreeAccel Method Definitions
-KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p,
+KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::vector<double>& probabilities,
                          int isectCost, int traversalCost, double emptyBonus,
                          int maxPrims, int maxDepth)
         : isectCost(isectCost),
@@ -112,6 +131,12 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p,
           maxPrims(maxPrims),
           emptyBonus(emptyBonus),
           primitives(std::move(p)) {
+
+    nodes = nullptr;
+    if (primitives.empty())
+        return;
+    STATS_KD::_reset();
+
     // Build kd-tree for accelerator
     nextFreeNode = nAllocedNodes = 0;
     if (maxDepth <= 0)
@@ -139,7 +164,14 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p,
 
     // Start recursive construction of kd-tree
     buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-              maxDepth, edges, prims0.get(), prims1.get());
+              maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities);
+
+    printf("--- KD STATS ---\n");
+    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
+    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
+    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
+    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
+
 }
 
 void KdAccelNode::InitLeaf(int *primNums, int np,
@@ -155,6 +187,8 @@ void KdAccelNode::InitLeaf(int *primNums, int np,
         primitiveIndicesOffset = primitiveIndices->size();
         for (int i = 0; i < np; ++i) primitiveIndices->push_back(primNums[i]);
     }
+    STATS_KD::leafNodes++;
+    STATS_KD::totalPrimitives += np;
 }
 
 KdTreeAccel::~KdTreeAccel() {
@@ -168,7 +202,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
                             int *primNums, int nPrimitives, int depth,
                             const std::unique_ptr<BoundEdge[]> edges[3],
-                            int *prims0, int *prims1, int badRefines) {
+                            int *prims0, int *prims1, int badRefines, const std::vector<double>& probabilities) {
     //CHECK_EQ(nodeNum, nextFreeNode);
     assert(nodeNum == nextFreeNode);
     // Get next free node from _nodes_ array
@@ -224,8 +258,35 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 
     // Compute cost of all splits for _axis_ to find best
     int nBelow = 0, nAbove = nPrimitives;
+    // w/ probability
+    double probBelow = 0.0;
+    double probAbove = 0.0;
+
+    // add probability for all edges going in
+    std::set<int> edgeIn;
+    if(!probabilities.empty()) {
+        for (int i = 0; i < 2 * nPrimitives; ++i) {
+            auto inside = edgeIn.find(edges[axis][i].primNum);
+            if(inside != edgeIn.end()) {
+                //probAbove += edges[axis][i].type == EdgeType::End ? probabilities[edges[axis][i].primNum] : 0.0;
+                probAbove += probabilities[edges[axis][i].primNum];
+                edgeIn.erase(inside);
+            }
+            else {
+                edgeIn.insert(edges[axis][i].primNum);
+            }
+        }
+    }
+
     for (int i = 0; i < 2 * nPrimitives; ++i) {
-        if (edges[axis][i].type == EdgeType::End) --nAbove;
+        if (edges[axis][i].type == EdgeType::End) {
+            --nAbove;
+            if(!probabilities.empty()) {
+                auto inside = edgeIn.find(edges[axis][i].primNum);
+                if(inside == edgeIn.end())
+                    probAbove -= probabilities[edges[axis][i].primNum];
+            }
+        }
         double edgeT = edges[axis][i].t;
         if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
             // Compute cost for split at _i_th edge
@@ -241,9 +302,14 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
             double pBelow = belowSA * invTotalSA;
             double pAbove = aboveSA * invTotalSA;
             double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+
+            const double weightSA = 0.0;
+            double pca = (probAbove + probBelow > 0) ? weightSA + (2.0 - weightSA) * probAbove / (probAbove + probBelow) : 1.0;
+            double pcb = (probAbove + probBelow > 0) ? weightSA + (2.0 - weightSA) * probBelow / (probAbove + probBelow) : 1.0;
+
             double cost =
                     traversalCost +
-                    isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
+                    isectCost * (1 - eb) * (pcb * pBelow * nBelow + pca * pAbove * nAbove);
 
             // Update best split if this is lowest cost so far
             if (cost < bestCost) {
@@ -252,7 +318,14 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                 bestOffset = i;
             }
         }
-        if (edges[axis][i].type == EdgeType::Start) ++nBelow;
+        if (edges[axis][i].type == EdgeType::Start) {
+            ++nBelow;
+            if(!probabilities.empty()) {
+                auto inside = edgeIn.find(edges[axis][i].primNum);
+                if(inside == edgeIn.end())
+                    probBelow += probabilities[edges[axis][i].primNum];
+            }
+        }
     }
     //CHECK(nBelow == nPrimitives && nAbove == 0);
 
@@ -283,20 +356,20 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     AxisAlignedBoundingBox bounds0 = nodeBounds, bounds1 = nodeBounds;
     bounds0.max[bestAxis] = bounds1.min[bestAxis] = tSplit;
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines);
+              prims0, prims1 + nPrimitives, badRefines, probabilities);
     int aboveChild = nextFreeNode;
     nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
     buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines);
+              prims0, prims1 + nPrimitives, badRefines, probabilities);
 }
 
 bool KdTreeAccel::Intersect(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
-    double tMin, tMax;
-    if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+    double tMin = 0.0, tMax = 1.0e99;
+    /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
         return false;
-    }
+    }*/
 
     // Prepare to traverse kd-tree for ray
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);

@@ -343,6 +343,7 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
           splitMethod(splitMethod),
           primitives(std::move(p)) {
 
+    nodes = nullptr;
     if (primitives.empty())
         return;
     STATS::_reset();

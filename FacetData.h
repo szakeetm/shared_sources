@@ -13,6 +13,7 @@
 
 class Surface {
 public:
+    virtual ~Surface() = default;
     virtual bool IsHardHit(const Ray &r) { return true; };
 };
 
@@ -45,7 +46,7 @@ struct Facet : public RTPrimitive {
     std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
     Surface* surf;
     size_t globalId; //Global index (to identify when superstructures are present)
-    size_t iSCount{0};
+    //size_t iSCount{0};
 
     void ComputeBB() { bb = sh.bb;};
     bool Intersect(Ray &r) override;
