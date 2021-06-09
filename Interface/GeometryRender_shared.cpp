@@ -593,7 +593,9 @@ void Geometry::DrawAABBNode(const KdTreeAccel &kd) {
         return;
 
     const KdAccelNode *node = &kd.nodes[0];
-    DrawAABBNode(node, kd.bounds, 0, 0);
+    //DrawAABBNode(node, kd.bounds, 0, 0);
+    DrawAABBPlane(node, kd.bounds, 0, 0);
+
 }
 
 void Geometry::DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level) {
@@ -773,23 +775,6 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
     if(node->IsLeaf() && !mApp->aabbVisu.showAABBLeaves) return;
 
     if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
-        auto delta = this->bb.max - this->bb.min;
-        auto bbox = bb;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
-
-        int axis = node->SplitAxis();
-        double plane = node->SplitPos();
-
-        bbox.min[axis] = plane;
-        bbox.max[axis] = plane;
-
-        Vector3d a = bbox.min;
-        Vector3d b = bbox.min;
-        Vector3d c = bbox.max;
-        Vector3d d = bbox.max;
-
-        b[axis + 1 % 3] = bbox.max[axis + 1 % 3];
-        d[axis + 2 % 3] = bbox.max[axis + 2 % 3];
 
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
@@ -803,6 +788,39 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
         }
+
+        auto delta = this->bb.max - this->bb.min;
+        auto bbox = bb;
+        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+
+        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        int axis = node->SplitAxis();
+        double plane = node->SplitPos();
+
+        bbox.min[axis] = plane;
+        bbox.max[axis] = plane;
+
+        Vector3d a = bbox.min;
+        Vector3d b = bbox.min;
+        Vector3d c = bbox.max;
+        Vector3d d = bbox.max;
+
+        const int axisSwap = (axis + 2) % 3;
+        b[axisSwap] = bbox.max[axisSwap];
+        d[axisSwap] = bbox.min[axisSwap];
+
+
 
 
         // begin transparent sides
@@ -820,76 +838,6 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
         glEnd();
         // end transparent sides
 
-        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
-
-        glBegin(GL_POINTS);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
-        glEnd();
-
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.05f) + 0.4f));
-
-        glLineWidth(3.0f);
-
-        glPushAttrib(GL_LINE_BIT);
-        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
-                std::min(1.0f, (level * 0.5f) + 0.1f));
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
-        glEnd();
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
-        glEnd();
-
-        glBegin(GL_LINES);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
-        glEnd();
-        glBegin(GL_LINES);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
-        glEnd();
-        glBegin(GL_LINES);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
-        glEnd();
-        glBegin(GL_LINES);
-        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
-        glEnd();
-
-        glLineStipple(1, 0x0101);
-        glEnable(GL_LINE_STIPPLE);
-        glBegin(GL_LINE_STRIP);
-        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
-        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
-        glEnd();
-        glDisable(GL_LINE_STIPPLE);
-
-        glPopAttrib();
-        //glLineWidth(1.0f);
-
         if (mApp->antiAliasing) {
             glDisable(GL_ALPHA_TEST);
             glDisable(GL_DEPTH_TEST);
@@ -905,8 +853,8 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
 
         auto bbl = bb.Split(axis, plane, true);
         auto bbr = bb.Split(axis, plane, false);
-        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(lnode, bbl, currentNodeIndex + 1, level+1);
-        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(lnode, bbr, node->AboveChild(), level+1);
+        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBPlane(lnode, bbl, currentNodeIndex + 1, level+1);
+        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBPlane(lnode, bbr, node->AboveChild(), level+1);
     }
 }
 
