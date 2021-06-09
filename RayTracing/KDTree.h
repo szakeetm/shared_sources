@@ -13,7 +13,32 @@
 using Primitive = Facet;
 
 // KdTreeAccel Forward Declarations
-struct KdAccelNode;
+// KdTreeAccel Local Declarations
+struct KdAccelNode {
+    // KdAccelNode Methods
+    void InitLeaf(int *primNums, int np, std::vector<int> *primitiveIndices);
+    void InitInterior(int axis, int ac, double s);
+    double SplitPos() const { return split; }
+    int nPrimitives() const { return nPrims >> 2; }
+    int SplitAxis() const { return flags & 3; }
+    bool IsLeaf() const { return (flags & 3) == 3; }
+    int AboveChild() const { return aboveChild >> 2; }
+    union {
+        double split;                 // Interior
+        int onePrimitive;            // Leaf
+        int primitiveIndicesOffset;  // Leaf
+    };
+
+private:
+    union {
+        int flags;       // Both
+        int nPrims;      // Leaf
+        int aboveChild;  // Interior
+    };
+
+    friend class Geometry;
+};
+
 struct BoundEdge;
 class KdTreeAccel : public RTPrimitive {
 public:
@@ -47,6 +72,8 @@ private:
     KdAccelNode *nodes;
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
+
+    friend class Geometry;
 };
 
 struct KdToDo {

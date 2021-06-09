@@ -588,17 +588,336 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 
 }
 
+void Geometry::DrawAABBNode(const KdTreeAccel &kd) {
+    if (!kd.nodes)
+        return;
+
+    const KdAccelNode *node = &kd.nodes[0];
+    DrawAABBNode(node, kd.bounds, 0, 0);
+}
+
+void Geometry::DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level) {
+
+
+    const KdAccelNode *node = &lnode[currentNodeIndex];
+
+    const int max_level = (mApp->aabbVisu.showLevelAABB[1] == -1) ? 64 : mApp->aabbVisu.showLevelAABB[1];
+    if(node->IsLeaf() && !mApp->aabbVisu.showAABBLeaves) return;
+
+    if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
+        auto delta = this->bb.max - this->bb.min;
+        auto bbox = bb;
+        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        if (mApp->antiAliasing) {
+            glEnable(GL_LINE_SMOOTH);
+            glEnable(GL_BLEND);
+            glEnable(GL_ALPHA_TEST);
+            glEnable(GL_DEPTH_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+        }
+
+
+        // begin transparent sides
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+        // end transparent sides
+
+        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.05f) + 0.4f));
+
+        glLineWidth(3.0f);
+
+        glPushAttrib(GL_LINE_BIT);
+        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
+                std::min(1.0f, (level * 0.5f) + 0.1f));
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glLineStipple(1, 0x0101);
+        glEnable(GL_LINE_STIPPLE);
+        glBegin(GL_LINE_STRIP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glDisable(GL_LINE_STIPPLE);
+
+        glPopAttrib();
+        //glLineWidth(1.0f);
+
+        if (mApp->antiAliasing) {
+            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glDisable(GL_LINE_SMOOTH);
+        }
+        glDepthMask(GL_TRUE);
+    }
+
+    if(level < max_level && !node->IsLeaf()) {
+        int axis = node->SplitAxis();
+        double plane = node->SplitPos();
+
+        auto bbl = bb.Split(axis, plane, true);
+        auto bbr = bb.Split(axis, plane, false);
+        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(lnode, bbl, currentNodeIndex + 1, level+1);
+        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(lnode, bbr, node->AboveChild(), level+1);
+    }
+}
+
+void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level) {
+
+
+    const KdAccelNode *node = &lnode[currentNodeIndex];
+
+    const int max_level = (mApp->aabbVisu.showLevelAABB[1] == -1) ? 64 : mApp->aabbVisu.showLevelAABB[1];
+    if(node->IsLeaf() && !mApp->aabbVisu.showAABBLeaves) return;
+
+    if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
+        auto delta = this->bb.max - this->bb.min;
+        auto bbox = bb;
+        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+
+        int axis = node->SplitAxis();
+        double plane = node->SplitPos();
+
+        bbox.min[axis] = plane;
+        bbox.max[axis] = plane;
+
+        Vector3d a = bbox.min;
+        Vector3d b = bbox.min;
+        Vector3d c = bbox.max;
+        Vector3d d = bbox.max;
+
+        b[axis + 1 % 3] = bbox.max[axis + 1 % 3];
+        d[axis + 2 % 3] = bbox.max[axis + 2 % 3];
+
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        if (mApp->antiAliasing) {
+            glEnable(GL_LINE_SMOOTH);
+            glEnable(GL_BLEND);
+            glEnable(GL_ALPHA_TEST);
+            glEnable(GL_DEPTH_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+        }
+
+
+        // begin transparent sides
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glBegin(GL_POLYGON);
+        glVertex3d(a.x, a.y, a.z);
+        glVertex3d(b.x, b.y, b.z);
+        glVertex3d(c.x, c.y, c.z);
+        glVertex3d(d.x, d.y, d.z);
+        glEnd();
+        // end transparent sides
+
+        glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                std::min(1.0f, (level * 0.05f) + 0.4f));
+
+        glLineWidth(3.0f);
+
+        glPushAttrib(GL_LINE_BIT);
+        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
+        glColor4f(
+                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
+                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
+                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
+                std::min(1.0f, (level * 0.5f) + 0.1f));
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+        glLineStipple(1, 0x0101);
+        glEnable(GL_LINE_STIPPLE);
+        glBegin(GL_LINE_STRIP);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glEnd();
+        glDisable(GL_LINE_STIPPLE);
+
+        glPopAttrib();
+        //glLineWidth(1.0f);
+
+        if (mApp->antiAliasing) {
+            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glDisable(GL_LINE_SMOOTH);
+        }
+        glDepthMask(GL_TRUE);
+    }
+
+    if(level < max_level && !node->IsLeaf()) {
+        int axis = node->SplitAxis();
+        double plane = node->SplitPos();
+
+        auto bbl = bb.Split(axis, plane, true);
+        auto bbr = bb.Split(axis, plane, false);
+        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(lnode, bbl, currentNodeIndex + 1, level+1);
+        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(lnode, bbr, node->AboveChild(), level+1);
+    }
+}
+
 void Geometry::DrawAABBNode(const BVHAccel &bvh) {
     if (!bvh.nodes || bvh.nodes[0].secondChildOffset == 0)
         return;
-    int toVisitOffset = 0, currentNodeIndex = 0;
-    int nodesToVisit[64];
 
+    int currentNodeIndex = 0;
     const LinearBVHNode *node = &bvh.nodes[currentNodeIndex];
-    // Check ray against BVH node
+
     DrawAABBNode(node, currentNodeIndex, 0);
-
-
 }
 
 void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, int level) {
@@ -964,8 +1283,58 @@ void Geometry::DrawAABB() {
                 delete tree[s];
         }
 #if defined(USE_KDTREE)
+            else{
+            std::vector<KdTreeAccel> kdtree;
+            if(mApp->worker.model.kdtree.empty()) {
+                std::vector<std::vector<std::shared_ptr<Primitive>>> primPointers;
+                primPointers.resize(mApp->worker.model.sh.nbSuper);
+                for (auto &sFac : mApp->worker.model.facets) {
+                    if (sFac->sh.superIdx == -1) { //Facet in all structures
+                        for (auto &fp_vec : primPointers) {
+                            fp_vec.push_back(sFac);
+                        }
+                    } else {
+                        primPointers[sFac->sh.superIdx].push_back(sFac); //Assign to structure
+                    }
+                }
 
-#endif
+                if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit && mApp->worker.globState.initialized && mApp->worker.globState.globalHits.globalHits.nbDesorbed > 0){
+                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model.facets.size())
+                        return;
+                    std::vector<double> probabilities;
+                    probabilities.reserve(mApp->worker.globState.facetStates.size());
+                    for(auto& state : mApp->worker.globState.facetStates) {
+                        probabilities.emplace_back(state.momentResults[0].hits.nbHitEquiv / mApp->worker.globState.globalHits.globalHits.nbHitEquiv);
+                    }
+                    /*size_t sumCount = 0;
+                    for(auto& fac : model.facets) {
+                        sumCount += fac->iSCount;
+                    }
+                    for(auto& fac : model.facets) {
+                        probabilities.emplace_back((double)fac->iSCount / (double)sumCount);
+                    }*/
+                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+                        kdtree.emplace_back(primPointers[s], probabilities);
+                    }
+                }
+                else {
+                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+                        kdtree.emplace_back(primPointers[s]);
+                    }
+                }
+
+            }
+            else {
+                kdtree = mApp->worker.model.kdtree;
+            }
+
+            if(!kdtree.empty()) {
+                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model.sh.nbSuper : (int)1);
+                for (int s = 0; s < nStructs; ++s)
+                    DrawAABBNode(kdtree[s]);
+            }
+        }
+#else
     else{
             std::vector<BVHAccel> bvhs;
             if(mApp->worker.model.bvhs.empty()) {
@@ -1017,6 +1386,7 @@ void Geometry::DrawAABB() {
                     DrawAABBNode(bvhs[s]);
             }
         }
+#endif
     }
 }
 
@@ -1742,13 +2112,13 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			}
 		}
 
-        glCallList(aabbList);
-        //DrawAABB();
-
 		// Restore default matrix
 		glLoadMatrixf(matView);
 	}
 
+    if(1) // always draw for now
+        glCallList(aabbList);
+    //DrawAABB();
 
 	// Paint non-planar and selected facets
 	//if (GetNbSelectedFacets()>0) {

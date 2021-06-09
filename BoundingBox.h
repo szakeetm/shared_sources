@@ -30,6 +30,15 @@ public:
         bb.max.x += amount.x;   bb.max.y += amount.y;   bb.max.z += amount.z;
     }
 
+    AxisAlignedBoundingBox Split(int dim, double pos, bool keepMin)          {
+        auto bb = *this;
+        if(keepMin)
+            bb.max[dim] = pos;
+        else
+            bb.min[dim] = pos;
+        return bb;
+    }
+
     Vector3d& operator[] (int);
     const Vector3d& operator[] (int) const;
 
