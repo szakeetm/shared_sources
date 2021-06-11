@@ -166,7 +166,7 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
 
     // Start recursive construction of kd-tree
     buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-              maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities);
+              maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
 
     printf("--- KD STATS ---\n");
     printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
@@ -201,10 +201,9 @@ KdTreeAccel::~KdTreeAccel() {
 }
 
 void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
-                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
-                            int *primNums, int nPrimitives, int depth,
-                            const std::unique_ptr<BoundEdge[]> edges[3],
-                            int *prims0, int *prims1, int badRefines, const std::vector<double>& probabilities) {
+                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                            int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
+                            int badRefines, const std::vector<double> &probabilities, int prevSplitAxis) {
     //CHECK_EQ(nodeNum, nextFreeNode);
     assert(nodeNum == nextFreeNode);
     // Get next free node from _nodes_ array
@@ -334,7 +333,17 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     // Create leaf if no good splits were found
     if (bestAxis == -1 && retries < 2) {
         ++retries;
-        axis = (axis + 1) % 3;
+        if(prevSplitAxis >= 0){
+            axis = (axis + 1) % 3;
+            if(retries == 1 && axis == prevSplitAxis){
+                axis = (axis + 1) % 3;
+            }
+            else if (retries == 2){
+                axis = prevSplitAxis;
+            }
+        }
+        else
+            axis = (axis + 1) % 3;
         goto retrySplit;
     }
     if (bestCost > oldCost) ++badRefines;
@@ -358,11 +367,11 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     AxisAlignedBoundingBox bounds0 = nodeBounds, bounds1 = nodeBounds;
     bounds0.max[bestAxis] = bounds1.min[bestAxis] = tSplit;
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines, probabilities);
+              prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
     int aboveChild = nextFreeNode;
     nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
     buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines, probabilities);
+              prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
 }
 
 bool KdTreeAccel::Intersect(Ray &ray) {

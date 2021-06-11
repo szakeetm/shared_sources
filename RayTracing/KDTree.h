@@ -32,11 +32,10 @@ public:
 private:
     void ComputeBB() override;
     // KdTreeAccel Private Methods
-    void buildTree(int nodeNum, const AxisAlignedBoundingBox &bounds,
-                   const std::vector<AxisAlignedBoundingBox> &primBounds, int *primNums,
-                   int nprims, int depth,
-                   const std::unique_ptr<BoundEdge[]> edges[3], int *prims0,
-                   int *prims1, int badRefines = 0, const std::vector<double>& probabilities = std::vector<double>{});
+    void buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
+                   const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                   int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
+                   int badRefines, const std::vector<double> &probabilities, int prevSplitAxis);
 
 private:
     // KdTreeAccel Private Data
