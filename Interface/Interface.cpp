@@ -854,6 +854,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Pipe (L/R=100)", MENU_TEST_PIPE100);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=1000)", MENU_TEST_PIPE1000);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=10000)", MENU_TEST_PIPE10000);
+    menu->GetSubMenu("Test")->Add("Pipe (L/R=N)", MENU_TEST_PIPEN);
     //Quick test pipe
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Quick Pipe", MENU_QUICKPIPE, SDLK_q, ALT_MODIFIER);
@@ -1719,6 +1720,20 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_TEST_PIPE10000:
                     if (AskToSave()) BuildPipe(10000.0, 0);
                     return true;
+                case MENU_TEST_PIPEN: {
+                    sprintf(tmp, "100");
+                    //sprintf(title,"Pipe L/R = %g",L/R);
+                    char *chRatio = GLInputBox::GetInput(tmp, "L/R Ratio", "Build Pipe");
+                    if (!chRatio) return false;
+                    double ratio = 0.0;
+                    if ((sscanf(chRatio, "%lf", &ratio) <= 0) || (ratio <= 0.0)) {
+                        GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        return false;
+                    }
+
+                    if (AskToSave()) BuildPipe(ratio, 0);
+                    return true;
+                }
                 case MENU_QUICKPIPE:
                     if (AskToSave()) BuildPipe(5.0, 5);
                     return true;
