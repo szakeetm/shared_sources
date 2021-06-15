@@ -803,3 +803,32 @@ void Worker::RetrieveHistogramCache()
 #endif
     }
 }
+
+void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
+    // Send and Load geometry
+    progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
+    try {
+        if (!InterfaceGeomToSimModel()) {
+            std::string errString = "Failed to send geometry to sub process!\n";
+            GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
+
+            progressDlg->SetVisible(false);
+            SAFE_DELETE(progressDlg);
+            return;
+        }
+
+        progressDlg->SetMessage("Initialising physical properties for model->..");
+        model->PrepareToRun();
+
+        progressDlg->SetMessage("Constructing memory structure to store results...");
+        if (!sendOnly) {
+            globState.Resize(*model);
+        }
+
+        simManager.ForwardSimModel(model);
+        simManager.ForwardGlobalCounter(&globState, &particleLog);
+    }
+    catch (std::exception &e) {
+        GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
+    }
+}
