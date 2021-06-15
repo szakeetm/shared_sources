@@ -3020,7 +3020,7 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	}
 
 #if defined(MOLFLOW)
-	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model.wp.gasMass);
+	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model->wp.gasMass);
 #endif
 }
 
@@ -3793,7 +3793,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	worker->globState.globalHits.globalHits.nbHitEquiv = (double)worker->globState.globalHits.globalHits.nbMCHit; //Backward comp
 	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
 	worker->globState.globalHits.globalHits.nbDesorbed = file->ReadSizeT();
-	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
+	worker->model->otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
 	sh.nbFacet = file->ReadInt();

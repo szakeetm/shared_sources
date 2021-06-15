@@ -103,7 +103,7 @@ bool SimThread::runLoop() {
         double timeEnd = omp_get_wtime();
 
         if (procInfo->activeProcs.front() == threadNum || timeEnd-timeLoopStart > 60) { // update after 60s of no update or when thread is called
-            if(simulation->model.otfParams.desorptionLimit > 0){
+            if(simulation->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
                     localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
                 else localDesLimit = 0;
@@ -146,9 +146,9 @@ void SimThread::setSimState(const std::string& msg) const {
     size_t count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
-    if (simulation->model.otfParams.nbProcess)
-        max = (simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess)
-                + ((this->threadNum < simulation->model.otfParams.desorptionLimit % simulation->model.otfParams.nbProcess) ? 1 : 0);
+    if (simulation->model->otfParams.nbProcess)
+        max = (simulation->model->otfParams.desorptionLimit / simulation->model->otfParams.nbProcess)
+                + ((this->threadNum < simulation->model->otfParams.desorptionLimit % simulation->model->otfParams.nbProcess) ? 1 : 0);
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
@@ -161,7 +161,7 @@ void SimThread::setSimState(const std::string& msg) const {
 
 int SimThread::runSimulation(size_t desorptions) {
     // 1s step
-    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
     {
         char msg[128];
@@ -366,8 +366,8 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
                 size_t count = 0;
                 count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;
                 size_t max = 0;
-                if (sim->model.otfParams.nbProcess)
-                    max = sim->model.otfParams.desorptionLimit / sim->model.otfParams.nbProcess + ((threadId < sim->model.otfParams.desorptionLimit % sim->model.otfParams.nbProcess) ? 1 : 0);
+                if (sim->model->otfParams.nbProcess)
+                    max = sim->model->otfParams.desorptionLimit / sim->model->otfParams.nbProcess + ((threadId < sim->model->otfParams.desorptionLimit % sim->model->otfParams.nbProcess) ? 1 : 0);
 
                 char tmp[128];
                 if (max != 0) {
@@ -551,9 +551,9 @@ bool SimulationController::Load() {
 bool SimulationController::UpdateParams() {
     // Load geometry
     auto* sim = simulation;
-    if (sim->model.otfParams.enableLogging) {
+    if (sim->model->otfParams.enableLogging) {
         printf("Logging with size limit %zd\n",
-               sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
+               sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
     sim->ReinitializeParticleLog();
     return true;
@@ -580,10 +580,10 @@ int SimulationController::Start() {
         return 1;
     }
 
-    if (simulation->model.otfParams.desorptionLimit > 0) {
+    if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
-            simulation->model.otfParams.desorptionLimit /
-            simulation->model.otfParams.nbProcess) {
+            simulation->model->otfParams.desorptionLimit /
+            simulation->model->otfParams.nbProcess) {
             ClearCommand();
             SetState(PROCESS_DONE, GetSimuStatus());
         }
@@ -603,9 +603,9 @@ int SimulationController::Start() {
         // Calculate remaining work
         size_t desPerThread = 0;
         size_t remainder = 0;
-        if(simulation->model.otfParams.desorptionLimit > 0){
-            if(simulation->model.otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
-                size_t limitDes_global = simulation->model.otfParams.desorptionLimit;
+        if(simulation->model->otfParams.desorptionLimit > 0){
+            if(simulation->model->otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
+                size_t limitDes_global = simulation->model->otfParams.desorptionLimit;
                 desPerThread = limitDes_global / nbThreads;
                 remainder = limitDes_global % nbThreads;
             }

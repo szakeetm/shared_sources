@@ -163,7 +163,7 @@ public:
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  SimulationModel model;
+  std::shared_ptr<SimulationModel> model;
   FacetHistogramBuffer globalHistogramCache;
 
   //float  startTime;         // Start time

@@ -319,7 +319,7 @@ int SimulationManager::InitSimUnits() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(SimulationModel *model, GlobalSimuState *globState) {
+int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState) {
     model->m.lock();
 
     // Prepare simulation unit
@@ -659,15 +659,15 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 }
 
 // Create hard copy for local usage
-void SimulationManager::ForwardSimModel(SimulationModel *model) {
+void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
     for(auto& sim : simUnits)
-        sim->model = *model;
+        sim->model = model;
 }
 
 // Create hard copy for local usage
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
     for(auto& sim : simUnits)
-        sim->model.otfParams = *otfParams;
+        sim->model->otfParams = *otfParams;
 }
 
 /**
