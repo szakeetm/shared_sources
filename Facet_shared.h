@@ -125,8 +125,8 @@ public:
 	double DensityCorrection();
 #endif
 #if defined(SYNRAD) //Implementations in SynradFacet.cpp
-	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex,
-                 FacetHitBuffer &facetCounter);
+	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+    void LoadSYNResults(FileReader *file, int version, FacetHitBuffer &facetCounter);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();

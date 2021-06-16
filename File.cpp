@@ -183,6 +183,29 @@ bool FileReader::SeekFor(const char *keyword) {
     return isEof == 0;
 }
 
+bool FileReader::SeekForInline(const char *keyword) {
+    char *w;
+    char *res;
+    bool notFound = true;
+    int oldbuffPos;
+    do {
+        oldbuffPos = buffPos;
+        w = ReadWord();
+        res = w;
+        while ((res = std::strstr(res, keyword)) != nullptr) {
+            // Increment result, otherwise we'll find target at the same location
+            notFound = false;
+            break;
+        }
+        //w = strstr(w, keyword);
+        //notFound = (res == nullptr && (!isEof));
+    } while (notFound && (!isEof));
+
+    /*if(res != nullptr  && !isEof)
+        buffPos = oldbuffPos + std::strlen(keyword) + 1;*/
+    return isEof == 0;
+}
+
 bool FileReader::SeekForChar(const char *c) {
     char w;
     bool notFound;

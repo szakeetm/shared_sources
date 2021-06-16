@@ -693,11 +693,11 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     progressDlg->SetVisible(false);
     SAFE_DELETE(progressDlg);
 
-#if defined(SYNRAD)
+/*#if defined(SYNRAD)
     //Reset leak and hit cache
     ResetWorkerStats();
     Update(0.0f);
-#endif
+#endif*/
 }
 
 /**

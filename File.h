@@ -67,6 +67,7 @@ public:
   void JumpSection(const char *end);
   void SeekStart();
   bool SeekFor(const char *keyword);
+  bool SeekForInline(const char *keyword);
   bool SeekForChar(const char *c);
   bool wasLineEnd;
 
