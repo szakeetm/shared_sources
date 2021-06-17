@@ -447,22 +447,14 @@ int SimulationManager::KillAllSimUnits() {
                         TerminateThread(nativeHandle, 1);
 #else
                         //Linux
-                        /*std::terminate(simHandles[i].first);
-                        void *res;
                         int s;
-
                         s = pthread_cancel(nativeHandle);
                         if (s != 0)
-                            printf("pthread_cancel: %d\n", s);*/
+                            printf("pthread_cancel: %d\n", s);
+                        tIter->first.detach();
 #endif
                         //assume that the process doesn't exist, so remove it from our management structure
                         try {
-                            int s;
-
-                            s = pthread_cancel(nativeHandle);
-                            if (s != 0)
-                                printf("pthread_cancel: %d\n", s);
-                            tIter->first.detach();
                             tIter = simHandles.erase(tIter);
                         }
                         catch (std::exception &e) {
