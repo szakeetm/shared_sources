@@ -103,7 +103,7 @@ public:
 
     int GetProcStatus(ProcComm &procInfoList);
 
-    const char *GetErrorDetails();
+    std::string GetErrorDetails();
 
     // Hit Buffer functions
     bool GetLockedHitBuffer();

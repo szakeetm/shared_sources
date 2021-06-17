@@ -69,6 +69,10 @@ public:
     bool Load();
     int Reset();
 
+    void EmergencyExit(){
+        for(auto& t : simThreads)
+            t.particle->allQuit = true;
+    };
 protected:
 
     SimulationUnit* simulation;

@@ -211,7 +211,7 @@ private:
   // Methods
   void ResetWorkerStats();
   //void ClearHits();
-  const char *GetErrorDetails();
+  std::string GetErrorDetails();
   //void ThrowSubProcError(std::string message);
   void ThrowSubProcError(const char *message = nullptr);
   void Start();

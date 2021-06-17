@@ -191,9 +191,9 @@ void Worker::ThrowSubProcError(const char *message) {
 
     char errMsg[1024];
     if (!message)
-        sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
+        sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails().c_str());
     else
-        sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
+        sprintf(errMsg, "%s\n%s", message, GetErrorDetails().c_str());
     throw std::runtime_error(errMsg);
 
 }
@@ -221,7 +221,7 @@ void Worker::SetMaxDesorption(size_t max) {
 }
 */
 
-const char *Worker::GetErrorDetails() {
+std::string Worker::GetErrorDetails() {
     return simManager.GetErrorDetails();
 }
 
