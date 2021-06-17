@@ -63,6 +63,7 @@ public:
   int ReadInt();
   double ReadDouble();
   void ReadKeyword(const char *keyword);
+  bool PeekKeyword(const char *keyword);
   char *ReadWord();
   void JumpSection(const char *end);
   void SeekStart();

@@ -158,6 +158,18 @@ void FileReader::ReadKeyword(const char *keyword) {
     }
 }
 
+bool FileReader::PeekKeyword(const char *keyword) {
+
+    int oldBuffPos = buffPos;
+    char *w = ReadWord();
+    bool keywordNext = (strcmp(w, keyword) != 0);
+
+    // go back to old position, as we only wanted to peek
+    buffPos = oldBuffPos;
+
+    return keywordNext;
+}
+
 void FileReader::SeekStart() {
     fseek(file, 0L, SEEK_SET);
     isEof = 0;
