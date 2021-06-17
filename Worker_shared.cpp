@@ -424,13 +424,14 @@ void Worker::CalculateTextureLimits(){
 #endif
 
 #ifdef SYNRAD
+#define HITMAX 1E38
 void Worker::CalculateTextureLimits(){
     // first get tmp limit
     TextureCell limitMin, limitMax;
     TEXTURE_MIN_MAX limits[3]; // count, flux, power
     for(auto& lim : limits){
         lim.max = 0;
-        lim.min = 0;
+        lim.min = HITMAX;
     }
 
     for (const auto &subF : model->facets) {
