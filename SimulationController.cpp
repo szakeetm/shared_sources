@@ -500,7 +500,7 @@ bool SimulationController::Load() {
         bool loadError = false;
 
         // Init particles / threads
-        simulation->SetNParticle(nbThreads);
+        simulation->SetNParticle(nbThreads, false);
         if (simulation->LoadSimulation(procInfo->subProcInfo[0].statusString)) {
             loadError = true;
         }

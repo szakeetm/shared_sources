@@ -40,7 +40,7 @@ public:
 
     virtual size_t GetHitsSize() = 0;
     virtual MFSim::Particle * GetParticle(size_t i) = 0;
-    virtual void SetNParticle(size_t n) = 0;
+    virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
     SimulationModel model;
     //OntheflySimulationParams ontheflyParams;

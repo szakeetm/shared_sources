@@ -117,6 +117,7 @@ public:
     int IncreasePriority();
     int DecreasePriority();
 
+    int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
     ProcComm procInformation; // ctrl

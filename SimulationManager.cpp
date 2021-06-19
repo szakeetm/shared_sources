@@ -734,3 +734,13 @@ int SimulationManager::DecreasePriority() {
     }
     return 0;
 }
+
+int SimulationManager::RefreshRNGSeed(bool fixed) {
+    if(simUnits.empty() || nbThreads == 0)
+        return 1;
+    for(auto& sim : simUnits){
+        sim->SetNParticle(nbThreads, fixed);
+    }
+
+    return 0;
+}
