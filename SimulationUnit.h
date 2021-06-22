@@ -42,7 +42,7 @@ public:
     virtual MFSim::Particle * GetParticle(size_t i) = 0;
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
-    SimulationModel model;
+    std::shared_ptr<SimulationModel> model;
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)

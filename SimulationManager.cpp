@@ -319,7 +319,7 @@ int SimulationManager::InitSimUnits() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(SimulationModel *model, GlobalSimuState *globState) {
+int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState) {
     model->m.lock();
 
     // Prepare simulation unit
@@ -435,21 +435,39 @@ int SimulationManager::KillAllSimUnits() {
     if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-
-            for(size_t i=0;i<simHandles.size();i++) {
-                if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED){
-                    auto nativeHandle = simHandles[i].first.native_handle();
+            for(auto& con : simController)
+                con.EmergencyExit();
+            if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
+                int i = 0;
+                for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
+                    if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
+                        auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-                    //Windows
-				    TerminateThread(nativeHandle, 1);
+                        //Windows
+                        TerminateThread(nativeHandle, 1);
 #else
-                    //Linux
-                    pthread_cancel(nativeHandle);
+                        //Linux
+                        int s;
+                        s = pthread_cancel(nativeHandle);
+                        if (s != 0)
+                            printf("pthread_cancel: %d\n", s);
+                        tIter->first.detach();
 #endif
-                    //assume that the process doesn't exist, so remove it from our management structure
-                    simHandles.erase((simHandles.begin()+i));
-                    throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
-
+                        //assume that the process doesn't exist, so remove it from our management structure
+                        try {
+                            tIter = simHandles.erase(tIter);
+                        }
+                        catch (std::exception &e) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
+                        catch (...) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes\n");
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
+                    }
                 }
             }
         }
@@ -560,13 +578,14 @@ bool SimulationManager::GetRunningStatus(){
  * @brief Return error information or current running state in case of a hangup
  * @return char array containing proc status (and error message/s)
  */
-const char *SimulationManager::GetErrorDetails() {
+std::string SimulationManager::GetErrorDetails() {
 
     ProcComm procInfo;
     GetProcStatus(procInfo);
 
-    static char err[1024];
-    strcpy(err, "");
+    std::string err;
+    //static char err[1024];
+    //std::memset(err, 0, 1024);
 
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
         char tmp[512]{'\0'};
@@ -575,14 +594,19 @@ const char *SimulationManager::GetErrorDetails() {
             sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
                     procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[Thread #%zd] %s %s\n", i, prStates[state]);
+            sprintf(tmp, "[Thread #%zd] %s\n", i, prStates[state]);
         }
         // Append at most up to character 1024, strncat would otherwise overwrite in memory
-        strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
+        err.append(tmp);
+        if(err.size() >= 1024) {
+            err.resize(1024);
+            break;
+        }
+        /*strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
         if(strlen(err) >= 1024) {
             err[1023] = '\0';
             break;
-        }
+        }*/
     }
     return err;
 }
@@ -659,15 +683,15 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 }
 
 // Create hard copy for local usage
-void SimulationManager::ForwardSimModel(SimulationModel *model) {
+void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
     for(auto& sim : simUnits)
-        sim->model = *model;
+        sim->model = model;
 }
 
 // Create hard copy for local usage
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
     for(auto& sim : simUnits)
-        sim->model.otfParams = *otfParams;
+        sim->model->otfParams = *otfParams;
 }
 
 /**

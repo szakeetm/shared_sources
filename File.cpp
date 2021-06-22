@@ -158,6 +158,18 @@ void FileReader::ReadKeyword(const char *keyword) {
     }
 }
 
+bool FileReader::PeekKeyword(const char *keyword) {
+
+    int oldBuffPos = buffPos;
+    char *w = ReadWord();
+    bool keywordNext = (strcmp(w, keyword) != 0);
+
+    // go back to old position, as we only wanted to peek
+    buffPos = oldBuffPos;
+
+    return keywordNext;
+}
+
 void FileReader::SeekStart() {
     fseek(file, 0L, SEEK_SET);
     isEof = 0;
@@ -180,6 +192,29 @@ bool FileReader::SeekFor(const char *keyword) {
         w = ReadLine();
         notFound = ((strcmp(w, keyword) != 0) && (!isEof));
     } while (notFound);
+    return isEof == 0;
+}
+
+bool FileReader::SeekForInline(const char *keyword) {
+    char *w;
+    char *res;
+    bool notFound = true;
+    int oldbuffPos;
+    do {
+        oldbuffPos = buffPos;
+        w = ReadWord();
+        res = w;
+        while ((res = std::strstr(res, keyword)) != nullptr) {
+            // Increment result, otherwise we'll find target at the same location
+            notFound = false;
+            break;
+        }
+        //w = strstr(w, keyword);
+        //notFound = (res == nullptr && (!isEof));
+    } while (notFound && (!isEof));
+
+    /*if(res != nullptr  && !isEof)
+        buffPos = oldbuffPos + std::strlen(keyword) + 1;*/
     return isEof == 0;
 }
 

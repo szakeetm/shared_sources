@@ -105,7 +105,7 @@ LoadStatus::~LoadStatus()
 
 void LoadStatus::SMPUpdate() {
 		
-	if ((processList->GetNbRow() - 1) != worker->model.otfParams.nbProcess) RefreshNbProcess();
+	if ((processList->GetNbRow() - 1) != worker->model->otfParams.nbProcess) RefreshNbProcess();
 
 		char tmp[512];
 		PROCESS_INFO pInfo;

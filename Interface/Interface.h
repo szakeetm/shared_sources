@@ -215,6 +215,7 @@ typedef struct {
 #define MENU_TEST_PIPE100         804
 #define MENU_TEST_PIPE1000        805
 #define MENU_TEST_PIPE10000       806
+#define MENU_TEST_PIPEN           807
 
 #define MENU_QUICKPIPE            810
 
