@@ -38,8 +38,10 @@ struct Facet : public RTPrimitive {
     Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
     ~Facet(){
         if (surf) {
-            delete surf;
-            surf = nullptr;}
+            //delete surf;
+            // don' t delete, origin is an unreferenced shared ptr
+            surf = nullptr;
+        }
     }
     FacetProperties sh;
     std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
