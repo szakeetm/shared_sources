@@ -11,6 +11,8 @@
 #include <BoundingBox.h>
 #include <cmath>
 #include <set>
+#include <cassert>
+
 #include "KDTree.h"
 #include "Ray.h"
 

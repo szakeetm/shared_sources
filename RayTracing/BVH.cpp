@@ -11,6 +11,7 @@
 #include <BoundingBox.h>
 #include "BVH.h"
 #include "Ray.h"
+#include <cassert>
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);

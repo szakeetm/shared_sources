@@ -435,7 +435,8 @@ void Worker::CalculateTextureLimits(){
         lim.min = HITMAX;
     }
 
-    for (const auto &subF : model->facets) {
+    for (const auto &sub : model->facets) {
+        auto& subF = *sub;
         if (subF.sh.isTextured) {
                 {
                     // go on if the facet was never hit before
