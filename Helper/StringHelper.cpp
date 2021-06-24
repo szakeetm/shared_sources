@@ -190,6 +190,7 @@ std::vector<std::string> SplitString(std::string const& input, const char& delim
 {
     std::vector<std::string> result;
     char* str = strdup(input.c_str());
+    char* str_ptr = str; // keep to free memory
     do
     {
         char* begin = str;
@@ -197,7 +198,7 @@ std::vector<std::string> SplitString(std::string const& input, const char& delim
             str++;
         result.emplace_back(std::string(begin, str));
     } while (0 != *str++);
-    free(str);
+    free(str_ptr);
     return result;
 }
 
