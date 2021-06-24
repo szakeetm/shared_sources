@@ -72,7 +72,7 @@ bool Facet::Intersect(Ray &ray) {
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
                                     //ray.lastIntersected = this->globalId;
-                                    if(ray.hitChain->hit){
+                                    /*if(ray.hitChain->hit){
                                         ray.hitChain->next = new HitChain();
                                         ray.hitChain = ray.hitChain->next;
                                     }
@@ -81,11 +81,19 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->hit->colU = u;
                                     ray.hitChain->hit->colV = v;
                                     ray.hitChain->hit->colDistTranspPass = d;
-                                    ray.hitChain->hitId = globalId;
+                                    ray.hitChain->hitId = globalId;*/
+
+                                    auto hit = new SubProcessFacetTempVar();
+                                    hit->isHit = true;
+                                    hit->colU = u;
+                                    hit->colV = v;
+                                    hit->colDistTranspPass = d;
+                                    ray.hits->emplace_back(globalId, hit);
+
                                 }
                             }
                             else {
-                                if(ray.hitChain->hit){
+                                /*if(ray.hitChain->hit){
                                     ray.hitChain->next = new HitChain();
                                     ray.hitChain = ray.hitChain->next;
                                 }
@@ -94,7 +102,14 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colU = u;
                                 ray.hitChain->hit->colV = v;
                                 ray.hitChain->hit->colDistTranspPass = d;
-                                ray.hitChain->hitId = globalId;
+                                ray.hitChain->hitId = globalId;*/
+
+                                auto hit = new SubProcessFacetTempVar();
+                                hit->isHit = false;
+                                hit->colU = u;
+                                hit->colV = v;
+                                hit->colDistTranspPass = d;
+                                ray.hits->emplace_back(globalId, hit);
                             }
                             return hardHit;
                         } // IsInFacet

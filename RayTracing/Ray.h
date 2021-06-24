@@ -16,6 +16,12 @@ struct HitChain{
     HitChain* next;
 };
 
+struct HitLink{
+    HitLink(size_t id, SubProcessFacetTempVar* h) : hitId(id), hit(h){};
+    size_t hitId;
+    SubProcessFacetTempVar* hit;
+};
+
 struct Payload {};
 constexpr double inf_d = 1.0e99;
 class Ray {
@@ -40,6 +46,7 @@ public:
     Payload* pay;
 
     HitChain* hitChain;
+    std::vector<HitLink>* hits;
     MersenneTwister* rng;
 };
 
