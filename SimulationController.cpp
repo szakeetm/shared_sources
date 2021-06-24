@@ -519,15 +519,18 @@ bool SimulationController::Load() {
             }
 
             // "Warm up" threads, to remove overhead for performance benchmarks
+            double randomCounter = 0;
+#pragma omp parallel default(none) shared(randomCounter)
             {
-                size_t randomCounter = 0;
-#pragma omp parallel for default(none) shared(randomCounter)
-                for (int i = 0; i < (int) 1e3; ++i) {
-#pragma omp critical
-                    randomCounter += i;
+                double local_result;
+#pragma omp for
+                for (int i=0; i < 1000; i++) {
+                    local_result += 1;
                 }
-                DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+#pragma omp critical
+                randomCounter += local_result;
             }
+            DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
 
             // Calculate remaining work
             size_t desPerThread = 0;
