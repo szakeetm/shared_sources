@@ -43,13 +43,15 @@ bool Facet::Intersect(Ray &ray) {
                         // This check could be avoided on rectangular facet.
                         if (IsInPoly(u, v, vertices2)) {
                             bool hardHit = this->surf->IsHardHit(ray);
-#if defined(SYNRAD)
-                            /*hardHit &= (this->sh.reflectType > 10 //Material reflection
+/*#if defined(SYNRAD)
+
+                            if(typeid(*surf) == typeid(MaterialSurface))
+                            hardHit &= (this->sh.reflectType > 10 //Material reflection
                                         && currentParticle.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
                                         && currentParticle.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
                                                                                                                          acos(Dot(currentParticle.direction, this->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
-*/
-#endif
+
+#endif*/
                             /*#if defined(MOLFLOW)
                             double time = ray.time + d / 100.0 / currentParticle.velocity;
                             double currentOpacity = currentParticle.model->GetOpacityAt(f, time);

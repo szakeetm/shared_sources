@@ -27,7 +27,7 @@ public:
 class AlphaSurface : public Surface{
     double opacity{1.0};
 public:
-    AlphaSurface(double opacity) : opacity(opacity){}
+    AlphaSurface(double opacity) : opacity(opacity){};
     bool IsHardHit(const Ray &r) override {
         return (r.rng->rnd() < opacity);
     };
@@ -47,6 +47,7 @@ struct Facet : public RTPrimitive {
     std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
     std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
     Surface* surf;
+
     size_t globalId; //Global index (to identify when superstructures are present)
     //size_t iSCount{0};
 
