@@ -80,7 +80,7 @@ ELSE()
 ENDIF()
 
 # Preprocessor definitions
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)

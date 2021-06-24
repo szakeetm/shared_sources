@@ -189,15 +189,15 @@ std::vector<std::string> SplitString(std::string const& input) {
 std::vector<std::string> SplitString(std::string const& input, const char& delimiter)
 {
     std::vector<std::string> result;
-    const char* str = strdup(input.c_str());
+    char* str = strdup(input.c_str());
     do
     {
-        const char* begin = str;
+        char* begin = str;
         while (*str != delimiter && *str)
             str++;
-
-        result.push_back(std::string(begin, str));
+        result.emplace_back(std::string(begin, str));
     } while (0 != *str++);
+    free(str);
     return result;
 }
 
