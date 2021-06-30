@@ -81,7 +81,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
 
-#include "NativeFileDialog/nfd.h"
+//#include "NativeFileDialog/nfd.h"
 
 //Updater
 #include "File.h" //File utils (Get extension, etc)
