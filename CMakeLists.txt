@@ -57,7 +57,7 @@ ENDIF()
 # Defines outputs , depending BUILD TYPE                   #
 ############################################################
 
-if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
+#[[if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
@@ -65,7 +65,16 @@ else()
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
-endif()
+endif()]]
+
+#[[# Messages
+message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")
+message("${PROJECT_NAME}: CURR PROJECT: ${CMAKE_CURRENT_SOURCE_DIR}")
+message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+# Messages
+message("${PROJECT_NAME}: CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+message("${PROJECT_NAME}: CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+message("${PROJECT_NAME}: CMAKE_EXECUTABLE_OUTPUT_DIRECTORY: ${CMAKE_EXECUTABLE_OUTPUT_DIRECTORY}")]]
 
 # Definition of Macros
 add_definitions(
@@ -236,24 +245,33 @@ if(WIN32)
             BUILD_IN_SOURCE TRUE
             CONFIGURE_COMMAND ""
             BUILD_COMMAND msbuild.exe .\\ZipLib.sln /p:Configuration=Release /p:Platform=x64
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
             INSTALL_COMMAND
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/ZipLib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/lzma.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/zlib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/bzip2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/ZipLib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/lzma.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/zlib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/bzip2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
             )
 else()
     include(ExternalProject)
-    message("Building ziplib with" CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
     ExternalProject_Add(ziplib
             URL ${CMAKE_SOURCE_DIR}/src_shared/wbenny-ziplib-176e4b6d51fc
             PREFIX ${CMAKE_BINARY_DIR}/ziplib_build
             BUILD_IN_SOURCE TRUE
             CONFIGURE_COMMAND mkdir -p Bin
             BUILD_COMMAND make CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} library
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
             INSTALL_COMMAND
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/libzip.a ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/libzip.a ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
             )
+
+    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+    if (NOT TARGET libzip)
+        add_library( libzip STATIC IMPORTED GLOBAL)
+    endif()
+    # You can define two import-locations: one for debug and one for release.
+    get_filename_component(ABS_LINK_DIR_1 "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" REALPATH)
+    message("Libzip abs " ${ABS_LINK_DIR_1})
+    # other static libraries need to be built with similar settings for clang (here: libc++)
+    set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip.a )
 endif()
