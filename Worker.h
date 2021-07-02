@@ -105,12 +105,7 @@ public:
   void ReleaseLogBuff();
   void ReleaseHits();
  
-  void RemoveRegion(int index);
-  void AddRegion(const char *fileName,int position=-1); //load region (position==-1: add as new region)
-  void RecalcRegion(int regionId);
-  void SaveRegion(const char *fileName,int position,bool overwrite=false);
-  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
-
+  
   FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 
 #if defined(MOLFLOW)
@@ -158,6 +153,15 @@ public:
     void SendFacetHitCounts();
     void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   void StartStop(float appTime);    // Switch running/stopped
+
+  void RemoveRegion(int index);
+  void AddRegion(const char* fileName, int position = -1); //load region (position==-1: add as new region)
+  void RecalcRegion(int regionId);
+  void SaveRegion(const char* fileName, int position, bool overwrite = false);
+  void SetRegionFileLocation(const std::string fileName, int position);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+
+
 #endif
     bool   IsRunning();           // Started/Stopped state
 
