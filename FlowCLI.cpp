@@ -17,7 +17,7 @@
 #include <Helper/Chronometer.h>
 #include <Helper/StringHelper.h>
 #include <Helper/ConsoleLogger.h>
-#include <wbenny-ziplib-176e4b6d51fc/Source/ZipLib/ZipFile.h>
+#include <ZipLib/ZipFile.h>
 
 #include "FlowMPI.h"
 #include "SettingsIO.h"

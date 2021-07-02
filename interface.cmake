@@ -140,7 +140,7 @@ if(NOT MSVC)
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
     endif()]]
-    target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
+    target_link_libraries(${PROJECT_NAME} PUBLIC ziplib) # from ./lib/
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
