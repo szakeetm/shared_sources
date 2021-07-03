@@ -4,6 +4,11 @@
 
 #include "BoundingBox.h"
 
+#include <limits>
+AxisAlignedBoundingBox::AxisAlignedBoundingBox() : min(std::numeric_limits<double>::max()),
+                           max(std::numeric_limits<double>::lowest())
+{};
+
 Vector3d AxisAlignedBoundingBox::Offset(const Vector3d &p) const {
     Vector3d o = p - min;
     if (max.x > min.x) o.x /= max.x - min.x;

@@ -11,9 +11,7 @@
 
 class AxisAlignedBoundingBox{
 public:
-    AxisAlignedBoundingBox() : min(std::numeric_limits<double>::max()),
-                               max(std::numeric_limits<double>::lowest())
-    {}
+    AxisAlignedBoundingBox();
 
     Vector3d min;
     Vector3d max;
