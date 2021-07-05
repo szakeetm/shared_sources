@@ -12,7 +12,7 @@ else()
 endif()
 
 if(MSVC)
-set(SOURCE_DIR "")
+set(SOURCE_DIR ".")
 set(headers
         ${SOURCE_DIR}/7z.h
         ${SOURCE_DIR}/7zAlloc.h
