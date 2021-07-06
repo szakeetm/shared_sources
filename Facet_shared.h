@@ -93,7 +93,7 @@ public:
 	Vector2d GetMeshCenter(size_t index);
 	double GetArea();
 	bool  IsTXTLinkFacet();
-	Vector3d GetRealCenter();
+	Vector3_t<FLOAT> GetRealCenter();
 	void  UpdateFlags();
 	FacetGroup Explode();
 

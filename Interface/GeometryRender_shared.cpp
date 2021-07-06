@@ -344,7 +344,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		Vector3d *v = GetVertex(i);
+		Vector3_t<FLOAT> *v = GetVertex(i);
 		//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
 		if (true) {
 
@@ -708,7 +708,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct ArrowToDraw {
-		Vector3d startPoint, endPoint, normal;
+		Vector3_t<FLOAT> startPoint, endPoint, normal;
 		std::array<float,4> color; //to pass components to glColor4f
 	};
 	std::vector<ArrowToDraw> arrowsToDraw;
@@ -731,8 +731,8 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
             }
 			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
-				Vector3d& center = facets[sel]->sh.center;
-				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
+				Vector3_t<FLOAT>& center = facets[sel]->sh.center;
+				Vector3_t<FLOAT>& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
 				arrow.endPoint = center + .5* dir;
 				arrow.normal = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
@@ -985,7 +985,7 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool a
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
-	Vector3d  p3D;
+	Vector3_t<FLOAT>  p3D;
 	const Vector2d* p1;
 	const Vector2d* p2;
 	const Vector2d* p3;
@@ -1374,7 +1374,7 @@ void Geometry::BuildShapeList() {
 	for (int i = 0; i <= nbTetha; i++) {
 		for (int j = 0; j < nbPhi; j++) {
 
-			Vector3d v1, v2, v3, v4;
+			Vector3_t<FLOAT> v1, v2, v3, v4;
 
 			v1.x = sin(dtetha*(double)i)*cos(dphi*(double)j);
 			v1.y = sin(dtetha*(double)i)*sin(dphi*(double)j);

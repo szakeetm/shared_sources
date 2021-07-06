@@ -91,9 +91,9 @@ double GetElement(const std::pair<double, std::vector<double>> & pair, const boo
 [[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
 int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t &startIndex);
 
-std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
-Vector3d
-PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+std::tuple<double, double> CartesianToPolar(const Vector3_t<FLOAT>& incidentDir, const Vector3_t<FLOAT>& normU, const Vector3_t<FLOAT>& normV, const Vector3_t<FLOAT>& normN);
+Vector3_t<FLOAT>
+PolarToCartesian(const Vector3_t<FLOAT> &nU, const Vector3_t<FLOAT> &nV, const Vector3_t<FLOAT> &nN, const double &theta, const double &phi,
                  const bool &reverse); //sets sHandle->currentParticle.direction
 
 //Elementwise addition of two vectors:

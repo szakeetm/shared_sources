@@ -842,7 +842,7 @@ void GLToolkit::DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int 
 
 }
 
-std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& p){
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3_t<FLOAT>& p){
 
   GLfloat mProj[16];
   GLfloat mView[16];
@@ -940,13 +940,13 @@ void GLToolkit::DrawStringRestore() {
 }
 
 void GLToolkit::DrawCoordinateAxes(double length, double n) {
-    Vector3d O(0.0, 0.0, 0.0);
-    Vector3d X(1.0, 0.0, 0.0);
-    Vector3d Y(0.0, 1.0, 0.0);
-    Vector3d Z(0.0, 0.0, 1.0);
-    Vector3d X_end = length * X;
-    Vector3d Y_end = length * Y;
-    Vector3d Z_end = length * Z;
+    Vector3_t<FLOAT> O(0.0, 0.0, 0.0);
+    Vector3_t<FLOAT> X(1.0, 0.0, 0.0);
+    Vector3_t<FLOAT> Y(0.0, 1.0, 0.0);
+    Vector3_t<FLOAT> Z(0.0, 0.0, 1.0);
+    Vector3_t<FLOAT> X_end = length * X;
+    Vector3_t<FLOAT> Y_end = length * Y;
+    Vector3_t<FLOAT> Z_end = length * Z;
     DrawVector(O, X_end, Y, n);
     DrawVector(O, Y_end, Z, n);
     DrawVector(O, Z_end, X, n);
@@ -959,28 +959,28 @@ void GLToolkit::DrawCoordinateAxes(double length, double n) {
 
 void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& nr) {
 
-    Vector3d start(x1, y1, z1);
-    Vector3d end(x2, y2, z2);
-    Vector3d diff = end - start;
-    Vector3d diffNorm = diff.Normalized();
-    Vector3d normal;
+    Vector3_t<FLOAT> start(x1, y1, z1);
+    Vector3_t<FLOAT> end(x2, y2, z2);
+    Vector3_t<FLOAT> diff = end - start;
+    Vector3_t<FLOAT> diffNorm = diff.Normalized();
+    Vector3_t<FLOAT> normal;
 
   // Choose a normal vector
   if( std::abs(diff.x) > 1e-3 ) {
     // Oy
-      normal = Vector3d(diffNorm.z, diffNorm.y, -diffNorm.x);
+      normal = Vector3_t<FLOAT>(diffNorm.z, diffNorm.y, -diffNorm.x);
   } else if( std::abs(diff.y) > 1e-3 ) {
     // Oz
-      normal = Vector3d(diffNorm.y, -diffNorm.x, diffNorm.z);
+      normal = Vector3_t<FLOAT>(diffNorm.y, -diffNorm.x, diffNorm.z);
   }
   else {
       // Ox
-      normal = Vector3d(diffNorm.x, diffNorm.z, -diffNorm.y);
+      normal = Vector3_t<FLOAT>(diffNorm.x, diffNorm.z, -diffNorm.y);
   }
   DrawVector(start, end, normal, nr);
 }
 
-void GLToolkit::DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, const double& nr) {
+void GLToolkit::DrawVector(const Vector3_t<FLOAT>& start, const Vector3_t<FLOAT>& end, const Vector3_t<FLOAT>& normal, const double& nr) {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
     glDisable(GL_BLEND);
@@ -992,11 +992,11 @@ void GLToolkit::DrawVector(const Vector3d& start, const Vector3d& end, const Vec
     glVertex3d(end.x,end.y,end.z);
 
     if (nr > 3.0) { //Draw arrow head
-        Vector3d diff = end - start;
-        Vector3d diffNorm = (1.0 / nr) * diff.Normalized();
-        Vector3d reducedNormal = (1.0 / nr) * normal;
-        Vector3d p2 = end + reducedNormal - diffNorm;
-        Vector3d p3 = end - reducedNormal - diffNorm;
+        Vector3_t<FLOAT> diff = end - start;
+        Vector3_t<FLOAT> diffNorm = (1.0 / nr) * diff.Normalized();
+        Vector3_t<FLOAT> reducedNormal = (1.0 / nr) * normal;
+        Vector3_t<FLOAT> p2 = end + reducedNormal - diffNorm;
+        Vector3_t<FLOAT> p3 = end - reducedNormal - diffNorm;
         
         glVertex3d(end.x, end.y, end.z);
         glVertex3d(p2.x,p2.y,p2.z);
@@ -1028,13 +1028,13 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness) {
+void GLToolkit::LookAt(const Vector3_t<FLOAT>& Eye, const Vector3_t<FLOAT>& camPos, const Vector3_t<FLOAT>& Up, const double& handedness) {
 	//handedness =  -1: left handed
 	// Create and load a left- or right-handed view matrix
 
-	Vector3d Z = (camPos - Eye).Normalized();
-	Vector3d X = -handedness * CrossProduct(Up, Z).Normalized();
-	Vector3d Y = -handedness * CrossProduct(Z, X);
+	Vector3_t<FLOAT> Z = (camPos - Eye).Normalized();
+	Vector3_t<FLOAT> X = -handedness * CrossProduct(Up, Z).Normalized();
+	Vector3_t<FLOAT> Y = -handedness * CrossProduct(Z, X);
   
 
 	double dotXE = Dot(Eye,X);

@@ -84,7 +84,7 @@ typedef struct {
   double   lightAngleOx; //Light direction
   double   lightAngleOy; //Light direction
 
-  Vector3d camOffset;  // Camera target offset
+  Vector3_t<FLOAT> camOffset;  // Camera target offset
   int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
 
   double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
@@ -252,9 +252,9 @@ private:
   double   zNear;
   double   zFar;
 
-  Vector3d camDir;     // Camera basis (PERSPECTIVE_PROJ)
-  Vector3d camLeft;    // Camera basis (PERSPECTIVE_PROJ)
-  Vector3d camUp;      // Camera basis (PERSPECTIVE_PROJ)
+  Vector3_t<FLOAT> camDir;     // Camera basis (PERSPECTIVE_PROJ)
+  Vector3_t<FLOAT> camLeft;    // Camera basis (PERSPECTIVE_PROJ)
+  Vector3_t<FLOAT> camUp;      // Camera basis (PERSPECTIVE_PROJ)
 
   double   vectorLength;
   double   arrowLength;

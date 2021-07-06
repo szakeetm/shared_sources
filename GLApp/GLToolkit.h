@@ -54,8 +54,8 @@ public:
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
-  static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
-  static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
+  static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3_t<FLOAT>& p);
+  static void LookAt(const Vector3_t<FLOAT>& Eye, const Vector3_t<FLOAT>& camPos, const Vector3_t<FLOAT>& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z);
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);
@@ -81,7 +81,7 @@ public:
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
   static void DrawCoordinateAxes(double length,double n=1.0);
   static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& nr=1.0); //Auto-choose a normal and draw vector
-  static void DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, const double& nr = 1.0); //Draw vector with passed normal
+  static void DrawVector(const Vector3_t<FLOAT>& start, const Vector3_t<FLOAT>& end, const Vector3_t<FLOAT>& normal, const double& nr = 1.0); //Draw vector with passed normal
   static void DrawButtonBack(const int &x,const int &y,const int &width,
 	  const int &height,const int &state);
   static void DrawSmallButton(int x,int y,int state);

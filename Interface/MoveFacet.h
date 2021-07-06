@@ -72,6 +72,6 @@ private:
   GLTitledPanel	*dirPanel;
   GLTitledPanel	*basePanel;
 
-  Vector3d baseLocation;
+  Vector3_t<FLOAT> baseLocation;
 
 };

@@ -242,7 +242,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 			//Calculate the plane
-			Vector3d AXIS_P0, AXIS_DIR;
+			Vector3_t<FLOAT> AXIS_P0, AXIS_DIR;
 
 			if (!(radText->GetNumber(&rad))) {
 				GLMessageBox::Display("Invalid angle (radians field)", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -251,16 +251,16 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 
 			switch (axisMode) {
 			case XMODE:
-				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
-				AXIS_DIR = Vector3d(1.0, 0.0, 0.0);
+				AXIS_P0 = Vector3_t<FLOAT>(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3_t<FLOAT>(1.0, 0.0, 0.0);
 				break;
 			case YMODE:
-				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
-				AXIS_DIR = Vector3d(0.0, 1.0, 0.0);
+				AXIS_P0 = Vector3_t<FLOAT>(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3_t<FLOAT>(0.0, 1.0, 0.0);
 				break;
 			case ZMODE:
-				AXIS_P0 = Vector3d(0.0, 0.0, 0.0);
-				AXIS_DIR = Vector3d(0.0, 0.0, 1.0);
+				AXIS_P0 = Vector3_t<FLOAT>(0.0, 0.0, 0.0);
+				AXIS_DIR = Vector3_t<FLOAT>(0.0, 0.0, 1.0);
 				break;
 			case FACETUMODE:
 			{
@@ -344,8 +344,8 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					return;
 				}
 
-				AXIS_P0 = Vector3d(a, b, c);
-				AXIS_DIR = Vector3d(u, v, w);
+				AXIS_P0 = Vector3_t<FLOAT>(a, b, c);
+				AXIS_DIR = Vector3_t<FLOAT>(u, v, w);
 				break;
 			default:
 				GLMessageBox::Display("Select an axis definition mode.", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -371,7 +371,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					selVertexId = i;
 				}
 			}
-			Vector3d *selVertex = geom->GetVertex(selVertexId);
+			Vector3_t<FLOAT> *selVertex = geom->GetVertex(selVertexId);
 			aText->SetText(selVertex->x);
 			bText->SetText(selVertex->y);
 			cText->SetText(selVertex->z);
@@ -400,7 +400,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 					selVertexId = i;
 				}
 			}
-			Vector3d *selVertex = geom->GetVertex(selVertexId);
+			Vector3_t<FLOAT> *selVertex = geom->GetVertex(selVertexId);
 			uText->SetText(selVertex->x - a);
 			vText->SetText(selVertex->y - b);
 			wText->SetText(selVertex->z - c);

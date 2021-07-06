@@ -219,7 +219,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 
-			Vector3d invariant;
+			Vector3_t<FLOAT> invariant;
 			bool found;
 
 			switch (invariantMode) {

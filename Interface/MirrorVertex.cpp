@@ -186,7 +186,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 			return;
 		}
 			//Calculate the plane
-			Vector3d P0,N;
+			Vector3_t<FLOAT> P0,N;
 			switch (planeMode) {
 			case XYMODE:
 				P0.x = 0.0; P0.y = 0.0; P0.z = 0.0;
@@ -279,7 +279,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 				 }
 			 }
 			 
-			 Vector3d U2, V2, N2;
+			 Vector3_t<FLOAT> U2, V2, N2;
 			 U2 = (*(geom->GetVertex(v1Id)) - *(geom->GetVertex(v2Id))).Normalized();
 			 V2 = (*(geom->GetVertex(v1Id)) - *(geom->GetVertex(v3Id))).Normalized();
 			 N2 = CrossProduct(V2, U2);

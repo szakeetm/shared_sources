@@ -115,6 +115,13 @@ void GLTextField::UpdateText(const char *text) {
   UpdateXpos();
 }
 
+bool GLTextField::GetNumber(float *num) {
+
+    int conv = sscanf(m_Text,"%f",num);
+    return (conv==1);
+
+}
+
 bool GLTextField::GetNumber(double *num) {
 
   int conv = sscanf(m_Text,"%lf",num);

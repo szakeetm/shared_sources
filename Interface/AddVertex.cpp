@@ -142,7 +142,7 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d location;
+		  Vector3_t<FLOAT> location;
 		  auto sh = geom->GetFacet(selFacetIds[0])->sh;
 		  if (src == facetCenterButton) {
 			  location = sh.center;

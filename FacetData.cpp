@@ -9,7 +9,7 @@
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
-    Vector3d rayDirOpposite(-1.0 * ray.direction);
+    Vector3_t<FLOAT> rayDirOpposite(-1.0 * ray.direction);
     double det = Dot(this->sh.Nuv, rayDirOpposite);
 
     // Eliminate "back facet"
@@ -21,7 +21,7 @@ bool Facet::Intersect(Ray &ray) {
         if (det != 0.0) {
 
             double iDet = 1.0 / det;
-            Vector3d intZ = ray(0) - this->sh.O;
+            Vector3_t<FLOAT> intZ = ray(0) - this->sh.O;
 
             u = iDet * DET33(intZ.x, this->sh.V.x, rayDirOpposite.x,
                              intZ.y, this->sh.V.y, rayDirOpposite.y,

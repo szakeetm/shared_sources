@@ -296,7 +296,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
   switch (message) {
   case MSG_BUTTON:
 	  if (src == createButton) {
-		  Vector3d center, axisDir, normalDir;
+		  Vector3_t<FLOAT> center, axisDir, normalDir;
 		  double axis1length, axis2length, racetrackTopLength;
 		  int nbSteps;
 
@@ -421,7 +421,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetCenter = geom->GetFacet(selFacets[0])->sh.center;
+		  Vector3_t<FLOAT> facetCenter = geom->GetFacet(selFacets[0])->sh.center;
 		  
 		  centerXtext->SetText(facetCenter.x);
 		  centerYtext->SetText(facetCenter.y);
@@ -436,7 +436,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d center = *(geom->GetVertex(selVertices[0]));
+		  Vector3_t<FLOAT> center = *(geom->GetVertex(selVertices[0]));
 
 		  centerXtext->SetText(center.x);
 		  centerYtext->SetText(center.y);
@@ -451,7 +451,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetU = geom->GetFacet(selFacets[0])->sh.U;
+		  Vector3_t<FLOAT> facetU = geom->GetFacet(selFacets[0])->sh.U;
 
 		  axisXtext->SetText(facetU.x);
 		  axisYtext->SetText(facetU.y);
@@ -461,7 +461,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  axisStatusLabel->SetText(tmp.str());
 	  }
 	  else if (src == axisVertexButton) {
-		  Vector3d center;
+		  Vector3_t<FLOAT> center;
 		  if (!centerXtext->GetNumber(&center.x)) {
 			  GLMessageBox::Display("Invalid center X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
@@ -480,9 +480,9 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d vertexLocation = *(geom->GetVertex(selVertices[0]));
+		  Vector3_t<FLOAT> vertexLocation = *(geom->GetVertex(selVertices[0]));
 
-		  Vector3d diff = vertexLocation - center;
+		  Vector3_t<FLOAT> diff = vertexLocation - center;
 
 		  axisXtext->SetText(diff.x);
 		  axisYtext->SetText(diff.y);
@@ -497,7 +497,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetN = geom->GetFacet(selFacets[0])->sh.N;
+		  Vector3_t<FLOAT> facetN = geom->GetFacet(selFacets[0])->sh.N;
 
 		  normalXtext->SetText(facetN.x);
 		  normalYtext->SetText(facetN.y);
@@ -507,7 +507,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  normalStatusLabel->SetText(tmp.str());
 	  }
 	  else if (src == normalVertexButton) {
-		  Vector3d center;
+		  Vector3_t<FLOAT> center;
 		  if (!centerXtext->GetNumber(&center.x)) {
 			  GLMessageBox::Display("Invalid center X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
@@ -526,9 +526,9 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d vertexLocation = *(geom->GetVertex(selVertices[0]));
+		  Vector3_t<FLOAT> vertexLocation = *(geom->GetVertex(selVertices[0]));
 
-		  Vector3d diff = vertexLocation - center;
+		  Vector3_t<FLOAT> diff = vertexLocation - center;
 
 		  normalXtext->SetText(diff.x);
 		  normalYtext->SetText(diff.y);

@@ -49,7 +49,7 @@ extern SynRad*mApp;
 * \param nbIndex number of indices/facets
 */
 InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
-	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
+	indices.resize(nbIndex);                    // Ref to Geometry Vector3_t<FLOAT>
 	vertices2.resize(nbIndex);
 	visible.resize(nbIndex);
 
@@ -1041,7 +1041,7 @@ bool InterfaceFacet::IsTXTLinkFacet() {
 * \brief Real center coordinate in global space
 * \return 3d vector for real center coordinate
 */
-Vector3d InterfaceFacet::GetRealCenter() {
+Vector3_t<FLOAT> InterfaceFacet::GetRealCenter() {
 	return Project(sh.center, sh.O, sh.N);
 }
 

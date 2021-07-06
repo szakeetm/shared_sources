@@ -224,7 +224,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d facetNormal = geom->GetFacet(selFacets[0])->sh.N;
+			Vector3_t<FLOAT> facetNormal = geom->GetFacet(selFacets[0])->sh.N;
 			xText->SetText(facetNormal.x);
 			yText->SetText(facetNormal.y);
 			zText->SetText(facetNormal.z);
@@ -240,7 +240,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 				GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			baseLocation = (Vector3d)*(geom->GetVertex(selVertices[0]));
+			baseLocation = (Vector3_t<FLOAT>)*(geom->GetVertex(selVertices[0]));
 			std::stringstream tmp; tmp << "Vertex " << selVertices[0] + 1;
 			baseStatusLabel->SetText(tmp.str());
 			dirFacetCenterButton->SetEnabled(true);
@@ -264,7 +264,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 				GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d translation = *(geom->GetVertex(selVertices[0])) - baseLocation;
+			Vector3_t<FLOAT> translation = *(geom->GetVertex(selVertices[0])) - baseLocation;
 
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);
@@ -280,7 +280,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d translation = geom->GetFacet(selFacets[0])->sh.center - baseLocation;
+			Vector3_t<FLOAT> translation = geom->GetFacet(selFacets[0])->sh.center - baseLocation;
 
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);

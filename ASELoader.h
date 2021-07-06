@@ -221,10 +221,10 @@ typedef struct {
   int tv1;
   int tv2;
   int tv3;
-  Vector3d  n0;
-  Vector3d  n1;
-  Vector3d  n2;
-  Vector3d  n3;
+  Vector3_t<FLOAT>  n0;
+  Vector3_t<FLOAT>  n1;
+  Vector3_t<FLOAT>  n2;
+  Vector3_t<FLOAT>  n3;
 
 } ASEFACE;
 
@@ -255,13 +255,13 @@ typedef struct {
 	  char      name[64];
 	  //char      gname[64];
 	  int       nb_pts;
-	  Vector3d *pts;
+	  Vector3_t<FLOAT> *pts;
 	  int       nb_face;
 	  ASEFACE  *face;
 	  int       nb_map;
 	  ASEMAP   *map;
 	  int       mat;
-	  Vector3d  u;
+	  Vector3_t<FLOAT>  u;
 	  double    angle;
 	  //ASEMATRIX rot;
 

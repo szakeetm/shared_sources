@@ -478,7 +478,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 
 			if (mApp->AskToReset()){
 				
-				Vector3d radiusBase, offsetORradiusdir;
+				Vector3_t<FLOAT> radiusBase, offsetORradiusdir;
 				radiusBase.x = x0;
 				radiusBase.y = y0;
 				radiusBase.z = z0;
@@ -537,7 +537,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				char tmp[32];
 				sprintf(tmp, "Facet %zd center", *foundId + 1);
 				curveBaseLabel->SetText(tmp);
-				Vector3d center3d = geom->GetFacet(*foundId)->sh.center;
+				Vector3_t<FLOAT> center3d = geom->GetFacet(*foundId)->sh.center;
 				curveX0Text->SetText(center3d.x);
 				curveY0Text->SetText(center3d.y);
 				curveZ0Text->SetText(center3d.z);

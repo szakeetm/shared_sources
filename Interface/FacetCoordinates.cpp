@@ -58,7 +58,7 @@ static const int   fEdits[] = { 0,0,EDIT_NUMBER,EDIT_NUMBER,EDIT_NUMBER };
 
 struct line {
 	size_t vertexId;
-	Vector3d coord;
+	Vector3_t<FLOAT> coord;
 };
 
 /**

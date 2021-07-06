@@ -218,7 +218,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 		bb.max.z = -1e100;
 
 		// Axis Aligned Bounding Box
-		for (const Vector3d& p : vertices3) {
+		for (const Vector3_t<FLOAT>& p : vertices3) {
 			bb.min.x = std::min(bb.min.x, p.x);
 			bb.min.y = std::min(bb.min.y, p.y);
 			bb.min.z = std::min(bb.min.z, p.z);
@@ -241,7 +241,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 	}
 	else { //bounding box only for the changed facet
 		for (int i = 0; i < facets[facet_number]->sh.nbIndex; i++) {
-			const Vector3d& p = vertices3[facets[facet_number]->indices[i]];
+			const Vector3_t<FLOAT>& p = vertices3[facets[facet_number]->indices[i]];
 			bb.min.x = std::min(bb.min.x, p.x);
 			bb.min.y = std::min(bb.min.y, p.y);
 			bb.min.z = std::min(bb.min.z, p.z);
@@ -338,7 +338,7 @@ size_t Geometry::GetNbVertex() const {
 	return sh.nbVertex;
 }
 
-Vector3d Geometry::GetFacetCenter(int facet) {
+Vector3_t<FLOAT> Geometry::GetFacetCenter(int facet) {
 
 	return facets[facet]->sh.center;
 
@@ -390,7 +390,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 		return;
 	}//at least three vertices
 
-	Vector3d U, V, N;
+	Vector3_t<FLOAT> U, V, N;
 	U = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[1]]).Normalized();
 
 	int i2 = 2;
@@ -739,9 +739,9 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 		return;
 	}
 
-	Vector3d U = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[1]]).Normalized();
-	Vector3d V = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[2]]).Normalized();
-	Vector3d N = CrossProduct(V, U);
+	Vector3_t<FLOAT> U = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[1]]).Normalized();
+	Vector3_t<FLOAT> V = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[2]]).Normalized();
+	Vector3_t<FLOAT> N = CrossProduct(V, U);
 	double nN = N.Norme();
 	if (nN < 1e-8) {
 		GLMessageBox::Display("Sorry, the 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
@@ -753,14 +753,14 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	double A = N.x;
 	double B = N.y;
 	double C = N.z;
-	Vector3d& p0 = vertices3[selectedVertices[0]];
+	Vector3_t<FLOAT>& p0 = vertices3[selectedVertices[0]];
 	double D = -Dot(N, p0);
 
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
 
 	for (int i = 0; i < sh.nbVertex; i++) {
-		Vector3d *v = GetVertex(i);
+		Vector3_t<FLOAT> *v = GetVertex(i);
 		if (auto screenCoords = GLToolkit::Get2DScreenCoord(*v)) { //To improve
 			auto[outX, outY] = *screenCoords;
 			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
@@ -822,7 +822,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 			Facet *f = facets[i];
 			if (f->wp.superIdx == viewStruct) {
 				for (int j = 0; j < f->wp.nbIndex; j++) {
-					Vector3d p = vertices3[f->indices[j]];
+					Vector3_t<FLOAT> p = vertices3[f->indices[j]];
 					if (p.x < sbb.min.x) sbb.min.x = p.x;
 					if (p.y < sbb.min.y) sbb.min.y = p.y;
 					if (p.z < sbb.min.z) sbb.min.z = p.z;
@@ -835,7 +835,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 		*/
 
 		for (size_t i = 0; i < sh.nbVertex; i++) {
-			Vector3d* v = &vertices3[i];
+			Vector3_t<FLOAT>* v = &vertices3[i];
 			if (v->x < sbb.min.x) sbb.min.x = v->x;
 			if (v->y < sbb.min.y) sbb.min.y = v->y;
 			if (v->z < sbb.min.z) sbb.min.z = v->z;
@@ -870,7 +870,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 
 }
 
-Vector3d Geometry::GetCenter() {
+Vector3_t<FLOAT> Geometry::GetCenter() {
 
 	/*if (viewStruct < 0) {
 
@@ -879,7 +879,7 @@ Vector3d Geometry::GetCenter() {
 	}
 	else {*/
 
-		Vector3d r;
+		Vector3_t<FLOAT> r;
 		AxisAlignedBoundingBox sbb = GetBB();
 
 		r.x = (sbb.max.x + sbb.min.x) / 2.0;
@@ -895,7 +895,7 @@ int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int 
 
 	bool found = false;
 	int i = 0;
-	//Vector3d n;
+	//Vector3_t<FLOAT> n;
 	double v2 = vT*vT;
 
 	while (i < *nbRef && !found) {
@@ -1073,7 +1073,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 
 }
 
-void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps) {
+void Geometry::Extrude(int mode, Vector3_t<FLOAT> radiusBase, Vector3_t<FLOAT> offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps) {
 
 	//creates facet from selected vertices
 
@@ -1085,7 +1085,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 			size_t sourceFacetId = sel;
 			facets[sourceFacetId]->selected = false;
 			//Update direction if necessary
-			Vector3d dir2, axisBase, axis;
+			Vector3_t<FLOAT> dir2, axisBase, axis;
 
 			if (mode == 1) { //Use facet normal to determine offset
 				dir2 = facets[sourceFacetId]->sh.N * distanceORradius;
@@ -1194,7 +1194,7 @@ void Geometry::ShiftVertex() {
 	BuildGLList();
 }
 
-void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) {
+void Geometry::Merge(size_t nbV, size_t nbF, Vector3_t<FLOAT> *nV, InterfaceFacet **nF) {
 	mApp->changedSinceSave = true;
 	// Merge the current geometry with the specified one
 	if (!nbV || !nbF) return;
@@ -1576,7 +1576,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 		alignerDestVertexId = anchorDestVertexId;
 		anchorDestVertexId = temp;
 	}
-	Vector3d Translation = vertices3[anchorDestVertexId] - vertices3[anchorSourceVertexId];
+	Vector3_t<FLOAT> Translation = vertices3[anchorDestVertexId] - vertices3[anchorSourceVertexId];
 
 	int nb = 0;
 	for (const auto& sel : memorizedSelection) {
@@ -1591,8 +1591,8 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	}
 
 	//Rotating to match normal vectors
-	Vector3d Axis;
-	Vector3d Normal;
+	Vector3_t<FLOAT> Axis;
+	Vector3_t<FLOAT> Normal;
 	double angle;
 	Normal = facets[destFacetId]->sh.N;
 	if (invertNormal) Normal = Normal * -1.0;
@@ -1634,8 +1634,8 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 
 	//Rotating to match direction points
 
-	Vector3d Dir1 = vertices3[alignerDestVertexId] - vertices3[anchorDestVertexId];
-	Vector3d Dir2 = vertices3[alignerSourceVertexId] - vertices3[anchorSourceVertexId];
+	Vector3_t<FLOAT> Dir1 = vertices3[alignerDestVertexId] - vertices3[anchorDestVertexId];
+	Vector3_t<FLOAT> Dir2 = vertices3[alignerSourceVertexId] - vertices3[anchorSourceVertexId];
 	Axis = CrossProduct(Dir2, Dir1);
 	if (Axis.Norme() < 1e-5) { //The two directions are either collinear or the opposite
 		if (Dot(Dir1, Dir2) > 0.99999) { //no rotation needed
@@ -1695,8 +1695,8 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 	prgMove->SetVisible(true);
 	auto selectedFacets = GetSelectedFacets();
 
-	Vector3d delta = Vector3d(dX, dY, dZ);
-	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta ;
+	Vector3_t<FLOAT> delta = Vector3_t<FLOAT>(dX, dY, dZ);
+	Vector3_t<FLOAT> translation = towardsDirectionMode ? distance*delta.Normalized() : delta ;
 
 	if (translation.Norme()>0.0) {
 		if (copy)
@@ -1734,7 +1734,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 	SAFE_DELETE(prgMove);
 }
 
-std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker) {
+std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3_t<FLOAT> P0, Vector3_t<FLOAT> N, bool project, bool copy, Worker *worker) {
 	std::vector<UndoPoint> undoPoints;
 	double counter = 0.0;
 	auto selectedFacets = GetSelectedFacets();
@@ -1758,7 +1758,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 		nbSelFacet++;
 		for (const auto& ind : facets[sel]->indices) {
 			if (!alreadyMirrored[ind]) {
-				Vector3d newPosition;
+				Vector3_t<FLOAT> newPosition;
 				if (project) {
 					newPosition = Project(vertices3[ind], P0, N);
 					if (!copy) {
@@ -1795,12 +1795,12 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	return undoPoints;
 }
 
-std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, bool project, bool copy, Worker *worker) {
+std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3_t<FLOAT> &AXIS_P0, const Vector3_t<FLOAT> &AXIS_DIR, bool project, bool copy, Worker *worker) {
 	std::vector<UndoPoint> undoPoints;
 	size_t nbVertexOri = sh.nbVertex;
 	for (size_t i = 0; i < nbVertexOri; i++) {
 		if (vertices3[i].selected) {
-			Vector3d newPosition;
+			Vector3_t<FLOAT> newPosition;
 			if (!project) {
 				newPosition = Mirror(vertices3[i], AXIS_P0, AXIS_DIR);
 			}
@@ -1825,7 +1825,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &A
 	return undoPoints;
 }
 
-void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
+void Geometry::RotateSelectedFacets(const Vector3_t<FLOAT> &AXIS_P0, const Vector3_t<FLOAT> &AXIS_DIR, double theta, bool copy, Worker *worker) {
 
 	auto selectedFacets = GetSelectedFacets();
 	double counter = 0.0;
@@ -1872,7 +1872,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 	SAFE_DELETE(prgRotate);
 }
 
-void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
+void Geometry::RotateSelectedVertices(const Vector3_t<FLOAT> &AXIS_P0, const Vector3_t<FLOAT> &AXIS_DIR, double theta, bool copy, Worker *worker) {
 
 	if (!copy) { //move
 		for (int i = 0; i < sh.nbVertex; i++) {
@@ -1966,8 +1966,8 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 	prgMove->SetVisible(true);
 	auto selectedVertices = GetSelectedVertices();
 
-	Vector3d delta = Vector3d(dX, dY, dZ);
-	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta;
+	Vector3_t<FLOAT> delta = Vector3_t<FLOAT>(dX, dY, dZ);
+	Vector3_t<FLOAT> translation = towardsDirectionMode ? distance*delta.Normalized() : delta;
 
 	if (translation.Norme()>0.0) {
 		mApp->changedSinceSave = true;
@@ -1976,7 +1976,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 		for (auto& i:selectedVertices) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / selectedVertices.size());
-			Vector3d newLocation = vertices3[i] + translation;
+			Vector3_t<FLOAT> newLocation = vertices3[i] + translation;
 			if (!copy) {
 				vertices3[i].SetLocation(newLocation);
 			}
@@ -1991,7 +1991,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 	SAFE_DELETE(prgMove);
 }
 
-void Geometry::AddVertex(const Vector3d& location, bool selected) {
+void Geometry::AddVertex(const Vector3_t<FLOAT>& location, bool selected) {
 	mApp->changedSinceSave = true;
 
 	//a new vertex
@@ -2012,7 +2012,7 @@ void Geometry::AddVertex(const Vector3d& location, bool selected) {
 }
 
 void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
-	AddVertex(Vector3d(X, Y, Z), selected);
+	AddVertex(Vector3_t<FLOAT>(X, Y, Z), selected);
 }
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
@@ -2074,7 +2074,7 @@ void Geometry::DelStruct(int numToDel) {
 	BuildGLList();
 }
 
-void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
+void Geometry::ScaleSelectedVertices(Vector3_t<FLOAT> invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
 	if (!mApp->AskToReset(worker)) return;
 	mApp->changedSinceSave = true;
@@ -2083,7 +2083,7 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 
 	for (size_t i = 0; i < nbVertexOri; i++) {
 		if (vertices3[i].selected) {
-			Vector3d newPosition;
+			Vector3_t<FLOAT> newPosition;
 			newPosition.x = invariant.x + factorX*(vertices3[i].x - invariant.x);
 			newPosition.y = invariant.y + factorY*(vertices3[i].y - invariant.y);
 			newPosition.z = invariant.z + factorZ*(vertices3[i].z - invariant.z);
@@ -2099,7 +2099,7 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 	InitializeGeometry();
 }
 
-void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
+void Geometry::ScaleSelectedFacets(Vector3_t<FLOAT> invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
 	auto *prgMove = new GLProgress("Scaling selected facets...", "Please wait");
 	prgMove->SetProgress(0.0);
@@ -2145,11 +2145,11 @@ bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<Cli
 	return (a->distance < b->distance);
 }
 
-bool Geometry::IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection) {
+bool Geometry::IntersectingPlaneWithLine(const Vector3_t<FLOAT> &P0, const Vector3_t<FLOAT> &u, const Vector3_t<FLOAT> &V0, const Vector3_t<FLOAT> &n, Vector3_t<FLOAT> *intersectPoint, bool withinSection) {
 	//Notations from http://geomalgorithms.com/a05-_intersect-1.html
 	//At this point, intersecting ray is L=P0+s*u
 	if (IsZero(Dot(n, u))) return false; //Check for parallelness
-	Vector3d w = P0 - V0;
+	Vector3_t<FLOAT> w = P0 - V0;
 	if (IsZero(Dot(n, w))) return false; //Check for inclusion
 	//Intersection point: P(s_i)-V0=w+s_i*u -> s_i=(-n*w)/(n*u)
 	double s_i = -Dot(n, w) / Dot(n, u);
@@ -2212,7 +2212,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 					for (size_t index = 0; index < f1->sh.nbIndex; index++) { //Go through all indexes of edge-finding facet
 						InterfaceVertex intersectionPoint;
 						InterfaceVertex base = vertices3[f1->indices[index]];
-						Vector3d side = vertices3[f1->GetIndex(index + 1)] - base;
+						Vector3_t<FLOAT> side = vertices3[f1->GetIndex(index + 1)] - base;
 
 						/*
 						//Check if this edge was already checked
@@ -2460,7 +2460,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	return deletedFacetList;
 }
 
-std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress *prg) {
+std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3_t<FLOAT> &base, const Vector3_t<FLOAT> &normal, size_t *nbCreated,GLProgress *prg) {
 	mApp->changedSinceSave = true;
 	std::vector<DeletedFacet> deletedFacetList;
 	size_t oldNbFacets = sh.nbFacet;
@@ -2468,7 +2468,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 		InterfaceFacet *f = facets[i];
 		if (f->selected) {
 			if (prg) prg->SetProgress(double(i) / double(sh.nbFacet));
-			Vector3d intersectionPoint, intersectLineDir;
+			Vector3_t<FLOAT> intersectionPoint, intersectLineDir;
 			if (!IntersectingPlaneWithLine(f->sh.O, f->sh.U, base, normal, &intersectionPoint))
 				if (!IntersectingPlaneWithLine(f->sh.O, f->sh.V, base, normal, &intersectionPoint))
 					if (!IntersectingPlaneWithLine(f->sh.O + f->sh.U, -1.0*f->sh.U, base, normal, &intersectionPoint)) //If origin on cutting plane
@@ -2799,7 +2799,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 
 		// Revert orientation if normal has been swapped
 		// This happens when the second vertex is no longer convex
-		Vector3d n, v1, v2;
+		Vector3_t<FLOAT> n, v1, v2;
 		double   d;
 		size_t i0 = facets[i]->indices[0];
 		size_t i1 = facets[i]->indices[1];
@@ -2850,8 +2850,8 @@ void Geometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 			size_t p0 = f->indices[k];
 			size_t p1 = f->indices[(k + 1) % f->sh.nbIndex];
 			size_t p2 = f->indices[(k + 2) % f->sh.nbIndex]; //to compare last side with first too
-			Vector3d p0p1 = (vertices3[p1] - vertices3[p0]).Normalized();
-			Vector3d p0p2 = (vertices3[p2] - vertices3[p1]).Normalized();
+			Vector3_t<FLOAT> p0p1 = (vertices3[p1] - vertices3[p0]).Normalized();
+			Vector3_t<FLOAT> p0p2 = (vertices3[p2] - vertices3[p1]).Normalized();
 			collinear = (Dot(p0p1, p0p2) >= linTreshold);
 			if (collinear&&f->sh.nbIndex > 3) { //collinear
 				size_t l = (k + 1) % f->sh.nbIndex;
@@ -2867,9 +2867,9 @@ void Geometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 
 void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	// Calculate facet normal
-	Vector3d p0 = vertices3[f->indices[0]];
-	Vector3d v1;
-	Vector3d v2;
+	Vector3_t<FLOAT> p0 = vertices3[f->indices[0]];
+	Vector3_t<FLOAT> v1;
+	Vector3_t<FLOAT> v2;
 	bool consecutive = true;
 	int ind = 2;
 
@@ -2888,11 +2888,11 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	f->sh.N = f->sh.N.Normalized();                  // Normalize
 
 	// Calculate Axis Aligned Bounding Box
-	f->sh.bb.min = Vector3d(1e100, 1e100, 1e100);
-	f->sh.bb.max = Vector3d(-1e100, -1e100, -1e100);
+	f->sh.bb.min = Vector3_t<FLOAT>(1e100, 1e100, 1e100);
+	f->sh.bb.max = Vector3_t<FLOAT>(-1e100, -1e100, -1e100);
 
 	for (const auto& i : f->indices) {
-		const Vector3d& p = vertices3[i];
+		const auto& p = vertices3[i];
 		f->sh.bb.min.x = std::min(f->sh.bb.min.x,p.x);
 		f->sh.bb.min.y = std::min(f->sh.bb.min.y, p.y);
 		f->sh.bb.min.z = std::min(f->sh.bb.min.z, p.z);
@@ -2913,7 +2913,7 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	// Facet planarity
 	f->planarityError = 0.0;
 	for (size_t i = 3; i < f->sh.nbIndex;i++) { //First 3 vertices are by def on a plane
-		const Vector3d& p = vertices3[f->indices[i]];
+		const Vector3_t<FLOAT>& p = vertices3[f->indices[i]];
 		double d = A * p.x + B * p.y + C * p.z + D;
 		f->planarityError = std::max(abs(d), f->planarityError);
 	}
@@ -2924,9 +2924,9 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	f->c = C;
 	f->d = D;
 
-	Vector3d p1 = vertices3[f->indices[1]];
+	Vector3_t<FLOAT> p1 = vertices3[f->indices[1]];
 
-	Vector3d U, V;
+	Vector3_t<FLOAT> U, V;
 
 	U = (p1 - p0).Normalized(); //First side
 
@@ -2940,8 +2940,8 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	Vector2d BBmax; BBmax.u = 0.0; BBmax.v = 0.0;
 
 	for (size_t j = 1; j < f->sh.nbIndex; j++) {
-		Vector3d p = vertices3[f->indices[j]];
-		Vector3d v = p - p0;
+		Vector3_t<FLOAT> p = vertices3[f->indices[j]];
+		Vector3_t<FLOAT> v = p - p0;
 		f->vertices2[j].u = Dot(U, v);  // Project p on U along the V direction
 		f->vertices2[j].v = Dot(V, v);  // Project p on V along the U direction
 
@@ -3258,8 +3258,8 @@ void Geometry::CreateLoft() {
 			size_t ind4[] = { newFacet->indices[0],newFacet->indices[1], newFacet->indices[2], newFacet->indices[3] };
 			delete newFacet;
 			newFacet = new InterfaceFacet(3);
-			Vector3d diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
-			Vector3d diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
+			Vector3_t<FLOAT> diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
+			Vector3_t<FLOAT> diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
 			bool connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side. To do: detect which split would create larger total surface and use that
 			newFacet->indices[0] = ind4[0];
 			newFacet->indices[1] = ind4[1];
@@ -3413,7 +3413,7 @@ void Geometry::AdjustProfile() {
 	for (int i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
 		if (f->sh.profileType == PROFILE_U) {
-			Vector3d v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
+			Vector3_t<FLOAT> v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
 			double n0 = v0.Norme();
 			double nU = f->sh.U.Norme();
 			if (IsZero(n0 - nU)) f->sh.profileType = PROFILE_U; // Select U
@@ -3860,7 +3860,7 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
     catch(std::exception& e) {
         throw Error("Couldn't allocate memory for facets");
     }
-	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
+	//vertices3 = (Vector3_t<FLOAT>*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3_t<FLOAT>));
 	
 	/*
 	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + wp.nbVertex) * sizeof(InterfaceVertex));
@@ -4078,7 +4078,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
     }
 
 	/*
-	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
+	//vertices3 = (Vector3_t<FLOAT>*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3_t<FLOAT>));
 	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertex));
 	if (!tmp_vertices3) throw Error("Out of memory: InsertGEOGeom");
 	memmove(tmp_vertices3, vertices3, (*nbVertex) * sizeof(InterfaceVertex));
@@ -4312,11 +4312,11 @@ bool Geometry::IsLoaded() const {
 	return isLoaded;
 }
 
-void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double& axis1Length, const double& axis2Length) {
+void Geometry::CreateRectangle(const Vector3_t<FLOAT>& rec_center, const Vector3_t<FLOAT>& axis1Dir, const Vector3_t<FLOAT>& normalDir, const double& axis1Length, const double& axis2Length) {
 	
 	std::vector<size_t> vertexIds;
-	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
-	Vector3d axis2half = CrossProduct(normalDir.Normalized()*(axis2Length/axis1Length), axis1half); //left-hand coordinate system, V = N x U
+	Vector3_t<FLOAT> axis1half = axis1Dir.Normalized()*0.5*axis1Length;
+	Vector3_t<FLOAT> axis2half = CrossProduct(normalDir.Normalized()*(axis2Length/axis1Length), axis1half); //left-hand coordinate system, V = N x U
 
 	AddVertex(rec_center - axis1half - axis2half, false);
 	vertexIds.push_back(sh.nbVertex - 1);
@@ -4330,11 +4330,11 @@ void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t & nbSteps)
+void Geometry::CreateCircle(const Vector3_t<FLOAT> & circ_center, const Vector3_t<FLOAT> & axis1Dir, const Vector3_t<FLOAT> & normalDir, const double & axis1Length, const double & axis2Length, const size_t & nbSteps)
 {	
 	std::vector<size_t> vertexIds;
-	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
-	Vector3d axis2half = CrossProduct(normalDir.Normalized()*(axis2Length / axis1Length), axis1half); //left-hand coordinate system, V = N x U
+	Vector3_t<FLOAT> axis1half = axis1Dir.Normalized()*0.5*axis1Length;
+	Vector3_t<FLOAT> axis2half = CrossProduct(normalDir.Normalized()*(axis2Length / axis1Length), axis1half); //left-hand coordinate system, V = N x U
 	double angle = 0.0;
 	while(angle < (2 * PI - 1E-5)){
 	//for (double angle = 0.0; angle < (2 * PI - 1E-5); angle += ((2 * PI / ((double)nbSteps)))) {
@@ -4347,7 +4347,7 @@ void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t & nbSteps)
+void Geometry::CreateRacetrack(const Vector3_t<FLOAT> & race_center, const Vector3_t<FLOAT> & axis1Dir, const Vector3_t<FLOAT> & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t & nbSteps)
 {
 	//Set of 3 equations:
 	// r: radius of racetrack arc
@@ -4364,8 +4364,8 @@ void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & ax
 	double alpha = acos((topLength / 2 - delta) / r);
 
 	std::vector<size_t> vertexIds;
-	Vector3d i = axis1Dir.Normalized();
-	Vector3d j = CrossProduct(normalDir, i).Normalized(); //left-hand coordinate system, V = N x U
+	Vector3_t<FLOAT> i = axis1Dir.Normalized();
+	Vector3_t<FLOAT> j = CrossProduct(normalDir, i).Normalized(); //left-hand coordinate system, V = N x U
 
 	for (size_t step = 0; step < (nbSteps + 1);step++) {  //Right side arc
 		double angle = 0.0-alpha + (double)step / (double)nbSteps*2.0*alpha;
@@ -4571,7 +4571,7 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 	return result;
 }
 
-void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
+void Geometry::InitInterfaceVertices(const std::vector<Vector3_t<FLOAT>>& vertices) {
     vertices3.clear();
     for(auto& vert : vertices) {
         vertices3.emplace_back(vert); // position data

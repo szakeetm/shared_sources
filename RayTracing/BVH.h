@@ -10,6 +10,7 @@
 #include <FacetData.h>
 #include "Primitive.h"
 
+using FLOAT = float;
 using Primitive = Facet;
 
 struct BVHBuildNode;

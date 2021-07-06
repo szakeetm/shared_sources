@@ -141,19 +141,19 @@ public:
 	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
 					  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
-	Vector3d   O;  // Origin
-	Vector3d   U;  // U vector
-	Vector3d   V;  // V vector
-	Vector3d   nU; // Normalized U
-	Vector3d   nV; // Normalized V
+	Vector3_t<FLOAT>   O;  // Origin
+	Vector3_t<FLOAT>   U;  // U vector
+	Vector3_t<FLOAT>   V;  // V vector
+	Vector3_t<FLOAT>   nU; // Normalized U
+	Vector3_t<FLOAT>   nV; // Normalized V
 
 				   // Normal vector
-	Vector3d    N;    // normalized
-	Vector3d    Nuv;  // normal to (u,v) not normlized
+	Vector3_t<FLOAT>    N;    // normalized
+	Vector3_t<FLOAT>    Nuv;  // normal to (u,v) not normlized
 
 					  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	AxisAlignedBoundingBox       bb;
-	Vector3d   center;
+	Vector3_t<FLOAT>   center;
 
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)
@@ -334,8 +334,8 @@ struct WorkerParams { //Plain old data
 	bool calcConstantFlow;
 
 	int motionType;
-	Vector3d motionVector1; //base point for rotation
-	Vector3d motionVector2; //rotation vector or velocity vector
+	Vector3_t<FLOAT> motionVector1; //base point for rotation
+    Vector3_t<FLOAT> motionVector2; //rotation vector or velocity vector
 #endif
 #if defined(SYNRAD)
 	size_t        nbRegion;  //number of magnetic regions
@@ -436,7 +436,7 @@ public:
 	    dP = 0.0;
 #endif
     }
-	Vector3d pos;
+    Vector3_t<FLOAT> pos;
 	int    type;
 #if defined(SYNRAD)
 	double dF;
@@ -468,7 +468,7 @@ public:
 		*this += rhs;
 		return *this;
 	}
-	Vector3d dir = Vector3d(0.0,0.0,0.0);
+    Vector3_t<FLOAT> dir = Vector3_t<FLOAT>(0.0,0.0,0.0);
 	size_t count=0;
 	template<class Archive>
 	void serialize(Archive & archive)
@@ -482,8 +482,8 @@ public:
 
 class LEAK {
 public:
-	Vector3d pos;
-	Vector3d dir;
+    Vector3_t<FLOAT> pos;
+    Vector3_t<FLOAT> dir;
 	template<class Archive>
 	void serialize(Archive & archive)
 	{

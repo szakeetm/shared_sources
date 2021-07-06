@@ -540,7 +540,7 @@ double Pow10(const double& a) {
 	return pow(10,a);
 }
 
-std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN) {
+std::tuple<double, double> CartesianToPolar(const Vector3_t<FLOAT>& incidentDir, const Vector3_t<FLOAT>& normU, const Vector3_t<FLOAT>& normV, const Vector3_t<FLOAT>& normN) {
 
     //input vectors need to be normalized
 
@@ -567,8 +567,8 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const V
     return { inTheta, inPhi };
 }
 
-Vector3d
-PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+Vector3_t<FLOAT>
+PolarToCartesian(const Vector3_t<FLOAT> &nU, const Vector3_t<FLOAT> &nV, const Vector3_t<FLOAT> &nN, const double &theta, const double &phi,
                  const bool &reverse) {
 
     //returns sHandle->currentParticle.direction
@@ -587,9 +587,9 @@ PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, con
     //#endif
 
     // Get the (nU,nV,N) orthonormal basis of the facet
-    Vector3d U = nU; // nU
-    Vector3d V = nV; // nV
-    Vector3d N = nN; // nN
+	Vector3_t<FLOAT> U = nU; // nU
+	Vector3_t<FLOAT> V = nV; // nV
+	Vector3_t<FLOAT> N = nN; // nN
     if (reverse) {
         N = -1.0 * N;
     }

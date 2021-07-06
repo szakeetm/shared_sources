@@ -5,24 +5,25 @@
 #include "BoundingBox.h"
 
 #include <limits>
+
 AxisAlignedBoundingBox::AxisAlignedBoundingBox() : min(std::numeric_limits<double>::max()),
                            max(std::numeric_limits<double>::lowest())
 {};
 
-Vector3d AxisAlignedBoundingBox::Offset(const Vector3d &p) const {
-    Vector3d o = p - min;
+Vector3_t<FLOAT> AxisAlignedBoundingBox::Offset(const Vector3_t<FLOAT> &p) const {
+    Vector3_t o = p - min;
     if (max.x > min.x) o.x /= max.x - min.x;
     if (max.y > min.y) o.y /= max.y - min.y;
     if (max.z > min.z) o.z /= max.z - min.z;
     return o;
 }
 
-Vector3d AxisAlignedBoundingBox::Diagonal() const {
+Vector3_t<FLOAT> AxisAlignedBoundingBox::Diagonal() const {
     return max - min;
 }
 
 int AxisAlignedBoundingBox::MaximumExtent() const {
-    Vector3d d = Diagonal();
+    Vector3_t d = Diagonal();
     if (d.x > d.y && d.x > d.z)
         return 0;
     else if (d.y > d.z)
@@ -32,7 +33,7 @@ int AxisAlignedBoundingBox::MaximumExtent() const {
 }
 
 double AxisAlignedBoundingBox::SurfaceArea() const {
-    Vector3d d = Diagonal();
+    Vector3_t<FLOAT> d = Diagonal();
     return 2.0 * (d.x * d.y + d.x * d.z + d.y * d.z);
 }
 
@@ -47,7 +48,7 @@ AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBo
     return unionbox;
 }
 
-AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBox& bb, const Vector3d& p) {
+AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBox& bb, const Vector3_t<FLOAT>& p) {
     AxisAlignedBoundingBox unionbox;
     unionbox.min.x = std::min(bb.min.x, p.x);
     unionbox.min.y = std::min(bb.min.y, p.y);
@@ -57,12 +58,13 @@ AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBo
     unionbox.max.z = std::max(bb.max.z, p.z);
     return unionbox;
 }
-Vector3d &AxisAlignedBoundingBox::operator[](int ext) {
+
+Vector3_t<FLOAT> &AxisAlignedBoundingBox::operator[](int ext) {
     if(ext == 0) return min;
     else return max;
 }
 
-const Vector3d &AxisAlignedBoundingBox::operator[](int ext) const {
+const Vector3_t<FLOAT> &AxisAlignedBoundingBox::operator[](int ext) const {
     if(ext == 0) return min;
     else return max;
 }
@@ -75,7 +77,7 @@ constexpr double gamma(int n)
     return (n * machEps) / (1 - n * machEps);
 }
 
-bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir,
+bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3_t<FLOAT> &invDir,
                                    const int dirIsNeg[3]) const {
     const AxisAlignedBoundingBox &bounds = *this;
     // Check for ray intersection against $x$ and $y$ slabs

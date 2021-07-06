@@ -7,6 +7,7 @@
 
 #include "Vector.h"
 
+using FLOAT = float;
 struct SubProcessFacetTempVar;
 class MersenneTwister;
 
@@ -27,14 +28,14 @@ constexpr double inf_d = 1.0e99;
 class Ray {
 public:
     Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersected(-1), hitChain(nullptr), rng(nullptr), pay(nullptr) {}
-    Ray(const Vector3d &o, const Vector3d &d, Payload* payload, double tMax = inf_d,
+    Ray(const Vector3_t<FLOAT> &o, const Vector3_t<FLOAT> &d, Payload* payload, double tMax = inf_d,
         double time = 0.f, int structure = -1)
             : origin(o), direction(d), tMax(tMax), time(time), structure(structure), hitChain(nullptr), rng(nullptr), pay(payload) {}
     ~Ray(){if(pay) delete pay;}
-            Vector3d operator()(double t) const { return origin + direction * t; }
+    Vector3_t<FLOAT> operator()(double t) const { return origin + direction * t; }
 
-    Vector3d origin;
-    Vector3d direction;
+    Vector3_t<FLOAT> origin;
+    Vector3_t<FLOAT> direction;
 
     // To keep track of shortest intersection
     double tMax;

@@ -26,9 +26,11 @@ class GLTextField;
 class GLLabel;
 class GLToggle;
 class GLTitledPanel;
-class Vector3d;
+template<typename T>
+class Vector3_t;
 
 #include <vector> //Std vectors
+#include <Vector.h>
 
 class Geometry;
 class Worker;
@@ -50,7 +52,7 @@ private:
   Worker	   *work;
 
   std::vector<size_t> memorizedSelection;
-  std::vector<std::vector<Vector3d>> oriPositions;
+  std::vector<std::vector<Vector3_t<FLOAT>>> oriPositions;
 
   GLButton    *memoSel;
   GLLabel     *numFacetSel;

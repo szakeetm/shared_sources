@@ -41,8 +41,12 @@ union PhysicalValue{
 	//Unified return value that can return size_t, double or vector
 	size_t count;
 	double value;
-	Vector3d vect;
-	PhysicalValue() { new(&vect) Vector3d(); }
+	Vector3_t<FLOAT> vect;
+	PhysicalValue() { memset(this, 0, sizeof(*this));  }
+    PhysicalValue(const PhysicalValue& rhs) {
+	    memcpy(this, &rhs, sizeof(rhs));
+	}
+
 } ;
 
 enum class PhysicalMode {
@@ -80,7 +84,7 @@ public:
 
 class UndoPoint {
 public:
-	Vector3d oriPos;
+	Vector3_t<FLOAT> oriPos;
 	size_t oriId;
 };
 
@@ -88,7 +92,7 @@ class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
 	void CalculateFacetParams(InterfaceFacet *f);
-	void Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF); // Merge geometry
+	void Merge(size_t nbV, size_t nbF, Vector3_t<FLOAT> *nV, InterfaceFacet **nF); // Merge geometry
 	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
@@ -124,7 +128,7 @@ public:
 	std::vector<size_t> GetAllFacetIndices() const;
 	size_t      GetNbFacet() const;
 	size_t      GetNbVertex() const;
-	Vector3d GetFacetCenter(int facet);
+	Vector3_t<FLOAT> GetFacetCenter(int facet);
 	size_t      GetNbStructure() const;
 	char     *GetStructureName(int idx);
 	GeomProperties* GetGeomProperties();
@@ -141,7 +145,7 @@ public:
 	InterfaceFacet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
 	AxisAlignedBoundingBox     GetBB();
-	Vector3d GetCenter();
+	Vector3_t<FLOAT> GetCenter();
     void SetPlottedFacets(std::map<int,GLColor> setMap);
     std::map<int,GLColor> GetPlottedFacets( ) const;
 
@@ -171,7 +175,7 @@ public:
 	void SwapNormal(); //Swap normals of selected facets
 	void RevertFlippedNormals(); //Reverts flipping for facets with normalFlipped flag
 	void SwapNormal(const std::vector < size_t> & facetList); //Swap normals of a list of facets
-	void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
+	void Extrude(int mode, Vector3_t<FLOAT> radiusBase, Vector3_t<FLOAT> offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
 	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
 	void RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, bool toEnd);
@@ -181,19 +185,19 @@ public:
 	void CreateLoft();
 	bool RemoveCollinear();
 	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
-	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
-	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
-	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = nullptr);
-	static bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
+	void ScaleSelectedVertices(Vector3_t<FLOAT> invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
+	void ScaleSelectedFacets(Vector3_t<FLOAT> invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
+	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3_t<FLOAT> &base, const Vector3_t<FLOAT> &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = nullptr);
+	static bool IntersectingPlaneWithLine(const Vector3_t<FLOAT> &P0, const Vector3_t<FLOAT> &u, const Vector3_t<FLOAT> &V0, const Vector3_t<FLOAT> &n, Vector3_t<FLOAT> *intersectPoint, bool withinSection = false);
 	void MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
-	std::vector<UndoPoint> MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker);
-	std::vector<UndoPoint> MirrorProjectSelectedVertices(const Vector3d &P0, const Vector3d &N, bool project, bool copy, Worker *worker);
-	void RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
-	void RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
+	std::vector<UndoPoint> MirrorProjectSelectedFacets(Vector3_t<FLOAT> P0, Vector3_t<FLOAT> N, bool project, bool copy, Worker *worker);
+	std::vector<UndoPoint> MirrorProjectSelectedVertices(const Vector3_t<FLOAT> &P0, const Vector3_t<FLOAT> &N, bool project, bool copy, Worker *worker);
+	void RotateSelectedFacets(const Vector3_t<FLOAT> &AXIS_P0, const Vector3_t<FLOAT> &AXIS_DIR, double theta, bool copy, Worker *worker);
+	void RotateSelectedVertices(const Vector3_t<FLOAT> &AXIS_P0, const Vector3_t<FLOAT> &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
 	int CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
-	void AddVertex(const Vector3d& location, bool selected = true);
+	void AddVertex(const Vector3_t<FLOAT>& location, bool selected = true);
 	void AddStruct(const char *name,bool deferDrawing=false);
 	void DelStruct(int numToDel);
 	std::vector<DeletedFacet> BuildIntersection(size_t *nbCreated);
@@ -217,9 +221,9 @@ public:
 	void    BuildFacetList(InterfaceFacet *f);
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
-	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
-	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
-	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
+	void CreateRectangle(const Vector3_t<FLOAT> & rec_center, const Vector3_t<FLOAT> & axis1Dir, const Vector3_t<FLOAT> & normalDir, const double & axis1Length, const double & axis2Length);
+	void CreateCircle(const Vector3_t<FLOAT> & circ_center, const Vector3_t<FLOAT> & axis1Dir, const Vector3_t<FLOAT> & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
+	void CreateRacetrack(const Vector3_t<FLOAT> & race_center, const Vector3_t<FLOAT> & axis1Dir, const Vector3_t<FLOAT> & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
 
 	void UpdateName(FileReader *file);
 	std::string GetName() const;
@@ -249,7 +253,7 @@ protected:
 	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
-    void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
+    void InitInterfaceVertices(const std::vector<Vector3_t<FLOAT>>& vertices);
     void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
 
     void SelectAll();
@@ -282,7 +286,7 @@ public:
 protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;
-	Vector3d  center;                     // Center (3D space)
+	Vector3_t<FLOAT>  center;                     // Center (3D space)
 	char      *strName[MAX_SUPERSTR];     // Structure name
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)

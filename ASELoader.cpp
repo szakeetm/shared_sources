@@ -544,7 +544,7 @@ void ASELoader::Load()
       break;
     case MESH_NUMVERTEX_KW:
       OBJ[nbObj].nb_pts= f->ReadInt();
-      OBJ[nbObj].pts = (Vector3d *)malloc( OBJ[nbObj].nb_pts * sizeof(Vector3d) );
+      OBJ[nbObj].pts = (Vector3_t<FLOAT> *)malloc( OBJ[nbObj].nb_pts * sizeof(Vector3_t<FLOAT>) );
       break;
     case MESH_NUMFACES_KW:
       OBJ[nbObj].nb_face= f->ReadInt();

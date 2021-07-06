@@ -234,7 +234,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     double oldCost = isectCost * double(nPrimitives);
     double totalSA = nodeBounds.SurfaceArea();
     double invTotalSA = 1.0 / totalSA;
-    Vector3d d = nodeBounds.max - nodeBounds.min;
+    Vector3_t<FLOAT> d = nodeBounds.max - nodeBounds.min;
 
     // Choose which axis to split along
     int axis = nodeBounds.MaximumExtent();
@@ -374,7 +374,7 @@ bool KdTreeAccel::Intersect(Ray &ray) {
     }*/
 
     // Prepare to traverse kd-tree for ray
-    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+    Vector3_t<FLOAT> invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
     constexpr int maxTodo = 64;
     KdToDo todo[maxTodo];
     int todoPos = 0;

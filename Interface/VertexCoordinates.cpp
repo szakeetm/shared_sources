@@ -164,7 +164,7 @@ void VertexCoordinates::Update() {
 		  vertexListC->SetValueAt(0,count,tmp);
 		  //sprintf(tmp,"%d",idx+1);
 		  //vertexListC->SetValueAt(1,i,tmp);
-		  Vector3d *v = s->GetVertex(i);
+		  Vector3_t<FLOAT> *v = s->GetVertex(i);
 		  sprintf(tmp,"%.10g",v->x);
 		  vertexListC->SetValueAt(1,count,tmp);
 		  sprintf(tmp,"%.10g",v->y);

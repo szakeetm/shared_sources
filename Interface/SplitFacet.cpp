@@ -243,7 +243,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			return;
 		}
 			//Calculate the plane
-			Vector3d P0,N;
+			Vector3_t<FLOAT> P0,N;
 			double nN2;
 
 			switch (planeMode) {
@@ -263,9 +263,9 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 					return;
 				}
 
-				Vector3d U2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[1])).Normalized();
-				Vector3d V2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[2])).Normalized();
-				Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
+				Vector3_t<FLOAT> U2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[1])).Normalized();
+				Vector3_t<FLOAT> V2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[2])).Normalized();
+				Vector3_t<FLOAT> N2 = CrossProduct(V2, U2); //We have a normal vector
 				nN2 = N2.Norme();
 				if (nN2 < 1e-8) {
 					GLMessageBox::Display("The 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);

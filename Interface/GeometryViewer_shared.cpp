@@ -494,12 +494,12 @@ void GeometryViewer::UpdateMatrix() {
 	view.camAngleOz = RoundAngle(view.camAngleOz);
 
 	// Convert polar coordinates
-	Vector3d org = geom->GetCenter();
+	Vector3_t<FLOAT> org = geom->GetCenter();
 
 	/*
-	Vector3d X(1.0, 0.0, 0.0);
-	Vector3d Y(0.0, 1.0, 0.0);
-	Vector3d Z(0.0, 0.0, 1.0);
+	Vector3_t<FLOAT> X(1.0, 0.0, 0.0);
+	Vector3_t<FLOAT> Y(0.0, 1.0, 0.0);
+	Vector3_t<FLOAT> Z(0.0, 0.0, 1.0);
 
 	camDir = Z;
 	camLeft = X * handedness;
@@ -541,7 +541,7 @@ void GeometryViewer::UpdateMatrix() {
 	switch (view.projMode) {
 	case PERSPECTIVE_PROJ:
 	{
-		Vector3d camPos = org + view.camOffset;
+		Vector3_t<FLOAT> camPos = org + view.camOffset;
 		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
 		break;
 	}
@@ -677,7 +677,7 @@ void GeometryViewer::DrawIndex() {
 	glBegin(GL_POINTS);
 	for (size_t i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
-			Vector3d *v = geom->GetVertex(i);
+			Vector3_t<FLOAT> *v = geom->GetVertex(i);
 			glVertex3d(v->x, v->y, v->z);
 		}
 	}
@@ -699,7 +699,7 @@ void GeometryViewer::DrawIndex() {
 			else {
 				sprintf(tmp, "%zd ", i + 1);
 			}
-			Vector3d *v = geom->GetVertex(i);
+			Vector3_t<FLOAT> *v = geom->GetVertex(i);
 			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 		}
 	}
@@ -761,7 +761,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 	glBegin(GL_POINTS);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = geom->GetVertex(i);
+		Vector3_t<FLOAT> *v = geom->GetVertex(i);
 		glVertex3d(v->x, v->y, v->z);
 	}
 	glEnd();
@@ -774,7 +774,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	// Draw Labels
 	glEnable(GL_BLEND);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = geom->GetVertex(i);
+		Vector3_t<FLOAT> *v = geom->GetVertex(i);
 		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, std::to_string(i + 1).c_str(), GLToolkit::GetDialogFont(), 2, 2);
 	}
 	glDisable(GL_BLEND);
@@ -803,8 +803,8 @@ void GeometryViewer::DrawNormal() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
-			Vector3d v1 = geom->GetFacetCenter(i);
-			Vector3d v2 = f->sh.N;
+			Vector3_t<FLOAT> v1 = geom->GetFacetCenter(i);
+			Vector3_t<FLOAT> v2 = f->sh.N;
 			GLToolkit::SetMaterial(&blueMaterial);
 			
 			GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
@@ -826,11 +826,11 @@ void GeometryViewer::DrawUV() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
-			const Vector3d& O = f->sh.O;
-			const Vector3d& U = f->sh.U;
-			const Vector3d& V = f->sh.V;
-			Vector3d U_endpoint = O + U;
-			Vector3d V_endpoint = O + V;
+			const Vector3_t<FLOAT>& O = f->sh.O;
+			const Vector3_t<FLOAT>& U = f->sh.U;
+			const Vector3_t<FLOAT>& V = f->sh.V;
+			Vector3_t<FLOAT> U_endpoint = O + U;
+			Vector3_t<FLOAT> V_endpoint = O + V;
 			GLToolkit::SetMaterial(&blueMaterial);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
@@ -892,12 +892,12 @@ void GeometryViewer::DrawFacetId() {
     // Draw Labels
     for (auto& selId:selectedFacets) {
         InterfaceFacet *f = geom->GetFacet(selId);
-        Vector3d center = geom->GetFacetCenter(selId);
-        Vector3d origin = geom->GetFacetCenter(selId);
-        Vector3d labelVec = geom->GetFacetCenter(selId);
+        Vector3_t<FLOAT> center = geom->GetFacetCenter(selId);
+        Vector3_t<FLOAT> origin = geom->GetFacetCenter(selId);
+        Vector3_t<FLOAT> labelVec = geom->GetFacetCenter(selId);
         double labelDist = 99999999.0;
         for (size_t i = 1; i < f->sh.nbIndex; i++) {
-            Vector3d *v = geom->GetVertex(f->indices[i]);
+            Vector3_t<FLOAT> *v = geom->GetVertex(f->indices[i]);
 
             // Look for the closest Vertex between Origin and Center as a label position
             double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
@@ -931,8 +931,8 @@ void GeometryViewer::DrawLeak() {
         auto& hitCache = mApp->worker.globalHitCache;
         for (size_t i = 0; i < Min(dispNumLeaks,hitCache.leakCacheSize); i++) {
 
-			Vector3d p = hitCache.leakCache[i].pos;
-			Vector3d d = hitCache.leakCache[i].dir;
+			Vector3_t<FLOAT> p = hitCache.leakCache[i].pos;
+			Vector3_t<FLOAT> d = hitCache.leakCache[i].dir;
 
 			glColor3f(0.9f, 0.2f, 0.5f);
 			glBegin(GL_POINTS);
@@ -956,7 +956,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
 	if (aspect == 0.0) aspect = 1.0; //To avoid division by zero
-	Vector3d org = geom->GetCenter();
+	Vector3_t<FLOAT> org = geom->GetCenter();
 
 	// Reset offset, zoom
 	view.camOffset.x = 0.0;
@@ -968,7 +968,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	// Get geometry transformed BB
 	ComputeBB(/*false*/);
 
-	Vector3d v;
+	Vector3_t<FLOAT> v;
 	v.x = xMax - org.x;
 	v.y = yMax - org.y;
 	v.z = zFar - org.z;
@@ -1018,7 +1018,7 @@ void GeometryViewer::Zoom() {
 		double aspect = (double)width / (double)(height - DOWN_MARGIN);
 		double x0, y0, w0, h0;
 		double dx = 0.0, dy = 0.0, dz = 0.0;
-		Vector3d org = work->GetGeometry()->GetCenter();
+		Vector3_t<FLOAT> org = work->GetGeometry()->GetCenter();
 		double z;
 
 		if (hS > wS) {
@@ -1120,7 +1120,7 @@ void GeometryViewer::Paint() {
 	sideBtn->SetState(false);
 	if (view.performXY) {
 		// Draw coordinates on screen when aligned
-		Vector3d org = geom->GetCenter();
+		Vector3_t<FLOAT> org = geom->GetCenter();
 		double x, y, z;
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
@@ -2022,7 +2022,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 		/*
 		for (int i = 0; i < nbV; i++) {
-			Vector3d *p = geom->GetVertex(i);
+			Vector3_t<FLOAT> *p = geom->GetVertex(i);
 			TRANSFORMVERTEX(p->x, p->y, p->z);
 		}*/
 
@@ -2059,7 +2059,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		// Transform vertex
 		for (size_t i = 0; i < nbV; i++) {
 			if (refIdx[i]) {
-				Vector3d *p = geom->GetVertex(i);
+				Vector3_t<FLOAT> *p = geom->GetVertex(i);
 				TRANSFORMVERTEX(p->x, p->y, p->z);
 			}
 		}

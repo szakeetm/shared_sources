@@ -267,7 +267,7 @@ void AlignFacet::MemorizeSelection() {
 	memorizedSelection = geom->GetSelectedFacets();
 	oriPositions.clear();
 	for (auto& sel : memorizedSelection) {
-		std::vector<Vector3d> op;
+		std::vector<Vector3_t<FLOAT>> op;
 		for (size_t ind = 0; ind < geom->GetFacet(sel)->sh.nbIndex; ind++)
 			op.push_back(*geom->GetVertex(geom->GetFacet(sel)->indices[ind]));
 		oriPositions.push_back(op);

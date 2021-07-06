@@ -83,8 +83,8 @@ std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
 
 void AABBNODE::ComputeBB() {
 
-	bb.max=Vector3d(-1e100,-1e100,-1e100);
-	bb.min=Vector3d(1e100,1e100,1e100);
+	bb.max=Vector3_t<FLOAT>(-1e100,-1e100,-1e100);
+	bb.min=Vector3_t<FLOAT>(1e100,1e100,1e100);
 
 	for (const auto& f : facets) {
 		bb.min.x = std::min(f->sh.bb.min.x,bb.min.x);
@@ -153,7 +153,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size
 
 }
 
-bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nullRx,const bool& nullRy,const bool& nullRz,const Vector3d& inverseRayDir) {
+bool IntersectBB_new(const AABBNODE& node,const Vector3_t<FLOAT>& rayPos,const bool& nullRx,const bool& nullRy,const bool& nullRz,const Vector3_t<FLOAT>& inverseRayDir) {
 	double tNear, tFar;
 	//X component
 
@@ -245,11 +245,11 @@ lab:
 
 
 //Unused as of 2017/09/25
-bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3d *rDir, double *dist) {
+bool RaySphereIntersect(Vector3_t<FLOAT> *center, double radius, Vector3_t<FLOAT> *rPos, Vector3_t<FLOAT> *rDir, double *dist) {
 
 	// Perform ray-sphere intersection
 	double B, C, D;
-	Vector3d s;
+	Vector3_t<FLOAT> s;
 	s.x = (rPos->x - center->x);
 	s.y = (rPos->y - center->y);
 	s.z = (rPos->z - center->z);
@@ -274,9 +274,9 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
-IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
-              const Vector3d &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,
-              const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
+IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3_t<FLOAT> &rayPos,
+              const Vector3_t<FLOAT> &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,
+              const bool &nullRy, const bool &nullRz, const Vector3_t<FLOAT> &inverseRayDir, bool &found,
               SubprocessFacet *&collidedFacet, double &minLength) {
 
 	// Returns three values
@@ -309,7 +309,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 				if (det != 0.0) {
 
 					double iDet = 1.0 / det;
-					Vector3d intZ = rayPos - f->sh.O;
+					Vector3_t<FLOAT> intZ = rayPos - f->sh.O;
 
 					u = iDet * DET33(intZ.x, f->sh.V.x, rayDirOpposite.x,
 						intZ.y, f->sh.V.y, rayDirOpposite.y,
@@ -450,7 +450,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 }
 
 std::tuple<bool, SubprocessFacet *, double>
-Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
+Intersect(MFSim::Particle &currentParticle, const Vector3_t<FLOAT> &rayPos, const Vector3_t<FLOAT> &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
 	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
@@ -458,7 +458,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 	bool nullRx = (rayDir.x == 0.0);
 	bool nullRy = (rayDir.y == 0.0);
 	bool nullRz = (rayDir.z == 0.0);
-	Vector3d inverseRayDir;
+	Vector3_t<FLOAT> inverseRayDir;
 	if (!nullRx) inverseRayDir.x = 1.0 / rayDir.x;
 	if (!nullRy) inverseRayDir.y = 1.0 / rayDir.y;
 	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
@@ -497,17 +497,17 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 }
 
-/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
+/*bool Visible(Simulation *sHandle, Vector3_t<FLOAT> *c1, Vector3_t<FLOAT> *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticle) {
 	//For AC matrix calculation, used only in MolFlow
 
-	Vector3d rayPos = *c1;
-	Vector3d rayDir = *c2 - *c1;
+	Vector3_t<FLOAT> rayPos = *c1;
+	Vector3_t<FLOAT> rayDir = *c2 - *c1;
 
 	bool nullRx = (rayDir.x == 0.0);
 	bool nullRy = (rayDir.y == 0.0);
 	bool nullRz = (rayDir.z == 0.0);
-	Vector3d inverseRayDir;
+	Vector3_t<FLOAT> inverseRayDir;
 	if (!nullRx) inverseRayDir.x = 1.0 / rayDir.x;
 	if (!nullRy) inverseRayDir.y = 1.0 / rayDir.y;
 	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;

@@ -45,7 +45,7 @@ struct BVHPrimitiveInfo {
 
     size_t primitiveNumber;
     AxisAlignedBoundingBox bounds;
-    Vector3d centroid;
+    Vector3_t<FLOAT> centroid;
     double probability; // For MCHitSplit
 };
 
@@ -106,7 +106,7 @@ int BVHAccel::SplitEqualCounts(std::vector<BVHPrimitiveInfo> &primitiveInfo, int
 int BVHAccel::SplitMiddle(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
                           int end, int dim, AxisAlignedBoundingBox &centroidBounds) {
     //<<Partition primitives through node’s midpoint>>
-    double pmid = (centroidBounds.min[dim] + centroidBounds.max[dim]) / 2;
+    FLOAT pmid = (centroidBounds.min[dim] + centroidBounds.max[dim]) / 2;
     BVHPrimitiveInfo *midPtr =
             std::partition(&primitiveInfo[start], &primitiveInfo[end - 1] + 1,
                            [dim, pmid](const BVHPrimitiveInfo &pi) {
@@ -540,7 +540,7 @@ bool BVHAccel::Intersect(Ray &ray) {
     if (!nodes) return false;
 
     bool hit = false;
-    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+    Vector3_t<FLOAT> invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
     int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
     // Follow ray through BVH nodes to find primitive intersections
     int toVisitOffset = 0, currentNodeIndex = 0;
