@@ -274,7 +274,7 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
-        const double ceilCutoff = 0.9999999;
+        const double ceilCutoff = 0.99;
         sh.texWidth_precise = width;
 		sh.texHeight_precise = height;
 		sh.texWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
