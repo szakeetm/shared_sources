@@ -19,6 +19,7 @@ struct HitChain{
 
 struct HitLink{
     HitLink(size_t id, SubProcessFacetTempVar* h) : hitId(id), hit(h){};
+    ~HitLink();
     size_t hitId;
     SubProcessFacetTempVar* hit;
 };
