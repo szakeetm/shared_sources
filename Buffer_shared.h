@@ -429,7 +429,7 @@ public:
 
 class HIT {
 public:
-    HIT() : pos() {
+    HIT() : pos(0.0) {
         type = 0;
 #if defined(SYNRAD)
         dF = 0.0;
@@ -459,6 +459,9 @@ public:
 // Velocity field
 class DirectionCell {
 public:
+	DirectionCell() : dir(0.0){
+		count=0;
+	}
 	DirectionCell& operator+=(const DirectionCell& rhs) {
 		this->dir += rhs.dir;
 		this->count += rhs.count;
@@ -468,8 +471,8 @@ public:
 		*this += rhs;
 		return *this;
 	}
-    Vector3_t<FLOAT> dir = Vector3_t<FLOAT>(0.0,0.0,0.0);
-	size_t count=0;
+    Vector3_t<FLOAT> dir;
+	size_t count;
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
@@ -482,6 +485,7 @@ public:
 
 class LEAK {
 public:
+	LEAK() : pos(0.0) , dir(0.0) {}
     Vector3_t<FLOAT> pos;
     Vector3_t<FLOAT> dir;
 	template<class Archive>
@@ -591,7 +595,7 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-    GlobalHitBuffer() : globalHits() {
+    GlobalHitBuffer() : globalHits() , hitCache(), leakCache(){
     	hitCacheSize = 0;
     	lastHitIndex = 0;
 		lastLeakIndex = 0;

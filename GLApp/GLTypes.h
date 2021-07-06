@@ -68,8 +68,10 @@ template<typename T>
 constexpr void IVALIDATE_DLG(T& dlg){ if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();}
 template<typename T>
 constexpr void RVALIDATE_DLG(T& dlg){ if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();}
+/*template<typename T>
+constexpr void ZEROVECTOR(T& _vector){ std::fill(_vector.begin(),_vector.end(), 0);}*/
 template<typename T>
-constexpr void ZEROVECTOR(T& _vector){ std::fill(_vector.begin(),_vector.end(),0);}
+constexpr void ZEROVECTOR(T& _vector){ _vector.assign(_vector.size(),{});}
 #define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
 #define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
 
