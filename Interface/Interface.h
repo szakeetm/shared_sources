@@ -24,12 +24,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <memory>
 #include <Formulas.h>
 
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+
 #include "Worker.h"
 #include "GeometryViewer.h"
 
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
+
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -245,11 +249,14 @@ protected:
 	virtual void InsertGeometry(bool newStr, std::string fileName = "") {}
 	virtual void SaveFile() {}
 	int FrameMove();
+	
 
 public:
 	virtual void UpdateFacetParams(bool updateSelection=false) {}
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
+
+	auto logger;
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
