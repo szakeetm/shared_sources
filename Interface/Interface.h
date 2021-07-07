@@ -256,8 +256,6 @@ public:
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
 
-	auto logger;
-
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
 	double   hps;          // Hit per second
@@ -298,6 +296,7 @@ public:
     bool     prevRunningState; //Previous state to react for state change
 
     std::shared_ptr<Formulas> formula_ptr;
+	std::shared_ptr<spdlog::logger> logger;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	HANDLE compressProcessHandle;
