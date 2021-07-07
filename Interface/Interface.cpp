@@ -1106,6 +1106,7 @@ void Interface::OneTimeSceneInit_shared_post() {
         auto max_size = 1048576 * 1; //1MB, can easily attach to email
         auto max_files = 5;
         logger = spdlog::rotating_logger_mt("logger", "logs/rotating_log.txt", max_size, max_files);
+        logger->flush_on(spdlog::level::info); //Flush at every message
         logger->info("APP STARTED, name: {}, version: {}, os: {}",appName,appVersionId, GLToolkit::GetOSName());
     }
     catch (const spdlog::spdlog_ex& ex)
