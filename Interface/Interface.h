@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #define LOGGING_ENABLED 1 //Change here
 
-#ifdef LOGGING_ENABLED
+#if LOGGING_ENABLED
 	#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 	#include <spdlog/spdlog.h>
 	#include "spdlog/async.h" //support for async logging.
@@ -306,7 +306,10 @@ public:
 	bool     prevRunningState; //Previous state to react for state change
 
 	std::shared_ptr<Formulas> formula_ptr;
+
+#if LOGGING_ENABLED
 	std::shared_ptr<spdlog::logger> logger;
+#endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 	HANDLE compressProcessHandle;

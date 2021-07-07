@@ -1100,6 +1100,7 @@ void Interface::OneTimeSceneInit_shared_post() {
         wereEvents = true;
     }
 
+#if LOGGING_ENABLED
     try
     {
         // Create a file rotating logger with 5mb size max and 3 rotated files
@@ -1109,12 +1110,13 @@ void Interface::OneTimeSceneInit_shared_post() {
         logger = spdlog::rotating_logger_mt("logger", "logs/rotating_log.txt", max_size, max_files);
         logger->flush_on(spdlog::level::info); //Flush at every message
         logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%!] %v");
-        LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
     }
     catch (const spdlog::spdlog_ex& ex)
     {
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
+#endif
+    LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
 }
 
 int Interface::RestoreDeviceObjects_shared() {
