@@ -24,11 +24,18 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <memory>
 #include <Formulas.h>
 
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#define LOG(...) SPDLOG_LOGGER_TRACE(logger,__VA_ARGS__)
-#include <spdlog/spdlog.h>
-#include "spdlog/async.h" //support for async logging.
-#include <spdlog/sinks/rotating_file_sink.h>
+#define LOGGING_ENABLED 1 //Change here
+
+#ifdef LOGGING_ENABLED
+	#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+	#include <spdlog/spdlog.h>
+	#include "spdlog/async.h" //support for async logging.
+	#include <spdlog/sinks/rotating_file_sink.h>
+	#define LOG(...) SPDLOG_LOGGER_TRACE(logger,__VA_ARGS__)
+#else
+	#define LOG(...) {}
+#endif
+
 
 #include "Worker.h"
 #include "GeometryViewer.h"
@@ -273,8 +280,8 @@ public:
 	size_t      numCPU;
 	float    lastAppTime;
 
-    bool useOldXMLFormat;
-    bool     antiAliasing;
+	bool useOldXMLFormat;
+	bool     antiAliasing;
 	bool     whiteBg;
 	bool highlightSelection;
 	bool highlightNonplanarFacets;
@@ -296,9 +303,9 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
-    bool     prevRunningState; //Previous state to react for state change
+	bool     prevRunningState; //Previous state to react for state change
 
-    std::shared_ptr<Formulas> formula_ptr;
+	std::shared_ptr<Formulas> formula_ptr;
 	std::shared_ptr<spdlog::logger> logger;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -320,7 +327,7 @@ public:
 	GLToggle      *showLine;
 	GLToggle      *showVolume;
 	GLToggle      *showTexture;
-    GLToggle      *showFacetId;
+	GLToggle      *showFacetId;
 	GLToggle      *showFilter;
 	GLToggle      *showIndex;
 	GLToggle      *showVertexId;
@@ -328,7 +335,7 @@ public:
 
 
 	GLButton      *globalSettingsBtn;
-    GLButton      *startSimu;
+	GLButton      *startSimu;
 	GLButton      *resetSimu;
 
 	GLCombo       *modeCombo;
@@ -446,7 +453,7 @@ public:
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
 	UpdateLogWindow   *updateLogWindow;
-    ManualUpdateCheckDialog* manualUpdate;
+	ManualUpdateCheckDialog* manualUpdate;
 
 	// Current directory
 	void UpdateCurrentDir(const char *fileName);
@@ -499,7 +506,7 @@ public:
 	void ExportTextures(int grouping, int mode);
 	
 	// Recent files
-    std::list<char *> recentsList;
+	std::list<char *> recentsList;
 	void AddRecent(const char *fileName);
 	void RemoveRecent(const char *fileName);
 	void UpdateRecentMenu();
