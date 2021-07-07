@@ -1105,9 +1105,11 @@ void Interface::OneTimeSceneInit_shared_post() {
         // Create a file rotating logger with 5mb size max and 3 rotated files
         auto max_size = 1048576 * 1; //1MB, can easily attach to email
         auto max_files = 5;
+        spdlog::set_level(spdlog::level::trace);
         logger = spdlog::rotating_logger_mt("logger", "logs/rotating_log.txt", max_size, max_files);
         logger->flush_on(spdlog::level::info); //Flush at every message
-        logger->info("APP STARTED, name: {}, version: {}, os: {}",appName,appVersionId, GLToolkit::GetOSName());
+        logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%!] %v");
+        LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
     }
     catch (const spdlog::spdlog_ex& ex)
     {

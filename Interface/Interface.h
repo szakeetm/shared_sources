@@ -24,7 +24,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <memory>
 #include <Formulas.h>
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+#define LOG(...) SPDLOG_LOGGER_TRACE(logger,__VA_ARGS__)
 #include <spdlog/spdlog.h>
+#include "spdlog/async.h" //support for async logging.
 #include <spdlog/sinks/rotating_file_sink.h>
 
 #include "Worker.h"
