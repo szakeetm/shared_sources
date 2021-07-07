@@ -211,6 +211,30 @@ Interface::Interface() {
     coplanarityTolerance = 1e-8;
     largeAreaThreshold = 1.0;
     planarityThreshold = 1e-5;
+
+    InitLogger();
+    LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
+}
+
+void Interface::InitLogger()
+{
+    //Init logger
+#if LOGGING_ENABLED
+    try
+    {
+        // Create a file rotating logger with 5mb size max and 3 rotated files
+        auto max_size = 1048576 * 1; //1MB, can easily attach to email
+        auto max_files = 5;
+        spdlog::set_level(spdlog::level::trace);
+        logger = spdlog::rotating_logger_mt("logger", "logs/rotating_log.txt", max_size, max_files);
+        logger->flush_on(spdlog::level::trace); //Flush at every message
+        logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%!] %v");
+    }
+    catch (const spdlog::spdlog_ex& ex)
+    {
+        std::cout << "Log init failed: " << ex.what() << std::endl;
+    }
+#endif
 }
 
 void Interface::UpdateViewerFlags() {
@@ -723,14 +747,18 @@ void Interface::SetFacetSearchPrg(bool visible, const char *text) {
 }
 
 int Interface::OnExit() {
+    LOG("Saving config...");
     SaveConfig();
     if (appUpdater) {
         appUpdater->IncreaseSessionCount();
     }
+    LOG("Removing autosave file {}", autosaveFilename);
     remove(autosaveFilename.c_str());
     auto cwd = std::filesystem::current_path();
     auto tempDir = cwd / "tmp";
+    LOG("Flushing temp directory {}", tempDir.string());
     std::filesystem::remove_all(tempDir);
+    LOG("Shutting down.");
     return GL_OK;
 }
 
@@ -1099,24 +1127,6 @@ void Interface::OneTimeSceneInit_shared_post() {
         updateCheckDialog->SetVisible(true);
         wereEvents = true;
     }
-
-#if LOGGING_ENABLED
-    try
-    {
-        // Create a file rotating logger with 5mb size max and 3 rotated files
-        auto max_size = 1048576 * 1; //1MB, can easily attach to email
-        auto max_files = 5;
-        spdlog::set_level(spdlog::level::trace);
-        logger = spdlog::rotating_logger_mt("logger", "logs/rotating_log.txt", max_size, max_files);
-        logger->flush_on(spdlog::level::info); //Flush at every message
-        logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%!] %v");
-    }
-    catch (const spdlog::spdlog_ex& ex)
-    {
-        std::cout << "Log init failed: " << ex.what() << std::endl;
-    }
-#endif
-    LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
 }
 
 int Interface::RestoreDeviceObjects_shared() {
@@ -2524,9 +2534,11 @@ bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vec
 }
 
 int Interface::Resize(size_t width, size_t height, bool forceWindowed) {
+    LOG("Resizing to {}x{}", width, height);
     int r = GLApplication::Resize(width, height, forceWindowed);
     PlaceComponents();
     worker.RebuildTextures();
+    LOG("Resize successful.");
     return r;
 }
 
@@ -2570,7 +2582,7 @@ void Interface::UpdateFormula() {
 		}
 
 		// Evaluation
-		if (ok) { //Variables succesfully evaluated
+		if (ok) { //Variables successfully evaluated
 			double r;
 			if (f->Evaluate(&r)) {
 				sprintf(tmp, "%g", r);

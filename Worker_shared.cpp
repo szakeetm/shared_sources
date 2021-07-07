@@ -195,6 +195,8 @@ void Worker::ThrowSubProcError(const char *message) {
         sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
     else
         sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
+    std::string errMsg_str = errMsg;
+    MLOG("Throwing subprocess error: {}", errMsg_str);
     throw std::runtime_error(errMsg);
 
 }
@@ -239,10 +241,13 @@ void Worker::ResetStatsAndHits(float appTime) {
         return;
 
     try {
+        MLOG("Resetting worker stats and hits...");
         ResetWorkerStats();
         simManager.ResetHits();
+        MLOG("Reset success. Updating worker...");
         if (needsReload) RealReload();
         Update(appTime);
+        MLOG("Update success.");
     }
     catch (std::exception &e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -251,9 +256,11 @@ void Worker::ResetStatsAndHits(float appTime) {
 
 void Worker::Stop() {
     try {
+        MLOG("Stopping simulation...");
         if (simManager.StopSimulation()) {
             throw std::logic_error("No active simulation to stop!");
         }
+        MLOG("Stop success.");
     }
     catch (std::exception& e) {
         throw Error(e.what());
@@ -261,7 +268,7 @@ void Worker::Stop() {
 }
 
 void Worker::SetProcNumber(size_t n) {
-
+    MLOG("Setting process number to {}, killing all simulation units...", n);
     // Kill all sub process
     try{
         simManager.KillAllSimUnits();
@@ -269,7 +276,7 @@ void Worker::SetProcNumber(size_t n) {
     catch (std::exception& e) {
         throw Error("Killing subprocesses failed!");
     }
-
+    MLOG("Kill successful, initializing new units...");
     simManager.useCPU = true;
     simManager.nbCores = n;
     // Launch n subprocess
@@ -277,7 +284,7 @@ void Worker::SetProcNumber(size_t n) {
     if ((ontheflyParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }
-
+    MLOG("Init successful.");
     ontheflyParams.nbProcess = n;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
@@ -288,7 +295,7 @@ size_t Worker::GetPID(size_t prIdx) {
 }
 
 void Worker::RebuildTextures() {
-
+    MLOG("Rebuilding textures");
     if (mApp->needsTexture || mApp->needsDirection) {
 
         // Only reload if we are even rebuilding textures
@@ -313,6 +320,7 @@ void Worker::RebuildTextures() {
         }
     }
     simManager.UnlockHitBuffer();
+    MLOG("Texture rebuild successful.");
 }
 
 size_t Worker::GetProcNumber() const {
@@ -328,7 +336,7 @@ void Worker::Update(float appTime) {
     //Global statistics, leak/hits, global histograms
     //Facet hits, facet histograms, facet angle maps
     //No cache for profiles, textures, directions (plotted directly from shared memory hit buffer)
-
+    
 
     if (needsReload) RealReload();
 
@@ -478,6 +486,7 @@ std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
 
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
+    MLOG("Changing simulation parameters without reloading geometry...");
     if (ontheflyParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
@@ -506,6 +515,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
+        MLOG("Sharing with simulation units...");
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             char errMsg[1024];
             sprintf(errMsg, "Failed to send params to sub process:\n");
@@ -528,6 +538,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     ResetWorkerStats();
     Update(0.0f);
 #endif
+    MLOG("Parameter update success.");
 }
 
 /**
@@ -600,6 +611,7 @@ void Worker::SendToHitBuffer() {
 * \brief Saves current facet hit counter from cache to results
 */
 void Worker::SendFacetHitCounts() {
+    MLOG("Sending facet hit counts...");
     BYTE* buffer = simManager.GetLockedHitBuffer();
     size_t nbFacet = geom->GetNbFacet();
     for (size_t i = 0; i < nbFacet; i++) {
@@ -607,6 +619,7 @@ void Worker::SendFacetHitCounts() {
         *((FacetHitBuffer *) (buffer + f->sh.hitOffset)) = f->facetHitCache; //Only const.flow
     }
     simManager.UnlockHitBuffer();
+    MLOG("Send success.");
 }
 
 void Worker::RetrieveHistogramCache(BYTE* dpHitStartAddress)

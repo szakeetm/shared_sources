@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 	#include "spdlog/async.h" //support for async logging.
 	#include <spdlog/sinks/rotating_file_sink.h>
 	#define LOG(...) SPDLOG_LOGGER_TRACE(logger,__VA_ARGS__)
+	#define MLOG(...) SPDLOG_LOGGER_TRACE(mApp->logger,__VA_ARGS__)
 #else
 	#define LOG(...) {}
 #endif
@@ -245,6 +246,7 @@ static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 class Interface : public GLApplication {
 protected:
 	Interface();
+	void InitLogger();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows=false) {}
 	//virtual void UpdateFormula() {}
