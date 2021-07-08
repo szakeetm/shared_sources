@@ -829,8 +829,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Invert selection", MENU_FACET_INVERTSEL, SDLK_i, CTRL_MODIFIER);
     menu->GetSubMenu("Selection")->Add(NULL); // Separator
 
-    menu->GetSubMenu("Selection")->Add("Memorize selection to");
-    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Memorize selection to");
+    menu->GetSubMenu("Selection")->Add("Overwrite selection");
+    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Overwrite selection");
     memorizeSelectionsMenu->Add("Add new...", MENU_SELECTION_ADDNEW, SDLK_w, CTRL_MODIFIER);
     memorizeSelectionsMenu->Add(NULL); // Separator
 
@@ -945,8 +945,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("View")->Add(NULL); // Separator
 
-    menu->GetSubMenu("View")->Add("Memorize view to");
-    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Memorize view to");
+    menu->GetSubMenu("View")->Add("Overwrite view");
+    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Overwrite view");
     memorizeViewsMenu->Add("Add new...", MENU_VIEW_ADDNEW, SDLK_q, CTRL_MODIFIER);
     memorizeViewsMenu->Add(NULL); // Separator
 
