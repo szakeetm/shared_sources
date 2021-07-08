@@ -214,6 +214,7 @@ Interface::Interface() {
 
     InitLogger();
     LOG("\n\n\nAPP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
+    LOG("Working directory: {}", std::filesystem::current_path().string());
 }
 
 void Interface::InitLogger()
@@ -749,7 +750,7 @@ void Interface::SetFacetSearchPrg(bool visible, const char *text) {
 }
 
 int Interface::OnExit() {
-    LOG("Saving config...");
+    
     SaveConfig();
     if (appUpdater) {
         appUpdater->IncreaseSessionCount();
