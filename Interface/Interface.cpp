@@ -213,7 +213,7 @@ Interface::Interface() {
     planarityThreshold = 1e-5;
 
     InitLogger();
-    LOG("APP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
+    LOG("\n\n\nAPP STARTED, name: {}, version: {}, os: {}", appName, appVersionId, GLToolkit::GetOSName());
 }
 
 void Interface::InitLogger()
@@ -222,7 +222,7 @@ void Interface::InitLogger()
 #if LOGGING_ENABLED
     try
     {
-        // Create a file rotating logger with 5mb size max and 3 rotated files
+        // Create a file rotating logger with 1mb size max and 3 rotated files
         auto max_size = 1048576 * 1; //1MB, can easily attach to email
         auto max_files = 5;
         spdlog::set_level(spdlog::level::trace);
@@ -270,6 +270,7 @@ void Interface::ResetSimulation(bool askConfirm) {
              GLDLG_OK;
 
     if (ok) {
+        LOG("Resetting simulation...");
         worker.ResetStatsAndHits(m_fTime);
 
         nbDesStart = 0;
@@ -281,6 +282,7 @@ void Interface::ResetSimulation(bool askConfirm) {
         if(formulaEditor) formulaEditor->UpdateValues();
     }
     UpdatePlotters();
+    LOG("Simulation reset and plotters updated.");
 }
 
 void Interface::UpdateStructMenu() {
@@ -1130,6 +1132,7 @@ void Interface::OneTimeSceneInit_shared_post() {
 }
 
 int Interface::RestoreDeviceObjects_shared() {
+    LOG("Restoring device objects called...");
     Geometry *geom = worker.GetGeometry();
     geom->RestoreDeviceObjects();
     //worker.Update(0.0f);
@@ -1169,10 +1172,13 @@ int Interface::RestoreDeviceObjects_shared() {
 
     UpdateTitle();
 
+    LOG("Success.");
+
     return GL_OK;
 }
 
 int Interface::InvalidateDeviceObjects_shared() {
+    LOG("Invalidate device objects called...");
     Geometry *geom = worker.GetGeometry();
     geom->InvalidateDeviceObjects();
     //worker.Update(0.0f);
@@ -1211,6 +1217,8 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(manualUpdate);
 
     UpdateTitle();
+
+    LOG("Success.");
 
     return GL_OK;
 }
@@ -2929,6 +2937,7 @@ void Interface::ResetAutoSaveTimer() {
 
 bool Interface::AutoSave(bool crashSave) {
     if (!changedSinceSave) return true;
+
     GLProgress *progressDlg2 = new GLProgress("Peforming autosave...", "Please wait");
     progressDlg2->SetProgress(0.0);
     progressDlg2->SetVisible(true);
