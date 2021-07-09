@@ -11,6 +11,7 @@ if (APPLE)
             /sw # Fink
             /opt/local # DarwinPorts
             /opt/csw # Blastwave
+            /opt/homebrew # ARM MacOS homebrew
             /opt
             ${OpenMP_PATH}
             )
