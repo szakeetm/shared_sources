@@ -28,6 +28,7 @@ include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
+    #target_include_directories(${PROJECT_NAME} PRIVATE OpenMP_INCLUDE_DIR)
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
