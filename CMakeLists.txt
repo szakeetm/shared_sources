@@ -223,7 +223,7 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
+#include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
