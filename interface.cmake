@@ -25,9 +25,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
-find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
-
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
