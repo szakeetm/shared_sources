@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(ziplib)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
@@ -225,9 +226,11 @@ set(GL_FILES
 
 #include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
+include(SetOpenMP.cmake)
+find_package(OpenMP REQUIRED)
+
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
 endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
-add_subdirectory(ziplib)
