@@ -28,6 +28,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <process.h>
 #else
 #include <unistd.h>
+#include <omp.h>
+
 #endif // def WIN
 
 #define  RK_STATE_LEN 624
