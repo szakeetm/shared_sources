@@ -24,22 +24,22 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
+include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
+    #target_include_directories(${PROJECT_NAME} PRIVATE OpenMP_INCLUDE_DIR)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 if(NOT MSVC)
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
-    find_package(CURL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
-
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
     #for shared memory

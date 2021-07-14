@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(ziplib)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
@@ -223,18 +224,13 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-if (APPLE)
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+#include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-endif()
+include(SetOpenMP.cmake)
+find_package(OpenMP REQUIRED)
 
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
 endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
-add_subdirectory(ziplib)
