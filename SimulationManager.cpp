@@ -722,14 +722,13 @@ int SimulationManager::IncreasePriority() {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
-
 #else
         int policy;
-            struct sched_param param{};
-            pthread_getschedparam(myHandle, &policy, &param);
-            param.sched_priority = sched_get_priority_min(policy);
-            pthread_setschedparam(myHandle, policy, &param);
-            //Check! Some documentation says it's always 0
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
 #endif
     }
 

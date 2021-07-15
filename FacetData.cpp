@@ -88,7 +88,7 @@ bool Facet::Intersect(Ray &ray) {
                                     hit->colU = u;
                                     hit->colV = v;
                                     hit->colDistTranspPass = d;
-                                    ray.hits->emplace_back(globalId, hit);
+                                    ray.hits.emplace_back(globalId, hit);
 
                                 }
                             }
@@ -109,7 +109,7 @@ bool Facet::Intersect(Ray &ray) {
                                 hit->colU = u;
                                 hit->colV = v;
                                 hit->colDistTranspPass = d;
-                                ray.hits->emplace_back(globalId, hit);
+                                ray.hits.emplace_back(globalId, hit);
                             }
                             return hardHit;
                         } // IsInFacet

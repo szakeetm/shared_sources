@@ -6,8 +6,9 @@
 #define MOLFLOW_PROJ_RAY_H
 
 #include "Vector.h"
+#include "RTHelper.h"
 
-struct SubProcessFacetTempVar;
+//struct SubProcessFacetTempVar;
 class MersenneTwister;
 
 struct HitChain{
@@ -18,6 +19,27 @@ struct HitChain{
 
 struct HitLink{
     HitLink(size_t id, SubProcessFacetTempVar* h) : hitId(id), hit(h){};
+    // Move constructor called on resize, prevent from deleting SubProcessFacetTempVar
+    HitLink(const HitLink& rhs) :
+            hitId(rhs.hitId),
+            hit(rhs.hit){};
+
+    HitLink(HitLink&& rhs) noexcept :
+            hitId(rhs.hitId),
+            hit(rhs.hit)
+    {
+        rhs.hit = nullptr;
+    }
+    HitLink& operator=(const HitLink& src){
+        hitId = src.hitId;
+        hit = src.hit;
+    };
+    HitLink& operator=(HitLink&& src){
+        hitId = src.hitId;
+        hit = src.hit;
+        src.hit = nullptr;
+    };
+
     ~HitLink();
     size_t hitId;
     SubProcessFacetTempVar* hit;
@@ -47,7 +69,7 @@ public:
     Payload* pay;
 
     HitChain* hitChain;
-    std::vector<HitLink>* hits;
+    std::vector<HitLink> hits;
     MersenneTwister* rng;
 };
 
