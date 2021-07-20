@@ -160,7 +160,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 	// nU et nV (normalized U et V) are also stored in the Facet structure.
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
-
 	for (int i = 0; i < sh.nbFacet; i++) {
 		//initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
 		if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
@@ -168,14 +167,35 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Current facet
 			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
-			// Detect non visible edge
-			f->InitVisibleEdge();
-
-			// Detect orientation
-			//f->DetectOrientation();
-			//f->sign = -1;
 		}
 	}
+
+    // Update mesh
+    for (int i = 0; i < sh.nbFacet; i++) {
+        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
+            // Main facet params
+            InterfaceFacet *f = facets[i];
+            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+        }
+    }
+}
+
+void Geometry::InitializeInterfaceGeometry(int facet_number) {
+
+    for (int i = 0; i < sh.nbFacet; i++) {
+        //initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
+        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
+            // Main facet params
+            // Current facet
+            InterfaceFacet *f = facets[i];
+            // Detect non visible edge
+            f->InitVisibleEdge();
+
+            // Detect orientation
+            //f->DetectOrientation();
+            //f->sign = -1;
+        }
+    }
 
     // Update mesh
     for (int i = 0; i < sh.nbFacet; i++) {
@@ -186,16 +206,16 @@ void Geometry::InitializeGeometry(int facet_number) {
         }
     }
 
-	isLoaded = true;
-	if (facet_number == -1) {
-		BuildGLList();
-		mApp->UpdateModelParams();
-		mApp->UpdateFacetParams(false);
-	}
+    isLoaded = true;
+    if (facet_number == -1) {
+        BuildGLList();
+        mApp->UpdateModelParams();
+        mApp->UpdateFacetParams(false);
+    }
 
-	//initGeoPrg->SetVisible(false);
-	//SAFE_DELETE(initGeoPrg);
-	//assert(_CrtCheckMemory());
+    //initGeoPrg->SetVisible(false);
+    //SAFE_DELETE(initGeoPrg);
+    //assert(_CrtCheckMemory());
 }
 
 void Geometry::InitializeMesh() {
@@ -266,7 +286,8 @@ void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 			while ((j < f->sh.nbIndex) && (f->nonSimple)) {
 				f->ShiftVertex();
 				InitializeGeometry(nonSimpleList[i]);
-				//f->DetectOrientation();
+                InitializeInterfaceGeometry(nonSimpleList[i]);
+                //f->DetectOrientation();
 				j++;
 			}
 		}
@@ -373,8 +394,9 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	}
 
 	mApp->changedSinceSave = true;
-	InitializeGeometry(); //Need to recalc facet hit offsets
-	UpdateSelection();
+	InitializeGeometry();
+    InitializeInterfaceGeometry();
+    UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
@@ -487,7 +509,8 @@ void Geometry::CreateDifference() {
 	facets[sh.nbFacet - 1]->indices[counter++] = facets[secondFacet]->indices[0];
 
 	InitializeGeometry();
-	mApp->UpdateFacetParams(true);
+    InitializeInterfaceGeometry();
+    mApp->UpdateFacetParams(true);
 	UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
@@ -607,7 +630,8 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 		vertices3[sh.nbVertex++] = newVert;
 
 	InitializeGeometry();
-	mApp->UpdateFacetParams(true);
+    InitializeInterfaceGeometry();
+    mApp->UpdateFacetParams(true);
 	UpdateSelection();
 }
 
@@ -1061,6 +1085,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		InterfaceFacet *f = facets[i];
 		f->SwapNormal();
 		InitializeGeometry((int)i);
+        InitializeInterfaceGeometry((int)i);
 		try {
 			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
@@ -1162,6 +1187,8 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 			sh.nbFacet += nbNewFacets;
 	}
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
+
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
@@ -1182,6 +1209,7 @@ void Geometry::ShiftVertex() {
 		if (f->selected) {
 			f->ShiftVertex();
 			InitializeGeometry(i);// Reinitialise geom
+            InitializeInterfaceGeometry(i);
 			try {
 				SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 			}
@@ -1539,6 +1567,7 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 	facets.clear();
 	facets = tempFacets;
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 }
 
 bool Geometry::RemoveNullFacet() {
@@ -1676,7 +1705,8 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	}
 
 	InitializeGeometry();
-	//update textures
+    InitializeInterfaceGeometry();
+    //update textures
 	/*try {
 		for (int i = 0; i < nbSelected; i++)
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
@@ -1722,6 +1752,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		}
 
 		InitializeGeometry();
+        InitializeInterfaceGeometry();
 		//update textures
 		/*try {
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
@@ -1782,6 +1813,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	if (nbSelFacet == 0) return undoPoints;
 	if (!project) SwapNormal();
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	//update textures
 	/*try {
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
@@ -1823,6 +1855,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &A
 		}
 	}
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	return undoPoints;
 }
 
@@ -1858,6 +1891,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 		}
 	
 		InitializeGeometry();
+        InitializeInterfaceGeometry();
 		//update textures
 		/*try {
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
@@ -1882,6 +1916,7 @@ void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &A
 			}
 		}
 		InitializeGeometry();
+        InitializeInterfaceGeometry();
 	}
 
 	else { //copy
@@ -1986,7 +2021,10 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 				AddToSelectedVertexList(i);
 			}
 		}
-		if (!copy) InitializeGeometry(); //Geometry changed
+		if (!copy) {
+            InitializeGeometry(); //Geometry changed
+            InitializeInterfaceGeometry();
+		}
 	}
 	prgMove->SetVisible(false);
 	SAFE_DELETE(prgMove);
@@ -2098,6 +2136,7 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 	}
 
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
@@ -2131,7 +2170,8 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 			}
 	}
 
-	InitializeGeometry();   
+	InitializeGeometry();
+    InitializeInterfaceGeometry();
 
 	prgMove->SetVisible(false);
 	SAFE_DELETE(prgMove);
@@ -2654,6 +2694,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 	// Delete old resources
 	DeleteGLLists(true, true);
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	return deletedFacetList;
 }
 
@@ -2721,9 +2762,11 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 	if (vT > 0.0) {
 		CollapseVertex(work, prg, totalWork, vT);
 		InitializeGeometry(); //Find collinear facets
+        InitializeInterfaceGeometry();
 		if (RemoveCollinear() || RemoveNullFacet()) {
 			InitializeGeometry(); //If  facets were removed, update geom.
-			mApp->UpdateModelParams();
+            InitializeInterfaceGeometry();
+            mApp->UpdateModelParams();
 		}
 	}
 
@@ -2821,7 +2864,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 
 	// Reinitialise geom
 	InitializeGeometry();
-
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
@@ -3021,7 +3064,7 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	}
 
 #if defined(MOLFLOW)
-	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model.wp.gasMass);
+	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model->wp.gasMass);
 #endif
 }
 
@@ -3313,6 +3356,7 @@ void Geometry::CreateLoft() {
 
 	sh.nbFacet += newFacets.size();
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::SetAutoNorme(bool enable) {
@@ -3353,7 +3397,7 @@ void Geometry::Rebuild() {
 
 	// Reinitialise geom
 	InitializeGeometry();
-
+    InitializeInterfaceGeometry();
 }
 
 
@@ -3373,6 +3417,21 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
     BuildFacetList(f);
 
+}
+
+void Geometry::SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh) {
+
+    InterfaceFacet *f = facets[facetId];
+    double nU = f->sh.U.Norme();
+    double nV = f->sh.V.Norme();
+
+    if (!f->SetTextureProperties(nU*ratioU, nV*ratioV, mesh)) {
+        char errMsg[512];
+        sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
+        throw Error(errMsg);
+    }
+    f->tRatioU = ratioU;
+    f->tRatioV = ratioV;
 }
 
 void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
@@ -3505,6 +3564,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
 }
@@ -3578,6 +3638,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 	UpdateName(file);
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	AdjustProfile();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
@@ -3719,6 +3780,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 	}
 	prg->SetMessage("Initializing geometry...");
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
@@ -3735,6 +3797,7 @@ void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	AdjustProfile();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
@@ -3753,6 +3816,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 	AdjustProfile();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
@@ -3766,7 +3830,7 @@ void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, 
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
-
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
@@ -3782,6 +3846,8 @@ void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
+
 	//AdjustProfile();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
@@ -3794,7 +3860,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 	worker->globState.globalHits.globalHits.nbHitEquiv = (double)worker->globState.globalHits.globalHits.nbMCHit; //Backward comp
 	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
 	worker->globState.globalHits.globalHits.nbDesorbed = file->ReadSizeT();
-	worker->model.otfParams.desorptionLimit = file->ReadSizeT();
+	worker->model->otfParams.desorptionLimit = file->ReadSizeT();
 
 	sh.nbVertex = file->ReadInt();
 	sh.nbFacet = file->ReadInt();
@@ -4487,6 +4553,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, const d
 	DeleteGLLists(true, true);
 
 	InitializeGeometry();
+    InitializeInterfaceGeometry();
 
 	return 0;
 
@@ -4500,7 +4567,7 @@ void  Geometry::EmptyGeometry() {
 	strName[0] = strdup("");
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
-
+    InitializeInterfaceGeometry();
 }
 
 void Geometry::SetPlottedFacets(std::map<int,GLColor> setMap) {

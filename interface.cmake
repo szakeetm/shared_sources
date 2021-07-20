@@ -25,9 +25,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
-find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
-
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
@@ -127,7 +124,7 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+    #[[# Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
     if (NOT TARGET libzip)
         add_library( libzip STATIC IMPORTED GLOBAL)
     endif()
@@ -139,8 +136,8 @@ if(NOT MSVC)
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
+    endif()]]
+    target_link_libraries(${PROJECT_NAME} PUBLIC ziplib) # from ./lib/
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
@@ -167,7 +164,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:
         /W4>)
 # Preprocessor definitions
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)

@@ -9,9 +9,7 @@ set(PROJECT_NAME nativefiledialog)
 
 # Folders files
 set(CPP_DIR_1 ./molflow_wrapper)
-set(CPP_DIR_2 .)
 set(HEADER_DIR_1 ./molflow_wrapper)
-set(HEADER_DIR_2 .)
 
 ################# CMake Project ############################
 # The main options of project                              #
@@ -26,38 +24,65 @@ project(${PROJECT_NAME} C CXX)
 # Source Files
 
 set(WRAPPER_SRC molflow_wrapper/nfd_wrapper.cpp)
-set(NFD_SRC nfd_common.c)
-# win, cocoa or gtk
-if (WIN32)
-    #REQUIRE_INCLUDE_FILE(windows.h HAS_WINDOWS)
-    list(APPEND NFD_SRC nfd_win.cpp)
-elseif (APPLE)
-    #REQUIRE_INCLUDE_FILE(AppKit/AppKit.h HAS_APPKIT)
-    # use custom compiler (gcc or clang) for the c++ wrapper
-    set(CMAKE_C_COMPILER clang)
-    list(APPEND NFD_SRC nfd_cocoa.m)
-elseif (UNIX)
-    #REQUIRE_INCLUDE_FILE(gtk/gtk.h HAS_GTK)
-    list(APPEND NFD_SRC nfd_gtk.c)
-elseif (UNIX)
-    message(FATAL_ERROR "Cannot detect your system, please report to https://github.com/aarcangeli/nativefiledialog-cmake/issues")
-endif ()
+
+# Download and unpack googletest at configure time
+configure_file(CMakeLists.txt.in nfd-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
+if(result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
+if(result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
+
+# Add googletest directly to our build. This defines
+# the gtest and gtest_main targets.
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/nfd-src
+        ${CMAKE_CURRENT_BINARY_DIR}/nfd-build
+        EXCLUDE_FROM_ALL)
+
+# The gtest/gtest_main targets carry header search path
+# dependencies automatically when using CMake 2.8.11 or
+# later. Otherwise we have to add them here ourselves.
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+    include_directories("${nfd_SOURCE_DIR}/include")
+endif()
+
+# Get the current working branch
+execute_process(
+        COMMAND git rev-parse --abbrev-ref HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_BRANCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Get the latest commit hash
+execute_process(
+        COMMAND git rev-parse HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+#add_subdirectory(nativefiledialog-extended)
 
 add_library(${PROJECT_NAME} STATIC ${WRAPPER_SRC})
-add_library(${PROJECT_NAME}_src STATIC ${NFD_SRC})
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_src)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-        ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
-        )
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_src)
+#add_library(${PROJECT_NAME}_src STATIC ${NFD_SRC})
+add_dependencies(${PROJECT_NAME} nfd)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_1})
+target_link_libraries(${PROJECT_NAME} PRIVATE nfd)
+#target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_src)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################
 
-IF (WIN32)
+#[[IF (WIN32)
 
 ELSEIF(APPLE)
 
@@ -77,10 +102,10 @@ ELSE()
     # Add other flags to the compiler
     ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
     target_link_libraries(${PROJECT_NAME}_src ${GTK3_LIBRARIES})
-ENDIF()
+ENDIF()]]
 
 # Preprocessor definitions
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)

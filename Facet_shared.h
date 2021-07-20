@@ -69,6 +69,7 @@ public:
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
+    bool  SetTextureProperties(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
 	void  BuildMeshGLList();
@@ -125,7 +126,8 @@ public:
 	double DensityCorrection();
 #endif
 #if defined(SYNRAD) //Implementations in SynradFacet.cpp
-	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+    void LoadSYNResults(FileReader *file, int version, FacetHitBuffer &facetCounter);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();

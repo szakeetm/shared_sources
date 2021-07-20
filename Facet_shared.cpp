@@ -269,7 +269,7 @@ int InterfaceFacet::InvalidateDeviceObjects() {
 * \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
 * \return true if texture was set
 */
-bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
+bool InterfaceFacet::SetTextureProperties(double width, double height, bool useMesh) {
 
 	bool dimOK = (width*height > 0.0000001);
 
@@ -288,13 +288,29 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 		sh.texHeight_precise = 0.0;
 	}
 
+	UpdateFlags(); //set hasMesh to true if everything was OK
+	return true;
+
+}
+
+/**
+* \brief Set texture on facet
+* \param width width of the texture
+* \param height height of the texture
+* \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
+* \return true if texture was set
+*/
+bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
+
+	bool dimOK = (width*height > 0.0000001);
+
 	texDimW = 0;
 	texDimH = 0;
 	hasMesh = false;
 	//SAFE_FREE(mesh);
 	/*for (size_t i = 0; i < meshvectorsize; i++)
         SAFE_DELETE(meshvector[i].points);*/
-    //SAFE_DELETE(meshvector);
+	//SAFE_DELETE(meshvector);
 	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
 	DELETE_TEX(glTex);
@@ -329,7 +345,6 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	}
 
-	UpdateFlags(); //set hasMesh to true if everything was OK
 	return true;
 
 }
@@ -1052,7 +1067,8 @@ void InterfaceFacet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
 	//wp.isOpaque = (wp.opacity != 0.0);
-	sh.isTextured = ((texDimW*texDimH) > 0);
+	//sh.isTextured = ((texDimW*texDimH) > 0);
+    sh.isTextured = ((sh.texWidth_precise*sh.texHeight_precise) > 0);
 }
 
 /**

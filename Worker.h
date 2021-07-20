@@ -21,6 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <string>
 #include <vector>
+#include <set>
+#include <list>
 #include <Helper/Chronometer.h>
 #include "Buffer_shared.h" //LEAK, HIT
 #include "SimulationManager.h"
@@ -139,7 +141,7 @@ public:
   int GenerateNewCDF(double temperature);
   void CalcTotalOutgassing();
   int GetCDFId(double temperature);
-  int GetIDId(size_t paramId);
+  int GetIDId(size_t paramId) const;
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   #endif
@@ -159,11 +161,21 @@ public:
     //Different signature:
     void SendFacetHitCounts();
     void SendToHitBuffer();// Send total and facet hit counts to subprocesses
+  void StartStop(float appTime);    // Switch running/stopped
+
+  void RemoveRegion(int index);
+  void AddRegion(const char* fileName, int position = -1); //load region (position==-1: add as new region)
+  void RecalcRegion(int regionId);
+  void SaveRegion(const char* fileName, int position, bool overwrite = false);
+  void SetRegionFileLocation(const std::string fileName, int position);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+
+
 #endif
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  SimulationModel model;
+  std::shared_ptr<SimulationModel> model;
   FacetHistogramBuffer globalHistogramCache;
 
   //float  startTime;         // Start time
@@ -183,8 +195,8 @@ public:
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<IntegratedDesorption> IDs; //integrated distribution function for each time-dependent desorption type
-  std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
-  std::vector<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
+  std::list<double> temperatures; //keeping track of all temperatures that have a CDF already generated
+  std::set<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
   std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
 
@@ -211,7 +223,7 @@ private:
   // Methods
   void ResetWorkerStats();
   //void ClearHits();
-  const char *GetErrorDetails();
+  std::string GetErrorDetails();
   //void ThrowSubProcError(std::string message);
   void ThrowSubProcError(const char *message = nullptr);
   void Start();

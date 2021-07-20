@@ -113,7 +113,8 @@ public:
 	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
-	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
+	void InitializeInterfaceGeometry(int facet_number = -1);
+    void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
     void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
 	void CheckCollinear();
@@ -202,6 +203,7 @@ public:
 	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
+    void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
 	void	MergecollinearSides(InterfaceFacet *f, double fT);

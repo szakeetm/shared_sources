@@ -209,7 +209,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = currentParticle.particleTime + d / 100.0 / currentParticle.velocity;
+									double time = currentParticle.particle.time + d / 100.0 / currentParticle.velocity;
 									double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
 #endif
@@ -220,7 +220,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& currentParticle.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& currentParticle.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-										acos(Dot(currentParticle.direction, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+										acos(Dot(currentParticle.particle.direction, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 

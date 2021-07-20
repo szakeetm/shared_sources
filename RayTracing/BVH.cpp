@@ -11,6 +11,7 @@
 #include <BoundingBox.h>
 #include "BVH.h"
 #include "Ray.h"
+#include <cassert>
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -69,6 +70,10 @@ struct BVHBuildNode {
         ++STATS::interiorNodes;
     }
 
+    ~BVHBuildNode(){
+        if(children[1]) delete children[1];
+        if(children[0]) delete children[0];
+    }
     AxisAlignedBoundingBox bounds;
     BVHBuildNode *children[2];
     int splitAxis, firstPrimOffset, nPrimitives;
@@ -386,6 +391,8 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     int offset = 0;
     flattenBVHTree(root, &offset);
     assert(totalNodes == offset);
+
+    delete root;
 
     printf("--- BVH STATS ---\n");
     printf(" Total Primitives: %d\n", STATS::totalPrimitives);

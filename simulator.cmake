@@ -24,22 +24,22 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
+include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
+    #target_include_directories(${PROJECT_NAME} PRIVATE OpenMP_INCLUDE_DIR)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 if(NOT MSVC)
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
-    find_package(CURL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
-
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
     #for shared memory
@@ -48,7 +48,7 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+    #[[# Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
     if (NOT TARGET libzip)
         add_library( libzip STATIC IMPORTED GLOBAL)
     endif()
@@ -60,8 +60,9 @@ if(NOT MSVC)
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
+    endif()]]
+    target_include_directories(${PROJECT_NAME} PUBLIC ziplib/Source)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
@@ -84,7 +85,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:
         /W4>)
 # Preprocessor definitions
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)

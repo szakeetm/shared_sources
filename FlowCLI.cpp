@@ -17,7 +17,7 @@
 #include <Helper/Chronometer.h>
 #include <Helper/StringHelper.h>
 #include <Helper/ConsoleLogger.h>
-#include <wbenny-ziplib-176e4b6d51fc/Source/ZipLib/ZipFile.h>
+#include <ZipLib/ZipFile.h>
 
 #include "FlowMPI.h"
 #include "SettingsIO.h"
@@ -55,11 +55,11 @@ int main(int argc, char** argv) {
 
     SimulationManager simManager{};
     simManager.interactiveMode = true;
-    SimulationModel model{};
+    std::shared_ptr<SimulationModel> model = std::make_shared<SimulationModel>();
     GlobalSimuState globState{};
 
 
-    if(Initializer::initFromArgv(argc, argv, &simManager, &model)){
+    if(Initializer::initFromArgv(argc, argv, &simManager, model)){
 #if defined(USE_MPI)
         MPI_Finalize();
 #endif
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     MFMPI::mpi_transfer_simu();
 #endif
 
-    if(Initializer::initFromFile(&simManager, &model, &globState)){
+    if(Initializer::initFromFile(&simManager, model, &globState)){
 #if defined(USE_MPI)
         MPI_Finalize();
 #endif
@@ -107,33 +107,33 @@ int main(int argc, char** argv) {
         ProcessSleep(1000);
 
         elapsedTime = simTimer.Elapsed();
-        if(model.otfParams.desorptionLimit != 0)
-            endCondition = globState.globalHits.globalHits.nbDesorbed/* - oldDesNb*/ >= model.otfParams.desorptionLimit;
+        if(model->otfParams.desorptionLimit != 0)
+            endCondition = globState.globalHits.globalHits.nbDesorbed/* - oldDesNb*/ >= model->otfParams.desorptionLimit;
 
         if(endCondition){
             /*std::stringstream outFile;
-            outFile << SettingsIO::outputPath << "/" <<"desorped_" << model.otfParams.desorptionLimit << "_" <<
+            outFile << SettingsIO::outputPath << "/" <<"desorped_" << model->otfParams.desorptionLimit << "_" <<
                  std::filesystem::path(SettingsIO::outputFile).filename().string();*/
             std::string outFile = std::filesystem::path(SettingsIO::outputPath)
                     .append("desorped_")
-                    .concat(std::to_string(model.otfParams.desorptionLimit))
+                    .concat(std::to_string(model->otfParams.desorptionLimit))
                     .concat("_")
                     .concat(std::filesystem::path(SettingsIO::outputFile).filename().string()).string();
             try {
                 std::filesystem::copy_file(SettingsIO::workFile, outFile, std::filesystem::copy_options::overwrite_existing);
                 FlowIO::WriterXML writer;
-                writer.SaveSimulationState(outFile, &model, globState);
+                writer.SaveSimulationState(outFile, model, globState);
             } catch(std::filesystem::filesystem_error& e) {
                 Log::console_error("Warning: Could not create file: %s\n", e.what());
             }
 
             // if there is a next des limit, handle that
             if(!Settings::desLimit.empty()) {
-                model.otfParams.desorptionLimit = Settings::desLimit.front();
+                model->otfParams.desorptionLimit = Settings::desLimit.front();
                 Settings::desLimit.pop_front();
-                simManager.ForwardOtfParams(&model.otfParams);
+                simManager.ForwardOtfParams(&model->otfParams);
                 endCondition = false;
-                Log::console_msg_master(1, " Handling next des limit %z\n", model.otfParams.desorptionLimit);
+                Log::console_msg_master(1, " Handling next des limit %z\n", model->otfParams.desorptionLimit);
 
                 try {
                     ProcessSleep(1000);
@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
         else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
             Log::console_msg_master(1,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
             FlowIO::WriterXML writer;
-            writer.SaveSimulationState(autoSave, &model, globState);
+            writer.SaveSimulationState(autoSave, model, globState);
         }
 
         // Check for potential time end
@@ -167,11 +167,13 @@ int main(int argc, char** argv) {
 #ifdef USE_MPI
     fflush(stdout);
     MPI_Barrier(MPI_COMM_WORLD);
+#endif
     Log::console_msg_master(1, "\n%-6s %-14s %-20s %-20s %-20s %-20s %-20s %-20s\n",
                             "Node#", "Time",
                             "#Hits (run)", "#Hits (total)","Hit/sec",
                             "#Des (run)", "#Des (total)","Des/sec");
     Log::console_msg_master(1, "%s\n",std::string(6+14+20+20+20+20+20+20,'-').c_str());
+#ifdef USE_MPI
     if(!MFMPI::world_rank) fflush(stdout);
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -241,8 +243,8 @@ int main(int argc, char** argv) {
         FlowIO::WriterXML writer;
         pugi::xml_document newDoc;
         newDoc.load_file(fullOutFile.c_str());
-        writer.SaveGeometry(newDoc, &model, false, true);
-        writer.SaveSimulationState(fullOutFile, &model, globState);
+        writer.SaveGeometry(newDoc, model, false, true);
+        writer.SaveSimulationState(fullOutFile, model, globState);
 
         if(SettingsIO::isArchive){
             Log::console_msg_master(3, "Compressing xml to zip...\n");

@@ -81,7 +81,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
 
-#include "NativeFileDialog/nfd.h"
+//#include "NativeFileDialog/nfd.h"
 
 //Updater
 #include "File.h" //File utils (Get extension, etc)
@@ -718,8 +718,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Invert selection", MENU_FACET_INVERTSEL, SDLK_i, CTRL_MODIFIER);
     menu->GetSubMenu("Selection")->Add(nullptr); // Separator
 
-    menu->GetSubMenu("Selection")->Add("Memorize selection to");
-    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Memorize selection to");
+    menu->GetSubMenu("Selection")->Add("Save / Overwrite selection");
+    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Save / Overwrite selection");
     memorizeSelectionsMenu->Add("Add new...", MENU_SELECTION_ADDNEW, SDLK_w, CTRL_MODIFIER);
     memorizeSelectionsMenu->Add(nullptr); // Separator
 
@@ -834,8 +834,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("View")->Add(nullptr); // Separator
 
-    menu->GetSubMenu("View")->Add("Memorize view to");
-    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Memorize view to");
+    menu->GetSubMenu("View")->Add("Save / Overwrite view");
+    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Save / Overwrite view");
     memorizeViewsMenu->Add("Add new...", MENU_VIEW_ADDNEW, SDLK_q, CTRL_MODIFIER);
     memorizeViewsMenu->Add(nullptr); // Separator
 
@@ -857,6 +857,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Pipe (L/R=100)", MENU_TEST_PIPE100);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=1000)", MENU_TEST_PIPE1000);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=10000)", MENU_TEST_PIPE10000);
+    menu->GetSubMenu("Test")->Add("Pipe (L/R=N)", MENU_TEST_PIPEN);
     //Quick test pipe
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Quick Pipe", MENU_QUICKPIPE, SDLK_q, ALT_MODIFIER);
@@ -1729,6 +1730,20 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_TEST_PIPE10000:
                     if (AskToSave()) BuildPipe(10000.0, 0);
                     return true;
+                case MENU_TEST_PIPEN: {
+                    sprintf(tmp, "100");
+                    //sprintf(title,"Pipe L/R = %g",L/R);
+                    char *chRatio = GLInputBox::GetInput(tmp, "L/R Ratio", "Build Pipe");
+                    if (!chRatio) return false;
+                    double ratio = 0.0;
+                    if ((sscanf(chRatio, "%lf", &ratio) <= 0) || (ratio <= 0.0)) {
+                        GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        return false;
+                    }
+
+                    if (AskToSave()) BuildPipe(ratio, 0);
+                    return true;
+                }
                 case MENU_QUICKPIPE:
                     if (AskToSave()) BuildPipe(5.0, 5);
                     return true;

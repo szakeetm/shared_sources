@@ -8,10 +8,10 @@ ST_LIBRARY = Bin/libzip.a
 #CXX      = g++
 #CC       = /usr/local/bin/gcc-9
 #CXX      = /usr/local/bin/g++-9
-CC        = clang
-CXX       = clang++
+#CC        = cc
+#CXX       = cc++
 CFLAGS    = -Wno-enum-conversion -O3
-CXXFLAGS  = -std=c++11 -O3
+CXXFLAGS  = -stdlib=libc++ -std=c++11 -O3
 #compile with -stdlib=libc++ when using clang in other projects
 #compile with stdlibc++ when using gcc in other projects
 
@@ -37,7 +37,7 @@ OBJS = \
 
 # Rules
 all: $(EXECUTABLE)  $(ST_LIBRARY)
-	
+library: 	$(ST_LIBRARY)
 sample: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJS)

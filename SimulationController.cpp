@@ -93,6 +93,7 @@ bool SimThread::runLoop() {
 
     double timeStart = omp_get_wtime();
     double timeLoopStart = timeStart;
+    double timeEnd;
     do {
         setSimState(getSimStatus());
         size_t desorptions = localDesLimit;//(localDesLimit > 0 && localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed) ? localDesLimit - particle->tmpState.globalHits.globalHits.hit.nbDesorbed : 0;
@@ -100,10 +101,10 @@ bool SimThread::runLoop() {
         simEos = runSimulation(desorptions);      // Run during 1 sec
         //printf("Pos[%zu][%d] %lu + %lu / %lu\n",threadNum, simEos, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
 
-        double timeEnd = omp_get_wtime();
+        timeEnd = omp_get_wtime();
 
         if (procInfo->activeProcs.front() == threadNum || timeEnd-timeLoopStart > 60) { // update after 60s of no update or when thread is called
-            if(simulation->model.otfParams.desorptionLimit > 0){
+            if(simulation->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
                     localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
                 else localDesLimit = 0;
@@ -121,7 +122,6 @@ bool SimThread::runLoop() {
         //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
         eos = simEos || (this->particle->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particle->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
-
 
     procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
@@ -146,9 +146,9 @@ void SimThread::setSimState(const std::string& msg) const {
     size_t count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
-    if (simulation->model.otfParams.nbProcess)
-        max = (simulation->model.otfParams.desorptionLimit / simulation->model.otfParams.nbProcess)
-                + ((this->threadNum < simulation->model.otfParams.desorptionLimit % simulation->model.otfParams.nbProcess) ? 1 : 0);
+    if (simulation->model->otfParams.nbProcess)
+        max = (simulation->model->otfParams.desorptionLimit / simulation->model->otfParams.nbProcess)
+                + ((this->threadNum < simulation->model->otfParams.desorptionLimit % simulation->model->otfParams.nbProcess) ? 1 : 0);
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
@@ -161,7 +161,7 @@ void SimThread::setSimState(const std::string& msg) const {
 
 int SimThread::runSimulation(size_t desorptions) {
     // 1s step
-    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
     {
         char msg[128];
@@ -366,8 +366,8 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
                 size_t count = 0;
                 count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;
                 size_t max = 0;
-                if (sim->model.otfParams.nbProcess)
-                    max = sim->model.otfParams.desorptionLimit / sim->model.otfParams.nbProcess + ((threadId < sim->model.otfParams.desorptionLimit % sim->model.otfParams.nbProcess) ? 1 : 0);
+                if (sim->model->otfParams.nbProcess)
+                    max = sim->model->otfParams.desorptionLimit / sim->model->otfParams.nbProcess + ((threadId < sim->model->otfParams.desorptionLimit % sim->model->otfParams.nbProcess) ? 1 : 0);
 
                 char tmp[128];
                 if (max != 0) {
@@ -500,7 +500,7 @@ bool SimulationController::Load() {
         bool loadError = false;
 
         // Init particles / threads
-        simulation->SetNParticle(nbThreads);
+        simulation->SetNParticle(nbThreads, false);
         if (simulation->LoadSimulation(procInfo->subProcInfo[0].statusString)) {
             loadError = true;
         }
@@ -519,15 +519,18 @@ bool SimulationController::Load() {
             }
 
             // "Warm up" threads, to remove overhead for performance benchmarks
+            double randomCounter = 0;
+#pragma omp parallel default(none) shared(randomCounter)
             {
-                size_t randomCounter = 0;
-#pragma omp parallel for default(none) shared(randomCounter)
-                for (int i = 0; i < (int) 1e3; ++i) {
-#pragma omp critical
-                    randomCounter += i;
+                double local_result;
+#pragma omp for
+                for (int i=0; i < 1000; i++) {
+                    local_result += 1;
                 }
-                DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+#pragma omp critical
+                randomCounter += local_result;
             }
+            DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
 
             // Calculate remaining work
             size_t desPerThread = 0;
@@ -557,9 +560,9 @@ bool SimulationController::Load() {
 bool SimulationController::UpdateParams() {
     // Load geometry
     auto* sim = simulation;
-    if (sim->model.otfParams.enableLogging) {
+    if (sim->model->otfParams.enableLogging) {
         printf("Logging with size limit %zd\n",
-               sizeof(size_t) + sim->model.otfParams.logLimit * sizeof(ParticleLoggerItem));
+               sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
     sim->ReinitializeParticleLog();
     return true;
@@ -588,10 +591,10 @@ int SimulationController::Start() {
 
     RebuildAccel();
 
-    if (simulation->model.otfParams.desorptionLimit > 0) {
+    if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
-            simulation->model.otfParams.desorptionLimit /
-            simulation->model.otfParams.nbProcess) {
+            simulation->model->otfParams.desorptionLimit /
+            simulation->model->otfParams.nbProcess) {
             ClearCommand();
             SetState(PROCESS_DONE, GetSimuStatus());
         }
@@ -611,9 +614,9 @@ int SimulationController::Start() {
         // Calculate remaining work
         size_t desPerThread = 0;
         size_t remainder = 0;
-        if(simulation->model.otfParams.desorptionLimit > 0){
-            if(simulation->model.otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
-                size_t limitDes_global = simulation->model.otfParams.desorptionLimit;
+        if(simulation->model->otfParams.desorptionLimit > 0){
+            if(simulation->model->otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
+                size_t limitDes_global = simulation->model->otfParams.desorptionLimit;
                 desPerThread = limitDes_global / nbThreads;
                 remainder = limitDes_global % nbThreads;
             }
@@ -635,6 +638,14 @@ int SimulationController::Start() {
         if (simuEnd) {
             if (GetLocalState() != PROCESS_ERROR) {
                 // Max desorption reached
+                ClearCommand();
+                SetState(PROCESS_DONE, GetSimuStatus());
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+            }
+        }
+        else {
+            if (GetLocalState() != PROCESS_ERROR) {
+                // Time limit reached
                 ClearCommand();
                 SetState(PROCESS_DONE, GetSimuStatus());
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);

@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(ziplib)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
@@ -58,7 +59,7 @@ ENDIF()
 # Defines outputs , depending BUILD TYPE                   #
 ############################################################
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#[[if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
@@ -66,7 +67,16 @@ else()
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
-endif()
+endif()]]
+
+#[[# Messages
+message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")
+message("${PROJECT_NAME}: CURR PROJECT: ${CMAKE_CURRENT_SOURCE_DIR}")
+message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+# Messages
+message("${PROJECT_NAME}: CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+message("${PROJECT_NAME}: CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+message("${PROJECT_NAME}: CMAKE_EXECUTABLE_OUTPUT_DIRECTORY: ${CMAKE_EXECUTABLE_OUTPUT_DIRECTORY}")]]
 
 # Definition of Macros
 add_definitions(
@@ -218,33 +228,13 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-if (APPLE)
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_C_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
+#include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include" CACHE INTERNAL "OpenMP flags for Xcode toolchain.")
-    set(OpenMP_CXX_LIB_NAMES "omp" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-    set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib" CACHE INTERNAL "OpenMP lib name for Xcode toolchain.")
-endif()
+include(SetOpenMP.cmake)
+find_package(OpenMP REQUIRED)
 
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
 endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
-if(WIN32)
-    include(ExternalProject)
-    ExternalProject_Add(ziplib
-            URL ${CMAKE_SOURCE_DIR}/src_shared/wbenny-ziplib-176e4b6d51fc
-            PREFIX ${CMAKE_BINARY_DIR}/ziplib_build
-            BUILD_IN_SOURCE TRUE
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND msbuild.exe .\\ZipLib.sln /p:Configuration=Release /p:Platform=x64
-            INSTALL_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            INSTALL_COMMAND
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/ZipLib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/lzma.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/zlib.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/ziplib_build/src/ziplib/Bin/x64/${CMAKE_BUILD_TYPE}/bzip2.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib/
-            )
-endif()

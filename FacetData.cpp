@@ -6,6 +6,7 @@
 #include "Polygon.h"
 #include "Helper/MathTools.h"
 #include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
+#include "RayTracing/Ray.h" // hitlink
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
@@ -43,7 +44,16 @@ bool Facet::Intersect(Ray &ray) {
                         // This check could be avoided on rectangular facet.
                         if (IsInPoly(u, v, vertices2)) {
                             bool hardHit = this->surf->IsHardHit(ray);
-/*#if defined(MOLFLOW)
+/*#if defined(SYNRAD)
+
+                            if(typeid(*surf) == typeid(MaterialSurface))
+                            hardHit &= (this->sh.reflectType > 10 //Material reflection
+                                        && currentParticle.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
+                                        && currentParticle.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
+                                                                                                                         acos(Dot(currentParticle.direction, this->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+
+#endif*/
+                            /*#if defined(MOLFLOW)
                             double time = ray.time + d / 100.0 / currentParticle.velocity;
                             double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
                             hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
@@ -63,7 +73,7 @@ bool Facet::Intersect(Ray &ray) {
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
                                     //ray.lastIntersected = this->globalId;
-                                    if(ray.hitChain->hit){
+                                    /*if(ray.hitChain->hit){
                                         ray.hitChain->next = new HitChain();
                                         ray.hitChain = ray.hitChain->next;
                                     }
@@ -72,11 +82,19 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->hit->colU = u;
                                     ray.hitChain->hit->colV = v;
                                     ray.hitChain->hit->colDistTranspPass = d;
-                                    ray.hitChain->hitId = globalId;
+                                    ray.hitChain->hitId = globalId;*/
+
+                                    auto hit = new SubProcessFacetTempVar();
+                                    hit->isHit = true;
+                                    hit->colU = u;
+                                    hit->colV = v;
+                                    hit->colDistTranspPass = d;
+                                    ray.hits.emplace_back(globalId, hit);
+
                                 }
                             }
                             else {
-                                if(ray.hitChain->hit){
+                                /*if(ray.hitChain->hit){
                                     ray.hitChain->next = new HitChain();
                                     ray.hitChain = ray.hitChain->next;
                                 }
@@ -85,7 +103,14 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colU = u;
                                 ray.hitChain->hit->colV = v;
                                 ray.hitChain->hit->colDistTranspPass = d;
-                                ray.hitChain->hitId = globalId;
+                                ray.hitChain->hitId = globalId;*/
+
+                                auto hit = new SubProcessFacetTempVar();
+                                hit->isHit = false;
+                                hit->colU = u;
+                                hit->colV = v;
+                                hit->colDistTranspPass = d;
+                                ray.hits.emplace_back(globalId, hit);
                             }
                             return hardHit;
                         } // IsInFacet

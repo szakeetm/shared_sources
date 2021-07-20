@@ -111,6 +111,7 @@ public:
 
 class FacetProperties { //Formerly SHFACET
 public:
+    FacetProperties() = default;
     explicit FacetProperties(size_t nbIndices);
 	//For sync between interface and subprocess
 	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
