@@ -1067,7 +1067,8 @@ void InterfaceFacet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
 	//wp.isOpaque = (wp.opacity != 0.0);
-	sh.isTextured = ((texDimW*texDimH) > 0);
+	//sh.isTextured = ((texDimW*texDimH) > 0);
+    sh.isTextured = ((sh.texWidth_precise*sh.texHeight_precise) > 0);
 }
 
 /**
