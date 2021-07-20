@@ -569,12 +569,12 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
 
         /* --- Simu settings ---*/
         static bool simChanged = false;
-        static double gasMass = mApp->worker.model.wp.gasMass;
-        static bool enableDecay = mApp->worker.model.wp.enableDecay;
-        static double halfLife = mApp->worker.model.wp.halfLife;
-        static bool lowFluxMode = mApp->worker.model.otfParams.lowFluxMode;
+        static double gasMass = mApp->worker.model->wp.gasMass;
+        static bool enableDecay = mApp->worker.model->wp.enableDecay;
+        static double halfLife = mApp->worker.model->wp.halfLife;
+        static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff =
-                mApp->worker.model.otfParams.lowFluxCutoff;
+                mApp->worker.model->otfParams.lowFluxCutoff;
 
         simChanged =
                 InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
@@ -597,18 +597,18 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
 
         // Use tmp var to multiply by 10
         double outgRate10 =
-                mApp->worker.model.wp.finalOutgassingRate_Pa_m3_sec * 10.00;
+                mApp->worker.model->wp.finalOutgassingRate_Pa_m3_sec * 10.00;
         InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
                        "%.4g"); // 10: conversion Pa*m3/sec -> mbar*l/s
         InputRightSide("Final outgassing rate (1/sec)",
-                       &mApp->worker.model.wp.finalOutgassingRate,
+                       &mApp->worker.model->wp.finalOutgassingRate,
                        "%.4g"); // In molecules/sec
 
         {
             char tmp[64];
             sprintf(tmp, "Tot.des. molecules [0 to %g s]",
-                    mApp->worker.model.wp.latestMoment);
-            InputRightSide(tmp, &mApp->worker.model.wp.totalDesorbedMolecules,
+                    mApp->worker.model->wp.latestMoment);
+            InputRightSide(tmp, &mApp->worker.model->wp.totalDesorbedMolecules,
                            "%.4g");
         }
 
@@ -662,11 +662,11 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
             PlaceAtRegionCenter("Apply above settings");
             if (ImGui::Button("Apply above settings")) {
                 simChanged = false;
-                mApp->worker.model.wp.gasMass = gasMass;
-                mApp->worker.model.wp.enableDecay = enableDecay;
-                mApp->worker.model.wp.halfLife = halfLife;
-                mApp->worker.model.otfParams.lowFluxMode = lowFluxMode;
-                mApp->worker.model.otfParams.lowFluxCutoff = lowFluxCutoff;
+                mApp->worker.model->wp.gasMass = gasMass;
+                mApp->worker.model->wp.enableDecay = enableDecay;
+                mApp->worker.model->wp.halfLife = halfLife;
+                mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
+                mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
             }
         }
         ImGui::PopItemWidth();
@@ -701,9 +701,9 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
     if (ImGui::BeginPopupModal("Edit MAX", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         // static bool initMax = false;
-        static double maxDes = mApp->worker.model.otfParams.desorptionLimit;
+        static double maxDes = mApp->worker.model->otfParams.desorptionLimit;
         /*if(!initMax) {
-            maxDes = mApp->worker.model.otfParams.desorptionLimit; // use
+            maxDes = mApp->worker.model->otfParams.desorptionLimit; // use
         double function to allow exponential format initMax = true;
         }*/
         ImGui::InputDouble("Desorption max (0=>endless)", &maxDes, 0.0f, 0.0f,
@@ -719,7 +719,7 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
         ImGui::PopStyleVar();*/
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
-            mApp->worker.model.otfParams.desorptionLimit = maxDes;
+            mApp->worker.model->otfParams.desorptionLimit = maxDes;
             // initMax = false;
             changeDesLimit = true;
             ImGui::CloseCurrentPopup();

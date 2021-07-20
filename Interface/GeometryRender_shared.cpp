@@ -1198,12 +1198,12 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
 }
 
 void Geometry::DrawAABB() {
-    if(!mApp->worker.model.structures.empty()) {
+    if(!mApp->worker.model->structures.empty()) {
         if(mApp->aabbVisu.oldBVH) {
             std::vector<std::vector<SubprocessFacet *>> facetPointers;
-            facetPointers.resize(mApp->worker.model.sh.nbSuper);
-            for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-                for (auto &sFac : mApp->worker.model.facets) {
+            facetPointers.resize(mApp->worker.model->sh.nbSuper);
+            for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
+                for (auto &sFac : mApp->worker.model->facets) {
                     // TODO: Build structures
                     if (sFac->sh.superIdx == -1) { //Facet in all structures
                         for (auto &fp_vec : facetPointers) {
@@ -1217,12 +1217,12 @@ void Geometry::DrawAABB() {
 
             // Build all AABBTrees
             size_t maxDepth = 0;
-            std::vector<AABBNODE *> tree(mApp->worker.model.sh.nbSuper);
-            for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+            std::vector<AABBNODE *> tree(mApp->worker.model->sh.nbSuper);
+            for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                 tree[s] = BuildAABBTree(facetPointers[s], 0, maxDepth);
             }
 
-            int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model.sh.nbSuper : (int)1);
+            int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : (int)1);
             for (int s = 0; s < nStructs; ++s)
                 if (tree[s]) {
                     DrawAABBNode(tree[s], 0);
@@ -1233,10 +1233,10 @@ void Geometry::DrawAABB() {
 #if defined(USE_KDTREE)
             else{
             std::vector<KdTreeAccel> kdtree;
-            if(mApp->worker.model.kdtree.empty()) {
+            if(mApp->worker.model->kdtree.empty()) {
                 std::vector<std::vector<std::shared_ptr<Primitive>>> primPointers;
-                primPointers.resize(mApp->worker.model.sh.nbSuper);
-                for (auto &sFac : mApp->worker.model.facets) {
+                primPointers.resize(mApp->worker.model->sh.nbSuper);
+                for (auto &sFac : mApp->worker.model->facets) {
                     if (sFac->sh.superIdx == -1) { //Facet in all structures
                         for (auto &fp_vec : primPointers) {
                             fp_vec.push_back(sFac);
@@ -1247,7 +1247,7 @@ void Geometry::DrawAABB() {
                 }
 
                 if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit && mApp->worker.globState.initialized && mApp->worker.globState.globalHits.globalHits.nbDesorbed > 0){
-                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model.facets.size())
+                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model->facets.size())
                         return;
                     std::vector<double> probabilities;
                     probabilities.reserve(mApp->worker.globState.facetStates.size());
@@ -1255,40 +1255,40 @@ void Geometry::DrawAABB() {
                         probabilities.emplace_back(state.momentResults[0].hits.nbHitEquiv / mApp->worker.globState.globalHits.globalHits.nbHitEquiv);
                     }
                     /*size_t sumCount = 0;
-                    for(auto& fac : model.facets) {
+                    for(auto& fac : model->facets) {
                         sumCount += fac->iSCount;
                     }
-                    for(auto& fac : model.facets) {
+                    for(auto& fac : model->facets) {
                         probabilities.emplace_back((double)fac->iSCount / (double)sumCount);
                     }*/
-                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                         kdtree.emplace_back(primPointers[s], probabilities);
                     }
                 }
                 else {
-                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
+                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                         kdtree.emplace_back(primPointers[s]);
                     }
                 }
 
             }
             else {
-                kdtree = mApp->worker.model.kdtree;
+                kdtree = mApp->worker.model->kdtree;
             }
 
             if(!kdtree.empty()) {
-                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model.sh.nbSuper : (int)1);
+                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : (int)1);
                 for (int s = 0; s < nStructs; ++s)
                     DrawAABBNode(kdtree[s]);
             }
         }
 #else
     else{
-            std::vector<BVHAccel> bvhs;
-            if(mApp->worker.model.bvhs.empty()) {
+            std::vector<BVHAccel>* bvhs;
+            if(mApp->worker.model->bvhs.empty()) {
                 std::vector<std::vector<std::shared_ptr<Primitive>>> primPointers;
-                primPointers.resize(mApp->worker.model.sh.nbSuper);
-                for (auto &sFac : mApp->worker.model.facets) {
+                primPointers.resize(mApp->worker.model->sh.nbSuper);
+                for (auto &sFac : mApp->worker.model->facets) {
                     if (sFac->sh.superIdx == -1) { //Facet in all structures
                         for (auto &fp_vec : primPointers) {
                             fp_vec.push_back(sFac);
@@ -1298,8 +1298,9 @@ void Geometry::DrawAABB() {
                     }
                 }
 
+                bvhs = new std::vector<BVHAccel>();
                 if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit && mApp->worker.globState.initialized && mApp->worker.globState.globalHits.globalHits.nbDesorbed > 0){
-                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model.facets.size())
+                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model->facets.size())
                         return;
                     std::vector<double> probabilities;
                     probabilities.reserve(mApp->worker.globState.facetStates.size());
@@ -1307,32 +1308,35 @@ void Geometry::DrawAABB() {
                         probabilities.emplace_back(state.momentResults[0].hits.nbHitEquiv / mApp->worker.globState.globalHits.globalHits.nbHitEquiv);
                     }
                     /*size_t sumCount = 0;
-                    for(auto& fac : model.facets) {
+                    for(auto& fac : model->facets) {
                         sumCount += fac->iSCount;
                     }
-                    for(auto& fac : model.facets) {
+                    for(auto& fac : model->facets) {
                         probabilities.emplace_back((double)fac->iSCount / (double)sumCount);
                     }*/
-                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-                        bvhs.emplace_back(primPointers[s], 2, BVHAccel::SplitMethod::ProbSplit, probabilities);
+                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
+                        bvhs->emplace_back(primPointers[s], 2, BVHAccel::SplitMethod::ProbSplit, probabilities);
                     }
                 }
                 else {
-                    for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-                        bvhs.emplace_back(primPointers[s], 2, mApp->aabbVisu.splitTechnique);
+                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
+                        bvhs->emplace_back(primPointers[s], 2, mApp->aabbVisu.splitTechnique);
                     }
                 }
 
             }
             else {
-                bvhs = mApp->worker.model.bvhs;
+
+                bvhs = &mApp->worker.model->bvhs;
             }
 
-            if(!bvhs.empty()) {
-                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model.sh.nbSuper : (int)1);
+            if(!bvhs->empty()) {
+                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : (int)1);
                 for (int s = 0; s < nStructs; ++s)
-                    DrawAABBNode(bvhs[s]);
+                    DrawAABBNode((*bvhs)[s]);
             }
+            if(mApp->worker.model->bvhs.empty())
+                delete bvhs;
         }
 #endif
     }
@@ -1383,11 +1387,11 @@ void Geometry::DrawPolys() {
 
 
 
-	if(!mApp->worker.model.structures.empty()) {
+	if(!mApp->worker.model->structures.empty()) {
         std::vector<std::vector<SubprocessFacet*>> facetPointers;
-        facetPointers.resize(mApp->worker.model.sh.nbSuper);
-        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-            for(auto& sFac : mApp->worker.model.facets){
+        facetPointers.resize(mApp->worker.model->sh.nbSuper);
+        for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
+            for(auto& sFac : mApp->worker.model->facets){
                 // TODO: Build structures
                 if (sFac->sh.superIdx == -1) { //Facet in all structures
                     for (auto& fp_vec : facetPointers) {
@@ -1403,8 +1407,8 @@ void Geometry::DrawPolys() {
         // Build all AABBTrees
         size_t maxDepth=0;
         AABBNODE* tree;
-        for (size_t s = 0; s < mApp->worker.model.sh.nbSuper; ++s) {
-            auto& structure = mApp->worker.model.structures[s];
+        for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
+            auto& structure = mApp->worker.model->structures[s];
             if(structure.aabbTree)
                 structure.aabbTree.reset();
             tree = BuildAABBTree(facetPointers[s], 0, maxDepth);
