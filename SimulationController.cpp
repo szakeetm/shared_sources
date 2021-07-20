@@ -93,6 +93,7 @@ bool SimThread::runLoop() {
 
     double timeStart = omp_get_wtime();
     double timeLoopStart = timeStart;
+    double timeEnd;
     do {
         setSimState(getSimStatus());
         size_t desorptions = localDesLimit;//(localDesLimit > 0 && localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed) ? localDesLimit - particle->tmpState.globalHits.globalHits.hit.nbDesorbed : 0;
@@ -100,7 +101,7 @@ bool SimThread::runLoop() {
         simEos = runSimulation(desorptions);      // Run during 1 sec
         //printf("Pos[%zu][%d] %lu + %lu / %lu\n",threadNum, simEos, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
 
-        double timeEnd = omp_get_wtime();
+        timeEnd = omp_get_wtime();
 
         if (procInfo->activeProcs.front() == threadNum || timeEnd-timeLoopStart > 60) { // update after 60s of no update or when thread is called
             if(simulation->model->otfParams.desorptionLimit > 0){
@@ -121,7 +122,6 @@ bool SimThread::runLoop() {
         //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
         eos = simEos || (this->particle->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particle->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
-
 
     procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
@@ -638,6 +638,14 @@ int SimulationController::Start() {
         if (simuEnd) {
             if (GetLocalState() != PROCESS_ERROR) {
                 // Max desorption reached
+                ClearCommand();
+                SetState(PROCESS_DONE, GetSimuStatus());
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+            }
+        }
+        else {
+            if (GetLocalState() != PROCESS_ERROR) {
+                // Time limit reached
                 ClearCommand();
                 SetState(PROCESS_DONE, GetSimuStatus());
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
