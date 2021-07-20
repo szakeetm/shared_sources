@@ -6,6 +6,7 @@
 #include "Polygon.h"
 #include "Helper/MathTools.h"
 #include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
+#include "RayTracing/Ray.h" // hitlink
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;

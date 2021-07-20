@@ -69,6 +69,7 @@ public:
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
+    bool  SetTextureProperties(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
 	void  BuildMeshGLList();
