@@ -427,8 +427,9 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
+        return 1;
     }
-    return 1;
+    return 2;
 }
 
 int SimulationManager::KillAllSimUnits() {
