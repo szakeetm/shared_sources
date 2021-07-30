@@ -84,12 +84,12 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;*/
 
-                                    auto hit = new SubProcessFacetTempVar();
-                                    hit->isHit = true;
-                                    hit->colU = u;
-                                    hit->colV = v;
-                                    hit->colDistTranspPass = d;
-                                    ray.hits.emplace_back(globalId, hit);
+                                    ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
+                                    auto& hit = ray.hits.back().hit;
+                                    hit.isHit = true;
+                                    hit.colU = u;
+                                    hit.colV = v;
+                                    hit.colDistTranspPass = d;
 
                                 }
                             }
@@ -105,12 +105,12 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
-                                auto hit = new SubProcessFacetTempVar();
-                                hit->isHit = false;
-                                hit->colU = u;
-                                hit->colV = v;
-                                hit->colDistTranspPass = d;
-                                ray.hits.emplace_back(globalId, hit);
+                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
+                                auto& hit = ray.hits.back().hit;
+                                hit.isHit = false;
+                                hit.colU = u;
+                                hit.colV = v;
+                                hit.colDistTranspPass = d;
                             }
                             return hardHit;
                         } // IsInFacet

@@ -18,18 +18,14 @@ struct HitChain {
 };
 
 struct HitLink {
-    HitLink(size_t id, SubProcessFacetTempVar *h) : hitId(id), hit(h) {};
+    HitLink(size_t id, SubProcessFacetTempVar h) : hitId(id), hit(h) {};
 
     // Move constructor called on resize, prevent from deleting SubProcessFacetTempVar
-    HitLink(const HitLink &rhs) :
-            hitId(rhs.hitId),
-            hit(rhs.hit) {};
+    HitLink(const HitLink &rhs) = default;
 
     HitLink(HitLink &&rhs) noexcept:
             hitId(rhs.hitId),
-            hit(rhs.hit) {
-        rhs.hit = nullptr;
-    }
+            hit(rhs.hit) {};
 
     HitLink &operator=(const HitLink &src) {
         hitId = src.hitId;
@@ -40,14 +36,13 @@ struct HitLink {
     HitLink &operator=(HitLink &&src) {
         hitId = src.hitId;
         hit = src.hit;
-        src.hit = nullptr;
         return *this;
     };
 
     ~HitLink();
 
     size_t hitId;
-    SubProcessFacetTempVar *hit;
+    SubProcessFacetTempVar hit;
 };
 
 struct Payload {
