@@ -589,7 +589,11 @@ int SimulationController::Start() {
         return 1;
     }
 
-    RebuildAccel();
+    if(RebuildAccel()){
+        loadOk = false;
+        SetState(PROCESS_ERROR, "Error building acceleration structure!");
+        return 1;
+    }
 
     if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=

@@ -822,7 +822,9 @@ void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
         }
 
         progressDlg->SetMessage("Initialising physical properties for model->..");
-        model->PrepareToRun();
+        if(model->PrepareToRun()){
+            throw std::runtime_error("Error preparing simulation");
+        }
 
         progressDlg->SetMessage("Constructing memory structure to store results...");
         if (!sendOnly) {

@@ -89,7 +89,7 @@ public:
 
     int InitSimUnits();
 
-    int InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState);
+    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
 
     int KillAllSimUnits();
 
