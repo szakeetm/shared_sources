@@ -102,11 +102,11 @@ namespace MFMPI {
         }
     }
 
-    void mpi_receive_states(SimulationModel& model, GlobalSimuState& globState) {
+    void mpi_receive_states(std::shared_ptr<SimulationModel>& model, GlobalSimuState& globState) {
         // First prepare receive structure
         MPI_Status status;
         GlobalSimuState tmpState{};
-        tmpState.Resize(model);
+        tmpState.Resize(*model);
 
         // Retrieve global simu state from other ranks
         // Binary Fan-in pattern
