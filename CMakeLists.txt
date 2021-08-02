@@ -58,7 +58,7 @@ ENDIF()
 # Defines outputs , depending BUILD TYPE                   #
 ############################################################
 
-#[[if(CMAKE_BUILD_TYPE MATCHES (Debug|RelWithDebInfo))
+#[[if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
     set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
