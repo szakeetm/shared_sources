@@ -151,6 +151,24 @@ int main(int argc, char** argv) {
             writer.SaveSimulationState(autoSave, model, globState);
         }
 
+        if(Settings::outputDuration && (uint64_t)(elapsedTime)%Settings::outputDuration==0){ // autosave every x seconds
+            if((uint64_t)elapsedTime / Settings::outputDuration <= 1){
+                Log::console_msg_master(1, "\n%-6s %-14s %-20s %-20s %-20s %-20s %-20s %-20s\n",
+                                        "Node#", "Time",
+                                        "#Hits (run)", "#Hits (total)","Hit/sec",
+                                        "#Des (run)", "#Des (total)","Des/sec");
+                Log::console_msg_master(1, "%s\n",std::string(6+14+20+20+20+20+20+20,'-').c_str());
+            }
+            Log::console_msg(1,"%-6d %-14.2lf %-20zu %-20zu %-20.2lf %-20zu %-20zu %-20.2lf\n",
+                             MFMPI::world_rank, elapsedTime,
+                             globState.globalHits.globalHits.nbMCHit - oldHitsNb, globState.globalHits.globalHits.nbMCHit,
+                             (double) (globState.globalHits.globalHits.nbMCHit - oldHitsNb) /
+                             (elapsedTime),
+                             globState.globalHits.globalHits.nbDesorbed - oldDesNb, globState.globalHits.globalHits.nbDesorbed,
+                             (double) (globState.globalHits.globalHits.nbDesorbed - oldDesNb) /
+                             (elapsedTime));
+        }
+
         // Check for potential time end
         if(Settings::simDuration > 0) {
             endCondition |= (elapsedTime >= (double) Settings::simDuration);
