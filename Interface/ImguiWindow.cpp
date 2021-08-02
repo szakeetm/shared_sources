@@ -942,6 +942,7 @@ void ImguiWindow::renderSingle() {
         }
         std::promise<int> p;
         static std::future<int> future_int;
+        static bool active_prev_state;
         if(!future_int.valid())
             future_int = p.get_future();
 
@@ -951,6 +952,8 @@ void ImguiWindow::renderSingle() {
             if(rebuildAabb){
                 future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
                                         &mApp->worker.globState, 2, (BVHAccel::SplitMethod)(mApp->aabbVisu.splitTechnique));
+                active_prev_state = true;
+                mApp->wereEvents = true;
             }
             // Evaluate running progress
             if(future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready){
@@ -968,9 +971,16 @@ void ImguiWindow::renderSingle() {
                 //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
                 // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
                 // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
-                /*ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+                ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
                 ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                ImGui::Text("Progress Bar");*/
+                ImGui::Text("Progress Bar");
+
+                active_prev_state = true;
+                mApp->wereEvents_imgui = true;
+            }
+            if(active_prev_state){
+                active_prev_state = false;
+                mApp->wereEvents_imgui = true;
             }
             ImGui::End();
             /*do {

@@ -476,7 +476,8 @@ void GLApplication::Run() {
        }
 
        // Repaint
-	   if (wereEvents) {
+       if (wereEvents || wereEvents_imgui) {
+           wereEvents_imgui = false;
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
 	   }
@@ -484,9 +485,7 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
-
        SDL_Delay(100);
-
      }
       
   }

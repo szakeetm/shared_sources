@@ -79,6 +79,7 @@ public:
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	bool wereEvents;
+	bool wereEvents_imgui{true};
 
 //#if defined(_DEBUG)
     // Debugging stuff
