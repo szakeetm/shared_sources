@@ -21,8 +21,25 @@ public:
 
     GLApplication* app;
 
+    bool ToggleMainMenu(){
+        show_app_main_menu_bar = !show_app_main_menu_bar;
+    }
+    bool ToggleSimStatus(){
+        show_app_sim_status = !show_app_sim_status;
+    }
+    bool ToggleDemoWindow(){
+        show_demo_window = !show_demo_window;
+    }
+    bool ToggleGlobalSettings(){
+        show_global_settings = !show_global_settings;
+    }
+    bool ToggleAABBWindow(){
+        show_aabb = !show_aabb;
+    }
 protected:
     // Our state
+    bool show_app_main_menu_bar{false};
+    bool show_app_sim_status{false};
     bool show_demo_window{false};
     bool show_global_settings{true};
     bool show_aabb{true};

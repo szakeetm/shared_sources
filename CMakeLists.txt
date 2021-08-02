@@ -133,6 +133,9 @@ set(INTERFACE_FILES
         Interface/VertexCoordinates.cpp
         Interface/ImguiWindow.cpp
         Interface/ImguiMenu.cpp
+        Interface/ImguiAABB.cpp
+        Interface/ImguiGlobalSettings.cpp
+        Interface/ImguiExtensions.cpp
 
         ASELoader.cpp
         Facet_shared.cpp
