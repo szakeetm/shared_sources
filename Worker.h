@@ -131,7 +131,7 @@ public:
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string&); //Get ID of parameter name
   void SendFacetHitCounts();
-  void SendAngleMaps();
+  int SendAngleMaps();
   void ResetMoments();
 
   double GetMoleculesPerTP(size_t moment) const;

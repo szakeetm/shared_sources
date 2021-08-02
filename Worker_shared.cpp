@@ -723,7 +723,8 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
     sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
                                        "/usr/bin/7za", //use p7zip installed system-wide
-                                       "/usr/local/bin/7za"}; //use p7zip installed for user
+                                       "/usr/local/bin/7za", //use p7zip installed for user
+                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
             sevenZipName = path;
@@ -822,7 +823,9 @@ void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
         }
 
         progressDlg->SetMessage("Initialising physical properties for model->..");
-        model->PrepareToRun();
+        if(model->PrepareToRun()){
+            throw std::runtime_error("Error preparing simulation");
+        }
 
         progressDlg->SetMessage("Constructing memory structure to store results...");
         if (!sendOnly) {

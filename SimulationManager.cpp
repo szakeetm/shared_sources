@@ -319,9 +319,10 @@ int SimulationManager::InitSimUnits() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState) {
-    model->m.lock();
-
+int SimulationManager::InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState) {
+    if (!model->m.try_lock()) {
+        return 1;
+    }
     // Prepare simulation unit
     ResetSimulations();
     ForwardSimModel(model);

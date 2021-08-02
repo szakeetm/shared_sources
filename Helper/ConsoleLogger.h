@@ -23,6 +23,7 @@ namespace Log {
         if (Settings::verbosity >= level) {
             if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
             printf(message, fmt...);
+            fflush(stdout);
         }
     }
 
@@ -31,6 +32,7 @@ namespace Log {
         if (!MFMPI::world_rank && Settings::verbosity >= level) {
             if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
             printf(message, fmt...);
+            fflush(stdout);
         }
     }
 

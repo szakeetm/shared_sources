@@ -248,6 +248,10 @@ void Interface::ResetSimulation(bool askConfirm) {
     if (ok) {
         worker.ResetStatsAndHits(m_fTime);
 
+        dps = 0.0;
+        hps = 0.0;
+        lastHps = hps;
+        lastDps = dps;
         nbDesStart = 0;
         nbHitStart = 0;
         if (convergencePlotter) {
@@ -2738,13 +2742,18 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
     } else {
-        if (worker.simuTimer.Elapsed() > 0.0) {
-            hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
-            dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
+        if(!runningState && worker.simuTimer.Elapsed() > 0.0) {
+            double _hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
+            double _dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
+            if(hps != _hps || dps != _dps)
+                wereEvents = true;
         } else {
+            if(hps != 0.0 || dps != 0.0)
+                wereEvents = true;
             hps = 0.0;
             dps = 0.0;
         }
+
         if(runningState)
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
         else
