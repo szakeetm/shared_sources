@@ -16,6 +16,93 @@
 #include <imgui/imgui_internal.h>
 #include <sstream>
 #include <imgui/IconsFontAwesome5.h>
+#include <future>
+
+namespace ImGui {
+
+    bool BufferingBar(const char* label, float value,  const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+
+        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 size = size_arg;
+        size.x -= style.FramePadding.x * 2;
+
+        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+        ItemSize(bb, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        // Render
+        const float circleStart = size.x * 0.7f;
+        const float circleEnd = size.x;
+        const float circleWidth = circleEnd - circleStart;
+
+        window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), bg_col);
+        window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart*value, bb.Max.y), fg_col);
+
+        const float t = g.Time;
+        const float r = size.y / 2;
+        const float speed = 1.5f;
+
+        const float a = speed*0;
+        const float b = speed*0.333f;
+        const float c = speed*0.666f;
+
+        const float o1 = (circleWidth+r) * (t+a - speed * (int)((t+a) / speed)) / speed;
+        const float o2 = (circleWidth+r) * (t+b - speed * (int)((t+b) / speed)) / speed;
+        const float o3 = (circleWidth+r) * (t+c - speed * (int)((t+c) / speed)) / speed;
+
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o1, bb.Min.y + r), r, bg_col);
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o2, bb.Min.y + r), r, bg_col);
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o3, bb.Min.y + r), r, bg_col);
+
+        return true;
+    }
+
+    bool Spinner(const char* label, float radius, int thickness, const ImU32& color) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+
+        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 size((radius )*2, (radius + style.FramePadding.y)*2);
+
+        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+        ItemSize(bb, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        // Render
+        window->DrawList->PathClear();
+
+        int num_segments = 30;
+        int start = abs(ImSin(g.Time*1.8f)*(num_segments-5));
+
+        const float a_min = IM_PI*2.0f * ((float)start) / (float)num_segments;
+        const float a_max = IM_PI*2.0f * ((float)num_segments-3) / (float)num_segments;
+
+        const ImVec2 centre = ImVec2(pos.x+radius, pos.y+radius+style.FramePadding.y);
+
+        for (int i = 0; i < num_segments; i++) {
+            const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a+g.Time*8) * radius,
+                                                centre.y + ImSin(a+g.Time*8) * radius));
+        }
+
+        window->DrawList->PathStroke(color, false, thickness);
+        return true;
+    }
+}
 
 void ImguiWindow::init() {
     // Setup Dear ImGui context
@@ -734,7 +821,7 @@ static void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &
 
 }
 
-static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb) {
+static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(400.0f,0.0f)); // Lift normal size constraint, however the presence of
@@ -773,6 +860,9 @@ static void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb) {
 
     if (ImGui::Button("Apply aabb view"))
         redrawAabb = true;
+
+    if (ImGui::Button("Build new AABB"))
+        rebuildAabb = true;
 }
 
 void ImguiWindow::renderSingle() {
@@ -788,6 +878,7 @@ void ImguiWindow::renderSingle() {
         bool recalcOutg = false;
         bool changeDesLimit = false;
         bool redrawAabb = false;
+        bool rebuildAabb = false;
         static int nbProc = mApp->worker.GetProcNumber();
 
 
@@ -822,25 +913,26 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_global_settings);
-            ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
-            ImGui::Checkbox("Sidebar", &show_app_sim_status);
+                    ImGui::Checkbox("Another Window", &show_global_settings);
+                    ImGui::Checkbox("Acceleration Structure", &show_aabb);
+                    ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
+                    ImGui::Checkbox("Sidebar", &show_app_sim_status);
 
-            ImGui::SliderFloat("float", &f, 0.0f,
-                               1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3(
-                    "clear color",
-                    (float *) &clear_color); // Edit 3 floats representing a color
+                    ImGui::SliderFloat("float", &f, 0.0f,
+                                       1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
+                                       ImGui::ColorEdit3(
+                                               "clear color",
+                                               (float *) &clear_color); // Edit 3 floats representing a color
 
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most
-                // widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+                                               if (ImGui::Button("Button")) // Buttons return true when clicked (most
+                                                   // widgets return true when edited/activated)
+                                                   counter++;
+                                               ImGui::SameLine();
+                                               ImGui::Text("counter = %d", counter);
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                        1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
+                                               ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                                                           1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                                               ImGui::End();
         }
 
         // 3. Show another simple window.
@@ -848,10 +940,43 @@ void ImguiWindow::renderSingle() {
             ShowGlobalSettings(mApp, &show_global_settings, nbProcChanged, recalcOutg, changeDesLimit,nbProc);
             ImGui::End();
         }
+        std::promise<int> p;
+        static std::future<int> future_int;
+        if(!future_int.valid())
+            future_int = p.get_future();
 
         if (show_aabb) {
-            ShowAABB(mApp, &show_aabb, redrawAabb);
+            ShowAABB(mApp, &show_aabb, redrawAabb, rebuildAabb);
+
+            if(rebuildAabb){
+                future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
+                                        &mApp->worker.globState, 2, (BVHAccel::SplitMethod)(mApp->aabbVisu.splitTechnique));
+            }
+            // Evaluate running progress
+            if(future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready){
+                // Animate a simple progress bar
+                static float progress = 0.0f, progress_dir = 1.0f;
+                if(1) {
+                    progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
+                    if (progress >= +1.1f) { progress = +1.1f; progress_dir *= -1.0f; }
+                    if (progress <= -0.1f) { progress = -0.1f; progress_dir *= -1.0f; }
+                }
+                const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+                const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
+
+                ImGui::Spinner("##spinner", 15, 6, col);
+                //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
+                // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
+                // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
+                /*ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+                ImGui::Text("Progress Bar");*/
+            }
             ImGui::End();
+            /*do {
+                progressDlg->SetProgress(load_progress);
+                ProcessSleep(100);
+            } while (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready);*/
         }
 
         // Rendering
@@ -886,9 +1011,18 @@ void ImguiWindow::renderSingle() {
         } else if (changeDesLimit) {
             mApp->worker.ChangeSimuParams(); // Sync with subprocesses
         }
+        /*else if(rebuildAabb){
+            double load_progress = 0.0;
+            {
+                future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
+                                        &mApp->worker.globState, 2, (BVHAccel::SplitMethod)(mApp->aabbVisu.splitTechnique));
+            }
+            //mApp->worker.model->BuildAccelStructure(&mApp->worker.globState, 2, (BVHAccel::SplitMethod)(mApp->aabbVisu.splitTechnique));
+        }*/
         else if(redrawAabb){
             mApp->worker.GetGeometry()->BuildGLList();
         }
+
     }
 }
 
