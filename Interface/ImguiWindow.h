@@ -23,18 +23,23 @@ public:
 
     bool ToggleMainMenu(){
         show_app_main_menu_bar = !show_app_main_menu_bar;
+        return show_app_main_menu_bar;
     }
     bool ToggleSimStatus(){
         show_app_sim_status = !show_app_sim_status;
+        return show_app_sim_status;
     }
     bool ToggleDemoWindow(){
         show_demo_window = !show_demo_window;
+        return show_demo_window;
     }
     bool ToggleGlobalSettings(){
         show_global_settings = !show_global_settings;
+        return show_global_settings;
     }
     bool ToggleAABBWindow(){
         show_aabb = !show_aabb;
+        return show_aabb;
     }
 protected:
     // Our state
