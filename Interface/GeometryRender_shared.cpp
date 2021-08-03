@@ -626,11 +626,27 @@ void Geometry::DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb,
 
 
         // begin transparent sides
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        if(mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glColor4f(
+                    0.9f ,
+                    0.2f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) ,
+                    (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) ,
+                    (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) ,
+                    std::min(1.0f, ((int) (level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) : 0.2f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) : 0.2f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + ((int) (level / 3.0f)) * 0.1f)) : 0.2f,
+                    std::min(1.0f, ((int) (level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        }
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBegin(GL_POLYGON);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
@@ -677,33 +693,75 @@ void Geometry::DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb,
         // end transparent sides
 
         glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
-
+        if(mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glColor4f(
+                    0.9f ,
+                    0.2f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    (1.0f / (1.0f + level * 0.5)),
+                    (1.0f / (1.0f + level * 0.5)),
+                    (1.0f / (1.0f + level * 0.5)),
+                    std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                    std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        }
         glBegin(GL_POINTS);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
         glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
         glEnd();
-
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.05f) + 0.4f));
-
+        if(mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glColor4f(
+                    0.9f ,
+                    0.2f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    (1.0f / (1.0f + level * 0.5)),
+                    (1.0f / (1.0f + level * 0.5)),
+                    (1.0f / (1.0f + level * 0.5)),
+                    std::min(1.0f, (level * 0.05f) + 0.4f));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                    std::min(1.0f, (level * 0.05f) + 0.4f));
+        }
         glLineWidth(3.0f);
 
         glPushAttrib(GL_LINE_BIT);
         glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
-                std::min(1.0f, (level * 0.5f) + 0.1f));
-
+        if(mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glColor4f(
+                    0.9f ,
+                    0.2f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    (1.0f / (1.0f + (level) * 0.5)),(1.0f / (1.0f + (level) * 0.5)),(1.0f / (1.0f + (level) * 0.5)),
+                    std::min(1.0f, (level * 0.5f) + 0.1f));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
+                    std::min(1.0f, (level * 0.5f) + 0.1f));
+        }
         glBegin(GL_LINE_LOOP);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
@@ -865,10 +923,11 @@ void Geometry::DrawAABBNode(const BVHAccel &bvh) {
     int currentNodeIndex = 0;
     const LinearBVHNode *node = &bvh.nodes[currentNodeIndex];
 
-    DrawAABBNode(node, currentNodeIndex, 0);
+    DrawAABBNode(node, currentNodeIndex, 0, false);
+    DrawAABBNode(node, currentNodeIndex, 0, true);
 }
 
-void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, int level) {
+void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, int level, bool selection) {
 
 
     const LinearBVHNode *node = &lnode[currentNodeIndex];
@@ -876,7 +935,7 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
     const int max_level = (mApp->aabbVisu.showLevelAABB[1] == -1) ? 64 : mApp->aabbVisu.showLevelAABB[1];
     if(node->nPrimitives > 0 && !mApp->aabbVisu.showAABBLeaves) return;
 
-    if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
+    if((!selection || (selection && mApp->aabbVisu.selectedNode == currentNodeIndex)) && (mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1])))) {
         auto bbox = node->bounds;
         auto delta = this->bb.max - this->bb.min;
         bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
@@ -896,14 +955,37 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
         }
-
+       /* if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glDisable(GL_DEPTH_TEST);
+            glColor4f(
+                    0.9f ,
+                    0.2f ,
+                    0.2f ,
+                    0.5f);
+        }*/
 
         // begin transparent sides
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
-                std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glColor4f(
+                    0.9f ,
+                    0.9f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    0.6f ,
+                    0.6f ,
+                    std::max(0.7f, (1.0f / (1.0f + level * 0.5f))) ,
+                    std::min(1.0f, ((int) (level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + ((int)(level / 3.0f)) * 0.1f)) : 0.2f,
+                    std::min(1.0f, ((int)(level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        }
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBegin(GL_POLYGON);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
@@ -949,34 +1031,69 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
         glEnd();
         // end transparent sides
 
+        // corner points
         glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ZERO);
+            glColor4f(
+                    0.9f ,
+                    0.9f ,
+                    0.2f ,
+                    0.5f);
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    0.6f ,
+                    0.6f ,
+                    std::max(0.7f, (1.0f / (1.0f + level * 0.5f))) ,
+                    std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
+                    std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        }
 
         glBegin(GL_POINTS);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
         glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
         glEnd();
 
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + level * 0.5)) : 0.1f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.1f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.1f,
-                std::min(1.0f, (level * 0.05f) + 0.4f));
-
-        glLineWidth(3.0f);
-
         glPushAttrib(GL_LINE_BIT);
-        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
-        glColor4f(
-                (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
-                (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
-                (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
-                std::min(1.0f, (level * 0.5f) + 0.1f));
 
+        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
+
+        // edges
+        if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            // Overwrite other boxes
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ZERO);
+
+            glColor4f(
+                    0.9f ,
+                    0.9f ,
+                    0.2f ,
+                    std::min(1.0f, (level * 0.5f) + mApp->aabbVisu.alpha * 2.0f));
+        }
+        else if(mApp->aabbVisu.sameColor){
+            glColor4f(
+                    0.6f ,
+                    0.6f ,
+                    std::max(0.7f, (1.0f / (1.0f + level * 0.5f))) ,
+                    std::min(1.0f, (level * 0.5f) + mApp->aabbVisu.alpha * 1.1f));
+        }
+        else {
+            glColor4f(
+                    (level % 3 == 0) ? (1.0f / (1.0f + (level) * 0.5)) : 0.2f,
+                    (level % 3 == 1) ? (1.0f / (1.0f + (level - 1) * 0.5)) : 0.2f,
+                    (level % 3 == 2) ? (1.0f / (1.0f + (level - 2) * 0.5)) : 0.2f,
+                    std::min(1.0f, (level * 0.5f) + 0.1f));
+        }
         glBegin(GL_LINE_LOOP);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
@@ -1029,8 +1146,8 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
     }
 
     if(level < max_level && node->nPrimitives <= 0) {
-        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(lnode, currentNodeIndex + 1, level+1);
-        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(lnode, node->secondChildOffset, level+1);
+        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBNode(lnode, currentNodeIndex + 1, level + 1, selection);
+        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBNode(lnode, node->secondChildOffset, level + 1, selection);
     }
 }
 

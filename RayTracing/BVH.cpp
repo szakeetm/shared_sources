@@ -389,9 +389,10 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     //<<Compute representation of depth-first traversal of BVH tree>>
     nodes = new LinearBVHNode[totalNodes]; //AllocAligned<LinearBVHNode>(totalNodes);
     int offset = 0;
-    flattenBVHTree(root, &offset);
+    std::vector<IntersectCount> swapped(totalNodes);
+    ints.swap(swapped);
+    flattenBVHTreeStats(root, &offset, 0);
     assert(totalNodes == offset);
-
     delete root;
 
     printf("--- BVH STATS ---\n");
@@ -532,6 +533,30 @@ int BVHAccel::flattenBVHTree(BVHBuildNode *node, int *offset) {
     return myOffset;
 }
 
+int BVHAccel::flattenBVHTreeStats(BVHBuildNode *node, int *offset, int level) {
+    LinearBVHNode *linearNode = &nodes[*offset];
+    linearNode->bounds = node->bounds;
+
+    ints[*offset].nbPrim = node->nPrimitives;
+    ints[*offset].level = level;
+
+    int myOffset = (*offset)++;
+    if (node->nPrimitives > 0) {
+        assert(!node->children[0] && !node->children[1]);
+        assert(node->nPrimitives < 65536);
+        linearNode->primitivesOffset = node->firstPrimOffset;
+        linearNode->nPrimitives = node->nPrimitives;
+    } else {
+        // Create interior flattened BVH node
+        linearNode->axis = node->splitAxis;
+        linearNode->nPrimitives = 0;
+        flattenBVHTreeStats(node->children[0], offset, level++);
+        linearNode->secondChildOffset =
+                flattenBVHTreeStats(node->children[1], offset, level++);
+    }
+    return myOffset;
+}
+
 void BVHAccel::ComputeBB() {
     bb = nodes ? nodes[0].bounds : AxisAlignedBoundingBox();
 }
@@ -548,7 +573,9 @@ bool BVHAccel::Intersect(Ray &ray) {
     while (true) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
+        ints[currentNodeIndex].nbChecks++;
         if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
+            ints[currentNodeIndex].nbIntersects++;
             if (node->nPrimitives > 0) {
                 // Intersect ray with primitives in leaf BVH node
                 for (int i = 0; i < node->nPrimitives; ++i) {

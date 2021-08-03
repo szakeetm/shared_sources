@@ -321,6 +321,11 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
+#if !defined(USE_KDTREE)
+    int splitMethod{0}; //SAH
+    int bvhWidth{2};
+#endif
+
 #if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment

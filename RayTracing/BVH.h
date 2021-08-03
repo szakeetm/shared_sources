@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <FacetData.h>
+#include <atomic>
 #include "Primitive.h"
 
 using Primitive = Facet;
@@ -28,6 +29,17 @@ struct LinearBVHNode {
     friend class Geometry;
 };
 
+struct IntersectCount{
+    IntersectCount() : nbChecks(0), nbIntersects(0){};
+    IntersectCount(const IntersectCount&) = delete;
+    IntersectCount(IntersectCount&&) = delete;//change this to 'delete' will give a similar compiler error
+
+    std::atomic<size_t> nbChecks{0};
+    std::atomic<size_t> nbIntersects{0};
+    size_t nbPrim{0};
+    size_t level{0};
+};
+
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
@@ -46,6 +58,8 @@ public:
 
     bool Intersect(Ray &ray);
 
+    std::vector<IntersectCount> ints;
+    LinearBVHNode* GetNodes(){return nodes;};
 private:
     void ComputeBB() override;
     // BVHAccel Private Methods
@@ -54,6 +68,7 @@ private:
             int start, int end, int *totalNodes,
             std::vector<std::shared_ptr<Primitive>> &orderedPrims);
     int flattenBVHTree(BVHBuildNode *node, int *offset);
+    int flattenBVHTreeStats(BVHBuildNode *node, int *offset, int level);
 
 private:
     const int maxPrimsInNode;

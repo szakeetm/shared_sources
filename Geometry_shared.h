@@ -360,7 +360,7 @@ protected:
 
 	void DrawAABBNode(AABBNODE *node, int level);
     void DrawAABBNode(const BVHAccel &bvh);
-    void DrawAABBNode(const LinearBVHNode * lnode, int currentNodeIndex, int level);
+    void DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, int level, bool selection);
 
     void DrawAABBNode(const KdTreeAccel &kd);
     void DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level);

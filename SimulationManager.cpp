@@ -685,7 +685,7 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 }
 
 // Create hard copy for local usage
-void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
+void SimulationManager::ForwardSimModel(const std::shared_ptr<SimulationModel>& model) {
     for(auto& sim : simUnits)
         sim->model = model;
 }
