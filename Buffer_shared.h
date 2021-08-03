@@ -323,7 +323,7 @@ struct WorkerParams { //Plain old data
     HistogramParams globalHistogramParams;
 #if !defined(USE_KDTREE)
     int splitMethod{0}; //SAH
-    int bvhWidth{2};
+    int bvhMaxPrimsInNode{2};
 #endif
 
 #if defined(MOLFLOW)

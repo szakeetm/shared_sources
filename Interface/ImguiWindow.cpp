@@ -491,7 +491,7 @@ void ImguiWindow::renderSingle() {
                 if(mApp->worker.IsRunning())
                     mApp->StartStopSimulation();
                 future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
-                                        &mApp->worker.globState, mApp->worker.model->wp.bvhWidth, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
+                                        &mApp->worker.globState, mApp->worker.model->wp.bvhMaxPrimsInNode, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
                 active_prev_state = true;
                 mApp->wereEvents = true;
             }

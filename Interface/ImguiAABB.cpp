@@ -97,7 +97,7 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
 
     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
-    ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhWidth, 0, 32);
+    ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
 
     const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit"};
     if (ImGui::BeginListBox("Splitting technique")) {
