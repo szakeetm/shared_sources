@@ -94,6 +94,7 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
     ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
     ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
     ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
+    ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats);
 
     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
@@ -128,7 +129,6 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
     if (/*tabItems.empty() && */!bvhs.empty() && tabItems.size() != bvhs.front().ints.size())
     {
         auto& bvh = bvhs.front();
-        size_t ii = 0;
         tabItems.resize(bvh.ints.size(), BoxData());
         for (int n = 0; n < tabItems.Size; n++)
         {

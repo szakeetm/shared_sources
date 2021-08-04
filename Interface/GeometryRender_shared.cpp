@@ -972,6 +972,15 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
                     0.2f ,
                     0.5f);
         }
+        else if(mApp->aabbVisu.showStats){
+            auto& stats = mApp->worker.model->bvhs.front().ints[currentNodeIndex];
+            float rate = (stats.nbChecks > 0) ? (float) stats.nbIntersects / (float) stats.nbChecks : 0.0f;
+            glColor4f(
+                    1.0f - rate ,
+                    0.6f ,
+                    rate ,
+                    std::min(1.0f, ((int) (level / 3.0f) * 0.02f) + mApp->aabbVisu.alpha));
+        }
         else if(mApp->aabbVisu.sameColor){
             glColor4f(
                     0.6f ,
@@ -1043,6 +1052,15 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
                     0.2f ,
                     0.5f);
         }
+        else if(mApp->aabbVisu.showStats){
+            auto& stats = mApp->worker.model->bvhs.front().ints[currentNodeIndex];
+            float rate = (stats.nbChecks > 0) ? (float) stats.nbIntersects / (float) stats.nbChecks : 0.0f;
+            glColor4f(
+                    1.0f - rate ,
+                    0.6f ,
+                    rate ,
+                    std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha));
+        }
         else if(mApp->aabbVisu.sameColor){
             glColor4f(
                     0.6f ,
@@ -1079,6 +1097,15 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
                     0.9f ,
                     0.2f ,
                     std::min(1.0f, (level * 0.5f) + mApp->aabbVisu.alpha * 2.0f));
+        }
+        else if(mApp->aabbVisu.showStats){
+            auto& stats = mApp->worker.model->bvhs.front().ints[currentNodeIndex];
+            float rate = (stats.nbChecks > 0) ? (float) stats.nbIntersects / (float) stats.nbChecks : 0.0f;
+            glColor4f(
+                    1.0f - rate ,
+                    0.6f ,
+                    rate ,
+                    std::min(1.0f, (level * 0.5f) + mApp->aabbVisu.alpha * 1.1f));
         }
         else if(mApp->aabbVisu.sameColor){
             glColor4f(
