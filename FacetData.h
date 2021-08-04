@@ -10,6 +10,7 @@
 #include "Vector.h"
 #include "Buffer_shared.h"
 #include <Random.h>
+#include <atomic>
 
 class Surface {
 public:
@@ -50,6 +51,10 @@ struct Facet : public RTPrimitive {
 
     size_t globalId; //Global index (to identify when superstructures are present)
     //size_t iSCount{0};
+
+    // Statistics
+    std::atomic<unsigned long long int> nbTraversalSteps{0};
+    std::atomic<unsigned long long int> nbIntersections{0};
 
     void ComputeBB() { bb = sh.bb;};
     bool Intersect(Ray &r) override;

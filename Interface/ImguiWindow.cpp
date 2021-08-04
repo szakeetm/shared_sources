@@ -485,7 +485,8 @@ void ImguiWindow::renderSingle() {
             future_int = p.get_future();
 
         if (show_aabb) {
-            ShowAABB(mApp, &show_aabb, redrawAabb, rebuildAabb);
+            static ImguiAABBVisu visu{};
+            visu.ShowAABB(mApp, &show_aabb, redrawAabb, rebuildAabb);
 
             if(rebuildAabb){
                 if(mApp->worker.IsRunning())

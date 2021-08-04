@@ -574,6 +574,7 @@ bool BVHAccel::Intersect(Ray &ray) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
         ints[currentNodeIndex].nbChecks++;
+        ray.traversalSteps++;
         if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
             ints[currentNodeIndex].nbIntersects++;
             if (node->nPrimitives > 0) {

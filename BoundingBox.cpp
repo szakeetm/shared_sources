@@ -78,6 +78,7 @@ constexpr double gamma(int n)
 bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir,
                                    const int dirIsNeg[3]) const {
     const AxisAlignedBoundingBox &bounds = *this;
+
     // Check for ray intersection against $x$ and $y$ slabs
     double tMin = (bounds[dirIsNeg[0]].x - ray.origin.x) * invDir.x;
     double tMax = (bounds[1 - dirIsNeg[0]].x - ray.origin.x) * invDir.x;

@@ -10,6 +10,9 @@
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
+    nbTraversalSteps += ray.traversalSteps;
+    ray.traversalSteps = 0;
+    ++nbIntersections;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
     double det = Dot(this->sh.Nuv, rayDirOpposite);
 

@@ -71,6 +71,10 @@ public:
     double time; // Only for td simulations in Molflow
     int lastIntersected; //
     int structure; //
+
+    //Statistics
+    size_t traversalSteps{0};
+
     //const Medium *medium;
     Payload *pay;
 

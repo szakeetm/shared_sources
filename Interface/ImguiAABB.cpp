@@ -5,6 +5,7 @@
 #include "ImguiAABB.h"
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
+#include "transfer_function_widget.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -72,9 +73,70 @@ namespace
         }
     };
     const ImGuiTableSortSpecs* BoxData::s_current_sort_specs = NULL;
+    
+    enum FacetDataColumnID {
+        FacetDataColumnID_ID,
+        FacetDataColumnID_Steps
+    };
+
+    struct FacetData {
+        int ID;
+        int steps;
+        
+        static const ImGuiTableSortSpecs* s_current_sort_specs;
+
+        // Compare function to be used by qsort()
+        static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs)
+        {
+            const FacetData* a = (const FacetData*)lhs;
+            const FacetData* b = (const FacetData*)rhs;
+            for (int n = 0; n < s_current_sort_specs->SpecsCount; n++)
+            {
+                // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
+                // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
+                const ImGuiTableColumnSortSpecs* sort_spec = &s_current_sort_specs->Specs[n];
+                int delta = 0;
+                switch (sort_spec->ColumnUserID)
+                {
+                    case FacetDataColumnID_ID:             delta = (a->ID - b->ID); break;
+                    case FacetDataColumnID_Steps:           delta = (a->steps > b->steps) ? 1 : (a->steps == b->steps) ? 0 : -1;     break;
+                    
+                    default: IM_ASSERT(0); break;
+                }
+                if (delta > 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
+                if (delta < 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
+            }
+
+            // qsort() is instable so always return a way to differenciate items.
+            // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
+            return (a->ID - b->ID);
+        }
+    };
+    const ImGuiTableSortSpecs* FacetData::s_current_sort_specs = NULL;
 }
 
-void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
+ImguiAABBVisu::ImguiAABBVisu(){
+    // A texture so we can color the background of the window by the colormap
+    GLuint colormap_texture;
+    glGenTextures(1, &colormap_texture);
+    glBindTexture(GL_TEXTURE_1D, colormap_texture);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    auto colormap = tfn_widget.get_colormap();
+    glTexImage1D(GL_TEXTURE_1D,
+                 0,
+                 GL_RGBA8,
+                 colormap.size() / 4,
+                 0,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 colormap.data());
+}
+
+void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(400.0f, 0.0f)); // Lift normal size constraint, however the presence of
@@ -96,6 +158,21 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
     ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
     ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats);
 
+    if (tfn_widget.changed()) {
+        auto colormap = tfn_widget.get_colormap();
+        glTexImage1D(GL_TEXTURE_1D,
+                     0,
+                     GL_RGBA8,
+                     colormap.size() / 4,
+                     0,
+                     GL_RGBA,
+                     GL_UNSIGNED_BYTE,
+                     colormap.data());
+    }
+    if(ImGui::SliderFloat2("Hit stat threshold", (float*)&mApp->aabbVisu.trimByProb, 0.0f, 1.0f, "%.2f")){
+        mApp->aabbVisu.trimRange = mApp->aabbVisu.trimByProb[1] - mApp->aabbVisu.trimByProb[0];
+    }
+
     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
     ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
@@ -116,13 +193,39 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
         ImGui::EndListBox();
     }
 
+    static bool color_win = false;
+    if(ImGui::Button("Edit colormap")) {
+        color_win = !color_win;
+    }
+
+    if(color_win) {
+        // Always center this window when appearing
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowSize(ImVec2(0, 400), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0, 0)); // Lift normal size constraint
+
+        if (ImGui::Begin("Choose colormap"),
+                ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ChildWindow) {
+            if (ImGui::Button("Apply")) {
+                mApp->aabbVisu.colorMap = tfn_widget.get_colormapf();
+                redrawAabb = true;
+                color_win = false;
+            }
+            if (ImGui::Button("Close")) {
+                color_win = false;
+            }
+            tfn_widget.draw_ui();
+            ImGui::End();
+        }
+        ImGui::PopStyleVar(); // Lift normal size constraint}
+    }
     if (ImGui::Button("Apply aabb view"))
         redrawAabb = true;
 
     if (ImGui::Button("Build new AABB"))
         rebuildAabb = true;
 
-    
     // Create item list
     static ImVector<BoxData> tabItems;
     auto& bvhs = mApp->worker.model->bvhs;
@@ -150,60 +253,148 @@ void ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAab
         }
     }
 
-    static ImGuiTableFlags tFlags =
-            ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-            ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
-            ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
-            ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
-            ImGuiTableFlags_Sortable;
+    // Create item list
+    static ImVector<FacetData> facItems;
+    auto& facets = mApp->worker.model->facets;
+    if (!facets.empty() && facItems.size() != facets.size())
+    {
+        auto& fac = facets;
+        facItems.resize(facets.size(), FacetData());
+        for (int n = 0; n < facItems.Size; n++)
+        {
+            auto& f = facets[n];
+            FacetData& item = facItems[n];
+            item.ID = n;
+            item.steps =  (f->nbTraversalSteps > 0) ? (double)f->nbTraversalSteps / (double)f->nbIntersections : 0.0;
+        }
+    }
+    else if(mApp->worker.IsRunning()){
+        auto& bvh = bvhs.front();
+        for (int n = 0; n < facItems.Size; n++)
+        {
+            FacetData& item = facItems[n];
+            auto& f = facets[item.ID];
+            item.steps =  (f->nbTraversalSteps > 0) ? (double)f->nbTraversalSteps / (double)f->nbIntersections : 0.0;
+        }
+    }
 
-    if (ImGui::BeginTable("boxlist", 4, tFlags)) {
-        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
-        ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);
-        ImGui::TableSetupColumn("Chance", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Chance);
-        ImGui::TableSetupColumn("#Prims", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Prims);
-        ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Level);
-        ImGui::TableHeadersRow();
 
-        // Sort our data if sort specs have been changed!
-        if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
-            if (sorts_specs->SpecsDirty){
-                BoxData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
-                if (tabItems.Size > 1)
-                    qsort(&tabItems[0], (size_t)tabItems.Size, sizeof(tabItems[0]), BoxData::CompareWithSortSpecs);
-                BoxData::s_current_sort_specs = NULL;
-                sorts_specs->SpecsDirty = false;
-            }
 
-        // Demonstrate using clipper for large vertical lists
-        ImGuiListClipper clipper;
-            clipper.Begin(tabItems.size());
-            while (clipper.Step()) {
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    BoxData* item = &tabItems[i];
-                    //ImGui::PushID(item->ID);
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
+    if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+    {
+        static ImGuiTableFlags tFlags =
+                ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
+                ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
+                ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
+                ImGuiTableFlags_Sortable;
 
-                    ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
-                    bool selected = mApp->aabbVisu.selectedNode == item->ID;
-                    char label[32];
-                    sprintf(label, "%d", item->ID);
-                    if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0)))
-                    {
-                        mApp->aabbVisu.selectedNode = item->ID;
+        if (ImGui::BeginTabItem("Description"))
+        {
+            if (ImGui::BeginTable("Boxes", 4, tFlags)) {
+                ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+                ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);
+                ImGui::TableSetupColumn("Chance", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Chance);
+                ImGui::TableSetupColumn("#Prims", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Prims);
+                ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Level);
+                ImGui::TableHeadersRow();
+
+                // Sort our data if sort specs have been changed!
+                if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+                    if (sorts_specs->SpecsDirty){
+                        BoxData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
+                        if (tabItems.Size > 1)
+                            qsort(&tabItems[0], (size_t)tabItems.Size, sizeof(tabItems[0]), BoxData::CompareWithSortSpecs);
+                        BoxData::s_current_sort_specs = NULL;
+                        sorts_specs->SpecsDirty = false;
                     }
 
-                    //ImGui::Text("%zu", item->ID);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%f", item->chance);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%d", item->prims);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%d", item->level);
-                    //ImGui::PopID();
-                }
+                // Demonstrate using clipper for large vertical lists
+                ImGuiListClipper clipper;
+                    clipper.Begin(tabItems.size());
+                    while (clipper.Step()) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            BoxData* item = &tabItems[i];
+                            //ImGui::PushID(item->ID);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+
+                            ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+                            bool selected = mApp->aabbVisu.selectedNode == item->ID;
+                            char label[32];
+                            sprintf(label, "%d", item->ID);
+                            if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0)))
+                            {
+                                if(selected)
+                                    mApp->aabbVisu.selectedNode = -1;
+                                else
+                                    mApp->aabbVisu.selectedNode = item->ID;
+                            }
+
+                            //ImGui::Text("%zu", item->ID);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%f", item->chance);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->prims);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->level);
+                            //ImGui::PopID();
+                        }
+                    }
+                    ImGui::EndTable();
             }
-            ImGui::EndTable();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Facet"))
+        {
+            if (ImGui::BeginTable("faclist", 2, tFlags)) {
+                ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+                ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
+                ImGui::TableSetupColumn("Steps", ImGuiTableColumnFlags_WidthStretch, 0.0f, FacetDataColumnID_Steps);
+                ImGui::TableHeadersRow();
+
+                // Sort our data if sort specs have been changed!
+                if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+                    if (sorts_specs->SpecsDirty){
+                        FacetData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
+                        if (facItems.Size > 1)
+                            qsort(&facItems[0], (size_t)facItems.Size, sizeof(facItems[0]), FacetData::CompareWithSortSpecs);
+                        FacetData::s_current_sort_specs = NULL;
+                        sorts_specs->SpecsDirty = false;
+                    }
+
+                // Demonstrate using clipper for large vertical lists
+                ImGuiListClipper clipper;
+                    clipper.Begin(facItems.size());
+                    while (clipper.Step()) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            FacetData* item = &facItems[i];
+                            //ImGui::PushID(item->ID);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+
+                            /*ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+                            bool selected = mApp->aabbVisu.selectedNode == item->ID;
+                            char label[32];
+                            sprintf(label, "%d", item->ID);
+                            if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0)))
+                            {
+                                if(selected)
+                                    mApp->aabbVisu.selectedNode = -1;
+                                else
+                                    mApp->aabbVisu.selectedNode = item->ID;
+                            }*/
+
+                            ImGui::Text("%d", item->ID);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->steps);
+                            //ImGui::PopID();
+                        }
+                    }
+                    ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
 }

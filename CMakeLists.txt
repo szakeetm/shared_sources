@@ -136,6 +136,7 @@ set(INTERFACE_FILES
         Interface/ImguiAABB.cpp
         Interface/ImguiGlobalSettings.cpp
         Interface/ImguiExtensions.cpp
+        Interface/transfer_function_widget.cpp
 
         ASELoader.cpp
         Facet_shared.cpp
