@@ -550,9 +550,9 @@ int BVHAccel::flattenBVHTreeStats(BVHBuildNode *node, int *offset, int level) {
         // Create interior flattened BVH node
         linearNode->axis = node->splitAxis;
         linearNode->nPrimitives = 0;
-        flattenBVHTreeStats(node->children[0], offset, level++);
+        flattenBVHTreeStats(node->children[0], offset, level+1);
         linearNode->secondChildOffset =
-                flattenBVHTreeStats(node->children[1], offset, level++);
+                flattenBVHTreeStats(node->children[1], offset, level+1);
     }
     return myOffset;
 }
