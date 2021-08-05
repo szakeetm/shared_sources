@@ -97,6 +97,7 @@ std::optional<Vector2d> Intersect2D(const Vector2d &p1, const Vector2d& p2, cons
 
 Vector3d Mirror(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
 Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
+std::optional<double> ProjectToSection(const Vector3d& P, const Vector3d& A, const Vector3d& B);
 Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta);
 
 double GetOrientedAngle(const Vector2d& v1, const Vector2d& v2);

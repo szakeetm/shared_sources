@@ -130,6 +130,25 @@ Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N) {
 	return P - Dot(P - P0, N)*N;
 }
 
+std::optional<double> ProjectToSection(const Vector3d& P, const Vector3d& A, const Vector3d& B) {
+	/// <summary>
+	/// The function projects P to the section [A..B]
+	/// Returns false if projection not on section
+	/// Returns [0..1] if on section (fraction of section)
+	/// </summary>
+
+	Vector3d AB = B - A;
+	double ABlength = AB.Norme();
+	if (ABlength < 1E-30) return false; //Would cause 0-division later
+	Vector3d AP = P - A;
+
+	double pos = Dot(AP, AB) / (ABlength * ABlength);
+	// Formula from https://gamedev.stackexchange.com/questions/72528/how-can-i-project-a-3d-point-onto-a-3d-line
+
+	if (pos >= 0.0 && pos <= 1.0) return pos;
+	else return false;
+}
+
 Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta) {
 	//theta = theta / 180 * PI; //degree->radians
 	Vector3d dir = AXIS_DIR.Normalized();
