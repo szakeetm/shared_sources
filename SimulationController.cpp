@@ -485,6 +485,10 @@ int SimulationController::controlledLoop(int argc, char **argv) {
 }
 
 int SimulationController::RebuildAccel() {
+    for(auto& fac : simulation->model->facets){
+        fac->nbTraversalSteps = 0;
+        fac->nbIntersections = 0;
+    }
     if (simulation->RebuildAccelStructure()) {
         return 1;
     }

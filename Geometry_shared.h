@@ -356,6 +356,7 @@ protected:
 		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif
 
+    void DrawHeatmap(const SubprocessFacet& facet);
     void DrawAABB();
 
 	void DrawAABBNode(AABBNODE *node, int level);

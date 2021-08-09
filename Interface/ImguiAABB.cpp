@@ -157,6 +157,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
     ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
     ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats);
+    ImGui::Checkbox("Use traversal step heatmap", &mApp->aabbVisu.travStep);
 
     if (tfn_widget.changed()) {
         auto colormap = tfn_widget.get_colormap();
@@ -260,21 +261,30 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     {
         auto& fac = facets;
         facItems.resize(facets.size(), FacetData());
+
+        mApp->aabbVisu.trimByProb[0] = 1e99;
+        mApp->aabbVisu.trimByProb[1] = 0;
         for (int n = 0; n < facItems.Size; n++)
         {
             auto& f = facets[n];
             FacetData& item = facItems[n];
             item.ID = n;
             item.steps =  (f->nbTraversalSteps > 0) ? (double)f->nbTraversalSteps / (double)f->nbIntersections : 0.0;
+            mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float)item.steps);
+            mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float)item.steps);
         }
     }
     else if(mApp->worker.IsRunning()){
         auto& bvh = bvhs.front();
+        mApp->aabbVisu.trimByProb[0] = 1e99;
+        mApp->aabbVisu.trimByProb[1] = 0;
         for (int n = 0; n < facItems.Size; n++)
         {
             FacetData& item = facItems[n];
             auto& f = facets[item.ID];
             item.steps =  (f->nbTraversalSteps > 0) ? (double)f->nbTraversalSteps / (double)f->nbIntersections : 0.0;
+            mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float)item.steps);
+            mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float)item.steps);
         }
     }
 

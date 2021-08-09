@@ -605,6 +605,8 @@ bool BVHAccel::Intersect(Ray &ray) {
             currentNodeIndex = nodesToVisit[--toVisitOffset];
         }
     }
+
+    ray.traversalSteps = 0;
     return hit;
 }
 
