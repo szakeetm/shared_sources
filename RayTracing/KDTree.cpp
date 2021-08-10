@@ -143,9 +143,17 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
     for (size_t i = 0; i < primitives.size(); ++i) primNums[i] = i;
 
     // Start recursive construction of kd-tree
+    std::vector<IntersectCount>(0).swap(ints);
     buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
               maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
 
+    /*int minLevel = maxDepth;
+    for(int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum){
+        minLevel = std::min(minLevel, (int)ints[nodeNum].level);
+    }*/
+    for(int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum){
+        ints[nodeNum].level = maxDepth - ints[nodeNum].level - 1;
+    }
     printf("--- KD STATS ---\n");
     printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
     printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
@@ -196,6 +204,13 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
         nAllocedNodes = nNewAllocNodes;
     }
     ++nextFreeNode;
+
+    if((int)ints.size() <= nodeNum){
+        ints.emplace_back();
+    }
+    nodes[nodeNum].nodeId = nodeNum;
+    ints[nodeNum].nbPrim = nPrimitives;
+    ints[nodeNum].level = depth - 1;
 
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {
@@ -344,6 +359,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     double tSplit = edges[bestAxis][bestOffset].t;
     AxisAlignedBoundingBox bounds0 = nodeBounds, bounds1 = nodeBounds;
     bounds0.max[bestAxis] = bounds1.min[bestAxis] = tSplit;
+
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
               prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
     int aboveChild = nextFreeNode;
@@ -370,10 +386,15 @@ bool KdTreeAccel::Intersect(Ray &ray) {
     bool hit = false;
     const KdAccelNode *node = &nodes[0];
     while (node != nullptr) {
+
+        ints[node->nodeId].nbChecks++;
+        ray.traversalSteps++;
+
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;
         if (!node->IsLeaf()) {
             // Process kd-tree interior node
+            ints[node->nodeId].nbIntersects++;
 
             // Compute parametric distance along ray to split plane
             int axis = node->SplitAxis();
@@ -437,6 +458,8 @@ bool KdTreeAccel::Intersect(Ray &ray) {
                 break;
         }
     }
+
+    ray.traversalSteps = 0;
     return hit;
 }
 

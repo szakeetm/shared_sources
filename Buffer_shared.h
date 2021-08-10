@@ -321,8 +321,8 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
+    int splitMethod{0}; //SAH by default for BVH/KDtree
 #if !defined(USE_KDTREE)
-    int splitMethod{0}; //SAH
     int bvhMaxPrimsInNode{2};
 #endif
 

@@ -491,8 +491,14 @@ void ImguiWindow::renderSingle() {
             if(rebuildAabb){
                 if(mApp->worker.IsRunning())
                     mApp->StartStopSimulation();
+
+#if defined(USE_KDTREE)
+                future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
+                                        &mApp->worker.globState, 0, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
+#else
                 future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
                                         &mApp->worker.globState, mApp->worker.model->wp.bvhMaxPrimsInNode, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
+#endif
                 active_prev_state = true;
                 mApp->wereEvents = true;
             }
@@ -500,21 +506,27 @@ void ImguiWindow::renderSingle() {
             if(future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready){
                 // Animate a simple progress bar
                 static float progress = 0.0f, progress_dir = 1.0f;
-                if(1) {
+                //if(1) {
                     progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
                     if (progress >= +1.1f) { progress = +1.1f; progress_dir *= -1.0f; }
                     if (progress <= -0.1f) { progress = -0.1f; progress_dir *= -1.0f; }
-                }
+                //}
                 const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
                 const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
 
-                ImGui::Spinner("##spinner", 15, 6, col);
-                //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
-                // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
-                // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
-                ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
-                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                ImGui::Text("Progress Bar");
+                ImGui::OpenPopup("Loader");
+                if (ImGui::BeginPopup("Loader"))
+                {
+                    ImGui::Spinner("##spinner", 15, 6, col);
+                    //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
+                    // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
+                    // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
+                    ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+                    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+                    ImGui::Text("Progress Bar");
+                    ImGui::EndPopup();
+                }
+
 
                 active_prev_state = true;
                 mApp->wereEvents_imgui = true;

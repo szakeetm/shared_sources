@@ -11,7 +11,7 @@
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
     nbTraversalSteps += ray.traversalSteps;
-    ++nbIntersections;
+    ++nbTests;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
     double det = Dot(this->sh.Nuv, rayDirOpposite);
 
@@ -114,6 +114,8 @@ bool Facet::Intersect(Ray &ray) {
                                 hit.colV = v;
                                 hit.colDistTranspPass = d;
                             }
+
+                            ++nbIntersections;
                             return hardHit;
                         } // IsInFacet
                     } // d range

@@ -29,17 +29,6 @@ struct LinearBVHNode {
     friend class Geometry;
 };
 
-struct IntersectCount{
-    IntersectCount() : nbChecks(0), nbIntersects(0){};
-    IntersectCount(const IntersectCount&) = delete;
-    IntersectCount(IntersectCount&&) = delete;//change this to 'delete' will give a similar compiler error
-
-    std::atomic<size_t> nbChecks{0};
-    std::atomic<size_t> nbIntersects{0};
-    size_t nbPrim{0};
-    size_t level{0};
-};
-
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types

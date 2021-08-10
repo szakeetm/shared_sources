@@ -29,6 +29,9 @@ struct KdAccelNode {
         int primitiveIndicesOffset;  // Leaf
     };
 
+    // stats
+    int nodeId{0};
+
 private:
     union {
         int flags;       // Both
@@ -54,6 +57,7 @@ public:
 
     bool Intersect(Ray &ray);
 
+    std::vector<IntersectCount> ints;
 private:
     void ComputeBB() override;
     // KdTreeAccel Private Methods

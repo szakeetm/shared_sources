@@ -389,8 +389,8 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     //<<Compute representation of depth-first traversal of BVH tree>>
     nodes = new LinearBVHNode[totalNodes]; //AllocAligned<LinearBVHNode>(totalNodes);
     int offset = 0;
-    std::vector<IntersectCount> swapped(totalNodes);
-    ints.swap(swapped);
+
+    std::vector<IntersectCount>(totalNodes).swap(ints);
     flattenBVHTreeStats(root, &offset, 0);
     assert(totalNodes == offset);
     delete root;

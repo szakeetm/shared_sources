@@ -365,5 +365,6 @@ protected:
 
     void DrawAABBNode(const KdTreeAccel &kd);
     void DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level);
-    void DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level);
+    void DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level,
+                       bool selection);
 };

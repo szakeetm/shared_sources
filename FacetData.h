@@ -55,6 +55,7 @@ struct Facet : public RTPrimitive {
     // Statistics
     std::atomic<unsigned long long int> nbTraversalSteps{0};
     std::atomic<unsigned long long int> nbIntersections{0};
+    std::atomic<unsigned long long int> nbTests{0};
 
     void ComputeBB() { bb = sh.bb;};
     bool Intersect(Ray &r) override;
