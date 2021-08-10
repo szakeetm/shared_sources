@@ -6,6 +6,7 @@
 #define MOLFLOW_PROJ_RTPRIMITIVE_H
 
 #include "BoundingBox.h"
+#include <atomic>
 
 class Ray;
 
