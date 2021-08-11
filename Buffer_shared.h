@@ -321,10 +321,9 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
+    int accel_type;
     int splitMethod{0}; //SAH by default for BVH/KDtree
-#if !defined(USE_KDTREE)
     int bvhMaxPrimsInNode{2};
-#endif
 
 #if defined(MOLFLOW)
 	double latestMoment;
