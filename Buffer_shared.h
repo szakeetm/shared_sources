@@ -321,6 +321,8 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
+
+    int accel_type;
 #if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
