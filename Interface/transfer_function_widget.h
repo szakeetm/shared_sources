@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <SDL_opengl.h>
 #include "SDL2/SDL_opengl.h"
 #include "imgui/imgui.h"
 

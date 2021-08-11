@@ -204,6 +204,15 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
+    ImGui::Checkbox("Use BVH", &mApp->aabbVisu.oldBVH);
+    static int selected_accel = 0;
+    {
+        // Using the _simplified_ one-liner Combo() api here
+        // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+        const char *items[] = {"BVH", "KD-tree"};
+        if(ImGui::Combo("accel_combo", &selected_accel, items, IM_ARRAYSIZE(items)))
+            mApp->worker.model->wp.accel_type = selected_accel;
+    }
 #if defined(USE_KDTREE)
     const char *items[] = {"SAH", "ProbSplit"};
     if (ImGui::BeginListBox("Splitting technique")) {
@@ -228,7 +237,6 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     }
 #else
     ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
-
     const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit"};
     if (ImGui::BeginListBox("Splitting technique")) {
         for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
@@ -300,11 +308,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
     // Create item list
     static ImVector<BoxData> tabItems;
-#if defined(USE_KDTREE)
-    auto &bvhs = mApp->worker.model->kdtree;
-#else
-    auto& bvhs = mApp->worker.model->bvhs;
-#endif
+    auto& accel = mApp->worker.model->accel;
 
     float trimMax = 0.0f;
     float trimMin = 1.0e30f;
@@ -323,72 +327,88 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             {
                 // Using the _simplified_ one-liner Combo() api here
                 // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-                const char *items[] = {"Steps", "ISRate global"};
+                const char *items[] = {"Chance", "ISRate global"};
                 if(ImGui::Combo("combo", &selected_combo, items, IM_ARRAYSIZE(items)))
                     forceUpdate = true;
             }
 
-            if (rate_vec && rate_vec->size() != bvhs.front().ints.size())
-                rate_vec->resize(bvhs.front().ints.size(), -1.0f);
-
-            if (/*tabItems.empty() && */!bvhs.empty() && (int)tabItems.size() != (int)bvhs.front().ints.size()) {
-                auto &bvh = bvhs.front();
-
-                size_t nbIntersections_total = 0;
-                tabItems.resize(bvh.ints.size(), BoxData());
-                for (int n = 0; n < tabItems.Size; n++) {
-                    BoxData &item = tabItems[n];
-                    auto &f = bvh.ints[n];
-                    item.ID = n;
-                    item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
-                    item.prims = f.nbPrim;
-                    item.level = f.level;
-                    nbIntersections_total += f.nbIntersects;
-                }
-
-                for (int n = 0; n < tabItems.Size; n++) {
-                    BoxData &item = tabItems[n];
-                    auto &f = bvh.ints[item.ID];
-                    item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects / (double) nbIntersections_total : 0.0;
-                }
-
-                if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
-                    for (int n = 0; n < tabItems.Size; n++) {
-                        BoxData &item = tabItems[n];
-                        if(selected_combo == 0)
-                            (*rate_vec)[item.ID] = item.chance;
-                        else if(selected_combo == 1)
-                            (*rate_vec)[item.ID] = item.globalIntersectionRate;
-                    }
-                }
-            } else if (forceUpdate || (constantUpdates && mApp->worker.IsRunning())) {
-                size_t nbIntersections_total = 0;
-
-                auto &bvh = bvhs.front();
-                for (int n = 0; n < tabItems.Size; n++) {
-                    BoxData &item = tabItems[n];
-                    auto &f = bvh.ints[item.ID];
-                    item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
-                    nbIntersections_total += f.nbIntersects;
-                }
-
-
-                for (int n = 0; n < tabItems.Size; n++) {
-                    BoxData &item = tabItems[n];
-                    auto &f = bvh.ints[item.ID];
-                    item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects / (double) nbIntersections_total : 0.0;
-                }
-
-                if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
-                    for (int n = 0; n < tabItems.Size; n++) {
-                        BoxData &item = tabItems[n];
-                        if(selected_combo == 0)
-                            (*rate_vec)[item.ID] = item.chance;
-                        else if(selected_combo == 1)
-                            (*rate_vec)[item.ID] = item.globalIntersectionRate;
-                    }
+            std::vector<IntersectCount>* stats = nullptr;
+            if(!accel.empty()) {
+                if (mApp->worker.model->wp.accel_type &&
+                    std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
+                    stats = &std::dynamic_pointer_cast<KdTreeAccel>(accel.front())->ints;
+                } else if (std::dynamic_pointer_cast<BVHAccel>(accel.front()) != nullptr) {
+                    stats = &std::dynamic_pointer_cast<BVHAccel>(accel.front())->ints;
                 }
             }
+
+            if(stats && stats->size() > 0){
+                if (rate_vec && rate_vec->size() != stats->size())
+                    rate_vec->resize(stats->size(), -1.0f);
+
+                if (/*tabItems.empty() && */!accel.empty() && (int) tabItems.size() != (int) stats->size()) {
+                    auto &bvh = accel.front();
+
+                    size_t nbIntersections_total = 0;
+                    tabItems.resize(stats->size(), BoxData());
+                    for (int n = 0; n < tabItems.Size; n++) {
+                        BoxData &item = tabItems[n];
+                        auto &f = (*stats)[n];
+                        item.ID = n;
+                        item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
+                        item.prims = f.nbPrim;
+                        item.level = f.level;
+                        nbIntersections_total += f.nbIntersects;
+                    }
+
+                    for (int n = 0; n < tabItems.Size; n++) {
+                        BoxData &item = tabItems[n];
+                        auto &f = (*stats)[item.ID];
+                        item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects /
+                                                                                    (double) nbIntersections_total
+                                                                                  : 0.0;
+                    }
+
+                    if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
+                        for (int n = 0; n < tabItems.Size; n++) {
+                            BoxData &item = tabItems[n];
+                            if (selected_combo == 0)
+                                (*rate_vec)[item.ID] = item.chance;
+                            else if (selected_combo == 1)
+                                (*rate_vec)[item.ID] = item.globalIntersectionRate;
+                        }
+                    }
+                } else if (forceUpdate || (constantUpdates && mApp->worker.IsRunning())) {
+                    size_t nbIntersections_total = 0;
+
+                    auto &bvh = accel.front();
+                    for (int n = 0; n < tabItems.Size; n++) {
+                        BoxData &item = tabItems[n];
+                        auto &f = (*stats)[item.ID];
+                        item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
+                        nbIntersections_total += f.nbIntersects;
+                    }
+
+
+                    for (int n = 0; n < tabItems.Size; n++) {
+                        BoxData &item = tabItems[n];
+                        auto &f = (*stats)[item.ID];
+                        item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects /
+                                                                                    (double) nbIntersections_total
+                                                                                  : 0.0;
+                    }
+
+                    if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
+                        for (int n = 0; n < tabItems.Size; n++) {
+                            BoxData &item = tabItems[n];
+                            if (selected_combo == 0)
+                                (*rate_vec)[item.ID] = item.chance;
+                            else if (selected_combo == 1)
+                                (*rate_vec)[item.ID] = item.globalIntersectionRate;
+                        }
+                    }
+                }
+
 
             if (ImGui::BeginTable("Boxes", 5, tFlags)) {
                 ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
@@ -446,7 +466,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
                 ImGui::EndTable();
             }
+            }
             ImGui::EndTabItem();
+
         }
 
         if (ImGui::BeginTabItem("Facet")) {
@@ -526,7 +548,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 }
             } else if (forceUpdate || (constantUpdates && mApp->worker.IsRunning())) {
-                auto &bvh = bvhs.front();
+                auto &bvh = accel.front();
                 //mApp->aabbVisu.trimByProb[0] = 1.0e38f;
                 //mApp->aabbVisu.trimByProb[1] = 0;
 

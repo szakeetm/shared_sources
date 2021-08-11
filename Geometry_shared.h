@@ -360,6 +360,9 @@ protected:
     void DrawAABB();
 
 	void DrawAABBNode(AABBNODE *node, int level);
+
+	void DrawAABBNode(const std::shared_ptr<RTPrimitive> prim); //! Helper function to reference proper subclass of accel structure
+
     void DrawAABBNode(const BVHAccel &bvh);
     void DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, int level, bool selection);
 
@@ -367,4 +370,5 @@ protected:
     void DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level);
     void DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level,
                        bool selection);
+
 };

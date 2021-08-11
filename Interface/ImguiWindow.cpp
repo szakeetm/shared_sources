@@ -492,13 +492,9 @@ void ImguiWindow::renderSingle() {
                 if(mApp->worker.IsRunning())
                     mApp->StartStopSimulation();
 
-#if defined(USE_KDTREE)
                 future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
-                                        &mApp->worker.globState, 0, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
-#else
-                future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
-                                        &mApp->worker.globState, mApp->worker.model->wp.bvhMaxPrimsInNode, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod);
-#endif
+                                        &mApp->worker.globState, mApp->worker.model->wp.accel_type, (BVHAccel::SplitMethod)mApp->worker.model->wp.splitMethod, mApp->worker.model->wp.bvhMaxPrimsInNode);
+
                 active_prev_state = true;
                 mApp->wereEvents = true;
             }
