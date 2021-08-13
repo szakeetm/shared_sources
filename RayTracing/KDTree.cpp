@@ -372,6 +372,8 @@ bool KdTreeAccel::Intersect(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
+
+    // Neglect initial parametric test, since a ray starts always from inside
     /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
         return false;
     }*/
@@ -387,13 +389,13 @@ bool KdTreeAccel::Intersect(Ray &ray) {
     const KdAccelNode *node = &nodes[0];
     while (node != nullptr) {
 
-        ints[node->nodeId].nbChecks++;
-        ray.traversalSteps++;
+        ints[node->nodeId].nbChecks+=ray.traversalSteps;
 
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;
         if (!node->IsLeaf()) {
             // Process kd-tree interior node
+            ray.traversalSteps++;
             ints[node->nodeId].nbIntersects++;
 
             // Compute parametric distance along ray to split plane
@@ -435,6 +437,7 @@ bool KdTreeAccel::Intersect(Ray &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
+                ray.traversalSteps++;
                 if (p->globalId != ray.lastIntersected && p->Intersect(ray))
                     hit = true;
             } else {
@@ -443,6 +446,7 @@ bool KdTreeAccel::Intersect(Ray &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
+                    ray.traversalSteps++;
                     if (p->globalId != ray.lastIntersected && p->Intersect(ray))
                         hit = true;
                 }

@@ -204,7 +204,6 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
-    ImGui::Checkbox("Use BVH", &mApp->aabbVisu.oldBVH);
     static int selected_accel = 0;
     {
         // Using the _simplified_ one-liner Combo() api here
