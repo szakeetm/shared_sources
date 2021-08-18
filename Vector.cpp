@@ -95,12 +95,32 @@ Vector3d CrossProduct(const Vector3d &v1, const Vector3d &v2) {
 	);
 }
 
+Vector3d Abs(const Vector3d &v) {
+    return {std::abs(v.x), std::abs(v.y), std::abs(v.z)};
+}
+
+Vector2d Abs(const Vector2d &v) {
+    return {std::abs(v.u), std::abs(v.v)};
+}
+
 double Dot(const Vector3d &v1, const Vector3d &v2) {
 	return (v1.x)*(v2.x) + (v1.y)*(v2.y) + (v1.z)*(v2.z);
 }
 
 double Dot(const Vector2d &v1, const Vector2d &v2) {
 	return v1.u*v2.u + v1.v*v2.v;
+}
+
+int MaxComponentIndex(const Vector3d &v) {
+    return (v.x > v.y) ? ((v.x > v.z) ? 0 : 2) : ((v.y > v.z) ? 1 : 2);
+}
+
+double MaxComponentValue(const Vector3d &v) {
+    return std::max({v.x, v.y, v.z});
+}
+
+Vector3d Permute(const Vector3d &v, std::array<int, 3> p) {
+    return {v[p[0]], v[p[1]], v[p[2]]};
 }
 
 double Vector3d::Norme() const {

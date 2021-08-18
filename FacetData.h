@@ -56,5 +56,29 @@ struct Facet : public RTPrimitive {
 
 };
 
+struct TriangleFacet : public RTPrimitive {
+    TriangleFacet() : RTPrimitive(), sh(0){ surf = nullptr; };
+    TriangleFacet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
+    ~TriangleFacet(){
+        if (surf) {
+            //delete surf;
+            // don' t delete, origin is an unreferenced shared ptr
+            surf = nullptr;
+        }
+    }
+    FacetProperties sh;
+    std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
+    std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
+    std::vector<Vector3d>* vertices3;        // Vertices (2D plane space, UV coordinates)
+    Vector2d* texCoord;
+
+    Surface* surf;
+
+    size_t globalId; //Global index (to identify when superstructures are present)
+    //size_t iSCount{0};
+
+    void ComputeBB() { bb = sh.bb;};
+    bool Intersect(Ray &r) override;
+};
 
 #endif //MOLFLOW_PROJ_FACETDATA_H

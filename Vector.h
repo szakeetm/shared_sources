@@ -28,6 +28,14 @@ Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
 Vector3d operator*(const Vector3d &v1, const double& mult);
 Vector3d operator*(const double& mult, const Vector3d &v1);
+
+Vector3d Abs(const Vector3d &v);
+Vector2d Abs(const Vector2d &v);
+int MaxComponentIndex(const Vector3d &v);
+double MaxComponentValue(const Vector3d &v);
+
+Vector3d Permute(const Vector3d &v, std::array<int, 3> p);
+
 double Dot(const Vector3d &v1, const Vector3d &v2);
 Vector3d CrossProduct(const Vector3d &v1, const Vector3d &v2);
 
