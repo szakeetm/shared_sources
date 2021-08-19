@@ -361,7 +361,7 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
         if (primitives.size() > probabilities.size())
             return;
         for (size_t i = 0; i < primitives.size(); ++i)
-            primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[primitives[i]->globalId]};
+            primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[i]};
     } else {
         for (size_t i = 0; i < primitives.size(); ++i)
             primitiveInfo[i] = {i, primitives[i]->sh.bb};

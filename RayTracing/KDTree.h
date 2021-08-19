@@ -10,7 +10,7 @@
 #include <FacetData.h>
 #include "Primitive.h"
 
-using Primitive = Facet;
+using Primitive = GeomPrimitive;
 
 // KdTreeAccel Forward Declarations
 struct KdAccelNode;

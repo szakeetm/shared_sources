@@ -33,51 +33,44 @@ public:
     };
 };
 
-struct Facet : public RTPrimitive {
-    Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
-    Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    ~Facet(){
+struct GeomPrimitive : public RTPrimitive {
+    GeomPrimitive() : RTPrimitive(), sh(0){ surf = nullptr; };
+    explicit GeomPrimitive(size_t nbIndex) : RTPrimitive(), sh(nbIndex){ surf = nullptr; };
+    ~GeomPrimitive() override{
         if (surf) {
             //delete surf;
             // don' t delete, origin is an unreferenced shared ptr
             surf = nullptr;
         }
     }
+    size_t globalId; //Global index (to identify when superstructures are present)
     FacetProperties sh;
     std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
     std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
     Surface* surf;
+};
 
-    size_t globalId; //Global index (to identify when superstructures are present)
+struct Facet : public GeomPrimitive {
+    Facet() : GeomPrimitive(){ };
+    Facet(size_t nbIndex) : GeomPrimitive(nbIndex) { };
+    virtual ~Facet(){ }
+
     //size_t iSCount{0};
 
-    void ComputeBB() { bb = sh.bb;};
+    void ComputeBB() override { bb = sh.bb;};
     bool Intersect(Ray &r) override;
 
 };
 
-struct TriangleFacet : public RTPrimitive {
-    TriangleFacet() : RTPrimitive(), sh(0){ surf = nullptr; };
-    TriangleFacet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    ~TriangleFacet(){
-        if (surf) {
-            //delete surf;
-            // don' t delete, origin is an unreferenced shared ptr
-            surf = nullptr;
-        }
-    }
-    FacetProperties sh;
-    std::vector<size_t>      indices;          // Indices (Reference to geometry vertex)
-    std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
+struct TriangleFacet : public GeomPrimitive {
+    TriangleFacet() : GeomPrimitive(3){ };
+    virtual ~TriangleFacet() { }
     std::vector<Vector3d>* vertices3;        // Vertices (2D plane space, UV coordinates)
     Vector2d* texCoord;
 
-    Surface* surf;
-
-    size_t globalId; //Global index (to identify when superstructures are present)
     //size_t iSCount{0};
 
-    void ComputeBB() { bb = sh.bb;};
+    void ComputeBB() override { bb = sh.bb;};
     bool Intersect(Ray &r) override;
 };
 

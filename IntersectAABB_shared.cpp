@@ -50,9 +50,9 @@ std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
 	size_t nbLeft, nbRight;
 
 	for (const auto& f : facets) {
-		if (f->sh.center.x > centerX) rightFromCenterZ++;
-		if (f->sh.center.y > centerY) rightFromCenterY++;
-		if (f->sh.center.z > centerZ) rightFromCenterX++;
+		if (f->prim->sh.center.x > centerX) rightFromCenterZ++;
+		if (f->prim->sh.center.y > centerY) rightFromCenterY++;
+		if (f->prim->sh.center.z > centerZ) rightFromCenterX++;
 	}
 
 	double deviationFromHalfHalf_X = fabs((double)rightFromCenterZ - (double)(facets.size()) / 2.0);
@@ -87,12 +87,12 @@ void AABBNODE::ComputeBB() {
 	bb.min=Vector3d(1e100,1e100,1e100);
 
 	for (const auto& f : facets) {
-		bb.min.x = std::min(f->sh.bb.min.x,bb.min.x);
-		bb.min.y = std::min(f->sh.bb.min.y, bb.min.y);
-		bb.min.z = std::min(f->sh.bb.min.z, bb.min.z);
-		bb.max.x = std::max(f->sh.bb.max.x, bb.max.x);
-		bb.max.y = std::max(f->sh.bb.max.y, bb.max.y);
-		bb.max.z = std::max(f->sh.bb.max.z, bb.max.z);
+		bb.min.x = std::min(f->prim->sh.bb.min.x,bb.min.x);
+		bb.min.y = std::min(f->prim->sh.bb.min.y, bb.min.y);
+		bb.min.z = std::min(f->prim->sh.bb.min.z, bb.min.z);
+		bb.max.x = std::max(f->prim->sh.bb.max.x, bb.max.x);
+		bb.max.y = std::max(f->prim->sh.bb.max.y, bb.max.y);
+		bb.max.z = std::max(f->prim->sh.bb.max.z, bb.max.z);
 	}
 
 }
@@ -120,7 +120,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->sh.center.x > m) rList[nbr++] = f;
+				if (f->prim->sh.center.x > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -128,7 +128,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size
 		case 2: // xz
 			m = (newNode->bb.min.y + newNode->bb.max.y) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->sh.center.y > m) rList[nbr++] = f;
+				if (f->prim->sh.center.y > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -136,7 +136,7 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size
 		case 3: // xy
 			m = (newNode->bb.min.z + newNode->bb.max.z) / 2.0;
 			for (const auto& f : newNode->facets) {
-				if (f->sh.center.z > m) rList[nbr++] = f;
+				if (f->prim->sh.center.z > m) rList[nbr++] = f;
 				else                   lList[nbl++] = f;
 			}
 			break;
@@ -299,9 +299,9 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 			if (f == lastHitBefore)
 				continue;
 
-			double det = Dot(f->sh.Nuv, rayDirOpposite);
+			double det = Dot(f->prim->sh.Nuv, rayDirOpposite);
 			// Eliminate "back facet"
-			if ((f->sh.is2sided) || (det > 0.0)) { //If 2-sided or if ray going opposite facet normal
+			if ((f->prim->sh.is2sided) || (det > 0.0)) { //If 2-sided or if ray going opposite facet normal
 
 				double u, v, d;
 				// Ray/rectangle instersection. Find (u,v,dist) and check 0<=u<=1, 0<=v<=1, dist>=0
@@ -309,27 +309,27 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 				if (det != 0.0) {
 
 					double iDet = 1.0 / det;
-					Vector3d intZ = rayPos - f->sh.O;
+					Vector3d intZ = rayPos - f->prim->sh.O;
 
-					u = iDet * DET33(intZ.x, f->sh.V.x, rayDirOpposite.x,
-						intZ.y, f->sh.V.y, rayDirOpposite.y,
-						intZ.z, f->sh.V.z, rayDirOpposite.z);
+					u = iDet * DET33(intZ.x, f->prim->sh.V.x, rayDirOpposite.x,
+						intZ.y, f->prim->sh.V.y, rayDirOpposite.y,
+						intZ.z, f->prim->sh.V.z, rayDirOpposite.z);
 
 					if (u >= 0.0 && u <= 1.0) {
 
-						v = iDet * DET33(f->sh.U.x, intZ.x, rayDirOpposite.x,
-							f->sh.U.y, intZ.y, rayDirOpposite.y,
-							f->sh.U.z, intZ.z, rayDirOpposite.z);
+						v = iDet * DET33(f->prim->sh.U.x, intZ.x, rayDirOpposite.x,
+							f->prim->sh.U.y, intZ.y, rayDirOpposite.y,
+							f->prim->sh.U.z, intZ.z, rayDirOpposite.z);
 
 						if (v >= 0.0 && v <= 1.0) {
 
-							d = iDet * Dot(f->sh.Nuv, intZ);
+							d = iDet * Dot(f->prim->sh.Nuv, intZ);
 
 							if (d>0.0) {
 
 								// Now check intersection with the facet polygon (in the u,v space)
 								// This check could be avoided on rectangular facet.
-								if (IsInFacet(*f, u, v)) {
+								if (IsInFacet(*currentParticle.model->primitives[f->globalId], u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
 									double time = currentParticle.particle.time + d / 100.0 / currentParticle.velocity;
@@ -385,7 +385,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 	}
 }
 
-bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
+bool IsInFacet(const GeomPrimitive &f, const double &u, const double &v) {
 
 	/*
 
