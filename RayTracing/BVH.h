@@ -21,24 +21,31 @@ struct LinearBVHNode;
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
-    enum class SplitMethod { SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit
+    enum class SplitMethod {
+        SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, TestSplit
     };
 
     // BVHAccel Public Methods
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
              int maxPrimsInNode = 1,
-             SplitMethod splitMethod = SplitMethod::SAH, const std::vector<double>& probabilities = std::vector<double>{});
+             SplitMethod splitMethod = SplitMethod::SAH);
+    BVHAccel(const std::vector<double> &probabilities,
+             std::vector<std::shared_ptr<Primitive>> p, int maxPrimsInNode = 1,
+             SplitMethod splitMethod = SplitMethod::ProbSplit);
+    BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_ptr<Primitive>> p,
+             int maxPrimsInNode = 1, SplitMethod splitMethod = SplitMethod::TestSplit);
     BVHAccel(BVHAccel && src) noexcept;
     BVHAccel(const BVHAccel & src) noexcept;
 
     BVHAccel& operator=(const BVHAccel & src) noexcept;
     ~BVHAccel() override;
 
-    bool Intersect(Ray &ray);
+    bool Intersect(Ray &ray) override;
 
 private:
     void ComputeBB() override;
     // BVHAccel Private Methods
+    void construct(std::vector<BVHPrimitiveInfo> primitiveInfo = std::vector<BVHPrimitiveInfo>());
     BVHBuildNode *recursiveBuild(
             std::vector<BVHPrimitiveInfo> &primitiveInfo,
             int start, int end, int *totalNodes,
@@ -47,8 +54,10 @@ private:
 
 private:
     const int maxPrimsInNode;
-    const SplitMethod splitMethod;
+    SplitMethod splitMethod;
     std::vector<std::shared_ptr<Primitive>> primitives;
+    std::vector<TestRay> battery;
+
     LinearBVHNode *nodes = nullptr;
 
     int SplitEqualCounts(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
