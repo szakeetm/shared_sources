@@ -215,7 +215,11 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)
+#if defined(DEBUG)
+        this->nbThreads = 1;
+#else
         this->nbThreads = omp_get_max_threads();
+#endif
     else
         this->nbThreads = nbThreads;
 
