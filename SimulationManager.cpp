@@ -225,14 +225,19 @@ int SimulationManager::CreateCPUHandle() {
 
     //Get number of cores
     if(nbThreads == 0) {
+#if defined(DEBUG)
+        nbThreads = 1;
+#else
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
         nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
 #else
         nbThreads = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
-#endif
+#endif // WIN
+#endif // DEBUG
     }
+
     if(!simUnits.empty()){
         for(auto& sim : simUnits){
             delete sim;
