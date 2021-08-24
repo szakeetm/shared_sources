@@ -245,10 +245,11 @@ void Interface::ResetSimulation(bool askConfirm) {
     if (ok) {
         worker.ResetStatsAndHits(m_fTime);
 
-        dps = 0.0;
-        hps = 0.0;
-        lastHps = hps;
-        lastDps = dps;
+        hps.clear();
+        dps.clear();
+        hps_runtotal.clear();
+        dps_runtotal.clear();
+
         nbDesStart = 0;
         nbHitStart = 0;
         if (convergencePlotter) {
@@ -2705,15 +2706,12 @@ int Interface::FrameMove() {
                     hitCache.nbDesorbed != lastNbDes) {
                     auto dTime = (double) (m_fTime - lastMeasTime);
                     if(dTime > 1e-6) {
-                        hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
-                        dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
+                        hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
+                        dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
+                        //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
+                        //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
                     }
-                    if (lastHps != 0.0) {
-                        hps = 0.2 * (hps) + 0.8 * lastHps;
-                        dps = 0.2 * (dps) + 0.8 * lastDps;
-                    }
-                    lastHps = hps;
-                    lastDps = dps;
+
                     lastNbHit = hitCache.nbMCHit;
                     lastNbDes = hitCache.nbDesorbed;
                     lastMeasTime = m_fTime;
@@ -2727,13 +2725,11 @@ int Interface::FrameMove() {
         if(!runningState && worker.simuTimer.Elapsed() > 0.0) {
             double _hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
             double _dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
-            if(hps != _hps || dps != _dps)
+            if(hps.last() != _hps || dps.last() != _dps)
                 wereEvents = true;
         } else {
-            if(hps != 0.0 || dps != 0.0)
+            if(hps.last() != 0.0  || dps.last() != 0.0)
                 wereEvents = true;
-            hps = 0.0;
-            dps = 0.0;
         }
 
         if(runningState)
