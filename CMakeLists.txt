@@ -148,6 +148,7 @@ set(INTERFACE_FILES
         Web.cpp
         Worker_shared.cpp
         GeometryConverter.cpp
+        AABB.cpp #only used for visualisation at this point
         )
 
 set(SIM_FILES
@@ -177,7 +178,6 @@ set(SIM_FILES
         RayTracing/BVH.h
         RayTracing/Ray.h
         RayTracing/Primitive.h
-        AABB.cpp
         BoundingBox.cpp
         BoundingBox.h
         RayTracing/RTHelper.h
