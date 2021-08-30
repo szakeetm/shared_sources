@@ -12,11 +12,31 @@
 
 using Primitive = Facet;
 
-struct BVHBuildNode;
 
 // BVHAccel Forward Declarations
-struct BVHPrimitiveInfo;
+struct BVHBuildNode;
 struct LinearBVHNode;
+
+struct BVHPrimitiveInfo {
+    BVHPrimitiveInfo() : primitiveNumber(0), bounds(),
+                         centroid(), probability(0.0) {}
+
+    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds)
+            : primitiveNumber(primitiveNumber), bounds(bounds),
+              centroid(.5f * bounds.min + .5f * bounds.max),
+              probability(0.0) {}
+
+    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds, double probability)
+            : primitiveNumber(primitiveNumber), bounds(bounds),
+              centroid(.5f * bounds.min + .5f * bounds.max),
+              probability(probability) {}
+
+    size_t primitiveNumber;
+    AxisAlignedBoundingBox bounds;
+    Vector3d centroid;
+    double probability; // For MCHitSplit
+};
+
 
 class BVHAccel : public RTPrimitive {
 public:
