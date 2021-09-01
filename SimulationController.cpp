@@ -103,7 +103,8 @@ bool SimThread::runLoop() {
 
         timeEnd = omp_get_wtime();
 
-        if (procInfo->activeProcs.front() == threadNum || timeEnd-timeLoopStart > 60) { // update after 60s of no update or when thread is called
+        bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
+        if (procInfo->activeProcs.front() == threadNum || forceQueue) {
             if(simulation->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
                     localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
@@ -113,7 +114,8 @@ bool SimThread::runLoop() {
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particle->UpdateHits(simulation->globState, simulation->globParticleLog,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-            procInfo->NextSubProc();
+            if(procInfo->activeProcs.front() == threadNum)
+                procInfo->NextSubProc();
             timeLoopStart = omp_get_wtime();
         }
         else{
@@ -213,7 +215,11 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)
+#if defined(DEBUG)
+        this->nbThreads = 1;
+#else
         this->nbThreads = omp_get_max_threads();
+#endif
     else
         this->nbThreads = nbThreads;
 
@@ -527,7 +533,7 @@ bool SimulationController::Load() {
             double randomCounter = 0;
 #pragma omp parallel default(none) shared(randomCounter)
             {
-                double local_result;
+                double local_result = 0;
 #pragma omp for
                 for (int i=0; i < 1000; i++) {
                     local_result += 1;

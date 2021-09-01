@@ -12,6 +12,7 @@
 #include "BVH.h"
 #include "Ray.h"
 #include <cassert>
+#include <utility>
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -29,25 +30,6 @@ namespace STATS {
         leafNodes = 0;
     }
 }
-struct BVHPrimitiveInfo {
-    BVHPrimitiveInfo() : primitiveNumber(0), bounds(),
-                         centroid(), probability(0.0) {}
-
-    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds)
-            : primitiveNumber(primitiveNumber), bounds(bounds),
-              centroid(.5f * bounds.min + .5f * bounds.max),
-              probability(0.0) {}
-
-    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds, double probability)
-            : primitiveNumber(primitiveNumber), bounds(bounds),
-              centroid(.5f * bounds.min + .5f * bounds.max),
-              probability(probability) {}
-
-    size_t primitiveNumber;
-    AxisAlignedBoundingBox bounds;
-    Vector3d centroid;
-    double probability; // For MCHitSplit
-};
 
 struct BVHBuildNode {
     // BVHBuildNode Public Methods
@@ -341,13 +323,64 @@ int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
     return mid;
 }
 
-BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
-                   int maxPrimsInNode, SplitMethod splitMethod,
-                   const std::vector<double> &probabilities)
+BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_ptr<Primitive>> p, int maxPrimsInNode,
+                   SplitMethod splitMethod)
+                   : maxPrimsInNode(std::min(255, maxPrimsInNode)),
+                   splitMethod(splitMethod),
+                   battery(battery) {
+
+    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
+    if (splitMethod == SplitMethod::TestSplit) {
+        if (battery.empty())
+            this->splitMethod = SplitMethod::SAH;
+    }
+
+    construct();
+}
+
+BVHAccel::BVHAccel(const std::vector<double> &probabilities, std::vector<std::shared_ptr<Primitive>> p,
+                   int maxPrimsInNode,
+                   SplitMethod splitMethod)
         : maxPrimsInNode(std::min(255, maxPrimsInNode)),
           splitMethod(splitMethod),
           primitives(std::move(p)) {
 
+    std::vector<BVHPrimitiveInfo> primitiveInfo;
+
+    if (splitMethod == SplitMethod::ProbSplit) {
+        if (primitives.size() != probabilities.size())
+            this->splitMethod = SplitMethod::SAH;
+    }
+
+    if (splitMethod == SplitMethod::ProbSplit) {
+        primitiveInfo.resize(primitives.size());
+        for (size_t i = 0; i < primitives.size(); ++i)
+            primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[primitives[i]->globalId]};
+        construct(primitiveInfo);
+    }
+    else{
+        construct();
+    }
+
+}
+
+BVHAccel::~BVHAccel() {
+    if (nodes) {
+        delete[] nodes;
+        nodes = nullptr;
+    }
+};
+
+BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
+                   int maxPrimsInNode, SplitMethod splitMethod)
+                   : maxPrimsInNode(std::min(255, maxPrimsInNode)),
+                   splitMethod(splitMethod),
+                   primitives(std::move(p)) {
+
+    construct();
+}
+
+void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     nodes = nullptr;
     if (primitives.empty())
         return;
@@ -356,16 +389,16 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     //<<Build BVH from primitives>>
     //<<Initialize primitiveInfo array for primitives>>
 
-    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
-    if (splitMethod == SplitMethod::ProbSplit) {
-        if (primitives.size() > probabilities.size())
+    if(primitiveInfo.empty()) {
+        std::vector<BVHPrimitiveInfo>(primitives.size()).swap(primitiveInfo);
+        if (splitMethod != SplitMethod::ProbSplit) {
+            for (size_t i = 0; i < primitives.size(); ++i)
+                primitiveInfo[i] = {i, primitives[i]->sh.bb};
+        } else {
             return;
-        for (size_t i = 0; i < primitives.size(); ++i)
-            primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[primitives[i]->globalId]};
-    } else {
-        for (size_t i = 0; i < primitives.size(); ++i)
-            primitiveInfo[i] = {i, primitives[i]->sh.bb};
+        }
     }
+
     //<<Build BVH tree for primitives using primitiveInfo>>
     //MemoryArena arena(1024 * 1024);
     int totalNodes = 0;
@@ -400,14 +433,6 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     printf(" Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
     printf(" Interior Nodes:   %d\n", STATS::interiorNodes);
     printf(" Leaf Nodes:       %d\n", STATS::leafNodes);
-
-}
-
-BVHAccel::~BVHAccel() {
-    if (nodes) {
-        delete[] nodes;
-        nodes = nullptr;
-    }
 };
 
 BVHBuildNode *BVHAccel::recursiveBuild(

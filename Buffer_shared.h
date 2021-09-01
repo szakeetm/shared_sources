@@ -592,6 +592,14 @@ public:
 };
 #endif
 
+struct TestRay {
+    TestRay(const Vector3d& pos, const Vector3d& dir){
+        this->pos = pos;
+        this->dir = dir;
+    }
+    Vector3d pos;
+    Vector3d dir;
+};
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
@@ -631,6 +639,7 @@ public:
 	TextureCell hitMin{}, hitMax{};
 #endif
 
+    std::vector<TestRay> PrepareHitBattery();
 	template<class Archive>
 	void serialize(Archive & archive)
 	{

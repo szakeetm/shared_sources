@@ -230,6 +230,7 @@ typedef struct {
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
+constexpr size_t SmoothStatSizeLimit() {return 16;};
 
 class Interface : public GLApplication {
 protected:
@@ -256,10 +257,59 @@ public:
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
-	double   hps;          // Hit per second
-	double   dps;          // Desorption (or new particle) per second
-	double   lastHps;      // hps measurement
-	double   lastDps;      // dps measurement
+	template <typename T, bool useDiff = false>
+	struct EventPerSecond {
+	    EventPerSecond(size_t limit = SmoothStatSizeLimit()) : N(limit) {};
+
+	    double avg(){
+	        if(eventsAtTime.empty()) return 0.0;
+	        auto& first = eventsAtTime.front();
+	        auto& last = eventsAtTime.back();
+
+	        double avg = 0.0;
+	        if(last.second - first.second > 0.0)
+	            avg = static_cast<double>(sum) / (last.second - first.second);
+
+	        if(avg != 0.0)
+	            lastCached = avg;
+	        return lastCached;
+	    }
+
+	    double last(){
+	        return lastCached;
+	    }
+
+	    void push(T event, double time){
+	        if(eventsAtTime.size() >= N) {
+	            if(!useDiff)
+	                sum -= eventsAtTime.front().first;
+	            eventsAtTime.pop();
+	        }
+	        eventsAtTime.push({event, time});
+	        if(useDiff)
+	            sum = eventsAtTime.back().first - eventsAtTime.front().first;
+	        else
+	            sum += event;
+	    }
+
+	    void clear(){
+	        std::queue<std::pair<T,double>>().swap(eventsAtTime);
+	        sum = 0;
+	        lastCached = 0.0;
+	    }
+
+	    std::queue<std::pair<T,double>> eventsAtTime;
+	private:
+	    T sum = 0;
+	    size_t N;
+	    double lastCached = 0.0;
+	};
+
+	EventPerSecond<size_t>   hps;          // Hit per second
+	EventPerSecond<size_t>   dps;          // Hit per second
+	EventPerSecond<size_t,true>   hps_runtotal;          // Hit per second
+	EventPerSecond<size_t,true>   dps_runtotal;          // Hit per second
+
 	size_t    lastNbHit;    // measurement
 	size_t    lastNbDes;    // measurement
 	size_t    nbDesStart;   // measurement
