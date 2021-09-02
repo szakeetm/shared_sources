@@ -182,7 +182,6 @@ int main(int argc, char** argv) {
     simManager.KillAllSimUnits();
     Log::console_msg(1,"[%d][%s] Simulation finished!\n", MFMPI::world_rank, Util::getTimepointString().c_str());
 
-    auto vec = globState.globalHits.PrepareHitBattery();
 #ifdef USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif

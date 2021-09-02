@@ -278,6 +278,10 @@ public:
 	    }
 
 	    void push(T event, double time){
+	        if(!eventsAtTime.empty()){
+	            if(time == eventsAtTime.back().second)
+	                return;
+	        }
 	        if(eventsAtTime.size() >= N) {
 	            if(!useDiff)
 	                sum -= eventsAtTime.front().first;
@@ -305,8 +309,8 @@ public:
 
 	EventPerSecond<size_t>   hps;          // Hit per second
 	EventPerSecond<size_t>   dps;          // Hit per second
-	EventPerSecond<size_t,true>   hps_runtotal;          // Hit per second
-	EventPerSecond<size_t,true>   dps_runtotal;          // Hit per second
+	EventPerSecond<size_t,true>   hps_runtotal{2};          // Hit per second
+	EventPerSecond<size_t,true>   dps_runtotal{2};          // Hit per second
 
 	size_t    lastNbHit;    // measurement
 	size_t    lastNbDes;    // measurement

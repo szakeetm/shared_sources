@@ -20,12 +20,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 #include "Vector.h"
 #include "BoundingBox.h"
-#include <vector>
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 
+#include <vector>
 #include <array>
+#include <map>
 
 #if defined(MOLFLOW)
 #include "../src/MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
@@ -38,6 +39,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
+#define HITCACHELIMIT      (size_t)1048576  // Max. displayed number of lines and hits.
+#define HITCACHEMIN      (size_t)(128)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLE      (size_t)(HITCACHELIMIT/1)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
 class HistogramParams {
@@ -438,6 +443,13 @@ public:
 	    dP = 0.0;
 #endif
     }
+    HIT(Vector3d& pos, int t) : pos(pos), type(t) {
+#if defined(SYNRAD)
+        dF = 0.0;
+        dP = 0.0;
+#endif
+    }
+
 	Vector3d pos;
 	int    type;
 #if defined(SYNRAD)
@@ -595,8 +607,33 @@ struct TestRay {
         this->pos = pos;
         this->dir = dir;
     }
+    TestRay(const Vector3d& pos, const Vector3d& dir, int loc){
+        this->pos = pos;
+        this->dir = dir;
+        location = loc;
+    }
     Vector3d pos;
     Vector3d dir;
+    int location;
+};
+
+struct FreqBattery {
+    void resize(size_t n) {
+        rays.resize(n,{});
+        /*for(auto& r : rays) {
+            r.resize(HITCACHESIZE);
+        }*/
+        nRays.resize(n,0);
+    }
+    void clear(){
+        rays.clear();
+        nRays.clear();
+    }
+    size_t size() const{
+        return nRays.size();
+    }
+    std::vector<std::vector<TestRay>> rays;       // hits
+    std::vector<int> nRays;                             // amount to cache
 };
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
@@ -622,7 +659,8 @@ public:
 	size_t  nbLeakTotal;         // Total leaks
     HIT hitCache[HITCACHESIZE];       // Hit history
     LEAK leakCache[LEAKCACHESIZE];      // Leak history
-
+    //std::vector<std::vector<TestRay>> hitBattery;       // hits
+    FreqBattery hitBattery;
     double distTraveled_total;
 
 #if defined(MOLFLOW)
@@ -637,7 +675,6 @@ public:
 	TextureCell hitMin{}, hitMax{};
 #endif
 
-    std::vector<TestRay> PrepareHitBattery();
 	template<class Archive>
 	void serialize(Archive & archive)
 	{

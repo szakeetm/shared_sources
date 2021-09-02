@@ -136,10 +136,12 @@ bool SimThread::runLoop() {
 }
 
 void SimThread::setSimState(char *msg) const {
+    procInfo->subProcInfo[threadNum].slaveState = PROCESS_RUN;
     snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg);
 }
 
 void SimThread::setSimState(const std::string& msg) const {
+    procInfo->subProcInfo[threadNum].slaveState = PROCESS_RUN;
     snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg.c_str());
 }
 
@@ -454,9 +456,9 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 if (!lastHitUpdateOK) {
                     // Last update not successful, retry with a longer timeout
                     if ((GetLocalState() != PROCESS_ERROR)) {
-                        SetState(PROCESS_STARTING, "Updating hits...", false, true);
+                        SetState(PROCESS_STARTING, "Updating hits...", true, true);
                         //lastHitUpdateOK = simulation->UpdateHits(prIdx, 60000);
-                        SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
+                        SetState(PROCESS_STARTING, GetSimuStatus(), true, true);
                     }
                 }
                 SetReady(loadOk);
@@ -496,6 +498,7 @@ int SimulationController::RebuildAccel() {
     }
     return 0;
 }
+
 bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Loading simulation");
@@ -595,7 +598,13 @@ int SimulationController::Start() {
         return 1;
     }
 
-    if(RebuildAccel()){
+
+    simulation->globState->UpdateBatteryFrequencies();
+
+    for(auto& freq : simThreads){
+        freq.particle->tmpState.globalHits.hitBattery.nRays = simulation->globState->globalHits.hitBattery.nRays;
+    }
+    if(simulation->model->accel.empty() && RebuildAccel()){
         loadOk = false;
         SetState(PROCESS_ERROR, "Error building acceleration structure!");
         return 1;
@@ -670,7 +679,7 @@ int SimulationController::Start() {
 
 int SimulationController::Reset() {
     DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-    SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+    SetState(PROCESS_STARTING, "Resetting local cache...", true, true);
     resetControls();
     auto *sim = simulation;
     sim->ResetSimulation();

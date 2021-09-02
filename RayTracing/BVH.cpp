@@ -13,6 +13,7 @@
 #include "Ray.h"
 #include <cassert>
 #include <utility>
+#include <random>
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -323,19 +324,170 @@ int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
     return mid;
 }
 
+int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
+                        int end, int dim, AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery, AxisAlignedBoundingBox &bounds) {
+    //<<Partition primitives using approximate SAH>>
+    int nPrimitives = end - start;
+    int mid = -1;
+    if (nPrimitives <= 2) {
+        //<<Partition primitives into equally sized subsets>>
+        mid = SplitEqualCounts(primitiveInfo, start, end, dim);
+    } else if (nPrimitives > maxPrimsInNode) { // else return -1 to just create a leaf node
+        //<<Allocate BucketInfo for SAH partition buckets>>
+        constexpr int nBuckets = 12;
+        struct BucketInfo {
+            int count = 0;
+            AxisAlignedBoundingBox bounds;
+        };
+        BucketInfo buckets[nBuckets];
+        //<<Initialize BucketInfo for SAH partition buckets>>
+        for (int i = start; i < end; ++i) {
+            int b = nBuckets *
+                    centroidBounds.Offset(primitiveInfo[i].centroid)[dim];
+            if (b == nBuckets) b = nBuckets - 1;
+            assert(b >= 0);
+            assert(b < nBuckets);
+            buckets[b].count++;
+            buckets[b].bounds = AxisAlignedBoundingBox::Union(buckets[b].bounds, primitiveInfo[i].bounds);
+        }
+
+        //<<Compute costs for splitting after each bucket>>
+        double cost[nBuckets - 1];
+        double hitcost[nBuckets - 1];
+
+        std::vector<bool> rayHasHit(local_battery.size(), false);
+        for (int i = 0; i < nBuckets - 1; ++i) {
+            AxisAlignedBoundingBox b0, b1;
+            int count0 = 0, count1 = 0;
+            for (int j = 0; j <= i; ++j) {
+                b0 = AxisAlignedBoundingBox::Union(b0, buckets[j].bounds);
+                count0 += buckets[j].count;
+            }
+            for (int j = i + 1; j < nBuckets; ++j) {
+                b1 = AxisAlignedBoundingBox::Union(b1, buckets[j].bounds);
+                count1 += buckets[j].count;
+            }
+
+            int hitCount1 = 0;
+            int hitCount0 = 0;
+            int hitCountBoth = 0;
+            auto ray = Ray();
+            size_t ray_n = 0;
+            for(auto& test : local_battery){
+                ray.origin = test.pos;
+                ray.direction = test.dir;
+                Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+
+                bool hit0 = b0.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+                bool hit1 = b1.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+                if(hit0 && hit1) hitCountBoth++;
+                else {
+                    if(hit0) hitCount0++;
+                    if(hit1) hitCount1++;
+                }
+                rayHasHit[ray_n] = rayHasHit[ray_n] | (hit0 || hit1);
+                ray_n++;
+            }
+            cost[i] = 0.5f + (count0 * b0.SurfaceArea() +
+                    count1 * b1.SurfaceArea()) / bounds.SurfaceArea();
+            //hitcost[i] = 0.5f + (double)(hitcount0 + hitcount1) / (double)local_battery.size();
+            double pAbove = (double) (hitCount0) / (double) local_battery.size();
+            double pBelow = (double) (hitCount1) / (double) local_battery.size();
+            double pBoth = (double) (hitCountBoth) / (double) local_battery.size(); // as a penalty
+
+            // https://www.wolframalpha.com/input/?i=-1.0+*+e%5E%28-2.35+*+%28x%5E2%2By%5E2%29%29+%2B+1+for+x%3D0+to+x%3D1
+            //hitcost[i] = 1.0f + -1.0f * std::exp(-2.35f * (pAbove*pAbove + pBelow*pBelow));
+            //https://www.wolframalpha.com/input/?i=1.0+*+e%5E%28-2.3+*+%28%28x-1%29%5E2%2B%28y-1%29%5E2%29%29+%2B+0+for+x%3D0+to+x%3D1
+            hitcost[i] = 1.0f * std::exp(-2.30f * (std::pow(pAbove,2) + std::pow(pBelow,2)));
+            hitcost[i] *= nPrimitives;
+            hitcost[i] -= nPrimitives;
+            hitcost[i] = std::abs(hitcost[i]);
+            //hitcost[i] = 0.5f + 1.0f - std::abs(pAbove - pBelow) + pBoth;
+        }
+
+        //<<Find bucket to split at that minimizes SAH metric>>
+        double minCost = hitcost[0];
+        int minCostSplitBucket = 0;
+        for (int i = 1; i < nBuckets - 1; ++i) {
+            if (hitcost[i] < minCost) {
+                minCost = hitcost[i];
+                minCostSplitBucket = i;
+            }
+        }
+
+        size_t ray_n = 0;
+        for(auto iter = local_battery.begin(); iter != local_battery.end(); ){
+            if(!rayHasHit[ray_n]) iter = local_battery.erase(iter);
+            else iter++;
+            ray_n++;
+        }
+
+        //<<Either create leaf or split primitives at selected SAH bucket>>
+        double leafCost = nPrimitives;
+        if (minCost < leafCost) {
+            BVHPrimitiveInfo *pmid = std::partition(&primitiveInfo[start],
+                                                    &primitiveInfo[end - 1] + 1,
+                                                    [=](const BVHPrimitiveInfo &pi) {
+                int b = nBuckets * centroidBounds.Offset(pi.centroid)[dim];
+                if (b == nBuckets) b = nBuckets - 1;
+                assert(b >= 0);
+                assert(b < nBuckets);
+                return b <= minCostSplitBucket;
+            });
+            mid = pmid - &primitiveInfo[0];
+        }
+    }
+    return mid;
+}
+
 BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_ptr<Primitive>> p, int maxPrimsInNode,
                    SplitMethod splitMethod)
                    : maxPrimsInNode(std::min(255, maxPrimsInNode)),
                    splitMethod(splitMethod),
+                   primitives(std::move(p)),
                    battery(battery) {
 
-    std::vector<BVHPrimitiveInfo> primitiveInfo(primitives.size());
+    std::unique_ptr<double[]> primChance(new double[primitives.size()]);
+    for (size_t i = 0; i < primitives.size(); ++i) {
+        primChance[i] = 0.0;
+    }
+
+    auto ray = Ray();
+    ray.rng = new MersenneTwister();
+    for (auto &test : this->battery) {
+        ray.origin = test.pos;
+        ray.direction = test.dir;
+        Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+        int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+        for (size_t i = 0; i < primitives.size(); ++i) {
+            primChance[i] += primitives[i]->Intersect(ray);
+        }
+    }
+    delete ray.rng;
+
+    // if battery is too large, only use a random sample
+    if(this->battery.size() > HITCACHELIMIT / 128) {
+        std::vector<TestRay> sampleRays;
+        std::sample(this->battery.begin(), this->battery.end(), std::back_inserter(sampleRays),
+                    HITCACHELIMIT / 128, std::mt19937{std::random_device{}()});
+        this->battery.swap(sampleRays);
+    }
+    for (size_t i = 0; i < primitives.size(); ++i) {
+        primChance[i] /= this->battery.size();
+    }
+
+    std::vector<BVHPrimitiveInfo> primitiveInfo(0);
     if (splitMethod == SplitMethod::TestSplit) {
-        if (battery.empty())
+        if (this->battery.empty())
             this->splitMethod = SplitMethod::SAH;
     }
 
-    construct();
+    printf("--- BVH with HitBattery ---\n");
+    printf(" Battery size   : %zu\n", battery.size());
+    printf(" Sampled battery: %zu\n", this->battery.size());
+
+    construct(primitiveInfo);
 }
 
 BVHAccel::BVHAccel(const std::vector<double> &probabilities, std::vector<std::shared_ptr<Primitive>> p,
@@ -359,7 +511,7 @@ BVHAccel::BVHAccel(const std::vector<double> &probabilities, std::vector<std::sh
         construct(primitiveInfo);
     }
     else{
-        construct();
+        construct(primitiveInfo);
     }
 
 }
@@ -377,7 +529,7 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
                    splitMethod(splitMethod),
                    primitives(std::move(p)) {
 
-    construct();
+    construct(std::vector<BVHPrimitiveInfo>());
 }
 
 void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
@@ -409,7 +561,7 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     else
         */
     root = recursiveBuild(/*arena,*/ primitiveInfo, 0, primitives.size(),
-                                     &totalNodes, orderedPrims);
+                                     &totalNodes, orderedPrims, std::move(battery));
     primitives.swap(orderedPrims);
 
     printf("BVH created with %d nodes for %d "
@@ -434,10 +586,10 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     printf(" Leaf Nodes:       %d\n", STATS::leafNodes);
 };
 
-BVHBuildNode *BVHAccel::recursiveBuild(
-        std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
-        int end, int *totalNodes,
-        std::vector<std::shared_ptr<Primitive>> &orderedPrims) {
+BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end,
+                                       int *totalNodes,
+                                       std::vector<std::shared_ptr<Primitive>> &orderedPrims,
+                                       std::vector<TestRay> testBattery) {
     assert(start != end);
 
     BVHBuildNode *node = new BVHBuildNode();//arena.Alloc<BVHBuildNode>();
@@ -476,6 +628,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(
             node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
             return node;
         } else {
+            std::vector<TestRay> local_battery;
             //<<Partition primitives based on splitMethod>>
             switch (splitMethod) {
                 case SplitMethod::MolflowSplit: {
@@ -509,6 +662,15 @@ BVHBuildNode *BVHAccel::recursiveBuild(
                     //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
                     break;
                 }
+                case SplitMethod::TestSplit: {
+                    if(testBattery.size() > 256) {
+                        local_battery = testBattery;
+                        //<<Partition primitives into equally sized subsets>>
+                        mid = SplitTest(primitiveInfo, start, end, dim, centroidBounds, local_battery, bounds);
+                        //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
+                        break;
+                    }
+                }
                 case SplitMethod::SAH:
                 default: {
                     mid = SplitSAH(primitiveInfo, start, end, dim, centroidBounds, bounds);
@@ -529,9 +691,9 @@ BVHBuildNode *BVHAccel::recursiveBuild(
 
             node->InitInterior(dim,
                                recursiveBuild(primitiveInfo, start, mid,
-                                              totalNodes, orderedPrims),
+                                              totalNodes, orderedPrims, local_battery),
                                recursiveBuild(primitiveInfo, mid, end,
-                                              totalNodes, orderedPrims));
+                                              totalNodes, orderedPrims, local_battery));
         }
     }
     return node;

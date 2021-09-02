@@ -106,12 +106,15 @@ int SimulationManager::StartSimulation() {
         if (simHandles.empty())
             throw std::logic_error("No active simulation handles!");
 
+        for(auto& con : simController){
+            con.RebuildAccel();
+        }
         if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
     }
     else {
-        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        this->procInformation.masterCmd = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
             con.Start();
         }

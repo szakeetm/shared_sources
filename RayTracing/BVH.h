@@ -65,11 +65,10 @@ public:
 private:
     void ComputeBB() override;
     // BVHAccel Private Methods
-    void construct(std::vector<BVHPrimitiveInfo> primitiveInfo = std::vector<BVHPrimitiveInfo>());
-    BVHBuildNode *recursiveBuild(
-            std::vector<BVHPrimitiveInfo> &primitiveInfo,
-            int start, int end, int *totalNodes,
-            std::vector<std::shared_ptr<Primitive>> &orderedPrims);
+    void construct(std::vector<BVHPrimitiveInfo> primitiveInfo);
+    BVHBuildNode *recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int *totalNodes,
+                                 std::vector<std::shared_ptr<Primitive>> &orderedPrims,
+                                 std::vector<TestRay> testBattery);
     int flattenBVHTree(BVHBuildNode *node, int *offset);
 
 private:
@@ -90,6 +89,10 @@ private:
 
     int SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                  AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
+
+    int SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                  AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery,
+                  AxisAlignedBoundingBox &bounds);
 
     int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 };
