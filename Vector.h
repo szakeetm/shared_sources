@@ -28,6 +28,10 @@ Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
 Vector3d operator*(const Vector3d &v1, const double& mult);
 Vector3d operator*(const double& mult, const Vector3d &v1);
+Vector3d operator/(const Vector3d &v1, const double& div);
+Vector3d operator/(const double& div, const Vector3d &v1);
+Vector3d operator/(const Vector3d &v1, const Vector3d &v2);
+
 double Dot(const Vector3d &v1, const Vector3d &v2);
 Vector3d CrossProduct(const Vector3d &v1, const Vector3d &v2);
 

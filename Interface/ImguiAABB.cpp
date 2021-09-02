@@ -171,6 +171,36 @@ ImguiAABBVisu::ImguiAABBVisu() {
     mApp->aabbVisu.colorMap = tfn_widget.get_colormapf();
 }
 
+inline int Log2Int(uint32_t v) {
+#if defined(_MSC_VER)
+    unsigned long lz = 0;
+    if (_BitScanReverse(&lz, v)) return lz;
+    return 0;
+#else
+    return 31 - __builtin_clz(v);
+#endif
+}
+
+inline int Log2Int(int32_t v) { return Log2Int((uint32_t) v); }
+
+inline int Log2Int(uint64_t v) {
+#if defined(_MSC_VER)
+    unsigned long lz = 0;
+#if defined(_WIN64)
+    _BitScanReverse64(&lz, v);
+#else
+    if  (_BitScanReverse(&lz, v >> 32))
+        lz += 32;
+    else
+        _BitScanReverse(&lz, v & 0xffffffff);
+#endif // _WIN64
+    return lz;
+#else  // _MSC_VER
+    return 63 - __builtin_clzll(v);
+#endif
+}
+
+inline int Log2Int(int64_t v) { return Log2Int((uint64_t) v); }
 void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
@@ -182,77 +212,46 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool
     ImGui::PopStyleVar(1);
 
-
     static std::shared_ptr<std::vector<float>> rate_vec;
-    ImGui::DragIntRange2("Show AABB level", &mApp->aabbVisu.showLevelAABB[0], &mApp->aabbVisu.showLevelAABB[1], 1.0f,
-                         -1, 10);
-    ImGui::SliderFloat("AABB alpha", &mApp->aabbVisu.alpha, 0.0f, 1.0f);
-    ImGui::Checkbox("Show left  branches", &mApp->aabbVisu.showBranchSide[0]);
-    ImGui::Checkbox("Show right branches", &mApp->aabbVisu.showBranchSide[1]);
-    ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
-    ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
-    ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
-    if (ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats))
-        mApp->aabbVisu.travStep = (mApp->aabbVisu.showStats) ? false : mApp->aabbVisu.travStep;
-    if (ImGui::Checkbox("Use traversal step heatmap", &mApp->aabbVisu.travStep))
-        mApp->aabbVisu.showStats = (mApp->aabbVisu.travStep) ? false : mApp->aabbVisu.showStats;
-
     if (!rate_vec) {
         rate_vec = std::make_shared<std::vector<float>>();
         mApp->aabbVisu.rateVector = rate_vec;
     }
-
-    ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
-    ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
-    static int selected_accel = 0;
-    {
-        // Using the _simplified_ one-liner Combo() api here
-        // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-        const char *items[] = {"BVH", "KD-tree"};
-        if(ImGui::Combo("accel_combo", &selected_accel, items, IM_ARRAYSIZE(items)))
-            mApp->worker.model->wp.accel_type = selected_accel;
-    }
-#if defined(USE_KDTREE)
-    const char *items[] = {"SAH", "ProbSplit"};
-    if (ImGui::BeginListBox("Splitting technique")) {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
-            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n) || (std::strcmp("ProbSplit",items[n]) == 0 && mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit);
-            if (ImGui::Selectable(items[n], is_selected)) {
-                if(std::strcmp("ProbSplit",items[n]) == 0){
-                    mApp->aabbVisu.splitTechnique = BVHAccel::SplitMethod::ProbSplit;
-                    mApp->worker.model->wp.splitMethod = static_cast<int>(mApp->aabbVisu.splitTechnique);
-                }
-                else {
-                    mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
-                    mApp->worker.model->wp.splitMethod = n;
-                }
+    if (ImGui::CollapsingHeader("Draw Settings")) {
+        bool showAll = (mApp->aabbVisu.showLevelAABB[0] == -1) ? true : false;
+        if (ImGui::Checkbox("Show all AABB levels", &showAll)) {
+            if (!showAll) {
+                mApp->aabbVisu.showLevelAABB[0] = 0;
+                mApp->aabbVisu.showLevelAABB[1] = std::round(8.0f + 1.3f * Log2Int(int64_t(mApp->worker.model->facets.size())));
+            } else {
+                mApp->aabbVisu.showLevelAABB[0] = -1;
+                mApp->aabbVisu.showLevelAABB[1] = -1;
             }
-
-            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
         }
-        ImGui::EndListBox();
-    }
-#else
-    ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
-    const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit"};
-    if (ImGui::BeginListBox("Splitting technique")) {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
-            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n);
-            if (ImGui::Selectable(items[n], is_selected)) {
-                mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
-                mApp->worker.model->wp.splitMethod = n;
-            }
+        if (!showAll)
+            ImGui::DragIntRange2("Show AABB level", &mApp->aabbVisu.showLevelAABB[0],
+                                 &mApp->aabbVisu.showLevelAABB[1], 1.0f, 0, 30);
 
-            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndListBox();
-    }
-#endif
+        ImGui::SliderFloat("AABB alpha", &mApp->aabbVisu.alpha, 0.0f, 1.0f);
+        ImGui::Checkbox("Show left  branches", &mApp->aabbVisu.showBranchSide[0]);
+        ImGui::Checkbox("Show right branches", &mApp->aabbVisu.showBranchSide[1]);
+        ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
+        ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
+        ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
+        if (ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats))
+            mApp->aabbVisu.travStep = (mApp->aabbVisu.showStats) ? false : mApp->aabbVisu.travStep;
+        if (ImGui::Checkbox("Use traversal step heatmap", &mApp->aabbVisu.travStep))
+            mApp->aabbVisu.showStats = (mApp->aabbVisu.travStep) ? false : mApp->aabbVisu.showStats;
 
+        /*if (!rate_vec) {
+            rate_vec = std::make_shared<std::vector<float>>();
+            mApp->aabbVisu.rateVector = rate_vec;
+        }*/
+
+        ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
+    }
+    if (ImGui::Button("Apply aabb view"))
+        redrawAabb = true;
 
     static bool color_win = false;
     if (ImGui::Button("Edit colormap")) {
@@ -292,11 +291,81 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         }
         ImGui::PopStyleVar(); // Lift normal size constraint}
     }
-    if (ImGui::Button("Apply aabb view"))
-        redrawAabb = true;
 
-    if (ImGui::Button("Build new AABB"))
-        rebuildAabb = true;
+    if (ImGui::CollapsingHeader("AABB Builder")) {
+    ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
+    static int selected_accel = 0;
+    {
+        // Using the _simplified_ one-liner Combo() api here
+        // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+        const char *items[] = {"BVH", "KD-tree"};
+        if(ImGui::Combo("Accel Type", &selected_accel, items, IM_ARRAYSIZE(items)))
+            mApp->worker.model->wp.accel_type = selected_accel;
+    }
+#if defined(USE_KDTREE)
+    const char *items[] = {"SAH", "ProbSplit","TestSplit"};
+    if (ImGui::BeginListBox("Splitting technique")) {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
+            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n) || (std::strcmp("ProbSplit",items[n]) == 0 && mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit);
+            if (ImGui::Selectable(items[n], is_selected)) {
+                if(std::strcmp("ProbSplit",items[n]) == 0){
+                    mApp->aabbVisu.splitTechnique = BVHAccel::SplitMethod::ProbSplit;
+                    mApp->worker.model->wp.splitMethod = static_cast<int>(mApp->aabbVisu.splitTechnique);
+                }
+                else if(std::strcmp("TestSplit",items[n]) == 0){
+                    mApp->aabbVisu.splitTechnique = BVHAccel::SplitMethod::TestSplit;
+                    mApp->worker.model->wp.splitMethod = static_cast<int>(mApp->aabbVisu.splitTechnique);
+                }
+                else {
+                    mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
+                    mApp->worker.model->wp.splitMethod = n;
+                }
+            }
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndListBox();
+    }
+#else
+    ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
+    const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit"};
+    if (ImGui::BeginListBox("Splitting technique")) {
+        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
+            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n);
+            if (ImGui::Selectable(items[n], is_selected)) {
+                mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
+                mApp->worker.model->wp.splitMethod = n;
+            }
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndListBox();
+    }
+    if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::TestSplit) {
+        if (ImGui::Button("Update hit frequencies")) {
+            mApp->worker.globState.UpdateBatteryFrequencies();
+        }
+        static int nbTestRays = 0;
+        if (ImGui::Button("Update #TestRays")) {
+            nbTestRays = 0;
+            for(auto& bat : mApp->worker.globState.globalHits.hitBattery.rays){
+                //for(auto& hit : bat) {
+                if(bat.empty()) continue;
+                nbTestRays+=bat.size();
+            }
+        }
+        ImGui::Text("Test Rays: %d", nbTestRays);
+    }
+#endif
+        if (ImGui::Button("Build new AABB")) {
+            rebuildAabb = true;
+            rate_vec->assign(rate_vec->size(), 0.0);
+        }
+    }
 
     static bool constantUpdates = false;
     bool forceUpdate = false;
@@ -449,6 +518,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 mApp->aabbVisu.selectedNode = -1;
                             else
                                 mApp->aabbVisu.selectedNode = item->ID;
+                            redrawAabb = true;
                         }
 
                         //ImGui::Text("%zu", item->ID);

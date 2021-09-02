@@ -16,10 +16,27 @@ struct IntersectCount{
         nbPrim = cpy.nbPrim;
         level = cpy.level;
     };
-    IntersectCount(IntersectCount&& mvr) : nbChecks(mvr.nbChecks.load()), nbIntersects(mvr.nbIntersects.load()){
+    IntersectCount(IntersectCount&& mvr)  noexcept : nbChecks(mvr.nbChecks.load()), nbIntersects(mvr.nbIntersects.load()){
         nbPrim = mvr.nbPrim;
         level = mvr.level;
     };
+    IntersectCount& operator=(const IntersectCount& cpy){
+        nbChecks = cpy.nbChecks.load();
+        nbIntersects = cpy.nbIntersects.load();
+        nbPrim = cpy.nbPrim;
+        level = cpy.level;
+
+        return *this;
+    }
+
+    IntersectCount& operator=(IntersectCount&& cpy) noexcept {
+        nbChecks = cpy.nbChecks.load();
+        nbIntersects = cpy.nbIntersects.load();
+        nbPrim = cpy.nbPrim;
+        level = cpy.level;
+
+        return *this;
+    }
 
     std::atomic<size_t> nbChecks{0};
     std::atomic<size_t> nbIntersects{0};

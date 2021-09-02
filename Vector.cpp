@@ -68,6 +68,24 @@ Vector3d operator*(const double& mult, const Vector3d &v1) {
 	return v1*mult;
 }
 
+Vector3d operator/(const Vector3d &v1, const double& div) {
+    return Vector3d(v1.x / div,
+                    v1.y / div,
+                    v1.z / div);
+}
+
+Vector3d operator/(const double& div, const Vector3d &v1) {
+    return Vector3d(div / v1.x,
+                    div / v1.y,
+                    div / v1.z);
+}
+
+Vector3d operator/(const Vector3d &v1, const Vector3d &v2) {
+    return Vector3d(v1.x / v2.x,
+                    v1.y / v2.y,
+                    v1.z / v2.z);
+}
+
 Vector2d operator+ (const Vector2d &v1, const Vector2d& v2) {
 	return Vector2d(v1.u + v2.u,
 					v1.v + v2.v);

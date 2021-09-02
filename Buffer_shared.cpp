@@ -32,26 +32,6 @@ GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
     return *this;
 }
 
-std::vector<TestRay> GlobalHitBuffer::PrepareHitBattery() {
-    std::vector<TestRay> battery;
-    size_t count = 0;
-    while (count < hitCacheSize) { //While hits are consecutive
-        if(hitCache[count].type == HIT_TELEPORTSOURCE
-        || hitCache[count].type == HIT_TELEPORTDEST
-        || hitCache[count].type == HIT_LAST
-        || hitCache[count].type == HIT_ABS)
-            ++count;
-        else {
-                auto &item = hitCache[count];
-                battery.emplace_back(item.pos, hitCache[count + 1].pos - item.pos);
-                // dir
-                // pos
-                ++count;
-            }
-    }
-    return battery;
-}
-
 #if defined(MOLFLOW)
 /**
 * \brief += operator, with simple += of underlying structures

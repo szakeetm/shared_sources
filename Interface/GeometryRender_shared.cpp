@@ -1163,7 +1163,7 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
 
         }
         else if(mApp->aabbVisu.showStats){
-            rate = (!mApp->aabbVisu.rateVector->empty()) ? mApp->aabbVisu.rateVector->at(currentNodeIndex) : 0.0f;
+            rate = (!mApp->aabbVisu.rateVector->empty() || mApp->aabbVisu.rateVector->size() <= currentNodeIndex) ? mApp->aabbVisu.rateVector->at(currentNodeIndex) : 0.0f;
             if(rate >= mApp->aabbVisu.trimByProb[0] && rate <= mApp->aabbVisu.trimByProb[1]) {
                 color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]) : applyGLColor4f(mApp->aabbVisu.colorMap, rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]);
             }
@@ -1182,10 +1182,17 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             color = {0.6f ,
                      0.6f ,
                      std::max(0.7f, (1.0f / (1.0f + level * 0.5f))) ,
-                     std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha)};
+                     std::min(1.0f, (level * 0.033f) + mApp->aabbVisu.alpha)};
         }
         else {
-            color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, 0, 30) : applyGLColor4f(mApp->aabbVisu.colorMap, level, 0, 30);
+            int minLevel=0, maxLevel=30;
+            if(mApp->aabbVisu.showLevelAABB[0]>-1){
+                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+            }
+            if(mApp->aabbVisu.showLevelAABB[1]>-1){
+                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+            }
+            color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, minLevel, maxLevel) : applyGLColor4f(mApp->aabbVisu.colorMap, level, minLevel, maxLevel);
         }
 
         auto delta = this->bb.max - this->bb.min;
@@ -1364,7 +1371,12 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
                      std::min(1.0f, (level * 0.02f) + mApp->aabbVisu.alpha)};
         }
         else {
-            color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, 0, 30) : applyGLColor4f(mApp->aabbVisu.colorMap, level, 0, 30);
+            int minLevel=0, maxLevel=30;
+            if(mApp->aabbVisu.showLevelAABB[0]==-1){
+                minLevel = mApp->aabbVisu.showLevelAABB[0];
+                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+            }
+            color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, minLevel, maxLevel) : applyGLColor4f(mApp->aabbVisu.colorMap, level, minLevel, maxLevel);
         }
 
         auto bbox = node->bounds;
@@ -1890,7 +1902,7 @@ void Geometry::DrawAABB() {
                         if(mApp->worker.model->wp.accel_type == 1)
                             accel.emplace_back(std::make_shared<KdTreeAccel>(primPointers[s], probabilities, 80, 1, 0.5, 1, -1));
                         else
-                            accel.emplace_back(std::make_shared<BVHAccel>(primPointers[s], 2, BVHAccel::SplitMethod::SAH, probabilities));
+                            accel.emplace_back(std::make_shared<BVHAccel>(probabilities, primPointers[s], 2));
                     }
                 }
                 else {

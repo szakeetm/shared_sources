@@ -111,7 +111,7 @@ int SimulationManager::StartSimulation() {
         }
     }
     else {
-        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        this->procInformation.masterCmd = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
             con.Start();
         }
