@@ -330,7 +330,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     }
 #else
     ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
-    const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit"};
+    const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit", "HybridSplit"};
     if (ImGui::BeginListBox("Splitting technique")) {
         for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
             const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n);

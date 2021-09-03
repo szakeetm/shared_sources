@@ -1900,7 +1900,7 @@ void Geometry::DrawAABB() {
                     
                     for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                         if(mApp->worker.model->wp.accel_type == 1)
-                            accel.emplace_back(std::make_shared<KdTreeAccel>(primPointers[s], probabilities, 80, 1, 0.5, 1, -1));
+                            accel.emplace_back(std::make_shared<KdTreeAccel>((KdTreeAccel::SplitMethod)mApp->aabbVisu.splitTechnique, primPointers[s], probabilities, 80, 1, 0.5, 1, -1));
                         else
                             accel.emplace_back(std::make_shared<BVHAccel>(probabilities, primPointers[s], 2));
                     }
@@ -1908,7 +1908,7 @@ void Geometry::DrawAABB() {
                 else {
                     for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                         if(mApp->worker.model->wp.accel_type == 1)
-                            accel.emplace_back(std::make_shared<KdTreeAccel>(primPointers[s], std::vector<double>{}, 80, 1, 0.5, 1, -1));
+                            accel.emplace_back(std::make_shared<KdTreeAccel>((KdTreeAccel::SplitMethod)mApp->aabbVisu.splitTechnique, primPointers[s], std::vector<double>{}, 80, 1, 0.5, 1, -1));
                         else
                             accel.emplace_back(std::make_shared<BVHAccel>(primPointers[s], 2, mApp->aabbVisu.splitTechnique));
                     }

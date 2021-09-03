@@ -801,6 +801,12 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     }
     ++nextFreeNode;
 
+    nodes[nodeNum].nodeId = nodeNum;
+    ints.emplace_back();
+    auto& intstat = ints.back(); // ints[nodeNum]
+    intstat.nbPrim = nPrimitives;
+    intstat.level = depth - 1;
+
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {
         nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
@@ -898,6 +904,12 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     }
     ++nextFreeNode;
 
+    nodes[nodeNum].nodeId = nodeNum;
+    ints.emplace_back();
+    auto& intstat = ints.back(); // ints[nodeNum]
+    intstat.nbPrim = nPrimitives;
+    intstat.level = depth - 1;
+
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {
         nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
@@ -920,7 +932,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     int retries = 0;
 
     retrySplit:
-    if(splitMethod == SplitMethod::SAH && !local_battery.empty())
+    if(splitMethod == SplitMethod::TestSplit && !local_battery.empty())
         std::tie(bestCost, bestAxis, bestOffset) = SplitTest(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges, battery, local_battery, primChance, tMax);
     else if(splitMethod == SplitMethod::HybridSplit && !local_battery.empty())
         std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
