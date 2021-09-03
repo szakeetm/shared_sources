@@ -62,14 +62,34 @@ struct TestRayLoc {
     double tMin{0.0};
     double tMax{0.0};
 };
+
+struct SplitCandidate {
+    SplitCandidate() = default;
+    SplitCandidate(double c, int a, int o){
+        cost=c;
+        axis=a;
+        offset=o;
+    }
+    double cost{1.0e99};
+    int axis{-1};
+    int offset{-1};
+};
+
 class KdTreeAccel : public RTPrimitive {
 public:
+    // KdTreeAccel Public Types
+    enum class SplitMethod {
+        SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, TestSplit, HybridSplit
+    };
+
+public:
     // KdTreeAccel Public Methods
-    KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::vector<double>& probabilities = std::vector<double>{},
+    KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
+                const std::vector<double> &probabilities = std::vector<double>{},
                 int isectCost = 80, int traversalCost = 1,
                 double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
-    KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::vector<TestRay> &battery,
-                const std::vector<double> &frequencies = std::vector<double>{}, int isectCost = 80, int traversalCost = 1,
+    KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
+                const std::vector<TestRay> &battery, const std::vector<double> &frequencies = std::vector<double>{}, int isectCost = 80, int traversalCost = 1,
                 double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
     KdTreeAccel(KdTreeAccel && src) noexcept;
     KdTreeAccel(const KdTreeAccel & src) noexcept;
@@ -96,6 +116,7 @@ private:
                    const std::unique_ptr<double[]> &primChance, double oldCost);
 private:
     // KdTreeAccel Private Data
+    SplitMethod splitMethod;
     const int isectCost, traversalCost, maxPrims;
     const double emptyBonus;
     std::vector<std::shared_ptr<Primitive>> primitives;
@@ -104,7 +125,31 @@ private:
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
 
+    std::tuple<double, int, int> SplitSAH(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
+                            int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3]);
+    std::tuple<double, int, int> SplitProb(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                            const std::unique_ptr<BoundEdge[]> edges[3],
+                            const std::vector<double> &probabilities);
+
+    std::tuple<double, int, int> SplitHybrid(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                             int *primNums, int nPrimitives,
+                                             const std::unique_ptr<BoundEdge[]> edges[3],
+                                             const std::vector<TestRay> &battery,
+                                             const std::vector<TestRayLoc> &local_battery,
+                                             const std::unique_ptr<double[]> &primChance, double tMax) const const;
+
+    std::tuple<double, int, int>
+    SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
+              const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
+              int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
+              const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
+              const std::unique_ptr<double[]> &primChance, double tMax);
+
     friend class Geometry;
+
 };
 
 struct KdToDo {

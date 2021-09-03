@@ -119,10 +119,11 @@ void KdTreeAccel::ComputeBB() {
 }
 
 // KdTreeAccel Method Definitions
-KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::vector<double> &probabilities,
-                         int isectCost, int traversalCost, double emptyBonus,
-                         int maxPrims, int maxDepth)
-        : isectCost(isectCost),
+KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
+                         const std::vector<double> &probabilities, int isectCost, int traversalCost,
+                         double emptyBonus, int maxPrims, int maxDepth)
+        : splitMethod(splitMethod),
+          isectCost(isectCost),
           traversalCost(traversalCost),
           maxPrims(maxPrims),
           emptyBonus(emptyBonus),
@@ -182,10 +183,11 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
 }
 
 // KdTreeAccel Method Definitions
-KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::vector<TestRay> &battery,
-                         const std::vector<double> &frequencies, int isectCost, int traversalCost,
-                         double emptyBonus, int maxPrims, int maxDepth)
-        : isectCost(isectCost),
+KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
+                         const std::vector<TestRay> &battery, const std::vector<double> &frequencies, int isectCost,
+                         int traversalCost, double emptyBonus, int maxPrims, int maxDepth)
+        : splitMethod(splitMethod),
+          isectCost(isectCost),
           traversalCost(traversalCost),
           maxPrims(maxPrims),
           emptyBonus(emptyBonus),
@@ -321,41 +323,9 @@ KdTreeAccel::~KdTreeAccel() {
     }
 }
 
-void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
-                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
-                            int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                            int badRefines, const std::vector<double> &probabilities, int prevSplitAxis) {
-    //CHECK_EQ(nodeNum, nextFreeNode);
-    assert(nodeNum == nextFreeNode);
-    // Get next free node from _nodes_ array
-    if (nextFreeNode == nAllocedNodes) {
-        int nNewAllocNodes = std::max(2 * nAllocedNodes, 512);
-        KdAccelNode *n = new KdAccelNode[nNewAllocNodes];
-        if (nAllocedNodes > 0) {
-            memcpy(n, nodes, nAllocedNodes * sizeof(KdAccelNode));
-            delete[] nodes;
-        }
-        nodes = n;
-        nAllocedNodes = nNewAllocNodes;
-    }
-    ++nextFreeNode;
-
-    /*if((int)ints.size() <= nodeNum){
-        ints.resize(nAllocedNodes,{});
-    }*/
-    nodes[nodeNum].nodeId = nodeNum;
-    ints.emplace_back();
-    auto& intstat = ints.back(); // ints[nodeNum]
-    intstat.nbPrim = nPrimitives;
-    intstat.level = depth - 1;
-
-    // Initialize leaf node if termination criteria met
-    if (nPrimitives <= maxPrims || depth == 0) {
-        nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
-        return;
-    }
-
-    // Initialize interior node and continue recursion
+std::tuple<double, int, int>KdTreeAccel::SplitSAH(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                     const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
+                                     int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3]) {
 
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
@@ -365,10 +335,78 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     double invTotalSA = 1.0 / totalSA;
     Vector3d d = nodeBounds.max - nodeBounds.min;
 
-    // Choose which axis to split along
-    int axis = nodeBounds.MaximumExtent();
-    int retries = 0;
-    retrySplit:
+    // Initialize edges for _axis_
+    for (int i = 0; i < nPrimitives; ++i) {
+        int pn = primNums[i];
+        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
+        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
+        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
+    }
+
+    // Sort _edges_ for _axis_
+    std::sort(&edges[axis][0], &edges[axis][2 * nPrimitives],
+              [](const BoundEdge &e0, const BoundEdge &e1) -> bool {
+                  if (e0.t == e1.t)
+                      return (int) e0.type < (int) e1.type;
+                  else
+                      return e0.t < e1.t;
+              });
+
+    // Compute cost of all splits for _axis_ to find best
+    int nBelow = 0, nAbove = nPrimitives;
+
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        if (edges[axis][i].type == EdgeType::End) {
+            --nAbove;
+        }
+        double edgeT = edges[axis][i].t;
+        if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
+            // Compute cost for split at _i_th edge
+
+            // Compute child surface areas for split at _edgeT_
+            int otherAxis0 = (axis + 1) % 3, otherAxis1 = (axis + 2) % 3;
+            double belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (edgeT - nodeBounds.min[axis]) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (nodeBounds.max[axis] - edgeT) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double pBelow = belowSA * invTotalSA;
+            double pAbove = aboveSA * invTotalSA;
+            double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+
+            double cost =
+                    traversalCost +
+                    isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
+
+            // Update best split if this is lowest cost so far
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestAxis = axis;
+                bestOffset = i;
+            }
+        }
+        if (edges[axis][i].type == EdgeType::Start) {
+            ++nBelow;
+        }
+    }
+
+    //CHECK(nBelow == nPrimitives && nAbove == 0);
+    return {bestCost, bestAxis, bestOffset};
+};
+
+std::tuple<double, int, int>KdTreeAccel::SplitProb(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                     const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                                     const std::unique_ptr<BoundEdge[]> edges[3],
+                                     const std::vector<double> &probabilities) {
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+    double oldCost = isectCost * double(nPrimitives);
+    double totalSA = nodeBounds.SurfaceArea();
+    double invTotalSA = 1.0 / totalSA;
+    Vector3d d = nodeBounds.max - nodeBounds.min;
 
     // Initialize edges for _axis_
     for (int i = 0; i < nPrimitives; ++i) {
@@ -459,7 +497,335 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
             }
         }
     }
+
     //CHECK(nBelow == nPrimitives && nAbove == 0);
+    return {bestCost, bestAxis, bestOffset};
+};
+
+std::tuple<double, int, int>KdTreeAccel::SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                      const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
+                                      int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
+                                      const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
+                                      const std::unique_ptr<double[]> &primChance, double tMax) {
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+    double oldCost = isectCost * double(nPrimitives);
+
+    // Initialize edges for _axis_
+    for (int i = 0; i < nPrimitives; ++i) {
+        int pn = primNums[i];
+        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
+        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
+        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
+    }
+
+    double probBelow = 0.0;
+    double probAbove = 0.0;
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        /*if (edges[axis][i].type == EdgeType::Start)
+            probAbove = edges[axis][i].primNum;*/
+        if (edges[axis][i].type == EdgeType::End)
+            probAbove += primChance[edges[axis][i].primNum];
+    }
+    // normalise to [0..1]
+    double probMax = probAbove;
+
+    // Sort _edges_ for _axis_
+    std::sort(&edges[axis][0], &edges[axis][2 * nPrimitives],
+              [](const BoundEdge &e0, const BoundEdge &e1) -> bool {
+                  if (e0.t == e1.t)
+                      return (int) e0.type < (int) e1.type;
+                  else
+                      return e0.t < e1.t;
+              });
+
+    // Compute cost of all splits for _axis_ to find best
+    int nBelow = 0, nAbove = nPrimitives;
+    double inv_denum = 1.0 / (double) local_battery.size();
+
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        if (edges[axis][i].type == EdgeType::End) {
+            --nAbove;
+            probAbove -= primChance[edges[axis][i].primNum];
+        }
+        double edgeT = edges[axis][i].t;
+        if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
+            // Compute cost for split at _i_th edge
+            double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+
+            {//if(local_battery.size() >= HITCACHEMIN) {
+                int hitCountB = 0;
+                int hitCountA = 0;
+                int hitCountBoth = 0;
+
+                auto ray = Ray();
+                double locTMax = tMax;
+#pragma omp parallel for default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
+                for (auto &ind: local_battery) {
+                    ray.origin = battery[ind.index].pos;
+                    ray.direction = battery[ind.index].dir;
+                    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+                    /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
+                    hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
+
+                    // Compute parametric distance along ray to split plane
+                    double tSplit = edgeT;
+                    //int axis = node->SplitAxis();
+                    double tPlane = (tSplit - ray.origin[axis]) * invDir[axis];
+
+                    // Get node children pointers for ray
+                    const KdAccelNode *firstChild, *secondChild;
+                    int belowFirst =
+                            (ray.origin[axis] < tSplit) ||
+                            (ray.origin[axis] == tSplit && ray.direction[axis] <= 0);
+
+                    // Advance to next child node, possibly enqueue other child
+                    if (tPlane > ind.tMax || tPlane <= 0)
+#pragma omp atomic
+                        hitCountA++;// test first child
+                    else if (tPlane < ind.tMin)
+#pragma omp atomic
+                        hitCountB++;// test second child
+                    else {
+#pragma omp atomic
+                        hitCountBoth++;
+                    }
+                }
+                double pAbove = (double) (hitCountA + hitCountBoth) * inv_denum;
+                double pBelow = (double) (hitCountB + hitCountBoth) * inv_denum;
+                double pBoth = (double) (hitCountBoth) * inv_denum;
+
+                /*if(hitCountB-hitCountA < 0) {
+                    pAbove = (double) (std::abs(hitCountB - hitCountA)) / (double) (hitCountA + hitCountB);
+                    pBelow = 1.0 - pAbove;
+                }
+                else {
+                    pBelow = (double) (std::abs(hitCountA - hitCountB)) / (double) (hitCountA + hitCountB);
+                    pAbove = 1.0 - pBelow;
+                }*/
+
+                double cost =
+                        traversalCost
+                        + isectCost * (1 - eb) *
+                          (/*pBelow **/ probBelow / probMax * nBelow + /*pAbove **/ probAbove / probMax * nAbove);
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestAxis = axis;
+                    bestOffset = i;
+                }
+            }
+        }
+        if (edges[axis][i].type == EdgeType::Start) {
+            ++nBelow;
+            probBelow += primChance[edges[axis][i].primNum];
+        }
+    }
+    //CHECK(nBelow == nPrimitives && nAbove == 0);
+
+    return {bestCost, bestAxis, bestOffset};
+};
+
+std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                                      const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                                      int *primNums, int nPrimitives,
+                                                      const std::unique_ptr<BoundEdge[]> edges[3],
+                                                      const std::vector<TestRay> &battery,
+                                                      const std::vector<TestRayLoc> &local_battery,
+                                                      const std::unique_ptr<double[]> &primChance, double tMax) const {
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+    double oldCost = isectCost * double(nPrimitives);
+    double totalSA = nodeBounds.SurfaceArea();
+    double invTotalSA = 1.0 / totalSA;
+    Vector3d d = nodeBounds.max - nodeBounds.min;
+
+    // Initialize edges for _axis_
+    for (int i = 0; i < nPrimitives; ++i) {
+        int pn = primNums[i];
+        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
+        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
+        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
+    }
+
+    double probBelow = 0.0;
+    double probAbove = 0.0;
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        /*if (edges[axis][i].type == EdgeType::Start)
+            probAbove = edges[axis][i].primNum;*/
+        if (edges[axis][i].type == EdgeType::End)
+            probAbove += primChance[edges[axis][i].primNum];
+    }
+    // normalise to [0..1]
+    double probMax = probAbove;
+    //probAbove = 1.0;
+
+    // Sort _edges_ for _axis_
+    std::sort(&edges[axis][0], &edges[axis][2 * nPrimitives],
+              [](const BoundEdge &e0, const BoundEdge &e1) -> bool {
+                  if (e0.t == e1.t)
+                      return (int) e0.type < (int) e1.type;
+                  else
+                      return e0.t < e1.t;
+              });
+
+    // Compute cost of all splits for _axis_ to find best
+    int nBelow = 0, nAbove = nPrimitives;
+    double inv_denum = 1.0 / local_battery.size();
+
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        if (edges[axis][i].type == EdgeType::End) {
+            --nAbove;
+            probAbove -= primChance[edges[axis][i].primNum];
+        }
+        double edgeT = edges[axis][i].t;
+        if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
+            // Compute cost for split at _i_th edge
+
+            // Compute child surface areas for split at _edgeT_
+            int otherAxis0 = (axis + 1) % 3, otherAxis1 = (axis + 2) % 3;
+            double belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (edgeT - nodeBounds.min[axis]) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (nodeBounds.max[axis] - edgeT) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double pBelow = belowSA * invTotalSA;
+            double pAbove = aboveSA * invTotalSA;
+            double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+
+            double cost_sah =
+                    traversalCost +
+                    isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
+
+            {//if(local_battery.size() >= HITCACHEMIN) {
+                int hitCountB = 0;
+                int hitCountA = 0;
+                int hitCountBoth = 0;
+                double pBoth = 0.0;
+
+                auto ray = Ray();
+                double locTMax = tMax;
+#pragma omp parallel for default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
+                for (auto &ind: local_battery) {
+                    ray.origin = battery[ind.index].pos;
+                    ray.direction = battery[ind.index].dir;
+                    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+                    /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
+                    hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
+
+                    // Compute parametric distance along ray to split plane
+                    double tSplit = edgeT;
+                    //int axis = node->SplitAxis();
+                    double tPlane = (tSplit - ray.origin[axis]) * invDir[axis];
+
+                    // Get node children pointers for ray
+                    const KdAccelNode *firstChild, *secondChild;
+                    int belowFirst =
+                            (ray.origin[axis] < tSplit) ||
+                            (ray.origin[axis] == tSplit && ray.direction[axis] <= 0);
+
+                    // Advance to next child node, possibly enqueue other child
+                    if (tPlane > ind.tMax || tPlane <= 0)
+#pragma omp atomic
+                        hitCountA++;// test first child
+                    else if (tPlane < ind.tMin)
+#pragma omp atomic
+                        hitCountB++;// test second child
+                    else {
+#pragma omp atomic
+                        hitCountBoth++;
+                    }
+                }
+                pAbove = (double) (hitCountA + hitCountBoth) * inv_denum;
+                pBelow = (double) (hitCountB + hitCountBoth) * inv_denum;
+                pBoth = (double) (hitCountBoth) * inv_denum;
+
+                /*if(hitCountB-hitCountA < 0) {
+                    pAbove = (double) (std::abs(hitCountB - hitCountA)) / (double) (hitCountA + hitCountB);
+                    pBelow = 1.0 - pAbove;
+                }
+                else {
+                    pBelow = (double) (std::abs(hitCountA - hitCountB)) / (double) (hitCountA + hitCountB);
+                    pAbove = 1.0 - pBelow;
+                }*/
+
+                double cost =
+                        traversalCost
+                        + isectCost * (1 - eb) *
+                          (/*pBelow **/ probBelow / probMax * nBelow + /*pAbove **/ probAbove / probMax * nAbove);
+
+                double alpha = 0.1;
+                double beta = 0.9;
+                double weight = alpha * (1.0 - (1.0 / (1.0 + beta * (double)local_battery.size())));
+                double linCost = weight * cost + (1.0 - weight) * cost_sah;
+
+                if (linCost < bestCost) {
+                    bestCost = linCost;
+                    bestAxis = axis;
+                    bestOffset = i;
+                }
+            }
+        }
+        if (edges[axis][i].type == EdgeType::Start) {
+            ++nBelow;
+            probBelow += primChance[edges[axis][i].primNum];
+        }
+    }
+    //CHECK(nBelow == nPrimitives && nAbove == 0);
+
+    return {bestCost, bestAxis, bestOffset};
+};
+
+void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
+                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                            int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
+                            int badRefines, const std::vector<double> &probabilities, int prevSplitAxis) {
+    //CHECK_EQ(nodeNum, nextFreeNode);
+    assert(nodeNum == nextFreeNode);
+    // Get next free node from _nodes_ array
+    if (nextFreeNode == nAllocedNodes) {
+        int nNewAllocNodes = std::max(2 * nAllocedNodes, 512);
+        KdAccelNode *n = new KdAccelNode[nNewAllocNodes];
+        if (nAllocedNodes > 0) {
+            memcpy(n, nodes, nAllocedNodes * sizeof(KdAccelNode));
+            delete[] nodes;
+        }
+        nodes = n;
+        nAllocedNodes = nNewAllocNodes;
+    }
+    ++nextFreeNode;
+
+    // Initialize leaf node if termination criteria met
+    if (nPrimitives <= maxPrims || depth == 0) {
+        nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
+        return;
+    }
+
+    // Initialize interior node and continue recursion
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+    /*double oldCost = isectCost * double(nPrimitives);
+    double totalSA = nodeBounds.SurfaceArea();
+    double invTotalSA = 1.0 / totalSA;
+    Vector3d d = nodeBounds.max - nodeBounds.min;*/
+
+    // Choose which axis to split along
+    int axis = nodeBounds.MaximumExtent();
+    int retries = 0;
+    retrySplit:
+
+    if(splitMethod == SplitMethod::ProbSplit && !probabilities.empty())
+        std::tie(bestCost, bestAxis, bestOffset) = SplitProb(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges, probabilities);
+    else if(splitMethod == SplitMethod::SAH)
+        std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges);
 
     // Create leaf if no good splits were found
     if (bestAxis == -1 && retries < 2) {
@@ -475,6 +841,8 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
             axis = (axis + 1) % 3;
         goto retrySplit;
     }
+
+    double oldCost = isectCost * double(nPrimitives);
     if (bestCost > oldCost) ++badRefines;
     if ((bestCost > 4 * oldCost && nPrimitives < 16) || bestAxis == -1 ||
         badRefines == 3) {
@@ -530,15 +898,6 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     }
     ++nextFreeNode;
 
-    /*if((int)ints.size() <= nodeNum){
-        ints.resize(nAllocedNodes,{});
-    }*/
-    nodes[nodeNum].nodeId = nodeNum;
-    ints.emplace_back();
-    auto& intstat = ints.back(); // ints[nodeNum]
-    intstat.nbPrim = nPrimitives;
-    intstat.level = ints[0].level - depth;
-
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {
         nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
@@ -550,158 +909,24 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
     double bestCost = 1.0e99;
-    int bestAxisSAH = -1, bestOffsetSAH = -1;
-    double bestCostSAH = 1.0e99;
 
     //double oldCost = isectCost * double(nPrimitives);
-    double totalSA = nodeBounds.SurfaceArea();
+    /*double totalSA = nodeBounds.SurfaceArea();
     double invTotalSA = 1.0 / totalSA;
-    Vector3d d = nodeBounds.max - nodeBounds.min;
+    Vector3d d = nodeBounds.max - nodeBounds.min;*/
 
     // Choose which axis to split along
     int axis = nodeBounds.MaximumExtent();
     int retries = 0;
 
     retrySplit:
-
-    // Initialize edges for _axis_
-    for (int i = 0; i < nPrimitives; ++i) {
-        int pn = primNums[i];
-        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
-        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
-        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
-    }
-
-    double probBelow = 0.0;
-    double probAbove = 0.0;
-    for (int i = 0; i < 2 * nPrimitives; ++i) {
-        /*if (edges[axis][i].type == EdgeType::Start)
-            probAbove = edges[axis][i].primNum;*/
-        if (edges[axis][i].type == EdgeType::End)
-            probAbove += primChance[edges[axis][i].primNum];
-    }
-
-    // normalise to [0..1]
-    double probMax = probAbove;
-    //probAbove = 1.0;
-
-    // Sort _edges_ for _axis_
-    std::sort(&edges[axis][0], &edges[axis][2 * nPrimitives],
-              [](const BoundEdge &e0, const BoundEdge &e1) -> bool {
-                  if (e0.t == e1.t)
-                      return (int) e0.type < (int) e1.type;
-                  else
-                      return e0.t < e1.t;
-              });
-
-    // Compute cost of all splits for _axis_ to find best
-    int nBelow = 0, nAbove = nPrimitives;
-    double inv_denum = 1.0 / local_battery.size();
-
-    for (int i = 0; i < 2 * nPrimitives; ++i) {
-        if (edges[axis][i].type == EdgeType::End) {
-            --nAbove;
-            probAbove -= primChance[edges[axis][i].primNum];
-        }
-        double edgeT = edges[axis][i].t;
-        if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
-            // Compute cost for split at _i_th edge
-
-            // Compute child surface areas for split at _edgeT_
-            int otherAxis0 = (axis + 1) % 3, otherAxis1 = (axis + 2) % 3;
-            double belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
-                                  (edgeT - nodeBounds.min[axis]) *
-                                  (d[otherAxis0] + d[otherAxis1]));
-            double aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
-                                  (nodeBounds.max[axis] - edgeT) *
-                                  (d[otherAxis0] + d[otherAxis1]));
-            double pBelow = belowSA * invTotalSA;
-            double pAbove = aboveSA * invTotalSA;
-            double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
-
-            double cost_sah =
-                    traversalCost +
-                    isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
-
-
-// Update best split if this is lowest cost so far
-            if (cost_sah < bestCostSAH) {
-                bestCostSAH = cost_sah;
-                bestAxisSAH = axis;
-                bestOffsetSAH = i;
-            }
-
-            {//if(local_battery.size() >= HITCACHEMIN) {
-                int hitCountB = 0;
-                int hitCountA = 0;
-                int hitCountBoth = 0;
-                double pBoth = 0.0;
-
-                auto ray = Ray();
-                double locTMax = tMax;
-#pragma omp parallel for default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
-                for (auto &ind: local_battery) {
-                    ray.origin = battery[ind.index].pos;
-                    ray.direction = battery[ind.index].dir;
-                    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
-                    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
-                    /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
-                    hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
-
-                    // Compute parametric distance along ray to split plane
-                    double tSplit = edgeT;
-                    //int axis = node->SplitAxis();
-                    double tPlane = (tSplit - ray.origin[axis]) * invDir[axis];
-
-                    // Get node children pointers for ray
-                    const KdAccelNode *firstChild, *secondChild;
-                    int belowFirst =
-                            (ray.origin[axis] < tSplit) ||
-                            (ray.origin[axis] == tSplit && ray.direction[axis] <= 0);
-
-                    // Advance to next child node, possibly enqueue other child
-                    if (tPlane > ind.tMax || tPlane <= 0)
-#pragma omp atomic
-                        hitCountA++;// test first child
-                    else if (tPlane < ind.tMin)
-#pragma omp atomic
-                        hitCountB++;// test second child
-                    else {
-#pragma omp atomic
-                        hitCountBoth++;
-                    }
-                }
-
-                pAbove = (double) (hitCountA + hitCountBoth) * inv_denum;
-                pBelow = (double) (hitCountB + hitCountBoth) * inv_denum;
-                pBoth = (double) (hitCountBoth) * inv_denum;
-
-                /*if(hitCountB-hitCountA < 0) {
-                    pAbove = (double) (std::abs(hitCountB - hitCountA)) / (double) (hitCountA + hitCountB);
-                    pBelow = 1.0 - pAbove;
-                }
-                else {
-                    pBelow = (double) (std::abs(hitCountA - hitCountB)) / (double) (hitCountA + hitCountB);
-                    pAbove = 1.0 - pBelow;
-                }*/
-
-                double cost =
-                        traversalCost
-                        + isectCost * (1 - eb) *
-                          (/*pBelow **/ probBelow / probMax * nBelow + /*pAbove **/ probAbove / probMax * nAbove);
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestAxis = axis;
-                    bestOffset = i;
-                }
-            }
-        }
-        if (edges[axis][i].type == EdgeType::Start) {
-            ++nBelow;
-            probBelow += primChance[edges[axis][i].primNum];
-        }
-    }
-    //CHECK(nBelow == nPrimitives && nAbove == 0);
+    if(splitMethod == SplitMethod::SAH && !local_battery.empty())
+        std::tie(bestCost, bestAxis, bestOffset) = SplitTest(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges, battery, local_battery, primChance, tMax);
+    else if(splitMethod == SplitMethod::HybridSplit && !local_battery.empty())
+        std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
+                                                               edges, battery, local_battery, primChance, tMax);
+    else
+        std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges);
 
     /*if(local_battery.size() < HITCACHEMIN){
             bestCost = bestCostSAH;
@@ -709,7 +934,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
             bestOffset = bestOffsetSAH;
     }*/
     // Create leaf if no good splits were found
-    if (/*bestAxis == -1 && */retries < 2) {
+    if (bestAxis == -1 && retries < 2) {
         ++retries;
         if (prevSplitAxis >= 0) {
             axis = (axis + 1) % 3;
