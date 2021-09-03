@@ -28,6 +28,12 @@ public:
         bb.max.x += amount.x;   bb.max.y += amount.y;   bb.max.z += amount.z;
     }
 
+    void Expand(const double amount, const int dim)          {
+        auto& bb = *this;
+        bb.min[dim] -= amount;
+        bb.max[dim] += amount;
+    }
+
     AxisAlignedBoundingBox Split(int dim, double pos, bool keepMin)          {
         auto bb = *this;
         if(keepMin)

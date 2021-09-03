@@ -522,14 +522,13 @@ void ImguiWindow::renderSingle() {
                         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                         ImGuiWindowFlags_NoSavedSettings;
                 bool open = true;
-                if (ImGui::Begin("Loader", &open, flags))
-                {
+                if (ImGui::Begin("Loader", &open, flags)) {
                     ImGui::Spinner("##spinner", 15, 6, col);
                     //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
                     // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
                     // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
                     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                    ImGui::ProgressBar(progress, ImVec2(100.0f, 36.0f));
+                    ImGui::ProgressBar(progress, ImVec2(164.0f, 36.0f));
                     //ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
                     //ImGui::Text("Progress Bar");
                     ImGui::End();
@@ -555,6 +554,7 @@ void ImguiWindow::renderSingle() {
                 mApp->wereEvents_imgui = true;
             }
             if(active_prev_state){
+                redrawAabb = true;
                 active_prev_state = false;
                 mApp->wereEvents_imgui = true;
             }

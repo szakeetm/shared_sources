@@ -1263,8 +1263,10 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
         int axis = node->SplitAxis();
         double plane = node->SplitPos();
 
+        bbox = bb;
         bbox.min[axis] = plane;
         bbox.max[axis] = plane;
+        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002)*delta[axis], axis);
 
         Vector3d a = bbox.min;
         Vector3d b = bbox.min;
@@ -1372,8 +1374,10 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
         }
         else {
             int minLevel=0, maxLevel=30;
-            if(mApp->aabbVisu.showLevelAABB[0]==-1){
-                minLevel = mApp->aabbVisu.showLevelAABB[0];
+            if(mApp->aabbVisu.showLevelAABB[0]>-1){
+                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+            }
+            if(mApp->aabbVisu.showLevelAABB[1]>-1){
                 maxLevel = mApp->aabbVisu.showLevelAABB[1];
             }
             color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, minLevel, maxLevel) : applyGLColor4f(mApp->aabbVisu.colorMap, level, minLevel, maxLevel);
@@ -1875,52 +1879,20 @@ void Geometry::DrawAABB() {
                 delete tree[s];
         }
         else {
+
             std::vector<std::shared_ptr<RTPrimitive>> accel;
             if(mApp->worker.model->accel.empty()) {
-                std::vector<std::vector<std::shared_ptr<Primitive>>> primPointers;
-                primPointers.resize(mApp->worker.model->sh.nbSuper);
-                for (auto &sFac : mApp->worker.model->facets) {
-                    if (sFac->sh.superIdx == -1) { //Facet in all structures
-                        for (auto &fp_vec : primPointers) {
-                            fp_vec.push_back(sFac);
-                        }
-                    } else {
-                        primPointers[sFac->sh.superIdx].push_back(sFac); //Assign to structure
-                    }
-                }
-
-                if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit && mApp->worker.globState.initialized && mApp->worker.globState.globalHits.globalHits.nbDesorbed > 0){
-                    if(mApp->worker.globState.facetStates.size() != mApp->worker.model->facets.size())
-                        return;
-                    std::vector<double> probabilities;
-                    probabilities.reserve(mApp->worker.globState.facetStates.size());
-                    for(auto& state : mApp->worker.globState.facetStates) {
-                        probabilities.emplace_back(state.momentResults[0].hits.nbHitEquiv / mApp->worker.globState.globalHits.globalHits.nbHitEquiv);
-                    }
-                    
-                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
-                        if(mApp->worker.model->wp.accel_type == 1)
-                            accel.emplace_back(std::make_shared<KdTreeAccel>((KdTreeAccel::SplitMethod)mApp->aabbVisu.splitTechnique, primPointers[s], probabilities, 80, 1, 0.5, 1, -1));
-                        else
-                            accel.emplace_back(std::make_shared<BVHAccel>(probabilities, primPointers[s], 2));
-                    }
-                }
-                else {
-                    for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
-                        if(mApp->worker.model->wp.accel_type == 1)
-                            accel.emplace_back(std::make_shared<KdTreeAccel>((KdTreeAccel::SplitMethod)mApp->aabbVisu.splitTechnique, primPointers[s], std::vector<double>{}, 80, 1, 0.5, 1, -1));
-                        else
-                            accel.emplace_back(std::make_shared<BVHAccel>(primPointers[s], 2, mApp->aabbVisu.splitTechnique));
-                    }
-                }
-
+                mApp->worker.model->BuildAccelStructure(
+                        &mApp->worker.globState,
+                        mApp->worker.model->wp.accel_type,
+                        mApp->aabbVisu.splitTechnique,
+                        mApp->worker.model->wp.bvhMaxPrimsInNode
+                        );
             }
-            else {
-                accel = mApp->worker.model->accel;
-            }
+            accel = mApp->worker.model->accel;
 
             if(!accel.empty()) {
-                int nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : (int)1);
+                size_t nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : 1);
                 for (int s = 0; s < nStructs; ++s){
                     if(dynamic_cast<BVHAccel*>(accel.at(s).get())){
                         DrawAABBNode(*dynamic_cast<BVHAccel*>(accel.at(s).get()));

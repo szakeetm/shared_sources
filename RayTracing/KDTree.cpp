@@ -109,6 +109,36 @@ struct BoundEdge {
     EdgeType type;
 };
 
+void KdTreeAccel::PrintTreeInfo(){
+    std::string splitName;
+    switch (splitMethod) {
+        case(SplitMethod::SAH):
+            splitName = "SAH";
+            break;
+        case(SplitMethod::ProbSplit):
+            splitName = "Prob";
+            break;
+        case(SplitMethod::TestSplit):
+            splitName = "Test";
+            break;
+        case(SplitMethod::HybridSplit):
+            splitName = "Hybrid";
+            break;
+        default:
+            splitName = "Unknown split";
+    }
+    printf("--- KD STATS ---\n");
+    printf("- Split: %s -\n", splitName.c_str());
+    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
+    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
+    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
+    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
+    printf(" Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine, (double)STATS_KD::leafBadRefine/STATS_KD::leafNodes);
+    printf(" Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost, (double)STATS_KD::leafHigherCost/STATS_KD::leafNodes);
+    printf(" Split SAH:        %d [%lf]\n", STATS_KD::splitSAH, (double)STATS_KD::splitSAH/(STATS_KD::splitRay+STATS_KD::splitSAH));
+    printf(" Split Ray:        %d [%lf]\n", STATS_KD::splitRay, (double)STATS_KD::splitRay/(STATS_KD::splitRay+STATS_KD::splitSAH));
+}
+
 void KdTreeAccel::ComputeBB() {
     bb = AxisAlignedBoundingBox();
     if (nodes) {
@@ -120,8 +150,8 @@ void KdTreeAccel::ComputeBB() {
 
 // KdTreeAccel Method Definitions
 KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
-                         const std::vector<double> &probabilities, int isectCost, int traversalCost,
-                         double emptyBonus, int maxPrims, int maxDepth)
+                         const std::vector<double> &probabilities, const std::vector<TestRay> &battery,
+                         int isectCost, int traversalCost, double emptyBonus, int maxPrims, int maxDepth)
         : splitMethod(splitMethod),
           isectCost(isectCost),
           traversalCost(traversalCost),
@@ -157,146 +187,50 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 
     // Initialize _primNums_ for kd-tree construction
     std::unique_ptr<int[]> primNums(new int[primitives.size()]);
-    for (size_t i = 0; i < primitives.size(); ++i) primNums[i] = i;
-
-    // Start recursive construction of kd-tree
-    std::vector<IntersectCount>(0).swap(ints);
-    buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-              maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
-
-    /*int minLevel = maxDepth;
-    for(int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum){
-        minLevel = std::min(minLevel, (int)ints[nodeNum].level);
-    }*/
-    for(int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum){
-        ints[nodeNum].level = maxDepth - ints[nodeNum].level - 1;
-    }
-    printf("--- KD STATS ---\n");
-    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
-    printf(" Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine, (double)STATS_KD::leafBadRefine/STATS_KD::leafNodes);
-    printf(" Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost, (double)STATS_KD::leafHigherCost/STATS_KD::leafNodes);
-    printf(" Split SAH:        %d [%lf]\n", STATS_KD::splitSAH, (double)STATS_KD::splitSAH/(STATS_KD::splitRay+STATS_KD::splitSAH));
-    printf(" Split Ray:        %d [%lf]\n", STATS_KD::splitRay, (double)STATS_KD::splitRay/(STATS_KD::splitRay+STATS_KD::splitSAH));
-}
-
-// KdTreeAccel Method Definitions
-KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
-                         const std::vector<TestRay> &battery, const std::vector<double> &frequencies, int isectCost,
-                         int traversalCost, double emptyBonus, int maxPrims, int maxDepth)
-        : splitMethod(splitMethod),
-          isectCost(isectCost),
-          traversalCost(traversalCost),
-          maxPrims(maxPrims),
-          emptyBonus(emptyBonus),
-          primitives(std::move(p)) {
-
-    nodes = nullptr;
-    if (primitives.empty())
-        return;
-    STATS_KD::_reset();
-
-    // Build kd-tree for accelerator
-    nextFreeNode = nAllocedNodes = 0;
-    if (maxDepth <= 0)
-        maxDepth = std::round(8.0f + 1.3f * Log2Int(int64_t(primitives.size())));
-
-    // Compute bounds for kd-tree construction
-    std::vector<AxisAlignedBoundingBox> primBounds;
-    primBounds.reserve(primitives.size());
-    for (const std::shared_ptr<Primitive> &prim : primitives) {
-        AxisAlignedBoundingBox b = prim->sh.bb;
-        bounds = AxisAlignedBoundingBox::Union(bounds, b);
-        primBounds.push_back(b);
-    }
-
-    // Allocate working memory for kd-tree construction
-    std::unique_ptr<BoundEdge[]> edges[3];
-    for (int i = 0; i < 3; ++i)
-        edges[i] = std::make_unique<BoundEdge[]>(2 * primitives.size());
-    std::unique_ptr<int[]> prims0(new int[primitives.size()]);
-    std::unique_ptr<int[]> prims1(new int[(maxDepth + 1) * primitives.size()]);
-
-    // Initialize _primNums_ for kd-tree construction
-    std::unique_ptr<int[]> primNums(new int[primitives.size()]);
-    std::unique_ptr<double[]> primChance(new double[primitives.size()]);
     for (size_t i = 0; i < primitives.size(); ++i) {
         primNums[i] = i;
-        primChance[i] = 0.0;
     }
 
-    if(frequencies.empty()){
-        auto ray = Ray();
-#pragma omp parallel default(none) firstprivate(ray) shared(battery, edges, primChance)
-        {
-            ray.rng = new MersenneTwister();
-#pragma omp for
-            for (auto &test: battery) {
-                ray.origin = test.pos;
-                ray.direction = test.dir;
-                Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
-                int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
-                for (size_t i = 0; i < primitives.size(); ++i) {
-                    bool hit = primitives[i]->Intersect(ray);
-                    if (hit) {
-#pragma omp atomic
-                        primChance[i] += 1.0;
-                    }
-                }
-            }
-            delete ray.rng;
+    std::vector<IntersectCount>(0).swap(ints);
+
+    bool withBattery = (splitMethod == KdTreeAccel::SplitMethod::TestSplit) || (splitMethod == KdTreeAccel::SplitMethod::HybridSplit);
+
+    if(withBattery) {
+        printf("--- KD with HitBattery ---\n");
+        printf(" Battery size: %zu\n", battery.size());
+        // if battery is too large, only use a random sample
+
+        std::vector<TestRay>* batter_ptr = const_cast<std::vector<TestRay> *>(&battery);
+        if(battery.size() > HITCACHESAMPLE) {
+            batter_ptr = new std::vector<TestRay>;
+            std::sample(battery.begin(), battery.end(), std::back_inserter(*batter_ptr),
+                        HITCACHESAMPLE, std::mt19937{std::random_device{}()});
+            printf(" Sample size: %zu\n", batter_ptr->size());
         }
-        for (size_t i = 0; i < primitives.size(); ++i) {
-            primChance[i] /= battery.size();
-        }
+        std::vector<TestRayLoc> indices;
+        indices.reserve(batter_ptr->size());
+        for(int i = 0; i < batter_ptr->size(); ++i)
+            indices.emplace_back(i, 0, 1.0e99);
+
+        double costLimit = 1.0e99;
+        // Start recursive construction of kd-tree
+        buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
+                  maxDepth, edges, prims0.get(), prims1.get(), 0, *batter_ptr, indices, -1, 0.0, 1.0e99,
+                  probabilities, costLimit);
+
+        if(battery.size() > HITCACHESAMPLE)
+            delete batter_ptr;
     }
     else{
-        for(int i = 0; i < frequencies.size(); ++i)
-            primChance[i] = frequencies[i];
-    }
-
-    printf("--- KD with HitBattery ---\n");
-    printf(" Battery size: %zu\n", battery.size());
-    // if battery is too large, only use a random sample
-
-    double costLimit = 1.0e99;
-    if(battery.size() > HITCACHESAMPLE) {
-        std::vector<TestRay> sampleRays;
-        std::sample(battery.begin(), battery.end(), std::back_inserter(sampleRays),
-                    HITCACHESAMPLE, std::mt19937{std::random_device{}()});
-        printf(" Sample size: %zu\n", sampleRays.size());
-
-        std::vector<TestRayLoc> indices;
-        indices.reserve(sampleRays.size());
-        for(int i = 0; i < sampleRays.size(); ++i)
-            indices.emplace_back(i, 0, 1.0e99);
-        // Start recursive construction of kd-tree
         buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-                  maxDepth, edges, prims0.get(), prims1.get(), 0, sampleRays, indices, -1, 0.0, 1.0e99,
-                  primChance, costLimit);
-    }
-    else {
-        std::vector<TestRayLoc> indices;
-        indices.reserve(battery.size());
-        for(int i = 0; i < battery.size(); ++i)
-            indices.emplace_back(i, 0, 1.0e99);
-        // Start recursive construction of kd-tree
-        buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-                  maxDepth, edges, prims0.get(), prims1.get(), 0, battery, indices, -1, 0.0, 1.0e99, primChance,
-                  costLimit);
+                  maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
     }
 
-    printf("--- KD STATS ---\n");
-    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
-    printf(" Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine, (double)STATS_KD::leafBadRefine/STATS_KD::leafNodes);
-    printf(" Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost, (double)STATS_KD::leafHigherCost/STATS_KD::leafNodes);
-    printf(" Split SAH:        %d [%lf]\n", STATS_KD::splitSAH, (double)STATS_KD::splitSAH/(STATS_KD::splitRay+STATS_KD::splitSAH));
-    printf(" Split Ray:        %d [%lf]\n", STATS_KD::splitRay, (double)STATS_KD::splitRay/(STATS_KD::splitRay+STATS_KD::splitSAH));
+    for(int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum){
+        ints[nodeNum].level = maxDepth - ints[nodeNum].level;
+    }
+
+    PrintTreeInfo();
 }
 
 void KdAccelNode::InitLeaf(int *primNums, int np,
@@ -503,10 +437,10 @@ std::tuple<double, int, int>KdTreeAccel::SplitProb(int axis, const AxisAlignedBo
 };
 
 std::tuple<double, int, int>KdTreeAccel::SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
-                                      const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
-                                      int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
-                                      const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
-                                      const std::unique_ptr<double[]> &primChance, double tMax) {
+                                                   const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
+                                                   int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
+                                                   const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
+                                                   const std::vector<double> &primChance, double tMax) {
 
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
@@ -634,7 +568,7 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
                                                       const std::unique_ptr<BoundEdge[]> edges[3],
                                                       const std::vector<TestRay> &battery,
                                                       const std::vector<TestRayLoc> &local_battery,
-                                                      const std::unique_ptr<double[]> &primChance, double tMax) const {
+                                                      const std::vector<double> &primChance, double tMax) const {
 
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
@@ -805,7 +739,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     ints.emplace_back();
     auto& intstat = ints.back(); // ints[nodeNum]
     intstat.nbPrim = nPrimitives;
-    intstat.level = depth - 1;
+    intstat.level = depth;
 
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {
@@ -888,7 +822,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                             int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
                             int badRefines, const std::vector<TestRay> &battery,
                             const std::vector<TestRayLoc> &local_battery, int prevSplitAxis, double tMin, double tMax,
-                            const std::unique_ptr<double[]> &primChance, double oldCost) {
+                            const std::vector<double> &primChance, double oldCost) {
     //CHECK_EQ(nodeNum, nextFreeNode);
     assert(nodeNum == nextFreeNode);
     // Get next free node from _nodes_ array
@@ -908,7 +842,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     ints.emplace_back();
     auto& intstat = ints.back(); // ints[nodeNum]
     intstat.nbPrim = nPrimitives;
-    intstat.level = depth - 1;
+    intstat.level = depth;
 
     // Initialize leaf node if termination criteria met
     if (nPrimitives <= maxPrims || depth == 0) {

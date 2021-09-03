@@ -62,7 +62,10 @@ namespace {
                         delta = (a->chance > b->chance) ? 1 : (a->chance == b->chance) ? 0 : -1;
                         break;
                     case BoxDataColumnID_ISGlob:
-                        delta = (a->globalIntersectionRate > b->globalIntersectionRate) ? 1 : (a->globalIntersectionRate == b->globalIntersectionRate) ? 0 : -1;
+                        delta = (a->globalIntersectionRate > b->globalIntersectionRate) ? 1
+                                                                                        : (a->globalIntersectionRate ==
+                                                                                           b->globalIntersectionRate)
+                                                                                          ? 0 : -1;
                         break;
                     case BoxDataColumnID_Prims:
                         delta = (a->prims - b->prims);
@@ -201,6 +204,7 @@ inline int Log2Int(uint64_t v) {
 }
 
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t) v); }
+
 void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
@@ -222,7 +226,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         if (ImGui::Checkbox("Show all AABB levels", &showAll)) {
             if (!showAll) {
                 mApp->aabbVisu.showLevelAABB[0] = 0;
-                mApp->aabbVisu.showLevelAABB[1] = std::round(8.0f + 1.3f * Log2Int(int64_t(mApp->worker.model->facets.size())));
+                mApp->aabbVisu.showLevelAABB[1] = std::round(
+                        8.0f + 1.3f * Log2Int(int64_t(mApp->worker.model->facets.size())));
             } else {
                 mApp->aabbVisu.showLevelAABB[0] = -1;
                 mApp->aabbVisu.showLevelAABB[1] = -1;
@@ -293,74 +298,63 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     }
 
     if (ImGui::CollapsingHeader("AABB Builder")) {
-    ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
-    static int selected_accel = 0;
-    {
-        // Using the _simplified_ one-liner Combo() api here
-        // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-        const char *items[] = {"BVH", "KD-tree"};
-        if(ImGui::Combo("Accel Type", &selected_accel, items, IM_ARRAYSIZE(items)))
-            mApp->worker.model->wp.accel_type = selected_accel;
-    }
-#if defined(USE_KDTREE)
-    const char *items[] = {"SAH", "ProbSplit","TestSplit"};
-    if (ImGui::BeginListBox("Splitting technique")) {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
-            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n) || (std::strcmp("ProbSplit",items[n]) == 0 && mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::ProbSplit);
-            if (ImGui::Selectable(items[n], is_selected)) {
-                if(std::strcmp("ProbSplit",items[n]) == 0){
-                    mApp->aabbVisu.splitTechnique = BVHAccel::SplitMethod::ProbSplit;
-                    mApp->worker.model->wp.splitMethod = static_cast<int>(mApp->aabbVisu.splitTechnique);
-                }
-                else if(std::strcmp("TestSplit",items[n]) == 0){
-                    mApp->aabbVisu.splitTechnique = BVHAccel::SplitMethod::TestSplit;
-                    mApp->worker.model->wp.splitMethod = static_cast<int>(mApp->aabbVisu.splitTechnique);
-                }
-                else {
-                    mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
+        ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
+        static int selected_accel = 0;
+        {
+            // Using the _simplified_ one-liner Combo() api here
+            // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+            const char *items[] = {"BVH", "KD-tree"};
+            if (ImGui::Combo("Accel Type", &selected_accel, items, IM_ARRAYSIZE(items))) {
+                mApp->worker.model->wp.accel_type = selected_accel;
+                mApp->aabbVisu.alpha = selected_accel == 0 ? 0.06f : 0.2f;
+            }
+        }
+
+        static std::vector<std::string> items;
+        if (selected_accel == 0) {
+            ImGui::SliderInt("Max prims/node", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
+            items = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit",
+                     "HybridSplit"};
+        } else {
+            items = {"SAH", "ProbSplit", "TestSplit", "HybridSplit"};
+        }
+
+        if (ImGui::BeginListBox("Splitting technique")) {
+            for (int n = 0; n < items.size(); n++) {
+                const bool is_selected = (mApp->aabbVisu.splitTechnique == n);
+                if (ImGui::Selectable(items[n].c_str(), is_selected)) {
+                    mApp->aabbVisu.splitTechnique = n;
                     mApp->worker.model->wp.splitMethod = n;
                 }
-            }
 
-            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndListBox();
-    }
-#else
-    ImGui::SliderInt("BVH width", &mApp->worker.model->wp.bvhMaxPrimsInNode, 0, 32);
-    const char *items[] = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit", "HybridSplit"};
-    if (ImGui::BeginListBox("Splitting technique")) {
-        for (int n = 0; n < IM_ARRAYSIZE(items); n++) {
-            const bool is_selected = ((int) mApp->aabbVisu.splitTechnique == n);
-            if (ImGui::Selectable(items[n], is_selected)) {
-                mApp->aabbVisu.splitTechnique = (BVHAccel::SplitMethod) n;
-                mApp->worker.model->wp.splitMethod = n;
+                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
             }
+            ImGui::EndListBox();
+        }
+        bool withHitBattery =
+                mApp->aabbVisu.splitTechnique == (mApp->worker.model->wp.accel_type == 0)
+                ? (int) BVHAccel::SplitMethod::TestSplit : (int) KdTreeAccel::SplitMethod::TestSplit
+                                                           || mApp->aabbVisu.splitTechnique ==
+                                                              (mApp->worker.model->wp.accel_type == 1) ? false
+                                                                                                       : (int) KdTreeAccel::SplitMethod::HybridSplit;
+        if (withHitBattery) {
+            if (ImGui::Button("Update hit frequencies")) {
+                mApp->worker.globState.UpdateBatteryFrequencies();
+            }
+            static int nbTestRays = 0;
+            if (ImGui::Button("Update #TestRays")) {
+                nbTestRays = 0;
+                for (auto &bat: mApp->worker.globState.globalHits.hitBattery.rays) {
+                    //for(auto& hit : bat) {
+                    if (bat.empty()) continue;
+                    nbTestRays += bat.size();
+                }
+            }
+            ImGui::Text("Test Rays: %d", nbTestRays);
+        }
 
-            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndListBox();
-    }
-    if(mApp->aabbVisu.splitTechnique == BVHAccel::SplitMethod::TestSplit) {
-        if (ImGui::Button("Update hit frequencies")) {
-            mApp->worker.globState.UpdateBatteryFrequencies();
-        }
-        static int nbTestRays = 0;
-        if (ImGui::Button("Update #TestRays")) {
-            nbTestRays = 0;
-            for(auto& bat : mApp->worker.globState.globalHits.hitBattery.rays){
-                //for(auto& hit : bat) {
-                if(bat.empty()) continue;
-                nbTestRays+=bat.size();
-            }
-        }
-        ImGui::Text("Test Rays: %d", nbTestRays);
-    }
-#endif
         if (ImGui::Button("Build new AABB")) {
             rebuildAabb = true;
             rate_vec->assign(rate_vec->size(), 0.0);
@@ -371,12 +365,12 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     bool forceUpdate = false;
     ImGui::Checkbox("Update constantly", &constantUpdates);
     ImGui::SameLine();
-    if(ImGui::Button("Force update"))
+    if (ImGui::Button("Force update"))
         forceUpdate = true;
 
     // Create item list
     static ImVector<BoxData> tabItems;
-    auto& accel = mApp->worker.model->accel;
+    auto &accel = mApp->worker.model->accel;
 
     float trimMax = 0.0f;
     float trimMin = 1.0e30f;
@@ -396,12 +390,12 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 // Using the _simplified_ one-liner Combo() api here
                 // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
                 const char *items[] = {"Chance", "ISRate global"};
-                if(ImGui::Combo("combo", &selected_combo, items, IM_ARRAYSIZE(items)))
+                if (ImGui::Combo("combo", &selected_combo, items, IM_ARRAYSIZE(items)))
                     forceUpdate = true;
             }
 
-            std::vector<IntersectCount>* stats = nullptr;
-            if(!accel.empty()) {
+            std::vector<IntersectCount> *stats = nullptr;
+            if (!accel.empty()) {
                 if (mApp->worker.model->wp.accel_type &&
                     std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
                     stats = &std::dynamic_pointer_cast<KdTreeAccel>(accel.front())->ints;
@@ -410,7 +404,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
             }
 
-            if(stats && stats->size() > 0){
+            if (stats && stats->size() > 0) {
                 if (rate_vec && rate_vec->size() != stats->size())
                     rate_vec->resize(stats->size(), -1.0f);
 
@@ -478,63 +472,63 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
 
 
-            if (ImGui::BeginTable("Boxes", 5, tFlags)) {
-                ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
-                ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);
-                ImGui::TableSetupColumn("Chance", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Chance);
-                ImGui::TableSetupColumn("ISGlob", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_ISGlob);
-                ImGui::TableSetupColumn("#Prims", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Prims);
-                ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Level);
-                ImGui::TableHeadersRow();
+                if (ImGui::BeginTable("Boxes", 5, tFlags)) {
+                    ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);
+                    ImGui::TableSetupColumn("Chance", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Chance);
+                    ImGui::TableSetupColumn("ISGlob", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_ISGlob);
+                    ImGui::TableSetupColumn("#Prims", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Prims);
+                    ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.0f, BoxDataColumnID_Level);
+                    ImGui::TableHeadersRow();
 
-                // Sort our data if sort specs have been changed!
-                if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
-                    if (sorts_specs->SpecsDirty) {
-                        BoxData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
-                        if (tabItems.Size > 1)
-                            qsort(&tabItems[0], (size_t) tabItems.Size, sizeof(tabItems[0]),
-                                  BoxData::CompareWithSortSpecs);
-                        BoxData::s_current_sort_specs = nullptr;
-                        sorts_specs->SpecsDirty = false;
-                    }
-
-                // Demonstrate using clipper for large vertical lists
-                ImGuiListClipper clipper;
-                clipper.Begin(tabItems.size());
-                while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        BoxData *item = &tabItems[i];
-                        //ImGui::PushID(item->ID);
-                        ImGui::TableNextRow();
-                        ImGui::TableSetColumnIndex(0);
-
-                        ImGuiSelectableFlags selectable_flags =
-                                ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
-                        bool selected = mApp->aabbVisu.selectedNode == item->ID;
-                        char label[32];
-                        sprintf(label, "%d", item->ID);
-                        if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0))) {
-                            if (selected)
-                                mApp->aabbVisu.selectedNode = -1;
-                            else
-                                mApp->aabbVisu.selectedNode = item->ID;
-                            redrawAabb = true;
+                    // Sort our data if sort specs have been changed!
+                    if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
+                        if (sorts_specs->SpecsDirty) {
+                            BoxData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
+                            if (tabItems.Size > 1)
+                                qsort(&tabItems[0], (size_t) tabItems.Size, sizeof(tabItems[0]),
+                                      BoxData::CompareWithSortSpecs);
+                            BoxData::s_current_sort_specs = nullptr;
+                            sorts_specs->SpecsDirty = false;
                         }
 
-                        //ImGui::Text("%zu", item->ID);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%f", item->chance);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%f", item->globalIntersectionRate);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%d", item->prims);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%d", item->level);
-                        //ImGui::PopID();
+                    // Demonstrate using clipper for large vertical lists
+                    ImGuiListClipper clipper;
+                    clipper.Begin(tabItems.size());
+                    while (clipper.Step()) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            BoxData *item = &tabItems[i];
+                            //ImGui::PushID(item->ID);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+
+                            ImGuiSelectableFlags selectable_flags =
+                                    ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+                            bool selected = mApp->aabbVisu.selectedNode == item->ID;
+                            char label[32];
+                            sprintf(label, "%d", item->ID);
+                            if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0))) {
+                                if (selected)
+                                    mApp->aabbVisu.selectedNode = -1;
+                                else
+                                    mApp->aabbVisu.selectedNode = item->ID;
+                                redrawAabb = true;
+                            }
+
+                            //ImGui::Text("%zu", item->ID);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%f", item->chance);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%f", item->globalIntersectionRate);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->prims);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->level);
+                            //ImGui::PopID();
+                        }
                     }
+                    ImGui::EndTable();
                 }
-                ImGui::EndTable();
-            }
             }
             ImGui::EndTabItem();
 
@@ -546,7 +540,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 // Using the _simplified_ one-liner Combo() api here
                 // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
                 const char *items[] = {"Steps", "ISRate", "ISRate global"};
-                if(ImGui::Combo("combo", &selected_combo, items, IM_ARRAYSIZE(items)))
+                if (ImGui::Combo("combo", &selected_combo, items, IM_ARRAYSIZE(items)))
                     forceUpdate = true;
             }
 
@@ -574,8 +568,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     if (selected_combo == 0) {
                         trimMax = std::max(trimMax, (float) item.steps);
                         trimMin = std::min(trimMin, (float) item.steps);
-                    }
-                    else if (selected_combo == 1) {
+                    } else if (selected_combo == 1) {
                         trimMax = std::max(trimMax, (float) item.intersectionRate);
                         trimMin = std::min(trimMin, (float) item.intersectionRate);
                     }
@@ -634,8 +627,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     if (selected_combo == 0) {
                         trimMax = std::max(trimMax, (float) item.steps);
                         trimMin = std::min(trimMin, (float) item.steps);
-                    }
-                    else if (selected_combo == 1) {
+                    } else if (selected_combo == 1) {
                         trimMax = std::max(trimMax, (float) item.intersectionRate);
                         trimMin = std::min(trimMin, (float) item.intersectionRate);
                     }
@@ -752,12 +744,13 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         ImGui::EndTabBar();
     }
 
-    if(forceUpdate) {
+    if (forceUpdate) {
         mApp->aabbVisu.trimByProb[1] = (trimMax > 0.0) ? trimMax : mApp->aabbVisu.trimByProb[1];
         mApp->aabbVisu.trimByProb[0] = (trimMin < 1.0e25f) ? trimMin : mApp->aabbVisu.trimByProb[0];
         redrawAabb = true;
     }
-    if (ImGui::SliderFloat2("Hit stat threshold", (float *) &mApp->aabbVisu.trimByProb, 0.0f, trimMax > 0.0f ? trimMax : 1.0f,
+    if (ImGui::SliderFloat2("Hit stat threshold", (float *) &mApp->aabbVisu.trimByProb, 0.0f,
+                            trimMax > 0.0f ? trimMax : 1.0f,
                             "%.2f")) {
         mApp->aabbVisu.trimRange = mApp->aabbVisu.trimByProb[1] - mApp->aabbVisu.trimByProb[0];
     }

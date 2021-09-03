@@ -79,17 +79,19 @@ class KdTreeAccel : public RTPrimitive {
 public:
     // KdTreeAccel Public Types
     enum class SplitMethod {
-        SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, TestSplit, HybridSplit
+        SAH, ProbSplit, TestSplit, HybridSplit
     };
 
 public:
     // KdTreeAccel Public Methods
-    KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
+    /*KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
                 const std::vector<double> &probabilities = std::vector<double>{},
                 int isectCost = 80, int traversalCost = 1,
                 double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
+    */
     KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
-                const std::vector<TestRay> &battery, const std::vector<double> &frequencies = std::vector<double>{}, int isectCost = 80, int traversalCost = 1,
+                const std::vector<double> &probabilities = std::vector<double>{}, const std::vector<TestRay> &battery = std::vector<TestRay>{},
+                int isectCost = 80, int traversalCost = 1,
                 double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
     KdTreeAccel(KdTreeAccel && src) noexcept;
     KdTreeAccel(const KdTreeAccel & src) noexcept;
@@ -113,7 +115,7 @@ private:
                    int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
                    int badRefines, const std::vector<TestRay> &battery,
                    const std::vector<TestRayLoc> &local_battery, int prevSplitAxis, double tMin, double tMax,
-                   const std::unique_ptr<double[]> &primChance, double oldCost);
+                   const std::vector<double> &primChance, double oldCost);
 private:
     // KdTreeAccel Private Data
     SplitMethod splitMethod;
@@ -139,17 +141,18 @@ private:
                                              const std::unique_ptr<BoundEdge[]> edges[3],
                                              const std::vector<TestRay> &battery,
                                              const std::vector<TestRayLoc> &local_battery,
-                                             const std::unique_ptr<double[]> &primChance, double tMax) const const;
+                                             const std::vector<double> &primChance, double tMax) const;
 
     std::tuple<double, int, int>
     SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
               const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
               int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
               const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
-              const std::unique_ptr<double[]> &primChance, double tMax);
+              const std::vector<double> &primChance, double tMax);
 
     friend class Geometry;
 
+    void PrintTreeInfo();
 };
 
 struct KdToDo {
