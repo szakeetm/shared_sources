@@ -83,4 +83,18 @@ public:
     MersenneTwister *rng;
 };
 
+class RayStat : public Ray {
+public:
+    RayStat() : Ray() {}
+
+    RayStat(const Vector3d &o, const Vector3d &d, Payload *payload, double tMax = inf_d,
+        double time = 0.f, int structure = -1)
+            : Ray(o, d, payload, tMax, time, structure) {}
+
+    virtual ~RayStat() = default;
+
+    //Statistics
+    size_t traversalSteps{0};
+};
+
 #endif //MOLFLOW_PROJ_RAY_H

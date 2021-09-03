@@ -153,6 +153,8 @@ private:
     friend class Geometry;
 
     void PrintTreeInfo();
+
+    bool IntersectStat(RayStat &ray);
 };
 
 struct KdToDo {

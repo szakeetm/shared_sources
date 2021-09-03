@@ -111,6 +111,8 @@ private:
     int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 
     friend class Geometry;
+
+    bool IntersectStat(RayStat &ray);
 };
 
 

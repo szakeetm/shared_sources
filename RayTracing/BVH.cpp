@@ -760,6 +760,51 @@ bool BVHAccel::Intersect(Ray &ray) {
     while (true) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
+        if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
+            if (node->nPrimitives > 0) {
+                // Intersect ray with primitives in leaf BVH node
+                for (int i = 0; i < node->nPrimitives; ++i) {
+
+                    const std::shared_ptr<Primitive> &p = primitives[node->primitivesOffset + i];
+                    // Do not check last collided facet to prevent self intersections
+                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                        hit = true;
+                    }
+                }
+                if (toVisitOffset == 0) break;
+                currentNodeIndex = nodesToVisit[--toVisitOffset];
+            } else {
+                // Put far BVH node on _nodesToVisit_ stack, advance to near
+                // node
+                if (dirIsNeg[node->axis]) {
+                    nodesToVisit[toVisitOffset++] = currentNodeIndex + 1;
+                    currentNodeIndex = node->secondChildOffset;
+                } else {
+                    nodesToVisit[toVisitOffset++] = node->secondChildOffset;
+                    currentNodeIndex = currentNodeIndex + 1;
+                }
+            }
+        } else {
+            if (toVisitOffset == 0) break;
+            currentNodeIndex = nodesToVisit[--toVisitOffset];
+        }
+    }
+
+    return hit;
+}
+
+bool BVHAccel::IntersectStat(RayStat &ray) {
+    if (!nodes) return false;
+
+    bool hit = false;
+    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+    // Follow ray through BVH nodes to find primitive intersections
+    int toVisitOffset = 0, currentNodeIndex = 0;
+    int nodesToVisit[64];
+    while (true) {
+        const LinearBVHNode *node = &nodes[currentNodeIndex];
+        // Check ray against BVH node
         ray.traversalSteps++;
         ints[currentNodeIndex].nbChecks+=ray.traversalSteps;
         if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
