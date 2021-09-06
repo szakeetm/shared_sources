@@ -595,9 +595,10 @@ int SimulationController::Start() {
         return 1;
     }
 
-    if(RebuildAccel()){
+    if(simulation->model->accel.empty()){
+    //if(RebuildAccel()){
         loadOk = false;
-        SetState(PROCESS_ERROR, "Error building acceleration structure!");
+        SetState(PROCESS_ERROR, "Failed building acceleration structure!");
         return 1;
     }
 
