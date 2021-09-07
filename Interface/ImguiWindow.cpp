@@ -467,7 +467,7 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
             }
             char overlay[32];
             sprintf(overlay, "avg %f hit/s", average);
-            ImGui::PlotLines(""/*"Hit/s"*/, values, IM_ARRAYSIZE(values), values_offset, overlay, -0.01f, max_val * 1.05f,
+            ImGui::PlotLines(""/*"Hit/s"*/, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,
                              ImVec2(0, 80.0f));
         }
     }
@@ -521,7 +521,7 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_global_settings);
+            ImGui::Checkbox("Global settings", &show_global_settings);
             ImGui::Checkbox("Acceleration Structure", &show_aabb);
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sim_status);
@@ -641,7 +641,6 @@ void ImguiWindow::renderSingle() {
                 active_prev_state = false;
                 mApp->wereEvents_imgui = true;
             }
-            ImGui::End();
             /*do {
                 progressDlg->SetProgress(load_progress);
                 ProcessSleep(100);

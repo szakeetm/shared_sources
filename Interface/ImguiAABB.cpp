@@ -208,7 +208,7 @@ inline int Log2Int(int64_t v) { return Log2Int((uint64_t) v); }
 void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(400.0f, 0.0f)); // Lift normal size constraint, however the presence of
+            ImVec2(400.0f, 500.0f)); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
 
     ImGui::Begin(
@@ -754,4 +754,6 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             "%.2f")) {
         mApp->aabbVisu.trimRange = mApp->aabbVisu.trimByProb[1] - mApp->aabbVisu.trimByProb[0];
     }
+
+    ImGui::End();
 }
