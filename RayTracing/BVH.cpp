@@ -565,10 +565,8 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     primitives.swap(orderedPrims);
 
     printf("BVH created with %d nodes for %d "
-           "primitives (%.2f MB), arena allocated %.2f MB",
+           "primitives (%.2f MB)",
            totalNodes, (int) primitives.size(),
-           float(totalNodes * sizeof(LinearBVHNode)) /
-           (1024.f * 1024.f),
            float(totalNodes * sizeof(LinearBVHNode)) /
            (1024.f * 1024.f));
     //<<Compute representation of depth-first traversal of BVH tree>>

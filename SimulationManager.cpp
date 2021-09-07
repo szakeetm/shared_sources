@@ -24,6 +24,7 @@
 #include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager() {
+    simulationChanged = true; // by default always init simulation process the first time
     interactiveMode = true;
     isRunning = false;
     hasErrorStatus = false;
@@ -106,11 +107,24 @@ int SimulationManager::StartSimulation() {
         if (simHandles.empty())
             throw std::logic_error("No active simulation handles!");
 
+        if(simulationChanged){
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+                throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+            }
+            simulationChanged = false;
+        }
         if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
     }
     else {
+        if(simulationChanged){
+            this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
+            for(auto& con : simController){
+                con.Load();
+            }
+            simulationChanged = false;
+        }
         this->procInformation.masterCmd = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
             con.Start();

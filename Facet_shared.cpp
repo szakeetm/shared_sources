@@ -345,7 +345,8 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	}
 
-	return true;
+    UpdateFlags(); //set hasMesh to true if everything was OK
+    return true;
 
 }
 

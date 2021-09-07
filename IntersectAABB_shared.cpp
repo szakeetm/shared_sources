@@ -215,12 +215,12 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 #endif
 
 #if defined(SYNRAD)
-									hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
+                                    hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
 										&& currentParticle.randomGenerator.rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
 										&& currentParticle.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
 										&& currentParticle.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-										acos(Dot(currentParticle.particle.direction, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 

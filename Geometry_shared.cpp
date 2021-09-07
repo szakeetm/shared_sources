@@ -202,6 +202,7 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
         if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
             // Main facet params
             InterfaceFacet *f = facets[i];
+            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
             SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
         }
     }
@@ -224,6 +225,7 @@ void Geometry::InitializeMesh() {
         /*double p = (double)i / (double)sh.nbFacet;
         progressDlg->SetProgress(p);*/
         InterfaceFacet *f = facets[i];
+        SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
         SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
     }
 }
@@ -1087,7 +1089,8 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		InitializeGeometry((int)i);
         InitializeInterfaceGeometry((int)i);
 		try {
-			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
+            SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
+            SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 		catch (Error &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1211,8 +1214,9 @@ void Geometry::ShiftVertex() {
 			InitializeGeometry(i);// Reinitialise geom
             InitializeInterfaceGeometry(i);
 			try {
-				SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
-			}
+				SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
+                SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
+            }
 			catch (Error &e) {
 				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}

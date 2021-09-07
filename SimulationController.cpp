@@ -598,15 +598,14 @@ int SimulationController::Start() {
         return 1;
     }
 
-
     simulation->globState->UpdateBatteryFrequencies();
 
     for(auto& freq : simThreads){
         freq.particle->tmpState.globalHits.hitBattery.nRays = simulation->globState->globalHits.hitBattery.nRays;
     }
-    if(simulation->model->accel.empty() && RebuildAccel()){
+    if(simulation->model->accel.empty()/* && RebuildAccel()*/){
         loadOk = false;
-        SetState(PROCESS_ERROR, "Error building acceleration structure!");
+        SetState(PROCESS_ERROR, "Failed building acceleration structure!");
         return 1;
     }
 
