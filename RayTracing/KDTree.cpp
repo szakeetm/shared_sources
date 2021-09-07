@@ -194,6 +194,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
     std::vector<IntersectCount>(0).swap(ints);
 
     bool withBattery = (splitMethod == KdTreeAccel::SplitMethod::TestSplit) || (splitMethod == KdTreeAccel::SplitMethod::HybridSplit);
+    bool withSmartBattery = withBattery;
 
     if(withBattery) {
         printf("--- KD with HitBattery ---\n");
@@ -220,6 +221,22 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 
         if(battery.size() > HITCACHESAMPLE)
             delete batter_ptr;
+    }
+    else if(withSmartBattery){
+        std::unique_ptr<std::vector<RaySegment>> rays(new std::vector<RaySegment>(battery.size()));
+        for(int r = 0; r < battery.size(); ++r){
+            rays[r].ray = &(battery[r]);
+        }
+        std::unique_ptr<RayBoundary[]> stack_x(new RayBoundary[battery.size() * 2]);
+        std::unique_ptr<RayBoundary[]> stack_y(new RayBoundary[battery.size() * 2]);
+        std::unique_ptr<RayBoundary[]> stack_z(new RayBoundary[battery.size() * 2]);
+
+        BoundaryStack boundaryStack{};
+        double costLimit = 1.0e99;
+        // Start recursive construction of kd-tree
+        buildTreeRDH(0, bounds, primBounds, primNums.get(), primitives.size(),
+                     maxDepth, edges, prims0.get(), prims1.get(), 0, rays, stack_x, stack_y, stack_z,
+                     -1, 0.0, 1.0e99, probabilities, costLimit, boundaryStack);
     }
     else{
         buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
@@ -817,6 +834,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
               prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
 }
 
+// default construction algorithm for RDH
 void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                             int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
@@ -909,7 +927,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     }
 
     std::vector<TestRayLoc> battery_below, battery_above;
-    if(1){
+    {
         auto ray = Ray();
         double locTMax = tMax;
 #pragma omp parallel default(none) firstprivate(ray) shared(battery, local_battery, edges, bestAxis, bestOffset, battery_above, battery_below)
@@ -995,6 +1013,223 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
                   prims0, prims1 + nPrimitives, badRefines, battery, battery_above, bestAxis, tSplit, tMax,
                   primChance, bestCost);
+    }
+}
+
+// default construction algorithm for RDH
+void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
+                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                            int depth,
+                            const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1, int badRefines,
+                            const std::unique_ptr<std::vector<RaySegment>> &battery, std::unique_ptr<RayBoundary[]>& stack_x, std::unique_ptr<RayBoundary[]>& stack_y,
+                                    std::unique_ptr<RayBoundary[]>& stack_z, int prevSplitAxis, double tMin, double tMax,
+                            const std::vector<double> &primChance, double oldCost, BoundaryStack bound) {
+    //CHECK_EQ(nodeNum, nextFreeNode);
+    assert(nodeNum == nextFreeNode);
+    // Get next free node from _nodes_ array
+    if (nextFreeNode == nAllocedNodes) {
+        int nNewAllocNodes = std::max(2 * nAllocedNodes, 512);
+        KdAccelNode *n = new KdAccelNode[nNewAllocNodes];
+        if (nAllocedNodes > 0) {
+            memcpy(n, nodes, nAllocedNodes * sizeof(KdAccelNode));
+            delete[] nodes;
+        }
+        nodes = n;
+        nAllocedNodes = nNewAllocNodes;
+    }
+    ++nextFreeNode;
+
+    nodes[nodeNum].nodeId = nodeNum;
+    ints.emplace_back();
+    auto& intstat = ints.back(); // ints[nodeNum]
+    intstat.nbPrim = nPrimitives;
+    intstat.level = depth;
+
+    // Initialize leaf node if termination criteria met
+    if (nPrimitives <= maxPrims || depth == 0) {
+        nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
+        return;
+    }
+
+    // Initialize interior node and continue recursion
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+
+    //double oldCost = isectCost * double(nPrimitives);
+    /*double totalSA = nodeBounds.SurfaceArea();
+    double invTotalSA = 1.0 / totalSA;
+    Vector3d d = nodeBounds.max - nodeBounds.min;*/
+
+    // Choose which axis to split along
+    int axis = nodeBounds.MaximumExtent();
+    int retries = 0;
+
+    retrySplit:
+    if(splitMethod == SplitMethod::TestSplit && battery)
+        std::tie(bestCost, bestAxis, bestOffset) = SplitTest(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges, battery, local_battery, primChance, tMax);
+    else if(splitMethod == SplitMethod::HybridSplit && battery)
+        std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
+                                                               edges, battery, local_battery, primChance, tMax);
+    else
+        std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges);
+
+    /*if(local_battery.size() < HITCACHEMIN){
+            bestCost = bestCostSAH;
+            bestAxis = bestAxisSAH;
+            bestOffset = bestOffsetSAH;
+    }*/
+    // Create leaf if no good splits were found
+    if (bestAxis == -1 && retries < 2) {
+        ++retries;
+        if (prevSplitAxis >= 0) {
+            axis = (axis + 1) % 3;
+            if (retries == 1 && axis == prevSplitAxis) {
+                axis = (axis + 1) % 3;
+            } else if (retries == 2) {
+                axis = prevSplitAxis;
+            }
+        } else
+            axis = (axis + 1) % 3;
+        goto retrySplit;
+    }
+
+    if (bestCost > oldCost) {
+        //++badRefines;
+    }
+
+    if ((bestCost > 4.0 * oldCost && nPrimitives < 16) || bestAxis == -1 ||
+        badRefines == 3) {
+        if(bestCost > 4.0 * oldCost)
+            ++STATS_KD::leafHigherCost;
+        if(badRefines >= 3)
+            ++STATS_KD::leafBadRefine;
+        nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
+        return;
+    }
+
+    std::vector<TestRayLoc> battery_below, battery_above;
+    {
+        auto ray = Ray();
+        double locTMax = tMax;
+#pragma omp parallel default(none) firstprivate(ray) shared(battery, local_battery, edges, bestAxis, bestOffset, battery_above, battery_below)
+        {
+            std::vector<TestRayLoc> battery_below_local, battery_above_local;
+#pragma omp for
+            for (auto ind : local_battery) {
+                ray.origin = battery[ind.index].pos;
+                ray.direction = battery[ind.index].dir;
+                Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+                /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
+                hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
+
+                {
+                    // Compute parametric distance along ray to split plane
+                    double tSplit = edges[bestAxis][bestOffset].t;
+                    //int axis = node->SplitAxis();
+                    double tPlane = (tSplit - ray.origin[bestAxis]) * invDir[bestAxis];
+
+                    // Get node children pointers for ray
+                    int belowFirst =
+                            (ray.origin[bestAxis] < tSplit) ||
+                            (ray.origin[bestAxis] == tSplit && ray.direction[bestAxis] <= 0);
+
+                    // Advance to next child node, possibly enqueue other child
+                    {
+                        if (tPlane > ind.tMax|| tPlane <= 0) {
+                            battery_above_local.emplace_back(ind.index, ind.tMin, ind.tMax);
+                        } else if (tPlane < ind.tMin) {
+                            battery_below_local.emplace_back(ind.index, ind.tMin, ind.tMax);
+                        } else {
+                            battery_above_local.emplace_back(ind.index, ind.tMin, tPlane);
+                            battery_below_local.emplace_back(ind.index, tPlane, ind.tMax);
+                        }
+                    }
+                }
+            }
+
+            // combine local
+#pragma omp critical
+            {
+                battery_above.insert(battery_above.end(), battery_above_local.begin(), battery_above_local.end());
+                battery_below.insert(battery_below.end(), battery_below_local.begin(), battery_below_local.end());
+            }
+        }
+    }
+
+    // Classify primitives with respect to split
+    int n0 = 0, n1 = 0;
+    for (int i = 0; i < bestOffset; ++i)
+        if (edges[bestAxis][i].type == EdgeType::Start)
+            prims0[n0++] = edges[bestAxis][i].primNum;
+    for (int i = bestOffset + 1; i < 2 * nPrimitives; ++i)
+        if (edges[bestAxis][i].type == EdgeType::End)
+            prims1[n1++] = edges[bestAxis][i].primNum;
+
+    STATS_KD::splitRay++;
+
+    // Recursively initialize children nodes
+    double tSplit = edges[bestAxis][bestOffset].t;
+    AxisAlignedBoundingBox bounds0 = nodeBounds, bounds1 = nodeBounds;
+    bounds0.max[bestAxis] = bounds1.min[bestAxis] = tSplit;
+
+
+    /* --- RDH ---
+     * When a splitting plane position is decided and a left subtree should be constructed,
+     * we check the boundaries in the corresponding axis and
+     * mark all ray segments that have to be shortened (are cut by the splitting plane).
+     * The original ray boundaries are stored in the stack of
+     * signed distances associated with each ray segment data structure.
+     * For the marked rays we recompute the boundaries in a corresponding axis.
+     * All ray boundaries are then resorted by quicksort before we start to evaluate the RDH.
+     */
+    RayBoundary* to_sort;
+    // 1. select by axis
+    if(bestAxis == 0) {
+        to_sort = stack_x.get();
+    }
+    else if (axis == 1){
+        to_sort = stack_y.get();
+    }
+    else {
+        to_sort = stack_z.get();
+    }
+    // 2. mark rays depending on boundaries
+    for(int i = 0; i < battery.size(); ++i) {
+        auto& segment = to_sort[i];
+        // 3. store original boundaries
+        segment.rs->distances.emplace_back(Vector2d{segment.rs->tMin, segment.rs->tMax});
+        if(segment.rs->tMin < tSplit || tSplit < segment.rs->tMax){
+            // 4. mark segment
+            // TODO:
+            segment.rs->tMin = std::max(segment.rs->tMin, tSplit);
+            segment.rs->tMax = std::min(segment.rs->tMax, tSplit);
+        }
+    }
+    if(battery_below.size() < HITCACHEMIN){
+        std::vector<double> dummy;
+        buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
+                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+    }
+    else {
+        buildTreeRDH(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
+                  prims0, prims1 + nPrimitives, badRefines, battery, stack_x, stack_y, stack_z, bestAxis, tMin, tSplit,
+                  primChance, bestCost, bound);
+    }
+
+    int aboveChild = nextFreeNode;
+    nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
+    if(battery_above.size() < HITCACHEMIN){
+        std::vector<double> dummy;
+        buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
+                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+    }
+    else {
+        buildTreeRDH(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
+                  prims0, prims1 + nPrimitives, badRefines, battery, stack_x, stack_y, stack_z, bestAxis, tSplit, tMax,
+                  primChance, bestCost, bound);
     }
 }
 

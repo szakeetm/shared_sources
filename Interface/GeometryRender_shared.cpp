@@ -1881,14 +1881,14 @@ void Geometry::DrawAABB() {
         else {
 
             std::vector<std::shared_ptr<RTPrimitive>> accel;
-            if(mApp->worker.model->accel.empty()) {
+            /*if(mApp->worker.model->accel.empty()) {
                 mApp->worker.model->BuildAccelStructure(
                         &mApp->worker.globState,
                         mApp->worker.model->wp.accel_type,
                         mApp->aabbVisu.splitTechnique,
                         mApp->worker.model->wp.bvhMaxPrimsInNode
                         );
-            }
+            }*/
             accel = mApp->worker.model->accel;
 
             if(!accel.empty()) {

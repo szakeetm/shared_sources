@@ -77,6 +77,25 @@ struct SplitCandidate {
 
 class KdTreeAccel : public RTPrimitive {
 public:
+    struct RaySegment{
+        double tMin{-1.0e99};
+        double tMax{1.0e99};
+        const TestRay* ray{nullptr};
+        std::vector<Vector2d> distances;
+    };
+    struct RayBoundary{
+        RaySegment* rs{nullptr};
+        int flag{-1}; // 0: left, 1: right, 2: on splitting plane
+    };
+    // local stack shows which _RayBoundary/ies from the whole set of boundaries belong to
+    //the left, to the right, and to both of them
+    struct BoundaryStack{
+        int leftMin{-1};
+        int leftMax{-1};
+        int rightMin{-1};
+        int rightMax{-1};
+    };
+
     // KdTreeAccel Public Types
     enum class SplitMethod {
         SAH, ProbSplit, TestSplit, HybridSplit
@@ -116,6 +135,14 @@ private:
                    int badRefines, const std::vector<TestRay> &battery,
                    const std::vector<TestRayLoc> &local_battery, int prevSplitAxis, double tMin, double tMax,
                    const std::vector<double> &primChance, double oldCost);
+    void buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
+                      const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
+                      int depth,
+                      const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1, int badRefines,
+                      const std::unique_ptr<std::vector<RaySegment>> &battery,
+                      std::unique_ptr<RayBoundary[]>& stack_x, std::unique_ptr<RayBoundary[]>& stack_y,
+                      std::unique_ptr<RayBoundary[]>& stack_z, int prevSplitAxis, double tMin, double tMax,
+                      const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
 private:
     // KdTreeAccel Private Data
     SplitMethod splitMethod;
