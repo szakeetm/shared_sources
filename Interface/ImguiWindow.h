@@ -48,6 +48,7 @@ protected:
     bool show_demo_window{false};
     bool show_global_settings{true};
     bool show_aabb{true};
+    bool show_perfo{true};
 
     ImVec4 clear_color;
 
