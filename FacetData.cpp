@@ -84,12 +84,13 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;*/
 
-                                    ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
+                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
+                                    /*ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
                                     auto& hit = ray.hits.back().hit;
                                     hit.isHit = true;
                                     hit.colU = u;
                                     hit.colV = v;
-                                    hit.colDistTranspPass = d;
+                                    hit.colDistTranspPass = d;*/
 
                                 }
                             }
@@ -105,12 +106,12 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
-                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
-                                auto& hit = ray.hits.back().hit;
+                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar(d,u,v,false));
+                                /*auto& hit = ray.hits.back().hit;
                                 hit.isHit = false;
                                 hit.colU = u;
                                 hit.colV = v;
-                                hit.colDistTranspPass = d;
+                                hit.colDistTranspPass = d;*/
                             }
                             return hardHit;
                         } // IsInFacet

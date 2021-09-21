@@ -13,6 +13,12 @@ struct SubProcessFacetTempVar {
         colV = 0.0;
         isHit=false;
     }
+    SubProcessFacetTempVar(double d, double u, double v, bool hit){
+        colDistTranspPass=d;
+        colU = u;
+        colV = v;
+        isHit=hit;
+    }
     double colDistTranspPass;
     double colU;
     double colV;
