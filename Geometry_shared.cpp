@@ -385,9 +385,15 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	//Recalculates geometry after execution, so shouldn't be used repetitively
 
 	//a new facet
-	sh.nbFacet++;
-    facets.emplace_back(new InterfaceFacet(vertexIds.size()));
-	if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
+    try {
+        facets.emplace_back(new InterfaceFacet(vertexIds.size()));
+    }
+    catch (std::exception& err){
+        throw err;
+    }
+
+    sh.nbFacet++;
+    if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
 	UnselectAll();
 	facets[sh.nbFacet - 1]->selected = true;
 	for (size_t i = 0; i < vertexIds.size(); i++) {
@@ -2813,6 +2819,8 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 							newRef[k] --; //Renumber references
 						}
 						sh.nbFacet--;
+                        facets.pop_back();
+
 						facets[i] = merged;
 						//InitializeGeometry(i);
 						//SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
