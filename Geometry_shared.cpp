@@ -845,24 +845,16 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 		}
 #endif
 
-		//If geometry or a dimension is empty
+		//If geometry or X,Y dimensions are empty
 		if (sbb.min.x == 1e100) sbb.min.x = -1.0;
 		if (sbb.min.y == 1e100) sbb.min.y = -1.0;
 		if (sbb.min.z == 1e100) sbb.min.z = -1.0;
 		if (sbb.max.x == -1e100) sbb.max.x = 1.0;
 		if (sbb.max.y == -1e100) sbb.max.y = 1.0;
 		if (sbb.max.z == -1e100) sbb.max.z = 1.0;
-		if (sbb.min.x == sbb.max.x) {
+		if (sbb.min.x == sbb.max.x && sbb.min.y == sbb.max.y) { //arrowLength would be division by 0
 			sbb.min.x -= 1.0;
 			sbb.max.x += 1.0;
-		}
-		if (sbb.min.y == sbb.max.y) {
-			sbb.min.y -= 1.0;
-			sbb.max.y += 1.0;
-		}
-		if (sbb.min.z == sbb.max.z) {
-			sbb.min.z -= 1.0;
-			sbb.max.z += 1.0;
 		}
 
 		return sbb;
