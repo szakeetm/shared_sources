@@ -823,36 +823,47 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 		}
 		*/
 
-		for (size_t i = 0; i < sh.nbVertex; i++) {
-			Vector3d* v = &vertices3[i];
-			if (v->x < sbb.min.x) sbb.min.x = v->x;
-			if (v->y < sbb.min.y) sbb.min.y = v->y;
-			if (v->z < sbb.min.z) sbb.min.z = v->z;
-			if (v->x > sbb.max.x) sbb.max.x = v->x;
-			if (v->y > sbb.max.y) sbb.max.y = v->y;
-			if (v->z > sbb.max.z) sbb.max.z = v->z;
+		for (auto& v : vertices3) {
+			sbb.min.x = std::min(v.x, sbb.min.x);
+			sbb.min.y = std::min(v.y, sbb.min.y);
+			sbb.min.z = std::min(v.z, sbb.min.z);
+			sbb.max.x = std::max(v.x, sbb.max.x);
+			sbb.max.y = std::max(v.y, sbb.max.y);
+			sbb.max.z = std::max(v.z, sbb.max.z);
 		}
 
 #if defined(SYNRAD)
 		//Regions
-		Worker *worker = &(mApp->worker);
-		for (int i = 0; i < (int)worker->regions.size(); i++) {
-			if (worker->regions[i].AABBmin.x < sbb.min.x) sbb.min.x = worker->regions[i].AABBmin.x;
-			if (worker->regions[i].AABBmin.y < sbb.min.y) sbb.min.y = worker->regions[i].AABBmin.y;
-			if (worker->regions[i].AABBmin.z < sbb.min.z) sbb.min.z = worker->regions[i].AABBmin.z;
-			if (worker->regions[i].AABBmax.x > sbb.max.x) sbb.max.x = worker->regions[i].AABBmax.x;
-			if (worker->regions[i].AABBmax.y > sbb.max.y) sbb.max.y = worker->regions[i].AABBmax.y;
-			if (worker->regions[i].AABBmax.z > sbb.max.z) sbb.max.z = worker->regions[i].AABBmax.z;
+		
+		for (auto& r : mApp->worker.regions) {
+			sbb.min.x = std::min(sbb.min.x, r.AABBmin.x);
+			sbb.min.y = std::min(sbb.min.y, r.AABBmin.y);
+			sbb.min.z = std::min(sbb.min.z, r.AABBmin.z);
+			sbb.max.x = std::max(sbb.max.x, r.AABBmax.x);
+			sbb.max.y = std::max(sbb.max.y, r.AABBmax.y);
+			sbb.max.z = std::max(sbb.max.z, r.AABBmax.z);
 		}
 #endif
 
-		//If geometry is empty
+		//If geometry or a dimension is empty
 		if (sbb.min.x == 1e100) sbb.min.x = -1.0;
 		if (sbb.min.y == 1e100) sbb.min.y = -1.0;
 		if (sbb.min.z == 1e100) sbb.min.z = -1.0;
 		if (sbb.max.x == -1e100) sbb.max.x = 1.0;
 		if (sbb.max.y == -1e100) sbb.max.y = 1.0;
 		if (sbb.max.z == -1e100) sbb.max.z = 1.0;
+		if (sbb.min.x == sbb.max.x) {
+			sbb.min.x -= 1.0;
+			sbb.max.x += 1.0;
+		}
+		if (sbb.min.y == sbb.max.y) {
+			sbb.min.y -= 1.0;
+			sbb.max.y += 1.0;
+		}
+		if (sbb.min.z == sbb.max.z) {
+			sbb.min.z -= 1.0;
+			sbb.max.z += 1.0;
+		}
 
 		return sbb;
 	//}
