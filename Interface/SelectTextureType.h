@@ -63,6 +63,7 @@ private:
 	  *ratioMinText,
 	  *ratioMaxText;
   GLToggle
+	  *squareToggle,
 	  *ratioToggle,
 	  *ratioMinMaxToggle,
 	  *desorbToggle,

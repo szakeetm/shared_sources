@@ -105,14 +105,15 @@ public:
 	virtual ~Geometry();
 
 #if defined(SYNRAD)
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState &globState, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
 	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
-	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
+	void InitializeInterfaceGeometry(int facet_number = -1);
+    void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
     void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
 	void CheckCollinear();
@@ -191,7 +192,7 @@ public:
 	void RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
-	void CloneSelectedFacets();
+	int CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
 	void AddStruct(const char *name,bool deferDrawing=false);
@@ -201,6 +202,7 @@ public:
 	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
+    void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
 	void	MergecollinearSides(InterfaceFacet *f, double fT);
@@ -250,7 +252,7 @@ protected:
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    void InitInterfaceFacets(const std::vector<SubprocessFacet>& sFacets, Worker* work);
+    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();
@@ -333,6 +335,10 @@ protected:
 
 #if defined(MOLFLOW)
 #include "../src/MolflowTypes.h"
+		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
+#endif
+#if defined(SYNRAD)
+    #include "../src/SynradTypes.h"
 		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 

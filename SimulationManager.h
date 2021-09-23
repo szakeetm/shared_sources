@@ -89,6 +89,8 @@ public:
 
     int InitSimUnits();
 
+    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
+
     int KillAllSimUnits();
 
     int ResetSimulations();
@@ -101,7 +103,7 @@ public:
 
     int GetProcStatus(ProcComm &procInfoList);
 
-    const char *GetErrorDetails();
+    std::string GetErrorDetails();
 
     // Hit Buffer functions
     bool GetLockedHitBuffer();
@@ -115,6 +117,7 @@ public:
     int IncreasePriority();
     int DecreasePriority();
 
+    int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
     ProcComm procInformation; // ctrl
@@ -146,7 +149,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(SimulationModel* model);
+    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

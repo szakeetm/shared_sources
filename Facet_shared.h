@@ -69,6 +69,7 @@ public:
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
+    bool  SetTextureProperties(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
 	void  BuildMeshGLList();
@@ -125,16 +126,17 @@ public:
 	double DensityCorrection();
 #endif
 #if defined(SYNRAD) //Implementations in SynradFacet.cpp
-	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+    void LoadSYNResults(FileReader *file, int version, FacetHitBuffer &facetCounter);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();
 	size_t GetTexRamSize();
 	size_t GetTexRamSizeForRatio(double ratio) const;
     size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
-    void  BuildTexture(TextureCell *texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
-	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, TextureCell* texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
-	double GetSmooth(const int &i, const int &j, TextureCell *texture, const size_t& textureMode, const float &scaleF);
+    void  BuildTexture(const std::vector<TextureCell> &texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
+	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, const std::vector<TextureCell> &texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
+	double GetSmooth(const int &i, const int &j, const std::vector<TextureCell> &texture, const size_t& textureMode, const float &scaleF);
 #endif
 
 

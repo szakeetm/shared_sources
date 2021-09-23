@@ -41,7 +41,6 @@ private:
 class SimulationController {
     bool UpdateParams();
     int resetControls();
-
 protected:
 
 
@@ -67,6 +66,13 @@ public:
 
     int Start();
     bool Load();
+    int RebuildAccel();
+    int Reset();
+
+    void EmergencyExit(){
+        for(auto& t : simThreads)
+            t.particle->allQuit = true;
+    };
 protected:
 
     SimulationUnit* simulation;

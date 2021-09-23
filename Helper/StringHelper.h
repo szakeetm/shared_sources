@@ -15,6 +15,7 @@ extern template int stringToNumber<int>(std::string const& s, bool returnDefValO
 extern template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
 extern template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
 
+void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit);
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets);
 std::string AbbreviateString(const std::string& input, size_t maxLength);
 std::vector<std::string> SplitString(std::string const& input);
@@ -25,5 +26,7 @@ bool beginsWith(std::string const& fullString, std::string const& beginning);
 std::string space2underscore(std::string text);
 bool iequals(std::string a, std::string b);
 
-
+namespace Util {
+    std::string getTimepointString();
+}
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

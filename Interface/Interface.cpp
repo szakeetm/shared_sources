@@ -81,7 +81,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
 
-#include "NativeFileDialog/nfd.h"
+//#include "NativeFileDialog/nfd.h"
 
 //Updater
 #include "File.h" //File utils (Get extension, etc)
@@ -246,7 +246,23 @@ void Interface::ResetSimulation(bool askConfirm) {
              GLDLG_OK;
 
     if (ok) {
+        if(Interface::worker.IsRunning()) {
+            try {
+                this->worker.Stop_Public();
+            }
+            catch (std::exception &err) {
+                ok = GLMessageBox::Display("Could not stop simulation, reset anyway ?", "Question",
+                                           GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
+                if (!ok)
+                    return;
+            }
+        }
         worker.ResetStatsAndHits(m_fTime);
+
+        hps.clear();
+        dps.clear();
+        hps_runtotal.clear();
+        dps_runtotal.clear();
 
         nbDesStart = 0;
         nbHitStart = 0;
@@ -718,8 +734,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Selection")->Add("Invert selection", MENU_FACET_INVERTSEL, SDLK_i, CTRL_MODIFIER);
     menu->GetSubMenu("Selection")->Add(nullptr); // Separator
 
-    menu->GetSubMenu("Selection")->Add("Memorize selection to");
-    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Memorize selection to");
+    menu->GetSubMenu("Selection")->Add("Save / Overwrite selection");
+    memorizeSelectionsMenu = menu->GetSubMenu("Selection")->GetSubMenu("Save / Overwrite selection");
     memorizeSelectionsMenu->Add("Add new...", MENU_SELECTION_ADDNEW, SDLK_w, CTRL_MODIFIER);
     memorizeSelectionsMenu->Add(nullptr); // Separator
 
@@ -834,8 +850,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("View")->Add(nullptr); // Separator
 
-    menu->GetSubMenu("View")->Add("Memorize view to");
-    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Memorize view to");
+    menu->GetSubMenu("View")->Add("Save / Overwrite view");
+    memorizeViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Save / Overwrite view");
     memorizeViewsMenu->Add("Add new...", MENU_VIEW_ADDNEW, SDLK_q, CTRL_MODIFIER);
     memorizeViewsMenu->Add(nullptr); // Separator
 
@@ -857,6 +873,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Pipe (L/R=100)", MENU_TEST_PIPE100);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=1000)", MENU_TEST_PIPE1000);
     menu->GetSubMenu("Test")->Add("Pipe (L/R=10000)", MENU_TEST_PIPE10000);
+    menu->GetSubMenu("Test")->Add("Pipe (L/R=N)", MENU_TEST_PIPEN);
     //Quick test pipe
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Quick Pipe", MENU_QUICKPIPE, SDLK_q, ALT_MODIFIER);
@@ -1729,6 +1746,20 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_TEST_PIPE10000:
                     if (AskToSave()) BuildPipe(10000.0, 0);
                     return true;
+                case MENU_TEST_PIPEN: {
+                    sprintf(tmp, "100");
+                    //sprintf(title,"Pipe L/R = %g",L/R);
+                    char *chRatio = GLInputBox::GetInput(tmp, "L/R Ratio", "Build Pipe");
+                    if (!chRatio) return false;
+                    double ratio = 0.0;
+                    if ((sscanf(chRatio, "%lf", &ratio) <= 0) || (ratio <= 0.0)) {
+                        GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        return false;
+                    }
+
+                    if (AskToSave()) BuildPipe(ratio, 0);
+                    return true;
+                }
                 case MENU_QUICKPIPE:
                     if (AskToSave()) BuildPipe(5.0, 5);
                     return true;
@@ -2662,9 +2693,8 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
+    if (((runningState || worker.globState.stateChanged) && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
         {
-
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
             wereEvents = true; //Will repaint
@@ -2705,15 +2735,12 @@ int Interface::FrameMove() {
                     hitCache.nbDesorbed != lastNbDes) {
                     auto dTime = (double) (m_fTime - lastMeasTime);
                     if(dTime > 1e-6) {
-                        hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
-                        dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
+                        hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
+                        dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
+                        //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
+                        //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
                     }
-                    if (lastHps != 0.0) {
-                        hps = 0.2 * (hps) + 0.8 * lastHps;
-                        dps = 0.2 * (dps) + 0.8 * lastDps;
-                    }
-                    lastHps = hps;
-                    lastDps = dps;
+
                     lastNbHit = hitCache.nbMCHit;
                     lastNbDes = hitCache.nbDesorbed;
                     lastMeasTime = m_fTime;
@@ -2724,13 +2751,16 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
     } else {
-        if (worker.simuTimer.Elapsed() > 0.0) {
-            hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
-            dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
+        if(!runningState && worker.simuTimer.Elapsed() > 0.0) {
+            double _hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
+            double _dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
+            if(hps.last() != _hps || dps.last() != _dps)
+                wereEvents = true;
         } else {
-            hps = 0.0;
-            dps = 0.0;
+            if(hps.last() != 0.0  || dps.last() != 0.0)
+                wereEvents = true;
         }
+
         if(runningState)
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
         else

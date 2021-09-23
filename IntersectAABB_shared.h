@@ -41,7 +41,7 @@ public:
 	std::vector<SubprocessFacet*> facets;
 };
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);
+AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size_t depth, size_t& maxDepth);
 
 void IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
                    const Vector3d &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,

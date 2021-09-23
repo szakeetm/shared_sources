@@ -97,7 +97,7 @@ void AABBNODE::ComputeBB() {
 
 }
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_t depth,size_t& maxDepth) {
+AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size_t depth, size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;
 	double m;
@@ -294,7 +294,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 
 	if (node.left == nullptr || node.right == nullptr) { // Leaf
 
-		for (const auto& f : node.facets) {
+		for (const auto &f : node.facets) {
 			// Do not check last collided facet
 			if (f == lastHitBefore)
 				continue;
@@ -332,18 +332,18 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = currentParticle.particleTime + d / 100.0 / currentParticle.velocity;
+									double time = currentParticle.particle.time + d / 100.0 / currentParticle.velocity;
 									double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
 #endif
 
 #if defined(SYNRAD)
-									hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
-										&& sHandle->randomGenerator.rnd()>f->sh.opacity)
+                                    hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
+										&& currentParticle.randomGenerator.rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
-										&& sHandle->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
-										&& sHandle->materials[f->sh.reflectType - 10].GetReflectionType(sHandle->currentParticle.energy,
-										acos(Dot(sHandle->currentParticle.direction, f->sh.N)) - PI / 2, sHandle->randomGenerator.rnd()) == REFL_TRANS));
+										&& currentParticle.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
+										&& currentParticle.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
+										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 

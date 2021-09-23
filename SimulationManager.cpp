@@ -21,8 +21,10 @@
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
+#include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager() {
+    simulationChanged = true; // by default always init simulation process the first time
     interactiveMode = true;
     isRunning = false;
     hasErrorStatus = false;
@@ -105,11 +107,24 @@ int SimulationManager::StartSimulation() {
         if (simHandles.empty())
             throw std::logic_error("No active simulation handles!");
 
+        if(simulationChanged){
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+                throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+            }
+            simulationChanged = false;
+        }
         if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
     }
     else {
+        if(simulationChanged){
+            this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
+            for(auto& con : simController){
+                con.Load();
+            }
+            simulationChanged = false;
+        }
         this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
             con.Start();
@@ -224,14 +239,19 @@ int SimulationManager::CreateCPUHandle() {
 
     //Get number of cores
     if(nbThreads == 0) {
+#if defined(DEBUG)
+        nbThreads = 1;
+#else
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
         nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
 #else
         nbThreads = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
-#endif
+#endif // WIN
+#endif // DEBUG
     }
+
     if(!simUnits.empty()){
         for(auto& sim : simUnits){
             delete sim;
@@ -312,6 +332,32 @@ int SimulationManager::InitSimUnits() {
     }
 
     return WaitForProcStatus(PROCESS_READY);
+}
+
+/*!
+ * @brief Creates Simulation Units and waits for their ready status
+ * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
+ */
+int SimulationManager::InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState) {
+    if (!model->m.try_lock()) {
+        return 1;
+    }
+    // Prepare simulation unit
+    ResetSimulations();
+    ForwardSimModel(model);
+    ForwardGlobalCounter(globState, nullptr);
+
+    bool invalidLoad = LoadSimulation();
+    model->m.unlock();
+
+    if(invalidLoad){
+        std::string errString = "Failed to send geometry to sub process:\n";
+        errString.append(GetErrorDetails());
+        throw std::runtime_error(errString);
+        return 1;
+    }
+
+    return 0;
 }
 
 /*!
@@ -401,29 +447,48 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
+        return 1;
     }
-    return 1;
+    return 2;
 }
 
 int SimulationManager::KillAllSimUnits() {
     if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-
-            for(size_t i=0;i<simHandles.size();i++) {
-                if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED){
-                    auto nativeHandle = simHandles[i].first.native_handle();
+            for(auto& con : simController)
+                con.EmergencyExit();
+            if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
+                int i = 0;
+                for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
+                    if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
+                        auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-                    //Windows
-				    TerminateThread(nativeHandle, 1);
+                        //Windows
+                        TerminateThread(nativeHandle, 1);
 #else
-                    //Linux
-                    pthread_cancel(nativeHandle);
+                        //Linux
+                        int s;
+                        s = pthread_cancel(nativeHandle);
+                        if (s != 0)
+                            printf("pthread_cancel: %d\n", s);
+                        tIter->first.detach();
 #endif
-                    //assume that the process doesn't exist, so remove it from our management structure
-                    simHandles.erase((simHandles.begin()+i));
-                    throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
-
+                        //assume that the process doesn't exist, so remove it from our management structure
+                        try {
+                            tIter = simHandles.erase(tIter);
+                        }
+                        catch (std::exception &e) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
+                        catch (...) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes\n");
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
+                    }
                 }
             }
         }
@@ -454,16 +519,25 @@ int SimulationManager::ResetSimulations() {
         if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     }
-    else{
-        //simController.front().
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
     }
     return 0;
 }
 
 int SimulationManager::ResetHits() {
     isRunning = false;
-    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
+    }
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
+    }
     return 0;
 }
 
@@ -525,24 +599,35 @@ bool SimulationManager::GetRunningStatus(){
  * @brief Return error information or current running state in case of a hangup
  * @return char array containing proc status (and error message/s)
  */
-const char *SimulationManager::GetErrorDetails() {
+std::string SimulationManager::GetErrorDetails() {
 
     ProcComm procInfo;
     GetProcStatus(procInfo);
 
-    static char err[1024];
-    strcpy(err, "");
+    std::string err;
+    //static char err[1024];
+    //std::memset(err, 0, 1024);
 
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
-        char tmp[512];
+        char tmp[512]{'\0'};
         size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s: %s\n", i, procInfo.subProcInfo[i].procId, prStates[state],
+            sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
                     procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %zu] %s\n", i, procInfo.subProcInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[Thread #%zd] %s\n", i, prStates[state]);
         }
-        strncat(err, tmp, 512);
+        // Append at most up to character 1024, strncat would otherwise overwrite in memory
+        err.append(tmp);
+        if(err.size() >= 1024) {
+            err.resize(1024);
+            break;
+        }
+        /*strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
+        if(strlen(err) >= 1024) {
+            err[1023] = '\0';
+            break;
+        }*/
     }
     return err;
 }
@@ -619,15 +704,15 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 }
 
 // Create hard copy for local usage
-void SimulationManager::ForwardSimModel(SimulationModel *model) {
+void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
     for(auto& sim : simUnits)
-        sim->model = *model;
+        sim->model = model;
 }
 
 // Create hard copy for local usage
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
     for(auto& sim : simUnits)
-        sim->model.otfParams = *otfParams;
+        sim->model->otfParams = *otfParams;
 }
 
 /**
@@ -658,14 +743,13 @@ int SimulationManager::IncreasePriority() {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
-
 #else
         int policy;
-            struct sched_param param{};
-            pthread_getschedparam(myHandle, &policy, &param);
-            param.sched_priority = sched_get_priority_min(policy);
-            pthread_setschedparam(myHandle, policy, &param);
-            //Check! Some documentation says it's always 0
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
 #endif
     }
 
@@ -692,5 +776,15 @@ int SimulationManager::DecreasePriority() {
             //Check! Some documentation says it's always 0
 #endif
     }
+    return 0;
+}
+
+int SimulationManager::RefreshRNGSeed(bool fixed) {
+    if(simUnits.empty() || nbThreads == 0)
+        return 1;
+    for(auto& sim : simUnits){
+        sim->SetNParticle(nbThreads, fixed);
+    }
+
     return 0;
 }

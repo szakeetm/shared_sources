@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 #include "Vector.h"
+#include "BoundingBox.h"
 #include <vector>
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
@@ -110,6 +111,7 @@ public:
 
 class FacetProperties { //Formerly SHFACET
 public:
+    FacetProperties() = default;
     explicit FacetProperties(size_t nbIndices);
 	//For sync between interface and subprocess
 	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
@@ -156,8 +158,8 @@ public:
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)
 	size_t    texHeight;   // Rounded texture resolution (V)
-	double texWidthD;   // Actual texture resolution (U)
-	double texHeightD;  // Actual texture resolution (V)
+	double texWidth_precise;   // Actual texture resolution (U)
+	double texHeight_precise;  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
@@ -191,6 +193,10 @@ public:
 
 	//Outgassing map
 	bool   useOutgassingFile;   //has desorption file for cell elements
+	double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
+    double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
+    size_t   outgassingMapWidth; //rounded up outgassing file map width
+	size_t   outgassingMapHeight; //rounded up outgassing file map height
 	double totalOutgassing; //total outgassing for the given facet
 
 	AnglemapParams anglemapParams;//Incident angle map
@@ -253,8 +259,8 @@ public:
 			// Hit/Abs/Des/Density recording on 2D texture map
 			CEREAL_NVP(texWidth),    // Rounded texture resolution (U)
 			CEREAL_NVP(texHeight),   // Rounded texture resolution (V)
-			CEREAL_NVP(texWidthD),   // Actual texture resolution (U)
-			CEREAL_NVP(texHeightD)  // Actual texture resolution (V)
+			CEREAL_NVP(texWidth_precise),   // Actual texture resolution (U)
+			CEREAL_NVP(texHeight_precise)  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 								 // Molflow-specific facet parameters
@@ -289,6 +295,10 @@ public:
 
 			//Outgassing map
 			CEREAL_NVP(useOutgassingFile),   //has desorption file for cell elements
+            CEREAL_NVP(outgassingFileRatioU), //desorption file's sample/unit ratio U
+            CEREAL_NVP(outgassingFileRatioV), //desorption file's sample/unit ratio V
+            CEREAL_NVP(outgassingMapWidth), //rounded up outgassing file map width
+            CEREAL_NVP(outgassingMapHeight), //rounded up outgassing file map height
 
 			CEREAL_NVP(totalOutgassing), //total outgassing for the given facet
 
@@ -311,6 +321,8 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
+
+    int accel_type;
 #if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
@@ -330,6 +342,7 @@ struct WorkerParams { //Plain old data
 #if defined(SYNRAD)
 	size_t        nbRegion;  //number of magnetic regions
 	size_t        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
+	size_t        sourceArea;
 	bool       newReflectionModel;
 #endif
 
@@ -356,8 +369,9 @@ struct WorkerParams { //Plain old data
 
 #if defined(SYNRAD)
 			CEREAL_NVP(nbRegion)  //number of magnetic regions
-			, CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
-			, CEREAL_NVP(newReflectionModel)
+                , CEREAL_NVP(nbTrajPoints) //total number of trajectory points (calculated at CopyGeometryBuffer)
+                , CEREAL_NVP(sourceArea)
+                , CEREAL_NVP(newReflectionModel)
 #endif
 		);
 	}
@@ -490,15 +504,19 @@ public:
     FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
 	std::vector<double> distanceHistogram;
+#ifdef MOLFLOW
 	std::vector<double> timeHistogram;
+#endif
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
 			CEREAL_NVP(nbHitsHistogram), 
-			CEREAL_NVP(distanceHistogram), 
-			CEREAL_NVP(timeHistogram)
-		);
+			CEREAL_NVP(distanceHistogram)
+#ifdef MOLFLOW
+        ,CEREAL_NVP(timeHistogram)
+#endif
+        );
 	}
 };
 
@@ -547,26 +565,24 @@ public:
     FacetHitBuffer();
     void ResetBuffer();
 
-    struct {
-        // Counts
-        size_t nbMCHit;               // Number of hits
-        size_t nbDesorbed;          // Number of desorbed molec
-        double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-        double nbAbsEquiv;          // Equivalent number of absorbed molecules
-        double fluxAbs;         // Total desorbed Flux
-        double powerAbs;        // Total desorbed power
-    } hit;
+    // Counts
+    size_t nbMCHit;               // Number of hits
+    size_t nbDesorbed;          // Number of desorbed molec
+    double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+    double nbAbsEquiv;          // Equivalent number of absorbed molecules
+    double fluxAbs;         // Total desorbed Flux
+    double powerAbs;        // Total desorbed power
 
 	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive(
-			CEREAL_NVP(hit.fluxAbs),
-			CEREAL_NVP(hit.powerAbs),
-			CEREAL_NVP(hit.nbMCHit),           // Number of hits
-			CEREAL_NVP(hit.nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-			CEREAL_NVP(hit.nbAbsEquiv),      // Number of absorbed molec
-			CEREAL_NVP(hit.nbDesorbed)
+			CEREAL_NVP(fluxAbs),
+			CEREAL_NVP(powerAbs),
+			CEREAL_NVP(nbMCHit),           // Number of hits
+			CEREAL_NVP(nbHitEquiv),			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+			CEREAL_NVP(nbAbsEquiv),      // Number of absorbed molec
+			CEREAL_NVP(nbDesorbed)
 			);
 	}
 
@@ -584,7 +600,9 @@ public:
 		leakCacheSize = 0;
 		nbLeakTotal = 0;
 		distTraveled_total = 0.0;
-		distTraveledTotal_fullHitsOnly = 0.0;
+#if defined(MOLFLOW)
+        distTraveledTotal_fullHitsOnly = 0.0;
+#endif
     };
     GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
 
@@ -597,16 +615,18 @@ public:
     HIT hitCache[HITCACHESIZE];       // Hit history
     LEAK leakCache[LEAKCACHESIZE];      // Leak history
 
+    double distTraveled_total;
 
 #if defined(MOLFLOW)
+    double distTraveledTotal_fullHitsOnly;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    //TODO: Remove at some point when smarter memory padding is introduced
 	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
-	double distTraveled_total;
-	double distTraveledTotal_fullHitsOnly;
+#endif // WIN
 #endif
 
 #if defined(SYNRAD)
-	TextureCell hitMin, hitMax;
-	double distTraveledTotal;
+	TextureCell hitMin{}, hitMax{};
 #endif
 
 	template<class Archive>
@@ -616,23 +636,24 @@ public:
 			CEREAL_NVP(globalHits),               // Global counts (as if the whole geometry was one extra facet)
 			CEREAL_NVP(hitCacheSize),              // Number of valid hits in cache
 			CEREAL_NVP(lastHitIndex),					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-			CEREAL_NVP(hitCache),       // Hit history
+			//CEREAL_NVP(hitCache),       // Hit history
 
 			CEREAL_NVP(lastLeakIndex),		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
 			CEREAL_NVP(leakCacheSize),        //Number of valid leaks in the cache
 			CEREAL_NVP(nbLeakTotal),         // Total leaks
-			CEREAL_NVP(leakCache)      // Leak history
+			//CEREAL_NVP(leakCache),      // Leak history
+            CEREAL_NVP(distTraveled_total)
 
 #if defined(MOLFLOW)
-			,CEREAL_NVP(texture_limits), //Min-max on texture
-			CEREAL_NVP(distTraveled_total),
-			CEREAL_NVP(distTraveledTotal_fullHitsOnly)
+            ,CEREAL_NVP(distTraveledTotal_fullHitsOnly)
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+                ,CEREAL_NVP(texture_limits) //Min-max on texture
+#endif // WIN
 #endif
 
 #if defined(SYNRAD)
 			,CEREAL_NVP(hitMin),
-				CEREAL_NVP(hitMax),
-				CEREAL_NVP(distTraveledTotal)
+				CEREAL_NVP(hitMax)
 #endif
 		);
 	}

@@ -15,20 +15,6 @@ namespace MFSim {
     class Particle;
 }
 
-struct SubProcessFacetTempVar {
-    // Temporary var (used in Intersect for collision)
-    SubProcessFacetTempVar(){
-        colDistTranspPass=1.0E99;
-        colU = 0.0;
-        colV = 0.0;
-        isHit=false;
-    }
-    double colDistTranspPass;
-    double colU;
-    double colV;
-    bool   isHit;
-};
-
 class SimulationUnit {
 public:
     SimulationUnit() : model(), totalDesorbed(0), m(){
@@ -44,17 +30,19 @@ public:
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
+    virtual int RebuildAccelStructure() = 0;
+
     virtual int ReinitializeParticleLog() = 0;
-    virtual int SanityCheckModel() = 0;
+    virtual std::pair<int, std::optional<std::string>> SanityCheckModel(bool strictCheck) = 0;
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
     virtual MFSim::Particle * GetParticle(size_t i) = 0;
-    virtual void SetNParticle(size_t n) = 0;
+    virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
-    SimulationModel model;
+    std::shared_ptr<SimulationModel> model;
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)

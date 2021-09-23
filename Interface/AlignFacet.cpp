@@ -250,6 +250,7 @@ dirDestVertexId,
 				}
 			}
 			geom->InitializeGeometry();
+            geom->InitializeInterfaceGeometry();
 			work->Reload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();

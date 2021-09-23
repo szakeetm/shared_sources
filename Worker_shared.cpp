@@ -139,7 +139,7 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
     geom->ExportTextures(f, grouping, mode, globState, saveSelected);
 #endif
 #if defined(SYNRAD)
-    geom->ExportTextures(f, grouping, mode, no_scans, buffer, saveSelected);
+    geom->ExportTextures(f, grouping, mode, no_scans, globState, saveSelected);
 #endif
     //simManager.UnlockHitBuffer();
     fclose(f);
@@ -192,9 +192,9 @@ void Worker::ThrowSubProcError(const char *message) {
 
     char errMsg[1024];
     if (!message)
-        sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails());
+        sprintf(errMsg, "Bad response from sub process(es):\n%s",GetErrorDetails().c_str());
     else
-        sprintf(errMsg, "%s\n%s", message, GetErrorDetails());
+        sprintf(errMsg, "%s\n%s", message, GetErrorDetails().c_str());
     throw std::runtime_error(errMsg);
 
 }
@@ -222,8 +222,50 @@ void Worker::SetMaxDesorption(size_t max) {
 }
 */
 
-const char *Worker::GetErrorDetails() {
+std::string Worker::GetErrorDetails() {
     return simManager.GetErrorDetails();
+}
+
+void Worker::InnerStop(float appTime) {
+    simuTimer.Stop();
+}
+
+void Worker::StartStop(float appTime) {
+    if( IsRunning() )  {
+
+        // Stop
+        InnerStop(appTime);
+        try {
+            Stop();
+            Update(appTime);
+
+        }
+        catch(Error &e) {
+            GLMessageBox::Display((char *)e.what(),"Error (Stop)",GLDLG_OK,GLDLG_ICONERROR);
+
+        }
+    }
+    else {
+
+        // Start
+        try {
+            if (needsReload) RealReload(); //Synchronize subprocesses to main process
+            Start();
+            simuTimer.Start();
+        }
+        catch (Error &e) {
+            //isRunning = false;
+            GLMessageBox::Display((char *)e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
+            return;
+        }
+
+        // Particular case when simulation ends before getting RUN state
+        if(simManager.allProcsDone) {
+            Update(appTime);
+            GLMessageBox::Display("Max desorption reached","Information (Start)",GLDLG_OK,GLDLG_ICONINFO);
+        }
+    }
+
 }
 
 void Worker::ResetStatsAndHits(float appTime) {
@@ -232,7 +274,7 @@ void Worker::ResetStatsAndHits(float appTime) {
     //stopTime = 0.0f;
     //startTime = 0.0f;
     //simuTime = 0.0f;
-    if (model.otfParams.nbProcess == 0)
+    if (model->otfParams.nbProcess == 0)
         return;
 
     try {
@@ -269,7 +311,7 @@ void Worker::InitSimProc() {
         throw Error("Initialising simulation unit failed!");
     }
 
-    model.otfParams.nbProcess = simManager.nbThreads;
+    model->otfParams.nbProcess = simManager.nbThreads;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -288,11 +330,11 @@ void Worker::SetProcNumber(size_t n) {
     simManager.nbThreads = std::clamp((size_t)n , (size_t)0 , MAX_PROCESS);
 
     // Launch n subprocess
-    if ((model.otfParams.nbProcess = simManager.InitSimUnits())) {
+    if ((model->otfParams.nbProcess = simManager.InitSimUnits())) {
         throw Error("Starting subprocesses failed!");
     }
 
-    model.otfParams.nbProcess = simManager.nbThreads;
+    model->otfParams.nbProcess = simManager.nbThreads;
 
     //if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
@@ -301,6 +343,7 @@ size_t Worker::GetPID(size_t prIdx) {
     return 0;
 }
 
+#ifdef MOLFLOW
 void Worker::CalculateTextureLimits(){
     // first get tmp limit
     TEXTURE_MIN_MAX limits[3];
@@ -309,9 +352,10 @@ void Worker::CalculateTextureLimits(){
         lim.min.steady_state = lim.min.moments_only = HITMAX;
     }
 
-    for (const auto &subF : model.facets) {
+    for (const auto &sub : model->facets) {
+        auto& subF = *sub;
         if (subF.sh.isTextured) {
-            for (size_t m = 0; m < ( 1 + model.tdParams.moments.size()); m++) {
+            for (size_t m = 0; m < ( 1 + model->tdParams.moments.size()); m++) {
                 {
                     // go on if the facet was never hit before
                     auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[m].hits;
@@ -320,8 +364,8 @@ void Worker::CalculateTextureLimits(){
 
                 //double dCoef = globState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
                 const double timeCorrection =
-                        m == 0 ? model.wp.finalOutgassingRate : (model.wp.totalDesorbedMolecules) /
-                                moments[m - 1].second;//model.tdParams.moments[m - 1].second;
+                        m == 0 ? model->wp.finalOutgassingRate : (model->wp.totalDesorbedMolecules) /
+                                moments[m - 1].second;//model->tdParams.moments[m - 1].second;
                 //model->wp.timeWindowSize;
                 //Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
                 const auto &texture = globState.facetStates[subF.globalId].momentResults[m].texture;
@@ -362,7 +406,7 @@ void Worker::CalculateTextureLimits(){
     double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
     //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
     //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model.wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
     dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
     dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
 
@@ -379,6 +423,76 @@ void Worker::CalculateTextureLimits(){
         GetGeometry()->texture_limits[v].autoscale = limits[v];
     }
 }
+#endif
+
+#ifdef SYNRAD
+#define HITMAX 1E38
+void Worker::CalculateTextureLimits(){
+    // first get tmp limit
+    TextureCell limitMin, limitMax;
+    TEXTURE_MIN_MAX limits[3]; // count, flux, power
+    for(auto& lim : limits){
+        lim.max = 0;
+        lim.min = HITMAX;
+    }
+
+    for (const auto &sub : model->facets) {
+        auto& subF = *sub;
+        if (subF.sh.isTextured) {
+                {
+                    // go on if the facet was never hit before
+                    auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[0].hits;
+                    if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
+                }
+
+                const auto &texture = globState.facetStates[subF.globalId].momentResults[0].texture;
+                const size_t textureSize = texture.size();
+                for (size_t t = 0; t < textureSize; t++) {
+                    //Add temporary hit counts
+
+                    if (subF.largeEnough[t]) { // TODO: For count it wasn't applied in Synrad so far
+                        double val[3];  //pre-calculated autoscaling values (Pressure, imp.rate, density)
+
+                        val[0] = texture[t].count; //pressure without dCoef_pressure
+                        val[1] = texture[t].flux * subF.textureCellIncrements[t];
+                        val[2] = texture[t].power * subF.textureCellIncrements[t];
+
+                        //Global autoscale
+                        for (int v = 0; v < 3; v++) {
+                            limits[v].max = std::max(val[v], limits[v].max);
+
+                            if (val[v] > 0.0) {
+                                limits[v].min = std::min(val[v], limits[v].min);
+                            }
+                        }
+                    } // if largeenough
+                }
+        }
+    }
+
+    /*double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
+    //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
+    //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
+    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+
+    // Add coefficient scaling
+    for(int v = 0; v < 3; ++v) {
+        limits[v].max.steady_state *= dCoef_custom[v];
+        limits[v].max.moments_only *= dCoef_custom[v];
+        limits[v].min.steady_state *= dCoef_custom[v];
+        limits[v].min.moments_only *= dCoef_custom[v];
+    }*/
+
+    // Last put temp limits into global struct
+    for(int v = 0; v < 3; ++v) {
+        GetGeometry()->texture_limits[v].autoscale = limits[v];
+    }
+}
+#endif
+
+
 
 void Worker::RebuildTextures() {
 
@@ -394,13 +508,8 @@ void Worker::RebuildTextures() {
 
 
         try {
-#if defined(MOLFLOW)
             CalculateTextureLimits();
-            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
-#endif
-#if defined(SYNRAD)
-            geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
-#endif
+            geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
         }
         catch (Error &e) {
             simManager.UnlockHitBuffer();
@@ -411,7 +520,7 @@ void Worker::RebuildTextures() {
 }
 
 size_t Worker::GetProcNumber() const {
-    //return model.otfParams.nbProcess;
+    //return model->otfParams.nbProcess;
     return simManager.nbThreads;
 }
 
@@ -460,12 +569,14 @@ void Worker::Update(float appTime) {
                 return;
             }
         }
+
+        globState.stateChanged = false;
         globalHitCache = globState.globalHits;
 
 #if defined(SYNRAD)
 
-        if (globalHitCache.globalHits.nbDesorbed && model.wp.nbTrajPoints) {
-            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model.wp.nbTrajPoints;
+        if (globalHitCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
+            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
         }
         else {
             no_scans = 1.0;
@@ -519,7 +630,7 @@ void Worker::Update(float appTime) {
 
 void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
 
-    if (model.otfParams.nbProcess == 0) return;
+    if (model->otfParams.nbProcess == 0) return;
     simManager.GetProcStatus(states, statusStrings);
 }
 
@@ -550,7 +661,7 @@ void Worker::ChangePriority(int prioLevel) {
 
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
-    if (model.otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
+    if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
     //auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
@@ -567,7 +678,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
-        simManager.ForwardOtfParams(&model.otfParams);
+        simManager.ForwardOtfParams(&model->otfParams);
 
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             char errMsg[1024];
@@ -586,11 +697,11 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     //progressDlg->SetVisible(false);
     //SAFE_DELETE(progressDlg);
 
-#if defined(SYNRAD)
+/*#if defined(SYNRAD)
     //Reset leak and hit cache
     ResetWorkerStats();
     Update(0.0f);
-#endif
+#endif*/
 }
 
 /**
@@ -612,7 +723,8 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
     sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
                                        "/usr/bin/7za", //use p7zip installed system-wide
-                                       "/usr/local/bin/7za"}; //use p7zip installed for user
+                                       "/usr/local/bin/7za", //use p7zip installed for user
+                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
             sevenZipName = path;
@@ -676,8 +788,13 @@ void Worker::RetrieveHistogramCache()
 
     //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
+#if defined(MOLFLOW)
     globalHistogramCache = globState.globalHistograms[displayedMoment];
-
+#endif
+#if defined(SYNRAD)
+    if(!globState.globalHistograms.empty())
+        globalHistogramCache = globState.globalHistograms[0];
+#endif
     //FACET HISTOGRAMS
     for (size_t i = 0;i < geom->GetNbFacet();i++) {
         InterfaceFacet* f = geom->GetFacet(i);
@@ -685,5 +802,40 @@ void Worker::RetrieveHistogramCache()
         f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
         f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;
 #endif
+#if defined(SYNRAD)
+        f->facetHitCache = globState.facetStates[i].momentResults[0].hits;
+        f->facetHistogramCache = globState.facetStates[i].momentResults[0].histogram;
+#endif
+    }
+}
+
+void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
+    // Send and Load geometry
+    progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
+    try {
+        if (!InterfaceGeomToSimModel()) {
+            std::string errString = "Failed to send geometry to sub process!\n";
+            GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
+
+            progressDlg->SetVisible(false);
+            SAFE_DELETE(progressDlg);
+            return;
+        }
+
+        progressDlg->SetMessage("Initialising physical properties for model->..");
+        if(model->PrepareToRun()){
+            throw std::runtime_error("Error preparing simulation");
+        }
+
+        progressDlg->SetMessage("Constructing memory structure to store results...");
+        if (!sendOnly) {
+            globState.Resize(*model);
+        }
+
+        simManager.ForwardSimModel(model);
+        simManager.ForwardGlobalCounter(&globState, &particleLog);
+    }
+    catch (std::exception &e) {
+        GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }

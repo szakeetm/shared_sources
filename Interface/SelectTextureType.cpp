@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindowManager.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToggle.h"
+#include "GLApp/GLLabel.h"
 #include "GLApp/GLTextField.h"
 #include "Helper/MathTools.h" //IsEqual
 #include "GLApp/GLButton.h"
@@ -50,36 +51,47 @@ extern SynRad*mApp;
 SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 
 	int xD, yD, wD, hD;
-	wD = 280; hD = 210;
+	wD = 280; hD = 260;
 	SetTitle("Select facets by texture properties");
 
 	resolutionpanel = new GLTitledPanel("Texture resolution");
-	resolutionpanel->SetBounds(5, 5, wD - 10, 70);
+	resolutionpanel->SetBounds(5, 5, wD - 10, 120);
 	resolutionpanel->SetClosable(false);
 	Add(resolutionpanel);
 
+	squareToggle = new GLToggle(0, "Square texture");
+	squareToggle->AllowMixedState(true);
+	squareToggle->SetState(2);
+	resolutionpanel->Add(squareToggle);
+	resolutionpanel->SetCompBounds(squareToggle, 5, 16, 260, 20);
+
+	GLLabel* ratioInfo = new GLLabel("For non-square textures, condition applies to either\nof the two dimensions:");
+	resolutionpanel->Add(ratioInfo);
+	resolutionpanel->SetCompBounds(ratioInfo, 7, 32, 260, 20);
+
+
 	ratioToggle = new GLToggle(0, "Exactly                   /cm");
 	resolutionpanel->Add(ratioToggle);
-	resolutionpanel->SetCompBounds(ratioToggle, 5, 16, 150, 20);
+	resolutionpanel->SetCompBounds(ratioToggle, 5, 66, 150, 20);
 
 	ratioText = new GLTextField(0, "");
 	resolutionpanel->Add(ratioText);
-	resolutionpanel->SetCompBounds(ratioText, 70, 15, 60, 19);
+	resolutionpanel->SetCompBounds(ratioText, 70, 65, 60, 19);
 
 	ratioMinMaxToggle = new GLToggle(1, "Between                 /cm and                  /cm");
 	resolutionpanel->Add(ratioMinMaxToggle);
-	resolutionpanel->SetCompBounds(ratioMinMaxToggle, 5, 42, 250, 20);
+	resolutionpanel->SetCompBounds(ratioMinMaxToggle, 5, 92, 250, 20);
 
 	ratioMinText = new GLTextField(0, "");
 	resolutionpanel->Add(ratioMinText);
-	resolutionpanel->SetCompBounds(ratioMinText, 70, 42, 60, 19);
+	resolutionpanel->SetCompBounds(ratioMinText, 70, 92, 60, 19);
 
 	ratioMaxText = new GLTextField(0, "");
 	resolutionpanel->Add(ratioMaxText);
-	resolutionpanel->SetCompBounds(ratioMaxText, 180, 42, 60, 19);
+	resolutionpanel->SetCompBounds(ratioMaxText, 180, 92, 60, 19);
 
 	textureTypePanel = new GLTitledPanel("Texture type");
-	textureTypePanel->SetBounds(5, 80, wD - 10, 80);
+	textureTypePanel->SetBounds(5, 130, wD - 10, 80);
 	textureTypePanel->SetClosable(false);
 	Add(textureTypePanel);
 
@@ -115,7 +127,7 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 
 	// Buttons
 	int startX = 5;
-	int startY = 165;
+	int startY = 215;
 
 	selectButton = new GLButton(0, "Select");
 	selectButton->SetBounds(startX, startY, 75, 20);
@@ -172,8 +184,9 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 		for (size_t i = 0; i < geom->GetNbFacet(); i++) {
 			InterfaceFacet* f = geom->GetFacet(i);
 			bool match = f->sh.isTextured;
-			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) && IsEqual(ratio, f->tRatioV);
-			if (minmaxRatio) match = match && (minRatio <= f->tRatioU) && (f->tRatioU <= maxRatio) && (minRatio <= f->tRatioV) && (f->tRatioV <= maxRatio);
+			if (squareToggle->GetState() != 2) match = match && ((squareToggle->GetState()==1) == IsEqual(f->tRatioU,f->tRatioV));
+			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) || IsEqual(ratio, f->tRatioV);
+			if (minmaxRatio) match = match && ((minRatio <= f->tRatioU) && (f->tRatioU <= maxRatio)) || ((minRatio <= f->tRatioV) && (f->tRatioV <= maxRatio));
 #if defined(MOLFLOW)
 			if (desorbToggle->GetState() != 2) match = match && f->sh.countDes;
 #endif

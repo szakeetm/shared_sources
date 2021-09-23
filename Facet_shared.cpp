@@ -64,8 +64,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	
 	sh.texWidth = 0;
 	sh.texHeight = 0;
-	sh.texWidthD = 0.0;
-	sh.texHeightD = 0.0;
+	sh.texWidth_precise = 0.0;
+	sh.texHeight_precise = 0.0;
 	sh.center.x = 0.0;
 	sh.center.y = 0.0;
 	sh.center.z = 0.0;
@@ -269,14 +269,14 @@ int InterfaceFacet::InvalidateDeviceObjects() {
 * \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
 * \return true if texture was set
 */
-bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
+bool InterfaceFacet::SetTextureProperties(double width, double height, bool useMesh) {
 
 	bool dimOK = (width*height > 0.0000001);
 
 	if (dimOK) {
         const double ceilCutoff = 0.9999999;
-        sh.texWidthD = width;
-		sh.texHeightD = height;
+        sh.texWidth_precise = width;
+		sh.texHeight_precise = height;
 		sh.texWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
 		sh.texHeight = (int)ceil(height * ceilCutoff);
 		dimOK = (sh.texWidth > 0 && sh.texHeight > 0);
@@ -284,9 +284,25 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	else {
 		sh.texWidth = 0;
 		sh.texHeight = 0;
-		sh.texWidthD = 0.0;
-		sh.texHeightD = 0.0;
+		sh.texWidth_precise = 0.0;
+		sh.texHeight_precise = 0.0;
 	}
+
+	UpdateFlags(); //set hasMesh to true if everything was OK
+	return true;
+
+}
+
+/**
+* \brief Set texture on facet
+* \param width width of the texture
+* \param height height of the texture
+* \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
+* \return true if texture was set
+*/
+bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
+
+	bool dimOK = (width*height > 0.0000001);
 
 	texDimW = 0;
 	texDimH = 0;
@@ -294,7 +310,7 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	//SAFE_FREE(mesh);
 	/*for (size_t i = 0; i < meshvectorsize; i++)
         SAFE_DELETE(meshvector[i].points);*/
-    //SAFE_DELETE(meshvector);
+	//SAFE_DELETE(meshvector);
 	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
 	DELETE_TEX(glTex);
@@ -329,8 +345,8 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	}
 
-	UpdateFlags(); //set hasMesh to true if everything was OK
-	return true;
+    UpdateFlags(); //set hasMesh to true if everything was OK
+    return true;
 
 }
 
@@ -368,8 +384,8 @@ bool InterfaceFacet::BuildMesh() {
 	
 	GLAppPolygon P1, P2;
 	double sx, sy;
-	double iw = 1.0 / (double)sh.texWidthD;
-	double ih = 1.0 / (double)sh.texHeightD;
+	double iw = 1.0 / (double)sh.texWidth_precise;
+	double ih = 1.0 / (double)sh.texHeight_precise;
 	double rw = sh.U.Norme() * iw;
 	double rh = sh.V.Norme() * ih;
 	double fullCellArea = iw*ih;
@@ -941,8 +957,8 @@ Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 		}
 
 		else { //full elem
-			double iw = 1.0 / (double)sh.texWidthD;
-			double ih = 1.0 / (double)sh.texHeightD;
+			double iw = 1.0 / (double)sh.texWidth_precise;
+			double ih = 1.0 / (double)sh.texHeight_precise;
 			double sx = (double)(index%sh.texWidth);
 			double sy = (double)(index / sh.texWidth);
 			if (pointId == 0) {
@@ -1007,8 +1023,8 @@ Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
 		}
 	}
 	else {
-		double iw = 1.0 / (double)sh.texWidthD;
-		double ih = 1.0 / (double)sh.texHeightD;
+		double iw = 1.0 / (double)sh.texWidth_precise;
+		double ih = 1.0 / (double)sh.texHeight_precise;
 		double sx = (double)(index%sh.texWidth);
 		double sy = (double)(index / sh.texWidth);
 		double u0 = sx * iw;
@@ -1052,7 +1068,8 @@ void InterfaceFacet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
 	//wp.isOpaque = (wp.opacity != 0.0);
-	sh.isTextured = ((texDimW*texDimH) > 0);
+	//sh.isTextured = ((texDimW*texDimH) > 0);
+    sh.isTextured = ((sh.texWidth_precise*sh.texHeight_precise) > 0);
 }
 
 /**
