@@ -347,15 +347,15 @@ int SimulationManager::InitSimulation(const std::shared_ptr<SimulationModel>& mo
     ForwardSimModel(model);
     ForwardGlobalCounter(globState, nullptr);
 
-    bool invalidLoad = LoadSimulation();
+    //bool invalidLoad = LoadSimulation();
     model->m.unlock();
 
-    if(invalidLoad){
+    /*if(invalidLoad){
         std::string errString = "Failed to send geometry to sub process:\n";
         errString.append(GetErrorDetails());
         throw std::runtime_error(errString);
         return 1;
-    }
+    }*/
 
     return 0;
 }
