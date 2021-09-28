@@ -349,11 +349,19 @@ void GLWindow::ProcessMessage(GLComponent *src,int message) {
 
 void GLWindow::UpdateOnResize() {
 
-  if( maximized ) {
-    GLWindow *master = GLWindowManager::GetTopLevelWindow();
-    int u = master->GetUpMargin();
-    SetBounds(1,u,master->GetWidth()-2,master->GetHeight()-u-2);
-  }
+    GLWindow* master = GLWindowManager::GetTopLevelWindow();
+    int masterWidth = master->GetWidth();
+    int masterHeight = master->GetHeight();
+
+    if (maximized) { //Keep maximized
+        int u = master->GetUpMargin();
+        SetBounds(1, u, masterWidth - 2, masterHeight - u - 2);
+    }
+    else { //Keep on screen
+        int childX, childY, childW, childH;
+        GetBounds(&childX, &childY, &childW, &childH);
+        SetBounds(std::max(0, std::min(childX, masterWidth - 100)), std::max(0, std::min(childY, masterHeight - 50)), childW, childH);
+    }
 
 }
 
