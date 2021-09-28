@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     GlobalSimuState globState{};
 
 
-    if(Initializer::initFromArgv(argc, argv, &simManager, model)){
+    if(-1 < Initializer::initFromArgv(argc, argv, &simManager, model)){
 #if defined(USE_MPI)
         MPI_Finalize();
 #endif
