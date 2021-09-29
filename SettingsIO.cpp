@@ -51,7 +51,10 @@ namespace SettingsIO {
         if (SettingsIO::overwrite) {
             SettingsIO::outputFile = SettingsIO::inputFile;
             SettingsIO::workPath = "tmp/";
-        } else if (SettingsIO::outputPath.empty() && std::filesystem::path(SettingsIO::outputFile).has_parent_path()) { // Use a default outputpath if unset
+        } else if(!SettingsIO::outputPath.empty()){
+            SettingsIO::workPath = SettingsIO::outputPath;
+        }
+        else if (SettingsIO::outputPath.empty() && std::filesystem::path(SettingsIO::outputFile).has_parent_path()) { // Use a default outputpath if unset
             SettingsIO::workPath =
                     std::filesystem::path(SettingsIO::outputFile).parent_path().string();
         } else if (SettingsIO::outputPath
