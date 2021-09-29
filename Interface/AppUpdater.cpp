@@ -41,6 +41,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <unistd.h> //Get user name
 #endif
 
+enum class FetchStatus : int
+{
+    NONE = 0,
+    DOWNLOAD_ERROR = 1,
+    OTHER_ERROR = 2, OKAY, PARSE_ERROR
+};
 /**
 * \brief Constructor with initialisation for the App Updater
 * \param appName hardcoded name of the app (@see versionId.h)
@@ -50,6 +56,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile) {
 	applicationName = appName;
 	currentVersionId = versionId;
+    lastFetchStatus = 0;
 	configFileName = configFile;
 
 	if(!std::filesystem::exists(configFileName))
@@ -182,7 +189,7 @@ void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates) {
 */
 int AppUpdater::RequestUpdateCheck() {
 	if (appLaunchedWithoutAsking == -1) {
-		if (allowUpdateCheck) updateThread = std::thread(&AppUpdater::PerformUpdateCheck, (AppUpdater*)this); //Launch parallel update-checking thread
+		if (allowUpdateCheck) updateThread = std::thread(&AppUpdater::PerformUpdateCheck, (AppUpdater*)this, false); //Launch parallel update-checking thread
 		return ANSWER_ALREADYDECIDED;
 	}
 	else if (appLaunchedWithoutAsking >= askAfterNbLaunches) { //Third time launching app, time to ask if we can check for updates
@@ -198,15 +205,15 @@ int AppUpdater::RequestUpdateCheck() {
 * \return if or when user should be asked to update
 */
 void AppUpdater::PerformImmediateCheck() {
-    PerformUpdateCheck();
+    PerformUpdateCheck(true);
 }
 
 /**
 * \brief Check for updates
 */
-void AppUpdater::PerformUpdateCheck() {
+void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 	//Update checker
-	if (allowUpdateCheck) { //One extra safeguard to ensure that we (still) have the permission
+	if (allowUpdateCheck || forceCheck) { //One extra safeguard to ensure that we (still) have the permission
 		//std::string url = "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"; //Update feed
 
 		std::string resultCategory;
@@ -225,15 +232,18 @@ void AppUpdater::PerformUpdateCheck() {
 				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId, branchName);
 				resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
-			}
+                lastFetchStatus = (int)FetchStatus::OKAY;
+            }
 			else { //parse error
 				resultCategory = "parseError";
 				resultDetail << "parseError_" << parseResult.status << "_" << applicationName << "_" << currentVersionId;
-			}
+                lastFetchStatus = (int)FetchStatus::PARSE_ERROR;
+            }
 		}
 		else { //download error
 			resultCategory = "stringDownloadError";
 			resultDetail << "stringDownloadError_" << downloadResult << "_" << applicationName << "_" << currentVersionId;
+		    lastFetchStatus = (int)FetchStatus::DOWNLOAD_ERROR;
 		}
 		//Send result for analytics
 
@@ -280,7 +290,7 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 * \return vector with newer releases
 */
 std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
-	std::vector<UpdateManifest> availableUpdates;
+	std::vector<UpdateManifest> availables;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
 	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
@@ -300,14 +310,14 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
 
 					for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
-						newUpdate.filesToCopy.push_back(fileNode.attribute("name").as_string());
+						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
-					availableUpdates.push_back(newUpdate);
+					availables.push_back(newUpdate);
 				}
 			}
 		}
 	}
-	return availableUpdates;
+	return availables;
 }
 
 /**
@@ -796,11 +806,19 @@ void ManualUpdateCheckDialog::Refresh() {
             }
         }
         else { // no updates found
-            aboutText << "This is already the latest version!" << std::endl;
+            // Try again
             updater->PerformImmediateCheck();
-            aboutText << updater->GetLatestChangeLog();
-            if(updater->IsUpdateAvailable())
+            if (updater->IsUpdateAvailable())
                 updateAvailable = true;
+            if(updater->GetStatus() != (int)FetchStatus::OKAY){
+                aboutText << "Could not retrieve update details!" << std::endl;
+                aboutText << "Please check your internet connection or try again later." << std::endl;
+                aboutText << "Find updates manually at:    https://molflow.web.cern.ch/" << std::endl;            }
+            else {
+                aboutText << "This is already the latest version!" << std::endl;
+                //updater->PerformImmediateCheck();
+                aboutText << updater->GetLatestChangeLog();
+            }
         }
     }
     else{ // app updater error

@@ -181,10 +181,10 @@ void HistogramPlotter::Refresh() {
 	size_t modeId = GetSelectedTabIndex();
 	std::vector<int> histogramFacetIds;
 
-	bool recordGlobal = ((modeId == HISTOGRAM_MODE_BOUNCES && worker->wp.globalHistogramParams.recordBounce)
-		|| (modeId == HISTOGRAM_MODE_DISTANCE && worker->wp.globalHistogramParams.recordDistance)
+	bool recordGlobal = ((modeId == HISTOGRAM_MODE_BOUNCES && worker->model->wp.globalHistogramParams.recordBounce)
+		|| (modeId == HISTOGRAM_MODE_DISTANCE && worker->model->wp.globalHistogramParams.recordDistance)
 #if defined(MOLFLOW)
-		|| (modeId == HISTOGRAM_MODE_TIME && worker->wp.globalHistogramParams.recordTime)
+		|| (modeId == HISTOGRAM_MODE_TIME && worker->model->wp.globalHistogramParams.recordTime)
 #endif
 		);
 	if (recordGlobal) histogramFacetIds.push_back(-1); // -1 == Global histogram
@@ -288,22 +288,22 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	if (facetId == -1) { //Global histogram
 		if (modeId == HISTOGRAM_MODE_BOUNCES) {
 			histogramValues = &(worker->globalHistogramCache.nbHitsHistogram);
-			xMax = (double)worker->wp.globalHistogramParams.nbBounceMax;
-			xSpacing = (double)worker->wp.globalHistogramParams.nbBounceBinsize;
-			nbBins = worker->wp.globalHistogramParams.GetBounceHistogramSize();
+			xMax = (double)worker->model->wp.globalHistogramParams.nbBounceMax;
+			xSpacing = (double)worker->model->wp.globalHistogramParams.nbBounceBinsize;
+			nbBins = worker->model->wp.globalHistogramParams.GetBounceHistogramSize();
 		}
 		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
 			histogramValues = &(worker->globalHistogramCache.distanceHistogram);
-			xMax = worker->wp.globalHistogramParams.distanceMax;
-			xSpacing = worker->wp.globalHistogramParams.distanceBinsize;
-			nbBins = worker->wp.globalHistogramParams.GetDistanceHistogramSize();
+			xMax = worker->model->wp.globalHistogramParams.distanceMax;
+			xSpacing = worker->model->wp.globalHistogramParams.distanceBinsize;
+			nbBins = worker->model->wp.globalHistogramParams.GetDistanceHistogramSize();
 		}
 #if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(worker->globalHistogramCache.timeHistogram);
-			worker->wp.globalHistogramParams.timeMax;
-			xSpacing = worker->wp.globalHistogramParams.timeBinsize;
-			nbBins = worker->wp.globalHistogramParams.GetTimeHistogramSize();
+			worker->model->wp.globalHistogramParams.timeMax;
+			xSpacing = worker->model->wp.globalHistogramParams.timeBinsize;
+			nbBins = worker->model->wp.globalHistogramParams.GetTimeHistogramSize();
 		}
 #endif
 	}

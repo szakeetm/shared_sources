@@ -37,7 +37,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma warning(disable : 4146)
 #endif
 
-unsigned long GenerateSeed();
+unsigned long GenerateSeed(size_t offsetIndex);
 
 class MersenneTwister {
 
@@ -74,7 +74,7 @@ public:
         gsl_rng_env_setup();                          // Read variable environnement
         const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
         this->gen=gsl_rng_alloc (type);;
-        gsl_rng_set(this->gen,GenerateSeed());
+        gsl_rng_set(this->gen, GenerateSeed(0));
     }
     ~TruncatedGaussian(){
         gsl_rng_free(this->gen);

@@ -218,11 +218,12 @@ public:
 	void SkipAvailableUpdates();
 	void InstallLatestUpdate(UpdateLogWindow* logWindow);
 	void IncreaseSessionCount();
-	
+	int GetStatus(){return lastFetchStatus;};
 private:
 
 	//Initialized by constructor:
 	int currentVersionId;
+	int lastFetchStatus;
 	std::string applicationName;
 	std::string configFileName;
 
@@ -243,12 +244,12 @@ private:
 	//Methods
 	void SaveConfig();
 	void LoadConfig();
-	void PerformUpdateCheck(); //Actually check for updates (once we have user permission)
+	void PerformUpdateCheck(bool forceCheck); //Actually check for updates (once we have user permission)
 	
 	std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
-	UpdateManifest GetLatest(const std::vector<UpdateManifest>& updates);
+	static UpdateManifest GetLatest(const std::vector<UpdateManifest>& updatesstatic );
     std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
     std::string GetLatestChangeLog(const std::vector<UpdateManifest>& updates);
     void SkipVersions(const std::vector<UpdateManifest>& updates);

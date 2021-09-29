@@ -182,7 +182,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 		}
 		if (src == selectButton) geom->UnselectAll();
 		for (size_t i = 0; i < geom->GetNbFacet(); i++) {
-			Facet* f = geom->GetFacet(i);
+			InterfaceFacet* f = geom->GetFacet(i);
 			bool match = f->sh.isTextured;
 			if (squareToggle->GetState() != 2) match = match && ((squareToggle->GetState()==1) == IsEqual(f->tRatioU,f->tRatioV));
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) || IsEqual(ratio, f->tRatioV);

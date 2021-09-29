@@ -8,6 +8,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include "GLTypes.h"  //GL_OK
+#include "Helper/Chronometer.h"
 //#include "GLWindow.h"
 //#include "GLComponent.h"
 //class GLWindow;
@@ -73,6 +74,7 @@ public:
     //float             m_fElapsedTime;      // Time elapsed since last frame
     float             m_fFPS;              // Instanteous frame rate
 	float			  m_fTime;             // Number of second since app startup (WIN32 only)
+	Chronometer       m_Timer;
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	bool wereEvents;
@@ -96,7 +98,7 @@ private:
 
    int m_bitsPerPixel;
    char errMsg[512];
-   int  lastTick;
+   time_type  lastTick;
    //int  lastFrTick;
    int  nbFrame;
    int  nbEvent;

@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class FileReader;
 #include <vector>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 
 template <class Datatype> class Distribution{ //All methods except Interpolate
 protected:
@@ -44,9 +44,12 @@ public:
 	void SetY(const size_t& index, const Datatype& y);
 	void Resize(const size_t& N); //Clear, resize and shrink.
 	size_t GetSize();
+	size_t GetMemSize();
 	double GetX(const size_t& index);
 	Datatype GetY(const size_t& index); //GetYValue seems reserved
-	const std::vector<std::pair<double,Datatype>> GetValues(){return (const std::vector<std::pair<double,Datatype>>)values;}
+	[[nodiscard]] const std::vector<std::pair<double,Datatype>>& GetValues() const {
+	    return values;
+	}
 	bool logXinterp=false;
 	bool logYinterp=false;
 };
@@ -99,6 +102,11 @@ template <class Datatype> size_t Distribution<Datatype>::GetSize() {
 	return values.size();
 }
 
+template <class Datatype> size_t Distribution<Datatype>::GetMemSize() {
+    return sizeof(std::vector<std::pair<double,Datatype>>)
+    + (sizeof(std::pair<double,Datatype>) * values.capacity());
+}
+
 template <class Datatype> double Distribution<Datatype>::GetX(const size_t& index) {
 	assert(index < values.size());
 	return values[index].first;
@@ -111,8 +119,8 @@ template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t& in
 
 class Distribution2D:public Distribution<double> { //Standard x-y pairs of double
 public:
-	double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
-	double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
+	[[nodiscard]] double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
+	[[nodiscard]] double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
 
     template<class Archive>
     void serialize(Archive & archive)

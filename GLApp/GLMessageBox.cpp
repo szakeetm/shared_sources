@@ -10,20 +10,19 @@
 GLMessageBox::GLMessageBox(const std::string & message, const std::string & title, const std::vector<std::string> & buttonList, int icon) :GLWindow() {
 
 	int xD, yD, wD, hD, iconWidth, txtWidth, txtHeight;
-	int nbButton = 0;
 
 	if (title.length()) SetTitle(title);
 	else      SetTitle("Message");
 
 	// Label
-	GLLabel  *label = new GLLabel(message.c_str());
+	auto  *label = new GLLabel(message.c_str());
 	label->GetTextBounds(&txtWidth, &txtHeight);
 	iconWidth = (icon == GLDLG_ICONNONE) ? 0 : 64;
 	label->SetBounds(iconWidth + 3, 3, txtWidth, txtHeight);
 	Add(label);
 
 	// Icon
-	GLIcon   *gIcon = NULL;
+	GLIcon   *gIcon;
 	switch (icon) {
 	case GLDLG_ICONERROR:
 		gIcon = new GLIcon("images/icon_error.png");
@@ -37,7 +36,11 @@ GLMessageBox::GLMessageBox(const std::string & message, const std::string & titl
 	case GLDGL_ICONDEAD:
 		gIcon = new GLIcon("images/icon_dead.png");
 		break;
+    default:
+        gIcon = nullptr;
+        break;
 	}
+
 	if (gIcon) {
 		gIcon->SetBounds(3, 0, 64, 64);
 		Add(gIcon);
@@ -51,8 +54,8 @@ GLMessageBox::GLMessageBox(const std::string & message, const std::string & titl
 	int startY = hD - 45;
 
 	int compId = 0;
-	for (std::string buttonText : buttonList) {
-		GLButton *btn = new GLButton(compId++, buttonText.c_str());
+	for (const std::string& buttonText : buttonList) {
+		auto *btn = new GLButton(compId++, buttonText.c_str());
 		btn->SetBounds(startX, startY, 75, 20);
 		Add(btn);
 		startX += 80;
@@ -64,10 +67,10 @@ GLMessageBox::GLMessageBox(const std::string & message, const std::string & titl
 	if (wD > wS) wD = wS;
 	xD = (wS - wD) / 2;
 	yD = (hS - hD) / 2;
-	SetBounds(xD, yD, wD, hD);
+    GLWindow::SetBounds(xD, yD, wD, hD);
 
 	// Create objects
-	RestoreDeviceObjects();
+    GLContainer::RestoreDeviceObjects();
 
 	rCode = GLDLG_CANCEL;
 
@@ -154,7 +157,7 @@ GLMessageBox::GLMessageBox(const char *message,char *title,int mode,int icon):GL
 void GLMessageBox::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
     rCode = src->GetId();
-    GLWindow::ProcessMessage(NULL,MSG_CLOSE);
+    GLWindow::ProcessMessage(nullptr, MSG_CLOSE);
     return;
   }
   GLWindow::ProcessMessage(src,message);
@@ -163,13 +166,13 @@ void GLMessageBox::ProcessMessage(GLComponent *src,int message) {
 int GLMessageBox::Display(const char *message, const char *title,int mode,int icon) {
 	std::vector<std::string> list;
 	if (mode & GLDLG_OK) {
-		list.push_back("OK");
+		list.emplace_back("OK");
 	}
 	if (mode & GLDLG_CANCEL) {
-		list.push_back("Cancel");
+		list.emplace_back("Cancel");
 	}
 	std::string titleStr;
-	if (title == NULL) titleStr = "";
+	if (title == nullptr) titleStr = "";
 	else titleStr = title;
 	int retCode = Display(message, titleStr, list, icon);
 	if (retCode == 0) return GLDLG_OK;
@@ -187,7 +190,7 @@ int GLMessageBox::Display(const std::string & message, const std::string & title
 	glGetIntegerv(GL_VIEWPORT, old_viewport);
 
 	// Initialise
-	GLMessageBox *dlg = new GLMessageBox(message, title, buttonList, icon);
+	auto *dlg = new GLMessageBox(message, title, buttonList, icon);
 	dlg->DoModal();
 	int ret = dlg->rCode;
 	delete dlg;

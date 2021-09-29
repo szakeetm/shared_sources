@@ -3,10 +3,10 @@
 //
 
 
-
+#include <thread>
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
-#else if not(defined(__MACOSX__) || defined(__APPLE__))
+#elif not(defined(__MACOSX__) || defined(__APPLE__))
 #include <cstring> //memset on unix
 #endif
 
@@ -19,23 +19,23 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <cereal/archives/binary.hpp>
+#include <../src/Simulation/Simulation.h>
+#include <Helper/ConsoleLogger.h>
 
-SimulationManager::SimulationManager(std::string appName , std::string dpName) {
+SimulationManager::SimulationManager() {
+    simulationChanged = true; // by default always init simulation process the first time
+    interactiveMode = true;
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
 
     useCPU = false;
-    nbCores = 0;
+    nbThreads = 0;
 
     useGPU = false;
 
     useRemote = false;
-
-    dpControl = nullptr;
-    dpHit = nullptr;
-    dpLog = nullptr;
-    dpLoader = nullptr;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     uint32_t pid = _getpid();
@@ -45,25 +45,26 @@ SimulationManager::SimulationManager(std::string appName , std::string dpName) {
     const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
 #endif
 
-    sprintf(this->appName,"%s", appName.c_str());
-    sprintf(this->ctrlDpName,"%s", std::string(dpPrefix+dpName+"CTRL"+std::to_string(pid)).c_str());
-    sprintf(this->loadDpName,"%s", std::string(dpPrefix+dpName+"LOAD"+std::to_string(pid)).c_str());
-    sprintf(this->hitsDpName,"%s", std::string(dpPrefix+dpName+"HITS"+std::to_string(pid)).c_str());
-    sprintf(this->logDpName,"%s", std::string(dpPrefix+dpName+"LOG"+std::to_string(pid)).c_str());
-
 }
 
 SimulationManager::~SimulationManager() {
-    CLOSEDP(dpControl);
-    CLOSEDP(dpLoader);
-    CLOSEDP(dpHit);
-    CLOSEDP(dpLog);
+    KillAllSimUnits();
+    for(auto& unit : simUnits){
+        delete unit;
+    }
 }
 
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
-        if(!IsProcessRunning((*proc).first)){
+        if(!(*proc).first.joinable()){
+            auto myHandle = (*proc).first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+            TerminateThread(myHandle, 1);
+#else
+            //Linux
+            pthread_cancel(myHandle);
+#endif
             proc = this->simHandles.erase(proc);
             ++nbDead;
         }
@@ -96,57 +97,38 @@ int SimulationManager::ResetStatsAndHits() {
     return 0;
 }
 
-int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send simulation mode changes to subprocesses without reloading the whole geometry
-    if (simHandles.empty())
-        throw std::logic_error("No active simulation handles!");
-
-    if(!ignoreSubs) {
-        //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-            throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
-        }
-    }
-    //To do: only close if parameters changed
-    if (dpLog && logSize == dpLog->size) {
-        ClearLogBuffer(); //Fills values with 0
-    } else {
-        CloseLogDP();
-        if (logSize)
-            if(CreateLogDP(logSize)) {
-                throw std::runtime_error(
-                        "Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
-            }
-    }
-
-    return 0;
-}
-
-int SimulationManager::ReloadHitBuffer(size_t hitSize) {
-    if(dpHit && hitSize == dpHit->size){
-        // Just reset the buffer
-        ResetHits();
-    }
-    else{
-        CloseHitsDP();
-        if (CreateHitsDP(hitSize)) {
-            throw std::runtime_error("Failed to create 'hits' dataport: out of memory.");
-        }
-    }
-
-    return 0;
-}
-
 /*!
  * @brief Starts the simulation on all available simulation units
  * @return 0=start successful, 1=PROCESS_DONE state entered
  */
 int SimulationManager::StartSimulation() {
-    refreshProcStatus();
-    if (simHandles.empty())
-        throw std::logic_error("No active simulation handles!");
+    if(interactiveMode) {
+        refreshProcStatus();
+        if (simHandles.empty())
+            throw std::logic_error("No active simulation handles!");
 
-    if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)){ // TODO: 0=MC_MODE, AC_MODE should be seperated completely
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+        if(simulationChanged){
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+                throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+            }
+            simulationChanged = false;
+        }
+        if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
+        }
+    }
+    else {
+        if(simulationChanged){
+            this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
+            for(auto& con : simController){
+                con.Load();
+            }
+            simulationChanged = false;
+        }
+        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        for(auto& con : simController){
+            con.Start();
+        }
     }
 
     if(allProcsDone){
@@ -159,12 +141,43 @@ int SimulationManager::StartSimulation() {
 
 int SimulationManager::StopSimulation() {
     isRunning = false;
-    refreshProcStatus();
-    if (simHandles.empty())
-        return 1;
+    if(interactiveMode) {
+        refreshProcStatus();
+        if (simHandles.empty())
+            return 1;
 
-    if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+        if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+    }
+    else {
+        /*if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+        */
+        return 1;
+    }
+
+    return 0;
+}
+
+int SimulationManager::LoadSimulation(){
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+            std::string errString = "Failed to send geometry to sub process:\n";
+            errString.append(GetErrorDetails());
+            throw std::runtime_error(errString);
+        }
+    }
+    else{
+        bool errorOnLoad = false;
+        for(auto& con : simController){
+            errorOnLoad |= con.Load();
+        }
+        if(errorOnLoad){
+            std::cerr << "Failed to load simulation!" << std::endl;
+            return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -215,13 +228,7 @@ int SimulationManager::TerminateSimHandles() {
     return 0;
 }
 
-int SimulationManager::FetchResults() {
-
-    return 0;
-}
-
-int SimulationManager::CreateCPUHandle(uint16_t iProc) {
-    char cmdLine[512];
+int SimulationManager::CreateCPUHandle() {
     uint32_t processId;
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -230,29 +237,67 @@ int SimulationManager::CreateCPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
-    char *arguments[4];
-    for(int arg=0;arg<3;arg++)
-        arguments[arg] = new char[512];
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine,"%sSub.exe %d %hu",appName,processId,iProc);
-    sprintf(arguments[0],"%s",cmdLine);
+    //Get number of cores
+    if(nbThreads == 0) {
+#if defined(DEBUG)
+        nbThreads = 1;
 #else
-    sprintf(cmdLine,"./%sSub",appName);
-    sprintf(arguments[0],"%s",cmdLine);
-    sprintf(arguments[1],"%d",processId);
-    sprintf(arguments[2],"%hu",iProc);
-    arguments[3] = nullptr;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo(&sysinfo);
+        nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
+#else
+        nbThreads = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
+#endif // WIN
+#endif // DEBUG
+    }
+
+    if(!simUnits.empty()){
+        for(auto& sim : simUnits){
+            delete sim;
+        }
+    }
+    size_t nbSimUnits = 1; // nbThreads
+    try{
+        simUnits.resize(nbSimUnits);
+        procInformation.Resize(nbThreads);
+        simController.clear();
+        simHandles.clear();
+    }
+    catch (std::exception& e){
+        std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
+        throw std::runtime_error(e.what());
+    }
+
+    for(size_t t = 0; t < nbSimUnits; ++t){
+        simUnits[t] = new Simulation();
+    }
+    simController.emplace_back(SimulationController{processId, 0, nbThreads,
+                                                    simUnits.back(), &procInformation});
+    if(interactiveMode) {
+        simHandles.emplace_back(
+                /*StartProc(arguments, STARTPROC_NOWIN),*/
+                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                SimType::simCPU);
+        /*simUnits.emplace_back(Simulation{nbThreads});
+        procInformation.emplace_back(SubDProcInfo{});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        simHandles.emplace_back(
+                *//*StartProc(arguments, STARTPROC_NOWIN),*//*
+            std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
+            SimType::simCPU);*/
+        auto myHandle = simHandles.back().first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+        int policy;
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
 #endif
-
-    simHandles.emplace_back(
-            StartProc(arguments, STARTPROC_NOWIN),
-            SimType::simCPU);
-
-    for(int arg=0;arg<3;arg++)
-        if(arguments[arg] != nullptr) delete[] arguments[arg];
-
-    // Wait a bit
-    ProcessSleep(25);
+    }
 
     return 0;
 }
@@ -267,93 +312,52 @@ int SimulationManager::CreateRemoteHandle() {
     return 1;
 }
 
-int SimulationManager::CreateLoaderDP(size_t loaderSize) {
-
-    //std::string loaderString = SerializeForLoader().str();
-    //size_t loadSize = loaderSize.size();
-    dpLoader = CreateDataport(loadDpName, loaderSize);
-    if (!dpLoader)
-        return 1;
-        //throw Error("Failed to create 'loader' dataport.\nMost probably out of memory.\nReduce number of subprocesses or texture size.");
-
-    //progressDlg->SetMessage("Accessing dataport...");
-//    AccessDataportTimed(dpLoader, (DWORD)(3000 + nbCores*loaderSize / 10000));
-//    //progressDlg->SetMessage("Assembling geometry to pass...");
-//
-//    std::copy(loaderSize.begin(), loaderSize.end(), (BYTE*)dpLoader->buff);
-//
-//    //progressDlg->SetMessage("Releasing dataport...");
-//    ReleaseDataport(dpLoader);
-    return 0;
-}
-
-int SimulationManager::CreateControlDP() {
-    if( !dpControl )
-        dpControl = CreateDataport(ctrlDpName,sizeof(SHCONTROL));
-    if( !dpControl )
-        return 1;
-        //throw Error("Failed to create 'control' dataport");
-    AccessDataport(dpControl);
-    memset(dpControl->buff,0,sizeof(SHCONTROL));
-    ReleaseDataport(dpControl);
-
-    return 0;
-}
-
-//TODO: This is Molflow only
-int SimulationManager::CreateLogDP(size_t logDpSize) {
-    //size_t logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
-    dpLog = CreateDataport(logDpName, logDpSize);
-    if (!dpLog) {
-        //progressDlg->SetVisible(false);
-        //SAFE_DELETE(progressDlg);
-        return 1;
-        //throw Error("Failed to create 'dpLog' dataport.\nMost probably out of memory.\nReduce number of logged particles in Particle Logger.");
-    }
-
-    return 0;
-}
-
-int SimulationManager::CreateHitsDP(size_t hitSize) {
-    //size_t hitSize = geom->GetHitsSize(&moments);
-    dpHit = CreateDataport(hitsDpName, hitSize);
-    //ClearHits(true);
-    if (!dpHit) {
-        return 1;
-        //throw Error("Failed to create 'hits' dataport: out of memory.");
-    }
-
-    // ClearHits
-    ResetHits(); //Also clears hits, leaks
-    return 0;
-}
-
 /*!
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
 int SimulationManager::InitSimUnits() {
 
-    // First create Control DP, so subprocs can communicate
-    if(CreateControlDP())
-        throw std::runtime_error("Could not create control dataport!");
-
     if(useCPU){
         // Launch nbCores subprocesses
-        auto nbActiveProcesses = simHandles.size();
-        for(int iProc = 0; iProc < nbCores; ++iProc) {
-            if(CreateCPUHandle(iProc + nbActiveProcesses)) // abort initialization when creation fails
-                return simHandles.size();
-        }
+        CreateCPUHandle();
     }
     if(useGPU){
         CreateGPUHandle();
+        //procInformation.push_back(simController.back().procInfo);
     }
     if(useRemote){
         CreateRemoteHandle();
+        //procInformation.push_back(simController.back().procInfo);
     }
 
     return WaitForProcStatus(PROCESS_READY);
+}
+
+/*!
+ * @brief Creates Simulation Units and waits for their ready status
+ * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
+ */
+int SimulationManager::InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState) {
+    if (!model->m.try_lock()) {
+        return 1;
+    }
+    // Prepare simulation unit
+    ResetSimulations();
+    ForwardSimModel(model);
+    ForwardGlobalCounter(globState, nullptr);
+
+    //bool invalidLoad = LoadSimulation();
+    model->m.unlock();
+
+    /*if(invalidLoad){
+        std::string errString = "Failed to send geometry to sub process:\n";
+        errString.append(GetErrorDetails());
+        throw std::runtime_error(errString);
+        return 1;
+    }*/
+
+    return 0;
 }
 
 /*!
@@ -369,38 +373,34 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     int waitTime = 0;
     int timeOutAt = 10000; // 10 sec; max time for an idle operation to timeout
     allProcsDone = true;
+    hasErrorStatus = false;
 
     // struct, because vector of char arrays is forbidden w/ clang
     struct StateString {
         char s[128];
     };
-    std::vector<StateString> prevStateStrings(simHandles.size());
-    std::vector<StateString> stateStrings(simHandles.size());
+    std::vector<StateString> prevStateStrings(procInformation.subProcInfo.size());
+    std::vector<StateString> stateStrings(procInformation.subProcInfo.size());
 
-    AccessDataport(dpControl);
     {
-        auto *shMaster = (SHCONTROL *) dpControl->buff;
-        for (size_t i = 0; i < simHandles.size(); i++) {
-            snprintf(prevStateStrings[i].s, 128, shMaster->procInformation[i].statusString);
+        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+            snprintf(prevStateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
         }
     }
-    ReleaseDataport(dpControl);
 
     do {
 
         finished = true;
-        AccessDataport(dpControl);
-        auto *shMaster = (SHCONTROL *) dpControl->buff;
 
-        for (size_t i = 0; i < simHandles.size(); i++) {
-            auto procState = shMaster->procInformation[i].slaveState;
+        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+            auto procState = procInformation.subProcInfo[i].slaveState;
             finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i].s, 128, shMaster->procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) { // if strings are different
+                snprintf(stateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
+                if(strcmp(prevStateStrings[i].s, stateStrings[i].s) != 0) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
                     prevIncTime = waitTime;
@@ -408,7 +408,6 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
-        ReleaseDataport(dpControl);
 
         if (!finished) {
             ProcessSleep(waitAmount);
@@ -420,26 +419,17 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 }
 
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
-    if(!dpControl) {
-        return 1;
-    }
-
     // Send command
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    for(size_t i=0;i<simHandles.size();i++) {
-        auto procState = shMaster->procInformation[i].slaveState;
-        if(procState == PROCESS_READY
-           || procState == PROCESS_RUN
-              || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
-            shMaster->procInformation[i].slaveState = PROCESS_STARTING;
-            shMaster->procInformation[i].oldState = shMaster->procInformation[i].masterCmd; // use to solve old state
-            shMaster->procInformation[i].masterCmd = command;
-            shMaster->procInformation[i].cmdParam = param;
-            shMaster->procInformation[i].cmdParam2 = param2;
+
+    procInformation.masterCmd = command;
+    procInformation.cmdParam = param;
+    procInformation.cmdParam2 = param2;
+    for(auto & i : procInformation.subProcInfo) {
+        auto procState = i.slaveState;
+        if(procState == PROCESS_READY || procState == PROCESS_RUN || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
+            i.slaveState = PROCESS_STARTING;
         }
     }
-    ReleaseDataport(dpControl);
 
     return 0;
 }
@@ -457,173 +447,131 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
+        return 1;
     }
-    return 1;
+    return 2;
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if( dpControl && !simHandles.empty() ) {
+    if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-            AccessDataport(dpControl);
-            auto *shMaster = (SHCONTROL *)dpControl->buff;
-            for(size_t i=0;i<simHandles.size();i++) {
-                if (shMaster->procInformation[i].slaveState != PROCESS_KILLED){
-                    if(!KillProc(simHandles[i].first)) {
+            for(auto& con : simController)
+                con.EmergencyExit();
+            if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
+                int i = 0;
+                for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
+                    if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
+                        auto nativeHandle = simHandles[i].first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+                        //Windows
+                        TerminateThread(nativeHandle, 1);
+#else
+                        //Linux
+                        int s;
+                        s = pthread_cancel(nativeHandle);
+                        if (s != 0)
+                            printf("pthread_cancel: %d\n", s);
+                        tIter->first.detach();
+#endif
                         //assume that the process doesn't exist, so remove it from our management structure
-                        simHandles.erase((simHandles.begin()+i));
-                        ReleaseDataport(dpControl);
-                        throw std::runtime_error(MakeSubProcError("Could not terminate sub processes")); // proc couldn't be killed!?
+                        try {
+                            tIter = simHandles.erase(tIter);
+                        }
+                        catch (std::exception &e) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
+                        catch (...) {
+                            char tmp[512];
+                            snprintf(tmp, 512, "Could not terminate sub processes\n");
+                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                        }
                     }
                 }
             }
-            ReleaseDataport(dpControl);
+        }
+
+        for(size_t i=0;i<simHandles.size();i++) {
+            if (procInformation.subProcInfo[i].slaveState == PROCESS_KILLED) {
+                simHandles[i].first.join();
+            }
+            else{
+                auto nativeHandle = simHandles[i].first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+                //Windows
+                TerminateThread(nativeHandle, 1);
+#else
+                //Linux
+                pthread_cancel(nativeHandle);
+#endif
+            }
         }
         simHandles.clear();
     }
-    nbCores = 0;
-    return 0;
-}
-
-int SimulationManager::ClearLogBuffer() {
-    if (!dpLog) {
-        return 1;
-    }
-    AccessDataport(dpLog);
-    memset(dpLog->buff, 0, dpLog->size); //Also clears hits, leaks
-    ReleaseDataport(dpLog);
+    nbThreads = 0;
     return 0;
 }
 
 int SimulationManager::ResetSimulations() {
-    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
+    }
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
+    }
     return 0;
 }
 
 int SimulationManager::ResetHits() {
     isRunning = false;
-    if (!dpHit) {
-        return 1;
+    if(interactiveMode) {
+        if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
+            throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     }
-    if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
-        throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
-    AccessDataport(dpHit);
-    memset(dpHit->buff, 0, dpHit->size); //Also clears hits, leaks
-    ReleaseDataport(dpHit);
+    else {
+        for(auto& con : simController){
+            con.Reset();
+        }
+    }
     return 0;
 }
 
-int SimulationManager::CloseLoaderDP() {
-    CLOSEDP(dpLoader);
-    return 0;
-}
-
-int SimulationManager::CloseControlDP() {
-    CLOSEDP(dpControl);
-    return 0;
-}
-
-int SimulationManager::CloseLogDP() {
-    CLOSEDP(dpLog);
-    return 0;
-}
-
-int SimulationManager::CloseHitsDP() {
-    CLOSEDP(dpHit);
-    return 0;
-}
-
-int SimulationManager::GetProcStatus(std::vector<SubProcInfo>& procInfoList) {
+int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     if(simHandles.empty())
         return 1;
 
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    for(int i = 0; i<simHandles.size();++i){
-        SubProcInfo pInfo{};
-        pInfo.procId = simHandles[i].first;
-        pInfo.masterCmd = shMaster->procInformation[i].masterCmd;
-        pInfo.slaveState = shMaster->procInformation[i].slaveState;
-        strncpy(pInfo.statusString,shMaster->procInformation[i].statusString,128);
-        pInfo.cmdParam = shMaster->procInformation[i].cmdParam;
-        pInfo.oldState = shMaster->procInformation[i].oldState;
-        pInfo.runtimeInfo = shMaster->procInformation[i].runtimeInfo;
-
-        procInfoList.emplace_back(pInfo);
-    }
-    ReleaseDataport(dpControl);
+    procInfoList.subProcInfo = procInformation.subProcInfo;
 
     return 0;
 }
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
-    AccessDataport(dpControl);
-    auto *shMaster = (SHCONTROL *)dpControl->buff;
-    //memcpy(states, shMaster->states, MAX_PROCESS * sizeof(size_t));
-    for (size_t i = 0; i < MAX_PROCESS; i++) {
+
+    if(statusStrings.size() < procInformation.subProcInfo.size())
+        return 1;
+
+    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = shMaster->procInformation[i].slaveState;
+        states[i] = procInformation.subProcInfo[i].slaveState;
         char tmp[128];
-        strncpy(tmp, shMaster->procInformation[i].statusString, 127);
+        strncpy(tmp, procInformation.subProcInfo[i].statusString, 127);
         tmp[127] = 0;
         statusStrings[i] = tmp;
     }
-    ReleaseDataport(dpControl);
     return 0;
 }
 
-BYTE *SimulationManager::GetLockedHitBuffer() {
-    if (dpHit && AccessDataport(dpHit)) {
-        // A copy might result in too much memory requirement depending on the geometry
-        /*BYTE* bufferCopy;
-        bufferCopy = new BYTE[dpHit->size];
-        std::copy((BYTE*)dpHit->buff,(BYTE*)dpHit->buff + dpHit->size,bufferCopy);
-        ReleaseDataport(dpHit);*/
-        return (BYTE*)dpHit->buff;
-    }
-    return nullptr;
+bool SimulationManager::GetLockedHitBuffer() {
+    return true;
 }
 
 int SimulationManager::UnlockHitBuffer() {
-    if (dpHit && ReleaseDataport(dpHit)) {
-        return 0;
-    }
-    return 1;
-}
-
-int SimulationManager::UploadToLoader(void *data, size_t size) {
-    if (dpLoader && AccessDataport(dpLoader)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpLoader->buff);
-        ReleaseDataport(dpLoader);
-        return 0;
-    }
-
-    return 1;
-}
-
-int SimulationManager::UploadToHitBuffer(void *data, size_t size) {
-    if (dpHit && AccessDataport(dpHit)) {
-        std::copy((BYTE*)data,(BYTE*)data + size,(BYTE*)dpHit->buff);
-        ReleaseDataport(dpHit);
-        return 0;
-    }
-
-    return 1;
-}
-
-BYTE *SimulationManager::GetLockedLogBuffer() {
-    if (dpLog && AccessDataport(dpLog)) {
-        return (BYTE*)dpLog->buff;
-    }
-    return nullptr;
-}
-
-int SimulationManager::UnlockLogBuffer() {
-    if (dpLog && ReleaseDataport(dpLog)) {
-        return 0;
-    }
-    return 1;
+    return 0;
 }
 
 /*!
@@ -632,10 +580,9 @@ int SimulationManager::UnlockLogBuffer() {
  */
 bool SimulationManager::GetRunningStatus(){
 
-    auto *shMaster = (SHCONTROL *) dpControl->buff;
     bool done = true;
-    for (size_t i = 0; i < simHandles.size(); i++) {
-        auto procState = shMaster->procInformation[i].slaveState;
+    for (auto & i : procInformation.subProcInfo) {
+        auto procState = i.slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {
             hasErrorStatus = true;
@@ -652,24 +599,35 @@ bool SimulationManager::GetRunningStatus(){
  * @brief Return error information or current running state in case of a hangup
  * @return char array containing proc status (and error message/s)
  */
-const char *SimulationManager::GetErrorDetails() {
+std::string SimulationManager::GetErrorDetails() {
 
-    std::vector<SubProcInfo> procInfo;
+    ProcComm procInfo;
     GetProcStatus(procInfo);
 
-    static char err[1024];
-    strcpy(err, "");
+    std::string err;
+    //static char err[1024];
+    //std::memset(err, 0, 1024);
 
-    for (size_t i = 0; i < procInfo.size(); i++) {
-        char tmp[512];
-        size_t state = procInfo[i].slaveState;
+    for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
+        char tmp[512]{'\0'};
+        size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s: %s\n", i, procInfo[i].procId, prStates[state],
-                    procInfo[i].statusString);
+            sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
+                    procInfo.subProcInfo[i].statusString);
         } else {
-            sprintf(tmp, "[#%zd] Process [PID %lu] %s\n", i, procInfo[i].procId, prStates[state]);
+            sprintf(tmp, "[Thread #%zd] %s\n", i, prStates[state]);
         }
-        strncat(err, tmp, 512);
+        // Append at most up to character 1024, strncat would otherwise overwrite in memory
+        err.append(tmp);
+        if(err.size() >= 1024) {
+            err.resize(1024);
+            break;
+        }
+        /*strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
+        if(strlen(err) >= 1024) {
+            err[1023] = '\0';
+            break;
+        }*/
     }
     return err;
 }
@@ -691,58 +649,141 @@ std::string SimulationManager::MakeSubProcError(const char *message) {
 
 int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType) {
     if(loadType < LoadType::NLOADERTYPES){
-        if(CreateLoaderDP(size))
+        /*if(CreateLoaderDP(size))
             return 1;
         if(UploadToLoader(data, size))
-            return 1;
+            return 1;*/
     }
 
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
             if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
-                CloseLoaderDP();
+                //CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
-            CloseLoaderDP();
+            //CloseLoaderDP();
             break;
         }
         case LoadType::LOADPARAM:{
 
             //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
             if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
-                CloseLoaderDP();
+                //CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
             }
-            CloseLoaderDP();
+            //CloseLoaderDP();
             if(isRunning) { // restart
                 StartSimulation();
             }
             break;
         }
-        case LoadType::LOADAC:{
-            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
-                CloseLoaderDP();
-                std::string errString = "Failed to send AC geometry to sub process:\n";
-                errString.append(GetErrorDetails());
-                throw std::runtime_error(errString);
-            }
-            CloseLoaderDP();
-            break;
-        }
         case LoadType::LOADHITS:{
-            if(UploadToHitBuffer(data, size))
-                throw std::runtime_error(MakeSubProcError("Failed to access hit buffer"));
-            break;
         }
         default:{
             // Unspecified load type
             return 1;
         }
+    }
+
+    return 0;
+}
+
+void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog) {
+    for(auto& simUnit : simUnits) {
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
+        simUnit->globState = simState;
+        simUnit->globParticleLog = particleLog;
+        simUnit->tMutex.unlock();
+    }
+}
+
+// Create hard copy for local usage
+void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
+    for(auto& sim : simUnits)
+        sim->model = model;
+}
+
+// Create hard copy for local usage
+void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
+    for(auto& sim : simUnits)
+        sim->model->otfParams = *otfParams;
+}
+
+/**
+* \brief Saves current facet hit counter from cache to results
+*/
+void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
+    for(auto& simUnit : simUnits){
+        if(simUnit->globState->facetStates.size() != hitCaches.size()) return;
+        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+            return;
+        for (size_t i = 0; i < hitCaches.size(); i++) {
+            simUnit->globState->facetStates[i].momentResults[0].hits = *hitCaches[i];
+        }
+        simUnit->tMutex.unlock();
+    }
+}
+
+int SimulationManager::IncreasePriority() {
+#if defined(_WIN32) && defined(_MSC_VER)
+    // https://cpp.hotexamples.com/de/examples/-/-/SetPriorityClass/cpp-setpriorityclass-function-examples.html
+    HANDLE hProcess = GetCurrentProcess();
+    SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
+#else
+
+#endif
+
+    for(auto& handle : simHandles) {
+        auto myHandle = handle.first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
+#else
+        int policy;
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
+#endif
+    }
+
+    return 0;
+}
+
+int SimulationManager::DecreasePriority() {
+#if defined(_WIN32) && defined(_MSC_VER)
+    HANDLE hProcess = GetCurrentProcess();
+    SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS);
+#else
+
+#endif
+    for(auto& handle : simHandles) {
+        auto myHandle = handle.first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+        int policy;
+            struct sched_param param{};
+            pthread_getschedparam(myHandle, &policy, &param);
+            param.sched_priority = sched_get_priority_min(policy);
+            pthread_setschedparam(myHandle, policy, &param);
+            //Check! Some documentation says it's always 0
+#endif
+    }
+    return 0;
+}
+
+int SimulationManager::RefreshRNGSeed(bool fixed) {
+    if(simUnits.empty() || nbThreads == 0)
+        return 1;
+    for(auto& sim : simUnits){
+        sim->SetNParticle(nbThreads, fixed);
     }
 
     return 0;

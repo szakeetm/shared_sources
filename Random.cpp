@@ -22,11 +22,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <stdlib.h>
 #include "Random.h"
 #include "Helper/MathTools.h"
+#include <omp.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <process.h>
 #else
 #include <unistd.h>
+#include <omp.h>
+
 #endif // def WIN
 
 #define  RK_STATE_LEN 624
@@ -77,17 +80,17 @@ unsigned long MersenneTwister::GetSeed() {
     return seed;
 }
 
-unsigned long GenerateSeed() {
-    size_t ms = GetSysTimeMs();
+unsigned long GenerateSeed(size_t offsetIndex) {
+    size_t ms = omp_get_wtime();
     int processId;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     processId = _getpid();
 #else
     processId = ::getpid();
 #endif //  WIN
-
+    //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId))));
+    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+offsetIndex))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
@@ -138,7 +141,7 @@ MersenneTwister::MersenneTwister() {
 #if defined(DEBUG)
     SetSeed(42424242);
 #else
-    SetSeed(GenerateSeed());
+    SetSeed(GenerateSeed(0));
 #endif
 }
 

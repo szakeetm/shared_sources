@@ -11,7 +11,10 @@
 #include <iterator>
 
 #include <GLApp/GLTypes.h>
-
+#include <chrono>
+#if defined(WIN32) || defined(WIN64)
+#include <ctime> // for time_t
+#endif
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
 template <class T>
 T stringToNumber(std::string const& s, bool returnDefValOnErr) {
@@ -114,7 +117,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 if (facetId <= 0 || facetId > nbFacets) throw std::invalid_argument(tmp.str());
                 outputFacetIds.push_back(facetId - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] <<"\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
@@ -142,7 +145,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 outputFacetIds.resize(oldSize + facetId2 - facetId1 + 1);
                 std::iota(outputFacetIds.begin() + oldSize, outputFacetIds.end(), facetId1 - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
@@ -186,15 +189,16 @@ std::vector<std::string> SplitString(std::string const& input) {
 std::vector<std::string> SplitString(std::string const& input, const char& delimiter)
 {
     std::vector<std::string> result;
-    const char* str = strdup(input.c_str());
+    char* str = strdup(input.c_str());
+    char* str_ptr = str; // keep to free memory
     do
     {
-        const char* begin = str;
+        char* begin = str;
         while (*str != delimiter && *str)
             str++;
-
-        result.push_back(std::string(begin, str));
+        result.emplace_back(std::string(begin, str));
     } while (0 != *str++);
+    free(str_ptr);
     return result;
 }
 
@@ -225,4 +229,16 @@ bool iequals(std::string str1, std::string str2)
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
     return str1.size() == str2.size()
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
+}
+
+namespace Util {
+    std::string getTimepointString(){
+        auto time_point = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+        char s[256];
+        struct tm *p = localtime(&now_c);
+        //YYYY.MM.DD_HH.MM.SS
+        strftime(s, 256, "%F_%H.%M.%S", p);
+        return s;
+    }
 }

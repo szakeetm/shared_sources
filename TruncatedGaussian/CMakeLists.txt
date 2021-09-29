@@ -38,13 +38,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         )
 
 if(MSVC)
+    set(LINK_DIR_1 "${CMAKE_SOURCE_DIR}/lib_external/win/${MY_BUILD_TYPE}")
+    message(${LINK_DIR_1})
+
     target_include_directories(${PROJECT_NAME} PUBLIC
             #"../../include/windows_only"
             "${CMAKE_CURRENT_SOURCE_DIR}/../../include/windows_only"
             )
     target_link_libraries(${PROJECT_NAME}
-            libgsl.lib
-            libgslcblas.lib
+            ${LINK_DIR_1}/libgsl.lib
+            ${LINK_DIR_1}/libgslcblas.lib
             )
 endif(MSVC)
 if(NOT MSVC)
@@ -59,7 +62,7 @@ endif(NOT MSVC)
 ########################################
 
 # Preprocessor definitions
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)

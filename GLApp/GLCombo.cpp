@@ -31,7 +31,7 @@ public:
     if( evt->type == SDL_MOUSEBUTTONDOWN ) {
       int mx = GetX(NULL,evt);
       int my = GetY(NULL,evt);
-      if(mx>=0 && mx<=width && my>=0 && my<=height) {
+      if(mx>=0 && mx <= _width && my >= 0 && my <= _height) {
         GLWindow::ManageEvent(evt);
       } else {
         // Click outside => cancel

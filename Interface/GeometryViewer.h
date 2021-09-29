@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "GLApp/GLComponent.h"
 #include "GLApp/GLTypes.h"
+#include "GeometryTypes.h"
 #include "Vector.h"
 #include <vector>
 
@@ -70,7 +71,7 @@ class GLOverlayLabel;
 
 typedef struct {
 
-  char    *name;       // View name
+  std::string name;    // View name
 
   int      projMode;   // Projection type
   double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
@@ -92,13 +93,6 @@ typedef struct {
   double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
 } AVIEW;
-
-typedef struct {
-
-  std::string    name;       // Selection name
-  std::vector<size_t> selection; // List of facets
-
-} SelectionGroup;
 
 typedef struct {
 	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
@@ -123,18 +117,18 @@ public:
   void ToSideView();
   void ToFrontView();
   bool SelectionChanged();
-  bool IsDragging();
+  bool IsDragging() override;
   AVIEW GetCurrentView();
   void  SetCurrentView(AVIEW v);
   bool IsSelected();
   void SetSelected(bool s);
 
   // Implementation
-  void Paint();
-  void ManageEvent(SDL_Event *evt);
-  void SetBounds(int x,int y,int width,int height);
+  void Paint() override;
+  void ManageEvent(SDL_Event *evt) override;
+  void SetBounds(int x,int y,int width,int height) override;
   void ProcessMessage(GLComponent *src,int message) override;
-  void SetFocus(bool focus);
+  void SetFocus(bool focus) override;
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();

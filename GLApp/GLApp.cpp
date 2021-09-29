@@ -258,26 +258,28 @@ void GLApplication::Exit() {
 
 void GLApplication::UpdateStats() {
 
-  int fTick = SDL_GetTicks();
+  time_type fTick = clock_type::now();
   float eps;
 
   // Update timing
   nbFrame++;
-  float fTime = (float)(fTick - lastTick) * 0.001f;
-  if( (fTick - lastTick) >= 1000 ) {
-     int t0 = fTick;
-     int t = t0 - lastTick;
-     m_fFPS = (float)(nbFrame*1000) / (float)t;
-     eps = (float)(nbEvent*1000) / (float)t;
+  //float fTime = (float)(fTick - lastTick) * 0.001f;
+  std::chrono::duration<double> duration = std::chrono::duration_cast<time_ratio>(fTick - lastTick);
+
+  if( duration.count() >= 1.0 ) { // more than 1.0 sec
+     //int t0 = fTick;
+     //int t = t0 - lastTick;
+     m_fFPS = (float)(nbFrame) / (float)duration.count();
+     eps = (float)(nbEvent) / (float)duration.count();
      nbFrame = 0;
      nbEvent = 0;
-     lastTick = t0;
+     lastTick = fTick;
      sprintf(m_strFrameStats,"%.2f fps (%dx%dx%d)   ",m_fFPS,m_screenWidth,m_screenHeight,m_bitsPerPixel);
      sprintf(m_strEventStats,"%.2f eps C:%d W:%d M:%d J:%d K:%d S:%d A:%d R:%d E:%d O:%d   ",
              eps,nbMouse,nbWheel,nbMouseMotion,nbJoystic,nbKey,nbSystem,nbActive,nbResize,nbExpose,nbOther);
   }
 
-  m_fTime = (float) ( fTick - firstTick ) * 0.001f;
+  m_fTime = (float) m_Timer.Elapsed();
   //m_fElapsedTime = (fTick - lastFrTick) * 0.001f;
   //lastFrTick = fTick;
 
@@ -367,6 +369,8 @@ void GLApplication::Run() {
 //#endif
 
   // Stats
+  m_Timer.ReInit();
+  m_Timer.Start();
   m_fTime        = 0.0f;
   //m_fElapsedTime = 0.0f;
   m_fFPS         = 0.0f;
@@ -386,7 +390,7 @@ void GLApplication::Run() {
   nbWheel        = 0;
 
   //lastTick = lastFrTick = firstTick = SDL_GetTicks();
-  lastTick  = firstTick = SDL_GetTicks();
+  lastTick  = clock_type::now();
 
   mApp->CheckForRecovery();
   wereEvents = false;

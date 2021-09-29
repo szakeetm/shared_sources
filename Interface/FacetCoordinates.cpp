@@ -421,12 +421,8 @@ void FacetCoordinates::ApplyChanges(){
 			geom->Rebuild(); //Will recalculate facet parameters
 
 			// Send to sub process
-			try {
-				worker->Reload();
-			} catch(Error &e) {
-				GLMessageBox::Display(e.what(),"Error",GLDLG_OK,GLDLG_ICONERROR);
-				return;
-			}
+			worker->Reload();
+
 			//GLWindowManager::FullRepaint();
 		}
 	//}

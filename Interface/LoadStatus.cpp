@@ -105,7 +105,7 @@ LoadStatus::~LoadStatus()
 
 void LoadStatus::SMPUpdate() {
 		
-	if ((processList->GetNbRow() - 1) != worker->ontheflyParams.nbProcess) RefreshNbProcess();
+	if ((processList->GetNbRow() - 1) != worker->model->otfParams.nbProcess) RefreshNbProcess();
 
 		char tmp[512];
 		PROCESS_INFO pInfo;
@@ -115,7 +115,7 @@ void LoadStatus::SMPUpdate() {
 		memset(states,0,MAX_PROCESS*sizeof(int));
 		worker->GetProcStatus(states,statusStrings);
 
-    std::vector<SubProcInfo> procInfo;
+    ProcComm procInfo;
     worker->GetProcStatus(procInfo);
 		processList->ResetValues();
 

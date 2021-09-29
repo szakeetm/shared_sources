@@ -6,6 +6,9 @@
 #define MOLFLOW_PROJ_PROCESSCONTROL_H
 
 #include <cstddef> //size_t
+#include <vector>
+#include <mutex>
+#include <list>
 
 #define PROCESS_STARTING 0   // Loading state
 #define PROCESS_RUN      1   // Running state
@@ -13,8 +16,7 @@
 #define PROCESS_KILLED   3   // Process killed
 #define PROCESS_ERROR    4   // Process in error
 #define PROCESS_DONE     5   // Simulation ended
-#define PROCESS_RUNAC    6   // Computing AC matrix
-#define PROCESS_WAIT     7   // Command fully executed
+#define PROCESS_WAIT     6   // Command fully executed
 
 #define COMMAND_NONE     10  // No change
 #define COMMAND_LOAD     11  // Load geometry
@@ -24,9 +26,6 @@
 #define COMMAND_EXIT     15  // Exit
 #define COMMAND_CLOSE    16  // Release handles
 #define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
-#define COMMAND_RELEASEDPLOG 18 //Release dpLog handle (precedes Updateparams)
-#define COMMAND_LOADAC   19  // Load mesh and compute AC matrix
-#define COMMAND_STEPAC   20  // Perform single iteration step (AC)
 
 static const char *prStates[] = {
 
@@ -36,7 +35,7 @@ static const char *prStates[] = {
         "Killed",
         "Error",
         "Done",
-        "Computing AC matrix", //Molflow only
+        "",
         "",
         "",
         "",
@@ -47,10 +46,7 @@ static const char *prStates[] = {
         "Resetting",
         "Exiting",
         "Closing",
-        "Update params",
-        "Release dpLog",
-        "Load AC matrix", //Molflow only
-        "AC iteration step" //Molflow only
+        "Update params"
 };
 
 struct PROCESS_INFO{
@@ -61,15 +57,38 @@ struct PROCESS_INFO{
 
 };
 
-struct SubProcInfo {
-    size_t procId;
-    size_t slaveState;
+struct ProcComm {
+
+    struct SubProcInfo {
+        size_t procId;
+        size_t slaveState;
+        char statusString[128];
+        PROCESS_INFO runtimeInfo;
+    };
+
     size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
-    size_t oldState;
-    char statusString[128];
-    PROCESS_INFO runtimeInfo;
+    std::list<size_t> activeProcs;
+    std::mutex m;
+    std::vector<SubProcInfo> subProcInfo;
+
+    ProcComm();
+    explicit ProcComm(size_t nbProcs) : ProcComm() {
+        Resize(nbProcs);
+    };
+    void Resize(size_t nbProcs){
+        subProcInfo.resize(nbProcs);
+        InitActiveProcList();
+    };
+    void NextSubProc();
+
+    ProcComm& operator=(const ProcComm & src);
+    ProcComm& operator=(ProcComm && src) noexcept ;
+
+    void RemoveAsActive(size_t id);
+
+    void InitActiveProcList();
 };
 
 #endif //MOLFLOW_PROJ_PROCESSCONTROL_H
