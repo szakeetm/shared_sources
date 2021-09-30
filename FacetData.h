@@ -15,23 +15,19 @@
 class Surface {
 public:
     virtual ~Surface() = default;
-    virtual bool IsHardHit(const Ray &r) { return true; };
+    virtual bool IsHardHit(const Ray &r);
 };
 
 class TransparentSurface : public Surface{
 public:
-    bool IsHardHit(const Ray &r) override {
-        return false;
-    };
+    bool IsHardHit(const Ray &r);
 };
 
 class AlphaSurface : public Surface{
     double opacity{1.0};
 public:
     AlphaSurface(double opacity) : opacity(opacity){};
-    bool IsHardHit(const Ray &r) override {
-        return (r.rng->rnd() < opacity);
-    };
+    bool IsHardHit(const Ray &r) override;
 };
 
 struct Facet : public RTPrimitive {

@@ -321,7 +321,7 @@ std::array<float,4> applyGLColor4f(double value, float lower, float upper){
 
     int low = 0;
     int up = 1;
-    if((lower > 0.0f || upper != 1.0f) && (upper-lower > 0.0f)){
+    if(upper-lower > 0.0f){
         value = (value - lower) / (upper-lower);
     }
     int pos = std::min((int)colorMap.size()-1, (int)(value * colorMap.size()));
@@ -341,7 +341,7 @@ std::array<float,4> applyGLColor4f(const std::vector<float>& cmap, double value,
 
     int low = 0;
     int up = 1;
-    if((lower > 0.0f || upper != 1.0f) && (upper-lower > 0.0f)){
+    if(upper-lower > 0.0f){
         value = (value - lower) / (upper-lower);
     }
     int pos = std::min((int)(cmap.size() / 4)-1, (int)(value * (cmap.size() / 4)));
@@ -1187,7 +1187,7 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
         else {
             int minLevel=0, maxLevel=30;
             if(mApp->aabbVisu.showLevelAABB[0]>-1){
-                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+                minLevel = mApp->aabbVisu.showLevelAABB[0];
             }
             if(mApp->aabbVisu.showLevelAABB[1]>-1){
                 maxLevel = mApp->aabbVisu.showLevelAABB[1];
@@ -1260,34 +1260,36 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             // end transparent sides
         }
 
-        int axis = node->SplitAxis();
-        double plane = node->SplitPos();
+        if(!node->IsLeaf()) {
+            int axis = node->SplitAxis();
+            double plane = node->SplitPos();
 
-        bbox = bb;
-        bbox.min[axis] = plane;
-        bbox.max[axis] = plane;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002)*delta[axis], axis);
+            bbox = bb;
+            bbox.min[axis] = plane;
+            bbox.max[axis] = plane;
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002) * delta[axis], axis);
 
-        Vector3d a = bbox.min;
-        Vector3d b = bbox.min;
-        Vector3d c = bbox.max;
-        Vector3d d = bbox.max;
+            Vector3d a = bbox.min;
+            Vector3d b = bbox.min;
+            Vector3d c = bbox.max;
+            Vector3d d = bbox.max;
 
-        const int axisSwap = (axis + 2) % 3;
-        b[axisSwap] = bbox.max[axisSwap];
-        d[axisSwap] = bbox.min[axisSwap];
+            const int axisSwap = (axis + 2) % 3;
+            b[axisSwap] = bbox.max[axisSwap];
+            d[axisSwap] = bbox.min[axisSwap];
 
-        // begin transparent sides
-        glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha);
+            // begin transparent sides
+            glColor4f(color[0], color[1], color[2], color[3] * mApp->aabbVisu.alpha);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glBegin(GL_POLYGON);
-        glVertex3d(a.x, a.y, a.z);
-        glVertex3d(b.x, b.y, b.z);
-        glVertex3d(c.x, c.y, c.z);
-        glVertex3d(d.x, d.y, d.z);
-        glEnd();
-        // end transparent sides
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glBegin(GL_POLYGON);
+            glVertex3d(a.x, a.y, a.z);
+            glVertex3d(b.x, b.y, b.z);
+            glVertex3d(c.x, c.y, c.z);
+            glVertex3d(d.x, d.y, d.z);
+            glEnd();
+            // end transparent sides
+        }
 
         if (mApp->antiAliasing) {
             glDisable(GL_ALPHA_TEST);
@@ -1375,7 +1377,7 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
         else {
             int minLevel=0, maxLevel=30;
             if(mApp->aabbVisu.showLevelAABB[0]>-1){
-                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+                minLevel = mApp->aabbVisu.showLevelAABB[0];
             }
             if(mApp->aabbVisu.showLevelAABB[1]>-1){
                 maxLevel = mApp->aabbVisu.showLevelAABB[1];
@@ -1880,7 +1882,7 @@ void Geometry::DrawAABB() {
         }
         else {
 
-            std::vector<std::shared_ptr<RTPrimitive>> accel;
+            std::vector<std::shared_ptr<RTPrimitive>>& accel = mApp->worker.model->accel;
             /*if(mApp->worker.model->accel.empty()) {
                 mApp->worker.model->BuildAccelStructure(
                         &mApp->worker.globState,
@@ -1889,9 +1891,9 @@ void Geometry::DrawAABB() {
                         mApp->worker.model->wp.bvhMaxPrimsInNode
                         );
             }*/
-            accel = mApp->worker.model->accel;
+            //accel = mApp->worker.model->accel;
 
-            if(!accel.empty()) {
+            if(!accel.empty() && mApp->worker.model->initialized) {
                 size_t nStructs = (mApp->aabbVisu.drawAllStructs ? mApp->worker.model->sh.nbSuper : 1);
                 for (int s = 0; s < nStructs; ++s){
                     if(dynamic_cast<BVHAccel*>(accel.at(s).get())){
@@ -2542,7 +2544,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glLoadMatrixf(matView);
 	}
 
-    if(1) // always draw for now
+    if(mApp->aabbVisu.renderAABB) // always draw for now
         glCallList(aabbList);
     //DrawAABB();
 

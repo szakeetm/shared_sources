@@ -80,6 +80,7 @@ public:
 
     HitChain *hitChain;
     std::vector<HitLink> hits;
+    std::vector<HitLink> transparentHits;
     MersenneTwister *rng;
 };
 

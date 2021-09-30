@@ -41,8 +41,12 @@ bool Facet::Intersect(Ray &ray) {
 
                         // Now check intersection with the facet polygon (in the u,v space)
                         // This check could be avoided on rectangular facet.
-                        if (IsInPoly(u, v, vertices2)) {
+                        if (this->indices.size() == 4 || IsInPoly(u, v, vertices2)) {
                             bool hardHit = this->surf->IsHardHit(ray);
+                            //double time = ray.time + d / 100.0 / this->velocity;
+                            /*double currentOpacity = this->sh.opacity;
+                            bool hardHit = ((currentOpacity == 1.0) || (ray.rng->rnd()<currentOpacity));
+*/
 /*#if defined(SYNRAD)
 
                             if(typeid(*surf) == typeid(MaterialSurface))
@@ -82,7 +86,7 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->hit->colV = v;
                                     ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;*/
-
+                                    if(!ray.hits.empty())ray.hits.clear();
                                     ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
                                     auto& hit = ray.hits.back().hit;
                                     hit.isHit = true;
@@ -104,8 +108,8 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
-                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
-                                auto& hit = ray.hits.back().hit;
+                                auto& thit = ray.transparentHits.emplace_back(globalId, SubProcessFacetTempVar());
+                                auto& hit = thit.hit;
                                 hit.isHit = false;
                                 hit.colU = u;
                                 hit.colV = v;
@@ -196,4 +200,16 @@ bool Facet::IntersectStat(RayStat &ray) {
     } // dot<0
 
     return false;
+}
+
+bool Surface::IsHardHit(const Ray &r) {
+    return true;
+}
+
+bool TransparentSurface::IsHardHit(const Ray &r) {
+    return false;
+}
+
+bool AlphaSurface::IsHardHit(const Ray &r) {
+    return (r.rng->rnd() < opacity);
 }

@@ -151,6 +151,57 @@ namespace {
     };
 
     const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
+    
+    // Test rays
+    enum RayDataColumnID {
+        RayDataColumnID_ID,
+        RayDataColumnID_NRays,
+        RayDataColumnID_MaxRays
+    };
+
+    struct RayData {
+        int ID;
+        int nRays;
+        int maxRays;
+
+        static const ImGuiTableSortSpecs *s_current_sort_specs;
+
+        // Compare function to be used by qsort()
+        static int IMGUI_CDECL CompareWithSortSpecs(const void *lhs, const void *rhs) {
+            const auto *a = (const RayData *) lhs;
+            const auto *b = (const RayData *) rhs;
+            for (int n = 0; n < s_current_sort_specs->SpecsCount; n++) {
+                // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
+                // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
+                const ImGuiTableColumnSortSpecs *sort_spec = &s_current_sort_specs->Specs[n];
+                int delta = 0;
+                switch (sort_spec->ColumnUserID) {
+                    case RayDataColumnID_ID:
+                        delta = (a->ID - b->ID);
+                        break;
+                    case RayDataColumnID_NRays:
+                        delta = (a->nRays > b->nRays) ? 1 : (a->nRays == b->nRays) ? 0 : -1;
+                        break;
+                    case RayDataColumnID_MaxRays:
+                        delta = (a->maxRays > b->maxRays) ? 1 : (a->maxRays == b->maxRays) ? 0 : -1;
+                        break;
+                    default:
+                        IM_ASSERT(0);
+                        break;
+                }
+                if (delta > 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
+                if (delta < 0)
+                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
+            }
+
+            // qsort() is instable so always return a way to differenciate items.
+            // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
+            return (a->ID - b->ID);
+        }
+    };
+
+    const ImGuiTableSortSpecs *RayData::s_current_sort_specs = nullptr;
 }
 
 ImguiAABBVisu::ImguiAABBVisu() {
@@ -221,39 +272,43 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         rate_vec = std::make_shared<std::vector<float>>();
         mApp->aabbVisu.rateVector = rate_vec;
     }
-    if (ImGui::CollapsingHeader("Draw Settings")) {
-        bool showAll = (mApp->aabbVisu.showLevelAABB[0] == -1) ? true : false;
-        if (ImGui::Checkbox("Show all AABB levels", &showAll)) {
-            if (!showAll) {
-                mApp->aabbVisu.showLevelAABB[0] = 0;
-                mApp->aabbVisu.showLevelAABB[1] = std::round(
-                        8.0f + 1.3f * Log2Int(int64_t(mApp->worker.model->facets.size())));
-            } else {
-                mApp->aabbVisu.showLevelAABB[0] = -1;
-                mApp->aabbVisu.showLevelAABB[1] = -1;
+
+    ImGui::Checkbox("Draw Acceleration Data Structure", &mApp->aabbVisu.renderAABB);
+    if(mApp->aabbVisu.renderAABB){
+        if (ImGui::CollapsingHeader("Draw Settings")) {
+            bool showAll = (mApp->aabbVisu.showLevelAABB[0] == -1) ? true : false;
+            if (ImGui::Checkbox("Show all AABB levels", &showAll)) {
+                if (!showAll) {
+                    mApp->aabbVisu.showLevelAABB[0] = 0;
+                    mApp->aabbVisu.showLevelAABB[1] = std::round(
+                            8.0f + 1.3f * Log2Int(int64_t(mApp->worker.model->facets.size())));
+                } else {
+                    mApp->aabbVisu.showLevelAABB[0] = -1;
+                    mApp->aabbVisu.showLevelAABB[1] = -1;
+                }
             }
+            if (!showAll)
+                ImGui::DragIntRange2("Show AABB level", &mApp->aabbVisu.showLevelAABB[0],
+                                     &mApp->aabbVisu.showLevelAABB[1], 1.0f, 0, 30);
+
+            ImGui::SliderFloat("AABB alpha", &mApp->aabbVisu.alpha, 0.0f, 1.0f);
+            ImGui::Checkbox("Show left  branches", &mApp->aabbVisu.showBranchSide[0]);
+            ImGui::Checkbox("Show right branches", &mApp->aabbVisu.showBranchSide[1]);
+            ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
+            ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
+            ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
+            if (ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats))
+                mApp->aabbVisu.travStep = (mApp->aabbVisu.showStats) ? false : mApp->aabbVisu.travStep;
+            if (ImGui::Checkbox("Use traversal step heatmap", &mApp->aabbVisu.travStep))
+                mApp->aabbVisu.showStats = (mApp->aabbVisu.travStep) ? false : mApp->aabbVisu.showStats;
+
+            /*if (!rate_vec) {
+                rate_vec = std::make_shared<std::vector<float>>();
+                mApp->aabbVisu.rateVector = rate_vec;
+            }*/
+
+            ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
         }
-        if (!showAll)
-            ImGui::DragIntRange2("Show AABB level", &mApp->aabbVisu.showLevelAABB[0],
-                                 &mApp->aabbVisu.showLevelAABB[1], 1.0f, 0, 30);
-
-        ImGui::SliderFloat("AABB alpha", &mApp->aabbVisu.alpha, 0.0f, 1.0f);
-        ImGui::Checkbox("Show left  branches", &mApp->aabbVisu.showBranchSide[0]);
-        ImGui::Checkbox("Show right branches", &mApp->aabbVisu.showBranchSide[1]);
-        ImGui::Checkbox("Show AABB leaves", &mApp->aabbVisu.showAABBLeaves);
-        ImGui::Checkbox("Reverse Expansion", &mApp->aabbVisu.reverseExpansion);
-        ImGui::Checkbox("Apply same color", &mApp->aabbVisu.sameColor);
-        if (ImGui::Checkbox("Render colors based on hit stats", &mApp->aabbVisu.showStats))
-            mApp->aabbVisu.travStep = (mApp->aabbVisu.showStats) ? false : mApp->aabbVisu.travStep;
-        if (ImGui::Checkbox("Use traversal step heatmap", &mApp->aabbVisu.travStep))
-            mApp->aabbVisu.showStats = (mApp->aabbVisu.travStep) ? false : mApp->aabbVisu.showStats;
-
-        /*if (!rate_vec) {
-            rate_vec = std::make_shared<std::vector<float>>();
-            mApp->aabbVisu.rateVector = rate_vec;
-        }*/
-
-        ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
     }
     if (ImGui::Button("Apply aabb view"))
         redrawAabb = true;
@@ -316,7 +371,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             items = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit",
                      "HybridSplit"};
         } else {
-            items = {"SAH", "ProbSplit", "TestSplit", "HybridSplit"};
+            items = {"SAH", "ProbSplit", "TestSplit", "HybridSplit", "HybridBinSplit"};
         }
 
         if (ImGui::BeginListBox("Splitting technique")) {
@@ -333,17 +388,25 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
             ImGui::EndListBox();
         }
-        bool withHitBattery =
-                mApp->aabbVisu.splitTechnique == (mApp->worker.model->wp.accel_type == 0)
-                ? (int) BVHAccel::SplitMethod::TestSplit : (int) KdTreeAccel::SplitMethod::TestSplit
-                                                           || mApp->aabbVisu.splitTechnique ==
-                                                              (mApp->worker.model->wp.accel_type == 1) ? false
-                                                                                                       : (int) KdTreeAccel::SplitMethod::HybridSplit;
+        bool withHitBattery = false;
+        if(mApp->worker.model->wp.accel_type == 0)
+            withHitBattery |= mApp->aabbVisu.splitTechnique == (int) BVHAccel::SplitMethod::TestSplit;
+        else if(mApp->worker.model->wp.accel_type == 1) {
+            withHitBattery |= mApp->aabbVisu.splitTechnique == (int) KdTreeAccel::SplitMethod::HybridBin;
+            withHitBattery |= mApp->aabbVisu.splitTechnique == (int) KdTreeAccel::SplitMethod::HybridSplit;
+            withHitBattery |= mApp->aabbVisu.splitTechnique == (int) KdTreeAccel::SplitMethod::TestSplit;
+        }
+
         if (withHitBattery) {
+            // Create item list
+            static ImVector<RayData> rayItems;
+
             if (ImGui::Button("Update hit frequencies")) {
                 mApp->worker.globState.UpdateBatteryFrequencies();
             }
+
             static int nbTestRays = 0;
+            bool updateTestRays = false;
             if (ImGui::Button("Update #TestRays")) {
                 nbTestRays = 0;
                 for (auto &bat: mApp->worker.globState.globalHits.hitBattery.rays) {
@@ -351,8 +414,105 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     if (bat.empty()) continue;
                     nbTestRays += bat.size();
                 }
+                updateTestRays = true;
             }
             ImGui::Text("Test Rays: %d", nbTestRays);
+
+            if (updateTestRays || ((int) rayItems.size() != (int) mApp->worker.globState.globalHits.hitBattery.size())) {
+                rayItems.resize(mApp->worker.globState.globalHits.hitBattery.size(), RayData());
+                int nodeLevel_max = 0;
+
+
+                for (int n = 0; n < rayItems.Size; n++) {
+                    RayData &item = rayItems[n];
+                    auto &f = mApp->worker.globState.globalHits.hitBattery.rays[n];
+                    item.ID = n;
+                    item.nRays = f.size();
+                    item.maxRays = mApp->worker.globState.globalHits.hitBattery.nRays[item.ID];
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Test rays")) {
+                if(ImGui::Button("Toggle Testray view")){
+
+                }
+                static ImGuiTableFlags tFlags =
+                        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
+                        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                        ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
+                        ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
+                        ImGuiTableFlags_Sortable;
+
+                if (ImGui::BeginTable("Test rays", 3, tFlags)) {
+                    ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
+                    ImGui::TableSetupColumn("#Facet", ImGuiTableColumnFlags_WidthFixed, 0.0f, RayDataColumnID_ID);
+                    ImGui::TableSetupColumn("nRays", ImGuiTableColumnFlags_WidthStretch, 0.0f, RayDataColumnID_NRays);
+                    ImGui::TableSetupColumn("Max Rays", ImGuiTableColumnFlags_WidthStretch, 0.0f, RayDataColumnID_MaxRays);
+                    ImGui::TableHeadersRow();
+
+                    // Sort our data if sort specs have been changed!
+                    if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
+                        if (sorts_specs->SpecsDirty) {
+                            RayData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
+                            if (rayItems.Size > 1)
+                                qsort(&rayItems[0], (size_t) rayItems.Size, sizeof(rayItems[0]),
+                                      RayData::CompareWithSortSpecs);
+                            RayData::s_current_sort_specs = nullptr;
+                            sorts_specs->SpecsDirty = false;
+                        }
+
+                    // Demonstrate using clipper for large vertical lists
+                    ImGuiListClipper clipper;
+                    clipper.Begin(rayItems.size());
+                    while (clipper.Step()) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            RayData *item = &rayItems[i];
+                            //ImGui::PushID(item->ID);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+
+                            ImGuiSelectableFlags selectable_flags =
+                                    ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+
+                            auto selectedFac = mApp->worker.GetGeometry()->GetSelectedFacets();
+                            bool selected = false;
+                            auto selection = selectedFac.begin();
+                            for (; selection != selectedFac.end(); selection++) {
+                                if ((int) (*selection) == item->ID) {
+                                    selected = true;
+                                    ImGui::SetItemDefaultFocus();
+                                    break;
+                                }
+                            }
+                            char label[32];
+                            sprintf(label, "%d", item->ID);
+                            if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0))) {
+                                if (ImGui::GetIO().KeyCtrl) {
+                                    if (selected) {
+                                        selectedFac.erase(selection);
+                                    } else
+                                        selectedFac.push_back(item->ID);
+                                } else {
+                                    selectedFac.clear();
+                                    selectedFac.push_back(item->ID);
+                                }
+                                //mApp->UpdateFacetlistSelected();
+                                mApp->worker.GetGeometry()->SetSelection(selectedFac, false, false);
+                            }
+
+                            //ImGui::Text("%zu", item->ID);
+                            /*ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->ID);*/
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->nRays);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%d", item->maxRays);
+                            //ImGui::PopID();
+                        }
+                    }
+                    ImGui::EndTable();
+                }
+            }
         }
 
         if (ImGui::Button("Build new AABB")) {
@@ -395,7 +555,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
 
             std::vector<IntersectCount> *stats = nullptr;
-            if (!accel.empty()) {
+            if (!accel.empty() && mApp->worker.model->initialized) {
                 if (mApp->worker.model->wp.accel_type &&
                     std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
                     stats = &std::dynamic_pointer_cast<KdTreeAccel>(accel.front())->ints;
@@ -413,6 +573,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                     size_t nbIntersections_total = 0;
                     tabItems.resize(stats->size(), BoxData());
+                    int nodeLevel_max = 0;
                     for (int n = 0; n < tabItems.Size; n++) {
                         BoxData &item = tabItems[n];
                         auto &f = (*stats)[n];
@@ -421,7 +582,11 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         item.prims = f.nbPrim;
                         item.level = f.level;
                         nbIntersections_total += f.nbIntersects;
+
+                        nodeLevel_max = std::max(nodeLevel_max, item.level);
                     }
+                    mApp->aabbVisu.showLevelAABB[0] = 0;
+                    mApp->aabbVisu.showLevelAABB[1] = nodeLevel_max;
 
                     for (int n = 0; n < tabItems.Size; n++) {
                         BoxData &item = tabItems[n];

@@ -229,8 +229,8 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 											minLength = d;
 											collidedFacet = f;
 											found = true;
-                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
-                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
+                                            //currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
+                                            //currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
 										}
 									}
 									else {
@@ -355,7 +355,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 	if (found) {
 
-        currentParticle.tmpFacetVars[collidedFacet->globalId].isHit = true;
+        //currentParticle.tmpFacetVars[collidedFacet->globalId].isHit = true;
 
 		// Second pass for transparent hits
 		/*for (const auto& tpFacet : currentParticle.transparentHitBuffer){

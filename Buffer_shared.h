@@ -41,7 +41,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
 #define HITCACHELIMIT      (size_t)1048576  // Max. displayed number of lines and hits.
 #define HITCACHEMIN      (size_t)(128)  // Max. displayed number of lines and hits.
-#define HITCACHESAMPLE      (size_t)(HITCACHELIMIT/1)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*HITCACHEMIN*4)  // Max. displayed number of lines and hits.
 #define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
@@ -630,12 +630,14 @@ struct FreqBattery {
     void clear(){
         rays.clear();
         nRays.clear();
+        initialized = false;
     }
     size_t size() const{
         return nRays.size();
     }
     std::vector<std::vector<TestRay>> rays;       // hits
-    std::vector<int> nRays;                             // amount to cache
+    std::vector<int> nRays;                       // amount to cache
+    bool initialized = true;
 };
 
 class GlobalHitBuffer { //Should be plain old data, memset applied

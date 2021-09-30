@@ -76,6 +76,31 @@ constexpr double gamma(int n)
 }
 
 bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir,
+                                                         const int dirIsNeg[3]) const {
+    double tNear, tFar;
+    //X component
+    double intersection1 = (min.x - ray.origin.x) * invDir.x;
+    double intersection2 = (max.x - ray.origin.x) * invDir.x;
+    tNear = std::min(intersection1, intersection2);
+    tFar = std::max(intersection1, intersection2);
+    if (tFar < 0.0) return false;
+
+    intersection1 = (min.y - ray.origin.y) * invDir.y;
+    intersection2 = (max.y - ray.origin.y) * invDir.y;
+    tNear = std::max(tNear, std::min(intersection1, intersection2));
+    tFar = std::min(tFar, std::max(intersection1, intersection2));
+    if (tNear>tFar || tFar<0.0) return false;
+
+    intersection1 = (min.z - ray.origin.z) * invDir.z;
+    intersection2 = (max.z - ray.origin.z) * invDir.z;
+    tNear = std::max(tNear, std::min(intersection1, intersection2));
+    tFar = std::min(tFar, std::max(intersection1, intersection2));
+    if (tNear>tFar || tFar<0.0) return false;
+
+    return true;
+}
+
+/*bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir,
                                    const int dirIsNeg[3]) const {
     const AxisAlignedBoundingBox &bounds = *this;
 
@@ -102,7 +127,7 @@ bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir
     if (tzMin > tMin) tMin = tzMin;
     if (tzMax < tMax) tMax = tzMax;
     return (tMin < ray.tMax) && (tMax > 0);
-}
+}*/
 
 bool AxisAlignedBoundingBox::IntersectP(const Ray &ray, double *hitt0,
                                    double *hitt1) const {
@@ -112,6 +137,29 @@ bool AxisAlignedBoundingBox::IntersectP(const Ray &ray, double *hitt0,
         double invRayDir = 1 / ray.direction[i];
         double tNear = (min[i] - ray.origin[i]) * invRayDir;
         double tFar = (max[i] - ray.origin[i]) * invRayDir;
+
+        // Update parametric interval from slab intersection $t$ values
+        if (tNear > tFar) std::swap(tNear, tFar);
+
+        // Update _tFar_ to ensure robust ray--bounds intersection
+        tFar *= 1 + 2 * gamma(3);
+        t0 = tNear > t0 ? tNear : t0;
+        t1 = tFar < t1 ? tFar : t1;
+        if (t0 > t1) return false;
+    }
+    if (hitt0) *hitt0 = t0;
+    if (hitt1) *hitt1 = t1;
+    return true;
+}
+
+bool AxisAlignedBoundingBox::IntersectP(const Ray &ray, double *hitt0,
+                                        double *hitt1, int dim) const {
+    double t0 = 0, t1 = ray.tMax;
+    {
+        // Update interval for _i_th bounding box slab
+        double invRayDir = 1 / ray.direction[dim];
+        double tNear = (min[dim] - ray.origin[dim]) * invRayDir;
+        double tFar = (max[dim] - ray.origin[dim]) * invRayDir;
 
         // Update parametric interval from slab intersection $t$ values
         if (tNear > tFar) std::swap(tNear, tFar);

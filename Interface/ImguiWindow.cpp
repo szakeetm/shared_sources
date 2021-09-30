@@ -490,7 +490,7 @@ void ImguiWindow::renderSingle() {
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
-        ImGui_ImplSDL2_NewFrame(app->mainScreen);
+        ImGui_ImplSDL2_NewFrame(/*app->mainScreen*/);
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
@@ -513,11 +513,9 @@ void ImguiWindow::renderSingle() {
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!"
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
             // and append into it.
 
-            ImGui::Text("This is some useful text."); // Display some text (you can
-            // use a format strings too)
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
@@ -636,7 +634,7 @@ void ImguiWindow::renderSingle() {
                 active_prev_state = true;
                 mApp->wereEvents_imgui = true;
             }
-            if (active_prev_state) {
+            else if (active_prev_state) {
                 redrawAabb = true;
                 active_prev_state = false;
                 mApp->wereEvents_imgui = true;
@@ -680,6 +678,7 @@ void ImguiWindow::renderSingle() {
             mApp->worker.ChangeSimuParams(); // Sync with subprocesses
         } else if (redrawAabb) {
             mApp->worker.GetGeometry()->BuildGLList();
+            redrawAabb = false;
         }
 
     }

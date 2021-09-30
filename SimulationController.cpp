@@ -603,6 +603,13 @@ int SimulationController::Start() {
     for(auto& freq : simThreads){
         freq.particle->tmpState.globalHits.hitBattery.nRays = simulation->globState->globalHits.hitBattery.nRays;
     }
+#if defined(USE_OLD_BVH)
+    if(simulation->model->structures.empty()/* && RebuildAccel()*/){
+        loadOk = false;
+        SetState(PROCESS_ERROR, "Failed building (old) acceleration structure!");
+        return 1;
+    }
+#endif
     if(simulation->model->accel.empty()/* && RebuildAccel()*/){
         loadOk = false;
         SetState(PROCESS_ERROR, "Failed building acceleration structure!");

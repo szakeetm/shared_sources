@@ -64,7 +64,7 @@ bool InputRightSide(const char *desc, double *val, const char *format) {
     ImGui::Text("%s:", desc);
     {
         // Move to right side
-        ImGui::SameLine((ImGui::GetContentRegionAvailWidth()) - 100.0f);
+        ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
         ImGui::PushItemWidth(100.0f);
         ImGui::PushID(desc);
         ImGui::InputDouble("", val, 0.00f, 0.0f, format);

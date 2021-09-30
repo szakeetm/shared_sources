@@ -77,19 +77,22 @@ struct SplitCandidate {
 
 class KdTreeAccel : public RTPrimitive {
 public:
+    using BoundaryFloat = double;
     struct RaySegment{
-        double tMin{-1.0e99};
-        double tMax{1.0e99};
+        BoundaryFloat tMin{-1.0e99};
+        BoundaryFloat tMax{1.0e99};
         const TestRay* ray{nullptr};
         std::vector<Vector2d> distances;
     };
     struct RayBoundary{
         RaySegment* rs{nullptr};
-        int flag{-1}; // 0: left, 1: right, 2: on splitting plane
+        int flag{-1}; // 0: left, 1: on splitting plane, 2: right
     };
     // local stack shows which _RayBoundary/ies from the whole set of boundaries belong to
     //the left, to the right, and to both of them
     struct BoundaryStack{
+        BoundaryStack(int ll, int lh, int rl, int rh) :
+            leftMin(ll), leftMax(lh), rightMin(rl), rightMax(rh) {};
         int leftMin{-1};
         int leftMax{-1};
         int rightMin{-1};
@@ -98,7 +101,7 @@ public:
 
     // KdTreeAccel Public Types
     enum class SplitMethod {
-        SAH, ProbSplit, TestSplit, HybridSplit
+        SAH, ProbSplit, TestSplit, HybridSplit, HybridBin
     };
 
 public:
@@ -137,12 +140,10 @@ private:
                    const std::vector<double> &primChance, double oldCost);
     void buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                       const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
-                      int depth,
-                      const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1, int badRefines,
-                      const std::unique_ptr<std::vector<RaySegment>> &battery,
-                      std::unique_ptr<RayBoundary[]>& stack_x, std::unique_ptr<RayBoundary[]>& stack_y,
-                      std::unique_ptr<RayBoundary[]>& stack_z, int prevSplitAxis, double tMin, double tMax,
-                      const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
+                      int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
+                      int badRefines, const std::unique_ptr<std::vector<RaySegment>> &battery,
+                      RayBoundary ** rb_stack, int prevSplitAxis, double tMin,
+                      double tMax, const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
 private:
     // KdTreeAccel Private Data
     SplitMethod splitMethod;
@@ -169,13 +170,30 @@ private:
                                              const std::vector<TestRay> &battery,
                                              const std::vector<TestRayLoc> &local_battery,
                                              const std::vector<double> &primChance, double tMax) const;
-
+    std::tuple<double, int, int, bool, bool> SplitHybridBin(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                                            int *primNums, int nPrimitives,
+                                                            const std::unique_ptr<BoundEdge[]> edges[3],
+                                                            const std::vector<TestRay> &battery,
+                                                            const std::vector<TestRayLoc> &local_battery,
+                                                            const std::vector<double> &primChance, double tMax) const;
     std::tuple<double, int, int>
     SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
-              const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
-              int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3],
+              const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+              int *primNums, int nPrimitives,
+              const std::unique_ptr<BoundEdge[]> edges[3],
               const std::vector<TestRay> &battery, const std::vector<TestRayLoc> &local_battery,
               const std::vector<double> &primChance, double tMax);
+
+              std::tuple<double, int, int>
+    SplitTest(int axis, const AxisAlignedBoundingBox &nodeBounds,
+              const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+              int *primNums, int nPrimitives,
+              const std::unique_ptr<BoundEdge[]> edges[3],
+              const std::unique_ptr<std::vector<RaySegment>> &battery,
+              RayBoundary **rb_stack,
+              const std::vector<double> &primChance, double tMax,
+              const BoundaryStack &boundary_stack);
 
     friend class Geometry;
 
