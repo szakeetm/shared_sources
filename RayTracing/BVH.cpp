@@ -12,6 +12,7 @@
 #include "BVH.h"
 #include "Ray.h"
 #include <cassert>
+#include <Helper/ConsoleLogger.h>
 #include <utility>
 #include <random>
 
@@ -564,7 +565,7 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
                                      &totalNodes, orderedPrims, std::move(battery));
     primitives.swap(orderedPrims);
 
-    printf("BVH created with %d nodes for %d "
+    Log::console_msg_master(4, "BVH created with %d nodes for %d "
            "primitives (%.2f MB)\n",
            totalNodes, (int) primitives.size(),
            float(totalNodes * sizeof(LinearBVHNode)) /
@@ -578,11 +579,11 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     assert(totalNodes == offset);
     delete root;
 
-    printf("--- BVH STATS ---\n");
-    printf(" Total Primitives: %d\n", STATS::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS::leafNodes);
+    Log::console_msg_master(4,"--- BVH STATS ---\n");
+    Log::console_msg_master(4," Total Primitives: %d\n", STATS::totalPrimitives);
+    Log::console_msg_master(4," Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
+    Log::console_msg_master(4," Interior Nodes:   %d\n", STATS::interiorNodes);
+    Log::console_msg_master(4," Leaf Nodes:       %d\n", STATS::leafNodes);
 };
 
 BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end,

@@ -18,6 +18,7 @@ struct HitChain {
 };
 
 struct HitLink {
+    HitLink() : hitId(9999999999), hit(SubProcessFacetTempVar()) {};
     HitLink(size_t id, SubProcessFacetTempVar h) : hitId(id), hit(h) {};
 
     // Move constructor called on resize, prevent from deleting SubProcessFacetTempVar
@@ -80,7 +81,8 @@ public:
 
     HitChain *hitChain;
     std::vector<HitLink> hits;
-    std::vector<HitLink> transparentHits;
+    HitLink hardHit;
+    std::vector<HitLink> transparentHits; // TODO: Remove Extra debug structure
     MersenneTwister *rng;
 };
 

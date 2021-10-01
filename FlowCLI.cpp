@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     MFMPI::mpi_initialize();
 #endif
 
-    Log::console_msg_master(0, "%s\n", molflowCliLogo);
+    Log::console_msg_master(1, "%s\n", molflowCliLogo);
 
     SimulationManager simManager{};
     simManager.interactiveMode = true;
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     GlobalSimuState globState{};
 
 
-    if(Initializer::initFromArgv(argc, argv, &simManager, model)){
+    if(-1 < Initializer::initFromArgv(argc, argv, &simManager, model)){
 #if defined(USE_MPI)
         MPI_Finalize();
 #endif
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
             }
         }
         else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
-            Log::console_msg_master(1,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
+            Log::console_msg_master(2,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
             FlowIO::WriterXML writer;
             writer.SaveSimulationState(autoSave, model, globState);
         }

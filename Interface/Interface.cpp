@@ -246,6 +246,17 @@ void Interface::ResetSimulation(bool askConfirm) {
              GLDLG_OK;
 
     if (ok) {
+        if(Interface::worker.IsRunning()) {
+            try {
+                this->worker.Stop_Public();
+            }
+            catch (std::exception &err) {
+                ok = GLMessageBox::Display("Could not stop simulation, reset anyway ?", "Question",
+                                           GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
+                if (!ok)
+                    return;
+            }
+        }
         worker.ResetStatsAndHits(m_fTime);
 
         hps.clear();

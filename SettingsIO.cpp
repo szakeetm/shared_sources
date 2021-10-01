@@ -51,11 +51,18 @@ namespace SettingsIO {
         if (SettingsIO::overwrite) {
             SettingsIO::outputFile = SettingsIO::inputFile;
             SettingsIO::workPath = "tmp/";
+        } else if(!SettingsIO::outputPath.empty()){
+            SettingsIO::workPath = SettingsIO::outputPath;
+        }
+        else if (SettingsIO::outputPath.empty() && std::filesystem::path(SettingsIO::outputFile).has_parent_path()) { // Use a default outputpath if unset
+            SettingsIO::workPath =
+                    std::filesystem::path(SettingsIO::outputFile).parent_path().string();
         } else if (SettingsIO::outputPath
                 .empty()) { // Use a default outputpath if unset
             SettingsIO::outputPath = "Results_" + Util::getTimepointString();
             SettingsIO::workPath = SettingsIO::outputPath;
-        } else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
+        }
+        else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
             Log::console_error(
                     "Output path was set to %s, but Output file also contains a parent "
                     "path %s\n"
@@ -113,12 +120,17 @@ namespace SettingsIO {
         // Next check if outputfile name has parent path as name
         // Additional directory in outputpath
         if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
-            std::string outputFilePath =
-                    std::filesystem::path(SettingsIO::outputPath)
-                            .append(std::filesystem::path(SettingsIO::outputFile)
-                                            .parent_path()
-                                            .string())
-                            .string();
+            std::string outputFilePath;
+            if(SettingsIO::outputPath.empty())
+                outputFilePath =
+                        std::filesystem::path(SettingsIO::outputFile).parent_path().string();
+            else
+                outputFilePath =
+                        std::filesystem::path(SettingsIO::outputPath)
+                                .append(std::filesystem::path(SettingsIO::outputFile)
+                                                .parent_path()
+                                                .string())
+                                .string();
             try {
                 if (!std::filesystem::exists(outputFilePath))
                     std::filesystem::create_directory(outputFilePath);
