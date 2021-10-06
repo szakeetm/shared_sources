@@ -789,7 +789,8 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
                 auto ray = Ray();
                 double locTMax = tMax;
 #pragma omp parallel for default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
-                for (auto &ind: local_battery) {
+                for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                    auto& ind = local_battery[sample_id];
                     ray.origin = battery[ind.index].pos;
                     ray.direction = battery[ind.index].dir;
                     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
@@ -1040,7 +1041,8 @@ std::tuple<double, int, int, bool, bool> KdTreeAccel::SplitHybridBin(int axis, c
         auto ray = Ray();
         double locTMax = tMax;
 #pragma omp parallel for default(none) firstprivate(ray) shared(buckets, battery, axis, local_battery, edges, bestAxis, bestOffset)
-        for (auto &ind: local_battery) {
+        for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+            auto& ind = local_battery[sample_id];
             ray.origin = battery[ind.index].pos;
             ray.direction = battery[ind.index].dir;
             /*Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
