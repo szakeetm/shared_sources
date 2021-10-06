@@ -1218,6 +1218,8 @@ if( showVolume || showTexture ) {
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
+    if(mApp->aabbVisu.renderSampleRays) DrawLinesAndHitsFromSamples(work->globState);
+
 	int cullMode;
 	if (showBack != SHOW_FRONTANDBACK && !mApp->leftHandedView) {
 		//Right-handed coord system: front and back inverse
@@ -2142,4 +2144,168 @@ void GeometryViewer::RequestScreenshot(std::string fileName, int x, int y, int w
 	screenshotStatus.h = h;
 	screenshotStatus.fileName = fileName;
 	if (screenshotStatus.requested<2) screenshotStatus.requested++;
+}
+
+/**
+* \brief Draws Lines and Hits into 3D area via OpenGL.
+*/
+void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globState) {
+
+    constexpr int _maxHitsPerSource = 64;
+    auto& hitCache = mApp->worker.globalHitCache;
+    // Lines
+    if (globState.initialized && globState.globalHits.hitBattery.rays.size()) {
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE);
+
+        size_t count = 0;
+        size_t max_count = 0;
+
+        for(auto& source : globState.globalHits.hitBattery.rays)
+            max_count += source.size();
+
+        double denum = 1.0;
+        double denum_lower = 1.0;
+        if(max_count > dispNumHits){
+            denum = (double) dispNumHits / max_count;
+            max_count = 0;
+            for(auto& source : globState.globalHits.hitBattery.rays){
+                if((int)std::ceil(source.size() * denum) > _maxHitsPerSource){
+                    max_count += _maxHitsPerSource;
+                }
+                else {
+                    max_count += source.size();
+                }
+            }
+            denum_lower = (double) dispNumHits / max_count;
+        }
+
+
+        for(auto& source : globState.globalHits.hitBattery.rays) {
+            count = 0;
+            int maxCount = std::ceil(source.size() * denum);
+            if(maxCount > _maxHitsPerSource){
+                maxCount = std::ceil(source.size() * denum_lower);
+                if (maxCount > _maxHitsPerSource)
+                    maxCount = _maxHitsPerSource;
+            }
+
+            for(auto& ray : source) {
+
+                //Regular (green) line color
+                if (mApp->whiteBg) { //whitebg
+                    glColor3f(0.2f, 0.2f, 0.7f);
+                } else {
+                    glColor3f(0.5f, 0.5f, 1.0f);
+                }
+
+                if (mApp->antiAliasing) {
+                    glEnable(GL_BLEND);
+                    glEnable(GL_LINE_SMOOTH);
+                }
+
+                glBegin(GL_LINE_STRIP);
+                glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+                glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
+                count++;
+                glEnd();
+
+                if (mApp->antiAliasing) {
+                    glDisable(GL_LINE_SMOOTH);
+                    glDisable(GL_BLEND);
+                }
+
+
+                if (count >= maxCount)
+                    break;
+            }
+        }
+    }
+
+    // Hits
+    /*if (showHit) {
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
+
+        // Refl
+        float pointSize = (bigDots) ? 3.0f : 2.0f;
+        glPointSize(pointSize);
+        if (mApp->whiteBg) { //whitebg
+            glColor3f(0.2f, 0.2f, 0.2f);
+        }
+        else {
+            glColor3f(0.0f, 1.0f, 0.0f);
+        }
+        glBegin(GL_POINTS);
+        for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+            if (hitCache.hitCache[i].type == HIT_REF)
+                glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+        glEnd();
+
+        // Moving Refl
+
+        glPointSize(pointSize);
+        *//*if (mApp->whiteBg) { //whitebg
+            glColor3f(0.2f, 0.2f, 0.2f);
+        }
+        else {*//*
+        glColor3f(1.0f, 0.0f, 1.0f);
+        //}
+        glBegin(GL_POINTS);
+        for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+            if (hitCache.hitCache[i].type == HIT_MOVING)
+                glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+        glEnd();
+
+        // Trans
+        pointSize = (bigDots) ? 3.0f : 2.0f;
+        glPointSize(pointSize);
+        glColor3f(0.5f, 1.0f, 1.0f);
+        glBegin(GL_POINTS);
+        for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+            if (hitCache.hitCache[i].type == HIT_TRANS)
+                glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+        glEnd();
+
+        // Teleport
+        if (showTP) {
+            //pointSize=(bigDots)?3.0f:2.0f;
+            glPointSize(pointSize);
+            if (!mApp->whiteBg) {
+                glColor3f(1.0f, 0.7f, 0.2f);
+            }
+            else {
+                glColor3f(1.0f, 0.0f, 1.0f);
+            }
+            glBegin(GL_POINTS);
+            for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+                if (Contains({HIT_TELEPORTSOURCE, HIT_TELEPORTDEST}, hitCache.hitCache[i].type))
+                    glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+            glEnd();
+        }
+
+        // Abs
+        glPointSize(pointSize);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glBegin(GL_POINTS);
+        for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+            if (hitCache.hitCache[i].type == HIT_ABS)
+                glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+        glEnd();
+
+        // Des
+        glColor3f(0.3f, 0.3f, 1.0f);
+        glBegin(GL_POINTS);
+        for (size_t i = 0; i < Min(dispNumHits, hitCache.hitCacheSize); i++)
+            if (hitCache.hitCache[i].type == HIT_DES)
+                glVertex3d(hitCache.hitCache[i].pos.x, hitCache.hitCache[i].pos.y, hitCache.hitCache[i].pos.z);
+        glEnd();
+
+    }*/
+
 }

@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 
 class Worker;
+class GlobalSimuState;
 class GLButton;
 class GLLabel;
 class GLCombo;
@@ -277,6 +278,7 @@ private:
 
   //Debug
   //GLLabel* debugLabel;
+    void DrawLinesAndHitsFromSamples(const GlobalSimuState &globState);
 };
 
 #endif /* _GEOMETRYVIEWERH_ */

@@ -39,9 +39,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
-#define HITCACHELIMIT      (size_t)1048576  // Max. displayed number of lines and hits.
+#define HITCACHELIMIT      (size_t)(1048576*4)  // Max. displayed number of lines and hits.
 #define HITCACHEMIN      (size_t)(128)  // Max. displayed number of lines and hits.
-#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*HITCACHEMIN*4)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*HITCACHEMIN*32)  // Max. displayed number of lines and hits.
 #define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
@@ -605,7 +605,8 @@ public:
 #endif
 
 struct TestRay {
-    TestRay(const Vector3d& pos, const Vector3d& dir){
+    TestRay() : pos(1e99), dir(1e99), location(-1){}
+    TestRay(const Vector3d& pos, const Vector3d& dir) : location(-1){
         this->pos = pos;
         this->dir = dir;
     }
@@ -626,10 +627,12 @@ struct FreqBattery {
             r.resize(HITCACHESIZE);
         }*/
         nRays.resize(n,0);
+        cyclicIndex.resize(n,0);
     }
     void clear(){
         rays.clear();
         nRays.clear();
+        cyclicIndex.clear();
         initialized = false;
     }
     size_t size() const{
@@ -637,6 +640,9 @@ struct FreqBattery {
     }
     std::vector<std::vector<TestRay>> rays;       // hits
     std::vector<int> nRays;                       // amount to cache
+    std::vector<int> cyclicIndex;                 // amount to cache
+
+    size_t maxSamples = HITCACHESAMPLE;
     bool initialized = true;
 };
 

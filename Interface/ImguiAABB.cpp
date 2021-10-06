@@ -401,6 +401,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             // Create item list
             static ImVector<RayData> rayItems;
 
+            if(ImGui::SliderInt("Change samples size", &mApp->aabbVisu.maxRaySamples, 0, HITCACHELIMIT)){
+                mApp->worker.globState.globalHits.hitBattery.maxSamples = mApp->aabbVisu.maxRaySamples;
+            }
             if (ImGui::Button("Update hit frequencies")) {
                 mApp->worker.globState.UpdateBatteryFrequencies();
             }
@@ -433,9 +436,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
 
             if (ImGui::CollapsingHeader("Test rays")) {
-                if(ImGui::Button("Toggle Testray view")){
+                ImGui::Checkbox("Toggle Testray view", &mApp->aabbVisu.renderSampleRays);
 
-                }
                 static ImGuiTableFlags tFlags =
                         ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
                         ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |

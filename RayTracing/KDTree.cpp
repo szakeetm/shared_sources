@@ -211,10 +211,10 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         // if battery is too large, only use a random sample
 
         std::vector<TestRay> *batter_ptr = const_cast<std::vector<TestRay> *>(&battery);
-        if (battery.size() > HITCACHESAMPLE) {
+        if (battery.size() > HITCACHELIMIT) {
             batter_ptr = new std::vector<TestRay>;
             std::sample(battery.begin(), battery.end(), std::back_inserter(*batter_ptr),
-                        HITCACHESAMPLE, std::mt19937{std::random_device{}()});
+                        HITCACHELIMIT, std::mt19937{std::random_device{}()});
             printf(" Sample size: %zu\n", batter_ptr->size());
         }
         std::vector<TestRayLoc> indices;
@@ -228,7 +228,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
                   maxDepth, edges, prims0.get(), prims1.get(), 0, *batter_ptr, indices, -1, 0.0, 1.0e99,
                   probabilities, costLimit);
 
-        if (battery.size() > HITCACHESAMPLE)
+        if (battery.size() > HITCACHELIMIT)
             delete batter_ptr;
     } else if (!battery.empty() && withSmartBattery) {
         std::unique_ptr<std::vector<RaySegment>> rays(new std::vector<RaySegment>(battery.size()));
