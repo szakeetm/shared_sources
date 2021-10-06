@@ -8,25 +8,32 @@
 #include "imgui/imgui.h"
 #include <string>
 
+namespace ImGui {
 // Make the UI compact because there are so many fields
-void PushStyleCompact();
+    void PushStyleCompact();
 
-void PopStyleCompact();
+    void PopStyleCompact();
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a
 // merged icon fonts (see docs/FONTS.md)
-void HelpMarker(const char *desc);
+    void HelpMarker(const char *desc);
 
-void PlaceAtWindowCenter(const char *str);
+    void PlaceAtWindowCenter(const char *str);
 
-void PlaceAtRegionCenter(const char *str);
+    void PlaceAtRegionCenter(const char *str);
 
-void PlaceAtRegionRight(const char *str, bool sameLine);
+    void PlaceAtRegionRight(const char *str, bool sameLine);
 
-bool InputRightSide(const char *desc, double *val, const char *format);
+    bool InputRightSide(const char *desc, double *val, const char *format);
 
 // Add spacing of checkbox width
-void AddCheckboxWidthSpacing();
+    void AddCheckboxWidthSpacing();
 
+    bool
+    BufferingBar(const char *label, float value, const ImVec2 &size_arg, const ImU32 &bg_col, const ImU32 &fg_col);
+
+    bool
+    Spinner(const char *label, float radius, int thickness, const ImU32 &color);
+}
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

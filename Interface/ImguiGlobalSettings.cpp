@@ -187,7 +187,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 mApp->worker.model->otfParams.lowFluxCutoff;
 
         simChanged =
-                InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+                ImGui::InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
         simChanged = ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -195,7 +195,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                                   IM_COL32(217, 217, 217, 255));
         }
         ImGui::SameLine();
-        simChanged = InputRightSide("Gas half life (s)", &halfLife, "%g");
+        simChanged = ImGui::InputRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
             ImGui::PopStyleColor();
@@ -208,9 +208,9 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
         // Use tmp var to multiply by 10
         double outgRate10 =
                 mApp->worker.model->wp.finalOutgassingRate_Pa_m3_sec * 10.00;
-        InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
+        ImGui::InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
                        "%.4g"); // 10: conversion Pa*m3/sec -> mbar*l/s
-        InputRightSide("Final outgassing rate (1/sec)",
+        ImGui::InputRightSide("Final outgassing rate (1/sec)",
                        &mApp->worker.model->wp.finalOutgassingRate,
                        "%.4g"); // In molecules/sec
 
@@ -218,7 +218,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
             char tmp[64];
             sprintf(tmp, "Tot.des. molecules [0 to %g s]",
                     mApp->worker.model->wp.latestMoment);
-            InputRightSide(tmp, &mApp->worker.model->wp.totalDesorbedMolecules,
+            ImGui::InputRightSide(tmp, &mApp->worker.model->wp.totalDesorbedMolecules,
                            "%.4g");
         }
 
@@ -228,7 +228,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
 
         {
             const std::string btnText = "Recalc. outgassing";
-            PlaceAtRegionRight(btnText.c_str(), false);
+            ImGui::PlaceAtRegionRight(btnText.c_str(), false);
         }
 
         if (ImGui::Button("Recalc. outgassing")) // Edit bools storing our
@@ -238,7 +238,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 "Enable low flux mode",
                 &lowFluxMode); // Edit bools storing our window open/close state
         ImGui::SameLine();
-        HelpMarker(
+        ImGui::HelpMarker(
                 "Low flux mode helps to gain more statistics on low pressure "
                 "parts of the system, at the expense\n"
                 "of higher pressure parts. If a traced particle reflects from a "
@@ -260,7 +260,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
             ImGui::PushStyleColor(ImGuiCol_FrameBg,
                                   IM_COL32(217, 217, 217, 255));
         }
-        simChanged = InputRightSide(
+        simChanged = ImGui::InputRightSide(
                 "Cutoff ratio", &lowFluxCutoff,
                 "%.2e"); // Edit bools storing our window open/close state
         if (!lowFluxMode) {
@@ -269,7 +269,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
         }
 
         {
-            PlaceAtRegionCenter("Apply above settings");
+            ImGui::PlaceAtRegionCenter("Apply above settings");
             if (ImGui::Button("Apply above settings")) {
                 simChanged = false;
                 mApp->worker.model->wp.gasMass = gasMass;
@@ -299,7 +299,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
     if (ImGui::Button("Apply and restart processes"))
         nbProcChanged = true;
     {
-        PlaceAtRegionRight("Change MAX desorbed molecules", true);
+        ImGui::PlaceAtRegionRight("Change MAX desorbed molecules", true);
         if (ImGui::Button("Change MAX desorbed molecules"))
             ImGui::OpenPopup("Edit MAX");
     }
