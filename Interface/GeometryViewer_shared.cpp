@@ -2154,7 +2154,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
     constexpr int _maxHitsPerSource = 64;
     auto& hitCache = mApp->worker.globalHitCache;
     // Lines
-    if (globState.initialized && globState.globalHits.hitBattery.rays.size()) {
+    if (globState.initialized && globState.hitBattery.rays.size()) {
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
@@ -2163,7 +2163,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         size_t count = 0;
         size_t max_count = 0;
 
-        for(auto& source : globState.globalHits.hitBattery.rays)
+        for(auto& source : globState.hitBattery.rays)
             max_count += source.size();
 
         double denum = 1.0;
@@ -2171,7 +2171,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         if(max_count > dispNumHits){
             denum = (double) dispNumHits / max_count;
             max_count = 0;
-            for(auto& source : globState.globalHits.hitBattery.rays){
+            for(auto& source : globState.hitBattery.rays){
                 if((int)std::ceil(source.size() * denum) > _maxHitsPerSource){
                     max_count += _maxHitsPerSource;
                 }
@@ -2183,7 +2183,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         }
 
 
-        for(auto& source : globState.globalHits.hitBattery.rays) {
+        for(auto& source : globState.hitBattery.rays) {
             count = 0;
             int maxCount = std::ceil(source.size() * denum);
             if(maxCount > _maxHitsPerSource){

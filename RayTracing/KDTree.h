@@ -199,7 +199,7 @@ private:
 
     void PrintTreeInfo();
 
-    bool IntersectStat(RayStat &ray);
+    bool IntersectStat(RayStat &ray) override;
 };
 
 struct KdToDo {

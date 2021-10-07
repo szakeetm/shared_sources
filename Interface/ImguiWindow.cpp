@@ -488,63 +488,8 @@ void ImguiWindow::renderSingle() {
             }
             // Evaluate running progress
             if (future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-                // Animate a simple progress bar
-                static float progress = 0.0f, progress_dir = 1.0f;
-                /*static Chronometer build_dur;
-                if(!build_dur.isActive) build_dur.Start();*/
-                //if(1) {
-                progress += progress_dir * (1.0f / 60.0f) * ImGui::GetIO().DeltaTime;
-                if (progress >= +1.0f) {
-                    progress = +1.0f;
-                    progress_dir *= -1.0f;
-                }
-                if (progress <= -0.0f) {
-                    progress = -0.0f;
-                    progress_dir *= -1.0f;
-                }
-                //}
-                const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
-                const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
-
-                const ImGuiViewport *viewport = ImGui::GetMainViewport();
-                ImGui::SetNextWindowPos(true ?
-                                        ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.5f, 0.34f * viewport->Size.x)
-                                             : viewport->Pos);
-                //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x * 0.3f,36.0f+2.0f*ImGui::GetStyle().ItemInnerSpacing.x)
-                /*use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y) : viewport->Size);*/
-                static ImGuiWindowFlags flags =
-                        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                        ImGuiWindowFlags_NoSavedSettings;
-                bool open = true;
-                if(1){
-                    if (ImGui::Begin("Loader", &open, flags)) {
-                        ImGui::Spinner("##spinner", 15, 6, col);
-                        //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
-                        // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
-                        // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
-                        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                        ImGui::ProgressBar(progress, ImVec2(164.0f, 36.0f));
-                        //ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                        //ImGui::Text("Progress Bar");
-                        ImGui::End();
-                    }
-                }
-
-                // as blocking modal
-                /*ImGui::OpenPopup("Loader");
-                if (ImGui::BeginPopup("Loader"))
-                {
-                    ImGui::Spinner("##spinner", 15, 6, col);
-                    //ImGui::BufferingBar("##buffer_bar", 0.7f, ImVec2(400, 6), bg, col);
-                    // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
-                    // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
-                    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                    ImGui::ProgressBar(progress, ImVec2(0.0f, 36.0f));
-                    //ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                    //ImGui::Text("Progress Bar");
-                    ImGui::EndPopup();
-                }*/
-
+                static float progress = 0.0f, load_time = 0.0f;
+                ImGui::Loader(progress, load_time);
 
                 active_prev_state = true;
                 mApp->wereEvents_imgui = true;
@@ -554,10 +499,6 @@ void ImguiWindow::renderSingle() {
                 active_prev_state = false;
                 mApp->wereEvents_imgui = true;
             }
-            /*do {
-                progressDlg->SetProgress(load_progress);
-                ProcessSleep(100);
-            } while (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready);*/
         }
 
         // Rendering

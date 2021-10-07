@@ -620,35 +620,22 @@ struct TestRay {
     int location;
 };
 
-struct FreqBattery {
-    void resize(size_t n) {
-        rays.resize(n,{});
-        /*for(auto& r : rays) {
-            r.resize(HITCACHESIZE);
-        }*/
-        nRays.resize(n,0);
-        cyclicIndex.resize(n,0);
-    }
-    void clear(){
-        rays.clear();
-        nRays.clear();
-        cyclicIndex.clear();
-        initialized = false;
-    }
-    size_t size() const{
-        return nRays.size();
-    }
+struct SampleBattery {
+    SampleBattery();
+    void resize(size_t n);
+    void clear();
+    [[nodiscard]] size_t size() const;
     std::vector<std::vector<TestRay>> rays;       // hits
     std::vector<int> nRays;                       // amount to cache
     std::vector<int> cyclicIndex;                 // amount to cache
 
-    size_t maxSamples = HITCACHESAMPLE;
-    bool initialized = true;
+    size_t maxSamples;
+    bool initialized;
 };
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-    GlobalHitBuffer() : globalHits() {
+    GlobalHitBuffer() : globalHits(){
     	hitCacheSize = 0;
     	lastHitIndex = 0;
 		lastLeakIndex = 0;
@@ -670,7 +657,6 @@ public:
     HIT hitCache[HITCACHESIZE];       // Hit history
     LEAK leakCache[LEAKCACHESIZE];      // Leak history
     //std::vector<std::vector<TestRay>> hitBattery;       // hits
-    FreqBattery hitBattery;
     double distTraveled_total;
 
 #if defined(MOLFLOW)

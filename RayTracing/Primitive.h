@@ -38,6 +38,12 @@ struct IntersectCount{
         return *this;
     }
 
+    void Reset() {
+        nbChecks = 0;
+        nbIntersects = 0;
+    }
+
+
     std::atomic<size_t> nbChecks{0};
     std::atomic<size_t> nbIntersects{0};
     size_t nbPrim{0};

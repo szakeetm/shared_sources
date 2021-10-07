@@ -2,16 +2,16 @@
 // Created by pbahr on 8/2/21.
 //
 
+#include "Geometry_shared.h"
+#include <future>
 #include "ImguiAABB.h"
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
 #include "transfer_function_widget.h"
+#include "ImguiExtensions.h"
 
 #if defined(MOLFLOW)
-
 #include "../../src/MolFlow.h"
-#include "Geometry_shared.h"
-
 extern MolFlow *mApp;
 #endif
 
@@ -256,6 +256,32 @@ inline int Log2Int(uint64_t v) {
 
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t) v); }
 
+int UpdateADSStats(){
+    // Reset all stats from nodes and facets
+    if (!mApp->worker.model->accel.empty() && mApp->worker.model->initialized) {
+        std::vector<IntersectCount> *stats = nullptr;
+        if (mApp->worker.model->wp.accel_type &&
+            std::dynamic_pointer_cast<KdTreeAccel>(mApp->worker.model->accel.front()) != nullptr) {
+            stats = &std::dynamic_pointer_cast<KdTreeAccel>(mApp->worker.model->accel.front())->ints;
+        } else if (std::dynamic_pointer_cast<BVHAccel>(mApp->worker.model->accel.front()) != nullptr) {
+            stats = &std::dynamic_pointer_cast<BVHAccel>(mApp->worker.model->accel.front())->ints;
+        }
+        for(auto& stat : *stats) {
+            stat.Reset();
+        }
+    }
+    for(auto& fac : mApp->worker.model->facets){
+        fac->nbTraversalSteps = 0;
+        fac->nbIntersections = 0;
+        fac->nbTests = 0;
+    }
+
+    auto battery = mApp->worker.globState.PrepareHitBattery();
+    mApp->worker.model->ComputeHitStats(battery);
+
+    return 0;
+}
+
 void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, bool &rebuildAabb) {
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
@@ -401,8 +427,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             // Create item list
             static ImVector<RayData> rayItems;
 
-            if(ImGui::SliderInt("Change samples size", &mApp->aabbVisu.maxRaySamples, 0, HITCACHELIMIT)){
-                mApp->worker.globState.globalHits.hitBattery.maxSamples = mApp->aabbVisu.maxRaySamples;
+            int maxSamples = mApp->worker.globState.hitBattery.maxSamples;
+            if(ImGui::SliderInt("Change samples size", &maxSamples, 0, HITCACHELIMIT)){
+                mApp->worker.globState.hitBattery.maxSamples = maxSamples;
             }
             if (ImGui::Button("Update hit frequencies")) {
                 mApp->worker.globState.UpdateBatteryFrequencies();
@@ -412,7 +439,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             bool updateTestRays = false;
             if (ImGui::Button("Update #TestRays")) {
                 nbTestRays = 0;
-                for (auto &bat: mApp->worker.globState.globalHits.hitBattery.rays) {
+                for (auto &bat : mApp->worker.globState.hitBattery.rays) {
                     //for(auto& hit : bat) {
                     if (bat.empty()) continue;
                     nbTestRays += bat.size();
@@ -421,17 +448,17 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
             ImGui::Text("Test Rays: %d", nbTestRays);
 
-            if (updateTestRays || ((int) rayItems.size() != (int) mApp->worker.globState.globalHits.hitBattery.size())) {
-                rayItems.resize(mApp->worker.globState.globalHits.hitBattery.size(), RayData());
+            if (updateTestRays || ((int) rayItems.size() != (int) mApp->worker.globState.hitBattery.size())) {
+                rayItems.resize(mApp->worker.globState.hitBattery.size(), RayData());
                 int nodeLevel_max = 0;
 
 
                 for (int n = 0; n < rayItems.Size; n++) {
                     RayData &item = rayItems[n];
-                    auto &f = mApp->worker.globState.globalHits.hitBattery.rays[n];
+                    auto &f = mApp->worker.globState.hitBattery.rays[n];
                     item.ID = n;
                     item.nRays = f.size();
-                    item.maxRays = mApp->worker.globState.globalHits.hitBattery.nRays[item.ID];
+                    item.maxRays = mApp->worker.globState.hitBattery.nRays[item.ID];
                 }
             }
 
@@ -530,8 +557,31 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     if (ImGui::Button("Force update"))
         forceUpdate = true;
 
-    // Create item list
+    std::promise<int> p;
+    static std::future<int> future_int;
+    if (!future_int.valid())
+        future_int = p.get_future();
+
+    if (ImGui::Button("Update ADS stats")) {
+        future_int = std::async(std::launch::async, &UpdateADSStats);
+
+        // Mark for immediate update
+        forceUpdate = true;
+    }
+
+    // Evaluate running progress
+    if (future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+        static float progress = 0.0f, load_time = 0.0f;
+        ImGui::Loader(progress, load_time);
+    }
+
+    // Create item lists for Node and Facet tabs
     static ImVector<BoxData> tabItems;
+    static ImVector<FacetData> facItems;
+    if(rebuildAabb || forceUpdate) {
+        tabItems.clear();
+        facItems.clear();
+    }
     auto &accel = mApp->worker.model->accel;
 
     float trimMax = 0.0f;
@@ -712,7 +762,6 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
 
             // Create item list
-            static ImVector<FacetData> facItems;
             auto &facets = mApp->worker.model->facets;
             if (!rate_vec && rate_vec->size() != facets.size())
                 rate_vec->resize(facets.size(), -1.0f);

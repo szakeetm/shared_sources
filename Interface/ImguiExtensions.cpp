@@ -167,5 +167,54 @@ namespace ImGui {
         window->DrawList->PathStroke(color, false, thickness);
         return true;
     }
+
+    bool Loader(float& progress, float& time){
+        static float /*progress = 0.0f,*/ progress_dir = 1.0f;
+        time += ImGui::GetIO().DeltaTime;
+        progress += progress_dir * (1.0f / 60.0f) * ImGui::GetIO().DeltaTime;
+        if (progress >= +1.0f) {
+            progress = +1.0f;
+            progress_dir *= -1.0f;
+        }
+        if (progress <= -0.0f) {
+            progress = -0.0f;
+            progress_dir *= -1.0f;
+        }
+        //}
+        const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+        const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
+        const float size = 36.0f;
+        const int thickness = 6.0f;
+        const float radius = 0.5f * (size - thickness);
+
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(true ?
+                                ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.5f, 0.34f * viewport->Size.y)
+                                     : viewport->Pos);
+        ImGui::SetNextWindowSize(ImVec2(
+                164.0f+size+3.0f*ImGui::GetStyle().ItemInnerSpacing.x,
+                size+2.0f*ImGui::GetStyle().WindowPadding.y)
+                );
+        /*use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y) : viewport->Size);*/
+        static ImGuiWindowFlags flags =
+                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoSavedSettings;
+        bool open = true;
+
+        if (ImGui::Begin("Loader", &open, flags)) {
+            ImGui::Spinner("##spinner", radius, thickness, col);
+            ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            char buf[32];
+            if(time >= 60)
+                sprintf(buf, "%d:%2dm", (int)(time / 60.0), ((int)time % 60));
+            else
+                sprintf(buf, "%ds", (int)(time));
+            ImGui::ProgressBar(progress, ImVec2(164.0f, size), buf);
+            //ImGui::SameLine();
+            ImGui::End();
+        }
+
+    }
+
 }
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

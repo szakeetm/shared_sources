@@ -805,7 +805,7 @@ bool BVHAccel::IntersectStat(RayStat &ray) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
         ray.traversalSteps++;
-        ints[currentNodeIndex].nbChecks+=ray.traversalSteps;
+        ints[currentNodeIndex].nbChecks += ray.traversalSteps;
         if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
             ints[currentNodeIndex].nbIntersects++;
             if (node->nPrimitives > 0) {
@@ -815,7 +815,7 @@ bool BVHAccel::IntersectStat(RayStat &ray) {
                     const std::shared_ptr<Primitive> &p = primitives[node->primitivesOffset + i];
                     // Do not check last collided facet to prevent self intersections
                     ray.traversalSteps++;
-                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                    if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                         hit = true;
                     }
                 }

@@ -601,7 +601,7 @@ int SimulationController::Start() {
     simulation->globState->UpdateBatteryFrequencies();
 
     for(auto& freq : simThreads){
-        freq.particle->tmpState.globalHits.hitBattery.nRays = simulation->globState->globalHits.hitBattery.nRays;
+        freq.particle->tmpState.hitBattery.nRays = simulation->globState->hitBattery.nRays;
     }
 #if defined(USE_OLD_BVH)
     if(simulation->model->structures.empty()/* && RebuildAccel()*/){

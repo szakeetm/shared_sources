@@ -32,6 +32,29 @@ GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
     return *this;
 }
 
+SampleBattery::SampleBattery() {
+    maxSamples = HITCACHESAMPLE;
+    initialized = false;
+};
+
+void SampleBattery::resize(size_t n) {
+    rays.resize(n,{});
+    /*for(auto& r : rays) {
+        r.resize(HITCACHESIZE);
+    }*/
+    nRays.resize(n,0);
+    cyclicIndex.resize(n,0);
+}
+void SampleBattery::clear(){
+    rays.clear();
+    nRays.clear();
+    cyclicIndex.clear();
+    initialized = false;
+}
+size_t SampleBattery::size() const{
+    return nRays.size();
+}
+
 #if defined(MOLFLOW)
 /**
 * \brief += operator, with simple += of underlying structures

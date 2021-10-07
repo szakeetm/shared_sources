@@ -112,7 +112,7 @@ private:
 
     friend class Geometry;
 
-    bool IntersectStat(RayStat &ray);
+    bool IntersectStat(RayStat &ray) override;
 };
 
 
