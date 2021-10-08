@@ -168,7 +168,7 @@ namespace ImGui {
         return true;
     }
 
-    bool Loader(float& progress, float& time){
+    void Loader(float& progress, float& time){
         static float /*progress = 0.0f,*/ progress_dir = 1.0f;
         time += ImGui::GetIO().DeltaTime;
         progress += progress_dir * (1.0f / 60.0f) * ImGui::GetIO().DeltaTime;

@@ -154,6 +154,7 @@ public:
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 
+    int BuildAccelStructure();
 };
 
 

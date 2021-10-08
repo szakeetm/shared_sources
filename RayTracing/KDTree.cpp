@@ -15,6 +15,7 @@
 #include <cassert>
 #include <random>
 #include <Helper/Chronometer.h>
+#include <Helper/ConsoleLogger.h>
 
 #include "KDTree.h"
 #include "Ray.h"
@@ -130,19 +131,19 @@ void KdTreeAccel::PrintTreeInfo() {
         default:
             splitName = "Unknown split";
     }
-    printf("--- KD STATS ---\n");
-    printf("- Split: %s -\n", splitName.c_str());
-    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
-    printf(" Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine,
+    Log::console_msg_master(4, "--- KD STATS ---\n");
+    Log::console_msg_master(4, "- Split: %s -\n", splitName.c_str());
+    Log::console_msg_master(4, " Total Primitives: %d\n", STATS_KD::totalPrimitives);
+    Log::console_msg_master(4, " Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
+    Log::console_msg_master(4, " Interior Nodes:   %d\n", STATS_KD::interiorNodes);
+    Log::console_msg_master(4, " Leaf Nodes:       %d\n", STATS_KD::leafNodes);
+    Log::console_msg_master(4, " Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine,
            (double) STATS_KD::leafBadRefine / STATS_KD::leafNodes);
-    printf(" Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost,
+    Log::console_msg_master(4, " Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost,
            (double) STATS_KD::leafHigherCost / STATS_KD::leafNodes);
-    printf(" Split SAH:        %d [%lf]\n", STATS_KD::splitSAH,
+    Log::console_msg_master(4, " Split SAH:        %d [%lf]\n", STATS_KD::splitSAH,
            (double) STATS_KD::splitSAH / (STATS_KD::splitRay + STATS_KD::splitSAH));
-    printf(" Split Ray:        %d [%lf]\n", STATS_KD::splitRay,
+    Log::console_msg_master(4, " Split Ray:        %d [%lf]\n", STATS_KD::splitRay,
            (double) STATS_KD::splitRay / (STATS_KD::splitRay + STATS_KD::splitSAH));
 }
 
@@ -168,6 +169,8 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 
     nodes = nullptr;
     if (primitives.empty())
+        return;
+    if (splitMethod == KdTreeAccel::SplitMethod::ProbSplit && probabilities.empty())
         return;
     STATS_KD::_reset();
 
@@ -210,7 +213,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         printf(" Battery size: %zu\n", battery.size());
         // if battery is too large, only use a random sample
 
-        std::vector<TestRay> *batter_ptr = const_cast<std::vector<TestRay> *>(&battery);
+        auto *batter_ptr = const_cast<std::vector<TestRay> *>(&battery);
         if (battery.size() > HITCACHELIMIT) {
             batter_ptr = new std::vector<TestRay>;
             std::sample(battery.begin(), battery.end(), std::back_inserter(*batter_ptr),
@@ -1205,9 +1208,10 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     int retries = 0;
     retrySplit:
 
-    if (splitMethod == SplitMethod::ProbSplit && !probabilities.empty())
+    if (splitMethod == SplitMethod::ProbSplit && !probabilities.empty()) {
         std::tie(bestCost, bestAxis, bestOffset) = SplitProb(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
                                                              edges, probabilities);
+    }
     else if (splitMethod == SplitMethod::SAH)
         std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
                                                             edges);
@@ -2072,4 +2076,17 @@ KdTreeAccel &KdTreeAccel::operator=(const KdTreeAccel &src) noexcept {
         exit(44);
 
     return *this;
+}
+
+std::ostream &operator<<(std::ostream &os, KdTreeAccel::SplitMethod split_type) {
+    switch (split_type) {
+        case KdTreeAccel::SplitMethod::SAH : return os << "SAH" ;
+        case KdTreeAccel::SplitMethod::ProbSplit: return os << "ProbSplit";
+        case KdTreeAccel::SplitMethod::TestSplit: return os << "TestSplit";
+        case KdTreeAccel::SplitMethod::HybridSplit: return os << "HybridSplit";
+        case KdTreeAccel::SplitMethod::HybridBin: return os << "HybridBin";
+        default: return os << "Unknown";
+            // omit default case to trigger compiler warning for missing cases
+    };
+    return os << static_cast<std::uint16_t>(split_type);
 }

@@ -2192,34 +2192,39 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
                     maxCount = _maxHitsPerSource;
             }
 
+            if (mApp->antiAliasing) {
+                glEnable(GL_BLEND);
+                glEnable(GL_LINE_SMOOTH);
+            }
+
             for(auto& ray : source) {
 
                 //Regular (green) line color
                 if (mApp->whiteBg) { //whitebg
-                    glColor3f(0.2f, 0.2f, 0.7f);
+                    glColor3f(0.15f, 0.15f, 0.6f);
                 } else {
-                    glColor3f(0.5f, 0.5f, 1.0f);
-                }
-
-                if (mApp->antiAliasing) {
-                    glEnable(GL_BLEND);
-                    glEnable(GL_LINE_SMOOTH);
+                    glColor3f(0.35f, 0.35f, 0.9f);
                 }
 
                 glBegin(GL_LINE_STRIP);
                 glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+                //Regular (green) line color
+                if (mApp->whiteBg) { //whitebg
+                    glColor3f(0.6f, 0.15f, 0.6f);
+                } else {
+                    glColor3f(0.9f, 0.35f, 0.9f);
+                }
                 glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
                 count++;
                 glEnd();
 
-                if (mApp->antiAliasing) {
-                    glDisable(GL_LINE_SMOOTH);
-                    glDisable(GL_BLEND);
-                }
-
-
                 if (count >= maxCount)
                     break;
+            }
+
+            if (mApp->antiAliasing) {
+                glDisable(GL_LINE_SMOOTH);
+                glDisable(GL_BLEND);
             }
         }
     }

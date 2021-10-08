@@ -103,6 +103,7 @@ public:
     enum class SplitMethod {
         SAH, ProbSplit, TestSplit, HybridSplit, HybridBin
     };
+    friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
 public:
     // KdTreeAccel Public Methods

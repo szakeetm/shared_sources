@@ -394,7 +394,10 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
             auto procState = procInformation.subProcInfo[i].slaveState;
-            finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
+            if(procStatus == PROCESS_KILLED) // explicitly ask for killed state
+                finished = finished & (procState==PROCESS_KILLED);
+            else
+                finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 hasErrorStatus = true;
             }
@@ -498,14 +501,16 @@ int SimulationManager::KillAllSimUnits() {
                 simHandles[i].first.join();
             }
             else{
-                auto nativeHandle = simHandles[i].first.native_handle();
+                if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED))
+                    exit(1);
+/*                auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                 //Windows
                 TerminateThread(nativeHandle, 1);
 #else
                 //Linux
                 pthread_cancel(nativeHandle);
-#endif
+#endif*/
             }
         }
         simHandles.clear();
@@ -784,6 +789,30 @@ int SimulationManager::RefreshRNGSeed(bool fixed) {
         return 1;
     for(auto& sim : simUnits){
         sim->SetNParticle(nbThreads, fixed);
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Calls for a rebuild of the acceleration structure on the simulation side
+ * @return 0=start successful, 1=PROCESS_DONE state entered
+ */
+int SimulationManager::BuildAccelStructure() {
+    if(interactiveMode) {
+        refreshProcStatus();
+        if (simHandles.empty())
+            throw std::logic_error("No active simulation handles!");
+
+        if (ExecuteAndWait(COMMAND_ACCEL, PROCESS_RUN, 0, 0)) {
+            throw std::runtime_error(MakeSubProcError("Subprocess could not build acceleration data structure!"));
+        }
+    }
+    else {
+        this->procInformation.masterCmd = COMMAND_ACCEL; // TODO: currently needed to not break the loop
+        for(auto& con : simController){
+            con.RebuildAccel();
+        }
     }
 
     return 0;

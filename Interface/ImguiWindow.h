@@ -15,7 +15,7 @@ class ImguiWindow {
 public:
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
-    void destruct();
+    static void destruct();
     //void render();
     void renderSingle();
 
@@ -46,12 +46,11 @@ protected:
     bool show_app_main_menu_bar{false};
     bool show_app_sim_status{false};
     bool show_demo_window{false};
-    bool show_global_settings{true};
+    bool show_global_settings{false};
     bool show_aabb{true};
     bool show_perfo{true};
 
-    ImVec4 clear_color;
-
+    double start_time;
     static void restartProc(int nbProc, MolFlow *mApp);
 
     //static void ProcessControlTable(MolFlow *mApp);

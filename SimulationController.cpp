@@ -24,6 +24,21 @@
 
 #define WAITTIME    500  // Answer in STOP mode
 
+void InitOMP(){
+    // "Warm up" threads, to remove overhead for performance benchmarks
+    double randomCounter = 0;
+#pragma omp parallel default(none) shared(randomCounter)
+    {
+        double local_result = 0;
+#pragma omp for
+        for (int i=0; i < 1000; i++) {
+            local_result += 1;
+        }
+#pragma omp critical
+        randomCounter += local_result;
+    }
+    DEBUG_PRINT("[OMP] Init: %f\n", randomCounter);
+}
 SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) {
     this->threadNum = threadNum;
     this->procInfo = procInfo;
@@ -234,6 +249,7 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
     stepsPerSec = 0.0;
     endState = false;
     lastHitUpdateOK = true;
+    benchmarkADS = false;
 
     SetRuntimeInfo();
 
@@ -258,6 +274,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     parentPID = o.parentPID;
     nbThreads = o.nbThreads;
     loadOk = o.loadOk;
+    benchmarkADS = o.benchmarkADS;
 
     simThreads.reserve(nbThreads);
     for (size_t t = 0; t < nbThreads; t++) {
@@ -527,19 +544,7 @@ bool SimulationController::Load() {
                 }
             }
 
-            // "Warm up" threads, to remove overhead for performance benchmarks
-            double randomCounter = 0;
-#pragma omp parallel default(none) shared(randomCounter)
-            {
-                double local_result = 0;
-#pragma omp for
-                for (int i=0; i < 1000; i++) {
-                    local_result += 1;
-                }
-#pragma omp critical
-                randomCounter += local_result;
-            }
-            DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+            InitOMP();
 
             // Calculate remaining work
             size_t desPerThread = 0;
@@ -651,6 +656,10 @@ int SimulationController::Start() {
             thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
         }
 
+        // Start with a benchmark
+        if(this->benchmarkADS)
+            simulation->FindBestADS();
+
         int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)
         {
@@ -660,20 +669,12 @@ int SimulationController::Start() {
             simuEnd |= eos;
         }
 
-        if (simuEnd) {
-            if (GetLocalState() != PROCESS_ERROR) {
-                // Max desorption reached
-                ClearCommand();
-                SetState(PROCESS_DONE, GetSimuStatus());
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
-            }
-        }
-        else {
-            if (GetLocalState() != PROCESS_ERROR) {
-                // Time limit reached
-                ClearCommand();
-                SetState(PROCESS_DONE, GetSimuStatus());
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+        if(GetLocalState() != PROCESS_ERROR && GetLocalState() != PROCESS_KILLED) {
+            if (simuEnd) {
+                    // Max desorption reached
+                    ClearCommand();
+                    SetState(PROCESS_DONE, GetSimuStatus());
+                    DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
             }
         }
     } else {

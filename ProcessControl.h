@@ -26,6 +26,7 @@
 #define COMMAND_EXIT     15  // Exit
 #define COMMAND_CLOSE    16  // Release handles
 #define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
+#define COMMAND_ACCEL     18  // Build Accel
 
 static const char *prStates[] = {
 

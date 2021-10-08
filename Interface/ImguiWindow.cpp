@@ -16,7 +16,6 @@
 #include "ImguiGlobalSettings.h"
 
 #include <imgui/imgui_internal.h>
-#include <sstream>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 
@@ -45,7 +44,7 @@ void ImguiWindow::init() {
     // them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
     // need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please
+    // - If the file cannot be loaded, the function will return nullptr. Please
     // handle those errors in your application (e.g. use an assertion, or display
     // an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored
@@ -70,12 +69,16 @@ void ImguiWindow::init() {
     // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     // ImFont* font =
     // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-    // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
+    // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
-    // Our state
     show_demo_window = false;
     show_global_settings = false;
-    clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    show_app_main_menu_bar = false;
+    show_app_sim_status = false;
+    show_aabb = false;
+    show_perfo = false;
+
+    start_time = ImGui::GetTime();
 }
 
 void ImguiWindow::destruct() {
@@ -196,7 +199,7 @@ namespace {
         }
     };
 
-    const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = NULL;
+    const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
 }
 
 // Demonstrate creating a simple static window with no decoration
@@ -286,7 +289,7 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
                             if (items.Size > 1)
                                 qsort(&items[0], (size_t) items.Size, sizeof(items[0]),
                                       FacetData::CompareWithSortSpecs);
-                            FacetData::s_current_sort_specs = NULL;
+                            FacetData::s_current_sort_specs = nullptr;
                             sorts_specs->SpecsDirty = false;
                         }
 
@@ -420,12 +423,8 @@ void ImguiWindow::renderSingle() {
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair
-        // to created a named window.
+        // 2. Show Molflow x ImGui Hub window
         {
-            static float f = 0.0f;
-            static int counter = 0;
-
             ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
             // and append into it.
 
@@ -438,39 +437,33 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Sidebar", &show_app_sim_status);
             ImGui::Checkbox("Performance Plot", &show_perfo);
 
-            ImGui::SliderFloat("float", &f, 0.0f,
-                               1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3(
-                    "clear color",
-                    (float *) &clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most
-                // widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+            ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            auto now_time = ImGui::GetTime();
+            ImGui::Text("Application time %.3f s [%.3f s]",
+                        ImGui::GetTime(), difftime(now_time, start_time));
             ImGui::End();
         }
 
-        // 3. Show another simple window.
+        // 3. Show window plotting the simulation performance
         if (show_perfo) {
             ShowPerfoPlot(&show_perfo, mApp);
         }
 
-        // 3. Show another simple window.
+        // 3. Show global settings
         if (show_global_settings) {
             ShowGlobalSettings(mApp, &show_global_settings, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
             ImGui::End();
         }
+
+        // 4. Create placeholder for async launches
         std::promise<int> p;
         static std::future<int> future_int;
         static bool active_prev_state;
         if (!future_int.valid())
             future_int = p.get_future();
 
+        // 5. Show Window for ADS configuration/visualisation
         if (show_aabb) {
             static ImguiAABBVisu visu{};
             visu.ShowAABB(mApp, &show_aabb, redrawAabb, rebuildAabb);
@@ -516,7 +509,7 @@ void ImguiWindow::renderSingle() {
                 try {
                     mApp->worker.RealReload();
                 } catch (std::exception &e) {
-                    if (ImGui::BeginPopupModal("Error", NULL,
+                    if (ImGui::BeginPopupModal("Error", nullptr,
                                                ImGuiWindowFlags_AlwaysAutoResize)) {
                         ImGui::Text("Recalculation failed: Couldn't reload Worker:\n%s",
                                     e.what());
@@ -550,7 +543,7 @@ void ImguiWindow::restartProc(int nbProc, MolFlow *mApp) {
         mApp->worker.RealReload(true);
         mApp->SaveConfig();
     } catch (Error &e) {
-        if (ImGui::BeginPopupModal("Error", NULL,
+        if (ImGui::BeginPopupModal("Error", nullptr,
                                    ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("%s", e.what());
             ImGui::Separator();

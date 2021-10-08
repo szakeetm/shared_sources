@@ -48,13 +48,13 @@ struct BVHPrimitiveInfo {
     double probability; // For MCHitSplit
 };
 
-
 class BVHAccel : public RTPrimitive {
 public:
     // BVHAccel Public Types
     enum class SplitMethod {
         SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, TestSplit
     };
+    friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
     // BVHAccel Public Methods
     BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
@@ -113,7 +113,7 @@ private:
     friend class Geometry;
 
     bool IntersectStat(RayStat &ray) override;
-};
 
+};
 
 #endif //MOLFLOW_PROJ_BVH_H

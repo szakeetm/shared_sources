@@ -41,6 +41,9 @@ public:
     virtual size_t GetHitsSize() = 0;
     virtual MFSim::Particle * GetParticle(size_t i) = 0;
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
+
+    virtual void FindBestADS() = 0; //! benchmark to find best Acceleration Data Structure
+
 public:
     std::shared_ptr<SimulationModel> model;
     //OntheflySimulationParams ontheflyParams;
@@ -52,6 +55,7 @@ public:
 
     size_t totalDesorbed; // todo: should be a "sim counter"
     std::timed_mutex m;
+
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

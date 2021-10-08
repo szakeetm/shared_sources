@@ -373,8 +373,9 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             int hitCount0 = 0;
             int hitCountBoth = 0;
             auto ray = Ray();
-            size_t ray_n = 0;
-            for(auto& test : local_battery){
+#pragma omp parallel for default(none) firstprivate(ray) shared(rayHasHit, hitCount0, hitCount1, b0, b1, battery, hitCountBoth, local_battery)
+            for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                auto& test = local_battery[sample_id];
                 ray.origin = test.pos;
                 ray.direction = test.dir;
                 Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
@@ -384,11 +385,16 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
                 bool hit1 = b1.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
                 if(hit0 && hit1) hitCountBoth++;
                 else {
-                    if(hit0) hitCount0++;
-                    if(hit1) hitCount1++;
+                    if(hit0) {
+#pragma omp atomic
+                        hitCount0++;
+                    }
+                    if(hit1) {
+#pragma omp atomic
+                        hitCount1++;
+                    }
                 }
-                rayHasHit[ray_n] = rayHasHit[ray_n] | (hit0 || hit1);
-                ray_n++;
+                rayHasHit[sample_id] = rayHasHit[sample_id] | (hit0 || hit1);
             }
             cost[i] = 0.5f + (count0 * b0.SurfaceArea() +
                     count1 * b1.SurfaceArea()) / bounds.SurfaceArea();
@@ -397,9 +403,6 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             double pBelow = (double) (hitCount1) / (double) local_battery.size();
             double pBoth = (double) (hitCountBoth) / (double) local_battery.size(); // as a penalty
 
-            // https://www.wolframalpha.com/input/?i=-1.0+*+e%5E%28-2.35+*+%28x%5E2%2By%5E2%29%29+%2B+1+for+x%3D0+to+x%3D1
-            //hitcost[i] = 1.0f + -1.0f * std::exp(-2.35f * (pAbove*pAbove + pBelow*pBelow));
-            //https://www.wolframalpha.com/input/?i=1.0+*+e%5E%28-2.3+*+%28%28x-1%29%5E2%2B%28y-1%29%5E2%29%29+%2B+0+for+x%3D0+to+x%3D1
             hitcost[i] = 1.0f * std::exp(-2.30f * (std::pow(pAbove,2) + std::pow(pBelow,2)));
             hitcost[i] *= nPrimitives;
             hitcost[i] -= nPrimitives;
@@ -417,12 +420,12 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             }
         }
 
-        size_t ray_n = 0;
+        /*size_t ray_n = 0;
         for(auto iter = local_battery.begin(); iter != local_battery.end(); ){
             if(!rayHasHit[ray_n]) iter = local_battery.erase(iter);
             else iter++;
             ray_n++;
-        }
+        }*/
 
         //<<Either create leaf or split primitives at selected SAH bucket>>
         double leafCost = nPrimitives;
@@ -449,7 +452,7 @@ BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_
                    primitives(std::move(p)),
                    battery(battery) {
 
-    std::unique_ptr<double[]> primChance(new double[primitives.size()]);
+    /*std::unique_ptr<double[]> primChance(new double[primitives.size()]);
     for (size_t i = 0; i < primitives.size(); ++i) {
         primChance[i] = 0.0;
     }
@@ -465,18 +468,19 @@ BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_
             primChance[i] += primitives[i]->Intersect(ray);
         }
     }
-    delete ray.rng;
+    delete ray.rng;*/
 
     // if battery is too large, only use a random sample
-    if(this->battery.size() > HITCACHELIMIT / 128) {
+    /*if(this->battery.size() > HITCACHELIMIT / 128) {
         std::vector<TestRay> sampleRays;
         std::sample(this->battery.begin(), this->battery.end(), std::back_inserter(sampleRays),
                     HITCACHELIMIT / 128, std::mt19937{std::random_device{}()});
         this->battery.swap(sampleRays);
-    }
-    for (size_t i = 0; i < primitives.size(); ++i) {
+    }*/
+
+    /*for (size_t i = 0; i < primitives.size(); ++i) {
         primChance[i] /= this->battery.size();
-    }
+    }*/
 
     std::vector<BVHPrimitiveInfo> primitiveInfo(0);
     if (splitMethod == SplitMethod::TestSplit) {
@@ -484,9 +488,9 @@ BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_
             this->splitMethod = SplitMethod::SAH;
     }
 
-    printf("--- BVH with HitBattery ---\n");
-    printf(" Battery size   : %zu\n", battery.size());
-    printf(" Sampled battery: %zu\n", this->battery.size());
+    Log::console_msg_master(4, "--- BVH with HitBattery ---\n");
+    Log::console_msg_master(4, " Battery size   : %zu\n", battery.size());
+    Log::console_msg_master(4, " Sampled battery: %zu\n", this->battery.size());
 
     construct(primitiveInfo);
 }
@@ -861,3 +865,17 @@ BVHAccel &BVHAccel::operator=(const BVHAccel &src) noexcept {
     return *this;
 }
 
+std::ostream &operator<<(std::ostream &os, BVHAccel::SplitMethod split_type) {
+    switch (split_type) {
+        case BVHAccel::SplitMethod::SAH : return os << "SAH" ;
+        case BVHAccel::SplitMethod::HLBVH: return os << "HLBVH";
+        case BVHAccel::SplitMethod::Middle: return os << "Middle";
+        case BVHAccel::SplitMethod::EqualCounts: return os << "EqualCounts";
+        case BVHAccel::SplitMethod::MolflowSplit: return os << "MolflowSplit";
+        case BVHAccel::SplitMethod::ProbSplit: return os << "ProbSplit";
+        case BVHAccel::SplitMethod::TestSplit: return os << "TestSplit";
+        default: return os << "Unknown";
+            // omit default case to trigger compiler warning for missing cases
+    };
+    return os << static_cast<std::uint16_t>(split_type);
+}

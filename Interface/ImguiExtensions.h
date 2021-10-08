@@ -36,6 +36,6 @@ namespace ImGui {
     bool
     Spinner(const char *label, float radius, int thickness, const ImU32 &color);
 
-    bool Loader(float& progress, float& time);
+    void Loader(float& progress, float& time);
 }
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

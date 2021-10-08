@@ -90,6 +90,7 @@ private:
     bool lastHitUpdateOK;
     bool loadOk;
 
+    bool benchmarkADS;
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
