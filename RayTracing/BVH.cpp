@@ -373,7 +373,7 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             int hitCount0 = 0;
             int hitCountBoth = 0;
             auto ray = Ray();
-#pragma omp parallel for default(none) firstprivate(ray) shared(rayHasHit, hitCount0, hitCount1, b0, b1, battery, hitCountBoth, local_battery)
+#pragma omp parallel for default(none) firstprivate(ray) shared(rayHasHit, hitCount0, hitCount1, b0, b1, hitCountBoth, local_battery)
             for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
                 auto& test = local_battery[sample_id];
                 ray.origin = test.pos;
