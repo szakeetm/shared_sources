@@ -18,6 +18,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
+#include <implot/implot.h>
 
 void ImguiWindow::init() {
     // Setup Dear ImGui context
@@ -385,6 +386,11 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
             sprintf(overlay, "avg %f hit/s", average);
             ImGui::PlotLines(""/*"Hit/s"*/, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,
                              ImVec2(0, 80.0f));
+
+            if (ImPlot::BeginPlot("My Plot")) {
+                ImPlot::PlotLine("My Line Plot", values, IM_ARRAYSIZE(values));
+                ImPlot::EndPlot();
+            }
         }
     }
     ImGui::End();
