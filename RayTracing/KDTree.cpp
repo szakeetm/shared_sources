@@ -1374,7 +1374,8 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
         {
             std::vector<TestRayLoc> battery_below_local, battery_above_local;
 //#pragma omp for
-            for (auto ind: local_battery) {
+            for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                auto& ind = local_battery[sample_id];
                 ray.origin = battery[ind.index].pos;
                 ray.direction = battery[ind.index].dir;
                 Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
