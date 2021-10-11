@@ -24,6 +24,7 @@ void ImguiWindow::init() {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
@@ -86,6 +87,7 @@ void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 }
 
@@ -336,10 +338,10 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                             ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
 
-    static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_AlwaysAutoResize |
+    static ImGuiWindowFlags flags =/*
+            ImGuiWindowFlags_AlwaysAutoResize |*/
             ImGuiWindowFlags_NoSavedSettings;
 
     if (ImGui::Begin("Perfo", p_open, flags)) {
@@ -348,6 +350,7 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
         // Tip: If your float aren't contiguous but part of a structure, you can pass a pointer to your first float
         // and the sizeof() of your structure in the "stride" parameter.
         static float values[20] = {0.0f};
+        static float tvalues[20] = {0.0f};
         static int values_offset = 0;
         static double refresh_time = 0.0;
         if (!true || refresh_time == 0.0) // force
@@ -358,6 +361,7 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
         {
             //static float phase = 0.0f;
             values[values_offset] = mApp->hps.avg();
+            tvalues[values_offset] = now_time;
             if (values[values_offset] != values[(values_offset - 1) % IM_ARRAYSIZE(values)])
                 values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
             //phase += 0.10f * values_offset;
@@ -367,7 +371,7 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
         // Plots can display overlay texts
         // (in this example, we will display an average value)
         {
-            float average = 0.0f;
+            /*float average = 0.0f;
             for (float value: values)
                 average += value;
             average /= (float) IM_ARRAYSIZE(values);
@@ -384,11 +388,10 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
             }
             char overlay[32];
             sprintf(overlay, "avg %f hit/s", average);
-            ImGui::PlotLines(""/*"Hit/s"*/, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,
-                             ImVec2(0, 80.0f));
-
-            if (ImPlot::BeginPlot("My Plot")) {
-                ImPlot::PlotLine("My Line Plot", values, IM_ARRAYSIZE(values));
+            ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,
+                             ImVec2(0, 80.0f));*/
+            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1,-1), ImPlotFlags_AntiAliased, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_Time, ImPlotAxisFlags_AutoFit)) {
+                ImPlot::PlotLine("Simulation", tvalues, values, IM_ARRAYSIZE(values), values_offset);
                 ImPlot::EndPlot();
             }
         }
