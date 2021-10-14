@@ -442,7 +442,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 for (auto &bat : mApp->worker.globState.hitBattery.rays) {
                     //for(auto& hit : bat) {
                     if (bat.empty()) continue;
-                    nbTestRays += bat.size();
+                    nbTestRays += bat.Size();
                 }
                 updateTestRays = true;
             }
@@ -457,8 +457,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     RayData &item = rayItems[n];
                     auto &f = mApp->worker.globState.hitBattery.rays[n];
                     item.ID = n;
-                    item.nRays = f.size();
-                    item.maxRays = mApp->worker.globState.hitBattery.nRays[item.ID];
+                    item.nRays = f.Size();
+                    item.maxRays = mApp->worker.globState.hitBattery.rays[item.ID].Capacity();
                 }
             }
 

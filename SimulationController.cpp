@@ -603,11 +603,18 @@ int SimulationController::Start() {
         return 1;
     }
 
-    simulation->globState->UpdateBatteryFrequencies();
-
-    for(auto& freq : simThreads){
-        freq.particle->tmpState.hitBattery.nRays = simulation->globState->hitBattery.nRays;
+    if(simulation->model->otfParams.raySampling) {
+        simulation->globState->UpdateBatteryFrequencies();
+        for (auto &freq: simThreads) {
+            freq.particle->tmpState.hitBattery.rays = simulation->globState->hitBattery.rays;
+        }
     }
+    else{
+        for (auto &thr: simThreads) {
+            thr.particle->tmpState.StopBatteryChange();
+        }
+    }
+
 #if defined(USE_OLD_BVH)
     if(simulation->model->structures.empty()/* && RebuildAccel()*/){
         loadOk = false;
@@ -657,7 +664,7 @@ int SimulationController::Start() {
         }
 
         // Start with a benchmark
-        if(this->benchmarkADS)
+        if(simulation->model->otfParams.benchmarkADS)
             simulation->FindBestADS();
 
         int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation

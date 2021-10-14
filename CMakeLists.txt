@@ -194,6 +194,7 @@ set(HELPER_FILES
         Helper/Chronometer.cpp
         Helper/FormatHelper.cpp
         Helper/ConsoleLogger.h
+        Helper/CircularBuffer.h #template
         AppSettings.cpp
         )
 

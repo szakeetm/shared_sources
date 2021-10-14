@@ -38,21 +38,17 @@ SampleBattery::SampleBattery() {
 };
 
 void SampleBattery::resize(size_t n) {
-    rays.resize(n,{});
+    rays.resize(n,{HITCACHESIZE});
     /*for(auto& r : rays) {
-        r.resize(HITCACHESIZE);
+        r.Resize(HITCACHESIZE);
     }*/
-    nRays.resize(n,0);
-    cyclicIndex.resize(n,0);
 }
 void SampleBattery::clear(){
     rays.clear();
-    nRays.clear();
-    cyclicIndex.clear();
     initialized = false;
 }
 size_t SampleBattery::size() const{
-    return nRays.size();
+    return rays.size();
 }
 
 #if defined(MOLFLOW)

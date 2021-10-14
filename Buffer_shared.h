@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include <array>
 #include <map>
+#include "Helper/CircularBuffer.h"
 
 #if defined(MOLFLOW)
 #include "../src/MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
@@ -412,7 +413,10 @@ public:
     double	 lowFluxCutoff;
 
 	bool enableLogging;
-	size_t logFacetId, logLimit;
+    bool benchmarkADS; // TODO: Tmp for finding the best ADS structure
+    bool raySampling;
+
+    size_t logFacetId, logLimit;
 
     size_t desorptionLimit;
 	size_t nbProcess; //For desorption limit / log size calculation
@@ -433,7 +437,6 @@ public:
             CEREAL_NVP(timeLimit)
         );
 	}
-
 }; //parameters that can be changed without restarting the simulation
 
 class HIT {
@@ -625,10 +628,11 @@ struct SampleBattery {
     void resize(size_t n);
     void clear();
     [[nodiscard]] size_t size() const;
-    std::vector<std::vector<TestRay>> rays;       // hits
+    std::vector<CircularBuffer<TestRay>> rays;
+    /*std::vector<std::vector<TestRay>> rays;       // hits
     std::vector<int> nRays;                       // amount to cache
     std::vector<int> cyclicIndex;                 // amount to cache
-
+*/
     size_t maxSamples;
     bool initialized;
 };

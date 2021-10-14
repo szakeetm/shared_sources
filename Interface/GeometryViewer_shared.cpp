@@ -2164,7 +2164,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         size_t max_count = 0;
 
         for(auto& source : globState.hitBattery.rays)
-            max_count += source.size();
+            max_count += source.Size();
 
         double denum = 1.0;
         double denum_lower = 1.0;
@@ -2172,11 +2172,11 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
             denum = (double) dispNumHits / max_count;
             max_count = 0;
             for(auto& source : globState.hitBattery.rays){
-                if((int)std::ceil(source.size() * denum) > _maxHitsPerSource){
+                if((int)std::ceil(source.Size() * denum) > _maxHitsPerSource){
                     max_count += _maxHitsPerSource;
                 }
                 else {
-                    max_count += source.size();
+                    max_count += source.Size();
                 }
             }
             denum_lower = (double) dispNumHits / max_count;
@@ -2185,9 +2185,9 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
 
         for(auto& source : globState.hitBattery.rays) {
             count = 0;
-            int maxCount = std::ceil(source.size() * denum);
+            int maxCount = std::ceil(source.Size() * denum);
             if(maxCount > _maxHitsPerSource){
-                maxCount = std::ceil(source.size() * denum_lower);
+                maxCount = std::ceil(source.Size() * denum_lower);
                 if (maxCount > _maxHitsPerSource)
                     maxCount = _maxHitsPerSource;
             }
@@ -2197,7 +2197,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
                 glEnable(GL_LINE_SMOOTH);
             }
 
-            for(auto& ray : source) {
+            for(auto& ray : source.data) {
 
                 //Regular (green) line color
                 if (mApp->whiteBg) { //whitebg
