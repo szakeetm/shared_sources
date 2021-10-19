@@ -1571,8 +1571,8 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 		}
         //assert(_CrtCheckMemory());
 		//Renumber things;
-		mApp->RenumberFormulas(&newRefs);
 		mApp->RenumberSelections(newRefs);
+		mApp->RenumberFormulas(&newRefs);
 		RenumberNeighbors(newRefs);
 		RenumberTeleports(newRefs);
 	}
@@ -2840,7 +2840,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		mApp->RenumberSelections(newRef);
 		mApp->RenumberFormulas(&newRef);
 		RenumberNeighbors(newRef);
-		RenumberTeleports(newRefs);
+		RenumberTeleports(newRef);
 	}
 	//Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
