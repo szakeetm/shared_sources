@@ -140,7 +140,7 @@ set(INTERFACE_FILES
         GrahamScan.cpp
         Web.cpp
         Worker_shared.cpp
-        GeometryConverter.cpp
+        GeometryTools.cpp
         )
 
 set(SIM_FILES
