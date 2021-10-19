@@ -1511,6 +1511,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	mApp->RenumberSelections(newRefs);
 	mApp->RenumberFormulas(&newRefs);
 	RenumberNeighbors(newRefs);
+	RenumberTeleports(newRefs);
 
 	// Delete old resources
 	DeleteGLLists(true, true);
@@ -1570,9 +1571,10 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 		}
         //assert(_CrtCheckMemory());
 		//Renumber things;
-		RenumberNeighbors(newRefs);
 		mApp->RenumberFormulas(&newRefs);
 		mApp->RenumberSelections(newRefs);
+		RenumberNeighbors(newRefs);
+		RenumberTeleports(newRefs);
 	}
 
 	sh.nbFacet += nbInsert;
@@ -2838,6 +2840,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		mApp->RenumberSelections(newRef);
 		mApp->RenumberFormulas(&newRef);
 		RenumberNeighbors(newRef);
+		RenumberTeleports(newRefs);
 	}
 	//Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
@@ -2893,6 +2896,16 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 			else { //Update id
 				f->neighbors[j].id = newRefs[oriId];
 			}
+		}
+	}
+}
+
+void Geometry::RenumberTeleports(const std::vector<int> &newRefs) {
+	for (size_t i = 0; i < sh.nbFacet; i++) {
+		InterfaceFacet *f = facets[i];
+		
+		if (f->sh.teleportDest > 0) {
+			f->sh.teleportDest = newRefs[f->sh.teleportDest - 1] + 1; //Shift by 1: teleport destinations are numbered from 1, 0=no teleport, -1=back to where it came from
 		}
 	}
 }
