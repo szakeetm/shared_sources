@@ -350,12 +350,12 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
     Container<CommonEdge, Allocator> edge_cpy;
     for(auto iter_o = edges.begin(); iter_o != edges.end(); ){
         auto iter_next = std::next(iter_o,nextAdd);
-#ifdef DEBUG
-        int dist_o = std::distance(edges.begin(), iter_o);
-        int dist_next = std::distance(edges.begin(), iter_next);
-#endif
-        if(iter_next == edges.end())
-            break;
+
+        if(iter_next == edges.end()) {
+            if(iter_o->facetId.size()<=1)
+                iter_o = edges.erase(iter_o);
+            continue;
+        }
         if(iter_o->v1 == iter_next->v1 && iter_o->v2 == iter_next->v2){
             if(iter_o->facetId[0] == iter_next->facetId[0] || iter_o->facetId[1] == iter_next->facetId[0]) {
                 nextAdd++;
@@ -371,9 +371,6 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
                     cpy.facetId.resize(1);
                     cpy.Merge(*iter_next);
                     edge_cpy.push_back(cpy);
-                    /*iter_o = edges.insert(std::next(iter_o,1), cpy);
-                    nextAdd = 1;
-                    continue;*/
                 }
                 nextAdd++;
                 continue;
@@ -383,10 +380,10 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
                 continue;
             }
         }
-        else if(iter_o->facetId[0] == iter_next->facetId[0]) {
+        /*else if(iter_o->facetId[0] == iter_next->facetId[0]) {
             nextAdd++;
             continue;
-        }
+        }*/
         else {
             if(iter_o->facetId.size()<=1)
                 iter_o = edges.erase(iter_o);
@@ -505,7 +502,7 @@ int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge>
     // 3. Get pairs
     CombineEdges(edges);
     RemoveDuplicates(commonEdges);
-    HandleLoneEdge(commonEdges);
+    //HandleLoneEdge(commonEdges);
 
     return edges.size();
 }
@@ -555,7 +552,7 @@ int GeometryTools::GetCommonEdgesList(Geometry *geometry, std::vector<CommonEdge
         commonEdges.emplace_back(edge);
     }
     RemoveDuplicates(commonEdges);
-    HandleLoneEdge(commonEdges);
+    //HandleLoneEdge(commonEdges);
 
     return commonEdges.size();
 
