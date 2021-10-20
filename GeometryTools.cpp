@@ -352,8 +352,13 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
         auto iter_next = std::next(iter_o,nextAdd);
 
         if(iter_next == edges.end()) {
-            if(iter_o->facetId.size()<=1)
+            if(iter_o->facetId.size()<=1) {
                 iter_o = edges.erase(iter_o);
+            }
+            else{
+                ++iter_o;
+            }
+            nextAdd = 1;
             continue;
         }
         if(iter_o->v1 == iter_next->v1 && iter_o->v2 == iter_next->v2){
