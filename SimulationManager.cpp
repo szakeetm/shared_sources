@@ -510,7 +510,7 @@ int SimulationManager::KillAllSimUnits() {
         }
         simHandles.clear();
     }
-    nbThreads = 0;
+    //nbThreads = 0;
     return 0;
 }
 

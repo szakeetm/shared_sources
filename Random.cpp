@@ -81,7 +81,8 @@ unsigned long MersenneTwister::GetSeed() {
 }
 
 unsigned long GenerateSeed(size_t offsetIndex) {
-    size_t ms = omp_get_wtime();
+    double time = omp_get_wtime();
+    size_t ms = *(reinterpret_cast<size_t *>(&time)); // just use the bits for hashing
     int processId;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     processId = _getpid();
@@ -90,7 +91,7 @@ unsigned long GenerateSeed(size_t offsetIndex) {
 #endif //  WIN
     //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId+offsetIndex))));
+    return (unsigned long)(std::hash<unsigned long>()(ms*(std::hash<unsigned long>()(processId+offsetIndex))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
