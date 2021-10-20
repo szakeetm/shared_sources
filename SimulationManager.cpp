@@ -759,7 +759,7 @@ int SimulationManager::IncreasePriority() {
 int SimulationManager::DecreasePriority() {
 #if defined(_WIN32) && defined(_MSC_VER)
     HANDLE hProcess = GetCurrentProcess();
-    SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS);
+    SetPriorityClass(hProcess, IDLE_PRIORITY_CLASS);
 #else
 
 #endif
