@@ -150,7 +150,7 @@ set(INTERFACE_FILES
         GrahamScan.cpp
         Web.cpp
         Worker_shared.cpp
-        GeometryConverter.cpp
+        GeometryTools.cpp
         AABB.cpp #only used for visualisation at this point
         )
 
