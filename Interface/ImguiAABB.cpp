@@ -378,6 +378,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         ImGui::PopStyleVar(); // Lift normal size constraint}
     }
 
+    ImGui::Checkbox("Find fastest ADS", &mApp->worker.model->otfParams.benchmarkADS);
     if (ImGui::CollapsingHeader("AABB Builder")) {
         ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
         static int selected_accel = 0;
@@ -414,6 +415,25 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
             ImGui::EndListBox();
         }
+
+        if(mApp->worker.model->wp.accel_type == 1) {
+            static bool withRopes = false;
+            if(ImGui::Checkbox("Use ropes", &withRopes)){
+                if(withRopes){
+                    for(int s = 0; s <  mApp->worker.model->structures.size(); s++)
+                        if(dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(s).get())){
+                            dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(s).get())->AddRopes();
+                        }
+                }
+                else{
+                    for(int s = 0; s <  mApp->worker.model->structures.size(); s++)
+                        if(dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(s).get())){
+                            dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(s).get())->RemoveRopes();
+                        }
+                }
+            }
+        }
+
         bool withHitBattery = false;
         if(mApp->worker.model->wp.accel_type == 0)
             withHitBattery |= mApp->aabbVisu.splitTechnique == (int) BVHAccel::SplitMethod::TestSplit;

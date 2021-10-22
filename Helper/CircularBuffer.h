@@ -16,7 +16,6 @@ struct CircularBuffer {
         data.reserve(size_max);
     }
     void Resize(int max_size = 1024) {
-        std::cout << "Resize: "<<max_size<<"\n";
         // will add to back again
         size_max = max_size;
         offset  = 0;

@@ -11,6 +11,21 @@
 #include "Primitive.h"
 
 using Primitive = Facet;
+const double KD_TREE_EPSILON = 1e-8; // for ropes
+enum SplitAxis {
+    X_AXIS = 0,
+    Y_AXIS = 1,
+    Z_AXIS = 2
+};
+
+enum AABBFace {
+    LEFT = 0,
+    RIGHT = 1,
+    TOP = 2,
+    BOTTOM = 3,
+    FRONT = 4,
+    BACK = 5
+};
 
 // KdTreeAccel Forward Declarations
 // KdTreeAccel Local Declarations
@@ -32,6 +47,14 @@ struct KdAccelNode {
     // stats
     int nodeId{0};
 
+    // stackless w/ ropes
+    KdAccelNode *ropes[6];
+    AxisAlignedBoundingBox bbox;
+    [[nodiscard]] const KdAccelNode *getNeighboringNode(const Ray &ray) const;
+    [[nodiscard]] const KdAccelNode *getNeighboringNode(const Vector3d &p, const Vector3d &o) const;
+
+    void prettyPrint() const;
+
 private:
     union {
         int flags;       // Both
@@ -40,6 +63,7 @@ private:
     };
 
     friend class Geometry;
+
 };
 
 struct BoundEdge;
@@ -105,6 +129,8 @@ public:
     };
     friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
+    bool IntersectRope(Ray &ray);
+
 public:
     // KdTreeAccel Public Methods
     /*KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
@@ -123,9 +149,14 @@ public:
     ~KdTreeAccel() override;
 
     bool Intersect(Ray &ray) override;
+    bool IntersectTrav(Ray &ray);
     RTStats IntersectT(Ray &ray);
 
     std::vector<IntersectCount> ints;
+
+    void RemoveRopes();
+    void AddRopes();
+
 private:
     void ComputeBB() override;
     // KdTreeAccel Private Methods
@@ -145,6 +176,9 @@ private:
                       int badRefines, const std::unique_ptr<std::vector<RaySegment>> &battery,
                       RayBoundary ** rb_stack, int prevSplitAxis, double tMin,
                       double tMax, const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
+    void attachRopes(KdAccelNode* current, KdAccelNode* ropes[]);
+    void optimizeRopes( KdAccelNode *ropes[], AxisAlignedBoundingBox bbox);
+
 private:
     // KdTreeAccel Private Data
     SplitMethod splitMethod;
@@ -153,6 +187,7 @@ private:
     std::vector<std::shared_ptr<Primitive>> primitives;
     std::vector<int> primitiveIndices;
     KdAccelNode *nodes;
+    bool hasRopes = false;
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
 
