@@ -46,6 +46,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #include "ASELoader.h"
+#include <omp.h>
 //#include <algorithm>
 #include <list>
 #include <numeric> //std::iota
@@ -2085,10 +2086,36 @@ std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
-	for (size_t i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->selected) nb++;
+#pragma omp parallel default(none) shared(nb)
+	{
+		size_t local_count = 0;
+
+#pragma omp for
+			for (size_t i = 0; i < sh.nbFacet; i++) {
+				if (facets[i]->selected) local_count++;
+			}
+#pragma omp critical
+		{
+			nb += local_count;
+		}
+	}
 	return nb;
+
 }
+/*
+			// "Warm up" threads, to remove overhead for performance benchmarks
+			double randomCounter = 0;
+#pragma omp parallel default(none) shared(randomCounter)
+			{
+				double local_result = 0;
+#pragma omp for
+				for (int i=0; i < 1000; i++) {
+					local_result += 1;
+				}
+#pragma omp critical
+*/
+
+
 
 void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown) {
 	if (!isShiftDown && !isCtrlDown) UnselectAll(); //Set selection
