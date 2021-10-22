@@ -640,6 +640,9 @@ int SimulationController::Start() {
         int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)
         {
+#if defined(_WIN32) && defined(_MSC_VER)
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+#endif
             eos = simThreads[omp_get_thread_num()].runLoop();
 
 #pragma omp atomic

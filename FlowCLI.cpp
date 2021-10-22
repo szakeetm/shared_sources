@@ -262,11 +262,11 @@ int main(int argc, char** argv) {
         writer.SaveGeometry(newDoc, model, false, true);
         writer.SaveSimulationState(fullOutFile, model, globState);
 
-        if(SettingsIO::isArchive){
+        if(createZip){
             Log::console_msg_master(3, "Compressing xml to zip...\n");
 
             //Zipper library
-            std::string fileNameWithZIP = std::filesystem::path(SettingsIO::workFile).replace_extension(".zip").string();
+            std::string fileNameWithZIP = std::filesystem::path(fullOutFile).replace_extension(".zip").string();
             if (std::filesystem::exists(fileNameWithZIP)) { // should be workFile == inputFile
                 try {
                     std::filesystem::remove(fileNameWithZIP);
@@ -278,10 +278,10 @@ int main(int argc, char** argv) {
             ZipFile::AddFile(fileNameWithZIP, fullOutFile, FileUtils::GetFilename(fullOutFile));
             //At this point, if no error was thrown, the compression is successful
             try {
-                std::filesystem::remove(SettingsIO::workFile);
+                std::filesystem::remove(fullOutFile);
             }
             catch (std::exception &e) {
-                Log::console_error("Error removing\n%s\nMaybe file is in use.\n",SettingsIO::workFile.c_str());
+                Log::console_error("Error removing\n%s\nMaybe file is in use.\n",fullOutFile.c_str());
             }
         }
     }
