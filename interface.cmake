@@ -23,6 +23,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
+        ${IMGUI_DIR}
         )
 
 if(MSVC)
@@ -150,6 +151,8 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
+
+target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

@@ -18,6 +18,7 @@
 #include <cstring> //strcpy, etc.
 #include <imgui/imgui_impl_sdl.h>
 #include <imgui/imgui_internal.h>
+#include "ImguiWindow.h"
 
 #ifndef _WIN32
 #include <unistd.h> //_exit()
@@ -247,6 +248,12 @@ void GLApplication::Exit() {
 #endif
   SAFE_FREE(logs);
 
+  if(imWnd) {
+      imWnd->destruct();
+      delete imWnd;
+      imWnd = nullptr;
+  }
+
   GLToolkit::InvalidateDeviceObjects();
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
@@ -397,7 +404,13 @@ void GLApplication::Run() {
 
   mApp->CheckForRecovery();
   wereEvents = false;
-				
+  wereEvents_imgui = true;
+
+  if(!imWnd) {
+      imWnd = new ImguiWindow(this);
+      imWnd->init();
+  }
+
   //Wait for user exit
   while( !quit )
   {
@@ -476,7 +489,8 @@ void GLApplication::Run() {
        }
 
        // Repaint
-	   if (wereEvents) {
+       if (wereEvents || wereEvents_imgui) {
+           wereEvents_imgui = false;
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
 	   }
@@ -484,9 +498,7 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
-
        SDL_Delay(100);
-
      }
       
   }

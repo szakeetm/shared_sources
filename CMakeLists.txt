@@ -15,6 +15,8 @@ if(NOT NO_INTERFACE)
     add_subdirectory(Clipper)
     add_subdirectory(NativeFileDialog)
     add_subdirectory(imgui)
+    add_subdirectory(implot)
+    add_dependencies(implot imgui)
 endif()
 
 # Project
@@ -28,6 +30,7 @@ set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXT ../src/)
+set(IMGUI_DIR ./imgui)
 
 set(COPY_DIR ../copy_to_build/)
 
@@ -133,6 +136,8 @@ set(INTERFACE_FILES
         Interface/VertexCoordinates.cpp
         Interface/ImguiWindow.cpp
         Interface/ImguiMenu.cpp
+        Interface/ImguiGlobalSettings.cpp
+        Interface/ImguiExtensions.cpp
 
         ASELoader.cpp
         Facet_shared.cpp

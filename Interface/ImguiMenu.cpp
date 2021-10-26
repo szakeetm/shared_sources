@@ -63,6 +63,7 @@ static void ShowMenuFile() {
 
     ImGui::Separator();
     if (ImGui::MenuItem("Quit", "Alt+F4")) {
+        exit(0);
     }
 }
 
