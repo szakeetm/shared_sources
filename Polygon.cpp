@@ -557,7 +557,7 @@ std::tuple<double,Vector2d,std::vector<Vector2d>> GetInterArea(const GLAppPolygo
   
   // Count number of pts
   size_t nbV = 0;
-  for(auto p : *polys)
+  for(auto& p : *polys)
 	  nbV += p.pts.size();
   std::vector<Vector2d> lList(nbV);
 
