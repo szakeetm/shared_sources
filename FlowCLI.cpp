@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     MFMPI::mpi_initialize();
 #endif
 
-    Log::console_msg_master(0, "%s\n", molflowCliLogo);
+    Log::console_msg_master(1, "%s\n", molflowCliLogo);
 
     SimulationManager simManager{};
     simManager.interactiveMode = true;
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     GlobalSimuState globState{};
 
 
-    if(Initializer::initFromArgv(argc, argv, &simManager, model)){
+    if(-1 < Initializer::initFromArgv(argc, argv, &simManager, model)){
 #if defined(USE_MPI)
         MPI_Finalize();
 #endif
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
             }
         }
         else if(Settings::autoSaveDuration && (uint64_t)(elapsedTime)%Settings::autoSaveDuration==0){ // autosave every x seconds
-            Log::console_msg_master(1,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
+            Log::console_msg_master(2,"[%.0lfs] Creating auto save file %s\n", elapsedTime, autoSave.c_str());
             FlowIO::WriterXML writer;
             writer.SaveSimulationState(autoSave, model, globState);
         }
@@ -262,11 +262,11 @@ int main(int argc, char** argv) {
         writer.SaveGeometry(newDoc, model, false, true);
         writer.SaveSimulationState(fullOutFile, model, globState);
 
-        if(SettingsIO::isArchive){
+        if(createZip){
             Log::console_msg_master(3, "Compressing xml to zip...\n");
 
             //Zipper library
-            std::string fileNameWithZIP = std::filesystem::path(SettingsIO::workFile).replace_extension(".zip").string();
+            std::string fileNameWithZIP = std::filesystem::path(fullOutFile).replace_extension(".zip").string();
             if (std::filesystem::exists(fileNameWithZIP)) { // should be workFile == inputFile
                 try {
                     std::filesystem::remove(fileNameWithZIP);
@@ -278,10 +278,10 @@ int main(int argc, char** argv) {
             ZipFile::AddFile(fileNameWithZIP, fullOutFile, FileUtils::GetFilename(fullOutFile));
             //At this point, if no error was thrown, the compression is successful
             try {
-                std::filesystem::remove(SettingsIO::workFile);
+                std::filesystem::remove(fullOutFile);
             }
             catch (std::exception &e) {
-                Log::console_error("Error removing\n%s\nMaybe file is in use.\n",SettingsIO::workFile.c_str());
+                Log::console_error("Error removing\n%s\nMaybe file is in use.\n",fullOutFile.c_str());
             }
         }
     }

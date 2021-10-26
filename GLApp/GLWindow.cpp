@@ -145,7 +145,7 @@ void GLWindow::SetTitle(const char *title) {
     if (title) {
 
         strcpy(this->_title, title);
-        minWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(title) + 30;
+        minWidth = std::max(minWidth, GLToolkit::GetDialogFontBold()->GetTextWidth(title) + 30);
 
         // Compute a short height for icon state
         int w = 0;
@@ -356,10 +356,18 @@ void GLWindow::ProcessMessage(GLComponent *src, int message) {
 
 void GLWindow::UpdateOnResize() {
 
-    if (maximized) {
-        GLWindow *master = GLWindowManager::GetTopLevelWindow();
+    GLWindow* master = GLWindowManager::GetTopLevelWindow();
+    int masterWidth = master->GetWidth();
+    int masterHeight = master->GetHeight();
+
+    if (maximized) { //Keep maximized
         int u = master->GetUpMargin();
-        SetBounds(1, u, master->GetWidth() - 2, master->GetHeight() - u - 2);
+        SetBounds(1, u, masterWidth - 2, masterHeight - u - 2);
+    }
+    else { //Keep on screen
+        int childX, childY, childW, childH;
+        GetBounds(&childX, &childY, &childW, &childH);
+        SetBounds(std::max(0, std::min(childX, masterWidth - 100)), std::max(0, std::min(childY, masterHeight - 50)), childW, childH);
     }
 
 }

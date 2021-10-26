@@ -193,10 +193,10 @@ public:
 
 	//Outgassing map
 	bool   useOutgassingFile;   //has desorption file for cell elements
-	double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
-    double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
-    size_t   outgassingMapWidth; //rounded up outgassing file map width
-	size_t   outgassingMapHeight; //rounded up outgassing file map height
+	//double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
+    //double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
+    //size_t   outgassingMapWidth; //rounded up outgassing file map width
+	//size_t   outgassingMapHeight; //rounded up outgassing file map height
 	double totalOutgassing; //total outgassing for the given facet
 
 	AnglemapParams anglemapParams;//Incident angle map
@@ -295,11 +295,11 @@ public:
 
 			//Outgassing map
 			CEREAL_NVP(useOutgassingFile),   //has desorption file for cell elements
-            CEREAL_NVP(outgassingFileRatioU), //desorption file's sample/unit ratio U
+            /*CEREAL_NVP(outgassingFileRatioU), //desorption file's sample/unit ratio U
             CEREAL_NVP(outgassingFileRatioV), //desorption file's sample/unit ratio V
             CEREAL_NVP(outgassingMapWidth), //rounded up outgassing file map width
             CEREAL_NVP(outgassingMapHeight), //rounded up outgassing file map height
-
+*/
 			CEREAL_NVP(totalOutgassing), //total outgassing for the given facet
 
 			CEREAL_NVP(anglemapParams)//Incident angle map

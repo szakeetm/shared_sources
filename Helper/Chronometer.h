@@ -15,13 +15,12 @@ using time_type = std::chrono::time_point<clock_type>;
 // time class working in ns precision, returning suitable sec/msec values
 class Chronometer {
 public:
-    Chronometer();
-    void ReInit();
-    void Start();
-    void Stop();
-    double Elapsed(); // return elapsed time in seconds
-    double ElapsedMs(); // return elapsed time in ms
-    double StartTime(); // return start time in seconds
+    Chronometer(); //! constructor for initial state: stopped, no elapsed time
+    void ReInit(); //! turns off and resets the timer
+    void Start(); //! start the timer and save starting time
+    void Stop(); //! stops the timer and save elapsed time
+    double Elapsed(); //! return elapsed time in seconds
+    double ElapsedMs(); //! return elapsed time in ms
 
 protected:
     std::chrono::time_point<clock_type> startTime;

@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry_shared.h"
-#include "GeometryConverter.h"
+#include "GeometryTools.h"
 #include "Facet_shared.h"
 #include "Helper/MathTools.h"
 #include "GLApp/GLMessageBox.h"
@@ -305,26 +305,21 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 		facets[i]->neighbors.clear();
 	}
 	prg->SetMessage("Comparing facets...");
-	for (i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-		mApp->DoEvents(); //Catch possible cancel press
-		InterfaceFacet *f1 = facets[i];
-		prg->SetProgress(double(i) / double(sh.nbFacet));
-		for (size_t j = i + 1; !work->abortRequested && j < sh.nbFacet; j++) {
-			InterfaceFacet *f2 = facets[j];
-			size_t c1, c2, l;
-			if (GetCommonEdges(facets[i], facets[j], &c1, &c2, &l)) {
-				double dotProduct = Dot(f1->sh.N, f2->sh.N);
-				Saturate(dotProduct, -1.0, 1.0); //Rounding errors...
-				double angleDiff = fabs(acos(dotProduct));
-				NeighborFacet n1{}, n2{};
-				n1.id = i;
-				n2.id = j;
-				n1.angleDiff = n2.angleDiff = angleDiff;
-				f1->neighbors.push_back(n2);
-				f2->neighbors.push_back(n1);
-			}
-		}
-	}
+    std::vector<CommonEdge> edges;
+
+    if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
+        i = 0;
+        for (auto &edge: edges) {
+            prg->SetProgress(double(i) / double(edges.size()));
+            NeighborFacet n1{}, n2{};
+            n1.id = edge.facetId[0];
+            n2.id = edge.facetId[1];
+            n1.angleDiff = n2.angleDiff = edge.angle;
+            GetFacet(n1.id)->neighbors.push_back(n2);
+            GetFacet(n2.id)->neighbors.push_back(n1);
+            ++i;
+        }
+    }
 	return i;
 }
 
@@ -1511,6 +1506,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	mApp->RenumberSelections(newRefs);
 	mApp->RenumberFormulas(&newRefs);
 	RenumberNeighbors(newRefs);
+	RenumberTeleports(newRefs);
 
 	// Delete old resources
 	DeleteGLLists(true, true);
@@ -1570,9 +1566,10 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 		}
         //assert(_CrtCheckMemory());
 		//Renumber things;
-		RenumberNeighbors(newRefs);
-		mApp->RenumberFormulas(&newRefs);
 		mApp->RenumberSelections(newRefs);
+		mApp->RenumberFormulas(&newRefs);
+		RenumberNeighbors(newRefs);
+		RenumberTeleports(newRefs);
 	}
 
 	sh.nbFacet += nbInsert;
@@ -2838,6 +2835,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		mApp->RenumberSelections(newRef);
 		mApp->RenumberFormulas(&newRef);
 		RenumberNeighbors(newRef);
+		RenumberTeleports(newRef);
 	}
 	//Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
@@ -2893,6 +2891,16 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 			else { //Update id
 				f->neighbors[j].id = newRefs[oriId];
 			}
+		}
+	}
+}
+
+void Geometry::RenumberTeleports(const std::vector<int> &newRefs) {
+	for (size_t i = 0; i < sh.nbFacet; i++) {
+		InterfaceFacet *f = facets[i];
+		
+		if (f->sh.teleportDest > 0) {
+			f->sh.teleportDest = newRefs[f->sh.teleportDest - 1] + 1; //Shift by 1: teleport destinations are numbered from 1, 0=no teleport, -1=back to where it came from
 		}
 	}
 }
@@ -4279,7 +4287,7 @@ std::vector<size_t> Geometry::GetAllFacetIndices() const {
 void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
     prg->SetMessage("Triangulating geometry...");
 	
-    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
+    auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg->SetMessage("Saving STL file...");
     f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {

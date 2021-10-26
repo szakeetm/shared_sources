@@ -12,6 +12,7 @@
 #include "BVH.h"
 #include "Ray.h"
 #include <cassert>
+#include <Helper/ConsoleLogger.h>
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -379,8 +380,8 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
                                      &totalNodes, orderedPrims);
     primitives.swap(orderedPrims);
 
-    printf("BVH created with %d nodes for %d "
-           "primitives (%.2f MB)",
+    Log::console_msg_master(4, "BVH created with %d nodes for %d "
+           "primitives (%.2f MB)\n",
            totalNodes, (int) primitives.size(),
            float(totalNodes * sizeof(LinearBVHNode)) /
            (1024.f * 1024.f));
@@ -392,11 +393,11 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
 
     delete root;
 
-    printf("--- BVH STATS ---\n");
-    printf(" Total Primitives: %d\n", STATS::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS::leafNodes);
+    Log::console_msg_master(4,"--- BVH STATS ---\n");
+    Log::console_msg_master(4," Total Primitives: %d\n", STATS::totalPrimitives);
+    Log::console_msg_master(4," Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
+    Log::console_msg_master(4," Interior Nodes:   %d\n", STATS::interiorNodes);
+    Log::console_msg_master(4," Leaf Nodes:       %d\n", STATS::leafNodes);
 
 }
 

@@ -15,10 +15,14 @@ void Chronometer::Start() {
 }
 
 void Chronometer::Stop() {
-    isActive = false;
-    stopTime = clock_type::now();
-    std::chrono::duration<double> duration = std::chrono::duration_cast<time_ratio>(stopTime - startTime); // gets converted to sec with ns precision like this
-    elapsedOnStop += duration.count();
+    // Check for "real stop": isActive [true->false]
+    if(isActive) {
+        isActive = false;
+        stopTime = clock_type::now();
+        std::chrono::duration<double> duration = std::chrono::duration_cast<time_ratio>(
+                stopTime - startTime); // gets converted to sec with ns precision like this
+        elapsedOnStop += duration.count();
+    }
 }
 
 double Chronometer::Elapsed() {
@@ -38,10 +42,6 @@ double Chronometer::ElapsedMs() {
         //std::chrono::duration<double> duration = std::chrono::duration_cast<time_ratio>(stopTime - startTime);
         return elapsedOnStop * 1000.0;
     }
-}
-
-double Chronometer::StartTime() {
-    return std::chrono::time_point_cast<time_ratio>(startTime).time_since_epoch().count();
 }
 
 void Chronometer::ReInit() {

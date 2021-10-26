@@ -140,7 +140,7 @@ public:
   static std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
   int GenerateNewCDF(double temperature);
   void CalcTotalOutgassing();
-  int GetCDFId(double temperature);
+  int GetCDFId(double temperature) const;
   int GetIDId(size_t paramId) const;
   //Different signature:
   void SendToHitBuffer();// Send total and facet hit counts to subprocesses
