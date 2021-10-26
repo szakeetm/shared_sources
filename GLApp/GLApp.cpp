@@ -404,7 +404,7 @@ void GLApplication::Run() {
 
   mApp->CheckForRecovery();
   wereEvents = false;
-  wereEvents_imgui = true;
+  wereEvents_imgui = 2;
 
   if(!imWnd) {
       imWnd = new ImguiWindow(this);
@@ -422,14 +422,17 @@ void GLApplication::Run() {
              auto ctx = ImGui::GetCurrentContext();
 
              if ((ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)  || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1) || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1)) {
-                 wereEvents = true;
+                 wereEvents_imgui = 5;
                  if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
 
                  }
                  continue;
              }
          }
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
+            wereEvents = true;
+            wereEvents_imgui = 5;
+        }
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
@@ -489,8 +492,8 @@ void GLApplication::Run() {
        }
 
        // Repaint
-       if (wereEvents || wereEvents_imgui) {
-           wereEvents_imgui = false;
+       if (wereEvents || wereEvents_imgui > 0) {
+           wereEvents_imgui -= 1; // allow to queue multiple imgui passes
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
 	   }
