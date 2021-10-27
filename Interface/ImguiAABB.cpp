@@ -381,7 +381,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
     ImGui::Checkbox("Find fastest ADS", &mApp->worker.model->otfParams.benchmarkADS);
     if (ImGui::CollapsingHeader("AABB Builder")) {
         ImGui::Checkbox("Use old BVH", &mApp->aabbVisu.oldBVH);
-        static int selected_accel = 0;
+        static int selected_accel = mApp->worker.model->wp.accel_type;
         {
             // Using the _simplified_ one-liner Combo() api here
             // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
@@ -457,6 +457,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
             static int nbTestRays = 0;
             bool updateTestRays = false;
+            ImGui::Checkbox("Enable Ray Sampling",&mApp->worker.model->otfParams.raySampling);
             if (ImGui::Button("Update #TestRays")) {
                 nbTestRays = 0;
                 for (auto &bat : mApp->worker.globState.hitBattery.rays) {
@@ -584,15 +585,20 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
     if (ImGui::Button("Update ADS stats")) {
         future_int = std::async(std::launch::async, &UpdateADSStats);
-
-        // Mark for immediate update
-        forceUpdate = true;
     }
 
+    static bool active_prev_state = false;
     // Evaluate running progress
     if (future_int.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
         static float progress = 0.0f, load_time = 0.0f;
         ImGui::Loader(progress, load_time);
+        active_prev_state = true;
+        mApp->wereEvents_imgui = true;
+    }
+    else if (active_prev_state) {
+        active_prev_state = false;
+        // Mark for immediate update
+        forceUpdate = true;
     }
 
     // Create item lists for Node and Facet tabs

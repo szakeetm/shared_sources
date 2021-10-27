@@ -628,6 +628,22 @@ int SimulationController::Start() {
         return 1;
     }
 
+    bool setPayload = false;
+    for(auto& accel : simulation->model->accel){
+        if(dynamic_cast<KdTreeAccel*>(accel.get())){
+            if(dynamic_cast<KdTreeAccel*>(accel.get())->hasRopes)
+                setPayload = true;
+        }
+    }
+
+    for (auto &thr: simThreads) {
+        if(setPayload)
+            if(!thr.particle->particle.pay)
+                thr.particle->particle.pay = new RopePayload;
+        else if(thr.particle->particle.pay)
+            delete thr.particle->particle.pay;
+    }
+
     if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
             simulation->model->otfParams.desorptionLimit /

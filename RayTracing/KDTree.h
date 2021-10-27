@@ -69,9 +69,9 @@ private:
 struct BoundEdge;
 
 struct RTStats {
-    size_t nti{0}; // traversed interior nodes
-    size_t ntl{0}; // traversed leaves
-    size_t nit{0}; // ray-bject intersection
+    size_t nTraversedInner{0}; // traversed interior nodes
+    size_t nTraversedLeaves{0}; // traversed leaves
+    size_t nIntersections{0}; // ray-bject intersection
     double timeTrav{0};
     double timeInt{0};
 };
@@ -97,6 +97,10 @@ struct SplitCandidate {
     double cost{1.0e99};
     int axis{-1};
     int offset{-1};
+};
+
+struct RopePayload : Payload {
+    const KdAccelNode* lastNode;
 };
 
 class KdTreeAccel : public RTPrimitive {
@@ -153,6 +157,7 @@ public:
     RTStats IntersectT(Ray &ray);
 
     std::vector<IntersectCount> ints;
+    bool hasRopes = false;
 
     void RemoveRopes();
     void AddRopes();
@@ -187,7 +192,6 @@ private:
     std::vector<std::shared_ptr<Primitive>> primitives;
     std::vector<int> primitiveIndices;
     KdAccelNode *nodes;
-    bool hasRopes = false;
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
 
@@ -236,6 +240,9 @@ private:
     void PrintTreeInfo();
 
     bool IntersectStat(RayStat &ray) override;
+    bool IntersectRopeStat(RayStat &ray);
+    bool IntersectTravStat(RayStat &ray);
+
 };
 
 struct KdToDo {

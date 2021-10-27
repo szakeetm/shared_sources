@@ -1258,6 +1258,54 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
             glEnd();
             // end transparent sides
+
+            // also draw edges
+            glPushAttrib(GL_LINE_BIT);
+
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ZERO);
+            glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 0.2f);
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glLineStipple(1, 0x0101);
+            glEnable(GL_LINE_STIPPLE);
+            glBegin(GL_LINE_STRIP);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glEnd();
+            glDisable(GL_LINE_STIPPLE);
+
+            glPopAttrib();
         }
 
         if(!node->IsLeaf()) {
@@ -1279,8 +1327,13 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             d[axisSwap] = bbox.min[axisSwap];
 
             // begin transparent sides
-            glColor4f(color[0], color[1], color[2], color[3] * mApp->aabbVisu.alpha);
-
+            if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+                glColor4f(color[0], color[1], color[2], std::max(color[3] * mApp->aabbVisu.alpha * 1.2f, 0.45f));
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            else{
+                glColor4f(color[0], color[1], color[2], color[3] * mApp->aabbVisu.alpha);
+            }
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glBegin(GL_POLYGON);
             glVertex3d(a.x, a.y, a.z);

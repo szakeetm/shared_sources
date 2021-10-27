@@ -109,8 +109,17 @@ bool Facet::Intersect(Ray &ray) {
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
+                                if(!ray.transparentHits.empty()){
+                                    for(auto& hit : ray.transparentHits){
+                                        if(hit.hitId == globalId && hit.hit.colU != u){
+                                            std::cout << "Multi hit\n";
+                                        }
+                                    }
+                                }
+
                                 auto& thit = ray.transparentHits.emplace_back(globalId, SubProcessFacetTempVar());
                                 auto& hit = thit.hit;
+
                                 hit.isHit = false;
                                 hit.colU = u;
                                 hit.colV = v;

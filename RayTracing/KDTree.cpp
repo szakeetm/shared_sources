@@ -292,6 +292,9 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 }
 
 void KdTreeAccel::AddRopes(){
+    for(int n = 0; n < nAllocedNodes; ++n){
+        ints[nodes[n].nodeId].Reset();
+    }
     hasRopes = true;
     KdAccelNode* ropes_loc[6] = { NULL }; // 2 ropes for each dimension
     attachRopes(&this->nodes[0], ropes_loc);
@@ -300,6 +303,7 @@ void KdTreeAccel::AddRopes(){
 void KdTreeAccel::RemoveRopes(){
     hasRopes = false;
     for(int n = 0; n < nAllocedNodes; ++n){
+        ints[nodes[n].nodeId].Reset();
         for (auto & rope : nodes[n].ropes) {
             rope = nullptr;
         }
@@ -1781,6 +1785,15 @@ bool KdTreeAccel::Intersect(Ray &ray){
     }
 }
 
+bool KdTreeAccel::IntersectStat(RayStat &ray){
+    if(hasRopes){
+        return IntersectRopeStat(ray);
+    }
+    else{
+        return IntersectTravStat(ray);
+    }
+}
+
 bool KdTreeAccel::IntersectTrav(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
@@ -2068,27 +2081,36 @@ const KdAccelNode * KdAccelNode::getNeighboringNode(const Vector3d &p, const Vec
     }*/
 }
 
+
 bool KdTreeAccel::IntersectRope(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
 
     // (-0.796657,-0.591801,0.431659) --> (0.772294,0.467946,0.429638)
-    /*ray.origin = {-0.796657,-0.591801,0.431659};
-    ray.direction = {0.772294,0.467946,0.429638};
-    ray.lastIntersected = 5;*/
+    /*ray.origin = {0.28101216891289105,-0.37277123608631663,-13.0};
+    ray.direction = {-0.25603539446160872, 0.074679806772409166, 0.96377839944840227};
+    ray.lastIntersected = 0;*/
 
     // Neglect initial parametric test, since a ray starts always from inside
-    if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+    /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
         return false;
-    }
+    }*/
 
     // Prepare to traverse kd-tree for ray
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
 
     // Traverse kd-tree nodes in order for ray
     bool hit = false;
-    const KdAccelNode *node = &nodes[0];
+    const KdAccelNode *node;
+    if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
+        node = ((RopePayload *) ray.pay)->lastNode;
+        if(!node->bbox.IntersectP(ray, nullptr, nullptr))// not in node
+            node = node->getNeighboringNode(ray);
+    }
+    else
+        node = &nodes[0];
+    // KdAccelNode *node = &nodes[0];
     while (node != nullptr) {
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;
@@ -2158,8 +2180,11 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
-                if (p->globalId != ray.lastIntersected && p->Intersect(ray))
+                if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                     hit = true;
+                    if(ray.pay && ray.hardHit.hitId == p->globalId)
+                        ((RopePayload*)ray.pay)->lastNode = node;
+                }
 
                 //printf(" Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
 
@@ -2169,8 +2194,11 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->globalId != ray.lastIntersected && p->Intersect(ray))
+                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
+                        if(ray.pay && ray.hardHit.hitId == p->globalId)
+                            ((RopePayload*)ray.pay)->lastNode = node;
+                    }
                     //printf(" Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
                 }
             }
@@ -2190,7 +2218,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
             else {
                 // This should never happen.
                 // If it does, then that means we're checking triangles in a node that the ray never intersects.
-                /*node->bbox.IntersectP(ray, &tMax_l, &tMin);
+                node->bbox.IntersectP(ray, &tMax_l, &tMin);
                 double tmax[3];
                 for(int i = 0; i < 3; ++i)
                     node->bbox.IntersectP(ray, nullptr, &tmax[i], i);
@@ -2200,7 +2228,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                 printf("nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[1]);
                 p_exit = ray.origin + ( tmax[2] * ray.direction );
                 printf("nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[2]);
-*/
+
                 break;
             }
 
@@ -2238,7 +2266,112 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     return hit;
 }
 
-bool KdTreeAccel::IntersectStat(RayStat &ray) {
+bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
+    //ProfilePhase p(Prof::AccelIntersect);
+    // Compute initial parametric range of ray inside kd-tree extent
+    double tMin = 0.0, tMax = 1.0e99;
+
+    // Neglect initial parametric test, since a ray starts always from inside
+    if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+        return false;
+    }
+
+    // Prepare to traverse kd-tree for ray
+    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+
+    // Traverse kd-tree nodes in order for ray
+    bool hit = false;
+    const KdAccelNode *node = &nodes[0];
+    while (node != nullptr) {
+        // Bail out if we found a hit closer than the current node
+
+        if (ray.tMax < tMin) break;
+
+        // Down traversal
+        while(!node->IsLeaf()) {
+            ints[node->nodeId].nbChecks += ray.traversalSteps;
+            // Process kd-tree interior node
+            //std::cout << "Moving down to find leaf:\n";
+            //node->prettyPrint();
+            ray.traversalSteps++;
+            ints[node->nodeId].nbIntersects++;
+
+            //bool isLeft = false;
+            Vector3d p_entry = ray.origin + ( tMin * ray.direction );
+
+            // Advance to next child node, possibly enqueue other child
+            if (p_entry[node->SplitAxis()] < node->SplitPos())
+                node = node + 1;
+            else
+                node = &nodes[node->AboveChild()];
+        }
+        ints[node->nodeId].nbChecks += ray.traversalSteps;
+
+        // At a leaf
+        // t_exit gets updated on hit with ray.tMax
+        {
+            // Check for intersections inside leaf node
+            int nPrimitives = node->nPrimitives();
+            if (nPrimitives == 1) {
+                ray.traversalSteps++;
+
+                const std::shared_ptr<Primitive> &p =
+                        primitives[node->onePrimitive];
+
+                // Check one primitive inside leaf node
+                if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
+                    hit = true;
+
+            } else {
+                for (int i = 0; i < nPrimitives; ++i) {
+                    ray.traversalSteps++;
+                    int index =
+                            primitiveIndices[node->primitiveIndicesOffset + i];
+                    const std::shared_ptr<Primitive> &p = primitives[index];
+                    // Check one primitive inside leaf node
+                    if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
+                        hit = true;
+                }
+            }
+            // Exit leaf
+
+            //std::cout << "Found leaf:\n";
+            //node->prettyPrint();
+            // TODO: Validate -> Get exit distance from current node
+            //int axis = node->SplitAxis();
+            //double tPlane = (node->SplitPos() - ray.origin[axis]) * invDir[axis];
+            double tMax_l = 0.0; // placeholder, can be null
+            // Get exit rope
+            if ( node->bbox.IntersectP(ray, &tMax_l, &tMin) ) {
+                // Set t_entry to be the entrance point of the next (neighboring) node.
+                //t_entry = tmp_t_far;
+            }
+            else {
+                // This should never happen.
+                // If it does, then that means we're checking triangles in a node that the ray never intersects.
+                break;
+            }
+
+            // Get neighboring node using ropes attached to current node.
+            //Vector3d p_exit = ray.origin + ( tMin * ray.direction );
+            node = node->getNeighboringNode(ray);
+
+            // Break if neighboring node not found, meaning we've exited the kd-tree.
+            if ( node == NULL ) {
+                break;
+            }
+        }
+    }
+
+    /*if(!hit)
+        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+               ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
+*/
+    ray.traversalSteps = 0;
+    return hit;
+}
+
+bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
@@ -2365,7 +2498,7 @@ RTStats KdTreeAccel::IntersectT(Ray &ray) {
 
             // Process kd-tree interior node
             time_trav.Start();
-            stat.nti++;
+            stat.nTraversedInner++;
 
             // Compute parametric distance along ray to split plane
             int axis = node->SplitAxis();
@@ -2405,8 +2538,8 @@ RTStats KdTreeAccel::IntersectT(Ray &ray) {
             // Check for intersections inside leaf node
             int nPrimitives = node->nPrimitives();
 
-            stat.ntl++;
-            stat.nit += nPrimitives;
+            stat.nTraversedLeaves++;
+            stat.nIntersections += nPrimitives;
             if (nPrimitives == 1) {
                 const std::shared_ptr<Primitive> &p =
                         primitives[node->onePrimitive];
@@ -2732,7 +2865,7 @@ void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
     }
     else {
 
-        optimizeRopes( ropes, current->bbox );
+        //optimizeRopes( ropes, current->bbox );
 
 
         AABBFace SL, SR;
