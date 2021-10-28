@@ -167,8 +167,10 @@ Interface::Interface() {
 #endif
 
     curViewer = 0;
+    /*
     strcpy(currentDir, ".");
     strcpy(currentSelDir, ".");
+    */
     //memset(formulas, 0, sizeof formulas);
 
     //formulaSettings = nullptr;
@@ -2590,7 +2592,7 @@ bool Interface::AskToSave() {
             try {
                 worker.SaveGeometry(fn.c_str(), progressDlg2);
                 changedSinceSave = false;
-                UpdateCurrentDir(fn.c_str());
+                //UpdateCurrentDir(fn.c_str());
                 UpdateTitle();
                 AddRecent(fn.c_str());
             }
@@ -2644,7 +2646,7 @@ void Interface::SaveFileAs() {
             worker.SaveGeometry(fn.c_str(), progressDlg2);
             ResetAutoSaveTimer();
             changedSinceSave = false;
-            UpdateCurrentDir(worker.fullFileName);
+            //UpdateCurrentDir(worker.fullFileName);
             UpdateTitle();
             AddRecent(worker.fullFileName);
         }
