@@ -30,6 +30,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
+
+#include "../../src/versionId.h"
+
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -236,7 +239,7 @@ protected:
 	//virtual void UpdateFormula() {}
 	virtual bool EvaluateVariable(VLIST *v) { return false; }
 	virtual void ClearFacetParams() {}
-	virtual void LoadConfig() {}
+	virtual void LoadConfig() {} //appName_config.xml
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
 
 	virtual void BuildPipe(double ratio, int steps = 0) {};

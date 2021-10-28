@@ -93,7 +93,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryConverter.h"
 #include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 
-#include "../../src/versionId.h"
+
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
@@ -1073,7 +1073,8 @@ void Interface::OneTimeSceneInit_shared_post() {
     menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
     menu->GetSubMenu("About")->Add("Check for updates...", MENU_UPDATE);
 
-    ClearFacetParams();
+    ClearFacetParams();   
+    
     LoadConfig();
     UpdateRecentMenu();
     UpdateViewerPanel();

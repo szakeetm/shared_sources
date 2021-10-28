@@ -25,6 +25,7 @@ bool endsWith(std::string const& fullString, std::string const& ending);
 bool beginsWith(std::string const& fullString, std::string const& beginning);
 std::string space2underscore(std::string text);
 bool iequals(std::string a, std::string b);
+std::string toLowerCase(std::string source);
 
 
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

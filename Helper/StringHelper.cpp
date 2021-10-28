@@ -4,7 +4,8 @@
 
 #include "StringHelper.h"
 #include "MathTools.h"
-
+#include <algorithm>
+#include <cctype>
 #include <stdexcept>
 #include <sstream>
 #include <numeric>
@@ -225,4 +226,11 @@ bool iequals(std::string str1, std::string str2)
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
     return str1.size() == str2.size()
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
+}
+
+std::string toLowerCase(std::string source) {
+
+    std::transform(source.begin(), source.end(), source.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+    return source;
 }
