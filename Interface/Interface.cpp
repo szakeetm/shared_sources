@@ -286,6 +286,7 @@ void Interface::UpdateStructMenu() {
     UpdateTitle();
 }
 
+/*
 void Interface::UpdateCurrentDir(const char *fileName) {
 
     strncpy(currentDir, fileName, 1024);
@@ -303,6 +304,7 @@ void Interface::UpdateCurrentSelDir(const char *fileName) {
     if (dp) *dp = 0;
 
 }
+*/
 
 void Interface::UpdateTitle() {
 

@@ -442,11 +442,13 @@ public:
 	UpdateLogWindow   *updateLogWindow;
     ManualUpdateCheckDialog* manualUpdate;
 
+	/*
 	// Current directory
 	void UpdateCurrentDir(const char *fileName);
 	char currentDir[1024];
 	void UpdateCurrentSelDir(const char *fileName);
 	char currentSelDir[1024];
+	*/
 
 	// Util functions
 	//void SendHeartBeat(bool forced=false);
