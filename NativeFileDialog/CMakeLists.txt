@@ -31,17 +31,17 @@ execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
         RESULT_VARIABLE result
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
 if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    message(FATAL_ERROR "CMake step for nfd failed: ${result}")
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
         RESULT_VARIABLE result
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
 if(result)
-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+    message(FATAL_ERROR "Build step for nfd failed: ${result}")
 endif()
 
-# Add googletest directly to our build. This defines
-# the gtest and gtest_main targets.
+# Add nfd directly to our build. This defines
+# the nfd target.
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/nfd-src
         ${CMAKE_CURRENT_BINARY_DIR}/nfd-build
         EXCLUDE_FROM_ALL)
