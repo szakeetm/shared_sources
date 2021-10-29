@@ -601,6 +601,76 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         forceUpdate = true;
     }
 
+    {
+        static RayStat ray{};
+        if (ImGui::Button("Create Test Particle")) {
+            if(ray.rng)
+                delete ray.rng;
+            ray = RayStat{};
+            ray.rng = new MersenneTwister;
+            mApp->worker.model->StartFromSource(ray);
+        }
+
+        bool enabled = !mApp->worker.model->accel.empty();
+        static bool hit = false;
+        static float oldPos[3]{0.0, 0.0, 0.0};
+        if (!enabled)
+            ImGui::BeginDisabled();
+        if (ImGui::Button("Next step")) {
+            if(!ray.rng) {
+                ray.rng = new MersenneTwister;
+                mApp->worker.model->StartFromSource(ray);
+            }
+            oldPos[0] = ray.origin.x;
+            oldPos[1] = ray.origin.y;
+            oldPos[2] = ray.origin.z;
+            hit = mApp->worker.model->accel[ray.structure]->IntersectStat(ray);
+            if(hit) {
+                ray.origin = ray.origin + ray.hardHit.hit.colDistTranspPass * ray.direction;
+                mApp->worker.model->PerformBounce(ray, mApp->worker.model->facets[ray.lastIntersected].get());
+            }
+        }
+        if (!enabled)
+            ImGui::EndDisabled();
+
+        ImGui::BeginDisabled();
+        if(hit) ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                                      IM_COL32(40, 217, 40, 255));
+        else ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                                   IM_COL32(217, 40, 40, 255));
+        ImGui::SameLine(); ImGui::Checkbox("", &hit);
+        ImGui::PopStyleColor();
+        ImGui::InputFloat3("Origin", reinterpret_cast<float *>(&oldPos));
+        float origin[3]{static_cast<float>(ray.origin.x), static_cast<float>(ray.origin.y), static_cast<float>(ray.origin.z)};
+        ImGui::InputFloat3("New Pos", reinterpret_cast<float *>(&origin));
+        float direction[3]{static_cast<float>(ray.direction.x), static_cast<float>(ray.direction.y), static_cast<float>(ray.direction.z)};
+        ImGui::InputFloat3("Direction", reinterpret_cast<float *>(&direction));
+        ImGui::EndDisabled();
+
+        if (!enabled)
+            ImGui::BeginDisabled();
+        static int rayNodePos = 0;
+        if (ImGui::Button("Visualise next node")) {
+            if(ray.traversedNodes.size() > rayNodePos) {
+                mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos++];
+                redrawAabb = true;
+            }
+            else if(rayNodePos == -1 && !ray.traversedNodes.empty()) {
+                rayNodePos = 0;
+                mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos++];
+                redrawAabb = true;
+            }
+            else {
+                rayNodePos = -1;
+            }
+        }
+        ImGui::SameLine(); ImGui::Text("[%d] %d", rayNodePos, mApp->aabbVisu.selectedNode);
+        if (!enabled)
+            ImGui::EndDisabled();
+
+
+    }
+
     // Create item lists for Node and Facet tabs
     static ImVector<BoxData> tabItems;
     static ImVector<FacetData> facItems;

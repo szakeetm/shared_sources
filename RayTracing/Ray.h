@@ -96,6 +96,7 @@ public:
 
     //Statistics
     size_t traversalSteps{0};
+    std::vector<size_t> traversedNodes;
 };
 
 #endif //MOLFLOW_PROJ_RAY_H
