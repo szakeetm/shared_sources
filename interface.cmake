@@ -155,6 +155,7 @@ endif(NOT MSVC)
 # Defines Flags for Windows and Linux                      #
 ############################################################
 
+#[[
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
@@ -177,4 +178,4 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
     endif()
-endif()
+endif()]]

@@ -2,6 +2,10 @@
 // Created by pascal on 4/30/21.
 //
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 #ifndef MOLFLOW_PROJ_CONSOLELOGGER_H
 #define MOLFLOW_PROJ_CONSOLELOGGER_H
 
@@ -50,4 +54,7 @@ namespace Log {
         console_msg_master(level, message, fmt...);
     }
 }
+
 #endif //MOLFLOW_PROJ_CONSOLELOGGER_H
+
+#pragma GCC diagnostic pop

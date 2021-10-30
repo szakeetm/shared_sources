@@ -61,7 +61,7 @@ if(NOT MSVC)
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
     endif()]]
-    target_include_directories(${PROJECT_NAME} PUBLIC ziplib/Source)
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ziplib/Source)
     target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -81,6 +81,7 @@ endif(NOT MSVC)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 # Preprocessor definitions
+#[[
 if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
@@ -97,3 +98,4 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
         target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
     endif()
 endif()
+]]
