@@ -9,6 +9,7 @@ add_subdirectory(compress)
 add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
 add_subdirectory(ziplib)
+add_subdirectory(fmt)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)

@@ -151,6 +151,9 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################

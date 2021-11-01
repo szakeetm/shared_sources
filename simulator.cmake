@@ -63,6 +63,8 @@ if(NOT MSVC)
     endif()]]
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ziplib/Source)
     target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+    #target_include_directories(${PROJECT_NAME} INTERFACE fmtlib_src)
+
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
@@ -74,6 +76,8 @@ if(NOT MSVC)
 
 endif(NOT MSVC)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################

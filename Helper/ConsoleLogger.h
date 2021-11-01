@@ -11,6 +11,7 @@
 
 #include "AppSettings.h"
 #include "FlowMPI.h"
+#include <fmt/core.h>
 
 extern int Settings::verbosity;
 extern int MFMPI::world_rank;
