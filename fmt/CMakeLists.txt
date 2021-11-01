@@ -78,7 +78,6 @@ add_library(${PROJECT_NAME}_src INTERFACE)
 target_include_directories(${PROJECT_NAME}_src INTERFACE include/)
 target_include_directories(${PROJECT_NAME}_src INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/fmt-src/include/)
 #target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
-set_target_properties(${PROJECT_NAME}_src PROPERTIES LINKER_LANGUAGE CXX)
 #add_library(${PROJECT_NAME}_src STATIC ${fmt_SRC})
 #add_dependencies(${PROJECT_NAME} fmt)
 
