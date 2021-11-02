@@ -146,6 +146,7 @@ set(INTERFACE_FILES
 
 set(SIM_FILES
         Distributions.cpp
+        ProfileModes.cpp
 
         # subprocesses
         Buffer_shared.cpp
