@@ -877,6 +877,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
+    menu->GetSubMenu("Test")->Add("Analyse Geometry", MENU_ANALYSE);
 
     geomNumber = new GLTextField(0, nullptr);
     geomNumber->SetEditable(false);
@@ -1758,6 +1759,9 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         GeometryTools::PolygonsToTriangles(this->worker.GetGeometry());
                         this->worker.Reload();
                     }
+                    return true;
+                case MENU_ANALYSE:
+                    GeometryTools::AnalyseGeometry(this->worker.GetGeometry());
                     return true;
                 case MENU_ABOUT: {
                     std::ostringstream aboutText;

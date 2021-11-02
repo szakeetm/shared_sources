@@ -232,32 +232,36 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
     return nRemoved;
 }
 
-static std::vector<std::vector<CommonEdge>> edges_algo(4); // first index = facet id, second index = neighbor id
+static std::vector<std::vector<CommonEdge>> edges_algo(5); // first index = facet id, second index = neighbor id
 
 void GeometryTools::AnalyseGeometry(Geometry* geometry) {
-    edges_algo.resize(4);
+    edges_algo.resize(5);
     Chronometer stop;
     int dupli = 0, lone = 0, trans = 0;
-    stop.Start();
+
+    // original, but slow to compare
+    /*stop.Start();
     AnalyseNeighbors(geometry);
     printf("[%lu] Neighbor T1: %lf\n", edges_algo[0].size(), stop.Elapsed());
     //int dupli = RemoveDuplicates(edges_algo[0]);
     //int lone = HandleLoneEdge(edges_algo[0]);
     //int trans = HandleTransparent(edges_algo[0], geometry);
     printf("[%lu - %d - %d - %d] Neighbor T1 Dupli: %lf\n", edges_algo[0].size(), dupli, lone, trans, stop.Elapsed());
-
-    stop.ReInit(); stop.Start();
+*/
+    //stop.ReInit();
+    stop.Start();
     GetCommonEdgesVec(geometry, edges_algo[1]);
-    printf("[%lu] Neighbor T2: %lf\n", edges_algo[1].size(), stop.Elapsed());
+    printf("[%lu] Neighbor T2 Vertex: %lf\n", edges_algo[1].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[1]);
     //lone = HandleLoneEdge(edges_algo[1]);
     CalculateNeighborAngles(edges_algo[1], geometry);
     //trans = HandleTransparent(edges_algo[1], geometry);
     printf("[%lu - %d - %d - %d] Neighbor T2 Dupli: %lf\n", edges_algo[1].size(), dupli, lone, trans, stop.Elapsed());
+    edges_algo[0] = std::move(edges_algo[1]);
 
     stop.ReInit(); stop.Start();
     GetCommonEdgesList(geometry, edges_algo[2]);
-    printf("[%lu] Neighbor T3: %lf\n", edges_algo[2].size(), stop.Elapsed());
+    printf("[%lu] Neighbor T3 List: %lf\n", edges_algo[2].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[2]);
     //lone = HandleLoneEdge(edges_algo[2]);
     CalculateNeighborAngles(edges_algo[2], geometry);
@@ -266,16 +270,27 @@ void GeometryTools::AnalyseGeometry(Geometry* geometry) {
 
     stop.ReInit(); stop.Start();
     GetCommonEdgesHash(geometry, edges_algo[3]);
-    printf("[%lu] Neighbor T4: %lf\n", edges_algo[3].size(), stop.Elapsed());
+    printf("[%lu] Neighbor T4 Hashmap: %lf\n", edges_algo[3].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[3]);
     //lone = HandleLoneEdge(edges_algo[3]);
     //trans = HandleTransparent(edges_algo[3], geometry);
     CalculateNeighborAngles(edges_algo[3], geometry);
     printf("[%lu - %d - %d - %d] Neighbor T4 Dupli: %lf\n", edges_algo[3].size(), dupli, lone, trans, stop.Elapsed());
-    
-    CompareAlgorithm(geometry, 1);
+
+    stop.ReInit(); stop.Start();
+    GetCommonEdgesMap(geometry, edges_algo[4]);
+    printf("[%lu] Neighbor T5 Map: %lf\n", edges_algo[4].size(), stop.Elapsed());
+    //dupli = RemoveDuplicates(edges_algo[3]);
+    //lone = HandleLoneEdge(edges_algo[3]);
+    //trans = HandleTransparent(edges_algo[3], geometry);
+    CalculateNeighborAngles(edges_algo[4], geometry);
+    printf("[%lu - %d - %d - %d] Neighbor T5 Dupli: %lf\n", edges_algo[4].size(), dupli, lone, trans, stop.Elapsed());
+
+    // Skip and only compare with newer algorithms
+    //CompareAlgorithm(geometry, 1);
     CompareAlgorithm(geometry, 2);
     CompareAlgorithm(geometry, 3);
+    CompareAlgorithm(geometry, 4);
 }
 
 void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
@@ -572,6 +587,55 @@ int GeometryTools::GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge
     commonEdges.clear();
     std::vector<CommonEdge>& edges = commonEdges;
     std::unordered_map<size_t,std::vector<int>> hashMap;
+
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+        auto facet = geometry->GetFacet(facetId);
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+
+            p11 = facet->GetIndex(i);
+            p12 = facet->GetIndex(i + 1);
+
+            size_t hash = ((p11 << 16) | (p12));
+            auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));
+            if(!edge.second) {// edge already exists, append facetid
+                edge.first->second.push_back(facetId);
+            }
+        }
+    }
+
+    for(auto& entry : hashMap){
+        p11 = entry.first >> 16;
+        p12 = entry.first % (int)65536; // % 2^16
+
+        if(p11 > p12) // only check one direction
+            continue;
+        auto rEdge = hashMap.find((p12 << 16) | (p11)); // look for reverse edge
+        if(rEdge != hashMap.end()) {
+            for(auto fac1 : entry.second) {
+                for (auto fac2: rEdge->second) {
+                    if(fac1 > fac2)
+                        edges.emplace_back(CommonEdge(fac2, fac1, p11, p12));
+                    else if(fac1 < fac2)
+                        edges.emplace_back(CommonEdge(fac1, fac2, p11, p12));
+                }
+            }
+        }
+    }
+
+    RemoveDuplicates(edges);
+    return commonEdges.size();
+
+}
+
+int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+
+    // Detect common edge between facet
+    size_t p11, p12;
+
+    // 1. Create list of edges
+    commonEdges.clear();
+    std::vector<CommonEdge>& edges = commonEdges;
+    std::map<size_t,std::vector<int>> hashMap;
 
     for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
