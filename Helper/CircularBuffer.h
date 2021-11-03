@@ -98,6 +98,13 @@ struct CircularBuffer {
             offset  = 0;
         }
     }
+    void Clear() {
+        if (data.size() > 0) {
+            data.clear();
+            data.resize(size_max);
+            offset  = 0;
+        }
+    }
     [[nodiscard]] size_t Size() const {
         return data.size();
     }

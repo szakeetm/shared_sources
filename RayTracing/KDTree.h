@@ -48,6 +48,7 @@ struct KdAccelNode {
     int nodeId{0};
 
     // stackless w/ ropes
+    KdAccelNode *parent{nullptr}; // needed if we start not from the root node
     KdAccelNode *ropes[6];
     AxisAlignedBoundingBox bbox;
     [[nodiscard]] const KdAccelNode *getNeighboringNode(const Ray &ray) const;
@@ -135,6 +136,7 @@ public:
 
     bool IntersectRope(Ray &ray);
 
+    KdAccelNode *nodes;
 public:
     // KdTreeAccel Public Methods
     /*KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
@@ -191,7 +193,6 @@ private:
     const double emptyBonus;
     std::vector<std::shared_ptr<Primitive>> primitives;
     std::vector<int> primitiveIndices;
-    KdAccelNode *nodes;
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
 
@@ -243,6 +244,7 @@ private:
     bool IntersectRopeStat(RayStat &ray);
     bool IntersectTravStat(RayStat &ray);
 
+    void addParent(KdAccelNode *current, KdAccelNode *parent);
 };
 
 struct KdToDo {

@@ -1219,6 +1219,7 @@ if( showVolume || showTexture ) {
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
     if(mApp->aabbVisu.renderSampleRays) DrawLinesAndHitsFromSamples(work->globState);
+    if(mApp->aabbVisu.renderSample) DrawLinesFromSample(mApp->aabbVisu.sample);
 
 	int cullMode;
 	if (showBack != SHOW_FRONTANDBACK && !mApp->leftHandedView) {
@@ -2312,5 +2313,124 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         glEnd();
 
     }*/
+
+}
+
+/**
+* \brief Draws Lines and Hits into 3D area via OpenGL.
+*/
+void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
+
+    // Lines
+    if (sample.size()) {
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE);
+
+        if (mApp->antiAliasing) {
+            glEnable(GL_BLEND);
+            glEnable(GL_LINE_SMOOTH);
+        }
+
+        float rgb_shade[3] = {(0.9f - 0.45f) / sample.size(), (0.45f - 0.9f) / sample.size(), (0.15f - 0.15f) / sample.size()};
+        if(mApp->whiteBg){
+            rgb_shade[0] = (0.15f - 0.15f) / sample.size();
+            rgb_shade[1] = (0.60f - 0.15f) / sample.size();
+            rgb_shade[2] = (0.60f - 0.60f) / sample.size();
+        }
+        if(sample.size() == 1){
+            auto &ray = sample.front();
+            //Regular (green) line color
+            if (mApp->whiteBg) { //whitebg
+                glColor3f(0.15f, 0.15f, 0.6f);
+            } else {
+                glColor3f(0.45f, 0.9f, 0.15f);
+            }
+
+            glBegin(GL_LINE_STRIP);
+            glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+            //Regular (green) line color
+            if (mApp->whiteBg) { //whitebg
+                glColor3f(0.15f, 0.6f, 0.6f);
+            } else {
+                glColor3f(0.9f, 0.45f, 0.15f);
+            }
+            glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
+            glEnd();
+
+            // points
+            if (!mApp->whiteBg) glPointSize(6.0f);
+            else glPointSize(7.0f);
+            if (mApp->whiteBg) { //whitebg
+                glColor3f(0.15f, 0.15f, 0.6f);
+            } else {
+                glColor3f(0.45f, 0.9f, 0.15f);
+            }
+            glEnable(GL_POINT_SMOOTH);
+            /*glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_BLEND);
+            glDisable(GL_CULL_FACE);
+            glEnable(GL_DEPTH_TEST);
+            glBegin(GL_POINTS);*/
+            glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+            //Regular (green) line color
+            if (mApp->whiteBg) { //whitebg
+                glColor3f(0.15f, 0.6f, 0.6f);
+            } else {
+                glColor3f(0.9f, 0.45f, 0.15f);
+            }
+            glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
+            glEnd();
+            glDisable(GL_POINT_SMOOTH);
+
+        }
+        else if(sample.size() > 1) {
+            glBegin(GL_LINE_STRIP);
+            int count = 0;
+            for (auto &ray: sample) {
+                //Regular (green) line color
+                if (mApp->whiteBg) { //whitebg
+                    glColor3f(0.15f + count * rgb_shade[0], 0.15f + count * rgb_shade[1], 0.6f + count * rgb_shade[2]);
+                } else {
+                    glColor3f(0.45f + count * rgb_shade[0], 0.9f + count * rgb_shade[1], 0.15f + count * rgb_shade[2]);
+                }
+                count++;
+                glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+            }
+            auto ray_e = sample.end();
+            glVertex3d(ray_e->pos.x + ray_e->dir.x, ray_e->pos.y + ray_e->dir.y, ray_e->pos.z + ray_e->dir.z);
+            glEnd();
+
+            count = 0;
+            glEnable(GL_POINT_SMOOTH);
+            /*glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
+            glDisable(GL_BLEND);
+            glDisable(GL_CULL_FACE);
+            glEnable(GL_DEPTH_TEST);*/
+            glBegin(GL_POINTS);
+            for (auto &ray: sample) {
+                //Regular (green) line color
+                if (mApp->whiteBg) { //whitebg
+                    glColor3f(0.15f + count * rgb_shade[0], 0.15f + count * rgb_shade[1], 0.6f + count * rgb_shade[2]);
+                } else {
+                    glColor3f(0.45f + count * rgb_shade[0], 0.9f + count * rgb_shade[1], 0.15f + count * rgb_shade[2]);
+                }
+                count++;
+                glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+            }
+            ray_e = sample.end();
+            glVertex3d(ray_e->pos.x + ray_e->dir.x, ray_e->pos.y + ray_e->dir.y, ray_e->pos.z + ray_e->dir.z);
+            glEnd();
+            glDisable(GL_POINT_SMOOTH);
+        }
+
+        if (mApp->antiAliasing) {
+            glDisable(GL_LINE_SMOOTH);
+            glDisable(GL_BLEND);
+        }
+    }
 
 }

@@ -173,7 +173,7 @@ bool Facet::IntersectStat(RayStat &ray) {
 
                         // Now check intersection with the facet polygon (in the u,v space)
                         // This check could be avoided on rectangular facet.
-                        if (IsInPoly(u, v, vertices2)) {
+                        if (this->indices.size() == 4 || IsInPoly(u, v, vertices2)) {
                             bool hardHit = this->surf->IsHardHit(ray);
 
                             if (hardHit) {
@@ -182,22 +182,26 @@ bool Facet::IntersectStat(RayStat &ray) {
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
 
-                                    ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
-                                    auto& hit = ray.hits.back().hit;
-                                    hit.isHit = true;
-                                    hit.colU = u;
-                                    hit.colV = v;
-                                    hit.colDistTranspPass = d;
-
+                                    if(!ray.hits.empty())ray.hits.clear();
+                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
                                 }
                             }
                             else {
-                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar(d,u,v,false));
-                                /*auto& hit = ray.hits.back().hit;
+                                if(!ray.transparentHits.empty()){
+                                    for(auto& hit : ray.transparentHits){
+                                        if(hit.hitId == globalId && hit.hit.colU != u){
+                                            std::cout << "Multi hit\n";
+                                        }
+                                    }
+                                }
+
+                                auto& thit = ray.transparentHits.emplace_back(globalId, SubProcessFacetTempVar());
+                                auto& hit = thit.hit;
+
                                 hit.isHit = false;
                                 hit.colU = u;
                                 hit.colV = v;
-                                hit.colDistTranspPass = d;*/
+                                hit.colDistTranspPass = d;
                             }
 
                             ++nbIntersections;

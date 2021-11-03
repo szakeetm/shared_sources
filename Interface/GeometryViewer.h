@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryTypes.h"
 #include "Vector.h"
 #include <vector>
+#include <Helper/CircularBuffer.h>
 
 class Worker;
 class GlobalSimuState;
@@ -32,6 +33,7 @@ class GLButton;
 class GLLabel;
 class GLCombo;
 class GLOverlayLabel;
+class TestRay;
 
 #define DRAGG_NONE   0
 #define DRAGG_SELECT 1
@@ -279,6 +281,7 @@ private:
   //Debug
   //GLLabel* debugLabel;
     void DrawLinesAndHitsFromSamples(const GlobalSimuState &globState);
+    static void DrawLinesFromSample(const std::vector<TestRay> &sample);
 };
 
 #endif /* _GEOMETRYVIEWERH_ */

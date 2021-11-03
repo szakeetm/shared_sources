@@ -287,7 +287,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
     }
 
     hasRopes = false;
-
+    addParent(&nodes[0], nullptr);
     PrintTreeInfo();
 }
 
@@ -1203,6 +1203,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     ++nextFreeNode;
 
     nodes[nodeNum].nodeId = nodeNum;
+    nodes[nodeNum].parent = nullptr;
 
     // Excl for rope traversal
     nodes[nodeNum].bbox = nodeBounds;
@@ -1284,11 +1285,13 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
               prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
+    nodes[nodeNum + 1].parent = &nodes[nodeNum];
 
     int aboveChild = nextFreeNode;
     nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
     buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
               prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
+    nodes[aboveChild].parent = &nodes[nodeNum];
 }
 
 // default construction algorithm for RDH
@@ -1314,6 +1317,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     ++nextFreeNode;
 
     nodes[nodeNum].nodeId = nodeNum;
+    nodes[nodeNum].parent = nullptr;
     ints.emplace_back();
     auto &intstat = ints.back(); // ints[nodeNum]
     intstat.nbPrim = nPrimitives;
@@ -1475,6 +1479,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                   prims0, prims1 + nPrimitives, badRefines, battery, local_battery, bestAxis, tMin, tSplit,
                   primChance, bestCost);
     }
+    nodes[nodeNum + 1].parent = &nodes[nodeNum];
 
     int aboveChild = nextFreeNode;
     nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
@@ -1492,6 +1497,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                   prims0, prims1 + nPrimitives, badRefines, battery, local_battery, bestAxis, tSplit, tMax,
                   primChance, bestCost);
     }
+    nodes[aboveChild].parent = &nodes[nodeNum];
 }
 
 // default construction algorithm for RDH
@@ -1728,6 +1734,7 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
                      prims0, prims1 + nPrimitives, badRefines, battery, rb_stack, bestAxis, tMin, tSplit,
                      primChance, bestCost, bound_new);
     }
+    nodes[nodeNum + 1].parent = &nodes[nodeNum];
 
     /*
      * When returning to an interior node after a left subtree has been
@@ -1774,6 +1781,7 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
                      prims0, prims1 + nPrimitives, badRefines, battery, rb_stack, bestAxis, tSplit, tMax,
                      primChance, bestCost, bound_new);
     }
+    nodes[aboveChild].parent = &nodes[nodeNum];
 }
 
 bool KdTreeAccel::Intersect(Ray &ray){
@@ -2088,10 +2096,12 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     double tMin = 0.0, tMax = 1.0e99;
 
     // (-0.796657,-0.591801,0.431659) --> (0.772294,0.467946,0.429638)
-    /*ray.origin = {0.28101216891289105,-0.37277123608631663,-13.0};
-    ray.direction = {-0.25603539446160872, 0.074679806772409166, 0.96377839944840227};
-    ray.lastIntersected = 0;*/
-
+    /*ray.origin = {3.2301291053440027, -6.6826513460504922, 18.830288821438948};
+    ray.direction = {0.034541292073762692, 0.59865232689214731, -0.80026388813221638};
+    ray.lastIntersected = 88;
+    if(!ray.pay)
+        new RopePayload;
+    ((RopePayload*)ray.pay)->lastNode = &nodes[14386];*/
     // Neglect initial parametric test, since a ray starts always from inside
     /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
         return false;
@@ -2107,7 +2117,10 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
         node = ((RopePayload *) ray.pay)->lastNode;
         size_t nHops = 0;
         while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
-            node = node->getNeighboringNode(ray);
+        //while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, &ray.tMax)){// not in node
+        //while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
+            //node = node->getNeighboringNode(ray);
+            node = node->parent;
             nHops++;
         }
         if(node == nullptr)
@@ -2246,16 +2259,32 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     ray.traversedNodes.clear();
 
     // Neglect initial parametric test, since a ray starts always from inside
-    if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+    /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
         return false;
     }
-
+*/
     // Prepare to traverse kd-tree for ray
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
 
     // Traverse kd-tree nodes in order for ray
     bool hit = false;
-    const KdAccelNode *node = &nodes[0];
+    const KdAccelNode *node;
+    if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
+        node = ((RopePayload *) ray.pay)->lastNode;
+        size_t nHops = 0;
+        while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
+            ray.traversedNodes.push_back(node->nodeId);
+            node = node->parent;
+            nHops++;
+        }
+        if(node == nullptr)
+            node = &nodes[0];
+        /*else
+            std::cout << "Sane starting point after " << nHops << " links\n";*/
+    }
+    else
+        node = &nodes[0];
+
     while (node != nullptr) {
         ray.traversedNodes.push_back(node->nodeId);
 
@@ -2265,7 +2294,6 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
 
         // Down traversal
         while(!node->IsLeaf()) {
-            ray.traversedNodes.push_back(node->nodeId);
             ints[node->nodeId].nbChecks += ray.traversalSteps;
             // Process kd-tree interior node
             //std::cout << "Moving down to find leaf:\n";
@@ -2281,8 +2309,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                 node = node + 1;
             else
                 node = &nodes[node->AboveChild()];
+            ray.traversedNodes.push_back(node->nodeId);
         }
-        ray.traversedNodes.push_back(node->nodeId);
 
         ints[node->nodeId].nbChecks += ray.traversalSteps;
 
@@ -2298,8 +2326,11 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
-                if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
+                if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                     hit = true;
+                    if(ray.pay && ray.hardHit.hitId == p->globalId)
+                        ((RopePayload*)ray.pay)->lastNode = node;
+                }
 
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
@@ -2308,8 +2339,11 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
+                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
+                        if(ray.pay && ray.hardHit.hitId == p->globalId)
+                            ((RopePayload*)ray.pay)->lastNode = node;
+                    }
                 }
             }
             // Exit leaf
@@ -2881,6 +2915,18 @@ void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
 
         RS_right[SL] = leftChild;
         attachRopes( rightChild, RS_right );
+    }
+}
+
+// recursively attach ropes from root node in DF order
+void KdTreeAccel::addParent(KdAccelNode *current, KdAccelNode *parent) {
+
+    current->parent = parent;
+
+    if ( !current->IsLeaf() ) {
+        // Recurse
+        addParent( current+1, current );
+        addParent( &nodes[current->AboveChild()], current );
     }
 }
 

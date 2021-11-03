@@ -919,7 +919,8 @@ void Geometry::DrawAABBNode(const KdAccelNode *lnode, AxisAlignedBoundingBox bb,
     if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
         auto delta = this->bb.max - this->bb.min;
         auto bbox = bb;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+        if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
 
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
@@ -1197,7 +1198,8 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
 
         auto delta = this->bb.max - this->bb.min;
         auto bbox = bb;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+        if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
 
         glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
         glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 1.2f);
@@ -1315,7 +1317,8 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
             bbox = bb;
             bbox.min[axis] = plane;
             bbox.max[axis] = plane;
-            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002) * delta[axis], axis);
+            if(mApp->aabbVisu.boxExpansion)
+                bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002) * delta[axis], axis);
 
             Vector3d a = bbox.min;
             Vector3d b = bbox.min;
@@ -1440,7 +1443,8 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
 
         auto bbox = node->bounds;
         auto delta = this->bb.max - this->bb.min;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+        if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
 
 
         // begin transparent sides
@@ -1578,7 +1582,8 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
     if(mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1]))) {
         auto bbox = node->bb;
         auto delta = this->bb.max - this->bb.min;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
+        if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
         /*glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
@@ -1752,7 +1757,8 @@ void Geometry::DrawHeatmap(const SubprocessFacet& facet) {
 
         auto bbox = facet.sh.bb;
         auto delta = this->bb.max - this->bb.min;
-        bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta);
+        if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta);
         /*glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
