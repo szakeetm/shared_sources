@@ -137,6 +137,8 @@ public:
     bool IntersectRope(Ray &ray);
 
     KdAccelNode *nodes;
+    std::vector<std::shared_ptr<Primitive>> primitives;
+    std::vector<int> primitiveIndices;
 public:
     // KdTreeAccel Public Methods
     /*KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
@@ -191,8 +193,6 @@ private:
     SplitMethod splitMethod;
     const int isectCost, traversalCost, maxPrims;
     const double emptyBonus;
-    std::vector<std::shared_ptr<Primitive>> primitives;
-    std::vector<int> primitiveIndices;
     int nAllocedNodes, nextFreeNode;
     AxisAlignedBoundingBox bounds;
 

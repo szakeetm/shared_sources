@@ -430,12 +430,12 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     static bool withRopes = false;
                     if (ImGui::Checkbox("Use ropes", &withRopes)) {
                         if (withRopes) {
-                            for (int s = 0; s < mApp->worker.model->structures.size(); s++)
+                            for (int s = 0; s < mApp->worker.model->accel.size(); s++)
                                 if (dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())) {
                                     dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())->AddRopes();
                                 }
                         } else {
-                            for (int s = 0; s < mApp->worker.model->structures.size(); s++)
+                            for (int s = 0; s < mApp->worker.model->accel.size(); s++)
                                 if (dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())) {
                                     dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())->RemoveRopes();
                                 }
@@ -926,6 +926,33 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                         else
                                             mApp->aabbVisu.selectedNode = item->ID;
                                         redrawAabb = true;
+                                    }
+
+                                    // Tooltip for row4
+                                    if(ImGui::IsItemActive() || ImGui::IsItemHovered()) {
+                                        if(item->isLeaf) {
+                                            std::vector<size_t> primIDs;
+                                            auto tree = std::dynamic_pointer_cast<KdTreeAccel>(
+                                                    accel.front()).get();
+                                            auto& node = tree->nodes[item->ID];
+                                            int nPrimitives = tree->nodes[item->ID].nPrimitives();
+                                            if (nPrimitives == 1) {
+                                                primIDs.push_back(node.onePrimitive);
+                                            } else {
+                                                for (int i = 0; i < nPrimitives; ++i) {
+                                                    int index =
+                                                            tree->primitiveIndices[node.primitiveIndicesOffset + i];
+                                                    primIDs.push_back(index);
+                                                }
+                                            }
+                                            if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+                                                mApp->worker.GetGeometry()->SetSelection(primIDs, false, false);
+                                            }
+                                            ImGui::BeginTooltip();
+                                            for(auto id : primIDs)
+                                                ImGui::Text("%lu", id);
+                                            ImGui::EndTooltip();
+                                        }
                                     }
 
                                     //ImGui::Text("%zu", item->ID);
