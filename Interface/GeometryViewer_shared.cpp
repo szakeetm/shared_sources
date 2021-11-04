@@ -2331,6 +2331,7 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
         if (mApp->antiAliasing) {
             glEnable(GL_BLEND);
             glEnable(GL_LINE_SMOOTH);
+            glEnable(GL_POINT_SMOOTH);
         }
 
         float rgb_shade[3] = {(0.9f - 0.45f) / sample.size(), (0.45f - 0.9f) / sample.size(), (0.15f - 0.15f) / sample.size()};
@@ -2367,13 +2368,8 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             } else {
                 glColor3f(0.45f, 0.9f, 0.15f);
             }
-            glEnable(GL_POINT_SMOOTH);
-            /*glDisable(GL_TEXTURE_2D);
-            glDisable(GL_LIGHTING);
-            glDisable(GL_BLEND);
-            glDisable(GL_CULL_FACE);
-            glEnable(GL_DEPTH_TEST);
-            glBegin(GL_POINTS);*/
+
+            glBegin(GL_POINTS);
             glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
             //Regular (green) line color
             if (mApp->whiteBg) { //whitebg
@@ -2383,7 +2379,6 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             }
             glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
             glEnd();
-            glDisable(GL_POINT_SMOOTH);
 
         }
         else if(sample.size() > 1) {
@@ -2404,12 +2399,6 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             glEnd();
 
             count = 0;
-            glEnable(GL_POINT_SMOOTH);
-            /*glDisable(GL_TEXTURE_2D);
-            glDisable(GL_LIGHTING);
-            glDisable(GL_BLEND);
-            glDisable(GL_CULL_FACE);
-            glEnable(GL_DEPTH_TEST);*/
             glBegin(GL_POINTS);
             for (auto &ray: sample) {
                 //Regular (green) line color
@@ -2424,10 +2413,10 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             ray_e = sample.end();
             glVertex3d(ray_e->pos.x + ray_e->dir.x, ray_e->pos.y + ray_e->dir.y, ray_e->pos.z + ray_e->dir.z);
             glEnd();
-            glDisable(GL_POINT_SMOOTH);
         }
 
         if (mApp->antiAliasing) {
+            glDisable(GL_POINT_SMOOTH);
             glDisable(GL_LINE_SMOOTH);
             glDisable(GL_BLEND);
         }

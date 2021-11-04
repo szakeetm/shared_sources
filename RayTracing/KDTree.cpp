@@ -292,6 +292,8 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 }
 
 void KdTreeAccel::AddRopes(){
+    if(!nodes)
+        return;
     for(int n = 0; n < nAllocedNodes; ++n){
         ints[nodes[n].nodeId].Reset();
     }
