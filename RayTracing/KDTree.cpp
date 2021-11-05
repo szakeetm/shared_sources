@@ -2119,6 +2119,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     const KdAccelNode *node;
     if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
         node = ((RopePayload *) ray.pay)->lastNode;
+        ((RopePayload *) ray.pay)->lastRay = ray;
         size_t nHops = 0;
         while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
         //while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, &ray.tMax)){// not in node

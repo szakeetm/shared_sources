@@ -102,6 +102,7 @@ struct SplitCandidate {
 
 struct RopePayload : Payload {
     const KdAccelNode* lastNode;
+    Ray lastRay;
 };
 
 class KdTreeAccel : public RTPrimitive {
