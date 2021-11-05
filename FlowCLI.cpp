@@ -243,6 +243,18 @@ int main(int argc, char** argv) {
                 Log::console_msg_master(3, "Successfully wrote facet details to CSV file %s\n", csvFile.c_str());
             }
         }
+        if(SettingsIO::outputFacetQuantities) {
+            //Could use SettingsIO::outputFile instead of fixed name
+            //std::string csvFile = std::filesystem::path(SettingsIO::outputFile).replace_extension(".csv").string();
+            std::string csvFile = "facet_physics.csv";
+            csvFile = std::filesystem::path(SettingsIO::outputPath).append(csvFile).string();
+
+            if (CSVExporter::ExportPhysicalQuantitiesForFacets(csvFile, &globState, model.get())) {
+                Log::console_error("Could not write facet quantities to CSV file %s\n", csvFile.c_str());
+            } else {
+                Log::console_msg_master(3, "Successfully wrote facet quantities to CSV file %s\n", csvFile.c_str());
+            }
+        }
 
         // Export results
         //  a) Use existing autosave as base

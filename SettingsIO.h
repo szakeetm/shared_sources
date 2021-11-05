@@ -19,6 +19,7 @@ namespace SettingsIO {
     extern bool overwrite;
     extern bool isArchive;
     extern bool outputFacetDetails;
+    extern bool outputFacetQuantities;
 
     int prepareIO();
     int initDirectories();
