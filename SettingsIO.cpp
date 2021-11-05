@@ -15,6 +15,8 @@
 namespace SettingsIO {
     bool overwrite = false;
     bool isArchive = false;
+    bool outputFacetDetails = false;
+
     std::string workFile;
     std::string workPath;
     std::string inputFile;
