@@ -224,6 +224,21 @@ std::string space2underscore(std::string text) {
     return text;
 }
 
+std::string molflowToAscii(std::string text) {
+    //Changes special characters in Molflow ASCII table to regular, exportable/copiable characters
+    for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
+        if (*it == '\201') {
+            *it = 'u';
+        } else if (*it == '\202') {
+            *it = 'v';
+        } else if (*it == '\262') {
+            *it = '2';
+        }else if (*it == '\263') {
+            *it = '3';
+    }
+    return text;
+}
+
 bool iequals(std::string str1, std::string str2)
 {
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
