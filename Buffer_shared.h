@@ -124,7 +124,7 @@ public:
 	double opacity;        // opacity  (0=>transparent , 1=>opaque)
 	double area;           // Facet area (m^2)
 
-	int    profileType;    // Profile type
+	int    profileType;    // Profile type, possible choices are defined in profileTypes vector in Molflow.cpp/Synrad.cpp
 	int    superIdx;       // Super structure index (Indexed from 0) -1: facet belongs to all structures (typically counter facets)
 	size_t    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
 	int	 teleportDest;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)

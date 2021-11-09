@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME} STATIC
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 # Preprocessor definitions
+#[[
 if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
     if(MSVC)
@@ -48,4 +49,4 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /EHsc)
     endif()
-endif()
+endif()]]

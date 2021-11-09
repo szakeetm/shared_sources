@@ -152,14 +152,18 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+
 target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################
 
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-target_compile_options(${PROJECT_NAME} PRIVATE
+#[[target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
         -Wall>
         $<$<CXX_COMPILER_ID:MSVC>:
@@ -180,4 +184,4 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
     endif()
-endif()
+endif()]]

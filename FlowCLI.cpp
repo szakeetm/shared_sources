@@ -17,7 +17,8 @@
 #include <Helper/Chronometer.h>
 #include <Helper/StringHelper.h>
 #include <Helper/ConsoleLogger.h>
-#include <ZipLib/ZipFile.h>
+#include <ziplib/ZipFile.h>
+#include <IO/CSVExporter.h>
 
 #include "FlowMPI.h"
 #include "SettingsIO.h"
@@ -29,15 +30,6 @@ static constexpr const char* molflowCliLogo = R"(
  | |\/| / _ \ |  _| / _ \ V  V /
  |_|  |_\___/_|_| |_\___/\_/\_/
     )";
-
-/*static constexpr const char* molflowCliLogo = R"(
- __
- \ \      __  __     _  __ _
-  \ \    |  \/  |___| |/ _| |_____ __ __
-  / /    | |\/| / _ \ |  _| / _ \ V  V /
- /_/_____|_|  |_\___/_|_| |_\___/\_/\_/
-   |_____|
-    )";*/
 
 int main(int argc, char** argv) {
 
@@ -239,6 +231,31 @@ int main(int argc, char** argv) {
     }
 
     if(MFMPI::world_rank == 0){
+        if(SettingsIO::outputFacetDetails) {
+            //Could use SettingsIO::outputFile instead of fixed name
+            //std::string csvFile = std::filesystem::path(SettingsIO::outputFile).replace_extension(".csv").string();
+            std::string csvFile = "facet_details.csv";
+            csvFile = std::filesystem::path(SettingsIO::outputPath).append(csvFile).string();
+
+            if (CSVExporter::ExportAllFacetDetails(csvFile, &globState, model.get())) {
+                Log::console_error("Could not write facet details to CSV file %s\n", csvFile.c_str());
+            } else {
+                Log::console_msg_master(3, "Successfully wrote facet details to CSV file %s\n", csvFile.c_str());
+            }
+        }
+        if(SettingsIO::outputFacetQuantities) {
+            //Could use SettingsIO::outputFile instead of fixed name
+            //std::string csvFile = std::filesystem::path(SettingsIO::outputFile).replace_extension(".csv").string();
+            std::string csvFile = "facet_physics.csv";
+            csvFile = std::filesystem::path(SettingsIO::outputPath).append(csvFile).string();
+
+            if (CSVExporter::ExportPhysicalQuantitiesForFacets(csvFile, &globState, model.get())) {
+                Log::console_error("Could not write facet quantities to CSV file %s\n", csvFile.c_str());
+            } else {
+                Log::console_msg_master(3, "Successfully wrote facet quantities to CSV file %s\n", csvFile.c_str());
+            }
+        }
+
         // Export results
         //  a) Use existing autosave as base
         //  b) Create copy of input file

@@ -5,11 +5,11 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 ############################################################
 
 # Project
-set(PROJECT_NAME nativefiledialog)
+set(PROJECT_NAME fmtlib)
 
 # Folders files
-set(CPP_DIR_1 ./molflow_wrapper)
-set(HEADER_DIR_1 ./molflow_wrapper)
+#set(CPP_DIR_1 ./molflow_wrapper)
+#set(HEADER_DIR_1 ./molflow_wrapper)
 
 ################# CMake Project ############################
 # The main options of project                              #
@@ -23,35 +23,37 @@ project(${PROJECT_NAME} C CXX)
 
 # Source Files
 
-set(WRAPPER_SRC molflow_wrapper/nfd_wrapper.cpp)
+#set(WRAPPER_SRC molflow_wrapper/nfd_wrapper.cpp)
 
 # Download and unpack googletest at configure time
-configure_file(CMakeLists.txt.in nfd-download/CMakeLists.txt)
+configure_file(CMakeLists.txt.in fmt-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
         RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fmt-download )
 if(result)
     message(FATAL_ERROR "CMake step for nfd failed: ${result}")
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
         RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nfd-download )
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fmt-download )
 if(result)
-    message(FATAL_ERROR "Build step for nfd failed: ${result}")
+    message(FATAL_ERROR "Build step for fmt failed: ${result}")
 endif()
 
-# Add nfd directly to our build. This defines
-# the nfd target.
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/nfd-src
-        ${CMAKE_CURRENT_BINARY_DIR}/nfd-build
-        EXCLUDE_FROM_ALL)
+# Add fmt directly to our build. This defines
+# the fmt target.
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/fmt-src
+        ${CMAKE_CURRENT_BINARY_DIR}/fmt-build
+        EXCLUDE_FROM_ALL
+        )
 
 # The gtest/gtest_main targets carry header search path
 # dependencies automatically when using CMake 2.8.11 or
 # later. Otherwise we have to add them here ourselves.
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-    include_directories("${nfd_SOURCE_DIR}/include")
-endif()
+#[[if (CMAKE_VERSION VERSION_LESS 2.8.11)
+    include_directories("${fmtlib_BINARY_DIR}/fmt-src/include")
+endif()]]
+include_directories(SYSTEM ${CMAKE_CURRENT_BINARY_DIR}/fmt-src/include)
 
 # Get the current working branch
 execute_process(
@@ -69,13 +71,18 @@ execute_process(
 
 #add_subdirectory(nativefiledialog-extended)
 
-add_library(${PROJECT_NAME} STATIC ${WRAPPER_SRC})
+#add_library(${PROJECT_NAME} STATIC ${WRAPPER_SRC})
 
-#add_library(${PROJECT_NAME}_src STATIC ${NFD_SRC})
-add_dependencies(${PROJECT_NAME} nfd)
+add_library(${PROJECT_NAME}_src INTERFACE)
+#add_library(${PROJECT_NAME}_src STATIC ${fmtlib_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME}_src INTERFACE include/)
+target_include_directories(${PROJECT_NAME}_src INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/fmt-src/include/)
+#target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+#add_library(${PROJECT_NAME}_src STATIC ${fmt_SRC})
+#add_dependencies(${PROJECT_NAME} fmt)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_1})
-target_link_libraries(${PROJECT_NAME} PRIVATE nfd)
+#target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_1})
+#target_link_libraries(${PROJECT_NAME} PRIVATE fmt)
 #target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_src)
 
 ######################### Flags ############################
