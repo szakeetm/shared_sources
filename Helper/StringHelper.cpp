@@ -233,8 +233,10 @@ std::string molflowToAscii(std::string text) {
             *it = 'v';
         } else if (*it == '\262') {
             *it = '2';
-        }else if (*it == '\263') {
+        }
+        else if (*it == '\263') {
             *it = '3';
+        }
     }
     return text;
 }
