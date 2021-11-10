@@ -47,8 +47,9 @@ protected:
     bool show_app_sim_status{false};
     bool show_demo_window{false};
     bool show_global_settings{false};
-    bool show_aabb{true};
-    bool show_perfo{true};
+    bool show_aabb{false};
+    bool show_perfo{false};
+    bool show_select{false};
 
     double start_time;
     static void restartProc(int nbProc, MolFlow *mApp);

@@ -301,17 +301,17 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 {
 	size_t i = 0;
 	work->abortRequested = false;
-	prg->SetMessage("Clearing previous neighborship data...");
+	if(prg) prg->SetMessage("Clearing previous neighborship data...");
 	for (i = 0; i < sh.nbFacet; i++) {
 		facets[i]->neighbors.clear();
 	}
-	prg->SetMessage("Comparing facets...");
+    if(prg) prg->SetMessage("Comparing facets...");
     std::vector<CommonEdge> edges;
 
     if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
         i = 0;
         for (auto &edge: edges) {
-            prg->SetProgress(double(i) / double(edges.size()));
+            if(prg) prg->SetProgress(double(i) / double(edges.size()));
             NeighborFacet n1{}, n2{};
             n1.id = edge.facetId[0];
             n2.id = edge.facetId[1];

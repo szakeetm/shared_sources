@@ -14,11 +14,13 @@
 #include "imgui/imgui_impl_opengl2.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "ImguiGlobalSettings.h"
+#include "ImguiShowNeighbors.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 #include <implot/implot.h>
+#include <GeometryTools.h>
 
 void ImguiWindow::init() {
     // Setup Dear ImGui context
@@ -79,6 +81,7 @@ void ImguiWindow::init() {
     show_app_sim_status = false;
     show_aabb = false;
     show_perfo = false;
+    show_select = false;
 
     start_time = ImGui::GetTime();
 }
@@ -445,6 +448,7 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sim_status);
             ImGui::Checkbox("Performance Plot", &show_perfo);
+            ImGui::Checkbox("Select neighbors", &show_select);
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -471,6 +475,10 @@ void ImguiWindow::renderSingle() {
         static bool active_prev_state;
         if (!future_int.valid())
             future_int = p.get_future();
+
+        if (show_select) {
+            ShowNeighborSelect(mApp, &show_select);
+        }
 
         // 5. Show Window for ADS configuration/visualisation
         if (show_aabb) {

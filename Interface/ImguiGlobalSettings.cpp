@@ -10,12 +10,10 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-extern MolFlow *mApp;
 #endif
 
 #if defined(SYNRAD)
 #include "../src/SynRad.h"
-extern SynRad*mApp;
 #endif
 
 static void ProcessControlTable(MolFlow *mApp) {
@@ -308,7 +306,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                             ImVec2(0.5f, 0.5f));
 
-    if (ImGui::BeginPopupModal("Edit MAX", NULL,
+    if (ImGui::BeginPopupModal("Edit MAX", nullptr,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         // static bool initMax = false;
         static double maxDes = mApp->worker.model->otfParams.desorptionLimit;

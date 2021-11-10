@@ -139,6 +139,7 @@ set(INTERFACE_FILES
         Interface/ImguiMenu.cpp
         Interface/ImguiAABB.cpp
         Interface/ImguiGlobalSettings.cpp
+        Interface/ImguiShowNeighbors.cpp
         Interface/ImguiExtensions.cpp
         Interface/transfer_function_widget.cpp
 
