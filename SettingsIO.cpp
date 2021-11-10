@@ -3,6 +3,7 @@
 //
 
 #include "SettingsIO.h"
+#include "../src/IO/CSVExporter.h"
 #include <Helper/ConsoleLogger.h>
 #include <Helper/StringHelper.h>
 #include <filesystem>
