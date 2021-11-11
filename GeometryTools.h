@@ -50,16 +50,6 @@ struct CommonEdge {
         }
         std::sort(facetId.begin(),facetId.end());
     }
-    CommonEdge MergeCpy(CommonEdge& e2){
-        CommonEdge cpy(*this);
-        for(auto id : e2.facetId) {
-            if (std::find(facetId.begin(), facetId.end(), id) == facetId.end()) {
-                // someName not in name, add it
-                facetId.push_back(id);
-            }
-        }
-        std::sort(facetId.begin(),facetId.end());
-    }
 
     std::vector<int> facetId; // which facet owns edge
     int v1; // index vector 1

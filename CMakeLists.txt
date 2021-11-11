@@ -9,6 +9,7 @@ add_subdirectory(compress)
 add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
 add_subdirectory(ziplib)
+add_subdirectory(fmt)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
@@ -145,6 +146,7 @@ set(INTERFACE_FILES
 
 set(SIM_FILES
         Distributions.cpp
+        ProfileModes.cpp
 
         # subprocesses
         Buffer_shared.cpp

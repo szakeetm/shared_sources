@@ -394,7 +394,10 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
             auto procState = procInformation.subProcInfo[i].slaveState;
-            finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
+            if(procStatus == PROCESS_KILLED) // explicitly ask for killed state
+                finished = finished & (procState==PROCESS_KILLED);
+            else
+                finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 hasErrorStatus = true;
             }
@@ -498,14 +501,16 @@ int SimulationManager::KillAllSimUnits() {
                 simHandles[i].first.join();
             }
             else{
-                auto nativeHandle = simHandles[i].first.native_handle();
+                if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED))
+                    exit(1);
+/*                auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                 //Windows
                 TerminateThread(nativeHandle, 1);
 #else
                 //Linux
                 pthread_cancel(nativeHandle);
-#endif
+#endif*/
             }
         }
         simHandles.clear();
@@ -759,7 +764,7 @@ int SimulationManager::IncreasePriority() {
 int SimulationManager::DecreasePriority() {
 #if defined(_WIN32) && defined(_MSC_VER)
     HANDLE hProcess = GetCurrentProcess();
-    SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS);
+    SetPriorityClass(hProcess, IDLE_PRIORITY_CLASS);
 #else
 
 #endif

@@ -16,6 +16,7 @@ class GLComponent;
 class GLWindow;
 //#include "GLFont.h"
 #include <string>
+#include <fmt/core.h>
 
 class GLApplication {
 

@@ -1506,6 +1506,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	mApp->RenumberSelections(newRefs);
 	mApp->RenumberFormulas(&newRefs);
 	RenumberNeighbors(newRefs);
+	RenumberTeleports(newRefs);
 
 	// Delete old resources
 	DeleteGLLists(true, true);
@@ -1565,9 +1566,10 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 		}
         //assert(_CrtCheckMemory());
 		//Renumber things;
-		RenumberNeighbors(newRefs);
-		mApp->RenumberFormulas(&newRefs);
 		mApp->RenumberSelections(newRefs);
+		mApp->RenumberFormulas(&newRefs);
+		RenumberNeighbors(newRefs);
+		RenumberTeleports(newRefs);
 	}
 
 	sh.nbFacet += nbInsert;
@@ -2833,6 +2835,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		mApp->RenumberSelections(newRef);
 		mApp->RenumberFormulas(&newRef);
 		RenumberNeighbors(newRef);
+		RenumberTeleports(newRef);
 	}
 	//Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
@@ -2888,6 +2891,16 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 			else { //Update id
 				f->neighbors[j].id = newRefs[oriId];
 			}
+		}
+	}
+}
+
+void Geometry::RenumberTeleports(const std::vector<int> &newRefs) {
+	for (size_t i = 0; i < sh.nbFacet; i++) {
+		InterfaceFacet *f = facets[i];
+		
+		if (f->sh.teleportDest > 0) {
+			f->sh.teleportDest = newRefs[f->sh.teleportDest - 1] + 1; //Shift by 1: teleport destinations are numbered from 1, 0=no teleport, -1=back to where it came from
 		}
 	}
 }
@@ -4631,7 +4644,7 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 			result.value = facetSnap.texture[index].sum_v_ort_per_area * 1E4 * (gasMass / 1000 / 6E23) * 0.0100 * moleculesPerTP;  //1E4 is conversion from m2 to cm2; 0.01 is Pa->mbar
 			break;
 		case PhysicalMode::AvgGasVelocity:
-			result.value = 4.0 * facetSnap.texture[index].countEquiv / facetSnap.texture[index].sum_1_per_ort_velocity;
+			result.value = 4.0 * facetSnap.texture[index].countEquiv / facetSnap.texture[index].sum_1_per_ort_velocity; //Different from FacetDetails, since textures don't record sum_1_per_v to save memory
 			break;
 		case PhysicalMode::GasVelocityVector:
 		{
