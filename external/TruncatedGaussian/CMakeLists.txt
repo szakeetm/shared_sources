@@ -4,11 +4,16 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 # Change if you want modify path or other values. #
 ###################################################
 
-set(PROJECT_NAME pugixml)
+# Project
+set(PROJECT_NAME truncatedgaussian)
+
+############## CMake Project ################
+#        The main options of project        #
+#############################################
 
 # Folders files
-set(CPP_DIR_1 ../../src_shared/PugiXML)
-set(HEADER_DIR_1 ../../src_shared/PugiXML)
+set(CPP_DIR_1 .)
+set(HEADER_DIR_1 .)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -20,17 +25,41 @@ project(${PROJECT_NAME} CXX)
 #   --   Add files to project.   --   #
 #######################################
 
-set(SRC_FILES ${CPP_DIR_1}/pugixml.cpp
-        ${HEADER_DIR_1}/pugixml.hpp
-        ${HEADER_DIR_1}/pugiconfig.hpp
-        )
+set(SRC_FILES ${CPP_DIR_1}/rtnorm.cpp )
+set(HEADER_FILES ${HEADER_DIR_1}/rtnorm.hpp)
 
 # Add library to build.
-add_library(${PROJECT_NAME} STATIC
-        ${SRC_FILES}
+add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
+
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${HEADER_DIR_1}
         )
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+if(MSVC)
+    set(LINK_DIR_1 "${CMAKE_SOURCE_DIR}/lib_external/win/${MY_BUILD_TYPE}")
+    message(${LINK_DIR_1})
+
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+            #"../../include/windows_only"
+            "../../../include/windows_only"
+            )
+    target_link_libraries(${PROJECT_NAME}
+            ${LINK_DIR_1}/libgsl.lib
+            ${LINK_DIR_1}/libgslcblas.lib
+            )
+endif(MSVC)
+if(NOT MSVC)
+    find_package(GSL REQUIRED)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${GSL_INCLUDE_DIRS})
+
+    target_link_libraries(${PROJECT_NAME} ${GSL_LIBRARIES})
+endif(NOT MSVC)
+
+################# Flags ################
+# Defines Flags for Windows and Linux. #
+########################################
 
 # Preprocessor definitions
 #[[

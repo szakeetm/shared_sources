@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME nativefiledialog)
 
 # Folders files
-set(CPP_DIR_1 ./molflow_wrapper)
-set(HEADER_DIR_1 ./molflow_wrapper)
+set(CPP_DIR_1 molflow_wrapper)
+set(HEADER_DIR_1 molflow_wrapper)
 
 ################# CMake Project ############################
 # The main options of project                              #

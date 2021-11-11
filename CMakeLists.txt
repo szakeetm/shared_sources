@@ -4,18 +4,10 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 # Change if you want modify path or other values           #
 ############################################################
 
-# First process subdirectories related to external projects
 add_subdirectory(compress)
-add_subdirectory(PugiXML)
-add_subdirectory(TruncatedGaussian)
-add_subdirectory(ziplib)
-add_subdirectory(fmt)
+add_subdirectory(external EXCLUDE_FROM_ALL)
 
-if(NOT NO_INTERFACE)
-    add_subdirectory(SDL_SavePNG)
-    add_subdirectory(Clipper)
-    add_subdirectory(NativeFileDialog)
-endif()
+
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -28,6 +20,10 @@ set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXT ../src/)
+set(EXTERNAL_1 ./external)
+set(EXTERNAL_2 ./external)
+
+set(HEADER_DIR_ZIP ./external/ziplib/Source)
 
 set(COPY_DIR ../copy_to_build/)
 

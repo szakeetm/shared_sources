@@ -25,6 +25,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
+#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
+        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
+
+#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR})]]
+
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
@@ -43,11 +50,7 @@ if(MSVC)
             shell32.lib
             ole32.lib
             )
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
-    #target_link_libraries(${PROJECT_NAME} nativefiledialog)
-endif(MSVC)
-if(NOT MSVC)
+ELSE() #not MSVC
 
     if(APPLE)
         #link to self-build sdl shared lib
@@ -86,23 +89,23 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${GTK3_LIBRARIES})
 
         find_package(X11 REQUIRED)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${X11_INCLUDE_DIRS})
+        target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${X11_INCLUDE_DIRS})
     endif()
 
     find_package(OpenGL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIRS})
 
     find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS})
 
     find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PNG_INCLUDE_DIRS})
 
     find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
     find_package(CURL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
@@ -137,7 +140,6 @@ if(NOT MSVC)
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
     endif()]]
-    target_link_libraries(${PROJECT_NAME} PUBLIC ziplib) # from ./lib/
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
@@ -147,12 +149,16 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
-    target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
-endif(NOT MSVC)
+    #external libraries from our project
+    message(Shared CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+endif() #NOT MSVC
 
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper sdl_savepng truncatedgaussian nativefiledialog)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
+target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

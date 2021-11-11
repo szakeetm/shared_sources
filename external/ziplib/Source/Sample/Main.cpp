@@ -4,7 +4,7 @@
 #include <crtdbg.h>
 #endif
 
-#include "../ZipLib/ZipFile.h"
+#include "../ziplib/ZipFile.h"
 #include "../ZipLib/streams/memstream.h"
 
 #include "../ZipLib/methods/Bzip2Method.h"

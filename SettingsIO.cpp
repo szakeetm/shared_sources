@@ -10,8 +10,8 @@
 
 // zip
 #include <File.h>
-#include <ziplib/ZipArchive.h>
-#include <ziplib/ZipFile.h>
+#include <ZipLib/ZipArchive.h>
+#include <ZipLib/ZipFile.h>
 
 namespace SettingsIO {
     bool overwrite = false;

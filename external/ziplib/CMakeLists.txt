@@ -159,11 +159,15 @@ source_group(headers								FILES ${headers_root})
 source_group(sources\\detail						FILES ${src_detail})
 source_group(sources								FILES ${src_root})
 
+add_library(${PROJECT_NAME}_inter INTERFACE)
+target_sources(${PROJECT_NAME}_inter INTERFACE ${headers})
+target_include_directories(${PROJECT_NAME}_inter SYSTEM INTERFACE Source)
 add_library(${PROJECT_NAME} STATIC ${sources})
 target_link_libraries(${PROJECT_NAME} PRIVATE
         bzip2
         lzma
-        zlib)
+        zlib
+        ${PROJECT_NAME}_inter)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ziplib")
 if(MSVC)
     set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS " /wd4996")
