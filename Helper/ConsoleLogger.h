@@ -2,9 +2,10 @@
 // Created by pascal on 4/30/21.
 //
 
-
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-security"
+#endif
 
 #ifndef MOLFLOW_PROJ_CONSOLELOGGER_H
 #define MOLFLOW_PROJ_CONSOLELOGGER_H
@@ -58,4 +59,6 @@ namespace Log {
 
 #endif //MOLFLOW_PROJ_CONSOLELOGGER_H
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif

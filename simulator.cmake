@@ -97,23 +97,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 ############################################################
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
-# Preprocessor definitions
-#[[
-if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)
-        #for .pdb debugging files
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
-    endif()
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
-    endif()
-endif()
-]]
