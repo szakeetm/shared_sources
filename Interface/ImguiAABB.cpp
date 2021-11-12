@@ -398,7 +398,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     const char *items[] = {"BVH", "KD-tree"};
                     if (ImGui::Combo("Accel Type", &selected_accel, items, IM_ARRAYSIZE(items))) {
                         mApp->worker.model->wp.accel_type = selected_accel;
-                        mApp->aabbVisu.alpha = selected_accel == 0 ? 0.06f : 0.2f;
+                        mApp->aabbVisu.alpha = selected_accel == 0 ? 0.04f : 0.16f;
                     }
                 }
 
@@ -590,15 +590,20 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
 
                 static RayStat ray{};
+                static RayStat ray_saved{};
+
                 std::vector<TestRay> &sample = mApp->aabbVisu.sample;
                 if (ImGui::Button("Create Test Particle")) {
                     if (ray.rng)
                         delete ray.rng;
                     if (ray.pay)
                         delete ray.pay;
+
                     ray = RayStat{};
                     ray.rng = new MersenneTwister;
-                    ray.pay = new RopePayload;
+                    if(1)
+                        // with ropes
+                        ray.pay = new RopePayload;
                     ray.rng->SetSeed(GenerateSeed(0));
                     mApp->worker.model->StartFromSource(ray);
                     sample.clear();
@@ -668,7 +673,6 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 if (!enabled)
                     ImGui::EndDisabled();
 
-                ImGui::BeginDisabled();
                 if (hit)
                     ImGui::PushStyleColor(ImGuiCol_FrameBg,
                                           IM_COL32(40, 217, 40, 255));
@@ -678,6 +682,33 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::SameLine();
                 ImGui::Checkbox("", &hit);
                 ImGui::PopStyleColor();
+
+                if (!enabled)
+                    ImGui::BeginDisabled();
+                if (ImGui::Button("Save ray")) {
+                    if (!ray_saved.pay) {
+                        ray_saved.pay = new RopePayload;
+                    }
+                    if (!ray_saved.rng) {
+                        ray_saved.rng = new MersenneTwister;
+                    }
+                    ray_saved = ray;
+                    *ray_saved.rng = *ray.rng;
+                    if(ray.pay)
+                        *(RopePayload*)ray_saved.pay = *(RopePayload*)ray.pay;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Load ray")) {
+                    rayNodePos = 0;
+                    ray = ray_saved;
+                    *ray.rng = *ray_saved.rng;
+                    if(ray.pay && ray_saved.pay)
+                        *(RopePayload*)ray.pay = *(RopePayload*)ray_saved.pay;
+                }
+                if (!enabled)
+                    ImGui::EndDisabled();
+
+                ImGui::BeginDisabled();
                 char origin_label[32];
                 sprintf(origin_label, "Origin on %d", oldFacet);
                 float oldOrigin[3]{static_cast<float>(oldPos[0]), static_cast<float>(oldPos[1]),
@@ -692,14 +723,42 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::InputFloat3("Direction", reinterpret_cast<float *>(&direction));
                 ImGui::EndDisabled();
 
+                static float new_values[3]{0.0,0.0,0.0};
+                ImGui::InputFloat3("Set new values", new_values);
+                if(ImGui::Button("Set as new origin")){
+                    ray.origin.x = new_values[0];
+                    ray.origin.y = new_values[1];
+                    ray.origin.z = new_values[2];
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Set as new direction")){
+                    ray.direction.x = new_values[0];
+                    ray.direction.y = new_values[1];
+                    ray.direction.z = new_values[2];
+                }
+                static int new_origin = -1;
+                ImGui::InputInt("Set new values", &new_origin);
+                if(ImGui::Button("Set as new source ID")){
+                    ray.lastIntersected = new_origin;
+                    oldFacet = new_origin;
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Set as new starting node")){
+                    if(!ray.pay)
+                        new RopePayload;
+                    if(dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())){
+                        if(ray.pay)((RopePayload*)ray.pay)->lastNode = &dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())->nodes[new_origin];
+                    }
+                }
+
                 if (!enabled)
                     ImGui::BeginDisabled();
                 if (ImGui::Button("Visualise next node")) {
-                    if (ray.traversedNodes.size() > rayNodePos) {
-                        mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos++];
+                    if ((int)ray.traversedNodes.size() > rayNodePos) {
+                        mApp->aabbVisu.selectedNode = (int)ray.traversedNodes[rayNodePos++];
                         redrawAabb = true;
                     } else if (rayNodePos == 0 && !ray.traversedNodes.empty()) {
-                        mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos++];
+                        mApp->aabbVisu.selectedNode = (int)ray.traversedNodes[rayNodePos++];
                         redrawAabb = true;
                     } else {
                         rayNodePos = 0;
@@ -709,7 +768,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::Text("[%d/%zu] %d", rayNodePos, ray.traversedNodes.size(), mApp->aabbVisu.selectedNode);
                 if (!ray.traversedNodes.empty()) {
                     if (ImGui::SliderInt("Node traversal chain", &rayNodePos, 0, ray.traversedNodes.size() - 1)) {
-                        mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos++];
+                        mApp->aabbVisu.selectedNode = ray.traversedNodes[rayNodePos];
                         redrawAabb = true;
                     }
                 }
@@ -878,7 +937,10 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             }
                         }
 
-
+                        static bool jump_to_pos = false;
+                        static int jump_pos = -1;
+                        if(ImGui::InputInt("Jump to position",&jump_pos))
+                            jump_to_pos = true;
                         if (ImGui::BeginTable("Boxes", 6, tFlags)) {
                             ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                             ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);
@@ -905,12 +967,15 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                     sorts_specs->SpecsDirty = false;
                                 }
 
-                            // Demonstrate using clipper for large vertical lists
-                            ImGuiListClipper clipper;
-                            clipper.Begin(tabItems.size());
-                            while (clipper.Step()) {
-                                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            if(jump_to_pos) {
+                                for (int i = 0; i < tabItems.Size; i++) {
                                     BoxData *item = &tabItems[i];
+
+                                    if(jump_pos == item->ID){
+                                        ImGui::SetScrollHereY();
+                                        jump_to_pos = false;
+                                    }
+
                                     //ImGui::PushID(item->ID);
                                     ImGui::TableNextRow();
                                     ImGui::TableSetColumnIndex(0);
@@ -969,6 +1034,74 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                     ImGui::Checkbox("", &item->isLeaf);
                                     ImGui::EndDisabled();
                                     //ImGui::PopID();
+                                }
+                            }
+                            else {
+                                ImGuiListClipper clipper;
+                                clipper.Begin(tabItems.size());
+                                while (clipper.Step()) {
+                                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                                        BoxData *item = &tabItems[i];
+                                        //ImGui::PushID(item->ID);
+                                        ImGui::TableNextRow();
+                                        ImGui::TableSetColumnIndex(0);
+
+                                        ImGuiSelectableFlags selectable_flags =
+                                                ImGuiSelectableFlags_SpanAllColumns |
+                                                ImGuiSelectableFlags_AllowItemOverlap;
+                                        bool selected = mApp->aabbVisu.selectedNode == item->ID;
+                                        char label[32];
+                                        sprintf(label, "%d", item->ID);
+                                        if (ImGui::Selectable(label, selected, selectable_flags, ImVec2(0, 0))) {
+                                            if (selected)
+                                                mApp->aabbVisu.selectedNode = -1;
+                                            else
+                                                mApp->aabbVisu.selectedNode = item->ID;
+                                            redrawAabb = true;
+                                        }
+
+                                        // Tooltip for row4
+                                        if (ImGui::IsItemActive() || ImGui::IsItemHovered()) {
+                                            if (item->isLeaf) {
+                                                std::vector<size_t> primIDs;
+                                                auto tree = std::dynamic_pointer_cast<KdTreeAccel>(
+                                                        accel.front()).get();
+                                                auto &node = tree->nodes[item->ID];
+                                                int nPrimitives = tree->nodes[item->ID].nPrimitives();
+                                                if (nPrimitives == 1) {
+                                                    primIDs.push_back(node.onePrimitive);
+                                                } else {
+                                                    for (int i = 0; i < nPrimitives; ++i) {
+                                                        int index =
+                                                                tree->primitiveIndices[node.primitiveIndicesOffset + i];
+                                                        primIDs.push_back(index);
+                                                    }
+                                                }
+                                                if (ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+                                                    mApp->worker.GetGeometry()->SetSelection(primIDs, false, false);
+                                                }
+                                                ImGui::BeginTooltip();
+                                                for (auto id: primIDs)
+                                                    ImGui::Text("%lu", id);
+                                                ImGui::EndTooltip();
+                                            }
+                                        }
+
+                                        //ImGui::Text("%zu", item->ID);
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", item->chance);
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%f", item->globalIntersectionRate);
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%d", item->prims);
+                                        ImGui::TableNextColumn();
+                                        ImGui::Text("%d", item->level);
+                                        ImGui::TableNextColumn();
+                                        ImGui::BeginDisabled();
+                                        ImGui::Checkbox("", &item->isLeaf);
+                                        ImGui::EndDisabled();
+                                        //ImGui::PopID();
+                                    }
                                 }
                             }
                             ImGui::EndTable();

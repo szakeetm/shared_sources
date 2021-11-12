@@ -93,7 +93,16 @@ public:
             : Ray(o, d, payload, tMax, time, structure) {}
 
     virtual ~RayStat() = default;
+    RayStat &operator=(const RayStat &src) noexcept {
+        origin = src.origin;
+        direction = src.direction;
+        lastIntersected = src.lastIntersected;
+        structure = src.structure;
+        tMax = src.tMax;
+        time = src.time;
 
+        return *this;
+    }
     //Statistics
     size_t traversalSteps{0};
     std::vector<size_t> traversedNodes;

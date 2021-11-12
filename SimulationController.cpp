@@ -637,10 +637,11 @@ int SimulationController::Start() {
     }
 
     for (auto &thr: simThreads) {
-        if(setPayload)
-            if(!thr.particle->particle.pay)
+        if(setPayload) {
+            if (!thr.particle->particle.pay)
                 thr.particle->particle.pay = new RopePayload;
-        else if(thr.particle->particle.pay)
+        }
+        else if (thr.particle->particle.pay)
             delete thr.particle->particle.pay;
     }
 

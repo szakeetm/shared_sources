@@ -2333,6 +2333,7 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             glEnable(GL_LINE_SMOOTH);
             glEnable(GL_POINT_SMOOTH);
         }
+        glLineWidth(3.0f);
 
         float rgb_shade[3] = {(0.9f - 0.45f) / sample.size(), (0.45f - 0.9f) / sample.size(), (0.15f - 0.15f) / sample.size()};
         if(mApp->whiteBg){
@@ -2415,6 +2416,7 @@ void GeometryViewer::DrawLinesFromSample(const std::vector<TestRay> &sample) {
             glEnd();
         }
 
+        glLineWidth(1.0f);
         if (mApp->antiAliasing) {
             glDisable(GL_POINT_SMOOTH);
             glDisable(GL_LINE_SMOOTH);
