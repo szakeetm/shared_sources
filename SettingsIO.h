@@ -18,6 +18,8 @@ namespace SettingsIO {
     extern std::string outputPath;
     extern bool overwrite;
     extern bool isArchive;
+    extern bool outputFacetDetails;
+    extern bool outputFacetQuantities;
 
     int prepareIO();
     int initDirectories();

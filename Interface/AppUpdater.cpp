@@ -19,9 +19,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
 #include "Web.h"
-#include "ziplib/ZipArchive.h"
-#include "ziplib/ZipArchiveEntry.h"
-#include "ziplib/ZipFile.h"
+#include <ZipLib/ZipArchive.h>
+#include <ZipLib/ZipArchiveEntry.h>
+#include <ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
 #include <filesystem>

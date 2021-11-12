@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME clipper)
 
 # Folders files
-set(CPP_DIR_1 ../../src_shared/Clipper)
-set(HEADER_DIR_1 ../../src_shared/Clipper)
+set(CPP_DIR_1 .)
+set(HEADER_DIR_1 .)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -39,21 +39,3 @@ add_library(${PROJECT_NAME} STATIC
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         )
-
-# Preprocessor definitions
-if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)
-        #for .pdb debugging files
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
-    endif()
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /EHsc)
-    endif()
-endif()

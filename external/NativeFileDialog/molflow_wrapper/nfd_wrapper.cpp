@@ -13,7 +13,8 @@ std::string NFD_OpenFile_Cpp(const std::string& fileFilters,const std::string& p
 
     // show the dialog
     const char* defaultPath = path.c_str(); if (path.empty()) defaultPath = nullptr;
-    nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, defaultPath);
+    size_t filterCount = fileFilters.empty() ? 0 : 1;
+    nfdresult_t result = NFD::OpenDialog(outPath, filterItem, filterCount, defaultPath);
     std::string resultStr;
 
 	if (result == NFD_OKAY) {

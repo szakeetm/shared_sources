@@ -6,7 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <Helper/ConsoleLogger.h>
-#include <ziplib/ZipFile.h>
+#include <ZipLib/ZipFile.h>
 #include "FlowMPI.h"
 #include "GeometrySimu.h"
 #include "SettingsIO.h"

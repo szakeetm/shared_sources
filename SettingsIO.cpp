@@ -9,12 +9,15 @@
 
 // zip
 #include <File.h>
-#include <ziplib/ZipArchive.h>
-#include <ziplib/ZipFile.h>
+#include <ZipLib/ZipArchive.h>
+#include <ZipLib/ZipFile.h>
 
 namespace SettingsIO {
     bool overwrite = false;
     bool isArchive = false;
+    bool outputFacetDetails = false;
+    bool outputFacetQuantities = false;
+
     std::string workFile;
     std::string workPath;
     std::string inputFile;
@@ -201,6 +204,10 @@ namespace SettingsIO {
                     .compare(std::filesystem::path("tmp"))) {
             // Settings::tmpfile_dir
             std::filesystem::remove_all("tmp");
+        }
+
+        if(is_empty(std::filesystem::path(SettingsIO::workPath))){
+            std::filesystem::remove_all(SettingsIO::workPath);
         }
     }
 } // namespace SettingsIO

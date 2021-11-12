@@ -24,6 +24,7 @@ std::vector<std::string> SplitString(std::string const& input, const char& delim
 bool endsWith(std::string const& fullString, std::string const& ending);
 bool beginsWith(std::string const& fullString, std::string const& beginning);
 std::string space2underscore(std::string text);
+std::string molflowToAscii(std::string text);
 bool iequals(std::string a, std::string b);
 
 namespace Util {

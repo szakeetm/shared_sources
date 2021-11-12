@@ -176,8 +176,12 @@ MoveFacet::MoveFacet(Geometry *g,Worker *w):GLWindow() {
 
 }
 
-void MoveFacet::ProcessMessage(GLComponent *src,int message) {
-	double dX,dY,dZ,distance;
+void MoveFacet::ProcessMessage(GLComponent* src, int message) {
+	//Initialize values as they will be passed on as parameters to the MoveFacet() function, regardless of delta or distance mode
+	double dX = 0.0;
+	double dY = 0.0;
+	double dZ = 0.0;
+	double distance = 0.0;
 
 	switch(message) {
 	case MSG_BUTTON:

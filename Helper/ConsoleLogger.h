@@ -2,11 +2,17 @@
 // Created by pascal on 4/30/21.
 //
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+#endif
+
 #ifndef MOLFLOW_PROJ_CONSOLELOGGER_H
 #define MOLFLOW_PROJ_CONSOLELOGGER_H
 
 #include "AppSettings.h"
 #include "FlowMPI.h"
+#include <fmt/core.h>
 
 extern int Settings::verbosity;
 extern int MFMPI::world_rank;
@@ -50,4 +56,9 @@ namespace Log {
         console_msg_master(level, message, fmt...);
     }
 }
+
 #endif //MOLFLOW_PROJ_CONSOLELOGGER_H
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
