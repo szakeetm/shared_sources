@@ -7,6 +7,11 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
+if(NOT NO_INTERFACE)
+    add_subdirectory(imgui)
+    add_subdirectory(implot)
+    add_dependencies(implot imgui)
+endif()
 
 
 # Project
