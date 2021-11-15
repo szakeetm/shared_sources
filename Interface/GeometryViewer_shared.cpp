@@ -1573,7 +1573,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 	// Handle mouse events
 	if (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEBUTTONDBLCLICK) {
-		mXOrg = mX;
+        mXOrg = mX;
 		mYOrg = mY;
 
 		if (evt->button.button == SDL_BUTTON_LEFT) {
