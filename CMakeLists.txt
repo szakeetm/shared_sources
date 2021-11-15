@@ -4,21 +4,10 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 # Change if you want modify path or other values           #
 ############################################################
 
-# First process subdirectories related to external projects
 add_subdirectory(compress)
-add_subdirectory(PugiXML)
-add_subdirectory(TruncatedGaussian)
-add_subdirectory(ziplib)
-add_subdirectory(fmt)
+add_subdirectory(external EXCLUDE_FROM_ALL)
 
-if(NOT NO_INTERFACE)
-    add_subdirectory(SDL_SavePNG)
-    add_subdirectory(Clipper)
-    add_subdirectory(NativeFileDialog)
-    add_subdirectory(imgui)
-    add_subdirectory(implot)
-    add_dependencies(implot imgui)
-endif()
+
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -31,6 +20,10 @@ set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXT ../src/)
+set(EXTERNAL_1 ./external)
+set(EXTERNAL_2 ./external)
+
+set(HEADER_DIR_ZIP ./external/ziplib/Source)
 set(IMGUI_DIR ./imgui)
 
 set(COPY_DIR ../copy_to_build/)
@@ -62,25 +55,6 @@ ENDIF()
 ############## Artefacts Output ############################
 # Defines outputs , depending BUILD TYPE                   #
 ############################################################
-
-#[[if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
-    set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_DEBUG}")
-else()
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
-    set(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${OUTPUT_REL}")
-endif()]]
-
-#[[# Messages
-message("${PROJECT_NAME}: MAIN PROJECT: ${CMAKE_PROJECT_NAME}")
-message("${PROJECT_NAME}: CURR PROJECT: ${CMAKE_CURRENT_SOURCE_DIR}")
-message("${PROJECT_NAME}: CURR BIN DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-# Messages
-message("${PROJECT_NAME}: CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-message("${PROJECT_NAME}: CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
-message("${PROJECT_NAME}: CMAKE_EXECUTABLE_OUTPUT_DIRECTORY: ${CMAKE_EXECUTABLE_OUTPUT_DIRECTORY}")]]
 
 # Definition of Macros
 add_definitions(

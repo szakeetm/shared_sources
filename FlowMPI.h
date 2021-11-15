@@ -12,7 +12,7 @@
 #include <bitset>
 #endif
 
-class SimulationModel;
+struct SimulationModel;
 class GlobalSimuState;
 
 namespace MFMPI {

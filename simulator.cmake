@@ -18,11 +18,23 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_4}
         )
 
+
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
         )
+
+#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
+        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
+
+#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR})]]
+#[[target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+        ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR}
+        )]]
 
 include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
@@ -34,7 +46,7 @@ endif()
 
 if(NOT MSVC)
     find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
@@ -61,8 +73,7 @@ if(NOT MSVC)
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
     endif()]]
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ziplib/Source)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+    #target_include_directories(${PROJECT_NAME} PRIVATE ziplib/Source SYSTEM INTERFACE ziplib/Source)
     #target_include_directories(${PROJECT_NAME} INTERFACE fmtlib_src)
 
 
@@ -78,28 +89,11 @@ endif(NOT MSVC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
+target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
 ############################################################
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
-# Preprocessor definitions
-#[[
-if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)
-        #for .pdb debugging files
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
-    endif()
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
-    endif()
-endif()
-]]
