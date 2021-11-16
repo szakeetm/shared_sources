@@ -7,7 +7,8 @@
 #include "ImguiMenu.h"
 
 #include "../../src/MolflowGeometry.h"
-#include "../../src_shared/Facet_shared.h"
+#include "Facet_shared.h"
+#include "../../src/Interface/Viewer3DSettings.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl2.h"
@@ -18,6 +19,7 @@
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 #include <implot/implot.h>
+#include <Helper/FormatHelper.h>
 
 void ImguiWindow::init() {
     // Setup Dear ImGui context
@@ -55,7 +57,12 @@ void ImguiWindow::init() {
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
     // io.Fonts->AddFontDefault();
+    static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
+    ImFontConfig sym_config;
+    sym_config.MergeMode = true;
+    sym_config.PixelSnapH = true;
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &sym_config, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
@@ -63,6 +70,14 @@ void ImguiWindow::init() {
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
+
+    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &sym_config, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
+
+    /*io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &sym_config, sym_ranges);*/
+
 // use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
 
     // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
@@ -205,9 +220,13 @@ namespace {
 
 // Demonstrate creating a simple static window with no decoration
 // + a context-menu to choose which corner of the screen to use.
-static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
+static void
+ShowExampleAppSimpleOverlay(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
     const float PAD = 10.0f;
     static int corner = 0;
+    static float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+    static float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+
     ImGuiIO &io = ImGui::GetIO();
 
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -222,23 +241,309 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
             ImGuiWindowFlags_NoSavedSettings;
 
     if (ImGui::Begin("Example: Fullscreen window", p_open, flags)) {
-        ImGui::Checkbox("Use work area instead of main area", &use_work_area);
-        ImGui::SameLine();
-        ImGui::HelpMarker(
-                "Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
+        if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
 
-        ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
-        ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
-        ImGui::Indent();
-        ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
-        ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
-        ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
-        ImGui::Unindent();
+            ImGui::Checkbox("Use work area instead of main area", &use_work_area);
+            ImGui::SameLine();
+            ImGui::HelpMarker(
+                    "Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
 
-        if (p_open && ImGui::Button("Close this window"))
-            *p_open = false;
+            ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
+            ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
+            ImGui::Indent();
+            ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
+            ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
+            ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
+            ImGui::Unindent();
 
-        char tmp[256];
+            if (p_open && ImGui::Button("Close this window"))
+                *p_open = false;
+        }
+
+        if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+            auto curViewer = mApp->curViewer;
+            auto viewer = mApp->viewer[curViewer];
+            if (ImGui::BeginTable("table_3dviewer", 3, ImGuiTableFlags_None)) {
+                /*ImGui::TableSetupColumn("col1");
+                ImGui::TableSetupColumn("col2");
+                ImGui::TableSetupColumn("col3");
+                ImGui::TableHeadersRow();*/
+                ImGui::TableNextRow();
+                {
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Rules", &viewer->showRule);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Normals", &viewer->showNormal);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox(fmt::format("{}", u8"u\u20d7,v\u20d7").c_str(), &viewer->showUV);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Lines", &viewer->showLine);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Leaks", &viewer->showLeak);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Hits", &viewer->showHit);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Volume", &viewer->showVolume);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Texture", &viewer->showTexture);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("FacetIDs", &viewer->showFacetId);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    if(ImGui::Button("<< View")){
+                        *newViewer = true;
+                    }
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("Indices", &viewer->showIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox("VertexIDs", &viewer->showVertexId);
+                }
+
+                ImGui::EndTable();
+
+            }
+        }
+
+        std::string title;
+        if(geom->GetNbSelectedFacets() > 1) {
+            title = fmt::format("Selected Facet ({} selected)", geom->GetNbSelectedFacets());
+        }
+        else if(geom->GetNbSelectedFacets() == 1){
+            title = fmt::format("Selected Facet (#{})", geom->GetSelectedFacets().front());
+        }
+        else {
+            title = fmt::format("Selected Facet (none)");
+        }
+        if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
+            size_t selected_facet_id = geom->GetNbSelectedFacets() ? geom->GetSelectedFacets().front() : 0;
+            auto sel = geom->GetNbSelectedFacets() ? geom->GetFacet(selected_facet_id) : nullptr;
+            if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
+                static int des_idx = 0;
+                if(sel) des_idx = sel->sh.desorbType;
+                if (ImGui::Combo("Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                    switch (des_idx) {
+                        case 0:
+                            fmt::print("none");
+                            break;
+                        case 1:
+                            fmt::print("uni");
+                            break;
+                        case 2:
+                            fmt::print("cos");
+                            break;
+                        case 3:
+                            fmt::print("cos \u207f");
+                            break;
+                        case 4:
+                            fmt::print("rec");
+                            break;
+                    }
+                }
+
+                static bool use_og_area = false;
+                bool use_og = !use_og_area;
+                static double og = 1.0;
+                static double og_area = 1.0;
+
+                if(sel) og = sel->sh.outgassing;
+                if (ImGui::Checkbox("Outgassing [mbar\u00b7l/s]", &use_og)) {
+                    use_og_area = !use_og;
+                }
+                ImGui::SameLine();
+                ImGui::InputDouble("##in", &og);
+                ImGui::Checkbox(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", &use_og_area);
+                ImGui::SameLine();
+                ImGui::InputDouble("##ina", &og);
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
+                static double sf = 1.0;
+                static double ps = 1.0;
+                if(sel) sf = sel->sh.sticking;
+                ImGui::InputRightSide("Sticking factor", &sf);
+                ImGui::InputRightSide("Pumping speed [l/s]", &ps);
+                ImGui::TreePop();
+            }
+            ImGui::PopItemWidth();
+            {
+                static int sides_idx = 0;
+                if(sel) sides_idx = sel->sh.is2sided;
+                if (ImGui::Combo("Sides", &sides_idx, "1 Sided\0 2 Sided\0")) {
+                    switch (sides_idx) {
+                        case 0:
+                            fmt::print("1s");
+                            break;
+                        case 1:
+                            fmt::print("2s");
+                            break;
+                    }
+                }
+
+                static double opacity = 1.0;
+                if(sel) opacity = sel->sh.opacity;
+                ImGui::InputRightSide("Opacity", &opacity);
+
+                static double temp = 1.0;
+                if(sel) temp = sel->sh.temperature;
+                ImGui::InputRightSide("Temperature [\u00b0\u212a]", &temp);
+
+                static double area = 1.0;
+                if(sel) area = sel->sh.area;
+                ImGui::InputRightSide("Area [cm\u00b2]", &area);
+
+                static int prof_idx = 0;
+                if(sel) prof_idx = sel->sh.profileType;
+                if (ImGui::Combo("Profile", &prof_idx,
+                                 "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
+                    switch (prof_idx) {
+                        case 0:
+                            fmt::print("None");
+                            break;
+                        case 1:
+                            fmt::print("Pu");
+                            break;
+                        case 2:
+                            fmt::print("Pv");
+                            break;
+                        case 3:
+                            fmt::print("Angle");
+                            break;
+                        case 4:
+                            fmt::print("Speed");
+                            break;
+                        case 5:
+                            fmt::print("Ortho vel");
+                            break;
+                        case 6:
+                            fmt::print("Tangen vel");
+                            break;
+                    }
+                }
+            }
+            ImGui::PopItemWidth();
+        }
+
+
+        if (ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if(ImGui::Button("<< Sim")){
+                *show_global = !*show_global;
+            }
+            ImGui::SameLine();
+            {
+                if (mApp->worker.IsRunning()) {
+                    title = fmt::format("Pause");
+                } else if (mApp->worker.globalHitCache.globalHits.nbMCHit > 0) {
+                    title = fmt::format("Resume");
+                } else {
+                    title = fmt::format("Begin");
+                }
+            }
+            if(ImGui::Button(title.c_str())){
+                mApp->changedSinceSave = true;
+                mApp->StartStopSimulation();
+            }
+            ImGui::SameLine();
+            if(!mApp->worker.IsRunning() && mApp->worker.globalHitCache.globalHits.nbDesorbed > 0)
+                ImGui::BeginDisabled();
+            if(ImGui::Button("Reset")){
+                mApp->changedSinceSave = true;
+                mApp->ResetSimulation();
+            }
+            if(!mApp->worker.IsRunning() && mApp->worker.globalHitCache.globalHits.nbDesorbed > 0)
+                ImGui::EndDisabled();
+
+            ImGui::Checkbox("Auto update scene", &mApp->autoFrameMove);
+            if(mApp->autoFrameMove){
+                ImGui::BeginDisabled();
+            }
+            if(ImGui::Button("Update")){
+                mApp->updateRequested = true;
+                mApp->FrameMove();
+            }
+            if(mApp->autoFrameMove){
+                ImGui::EndDisabled();
+            }
+
+            ImVec2 outer_size = ImVec2(std::max(0.0f, ImGui::GetContentRegionAvail().x), 0.0f);
+            if (ImGui::BeginTable("simugrid", 2, ImGuiTableFlags_None/*ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
+                                                 ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                                                 ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
+                                                 ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
+                                                 ImGuiTableFlags_Sortable*/, outer_size)) {
+
+                static std::string hit_stat;
+                static std::string des_stat;
+                bool runningState = mApp->worker.IsRunning();
+                if ((mApp->worker.simuTimer.Elapsed() <= 2.0f) && runningState) {
+                    hit_stat = "Starting...";
+                    des_stat = "Starting...";
+                } else {
+                    double current_avg = 0.0;
+                    if (!runningState) current_avg = mApp->hps_runtotal.avg();
+                    else current_avg = (current_avg != 0.0) ? current_avg : mApp->hps.last();
+
+                    hit_stat = fmt::format("{} ({})",
+                                           Util::formatInt(mApp->worker.globalHitCache.globalHits.nbMCHit, "hit"),
+                                           Util::formatPs(current_avg, "hit"));
+
+                    current_avg = 0.0;
+                    if (!runningState) current_avg = mApp->dps_runtotal.avg();
+                    else current_avg = (current_avg != 0.0) ? current_avg : mApp->dps.last();
+
+                    des_stat = fmt::format("{} ({})",
+                                           Util::formatInt(mApp->worker.globalHitCache.globalHits.nbDesorbed, "des"),
+                                           Util::formatPs(current_avg, "des"));
+                }
+
+
+                ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthFixed, 0.0f);
+                ImGui::TableSetupColumn("field", ImGuiTableColumnFlags_WidthStretch, 0.0f);
+                //ImGui::TableHeadersRow();
+
+                static char inputName[128] = "";
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Hits");
+                ImGui::TableNextColumn();
+                strcpy(inputName, fmt::format("{}", hit_stat).c_str());
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::InputText("##hit", inputName, IM_ARRAYSIZE(inputName));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Des.");
+                ImGui::TableNextColumn();
+                strcpy(inputName, fmt::format("{}", des_stat).c_str());
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::InputText("##des", inputName, IM_ARRAYSIZE(inputName));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Leaks");
+                ImGui::TableNextColumn();
+                strcpy(inputName, fmt::format("{}", "None").c_str());
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::InputText("##leak", inputName, IM_ARRAYSIZE(inputName));
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Time");
+                if (runningState)
+                    strcpy(inputName,
+                           fmt::format("Running: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
+                else
+                    strcpy(inputName,
+                           fmt::format("Stopped: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::InputText("##time", inputName, IM_ARRAYSIZE(inputName));
+
+                ImGui::EndTable();
+            }
+        }
+
 
         try {
             // Facet list
@@ -256,7 +561,7 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
 
                 // Create item list
                 static ImVector<FacetData> items;
-                if (items.Size == 0) {
+                if (items.Size != geom->GetNbFacet()) {
                     items.resize(geom->GetNbFacet(), FacetData());
                     for (int n = 0; n < items.Size; n++) {
                         InterfaceFacet *f = geom->GetFacet(n);
@@ -267,15 +572,25 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
                         item.abs = f->facetHitCache.nbAbsEquiv;
                     }
                 }
+                else if (mApp->worker.IsRunning()){
+                    for (int n = 0; n < items.Size; n++) {
+                        InterfaceFacet *f = geom->GetFacet(n);
+                        FacetData &item = items[n];
+                        item.hits = f->facetHitCache.nbMCHit;
+                        item.des = f->facetHitCache.nbDesorbed;
+                        item.abs = f->facetHitCache.nbAbsEquiv;
+                    }
+                }
 
                 static ImGuiTableFlags tFlags =
                         ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-                        ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
+                        /*ImGuiTableFlags_RowBg | */ImGuiTableFlags_BordersOuter |
                         ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
                         ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
                         ImGuiTableFlags_Sortable;
 
-                if (ImGui::BeginTable("facetlist", 4, tFlags)) {
+                ImVec2 outer_size = ImVec2(0.0f, std::max(ImGui::GetContentRegionAvail().y, TEXT_BASE_HEIGHT * 8.f));
+                if (ImGui::BeginTable("facetlist", 4, tFlags, outer_size)) {
                     ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                     ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
                     ImGui::TableSetupColumn("Hits", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_Hits);
@@ -329,7 +644,7 @@ static void ShowExampleAppSimpleOverlay(bool *p_open, Geometry *geom) {
 
 // Demonstrate creating a simple static window with no decoration
 // + a context-menu to choose which corner of the screen to use.
-static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
+static void ShowPerfoPlot(bool *p_open, Interface *mApp) {
     ImGuiIO &io = ImGui::GetIO();
 
     // Always center this window when appearing
@@ -388,7 +703,8 @@ static void ShowPerfoPlot(bool *p_open, Interface* mApp) {
             sprintf(overlay, "avg %f hit/s", average);
             ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,
                              ImVec2(0, 80.0f));*/
-            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1,-1), ImPlotFlags_AntiAliased, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_Time, ImPlotAxisFlags_AutoFit)) {
+            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1), ImPlotFlags_AntiAliased,
+                                  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_Time, ImPlotAxisFlags_AutoFit)) {
                 ImPlot::PlotLine("Simulation", tvalues, values, IM_ARRAYSIZE(values), values_offset);
                 ImPlot::EndPlot();
             }
@@ -419,8 +735,10 @@ void ImguiWindow::renderSingle() {
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
 
+        static bool open_viewer_window = false;
         if (show_app_sim_status)
-            ShowExampleAppSimpleOverlay(&show_app_sim_status, mApp->worker.GetGeometry());
+            ShowExampleAppSimpleOverlay(&show_app_sim_status, mApp, mApp->worker.GetGeometry(), &show_global_settings,
+                                        &open_viewer_window);
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -494,7 +812,16 @@ void ImguiWindow::renderSingle() {
         } else if (changeDesLimit) {
             mApp->worker.ChangeSimuParams(); // Sync with subprocesses
         }
-
+        if(open_viewer_window){
+            open_viewer_window = false;
+            if (!mApp->viewer3DSettings)
+                mApp->viewer3DSettings = new Viewer3DSettings();
+            mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
+            mApp->viewer3DSettings->Reposition();
+            auto curViewer = mApp->curViewer;
+            auto viewer = mApp->viewer[curViewer];
+            mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
+        }
     }
 }
 
