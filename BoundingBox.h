@@ -62,6 +62,7 @@ public:
                                                      const int dirIsNeg[3]) const;
     bool IntersectP(const Ray &ray, double *hitt0, double *hitt1) const;
     bool IntersectP(const Ray &ray, double *hitt0, double *hitt1, int dim) const;
+    bool IsInside(const Vector3d &point) const;
 
     template<class Archive>
     void serialize(Archive & archive)

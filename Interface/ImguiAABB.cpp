@@ -427,18 +427,23 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
 
                 if (mApp->worker.model->wp.accel_type == 1) {
-                    static bool withRopes = false;
+                    static bool withRopes = mApp->worker.model->wp.kd_with_ropes;
                     if (ImGui::Checkbox("Use ropes", &withRopes)) {
+                        mApp->worker.model->wp.kd_with_ropes = withRopes;
                         if (withRopes) {
-                            for (int s = 0; s < mApp->worker.model->accel.size(); s++)
-                                if (dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())) {
-                                    dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())->AddRopes();
+                            for (int s = 0; s < mApp->worker.model->accel.size(); s++) {
+                                auto kd = dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get());
+                                if (kd) {
+                                    kd->AddRopes();
                                 }
+                            }
                         } else {
-                            for (int s = 0; s < mApp->worker.model->accel.size(); s++)
-                                if (dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())) {
-                                    dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get())->RemoveRopes();
+                            for (int s = 0; s < mApp->worker.model->accel.size(); s++) {
+                                auto kd = dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get());
+                                if (kd) {
+                                    kd->RemoveRopes();
                                 }
+                            }
                         }
                     }
                 }
@@ -590,7 +595,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 }
 
                 static RayStat ray{};
-                static RayStat ray_saved{};
+                static RayStat ray_saved[3]{RayStat(Vector3d(-3.8835912746821628,-6.0998824020024864,-13),
+                                                    Vector3d(-0.60202049004275404,0.2776830749837918,0.74864106181549261))};
 
                 std::vector<TestRay> &sample = mApp->aabbVisu.sample;
                 if (ImGui::Button("Create Test Particle")) {
@@ -685,26 +691,70 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 if (!enabled)
                     ImGui::BeginDisabled();
-                if (ImGui::Button("Save ray")) {
-                    if (!ray_saved.pay) {
-                        ray_saved.pay = new RopePayload;
+                
+                for(int i = 0; i < 3; ++i) {
+                    auto& save = ray_saved[i];
+                    auto str = fmt::format("Save ray {}", i);
+                    if (ImGui::Button(str.c_str())) {
+                        if (!save.pay) {
+                            save.pay = new RopePayload;
+                        }
+                        if (!save.rng) {
+                            save.rng = new MersenneTwister;
+                        }
+                        save = ray;
+                        if (ray.rng)
+                            *save.rng = *ray.rng;
+                        if (ray.pay)
+                            *(RopePayload *) save.pay = *(RopePayload *) ray.pay;
                     }
-                    if (!ray_saved.rng) {
-                        ray_saved.rng = new MersenneTwister;
+                    if(i != 3-1){
+                        ImGui::SameLine();
                     }
-                    ray_saved = ray;
-                    *ray_saved.rng = *ray.rng;
-                    if(ray.pay)
-                        *(RopePayload*)ray_saved.pay = *(RopePayload*)ray.pay;
                 }
-                ImGui::SameLine();
-                if (ImGui::Button("Load ray")) {
-                    rayNodePos = 0;
-                    ray = ray_saved;
-                    *ray.rng = *ray_saved.rng;
-                    if(ray.pay && ray_saved.pay)
-                        *(RopePayload*)ray.pay = *(RopePayload*)ray_saved.pay;
+
+                for(int i = 0; i < 3; ++i) {
+                    auto& save = ray_saved[i];
+                    auto str = fmt::format("Load ray {}", i);
+                    if (ImGui::Button(str.c_str())) {
+                        rayNodePos = 0;
+                        ray = save;
+                        if(save.rng)
+                            *ray.rng = *save.rng;
+                        else
+                            ray.rng = new MersenneTwister;
+                        if (ray.pay && save.pay)
+                            *(RopePayload *) ray.pay = *(RopePayload *) save.pay;
+
+                        // use new ray for visualisation
+                        sample.clear();
+                        sample.emplace_back(TestRay(ray.origin, ray.direction, ray.lastIntersected));
+                    }
+
+                    // Tooltip for row4
+                    if(ImGui::IsItemHovered()) {
+                        ImGui::BeginTooltip();
+                        ImGui::BeginDisabled();
+                        char origin_label[32];
+                        float origin[3]{static_cast<float>(save.origin.x), static_cast<float>(save.origin.y),
+                                        static_cast<float>(save.origin.z)};
+                        sprintf(origin_label, "Origin on %d", save.lastIntersected);
+                        ImGui::InputFloat3(origin_label, reinterpret_cast<float *>(&origin));
+                        float direction[3]{static_cast<float>(save.direction.x), static_cast<float>(save.direction.y),
+                                           static_cast<float>(save.direction.z)};
+                        ImGui::InputFloat3("Direction", reinterpret_cast<float *>(&direction));
+                        if(save.pay && ((RopePayload*)save.pay)->lastNode) {
+                            ImGui::Text("Start node on %d", ((RopePayload *) save.pay)->lastNode->nodeId);
+                        }
+                        ImGui::EndDisabled();
+                        ImGui::EndTooltip();
+                    }
+
+                    if(i != 3-1){
+                        ImGui::SameLine();
+                    }
                 }
+
                 if (!enabled)
                     ImGui::EndDisabled();
 
@@ -743,12 +793,17 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     oldFacet = new_origin;
                 }
                 ImGui::SameLine();
+                ImGui::Text("%d",ray.lastIntersected);
                 if(ImGui::Button("Set as new starting node")){
                     if(!ray.pay)
                         new RopePayload;
                     if(dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())){
                         if(ray.pay)((RopePayload*)ray.pay)->lastNode = &dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())->nodes[new_origin];
                     }
+                }
+                if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
+                    ImGui::SameLine();
+                    ImGui::Text("%d", ((RopePayload *) ray.pay)->lastNode->nodeId);
                 }
 
                 if (!enabled)
@@ -941,6 +996,14 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         static int jump_pos = -1;
                         if(ImGui::InputInt("Jump to position",&jump_pos))
                             jump_to_pos = true;
+                        if(mApp->aabbVisu.selectedNode != -1) {
+                            if (ImGui::Button("Jump to selected")) {
+                                jump_pos = mApp->aabbVisu.selectedNode;
+                                jump_to_pos = true;
+                            }
+                            ImGui::SameLine();
+                            ImGui::Text("Node #%d",mApp->aabbVisu.selectedNode);
+                        }
                         if (ImGui::BeginTable("Boxes", 6, tFlags)) {
                             ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                             ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, BoxDataColumnID_ID);

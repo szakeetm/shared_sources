@@ -2121,10 +2121,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
         node = ((RopePayload *) ray.pay)->lastNode;
         ((RopePayload *) ray.pay)->lastRay = ray;
         size_t nHops = 0;
-        while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
-        //while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, &ray.tMax)){// not in node
-        //while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
-            //node = node->getNeighboringNode(ray);
+        while(node != nullptr && !node->bbox.IsInside(ray.origin)){// not in node
             node = node->parent;
             nHops++;
         }
@@ -2136,6 +2133,9 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     else
         node = &nodes[0];
     // KdAccelNode *node = &nodes[0];
+
+    node->bbox.IntersectP(ray, &tMin, nullptr);
+
     while (node != nullptr) {
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;
@@ -2168,7 +2168,8 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                 // Check one primitive inside leaf node
                 if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                     hit = true;
-                    if(ray.pay && ray.hardHit.hitId == p->globalId) {
+                    ((RopePayload *) ray.pay)->lastNode = node;
+                    /*if(ray.pay && ray.hardHit.hitId == p->globalId) {
                         double minLocal = 1e99;
                         node->bbox.IntersectP(ray, &minLocal, nullptr);
                         if (minId == p->globalId && tMinHit > minLocal) {
@@ -2179,7 +2180,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                             minId = p->globalId;
                             ((RopePayload *) ray.pay)->lastNode = node;
                         }
-                    }
+                    }*/
                 }
 
                 //printf(" Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
@@ -2192,7 +2193,8 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                     // Check one primitive inside leaf node
                     if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
-                        if(ray.pay && ray.hardHit.hitId == p->globalId) {
+                        ((RopePayload *) ray.pay)->lastNode = node;
+                        /*if(ray.pay && ray.hardHit.hitId == p->globalId) {
                             double minLocal = 1e99;
                             node->bbox.IntersectP(ray, &minLocal, nullptr);
                             if (minId == p->globalId && tMinHit > minLocal) {
@@ -2203,7 +2205,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                                 minId = p->globalId;
                                 ((RopePayload *) ray.pay)->lastNode = node;
                             }
-                        }
+                        }*/
                     }
                     //printf(" Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
                 }
@@ -2299,7 +2301,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
         node = ((RopePayload *) ray.pay)->lastNode;
         size_t nHops = 0;
-        while(node != nullptr && !node->bbox.IntersectP(ray, &tMin, nullptr)){// not in node
+        while(node != nullptr && !node->bbox.IsInside(ray.origin)){// not in node
             ray.traversedNodes.push_back(node->nodeId);
             node = node->parent;
             nHops++;
@@ -2311,6 +2313,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     }
     else
         node = &nodes[0];
+
+    node->bbox.IntersectP(ray, &tMin, nullptr);
 
     while (node != nullptr) {
         ray.traversedNodes.push_back(node->nodeId);
@@ -2355,7 +2359,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                 // Check one primitive inside leaf node
                 if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                     hit = true;
-                    double minLocal = 1e99;
+                    ((RopePayload *) ray.pay)->lastNode = node;
+                    /*double minLocal = 1e99;
                     node->bbox.IntersectP(ray, &minLocal, nullptr);
                     if (minId == p->globalId && tMinHit > minLocal) {
                         tMinHit = minLocal;
@@ -2364,7 +2369,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                         tMinHit = minLocal;
                         minId = p->globalId;
                         ((RopePayload *) ray.pay)->lastNode = node;
-                    }
+                    }*/
                 }
 
             } else {
@@ -2376,7 +2381,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                     // Check one primitive inside leaf node
                     if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
-                        double minLocal = 1e99;
+                        /*double minLocal = 1e99;
                         node->bbox.IntersectP(ray, &minLocal, nullptr);
                         if (minId == p->globalId && tMinHit > minLocal) {
                             tMinHit = minLocal;
@@ -2385,7 +2390,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                             tMinHit = minLocal;
                             minId = p->globalId;
                             ((RopePayload *) ray.pay)->lastNode = node;
-                        }
+                        }*/
+                        ((RopePayload *) ray.pay)->lastNode = node;
                     }
                 }
             }
@@ -2923,7 +2929,6 @@ void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
     else {
 
         //optimizeRopes( ropes, current->bbox );
-
 
         AABBFace SL, SR;
         if ( current->SplitAxis() == X_AXIS ) {

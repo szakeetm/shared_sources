@@ -174,3 +174,10 @@ bool AxisAlignedBoundingBox::IntersectP(const Ray &ray, double *hitt0,
     if (hitt1) *hitt1 = t1;
     return true;
 }
+
+bool AxisAlignedBoundingBox::IsInside(const Vector3d &point) const {
+
+    return (min[0] < point.x && max[0] > point.x)
+        && (min[1] < point.y && max[1] > point.y)
+        && (min[2] < point.z && max[2] > point.z);
+}
