@@ -2301,11 +2301,19 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
         node = ((RopePayload *) ray.pay)->lastNode;
         size_t nHops = 0;
+        //auto tmpNode = node;
         while(node != nullptr && !node->bbox.IsInside(ray.origin)){// not in node
             ray.traversedNodes.push_back(node->nodeId);
-            node = node->parent;
+            //node = node->parent;
+            node = node->getNeighboringNode(ray);
             nHops++;
         }
+        /*size_t nHopsNeigh = 0;
+        while(tmpNode != nullptr && !tmpNode->bbox.IsInside(ray.origin)){// not in node
+            //ray.traversedNodes.push_back(node->nodeId);
+            tmpNode = tmpNode->getNeighboringNode(ray);
+            nHopsNeigh++;
+        }*/
         if(node == nullptr)
             node = &nodes[0];
         /*else
@@ -2391,7 +2399,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
                             minId = p->globalId;
                             ((RopePayload *) ray.pay)->lastNode = node;
                         }*/
-                        ((RopePayload *) ray.pay)->lastNode = node;
+                        if(ray.pay && ((RopePayload *) ray.pay)->lastNode)
+                            ((RopePayload *) ray.pay)->lastNode = node;
                     }
                 }
             }

@@ -112,7 +112,7 @@ bool Facet::Intersect(Ray &ray) {
                                 if(!ray.transparentHits.empty()){
                                     for(auto& hit : ray.transparentHits){
                                         if(hit.hitId == globalId && hit.hit.colU != u){
-                                            std::cout << "Multi hit\n";
+                                            std::cout << "Multi hit"<< u << " vs " << hit.hit.colU << "\n";
                                         }
                                     }
                                 }
@@ -190,7 +190,8 @@ bool Facet::IntersectStat(RayStat &ray) {
                                 if(!ray.transparentHits.empty()){
                                     for(auto& hit : ray.transparentHits){
                                         if(hit.hitId == globalId && hit.hit.colU != u){
-                                            std::cout << "Multi hit\n";
+                                            std::cout << "Multi hit"<< u << " vs " << hit.hit.colU << "\n";
+
                                         }
                                     }
                                 }
