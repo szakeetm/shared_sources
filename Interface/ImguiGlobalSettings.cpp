@@ -188,20 +188,16 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 ImGui::InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
         simChanged = ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                                  IM_COL32(217, 217, 217, 255));
+            ImGui::BeginDisabled();
         }
         ImGui::SameLine();
         simChanged = ImGui::InputRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
-            ImGui::PopStyleColor();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
 
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(217, 217, 217, 255));
+        ImGui::BeginDisabled();
 
         // Use tmp var to multiply by 10
         double outgRate10 =
@@ -220,8 +216,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                            "%.4g");
         }
 
-        ImGui::PopStyleColor();
-        ImGui::PopItemFlag();
+        ImGui::EndDisabled();
         //***********************
 
         {
@@ -254,16 +249,13 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 "that if you'd like to see pressure across N orders of "
                 "magnitude, set it to 1E-N");
         if (!lowFluxMode) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                                  IM_COL32(217, 217, 217, 255));
+            ImGui::BeginDisabled();
         }
         simChanged = ImGui::InputRightSide(
                 "Cutoff ratio", &lowFluxCutoff,
                 "%.2e"); // Edit bools storing our window open/close state
         if (!lowFluxMode) {
-            ImGui::PopStyleColor();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
 
         {
