@@ -118,6 +118,8 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 		}
 
 		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
+
+        SDL_EnableScreenSaver();
 	}
 
 	errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth, m_screenHeight);
