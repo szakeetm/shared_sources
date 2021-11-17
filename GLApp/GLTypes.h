@@ -18,7 +18,9 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-
+#include <stdexcept>
+#include <cstring> // strncpy for Error
+#include <algorithm> // fill
 // Messages
 
 #define MSG_NULL     0    // No message
@@ -53,13 +55,21 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Macros
 #define DELETE_LIST(l) if(l) { glDeleteLists(l,1);l=0; }
-#define DELETE_TEX(t)  if(t) { glDeleteTextures(1,&t);t=0; }
-#define SAFE_DELETE(x) if(x) { delete x;x=NULL; }
-#define SAFE_FREE(x) if(x) { free(x);x=NULL; }
+
+#define DELETE_TEX(t) if(t) { glDeleteTextures(1,&t);t=0; }
+//#define SAFE_DELETE(x) if(x) { delete x;x=nullptr; }
+template<typename T>
+constexpr void SAFE_DELETE(T& x) {if(x) {delete x; x=nullptr;}}
+//#define SAFE_FREE(x) if(x) { free(x);x=nullptr; }
+template<typename T>
+constexpr void SAFE_FREE(T& x) {if(x) {free(x); x=nullptr;}}
 #define SAFE_CLEAR(vect) if(vect) {vect.clear();}
-#define IVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();
-#define RVALIDATE_DLG(dlg) if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();
-#define ZEROVECTOR(_vector) std::fill(_vector.begin(),_vector.end(),0);
+template<typename T>
+constexpr void IVALIDATE_DLG(T& dlg){ if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();}
+template<typename T>
+constexpr void RVALIDATE_DLG(T& dlg){ if(dlg && !dlg->IsVisible()) dlg->RestoreDeviceObjects();}
+template<typename T>
+constexpr void ZEROVECTOR(T& _vector){ std::fill(_vector.begin(),_vector.end(),0);}
 #define WRITEBUFFER(_value,_type) *((_type *)buffer)=_value;buffer += sizeof(_type)
 #define READBUFFER(_type) *(_type*)buffer;buffer+=sizeof(_type)
 
@@ -71,15 +81,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 // Type definitions
 typedef unsigned char BYTE;
 
-class Error {
-
-public:
-	Error(const char *message);
-	const char *GetMsg();
-
-private:
-	char msg[1024];
-
+struct Error : public std::runtime_error {
+    explicit Error( const std::string & what_ ) : std::runtime_error(what_) {}
+    explicit Error( const char * what_ ) : std::runtime_error(what_) {}
 };
 
 typedef struct {

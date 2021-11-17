@@ -3,16 +3,18 @@
 #include "GLMessageBox.h"
 #include "GLApp.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 #include "GLApp.h"
 #include "GLWindow.h"
 #include <sstream>
 #include <cstring> //strcpy, etc.
-#ifdef MOLFLOW
+#include "ImguiWindow.h"
+
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -107,7 +109,7 @@ void GLWindowManager::FullRepaint() {
 
 void GLWindowManager::DrawStats() {
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
 	
   // Statistics
   if( theApp ) {
@@ -384,17 +386,17 @@ void GLWindowManager::Resize() {
   for(int i=1;i<nbWindow;i++) 
     allWin[i]->UpdateOnResize();
 /*  	
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 	extern MolFlow *mApp;
 	#endif
 
-	#ifdef SYNRAD
+	#if defined(SYNRAD)
 	extern SynRad*mApp;
 	#endif
   try {
 		  mApp->worker.Update(0.0f);
   } catch(Error &e) {
-	  GLMessageBox::Display(e.GetMsg(),"Error (Worker::Update)",GLDLG_OK,GLDLG_ICONERROR);
+	  GLMessageBox::Display(e.what(),"Error (Worker::Update)",GLDLG_OK,GLDLG_ICONERROR);
   }
   */
   Repaint();
@@ -403,12 +405,15 @@ void GLWindowManager::Resize() {
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
+
+  if(theApp->imWnd)
+      theApp->imWnd->renderSingle();
   SDL_GL_SwapWindow(theApp->mainScreen);
 }
 
 void GLWindowManager::RepaintNoSwap() {
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   double t0 = theApp->GetTick();
 //#endif
 
@@ -441,7 +446,7 @@ void GLWindowManager::RepaintNoSwap() {
   }
   for(int i=0;i<nbWindow;i++) allWin[i]->PaintMenu();
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
 //#endif
 
@@ -449,7 +454,7 @@ void GLWindowManager::RepaintNoSwap() {
 
 void GLWindowManager::RepaintRange(int w0,int w1) {
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   double t0 = theApp->GetTick();
 //#endif
 
@@ -458,7 +463,7 @@ void GLWindowManager::RepaintRange(int w0,int w1) {
   for(int i=w0;i<w1;i++) allWin[i]->Paint();  
   for(int i=w0;i<w1;i++) allWin[i]->PaintMenu();
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
 //#endif
 

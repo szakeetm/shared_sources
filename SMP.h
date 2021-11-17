@@ -20,9 +20,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef _SMPH_
 #define _SMPH_
 
+#include "ProcessControl.h"
+
 #define STARTPROC_NORMAL 0
 #define STARTPROC_BACKGROUND 1
 #define STARTPROC_FOREGROUND 2
+#define STARTPROC_NOWIN 3
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,7 +39,7 @@ extern "C" {
 #include <windows.h>
 
  // Win32 shared memory
- typedef struct {
+    struct Dataport{
 	 char              name[32]; //Unique identifier
 	 char              semaname[32]; //Mutex unique identifier
      HANDLE            sema; //Mutex handle (CreateMutex return value)
@@ -44,7 +47,7 @@ extern "C" {
 	 HANDLE file;			//Physical file handle (if persistent)
 	 size_t size;		//keep track of mapped size
 	 void              *buff; //View handle (MapViewOfFile return value, pointer to data)
- } Dataport;
+ };
 
 #else
 #include <time.h>
@@ -55,7 +58,7 @@ extern "C" {
 
  using DWORD = unsigned int;
  using WORD = unsigned short;
-#if not defined(__MACOSX__) && not defined(__APPLE__)
+#if !defined(__MACOSX__) && !defined(__APPLE__)
  union semun {
     int                 val;   /* value for SETVAL             */
     struct semid_ds    *buf;   /* buffer for IPC_STAT, IPC_SET */
@@ -63,7 +66,7 @@ extern "C" {
 };
 #endif
  // Linux shared memory
- typedef struct {
+struct Dataport {
     char              name[32]; //Unique identifier
     char              semaname[32]; //Mutex unique identifier
     int            sema; //Mutex handle (CreateMutex return value)
@@ -71,17 +74,18 @@ extern "C" {
     int file;			//Physical file handle (if persistent)
     size_t size;		//keep track of mapped size
     void              *buff; //View handle (MapViewOfFile return value, pointer to data)
- } Dataport;
+ };
 
 #endif
 
-typedef struct {
+#define MAX_PROCESS (size_t)64    // Maximum number of process
 
-  double cpu_time; // CPU time         (in second)
-  size_t  mem_use;  // Memory usage     (in byte)
-  size_t  mem_peak; // MAx Memory usage (in byte)
+struct SHCONTROL {
+    // Process control
+    ProcComm procInformation[MAX_PROCESS];
+};
 
-} PROCESS_INFO;
+
 
 // Shared memory
 Dataport *CreateDataport(char *name, size_t size);
@@ -97,7 +101,7 @@ bool CloseDataport(Dataport *dp, bool unlinkShm);
 // Process management
 bool          KillProc(DWORD pID);
 bool          GetProcInfo(DWORD pID,PROCESS_INFO *pInfo);
-DWORD         StartProc(const char *pname,int mode, char **argv = nullptr);
+DWORD StartProc(char **procv, int mode);
 bool IsProcessRunning(DWORD pID);
 
 void InitTick();

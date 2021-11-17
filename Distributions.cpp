@@ -18,25 +18,25 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Distributions.h"
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
 #include <vector>
 
 
 std::vector<double> DistributionND::InterpolateY(const double & x, const bool & allowExtrapolate)
 {
-	return InterpolateVectorY(x, values, isLogLog, allowExtrapolate);
+	return InterpolateVectorY(x, values, logXinterp, logYinterp, allowExtrapolate);
 }
 
 double DistributionND::InterpolateX(const double & y, const size_t & elementIndex, const bool & allowExtrapolate)
 {
-	return InterpolateVectorX(y, values, elementIndex, isLogLog, allowExtrapolate);
+	return InterpolateVectorX(y, values, elementIndex, logXinterp, logYinterp, allowExtrapolate);
 }
 
 double Distribution2D::InterpolateY(const double &x, const bool& allowExtrapolate) const {
-	return InterpolateXY(x, values, true, isLogLog, allowExtrapolate);
+	return InterpolateXY(x, values, true, logXinterp, logYinterp, allowExtrapolate);
 }
 
 double Distribution2D::InterpolateX(const double &y, const bool& allowExtrapolate) const {
-	return InterpolateXY(y, values, false, isLogLog, allowExtrapolate);
+	return InterpolateXY(y, values, false, logXinterp, logYinterp, allowExtrapolate);
 }
 

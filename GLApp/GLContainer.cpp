@@ -3,20 +3,17 @@
 #include "GLWindow.h"
 #include "GLComponent.h"
 #include "GLToolkit.h"
-//#include "GLWindowManager.h"
-#include "GLApp.h"
-//#include <malloc.h>
 
 GLContainer::GLContainer() {
 
-  list = NULL;
-  lastFocus = NULL;
-  draggedComp = NULL;
+  list = nullptr;
+  lastFocus = nullptr;
+  draggedComp = nullptr;
   lastClick = 0;
   evtProcessed = false;
   evtCanceled = false;
-  parentWin = NULL;
-  redirect = NULL;
+  parentWin = nullptr;
+  redirect = nullptr;
 
 }
 
@@ -29,7 +26,7 @@ void GLContainer::Clear() {
   COMPLINK *node = list;
   COMPLINK *lnode;
 
-  while(node!=NULL) {
+  while(node!=nullptr) {
     node->comp->InvalidateDeviceObjects();
 	node->comp->DestroyComponents();
     SAFE_DELETE(node->comp);
@@ -37,7 +34,7 @@ void GLContainer::Clear() {
     node = node->next;
     SAFE_FREE(lnode);
   }
-  list = NULL;
+  list = nullptr;
 
 }
 
@@ -46,27 +43,55 @@ void GLContainer::SetWindow(GLWindow *parent) {
   parentWin = parent;
   // Relay to sub
   COMPLINK *node = list;
-  while(node!=NULL) {
+  while(node!=nullptr) {
     node->comp->SetWindow(parent);
     node = node->next;
   }
 
 }
 
+void GLContainer::Remove(GLComponent * comp, GLContainer* newParent) {
+    //unregisters and sets a new parent
+    //used after GLMenu::Track()
+
+    COMPLINK* node = list;
+    COMPLINK* prevNode = nullptr;
+
+    bool found = false;
+    while (!found && node) {
+        found = (node->comp == comp);
+        if (!found) {
+            prevNode = node;
+            node = node->next;
+        }
+    }
+
+    if (found) {
+        if (prevNode) {
+            prevNode->next = node->next;
+        }
+        else {
+            list = list->next;
+        }
+        node->comp->SetParent(newParent);
+        SAFE_FREE(node);
+    }
+}
+
 GLWindow *GLContainer::GetWindow() {
   return parentWin;
 }
 
-bool GLContainer::IsEventProcessed() {
+bool GLContainer::IsEventProcessed() const {
   return evtProcessed;
 }
 
-bool GLContainer::IsEventCanceled() {
+bool GLContainer::IsEventCanceled() const {
   return evtCanceled;
 }
 
 bool GLContainer::IsDragging() {
-  return (draggedComp!=NULL);
+  return (draggedComp!=nullptr);
 }
 
 void GLContainer::RedirectMessage(GLContainer *cont) {
@@ -79,14 +104,14 @@ GLContainer *GLContainer::GetRedirect() {
 
 void GLContainer::CancelDrag(SDL_Event *evt) {
 
-  draggedComp=NULL;
+  draggedComp=nullptr;
 
 }
 
 void GLContainer::RestoreDeviceObjects() {
 
   COMPLINK *node = list;
-  while(node!=NULL) {
+  while(node!=nullptr) {
     node->comp->RestoreDeviceObjects();
     node = node->next;
   }
@@ -96,7 +121,7 @@ void GLContainer::RestoreDeviceObjects() {
 void GLContainer::InvalidateDeviceObjects() {
 
   COMPLINK *node = list;
-  while(node!=NULL) {
+  while(node!=nullptr) {
     node->comp->InvalidateDeviceObjects();
     node = node->next;
   }
@@ -123,31 +148,7 @@ void GLContainer::PostDelete(GLComponent *comp) {
 
 }
 
-void GLContainer::Remove(GLComponent *comp) {
 
-  COMPLINK *node = list;
-  COMPLINK *prevNode = NULL;
-
-  bool found = false;
-  while(!found && node) {
-    found = (node->comp == comp);
-    if( !found ) {
-      prevNode = node;
-      node=node->next;
-    }
-  }
-
-  if( found ) {
-    if( prevNode ) {
-      prevNode->next = node->next;
-    } else {
-      list = list->next;
-    }
-    node->comp->SetParent(NULL);
-    SAFE_FREE(node);
-  }
-
-}
 
 void GLContainer::Add(GLComponent *comp) {
 
@@ -182,7 +183,7 @@ void GLContainer::Add(GLComponent *comp) {
     // Add at the end
     while(node->next) node=node->next; 
     node->next = (COMPLINK *)malloc(sizeof(COMPLINK));
-    node->next->next = NULL;
+    node->next->next = nullptr;
     node->next->comp = comp;
     node->next->postDelete = false;
     node->next->canProcess = true;
@@ -256,18 +257,18 @@ void GLContainer::RelayEventReverse(COMPLINK *lst,SDL_Event *evt) {
 void GLContainer::DoPostDelete() {
 
   COMPLINK *node = list;
-  COMPLINK *prevNode = NULL;
-  COMPLINK *toFree = NULL;
+  COMPLINK *prevNode = nullptr;
+  COMPLINK *toFree = nullptr;
 
   while(node) {
     if (node->postDelete) {
-      if( prevNode==NULL )
+      if( prevNode==nullptr )
         // Remove head
         list=list->next;
       else
         prevNode->next = node->next;
       node->comp->InvalidateDeviceObjects();
-      if(node->comp==lastFocus) lastFocus = NULL;
+      if(node->comp==lastFocus) lastFocus = nullptr;
       SAFE_DELETE(node->comp);
       toFree=node;
     } else {
@@ -320,7 +321,7 @@ void GLContainer::RelayEvent(GLComponent *comp,SDL_Event *evt,int ox,int oy) {
         ManageComp(comp,evt);
       }
 	}
-	else if (evt->type ==  SDL_MOUSEWHEEL) {
+    else if (evt->type ==  SDL_MOUSEWHEEL) {
 		int x, y;
 		SDL_GetMouseState(&x, &y);
 		if (parentWin->IsInComp(comp, x, y)) {
@@ -355,7 +356,7 @@ void GLContainer::ProcessMessage(GLComponent *src,int message) {
 
 void GLContainer::PaintComponents() {
   COMPLINK *node = list;
-  while(node!=NULL) {
+  while(node!=nullptr) {
     if(node->comp->IsVisible()) node->comp->Paint();
 	GLToolkit::CheckGLErrors("GLComponent:Paint()");
     node = node->next;

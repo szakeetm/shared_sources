@@ -63,18 +63,18 @@ int main(int argc,char* argv[]) {
 	fileNameWith7z = fileName + "7z";
 	std::string sevenZipName;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-	sevenZipName += "7za.exe";
+    sevenZipName += "7za.exe";
 #else //Linux, MacOS
-	if (FileUtils::Exist("./7za")) {
-		sevenZipName = "./7za"; //use 7za binary shipped with Molflow
-	}
-	else if (FileUtils::Exist("/usr/bin/7za")) {
-		sevenZipName = "/usr/bin/7za"; //use p7zip installed system-wide
-	}
-	else
-	{
-		sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
-	}
+    sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
+                                       "/usr/bin/7za", //use p7zip installed system-wide
+                                       "/usr/local/bin/7za", //use p7zip installed for user
+                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
+    for(auto& path : possibleLocations){
+        if (FileUtils::Exist(path)) {
+            sevenZipName = path;
+        }
+    }
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
 		printf("%s",("\n" + sevenZipName + " not found. Cannot compress.\n").c_str());
@@ -132,7 +132,7 @@ int main(int argc,char* argv[]) {
 	size_t found;
 	found=result.find("Everything is Ok");
 	if (found!=std::string::npos) {
-		printf("\nCompression seems legit. Deleting original GEO file.\n");
+		printf("\nCompression seems legit. Deleting original %s file.\n",std::filesystem::path(fileNameGeometry).extension().string().c_str());
 		std::filesystem::remove(fileNameGeometry);
 		return 0;
 	}
@@ -142,8 +142,8 @@ int main(int argc,char* argv[]) {
 	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
-	printf("\nSomething went wrong during the compression, read above. GEO file kept."
-		"\nType any letter and press Enter to exit\n");
+	printf("\nSomething went wrong during the compression, read above. %s file kept."
+		"\nType any letter and press Enter to exit\n",std::filesystem::path(fileNameGeometry).extension().string().c_str());
 	std::cin>>key;
 	return 0;
 }

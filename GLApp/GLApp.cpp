@@ -1,14 +1,14 @@
 // Copyright (c) 2011 rubicon IT GmbH
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
 #include "GLApp.h"
-#include "MathTools.h" //Min, max
+#include "Helper/MathTools.h" //Min, max
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
 #include "GLComponent.h"
@@ -16,6 +16,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
+#include <imgui/imgui_impl_sdl.h>
+#include <imgui/imgui_internal.h>
+#include "ImguiWindow.h"
+
 #ifndef _WIN32
 #include <unistd.h> //_exit()
 #endif
@@ -45,7 +49,7 @@ GLApplication::GLApplication() {
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
   wnd->SetVisible(true); // Make top level shell
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbRestore = 0;
   fPaintTime = 0.0;
   fMoveTime = 0.0;
@@ -128,7 +132,7 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 	if (doFirstInit) OneTimeSceneInit();
 
   GLWindowManager::RestoreDeviceObjects();
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbRestore++;
 #endif
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
@@ -244,6 +248,12 @@ void GLApplication::Exit() {
 #endif
   SAFE_FREE(logs);
 
+  if(imWnd) {
+      imWnd->destruct();
+      delete imWnd;
+      imWnd = nullptr;
+  }
+
   GLToolkit::InvalidateDeviceObjects();
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
@@ -251,37 +261,39 @@ void GLApplication::Exit() {
   SDL_GL_DeleteContext(mainContext);
   SDL_DestroyWindow(mainScreen);
   SDL_Quit();
-  exit(0);
+  this->quit = true;
+  //exit(0);
   //_exit(0);
-
 }
 
 void GLApplication::UpdateStats() {
 
-  int fTick = SDL_GetTicks();
+  time_type fTick = clock_type::now();
   float eps;
 
   // Update timing
   nbFrame++;
-  float fTime = (float)(fTick - lastTick) * 0.001f;
-  if( (fTick - lastTick) >= 1000 ) {
-     int t0 = fTick;
-     int t = t0 - lastTick;
-     m_fFPS = (float)(nbFrame*1000) / (float)t;
-     eps = (float)(nbEvent*1000) / (float)t;
+  //float fTime = (float)(fTick - lastTick) * 0.001f;
+  std::chrono::duration<double> duration = std::chrono::duration_cast<time_ratio>(fTick - lastTick);
+
+  if( duration.count() >= 1.0 ) { // more than 1.0 sec
+     //int t0 = fTick;
+     //int t = t0 - lastTick;
+     m_fFPS = (float)(nbFrame) / (float)duration.count();
+     eps = (float)(nbEvent) / (float)duration.count();
      nbFrame = 0;
      nbEvent = 0;
-     lastTick = t0;
+     lastTick = fTick;
      sprintf(m_strFrameStats,"%.2f fps (%dx%dx%d)   ",m_fFPS,m_screenWidth,m_screenHeight,m_bitsPerPixel);
      sprintf(m_strEventStats,"%.2f eps C:%d W:%d M:%d J:%d K:%d S:%d A:%d R:%d E:%d O:%d   ",
              eps,nbMouse,nbWheel,nbMouseMotion,nbJoystic,nbKey,nbSystem,nbActive,nbResize,nbExpose,nbOther);
   }
 
-  m_fTime = (float) ( fTick - firstTick ) * 0.001f;
+  m_fTime = (float) m_Timer.Elapsed();
   //m_fElapsedTime = (fTick - lastFrTick) * 0.001f;
   //lastFrTick = fTick;
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   nbPoly=0;
   nbLine=0;
 #endif
@@ -350,23 +362,25 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
 }
 
 void GLApplication::Run() {
-	#ifdef MOLFLOW
+	#if defined(MOLFLOW)
 	extern MolFlow *mApp;
 	#endif
 
-	#ifdef SYNRAD
+	#if defined(SYNRAD)
 	extern SynRad*mApp;
 	#endif
   SDL_Event sdlEvent;
 
-  bool   quit = false;
+  quit = false;
   int    ok;
   GLenum glError;
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
   double t1,t0;
 //#endif
 
   // Stats
+  m_Timer.ReInit();
+  m_Timer.Start();
   m_fTime        = 0.0f;
   //m_fElapsedTime = 0.0f;
   m_fFPS         = 0.0f;
@@ -386,11 +400,17 @@ void GLApplication::Run() {
   nbWheel        = 0;
 
   //lastTick = lastFrTick = firstTick = SDL_GetTicks();
-  lastTick  = firstTick = SDL_GetTicks();
+  lastTick  = clock_type::now();
 
   mApp->CheckForRecovery();
   wereEvents = false;
-				
+  wereEvents_imgui = 2;
+
+  if(!imWnd) {
+      imWnd = new ImguiWindow(this);
+      imWnd->init();
+  }
+
   //Wait for user exit
   while( !quit )
   {
@@ -398,8 +418,47 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
+         if(imWnd) {
+             auto ctx = ImGui::GetCurrentContext();
 
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
+             bool activeImGuiEvent = (ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)
+                                     || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1)
+                                     || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1);
+             if(!activeImGuiEvent){
+                 // workaround for some mouse events getting triggered on old implementation first, results e.g. in selection-rectangle when clicking on ImGui window
+                 // ImGui_ImplSDL2_NewFrame updates the mouse position, but is only called on ImGui render cycle
+                 // Check for mouse events in imgui windows manually
+                 // FIXME: Can be removed when GUI has been fully moved to ImGui
+                 if(sdlEvent.type == SDL_MOUSEBUTTONDOWN){
+                     for(auto win : ctx->Windows){
+                         if(win->Active) {
+                             // Mouse position
+                             //auto mouse_pos = ImGui::GetIO().MousePos;
+                             auto& mouse_pos = sdlEvent.button;
+                             if (win->OuterRectClipped.Min.x < mouse_pos.x &&
+                                 win->OuterRectClipped.Max.x > mouse_pos.x
+                                 &&
+                                 win->OuterRectClipped.Min.y < mouse_pos.y &&
+                                 win->OuterRectClipped.Max.y > mouse_pos.y) {
+                                 activeImGuiEvent = true;
+                                 break;
+                             }
+                         }
+                     }
+                 }
+             }
+             if (activeImGuiEvent) {
+                 wereEvents_imgui = 3;
+                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
+
+                 }
+                 continue;
+             }
+         }
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
+            wereEvents = true;
+            wereEvents_imgui = 3;
+        }
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
@@ -442,12 +501,12 @@ void GLApplication::Run() {
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
        // Call FrameMove
        ok = FrameMove();
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
        t1 = GetTick();
        fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0); //Moving average over 10 FrameMoves
 //#endif
@@ -459,7 +518,8 @@ void GLApplication::Run() {
        }
 
        // Repaint
-	   if (wereEvents) {
+       if (wereEvents || wereEvents_imgui > 0) {
+           wereEvents_imgui -= 1; // allow to queue multiple imgui passes
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
 	   }
@@ -467,9 +527,7 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
-
        SDL_Delay(100);
-
      }
       
   }
@@ -477,4 +535,9 @@ void GLApplication::Run() {
   //Clean up and exit
   Exit();
   
+}
+
+void GLApplication::RequestExit()
+{
+    quit = true; //will be executed in next Run loop
 }

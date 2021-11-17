@@ -17,12 +17,16 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+
+#include "SMP.h"
+
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define NOMINMAX
 
 #include <windows.h>
 #include <stdio.h>
 #include <process.h>
+#include <malloc.h>
 void PrintLastErrorText(LPTSTR suff);
 
 #else
@@ -67,18 +71,19 @@ int build_key (char *name)
 }
 #endif
 
-#if defined(__MACOSX__) || defined(__APPLE__)
+#if not (defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64))
+//#if defined(__MACOSX__) || defined(__APPLE__)
 // according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
 #include <signal.h>
 #include <sys/ipc.h>
+#include <string>
+
 volatile int alarm_triggered = 0;
 void alarm_handler(int sig)
 {
     alarm_triggered = 1;
 }
 #endif
-
-#include "SMP.h"
 
 // create named semaphore related to dp->semaname
 // ret -1 on fail
@@ -190,20 +195,16 @@ Dataport *CreateDataport(char *name, size_t size) {
 
     dp = (Dataport *) malloc(sizeof(Dataport));
 
-    if (dp == NULL) {
+    if (dp == nullptr) {
 
         printf("CreateDataport(): Not enough memory...");
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 
     strcpy(dp->name, name);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(dp->semaname, "%s_sema", name);
-#else
-    sprintf(dp->semaname,"%s_sema",name); // creates semaphore as /dev/sem/%s_sema
-#endif
+    sprintf(dp->semaname,"%s_sema",name); // for linux creates semaphore as /dev/sem/%s_sema
     /* ------------------- Create shared memory ------------------- */
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -232,10 +233,10 @@ Dataport *CreateDataport(char *name, size_t size) {
 
     }
 
-    if (dp->mem == NULL) {
+    if (dp->mem == nullptr) {
         PrintLastErrorText("CreateDataport(): CreateFileMapping() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 
 #else
@@ -247,21 +248,21 @@ Dataport *CreateDataport(char *name, size_t size) {
     if (dp->shmFd < 0) {
         PrintLastErrorText("CreateDataport(): shm_open() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 
 #if defined(__MACOSX__) || defined(__APPLE__)
 // Increase shared memory size from 0 to size
     struct stat mapstat;
     if (-1 != fstat(dp->shmFd, &mapstat) && mapstat.st_size == 0) {
-        ftruncate(dp->shmFd, size);
+        status = ftruncate(dp->shmFd, size);
     }
     else
-    return dp;
+        return dp;
     if (status != 0) {
         PrintLastErrorText("CreateDataport(): ftruncate() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #else
     // Increase shared memory size from 0 to size
@@ -269,14 +270,14 @@ Dataport *CreateDataport(char *name, size_t size) {
     if (status != 0) {
         PrintLastErrorText("CreateDataport(): ftruncate() failed");
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif //__APPLE__
 
 #endif
     /* ------------------- Create the semaphore ------------------- */
     if (CreateSemaphore(dp) == -1) {
-        return NULL;
+        return nullptr;
     }
 
     /* ------------------- Map the memomy ------------------- */
@@ -285,28 +286,29 @@ Dataport *CreateDataport(char *name, size_t size) {
     dp->buff = MapViewOfFile(dp->mem, FILE_MAP_WRITE, 0, 0, 0); //With this function write access equals all_access
 
 
-    if (dp->buff == NULL) {
+    if (dp->buff == nullptr) {
 
         PrintLastErrorText("CreateDataport(): MapViewOfFile() failed");
         CloseHandle(dp->mem);
         CloseHandle(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 #else
 
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
+    if (dp->buff == nullptr || dp->buff == MAP_FAILED) {
         PrintLastErrorText("CreateDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
     //memset(dp->buff, 0, size);//Debug
 
+    dp->size = size;
     return (dp);
 }
 
@@ -318,11 +320,11 @@ Dataport *OpenDataport(char *name, size_t size) {
 
     dp = (Dataport *) malloc(sizeof(Dataport));
 
-    if (dp == NULL) {
+    if (dp == nullptr) {
 
         printf("OpenDataport(): Not enough memory...");
         free(dp);
-        return NULL;
+        return nullptr;
 
     }
 
@@ -364,10 +366,12 @@ Dataport *OpenDataport(char *name, size_t size) {
 #else
     dp->shmFd = shm_open(name, O_RDWR, 0777);
     if (dp->shmFd < 0) {
-        PrintLastErrorText("OpenDataport(): shm_open() failed");
+        std::string errorString = "OpenDataport(): shm_open() failed for file ";
+        errorString.append(name);
+        PrintLastErrorText(errorString.c_str());
         close(dp->shmFd);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
     /* ------------------- Link to the semaphore ------------------- */
@@ -387,12 +391,12 @@ Dataport *OpenDataport(char *name, size_t size) {
     }
 #else
     dp->buff = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, dp->shmFd, 0);
-    if (dp->buff == NULL || dp->buff == MAP_FAILED) {
+    if (dp->buff == nullptr || dp->buff == MAP_FAILED) {
         PrintLastErrorText("OpenDataport(): mmap() failed");
         close(dp->shmFd);
         close(dp->sema);
         free(dp);
-        return NULL;
+        return nullptr;
     }
 #endif
 
@@ -574,15 +578,17 @@ bool CloseDataport(Dataport *dp) {
 
 // Timing stuff
 
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 bool usePerfCounter;         // Performance counter usage
 LARGE_INTEGER perfTickStart; // First tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
-#endif
 DWORD tickStart;
+#else
+struct timespec tickStart;
+#endif
 
 void InitTick(){
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 		LARGE_INTEGER qwTicksPerSec;
 		usePerfCounter = QueryPerformanceFrequency(&qwTicksPerSec);
 		if (usePerfCounter) {
@@ -591,30 +597,30 @@ void InitTick(){
 		}
 		tickStart = GetTickCount();
 #else
-        tickStart = (DWORD)time(NULL);
+    clock_gettime(CLOCK_MONOTONIC, &tickStart);
 #endif
 };
 double GetTick() {
 
     // Number of sec since the application startup
-#ifdef WIN
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     if (usePerfCounter) {
 		LARGE_INTEGER t, dt;
 		QueryPerformanceCounter(&t);
 		dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
 		return (double)(dt.QuadPart) / perfTicksPerSec;
 	}
-	else {
+    else {
 		return (double)((GetTickCount() - tickStart) / 1000.0);
 	}
-
 #else
-    if (tickStart < 0)
-        tickStart = time(NULL);
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((double)(tv.tv_sec - tickStart)*1000.0 + (double)tv.tv_usec / 1000.0);
+    struct timespec ts_end{};
+    clock_gettime(CLOCK_MONOTONIC, &ts_end);
+    uint64_t time_diff = (ts_end.tv_sec - tickStart.tv_sec) * 1000000000ULL + ts_end.tv_nsec -
+            tickStart.tv_nsec; // diff rounded to nsec to prevent errors
+    
+    return ((double)time_diff / 1e9);
 #endif
 }
 
@@ -658,298 +664,3 @@ void PrintLastErrorText( const char* errorMsg )
 
 }
 #endif
-
-
-#ifdef LINUXOLDCODE
-
-// Linux code
-
-#include <sys/types.h>
-
-/*typedef struct {
-     int              sema;
-     int              shar;
-     int              key;
-     pid_t            creator_pid;
-     char             body;
-} Dataport;*/
-
-#include "SMP.h"
-#include <stdio.h>
-/*#include <dataport.h>
-#include <boolean.h>
-#include <shared.h>
-#include <sema.h>*/
-#include <cstring>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <errno.h>
-#include <strings.h>
-#include <unistd.h>
-
-/****************************************************************************
-*
-*		Code for build_key function 
-*               --------------------------- 
-* 
-*    Function rule : To build a unique key from the dataport name
-*
-*    Argin : - The dataport name
-* 
-*    Argout : No argout	
-* 
-*    This function returns the key or -1 if it fails
-*
-****************************************************************************/
-
-int build_key (char *name)
-{
-    int key;
-
-/* Test dataport name length */
-
-      if (strlen(name)>25)
-    {
-        fprintf(stderr,"build_key(): dataport name too long (>25)\n");
-        return (-1); /* name too long */
-    }
-
-/* Build key */
-
-    for (key = 0;*name;name++)
-    {
-        key = HASH_BASE * key + *name;
-    }
-
-      return (key % HASH_MOD);
-}
-
-/****************************************************************************
-*
-*		Code for CreateDataport function
-*               --------------------------------
-*
-*    Function rule : To create a complete dataport (shared memory and its
-*							associated semaphore)
-*
-*    Argin : - The dataport name
-*            - The shared memory size wanted by the user
-*
-*    Argout : No argout
-*
-*    This function returns the datport pointer or NULL if it fails
-*
-****************************************************************************/
-
-Dataport *CreateDataport(char *name,long size)
-{
-   int key;
-   Dataport *dp;
-   int shmid;
-    int semid;
-    int full_size;
-
-/* Build a key from the dataport name */
-
-   key = build_key(name);
-   if (key == -1)
-        return(NULL);
-
-/* Get shared memory and semaphore */
-
-    full_size = size + sizeof(Dataport);
-   dp = (Dataport *)get_shared(full_size,key,true,&shmid);
-   if (dp==(Dataport *)(-1))
-       return (NULL);
-   dp->shar = shmid;
-
-/* Get semaphore to protect the shared memory */
-
-   semid = define_sema(1,key,true);
-    if (semid == -1)
-        return(NULL);
-    dp->sema = semid;
-
-/* Init. dataport own parameters and leave function */
-
-   dp->creator_pid = getpid();
-   dp->key = key;
-   return (dp);
-}
-
-/****************************************************************************
-*
-*		Code for OpenDataport function
-*               ------------------------------
-*
-*    Function rule : To link a process to an existing dataport
-*
-*    Argin : - The dataport name
-*            - The dataport shared memory size
-*
-*    Argout : No argout
-*
-*    This function returns a pointer to the dataport shm or NULL if it
-*	  fails
-*
-****************************************************************************/
-
-Dataport *OpenDataport(char *name,long size)
-{
-   int key;
-   Dataport *dp;
-   int shmid;
-    int semid;
-
-/* Build the key from dataport name */
-
-   key = build_key(name);
-   if (key == -1)
-       return (NULL); /* Name not in lookup table */
-
-/* Link the process to the dataport shared memory */
-
-   dp = (Dataport *)get_shared (size, key, false, &shmid);
-   if (dp==(Dataport *)(-1))
-        return (NULL);
-   dp->shar = shmid;
-
-/* Link the process to the dataport semaphore */
-
-   semid = define_sema (1, key, false);
-    if (semid == -1)
-   {
-        release_shared(dp);
-        return(NULL);
-   }
-   dp->sema = semid;
-   return (dp);
-}
-
-/****************************************************************************
-*
-*		Code for AccessDataport function
-*               --------------------------------
-*
-*    Function rule : To take a dataport control
-*
-*    Argin : - Address of dataport shared memory
-*
-*    Argout : No argout
-*
-*    This function returns 0 when the process gets the dataport control or
-*	  -1 when it fails
-*
-****************************************************************************/
-
-long AccessDataport(Dataport * dp)
-{
-   return(get_sema (dp->sema));
-}
-
-/****************************************************************************
-*
-*		Code for AccessDataportNoWait function
-*               --------------------------------------
-*
-*    Function rule : To take a dataport control
-*
-*    Argin : - Address of dataport shared memory
-*
-*    Argout : No argout
-*
-*    This function returns 0 when the process gets the dataport control or
-*	  immediately -1 when it fails
-*
-****************************************************************************/
-
-long AccessDataportNoWait(Dataport *dp)
-{
-   return(get_sema_nowait (dp->sema));
-}
-
-/****************************************************************************
-*
-*		Code for ReleaseDataport function
-*               ---------------------------------
-*
-*    Function rule : To release a dataport control
-*
-*    Argin : - Address of dataport shared memory
-*
-*    Argout : No argout
-*
-*    This function returns 0 if the dataport is released. Otherwise, the
-*	  function returns -1.
-*
-****************************************************************************/
-
-long ReleaseDataport(Dataport *dp)
-{
-   return(release_sema (dp->sema));
-}
-
-/****************************************************************************
-*
-*		Code for CloseDataport function
-*               -------------------------------
-*
-*    Function rule : To return the free memory in a block and to return
-*		     				largest free area.
-*
-*    Argin : - Address of the allocation table
-*            - The buffer size
-*
-*    Argout : - The largest free area size
-*	      	  - The amount of free memory
-*
-*    This function returns -1 if one error occurs and the error code will
-*    be set
-*
-****************************************************************************/
-
-long CloseDataport(Dataport *dp,char *name)
-{
-   int key,shar;
-
-/* The caller is the dataport creator ? */
-
-/* JMC suppress that test on september 8 94 *******
-*   if (dp->creator_pid != getpid())
-*   {
-*    	fprintf(stderr,"This process did not create the dataport\n");
-*    	return (-1);
-*   }
-*/
-/* Build the key from dataport name */
-
-   key = build_key(name);
-   if (key==-1)
-   {
-        fprintf(stderr,"The key for this name could not be found\n");
-        return (-1); /* Name not in lookup table */
-   }
-
-/* Is it the correct key ? */
-
-   if (dp->key != key)
-   {
-        fprintf(stderr,"This dataport does not correspond to the name\n");
-        return (-1); /* Name and dp to not correspond */
-   }
-
-/* Delete dataport semaphore */
-
-   delete_sema (dp->sema);
-
-/* Release and delte the shared memory */
-
-   shar = dp->shar;
-   release_shared((char *)dp);
-   delete_shared (shar);
-
-   return (0);
-}
-
-#endif
-

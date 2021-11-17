@@ -27,7 +27,7 @@ using namespace pugi;
 #include "GLApp/GLToolkit.h"
 #include <cereal/archives/binary.hpp>
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynradDistributions.h" //material, for Save, etc.
 #endif
 
@@ -39,7 +39,7 @@ struct NeighborFacet {
 class CellProperties {
 public:
 	//Old C-style array to save memory
-	Vector2d* points;
+	std::vector<Vector2d> points;
 	size_t nbPoints;
 	double   area;     // Area of element
 	float   uCenter;  // Center coordinates
@@ -50,7 +50,7 @@ public:
 
 class FacetGroup; //forward declaration as it's the return value of Explode()
 
-class Facet { //Interface facet
+class InterfaceFacet { //Interface facet
 
 	typedef struct {
 		size_t u;
@@ -62,13 +62,14 @@ class Facet { //Interface facet
 public:
 
 	// Constructor/Desctructor/Initialisation
-	Facet(size_t nbIndex);
-	~Facet();
+	explicit InterfaceFacet(size_t nbIndex);
+	~InterfaceFacet();
 
 	//void  DetectOrientation();
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
+    bool  SetTextureProperties(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
 	bool  BuildMesh();
 	void  BuildMeshGLList();
@@ -79,9 +80,10 @@ public:
 	void  FillVertexArray(InterfaceVertex *v);
 	size_t GetTexSwapSize(bool useColormap);
 	size_t GetTexSwapSizeForRatio(double ratio, bool useColor);
-	size_t GetNbCell();
+	std::pair<size_t, size_t> GetNbCell();
 	size_t GetNbCellForRatio(double ratio);
-	void  SwapNormal();
+    std::pair<size_t, size_t> GetNbCellForRatio(double ratioU, double ratioV);
+    void  SwapNormal();
 	void  ShiftVertex(const int& offset = 1);
 	void  InitVisibleEdge();
 	size_t   GetIndex(int idx);
@@ -101,11 +103,11 @@ public:
 	void  LoadTXT(FileReader *file);
 	void  SaveTXT(FileWriter *file);
 	void  LoadGEO(FileReader *file, int version, size_t nbVertex);
-	bool  IsCoplanarAndEqual(Facet *f, double threshold);
-	void  CopyFacetProperties(Facet *f, bool copyMesh = false);
+	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold);
+	void  CopyFacetProperties(InterfaceFacet *f, bool copyMesh = false);
 
 	//Different signature (and implementation)
-#ifdef MOLFLOW //Implementations in MolflowFacet.cpp
+#if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
 	void  ConvertOldDesorbType();
 	void  LoadSYN(FileReader *file, int version, size_t nbVertex);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
@@ -113,24 +115,28 @@ public:
 	void  SaveXML_geom(pugi::xml_node f);
 	size_t GetHitsSize(size_t nbMoments);
 	size_t GetTexRamSize(size_t nbMoments);
-	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir, size_t nbMoments);
-	void  BuildTexture(TextureCell *texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
+    size_t GetTexRamSizeForCellNumber(int width, int height, bool useMesh, bool countDir, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratio, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV, size_t nbMoments);
+    void  BuildTexture(const std::vector<TextureCell> &texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
 	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
 	void Sum_Neighbor(const int& i, const int& j, const double& weight, TextureCell *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 	double DensityCorrection();
 #endif
-#ifdef SYNRAD //Implementations in SynradFacet.cpp
-	void  LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+#if defined(SYNRAD) //Implementations in SynradFacet.cpp
+	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
+    void LoadSYNResults(FileReader *file, int version, FacetHitBuffer &facetCounter);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();
 	size_t GetTexRamSize();
-	size_t GetTexRamSizeForRatio(double ratio, bool useMesh, bool countDir);
-	void  BuildTexture(TextureCell *texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
-	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, TextureCell* texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
-	double GetSmooth(const int &i, const int &j, TextureCell *texture, const size_t& textureMode, const float &scaleF);
+	size_t GetTexRamSizeForRatio(double ratio) const;
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
+    void  BuildTexture(const std::vector<TextureCell> &texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
+	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, const std::vector<TextureCell> &texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
+	double GetSmooth(const int &i, const int &j, const std::vector<TextureCell> &texture, const size_t& textureMode, const float &scaleF);
 #endif
 
 
@@ -138,8 +144,8 @@ public:
 	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
 
 	//C-style arrays to save memory (textures can be huge):
-	int      *cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
-	CellProperties* meshvector;
+    std::vector<int> cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
+    std::vector<CellProperties> meshvector;
 	size_t meshvectorsize;
 
 	FacetProperties sh;
@@ -158,8 +164,9 @@ public:
 	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
 	size_t texDimH;         // Texture dimension (a power of 2)
 	size_t texDimW;         // Texture dimension (a power of 2)
-	double tRatio;       // Texture sample per unit
-	bool	textureVisible; //Draw the texture?
+    double tRatioU;       // Texture sample per unit
+    double tRatioV;       // Texture sample per unit
+    bool	textureVisible; //Draw the texture?
 	bool  collinear;      //All vertices are on a line (non-simple)
 	bool	volumeVisible;	//Draw volume?
 	bool    hasMesh;     // Has texture
@@ -177,21 +184,15 @@ public:
 	//Smart selection
 	std::vector<NeighborFacet> neighbors;
 
-#ifdef MOLFLOW
-	std::vector<double> outgassingMap; //outgassing map cell values (loaded from file)
-	std::vector<size_t> angleMapCache; //Stores either the recorded or the generating angle map. Worker::Update reads results here. A better implementation would be to separate recorded and generating angle maps
+#if defined(MOLFLOW)
+	OutgassingMap ogMap;
+    std::vector<size_t> angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
-	double totalFlux;
-	double totalDose;
 
 	//Parametric stuff
 	std::string userOutgassing;
 	std::string userSticking;
 	std::string userOpacity;
-#endif
-
-#ifdef SYNRAD
-
 #endif
 	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };
@@ -199,12 +200,13 @@ public:
 class FacetGroup {
 public:
 	size_t nbV;
-	std::vector<Facet*> facets;
+	std::vector<InterfaceFacet*> facets;
+	double originalPerAreaOutgassing; //Per-area outgassing of the exploded facet
 };
 
 class DeletedFacet {
 public:
-	Facet *f;
+	InterfaceFacet *f;
 	size_t ori_pos;
 	bool replaceOri;
 };

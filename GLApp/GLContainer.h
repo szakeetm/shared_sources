@@ -34,7 +34,7 @@ public:
 
   // Construction
   GLContainer();
-  ~GLContainer();
+  virtual ~GLContainer();
 
   // Parent window
   void SetWindow(GLWindow *parent);
@@ -42,8 +42,9 @@ public:
 
   // Components method
   void Add(GLComponent *comp);
-  void SetCompBoundsRelativeTo(GLComponent * org, GLComponent * src, int dx, int dy, int w, int h);
-  void Remove(GLComponent *comp);
+  static void SetCompBoundsRelativeTo(GLComponent * org, GLComponent * src, int dx, int dy, int w, int h);
+  void Remove(GLComponent *comp,GLContainer* newParent=NULL);
+
   void SetFocus(GLComponent *src);
   void PaintComponents();
   void DoPostDelete();
@@ -54,8 +55,8 @@ public:
   // Event stuff
   void FreezeComp();
   void UnfreezeComp();
-  bool IsEventProcessed();
-  bool IsEventCanceled();
+  bool IsEventProcessed() const;
+  bool IsEventCanceled() const;
   void RelayEvent(SDL_Event *evt);
   void RedirectMessage(GLContainer *cont);
   GLContainer *GetRedirect();

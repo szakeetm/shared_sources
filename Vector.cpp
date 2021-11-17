@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "Vector.h"
-#include "GLApp/MathTools.h" //PI
-#include "Random.h" //RandomPerpendicularVector
+#include "Helper/MathTools.h" //PI
 #include <math.h> //sqrt
 
 Vector2d::Vector2d() {}
@@ -29,7 +28,17 @@ Vector2d::Vector2d(const double &u, const double &v) {
 		this->v = v;
 }
 
-Vector3d::Vector3d() {}
+Vector3d::Vector3d() {
+    this->x = 0.0;
+    this->y = 0.0;
+    this->z = 0.0;
+}
+
+Vector3d::Vector3d(const double &val) {
+    this->x = val;
+    this->y = val;
+    this->z = val;
+}
 
 Vector3d::Vector3d(const double &x, const double &y,const double &z) {
 		this->x = x;
@@ -110,6 +119,30 @@ Vector3d & Vector3d::operator+=(const Vector3d & rhs)
 {
 	*this = *this + rhs;
 	return *this;
+}
+
+double & Vector3d::operator[] (int dim) {
+    if(dim == 0){
+        return x;
+    }
+    else if(dim == 1){
+        return y;
+    }
+    else {
+        return z;
+    }
+}
+
+const double& Vector3d::operator[] (int dim) const {
+    if(dim == 0){
+        return x;
+    }
+    else if(dim == 1){
+        return y;
+    }
+    else {
+        return z;
+    }
 }
 
 double Vector2d::Norme() const {
@@ -212,7 +245,11 @@ double GetOrientedAngle(const Vector2d& v1,const Vector2d& v2) {
 }
 
 Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
-	Vector3d randomVector=Vector3d(rnd(), rnd(), rnd());
+	Vector3d randomVector=Vector3d(
+            ((double) rand() / (RAND_MAX)) + 1,
+            ((double) rand() / (RAND_MAX)) + 1,
+            ((double) rand() / (RAND_MAX)) + 1
+    );
 	Vector3d perpendicularVector=CrossProduct(randomVector,v);
 	return length*perpendicularVector.Normalized();
 }

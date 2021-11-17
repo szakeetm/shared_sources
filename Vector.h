@@ -21,63 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cereal/cereal.hpp>
 #include <optional> //C++17
 
-class Vector3d {
-public:
-	double x;
-	double y;
-	double z;
-	Vector3d();
-	Vector3d(const double &x, const double &y, const double &z);
-	double Norme() const;
-	Vector3d Normalized() const;
-	Vector3d& operator+=(const Vector3d & rhs);
-	
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(CEREAL_NVP(x), CEREAL_NVP(y), CEREAL_NVP(z));
-	}
-};
-
-class Vector2d {
-public:
-	double u;
-	double v;
-	Vector2d();
-	Vector2d(const double &u, const double &v);
-	double Norme() const;
-	Vector2d Normalized() const;
-
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(CEREAL_NVP(u), CEREAL_NVP(v));
-	}
-};
-
-class InterfaceVertex : public Vector3d { //For Interface
-public:
-	bool selected=false;
-	void SetLocation(const Vector3d& v);
-	/*template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(*((Vector3d*)this)); //Write base class
-		archive(selected);
-	}*/
-};
-
-class AxisAlignedBoundingBox{
-public:
-
-	Vector3d min;
-	Vector3d max;
-	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(CEREAL_NVP(min), CEREAL_NVP(max));
-	}
-} ;
+class Vector3d;
+class Vector2d;
 
 Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
@@ -102,3 +47,67 @@ Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS
 double GetOrientedAngle(const Vector2d& v1, const Vector2d& v2);
 Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length);
 bool VertexEqual(const Vector2d& p1, const Vector2d& p2);
+
+class Vector3d {
+public:
+	double x;
+	double y;
+	double z;
+	Vector3d();
+    Vector3d(const double &val);
+	Vector3d(const double &x, const double &y, const double &z);
+	double Norme() const;
+	Vector3d Normalized() const;
+	Vector3d& operator+=(const Vector3d & rhs);
+    double& operator[] (int);
+	const double& operator[] (int) const;
+
+    template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(CEREAL_NVP(x), CEREAL_NVP(y), CEREAL_NVP(z));
+	}
+};
+
+class Vector2d {
+public:
+	double u;
+	double v;
+	Vector2d();
+	Vector2d(const double &u, const double &v);
+	double Norme() const;
+	Vector2d Normalized() const;
+
+	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(CEREAL_NVP(u), CEREAL_NVP(v));
+	}
+};
+
+class InterfaceVertex : public Vector3d { //For Interface
+public:
+    InterfaceVertex() = default;
+    InterfaceVertex(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
+    };
+    InterfaceVertex& operator=(const Vector3d& src){
+        x = src.x;
+        y = src.y;
+        z = src.z;
+        selected = false;
+
+        return *this;
+    };
+	bool selected=false;
+	void SetLocation(const Vector3d& v);
+	/*template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive(*((Vector3d*)this)); //Write base class
+		archive(selected);
+	}*/
+};

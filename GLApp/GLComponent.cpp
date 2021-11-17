@@ -15,7 +15,7 @@ GLComponent::GLComponent(int compId):GLContainer() {
   gBack = 208;
   bBack = 200;
   id = compId;
-  parent = NULL;
+  parent = nullptr;
   focus = false;
   enabled = true;
   visible = true;
@@ -35,7 +35,7 @@ int GLComponent::GetHeight() {
 void GLComponent::SetParent(GLContainer *parent) {
 
   this->parent =parent;
-  SetWindow(parent->GetWindow());
+  if (parent) SetWindow(parent->GetWindow());
 
 }
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <UpdateFeed>
 	<Branches>
-			<Branch name="molflow_public_win" description="MolFlow+ stable releases for Windows 64-bit">
+			<Branch name="synrad_public_win" description="MolFlow+ stable releases for Windows 64-bit">
 			<UpdateManifest>
 				<Version id="2703" name="2.7.3" date="11-12-2018" />
 				<ChangeLog>
@@ -16,7 +16,7 @@
 				</FilesToCopy>
 			</UpdateManifest>
 		</Branch>
-		<Branch name="molflow_public_mac" description="MolFlow+ stable releases for Mac OS">
+		<Branch name="synrad_public_mac" description="MolFlow+ stable releases for Mac OS">
 			<UpdateManifest>
 				<Version id="2703" name="2.7.3" date="11-12-2018" />
 				<ChangeLog>
@@ -31,7 +31,7 @@
 				</FilesToCopy>
 			</UpdateManifest>
 		</Branch>
-		<Branch name="molflow_public_linux_debian" description="MolFlow+ stable releases for x64 Debian Linux">
+		<Branch name="synrad_public_linux_debian" description="MolFlow+ stable releases for x64 Debian Linux">
 			<UpdateManifest>
 				<Version id="2703" name="2.7.3" date="11-12-2018" />
 				<ChangeLog>
@@ -46,7 +46,7 @@
 				</FilesToCopy>
 			</UpdateManifest>
 		</Branch>
-		<Branch name="molflow_public_linux_fedora" description="MolFlow+ stable releases for x64 Fedora Linux">
+		<Branch name="synrad_public_linux_fedora" description="MolFlow+ stable releases for x64 Fedora Linux">
 			<UpdateManifest>
 				<Version id="2703" name="2.7.3" date="11-12-2018" />
 				<ChangeLog>
@@ -61,7 +61,7 @@
 				</FilesToCopy>
 			</UpdateManifest>
 		</Branch>
-		<Branch name="molflow_public" description="MolFlow+ stable releases">
+		<Branch name="synrad_public" description="MolFlow+ stable releases">
 		<UpdateManifest>
 			<Version id="2674" name="2.6.74" date="05-02-2019" />
 			<ChangeLog>

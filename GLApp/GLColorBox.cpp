@@ -7,7 +7,7 @@
 #include "GLButton.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#include "MathTools.h" //Saturate
+#include "Helper/MathTools.h" //Saturate
 //#include <malloc.h>
 #define cimg_display 0
 #define cimg_use_png 1
@@ -244,7 +244,7 @@ void GLColorBox::Paint() {
   glTexCoord2f(0.0f,1.0f);glVertex2i(x    ,y+128);
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly++;
 #endif
 
@@ -295,7 +295,7 @@ void GLColorBox::Paint() {
   glTexCoord2f(0.0f,1.0f);glVertex2i(x+30,yPos+16);
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbPoly++;
 #endif
 
@@ -317,7 +317,7 @@ void GLColorBox::Paint() {
       glVertex2i(x+(i+1)*11-1,y+(j+1)*11-1);
       glVertex2i(x+i*11      ,y+(j+1)*11-1);
       glEnd();
-#ifdef _DEBUG
+#if defined(_DEBUG)
       theApp->nbPoly++;
 #endif
       glColor3f(0.0f,0.0f,0.0f);
@@ -327,7 +327,7 @@ void GLColorBox::Paint() {
       _glVertex2i(x+(i+1)*11-1,y+(j+1)*11-2);
       _glVertex2i(x+i*11      ,y+(j+1)*11-2);
       glEnd();
-#ifdef _DEBUG
+#if defined(_DEBUG)
       theApp->nbLine++;
 #endif
     }
@@ -348,7 +348,7 @@ void GLColorBox::paintBox(int x,int y,int w,int h) {
   _glVertex2i(x,y);
   glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
   theApp->nbLine+=2;
 #endif
 

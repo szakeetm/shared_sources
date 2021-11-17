@@ -96,6 +96,9 @@ GLAxis::GLAxis(GLComponent *parent,int orientation) {
   autoLabeling = true;
   dateFormat = (char *)FR_DATE_FORMAT;
   nbLabel = 0;
+    gridColor.r = 127;
+    gridColor.g = 127;
+    gridColor.b = 127;
   labelColor.r = 0;
   labelColor.g = 0;
   labelColor.b = 0;
@@ -1230,17 +1233,20 @@ GLuint GLAxis::initMarker(const char *name) {
       if( scale==LOG_SCALE && prec<1.0 )
         prec=1.0;
 
+      double relDiff = 0.005;
+      if(max>0)
+          relDiff = (max + min) != 0.0 ? (0.5 * (max - min) / (max + min)) : ((max - min) / (max));
       if (min < 0)
         min = ((int) (min / prec) - 1) * prec;
       else
         if ( scale==LOG_SCALE) min = (int) (min / prec) * prec;
-		else min*=0.95;
+		else min*=std::max(1.0 - relDiff, 0.95);
 
       if (max < 0)
         max = (int) (max / prec) * prec;
       else
         if ( scale==LOG_SCALE) max = ((int) (max / prec) + 1) * prec;
-		else max*=1.05;
+		else max*=std::min(1.0 + relDiff, 1.05);
 
     } // end ( if autoScale )
 
@@ -2151,7 +2157,7 @@ GLuint GLAxis::initMarker(const char *name) {
       pointY[0] = lp.y;
       pointY[1] =  p.y;
       GLColor c = v->GetColor();
-      GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,2,pointX,pointY);
+        GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 2, pointX, pointY, false);
 
     }
 
@@ -2182,7 +2188,7 @@ GLuint GLAxis::initMarker(const char *name) {
     glVertex2i(x,y+height);
     glEnd();
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
     theApp->nbPoly++;
 #endif
 
@@ -2288,7 +2294,7 @@ GLuint GLAxis::initMarker(const char *name) {
       pointX[1] = x+40;
       pointY[0] = y;
       pointY[1] = y;
-      GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,2,pointX,pointY);
+        GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 2, pointX, pointY, false);
       GLAxis::PaintMarker(v->GetMarkerColor(), v->GetMarker(), v->GetMarkerSize(), x + 20, y);
 
     } else if( v->GetViewType() == TYPE_BAR ) {
@@ -2307,7 +2313,7 @@ GLuint GLAxis::initMarker(const char *name) {
         pointX[2] = x+24;pointY[2] = y+4;
         pointX[3] = x+16;pointY[3] = y+4;
         pointX[4] = x+16;pointY[4] = y-4;
-        GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,5,pointX,pointY);
+          GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, 5, pointX, pointY, false);
 
       }
 
@@ -2326,7 +2332,7 @@ GLuint GLAxis::initMarker(const char *name) {
     pointX[1] = x2;
     pointY[0] = y1;
     pointY[1] = y2;
-    GLToolkit::DrawPoly(lWidth,dash,c.r,c.g,c.b,2,pointX,pointY);
+      GLToolkit::DrawPoly(lWidth, dash, c.r, c.g, c.b, 2, pointX, pointY, false);
   }
 
   //   Expert usage
@@ -2478,11 +2484,9 @@ GLuint GLAxis::initMarker(const char *name) {
 
       if (v->GetLineWidth() > 0) {
         GLColor c = v->GetColor();
-        GLToolkit::DrawPoly(v->GetLineWidth(),v->GetStyle(),c.r,c.g,c.b,nb,pointX,pointY);
+          GLToolkit::DrawPoly(v->GetLineWidth(), v->GetStyle(), c.r, c.g, c.b, nb, pointX, pointY, true);
       }
-
     }
-
   }
 
    void GLAxis::paintDataViewNormal(GLDataView *v, GLAxis *xAxis, int xOrg, int yOrg) {
@@ -3111,7 +3115,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x0 + (csize.width + 1), y, x0 + (csize.width + 1) + la, y);
+            drawLine(gridColor,gridStyle,1,x0 + (csize.width + 1), y, x0 + (csize.width + 1) + la, y);
           }
 
           //Draw sub tick
@@ -3156,7 +3160,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x0, y, x0- la, y);
+            drawLine(gridColor,gridStyle,1,x0, y, x0- la, y);
           }
 
           //Draw sub tick
@@ -3224,7 +3228,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           //Draw the grid
           if (gridVisible) {
-            drawLine(labelColor,gridStyle,1,x, y0, x, y0 - la);
+            drawLine(gridColor,gridStyle,1,x, y0, x, y0 - la);
           }
 
           //Draw tick

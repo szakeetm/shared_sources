@@ -21,7 +21,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 #include <stdlib.h>
 #include "Random.h"
-#include "GLApp/MathTools.h"
+#include "Helper/MathTools.h"
+#include <omp.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#include <process.h>
+#else
+#include <unistd.h>
+#include <omp.h>
+
+#endif // def WIN
 
 #define  RK_STATE_LEN 624
 
@@ -31,116 +40,115 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define __forceinline __attribute__((always_inline))
 #endif
 
-/* State of the RNG */
-typedef struct rk_state_
+void MersenneTwister::SetSeed(unsigned long seed)
 {
-  unsigned long key[RK_STATE_LEN];
-  int pos;
-} rk_state;
+    this->seed = seed;
+    seed &= 0xffffffffUL;
 
-rk_state localState;
-
-/* Maximum generated random value */
-#define RK_MAX 0xFFFFFFFFUL
-
-void rk_seed(unsigned long seed, rk_state *state)
-{
-  int pos;
-  seed &= 0xffffffffUL;
-
-  /* Knuth's PRNG as used in the Mersenne Twister reference implementation */
-  for (pos=0; pos<RK_STATE_LEN; pos++)
-  {
-    state->key[pos] = seed;
-    seed = (1812433253UL * (seed ^ (seed >> 30)) + pos + 1) & 0xffffffffUL;
-  }
-
-  state->pos = RK_STATE_LEN;
-}
-
-/* Magic Mersenne Twister constants */
-#define N 624
-#define M 397
-#define MATRIX_A 0x9908b0dfUL
-#define UPPER_MASK 0x80000000UL
-#define LOWER_MASK 0x7fffffffUL
-
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-// Disable "unary minus operator applied to unsigned type, result still unsigned" warning.
-#pragma warning(disable : 4146)
-#endif
-
-/* Slightly optimised reference implementation of the Mersenne Twister */
-__forceinline unsigned long rk_random(rk_state *state)
-{
-  unsigned long y;
-
-  if (state->pos == RK_STATE_LEN)
-  {
-    int i;
-
-    for (i=0;i<N-M;i++)
+    /* Knuth's PRNG as used in the Mersenne Twister reference implementation */
+    for (int pos=0; pos<RK_STATE_LEN; pos++)
     {
-      y = (state->key[i] & UPPER_MASK) | (state->key[i+1] & LOWER_MASK);
-      state->key[i] = state->key[i+M] ^ (y>>1) ^ (-(y & 1) & MATRIX_A);
+        localState.key[pos] = seed;
+        seed = (1812433253UL * (seed ^ (seed >> 30)) + pos + 1) & 0xffffffffUL;
     }
-    for (;i<N-1;i++)
-    {
-      y = (state->key[i] & UPPER_MASK) | (state->key[i+1] & LOWER_MASK);
-      state->key[i] = state->key[i+(M-N)] ^ (y>>1) ^ (-(y & 1) & MATRIX_A);
-    }
-    y = (state->key[N-1] & UPPER_MASK) | (state->key[0] & LOWER_MASK);
-    state->key[N-1] = state->key[M-1] ^ (y>>1) ^ (-(y & 1) & MATRIX_A);
 
-    state->pos = 0;
-  }
-  
-  y = state->key[state->pos++];
-
-  /* Tempering */
-  y ^= (y >> 11);
-  y ^= (y << 7) & 0x9d2c5680UL;
-  y ^= (y << 15) & 0xefc60000UL;
-  y ^= (y >> 18);
-
-  return y;
-}
-
-__forceinline double rk_double(rk_state *state)
-{
-  /* shifts : 67108864 = 0x4000000, 9007199254740992 = 0x20000000000000 */
-  long a = rk_random(state) >> 5, b = rk_random(state) >> 6;
-  return (a * 67108864.0 + b) / 9007199254740992.0;
+    localState.pos = RK_STATE_LEN;
 }
 
 // Initialise the random generator with the specified seed
-void rseed(unsigned long seed) {
-  rk_seed(seed,&localState);
+
+double MersenneTwister::rnd() { return rk_double(); }
+
+double MersenneTwister::Gaussian(const double & sigma) //inline
+{
+
+    //Box-Muller transform
+    //return sigma*sqrt(-2 * log(rnd()))*cos(2 * PI*rnd());
+
+    //Generates a random number following the Gaussian distribution around 0 with 'sigma' standard deviation
+    double v1, v2, r, fac;
+    do {
+        v1 = 2.0*rnd() - 1.0;
+        v2 = 2.0*rnd() - 1.0;
+        r = v1 * v1 + v2 * v2;
+    } while (r >= 1.0);
+    fac = sqrt(-2.0*log(r) / r);
+    return v2 * fac*sigma;
 }
 
-// Returns a uniform distributed double value in the interval ]0,1[
-double rnd() {
-	return rk_double(&localState);
+unsigned long MersenneTwister::GetSeed() {
+    return seed;
 }
 
-double Gaussian(const double &sigma) {
-
-	//Box-Muller transform
-	//return sigma*sqrt(-2 * log(rnd()))*cos(2 * PI*rnd());
-
-	//Generates a random number following the Gaussian distribution around 0 with 'sigma' standard deviation
-	double v1, v2, r, fac;
-	do {
-		v1 = 2.0*rnd() - 1.0;
-		v2 = 2.0*rnd() - 1.0;
-		r = Sqr(v1) + Sqr(v2);
-	} while (r >= 1.0);
-	fac = sqrt(-2.0*log(r) / r);
-	return v2*fac*sigma;
+unsigned long GenerateSeed(size_t offsetIndex) {
+    double time = omp_get_wtime();
+    size_t ms = *(reinterpret_cast<size_t *>(&time)); // just use the bits for hashing
+    int processId;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    processId = _getpid();
+#else
+    processId = ::getpid();
+#endif //  WIN
+    //printf("Random from thread %d\n", index);
+    //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
+    return (unsigned long)(std::hash<unsigned long>()(ms*(std::hash<unsigned long>()(processId+offsetIndex))));
 }
 
-double TruncatedGaussian(gsl_rng *gen, const double &mean, const double &sigma, const double &lowerBound, const double &upperBound) {
-	std::pair<double, double> s;  // Output argument of rtnorm
-	s = rtnorm(gen, lowerBound, upperBound, mean, sigma);
-	return s.first;
+/* Slightly optimised reference implementation of the Mersenne Twister */
+
+unsigned long MersenneTwister::rk_random() //inline
+{
+    unsigned long y;
+
+    if (localState.pos == RK_STATE_LEN)
+    {
+        int i;
+
+        for (i = 0; i < MERSENNE_N - MERSENNE_M; i++)
+        {
+            y = (localState.key[i] & UPPER_MASK) | (localState.key[i + 1] & LOWER_MASK);
+            localState.key[i] = localState.key[i + MERSENNE_M] ^ (y >> 1) ^ (-(y & 1) & MATRIX_A);
+        }
+        for (; i < MERSENNE_N - 1; i++)
+        {
+            y = (localState.key[i] & UPPER_MASK) | (localState.key[i + 1] & LOWER_MASK);
+            localState.key[i] = localState.key[i + (MERSENNE_M - MERSENNE_N)] ^ (y >> 1) ^ (-(y & 1) & MATRIX_A);
+        }
+        y = (localState.key[MERSENNE_N - 1] & UPPER_MASK) | (localState.key[0] & LOWER_MASK);
+        localState.key[MERSENNE_N - 1] = localState.key[MERSENNE_M - 1] ^ (y >> 1) ^ (-(y & 1) & MATRIX_A);
+
+        localState.pos = 0;
+    }
+
+    y = localState.key[localState.pos++];
+
+    /* Tempering */
+    y ^= (y >> 11);
+    y ^= (y << 7) & 0x9d2c5680UL;
+    y ^= (y << 15) & 0xefc60000UL;
+    y ^= (y >> 18);
+
+    return y;
+}
+
+double MersenneTwister::rk_double() //inline
+{
+    /* shifts : 67108864 = 0x4000000, 9007199254740992 = 0x20000000000000 */
+    long a = rk_random() >> 5, b = rk_random() >> 6;
+    return (a * 67108864.0 + b) / 9007199254740992.0;
+}
+
+MersenneTwister::MersenneTwister() {
+#if defined(DEBUG)
+    SetSeed(42424242);
+#else
+    SetSeed(GenerateSeed(0));
+#endif
+}
+
+double TruncatedGaussian::GetGaussian(const double & mean, const double & sigma, const double & lowerBound, const double & upperBound) //inline
+{
+    std::pair<double, double> s;  // Output argument of rtnorm
+    s = rtnorm(this->gen, lowerBound, upperBound, mean, sigma);
+    return s.first;
 }

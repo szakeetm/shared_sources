@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "GLTextField.h"
 #include "GLToolkit.h"
-#include "MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 #include "GLFont.h"
 #include <cstring> //strcpy, etc.
 

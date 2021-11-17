@@ -9,7 +9,8 @@
 #include "../GLButton.h"
 
 //#include <malloc.h>
-#include <math.h>
+#include <list>
+#include <cmath>
 #include <sstream>
 #include <cstring> //strcpy, etc.
 
@@ -44,16 +45,7 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	y2Axis = new GLAxis(this, VERTICAL_RIGHT);
 	displayDuration = 3600;
 
-	colors = {
-		GLColor(255,000,055), //red
-		GLColor(000,000,255), //blue
-		GLColor(000,204,051), //green
-		GLColor(000,000,000), //black
-		GLColor(255,153,051), //orange
-		GLColor(153,204,255), //light blue
-		GLColor(153,000,102), //violet
-		GLColor(255,230,005) //yellow
-	};
+	SetColorSchemeDefault(); // colors
 
 	nbLabel = 0;
 	zoomDrag = false;
@@ -61,10 +53,10 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 
 	chartMenu = new GLMenu();
 	chartMenu->Add("Chart properties",MENU_CHARTPROP);
-	chartMenu->Add(NULL);
+	chartMenu->Add(nullptr);
 	chartMenu->Add("Dataview Y1");
 	chartMenu->Add("Dataview Y2");
-	chartMenu->Add(NULL);
+	chartMenu->Add(nullptr);
 	chartMenu->Add("Copy to Clipboard",MENU_COPYALL);
 	chartMenu->Add("Save file (csv,txt)",MENU_SAVETXT);
 	//chartMenu->Add("Load file (TXT)",MENU_LOADTXT);
@@ -75,8 +67,8 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	zoomButton->SetVisible(false);
 	Add(zoomButton);
 
-	chartOptions = NULL;
-	dvOptions = NULL;
+	chartOptions = nullptr;
+	dvOptions = nullptr;
 
 	// Load NaN constant
 	size_t iNaN = 0x7ff0000bad0000ffL;
@@ -357,8 +349,7 @@ void GLChart::RestoreDeviceObjects() {
 	GLComponent::RestoreDeviceObjects();
 }
 
-GLColor GLChart::GetFirstAvailableColor()
-	{
+GLColor GLChart::GetFirstAvailableColor() {
 		std::vector<size_t> colorCount(colors.size(), 0);
 		int nbViews = GetY1Axis()->GetViewNumber();
 		for (int i = 0; i < nbViews; i++) {
@@ -378,7 +369,40 @@ GLColor GLChart::GetFirstAvailableColor()
 			}
 		}
 		return colors[minIndex];
-	
+}
+
+/*!
+ * @brief Finds the first unused linestyle for a specific color
+ * @param availableColor color that is supposed to be used
+ * @return available style
+ */
+int GLChart::GetFirstAvailableLinestyle(GLColor availableColor) {
+    std::list<std::pair<int,bool>> usedType = {
+            {STYLE_SOLID, false},
+            {STYLE_LONG_DASH, false},
+            {STYLE_DASH_DOT, false},
+            {STYLE_DASH, false},
+            {STYLE_DOT, false}
+    };
+
+    int nbViews = GetY1Axis()->GetViewNumber();
+    for (int i = 0; i < nbViews; i++) {
+        if( GetY1Axis()->GetDataView(i)->GetColor() == availableColor){
+            int style = GetY1Axis()->GetDataView(i)->GetStyle();
+            auto it = std::find_if(usedType.begin(), usedType.end(), [&style](const std::pair<int,bool>& element){ return element.first == style;});
+            if(it != usedType.end()) it->second = true;
+        }
+    }
+    for(auto& usableType : usedType){
+        if(!usableType.second){
+            return usableType.first;
+        }
+    }
+
+    // use the first linestyle in case all of them have been used already
+    // there are enough options, so this or cycling through styles should not be necessary
+    return STYLE_SOLID;
+
 }
 
 void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
@@ -510,8 +534,8 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 	// Measure header ------------------------------------------------------
 	if ( headerVisible && (strlen(header)>0) ) {
 		headerWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(header);
-		int h = GLToolkit::GetDialogFontBold()->GetTextHeight();
-		setRect(&headerR,MX , MY , w-2*MX , h + 10);
+		int height = GLToolkit::GetDialogFontBold()->GetTextHeight();
+		setRect(&headerR,MX , MY , w-2*MX , height + 10);
 	}
 
 	// Compute label number ------------------------------------------------------
@@ -533,15 +557,15 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 		for (i = 0; i < y1Axis->GetViewNumber(); i++) {
 			v = y1Axis->GetDataView(i);
 			if (v->IsLabelVisible()) {
-				int w = GLToolkit::GetDialogFont()->GetTextWidth(v->GetExtendedName());
-				if (w > maxLength) maxLength = w;
+				int width = GLToolkit::GetDialogFont()->GetTextWidth(v->GetExtendedName());
+				if (width > maxLength) maxLength = width;
 			}
 		}
 		for (i = 0; i < y2Axis->GetViewNumber(); i++) {
 			v = y2Axis->GetDataView(i);
 			if (v->IsLabelVisible()) {
-				int w = GLToolkit::GetDialogFont()->GetTextWidth(v->GetExtendedName());
-				if (w > maxLength) maxLength = w;
+				int width = GLToolkit::GetDialogFont()->GetTextWidth(v->GetExtendedName());
+				if (width > maxLength) maxLength = width;
 			}
 		}
 
@@ -1428,4 +1452,16 @@ void GLChart::RemoveDataView(GLDataView *view) {
 			axis->RemoveDataView(view);
 		}
 	}
+}
+
+void GLChart::SetColorSchemeColorblind(){
+    this->colors = ColorSchemes::okabeIto;
+}
+
+void GLChart::SetColorSchemeDefault(){
+    this->colors = ColorSchemes::defaultCol;
+}
+
+const std::vector<GLColor> & GLChart::GetColorScheme() const{
+    return this->colors;
 }

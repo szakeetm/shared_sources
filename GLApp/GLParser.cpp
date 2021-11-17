@@ -6,20 +6,21 @@
 #include <errno.h>
 #include "GLParser.h"
 #include <cstring> //strcpy, etc.
-#include "MathTools.h"
-#ifdef MOLFLOW
+#include "Helper/MathTools.h"
+#include "Helper/StringHelper.h"
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad *mApp;
 #endif
 

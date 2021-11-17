@@ -8,6 +8,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include "GLTypes.h"  //GL_OK
+#include "Helper/Chronometer.h"
 //#include "GLWindow.h"
 //#include "GLComponent.h"
 //class GLWindow;
@@ -15,7 +16,9 @@ class GLComponent;
 class GLWindow;
 //#include "GLFont.h"
 #include <string>
+#include <fmt/core.h>
 
+class ImguiWindow;
 class GLApplication {
 
 protected:
@@ -52,6 +55,7 @@ public:
     virtual void Pause(bool bPause);
     virtual int  Resize(size_t width, size_t height, bool forceWindowed=false);
     void  Run();
+    void  RequestExit();
     void  Exit();
 
     // Statistics management (expert usage)
@@ -72,11 +76,13 @@ public:
     //float             m_fElapsedTime;      // Time elapsed since last frame
     float             m_fFPS;              // Instanteous frame rate
 	float			  m_fTime;             // Number of second since app startup (WIN32 only)
+	Chronometer       m_Timer;
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	bool wereEvents;
+	int wereEvents_imgui{2};
 
-//#ifdef _DEBUG
+//#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;
     int  nbLine;
@@ -86,6 +92,7 @@ public:
 
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
+    ImguiWindow  *imWnd;
 
 //#endif
 
@@ -95,7 +102,7 @@ private:
 
    int m_bitsPerPixel;
    char errMsg[512];
-   int  lastTick;
+   time_type  lastTick;
    //int  lastFrTick;
    int  nbFrame;
    int  nbEvent;
@@ -111,6 +118,8 @@ private:
    int  nbExpose;
    int  firstTick;
 
+   bool quit;
 };
 
 #endif /* _GLAPPH_ */
+

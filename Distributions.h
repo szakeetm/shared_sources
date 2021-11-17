@@ -28,13 +28,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class FileReader;
 #include <vector>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 
 template <class Datatype> class Distribution{ //All methods except Interpolate
 protected:
 	std::vector<std::pair<double,Datatype>> values;
 public:
-	Distribution(); //Sets loglog to false
 	void AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered=false);
 	void AddPair(const double& x, const Datatype& y, const bool& keepOrdered=false);
 	void RemoveValue(const size_t& pos);
@@ -45,15 +44,15 @@ public:
 	void SetY(const size_t& index, const Datatype& y);
 	void Resize(const size_t& N); //Clear, resize and shrink.
 	size_t GetSize();
+	size_t GetMemSize();
 	double GetX(const size_t& index);
 	Datatype GetY(const size_t& index); //GetYValue seems reserved
-	bool isLogLog;
+	[[nodiscard]] const std::vector<std::pair<double,Datatype>>& GetValues() const {
+	    return values;
+	}
+	bool logXinterp=false;
+	bool logYinterp=false;
 };
-
-template <class Datatype> Distribution<Datatype>::Distribution() {
-	//Placeholder to allow simple initialization
-	isLogLog = false;
-}
 
 template <class Datatype> void Distribution<Datatype>::AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered) {
 	if (keepOrdered) {
@@ -103,6 +102,11 @@ template <class Datatype> size_t Distribution<Datatype>::GetSize() {
 	return values.size();
 }
 
+template <class Datatype> size_t Distribution<Datatype>::GetMemSize() {
+    return sizeof(std::vector<std::pair<double,Datatype>>)
+    + (sizeof(std::pair<double,Datatype>) * values.capacity());
+}
+
 template <class Datatype> double Distribution<Datatype>::GetX(const size_t& index) {
 	assert(index < values.size());
 	return values[index].first;
@@ -115,15 +119,16 @@ template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t& in
 
 class Distribution2D:public Distribution<double> { //Standard x-y pairs of double
 public:
-	double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
-	double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
+	[[nodiscard]] double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
+	[[nodiscard]] double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
 
     template<class Archive>
     void serialize(Archive & archive)
     {
         archive(
                 CEREAL_NVP(values),
-                CEREAL_NVP(isLogLog)
+                CEREAL_NVP(logXinterp),
+				CEREAL_NVP(logYinterp)
         );
     }
 };
@@ -137,7 +142,8 @@ public:
     {
         archive(
                 CEREAL_NVP(values),
-                CEREAL_NVP(isLogLog)
+                CEREAL_NVP(logXinterp),
+				CEREAL_NVP(logYinterp)
         );
     }
 };

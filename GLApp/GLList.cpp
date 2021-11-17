@@ -7,7 +7,7 @@
 #include "GLMenu.h"
 #include "GLToolkit.h"
 #include "GLTextField.h"
-#include "MathTools.h" //Min max
+#include "Helper/MathTools.h" //Min max
 //#include <malloc.h>
 #include  <math.h>
 #include <algorithm> //Sort
@@ -15,11 +15,13 @@
 #include "GLWindowManager.h"
 #include <Vector.h>
 #include <iomanip> //stream setprecision
-#ifdef MOLFLOW
+#include <sstream>
+
+#if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
 
@@ -32,32 +34,32 @@ template<class T> int cmp_column(const void *lhs_, const void *rhs_);
 size_t clickedCol;
 bool sortDescending;
 
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 extern MolFlow *mApp;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 extern SynRad *mApp;
 #endif
 
 GLList::GLList(int compId) :GLComponent(compId) {
 
 	Sortable = false;
-	worker = NULL;
+	worker = nullptr;
 	nbCol = 0;
 	nbRow = 0;
 	selectionMode = SINGLE_ROW;
 	cHeight = 15;
-	cWidths = NULL;
-	cEdits = NULL;
-	cAligns = NULL;
-	cColors = NULL;
-	cNames = NULL;
-	rNames = NULL;
-	values = NULL;
-	uValues = NULL;
-	edit = NULL;
-	cornerLabel = NULL;
+	cWidths = nullptr;
+	cEdits = nullptr;
+	cAligns = nullptr;
+	cColors = nullptr;
+	cNames = nullptr;
+	rNames = nullptr;
+	values = nullptr;
+	uValues = nullptr;
+	edit = nullptr;
+	cornerLabel = nullptr;
 	isEditing = false;
 	gridVisible = false;
 	SetBorder(BORDER_BEVEL_IN);
@@ -1042,7 +1044,7 @@ int GLList::GetValueInt(size_t row, size_t column) {
 	}
 	catch (Error &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
+		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return -1;
 	}
@@ -1057,7 +1059,7 @@ double GLList::GetValueDouble(size_t row, size_t column) {
 	}
 	catch (Error &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.GetMsg(), row);
+		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 }
@@ -1672,11 +1674,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						clickedCol = clickedColTmp;
 						if (this == mApp->facetList) mApp->UpdateFacetHits(true);
 						//define sort variable type
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 						typedef int SORTVAR;
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 						typedef double SORTVAR;
 #endif
 
@@ -1691,11 +1693,11 @@ void GLList::ManageEvent(SDL_Event *evt) {
 						// Step 3) Use the table
 						for (int i = 0; i < nbRow; i++) {
 							for (int j = 0; j < nbCol; j++) {
-#ifdef MOLFLOW
+#if defined(MOLFLOW)
 								table[i][j] = GetValueInt(i, j);
 #endif
 
-#ifdef SYNRAD
+#if defined(SYNRAD)
 								table[i][j] = GetValueDouble(i, j);
 #endif
 							}
