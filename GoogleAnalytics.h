@@ -5,14 +5,15 @@
 #ifndef MOLFLOW_PROJ_GOOGLEANALYTICS_H
 #define MOLFLOW_PROJ_GOOGLEANALYTICS_H
 
-#define REMOTE_FEED "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"
 #define PUBLIC_WEBSITE "https://molflow.web.cern.ch/"
 #define DOWNLOAD_PAGE "https://molflow.web.cern.ch/content/downloads"
 #define GA_PROJECT_ID "UA-86802533-2"
 
 #if defined(MOLFLOW)
+#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_molflow.xml"
 #define BRANCH_NAME "molflow_public"
 #elif defined(SYNRAD)
+#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_synrad.xml"
 #define BRANCH_NAME "synrad_public"
 #endif //BRANCH_NAME
 
