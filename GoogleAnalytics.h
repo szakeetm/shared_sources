@@ -10,13 +10,11 @@
 #define GA_PROJECT_ID "UA-86802533-2"
 
 #if defined(MOLFLOW)
-#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_molflow.xml"
+#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/dev_test/autoupdate_molflow.xml"
 #define BRANCH_NAME "molflow_public"
-#define APP_NAME "molflow"
 #elif defined(SYNRAD)
 #define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_synrad.xml"
 #define BRANCH_NAME "synrad_public"
-#define APP_NAME "synrad"
 #endif //BRANCH_NAME
 
 #if defined(__LINUX_FEDORA) // set by cmake
@@ -25,9 +23,12 @@
 #elif defined(__LINUX_DEBIAN) // set by cmake
 #define BRANCH_OS_SUFFIX "_linux_debian"
 #define OS_ID "debian"
-#elif defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+#elif defined(WIN32) || defined(_WIN32) || (defined(__CYGWIN__) && defined(__x86_64__)) || defined(__MINGW32__)
 #define BRANCH_OS_SUFFIX "_win"
-#define OS_ID "win"
+#define OS_ID "win_x86"
+#elif defined(WIN64) || defined(_WIN64) || (defined(__CYGWIN__) && defined(__X86__)) || defined(__MINGW64__)
+#define BRANCH_OS_SUFFIX "_win"
+#define OS_ID "win_x64"
 #elif (defined(__MACOSX__) || defined(__APPLE__)) && defined(__ARM_ARCH)
 #define BRANCH_OS_SUFFIX "_mac_arm"
 #define OS_ID "mac_arm"

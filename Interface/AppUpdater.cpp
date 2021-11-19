@@ -313,7 +313,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string os_fullname;
                     std::string os_prefix;
                     bool validOS = false;
-                    for (xml_node osNode : updateNode.children("ValidForOS")) {
+                    for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
                         if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){
                             // found
                             validOS = true;
@@ -328,8 +328,14 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string namedRelease = os_prefix + "_" + newUpdate.name;
 					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrlPathPrefix").as_string();
                     newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    if(newUpdate.zipName.empty()){
+                        newUpdate.zipName = namedRelease + ".zip";
+                    }
                     newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
-                    newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+                    newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
+                    if(newUpdate.folderName.empty()){
+                        newUpdate.folderName = namedRelease;
+                    }
 
                     // TODO: Add os dependent files
 					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
