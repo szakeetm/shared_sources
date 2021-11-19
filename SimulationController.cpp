@@ -641,8 +641,8 @@ int SimulationController::Start() {
             if (!thr.particle->particle.pay)
                 thr.particle->particle.pay = new RopePayload;
         }
-        else if (thr.particle->particle.pay)
-            delete thr.particle->particle.pay;
+        /*else if (thr.particle->particle.pay)
+            delete thr.particle->particle.pay;*/
     }
 
     if (simulation->model->otfParams.desorptionLimit > 0) {

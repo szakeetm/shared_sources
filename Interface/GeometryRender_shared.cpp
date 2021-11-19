@@ -1199,6 +1199,258 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
         auto delta = this->bb.max - this->bb.min;
         auto bbox = bb;
         if(mApp->aabbVisu.boxExpansion)
+            bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002)*delta*level);
+
+        glPointSize(std::max(1.0f, 5.0f - level * 0.5f));
+        glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 1.2f);
+
+        glBegin(GL_POINTS);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+        glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+        glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+        glEnd();
+
+
+        // draw full box for selected node
+        if(mApp->aabbVisu.onlyBorder || (selection && mApp->aabbVisu.selectedNode == currentNodeIndex)) {
+            /*if(mApp->aabbVisu.onlyBorder) {
+                glDisable(GL_DEPTH_TEST);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ZERO);
+            }*/
+
+            // only draw fille box for selection
+            if(!mApp->aabbVisu.onlyBorder) {
+                glColor4f(color[0], color[1], color[2], color[3] * mApp->aabbVisu.alpha * 0.2f);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+                glEnd();
+
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+                glEnd();
+
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+                glEnd();
+
+
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+                glEnd();
+
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+                glEnd();
+
+                glBegin(GL_POLYGON);
+                glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+                glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+                glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+                glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+                glEnd();
+            }
+            // end transparent sides
+
+            // also draw edges
+            glPushAttrib(GL_LINE_BIT);
+
+            glLineWidth(std::max(1.0f, 5.0f - level * 0.5f));
+
+            glEnable(GL_BLEND);
+            if(mApp->aabbVisu.onlyBorder && !selection) {
+                glEnable(GL_DEPTH_TEST);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+            }
+            else
+                glBlendFunc(GL_ONE, GL_ZERO);
+            glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 0.2f);
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glBegin(GL_LINE_LOOP);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.min.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.min.y, bbox.max.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.max.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glEnd();
+            glBegin(GL_LINES);
+            glVertex3d(bbox.min.x, bbox.max.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.min.z);
+            glEnd();
+
+            glLineStipple(1, 0x0101);
+            glEnable(GL_LINE_STIPPLE);
+            glBegin(GL_LINE_STRIP);
+            glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);
+            glVertex3d(bbox.max.x, bbox.max.y, bbox.max.z);
+            glEnd();
+            glDisable(GL_LINE_STIPPLE);
+
+            glPopAttrib();
+        }
+
+        if(!node->IsLeaf() && !mApp->aabbVisu.onlyBorder) {
+            int axis = node->SplitAxis();
+            double plane = node->SplitPos();
+
+            bbox = bb;
+            bbox.min[axis] = plane;
+            bbox.max[axis] = plane;
+            if(mApp->aabbVisu.boxExpansion)
+                bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.002 : 0.002) * delta[axis], axis);
+
+            Vector3d a = bbox.min;
+            Vector3d b = bbox.min;
+            Vector3d c = bbox.max;
+            Vector3d d = bbox.max;
+
+            const int axisSwap = (axis + 2) % 3;
+            b[axisSwap] = bbox.max[axisSwap];
+            d[axisSwap] = bbox.min[axisSwap];
+
+            // begin transparent sides
+            if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+                glColor4f(color[0], color[1], color[2], std::max(color[3] * mApp->aabbVisu.alpha * 1.2f, 0.45f));
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            else{
+                glColor4f(color[0], color[1], color[2], color[3] * mApp->aabbVisu.alpha);
+            }
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glBegin(GL_POLYGON);
+            glVertex3d(a.x, a.y, a.z);
+            glVertex3d(b.x, b.y, b.z);
+            glVertex3d(c.x, c.y, c.z);
+            glVertex3d(d.x, d.y, d.z);
+            glEnd();
+            // end transparent sides
+        }
+
+        if (mApp->antiAliasing) {
+            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glDisable(GL_LINE_SMOOTH);
+        }
+        glDepthMask(GL_TRUE);
+    }
+
+    if(level < max_level && !node->IsLeaf()) {
+        int axis = node->SplitAxis();
+        double plane = node->SplitPos();
+
+        auto bbl = bb.Split(axis, plane, true);
+        auto bbr = bb.Split(axis, plane, false);
+        if(mApp->aabbVisu.showBranchSide[0]) DrawAABBPlane(lnode, bbl, currentNodeIndex + 1, level + 1, selection);
+        if(mApp->aabbVisu.showBranchSide[1]) DrawAABBPlane(lnode, bbr, node->AboveChild(), level + 1, selection);
+    }
+}
+/*
+
+void Geometry::DrawAABBPlaneLine(const KdAccelNode *lnode, AxisAlignedBoundingBox bb, int currentNodeIndex, int level,
+                             bool selection) {
+
+
+    const KdAccelNode *node = &lnode[currentNodeIndex];
+
+    const int max_level = (mApp->aabbVisu.showLevelAABB[1] == -1) ? 64 : mApp->aabbVisu.showLevelAABB[1];
+    if(node->IsLeaf() && !mApp->aabbVisu.showAABBLeaves) return;
+
+    if((!mApp->aabbVisu.travStep || (mApp->aabbVisu.travStep && node->nPrims > 0)) && ((!selection && mApp->aabbVisu.selectedNode != currentNodeIndex) || (selection && mApp->aabbVisu.selectedNode == currentNodeIndex)) && (mApp->aabbVisu.showLevelAABB[0] == -1 || ((mApp->aabbVisu.showLevelAABB[0] <= level) && (level <= mApp->aabbVisu.showLevelAABB[1])))) {
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        if (mApp->antiAliasing) {
+            glEnable(GL_LINE_SMOOTH);
+            glEnable(GL_BLEND);
+            glEnable(GL_ALPHA_TEST);
+            glEnable(GL_DEPTH_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+        }
+
+        float rate = 0.0f;
+        std::array<float,4> color{0.0f};
+        if(mApp->aabbVisu.travStep && node->nPrims > 0){
+
+        }
+        else if(mApp->aabbVisu.showStats){
+            rate = (!mApp->aabbVisu.rateVector->empty() || mApp->aabbVisu.rateVector->size() <= currentNodeIndex) ? mApp->aabbVisu.rateVector->at(currentNodeIndex) : 0.0f;
+            if(rate >= mApp->aabbVisu.trimByProb[0] && rate <= mApp->aabbVisu.trimByProb[1]) {
+                color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]) : applyGLColor4f(mApp->aabbVisu.colorMap, rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]);
+            }
+        }
+
+        if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
+            color = {0.9f ,
+                     0.9f ,
+                     0.2f ,
+                     0.5f};
+        }
+        else if(mApp->aabbVisu.showStats){
+
+        }
+        else if(mApp->aabbVisu.sameColor){
+            color = {0.6f ,
+                     0.6f ,
+                     std::max(0.7f, (1.0f / (1.0f + level * 0.5f))) ,
+                     std::min(1.0f, (level * 0.033f) + mApp->aabbVisu.alpha)};
+        }
+        else {
+            int minLevel=0, maxLevel=30;
+            if(mApp->aabbVisu.showLevelAABB[0]>-1){
+                minLevel = mApp->aabbVisu.showLevelAABB[0];
+            }
+            if(mApp->aabbVisu.showLevelAABB[1]>-1){
+                maxLevel = mApp->aabbVisu.showLevelAABB[1];
+            }
+            color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(level, minLevel, maxLevel) : applyGLColor4f(mApp->aabbVisu.colorMap, level, minLevel, maxLevel);
+        }
+
+        auto delta = this->bb.max - this->bb.min;
+        auto bbox = bb;
+        if(mApp->aabbVisu.boxExpansion)
             bbox.Expand((mApp->aabbVisu.reverseExpansion ? -0.0002 : 0.0002)*delta*level);
 
         glPointSize(std::max(1.0f, 15.0f - level * 3.0f));
@@ -1366,6 +1618,8 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
         if(mApp->aabbVisu.showBranchSide[1]) DrawAABBPlane(lnode, bbr, node->AboveChild(), level + 1, selection);
     }
 }
+*/
+
 
 void Geometry::DrawAABBNode(const BVHAccel &bvh) {
     if (!bvh.nodes || bvh.nodes[0].secondChildOffset == 0)
@@ -1506,7 +1760,7 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
 
         glPushAttrib(GL_LINE_BIT);
 
-        glLineWidth(std::max(1.0f, 10.0f - level * 3.0f));
+        glLineWidth(std::max(1.0f, 5.0f - level * 0.5f));
 
         // edges
         if(selection && mApp->aabbVisu.selectedNode == currentNodeIndex) {
@@ -1515,7 +1769,7 @@ void Geometry::DrawAABBNode(const LinearBVHNode *lnode, int currentNodeIndex, in
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ZERO);
         }
-        glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 0.2f);
+        glColor4f(color[0],color[1],color[2],color[3] * mApp->aabbVisu.alpha * 4.0f);
 
         glBegin(GL_LINE_LOOP);
         glVertex3d(bbox.min.x, bbox.min.y, bbox.min.z);

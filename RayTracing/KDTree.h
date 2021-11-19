@@ -102,7 +102,9 @@ struct SplitCandidate {
 
 struct RopePayload : Payload {
     const KdAccelNode* lastNode;
+#if defined(DEBUG)
     Ray lastRay;
+#endif
 };
 
 class KdTreeAccel : public RTPrimitive {
@@ -135,8 +137,6 @@ public:
     };
     friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
-    bool IntersectRope(Ray &ray);
-
     KdAccelNode *nodes;
     std::vector<std::shared_ptr<Primitive>> primitives;
     std::vector<int> primitiveIndices;
@@ -165,7 +165,7 @@ public:
     bool hasRopes = false;
 
     void RemoveRopes();
-    void AddRopes();
+    void AddRopes(bool optimized);
 
 private:
     void ComputeBB() override;
@@ -186,7 +186,7 @@ private:
                       int badRefines, const std::unique_ptr<std::vector<RaySegment>> &battery,
                       RayBoundary ** rb_stack, int prevSplitAxis, double tMin,
                       double tMax, const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
-    void attachRopes(KdAccelNode* current, KdAccelNode* ropes[]);
+    void attachRopes(KdAccelNode *current, KdAccelNode *ropes[], bool optimize);
     void optimizeRopes( KdAccelNode *ropes[], AxisAlignedBoundingBox bbox);
 
 private:
@@ -242,8 +242,12 @@ private:
     void PrintTreeInfo();
 
     bool IntersectStat(RayStat &ray) override;
-    bool IntersectRopeStat(RayStat &ray);
     bool IntersectTravStat(RayStat &ray);
+
+    bool IntersectRope(Ray &ray);
+    bool IntersectRopeStat(RayStat &ray);
+    bool IntersectRopeRestart(Ray &ray); // to restart from previous target node
+    bool IntersectRopeRestartStat(RayStat &ray);
 
     void addParent(KdAccelNode *current, KdAccelNode *parent);
 };

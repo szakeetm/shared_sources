@@ -291,7 +291,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
     PrintTreeInfo();
 }
 
-void KdTreeAccel::AddRopes(){
+void KdTreeAccel::AddRopes(bool optimized) {
     if(!nodes)
         return;
     for(int n = 0; n < nAllocedNodes; ++n){
@@ -299,7 +299,7 @@ void KdTreeAccel::AddRopes(){
     }
     hasRopes = true;
     KdAccelNode* ropes_loc[6] = { NULL }; // 2 ropes for each dimension
-    attachRopes(&this->nodes[0], ropes_loc);
+    attachRopes(&this->nodes[0], ropes_loc, optimized);
 }
 
 void KdTreeAccel::RemoveRopes(){
@@ -2091,8 +2091,255 @@ const KdAccelNode * KdAccelNode::getNeighboringNode(const Vector3d &p, const Vec
     }*/
 }
 
-
 bool KdTreeAccel::IntersectRope(Ray &ray) {
+    //ProfilePhase p(Prof::AccelIntersect);
+    // Compute initial parametric range of ray inside kd-tree extent
+    double tMin = 0.0, tMax = 1.0e99;
+    double tMinHit = 1.0e99;
+    int minId = -1;
+
+    // (-0.796657,-0.591801,0.431659) --> (0.772294,0.467946,0.429638)
+    /*ray.origin = {3.2301291053440027, -6.6826513460504922, 18.830288821438948};
+    ray.direction = {0.034541292073762692, 0.59865232689214731, -0.80026388813221638};
+    ray.lastIntersected = 88;
+    if(!ray.pay)
+        new RopePayload;
+    ((RopePayload*)ray.pay)->lastNode = &nodes[14386];*/
+    // Neglect initial parametric test, since a ray starts always from inside
+    /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+        return false;
+    }*/
+
+    // Prepare to traverse kd-tree for ray
+    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+
+    // Traverse kd-tree nodes in order for ray
+    bool hit = false;
+    const KdAccelNode *node = &nodes[0];
+    // KdAccelNode *node = &nodes[0];
+
+    node->bbox.IntersectP(ray, &tMin, nullptr);
+
+    while (node != nullptr) {
+        // Bail out if we found a hit closer than the current node
+        if (ray.tMax < tMin) break;
+
+        // Down traversal
+        while(!node->IsLeaf()) {
+            // Process kd-tree interior node
+            //std::cout << "Moving down to find leaf:\n";
+            //node->prettyPrint();
+
+            //bool isLeft = false;
+            Vector3d p_entry = ray.origin + ( tMin * ray.direction );
+
+            // Choose left node or right node depending on splitting plane
+            if (p_entry[node->SplitAxis()] < node->SplitPos())
+                node = node + 1;
+            else
+                node = &nodes[node->AboveChild()];
+        }
+
+        // At a leaf
+        // t_exit gets updated on hit with ray.tMax
+        {
+            // Check for intersections inside leaf node
+            int nPrimitives = node->nPrimitives();
+            if (nPrimitives == 1) {
+                const std::shared_ptr<Primitive> &p =
+                        primitives[node->onePrimitive];
+
+                // Check one primitive inside leaf node
+                if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                    hit = true;
+                }
+
+                //printf(" Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
+
+            } else {
+                for (int i = 0; i < nPrimitives; ++i) {
+                    int index =
+                            primitiveIndices[node->primitiveIndicesOffset + i];
+                    const std::shared_ptr<Primitive> &p = primitives[index];
+                    // Check one primitive inside leaf node
+                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                        hit = true;
+                    }
+                    //printf(" Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
+                }
+            }
+            // Exit leaf
+
+            //std::cout << "Found leaf:\n";
+            //node->prettyPrint();
+            // TODO: Validate -> Get exit distance from current node
+            //int axis = node->SplitAxis();
+            //double tPlane = (node->SplitPos() - ray.origin[axis]) * invDir[axis];
+            double tMax_l = 0.0; // placeholder, can be null
+            // Get exit rope
+            if ( node->bbox.IntersectP(ray, &tMax_l, &tMin) ) {
+                // Set t_entry to be the entrance point of the next (neighboring) node.
+                //t_entry = tmp_t_far;
+            }
+            else {
+                // This should never happen.
+                // If it does, then that means we're checking triangles in a node that the ray never intersects.
+
+                break;
+            }
+
+            // Get neighboring node using ropes attached to current node.
+            //Vector3d p_exit = ray.origin + ( tMin * ray.direction );
+            /*auto* */node = node->getNeighboringNode(ray);
+            /*if(nodetax!=NULL){
+                node = nodetax;
+                // TODO: Check if can be unwinded like this
+                tMax = (node->SplitPos() - ray.origin[node->SplitAxis()]) * invDir[node->SplitAxis()];
+
+            }
+            else {
+                // DEBUG
+                *//*if (hit == false) {
+                    node->bbox.IntersectP(ray, &tMax_l, &tMin);
+                    node->getNeighboringNode(ray);
+                }*//*
+                // END DEBUG
+                node = NULL;
+            }*/
+
+
+            // Break if neighboring node not found, meaning we've exited the kd-tree.
+            if ( node == NULL ) {
+                break;
+            }
+        }
+    }
+
+    /*if(!hit)
+        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+               ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
+*/
+    return hit;
+}
+
+bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
+    //ProfilePhase p(Prof::AccelIntersect);
+    // Compute initial parametric range of ray inside kd-tree extent
+    double tMin = 0.0, tMax = 1.0e99;
+    double tMinHit = 1.0e99;
+    int minId = -1;
+    ray.traversedNodes.clear();
+
+    // Neglect initial parametric test, since a ray starts always from inside
+    /*if (!bounds.IntersectP(ray, &tMin, &tMax)) {
+        return false;
+    }
+*/
+    // Prepare to traverse kd-tree for ray
+    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+
+    // Traverse kd-tree nodes in order for ray
+    bool hit = false;
+    const KdAccelNode *node = &nodes[0];
+
+    //node->bbox.IntersectP(ray, &tMin, nullptr);
+
+    while (node != nullptr) {
+        ray.traversedNodes.push_back(node->nodeId);
+
+        // Bail out if we found a hit closer than the current node
+
+        if (ray.tMax < tMin) break;
+
+        // Down traversal
+        while(!node->IsLeaf()) {
+            ints[node->nodeId].nbChecks += ray.traversalSteps;
+            // Process kd-tree interior node
+            //std::cout << "Moving down to find leaf:\n";
+            //node->prettyPrint();
+            ray.traversalSteps++;
+            ints[node->nodeId].nbIntersects++;
+
+            //bool isLeft = false;
+            Vector3d p_entry = ray.origin + ( tMin * ray.direction );
+
+            // Advance to next child node, possibly enqueue other child
+            if (p_entry[node->SplitAxis()] < node->SplitPos())
+                node = node + 1;
+            else
+                node = &nodes[node->AboveChild()];
+            ray.traversedNodes.push_back(node->nodeId);
+        }
+
+        ints[node->nodeId].nbChecks += ray.traversalSteps;
+
+        // At a leaf
+        // t_exit gets updated on hit with ray.tMax
+        {
+            // Check for intersections inside leaf node
+            int nPrimitives = node->nPrimitives();
+            if (nPrimitives == 1) {
+                ray.traversalSteps++;
+
+                const std::shared_ptr<Primitive> &p =
+                        primitives[node->onePrimitive];
+
+                // Check one primitive inside leaf node
+                if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
+                    hit = true;
+                }
+
+            } else {
+                for (int i = 0; i < nPrimitives; ++i) {
+                    ray.traversalSteps++;
+                    int index =
+                            primitiveIndices[node->primitiveIndicesOffset + i];
+                    const std::shared_ptr<Primitive> &p = primitives[index];
+                    // Check one primitive inside leaf node
+                    if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
+                        hit = true;
+                    }
+                }
+            }
+            // Exit leaf
+
+            //std::cout << "Found leaf:\n";
+            //node->prettyPrint();
+            // TODO: Validate -> Get exit distance from current node
+            //int axis = node->SplitAxis();
+            //double tPlane = (node->SplitPos() - ray.origin[axis]) * invDir[axis];
+            double tMax_l = 0.0; // placeholder, can be null
+            // Get exit rope
+            if ( node->bbox.IntersectP(ray, &tMax_l, &tMin) ) {
+                // Set t_entry to be the entrance point of the next (neighboring) node.
+                //t_entry = tmp_t_far;
+            }
+            else {
+                // This should never happen.
+                // If it does, then that means we're checking triangles in a node that the ray never intersects.
+                break;
+            }
+
+            // Get neighboring node using ropes attached to current node.
+            //Vector3d p_exit = ray.origin + ( tMin * ray.direction );
+            node = node->getNeighboringNode(ray);
+
+            // Break if neighboring node not found, meaning we've exited the kd-tree.
+            if ( node == NULL ) {
+                break;
+            }
+        }
+    }
+
+    /*if(!hit)
+        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+               ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
+*/
+    ray.traversalSteps = 0;
+    return hit;
+}
+
+bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
@@ -2119,7 +2366,9 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     const KdAccelNode *node;
     if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
         node = ((RopePayload *) ray.pay)->lastNode;
+#if defined(DEBUG)
         ((RopePayload *) ray.pay)->lastRay = ray;
+#endif
         size_t nHops = 0;
         while(node != nullptr && !node->bbox.IsInside(ray.origin)){// not in node
             node = node->parent;
@@ -2279,7 +2528,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     return hit;
 }
 
-bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
+bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
@@ -2927,7 +3176,7 @@ void KdTreeAccel::optimizeRopes( KdAccelNode *ropes[], AxisAlignedBoundingBox bb
 }
 
 // recursively attach ropes from root node in DF order
-void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
+void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[], bool optimize) {
 // Base case.
     if ( current->IsLeaf() ) {
         //std::cout<<curr_node->id<<": "<<std::endl;
@@ -2937,7 +3186,8 @@ void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
     }
     else {
 
-        //optimizeRopes( ropes, current->bbox );
+        if(optimize)
+            optimizeRopes( ropes, current->bbox );
 
         AABBFace SL, SR;
         if ( current->SplitAxis() == X_AXIS ) {
@@ -2968,10 +3218,10 @@ void KdTreeAccel::attachRopes(KdAccelNode *current, KdAccelNode *ropes[]) {
 
         // Recurse
         RS_left[SR] = rightChild;
-        attachRopes( leftChild, RS_left );
+        attachRopes(leftChild, RS_left, true);
 
         RS_right[SL] = leftChild;
-        attachRopes( rightChild, RS_right );
+        attachRopes(rightChild, RS_right, true);
     }
 }
 

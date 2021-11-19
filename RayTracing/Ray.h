@@ -59,7 +59,12 @@ public:
             : origin(o), direction(d), tMax(tMax), time(time), structure(structure), hitChain(nullptr), rng(nullptr),
               pay(payload) {}
 
-    ~Ray() { if (pay) delete pay; }
+    ~Ray() {
+        if (pay) {
+            delete pay;
+            pay=nullptr;
+        }
+    }
 
     Vector3d operator()(double t) const { return origin + direction * t; }
 
@@ -87,6 +92,8 @@ public:
 class RayStat : public Ray {
 public:
     RayStat() : Ray() {}
+
+    explicit RayStat(const Ray &src) : Ray(src) {}
 
     RayStat(const Vector3d &o, const Vector3d &d, Payload *payload = nullptr, double tMax = inf_d,
         double time = 0.f, int structure = 0)

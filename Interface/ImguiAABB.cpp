@@ -339,7 +339,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         rate_vec = std::make_shared<std::vector<float>>();
                         mApp->aabbVisu.rateVector = rate_vec;
                     }*/
-
+                ImGui::Checkbox("Render only Split borders", &mApp->aabbVisu.onlyBorder);
                     ImGui::Checkbox("Draw all structures", &mApp->aabbVisu.drawAllStructs);
 
             }
@@ -428,13 +428,26 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 if (mApp->worker.model->wp.accel_type == 1) {
                     static bool withRopes = mApp->worker.model->wp.kd_with_ropes;
+                    static bool optimizedRopes = mApp->worker.model->wp.kd_with_ropes_optimized;
+                    if (ImGui::Checkbox("Optimise ropes", &optimizedRopes)) {
+                        mApp->worker.model->wp.kd_with_ropes_optimized = optimizedRopes;
+                        if (withRopes) {
+                            for (int s = 0; s < mApp->worker.model->accel.size(); s++) {
+                                auto kd = dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get());
+                                if (kd) {
+                                    kd->RemoveRopes();
+                                    kd->AddRopes(true);
+                                }
+                            }
+                        }
+                    }
                     if (ImGui::Checkbox("Use ropes", &withRopes)) {
                         mApp->worker.model->wp.kd_with_ropes = withRopes;
                         if (withRopes) {
                             for (int s = 0; s < mApp->worker.model->accel.size(); s++) {
                                 auto kd = dynamic_cast<KdTreeAccel *>(mApp->worker.model->accel.at(s).get());
                                 if (kd) {
-                                    kd->AddRopes();
+                                    kd->AddRopes(optimizedRopes);
                                 }
                             }
                         } else {
@@ -881,6 +894,25 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             }
             auto &accel = mApp->worker.model->accel;
 
+            RTStats tree_stats{};
+            if(mApp->worker.model->wp.accel_type == 1)
+                for( auto& acc : accel){
+                    //auto nodes = static_cast<KdTreeAccel*>(acc.get())->nodes;
+                    auto stats = static_cast<KdTreeAccel*>(acc.get())->ints;
+                    for(const auto& stat : stats) {
+                        tree_stats.nIntersections += stat.nbIntersects;
+                        tree_stats.nTraversedInner += stat.nbChecks;
+                    }
+                }
+            // old_bvb
+            int nInt = tree_stats.nIntersections / mApp->worker.globState.globalHits.globalHits.nbHitEquiv;
+            if(ImGui::InputInt("nIntersects", &nInt)) {
+                tree_stats.nIntersections = nInt;
+            }
+            int nCheck = tree_stats.nTraversedInner / mApp->worker.globState.globalHits.globalHits.nbHitEquiv;
+            if(ImGui::InputInt("nCheck", &nCheck)) {
+                tree_stats.nTraversedInner = nCheck;
+            }
             if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
                 static ImGuiTableFlags tFlags =
                         ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -1186,6 +1218,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                     // Create item list
                     auto &facets = mApp->worker.model->facets;
+                    static size_t nbSteps_total = 0;
                     if (!rate_vec && rate_vec->size() != facets.size())
                         rate_vec->resize(facets.size(), -1.0f);
                     if (!facets.empty() && facItems.size() != facets.size()) {
@@ -1195,6 +1228,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         mApp->aabbVisu.trimByProb[0] = 1.0e38f;
                         mApp->aabbVisu.trimByProb[1] = 0;
                         size_t nbIntersections_total = 0;
+                        nbSteps_total = 0;
+
                         for (int n = 0; n < facItems.Size; n++) {
                             auto &f = facets[n];
                             FacetData &item = facItems[n];
@@ -1203,6 +1238,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             item.intersectionRate = (f->nbTests > 0) ? (double) f->nbIntersections / (double) f->nbTests
                                                                      : 0.0;
                             nbIntersections_total += f->nbIntersections;
+                            nbSteps_total += item.steps;
                             mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float) item.steps);
                             mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float) item.steps);
                             if (selected_combo == 0) {
@@ -1255,7 +1291,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         //mApp->aabbVisu.trimByProb[1] = 0;
 
                         size_t nbIntersections_total = 0;
-
+                        nbSteps_total = 0;
                         for (int n = 0; n < facItems.Size; n++) {
                             FacetData &item = facItems[n];
                             auto &f = facets[item.ID];
@@ -1263,6 +1299,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             item.intersectionRate = (f->nbTests > 0) ? (double) f->nbIntersections / (double) f->nbTests
                                                                      : 0.0;
                             nbIntersections_total += f->nbIntersections;
+                            nbSteps_total += item.steps;
+
                             //mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float)item.steps);
                             //mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float)item.steps);
                             if (selected_combo == 0) {
@@ -1312,7 +1350,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     if (ImGui::BeginTable("facetList", 4, tFlags)) {
                         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                         ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
-                        ImGui::TableSetupColumn("Steps", ImGuiTableColumnFlags_WidthStretch, 0.0f,
+
+                        ImGui::TableSetupColumn(fmt::format("{} ({})","Steps",nbSteps_total/facets.size()).c_str(), ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Steps);
                         ImGui::TableSetupColumn("ISRate", ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Inter);
