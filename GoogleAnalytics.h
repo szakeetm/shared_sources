@@ -23,6 +23,8 @@
 #define BRANCH_OS_SUFFIX "_linux_debian"
 #elif defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #define BRANCH_OS_SUFFIX "_win"
+#elif (defined(__MACOSX__) || defined(__APPLE__)) && defined(__ARM_ARCH)
+#define BRANCH_OS_SUFFIX "_mac_arm"
 #elif defined(__MACOSX__) || defined(__APPLE__)
 #define BRANCH_OS_SUFFIX "_mac"
 #endif //BRANCH_OS_SUFFIX
