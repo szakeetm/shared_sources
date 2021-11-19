@@ -229,8 +229,10 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 			//Parse document and handle errors
 
 			if (parseResult.status == status_ok) { //parsed successfully
-				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId, branchName);
-				resultCategory = "updateCheck";
+				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId);
+                auto availableUpdates_old = DetermineAvailableUpdatesOldScheme(updateDoc, currentVersionId, branchName);
+                availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
+                resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
                 lastFetchStatus = (int)FetchStatus::OKAY;
             }
@@ -286,16 +288,15 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 * \brief Retrieve list with all newer releases
 * \param updateDoc xml doc containing all info about the recent updates
 * \param currentVersionId version ID of current version
-* \param branchName name of update branch (related to OS)
 * \return vector with newer releases
 */
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId) {
 	std::vector<UpdateManifest> availables;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
 	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
 		std::string currentBranchName = branchNode.attribute("name").as_string();
-		if (currentBranchName == branchName) {
+		if (currentBranchName == BRANCH_NAME) {
 			for (xml_node updateNode : branchNode.children("UpdateManifest")) {
 				int versionId = updateNode.child("Version").attribute("id").as_int();
 				if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
@@ -303,13 +304,41 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.versionId = versionId;
 					newUpdate.name = updateNode.child("Version").attribute("name").as_string();
 					newUpdate.date = updateNode.child("Version").attribute("date").as_string();
-					newUpdate.changeLog = updateNode.child_value("ChangeLog");
+                    if(std::strcmp(updateNode.child("Version").attribute("enabled").as_string(),"true") != 0)
+                        continue;
 
-					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
-					newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
-					newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+					newUpdate.changeLog = updateNode.child("ChangeLog").child_value("Global");
+                    //TODO: Consider OS dependent changelogs
 
-					for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
+                    std::string os_fullname;
+                    std::string os_prefix;
+                    bool validOS = false;
+                    for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
+                        if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){
+                            // found
+                            validOS = true;
+                            os_fullname = osNode.attribute("name").as_string();
+                            os_prefix = osNode.attribute("prefix").as_string();
+                            break;
+                        }
+                    }
+                    if(!validOS)
+                        continue; // get next Manifest
+
+                    std::string namedRelease = os_prefix + "_" + newUpdate.name;
+					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrlPathPrefix").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    if(newUpdate.zipName.empty()){
+                        newUpdate.zipName = namedRelease + ".zip";
+                    }
+                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
+                    newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
+                    if(newUpdate.folderName.empty()){
+                        newUpdate.folderName = namedRelease;
+                    }
+
+                    // TODO: Add os dependent files
+					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
 					availables.push_back(newUpdate);
@@ -318,6 +347,38 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 		}
 	}
 	return availables;
+}
+
+// Function to retrieve updates with old XML scheme
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+    std::vector<UpdateManifest> availables;
+
+    xml_node rootNode = updateDoc.child("UpdateFeed");
+    for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
+        std::string currentBranchName = branchNode.attribute("name").as_string();
+        if (currentBranchName == branchName) {
+            for (xml_node updateNode : branchNode.children("UpdateManifest")) {
+                int versionId = updateNode.child("Version").attribute("id").as_int();
+                if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
+                    UpdateManifest newUpdate;
+                    newUpdate.versionId = versionId;
+                    newUpdate.name = updateNode.child("Version").attribute("name").as_string();
+                    newUpdate.date = updateNode.child("Version").attribute("date").as_string();
+                    newUpdate.changeLog = updateNode.child_value("ChangeLog");
+
+                    newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+
+                    for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
+                        newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
+                    }
+                    availables.push_back(newUpdate);
+                }
+            }
+        }
+    }
+    return availables;
 }
 
 /**
@@ -610,14 +671,14 @@ void AppUpdater::IncreaseSessionCount() {
 * \return true if update available
 */
 bool AppUpdater::IsUpdateAvailable() {
-	return (availableUpdates.size() > 0);
+	return (!availableUpdates.empty());
 }
 
 /**
 * \brief Check if an update check is allowed
 * \return true if update check is allowed
 */
-bool AppUpdater::IsUpdateCheckAllowed() {
+bool AppUpdater::IsUpdateCheckAllowed() const {
 	return allowUpdateCheck;
 }
 
@@ -775,6 +836,11 @@ ManualUpdateCheckDialog::ManualUpdateCheckDialog(const std::string & appName, co
     updateButton->SetEnabled(false);
     Add(updateButton);
 
+    cancelButton = new GLButton(0, "Cancel");
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    cancelButton->SetEnabled(true);
+    Add(cancelButton);
+
 	std::stringstream title;
 	title << appName << " updater";
 	SetTitle(title.str());
@@ -798,12 +864,10 @@ void ManualUpdateCheckDialog::Refresh() {
     aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
 
     //Check if app updater has found updates
+    bool updateError = true;
     if (updater && logWnd) {
         if (updater->IsUpdateAvailable()) {
-            if (!foundWnd) {
-                foundWnd = new UpdateFoundDialog(appName, appVersionName, updater, logWnd);
-                foundWnd->SetVisible(true);
-            }
+            updateAvailable = true;
         }
         else { // no updates found
             // Try again
@@ -811,17 +875,25 @@ void ManualUpdateCheckDialog::Refresh() {
             if (updater->IsUpdateAvailable())
                 updateAvailable = true;
             if(updater->GetStatus() != (int)FetchStatus::OKAY){
-                aboutText << "Could not retrieve update details!" << std::endl;
-                aboutText << "Please check your internet connection or try again later." << std::endl;
-                aboutText << "Find updates manually at:    https://molflow.web.cern.ch/" << std::endl;            }
+                updateError = true;
+            }
             else {
                 aboutText << "This is already the latest version!" << std::endl;
-                //updater->PerformImmediateCheck();
                 aboutText << updater->GetLatestChangeLog();
             }
         }
     }
-    else{ // app updater error
+
+
+    if(updateAvailable){
+        aboutText.clear();
+        aboutText << appName << " " << updater->GetLatestUpdateName() << " is available.\n";
+        //aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+        aboutText << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
+        aboutText << updater->GetLatestChangeLog();
+        updateError = false;
+    }
+    if(updateError){ // app updater error
         aboutText << "Could not check for updates!" << std::endl;
         aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
         aboutText << "    https://molflow.web.cern.ch/" << std::endl;
@@ -837,6 +909,9 @@ void ManualUpdateCheckDialog::Refresh() {
 
     updateButton->SetBounds(5, hD - 45, 80, 19);
     updateButton->SetEnabled(updateAvailable);
+
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    updateButton->SetEnabled(true);
 
     //Set to lower right corner
     int wS, hS;

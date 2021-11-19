@@ -19,14 +19,22 @@
 
 #if defined(__LINUX_FEDORA) // set by cmake
 #define BRANCH_OS_SUFFIX "_linux_fedora"
+#define OS_ID "fedora"
 #elif defined(__LINUX_DEBIAN) // set by cmake
 #define BRANCH_OS_SUFFIX "_linux_debian"
-#elif defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+#define OS_ID "debian"
+#elif defined(WIN32) || defined(_WIN32) || (defined(__CYGWIN__) && defined(__x86_64__)) || defined(__MINGW32__)
 #define BRANCH_OS_SUFFIX "_win"
+#define OS_ID "win_x86"
+#elif defined(WIN64) || defined(_WIN64) || (defined(__CYGWIN__) && defined(__X86__)) || defined(__MINGW64__)
+#define BRANCH_OS_SUFFIX "_win"
+#define OS_ID "win_x64"
 #elif (defined(__MACOSX__) || defined(__APPLE__)) && defined(__ARM_ARCH)
 #define BRANCH_OS_SUFFIX "_mac_arm"
+#define OS_ID "mac_arm"
 #elif defined(__MACOSX__) || defined(__APPLE__)
 #define BRANCH_OS_SUFFIX "_mac"
+#define OS_ID "mac_intel"
 #endif //BRANCH_OS_SUFFIX
 
 #ifndef BRANCH_OS_SUFFIX

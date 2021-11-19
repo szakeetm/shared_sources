@@ -191,6 +191,7 @@ public:
 private:
     GLLabel *questionLabel;
     GLButton *updateButton;
+    GLButton *cancelButton;
     std::string appName;
     std::string appVersionName;
     AppUpdater* updater;
@@ -205,7 +206,7 @@ public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
 
 	bool IsUpdateAvailable();
-	bool IsUpdateCheckAllowed();
+	bool IsUpdateCheckAllowed() const;
 	void ClearAvailableUpdates();
 	std::string GetLatestUpdateName();
 	std::string GetCumulativeChangeLog();
@@ -245,8 +246,10 @@ private:
 	void SaveConfig();
 	void LoadConfig();
 	void PerformUpdateCheck(bool forceCheck); //Actually check for updates (once we have user permission)
-	
-	std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
+
+
+    std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId);
+    std::vector<UpdateManifest> DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
 	static UpdateManifest GetLatest(const std::vector<UpdateManifest>& updatesstatic );
