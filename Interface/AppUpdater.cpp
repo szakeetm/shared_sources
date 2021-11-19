@@ -229,8 +229,10 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 			//Parse document and handle errors
 
 			if (parseResult.status == status_ok) { //parsed successfully
-				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId, branchName);
-				resultCategory = "updateCheck";
+				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId);
+                auto availableUpdates_old = DetermineAvailableUpdatesOldScheme(updateDoc, currentVersionId, branchName);
+                availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
+                resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
                 lastFetchStatus = (int)FetchStatus::OKAY;
             }
@@ -286,16 +288,15 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 * \brief Retrieve list with all newer releases
 * \param updateDoc xml doc containing all info about the recent updates
 * \param currentVersionId version ID of current version
-* \param branchName name of update branch (related to OS)
 * \return vector with newer releases
 */
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId) {
 	std::vector<UpdateManifest> availables;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
 	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
 		std::string currentBranchName = branchNode.attribute("name").as_string();
-		if (currentBranchName == branchName) {
+		if (currentBranchName == BRANCH_NAME) {
 			for (xml_node updateNode : branchNode.children("UpdateManifest")) {
 				int versionId = updateNode.child("Version").attribute("id").as_int();
 				if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
@@ -303,13 +304,35 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.versionId = versionId;
 					newUpdate.name = updateNode.child("Version").attribute("name").as_string();
 					newUpdate.date = updateNode.child("Version").attribute("date").as_string();
-					newUpdate.changeLog = updateNode.child_value("ChangeLog");
+                    if(std::strcmp(updateNode.child("Version").attribute("enabled").as_string(),"true") != 0)
+                        continue;
 
-					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
-					newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
-					newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+					newUpdate.changeLog = updateNode.child("ChangeLog").child_value("Global");
+                    //TODO: Consider OS dependent changelogs
 
-					for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
+                    std::string os_fullname;
+                    std::string os_prefix;
+                    bool validOS = false;
+                    for (xml_node osNode : updateNode.children("ValidForOS")) {
+                        if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){
+                            // found
+                            validOS = true;
+                            os_fullname = osNode.attribute("name").as_string();
+                            os_prefix = osNode.attribute("prefix").as_string();
+                            break;
+                        }
+                    }
+                    if(!validOS)
+                        continue; // get next Manifest
+
+                    std::string namedRelease = os_prefix + "_" + newUpdate.name;
+					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrlPathPrefix").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
+                    newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+
+                    // TODO: Add os dependent files
+					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
 					availables.push_back(newUpdate);
@@ -318,6 +341,38 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 		}
 	}
 	return availables;
+}
+
+// Function to retrieve updates with old XML scheme
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+    std::vector<UpdateManifest> availables;
+
+    xml_node rootNode = updateDoc.child("UpdateFeed");
+    for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
+        std::string currentBranchName = branchNode.attribute("name").as_string();
+        if (currentBranchName == branchName) {
+            for (xml_node updateNode : branchNode.children("UpdateManifest")) {
+                int versionId = updateNode.child("Version").attribute("id").as_int();
+                if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
+                    UpdateManifest newUpdate;
+                    newUpdate.versionId = versionId;
+                    newUpdate.name = updateNode.child("Version").attribute("name").as_string();
+                    newUpdate.date = updateNode.child("Version").attribute("date").as_string();
+                    newUpdate.changeLog = updateNode.child_value("ChangeLog");
+
+                    newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+
+                    for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
+                        newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
+                    }
+                    availables.push_back(newUpdate);
+                }
+            }
+        }
+    }
+    return availables;
 }
 
 /**
