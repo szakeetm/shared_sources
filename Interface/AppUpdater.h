@@ -191,6 +191,7 @@ public:
 private:
     GLLabel *questionLabel;
     GLButton *updateButton;
+    GLButton *cancelButton;
     std::string appName;
     std::string appVersionName;
     AppUpdater* updater;
@@ -205,7 +206,7 @@ public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
 
 	bool IsUpdateAvailable();
-	bool IsUpdateCheckAllowed();
+	bool IsUpdateCheckAllowed() const;
 	void ClearAvailableUpdates();
 	std::string GetLatestUpdateName();
 	std::string GetCumulativeChangeLog();

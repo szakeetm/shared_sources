@@ -671,14 +671,14 @@ void AppUpdater::IncreaseSessionCount() {
 * \return true if update available
 */
 bool AppUpdater::IsUpdateAvailable() {
-	return (availableUpdates.size() > 0);
+	return (!availableUpdates.empty());
 }
 
 /**
 * \brief Check if an update check is allowed
 * \return true if update check is allowed
 */
-bool AppUpdater::IsUpdateCheckAllowed() {
+bool AppUpdater::IsUpdateCheckAllowed() const {
 	return allowUpdateCheck;
 }
 
@@ -836,6 +836,11 @@ ManualUpdateCheckDialog::ManualUpdateCheckDialog(const std::string & appName, co
     updateButton->SetEnabled(false);
     Add(updateButton);
 
+    cancelButton = new GLButton(0, "Cancel");
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    cancelButton->SetEnabled(true);
+    Add(cancelButton);
+
 	std::stringstream title;
 	title << appName << " updater";
 	SetTitle(title.str());
@@ -859,12 +864,10 @@ void ManualUpdateCheckDialog::Refresh() {
     aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
 
     //Check if app updater has found updates
+    bool updateError = true;
     if (updater && logWnd) {
         if (updater->IsUpdateAvailable()) {
-            if (!foundWnd) {
-                foundWnd = new UpdateFoundDialog(appName, appVersionName, updater, logWnd);
-                foundWnd->SetVisible(true);
-            }
+            updateAvailable = true;
         }
         else { // no updates found
             // Try again
@@ -872,17 +875,25 @@ void ManualUpdateCheckDialog::Refresh() {
             if (updater->IsUpdateAvailable())
                 updateAvailable = true;
             if(updater->GetStatus() != (int)FetchStatus::OKAY){
-                aboutText << "Could not retrieve update details!" << std::endl;
-                aboutText << "Please check your internet connection or try again later." << std::endl;
-                aboutText << "Find updates manually at:    https://molflow.web.cern.ch/" << std::endl;            }
+                updateError = true;
+            }
             else {
                 aboutText << "This is already the latest version!" << std::endl;
-                //updater->PerformImmediateCheck();
                 aboutText << updater->GetLatestChangeLog();
             }
         }
     }
-    else{ // app updater error
+
+
+    if(updateAvailable){
+        aboutText.clear();
+        aboutText << appName << " " << updater->GetLatestUpdateName() << " is available.\n";
+        //aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+        aboutText << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
+        aboutText << updater->GetLatestChangeLog();
+        updateError = false;
+    }
+    if(updateError){ // app updater error
         aboutText << "Could not check for updates!" << std::endl;
         aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
         aboutText << "    https://molflow.web.cern.ch/" << std::endl;
@@ -898,6 +909,9 @@ void ManualUpdateCheckDialog::Refresh() {
 
     updateButton->SetBounds(5, hD - 45, 80, 19);
     updateButton->SetEnabled(updateAvailable);
+
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    updateButton->SetEnabled(true);
 
     //Set to lower right corner
     int wS, hS;
