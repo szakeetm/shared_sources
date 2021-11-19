@@ -214,9 +214,9 @@ int AppUpdater::NotifyServerWarning() {
                 "Please check molflow.web.cern.ch manually.\n"
                 "Would you like to be reminded again in the future?",
                 "Warning", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) != GLDLG_OK) {
-            nbUpdateFailsInRow = 0;
-        } else {
             nbUpdateFailsInRow = -1;
+        } else {
+            nbUpdateFailsInRow = 0;
         }
     }
     SaveConfig();
@@ -899,7 +899,7 @@ void ManualUpdateCheckDialog::Refresh() {
     aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
 
     //Check if app updater has found updates
-    bool updateError = true;
+    bool updateError = false;
     if (updater && logWnd) {
         if (updater->IsUpdateAvailable()) {
             updateAvailable = true;
@@ -946,7 +946,7 @@ void ManualUpdateCheckDialog::Refresh() {
     updateButton->SetEnabled(updateAvailable);
 
     cancelButton->SetBounds(90, hD - 45, 80, 19);
-    updateButton->SetEnabled(true);
+    cancelButton->SetEnabled(true);
 
     //Set to lower right corner
     int wS, hS;
