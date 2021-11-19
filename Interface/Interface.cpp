@@ -2763,14 +2763,21 @@ int Interface::FrameMove() {
     if (timeForAutoSave) AutoSave();
 
     //Check if app updater has found updates
-    if (appUpdater && appUpdater->IsUpdateAvailable()) {
-        if (!updateLogWindow) {
-            updateLogWindow = new UpdateLogWindow(this);
+    if (appUpdater) {
+        if(appUpdater->IsUpdateAvailable()) {
+            if (!updateLogWindow) {
+                updateLogWindow = new UpdateLogWindow(this);
+            }
+            if (!updateFoundDialog) {
+                updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
+                updateFoundDialog->SetVisible(true);
+                wereEvents = true;
+            }
         }
-        if (!updateFoundDialog) {
-            updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
-            updateFoundDialog->SetVisible(true);
-            wereEvents = true;
+        else{
+            if(appUpdater->NotifyServerWarning()){
+
+            }
         }
     }
 

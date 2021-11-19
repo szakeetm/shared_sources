@@ -213,6 +213,7 @@ public:
     std::string GetLatestChangeLog();
 
 	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
+    int NotifyServerWarning();
     void PerformImmediateCheck();
 
 	void SetUserUpdatePreference(bool answer);
@@ -239,7 +240,7 @@ private:
 	std::thread updateThread;
 	bool allowUpdateCheck;
 	int appLaunchedWithoutAsking, askAfterNbLaunches; //Number of app launches before asking if user wants to check for updates. 0: default (shipping) value, -1: user already answered
-
+    int nbUpdateFailsInRow, askAfterNbUpdateFails; // Number of app launches in a row, in that an update couldn't be fetched
 	std::vector<UpdateManifest> availableUpdates; //empty in the beginning, populated upon update check
 
 	//Methods

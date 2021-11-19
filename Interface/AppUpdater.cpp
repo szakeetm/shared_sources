@@ -82,6 +82,8 @@ void AppUpdater::MakeDefaultConfig(){
     localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = "false";
     localConfigNode.child("Permission").append_attribute("appLaunchedBeforeAsking") = "0";
     localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = "3";
+    localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = "0";
+    localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = "5";
     localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX;
     localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
     localConfigNode.append_child("SkippedVersions");
@@ -105,7 +107,9 @@ void AppUpdater::SaveConfig() {
 	xml_node localConfigNode = rootNode.append_child("LocalConfig");
 	localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = allowUpdateCheck;
 	localConfigNode.child("Permission").append_attribute("appLaunchedBeforeAsking") = appLaunchedWithoutAsking;
-	localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = askAfterNbLaunches;
+    localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = askAfterNbLaunches;
+    localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = nbUpdateFailsInRow;
+    localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = askAfterNbUpdateFails;
 	localConfigNode.append_child("Branch").append_attribute("name") = branchName.c_str();
 	localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = userId.c_str();
 	xml_node skippedVerNode = localConfigNode.append_child("SkippedVersions");
@@ -134,7 +138,10 @@ void AppUpdater::LoadConfig() {
 	allowUpdateCheck = localConfigNode.child("Permission").attribute("allowUpdateCheck").as_bool();
 	appLaunchedWithoutAsking = localConfigNode.child("Permission").attribute("appLaunchedBeforeAsking").as_int();
 	askAfterNbLaunches = localConfigNode.child("Permission").attribute("askAfterNbLaunches").as_int();
-	branchName = localConfigNode.child("Branch").attribute("name").as_string();
+    nbUpdateFailsInRow = localConfigNode.child("Permission").attribute("nbUpdateFailsInRow").as_int();
+    askAfterNbUpdateFails = localConfigNode.child("Permission").attribute("askAfterNbUpdateFails").as_int(5);
+
+    branchName = localConfigNode.child("Branch").attribute("name").as_string();
 	userId = localConfigNode.child("GoogleAnalytics").attribute("cookie").as_string();
 	xml_node skippedVerNode = localConfigNode.child("SkippedVersions");
 	for (auto& version : skippedVerNode.children("Version")) {
@@ -200,6 +207,22 @@ int AppUpdater::RequestUpdateCheck() {
 	}
 }
 
+int AppUpdater::NotifyServerWarning() {
+    if (nbUpdateFailsInRow == askAfterNbUpdateFails) {
+        if (GLMessageBox::Display(
+                "Updates could not be fetched from the server for a while.\n"
+                "Please check molflow.web.cern.ch manually.\n"
+                "Would you like to be reminded again in the future?",
+                "Warning", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) != GLDLG_OK) {
+            nbUpdateFailsInRow = 0;
+        } else {
+            nbUpdateFailsInRow = -1;
+        }
+    }
+    SaveConfig();
+    return 0;
+}
+
 /**
 * \brief Get permission to ask user if he wants to update
 * \return if or when user should be asked to update
@@ -221,6 +244,8 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 		std::string os = GLToolkit::GetOSName();
 
 		auto[downloadResult, body] = DownloadString(feedUrl);
+
+        bool errorState = false;
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
 
@@ -237,17 +262,27 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
                 lastFetchStatus = (int)FetchStatus::OKAY;
             }
 			else { //parse error
+                errorState = true;
 				resultCategory = "parseError";
 				resultDetail << "parseError_" << parseResult.status << "_" << applicationName << "_" << currentVersionId;
                 lastFetchStatus = (int)FetchStatus::PARSE_ERROR;
             }
 		}
 		else { //download error
+            errorState = true;
 			resultCategory = "stringDownloadError";
 			resultDetail << "stringDownloadError_" << downloadResult << "_" << applicationName << "_" << currentVersionId;
 		    lastFetchStatus = (int)FetchStatus::DOWNLOAD_ERROR;
 		}
 		//Send result for analytics
+
+        if(errorState){
+            // Notify user that no updates could be fetched from a server after several tries
+            if(nbUpdateFailsInRow >= 0) {
+                nbUpdateFailsInRow++;
+                SaveConfig();
+            }
+        }
 
 		if (Contains({ "","not_set","default" }, userId)) {
 			//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
@@ -936,22 +971,12 @@ void ManualUpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
                 logWnd->SetVisible(true);
                 updater->InstallLatestUpdate(logWnd);
                 updater->ClearAvailableUpdates();
-                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+                GLWindow::ProcessMessage(nullptr, MSG_CLOSE);
             }
-            /*else if (src == laterButton) {
+            else if (src == cancelButton) {
                 updater->ClearAvailableUpdates();
-                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+                GLWindow::ProcessMessage(nullptr, MSG_CLOSE);
             }
-            else if (src == skipButton) {
-                updater->SkipAvailableUpdates();
-                updater->ClearAvailableUpdates();
-                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
-            }
-            else if (src == disableButton) {
-                updater->ClearAvailableUpdates();
-                updater->SetUserUpdatePreference(false);
-                GLWindow::ProcessMessage(NULL, MSG_CLOSE);
-            }*/
             break;
     }
     GLWindow::ProcessMessage(src, message);
