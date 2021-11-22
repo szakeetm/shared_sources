@@ -58,6 +58,7 @@ AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const s
 	currentVersionId = versionId;
     lastFetchStatus = 0;
 	configFileName = configFile;
+    updateWarning = nullptr;
 
 	if(!std::filesystem::exists(configFileName))
 	    MakeDefaultConfig();
@@ -208,19 +209,86 @@ int AppUpdater::RequestUpdateCheck() {
 }
 
 int AppUpdater::NotifyServerWarning() {
-    if (nbUpdateFailsInRow == askAfterNbUpdateFails) {
-        if (GLMessageBox::Display(
-                "Updates could not be fetched from the server for a while.\n"
-                "Please check molflow.web.cern.ch manually.\n"
-                "Would you like to be reminded again in the future?",
-                "Warning", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING) != GLDLG_OK) {
-            nbUpdateFailsInRow = -1;
-        } else {
-            nbUpdateFailsInRow = 0;
+    if (nbUpdateFailsInRow >= askAfterNbUpdateFails) {
+        // Issue the warning in a new window
+        if(!updateWarning) {
+            nbUpdateFailsInRow = askAfterNbUpdateFails - 1; // temporarily reset, so that warning is not constantly accessed
+            updateWarning = new UpdateWarningDialog(this);
         }
+        else
+            updateWarning->SetVisible(true);
     }
-    SaveConfig();
     return 0;
+}
+
+void AppUpdater::AllowFurtherWarnings(bool allow){
+    // Disable or ask again after threshold for warning has been passed again
+    if(!allow)
+        nbUpdateFailsInRow = -1;
+    else
+        nbUpdateFailsInRow = 0;
+    SaveConfig();
+}
+
+UpdateWarningDialog::UpdateWarningDialog(AppUpdater* appUpdater) {
+
+    updater = appUpdater;
+    std::string question =
+            "Updates could not be fetched from the server for a while.\n"
+            "Please check molflow.web.cern.ch manually.\n"
+            "Would you like to be reminded again in the future?";
+
+    questionLabel = new GLLabel(question.c_str());
+    questionLabel->SetBounds(5, 5, 150, 60);
+    Add(questionLabel);
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    yesButton = new GLButton(0, "Yes");
+    yesButton->SetBounds(5, hD - 45, 80, 19);
+    Add(yesButton);
+
+    noButton = new GLButton(0, "No");
+    noButton->SetBounds(90, hD - 45, 80, 19);
+    Add(noButton);
+
+    std::string title = fmt::format("Failed to fetch updates");
+    SetTitle(title);
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+    SetVisible(true);
+
+    RestoreDeviceObjects();
+}
+
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
+void UpdateWarningDialog::ProcessMessage(GLComponent *src, int message) {
+
+    switch (message) {
+        case MSG_BUTTON:
+            if (src == yesButton) {
+                updater->AllowFurtherWarnings(false);
+                SetVisible(false);
+            }
+            else if (src == noButton) {
+                updater->AllowFurtherWarnings(true);
+                SetVisible(false);
+            }
+            break;
+    }
+    GLWindow::ProcessMessage(src, message);
 }
 
 /**
