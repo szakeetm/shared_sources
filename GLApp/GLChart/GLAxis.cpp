@@ -1118,7 +1118,7 @@ GLuint GLAxis::initMarker(const char *name) {
         // Auto format
         if(vt==0.0) return "0";
 
-        if(fabs(vt)<=1.0E-4) {
+        if(fabs(vt)<=1.0E-4 || fabs(vt)>=1.0E10) {
 
           return ToScientific(vt);
 
