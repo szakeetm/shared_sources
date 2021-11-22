@@ -58,6 +58,7 @@ AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const s
 	currentVersionId = versionId;
     lastFetchStatus = 0;
 	configFileName = configFile;
+    updateWarning = nullptr;
 
 	if(!std::filesystem::exists(configFileName))
 	    MakeDefaultConfig();
