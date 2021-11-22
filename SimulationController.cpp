@@ -665,7 +665,7 @@ int SimulationController::Start() {
                 // Time limit reached
                 ClearCommand();
                 SetState(PROCESS_DONE, GetSimuStatus());
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
     } else {
