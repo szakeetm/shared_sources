@@ -182,6 +182,18 @@ private:
 	UpdateLogWindow* logWnd;
 };
 
+class UpdateWarningDialog : public GLWindow {
+public:
+    UpdateWarningDialog(AppUpdater* appUpdater);
+
+    // Implementation
+    void ProcessMessage(GLComponent *src, int message);
+private:
+    GLLabel *questionLabel;
+    GLButton *yesButton, *noButton;
+    AppUpdater* updater;
+};
+
 class ManualUpdateCheckDialog : public GLWindow {
 public:
     ManualUpdateCheckDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow, UpdateFoundDialog* foundWindow);
@@ -204,7 +216,9 @@ private:
     void MakeDefaultConfig();
 public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
-
+    ~AppUpdater(){
+        SAFE_DELETE(updateWarning);
+    }
 	bool IsUpdateAvailable();
 	bool IsUpdateCheckAllowed() const;
 	void ClearAvailableUpdates();
@@ -214,6 +228,8 @@ public:
 
 	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
     int NotifyServerWarning();
+    void AllowFurtherWarnings(bool allow);
+
     void PerformImmediateCheck();
 
 	void SetUserUpdatePreference(bool answer);
@@ -259,7 +275,7 @@ private:
     void SkipVersions(const std::vector<UpdateManifest>& updates);
 
 	void GenerateUserId();
-	
+    UpdateWarningDialog* updateWarning;
 };
 
 class UpdateCheckDialog : public GLWindow {
