@@ -428,6 +428,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 if (mApp->worker.model->wp.accel_type == 1) {
                     static bool withRopes = mApp->worker.model->wp.kd_with_ropes;
+                    static bool restartRope = mApp->worker.model->wp.kd_restart_ropes;
                     static bool optimizedRopes = mApp->worker.model->wp.kd_with_ropes_optimized;
                     if (ImGui::Checkbox("Optimise ropes", &optimizedRopes)) {
                         mApp->worker.model->wp.kd_with_ropes_optimized = optimizedRopes;
@@ -456,6 +457,17 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 if (kd) {
                                     kd->RemoveRopes();
                                 }
+                            }
+                        }
+                    }
+                    if (ImGui::Checkbox("Restart from nodes with by rope", &restartRope)) {
+                        mApp->worker.model->wp.kd_restart_ropes = restartRope;
+                        if(mApp->worker.IsRunning())
+                            mApp->StartStopSimulation();
+                        for (auto & s : mApp->worker.model->accel) {
+                            auto kd = dynamic_cast<KdTreeAccel *>(s.get());
+                            if (kd) {
+                                kd->restartFromNode = restartRope;
                             }
                         }
                     }
@@ -620,7 +632,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                     ray = RayStat{};
                     ray.rng = new MersenneTwister;
-                    if(1)
+                    if(mApp->worker.model->wp.kd_restart_ropes)
                         // with ropes
                         ray.pay = new RopePayload;
                     ray.rng->SetSeed(GenerateSeed(0));
@@ -641,7 +653,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     rayNodePos = 0;
                     if (!ray.rng) {
                         ray.rng = new MersenneTwister;
-                        ray.pay = new RopePayload;
+                        if(mApp->worker.model->wp.kd_restart_ropes)
+                            ray.pay = new RopePayload;
                         mApp->worker.model->StartFromSource(ray);
                         sample.clear();
                         sample.emplace_back(TestRay(ray.origin, ray.direction, ray.lastIntersected));
@@ -664,7 +677,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::SameLine();
                 if (ImGui::Button("Repeat step")) {
                     rayNodePos = 0;
-                    if (!ray.pay)
+                    if (!ray.pay && mApp->worker.model->wp.kd_restart_ropes)
                         ray.pay = new RopePayload;
                     if (!ray.rng) {
                         ray.rng = new MersenneTwister;
@@ -709,7 +722,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     auto& save = ray_saved[i];
                     auto str = fmt::format("Save ray {}", i);
                     if (ImGui::Button(str.c_str())) {
-                        if (!save.pay) {
+                        if (!save.pay && mApp->worker.model->wp.kd_restart_ropes) {
                             save.pay = new RopePayload;
                         }
                         if (!save.rng) {
@@ -808,7 +821,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::SameLine();
                 ImGui::Text("%d",ray.lastIntersected);
                 if(ImGui::Button("Set as new starting node")){
-                    if(!ray.pay)
+                    if(!ray.pay && mApp->worker.model->wp.kd_restart_ropes)
                         new RopePayload;
                     if(dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())){
                         if(ray.pay)((RopePayload*)ray.pay)->lastNode = &dynamic_cast<KdTreeAccel*>(mApp->worker.model->accel.at(ray.structure).get())->nodes[new_origin];

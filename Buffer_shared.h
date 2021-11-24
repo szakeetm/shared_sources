@@ -329,6 +329,7 @@ struct WorkerParams { //Plain old data
     HistogramParams globalHistogramParams;
     int accel_type;
     bool kd_with_ropes{true};
+    bool kd_restart_ropes{false};
     bool kd_with_ropes_optimized{true};
     int splitMethod{0}; //SAH by default for BVH/KDtree
     int bvhMaxPrimsInNode{2};

@@ -163,6 +163,7 @@ public:
 
     std::vector<IntersectCount> ints;
     bool hasRopes = false;
+    bool restartFromNode = false;
 
     void RemoveRopes();
     void AddRopes(bool optimized);

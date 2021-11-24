@@ -1790,7 +1790,10 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
 }
 
 bool KdTreeAccel::Intersect(Ray &ray){
-    if(hasRopes){
+    if(restartFromNode && hasRopes){
+        return IntersectRopeRestart(ray);
+    }
+    else if(hasRopes){
         return IntersectRope(ray);
     }
     else{
@@ -1799,9 +1802,11 @@ bool KdTreeAccel::Intersect(Ray &ray){
 }
 
 bool KdTreeAccel::IntersectStat(RayStat &ray){
-    if(hasRopes){
-        //return IntersectRopeStat(ray);
+    if(restartFromNode && hasRopes){
         return IntersectRopeRestartStat(ray);
+    }
+    else if(hasRopes){
+        return IntersectRopeStat(ray);
     }
     else{
         return IntersectTravStat(ray);
@@ -2362,14 +2367,15 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
         return false;
     }*/
 
+    RopePayload* ropePay = ray.pay ? (RopePayload*)ray.pay : nullptr;
     // Prepare to traverse kd-tree for ray
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
 
     // Traverse kd-tree nodes in order for ray
     bool hit = false;
     const KdAccelNode *node;
-    if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
-        node = ((RopePayload *) ray.pay)->lastNode;
+    if(ropePay && ropePay->lastNode) {
+        node = ropePay->lastNode;
 #if defined(DEBUG)
         ((RopePayload *) ray.pay)->lastRay = ray;
 #endif
@@ -2421,7 +2427,7 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
                 // Check one primitive inside leaf node
                 if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                     hit = true;
-                    ((RopePayload *) ray.pay)->lastNode = node;
+                    ropePay->lastNode = node;
                     /*if(ray.pay && ray.hardHit.hitId == p->globalId) {
                         double minLocal = 1e99;
                         node->bbox.IntersectP(ray, &minLocal, nullptr);
@@ -2446,7 +2452,7 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
                     // Check one primitive inside leaf node
                     if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
-                        ((RopePayload *) ray.pay)->lastNode = node;
+                        ropePay->lastNode = node;
                         /*if(ray.pay && ray.hardHit.hitId == p->globalId) {
                             double minLocal = 1e99;
                             node->bbox.IntersectP(ray, &minLocal, nullptr);
@@ -2547,12 +2553,13 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
 */
     // Prepare to traverse kd-tree for ray
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+    RopePayload* ropePay = ray.pay ? (RopePayload*)ray.pay : nullptr;
 
     // Traverse kd-tree nodes in order for ray
     bool hit = false;
     const KdAccelNode *node;
-    if(ray.pay && ((RopePayload*)ray.pay)->lastNode) {
-        node = ((RopePayload *) ray.pay)->lastNode;
+    if(ray.pay && ropePay->lastNode) {
+        node = ropePay->lastNode;
         size_t nHops = 0;
         //auto tmpNode = node;
         while(node != nullptr && !node->bbox.IsInside(ray.origin)){// not in node
@@ -2622,17 +2629,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
                 // Check one primitive inside leaf node
                 if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                     hit = true;
-                    ((RopePayload *) ray.pay)->lastNode = node;
-                    /*double minLocal = 1e99;
-                    node->bbox.IntersectP(ray, &minLocal, nullptr);
-                    if (minId == p->globalId && tMinHit > minLocal) {
-                        tMinHit = minLocal;
-                        ((RopePayload *) ray.pay)->lastNode = node;
-                    } else if(minId != p->globalId){
-                        tMinHit = minLocal;
-                        minId = p->globalId;
-                        ((RopePayload *) ray.pay)->lastNode = node;
-                    }*/
+                    ropePay->lastNode = node;
                 }
 
             } else {
@@ -2644,18 +2641,8 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
                     // Check one primitive inside leaf node
                     if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                         hit = true;
-                        /*double minLocal = 1e99;
-                        node->bbox.IntersectP(ray, &minLocal, nullptr);
-                        if (minId == p->globalId && tMinHit > minLocal) {
-                            tMinHit = minLocal;
-                            ((RopePayload *) ray.pay)->lastNode = node;
-                        } else if(minId != p->globalId){
-                            tMinHit = minLocal;
-                            minId = p->globalId;
-                            ((RopePayload *) ray.pay)->lastNode = node;
-                        }*/
-                        if(ray.pay && ((RopePayload *) ray.pay)->lastNode)
-                            ((RopePayload *) ray.pay)->lastNode = node;
+                        if(ropePay && ropePay->lastNode)
+                            ropePay->lastNode = node;
                     }
                 }
             }
