@@ -1219,6 +1219,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     // Create item list
                     auto &facets = mApp->worker.model->facets;
                     static size_t nbSteps_total = 0;
+                    static uint64_t nbSteps_totalsum = 0;
                     if (!rate_vec && rate_vec->size() != facets.size())
                         rate_vec->resize(facets.size(), -1.0f);
                     if (!facets.empty() && facItems.size() != facets.size()) {
@@ -1229,6 +1230,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         mApp->aabbVisu.trimByProb[1] = 0;
                         size_t nbIntersections_total = 0;
                         nbSteps_total = 0;
+                        nbSteps_totalsum = 0;
 
                         for (int n = 0; n < facItems.Size; n++) {
                             auto &f = facets[n];
@@ -1239,6 +1241,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                                                      : 0.0;
                             nbIntersections_total += f->nbIntersections;
                             nbSteps_total += item.steps;
+                            nbSteps_totalsum += item.steps * mApp->worker.globState.facetStates[item.ID].momentResults[0].hits.nbMCHit;
                             mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float) item.steps);
                             mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float) item.steps);
                             if (selected_combo == 0) {
@@ -1249,6 +1252,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 trimMin = std::min(trimMin, (float) item.intersectionRate);
                             }
                         }
+
+                        if(mApp->worker.globState.globalHits.globalHits.nbMCHit > 0)
+                            nbSteps_totalsum /= mApp->worker.globState.globalHits.globalHits.nbMCHit;
 
                         for (int n = 0; n < facItems.Size; n++) {
                             FacetData &item = facItems[n];
@@ -1292,6 +1298,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                         size_t nbIntersections_total = 0;
                         nbSteps_total = 0;
+                        nbSteps_totalsum = 0;
                         for (int n = 0; n < facItems.Size; n++) {
                             FacetData &item = facItems[n];
                             auto &f = facets[item.ID];
@@ -1300,6 +1307,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                                                      : 0.0;
                             nbIntersections_total += f->nbIntersections;
                             nbSteps_total += item.steps;
+                            nbSteps_totalsum += item.steps * mApp->worker.globState.facetStates[item.ID].momentResults[0].hits.nbMCHit;
+
 
                             //mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float)item.steps);
                             //mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float)item.steps);
@@ -1311,6 +1320,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 trimMin = std::min(trimMin, (float) item.intersectionRate);
                             }
                         }
+
+                        if(mApp->worker.globState.globalHits.globalHits.nbMCHit > 0)
+                            nbSteps_totalsum /= mApp->worker.globState.globalHits.globalHits.nbMCHit;
 
                         for (int n = 0; n < facItems.Size; n++) {
                             FacetData &item = facItems[n];
@@ -1351,7 +1363,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                         ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
 
-                        ImGui::TableSetupColumn(fmt::format("{} ({})","Steps",nbSteps_total/facets.size()).c_str(), ImGuiTableColumnFlags_WidthStretch, 0.0f,
+                        ImGui::TableSetupColumn(fmt::format("Steps ({} {})",nbSteps_total/facets.size(), nbSteps_totalsum).c_str(), ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Steps);
                         ImGui::TableSetupColumn("ISRate", ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Inter);

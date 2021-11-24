@@ -168,6 +168,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
           primitives(std::move(p)) {
 
     nodes = nullptr;
+
     if (primitives.empty())
         return;
     if (splitMethod == KdTreeAccel::SplitMethod::ProbSplit && probabilities.empty())
@@ -1206,6 +1207,8 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 
     nodes[nodeNum].nodeId = nodeNum;
     nodes[nodeNum].parent = nullptr;
+    for(auto& rope : nodes[nodeNum].ropes)
+        rope = nullptr;
 
     // Excl for rope traversal
     nodes[nodeNum].bbox = nodeBounds;
@@ -1797,7 +1800,8 @@ bool KdTreeAccel::Intersect(Ray &ray){
 
 bool KdTreeAccel::IntersectStat(RayStat &ray){
     if(hasRopes){
-        return IntersectRopeStat(ray);
+        //return IntersectRopeStat(ray);
+        return IntersectRopeRestartStat(ray);
     }
     else{
         return IntersectTravStat(ray);
@@ -2556,6 +2560,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
             //node = node->parent;
             node = node->getNeighboringNode(ray);
             nHops++;
+            ray.traversalSteps++;
         }
         /*size_t nHopsNeigh = 0;
         while(tmpNode != nullptr && !tmpNode->bbox.IsInside(ray.origin)){// not in node
@@ -2574,6 +2579,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
     node->bbox.IntersectP(ray, &tMin, nullptr);
 
     while (node != nullptr) {
+        ray.traversalSteps++;
         ray.traversedNodes.push_back(node->nodeId);
 
         // Bail out if we found a hit closer than the current node
@@ -2614,7 +2620,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
-                if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                     hit = true;
                     ((RopePayload *) ray.pay)->lastNode = node;
                     /*double minLocal = 1e99;
@@ -2636,7 +2642,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                    if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                         hit = true;
                         /*double minLocal = 1e99;
                         node->bbox.IntersectP(ray, &minLocal, nullptr);
