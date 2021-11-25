@@ -2195,7 +2195,7 @@ void Geometry::DrawAABB() {
         }
         else {
 
-            std::vector<std::shared_ptr<RTPrimitive>>& accel = mApp->worker.model->accel;
+            std::vector<std::shared_ptr<RTAccel>>& accel = mApp->worker.model->accel;
             /*if(mApp->worker.model->accel.empty()) {
                 mApp->worker.model->BuildAccelStructure(
                         &mApp->worker.globState,

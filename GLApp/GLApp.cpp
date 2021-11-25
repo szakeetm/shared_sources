@@ -31,7 +31,7 @@ LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
 #endif*/
 
-GLApplication::GLApplication() {
+GLApplication::GLApplication() : m_Timer(false) {
 
   m_bWindowed = true;
   m_strWindowTitle = "GL application";

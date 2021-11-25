@@ -89,6 +89,32 @@ public:
     MersenneTwister *rng;
 };
 
+struct RayStatistics {
+    size_t traversalSteps{0};
+    size_t nbIntersectionTests{0};
+    size_t nbBoxIntersectionTests{0};
+    size_t nbDownTest{0};
+    size_t nbUpTest{0};
+
+    RayStatistics& operator+=(const RayStatistics& src) {
+        this->traversalSteps += src.traversalSteps;
+        this->nbIntersectionTests += src.nbIntersectionTests;
+        this->nbBoxIntersectionTests += src.nbBoxIntersectionTests;
+        this->nbDownTest += src.nbDownTest;
+        this->nbUpTest += src.nbUpTest;
+
+        return *this;
+    }
+
+    inline void Reset(){
+        traversalSteps = 0;
+        nbIntersectionTests = 0;
+        nbBoxIntersectionTests = 0;
+        nbDownTest = 0;
+        nbUpTest = 0;
+    }
+};
+
 class RayStat : public Ray {
 public:
     RayStat() : Ray() {}
@@ -110,8 +136,13 @@ public:
 
         return *this;
     }
+
+    void ResetStats(){
+        stats.Reset();
+    }
+
     //Statistics
-    size_t traversalSteps{0};
+    RayStatistics stats;
     std::vector<size_t> traversedNodes;
 };
 

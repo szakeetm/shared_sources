@@ -236,7 +236,7 @@ static std::vector<std::vector<CommonEdge>> edges_algo(4); // first index = face
 
 void GeometryTools::AnalyseGeometry(Geometry* geometry) {
     edges_algo.resize(4);
-    Chronometer stop;
+    Chronometer stop(false);
     int dupli = 0, lone = 0, trans = 0;
     stop.Start();
     AnalyseNeighbors(geometry);

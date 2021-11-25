@@ -7,6 +7,7 @@
 
 #include "BoundingBox.h"
 #include <atomic>
+#include <Helper/Chronometer.h>
 
 class Ray;
 
@@ -58,5 +59,21 @@ public:
     virtual bool Intersect(Ray &r) = 0;
     virtual bool IntersectStat(RayStat &r) = 0;
     AxisAlignedBoundingBox bb;
+};
+
+// General acceleration data structure interface
+class RTAccel : public RTPrimitive {
+public:
+    // Stats
+    RayStatistics perRayCount;
+    std::vector<IntersectCount> ints;
+    std::vector<CummulativeBenchmark> algorithm_times; //time_sum,count pair for individual algorithm times
+    void ResetStats(){
+        perRayCount.Reset();
+        for(auto& stat : ints) {
+            stat.Reset();
+        }
+    }
+    // -----
 };
 #endif //MOLFLOW_PROJ_RTPRIMITIVE_H

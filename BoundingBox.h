@@ -9,6 +9,14 @@
 #include <RayTracing/Ray.h>
 #include "Vector.h"
 
+// profiling
+#include <Helper/Chronometer.h>
+
+namespace Profiling {
+    extern CummulativeBenchmark boxStats;
+    extern CummulativeBenchmark boxPStats;
+}
+
 class AxisAlignedBoundingBox{
 public:
     AxisAlignedBoundingBox();
@@ -58,8 +66,9 @@ public:
 
     static AxisAlignedBoundingBox Union(const AxisAlignedBoundingBox& bb, const Vector3d& p);
 
-    bool IntersectBox(const Ray &ray, const Vector3d &invDir,
-                                                     const int dirIsNeg[3]) const;
+    bool IntersectBox(const Ray &ray, const Vector3d &invDir, const int dirIsNeg[3]) const;
+    bool IntersectBox(RayStat &ray, const Vector3d &invDir, const int *dirIsNeg) const;
+
     bool IntersectP(const Ray &ray, double *hitt0, double *hitt1) const;
     bool IntersectP(const Ray &ray, double *hitt0, double *hitt1, int dim) const;
     bool IsInside(const Vector3d &point) const;
@@ -70,6 +79,7 @@ public:
         archive(CEREAL_NVP(min), CEREAL_NVP(max));
     }
 
+    bool IntersectP(RayStat &ray, double *hitt0, double *hitt1) const;
 } ;
 
 

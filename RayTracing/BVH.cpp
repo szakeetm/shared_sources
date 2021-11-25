@@ -15,6 +15,13 @@
 #include <Helper/ConsoleLogger.h>
 #include <utility>
 #include <random>
+#include <Helper/Chronometer.h>
+
+namespace Profiling {
+    CummulativeBenchmark intersectStatsBVH{};
+}
+
+static Chronometer time_bvh;
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -799,6 +806,14 @@ bool BVHAccel::Intersect(Ray &ray) {
 bool BVHAccel::IntersectStat(RayStat &ray) {
     if (!nodes) return false;
 
+    /*Chronometer time_outerloop; // 0
+Chronometer time_intersectbox; // 1
+Chronometer time_intersect; // 2
+if(algorithm_times.size() != 3)
+    std::vector<CummulativeBenchmark>(3,CummulativeBenchmark()).swap(algorithm_times);
+*/
+    time_bvh.ReStart();
+
     bool hit = false;
     Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
     int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
@@ -806,11 +821,15 @@ bool BVHAccel::IntersectStat(RayStat &ray) {
     int toVisitOffset = 0, currentNodeIndex = 0;
     int nodesToVisit[64];
     while (true) {
+        //time_outerloop.ReStart();
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
-        ray.traversalSteps++;
-        ints[currentNodeIndex].nbChecks += ray.traversalSteps;
+        ray.stats.traversalSteps++;
+
+        // nbChecks count box and primitive intersection tests
+        ints[currentNodeIndex].nbChecks += ray.stats.traversalSteps;
         if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
+            //time_intersectbox.ReStart();
             ints[currentNodeIndex].nbIntersects++;
             if (node->nPrimitives > 0) {
                 // Intersect ray with primitives in leaf BVH node
@@ -818,7 +837,7 @@ bool BVHAccel::IntersectStat(RayStat &ray) {
 
                     const std::shared_ptr<Primitive> &p = primitives[node->primitivesOffset + i];
                     // Do not check last collided facet to prevent self intersections
-                    ray.traversalSteps++;
+                    ray.stats.traversalSteps++;
                     if (p->globalId != ray.lastIntersected && p->IntersectStat(ray)) {
                         hit = true;
                     }
@@ -836,13 +855,19 @@ bool BVHAccel::IntersectStat(RayStat &ray) {
                     currentNodeIndex = currentNodeIndex + 1;
                 }
             }
+            //this->algorithm_times[1].AddTime(time_intersectbox.ElapsedMs());
         } else {
             if (toVisitOffset == 0) break;
             currentNodeIndex = nodesToVisit[--toVisitOffset];
         }
+
+        //this->algorithm_times[0].AddTime(time_outerloop.ElapsedMs());
     }
 
-    ray.traversalSteps = 0;
+    perRayCount += ray.stats;
+    ray.ResetStats();
+    Profiling::intersectStatsBVH.AddTime(time_bvh.ElapsedMs());
+
     return hit;
 }
 

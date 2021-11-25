@@ -10,6 +10,12 @@
 #include <FacetData.h>
 #include "Primitive.h"
 
+namespace Profiling {
+    extern CummulativeBenchmark intersectStatsKD;
+    extern CummulativeBenchmark intersectStatsKDRope;
+    extern CummulativeBenchmark intersectStatsKDRopeRestart;
+}
+
 using Primitive = Facet;
 const double KD_TREE_EPSILON = 1e-8; // for ropes
 enum SplitAxis {
@@ -107,7 +113,7 @@ struct RopePayload : Payload {
 #endif
 };
 
-class KdTreeAccel : public RTPrimitive {
+class KdTreeAccel : public RTAccel {
 public:
     using BoundaryFloat = double;
     struct RaySegment{
@@ -161,7 +167,6 @@ public:
     bool IntersectTrav(Ray &ray);
     RTStats IntersectT(Ray &ray);
 
-    std::vector<IntersectCount> ints;
     bool hasRopes = false;
     bool restartFromNode = false;
 

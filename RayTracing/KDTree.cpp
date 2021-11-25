@@ -14,11 +14,21 @@
 #include <set>
 #include <cassert>
 #include <random>
-#include <Helper/Chronometer.h>
 #include <Helper/ConsoleLogger.h>
 
 #include "KDTree.h"
 #include "Ray.h"
+
+#include <Helper/Chronometer.h>
+namespace Profiling {
+    CummulativeBenchmark intersectStatsKD{};
+    CummulativeBenchmark intersectStatsKDRope{};
+    CummulativeBenchmark intersectStatsKDRopeRestart{};
+}
+
+static Chronometer time_trav;
+static Chronometer time_rope;
+static Chronometer time_roperestart;
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -295,9 +305,8 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 void KdTreeAccel::AddRopes(bool optimized) {
     if(!nodes)
         return;
-    for(int n = 0; n < nAllocedNodes; ++n){
-        ints[nodes[n].nodeId].Reset();
-    }
+    ResetStats();
+
     hasRopes = true;
     KdAccelNode* ropes_loc[6] = { NULL }; // 2 ropes for each dimension
     attachRopes(&this->nodes[0], ropes_loc, optimized);
@@ -305,8 +314,9 @@ void KdTreeAccel::AddRopes(bool optimized) {
 
 void KdTreeAccel::RemoveRopes(){
     hasRopes = false;
+    ResetStats();
+
     for(int n = 0; n < nAllocedNodes; ++n){
-        ints[nodes[n].nodeId].Reset();
         for (auto & rope : nodes[n].ropes) {
             rope = nullptr;
         }
@@ -2233,6 +2243,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
 
 bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
+    time_rope.ReStart();
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
     double tMinHit = 1.0e99;
@@ -2253,6 +2264,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
 
     //node->bbox.IntersectP(ray, &tMin, nullptr);
 
+    ray.stats.traversalSteps++;
     while (node != nullptr) {
         ray.traversedNodes.push_back(node->nodeId);
 
@@ -2262,11 +2274,13 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
 
         // Down traversal
         while(!node->IsLeaf()) {
-            ints[node->nodeId].nbChecks += ray.traversalSteps;
+            ints[node->nodeId].nbChecks += ray.stats.traversalSteps;
             // Process kd-tree interior node
             //std::cout << "Moving down to find leaf:\n";
             //node->prettyPrint();
-            ray.traversalSteps++;
+
+            ray.stats.nbDownTest++; // interior test
+            ray.stats.traversalSteps++;
             ints[node->nodeId].nbIntersects++;
 
             //bool isLeft = false;
@@ -2280,7 +2294,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
             ray.traversedNodes.push_back(node->nodeId);
         }
 
-        ints[node->nodeId].nbChecks += ray.traversalSteps;
+        ints[node->nodeId].nbChecks += ray.stats.traversalSteps;
 
         // At a leaf
         // t_exit gets updated on hit with ray.tMax
@@ -2288,7 +2302,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
             // Check for intersections inside leaf node
             int nPrimitives = node->nPrimitives();
             if (nPrimitives == 1) {
-                ray.traversalSteps++;
+                ray.stats.traversalSteps++;
 
                 const std::shared_ptr<Primitive> &p =
                         primitives[node->onePrimitive];
@@ -2300,7 +2314,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
 
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
-                    ray.traversalSteps++;
+                    ray.stats.traversalSteps++;
                     int index =
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
@@ -2337,6 +2351,8 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
             if ( node == NULL ) {
                 break;
             }
+
+            ray.stats.traversalSteps++; // inc at the end, as we do it once in the beginning out of the loop
         }
     }
 
@@ -2344,7 +2360,10 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
         printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
-    ray.traversalSteps = 0;
+    perRayCount += ray.stats;
+    ray.ResetStats();
+    Profiling::intersectStatsKDRope.AddTime(time_rope.ElapsedMs());
+
     return hit;
 }
 
@@ -2540,6 +2559,8 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
 
 bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
+    time_roperestart.ReStart();
+
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
     double tMinHit = 1.0e99;
@@ -2567,7 +2588,8 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
             //node = node->parent;
             node = node->getNeighboringNode(ray);
             nHops++;
-            ray.traversalSteps++;
+            ray.stats.traversalSteps++;
+            ray.stats.nbUpTest++;
         }
         /*size_t nHopsNeigh = 0;
         while(tmpNode != nullptr && !tmpNode->bbox.IsInside(ray.origin)){// not in node
@@ -2586,7 +2608,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
     node->bbox.IntersectP(ray, &tMin, nullptr);
 
     while (node != nullptr) {
-        ray.traversalSteps++;
+        ray.stats.traversalSteps++;
         ray.traversedNodes.push_back(node->nodeId);
 
         // Bail out if we found a hit closer than the current node
@@ -2595,11 +2617,12 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
 
         // Down traversal
         while(!node->IsLeaf()) {
-            ints[node->nodeId].nbChecks += ray.traversalSteps;
+            ints[node->nodeId].nbChecks += ray.stats.traversalSteps;
             // Process kd-tree interior node
             //std::cout << "Moving down to find leaf:\n";
             //node->prettyPrint();
-            ray.traversalSteps++;
+            ray.stats.nbDownTest++; // interior test
+            ray.stats.traversalSteps++;
             ints[node->nodeId].nbIntersects++;
 
             //bool isLeft = false;
@@ -2613,7 +2636,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
             ray.traversedNodes.push_back(node->nodeId);
         }
 
-        ints[node->nodeId].nbChecks += ray.traversalSteps;
+        ints[node->nodeId].nbChecks += ray.stats.traversalSteps;
 
         // At a leaf
         // t_exit gets updated on hit with ray.tMax
@@ -2621,7 +2644,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
             // Check for intersections inside leaf node
             int nPrimitives = node->nPrimitives();
             if (nPrimitives == 1) {
-                ray.traversalSteps++;
+                ray.stats.traversalSteps++;
 
                 const std::shared_ptr<Primitive> &p =
                         primitives[node->onePrimitive];
@@ -2634,7 +2657,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
 
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
-                    ray.traversalSteps++;
+                    ray.stats.traversalSteps++;
                     int index =
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
@@ -2680,12 +2703,17 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
         printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
-    ray.traversalSteps = 0;
+    perRayCount += ray.stats;
+    ray.ResetStats();
+
+    Profiling::intersectStatsKDRopeRestart.AddTime(time_roperestart.ElapsedMs());
+
     return hit;
 }
 
 bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
     //ProfilePhase p(Prof::AccelIntersect);
+    time_trav.ReStart();
     // Compute initial parametric range of ray inside kd-tree extent
     double tMin = 0.0, tMax = 1.0e99;
     ray.traversedNodes.clear();
@@ -2706,13 +2734,14 @@ bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
     const KdAccelNode *node = &nodes[0];
     while (node != nullptr) {
         ray.traversedNodes.push_back(node->nodeId);
-        ints[node->nodeId].nbChecks += ray.traversalSteps;
+        ints[node->nodeId].nbChecks += ray.stats.traversalSteps;
 
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;
         if (!node->IsLeaf()) {
             // Process kd-tree interior node
-            ray.traversalSteps++;
+            ray.stats.traversalSteps++;
+            ray.stats.nbDownTest++; // interior test
             ints[node->nodeId].nbIntersects++;
 
             // Compute parametric distance along ray to split plane
@@ -2754,7 +2783,7 @@ bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
-                ray.traversalSteps++;
+                ray.stats.traversalSteps++;
                 if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
                     hit = true;
             } else {
@@ -2763,7 +2792,7 @@ bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    ray.traversalSteps++;
+                    ray.stats.traversalSteps++;
                     if (p->globalId != ray.lastIntersected && p->IntersectStat(ray))
                         hit = true;
                 }
@@ -2780,7 +2809,11 @@ bool KdTreeAccel::IntersectTravStat(RayStat &ray) {
         }
     }
 
-    ray.traversalSteps = 0;
+    perRayCount += ray.stats;
+    ray.ResetStats();
+
+    Profiling::intersectStatsKD.AddTime(time_trav.ElapsedMs());
+
     return hit;
 }
 
@@ -2803,8 +2836,8 @@ RTStats KdTreeAccel::IntersectT(Ray &ray) {
     const KdAccelNode *node = &nodes[0];
 
     RTStats stat;
-    Chronometer time_trav;
-    Chronometer time_int;
+    Chronometer time_trav(false);
+    Chronometer time_int(false);
     while (node != nullptr) {
         // Bail out if we found a hit closer than the current node
         if (ray.tMax < tMin) break;

@@ -13,6 +13,9 @@
 
 using Primitive = Facet;
 
+namespace Profiling {
+    extern CummulativeBenchmark intersectStatsBVH;
+}
 
 // BVHAccel Forward Declarations
 struct BVHBuildNode;
@@ -48,7 +51,7 @@ struct BVHPrimitiveInfo {
     double probability; // For MCHitSplit
 };
 
-class BVHAccel : public RTPrimitive {
+class BVHAccel : public RTAccel {
 public:
     // BVHAccel Public Types
     enum class SplitMethod {
@@ -73,7 +76,6 @@ public:
 
     bool Intersect(Ray &ray) override;
 
-    std::vector<IntersectCount> ints;
     LinearBVHNode* GetNodes(){return nodes;};
 private:
     void ComputeBB() override;

@@ -728,6 +728,7 @@ int SimulationController::Reset() {
     DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Resetting local cache...", true, true);
     resetControls();
+
     auto *sim = simulation;
     sim->ResetSimulation();
     SetReady(loadOk);

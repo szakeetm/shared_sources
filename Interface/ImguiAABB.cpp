@@ -262,18 +262,10 @@ inline int Log2Int(int64_t v) { return Log2Int((uint64_t) v); }
 
 int UpdateADSStats(){
     // Reset all stats from nodes and facets
-    if (!mApp->worker.model->accel.empty() && mApp->worker.model->initialized) {
-        std::vector<IntersectCount> *stats = nullptr;
-        if (mApp->worker.model->wp.accel_type &&
-            std::dynamic_pointer_cast<KdTreeAccel>(mApp->worker.model->accel.front()) != nullptr) {
-            stats = &std::dynamic_pointer_cast<KdTreeAccel>(mApp->worker.model->accel.front())->ints;
-        } else if (std::dynamic_pointer_cast<BVHAccel>(mApp->worker.model->accel.front()) != nullptr) {
-            stats = &std::dynamic_pointer_cast<BVHAccel>(mApp->worker.model->accel.front())->ints;
-        }
-        for(auto& stat : *stats) {
-            stat.Reset();
-        }
+    if (!mApp->worker.model->accel.empty() && mApp->worker.model->accel.front() != nullptr && mApp->worker.model->initialized) {
+        mApp->worker.model->accel.front()->ResetStats();
     }
+
     for(auto& fac : mApp->worker.model->facets){
         fac->nbTraversalSteps = 0;
         fac->nbIntersections = 0;
@@ -911,18 +903,20 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             if(mApp->worker.model->wp.accel_type == 1)
                 for( auto& acc : accel){
                     //auto nodes = static_cast<KdTreeAccel*>(acc.get())->nodes;
-                    auto stats = static_cast<KdTreeAccel*>(acc.get())->ints;
-                    for(const auto& stat : stats) {
+                    for(const auto& stat : acc->ints) {
                         tree_stats.nIntersections += stat.nbIntersects;
                         tree_stats.nTraversedInner += stat.nbChecks;
                     }
                 }
             // old_bvb
-            int nInt = tree_stats.nIntersections / mApp->worker.globState.globalHits.globalHits.nbHitEquiv;
+            int nInt = mApp->worker.globState.globalHits.globalHits.nbHitEquiv > 0.0 ? static_cast<int>(
+                    static_cast<double>(tree_stats.nIntersections) /
+                    mApp->worker.globState.globalHits.globalHits.nbHitEquiv) : 0;
             if(ImGui::InputInt("nIntersects", &nInt)) {
-                tree_stats.nIntersections = nInt;
+                tree_stats.nIntersections = static_cast<size_t>(nInt);
             }
-            int nCheck = tree_stats.nTraversedInner / mApp->worker.globState.globalHits.globalHits.nbHitEquiv;
+            int nCheck = mApp->worker.globState.globalHits.globalHits.nbHitEquiv > 0.0 ? static_cast<int>(
+                    tree_stats.nTraversedInner / mApp->worker.globState.globalHits.globalHits.nbHitEquiv) : 0;
             if(ImGui::InputInt("nCheck", &nCheck)) {
                 tree_stats.nTraversedInner = nCheck;
             }
@@ -947,11 +941,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                     std::vector<IntersectCount> *stats = nullptr;
                     if (!accel.empty() && mApp->worker.model->initialized) {
-                        if (mApp->worker.model->wp.accel_type &&
-                            std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
-                            stats = &std::dynamic_pointer_cast<KdTreeAccel>(accel.front())->ints;
-                        } else if (std::dynamic_pointer_cast<BVHAccel>(accel.front()) != nullptr) {
-                            stats = &std::dynamic_pointer_cast<BVHAccel>(accel.front())->ints;
+                        if (accel.front() != nullptr) {
+                            stats = &accel.front()->ints;
                         }
                     }
 
@@ -1291,14 +1282,14 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 case 2:
                                     for (int n = 0; n < facItems.Size; n++) {
                                         FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.intersectionRate_global;
+                                        (*rate_vec)[item.ID] = static_cast<float>(item.intersectionRate_global);
                                     }
                                     break;
                                 case 0:
                                 default:
                                     for (int n = 0; n < facItems.Size; n++) {
                                         FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.steps;
+                                        (*rate_vec)[item.ID] = static_cast<float>(item.steps);
                                     }
                                     break;
                             }
@@ -1372,11 +1363,64 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             }
                         }
                     }
+
+                    size_t avgRayIntersects = 0;
+                    float avgRayUps = 0;
+                    size_t avgRayDowns = 0;
+                    size_t avgRayBoxIntersects = 0;
+                    static double avgBoxTime = 0.0;
+                    static double avgBoxPTime = 0.0;
+                    static double avgBVH = 0.0;
+                    static double avgKDTrav = 0.0;
+                    static double avgKDR = 0.0;
+                    static double avgKDRR = 0.0;
+
+                    if(!accel.empty() && accel.front() && mApp->worker.globState.globalHits.globalHits.nbMCHit > 0) {
+                        const size_t& denum = mApp->worker.globState.globalHits.globalHits.nbMCHit;
+                        avgRayIntersects = accel.front()->perRayCount.nbIntersectionTests / denum;
+                        avgRayUps = (float)accel.front()->perRayCount.nbUpTest / denum;
+                        avgRayDowns = accel.front()->perRayCount.nbDownTest / denum;
+                        avgRayBoxIntersects = accel.front()->perRayCount.nbBoxIntersectionTests / denum;
+
+                        if(mApp->worker.model->wp.accel_type == 1) {
+                            //using Profiling::boxPStats;
+                            using Profiling::intersectStatsKD;
+                            using Profiling::intersectStatsKDRope;
+                            using Profiling::intersectStatsKDRopeRestart;
+
+                            //extern CummulativeBenchmark boxPStats;
+                            //avgBoxPTime = boxPStats.GetRatio();
+                            avgKDTrav = intersectStatsKD.GetRatio();
+                            avgKDR = intersectStatsKDRope.GetRatio();
+                            avgKDRR = intersectStatsKDRopeRestart.GetRatio();
+                        }
+                        else {
+                            //using Profiling::boxStats;
+                            using Profiling::intersectStatsBVH;
+
+                            //extern CummulativeBenchmark boxStats;
+                            //avgBoxTime = boxStats.GetRatio();
+                            avgBVH = intersectStatsBVH.GetRatio();
+                        }
+                    }
+
+                    // avg steps per facet, weighted avg steps per facet,
+                    ImGui::TextDisabled("%s", fmt::format("AVG (Steps:{} WSteps:{})",
+                                                          nbSteps_total/facets.size(), nbSteps_totalsum).c_str());
+                    ImGui::TextDisabled("%s", fmt::format("AVG Per Ray (Int:{} Box:{} Up:{:.2f} Down:{})",
+                                                          avgRayIntersects, avgRayBoxIntersects, avgRayUps, avgRayDowns).c_str());
+                    ImGui::TextDisabled("%s", fmt::format("Timing (BVH {:.2e}ms)",
+                                                          avgBVH).c_str());
+                    ImGui::TextDisabled("%s", fmt::format("Timing (KD {:.2e}ms {:.2e}ms {:.2e}ms)",
+                                                          avgKDTrav, avgKDR, avgKDRR).c_str());
+                    ImGui::TextDisabled("%s", fmt::format("Timing (Box {:.2e}ms {:.2e}ms)",
+                                                          avgBoxTime, avgBoxPTime).c_str());
                     if (ImGui::BeginTable("facetList", 4, tFlags)) {
                         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                         ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
 
-                        ImGui::TableSetupColumn(fmt::format("Steps ({} {})",nbSteps_total/facets.size(), nbSteps_totalsum).c_str(), ImGuiTableColumnFlags_WidthStretch, 0.0f,
+                        ImGui::TableSetupColumn("Steps",
+                                                ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Steps);
                         ImGui::TableSetupColumn("ISRate", ImGuiTableColumnFlags_WidthStretch, 0.0f,
                                                 FacetDataColumnID_Inter);

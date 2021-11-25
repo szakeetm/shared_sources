@@ -4,9 +4,15 @@
 
 #include "Chronometer.h"
 
-Chronometer::Chronometer() {
-    isActive = false;
+Chronometer::Chronometer(bool start) {
     elapsedOnStop = 0.0;
+
+    if(start){
+        Start();
+    }
+    else{
+        isActive = false;
+    }
 }
 
 void Chronometer::Start() {
@@ -46,6 +52,13 @@ double Chronometer::ElapsedMs() {
 
 void Chronometer::ReInit() {
     isActive = false;
+    startTime = clock_type::now();
+    stopTime = startTime;
+    elapsedOnStop = 0.0;
+}
+
+void Chronometer::ReStart() {
+    isActive = true;
     startTime = clock_type::now();
     stopTime = startTime;
     elapsedOnStop = 0.0;
