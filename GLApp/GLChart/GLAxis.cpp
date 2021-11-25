@@ -1014,30 +1014,28 @@ GLuint GLAxis::initMarker(const char *name) {
    * Suppress last non significative zeros
    * @param n String representing a floating number
    */
-  std::string GLAxis::suppressZero(const char *n) {
+  std::string GLAxis::suppressZero(const char* n) {
 
-    static char ret[64];
-    bool hasDecimal = (strrchr(n,'.') != NULL);
+	  std::string truncated = n; //Local converted copy
 
-    if(hasDecimal) {
+	  size_t decimalPos = truncated.find('.');
+	  if (decimalPos != std::string::npos) { //There is a decimal point
 
-      strcpy(ret,n);
-      int i = (int)strlen(n) - 1;
-      while( n[i]=='0' ) {
-        ret[i]=0;
-        i--;
-      }
-      if(n[i]=='.') {
-        // Remove unwanted decimal
-        ret[i]=0;
-      }
+		  size_t exponentPos = truncated.find('e');
+		  if (exponentPos == std::string::npos) exponentPos = truncated.find('E');
 
-      return ret;
+		  size_t i;
+		  if (exponentPos == std::string::npos) i = truncated.length() - 1; //Look from end
+		  else i = exponentPos - 1; //Look from last character before exponent
 
-    } else {
-      return n;
-    }
+		  while (i > 0 && truncated[i] == '0') {
+			  truncated.erase(i--);
+		  }
 
+		  if (truncated[i] == '.') truncated.erase(i); //Trailing decimal without digits after
+ 
+	  }
+      return truncated;
   }
 
   /**
@@ -1118,7 +1116,7 @@ GLuint GLAxis::initMarker(const char *name) {
         // Auto format
         if(vt==0.0) return "0";
 
-        if(fabs(vt)<=1.0E-4) {
+        if(fabs(vt)<=1.0E-4 || fabs(vt)>=1.0E10) {
 
           return ToScientific(vt);
 

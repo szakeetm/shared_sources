@@ -701,12 +701,20 @@ int SimulationController::Start() {
             }
         }
 
-        if(GetLocalState() != PROCESS_ERROR && GetLocalState() != PROCESS_KILLED) {
-            if (simuEnd) {
-                    // Max desorption reached
-                    ClearCommand();
-                    SetState(PROCESS_DONE, GetSimuStatus());
-                    DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+        if (simuEnd) {
+            if (GetLocalState() != PROCESS_ERROR && GetLocalState() != PROCESS_KILLED) {
+                // Max desorption reached
+                ClearCommand();
+                SetState(PROCESS_DONE, GetSimuStatus());
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+            }
+        }
+        else {
+            if (GetLocalState() != PROCESS_ERROR && GetLocalState() != PROCESS_KILLED) {
+                // Time limit reached
+                ClearCommand();
+                SetState(PROCESS_DONE, GetSimuStatus());
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
     } else {
