@@ -19,7 +19,7 @@ struct CircularBuffer {
         // will add to back again
         size_max = max_size;
         offset  = 0;
-        data.resize(size_max);
+        data.reserve(size_max);
     }
     void Add(T x) {
         if (data.size() < size_max)
@@ -36,7 +36,7 @@ struct CircularBuffer {
         }
     }
     void Add_Batch(const std::vector<T> &cpy) {
-        if(cpy.empty() || Size() == 0)
+        if(cpy.empty() || Capacity() == 0)
             return;
         else if(cpy.size() == 1){
             Add(cpy.front());
