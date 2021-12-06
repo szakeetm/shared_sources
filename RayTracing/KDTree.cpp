@@ -2892,7 +2892,7 @@ RTStats KdTreeAccel::IntersectT(Ray &ray) {
                         primitives[node->onePrimitive];
 
                 // Check one primitive inside leaf node
-                if (p->globalId != ray.lastIntersected && p->Intersect(ray))
+                if (p->globalId != ray.lastIntersected && p->IntersectT(ray))
                     hit = true;
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
@@ -2900,7 +2900,7 @@ RTStats KdTreeAccel::IntersectT(Ray &ray) {
                             primitiveIndices[node->primitiveIndicesOffset + i];
                     const std::shared_ptr<Primitive> &p = primitives[index];
                     // Check one primitive inside leaf node
-                    if (p->globalId != ray.lastIntersected && p->Intersect(ray))
+                    if (p->globalId != ray.lastIntersected && p->IntersectT(ray))
                         hit = true;
                 }
             }

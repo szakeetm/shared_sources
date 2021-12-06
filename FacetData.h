@@ -102,6 +102,7 @@ struct Facet : public RTPrimitive {
 
     void ComputeBB() override { bb = sh.bb;} ;
     bool Intersect(Ray &r) override;
+    bool IntersectT(Ray &r);
     bool IntersectStat(RayStat &r) override;
 
 };
