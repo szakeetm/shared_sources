@@ -334,6 +334,7 @@ struct WorkerParams { //Plain old data
     int splitMethod{0}; //SAH by default for BVH/KDtree
     int bvhMaxPrimsInNode{2};
     double hybridWeight{1.0};
+    bool ignore_calculated_costs{true};
 
 #if defined(MOLFLOW)
 	double latestMoment;
@@ -387,6 +388,7 @@ struct WorkerParams { //Plain old data
 #endif
 		);
 	}
+
 };
 
 class GeomProperties {  //Formerly SHGEOM

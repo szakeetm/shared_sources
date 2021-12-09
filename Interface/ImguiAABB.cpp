@@ -467,6 +467,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     if(ImGui::InputDouble("Hybrid alpha weight", &mApp->worker.model->wp.hybridWeight, 0.01f, 1.0f, "%.2f")){
                         std::clamp(mApp->worker.model->wp.hybridWeight, 0.0, 1.0);
                     }
+                    ImGui::Checkbox("Ignore calculated costs (trav/intersections)", &mApp->worker.model->wp.ignore_calculated_costs);
                 }
 
                 if (ImGui::Button("Build new AABB")) {
