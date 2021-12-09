@@ -825,7 +825,7 @@ void ImguiWindow::renderSingle() {
 
                 future_int = std::async(std::launch::async, &SimulationModel::BuildAccelStructure, mApp->worker.model,
                                         &mApp->worker.globState, mApp->worker.model->wp.accel_type,
-                                        mApp->worker.model->wp.splitMethod, mApp->worker.model->wp.bvhMaxPrimsInNode);
+                                        mApp->worker.model->wp.splitMethod, mApp->worker.model->wp.bvhMaxPrimsInNode, mApp->worker.model->wp.hybridWeight);
 
                 active_prev_state = true;
                 mApp->wereEvents = true;

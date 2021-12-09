@@ -139,7 +139,7 @@ public:
 
     // KdTreeAccel Public Types
     enum class SplitMethod {
-        SAH, ProbSplit, TestSplit, HybridSplit, HybridBin
+        SAH, ProbSplit, ProbHybrid, TestSplit, HybridSplit, HybridBin
     };
     friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
@@ -154,9 +154,10 @@ public:
                 double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
     */
     KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
-                const std::vector<double> &probabilities = std::vector<double>{}, const std::vector<TestRay> &battery = std::vector<TestRay>{},
-                int isectCost = 80, int traversalCost = 1,
-                double emptyBonus = 0.5, int maxPrims = 1, int maxDepth = -1);
+                const std::vector<double> &probabilities = std::vector<double>{},
+                const std::vector<TestRay> &battery = std::vector<TestRay>{}, double hybridWeight = 0.5,
+                int isectCost = 80, int traversalCost = 1, double emptyBonus = 0.5, int maxPrims = 1,
+                int maxDepth = -1);
     KdTreeAccel(KdTreeAccel && src) noexcept;
     KdTreeAccel(const KdTreeAccel & src) noexcept;
 
@@ -179,19 +180,21 @@ private:
     void buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                    const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                    int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                   int badRefines, const std::vector<double> &probabilities, int prevSplitAxis);
+                   int badRefines, const std::vector<double> &probabilities, const double probWeight,
+                   int prevSplitAxis);
     void buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                    const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                    int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                   int badRefines, const std::vector<TestRay> &battery,
+                   int badRefines, double hybridWeight, const std::vector<TestRay> &battery,
                    const std::vector<TestRayLoc> &local_battery, int prevSplitAxis, double tMin, double tMax,
                    const std::vector<double> &primChance, double oldCost);
     void buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                       const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                       int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                      int badRefines, const std::unique_ptr<std::vector<RaySegment>> &battery,
-                      RayBoundary ** rb_stack, int prevSplitAxis, double tMin,
-                      double tMax, const std::vector<double> &primChance, double oldCost, BoundaryStack bound);
+                      int badRefines, double hybridWeight,
+                      const std::unique_ptr<std::vector<RaySegment>> &battery, RayBoundary **rb_stack,
+                      int prevSplitAxis, double tMin, double tMax, const std::vector<double> &primChance,
+                      double oldCost, BoundaryStack bound);
     void attachRopes(KdAccelNode *current, KdAccelNode *ropes[], bool optimize);
     void optimizeRopes( KdAccelNode *ropes[], AxisAlignedBoundingBox bbox);
 
@@ -207,9 +210,16 @@ private:
                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums,
                             int nPrimitives, const std::unique_ptr<BoundEdge[]> edges[3]);
     std::tuple<double, int, int> SplitProb(int axis, const AxisAlignedBoundingBox &nodeBounds,
-                            const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
-                            const std::unique_ptr<BoundEdge[]> edges[3],
-                            const std::vector<double> &probabilities);
+                                           const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                           int *primNums, int nPrimitives,
+                                           const std::unique_ptr<BoundEdge[]> edges[3],
+                                           const std::vector<double> &probabilities, const double weight) const;
+    std::tuple<double, int, int> SplitHybridProb(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                                 const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                                 int *primNums, int nPrimitives,
+                                                 const std::unique_ptr<BoundEdge[]> edges[3],
+                                                 const std::vector<double> &probabilities,
+                                                 const double hybridWeight) const;
 
     std::tuple<double, int, int> SplitHybrid(int axis, const AxisAlignedBoundingBox &nodeBounds,
                                              const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
@@ -217,7 +227,8 @@ private:
                                              const std::unique_ptr<BoundEdge[]> edges[3],
                                              const std::vector<TestRay> &battery,
                                              const std::vector<TestRayLoc> &local_battery,
-                                             const std::vector<double> &primChance, double tMax) const;
+                                             const std::vector<double> &primChance, double tMax,
+                                             double hybridWeight) const;
     std::tuple<double, int, int, bool, bool> SplitHybridBin(int axis, const AxisAlignedBoundingBox &nodeBounds,
                                                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
                                                             int *primNums, int nPrimitives,

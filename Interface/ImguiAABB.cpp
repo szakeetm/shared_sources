@@ -400,7 +400,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     items = {"SAH", "HLBVH", "Middle", "EqualCounts", "MolflowSplit", "ProbSplit", "TestSplit",
                              "HybridSplit"};
                 } else {
-                    items = {"SAH", "ProbSplit", "TestSplit", "HybridSplit", "HybridBinSplit"};
+                    items = {"SAH", "ProbSplit", "ProbHybrid", "TestSplit", "HybridSplit", "HybridBinSplit"};
                 }
 
                 if (ImGui::BeginListBox("Splitting technique")) {
@@ -422,6 +422,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     static bool withRopes = mApp->worker.model->wp.kd_with_ropes;
                     static bool restartRope = mApp->worker.model->wp.kd_restart_ropes;
                     static bool optimizedRopes = mApp->worker.model->wp.kd_with_ropes_optimized;
+
                     if (ImGui::Checkbox("Optimise ropes", &optimizedRopes)) {
                         mApp->worker.model->wp.kd_with_ropes_optimized = optimizedRopes;
                         if (withRopes) {
@@ -462,6 +463,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 kd->restartFromNode = restartRope;
                             }
                         }
+                    }
+                    if(ImGui::InputDouble("Hybrid alpha weight", &mApp->worker.model->wp.hybridWeight, 0.01f, 1.0f, "%.2f")){
+                        std::clamp(mApp->worker.model->wp.hybridWeight, 0.0, 1.0);
                     }
                 }
 

@@ -333,6 +333,7 @@ struct WorkerParams { //Plain old data
     bool kd_with_ropes_optimized{true};
     int splitMethod{0}; //SAH by default for BVH/KDtree
     int bvhMaxPrimsInNode{2};
+    double hybridWeight{1.0};
 
 #if defined(MOLFLOW)
 	double latestMoment;

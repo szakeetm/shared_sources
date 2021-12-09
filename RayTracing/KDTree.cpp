@@ -20,6 +20,9 @@
 #include "Ray.h"
 
 #include <Helper/Chronometer.h>
+
+#include <fstream>
+
 namespace Profiling {
     CummulativeBenchmark intersectStatsKD{};
     CummulativeBenchmark intersectStatsKDRope{};
@@ -129,6 +132,9 @@ void KdTreeAccel::PrintTreeInfo() {
         case (SplitMethod::ProbSplit):
             splitName = "Prob";
             break;
+        case (SplitMethod::ProbHybrid):
+            splitName = "ProbHybrid";
+            break;
         case (SplitMethod::TestSplit):
             splitName = "Test";
             break;
@@ -169,6 +175,7 @@ void KdTreeAccel::ComputeBB() {
 // KdTreeAccel Method Definitions
 KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Primitive>> p,
                          const std::vector<double> &probabilities, const std::vector<TestRay> &battery,
+                         double hybridWeight,
                          int isectCost, int traversalCost, double emptyBonus, int maxPrims, int maxDepth)
         : splitMethod(splitMethod),
           isectCost(isectCost),
@@ -181,7 +188,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
 
     if (primitives.empty())
         return;
-    if (splitMethod == KdTreeAccel::SplitMethod::ProbSplit && probabilities.empty())
+    if ((splitMethod == KdTreeAccel::SplitMethod::ProbSplit || splitMethod == KdTreeAccel::SplitMethod::ProbHybrid) && probabilities.empty())
         return;
     STATS_KD::_reset();
 
@@ -239,7 +246,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         double costLimit = 1.0e99;
         // Start recursive construction of kd-tree
         buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-                  maxDepth, edges, prims0.get(), prims1.get(), 0, *batter_ptr, indices, -1, 0.0, 1.0e99,
+                  maxDepth, edges, prims0.get(), prims1.get(), 0, hybridWeight, *batter_ptr, indices, -1, 0.0, 1.0e99,
                   probabilities, costLimit);
 
         if (battery.size() > HITCACHELIMIT)
@@ -284,13 +291,13 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         double costLimit = 1.0e99;
         // Start recursive construction of kd-tree
         buildTreeRDH(0, bounds, primBounds, primNums.get(), primitives.size(),
-                     maxDepth, edges, prims0.get(), prims1.get(), 0, rays, rb_arr_ptr,
+                     maxDepth, edges, prims0.get(), prims1.get(), 0, hybridWeight, rays, rb_arr_ptr,
                      -1, 0.0, 1.0e99, probabilities, costLimit, boundaryStack);
 
         delete[] rb_stack;
     } else {
         buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),
-                  maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
+                  maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, hybridWeight, -1);
     }
 
     for (int nodeNum = 0; nodeNum < STATS_KD::interiorNodes + STATS_KD::leafNodes; ++nodeNum) {
@@ -424,7 +431,7 @@ std::tuple<double, int, int> KdTreeAccel::SplitProb(int axis, const AxisAlignedB
                                                     const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
                                                     int *primNums, int nPrimitives,
                                                     const std::unique_ptr<BoundEdge[]> edges[3],
-                                                    const std::vector<double> &probabilities) {
+                                                    const std::vector<double> &probabilities, const double weight) const {
 
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
@@ -743,13 +750,168 @@ std::tuple<double, int, int> KdTreeAccel::SplitTest(int axis, const AxisAlignedB
     return {bestCost, bestAxis, bestOffset};
 };
 
+std::tuple<double, int, int> KdTreeAccel::SplitHybridProb(int axis, const AxisAlignedBoundingBox &nodeBounds,
+                                                          const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
+                                                          int *primNums, int nPrimitives,
+                                                          const std::unique_ptr<BoundEdge[]> edges[3],
+                                                          const std::vector<double> &probabilities,
+                                                          const double hybridWeight) const {
+
+    // Choose split axis position for interior node
+    int bestAxis = -1, bestOffset = -1;
+    double bestCost = 1.0e99;
+    double oldCost = isectCost * double(nPrimitives);
+    double totalSA = nodeBounds.SurfaceArea();
+    double invTotalSA = 1.0 / totalSA;
+    Vector3d d = nodeBounds.max - nodeBounds.min;
+
+    // Initialize edges for _axis_
+    for (int i = 0; i < nPrimitives; ++i) {
+        int pn = primNums[i];
+        const AxisAlignedBoundingBox &apBounds = allPrimBounds[pn];
+        edges[axis][2 * i] = BoundEdge(apBounds.min[axis], pn, true);
+        edges[axis][2 * i + 1] = BoundEdge(apBounds.max[axis], pn, false);
+    }
+
+    // Sort _edges_ for _axis_
+    std::sort(&edges[axis][0], &edges[axis][2 * nPrimitives],
+              [](const BoundEdge &e0, const BoundEdge &e1) -> bool {
+                  if (e0.t == e1.t)
+                      return (int) e0.type < (int) e1.type;
+                  else
+                      return e0.t < e1.t;
+              });
+
+    double probBelow = 0.0;
+    double probAbove = 0.0;
+
+    // add probability for all edges going in
+    std::set<int> edgeIn;
+    if (!probabilities.empty()) {
+        for (int i = 0; i < 2 * nPrimitives; ++i) {
+            probAbove += probabilities[edges[axis][i].primNum];
+
+            /*auto inside = edgeIn.find(edges[axis][i].primNum);
+            if (inside != edgeIn.end()) {
+                //probAbove += edges[axis][i].type == EdgeType::End ? probabilities[edges[axis][i].primNum] : 0.0;
+                probAbove += probabilities[edges[axis][i].primNum];
+                edgeIn.erase(inside);
+            } else {
+                edgeIn.insert(edges[axis][i].primNum);
+            }*/
+        }
+    }
+
+    // normalise to [0..1]
+    double probMax = probAbove;
+    //probAbove = 1.0;
+
+    // Compute cost of all splits for _axis_ to find best
+    int nBelow = 0, nAbove = nPrimitives;
+
+    std::ofstream cost_writer;
+    if(nPrimitives > 800 && nPrimitives < 850){
+        cost_writer.open(fmt::format("costfile_{}.txt",nextFreeNode-1));
+    }
+    for (int i = 0; i < 2 * nPrimitives; ++i) {
+        if (edges[axis][i].type == EdgeType::End) {
+            --nAbove;
+            if (!probabilities.empty()) {
+                //auto inside = edgeIn.find(edges[axis][i].primNum);
+                //if (inside == edgeIn.end())
+                    probAbove -= probabilities[edges[axis][i].primNum];
+            }
+        }
+        double edgeT = edges[axis][i].t;
+        if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
+            // Compute cost for split at _i_th edge
+
+            // Compute child surface areas for split at _edgeT_
+            int otherAxis0 = (axis + 1) % 3, otherAxis1 = (axis + 2) % 3;
+            double belowSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (edgeT - nodeBounds.min[axis]) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double aboveSA = 2 * (d[otherAxis0] * d[otherAxis1] +
+                                  (nodeBounds.max[axis] - edgeT) *
+                                  (d[otherAxis0] + d[otherAxis1]));
+            double pBelow = belowSA * invTotalSA;
+            double pAbove = aboveSA * invTotalSA;
+            double eb = (nAbove == 0 || nBelow == 0) ? emptyBonus : 0;
+
+            double cost_sah =
+                    traversalCost +
+                    isectCost * (1 - eb) * (pBelow * nBelow + pAbove * nAbove);
+
+            double un_cost = traversalCost
+                             + isectCost * (1 - eb) *
+                               (/*pBelow **/ probBelow / (probMax) * nBelow + /*pAbove **/ probAbove / (probMax) * nAbove);
+
+            {
+                double cost = 0.0;
+                double alpha = 0.0;
+                double beta = 1.0 - alpha;
+
+                if(hybridWeight >= 0.0){
+                    alpha = hybridWeight;
+                    beta = 1.0 - alpha;
+                    cost = traversalCost
+                           + isectCost * (1 - eb) *
+                             (/*pBelow **/ probBelow / (probAbove+probBelow) * nBelow + /*pAbove **/ probAbove / (probAbove+probBelow) * nAbove);
+
+                }
+                else {
+                    if (1.0f / (float) this->primitives.size() <= probMax) {
+                        alpha = 1.0;
+                        beta = 1.0 - alpha;
+                        cost = traversalCost
+                               + isectCost * (1 - eb) *
+                                 (/*pBelow **/ probBelow / (probAbove+probBelow) * nBelow +
+                                               /*pAbove **/ probAbove / (probAbove+probBelow) * nAbove);
+                    }
+                }
+
+                //TODO: Maybe use nB Hits used for prob calculation as smoothing factor (beta * smooth)
+                //double weight = alpha * (1.0 - (1.0 / (1.0 + beta)));
+                double linCost = alpha * cost + beta * cost_sah;
+
+                if (linCost < bestCost) {
+                    bestCost = linCost;
+                    bestAxis = axis;
+                    bestOffset = i;
+                }
+
+
+                if(cost_writer.is_open()){
+                    cost_writer << edges[axis][i].t << " " << probabilities[edges[axis][i].primNum] << " " << cost_sah << " " << cost << " " << un_cost << "\n";
+                }
+            }
+        }
+        if (edges[axis][i].type == EdgeType::Start) {
+            ++nBelow;
+            if (!probabilities.empty()) {
+                //auto inside = edgeIn.find(edges[axis][i].primNum);
+                //if (inside == edgeIn.end())
+                    probBelow += probabilities[edges[axis][i].primNum];
+            }
+        }
+    }
+
+    if(cost_writer.is_open()){
+        cost_writer.close();
+    }
+    //CHECK(nBelow == nPrimitives && nAbove == 0);
+
+    return {bestCost, bestAxis, bestOffset};
+};
+
 std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAlignedBoundingBox &nodeBounds,
                                                       const std::vector<AxisAlignedBoundingBox> &allPrimBounds,
                                                       int *primNums, int nPrimitives,
                                                       const std::unique_ptr<BoundEdge[]> edges[3],
                                                       const std::vector<TestRay> &battery,
                                                       const std::vector<TestRayLoc> &local_battery,
-                                                      const std::vector<double> &primChance, double tMax) const {
+                                                      const std::vector<double> &primChance, double tMax,
+                                                      double hybridWeight) const {
 
     // Choose split axis position for interior node
     int bestAxis = -1, bestOffset = -1;
@@ -792,6 +954,12 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
     int nBelow = 0, nAbove = nPrimitives;
     double inv_denum = 1.0 / local_battery.size();
 
+    std::ofstream cost_writer;
+    if(local_battery.size() > 200 && local_battery.size() < 300){
+        cost_writer.open(fmt::format("costfile_rdh_{}.txt",nextFreeNode-1));
+    }
+
+    int nbEdgeInsideNode = 0;
     for (int i = 0; i < 2 * nPrimitives; ++i) {
         if (edges[axis][i].type == EdgeType::End) {
             --nAbove;
@@ -799,6 +967,7 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
         }
         double edgeT = edges[axis][i].t;
         if (edgeT > nodeBounds.min[axis] && edgeT < nodeBounds.max[axis]) {
+            nbEdgeInsideNode++;
             // Compute cost for split at _i_th edge
 
             // Compute child surface areas for split at _edgeT_
@@ -825,37 +994,50 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
 
                 auto ray = Ray();
                 double locTMax = tMax;
-#pragma omp parallel for default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
-                for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
-                    auto& ind = local_battery[sample_id];
-                    ray.origin = battery[ind.index].pos;
-                    ray.direction = battery[ind.index].dir;
-                    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
-                    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
-                    /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
-                    hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
+#pragma omp parallel default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
+                {
 
-                    // Compute parametric distance along ray to split plane
-                    double tSplit = edgeT;
-                    //int axis = node->SplitAxis();
-                    double tPlane = (tSplit - ray.origin[axis]) * invDir[axis];
+                    int hitCountB_loc = 0;
+                    int hitCountA_loc = 0;
+                    int hitCountBoth_loc = 0;
 
-                    // Get node children pointers for ray
-                    const KdAccelNode *firstChild, *secondChild;
-                    int belowFirst =
-                            (ray.origin[axis] < tSplit) ||
-                            (ray.origin[axis] == tSplit && ray.direction[axis] <= 0);
+#pragma omp for
+                    for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                        auto &ind = local_battery[sample_id];
+                        ray.origin = battery[ind.index].pos;
+                        ray.direction = battery[ind.index].dir;
+                        Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                        int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+                        /*hitcount1 += b1.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;
+                        hitcount0 += b0.IntersectBox(ray, invDir, dirIsNeg) ? 1 : 0;*/
 
-                    // Advance to next child node, possibly enqueue other child
-                    if (tPlane > ind.tMax || tPlane <= 0)
-#pragma omp atomic
-                        hitCountA++;// test first child
-                    else if (tPlane < ind.tMin)
-#pragma omp atomic
-                        hitCountB++;// test second child
-                    else {
-#pragma omp atomic
-                        hitCountBoth++;
+                        // Compute parametric distance along ray to split plane
+                        double tSplit = edgeT;
+                        //int axis = node->SplitAxis();
+                        double tPlane = (tSplit - ray.origin[axis]) * invDir[axis];
+
+                        // Get node children pointers for ray
+                        const KdAccelNode *firstChild, *secondChild;
+                        int belowFirst =
+                                (ray.origin[axis] < tSplit) ||
+                                (ray.origin[axis] == tSplit && ray.direction[axis] <= 0);
+
+                        // Advance to next child node, possibly enqueue other child
+                        if (tPlane > ind.tMax || tPlane <= 0)
+                            hitCountA_loc++;// test first child
+                        else if (tPlane < ind.tMin)
+                            hitCountB_loc++;// test second child
+                        else {
+                            hitCountBoth_loc++;
+                        }
+                    }
+
+                    // parallel reduce
+#pragma omp critical
+                    {
+                        hitCountA += hitCountA_loc;
+                        hitCountB += hitCountB_loc;
+                        hitCountBoth += hitCountBoth_loc;
                     }
                 }
                 pAbove = (double) (hitCountA + hitCountBoth) * inv_denum;
@@ -873,11 +1055,13 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
 
                 double cost = traversalCost
                               + isectCost * (1 - eb) *
-                                (/*pBelow **/ probBelow / probMax * nBelow + /*pAbove **/ probAbove / probMax * nAbove);
+                                (pBelow * nBelow + pAbove * nAbove);
 
-                double alpha = 0.1;
+                /*double alpha = 0.1;
                 double beta = 0.9;
                 double weight = alpha * (1.0 - (1.0 / (1.0 + beta * (double) local_battery.size())));
+                */
+                double weight = hybridWeight;
                 double linCost = weight * cost + (1.0 - weight) * cost_sah;
 
                 if (linCost < bestCost) {
@@ -885,12 +1069,24 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
                     bestAxis = axis;
                     bestOffset = i;
                 }
+
+                if(cost_writer.is_open()){
+                    cost_writer << edges[axis][i].t << " " << cost_sah << " " << cost << " " << linCost << "\n";
+                }
             }
         }
         if (edges[axis][i].type == EdgeType::Start) {
             ++nBelow;
             probBelow += primChance[edges[axis][i].primNum];
         }
+    }
+
+    /*if(nbEdgeInsideNode == 0){
+        fmt::print("Warning, no edges were inside node, could result into malformed node\n");
+    }*/
+
+    if(cost_writer.is_open()){
+        cost_writer.close();
     }
     //CHECK(nBelow == nPrimitives && nAbove == 0);
 
@@ -1199,7 +1395,8 @@ std::tuple<double, int, int, bool, bool> KdTreeAccel::SplitHybridBin(int axis, c
 void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                             int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                            int badRefines, const std::vector<double> &probabilities, int prevSplitAxis) {
+                            int badRefines, const std::vector<double> &probabilities, const double hybridWeight,
+                            int prevSplitAxis) {
     //CHECK_EQ(nodeNum, nextFreeNode);
     assert(nodeNum == nextFreeNode);
     // Get next free node from _nodes_ array
@@ -1251,9 +1448,14 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 
     if (splitMethod == SplitMethod::ProbSplit && !probabilities.empty()) {
         std::tie(bestCost, bestAxis, bestOffset) = SplitProb(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
-                                                             edges, probabilities);
+                                                             edges, probabilities, 0.5);
     }
-    else if (splitMethod == SplitMethod::SAH)
+    else if (splitMethod == SplitMethod::ProbHybrid && !probabilities.empty()) {
+        std::tie(bestCost, bestAxis, bestOffset) = SplitHybridProb(axis, nodeBounds, allPrimBounds, primNums,
+                                                                   nPrimitives,
+                                                                   edges, probabilities, hybridWeight);
+    }
+    else /*if (splitMethod == SplitMethod::SAH)*/
         std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
                                                             edges);
 
@@ -1299,13 +1501,13 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     bounds0.max[bestAxis] = bounds1.min[bestAxis] = tSplit;
 
     buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
+              prims0, prims1 + nPrimitives, badRefines, probabilities, hybridWeight, bestAxis);
     nodes[nodeNum + 1].parent = &nodes[nodeNum];
 
     int aboveChild = nextFreeNode;
     nodes[nodeNum].InitInterior(bestAxis, aboveChild, tSplit);
     buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-              prims0, prims1 + nPrimitives, badRefines, probabilities, bestAxis);
+              prims0, prims1 + nPrimitives, badRefines, probabilities, hybridWeight, bestAxis);
     nodes[aboveChild].parent = &nodes[nodeNum];
 }
 
@@ -1313,7 +1515,7 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                             const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                             int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                            int badRefines, const std::vector<TestRay> &battery,
+                            int badRefines, double hybridWeight, const std::vector<TestRay> &battery,
                             const std::vector<TestRayLoc> &local_battery, int prevSplitAxis, double tMin, double tMax,
                             const std::vector<double> &primChance, double oldCost) {
     //CHECK_EQ(nodeNum, nextFreeNode);
@@ -1368,7 +1570,8 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
                                                              edges, battery, local_battery, primChance, tMax);
     else if (splitMethod == SplitMethod::HybridSplit && !local_battery.empty())
         std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
-                                                               edges, battery, local_battery, primChance, tMax);
+                                                               edges, battery, local_battery, primChance, tMax,
+                                                               hybridWeight);
     else if (splitMethod == SplitMethod::HybridBin && !local_battery.empty())
         std::tie(bestCost, bestAxis, bestOffset, skipL, skipR) = SplitHybridBin(axis, nodeBounds, allPrimBounds, primNums,
                                                                   nPrimitives,
@@ -1403,8 +1606,13 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 
     if ((bestCost > 4.0 * oldCost && nPrimitives < 16) || bestAxis == -1 ||
         (badRefines >= 3 && nPrimitives < 128) || (badRefines >= 5)) {
-        if (bestCost > 4.0 * oldCost)
+        if (bestCost > 4.0 * oldCost) {
             ++STATS_KD::leafHigherCost;
+            if(nPrimitives > 16)
+                std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
+                                                                   edges, battery, local_battery, primChance, tMax,
+                                                                   hybridWeight);
+        }
         if (badRefines >= 3)
             ++STATS_KD::leafBadRefine;
         nodes[nodeNum].InitLeaf(primNums, nPrimitives, &primitiveIndices);
@@ -1483,15 +1691,17 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     if ((skipL && local_battery.size() < HITCACHEMIN) || (!skipL && battery_below.size() < HITCACHEMIN) ) {
         std::vector<double> dummy;
         buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+                  prims0, prims1 + nPrimitives, badRefines, dummy, hybridWeight, bestAxis);
     } else if (!skipL || !skipR){
         buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, battery, battery_below, bestAxis, tMin, tSplit,
+                  prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, battery_below, bestAxis, tMin,
+                  tSplit,
                   primChance, bestCost);
     }
     else{
         buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, battery, local_battery, bestAxis, tMin, tSplit,
+                  prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, local_battery, bestAxis, tMin,
+                  tSplit,
                   primChance, bestCost);
     }
     nodes[nodeNum + 1].parent = &nodes[nodeNum];
@@ -1501,15 +1711,17 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     if ((skipL && local_battery.size() < HITCACHEMIN) || (!skipL && battery_above.size() < HITCACHEMIN)) {
         std::vector<double> dummy;
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+                  prims0, prims1 + nPrimitives, badRefines, dummy, hybridWeight, bestAxis);
     } else if (!skipL || !skipR) {
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, battery, battery_above, bestAxis, tSplit, tMax,
+                  prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, battery_above, bestAxis, tSplit,
+                  tMax,
                   primChance, bestCost);
     }
     else{
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, battery, local_battery, bestAxis, tSplit, tMax,
+                  prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, local_battery, bestAxis, tSplit,
+                  tMax,
                   primChance, bestCost);
     }
     nodes[aboveChild].parent = &nodes[nodeNum];
@@ -1519,10 +1731,10 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
 void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBounds,
                                const std::vector<AxisAlignedBoundingBox> &allPrimBounds, int *primNums, int nPrimitives,
                                int depth, const std::unique_ptr<BoundEdge[]> edges[3], int *prims0, int *prims1,
-                               int badRefines, const std::unique_ptr<std::vector<RaySegment>> &battery,
-                               RayBoundary **rb_stack, int prevSplitAxis, double tMin,
-                               double tMax, const std::vector<double> &primChance, double oldCost,
-                               BoundaryStack bound) {
+                               int badRefines, double hybridWeight,
+                               const std::unique_ptr<std::vector<RaySegment>> &battery, RayBoundary **rb_stack,
+                               int prevSplitAxis, double tMin, double tMax, const std::vector<double> &primChance,
+                               double oldCost, BoundaryStack bound) {
     //CHECK_EQ(nodeNum, nextFreeNode);
     assert(nodeNum == nextFreeNode);
     // Get next free node from _nodes_ array
@@ -1743,10 +1955,10 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
     if (false/*battery_below.size() < HITCACHEMIN*/) {
         std::vector<double> dummy;
         buildTree(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+                  prims0, prims1 + nPrimitives, badRefines, dummy, hybridWeight, bestAxis);
     } else {
         buildTreeRDH(nodeNum + 1, bounds0, allPrimBounds, prims0, n0, depth - 1, edges,
-                     prims0, prims1 + nPrimitives, badRefines, battery, rb_stack, bestAxis, tMin, tSplit,
+                     prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, rb_stack, bestAxis, tMin, tSplit,
                      primChance, bestCost, bound_new);
     }
     nodes[nodeNum + 1].parent = &nodes[nodeNum];
@@ -1790,10 +2002,10 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
     if (false /*battery_above.size() < HITCACHEMIN*/) {
         std::vector<double> dummy;
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-                  prims0, prims1 + nPrimitives, badRefines, dummy, bestAxis);
+                  prims0, prims1 + nPrimitives, badRefines, dummy, hybridWeight, bestAxis);
     } else {
         buildTreeRDH(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
-                     prims0, prims1 + nPrimitives, badRefines, battery, rb_stack, bestAxis, tSplit, tMax,
+                     prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, rb_stack, bestAxis, tSplit, tMax,
                      primChance, bestCost, bound_new);
     }
     nodes[aboveChild].parent = &nodes[nodeNum];
@@ -3045,6 +3257,7 @@ std::ostream &operator<<(std::ostream &os, KdTreeAccel::SplitMethod split_type) 
     switch (split_type) {
         case KdTreeAccel::SplitMethod::SAH : return os << "SAH" ;
         case KdTreeAccel::SplitMethod::ProbSplit: return os << "ProbSplit";
+        case KdTreeAccel::SplitMethod::ProbHybrid: return os << "ProbHybrid";
         case KdTreeAccel::SplitMethod::TestSplit: return os << "TestSplit";
         case KdTreeAccel::SplitMethod::HybridSplit: return os << "HybridSplit";
         case KdTreeAccel::SplitMethod::HybridBin: return os << "HybridBin";
