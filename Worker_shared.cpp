@@ -151,7 +151,7 @@ void Worker::Stop_Public() {
         Stop();
         Update(mApp->m_fTime);
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -164,7 +164,7 @@ bool Worker::GetHits() {
     try {
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
         return false;
     }
@@ -177,7 +177,7 @@ ParticleLog & Worker::GetLog() {
             throw std::runtime_error("Couldn't get log access");
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (GetLog)", GLDLG_OK, GLDLG_ICONERROR);
     }
     return particleLog;
@@ -214,7 +214,7 @@ void Worker::SetMaxDesorption(size_t max) {
 		Reload();
 
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 
@@ -252,9 +252,9 @@ void Worker::StartStop(float appTime) {
             Start();
             simuTimer.Start();
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             //isRunning = false;
-            GLMessageBox::Display((char *)e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
+            GLMessageBox::Display(e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
             return;
         }
 
@@ -284,7 +284,7 @@ void Worker::ResetStatsAndHits(float appTime) {
         if (needsReload) RealReload();
         Update(appTime);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -295,7 +295,7 @@ void Worker::Stop() {
             throw std::logic_error("No active simulation to stop!");
         }
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         throw Error(e.what());
     }
 }
@@ -321,7 +321,7 @@ void Worker::SetProcNumber(size_t n) {
     try{
         simManager.KillAllSimUnits();
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         throw Error("Killing subprocesses failed!");
     }
 
@@ -510,9 +510,9 @@ void Worker::RebuildTextures() {
             CalculateTextureLimits();
             geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             simManager.UnlockHitBuffer();
-            throw e;
+            throw;
         }
     }
     simManager.UnlockHitBuffer();
@@ -614,7 +614,7 @@ void Worker::Update(float appTime) {
             geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
         }
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         globState.tMutex.unlock();
         GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         return;
@@ -689,7 +689,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
             return;
         }
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
@@ -834,7 +834,7 @@ void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
         simManager.ForwardSimModel(model);
         simManager.ForwardGlobalCounter(&globState, &particleLog);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }

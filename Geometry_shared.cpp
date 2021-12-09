@@ -383,8 +383,8 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
     try {
         facets.emplace_back(new InterfaceFacet(vertexIds.size()));
     }
-    catch (std::exception& err){
-        throw err;
+    catch (const std::exception& e){
+        throw;
     }
 
     sh.nbFacet++;
@@ -562,7 +562,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
     try{
         facets.resize(sh.nbFacet+nbNewFacets);
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
     }
 
@@ -1095,7 +1095,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
             SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
             SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
-		catch (Error &e) {
+		catch (const std::exception &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}	
 	}
@@ -1145,7 +1145,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
             try{
                 facets.resize(sh.nbFacet + nbNewFacets);
             }
-            catch(std::exception& e) {
+            catch(const std::exception &e) {
                 throw Error("Couldn't allocate memory for facets");
             }
 
@@ -1220,7 +1220,7 @@ void Geometry::ShiftVertex() {
 				SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
                 SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
             }
-			catch (Error &e) {
+			catch (const std::exception &e) {
 				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 
@@ -1720,7 +1720,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 		for (int i = 0; i < nbSelected; i++)
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
@@ -1766,7 +1766,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		/*try {
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 		}
-		catch (Error &e) {
+		catch (const std::exception &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
@@ -1827,7 +1827,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	/*try {
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
@@ -1906,7 +1906,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 
 		}
-		catch (Error &e) {
+		catch (const std::exception &e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
@@ -1984,7 +1984,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
     try{
         facets.resize(sh.nbFacet + selectedFacetIds.size());
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
         return 1;
     }
@@ -2657,7 +2657,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
                     try{
                         facets.resize(sh.nbFacet + newFacetsIndices.size());
                     }
-                    catch(std::exception& e) {
+                    catch(const std::exception &e) {
                         throw Error("Couldn't allocate memory for facets");
                     }
                 }
@@ -3554,7 +3554,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
     try{
         facets.resize(sh.nbFacet, nullptr);
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
     }
 
@@ -3701,7 +3701,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
         try{
             facets.resize(nbNewFacets, nullptr);
         }
-        catch(std::exception& e) {
+        catch(const std::exception &e) {
             throw Error("Out of memory: LoadSTL");
         }
 		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
@@ -3710,7 +3710,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
         try{
             facets.resize(nbNewFacets + sh.nbFacet);
         }
-        catch(std::exception& e) {
+        catch(const std::exception &e) {
             throw Error("Couldn't allocate memory for facets");
         }
 		vertices3.resize(sh.nbVertex + 3 * nbNewFacets);
@@ -3946,7 +3946,7 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
     try{
         facets.resize(nbNewFacets + sh.nbFacet);
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
     }
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
@@ -4162,7 +4162,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
     try{
         facets.resize(nbNewFacets + sh.nbFacet);
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
     }
 
@@ -4676,7 +4676,7 @@ void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sF
     try{
         facets.resize(sFacets.size(), nullptr);
     }
-    catch(std::exception& e) {
+    catch(const std::exception &e) {
         throw Error("Couldn't allocate memory for facets");
     }
 

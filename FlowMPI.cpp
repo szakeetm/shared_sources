@@ -85,7 +85,7 @@ namespace MFMPI {
                     try {
                         std::filesystem::create_directory(SettingsIO::outputPath);
                     }
-                    catch (std::exception& e){
+                    catch (const std::exception &e){
                         SettingsIO::outputPath = "./";
                         Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", SettingsIO::outputPath.c_str());
                     }
