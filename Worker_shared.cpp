@@ -598,7 +598,7 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
-                if (f->selected && f->sh.anglemapParams.hasRecorded)
+                if (f->selected && !f->sh.anglemapParams.hasRecorded)
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
                 f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
