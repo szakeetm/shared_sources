@@ -332,8 +332,8 @@ int BVHAccel::SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
     return mid;
 }
 
-int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
-                        int end, int dim, AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery, AxisAlignedBoundingBox &bounds) {
+int BVHAccel::SplitRDH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
+                       int end, int dim, AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery, AxisAlignedBoundingBox &bounds) {
     //<<Partition primitives using approximate SAH>>
     int nPrimitives = end - start;
     int mid = -1;
@@ -380,28 +380,43 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             int hitCount0 = 0;
             int hitCountBoth = 0;
             auto ray = Ray();
-#pragma omp parallel for default(none) firstprivate(ray) shared(rayHasHit, hitCount0, hitCount1, b0, b1, hitCountBoth, local_battery)
-            for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
-                auto& test = local_battery[sample_id];
-                ray.origin = test.pos;
-                ray.direction = test.dir;
-                Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
-                int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+#pragma omp parallel default(none) firstprivate(ray) shared(rayHasHit, hitCount0, hitCount1, b0, b1, hitCountBoth, local_battery)
+            {
 
-                bool hit0 = b0.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
-                bool hit1 = b1.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
-                if(hit0 && hit1) hitCountBoth++;
-                else {
-                    if(hit0) {
-#pragma omp atomic
-                        hitCount0++;
+                int hitCount0_loc = 0;
+                int hitCount1_loc = 0;
+                int hitCountBoth_loc = 0;
+
+#pragma omp for
+                for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                    auto &test = local_battery[sample_id];
+                    ray.origin = test.pos;
+                    ray.direction = test.dir;
+                    Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                    int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+
+                    bool hit0 = b0.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+                    bool hit1 = b1.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+                    if (hit0 && hit1)
+                        hitCountBoth_loc++;
+                    else {
+                        if (hit0) {
+                            hitCount0_loc++;
+                        }
+                        if (hit1) {
+                            hitCount1_loc++;
+                        }
                     }
-                    if(hit1) {
-#pragma omp atomic
-                        hitCount1++;
-                    }
+                    rayHasHit[sample_id] = rayHasHit[sample_id] | (hit0 || hit1);
                 }
-                rayHasHit[sample_id] = rayHasHit[sample_id] | (hit0 || hit1);
+
+                // parallel reduce
+#pragma omp critical
+                {
+                    hitCount0 += hitCount0_loc;
+                    hitCount1 += hitCount1_loc;
+                    hitCountBoth += hitCountBoth_loc;
+                }
             }
             cost[i] = 0.5f + (count0 * b0.SurfaceArea() +
                     count1 * b1.SurfaceArea()) / bounds.SurfaceArea();
@@ -410,11 +425,14 @@ int BVHAccel::SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start,
             double pBelow = (double) (hitCount1) / (double) local_battery.size();
             double pBoth = (double) (hitCountBoth) / (double) local_battery.size(); // as a penalty
 
-            hitcost[i] = 1.0f * std::exp(-2.30f * (std::pow(pAbove,2) + std::pow(pBelow,2)));
+            /*hitcost[i] = 1.0f * std::exp(-2.30f * (std::pow(pAbove,2) + std::pow(pBelow,2)));
             hitcost[i] *= nPrimitives;
             hitcost[i] -= nPrimitives;
-            hitcost[i] = std::abs(hitcost[i]);
+            hitcost[i] = std::abs(hitcost[i]);*/
             //hitcost[i] = 0.5f + 1.0f - std::abs(pAbove - pBelow) + pBoth;
+            hitcost[i] = 0.5f + 1.0f *
+                            (pBelow * count0 + pAbove * count1);
+
         }
 
         //<<Find bucket to split at that minimizes SAH metric>>
@@ -490,7 +508,7 @@ BVHAccel::BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_
     }*/
 
     std::vector<BVHPrimitiveInfo> primitiveInfo(0);
-    if (splitMethod == SplitMethod::TestSplit) {
+    if (splitMethod == SplitMethod::RDH) {
         if (this->battery.empty())
             this->splitMethod = SplitMethod::SAH;
     }
@@ -673,11 +691,11 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveI
                     //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
                     break;
                 }
-                case SplitMethod::TestSplit: {
-                    if(testBattery.size() > 256) {
+                case SplitMethod::RDH: {
+                    if(testBattery.size() > HITCACHEMIN) {
                         local_battery = testBattery;
                         //<<Partition primitives into equally sized subsets>>
-                        mid = SplitTest(primitiveInfo, start, end, dim, centroidBounds, local_battery, bounds);
+                        mid = SplitRDH(primitiveInfo, start, end, dim, centroidBounds, local_battery, bounds);
                         //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
                         break;
                     }
@@ -898,7 +916,7 @@ std::ostream &operator<<(std::ostream &os, BVHAccel::SplitMethod split_type) {
         case BVHAccel::SplitMethod::EqualCounts: return os << "EqualCounts";
         case BVHAccel::SplitMethod::MolflowSplit: return os << "MolflowSplit";
         case BVHAccel::SplitMethod::ProbSplit: return os << "ProbSplit";
-        case BVHAccel::SplitMethod::TestSplit: return os << "TestSplit";
+        case BVHAccel::SplitMethod::RDH: return os << "RDH";
         default: return os << "Unknown";
             // omit default case to trigger compiler warning for missing cases
     };

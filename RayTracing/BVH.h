@@ -55,7 +55,7 @@ class BVHAccel : public RTAccel {
 public:
     // BVHAccel Public Types
     enum class SplitMethod {
-        SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, TestSplit
+        SAH, HLBVH, Middle, EqualCounts, MolflowSplit, ProbSplit, RDH
     };
     friend std::ostream& operator << (std::ostream& os, SplitMethod split_type);
 
@@ -67,7 +67,7 @@ public:
              std::vector<std::shared_ptr<Primitive>> p, int maxPrimsInNode = 1,
              SplitMethod splitMethod = SplitMethod::ProbSplit);
     BVHAccel(const std::vector<TestRay> &battery, std::vector<std::shared_ptr<Primitive>> p,
-             int maxPrimsInNode = 1, SplitMethod splitMethod = SplitMethod::TestSplit);
+             int maxPrimsInNode = 1, SplitMethod splitMethod = SplitMethod::RDH);
     BVHAccel(BVHAccel && src) noexcept;
     BVHAccel(const BVHAccel & src) noexcept;
 
@@ -106,9 +106,9 @@ private:
     int SplitSAH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
                  AxisAlignedBoundingBox &centroidBounds, AxisAlignedBoundingBox &bounds);
 
-    int SplitTest(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
-                  AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery,
-                  AxisAlignedBoundingBox &bounds);
+    int SplitRDH(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim,
+                 AxisAlignedBoundingBox &centroidBounds, std::vector<TestRay> &local_battery,
+                 AxisAlignedBoundingBox &bounds);
 
     int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 

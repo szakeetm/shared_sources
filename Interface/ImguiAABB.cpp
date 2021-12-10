@@ -482,7 +482,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 bool withHitBattery = false;
                 if (mApp->worker.model->wp.accel_type == 0)
-                    withHitBattery |= mApp->aabbVisu.splitTechnique == (int) BVHAccel::SplitMethod::TestSplit;
+                    withHitBattery |= mApp->aabbVisu.splitTechnique == (int) BVHAccel::SplitMethod::RDH;
                 else if (mApp->worker.model->wp.accel_type == 1) {
                     withHitBattery |= mApp->aabbVisu.splitTechnique == (int) KdTreeAccel::SplitMethod::HybridBin;
                     withHitBattery |= mApp->aabbVisu.splitTechnique == (int) KdTreeAccel::SplitMethod::HybridSplit;
