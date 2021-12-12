@@ -41,8 +41,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
 #define HITCACHELIMIT      (size_t)(1048576*4)  // Max. displayed number of lines and hits.
-#define HITCACHEMIN      (size_t)(128)  // Max. displayed number of lines and hits.
-#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*HITCACHEMIN*32)  // Max. displayed number of lines and hits.
+#define HITCACHEMIN      (size_t)(64)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*2*HITCACHEMIN*2*32)  // Max. displayed number of lines and hits.
 #define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
@@ -631,6 +631,10 @@ struct TestRay {
 
 struct SampleBattery {
     SampleBattery();
+    SampleBattery(const SampleBattery& cpy) : maxSamples(cpy.maxSamples), initialized(cpy.initialized){
+        rays = cpy.rays;
+    };
+
     void resize(size_t n);
     void clear();
     [[nodiscard]] size_t size() const;

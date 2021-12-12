@@ -15,6 +15,9 @@ struct CircularBuffer {
         offset  = 0;
         data.reserve(size_max);
     }
+    CircularBuffer(const CircularBuffer& cpy) : size_max(cpy.size_max), offset(cpy.offset){
+        data = cpy.data;
+    };
     void Resize(int max_size = 1024) {
         // will add to back again
         size_max = max_size;

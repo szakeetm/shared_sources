@@ -996,7 +996,6 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
                 double locTMax = tMax;
 #pragma omp parallel default(none) firstprivate(ray) shared(battery, axis, hitCountA, hitCountB, hitCountBoth, local_battery, edges, bestAxis, bestOffset, edgeT)
                 {
-
                     int hitCountB_loc = 0;
                     int hitCountA_loc = 0;
                     int hitCountBoth_loc = 0;
@@ -1608,10 +1607,10 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
         (badRefines >= 3 && nPrimitives < 128) || (badRefines >= 5)) {
         if (bestCost > 4.0 * oldCost) {
             ++STATS_KD::leafHigherCost;
-            if(nPrimitives > 16)
+            /*if(nPrimitives > 16)
                 std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
                                                                    edges, battery, local_battery, primChance, tMax,
-                                                                   hybridWeight);
+                                                                   hybridWeight);*/
         }
         if (badRefines >= 3)
             ++STATS_KD::leafBadRefine;
@@ -1715,14 +1714,12 @@ void KdTreeAccel::buildTree(int nodeNum, const AxisAlignedBoundingBox &nodeBound
     } else if (!skipL || !skipR) {
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
                   prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, battery_above, bestAxis, tSplit,
-                  tMax,
-                  primChance, bestCost);
+                  tMax, primChance, bestCost);
     }
     else{
         buildTree(aboveChild, bounds1, allPrimBounds, prims1, n1, depth - 1, edges,
                   prims0, prims1 + nPrimitives, badRefines, hybridWeight, battery, local_battery, bestAxis, tSplit,
-                  tMax,
-                  primChance, bestCost);
+                  tMax, primChance, bestCost);
     }
     nodes[aboveChild].parent = &nodes[nodeNum];
 }
@@ -1807,14 +1804,12 @@ void KdTreeAccel::buildTreeRDH(int nodeNum, const AxisAlignedBoundingBox &nodeBo
     retrySplit:
     if (splitMethod == SplitMethod::TestSplit && battery)
         std::tie(bestCost, bestAxis, bestOffset) = SplitTest(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
-                                                             edges, battery, rb_stack, primChance, tMax,
-                                                             bound);
+                                                             edges, battery, rb_stack, primChance, tMax, bound);
         /*else if(splitMethod == SplitMethod::HybridSplit && battery)
             std::tie(bestCost, bestAxis, bestOffset) = SplitHybrid(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
                                                                    edges, battery, local_battery, primChance, tMax);*/
     else
-        std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives,
-                                                            edges);
+        std::tie(bestCost, bestAxis, bestOffset) = SplitSAH(axis, nodeBounds, allPrimBounds, primNums, nPrimitives, edges);
 
     /*if(local_battery.size() < HITCACHEMIN){
             bestCost = bestCostSAH;
