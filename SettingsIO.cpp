@@ -206,7 +206,7 @@ namespace SettingsIO {
             std::filesystem::remove_all("tmp");
         }
 
-        if(is_empty(std::filesystem::path(SettingsIO::workPath))){
+        if(!SettingsIO::workPath.empty() && is_empty(std::filesystem::path(SettingsIO::workPath))){
             std::filesystem::remove_all(SettingsIO::workPath);
         }
     }
