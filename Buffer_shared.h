@@ -629,6 +629,17 @@ struct TestRay {
     int location;
 };
 
+struct TestRayLoc {
+    TestRayLoc(size_t ind, double min, double max) {
+        index = ind;
+        tMin = min;
+        tMax = max;
+    }
+    size_t index{0};
+    double tMin{0.0};
+    double tMax{0.0};
+};
+
 struct SampleBattery {
     SampleBattery();
     SampleBattery(const SampleBattery& cpy) : maxSamples(cpy.maxSamples), initialized(cpy.initialized){

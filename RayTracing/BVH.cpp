@@ -590,8 +590,14 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
         root = HLBVHBuild(arena, primitiveInfo, &totalNodes, orderedPrims);
     else
         */
+
+    std::vector<TestRayLoc> indices;
+    indices.reserve(battery.size());
+    for (int i = 0; i < battery.size(); ++i)
+        indices.emplace_back(i, 0, 1.0e99);
+
     root = recursiveBuild(/*arena,*/ primitiveInfo, 0, primitives.size(),
-                                     &totalNodes, orderedPrims, std::move(battery));
+                                     &totalNodes, orderedPrims, battery, indices);
     primitives.swap(orderedPrims);
 
     Log::console_msg_master(4, "BVH created with %d nodes for %d "
@@ -618,7 +624,8 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
 BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end,
                                        int *totalNodes,
                                        std::vector<std::shared_ptr<Primitive>> &orderedPrims,
-                                       std::vector<TestRay> testBattery) {
+                                       std::vector<TestRay> &testBattery,
+                                       const std::vector<TestRayLoc> &local_battery) {
     assert(start != end);
 
     BVHBuildNode *node = new BVHBuildNode();//arena.Alloc<BVHBuildNode>();
@@ -657,7 +664,6 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveI
             node->InitLeaf(firstPrimOffset, nPrimitives, bounds);
             return node;
         } else {
-            std::vector<TestRay> local_battery;
             //<<Partition primitives based on splitMethod>>
             switch (splitMethod) {
                 case SplitMethod::MolflowSplit: {
@@ -692,10 +698,11 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveI
                     break;
                 }
                 case SplitMethod::RDH: {
-                    if(testBattery.size() > HITCACHEMIN) {
-                        local_battery = testBattery;
+                    if(local_battery.size() > HITCACHEMIN) {
+                        //local_battery = testBattery;
                         //<<Partition primitives into equally sized subsets>>
-                        mid = SplitRDH(primitiveInfo, start, end, dim, centroidBounds, local_battery, bounds);
+                        mid = SplitRDH(primitiveInfo, start, end, dim, centroidBounds,
+                                       const_cast<std::vector<TestRay> &>(testBattery), bounds);
                         //mid = SplitMiddleProb(primitiveInfo, start, end, dim);
                         break;
                     }
@@ -718,11 +725,56 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveI
                 return node;
             }
 
+            bool skipL = false;
+            bool skipR = false;
+            std::vector<TestRayLoc> battery_below, battery_above;
+            if(!skipL || !skipR)
+            {
+                AxisAlignedBoundingBox b0{bounds};
+                AxisAlignedBoundingBox b1{bounds};
+                b0.max[dim] = b1.min[dim] = mid;
+                auto ray = Ray();
+#pragma omp parallel default(none) firstprivate(ray) shared(battery, local_battery, battery_above, battery_below, b0, b1)
+                {
+                    std::vector<TestRayLoc> battery_below_local, battery_above_local;
+#pragma omp for
+                    for (int sample_id = 0; sample_id < local_battery.size(); sample_id++) {
+                        auto& ind = local_battery[sample_id];
+                        ray.origin = battery[ind.index].pos;
+                        ray.direction = battery[ind.index].dir;
+                        Vector3d invDir(1.0 / ray.direction.x, 1.0 / ray.direction.y, 1.0 / ray.direction.z);
+                        int dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+                        bool hit0 = b0.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+                        bool hit1 = b1.IntersectBox(ray, invDir, dirIsNeg) ? true : false;
+
+                        {
+
+                            // Advance to next child node, possibly enqueue other child
+                            {
+                                if (hit0) {
+                                    battery_above_local.emplace_back(ind.index, ind.tMin, ind.tMax);
+                                }
+                                if (hit1) {
+                                    battery_below_local.emplace_back(ind.index, ind.tMin, ind.tMax);
+                                }
+                            }
+                        }
+                    }
+
+                    // combine local
+#pragma omp critical
+                    {
+                        battery_above.insert(battery_above.end(), battery_above_local.begin(), battery_above_local.end());
+                        battery_below.insert(battery_below.end(), battery_below_local.begin(), battery_below_local.end());
+                    }
+                }
+            }
+
             node->InitInterior(dim,
                                recursiveBuild(primitiveInfo, start, mid,
-                                              totalNodes, orderedPrims, local_battery),
+                                              totalNodes, orderedPrims, testBattery, battery_above),
                                recursiveBuild(primitiveInfo, mid, end,
-                                              totalNodes, orderedPrims, local_battery));
+                                              totalNodes, orderedPrims, testBattery, battery_below));
         }
     }
     return node;

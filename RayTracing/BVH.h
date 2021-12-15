@@ -83,7 +83,8 @@ private:
     void construct(std::vector<BVHPrimitiveInfo> primitiveInfo);
     BVHBuildNode *recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int *totalNodes,
                                  std::vector<std::shared_ptr<Primitive>> &orderedPrims,
-                                 std::vector<TestRay> testBattery);
+                                 std::vector<TestRay> &testBattery,
+                                 const std::vector<TestRayLoc> &local_battery);
     int flattenBVHTree(BVHBuildNode *node, int *offset);
     int flattenBVHTreeStats(BVHBuildNode *node, int *offset, int level);
 

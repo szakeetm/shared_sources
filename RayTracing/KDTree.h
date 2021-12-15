@@ -83,17 +83,6 @@ struct RTStats {
     double timeInt{0};
 };
 
-struct TestRayLoc {
-    TestRayLoc(size_t ind, double min, double max) {
-        index = ind;
-        tMin = min;
-        tMax = max;
-    }
-    size_t index{0};
-    double tMin{0.0};
-    double tMax{0.0};
-};
-
 struct SplitCandidate {
     SplitCandidate() = default;
     SplitCandidate(double c, int a, int o){
