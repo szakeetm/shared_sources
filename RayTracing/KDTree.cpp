@@ -955,7 +955,7 @@ std::tuple<double, int, int> KdTreeAccel::SplitHybrid(int axis, const AxisAligne
     double inv_denum = 1.0 / local_battery.size();
 
     std::ofstream cost_writer;
-    if(local_battery.size() > 200 && local_battery.size() < 300){
+    if(local_battery.size() > 1000 && local_battery.size() < 1200){
         cost_writer.open(fmt::format("costfile_rdh_{}.txt",nextFreeNode-1));
     }
 

@@ -734,7 +734,7 @@ BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveI
                 AxisAlignedBoundingBox b1{bounds};
                 b0.max[dim] = b1.min[dim] = mid;
                 auto ray = Ray();
-#pragma omp parallel default(none) firstprivate(ray) shared(battery, local_battery, battery_above, battery_below, b0, b1)
+#pragma omp parallel default(none) firstprivate(ray) shared(local_battery, battery_above, battery_below, b0, b1)
                 {
                     std::vector<TestRayLoc> battery_below_local, battery_above_local;
 #pragma omp for
