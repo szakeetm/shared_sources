@@ -77,6 +77,7 @@ public:
 
   void JumpComment();
   void JumpControlChars();
+  static FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 
   std::vector<std::vector<std::string>> ImportCSV_string();
 private:

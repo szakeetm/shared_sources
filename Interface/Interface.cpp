@@ -878,6 +878,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
     menu->GetSubMenu("Test")->Add("Analyse Geometry", MENU_ANALYSE);
+    menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     geomNumber = new GLTextField(0, nullptr);
     geomNumber->SetEditable(false);
@@ -1763,6 +1764,22 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_ANALYSE:
                     GeometryTools::AnalyseGeometry(this->worker.GetGeometry());
                     return true;
+                case MENU_CMP_RES: {
+                    const std::string fileName = NFD_OpenFile_Cpp("syn7z", "");
+                    const std::string fileName_rhs = NFD_OpenFile_Cpp("syn7z", "");
+
+                    if (fileName.empty() || fileName_rhs.empty()) {
+                        return false;
+                    }
+
+                    std::string fileName_out = NFD_SaveFile_Cpp("txt", "");
+                    if (fileName_out.empty()) {
+                        fileName_out = "myCmp.txt";
+                    }
+
+                    worker.GetGeometry()->CompareXML_simustate(fileName, fileName_rhs, fileName_out, 1e-3);
+                    return true;
+                }
                 case MENU_ABOUT: {
                     std::ostringstream aboutText;
                     aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";

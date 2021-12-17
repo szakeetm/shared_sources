@@ -281,7 +281,8 @@ public:
 	void BuildFacetMeshLists();
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
-
+    virtual bool CompareXML_simustate(const std::string &fileName_lhs, const std::string &fileName_rhs,
+                                     const std::string &fileName_out, double cmpThreshold) = 0;
 protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;
