@@ -31,7 +31,7 @@ struct CommonEdge {
         swapped = false;
     };
     CommonEdge(size_t id, size_t v1, size_t v2) : facetId(), v1(v1), v2(v2){
-        facetId.emplace_back(id);
+        facetId.emplace_back(static_cast<int>(id));
         angle = 0.0;
         swapped = false;
     };

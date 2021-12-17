@@ -86,8 +86,8 @@ int SimulationManager::LoadInput(const std::string& fileName) {
     try {
         ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
     }
-    catch (std::runtime_error& e) {
-        throw e;
+    catch (const std::exception& e) {
+        throw;
     }
     return 0;
 }
@@ -196,8 +196,8 @@ bool SimulationManager::StartStopSimulation(){
             //Update(appTime);
         }
 
-        catch (std::runtime_error &e) {
-            throw e;
+        catch (const std::exception& e) {
+            throw;
         }
     } else {
 
@@ -207,8 +207,8 @@ bool SimulationManager::StartStopSimulation(){
 
             StartSimulation();
         }
-        catch (std::runtime_error &e) {
-            throw e;
+        catch (const std::exception& e) {
+            throw;
         }
 
         // Particular case when simulation ends before getting RUN state
@@ -264,7 +264,7 @@ int SimulationManager::CreateCPUHandle() {
         simController.clear();
         simHandles.clear();
     }
-    catch (std::exception& e){
+    catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
         throw std::runtime_error(e.what());
     }
@@ -481,7 +481,7 @@ int SimulationManager::KillAllSimUnits() {
                         try {
                             tIter = simHandles.erase(tIter);
                         }
-                        catch (std::exception &e) {
+                        catch (const std::exception &e) {
                             char tmp[512];
                             snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
                             throw std::runtime_error(tmp); // proc couldn't be killed!?

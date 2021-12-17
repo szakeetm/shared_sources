@@ -434,7 +434,7 @@ bool HistogramSettings::Apply() {
 		try{
 		    work->Update(mApp->m_fTime); //To refresh histogram cache
         }
-        catch (std::exception& e) {
+        catch (const std::exception &e) {
             GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();

@@ -87,8 +87,8 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
                 tmp << "Invalid input number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
             }
-            catch (Error& err) {
-                throw std::runtime_error(err.what());
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
             }
         }
     }
@@ -150,8 +150,8 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
             }
-            catch (Error& err) {
-                throw std::runtime_error(err.what());
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
             }
         }
     }

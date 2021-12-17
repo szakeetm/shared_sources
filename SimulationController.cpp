@@ -640,13 +640,16 @@ int SimulationController::Start() {
         int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)
         {
+            // Set OpenMP thread priority on Windows whenever we start a simulation run
 #if defined(_WIN32) && defined(_MSC_VER)
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
             eos = simThreads[omp_get_thread_num()].runLoop();
 
+            if(eos) {
 #pragma omp atomic
-            simuEnd |= eos;
+                simuEnd += 1;
+            }
         }
 
         if (simuEnd) {
@@ -662,7 +665,7 @@ int SimulationController::Start() {
                 // Time limit reached
                 ClearCommand();
                 SetState(PROCESS_DONE, GetSimuStatus());
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
     } else {

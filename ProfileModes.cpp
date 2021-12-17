@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ProfileModes.h"
 
 std::map<ProfileRecordModes, std::pair<std::string, std::string>> profileRecordModeDescriptions = { //mode, long description, short description
