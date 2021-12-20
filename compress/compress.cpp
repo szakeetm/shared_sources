@@ -68,7 +68,7 @@ int main(int argc,char* argv[]) {
     sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
                                        "/usr/bin/7za", //use p7zip installed system-wide
-                                       "/usr/local/bin/7za"}; //use p7zip installed for user
+                                       "/usr/local/bin/7za", //use p7zip installed for user
                                        "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
