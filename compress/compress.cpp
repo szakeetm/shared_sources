@@ -69,6 +69,7 @@ int main(int argc,char* argv[]) {
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
                                        "/usr/bin/7za", //use p7zip installed system-wide
                                        "/usr/local/bin/7za"}; //use p7zip installed for user
+                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
             sevenZipName = path;
