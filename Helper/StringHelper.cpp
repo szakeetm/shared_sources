@@ -11,7 +11,10 @@
 #include <iterator>
 
 #include <GLApp/GLTypes.h>
-
+#include <chrono>
+#if defined(WIN32) || defined(WIN64)
+#include <ctime> // for time_t
+#endif
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
 template <class T>
 T stringToNumber(std::string const& s, bool returnDefValOnErr) {
@@ -29,6 +32,69 @@ T stringToNumber(std::string const& s, bool returnDefValOnErr) {
 template int stringToNumber<int>(std::string const& s, bool returnDefValOnErr);
 template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
 template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
+
+void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit) {
+    auto ranges = SplitString(inputString, ',');
+    if (ranges.size() == 0) {
+        throw std::logic_error("Can't parse input");
+    }
+    for (const auto& range : ranges) {
+        auto tokens = SplitString(range, '-');
+        if (!Contains({ 1,2 },tokens.size())) {
+            std::ostringstream tmp;
+            tmp << "Can't parse \"" << range << "\". Input should be a number or a range.";
+            throw std::invalid_argument(tmp.str());
+        }
+        else if (tokens.size() == 1) {
+            //One facet
+            try {
+                int splitId = std::stoi(tokens[0]);
+                std::ostringstream tmp;
+                tmp << "Wrong id " << tokens[0];
+                if (splitId <= 0 || splitId > upperLimit) throw std::invalid_argument(tmp.str());
+                outputIds.push_back(splitId - 1);
+            }
+            catch (std::invalid_argument arg) {
+                std::ostringstream tmp;
+                tmp << "Invalid number " << tokens[0] <<"\n" << arg.what();
+                throw std::invalid_argument(tmp.str());
+            }
+        }
+        else if (tokens.size() == 2) {
+            //Range
+            try {
+                std::ostringstream tmp;
+                int id1 = std::stoi(tokens[0]);
+                if (id1 <= 0 || id1 > upperLimit) {
+                    tmp << "Wrong id " << tokens[0];
+                    throw std::invalid_argument(tmp.str());
+                }
+                int id2 = std::stoi(tokens[1]);
+                if (id2 <= 0 || id2 > upperLimit) {
+                    tmp << "Wrong id " << tokens[1];
+                    throw std::invalid_argument(tmp.str());
+                }
+                if (id2 <= id1) {
+                    tmp << "Invalid range " << id1 << "-" << id2;
+                    throw std::invalid_argument(tmp.str());
+                }
+                size_t oldSize = outputIds.size();
+                outputIds.resize(oldSize + id2 - id1 + 1);
+                std::iota(outputIds.begin() + oldSize, outputIds.end(), id1 - 1);
+            }
+            catch (std::invalid_argument arg) {
+                std::ostringstream tmp;
+                tmp << "Invalid input number " << tokens[0] << "\n" << arg.what();
+                throw std::invalid_argument(tmp.str());
+            }
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
+            }
+        }
+    }
+
+    return;
+}
 
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
     auto ranges = SplitString(inputString, ',');
@@ -51,7 +117,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 if (facetId <= 0 || facetId > nbFacets) throw std::invalid_argument(tmp.str());
                 outputFacetIds.push_back(facetId - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] <<"\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
@@ -79,13 +145,13 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 outputFacetIds.resize(oldSize + facetId2 - facetId1 + 1);
                 std::iota(outputFacetIds.begin() + oldSize, outputFacetIds.end(), facetId1 - 1);
             }
-            catch (std::invalid_argument arg) {
+            catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
             }
-            catch (Error& err) {
-                throw std::runtime_error(err.what());
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
             }
         }
     }
@@ -123,15 +189,16 @@ std::vector<std::string> SplitString(std::string const& input) {
 std::vector<std::string> SplitString(std::string const& input, const char& delimiter)
 {
     std::vector<std::string> result;
-    const char* str = strdup(input.c_str());
+    char* str = strdup(input.c_str());
+    char* str_ptr = str; // keep to free memory
     do
     {
-        const char* begin = str;
+        char* begin = str;
         while (*str != delimiter && *str)
             str++;
-
-        result.push_back(std::string(begin, str));
+        result.emplace_back(std::string(begin, str));
     } while (0 != *str++);
+    free(str_ptr);
     return result;
 }
 
@@ -157,9 +224,38 @@ std::string space2underscore(std::string text) {
     return text;
 }
 
+std::string molflowToAscii(std::string text) {
+    //Changes special characters in Molflow ASCII table to regular, exportable/copiable characters
+    for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
+        if (*it == '\201') {
+            *it = 'u';
+        } else if (*it == '\202') {
+            *it = 'v';
+        } else if (*it == '\262') {
+            *it = '2';
+        }
+        else if (*it == '\263') {
+            *it = '3';
+        }
+    }
+    return text;
+}
+
 bool iequals(std::string str1, std::string str2)
 {
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
     return str1.size() == str2.size()
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
+}
+
+namespace Util {
+    std::string getTimepointString(){
+        auto time_point = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(time_point);
+        char s[256];
+        struct tm *p = localtime(&now_c);
+        //YYYY.MM.DD_HH.MM.SS
+        strftime(s, 256, "%F_%H.%M.%S", p);
+        return s;
+    }
 }

@@ -30,18 +30,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMessageBox.h"
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-#include "../../src/ProfilePlotter.h"
+#include "../../src/Interface/ProfilePlotter.h"
 #include "HistogramPlotter.h"
 #include "Geometry_shared.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-#include "../../src/TimewisePlotter.h"
-#include "../../src/PressureEvolution.h"
+#include "../../src/Interface/TimewisePlotter.h"
+#include "../../src/Interface/PressureEvolution.h"
 #endif
 
 #if defined(SYNRAD)
 #include "../src/SynRad.h"
+#include "../src/Interface/SpectrumPlotter.h"
 #endif
 
 #if defined(MOLFLOW)
@@ -176,6 +177,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				}
 				if (!mApp->AskToReset(work)) return;
 				GLProgress *progressDlg = new GLProgress("Collapse", "Please wait");
+				progressDlg->SetClosable(false);
 				progressDlg->SetProgress(0.0);
 				progressDlg->SetVisible(true);
 				if (!l1->GetState()) vT = 0.0;
@@ -208,10 +210,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (mApp->spectrumPlotter) mApp->spectrumPlotter->Refresh();
 #endif
 				// Send to sub process
-				try { work->Reload(); }
-				catch (Error &e) {
-					GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-				}
+				work->Reload();
 
 				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);
@@ -231,6 +230,12 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				work->abortRequested = true;
 			}
 		}
+		break;
+	case MSG_CLOSE:
+		if (src == goButton) goButton->SetText("Collapse");
+		else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
+		isRunning = false;
+		work->abortRequested = true;
 		break;
 	}
 

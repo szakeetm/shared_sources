@@ -45,6 +45,7 @@ public:
 
   // Construction
   ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formulas> formulas);
+  ConvergencePlotter(const ConvergencePlotter& copy);
 
   // Component method
   void Display(Worker *w);
@@ -56,7 +57,7 @@ public:
   void ProcessMessage(GLComponent *src,int message) override;
   void SetBounds(int x,int y,int w,int h);
   int addView(int formulaHash);
-  std::vector<int> GetViews();
+  std::vector<int> GetViews() const;
   void SetViews(const std::vector<int> &updatedViews);
   bool IsLogScaled();
   void SetLogScaled(bool logScale);

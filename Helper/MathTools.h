@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <algorithm> //std::find
 #include <string>
 #include <cassert>
+#include <Vector.h>
 
 bool    IsEqual(const double &a, const double &b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
@@ -57,7 +58,7 @@ template <typename TYPE> TYPE Sqr(const TYPE& a) { return a*a; }
 char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
-double my_erf(double x);
+[[maybe_unused]] double my_erf(double x);
 double Weigh(const double& a, const double& b, const double& weigh);
 double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
 double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
@@ -75,7 +76,7 @@ template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const T
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
-int my_lower_bound(const double& key, double* A,const size_t& size);
+int my_lower_bound(const double& key, const double* A,const size_t& size);
 int my_lower_bound(const double& key, const std::vector<double>& A);
 int my_lower_bound(const double& key, const std::vector<std::pair<double, double>>& A, const bool& first);
 int my_lower_bound(const double& key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool& first, const size_t& elementIndex);
@@ -85,10 +86,15 @@ int weighed_lower_bound_X(const double& key, const double& weigh, double* A, dou
 double GetElement(const std::pair<double, double>& pair, const bool& first);
 double GetElement(const std::pair<double, std::vector<double>> & pair, const bool& first, const size_t& elementIndex);
 
-size_t GetSysTimeMs();
+[[maybe_unused]] size_t GetSysTimeMs();
 
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, size_t startIndex);
+[[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t &startIndex);
+
+std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
+Vector3d
+PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+                 const bool &reverse); //sets sHandle->currentParticle.direction
 
 //Elementwise addition of two vectors:
 #include <algorithm>
@@ -104,7 +110,7 @@ std::vector<T> operator+(const std::vector<T>& lhs, const std::vector<T>& rhs)
 	auto it2 = rhs.begin();
 	auto it3 = result.begin();
 
-	while (!(it1 == lhs.end())) {
+	while (it1 != lhs.end()) {
 		*it3 = *it1 + *it2;
 		it1++; it2++; it3++;
 	}
@@ -118,7 +124,7 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 
 	auto it1 = lhs.begin();
 	auto it2 = rhs.begin();
-	while (!(it1 == lhs.end())) {
+	while (it1 != lhs.end()) {
 		*it1 += *it2;
 		it1++; it2++;
 	}

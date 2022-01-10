@@ -7,13 +7,16 @@
 
 #include <vector>
 #include <string>
+#include <thread>
+#include "../src/Simulation/Simulation.h"
+#include <../src/GeometrySimu.h>
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
 class SimulationController;
 
-class Dataport;
+struct Dataport;
 
 enum class SimType : uint8_t {
     simCPU,
@@ -24,7 +27,6 @@ enum class SimType : uint8_t {
 enum class LoadType : uint8_t {
     LOADGEOM,
     LOADPARAM,
-    LOADAC,
     NLOADERTYPES,
     LOADHITS
 };
@@ -43,7 +45,7 @@ enum class LoadType : uint8_t {
  * @todo Add logger capability to console OR sdl framework
  */
 class SimulationManager {
-    int CreateCPUHandle(uint16_t iProc);
+    int CreateCPUHandle();
 
     int CreateGPUHandle(uint16_t iProc = 1);
 
@@ -57,37 +59,21 @@ protected:
     int ResetStatsAndHits(); /*! Reset local and global stats and counters */
     int TerminateSimHandles();
 
-    int FetchResults(); /*! Get results from simulations and clear local counters */
+    /*! Get results from simulations and clear local counters */
     bool StartStopSimulation();
 
     // Open/Close for shared memory
-    int CreateLoaderDP(size_t loaderSize);
-
-    int CloseLoaderDP();
-
-    int CreateControlDP();
-
-    int CloseControlDP();
 
     int CreateLogDP(size_t logDpSize);
 
     int CloseLogDP();
 
-    int CreateHitsDP(size_t hitSize);
-
-    int CloseHitsDP();
-
     int ForwardCommand(int command, size_t param, size_t param2);
 
     int WaitForProcStatus(uint8_t procStatus);
 
-    // Load Buffer functions
-    int UploadToLoader(void *data, size_t size);
-
-    int UploadToHitBuffer(void *data, size_t size);
-
 public:
-    SimulationManager(std::string appName, std::string dpName);
+    SimulationManager();
 
     ~SimulationManager();
 
@@ -95,14 +81,15 @@ public:
 
     int StopSimulation();
 
-    int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
+    int LoadSimulation();
 
-    int ReloadLogBuffer(size_t logSize, bool ignoreSubs); /*! Reload the logger if necessary */
-    int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
+    int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
     int InitSimUnits();
+
+    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
 
     int KillAllSimUnits();
 
@@ -114,38 +101,31 @@ public:
 
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
-    int GetProcStatus(std::vector<SubProcInfo> &procInfoList);
+    int GetProcStatus(ProcComm &procInfoList);
 
-    const char *GetErrorDetails();
+    std::string GetErrorDetails();
 
     // Hit Buffer functions
-    BYTE *GetLockedHitBuffer();
+    bool GetLockedHitBuffer();
 
     int UnlockHitBuffer();
-
-    // Log Buffer functions
-    BYTE *GetLockedLogBuffer();
-
-    int UnlockLogBuffer();
 
     bool GetRunningStatus();
 
     int LoadInput(const std::string& fileName);
 
-private:
+    int IncreasePriority();
+    int DecreasePriority();
 
-    // Dataport handles and names
-    Dataport *dpControl;
-    Dataport *dpHit; //TODO: Size unknown if not transferred via ReloadHitBuffer()/ShareWithSimUnits()
-    Dataport *dpLog;
-    Dataport *dpLoader;
+    int RefreshRNGSeed(bool fixed);
+private:
+    // Direct implementation for threads
+    ProcComm procInformation; // ctrl
+    // SimulationModel* model; // load
+    // hits
+
 
 protected:
-    char appName[16]{};
-    char ctrlDpName[32]{};
-    char loadDpName[32]{};
-    char hitsDpName[32]{};
-    char logDpName[32]{};
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
     // Flags
@@ -153,14 +133,27 @@ public:
     bool useGPU;
     bool useRemote;
 
-    uint16_t nbCores;
+    uint16_t nbThreads;
     uint16_t mainProcId{};
 
+    bool interactiveMode;
     bool isRunning;
     bool allProcsDone;
     bool hasErrorStatus;
     bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
-    std::vector<std::pair<uint32_t, SimType>> simHandles; // Vector of a pair of pid , simulation type
+
+private:
+    std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
+    //std::vector<std::thread> cpuSim;
+    std::vector<SimulationController> simController;
+    std::vector<Simulation*> simUnits;
+
+public:
+    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
+    void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
+    void ForwardOtfParams(OntheflySimulationParams* otfParams);
+    void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
+
 };
 
 

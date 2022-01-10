@@ -132,6 +132,27 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
 
 }
 
+// copy constructor
+ConvergencePlotter::ConvergencePlotter(const ConvergencePlotter& copy) : ConvergencePlotter(copy.worker, copy.formula_ptr) {
+    //nbView = copy.nbView;
+    worker = copy.worker;
+    formula_ptr = copy.formula_ptr;
+
+    lastUpdate = 0.0f;
+
+    profCombo->SetSelectedIndex(copy.profCombo->GetSelectedIndex());
+    logYToggle->SetState(copy.logYToggle->GetState());
+    colorToggle->SetState(copy.colorToggle->GetState());
+
+    if (!colorToggle->GetState())
+        chart->SetColorSchemeDefault();
+    else
+        chart->SetColorSchemeColorblind();
+
+    SetViews(copy.GetViews());
+}
+
+
 /**
 * \brief Sets positions and sizes of all UI elements
 * \param x x-coordinate of the element
@@ -350,7 +371,7 @@ void ConvergencePlotter::refreshViews() {
         }
 
         v->Reset();
-        if (worker->globalHitCache.globalHits.hit.nbDesorbed > 0) {
+        if (worker->globalHitCache.globalHits.nbDesorbed > 0) {
             auto& conv_vec = formula_ptr->convergenceValues[formId].conv_vec;
             for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
                 v->Add(conv_vec[j].first, conv_vec[j].second, false);
@@ -550,7 +571,7 @@ void ConvergencePlotter::SetViews(const std::vector<int> &updatedViews) {
 * \brief Create and return a vector of view IDs
 * \return vector containing the IDs of the views
 */
-std::vector<int> ConvergencePlotter::GetViews() {
+std::vector<int> ConvergencePlotter::GetViews() const {
     std::vector<int> v;
     v.reserve(nbView);
     for (size_t i = 0; i < nbView; i++)

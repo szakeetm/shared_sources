@@ -441,8 +441,8 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 	std::vector<Vector2d> p2Pts = inP2.pts;
 
     i=0;
-    while( i<inP1.pts.size() && !insideP2 ) {
-      insideP2 = IsInPoly(inP1.pts[i],p2Pts);
+    while( i < inP1.pts.size() && !insideP2 ) {
+      insideP2 = IsInPoly(inP1.pts[i], p2Pts);
       i++;
     }
     if( insideP2 ) {
@@ -452,7 +452,7 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
     }
 
     i=0;
-    while( i<inP2.pts.size() && !insideP1 ) {
+    while( i < inP2.pts.size() && !insideP1 ) {
       insideP1 = IsInPoly(inP2.pts[i],p1Pts);
       i++;
     }
@@ -557,7 +557,7 @@ std::tuple<double,Vector2d,std::vector<Vector2d>> GetInterArea(const GLAppPolygo
   
   // Count number of pts
   size_t nbV = 0;
-  for(auto p : *polys)
+  for(auto& p : *polys)
 	  nbV += p.pts.size();
   std::vector<Vector2d> lList(nbV);
 
@@ -617,65 +617,65 @@ std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vect
 
 bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 
-	// Fast method to check if a point is inside a polygon or not.
-	// Works with convex and concave polys, orientation independent
-	int n_updown = 0;
-	int n_found = 0;
+    // Fast method to check if a point is inside a polygon or not.
+    // Works with convex and concave polys, orientation independent
+    int n_updown = 0;
+    int n_found = 0;
 
-	size_t nbSizeMinusOne = polyPoints.size() - 1;
-	for (size_t j = 0; j < nbSizeMinusOne; j++) {
-		const Vector2d& p1 = polyPoints[j];
-		const Vector2d& p2 = polyPoints[j+1];
+    size_t nbSizeMinusOne = polyPoints.size() - 1;
+    for (size_t j = 0; j < nbSizeMinusOne; j++) {
+        const Vector2d& p1 = polyPoints[j];
+        const Vector2d& p2 = polyPoints[j+1];
 
-		/*
-		if (p1.u < p2.u) {
-			 minx = p1.u;
-			 maxx = p2.u;
-		}
-		else {
-			 minx = p2.u;
-			 maxx = p1.u;
-		}
-		if (p.u > minx && p.u <= maxx) {
-		*/
-		
-		if (p.u<p1.u != p.u<p2.u) {
-			double slope = (p2.v - p1.v) / (p2.u - p1.u);
-			if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
-				n_updown++;
-			}
-			else {
-				n_updown--;
-			}
-			n_found++;
-		}
-	}
-	//Last point. Repeating code because it's the fastest and this function is heavily used
-	const Vector2d& p1 = polyPoints[nbSizeMinusOne];
-	const Vector2d& p2 = polyPoints[0];
+        /*
+        if (p1.u < p2.u) {
+             minx = p1.u;
+             maxx = p2.u;
+        }
+        else {
+             minx = p2.u;
+             maxx = p1.u;
+        }
+        if (p.u > minx && p.u <= maxx) {
+        */
 
-	/*
-	if (p1.u < p2.u) {
-			minx = p1.u;
-			maxx = p2.u;
-		}
-		else {
-			minx = p2.u;
-			maxx = p1.u;
-		}
-	if (p.u > minx && p.u <= maxx) {
-	*/
+        if (p.u<p1.u != p.u<p2.u) {
+            double slope = (p2.v - p1.v) / (p2.u - p1.u);
+            if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
+                n_updown++;
+            }
+            else {
+                n_updown--;
+            }
+            n_found++;
+        }
+    }
+    //Last point. Repeating code because it's the fastest and this function is heavily used
+    const Vector2d& p1 = polyPoints[nbSizeMinusOne];
+    const Vector2d& p2 = polyPoints[0];
 
-	if (p.u<p1.u != p.u<p2.u) {
-		double slope = (p2.v - p1.v) / (p2.u - p1.u);
-		if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
-			n_updown++;
-		}
-		else {
-			n_updown--;
-		}
-		n_found++;
-	}
+    /*
+    if (p1.u < p2.u) {
+            minx = p1.u;
+            maxx = p2.u;
+        }
+        else {
+            minx = p2.u;
+            maxx = p1.u;
+        }
+    if (p.u > minx && p.u <= maxx) {
+    */
+
+    if (p.u<p1.u != p.u<p2.u) {
+        double slope = (p2.v - p1.v) / (p2.u - p1.u);
+        if ((slope * p.u - p.v) < (slope * p1.u - p1.v)) {
+            n_updown++;
+        }
+        else {
+            n_updown--;
+        }
+        n_found++;
+    }
 
 
 
@@ -722,8 +722,49 @@ bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
     */
 
     //if (n_updown<0) n_updown = -n_updown; //Not needed, oddity of negative numbers works the same way with (X/2)&1
-	//return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //(X & 1 means last bit of X is 1 i.e. the number is odd) The full expression means one is even and the other is odd
-	return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1);
+    //return ((n_found / 2) & 1) ^ ((n_updown / 2) & 1); //(X & 1 means last bit of X is 1 i.e. the number is odd) The full expression means one is even and the other is odd
+    return ((n_found / 2u) & 1u) ^ ((n_updown / 2u) & 1u);
+}
+
+bool IsInPoly(double u, double v, const std::vector<Vector2d> &polyPoints) {
+
+	// Fast method to check if a point is inside a polygon or not.
+	// Works with convex and concave polys, orientation independent
+	int n_updown = 0;
+	int n_found = 0;
+
+	size_t nbSizeMinusOne = polyPoints.size() - 1;
+	for (size_t j = 0; j < nbSizeMinusOne; j++) {
+		const Vector2d& p1 = polyPoints[j];
+		const Vector2d& p2 = polyPoints[j+1];
+		
+		if (u<p1.u != u<p2.u) {
+			double slope = (p2.v - p1.v) / (p2.u - p1.u);
+			if ((slope * u - v) < (slope * p1.u - p1.v)) {
+				n_updown++;
+			}
+			else {
+				n_updown--;
+			}
+			n_found++;
+		}
+	}
+	//Last point. Repeating code because it's the fastest and this function is heavily used
+	const Vector2d& p1 = polyPoints[nbSizeMinusOne];
+	const Vector2d& p2 = polyPoints[0];
+
+	if (u<p1.u != u<p2.u) {
+		double slope = (p2.v - p1.v) / (p2.u - p1.u);
+		if ((slope * u - v) < (slope * p1.u - p1.v)) {
+			n_updown++;
+		}
+		else {
+			n_updown--;
+		}
+		n_found++;
+	}
+
+	return ((n_found / 2u) & 1u) ^ ((n_updown / 2u) & 1u);
 }
 
 /*

@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLTypes.h"
 #include <cstring> //strcpy, etc.
 #include <filesystem>
+#include <sstream>
 
 #define MAX_WORD_LENGTH 65536 // expected length of the longest line
 
@@ -157,6 +158,18 @@ void FileReader::ReadKeyword(const char *keyword) {
     }
 }
 
+bool FileReader::PeekKeyword(const char *keyword) {
+
+    int oldBuffPos = buffPos;
+    char *w = ReadWord();
+    bool keywordNext = (strcmp(w, keyword) != 0);
+
+    // go back to old position, as we only wanted to peek
+    buffPos = oldBuffPos;
+
+    return keywordNext;
+}
+
 void FileReader::SeekStart() {
     fseek(file, 0L, SEEK_SET);
     isEof = 0;
@@ -179,6 +192,29 @@ bool FileReader::SeekFor(const char *keyword) {
         w = ReadLine();
         notFound = ((strcmp(w, keyword) != 0) && (!isEof));
     } while (notFound);
+    return isEof == 0;
+}
+
+bool FileReader::SeekForInline(const char *keyword) {
+    char *w;
+    char *res;
+    bool notFound = true;
+    int oldbuffPos;
+    do {
+        oldbuffPos = buffPos;
+        w = ReadWord();
+        res = w;
+        while ((res = std::strstr(res, keyword)) != nullptr) {
+            // Increment result, otherwise we'll find target at the same location
+            notFound = false;
+            break;
+        }
+        //w = strstr(w, keyword);
+        //notFound = (res == nullptr && (!isEof));
+    } while (notFound && (!isEof));
+
+    /*if(res != nullptr  && !isEof)
+        buffPos = oldbuffPos + std::strlen(keyword) + 1;*/
     return isEof == 0;
 }
 
@@ -291,6 +327,32 @@ char *FileReader::ReadWord() {
     return retWord;
 }
 
+std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
+    std::vector<std::vector<std::string>> table; //reset table
+    do {
+        std::vector<std::string> row;
+        std::string line = this->ReadLine();
+        std::stringstream token;
+        size_t cursor = 0;
+        size_t length = line.length();
+        while (cursor < length) {
+            char c = line[cursor];
+            if (c == ',') {
+                row.push_back(token.str());
+                token.str("");
+                token.clear();
+            } else {
+                token << c;
+            }
+            cursor++;
+        }
+        if (token.str().length() > 0) row.push_back(token.str());
+
+        table.push_back(row);
+    } while (!this->IsEof());
+    return table;
+}
+
 // FileWriter class
 
 FileWriter::FileWriter(const char *fileName) : fileName{} {
@@ -347,33 +409,49 @@ void FileWriter::Write(const char *s) {
 }
 
 std::string FileUtils::GetFilename(const std::string &str) {
+    /*
     size_t found = str.find_last_of("/\\");
     if (found == std::string::npos)
         return str; // not found
     return str.substr(found + 1);
+    */
+    std::filesystem::path path = str; //Convert to path object
+    return path.filename().u8string();
 }
 
 std::string FileUtils::StripExtension(const std::string &str) {
+
     size_t lastdot = str.find_last_of('.');
     if (lastdot == std::string::npos)
         return str;
     return str.substr(0, lastdot);
+
 }
 
 std::string FileUtils::GetPath(const std::string &str) {
+
     size_t found = str.find_last_of("/\\");
     if (found == std::string::npos)
         return ""; // not found, return empty string
     else
         return str.substr(0, found + 1);
+
 }
 
 std::string FileUtils::GetExtension(const std::string &str) {
+    //Returns file extension (without starting dot) or empty string if none
+    /*
+    //Old code, gives wrong extension on "C:\folder.name\file"
     size_t found = str.find_last_of('.');
     if (found == std::string::npos)
         return ""; // not found
     else
         return str.substr(found + 1);
+     */
+    std::filesystem::path path = str; //Convert to path object
+    std::string ext = path.extension().u8string();
+    if (ext.length()>0 && ext.at(0)=='.') ext.erase(0,1); //Strip starting dot
+    return ext;
 }
 
 std::string FileUtils::get_working_path() {

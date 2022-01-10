@@ -26,12 +26,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
+#include <../src/GeometrySimu.h>
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
-class Facet;
+class InterfaceFacet;
 class DeletedFacet;
 class Worker;
 class FileReader;
@@ -62,12 +63,12 @@ public:
 	ClippingVertex();
 	Vector2d vertex; //Storing the actual vertex
 	bool visited;
-	bool inside;
-	bool onClippingLine;
+	bool inside{};
+	bool onClippingLine{};
 	bool isLink;
-	double distance;
+	double distance{};
 	std::list<ClippingVertex>::iterator link;
-	size_t globalId;
+	size_t globalId{};
 };
 bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<ClippingVertex>::iterator& b);
 
@@ -86,36 +87,34 @@ public:
 class Geometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
-	void CalculateFacetParams(Facet *f);
-	void Merge(size_t nbV, size_t nbF, Vector3d *nV, Facet **nF); // Merge geometry
+	void CalculateFacetParams(InterfaceFacet *f);
+	void Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF); // Merge geometry
 	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
-	void InsertSTLGeom(FileReader *file, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
 	void AdjustProfile();
 	void BuildShapeList();
 	void BuildSelectList();
 	void BuildNonPlanarList();
 	void BuildVolumeFacetList();
 
-	float getMaxDistToCamera(Facet* f);
-	int compareFacetDepth(Facet* lhs, Facet* rhs);
+	float getMaxDistToCamera(InterfaceFacet* f);
+	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs);
 public:
 	Geometry();
 	virtual ~Geometry();
 
-#if defined(MOLFLOW)
-	virtual void ExportTextures(FILE *f, int grouping, int mode, BYTE *buffer, bool saveSelected) {}
-#endif
 #if defined(SYNRAD)
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, BYTE *buffer, bool saveSelected) {}
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState &globState, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
-	PhysicalValue GetPhysicalValue(Facet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, BYTE* texture); //Returns the physical value of either a facet or a texture cell
+	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
-	void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
+	void InitializeInterfaceGeometry(int facet_number = -1);
+    void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
+    void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
 	void CheckCollinear();
 	void CheckNonSimple();
@@ -123,12 +122,13 @@ public:
 	void CorrectNonSimple(int *nonSimpleList, int nbNonSimple);
 	size_t AnalyzeNeighbors(Worker *work, GLProgress *prg);
 	std::vector<size_t> GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff);
-	std::vector<size_t> GetAllFacetIndices();
-	size_t      GetNbFacet();
-	size_t      GetNbVertex();
+	std::vector<size_t> GetAllFacetIndices() const;
+	size_t      GetNbFacet() const;
+	size_t      GetNbVertex() const;
 	Vector3d GetFacetCenter(int facet);
-	size_t      GetNbStructure();
+	size_t      GetNbStructure() const;
 	char     *GetStructureName(int idx);
+	GeomProperties* GetGeomProperties();
 	void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
@@ -137,9 +137,9 @@ public:
 	void ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type);
 	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type);
 	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree & solution, ClipperLib::ClipType& type);
-	void RegisterVertex(Facet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
+	void RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
 	void SelectCoplanar(int width, int height, double tolerance);
-	Facet    *GetFacet(size_t facet);
+	InterfaceFacet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
 	AxisAlignedBoundingBox     GetBB();
 	Vector3d GetCenter();
@@ -147,19 +147,20 @@ public:
     std::map<int,GLColor> GetPlottedFacets( ) const;
 
 	// Collapsing stuff
-	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
+	static int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
 	bool RemoveNullFacet();
-	Facet *MergeFacet(Facet *f1, Facet *f2);
-	bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
+	static  InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
+	static bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
+	void RenumberTeleports(const std::vector<int>& newRefs);
 
 	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
-	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor);
+	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
 	void LoadASE(FileReader *file, GLProgress *prg);
 
-	bool IsLoaded();
+	bool IsLoaded() const;
 	void InsertTXT(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertGEO(FileReader *file, GLProgress *prg, bool newStr);
 	void InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr);
@@ -167,7 +168,7 @@ public:
 	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter* f, GLProgress* prg);
 	void SaveSuper(int s);
-	void SaveProfileTXT(FileWriter *file);
+	static void SaveProfileTXT(FileWriter *file);
 	void UpdateSelection();
 	void SwapNormal(); //Swap normals of selected facets
 	void RevertFlippedNormals(); //Reverts flipping for facets with normalFlipped flag
@@ -175,8 +176,8 @@ public:
 	void Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps);
 	
 	void RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy = false);
-	void RestoreFacets(std::vector<DeletedFacet> deletedFacetList, bool toEnd);
-	void AddFacets(std::vector<Facet*> facetList);
+	void RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, bool toEnd);
+	void AddFacets(std::vector<InterfaceFacet*> facetList);
 	void RemoveSelectedVertex();
 	void RemoveFromStruct(int numToDel);
 	void CreateLoft();
@@ -184,15 +185,15 @@ public:
 	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
-	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = NULL);
-	bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
+	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress *prg = nullptr);
+	static bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
 	void MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	std::vector<UndoPoint> MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker);
 	std::vector<UndoPoint> MirrorProjectSelectedVertices(const Vector3d &P0, const Vector3d &N, bool project, bool copy, Worker *worker);
 	void RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
 	void RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker);
-	void AlignFacets(std::vector<size_t> memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
-	void CloneSelectedFacets();
+	void AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId, size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker);
+	int CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
 	void AddStruct(const char *name,bool deferDrawing=false);
@@ -202,28 +203,29 @@ public:
 	void	Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
+    void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
-	void	MergecollinearSides(Facet *f, double fT);
+	void	MergecollinearSides(InterfaceFacet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();
 	void    DeleteIsolatedVertices(bool selectedOnly);
 	void	SelectIsolatedVertices();
 	void    SetNormeRatio(float r);
-	float   GetNormeRatio();
+	float   GetNormeRatio() const;
 	void    SetAutoNorme(bool enable);
-	bool    GetAutoNorme();
+	bool    GetAutoNorme() const;
 	void    SetCenterNorme(bool enable);
-	bool    GetCenterNorme();
-	void    BuildFacetList(Facet *f);
-	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, double *values = NULL);
+	bool    GetCenterNorme() const;
+	void    BuildFacetList(InterfaceFacet *f);
+	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
-	void CreateRectangle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
-	void CreateCircle(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
-	void CreateRacetrack(const Vector3d & center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
+	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
+	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
+	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
 
 	void UpdateName(FileReader *file);
-	std::string GetName();
+	std::string GetName() const;
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
 	std::vector<size_t> GetNonPlanarFacetIds(const double& tolerance=1E-5);
@@ -238,19 +240,22 @@ public:
 protected:
 	void AddToSelectionHist(size_t f);
 	bool AlreadySelected(size_t f);
-	void DrawFacet(Facet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
-	void FillFacet(Facet *f, bool addTextureCoord);
-	void AddTextureCoord(Facet *f, const Vector2d *p);
+	void DrawFacet(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
+	void FillFacet(InterfaceFacet *f, bool addTextureCoord);
+	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p);
 	void DrawPolys();
 	void DrawTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
 	int  FindEar(const GLAppPolygon& p);
-	void Triangulate(Facet *f, bool addTextureCoord);
-	void DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
+	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
+	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
-	void SelectAll();
+    void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
+    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
+
+    void SelectAll();
 	void UnselectAll();
 	void AddToSelectedVertexList(size_t vertexId);
 	void EmptySelectedVertexList();
@@ -285,8 +290,8 @@ protected:
 	char      *strFileName[MAX_SUPERSTR]; // Structure file name
 	char      strPath[512];               // Path were are stored files (super structure)
 
-										  // Geometry
-	Facet    **facets;    // All facets of this geometry
+    // Geometry
+	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
@@ -332,6 +337,10 @@ protected:
 #if defined(MOLFLOW)
 #include "../src/MolflowDisplayTypes.h"
         TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
+#endif
+#if defined(SYNRAD)
+    #include "../src/SynradTypes.h"
+		TEXTURE_SCALE_TYPE texture_limits[3];   // Min/max values for texture scaling: Pressure/Impingement rate/Density
 #endif
 
 #if defined(SYNRAD)

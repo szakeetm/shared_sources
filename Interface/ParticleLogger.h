@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 
+#include <vector>
 #include "GLApp/GLWindow.h"
 
 class GLButton;
@@ -64,7 +65,8 @@ private:
 	GLTitledPanel	*logParamPanel;
 	GLTitledPanel	*resultPanel;
 
-	std::string ConvertLogToText(const size_t & nbRec, ParticleLoggerItem* log, const std::string & separator, std::ofstream* file=NULL);
+	std::string ConvertLogToText(const std::vector<ParticleLoggerItem> &log, const std::string &separator,
+                                 std::ofstream *targetFile);
 	bool isRunning;
 };
 

@@ -21,7 +21,7 @@ private:
 
   GLInputBox(const char *message,const char *label,const char *title);
   void ProcessMessage(GLComponent *src,int message) override;
-  void ManageEvent(SDL_Event *evt); //Catch enter and esc
+  void ManageEvent(SDL_Event *evt) override; //Catch enter and esc
 };
 
 #endif /* _GLINPUTBOXH_ */

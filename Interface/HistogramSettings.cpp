@@ -401,21 +401,21 @@ bool HistogramSettings::Apply() {
 
 	if (mApp->AskToReset()) {
 		//Apply
-		work->wp.globalHistogramParams.recordBounce = globalRecBounce;
-		if (doGlobalHitLimit) work->wp.globalHistogramParams.nbBounceMax = globalHitLimit;
-		if (doGlobalHitBinsize) work->wp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
-		work->wp.globalHistogramParams.recordDistance = globalRecDistance;
-		if (doGlobalDistanceLimit) work->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
-		if (doGlobalDistanceBinsize) work->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
+		work->model->wp.globalHistogramParams.recordBounce = globalRecBounce;
+		if (doGlobalHitLimit) work->model->wp.globalHistogramParams.nbBounceMax = globalHitLimit;
+		if (doGlobalHitBinsize) work->model->wp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
+		work->model->wp.globalHistogramParams.recordDistance = globalRecDistance;
+		if (doGlobalDistanceLimit) work->model->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
+		if (doGlobalDistanceBinsize) work->model->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
 #if defined(MOLFLOW)
-		work->wp.globalHistogramParams.recordTime = globalRecTime;
-		if (doGlobalTimeLimit) work->wp.globalHistogramParams.timeMax = globalTimeLimit;
-		if (doGlobalTimeBinsize) work->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
+		work->model->wp.globalHistogramParams.recordTime = globalRecTime;
+		if (doGlobalTimeLimit) work->model->wp.globalHistogramParams.timeMax = globalTimeLimit;
+		if (doGlobalTimeBinsize) work->model->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
 #endif
 
 		auto selectedFacets = geom->GetSelectedFacets();
 		for (const auto& facetId : selectedFacets) {
-			Facet* f = geom->GetFacet(facetId);
+			InterfaceFacet* f = geom->GetFacet(facetId);
 			if (doFacetRecBounce) f->sh.facetHistogramParams.recordBounce = facetRecBounce;
 			if (doFacetHitLimit) f->sh.facetHistogramParams.nbBounceMax = facetHitLimit;
 			if (doFacetHitBinsize) f->sh.facetHistogramParams.nbBounceBinsize = facetHitBinsize;
@@ -434,7 +434,7 @@ bool HistogramSettings::Apply() {
 		try{
 		    work->Update(mApp->m_fTime); //To refresh histogram cache
         }
-        catch (std::exception& e) {
+        catch (const std::exception &e) {
             GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
@@ -446,16 +446,16 @@ bool HistogramSettings::Apply() {
 
 void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	//Update displayed info based on selected facets
-	globalRecordBounceToggle->SetState(work->wp.globalHistogramParams.recordBounce);
-	globalHitLimitText->SetText(work->wp.globalHistogramParams.nbBounceMax);
-	globalHitBinsizeText->SetText(work->wp.globalHistogramParams.nbBounceBinsize);
-	globalRecordDistanceToggle->SetState(work->wp.globalHistogramParams.recordDistance);
-	globalDistanceLimitText->SetText(work->wp.globalHistogramParams.distanceMax);
-	globalDistanceBinsizeText->SetText(work->wp.globalHistogramParams.distanceBinsize);
+	globalRecordBounceToggle->SetState(work->model->wp.globalHistogramParams.recordBounce);
+	globalHitLimitText->SetText(work->model->wp.globalHistogramParams.nbBounceMax);
+	globalHitBinsizeText->SetText(work->model->wp.globalHistogramParams.nbBounceBinsize);
+	globalRecordDistanceToggle->SetState(work->model->wp.globalHistogramParams.recordDistance);
+	globalDistanceLimitText->SetText(work->model->wp.globalHistogramParams.distanceMax);
+	globalDistanceBinsizeText->SetText(work->model->wp.globalHistogramParams.distanceBinsize);
 #if defined(MOLFLOW)
-	globalRecordTimeToggle->SetState(work->wp.globalHistogramParams.recordTime);
-	globalTimeLimitText->SetText(work->wp.globalHistogramParams.timeMax);
-	globalTimeBinsizeText->SetText(work->wp.globalHistogramParams.timeBinsize);
+	globalRecordTimeToggle->SetState(work->model->wp.globalHistogramParams.recordTime);
+	globalTimeLimitText->SetText(work->model->wp.globalHistogramParams.timeMax);
+	globalTimeBinsizeText->SetText(work->model->wp.globalHistogramParams.timeBinsize);
 #endif
 
 	bool hasFacetSelected = selectedFacetIds.size() > 0;
@@ -485,7 +485,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 #if defined(MOLFLOW)
 		bool recordTimeEqual = true, timeMaxEqual = true, timeBinsizeEqual = true;
 #endif
-		Facet* f0 = geom->GetFacet(selectedFacetIds[0]);
+		InterfaceFacet* f0 = geom->GetFacet(selectedFacetIds[0]);
 		bool recBounce = f0->sh.facetHistogramParams.recordBounce;
 		size_t bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
 		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceBinsize;
@@ -499,7 +499,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 #endif
 
 		for (size_t i = 1; i < selectedFacetIds.size();i++) {
-			Facet* f = geom->GetFacet(selectedFacetIds[i]);
+			InterfaceFacet* f = geom->GetFacet(selectedFacetIds[i]);
 			recordBounceEqual = recordBounceEqual && (f->sh.facetHistogramParams.recordBounce == recBounce);
 			bounceMaxEqual = bounceMaxEqual && (f->sh.facetHistogramParams.nbBounceMax == bounceMax);
 			bounceBinsizeEqual = bounceBinsizeEqual && (f->sh.facetHistogramParams.nbBounceBinsize== bounceBinsize);

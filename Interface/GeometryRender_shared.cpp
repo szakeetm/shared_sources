@@ -54,7 +54,7 @@ extern SynRad*mApp;
 
 void Geometry::SelectFacet(size_t facetId) {
 	if (!isLoaded) return;
-	Facet *f = facets[facetId];
+	InterfaceFacet *f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
 	if (!f->selected) f->UnselectElem();
 	nbSelectedHist = 0;
@@ -104,7 +104,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 				mApp->SetFacetSearchPrg(true, tmp);
 			}
 		}
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
 
 			size_t nb = facets[i]->sh.nbIndex;
@@ -224,7 +224,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 			if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex)) {
 
-				found = IsInPoly(Vector2d((double)x,(double)y), v);
+				found = IsInPoly((double)x,(double)y, v);
 
 				if (found) {
 					if (unselect) {
@@ -521,7 +521,7 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-void Geometry::DrawFacet(Facet *f, bool offset, bool showHidden, bool selOffset) {
+void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -631,7 +631,7 @@ void Geometry::DrawPolys() {
 }
 
 // returns 1 if lhs is greater, -1 otherwise
-float Geometry::getMaxDistToCamera(Facet* f){
+float Geometry::getMaxDistToCamera(InterfaceFacet* f){
 
     float rx, ry, rz, rw;
 
@@ -658,7 +658,7 @@ float Geometry::getMaxDistToCamera(Facet* f){
 }
 
 // returns 1 if lhs is greater, -1 otherwise
-int Geometry::compareFacetDepth(Facet* lhs, Facet* rhs){
+int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs){
 
     if(getMaxDistToCamera(lhs) > getMaxDistToCamera(rhs)){
         return 1;
@@ -932,26 +932,26 @@ int Geometry::FindEar(const GLAppPolygon& p) {
 
 }
 
-void Geometry::AddTextureCoord(Facet *f, const Vector2d *p) {
+void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
 	double vStep = 1.0 / (double)f->texDimH;
 
 #if 1
-	double fu = f->sh.texWidthD * uStep;
-	double fv = f->sh.texHeightD * vStep;
+	double fu = f->sh.texWidth_precise * uStep;
+	double fv = f->sh.texHeight_precise * vStep;
 	glTexCoord2f((float)(uStep + p->u*fu), (float)(vStep + p->v*fv));
 #else
 	// Show border (debugging purpose)
-	double fu = (f->sh.texWidthD + 2.0) * uStep;
-	double fv = (f->sh.texHeightD + 2.0) * vStep;
+	double fu = (f->sh.texWidth_precise + 2.0) * uStep;
+	double fv = (f->sh.texHeight_precise + 2.0) * vStep;
 	glTexCoord2f((float)(p->u*fu), (float)(p->v*fv));
 #endif
 
 }
 
-void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
+void Geometry::FillFacet(InterfaceFacet *f, bool addTextureCoord) {
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
@@ -980,7 +980,7 @@ void Geometry::FillFacet(Facet *f, bool addTextureCoord) {
 	}
 }
 
-void Geometry::DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTextureCoord) {
+void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
@@ -1018,7 +1018,7 @@ void Geometry::DrawEar(Facet *f, const GLAppPolygon& p, int ear, bool addTexture
 
 }
 
-void Geometry::Triangulate(Facet *f, bool addTextureCoord) {
+void Geometry::Triangulate(InterfaceFacet *f, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -1131,7 +1131,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0f, 3.0f);
 		for (size_t i = 0;i < sh.nbFacet && renderTexture;i++) {
-			Facet *f = facets[i];
+			InterfaceFacet *f = facets[i];
 			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #if defined(MOLFLOW)
 			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
@@ -1170,8 +1170,8 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 		for (int i = 0; i < sh.nbFacet;i++) {
 
-			Facet *f = facets[i];
-			if (f->cellPropertiesIds  && f->textureVisible) {
+			InterfaceFacet *f = facets[i];
+			if (!f->cellPropertiesIds.empty()  && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
 				glEnable(GL_POLYGON_OFFSET_LINE);
@@ -1191,10 +1191,10 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 		GLToolkit::SetMaterial(&arrowMaterial);
 		for (int i = 0;i < sh.nbFacet;i++) {
-			Facet *f = facets[i];
+			InterfaceFacet *f = facets[i];
 			if (f->sh.countDirection && f->dirCache) {
-				double iw = 1.0 / (double)f->sh.texWidthD;
-				double ih = 1.0 / (double)f->sh.texHeightD;
+				double iw = 1.0 / (double)f->sh.texWidth_precise;
+				double ih = 1.0 / (double)f->sh.texHeight_precise;
 				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {
@@ -1251,7 +1251,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 	// Paint selected cell on mesh
 	for (int i = 0; i < sh.nbFacet;i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		f->RenderSelectedElem();
 	}
 
@@ -1287,7 +1287,7 @@ std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
 	std::vector<bool> result(sh.nbVertex, false);
 	std::vector<size_t> selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
-		Facet* f = facets[facetId];
+		InterfaceFacet* f = facets[facetId];
 		for (size_t i = 0; i < f->sh.nbIndex; i++)
 			result[f->indices[i]] = true;
 	}
@@ -1501,7 +1501,7 @@ void Geometry::BuildSelectList() {
     const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 
     for (auto& sel : selectedFacets) {
-		Facet *f = facets[sel];
+		InterfaceFacet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
         if(!colorHighlighting.empty()){
             auto it = colorHighlighting.find(sel);
@@ -1534,7 +1534,7 @@ void Geometry::BuildSelectList() {
                 modifyRGBColor(r, g, b, 1.2f, 1.2f);
 
                 glColor3f(r, g, b);
-                Facet *f = facets[sel];
+                InterfaceFacet *f = facets[sel];
                 DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
                 glLineWidth(2.0f);
             }
@@ -1605,7 +1605,7 @@ void Geometry::BuildNonPlanarList() {
 	auto nonPlanarFacetIds = GetNonPlanarFacetIds();
 	hasNonPlanar = !nonPlanarFacetIds.empty();
 	for (const auto& np : nonPlanarFacetIds) {
-		Facet *f = facets[np];
+		InterfaceFacet *f = facets[np];
 		//DrawFacet(f,false,true,true);
 		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
 	}
@@ -1662,7 +1662,7 @@ int Geometry::RestoreDeviceObjects() {
 	if (!IsLoaded()) return GL_OK;
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
+		InterfaceFacet *f = facets[i];
 		f->RestoreDeviceObjects();
 		BuildFacetList(f);
 	}
@@ -1673,7 +1673,7 @@ int Geometry::RestoreDeviceObjects() {
 
 }
 
-void Geometry::BuildFacetList(Facet *f) {
+void Geometry::BuildFacetList(InterfaceFacet *f) {
 
 	// Rebuild OpenGL geometry with texture
 

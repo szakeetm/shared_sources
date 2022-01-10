@@ -17,29 +17,74 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
+#include <Helper/MathTools.h>
 #include "Buffer_shared.h"
 
+GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
+    this->globalHits += src.globalHits;
+
+    this->distTraveled_total += src.distTraveled_total;
+#if defined(MOLFLOW)
+    this->distTraveledTotal_fullHitsOnly += src.distTraveledTotal_fullHitsOnly;
+#endif
+    this->nbLeakTotal += src.nbLeakTotal;
+
+    return *this;
+}
+
+#if defined(MOLFLOW)
+/**
+* \brief += operator, with simple += of underlying structures
+* \param rhs reference object on the right hand
+* \return address of this (lhs)
+*/
+FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
+    this->nbDesorbed+=rhs.nbDesorbed;
+    this->nbMCHit+=rhs.nbMCHit;
+    this->nbHitEquiv+=rhs.nbHitEquiv;
+    this->nbAbsEquiv+=rhs.nbAbsEquiv;
+    this->sum_1_per_ort_velocity+=rhs.sum_1_per_ort_velocity;
+    this->sum_1_per_velocity+=rhs.sum_1_per_velocity;
+    this->sum_v_ort+=rhs.sum_v_ort;
+    return *this;
+}
+#endif
 #if defined(SYNRAD)
 FacetHitBuffer::FacetHitBuffer(){
     this->ResetBuffer();
 }
 
 void FacetHitBuffer::ResetBuffer(){
-    this->hit.nbMCHit = 0;
-    this->hit.nbDesorbed = 0;
-    this->hit.nbHitEquiv = 0.0;
-    this->hit.nbAbsEquiv = 0.0;
-    this->hit.fluxAbs = 0.0;
-    this->hit.powerAbs = 0.0;
+    this->nbMCHit = 0;
+    this->nbDesorbed = 0;
+    this->nbHitEquiv = 0.0;
+    this->nbAbsEquiv = 0.0;
+    this->fluxAbs = 0.0;
+    this->powerAbs = 0.0;
 }
 
 FacetHitBuffer & FacetHitBuffer::operator+=(const FacetHitBuffer & rhs){
-    this->hit.nbMCHit += rhs.hit.nbMCHit;
-    this->hit.nbDesorbed += rhs.hit.nbDesorbed;
-    this->hit.nbHitEquiv += rhs.hit.nbHitEquiv;
-    this->hit.nbAbsEquiv += rhs.hit.nbAbsEquiv;
-    this->hit.fluxAbs += rhs.hit.fluxAbs;
-	this->hit.powerAbs += rhs.hit.powerAbs;
+    this->nbMCHit += rhs.nbMCHit;
+    this->nbDesorbed += rhs.nbDesorbed;
+    this->nbHitEquiv += rhs.nbHitEquiv;
+    this->nbAbsEquiv += rhs.nbAbsEquiv;
+    this->fluxAbs += rhs.fluxAbs;
+	this->powerAbs += rhs.powerAbs;
 	return *this;
 }
+void FacetHistogramBuffer::Resize(const HistogramParams& params) {
+    this->nbHitsHistogram.resize(params.recordBounce ? params.GetBounceHistogramSize() : 0);
+    this->nbHitsHistogram.shrink_to_fit();
+    this->distanceHistogram.resize(params.recordDistance ? params.GetDistanceHistogramSize() : 0);
+    this->distanceHistogram.shrink_to_fit();
+}
+
+void FacetHistogramBuffer::Reset(){
+    ZEROVECTOR(nbHitsHistogram);
+    ZEROVECTOR(distanceHistogram);
+#if defined(MOLFLOW)
+    ZEROVECTOR(timeHistogram);
 #endif
+}
+#endif
+

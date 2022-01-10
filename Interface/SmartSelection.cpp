@@ -121,6 +121,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				analyzeButton->SetText("Stop analyzing");
 				isRunning = true;
 				GLProgress *progressDlg = new GLProgress("Analyzing facets", "Please wait");
+				progressDlg->SetClosable(false); //Use stop button
 				progressDlg->SetProgress(0.0);
 				progressDlg->SetVisible(true);
 
@@ -137,11 +138,16 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				enableToggle->SetState(1);
 			}
 			else {
-				analyzeButton->SetText("Analyze");
 				isRunning = false;
 				work->abortRequested = true;
+				analyzeButton->SetText("Analyze");
 			}
 		}
+		break;
+	case MSG_CLOSE:
+		isRunning = false;
+		work->abortRequested = true;
+		analyzeButton->SetText("Analyze");
 		break;
 	}
 

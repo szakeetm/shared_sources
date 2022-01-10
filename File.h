@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <stdio.h>
 #include <string>
+#include <vector>
 #include "GLApp/GLTypes.h"
 
 #define READ_BUFFSIZE 4096
@@ -62,10 +63,12 @@ public:
   int ReadInt();
   double ReadDouble();
   void ReadKeyword(const char *keyword);
+  bool PeekKeyword(const char *keyword);
   char *ReadWord();
   void JumpSection(const char *end);
   void SeekStart();
   bool SeekFor(const char *keyword);
+  bool SeekForInline(const char *keyword);
   bool SeekForChar(const char *c);
   bool wasLineEnd;
 
@@ -74,6 +77,8 @@ public:
 
   void JumpComment();
   void JumpControlChars();
+
+  std::vector<std::vector<std::string>> ImportCSV_string();
 private:
 
   void RefillBuffer();

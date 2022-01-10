@@ -289,10 +289,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
 				geom->ScaleSelectedFacets(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
-				try { work->Reload(); }
-				catch (Error &e) {
-					GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
-				}
+				work->Reload();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 				mApp->changedSinceSave = true;

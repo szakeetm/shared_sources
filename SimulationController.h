@@ -5,19 +5,42 @@
 #ifndef MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 #define MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 
-//#include "Simulation.h"
 #include <string>
 #include "SMP.h"
 #include "ProcessControl.h"
 #include "SimulationUnit.h"
 
-class SimulationController {
-    bool Load();
-    bool UpdateParams();
-    int StartSimulation();
-    int RunSimulation();
-    int resetControls();
+class Simulation;
 
+class SimThread {
+public:
+    SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
+    ~SimThread();
+
+    size_t threadNum;
+    double stepsPerSec;
+    bool simEos;
+    size_t localDesLimit;
+    double timeLimit;
+
+    char** status;
+    ProcComm* procInfo;
+    SimulationUnit* simulation;
+    MFSim::Particle* particle;
+    bool runLoop();
+
+private:
+    [[nodiscard]] char *getSimStatus() const;
+    void setSimState(char *msg) const;
+    void setSimState(const std::string& msg) const;
+    int runSimulation(size_t desorptions);
+    int advanceForTime(double simDuration);
+    int advanceForSteps(size_t desorptions);
+};
+
+class SimulationController {
+    bool UpdateParams();
+    int resetControls();
 protected:
 
 
@@ -25,44 +48,47 @@ protected:
     virtual int TerminateSim() {return 0;};
 
     int SetState(size_t state, const char *status, bool changeState = true, bool changeStatus = true);
+    int SetState(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     void GetState();
-    char *GetSimuStatus();
+    std::vector<std::string> GetSimuStatus();
     void SetErrorSub(const char *message);
     void SetStatus(char *status);
-    void SetReady();
+    void SetReady(const bool loadOk);
     int ClearCommand();
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
-    SimulationController(std::string appName , std::string dpName, size_t parentPID, size_t procIdx, SimulationUnit *simulationInstance);
+    SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
+                         SimulationUnit *simulationInstance, ProcComm *pInfo);
     ~SimulationController();
+    SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
-protected:
-    char appName[16];
-    char ctrlDpName[32];
-    char loadDpName[32];
-    char hitsDpName[32];
-    char logDpName[32];
+    int Start();
+    bool Load();
+    int RebuildAccel();
+    int Reset();
 
-    Dataport *dpControl;
-    Dataport *dpHit;
-    Dataport *dpLog;
-
-    SimulationUnit* simulation; //
+    void EmergencyExit(){
+        for(auto& t : simThreads)
+            t.particle->allQuit = true;
+    };
 protected:
 
-    int prIdx;
+    SimulationUnit* simulation;
+    std::vector<SimThread> simThreads;
+
+    ProcComm* procInfo;
     size_t parentPID;
-    SubProcInfo procInfo;
-
+    size_t nbThreads;
+    int prIdx;
 
 private:
     // tmp
     double stepsPerSec;
     bool endState;
     bool lastHitUpdateOK;
-    bool loadOK;
+    bool loadOk;
 
 };
 

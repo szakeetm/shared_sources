@@ -234,10 +234,8 @@ dirDestVertexId,
 				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
-				try { work->Reload(); } catch(Error &e) {
+				work->Reload();
 
-					GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-				}
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();
@@ -246,12 +244,13 @@ dirDestVertexId,
 		} else if (src==undoButton) {
 			if (!mApp->AskToReset(work)) return;
 			for (size_t i=0;i<memorizedSelection.size();i++) {
-				Facet *f=geom->GetFacet(memorizedSelection[i]);
+				InterfaceFacet *f=geom->GetFacet(memorizedSelection[i]);
 				for (size_t j=0;j<f->sh.nbIndex;j++) {
 					geom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
 				}
 			}
 			geom->InitializeGeometry();
+            geom->InitializeInterfaceGeometry();
 			work->Reload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();

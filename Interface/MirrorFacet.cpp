@@ -323,7 +323,8 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 			undoProjectButton->SetEnabled(false);
 			geom->InitializeGeometry();
-			//for(int i=0;i<nbSelected;i++)
+            geom->InitializeInterfaceGeometry();
+            //for(int i=0;i<nbSelected;i++)
 			//	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
 			work->Reload();
 			mApp->UpdateFacetlistSelected();

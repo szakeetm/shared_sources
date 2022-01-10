@@ -19,9 +19,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
 #include "Web.h"
-#include "ziplib/ZipArchive.h"
-#include "ziplib/ZipArchiveEntry.h"
-#include "ziplib/ZipFile.h"
+#include <ZipLib/ZipArchive.h>
+#include <ZipLib/ZipArchiveEntry.h>
+#include <ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
 #include <filesystem>
@@ -41,6 +41,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <unistd.h> //Get user name
 #endif
 
+enum class FetchStatus : int
+{
+    NONE = 0,
+    DOWNLOAD_ERROR = 1,
+    OTHER_ERROR = 2, OKAY, PARSE_ERROR
+};
 /**
 * \brief Constructor with initialisation for the App Updater
 * \param appName hardcoded name of the app (@see versionId.h)
@@ -50,7 +56,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile) {
 	applicationName = appName;
 	currentVersionId = versionId;
+    lastFetchStatus = 0;
 	configFileName = configFile;
+    updateWarning = nullptr;
 
 	if(!std::filesystem::exists(configFileName))
 	    MakeDefaultConfig();
@@ -75,6 +83,8 @@ void AppUpdater::MakeDefaultConfig(){
     localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = "false";
     localConfigNode.child("Permission").append_attribute("appLaunchedBeforeAsking") = "0";
     localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = "3";
+    localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = "0";
+    localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = "5";
     localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX;
     localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
     localConfigNode.append_child("SkippedVersions");
@@ -98,7 +108,9 @@ void AppUpdater::SaveConfig() {
 	xml_node localConfigNode = rootNode.append_child("LocalConfig");
 	localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = allowUpdateCheck;
 	localConfigNode.child("Permission").append_attribute("appLaunchedBeforeAsking") = appLaunchedWithoutAsking;
-	localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = askAfterNbLaunches;
+    localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = askAfterNbLaunches;
+    localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = nbUpdateFailsInRow;
+    localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = askAfterNbUpdateFails;
 	localConfigNode.append_child("Branch").append_attribute("name") = branchName.c_str();
 	localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = userId.c_str();
 	xml_node skippedVerNode = localConfigNode.append_child("SkippedVersions");
@@ -127,7 +139,10 @@ void AppUpdater::LoadConfig() {
 	allowUpdateCheck = localConfigNode.child("Permission").attribute("allowUpdateCheck").as_bool();
 	appLaunchedWithoutAsking = localConfigNode.child("Permission").attribute("appLaunchedBeforeAsking").as_int();
 	askAfterNbLaunches = localConfigNode.child("Permission").attribute("askAfterNbLaunches").as_int();
-	branchName = localConfigNode.child("Branch").attribute("name").as_string();
+    nbUpdateFailsInRow = localConfigNode.child("Permission").attribute("nbUpdateFailsInRow").as_int();
+    askAfterNbUpdateFails = localConfigNode.child("Permission").attribute("askAfterNbUpdateFails").as_int(5);
+
+    branchName = localConfigNode.child("Branch").attribute("name").as_string();
 	userId = localConfigNode.child("GoogleAnalytics").attribute("cookie").as_string();
 	xml_node skippedVerNode = localConfigNode.child("SkippedVersions");
 	for (auto& version : skippedVerNode.children("Version")) {
@@ -182,7 +197,7 @@ void AppUpdater::SkipVersions(const std::vector<UpdateManifest>& updates) {
 */
 int AppUpdater::RequestUpdateCheck() {
 	if (appLaunchedWithoutAsking == -1) {
-		if (allowUpdateCheck) updateThread = std::thread(&AppUpdater::PerformUpdateCheck, (AppUpdater*)this); //Launch parallel update-checking thread
+		if (allowUpdateCheck) updateThread = std::thread(&AppUpdater::PerformUpdateCheck, (AppUpdater*)this, false); //Launch parallel update-checking thread
 		return ANSWER_ALREADYDECIDED;
 	}
 	else if (appLaunchedWithoutAsking >= askAfterNbLaunches) { //Third time launching app, time to ask if we can check for updates
@@ -193,12 +208,103 @@ int AppUpdater::RequestUpdateCheck() {
 	}
 }
 
+int AppUpdater::NotifyServerWarning() {
+    if (nbUpdateFailsInRow >= askAfterNbUpdateFails) {
+        // Issue the warning in a new window
+        if(!updateWarning) {
+            nbUpdateFailsInRow = askAfterNbUpdateFails - 1; // temporarily reset, so that warning is not constantly accessed
+            updateWarning = new UpdateWarningDialog(this);
+        }
+        else
+            updateWarning->SetVisible(true);
+    }
+    return 0;
+}
+
+void AppUpdater::AllowFurtherWarnings(bool allow){
+    // Disable or ask again after threshold for warning has been passed again
+    if(!allow)
+        nbUpdateFailsInRow = -1;
+    else
+        nbUpdateFailsInRow = 0;
+    SaveConfig();
+}
+
+UpdateWarningDialog::UpdateWarningDialog(AppUpdater* appUpdater) {
+
+    updater = appUpdater;
+    std::string question =
+            "Updates could not be fetched from the server for a while.\n"
+            "Please check molflow.web.cern.ch manually.\n"
+            "Would you like to be reminded again in the future?";
+
+    questionLabel = new GLLabel(question.c_str());
+    questionLabel->SetBounds(5, 5, 150, 60);
+    Add(questionLabel);
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    yesButton = new GLButton(0, "Yes");
+    yesButton->SetBounds(5, hD - 45, 80, 19);
+    Add(yesButton);
+
+    noButton = new GLButton(0, "No");
+    noButton->SetBounds(90, hD - 45, 80, 19);
+    Add(noButton);
+
+    std::string title = fmt::format("Failed to fetch updates");
+    SetTitle(title);
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+    SetVisible(true);
+
+    RestoreDeviceObjects();
+}
+
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
+void UpdateWarningDialog::ProcessMessage(GLComponent *src, int message) {
+
+    switch (message) {
+        case MSG_BUTTON:
+            if (src == yesButton) {
+                updater->AllowFurtherWarnings(false);
+                SetVisible(false);
+            }
+            else if (src == noButton) {
+                updater->AllowFurtherWarnings(true);
+                SetVisible(false);
+            }
+            break;
+    }
+    GLWindow::ProcessMessage(src, message);
+}
+
+/**
+* \brief Get permission to ask user if he wants to update
+* \return if or when user should be asked to update
+*/
+void AppUpdater::PerformImmediateCheck() {
+    PerformUpdateCheck(true);
+}
+
 /**
 * \brief Check for updates
 */
-void AppUpdater::PerformUpdateCheck() {
+void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 	//Update checker
-	if (allowUpdateCheck) { //One extra safeguard to ensure that we (still) have the permission
+	if (allowUpdateCheck || forceCheck) { //One extra safeguard to ensure that we (still) have the permission
 		//std::string url = "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"; //Update feed
 
 		std::string resultCategory;
@@ -206,6 +312,8 @@ void AppUpdater::PerformUpdateCheck() {
 		std::string os = GLToolkit::GetOSName();
 
 		auto[downloadResult, body] = DownloadString(feedUrl);
+
+        bool errorState = false;
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
 
@@ -214,20 +322,35 @@ void AppUpdater::PerformUpdateCheck() {
 			//Parse document and handle errors
 
 			if (parseResult.status == status_ok) { //parsed successfully
-				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId, branchName);
-				resultCategory = "updateCheck";
+				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId);
+                auto availableUpdates_old = DetermineAvailableUpdatesOldScheme(updateDoc, currentVersionId, branchName);
+                availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
+                resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
-			}
+                lastFetchStatus = (int)FetchStatus::OKAY;
+            }
 			else { //parse error
+                errorState = true;
 				resultCategory = "parseError";
 				resultDetail << "parseError_" << parseResult.status << "_" << applicationName << "_" << currentVersionId;
-			}
+                lastFetchStatus = (int)FetchStatus::PARSE_ERROR;
+            }
 		}
 		else { //download error
+            errorState = true;
 			resultCategory = "stringDownloadError";
 			resultDetail << "stringDownloadError_" << downloadResult << "_" << applicationName << "_" << currentVersionId;
+		    lastFetchStatus = (int)FetchStatus::DOWNLOAD_ERROR;
 		}
 		//Send result for analytics
+
+        if(errorState){
+            // Notify user that no updates could be fetched from a server after several tries
+            if(nbUpdateFailsInRow >= 0) {
+                nbUpdateFailsInRow++;
+                SaveConfig();
+            }
+        }
 
 		if (Contains({ "","not_set","default" }, userId)) {
 			//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
@@ -268,16 +391,15 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 * \brief Retrieve list with all newer releases
 * \param updateDoc xml doc containing all info about the recent updates
 * \param currentVersionId version ID of current version
-* \param branchName name of update branch (related to OS)
 * \return vector with newer releases
 */
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
-	std::vector<UpdateManifest> availableUpdates;
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId) {
+	std::vector<UpdateManifest> availables;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
 	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
 		std::string currentBranchName = branchNode.attribute("name").as_string();
-		if (currentBranchName == branchName) {
+		if (currentBranchName == BRANCH_NAME) {
 			for (xml_node updateNode : branchNode.children("UpdateManifest")) {
 				int versionId = updateNode.child("Version").attribute("id").as_int();
 				if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
@@ -285,21 +407,81 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.versionId = versionId;
 					newUpdate.name = updateNode.child("Version").attribute("name").as_string();
 					newUpdate.date = updateNode.child("Version").attribute("date").as_string();
-					newUpdate.changeLog = updateNode.child_value("ChangeLog");
+                    if(std::strcmp(updateNode.child("Version").attribute("enabled").as_string(),"true") != 0)
+                        continue;
 
-					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
-					newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
-					newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+					newUpdate.changeLog = updateNode.child("ChangeLog").child_value("Global");
+                    //TODO: Consider OS dependent changelogs
 
-					for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
-						newUpdate.filesToCopy.push_back(fileNode.attribute("name").as_string());
+                    std::string os_fullname;
+                    std::string os_prefix;
+                    bool validOS = false;
+                    for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
+                        if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){
+                            // found
+                            validOS = true;
+                            os_fullname = osNode.attribute("name").as_string();
+                            os_prefix = osNode.attribute("prefix").as_string();
+                            break;
+                        }
+                    }
+                    if(!validOS)
+                        continue; // get next Manifest
+
+                    std::string namedRelease = os_prefix + "_" + newUpdate.name;
+					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrlPathPrefix").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    if(newUpdate.zipName.empty()){
+                        newUpdate.zipName = namedRelease + ".zip";
+                    }
+                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
+                    newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
+                    if(newUpdate.folderName.empty()){
+                        newUpdate.folderName = namedRelease;
+                    }
+
+                    // TODO: Add os dependent files
+					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
+						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
-					availableUpdates.push_back(newUpdate);
+					availables.push_back(newUpdate);
 				}
 			}
 		}
 	}
-	return availableUpdates;
+	return availables;
+}
+
+// Function to retrieve updates with old XML scheme
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+    std::vector<UpdateManifest> availables;
+
+    xml_node rootNode = updateDoc.child("UpdateFeed");
+    for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
+        std::string currentBranchName = branchNode.attribute("name").as_string();
+        if (currentBranchName == branchName) {
+            for (xml_node updateNode : branchNode.children("UpdateManifest")) {
+                int versionId = updateNode.child("Version").attribute("id").as_int();
+                if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
+                    UpdateManifest newUpdate;
+                    newUpdate.versionId = versionId;
+                    newUpdate.name = updateNode.child("Version").attribute("name").as_string();
+                    newUpdate.date = updateNode.child("Version").attribute("date").as_string();
+                    newUpdate.changeLog = updateNode.child_value("ChangeLog");
+
+                    newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrl").as_string();
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+                    newUpdate.folderName = updateNode.child("Content").attribute("folderName").as_string();
+
+                    for (xml_node fileNode : updateNode.child("FilesToCopy").children("File")) {
+                        newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
+                    }
+                    availables.push_back(newUpdate);
+                }
+            }
+        }
+    }
+    return availables;
 }
 
 /**
@@ -314,6 +496,21 @@ std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
 	return cumulativeChangeLog.str();
+}
+
+/**
+* \brief Retrieve string containing a changelog of all newer updates
+* \param updates list of updates
+* \return cumulative changelog as a string
+*/
+std::string AppUpdater::GetLatestChangeLog(const std::vector<UpdateManifest>& updates) {
+    if(updates.empty())
+        return "";
+    //No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
+    std::stringstream latestChangeLog;
+    auto update = GetLatest(updates);
+    latestChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
+    return latestChangeLog.str();
 }
 
 /**
@@ -434,9 +631,9 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					try {
 						FileUtils::CreateDir(dirName);
 					}
-					catch (std::filesystem::filesystem_error err) {
+					catch (const std::filesystem::filesystem_error& e) {
 						resultCategory = "zipExtractFolderCreateError";
-						resultDetail << "zipExtractFolderCreateError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << space2underscore(name) << "_" << applicationName << "_" << currentVersionId;
+						resultDetail << "zipExtractFolderCreateError_" << space2underscore(e.what()) << "_item_" << zi << "_name_" << space2underscore(name) << "_" << applicationName << "_" << currentVersionId;
 						userResult.str(""); userResult.clear();
 						userResult << "Item #" << (zi + 1) << ": couldn't create directory " << dirName << " Maybe it already exists in your app folder (from a previous update),";
 						logWindow->Log(userResult.str());
@@ -458,9 +655,9 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					//End debug
 					ZipFile::ExtractFile(zipDest.str(), fullName, dest);
 				}
-				catch (std::runtime_error err) {
+				catch (const std::exception& e) {
 					resultCategory = "zipExtractError";
-					resultDetail << "zipExtractError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << name << "_" << applicationName << "_" << currentVersionId;
+					resultDetail << "zipExtractError_" << space2underscore(e.what()) << "_item_" << zi << "_name_" << name << "_" << applicationName << "_" << currentVersionId;
 					userResult.str(""); userResult.clear();
 					userResult << "Couldn't extract item #" << (zi + 1) << " (" << fullName << ") of " << update.zipName << " to " << dest << ". Maybe it already exists in your app folder (from a previous update),";
 					logWindow->Log(userResult.str());
@@ -577,14 +774,14 @@ void AppUpdater::IncreaseSessionCount() {
 * \return true if update available
 */
 bool AppUpdater::IsUpdateAvailable() {
-	return (availableUpdates.size() > 0);
+	return (!availableUpdates.empty());
 }
 
 /**
 * \brief Check if an update check is allowed
 * \return true if update check is allowed
 */
-bool AppUpdater::IsUpdateCheckAllowed() {
+bool AppUpdater::IsUpdateCheckAllowed() const {
 	return allowUpdateCheck;
 }
 
@@ -612,6 +809,14 @@ std::string AppUpdater::GetLatestUpdateName() {
 */
 std::string AppUpdater::GetCumulativeChangeLog() {
 	return GetCumulativeChangeLog(availableUpdates);
+}
+
+/**
+* \brief Retrieve string containing a changelog of the latest update
+* \return latest changelog as a string
+*/
+std::string AppUpdater::GetLatestChangeLog() {
+    return GetLatestChangeLog(availableUpdates);
 }
 
 /**
@@ -709,41 +914,35 @@ there isn't any network communication later.
 * \param appUpdater App Updater handle
 * \param logWindow window for update progress handle
 */
-UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow) {
-	updater = appUpdater;
+ManualUpdateCheckDialog::ManualUpdateCheckDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow, UpdateFoundDialog* foundWindow) {
+	this->appName = appName;
+    this->appVersionName = appVersionName;
+    updater = appUpdater;
 	logWnd = logWindow;
+    foundWnd = foundWindow;
 
-	std::stringstream question;
-	question << appName << " " << appUpdater->GetLatestUpdateName() << " is available.\n";
-	question << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
-	question << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
-	question << appUpdater->GetCumulativeChangeLog();
+    std::ostringstream aboutText;
+    aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
 
-	questionLabel = new GLLabel(question.str().c_str());
+    questionLabel = new GLLabel(aboutText.str().c_str());
 	questionLabel->SetBounds(5, 5, 150, 60);
 	Add(questionLabel);
 
 	int textWidth, textHeight;
 	questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-	int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-	int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
-	updateButton = new GLButton(0, "Download");
-	updateButton->SetBounds(5, hD - 45, 80, 19);
-	Add(updateButton);
+    updateButton = new GLButton(0, "Download");
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    updateButton->SetEnabled(false);
+    Add(updateButton);
 
-	laterButton = new GLButton(0, "Ask later");
-	laterButton->SetBounds(90, hD - 45, 80, 19);
-	Add(laterButton);
-
-	skipButton = new GLButton(0, "Skip version(s)");
-	skipButton->SetBounds(175, hD - 45, 95, 19);
-	Add(skipButton);
-
-	disableButton = new GLButton(0, "Turn off update check");
-	disableButton->SetBounds(275, hD - 45, 120, 19);
-	Add(disableButton);
+    cancelButton = new GLButton(0, "Cancel");
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    cancelButton->SetEnabled(true);
+    Add(cancelButton);
 
 	std::stringstream title;
 	title << appName << " updater";
@@ -757,6 +956,98 @@ UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::str
 
 	RestoreDeviceObjects();
 
+}
+
+/**
+* \brief Performs a new update check and refreshes window content
+*/
+void ManualUpdateCheckDialog::Refresh() {
+    bool updateAvailable = false;
+    std::ostringstream aboutText;
+    aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+
+    //Check if app updater has found updates
+    bool updateError = false;
+    if (updater && logWnd) {
+        if (updater->IsUpdateAvailable()) {
+            updateAvailable = true;
+        }
+        else { // no updates found
+            // Try again
+            updater->PerformImmediateCheck();
+            if (updater->IsUpdateAvailable())
+                updateAvailable = true;
+            if(updater->GetStatus() != (int)FetchStatus::OKAY){
+                updateError = true;
+            }
+            else {
+                aboutText << "This is already the latest version!" << std::endl;
+                aboutText << updater->GetLatestChangeLog();
+            }
+        }
+    }
+
+
+    if(updateAvailable){
+        aboutText.clear();
+        aboutText << appName << " " << updater->GetLatestUpdateName() << " is available.\n";
+        //aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+        aboutText << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
+        aboutText << updater->GetLatestChangeLog();
+        updateError = false;
+    }
+    if(updateError){ // app updater error
+        aboutText << "Could not check for updates!" << std::endl;
+        aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
+        aboutText << "    https://molflow.web.cern.ch/" << std::endl;
+    }
+
+    questionLabel->SetText(aboutText.str().c_str());
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    updateButton->SetEnabled(updateAvailable);
+
+    cancelButton->SetBounds(90, hD - 45, 80, 19);
+    cancelButton->SetEnabled(true);
+
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+
+    RestoreDeviceObjects();
+}
+
+/**
+* \brief Function for processing various inputs (button, check boxes etc.)
+* \param src Exact source of the call
+* \param message Type of the source (button)
+*/
+void ManualUpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
+    switch (message) {
+        case MSG_BUTTON:
+            if (src == updateButton) {
+                logWnd->ClearLog();
+                logWnd->SetVisible(true);
+                updater->InstallLatestUpdate(logWnd);
+                updater->ClearAvailableUpdates();
+                GLWindow::ProcessMessage(nullptr, MSG_CLOSE);
+            }
+            else if (src == cancelButton) {
+                updater->ClearAvailableUpdates();
+                GLWindow::ProcessMessage(nullptr, MSG_CLOSE);
+            }
+            break;
+    }
+    GLWindow::ProcessMessage(src, message);
 }
 
 /**
@@ -794,6 +1085,62 @@ void UpdateFoundDialog::ProcessMessage(GLComponent *src, int message) {
 		break;
 	}
 	GLWindow::ProcessMessage(src, message);
+}
+
+/**
+* \brief Constructor with initialisation for the dialog window if an update has been found
+* \param appName name of the application
+* \param appVersionName string for the app version
+* \param appUpdater App Updater handle
+* \param logWindow window for update progress handle
+*/
+UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow) {
+    updater = appUpdater;
+    logWnd = logWindow;
+
+    std::stringstream question;
+    question << appName << " " << appUpdater->GetLatestUpdateName() << " is available.\n";
+    question << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
+    question << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
+    question << appUpdater->GetCumulativeChangeLog();
+
+    questionLabel = new GLLabel(question.str().c_str());
+    questionLabel->SetBounds(5, 5, 150, 60);
+    Add(questionLabel);
+
+    int textWidth, textHeight;
+    questionLabel->GetTextBounds(&textWidth, &textHeight);
+
+    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+
+    updateButton = new GLButton(0, "Download");
+    updateButton->SetBounds(5, hD - 45, 80, 19);
+    Add(updateButton);
+
+    laterButton = new GLButton(0, "Ask later");
+    laterButton->SetBounds(90, hD - 45, 80, 19);
+    Add(laterButton);
+
+    skipButton = new GLButton(0, "Skip version(s)");
+    skipButton->SetBounds(175, hD - 45, 95, 19);
+    Add(skipButton);
+
+    disableButton = new GLButton(0, "Turn off update check");
+    disableButton->SetBounds(275, hD - 45, 120, 19);
+    Add(disableButton);
+
+    std::stringstream title;
+    title << appName << " updater";
+    SetTitle(title.str());
+    //Set to lower right corner
+    int wS, hS;
+    GLToolkit::GetScreenSize(&wS, &hS);
+    int xD = (wS - wD) - 217;
+    int yD = (hS - hD) - 33;
+    SetBounds(xD, yD, wD, hD);
+
+    RestoreDeviceObjects();
 }
 
 /**
