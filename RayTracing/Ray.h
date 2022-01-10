@@ -48,6 +48,14 @@ struct HitLink {
 
 struct Payload {
 };
+
+#if defined(SYNRAD)
+struct Synpay : public Payload {
+    Synpay(double e){energy=e;}
+    double energy;
+};
+#endif
+
 constexpr double inf_d = 1.0e99;
 
 class Ray {
