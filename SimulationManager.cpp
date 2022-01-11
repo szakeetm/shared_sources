@@ -239,7 +239,7 @@ int SimulationManager::CreateCPUHandle() {
 #endif //  WIN
 
     //Get number of cores
-    if(nbThreads = = 0) {
+    if(nbThreads == 0) {
 #if defined(DEBUG)
         nbThreads = 1;
 #else
@@ -501,15 +501,16 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if (!simHandles.empty() && dpControl) {
+    if (!simHandles.empty()) {
         if (ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) { // execute
             // Force kill
             for(auto& con : simController)
                 con.EmergencyExit();
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
-                int i = 0; for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
+                int i = 0;
+                for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
                     if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
-                    auto nativeHandle = simHandles[i].first.native_handle();
+                        auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                         //Windows
                         TerminateThread(nativeHandle, 1);
@@ -528,8 +529,7 @@ int SimulationManager::KillAllSimUnits() {
                         catch (const std::exception &e) {
                             char tmp[512];
                             snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
-                        throw std::runtime_error(
-                                tmp); // proc couldn't be killed!?
+                        throw std::runtime_error(tmp); // proc couldn't be killed!?
                         }
                         catch (...) {
                             char tmp[512];

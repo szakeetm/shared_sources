@@ -328,7 +328,7 @@ void Worker::SetProcNumber(size_t n) {
 #if defined(GPUCOMPABILITY)
     simManager.useGPU = true;
     simManager.useCPU = false;
-    simManager.nbCores = 1;
+    //simManager.nbCores = 1;
 #else
     simManager.useCPU = true;
     simManager.nbThreads = n;
