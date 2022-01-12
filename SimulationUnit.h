@@ -17,11 +17,11 @@ namespace MFSim {
 
 class SimulationUnit {
 public:
-    SimulationUnit() : model(), totalDesorbed(0), m(){
+    SimulationUnit() : model(), totalDesorbed(0), tMutex(){
         globState = nullptr;
         globParticleLog = nullptr;
     };
-    SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {
+    SimulationUnit(const SimulationUnit& o) : model(o.model) , tMutex() {
         globState = nullptr;
         globParticleLog = nullptr;
         totalDesorbed = o.totalDesorbed;
@@ -51,7 +51,8 @@ public:
     //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"
-    std::timed_mutex m;
+    mutable std::timed_mutex tMutex;
+
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

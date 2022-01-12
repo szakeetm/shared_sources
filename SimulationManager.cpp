@@ -23,6 +23,7 @@
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
+#include <../src/GPUSim/SimulationGPU.h>
 #include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager() {
@@ -316,7 +317,7 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
 
     auto oldSize = simHandles.size();
 
-    char *arguments[4];
+    /*char *arguments[4];
     for (int arg = 0; arg < 3; arg++)
         arguments[arg] = new char[512];
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -338,7 +339,54 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
         if (arguments[arg] != nullptr) delete[] arguments[arg];
 
     if (oldSize >= simHandles.size())
-        return 0;
+        return 0;*/
+
+    if(!simUnits.empty()){
+        for(auto& sim : simUnits){
+            delete sim;
+        }
+    }
+    size_t nbSimUnits = 1; // nbThreads
+    try{
+        simUnits.resize(nbSimUnits);
+        procInformation.Resize(nbThreads);
+        simController.clear();
+        simHandles.clear();
+    }
+    catch (const std::exception &e){
+        std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
+        throw std::runtime_error(e.what());
+    }
+
+    for(size_t t = 0; t < nbSimUnits; ++t){
+        simUnits[t] = new SimulationGPU();
+    }
+    simController.emplace_back(SimulationController{processId, 0, nbThreads,
+                                                    simUnits.back(), &procInformation});
+    if(interactiveMode) {
+        simHandles.emplace_back(
+                /*StartProc(arguments, STARTPROC_NOWIN),*/
+                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                SimType::simGPU);
+        /*simUnits.emplace_back(Simulation{nbThreads});
+        procInformation.emplace_back(SubDProcInfo{});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        simHandles.emplace_back(
+                *//*StartProc (arguments, STARTPROC_NOWIN),*//*
+            std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
+            SimType::simCPU);*/
+        auto myHandle = simHandles.back().first.native_handle();
+#if defined(_WIN32) && defined(_MSC_VER)
+        SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
+#else
+        int policy;
+        struct sched_param param{};
+        pthread_getschedparam(myHandle, &policy, &param);
+        param.sched_priority = sched_get_priority_min(policy);
+        pthread_setschedparam(myHandle, policy, &param);
+        //Check! Some documentation says it's always 0
+#endif
+    }
 
     // Wait a bit
     ProcessSleep(25);

@@ -9,12 +9,14 @@
 #include <string>
 #include <thread>
 #include "../src/Simulation/Simulation.h"
+
 #include <../src/GeometrySimu.h>
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
 class SimulationController;
+class SimulationControllerGPU;
 
 struct Dataport;
 
@@ -146,7 +148,7 @@ private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;
     std::vector<SimulationController> simController;
-    std::vector<Simulation*> simUnits;
+    std::vector<SimulationUnit*> simUnits;
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);
