@@ -93,7 +93,7 @@ public:
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
 
-  void SerializeForExternal(std::string outputName);
+  void SerializeForExternal(const std::string& outputName);
     void ChangeSimuParams();
   void Stop_Public();// Switch running/stopped
     void StartStop(float appTime);    // Switch running/stopped
