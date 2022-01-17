@@ -309,7 +309,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 
     if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
         i = 0;
-        for (auto &edge: edges) {
+        for (auto &edge : edges) {
             prg->SetProgress(double(i) / double(edges.size()));
             NeighborFacet n1{}, n2{};
             n1.id = edge.facetId[0];
@@ -320,7 +320,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
             ++i;
         }
     }
-	return i;
+	return GetNbFacet();
 }
 
 std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)

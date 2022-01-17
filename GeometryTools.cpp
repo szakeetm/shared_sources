@@ -177,6 +177,11 @@ void CalculateNeighborAngles(Container<CommonEdge, Allocator>& edges, Geometry* 
 }
 
 int RemoveDuplicates(std::vector<CommonEdge>& edge_v){
+    for(auto& e : edge_v) {
+        if (e.facetId.size() < 1) {
+            fmt::print("Debug check\n");
+        }
+    }
     std::sort(&edge_v[0], &edge_v[edge_v.size()],
               [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
                   if (e0.facetId[0] == e1.facetId[0])
@@ -337,20 +342,30 @@ void GeometryTools::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> 
  * @brief Filters common edges that are oriented differently to each other
  * Checks for orientation with `swapped`, merges two edges together to combine facet id information
  * Requires: Edges in order of (v1 < v2) and secondary prime facet id in order a.facetId[0] < b.facetId[0]
- * @tparam Container
- * @tparam CommonEdge
- * @tparam Allocator
- * @param edges
+ * @tparam Container template container type, works for
+ * @tparam CommonEdge specific data type we are accessing from within an arbitrary container
+ * @tparam Allocator memory allocator for specific data type @CommonEdge
+ * @param edges e.g. list or vector of common edges
+ * @todo in this version depending on the facet number order there can be duplicates, leading to an endless loop
  */
-template <template <typename, typename> class Container,
+/*template <template <typename, typename> class Container,
         typename CommonEdge,
         typename Allocator=std::allocator<CommonEdge> >
 void CombineEdges(Container<CommonEdge, Allocator>& edges){
     int nextAdd = 1;
+    auto stop_size = std::pow(edges.size(), 1.3);
     Container<CommonEdge, Allocator> edge_cpy;
     for(auto iter_o = edges.begin(); iter_o != edges.end(); ){
         auto iter_next = std::next(iter_o,nextAdd);
-
+        // limit to prevent smart selection getting stucked
+        if(edges.size() > stop_size) {
+            edges.clear();
+            return;
+        }
+        if(23432 == iter_o->v1 && 23432 == iter_next->v1
+        && (iter_o->facetId[0] == 30599 || iter_next->facetId[0] == 30599)){
+            fmt::print("Debug check\n");
+        }
         if(iter_next == edges.end()) {
             if(iter_o->facetId.size()<=1) {
                 iter_o = edges.erase(iter_o);
@@ -385,10 +400,10 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
                 continue;
             }
         }
-        /*else if(iter_o->facetId[0] == iter_next->facetId[0]) {
+        *//*else if(iter_o->facetId[0] == iter_next->facetId[0]) {
             nextAdd++;
             continue;
-        }*/
+        }*//*
         else {
             if(iter_o->facetId.size()<=1)
                 iter_o = edges.erase(iter_o);
@@ -409,6 +424,85 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
             }
         }
         nextAdd = 1;
+    }
+}*/
+
+template <template <typename, typename> class Container,
+        typename CommonEdge,
+        typename Allocator=std::allocator<CommonEdge> >
+void CombineEdges(Container<CommonEdge, Allocator>& edges){
+    int nextAdd = 1;
+    auto stop_size = std::pow(edges.size(), 1.3);
+    Container<CommonEdge, Allocator> edge_cpy;
+    // loop over all edges, combine when shared edge is found, if multiple shared facets are found, create an external extra facet for later merging into main list
+    // alternatively, allow to merge 3>= facets into list, and save order info
+    for(auto iter_o = edges.begin(); iter_o != edges.end(); ){
+        auto iter_next = std::next(iter_o,nextAdd);
+        // limit to prevent smart selection getting stucked
+        if(edges.size() > stop_size) {
+            edges.clear();
+            return;
+        }
+        if(iter_next == edges.end()) {
+            if(iter_o->facetId.size()<=1) {
+                iter_o = edges.erase(iter_o);
+            }
+            else{
+                ++iter_o;
+            }
+            nextAdd = 1;
+            continue;
+        }
+        if(iter_o->v1 == iter_next->v1 && iter_o->v2 == iter_next->v2){
+            if(iter_o->facetId[0] == iter_next->facetId[0] || iter_o->facetId[1] == iter_next->facetId[0]) {
+                nextAdd++;
+                continue;
+            }
+            else if(iter_o->swapped != iter_next->swapped) {
+                // common edge found
+                if(iter_o->facetId.size() <= 1)
+                    iter_o->Merge(*iter_next);
+                else{
+                    //create new edge
+                    CommonEdge cpy(*iter_o);
+                    cpy.facetId.resize(1);
+                    cpy.Merge(*iter_next);
+                    edge_cpy.push_back(cpy);
+                }
+                nextAdd++;
+                continue;
+            }
+            else {
+                nextAdd++;
+                continue;
+            }
+        }
+            /*else if(iter_o->facetId[0] == iter_next->facetId[0]) {
+                nextAdd++;
+                continue;
+            }*/
+        else {
+            if(iter_o->facetId.size()<=1)
+                iter_o = edges.erase(iter_o);
+            else {
+                ++iter_o;
+            }
+        }
+        nextAdd = 1;
+    }
+
+    // Remove potential duplicates in extra edge cpy list
+    if(!edge_cpy.empty()) {
+        // Find duplicates
+        auto last = std::unique(edge_cpy.begin(), edge_cpy.end(), [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
+            if (e0.facetId[0] == e1.facetId[0])
+                return e0.facetId[1] == e1.facetId[1];
+            else
+                return false;
+        });
+        // Delete duplicate elements and insert new edges into list
+        edge_cpy.erase(last, edge_cpy.end());
+        edges.insert(edges.end(), edge_cpy.begin(), edge_cpy.end());
     }
 }
 
