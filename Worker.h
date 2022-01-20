@@ -88,7 +88,7 @@ public:
  static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
-  void ReloadSim(bool sendOnly, GLProgress *progressDlg);
+  int ReloadSim(bool sendOnly, GLProgress *progressDlg);
   void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();

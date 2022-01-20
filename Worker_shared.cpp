@@ -680,13 +680,13 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
         simManager.ForwardOtfParams(&model->otfParams);
 
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
-            char errMsg[1024];
-            sprintf(errMsg, "Failed to send params to sub process:\n");
-            GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+            auto errString = fmt::format("Failed to send params to sub process:\n");
+            GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
             progressDlg->SetVisible(false);
             SAFE_DELETE(progressDlg);
             return;
+            //throw std::runtime_error(errString.c_str());
         }
     }
     catch (const std::exception &e) {
@@ -808,17 +808,18 @@ void Worker::RetrieveHistogramCache()
     }
 }
 
-void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
+// returns -1 on error, 0 on success
+int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
     // Send and Load geometry
     progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
     try {
         if (!InterfaceGeomToSimModel()) {
             std::string errString = "Failed to send geometry to sub process!\n";
-            GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
+            /*GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
 
             progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);
-            return;
+            SAFE_DELETE(progressDlg);*/
+            throw std::runtime_error(errString.c_str());
         }
 
         progressDlg->SetMessage("Initialising physical properties for model->..");
@@ -836,5 +837,6 @@ void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
+        throw;
     }
 }
