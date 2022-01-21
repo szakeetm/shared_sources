@@ -989,7 +989,7 @@ void ManualUpdateCheckDialog::Refresh() {
 
 
     if(updateAvailable){
-        aboutText.str(std::string());
+        aboutText.clear();
         aboutText << appName << " " << updater->GetLatestUpdateName() << " is available.\n";
         //aboutText << "You have " << appName << " " << appVersionName << " (released " __DATE__ ")\n\n"; //Compile-time date
         aboutText << "Would you like to download this version?\nYou don't need to close " << appName << " and it won't overwrite anything.\n\n";
