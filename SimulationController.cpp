@@ -431,7 +431,9 @@ int SimulationController::controlledLoop(int argc, char **argv) {
         switch (procInfo->masterCmd) {
 
             case COMMAND_LOAD: {
-                Load();
+                if(!Load()){
+                    SetState(PROCESS_ERROR, "Could not load simulation");
+                }
                 break;
             }
             case COMMAND_UPDATEPARAMS: {
@@ -547,6 +549,8 @@ bool SimulationController::Load() {
                 remainder = des_global % nbThreads;
             }
             for (auto &thread : simThreads) {
+                if(!thread.particle)
+                    return false;
                 thread.particle->totalDesorbed = desPerThread;
                 thread.particle->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
             }

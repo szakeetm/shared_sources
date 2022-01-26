@@ -303,6 +303,10 @@ void Worker::Stop() {
 void Worker::InitSimProc() {
 
     simManager.useCPU = true;
+#if defined(GPUCOMPABILITY)
+    simManager.useCPU = false;
+    simManager.useGPU = true;
+#endif
     simManager.nbThreads = 0; // set to 0 to init max threads
 
     // Launch n subprocess

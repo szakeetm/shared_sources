@@ -315,6 +315,11 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
     processId = ::getpid();
 #endif //  WIN
 
+    //Get number of cores
+    if(nbThreads == 0) {
+        nbThreads = 1;
+    }
+
     auto oldSize = simHandles.size();
 
     /*char *arguments[4];
