@@ -309,7 +309,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 
     if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
         i = 0;
-        for (auto &edge: edges) {
+        for (auto &edge : edges) {
             prg->SetProgress(double(i) / double(edges.size()));
             NeighborFacet n1{}, n2{};
             n1.id = edge.facetId[0];
@@ -320,7 +320,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
             ++i;
         }
     }
-	return i;
+	return GetNbFacet();
 }
 
 std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
@@ -811,7 +811,7 @@ InterfaceVertex* Geometry::GetVertex(size_t idx) {
 }
 
 InterfaceFacet *Geometry::GetFacet(size_t facet) {
-	if (facet >= sh.nbFacet || facet < 0) {
+	if (facet >= facets.size() || facet < 0) {
 		char errMsg[512];
 		sprintf(errMsg, "Geometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2065,7 +2065,7 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
-	for (size_t i = 0; i < sh.nbFacet; i++)
+	for (size_t i = 0; i < facets.size(); i++)
 		if (facets[i]->selected) selection.push_back(i);
 	return selection;
 }

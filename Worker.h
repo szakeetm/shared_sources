@@ -88,7 +88,7 @@ public:
  static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
-  void ReloadSim(bool sendOnly, GLProgress *progressDlg);
+  int ReloadSim(bool sendOnly, GLProgress *progressDlg);
   void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
@@ -189,7 +189,7 @@ public:
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<IntegratedDesorption> IDs; //integrated distribution function for each time-dependent desorption type
-  std::list<double> temperatures; //keeping track of all temperatures that have a CDF already generated
+  std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
   std::set<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
   std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)

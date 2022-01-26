@@ -230,7 +230,7 @@ typedef struct {
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-constexpr size_t SmoothStatSizeLimit() {return 16;};
+constexpr size_t SmoothStatSizeLimit() {return 16;}
 
 class Interface : public GLApplication {
 protected:
