@@ -149,7 +149,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
+    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

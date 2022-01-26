@@ -832,11 +832,15 @@ int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
             globState.Resize(*model);
         }
 
+        progressDlg->SetMessage("Forwarding simulation model...");
         simManager.ForwardSimModel(model);
+        progressDlg->SetMessage("Forwarding global simulation state...");
         simManager.ForwardGlobalCounter(&globState, &particleLog);
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
         throw;
     }
+
+    return 0;
 }
