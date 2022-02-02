@@ -4693,7 +4693,8 @@ void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sF
         intFacet->ogMap = fac.ogMap;
         intFacet->angleMapCache = fac.angleMap.pdf;
 
-        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0 || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
+        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0
+        || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
             intFacet->hasOutgassingFile = true;
         }
 
