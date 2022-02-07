@@ -56,7 +56,7 @@ public:
 	Vector3d();
     Vector3d(const double &val);
 	Vector3d(const double &x, const double &y, const double &z);
-	double Norme() const;
+	double Length() const;
 	Vector3d Normalized() const;
 	Vector3d& operator+=(const Vector3d & rhs);
     double& operator[] (int);

@@ -900,7 +900,7 @@ void GeometryViewer::DrawFacetId() {
             Vector3d *v = geom->GetVertex(f->indices[i]);
 
             // Look for the closest Vertex between Origin and Center as a label position
-            double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
+            double distance = std::abs((origin - *v).Length() + (center - *v).Length());
             if(distance < labelDist){
                 labelVec = *v;
                 labelDist = distance;
@@ -972,7 +972,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	v.x = xMax - org.x;
 	v.y = yMax - org.y;
 	v.z = zFar - org.z;
-	camDistInc = v.Norme() / 100.0;
+	camDistInc = v.Length() / 100.0;
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;

@@ -174,7 +174,8 @@ void Geometry::InitializeGeometry(int facet_number) {
         if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
             // Main facet params
             InterfaceFacet *f = facets[i];
-            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Length(), f->sh.texHeight_precise /
+                                                                                    f->sh.V.Length(), f->hasMesh);
         }
     }
 }
@@ -201,8 +202,9 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
         if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
             // Main facet params
             InterfaceFacet *f = facets[i];
-            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
-            SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Length(), f->sh.texHeight_precise /
+                                                                                    f->sh.V.Length(), f->hasMesh);
+            SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Length(), f->sh.texHeight_precise / f->sh.V.Length(), f->hasMesh);
         }
     }
 
@@ -224,8 +226,9 @@ void Geometry::InitializeMesh() {
         /*double p = (double)i / (double)sh.nbFacet;
         progressDlg->SetProgress(p);*/
         InterfaceFacet *f = facets[i];
-        SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
-        SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+        SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Length(), f->sh.texHeight_precise /
+                                                                                f->sh.V.Length(), f->hasMesh);
+        SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Length(), f->sh.texHeight_precise / f->sh.V.Length(), f->hasMesh);
     }
 }
 
@@ -307,7 +310,12 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 	prg->SetMessage("Comparing facets...");
     std::vector<CommonEdge> edges;
 
-    if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
+    auto& facets_sub = mApp->worker.model->facets;
+    std::vector<Facet*> facet_ptr;
+    facet_ptr.resize(facets_sub.size());
+    std::transform(facets_sub.begin(), facets_sub.end(), facet_ptr.begin(),[](std::shared_ptr<SubprocessFacet> f){return static_cast<Facet*>(f.get());});
+
+    if(GeometryTools::GetAnalysedCommonEdges(facet_ptr, edges)) {
         i = 0;
         for (auto &edge : edges) {
             prg->SetProgress(double(i) / double(edges.size()));
@@ -320,7 +328,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
             ++i;
         }
     }
-	return GetNbFacet();
+	return facets_sub.size();
 }
 
 std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
@@ -583,7 +591,8 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 						Vector2d childVert;
 						childVert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].X;
 						childVert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].Y;
-						double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
+						double dist = Sqr(facets[id1]->sh.U.Length() * (vert.u - childVert.u)) + Sqr(
+                                facets[id1]->sh.V.Length() * (vert.v - childVert.v));
 						if (dist < minDist) {
 							minDist = dist;
 							closestIndexToChild[holeIndex] = j;
@@ -739,7 +748,7 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
 	int foundId = -1;
 	for (size_t k = 0; foundId == -1 && k < facets[id1]->sh.nbIndex; k++) { //Check if part of facet 1
-		double dist = (vert - facets[id1]->vertices2[k]).Norme();
+		double dist = (vert - facets[id1]->vertices2[k]).Length();
 		foundId = (dist < 1E-5) ? (int)facets[id1]->indices[k] : -1;
 	}
 	for (size_t k = 0; foundId == -1 && k < projectedPoints.size(); k++) { //Check if part of facet 2
@@ -769,7 +778,7 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	Vector3d U = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[1]]).Normalized();
 	Vector3d V = (vertices3[selectedVertices[0]] - vertices3[selectedVertices[2]]).Normalized();
 	Vector3d N = CrossProduct(V, U);
-	double nN = N.Norme();
+	double nN = N.Length();
 	if (nN < 1e-8) {
 		GLMessageBox::Display("Sorry, the 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 		return;
@@ -1636,7 +1645,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	Normal = facets[destFacetId]->sh.N;
 	if (invertNormal) Normal = Normal * -1.0;
 	Axis = CrossProduct(facets[sourceFacetId]->sh.N, Normal);
-	if (Axis.Norme() < 1e-5) { //The two normals are either collinear or the opposite
+	if (Axis.Length() < 1e-5) { //The two normals are either collinear or the opposite
 		if ((Dot(facets[destFacetId]->sh.N, facets[sourceFacetId]->sh.N) > 0.99999 && (!invertNormal)) ||
 			(Dot(facets[destFacetId]->sh.N, facets[sourceFacetId]->sh.N) < 0.00001 && invertNormal)) { //no rotation needed
 			Axis.x = 1.0;
@@ -1651,7 +1660,8 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	}
 	else {
 		Axis = Axis.Normalized();
-		angle = acos(Dot(facets[sourceFacetId]->sh.N, facets[destFacetId]->sh.N) / (facets[sourceFacetId]->sh.N.Norme() * facets[destFacetId]->sh.N.Norme()));
+		angle = acos(Dot(facets[sourceFacetId]->sh.N, facets[destFacetId]->sh.N) / (facets[sourceFacetId]->sh.N.Length() *
+                                                                                    facets[destFacetId]->sh.N.Length()));
 		//angle = angle / PI * 180;
 		if (invertNormal) angle = PI - angle;
 	}
@@ -1676,7 +1686,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	Vector3d Dir1 = vertices3[alignerDestVertexId] - vertices3[anchorDestVertexId];
 	Vector3d Dir2 = vertices3[alignerSourceVertexId] - vertices3[anchorSourceVertexId];
 	Axis = CrossProduct(Dir2, Dir1);
-	if (Axis.Norme() < 1e-5) { //The two directions are either collinear or the opposite
+	if (Axis.Length() < 1e-5) { //The two directions are either collinear or the opposite
 		if (Dot(Dir1, Dir2) > 0.99999) { //no rotation needed
 			Axis.x = 1.0;
 			Axis.y = 0.0;
@@ -1691,7 +1701,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	}
 	else {
 		Axis = Axis.Normalized();
-		angle = Dot(Dir1, Dir2) / (Dir1.Norme() * Dir2.Norme());
+		angle = Dot(Dir1, Dir2) / (Dir1.Length() * Dir2.Length());
 		//bool opposite=(angle<0.0);
 		angle = acos(angle);
 		//angle = angle / PI * 180;
@@ -1738,7 +1748,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 	Vector3d delta = Vector3d(dX, dY, dZ);
 	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta ;
 
-	if (translation.Norme()>0.0) {
+	if (translation.Length() > 0.0) {
 		if (copy)
 			if(CloneSelectedFacets()) { //move
 				return;
@@ -2014,7 +2024,7 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 	Vector3d delta = Vector3d(dX, dY, dZ);
 	Vector3d translation = towardsDirectionMode ? distance*delta.Normalized() : delta;
 
-	if (translation.Norme()>0.0) {
+	if (translation.Length() > 0.0) {
 		mApp->changedSinceSave = true;
 		
 		double counter = 1.0;
@@ -2288,7 +2298,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 								//Intersection found. First check if we already created this point
 								int foundId = -1;
 								for (size_t v = 0; foundId == -1 && v < newVertices.size(); v++) {
-									if (IsZero((newVertices[v] - intersectionPoint).Norme()))
+									if (IsZero((newVertices[v] - intersectionPoint).Length()))
 										foundId = (int)v;
 								}
 								IntersectPoint newPoint{}, newPointOtherFacet{};
@@ -2427,7 +2437,8 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 
 						for (size_t i = 0; i < clipPaths.size(); i++) {
 							if (clipPaths[i].front().onEdge == currentVertex && clipPaths[i].back().onEdge != -1) { //If a full clipping path is found on the scanned edge, go through it
-								double d = (vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].front().vertexId]).Norme();
+								double d = (vertices3[f->indices[currentVertex]] -
+                                            vertices3[clipPaths[i].front().vertexId]).Length();
 								if (d < minDist) {
 									minDist = d;
 									clipId = (int)i;
@@ -2435,7 +2446,8 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 								}
 							}
 							if (clipPaths[i].back().onEdge == currentVertex && clipPaths[i].front().onEdge != -1) { //If a full clipping path is found on the scanned edge, go through it
-								double d = (vertices3[f->indices[currentVertex]] - vertices3[clipPaths[i].back().vertexId]).Norme();
+								double d = (vertices3[f->indices[currentVertex]] -
+                                            vertices3[clipPaths[i].back().vertexId]).Length();
 								if (d < minDist) {
 									minDist = d;
 									clipId = (int)i;
@@ -2948,7 +2960,7 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
 		v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
 		f->sh.N = CrossProduct(v1, v2);              // Cross product
-		consecutive = (f->sh.N.Norme() < 1e-11);
+		consecutive = (f->sh.N.Length() < 1e-11);
 	}
 	f->collinear = consecutive; //mark for later that this facet was on a line
 	f->sh.N = f->sh.N.Normalized();                  // Normalize
@@ -3124,10 +3136,10 @@ void Geometry::CreateLoft() {
 	for (auto& closest : closestIndices2)
 		closest.visited = false; //I don't trust C++ default values
 
-	double u1Length = f1->sh.U.Norme();
-	double v1Length = f1->sh.V.Norme();
-	double u2Length = f2->sh.U.Norme();
-	double v2Length = f2->sh.V.Norme();
+	double u1Length = f1->sh.U.Length();
+	double v1Length = f1->sh.V.Length();
+	double u2Length = f2->sh.U.Length();
+	double v2Length = f2->sh.V.Length();
 
 	Vector2d center2Pos = ProjectVertex(f2->sh.center, f1->sh.U, f1->sh.V, f1->sh.O); //Project 2nd's center on 1st
 	Vector2d center1Pos = ProjectVertex(f1->sh.center, f1->sh.U, f1->sh.V, f1->sh.O); //Project 1st's center on 2nd
@@ -3326,7 +3338,7 @@ void Geometry::CreateLoft() {
 			newFacet = new InterfaceFacet(3);
 			Vector3d diff_0_2 = vertices3[ind4[0]] - vertices3[ind4[2]];
 			Vector3d diff_1_3 = vertices3[ind4[1]] - vertices3[ind4[3]];
-			bool connect_0_2 = diff_0_2.Norme() < diff_1_3.Norme(); //Split rectangle to two triangles along shorter side. To do: detect which split would create larger total surface and use that
+			bool connect_0_2 = diff_0_2.Length() < diff_1_3.Length(); //Split rectangle to two triangles along shorter side. To do: detect which split would create larger total surface and use that
 			newFacet->indices[0] = ind4[0];
 			newFacet->indices[1] = ind4[1];
 			newFacet->indices[2] = ind4[connect_0_2 ? 2 : 3];
@@ -3426,8 +3438,8 @@ void Geometry::Rebuild() {
 void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
     InterfaceFacet *f = facets[facetId];
-    double nU = f->sh.U.Norme();
-    double nV = f->sh.V.Norme();
+    double nU = f->sh.U.Length();
+    double nV = f->sh.V.Length();
 
     if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
         char errMsg[512];
@@ -3444,8 +3456,8 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 void Geometry::SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
     InterfaceFacet *f = facets[facetId];
-    double nU = f->sh.U.Norme();
-    double nV = f->sh.V.Norme();
+    double nU = f->sh.U.Length();
+    double nV = f->sh.V.Length();
 
     if (!f->SetTextureProperties(nU*ratioU, nV*ratioV, mesh)) {
         char errMsg[512];
@@ -3459,8 +3471,8 @@ void Geometry::SetFacetTextureProperties(size_t facetId, double ratioU, double r
 void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
 	InterfaceFacet *f = facets[facetId];
-	double nU = f->sh.U.Norme();
-	double nV = f->sh.V.Norme();
+	double nU = f->sh.U.Length();
+	double nV = f->sh.V.Length();
 
 	if (!f->SetTexture(nU*ratioU, nV*ratioV, mesh)) {
 		char errMsg[512];
@@ -3496,8 +3508,8 @@ void Geometry::AdjustProfile() {
 		InterfaceFacet *f = facets[i];
 		if (f->sh.profileType == PROFILE_U) {
 			Vector3d v0 = vertices3[f->indices[1]] - vertices3[f->indices[0]];
-			double n0 = v0.Norme();
-			double nU = f->sh.U.Norme();
+			double n0 = v0.Length();
+			double nU = f->sh.U.Length();
 			if (IsZero(n0 - nU)) f->sh.profileType = PROFILE_U; // Select U
 			else               f->sh.profileType = PROFILE_V; // Select V
 		}

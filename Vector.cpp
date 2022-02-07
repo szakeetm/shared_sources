@@ -103,13 +103,15 @@ double Dot(const Vector2d &v1, const Vector2d &v2) {
 	return v1.u*v2.u + v1.v*v2.v;
 }
 
-double Vector3d::Norme() const {
+// Return length of vector
+double Vector3d::Length() const {
 	return sqrt(Dot(*this, *this));
 }
 
+// Return normalized vector
 Vector3d Vector3d::Normalized() const {
 	double factor = 1.0;
-	double length = this->Norme();
+	double length = this->Length();
 	if (length > 0.0) factor /= length;
 	Vector3d result = factor * (*this);
 	return result;

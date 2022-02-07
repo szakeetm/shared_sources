@@ -283,7 +283,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 			 U2 = (*(geom->GetVertex(v1Id)) - *(geom->GetVertex(v2Id))).Normalized();
 			 V2 = (*(geom->GetVertex(v1Id)) - *(geom->GetVertex(v3Id))).Normalized();
 			 N2 = CrossProduct(V2, U2);
-			 double nN2 = N2.Norme();
+			 double nN2 = N2.Length();
 			 if (nN2 < 1e-8) {
 				 GLMessageBox::Display("The 3 selected vertices are on a line.", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 				 return;

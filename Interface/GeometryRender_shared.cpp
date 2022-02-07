@@ -1195,7 +1195,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			if (f->sh.countDirection && f->dirCache) {
 				double iw = 1.0 / (double)f->sh.texWidth_precise;
 				double ih = 1.0 / (double)f->sh.texHeight_precise;
-				double rw = f->sh.U.Norme() * iw;
+				double rw = f->sh.U.Length() * iw;
 				for (int x = 0;x < f->sh.texWidth;x++) {
 					for (int y = 0;y < f->sh.texHeight;y++) {
 						size_t add = x + y*f->sh.texWidth;

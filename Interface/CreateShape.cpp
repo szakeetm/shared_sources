@@ -340,11 +340,11 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
                   return;
               }
 
-              if (IsEqual(axisDir.Norme(), 0.0)) {
+              if (IsEqual(axisDir.Length(), 0.0)) {
                   GLMessageBox::Display("Axis1 direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
                   return;
               }
-              if (IsEqual(normalDir.Norme(), 0.0)) {
+              if (IsEqual(normalDir.Length(), 0.0)) {
                   GLMessageBox::Display("Normal direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
                   return;
               }

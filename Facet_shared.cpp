@@ -386,8 +386,8 @@ bool InterfaceFacet::BuildMesh() {
 	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidth_precise;
 	double ih = 1.0 / (double)sh.texHeight_precise;
-	double rw = sh.U.Norme() * iw;
-	double rh = sh.V.Norme() * ih;
+	double rw = sh.U.Length() * iw;
+	double rh = sh.V.Length() * ih;
 	double fullCellArea = iw*ih;
 
 	std::vector<Vector2d>(4).swap(P1.pts);
@@ -722,8 +722,8 @@ size_t InterfaceFacet::GetTexSwapSize(bool useColormap)const {
 */
 size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) const {
 
-	double nU = sh.U.Norme();
-	double nV = sh.V.Norme();
+	double nU = sh.U.Length();
+	double nV = sh.V.Length();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -761,8 +761,8 @@ std::pair<size_t, size_t> InterfaceFacet::GetNbCell() const{
 */
 size_t InterfaceFacet::GetNbCellForRatio(double ratio) const{
 
-	double nU = sh.U.Norme();
-	double nV = sh.V.Norme();
+	double nU = sh.U.Length();
+	double nV = sh.V.Length();
 	double width = nU*ratio;
 	double height = nV*ratio;
 
@@ -784,8 +784,8 @@ size_t InterfaceFacet::GetNbCellForRatio(double ratio) const{
 */
 std::pair<size_t, size_t> InterfaceFacet::GetNbCellForRatio(double ratioU, double ratioV) const{
 
-    double nU = sh.U.Norme();
-    double nV = sh.V.Norme();
+    double nU = sh.U.Length();
+    double nV = sh.V.Length();
     double width = nU*ratioU;
     double height = nV*ratioV;
 

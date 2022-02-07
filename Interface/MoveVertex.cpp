@@ -269,7 +269,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);
 			zText->SetText(translation.z);
-			distanceText->SetText(translation.Norme());
+			distanceText->SetText(translation.Length());
 
 			std::stringstream tmp; tmp << "Vertex " << selVertices[0] + 1;
 			directionStatusLabel->SetText(tmp.str());
@@ -285,7 +285,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);
 			zText->SetText(translation.z);
-			distanceText->SetText(translation.Norme());
+			distanceText->SetText(translation.Length());
 
 			std::stringstream tmp; tmp << "Center of facet " << selFacets[0] + 1;
 			directionStatusLabel->SetText(tmp.str());
