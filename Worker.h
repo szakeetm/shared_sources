@@ -119,7 +119,7 @@ public:
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
-  std::vector<std::string> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
+  std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
     [[maybe_unused]] static bool ImportAngleMaps(const std::string& fileName);
 

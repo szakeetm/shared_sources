@@ -420,7 +420,7 @@ std::string FileUtils::GetFilename(const std::string &str) {
 }
 
 std::string FileUtils::StripExtension(const std::string &str) {
-
+    //Removes last period and part after. If no period found, original string returned
     size_t lastdot = str.find_last_of('.');
     if (lastdot == std::string::npos)
         return str;
