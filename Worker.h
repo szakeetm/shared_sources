@@ -121,8 +121,6 @@ public:
   void ExportProfiles(const char *fileName);
   std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
-    [[maybe_unused]] static bool ImportAngleMaps(const std::string& fileName);
-
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
   void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
 	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
