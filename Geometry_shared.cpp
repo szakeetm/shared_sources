@@ -2080,8 +2080,8 @@ std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
-	for (size_t i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->selected) nb++;
+    for(auto& fac : facets)
+        if (fac->selected) nb++;
 	return nb;
 }
 
