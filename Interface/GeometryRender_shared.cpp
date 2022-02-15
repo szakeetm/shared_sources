@@ -1547,31 +1547,32 @@ void Geometry::BuildSelectList() {
 	}
 	glEndList();
 
-	if(mApp->highlightSelection){
+	if(mApp->highlightSelection){ //Above 500 selected facets rendering can be slow
         // Fourth list with transparent highlighting for selected facets
         selectHighlightList = glGenLists(1);
         glNewList(selectHighlightList, GL_COMPILE);
-        glDepthMask(GL_FALSE);
-        /*glDisable(GL_CULL_FACE);
-        glDepthFunc(GL_LEQUAL);*/
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_TEXTURE_2D);
-        //glDisable(GL_BLEND);
+		if (GetNbSelectedFacets() < 500) {  //Above 500 selected facets rendering can be slow
+			glDepthMask(GL_FALSE);
+			/*glDisable(GL_CULL_FACE);
+			glDepthFunc(GL_LEQUAL);*/
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_LIGHTING);
+			glDisable(GL_TEXTURE_2D);
+			//glDisable(GL_BLEND);
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-        glEnable(GL_BLEND);
-        //glBlendEquation(GL_MAX);
-        //glEnable(GL_MULTISAMPLE);
-        //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+			glEnable(GL_BLEND);
+			//glBlendEquation(GL_MAX);
+			//glEnable(GL_MULTISAMPLE);
+			//glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
-        DrawTransparentPolys(selectedFacets);
+			DrawTransparentPolys(selectedFacets);
 
-        //glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-        //glDisable(GL_MULTISAMPLE);
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
-
+			//glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			//glDisable(GL_MULTISAMPLE);
+			glDisable(GL_BLEND);
+			glDepthMask(GL_TRUE);
+		}
         glEndList();
 	}
 
