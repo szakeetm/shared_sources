@@ -2065,6 +2065,7 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
+	selection.reserve(facets.size());
 	for (size_t i = 0; i < facets.size(); i++)
 		if (facets[i]->selected) selection.push_back(i);
 	return selection;
