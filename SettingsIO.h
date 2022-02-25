@@ -20,6 +20,7 @@ namespace SettingsIO {
     extern bool isArchive;
     extern bool outputFacetDetails;
     extern bool outputFacetQuantities;
+    extern bool autogenerateTest;
 
     int prepareIO();
     int initDirectories();
