@@ -120,9 +120,7 @@ public:
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
-  std::vector<std::string> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
-
-    [[maybe_unused]] static bool ImportAngleMaps(const std::string& fileName);
+  std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
   void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,

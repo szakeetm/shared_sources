@@ -708,7 +708,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct ArrowToDraw {
-		Vector3d startPoint, endPoint, normal;
+		Vector3d startPoint, endPoint, parallel;
 		std::array<float,4> color; //to pass components to glColor4f
 	};
 	std::vector<ArrowToDraw> arrowsToDraw;
@@ -735,7 +735,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
 				arrow.endPoint = center + .5* dir;
-				arrow.normal = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
+				arrow.parallel = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
 				arrowsToDraw.push_back(arrow);
 			}
         }
@@ -760,7 +760,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 	glEnable(GL_LINE_STIPPLE);
 	for (const auto& arr : arrowsToDraw) {
 		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
-		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.normal,arrowLength);
+		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.parallel);
 	}
 	glPopAttrib();
     //---end transparent
@@ -1547,31 +1547,32 @@ void Geometry::BuildSelectList() {
 	}
 	glEndList();
 
-	if(mApp->highlightSelection){
+	if(mApp->highlightSelection){ //Above 500 selected facets rendering can be slow
         // Fourth list with transparent highlighting for selected facets
         selectHighlightList = glGenLists(1);
         glNewList(selectHighlightList, GL_COMPILE);
-        glDepthMask(GL_FALSE);
-        /*glDisable(GL_CULL_FACE);
-        glDepthFunc(GL_LEQUAL);*/
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_TEXTURE_2D);
-        //glDisable(GL_BLEND);
+		if (GetNbSelectedFacets() < 500) {  //Above 500 selected facets rendering can be slow
+			glDepthMask(GL_FALSE);
+			/*glDisable(GL_CULL_FACE);
+			glDepthFunc(GL_LEQUAL);*/
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_LIGHTING);
+			glDisable(GL_TEXTURE_2D);
+			//glDisable(GL_BLEND);
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-        glEnable(GL_BLEND);
-        //glBlendEquation(GL_MAX);
-        //glEnable(GL_MULTISAMPLE);
-        //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+			glEnable(GL_BLEND);
+			//glBlendEquation(GL_MAX);
+			//glEnable(GL_MULTISAMPLE);
+			//glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
-        DrawTransparentPolys(selectedFacets);
+			DrawTransparentPolys(selectedFacets);
 
-        //glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-        //glDisable(GL_MULTISAMPLE);
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
-
+			//glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			//glDisable(GL_MULTISAMPLE);
+			glDisable(GL_BLEND);
+			glDepthMask(GL_TRUE);
+		}
         glEndList();
 	}
 

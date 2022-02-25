@@ -256,8 +256,8 @@ private:
   Vector3d camLeft;    // Camera basis (PERSPECTIVE_PROJ)
   Vector3d camUp;      // Camera basis (PERSPECTIVE_PROJ)
 
-  double   vectorLength;
-  double   arrowLength;
+  double   vectorLength; //Coordinate axis default vector length
+  double   headSize; //Default vectorhead size, one global value to match N,U,V,axis vector heads
 
   // Rectangle selection
   int      selX1;

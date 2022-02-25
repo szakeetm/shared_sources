@@ -2075,6 +2075,7 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
+	selection.reserve(facets.size());
 	for (size_t i = 0; i < facets.size(); i++)
 		if (facets[i]->selected) selection.push_back(i);
 	return selection;
@@ -2090,8 +2091,8 @@ std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
-	for (size_t i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->selected) nb++;
+    for(auto& fac : facets)
+        if (fac->selected) nb++;
 	return nb;
 }
 
@@ -4705,7 +4706,8 @@ void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sF
         intFacet->ogMap = fac.ogMap;
         intFacet->angleMapCache = fac.angleMap.pdf;
 
-        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0 || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
+        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0
+        || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
             intFacet->hasOutgassingFile = true;
         }
 

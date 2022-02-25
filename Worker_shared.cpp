@@ -610,7 +610,10 @@ void Worker::Update(float appTime) {
                 if (f->selected && !f->sh.anglemapParams.hasRecorded)
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
-                f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
+                model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
+                f->angleMapCache = model->facets[i]->angleMap.pdf;
+                if(model->facets[i]->sh.anglemapParams.hasRecorded)
+                    f->sh.anglemapParams.hasRecorded = true;
             }
 #endif
         }
