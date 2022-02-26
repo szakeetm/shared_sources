@@ -557,6 +557,9 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	std::vector<ProjectedPoint> projectedPoints;
 	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type); //Returns solution in a polygon/hole list, we have to convert it to a continous outline
 
+    //set selection
+    UnselectAll();
+
 	//a new facet
 	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
     try{
@@ -566,8 +569,6 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
         throw Error("Couldn't allocate memory for facets");
     }
 
-	//set selection
-	UnselectAll();
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
