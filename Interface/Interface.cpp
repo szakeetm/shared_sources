@@ -2695,7 +2695,17 @@ int Interface::FrameMove() {
 
                 // Update hits
                 try {
+                    // postpone realreload if it would be called from a delayed run state change
+                    bool refreshReload = false;
+                    if(worker.needsReload && (prevRunningState && !runningState)) {
+                        refreshReload = true;
+                        worker.needsReload = false;
+                    }
+
                     worker.Update(m_fTime);
+
+                    if(refreshReload)
+                        worker.needsReload = true;
                 }
                 catch (const std::exception &e) {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);

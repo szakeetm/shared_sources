@@ -598,15 +598,14 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
-                if (f->selected && !f->sh.anglemapParams.hasRecorded)
+                if (f->selected && f->angleMapCache.empty())
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
                 if(f->sh.desorbType != DES_ANGLEMAP) {
-                    model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
-                    f->angleMapCache = model->facets[i]->angleMap.pdf;
+                    /*model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
+                    f->angleMapCache = model->facets[i]->angleMap.pdf;*/
+                    f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
                 }
-                if(model->facets[i]->sh.anglemapParams.hasRecorded)
-                    f->sh.anglemapParams.hasRecorded = true;
             }
 #endif
         }
