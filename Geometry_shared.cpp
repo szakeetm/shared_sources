@@ -309,7 +309,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 
     if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
         i = 0;
-        for (auto &edge: edges) {
+        for (auto &edge : edges) {
             prg->SetProgress(double(i) / double(edges.size()));
             NeighborFacet n1{}, n2{};
             n1.id = edge.facetId[0];
@@ -320,7 +320,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
             ++i;
         }
     }
-	return i;
+	return GetNbFacet();
 }
 
 std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
@@ -557,6 +557,9 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	std::vector<ProjectedPoint> projectedPoints;
 	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type); //Returns solution in a polygon/hole list, we have to convert it to a continous outline
 
+    //set selection
+    UnselectAll();
+
 	//a new facet
 	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
     try{
@@ -566,8 +569,6 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
         throw Error("Couldn't allocate memory for facets");
     }
 
-	//set selection
-	UnselectAll();
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
@@ -811,7 +812,7 @@ InterfaceVertex* Geometry::GetVertex(size_t idx) {
 }
 
 InterfaceFacet *Geometry::GetFacet(size_t facet) {
-	if (facet >= sh.nbFacet || facet < 0) {
+	if (facet >= facets.size() || facet < 0) {
 		char errMsg[512];
 		sprintf(errMsg, "Geometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2065,7 +2066,8 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
-	for (size_t i = 0; i < sh.nbFacet; i++)
+	selection.reserve(facets.size());
+	for (size_t i = 0; i < facets.size(); i++)
 		if (facets[i]->selected) selection.push_back(i);
 	return selection;
 }
@@ -2080,8 +2082,8 @@ std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
-	for (size_t i = 0; i < sh.nbFacet; i++)
-		if (facets[i]->selected) nb++;
+    for(auto& fac : facets)
+        if (fac->selected) nb++;
 	return nb;
 }
 
@@ -4693,7 +4695,8 @@ void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sF
         intFacet->ogMap = fac.ogMap;
         intFacet->angleMapCache = fac.angleMap.pdf;
 
-        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0 || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
+        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0
+        || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
             intFacet->hasOutgassingFile = true;
         }
 

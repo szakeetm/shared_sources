@@ -133,8 +133,8 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	selX2 = 0;
 	selY2 = 0;
 	selectionChange = false;
-	vectorLength = 5.0f;
-	arrowLength = 1.0;
+	vectorLength = 5.0; 
+	headSize = .1 * vectorLength; //default: 10% arrow head length
 	dispNumHits = 2048;
 	dispNumLeaks = 2048;
 
@@ -640,7 +640,6 @@ void GeometryViewer::SetWorker(Worker *w) {
 	Geometry *geom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = geom->GetBB();
 	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
-	arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
 }
 
 void GeometryViewer::DrawIndex() {
@@ -724,12 +723,12 @@ void GeometryViewer::DrawCoordinateAxes() {
 		}
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawCoordinateAxes(vectorLength, arrowLength);
+		GLToolkit::DrawCoordinateAxes(vectorLength,headSize);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
-		GLToolkit::DrawString((float)vectorLength, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
-		GLToolkit::DrawString(0.0f, (float)vectorLength, 0.0f, "y", GLToolkit::GetDialogFontBold());
-		GLToolkit::DrawString(0.0f, 0.0f, (float)vectorLength, "z", GLToolkit::GetDialogFontBold());
+		GLToolkit::DrawString((float)vectorLength+.5f*(float)headSize, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
+		GLToolkit::DrawString(0.0f, (float)vectorLength + .5f*(float)headSize, 0.0f, "y", GLToolkit::GetDialogFontBold());
+		GLToolkit::DrawString(0.0f, 0.0f, (float)vectorLength + .5f*(float)headSize, "z", GLToolkit::GetDialogFontBold());
 		GLToolkit::DrawStringRestore();
 	}
 
@@ -803,14 +802,14 @@ void GeometryViewer::DrawNormal() {
 	for (int i = 0; i < geom->GetNbFacet(); i++) {
 		InterfaceFacet *f = geom->GetFacet(i);
 		if (f->selected) {
-			Vector3d v1 = geom->GetFacetCenter(i);
-			Vector3d v2 = f->sh.N;
+			Vector3d start = geom->GetFacetCenter(i);
+			Vector3d end = start + f->sh.N * vectorLength; //facet normal is normalized to 1 length
 			GLToolkit::SetMaterial(&blueMaterial);
 			
-			GLToolkit::DrawVector(v1.x, v1.y, v1.z, v1.x + v2.x*vectorLength, v1.y + v2.y*vectorLength, v1.z + v2.z*vectorLength, arrowLength);
+			GLToolkit::DrawVector(start,end,f->sh.nU,headSize);
 			
 			glBegin(GL_POINTS);
-			glVertex3d(v1.x, v1.y, v1.z);
+			glVertex3d(start.x,start.y,start.z);
 			glEnd();
 		}
 	}
@@ -831,6 +830,8 @@ void GeometryViewer::DrawUV() {
 			const Vector3d& V = f->sh.V;
 			Vector3d U_endpoint = O + U;
 			Vector3d V_endpoint = O + V;
+			Vector3d U_stringAnchor = U_endpoint + f->sh.nU * .5*headSize;
+			Vector3d V_stringAnchor = V_endpoint + f->sh.nV * .5*headSize;
 			GLToolkit::SetMaterial(&blueMaterial);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
@@ -840,8 +841,8 @@ void GeometryViewer::DrawUV() {
 				glEnable(GL_DEPTH_TEST);
 			}
 			glLineWidth(1.0f);
-			GLToolkit::DrawVector(O, U_endpoint, f->sh.nV, arrowLength);
-			GLToolkit::DrawVector(O, V_endpoint, f->sh.nU, arrowLength);
+			GLToolkit::DrawVector(O, U_endpoint, f->sh.nV, headSize);
+			GLToolkit::DrawVector(O, V_endpoint, f->sh.nU, headSize);
 			if (mApp->antiAliasing) glDisable(GL_LINE_SMOOTH);
 			glPointSize(3.0f);
 			glColor3f(0.5f, 1.0f, 1.0f);
@@ -851,8 +852,8 @@ void GeometryViewer::DrawUV() {
 			//glEnable(GL_BLEND);
 			GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.6f, 1.0f);
 			GLToolkit::DrawStringInit();
-			GLToolkit::DrawString((float)(U_endpoint.x), (float)(U_endpoint.y), (float)(U_endpoint.z), "\201", GLToolkit::GetDialogFont());
-			GLToolkit::DrawString((float)(V_endpoint.x), (float)(V_endpoint.y), (float)(V_endpoint.z), "\202", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(U_stringAnchor.x), (float)(U_stringAnchor.y), (float)(U_stringAnchor.z), "\201", GLToolkit::GetDialogFont());
+			GLToolkit::DrawString((float)(V_stringAnchor.x), (float)(V_stringAnchor.y), (float)(V_stringAnchor.z), "\202", GLToolkit::GetDialogFont());
 			GLToolkit::DrawStringRestore();
 			//glDisable(GL_BLEND);
 		}
@@ -940,7 +941,7 @@ void GeometryViewer::DrawLeak() {
 			glEnd();
 
 			GLToolkit::DrawVector(p.x, p.y, p.z,
-				p.x + d.x*vectorLength, p.y + d.y*vectorLength, p.z + d.z*vectorLength, arrowLength);
+				p.x + d.x*vectorLength, p.y + d.y*vectorLength, p.z + d.z*vectorLength, headSize);
 
 		}
 		glDisable(GL_LINE_SMOOTH);
@@ -1244,7 +1245,7 @@ if( showVolume || showTexture ) {
                                     showMesh, showDir);
 
     // Draw on top of everything
-    if (showFacetId && (!detailsSuppressed)) DrawFacetId();
+    if (showFacetId && !detailsSuppressed) DrawFacetId();
 
     DrawCoordinateAxes();
 
@@ -2030,7 +2031,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 		//regions included
 		AxisAlignedBoundingBox bb = geom->GetBB();
 		vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
-		arrowLength = 10.0 / vectorLength;//Max((bb.max.z-bb.min.z),vectorLength);
+		headSize = .1 * vectorLength;
 		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
 		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);

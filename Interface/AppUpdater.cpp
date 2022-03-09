@@ -434,14 +434,14 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     if(newUpdate.zipName.empty()){
                         newUpdate.zipName = namedRelease + ".zip";
                     }
-                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
+                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + newUpdate.zipName;
                     newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
                     if(newUpdate.folderName.empty()){
                         newUpdate.folderName = namedRelease;
                     }
 
                     // TODO: Add os dependent files
-					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
+					for (const xml_node& fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
 					availables.push_back(newUpdate);

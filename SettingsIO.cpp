@@ -17,6 +17,7 @@ namespace SettingsIO {
     bool isArchive = false;
     bool outputFacetDetails = false;
     bool outputFacetQuantities = false;
+    bool autogenerateTest = false;
 
     std::string workFile;
     std::string workPath;
@@ -206,7 +207,7 @@ namespace SettingsIO {
             std::filesystem::remove_all("tmp");
         }
 
-        if(is_empty(std::filesystem::path(SettingsIO::workPath))){
+        if(!SettingsIO::workPath.empty() && is_empty(std::filesystem::path(SettingsIO::workPath))){
             std::filesystem::remove_all(SettingsIO::workPath);
         }
     }
