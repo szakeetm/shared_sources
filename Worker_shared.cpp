@@ -452,9 +452,9 @@ void Worker::CalculateTextureLimits(){
                     if (subF.largeEnough[t]) { // TODO: For count it wasn't applied in Synrad so far
                         double val[3];  //pre-calculated autoscaling values (Pressure, imp.rate, density)
 
-                        val[0] = texture[t].count; //pressure without dCoef_pressure
-                        val[1] = texture[t].flux * subF.textureCellIncrements[t];
-                        val[2] = texture[t].power * subF.textureCellIncrements[t];
+                        val[0] = texture[t].count;
+                        val[1] = texture[t].flux /** subF.textureCellIncrements[t]*/;
+                        val[2] = texture[t].power /** subF.textureCellIncrements[t]*/;
 
                         //Global autoscale
                         for (int v = 0; v < 3; v++) {
