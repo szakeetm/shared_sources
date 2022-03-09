@@ -105,15 +105,22 @@ bool SimThread::runLoop() {
 
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
         if (procInfo->activeProcs.front() == threadNum || forceQueue) {
+            size_t readdOnFail = 0;
             if(simulation->model->otfParams.desorptionLimit > 0){
-                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
+                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed) {
                     localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
+                    readdOnFail = particle->tmpState.globalHits.globalHits.nbDesorbed;
+                }
                 else localDesLimit = 0;
             }
 
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particle->UpdateHits(simulation->globState, simulation->globParticleLog,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+
+            if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
+                localDesLimit += readdOnFail;
+
             if(procInfo->activeProcs.front() == threadNum)
                 procInfo->NextSubProc();
             timeLoopStart = omp_get_wtime();
