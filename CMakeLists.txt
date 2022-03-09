@@ -88,6 +88,7 @@ set(INTERFACE_FILES
         Interface/FormulaEditor.cpp
         Interface/GeometryRender_shared.cpp
         Interface/GeometryViewer_shared.cpp
+        Interface/GlobalSettings_shared.cpp
         Interface/HistogramPlotter.cpp
         Interface/HistogramSettings.cpp
         Interface/Interface.cpp
