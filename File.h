@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef FILERWH
 #define FILERWH
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include "GLApp/GLTypes.h"

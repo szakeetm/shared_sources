@@ -28,7 +28,12 @@ struct Formulas {
         evaluator=eval;
         freq_accum.resize(cb_length);
     };
-    ~Formulas(){delete evaluator;};
+    ~Formulas(){
+        for(auto f : formulas_n){
+            SAFE_DELETE(f);
+        }
+        delete evaluator;
+    };
 
     void AddFormula(const char *fName, const char *formula);
     void ClearFormulas();

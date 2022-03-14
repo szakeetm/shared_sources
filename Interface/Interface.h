@@ -235,6 +235,7 @@ constexpr size_t SmoothStatSizeLimit() {return 16;}
 class Interface : public GLApplication {
 protected:
 	Interface();
+    virtual ~Interface();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
 	//virtual void UpdateFormula() {}

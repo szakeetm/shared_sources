@@ -116,7 +116,7 @@ extern int cWidth[];
 extern const char *cName[];
 
 
-Interface::Interface() {
+Interface::Interface() : GLApplication(){
     //Get number of cores
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     compressProcessHandle = nullptr;
@@ -208,6 +208,17 @@ Interface::Interface() {
     coplanarityTolerance = 1e-8;
     largeAreaThreshold = 1.0;
     planarityThreshold = 1e-5;
+
+    updateRequested = true;
+    prevRunningState = false;
+}
+
+Interface::~Interface() {
+    SAFE_DELETE(menu);
+    SAFE_DELETE(appUpdater);
+    for (auto & recentIter : recentsList) {
+        SAFE_FREE(recentIter);
+    }
 }
 
 void Interface::UpdateViewerFlags() {
