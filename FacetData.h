@@ -9,6 +9,7 @@
 #include <RayTracing/Primitive.h>
 #include "Vector.h"
 #include "Buffer_shared.h"
+#include <Random.h>
 
 class Surface {
 public:

@@ -13,7 +13,6 @@
 #define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
 #endif
 #include <cmath>
-#include <Random.h>
 
 bool MaterialSurface::IsHardHit(const Ray &r) {
     return !((opacity < 0.999999 //Partially transparent facet
