@@ -9,7 +9,6 @@
 #include <RayTracing/Primitive.h>
 #include "Vector.h"
 #include "Buffer_shared.h"
-#include <Random.h>
 
 class Surface {
 public:
@@ -42,26 +41,7 @@ class MaterialSurface : public Surface{
 public:
     MaterialSurface(double opacity) : opacity(opacity), mat(nullptr){};
     MaterialSurface(Material* mat, double opacity) : opacity(opacity), mat(mat){};
-    bool IsHardHit(const Ray &r) override {
-        return !((opacity < 0.999999 //Partially transparent facet
-                  && r.rng->rnd() > opacity)
-                 || (mat != nullptr &&/*this->sh.reflectType > 10 //Material reflection
-                     && */mat->hasBackscattering //Has complex scattering
-                     && mat->GetReflectionType(reinterpret_cast<Synpay*>(r.pay)->energy,
-                                               acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS));
-        /*if(opacity == 1.0)
-            return true;
-        else if(opacity == 0.0)
-            return false;
-        else if(r.rng->rnd() < opacity)
-            return true;
-        else if(mat->hasBackscattering
-                && mat->GetReflectionType(reinterpret_cast<Synpay*>(r.pay)->energy,
-                                          acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS)
-            return true;
-        else
-            return false;*/
-    }
+    bool IsHardHit(const Ray &r) override;
 };
 #endif
 

@@ -8,6 +8,35 @@
 #include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
 #include "RayTracing/Ray.h" // hitlink
 
+// M_PI define
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
+#endif
+#include <cmath>
+#include <Random.h>
+
+bool MaterialSurface::IsHardHit(const Ray &r) {
+    return !((opacity < 0.999999 //Partially transparent facet
+              && r.rng->rnd() > opacity)
+             || (mat != nullptr &&/*this->sh.reflectType > 10 //Material reflection
+                     && */mat->hasBackscattering //Has complex scattering
+                 && mat->GetReflectionType(reinterpret_cast<Synpay *>(r.pay)->energy,
+                                           acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS));
+
+    /*if(opacity == 1.0)
+            return true;
+        else if(opacity == 0.0)
+            return false;
+        else if(r.rng->rnd() < opacity)
+            return true;
+        else if(mat->hasBackscattering
+                && mat->GetReflectionType(reinterpret_cast<Synpay*>(r.pay)->energy,
+                                          acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS)
+            return true;
+        else
+            return false;*/
+}
+
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
