@@ -25,7 +25,7 @@ namespace SettingsIO {
     std::string inputPath;
     std::string outputFile;
     std::string outputPath;
-
+    std::vector<std::string> extraFiles;
     const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
     int prepareIO() {

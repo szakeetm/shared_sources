@@ -16,6 +16,7 @@ namespace SettingsIO {
     extern std::string inputPath;
     extern std::string outputFile;
     extern std::string outputPath;
+    extern std::vector<std::string> extraFiles;
     extern bool overwrite;
     extern bool isArchive;
     extern bool outputFacetDetails;
