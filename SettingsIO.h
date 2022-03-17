@@ -8,6 +8,8 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <map>
+#include "GeometryTypes.h" // selecitons
 
 namespace SettingsIO {
     extern std::string workFile;
@@ -17,6 +19,10 @@ namespace SettingsIO {
     extern std::string outputFile;
     extern std::string outputPath;
     extern std::vector<std::string> extraFiles;
+    extern std::map<std::string, std::vector<std::string>> cachedLines;
+    extern std::vector<std::vector<std::string>> formulas;
+    extern std::vector<SelectionGroup> selections;
+
     extern bool overwrite;
     extern bool isArchive;
     extern bool outputFacetDetails;

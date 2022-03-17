@@ -2,17 +2,17 @@
 // Created by pbahr on 08/02/2021.
 //
 
-#include "FacetData.h"
-#include "Polygon.h"
-#include "Helper/MathTools.h"
-#include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
-#include "RayTracing/Ray.h" // hitlink
-
 // M_PI define
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
 #endif
 #include <cmath>
+
+#include "FacetData.h"
+#include "Polygon.h"
+#include "Helper/MathTools.h"
+#include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
+#include "RayTracing/Ray.h" // hitlink
 
 bool MaterialSurface::IsHardHit(const Ray &r) {
     return !((opacity < 0.999999 //Partially transparent facet

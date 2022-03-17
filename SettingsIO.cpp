@@ -26,6 +26,9 @@ namespace SettingsIO {
     std::string outputFile;
     std::string outputPath;
     std::vector<std::string> extraFiles;
+    std::map<std::string, std::vector<std::string>> cachedLines;
+    std::vector<std::vector<std::string>> formulas;
+    std::vector<SelectionGroup> selections;
     const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
     int prepareIO() {
