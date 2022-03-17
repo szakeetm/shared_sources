@@ -90,6 +90,8 @@ private:
   int curLine;
   char fileName[2048];
   char readBuffer[READ_BUFFSIZE];
+  char* bufferedKeyword;
+  bool peekedKeyword;
   int  nbLeft;
   int  buffPos;
   int  isEof;

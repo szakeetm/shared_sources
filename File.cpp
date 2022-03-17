@@ -53,6 +53,9 @@ FileReader::FileReader(const char *fileName) : fileName{}, readBuffer{} {
     strcpy(this->fileName, fileName);
     isEof = 0;
     CurrentChar = ' ';
+
+    peekedKeyword = false;
+    bufferedKeyword = nullptr;
     RefillBuffer();
 }
 
@@ -158,16 +161,22 @@ void FileReader::ReadKeyword(const char *keyword) {
     }
 }
 
+// Returns true if next keyword is different, false if it is matching
 bool FileReader::PeekKeyword(const char *keyword) {
-
-    int oldBuffPos = buffPos;
+    //int oldBuffPos = buffPos;
     char *w = ReadWord();
-    bool keywordNext = (strcmp(w, keyword) != 0);
+
+    bool nextKeywordDiffers = (strcmp(w, keyword) != 0);
 
     // go back to old position, as we only wanted to peek
-    buffPos = oldBuffPos;
-
-    return keywordNext;
+    /*if (buffPos > oldBuffPos){ // but only if we actually moved in front, e.g. prevent new line
+        buffPos = oldBuffPos;
+        bufferedKeyword = w;
+        peekedKeyword = true;
+    }*/
+    bufferedKeyword = w;
+    peekedKeyword = true;
+    return nextKeywordDiffers;
 }
 
 void FileReader::SeekStart() {
@@ -273,6 +282,10 @@ int FileReader::IsEol() const {
 
 char *FileReader::ReadWord() {
 
+    if(peekedKeyword){
+        peekedKeyword = false;
+        return bufferedKeyword;
+    }
     static char retWord[MAX_WORD_LENGTH];
     int len = 0;
 
