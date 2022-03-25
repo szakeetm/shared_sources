@@ -57,7 +57,8 @@ namespace SettingsIO {
         // Overwrite excludes outputpath/filename
         if (SettingsIO::overwrite) {
             SettingsIO::outputFile = SettingsIO::inputFile;
-            SettingsIO::workPath = "tmp/";
+            std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
+            SettingsIO::workPath = tmpFolder;
         } else if(!SettingsIO::outputPath.empty()){
             SettingsIO::workPath = SettingsIO::outputPath;
         }
@@ -112,7 +113,7 @@ namespace SettingsIO {
             ++err;
 
             // use fallback dir
-            SettingsIO::workPath = "tmp/";
+            SettingsIO::workPath = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
             try {
                 if (!std::filesystem::exists(SettingsIO::workPath))
                     std::filesystem::create_directory(SettingsIO::workPath);
@@ -177,10 +178,11 @@ namespace SettingsIO {
                     ".xml") { // if it's an .xml file
                     notFoundYet = false;
 
-                    if (SettingsIO::outputPath != "tmp/")
-                        FileUtils::CreateDir("tmp"); // If doesn't exist yet
+                    std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
+                    if (SettingsIO::outputPath != tmpFolder)
+                        FileUtils::CreateDir(tmpFolder); // If doesn't exist yet
 
-                    parseFileName = "tmp/" + zipFileName;
+                    parseFileName = tmpFolder + zipFileName;
                     ZipFile::ExtractFile(SettingsIO::inputFile, zipFileName, parseFileName);
                 }
             }

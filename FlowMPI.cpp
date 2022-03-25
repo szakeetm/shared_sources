@@ -44,7 +44,7 @@ namespace MFMPI {
                 bool hasFile[1]{false};
                 MPI_Status status;
                 // Receive at most MAX_NUMBERS from process zero
-                MPI_Recv(hasFile, 1, MPI::BOOL, i, 0, MPI_COMM_WORLD,
+                MPI_Recv(hasFile, 1, MPI_CXX_BOOL, i, 0, MPI_COMM_WORLD,
                          &status);
 
                 if (!hasFile[0]) {
@@ -56,12 +56,14 @@ namespace MFMPI {
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
                     Log::console_msg(4,"Attempt to write file to node %d.\n", i);
-                    MPI_Send(contents.c_str(), MPI::BYTE.Get_size() * contents.size(), MPI::BYTE, i, 0, MPI_COMM_WORLD);
+                    int nByte = 0;
+                    MPI_Type_size(MPI_BYTE, &nByte);
+                    MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
                 }
 
             } else if (MFMPI::world_rank == i) {
                 bool hasFile[]{false/*!SettingsIO::inputFile.empty()*/};
-                MPI_Send(hasFile, 1, MPI::BOOL, 0, 0, MPI_COMM_WORLD);
+                MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
                     Log::console_msg(4,"[%d] Attempt to receive file from master.\n", MFMPI::world_rank);
@@ -71,13 +73,13 @@ namespace MFMPI {
                     // When probe returns, the status object has the size and other
                     // attributes of the incoming message. Get the message size
                     int number_bytes = 0;
-                    MPI_Get_count(&status, MPI::BYTE, &number_bytes);
+                    MPI_Get_count(&status, MPI_BYTE, &number_bytes);
                     // Allocate a buffer to hold the incoming numbers
                     char *file_buffer = (char *) malloc(sizeof(char) * number_bytes);
                     // Now receive the message with the allocated buffer
                     Log::console_msg(4,"Trying to receive %d numbers from master.\n",
                            number_bytes);
-                    MPI_Recv(file_buffer, number_bytes, MPI::BYTE, 0, 0,
+                    MPI_Recv(file_buffer, number_bytes, MPI_BYTE, 0, 0,
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
                     // use fallback dir

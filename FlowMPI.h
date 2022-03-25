@@ -34,7 +34,7 @@ namespace MFMPI {
         }
         const auto serialized = state_stream.str();
         //printf("[%d] Attempt to send state to %d (in %lu / %lu bytes).\n", dest, 0, state_stream.str().size(), strlen(state_stream.str().c_str()));
-        return MPI_Send(serialized.data(), (int) serialized.size(), MPI::BYTE, dest, tag, comm);
+        return MPI_Send(serialized.data(), (int) serialized.size(), MPI_BYTE, dest, tag, comm);
     }
 
     template<class T>
@@ -42,13 +42,13 @@ namespace MFMPI {
         //Get number of bytes in incoming message
         MPI_Probe(source, tag, comm, status);
         int number_bytes;
-        MPI_Get_count(status, MPI::BYTE, &number_bytes);
+        MPI_Get_count(status, MPI_BYTE, &number_bytes);
         //printf("Trying to receive %d bytes from %d.\n", number_bytes, source);
         //Allocate a buffer of appropriate size
         std::vector<char> incoming(number_bytes);
 
         //Receive the data
-        auto ret = MPI_Recv(incoming.data(), number_bytes, MPI::BYTE, source, tag, comm, status);
+        auto ret = MPI_Recv(incoming.data(), number_bytes, MPI_BYTE, source, tag, comm, status);
         std::stringstream state_stream;
         state_stream.write(incoming.data(), number_bytes);
 
