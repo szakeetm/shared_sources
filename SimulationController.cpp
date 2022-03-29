@@ -277,13 +277,6 @@ int SimulationController::resetControls() {
 int SimulationController::SetRuntimeInfo() {
 
     // Update runtime information
-    //procInfo->procId = 0; // TODO: There is no more procId
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    //procInfo->procId = _getpid();
-#else
-    //procInfo->procId = ::getpid();
-#endif //  WIN
-
     for (auto &pInfo : procInfo->subProcInfo)
         GetProcInfo(pInfo.procId, &pInfo.runtimeInfo);
 
