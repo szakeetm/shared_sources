@@ -705,3 +705,94 @@ int GeometryTools::GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge
     return commonEdges.size();
 
 }
+/*
+
+int NeighborScan::GetOverlappingEdges(std::vector<Facet *> facets, const std::vector<Vector3d>& vectors, std::vector<OverlappingEdge> &overlappingEdges) {
+
+    std::list<FacetVectors> vectors_xsort;
+
+    // Detect overlapping edges to find geometric neighbors
+    size_t p11, p12;
+    Vector3d v1, v2;
+    // 1. Define edge/line by direction + starting point
+    for (size_t facetId = 0; facetId < facets.size(); facetId++) {
+        auto facet = facets[facetId];
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+            p11 = facet->indices[i];
+            p12 = (i+1 >= facet->sh.nbIndex) ? facet->indices[0] : facet->indices[i + 1];
+            v1 = vectors[p11];
+            v2 = vectors[p12];
+
+            Vector3d dir((v2-v1).Normalized());
+            if(dir.x < 0){
+                // Keep x direction positive for sortability
+                // For overlapping lines, the orientation does not matter
+                dir = (-1.0) * dir;
+            }
+            vectors_xsort.emplace_back(facetId, dir, v1, v2, p11, p12);
+        }
+    }
+
+    // Sort _edges_ for _axis_
+    vectors_xsort.sort(
+            [](const FacetVectors &v0, const FacetVectors &v1) -> bool {
+                return v0.direction.x < v1.direction.x;
+            });
+
+    for(auto x_iter = vectors_xsort.begin(); x_iter != vectors_xsort.end(); x_iter++){
+        for(auto iter_o = std::next(x_iter); iter_o != vectors_xsort.end(); iter_o++){
+            if(x_iter->facetId == iter_o->facetId)
+                continue;
+            double sim = CosineSimilarity(x_iter->direction, iter_o->direction);
+
+            //https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html>v1
+            if(IsEqual(std::fabs(sim), 1, 1e-6)){
+                int nOverlaps = 0;
+                if(IsEqual(DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v1), 0.0)) nOverlaps++;
+                if(IsEqual(DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v2), 0.0)) nOverlaps++;
+                if(IsEqual(DistancePointToLine(iter_o->v1, iter_o->v2, x_iter->v1), 0.0)) nOverlaps++;
+                if(IsEqual(DistancePointToLine(iter_o->v1, iter_o->v2, x_iter->v2), 0.0)) nOverlaps++;
+                if(nOverlaps >= 2)
+                {
+                    */
+/*fmt::print("Vectors are overlapping and similar [{}] {} , {}, {} -- {} , {} , {}\n", sim, x_iter->direction.x,
+                               x_iter->direction.y, x_iter->direction.z,
+                               iter_o->direction.x, iter_o->direction.y, iter_o->direction.z);*//*
+
+                    if(x_iter->facetId < iter_o->facetId)
+                        overlappingEdges.emplace_back(x_iter->facetId, iter_o->facetId, x_iter->vid1, x_iter->vid2, iter_o->vid1, iter_o->vid2);
+                    else {
+                        overlappingEdges.emplace_back(iter_o->facetId, x_iter->facetId, iter_o->vid1, iter_o->vid2, x_iter->vid1, x_iter->vid2);
+                    }
+                }
+                */
+/*else if(nOverlaps == 1)
+                {
+                    fmt::print("Distances are {} , {} x {} , {}\n", DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v1)
+                            ,DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v2)
+                            ,DistancePointToLine(iter_o->v1, iter_o->v2, x_iter->v1)
+                            ,DistancePointToLine(iter_o->v1, iter_o->v2, x_iter->v2));
+                    fmt::print("Vectors are not overlapping but similar [{}] {} , {}, {} -- {} , {} , {} x {} , {}, {} -- {} , {} , {}\n", sim,
+                               x_iter->v1.x, x_iter->v1.y, x_iter->v1.z,
+                               x_iter->v2.x, x_iter->v2.y, x_iter->v2.z,
+                               iter_o->v1.x, iter_o->v1.y, iter_o->v1.z,
+                               iter_o->v2.x, iter_o->v2.y, iter_o->v2.z);
+                }*//*
+
+            }
+        }
+    }
+
+    int nRemoved = RemoveDuplicates(overlappingEdges);
+
+
+    */
+/*
+    RemoveDuplicates(overlappingEdges);
+    //HandleLoneEdge(overlappingEdges);
+*//*
+
+    return overlappingEdges.size();
+
+}
+*/
