@@ -598,7 +598,7 @@ int NeighborScan::GetOverlappingEdges(std::vector<Facet *> facets, const std::ve
                         overlappingEdges.emplace_back(iter_o->facetId, x_iter->facetId, iter_o->vid1, iter_o->vid2, x_iter->vid1, x_iter->vid2);
                     }
                 }
-                else if(nOverlaps == 1)
+                /*else if(nOverlaps == 1)
                 {
                     fmt::print("Distances are {} , {} x {} , {}\n", DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v1)
                             ,DistancePointToLine(x_iter->v1, x_iter->v2, iter_o->v2)
@@ -609,7 +609,7 @@ int NeighborScan::GetOverlappingEdges(std::vector<Facet *> facets, const std::ve
                                x_iter->v2.x, x_iter->v2.y, x_iter->v2.z,
                                iter_o->v1.x, iter_o->v1.y, iter_o->v1.z,
                                iter_o->v2.x, iter_o->v2.y, iter_o->v2.z);
-                }
+                }*/
             }
         }
     }

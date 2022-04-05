@@ -748,7 +748,7 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
 void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
 	int foundId = -1;
 	for (size_t k = 0; foundId == -1 && k < facets[id1]->sh.nbIndex; k++) { //Check if part of facet 1
-		double dist = (vert - facets[id1]->vertices2[k]).Length();
+		double dist = (vert - facets[id1]->vertices2[k]).Norme();
 		foundId = (dist < 1E-5) ? (int)facets[id1]->indices[k] : -1;
 	}
 	for (size_t k = 0; foundId == -1 && k < projectedPoints.size(); k++) { //Check if part of facet 2

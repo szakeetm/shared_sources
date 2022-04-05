@@ -983,7 +983,7 @@ void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,dou
 void GLToolkit::DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& parallel, double headSize) {
 
     Vector3d diff = end - start;
-    if (headSize < 1E-10) headSize = .1 * diff.Norme(); //Default head size 10% of vector length
+    if (headSize < 1E-10) headSize = .1 * diff.Length(); //Default head size 10% of vector length
     Vector3d headDiff = headSize * diff.Normalized();
     Vector3d arrowEnd = end - headDiff;
     Vector3d reducedParallel = headSize * parallel;
