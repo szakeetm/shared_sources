@@ -37,6 +37,54 @@ namespace MFMPI {
     void mpi_transfer_simu() {
         // Check if all worlds have the inputfile
         // forward if not, maybe change to broadcast
+
+        int number_bytes = 0;
+        std::string contents;
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        if(MFMPI::world_rank == 0){
+            std::ifstream infile;
+            infile.open(SettingsIO::inputFile, std::ios::binary);
+            //std::string contents;
+            contents.assign(std::istreambuf_iterator<char>(infile),
+                            std::istreambuf_iterator<char>());
+            int nByte = 0;
+            MPI_Type_size(MPI_BYTE, &nByte);
+            //MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+            number_bytes = nByte * contents.size();
+            Log::console_msg(4,"Sharing file size with nodes %d.\n", number_bytes);
+            MPI_Bcast(&number_bytes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        }
+        else {
+            MPI_Bcast(&number_bytes, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        }
+
+        if(number_bytes == 0) {
+            Log::console_msg(2,"No bytes received for file transfer!\n");
+            return;
+        }
+
+        Log::console_msg_master(4,"Attempt to write file to nodes.\n");
+        char *file_buffer;
+        if(MFMPI::world_rank != 0){
+            file_buffer = (char *) malloc(number_bytes);
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        if(MFMPI::world_rank == 0){
+            MPI_Bcast((char*)contents.c_str(), number_bytes, MPI_BYTE, 0, MPI_COMM_WORLD);
+        }
+        else {
+            MPI_Bcast(file_buffer, number_bytes, MPI_BYTE, 0, MPI_COMM_WORLD);
+        }
+
+        //MPI_Bcast(data, num_elements, MPI_INT, 0, MPI_COMM_WORLD);
+        if(MFMPI::world_rank != 0){
+            free(file_buffer);
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+        return;
+
         for (int i = 1; i < MFMPI::world_size; i++) {
             MPI_Barrier(MPI_COMM_WORLD);
             Log::console_msg_master(5,"File transfer loop %d / %d.\n", i, MFMPI::world_size);
@@ -44,7 +92,7 @@ namespace MFMPI {
                 bool hasFile[1]{false};
                 MPI_Status status;
                 // Receive at most MAX_NUMBERS from process zero
-                MPI_Recv(hasFile, 1, MPI::BOOL, i, 0, MPI_COMM_WORLD,
+                MPI_Recv(hasFile, 1, MPI_CXX_BOOL, i, 0, MPI_COMM_WORLD,
                          &status);
 
                 if (!hasFile[0]) {
@@ -56,12 +104,14 @@ namespace MFMPI {
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
                     Log::console_msg(4,"Attempt to write file to node %d.\n", i);
-                    MPI_Send(contents.c_str(), MPI::BYTE.Get_size() * contents.size(), MPI::BYTE, i, 0, MPI_COMM_WORLD);
+                    int nByte = 0;
+                    MPI_Type_size(MPI_BYTE, &nByte);
+                    MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
                 }
 
             } else if (MFMPI::world_rank == i) {
                 bool hasFile[]{false/*!SettingsIO::inputFile.empty()*/};
-                MPI_Send(hasFile, 1, MPI::BOOL, 0, 0, MPI_COMM_WORLD);
+                MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
                     Log::console_msg(4,"[%d] Attempt to receive file from master.\n", MFMPI::world_rank);
@@ -71,13 +121,13 @@ namespace MFMPI {
                     // When probe returns, the status object has the size and other
                     // attributes of the incoming message. Get the message size
                     int number_bytes = 0;
-                    MPI_Get_count(&status, MPI::BYTE, &number_bytes);
+                    MPI_Get_count(&status, MPI_BYTE, &number_bytes);
                     // Allocate a buffer to hold the incoming numbers
                     char *file_buffer = (char *) malloc(sizeof(char) * number_bytes);
                     // Now receive the message with the allocated buffer
                     Log::console_msg(4,"Trying to receive %d numbers from master.\n",
                            number_bytes);
-                    MPI_Recv(file_buffer, number_bytes, MPI::BYTE, 0, 0,
+                    MPI_Recv(file_buffer, number_bytes, MPI_BYTE, 0, 0,
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
                     // use fallback dir

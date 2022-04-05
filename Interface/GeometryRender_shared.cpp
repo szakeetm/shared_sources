@@ -1520,8 +1520,8 @@ void Geometry::BuildSelectList() {
         glLineWidth(2.0f);
     }
     // give profiled selection priority for being rendered last
-    for (auto& sel : selectedFacets) {
-        if(!colorHighlighting.empty()){
+    if(!colorHighlighting.empty()){
+        for (auto& sel : selectedFacets) {
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
             if (it != colorHighlighting.end()) {

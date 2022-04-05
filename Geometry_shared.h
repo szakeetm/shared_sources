@@ -149,7 +149,8 @@ public:
 
 	// Collapsing stuff
 	static int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
-	bool RemoveNullFacet();
+    static int AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex> &refs, double vT);
+    bool RemoveNullFacet();
 	static  InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
 	static bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);

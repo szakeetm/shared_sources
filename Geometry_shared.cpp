@@ -565,6 +565,9 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	std::vector<ProjectedPoint> projectedPoints;
 	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type); //Returns solution in a polygon/hole list, we have to convert it to a continous outline
 
+    //set selection
+    UnselectAll();
+
 	//a new facet
 	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
     try{
@@ -574,8 +577,6 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
         throw Error("Couldn't allocate memory for facets");
     }
 
-	//set selection
-	UnselectAll();
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
@@ -962,6 +963,124 @@ int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int 
 
 }
 
+int Geometry::AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex> &refs, double vT) {
+
+    indices.resize(refs.size());
+    bool found = false;
+    int i = 0;
+    //Vector3d n;
+    double v2 = vT*vT;
+
+    std::list<std::pair<int, InterfaceVertex>> sorted_refs; // pair with index and vertex
+    int id = 0;
+    for(auto& ref : refs){
+        sorted_refs.emplace_back(id++, ref);
+    }
+    // sort by x coordinates
+    sorted_refs.sort([](const std::pair<int, InterfaceVertex> &p0, const std::pair<int, InterfaceVertex> &p1) -> bool {
+        auto& v0 = p0.second;
+        auto& v1 = p1.second;
+        if (v0.x < v1.x)
+            return true;
+        else if (v0.x == v1.x){
+            if (v0.y < v1.y){
+                return true;
+            }
+            else if (v0.y == v1.y) {
+                if (v0.z < v1.z) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    });
+
+    // search by sorted results for 1 axis
+    int id_outer = 0;
+    int id_inner = 0;
+    int nbErased = 0; // keep track for proper index calculation
+    for(auto x_iter = sorted_refs.begin(); x_iter != sorted_refs.end(); x_iter++, id_outer++) {
+        id_inner = id_outer + 1;
+        found = false;
+        //indices[id_outer + nbErased] = id_outer;
+        indices[x_iter->first] = id_outer;
+        for (auto iter_o = std::next(x_iter); iter_o != sorted_refs.end(); id_inner++) {
+            double dx = std::abs(x_iter->second.x - iter_o->second.x);
+            if (dx < vT) {
+                double dy = std::abs(x_iter->second.y - iter_o->second.y);
+                if (dy < vT) {
+                    double dz = std::abs(x_iter->second.z - iter_o->second.z);
+                    if (dz < vT && (dx*dx + dy*dy + dz*dz < v2)) {
+                        // found a match, merge vertices by tracking the current vertex id
+                        found = true;
+                        nbErased++;
+                        //indices[id_outer + nbErased] = id_outer;
+                        indices[iter_o->first] = id_outer;
+                        iter_o = sorted_refs.erase(iter_o);
+                        continue; // go on with inner loop
+                    }
+                }
+            }
+            else if(iter_o->second.x - x_iter->second.x >= vT){
+                // x range is already too large, so we can skip (list is sorted by x)
+                break; // go on with outer loop
+            }
+            iter_o++;
+        }
+
+        /*indices[id_outer + nbErased] = id_outer;
+        if(!found){
+            indices[id_outer + nbErased] = id_outer;
+        }*/
+
+    }
+
+    /*for(auto& vertex_ref : refs){
+        double dx = std::abs(indices.x - (vertex_ref).x);
+        if (dx < vT) {
+            double dy = std::abs(indices.y - (vertex_ref).y);
+            if (dy < vT) {
+                double dz = std::abs(indices.z - (vertex_ref).z);
+                if (dz < vT) {
+                    found = (dx*dx + dy*dy + dz*dz < v2);
+                }
+            }
+        }
+        else if((vertex_ref).x - indices.x > dx) // TODO: i not incremented anymore
+            return refs.size();
+        if (!found) i++;
+        else break;
+    }*/
+
+   /* if (!found) {
+        // Add a new reference vertex
+        refs.insert(std::lower_bound(refs.begin(), refs.end(), indices, [](const Vector3d &v0, const Vector3d &v1) -> bool {
+            if (v0.x < v1.x)
+                return true;
+            else if (v0.x == v1.x){
+                if (v0.y < v1.y){
+                    return true;
+                }
+                else if (v0.y == v1.y) {
+                    if (v0.z < v1.z) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }), indices);
+        //refs[*nbRef] = p;
+        //*nbRef = *nbRef + 1;
+    }*/
+
+   refs.clear();
+   for(auto& s : sorted_refs){
+       refs.emplace_back(s.second);
+   }
+    return refs.size();
+
+}
+
 void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT) {
 	mApp->changedSinceSave = true;
 	if (!isLoaded) return;
@@ -972,13 +1091,24 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	if (!idx) throw Error("Out of memory: CollapseVertex");
 	int       nbRef = 0;
 
+    std::vector<int> indices;
 	// Collapse
 	prg->SetMessage("Collapsing vertices...");
-	for (int i = 0; !work->abortRequested && i < sh.nbVertex; i++) {
-		mApp->DoEvents();  //Catch abort request
-		prg->SetProgress(((double)i / (double)sh.nbVertex) / totalWork);
-		idx[i] = AddRefVertex(vertices3[i], refs, &nbRef, vT);
-	}
+	Chronometer collapse_time;
+    collapse_time.Start();
+    std::list<InterfaceVertex> vertex_refs;
+    vertex_refs.insert(vertex_refs.end(), vertices3.begin(), vertices3.end());
+    int jj = AddRefVertex(indices, vertex_refs, vT);
+    fmt::print("Collapse duration 1: {}s -- {}\n", collapse_time.Elapsed(), jj);
+    //vertex_refs.clear();
+//    collapse_time.ReInit(); collapse_time.Start();
+//    for (int i = 0; !work->abortRequested && i < sh.nbVertex; i++) {
+//		mApp->DoEvents();  //Catch abort request
+//		prg->SetProgress(((double)i / (double)sh.nbVertex));//*//* / totalWork*//*);
+//		idx[i] = AddRefVertex(vertices3[i], refs, &nbRef, vT);
+//	}
+//    fmt::print("Collapse duration 2: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
+    collapse_time.ReInit(); collapse_time.Start();
 
 	if (work->abortRequested) {
 		delete refs;
@@ -987,20 +1117,27 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	}
 
 	// Create the new vertex array
-	vertices3.resize(nbRef); vertices3.shrink_to_fit();
+	/*vertices3.resize(nbRef); vertices3.shrink_to_fit();
 
-	memcpy(vertices3.data(), refs, nbRef * sizeof(InterfaceVertex));
-	sh.nbVertex = nbRef;
+	memcpy(vertices3.data(), refs, nbRef * sizeof(InterfaceVertex));*/
+    vertices3.clear();
+    vertices3.insert(vertices3.end(),vertex_refs.begin(),vertex_refs.end());
+	sh.nbVertex = vertex_refs.size();
 
 	// Update facets indices
-	for (int i = 0; i < sh.nbFacet; i++) {
+    prg->SetMessage("Collapsing vertices [Updating indices] ...");
+    for (int i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
-		prg->SetProgress(((double)i / (double)sh.nbFacet) * 0.05 + 0.45);
+		prg->SetProgress(((double)i / (double)sh.nbFacet) /** 0.05 + 0.45*/);
 		for (int j = 0; j < f->sh.nbIndex; j++)
-			f->indices[j] = idx[f->indices[j]];
+            f->indices[j] = indices[f->indices[j]];
+        //f->indices[j] = idx[f->indices[j]];
 	}
 
-	free(idx);
+    fmt::print("Collapse duration 3: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
+    prg->SetMessage("Collapsing vertices [done] ...");
+
+    free(idx);
 	free(refs);
 
 }
@@ -2076,8 +2213,19 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
 	selection.reserve(facets.size());
-	for (size_t i = 0; i < facets.size(); i++)
-		if (facets[i]->selected) selection.push_back(i);
+#pragma omp parallel default(none)  shared(selection)
+    {
+        std::vector<size_t> selection_local;
+#pragma omp for
+        for (size_t i = 0; i < facets.size(); i++) {
+            if (facets[i]->selected)
+                selection_local.push_back(i);
+        }
+
+#pragma omp critical
+        selection.insert(selection.end(), selection_local.begin(), selection_local.end());
+    }
+
 	return selection;
 }
 
@@ -2767,6 +2915,7 @@ InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 
 		}
 
+
 	}
 
 	return nF;
@@ -2792,15 +2941,148 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		}
 	}
 
-	if (fT > 0.0 && !work->abortRequested) {
+    Chronometer collapse_time;
+    collapse_time.Start();
+
+    if (fT > 0.0 && !work->abortRequested) {
 
 		// Collapse facets
 		prg->SetMessage("Collapsing facets...");
 		std::vector<int> newRef(sh.nbFacet);
-		for (int i = 0; i < sh.nbFacet; i++) {
+        std::iota (std::begin(newRef), std::end(newRef), 0); // index from 0,1,2, .. sh.nbFacet-1
+        std::vector<int> refDecrements(sh.nbFacet);
+        std::fill(refDecrements.begin(), refDecrements.end(), 0);
+
+        /*for (int i = 0; i < sh.nbFacet; i++) {
 			newRef[i] = i; //Default: reference doesn't change
-		}
-		for (int i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
+		}*/
+
+        //first get a general set of common edges to determine facets with shared vertices
+        AnalyzeNeighbors(work, prg);
+        std::vector<bool> already_merged;
+        already_merged.resize(facets.size(), false);
+        prg->SetMessage("Collapsing facets...");
+        for (int i = 0; !work->abortRequested && i < facets.size(); i++) {
+            prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/);
+            //mApp->DoEvents(); //To catch eventual abort button click
+
+            // skip, merged facet is invalid
+            if(already_merged[i])
+                continue;
+
+            fi = facets[i];
+            // Search a coplanar facet
+            int j = i + 1;
+            if(!doSelectedOnly || fi->selected) {
+                for (int n = 0; n < fi->neighbors.size(); n++) {
+                    j = fi->neighbors[n].id;
+
+                    bool reverse_neigh = 0;
+                    if(already_merged[j])
+                        continue;
+
+                    for(auto& neighj : facets[j]->neighbors){
+                        if(neighj.id == i) {
+                            reverse_neigh = true;
+                            break;
+                        }
+                    }
+
+                    /*if(!reverse_neigh)
+                        continue;*/
+
+                    //while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
+                    fj = facets[j];
+                    merged = nullptr;
+                    if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
+                        // Collapse
+                        merged = MergeFacet(fi, fj);
+
+                        if (merged) {
+                            // Replace the old 2 facets by the new one
+                            merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
+#ifdef MOLFLOW
+                            if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
+                                CalculateFacetParams(merged); //get area
+                                merged->sh.outgassing = merged->sh.area / fi->sh.area *
+                                                        fi->sh.outgassing; //Maintain per-area outgassing
+                            }
+#endif //MOLFLOW
+                            already_merged[j] = true;
+                            //SAFE_DELETE(fi);
+                            //SAFE_DELETE(fj);
+                            newRef[i] = newRef[j] = -1;
+                            /*for (int k = j; k < sh.nbFacet - 1; k++) {
+                                facets[k] = facets[k + 1];
+                            }*/
+                            if(j+1 < refDecrements.size())
+                                refDecrements[j+1] += 1;
+                            /*for (int k = j + 1; k < newRef.size(); k++) {
+                                newRef[k]--; //Renumber references
+                            }*/
+                            //sh.nbFacet--;
+                            //facets.pop_back();
+
+                            // combine neighbors to keep a full search (in order)
+                            merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end());
+                            merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
+
+                            facets[i] = merged;
+                            //InitializeGeometry(i);
+                            //SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
+                            fi = facets[i];
+                            j = i + 1;
+
+                        }
+                    }
+                    if (!merged) j++;
+                }
+            }
+        }
+
+        fmt::print("Collapse facet duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+
+        prg->SetMessage("Globally applying new facet IDs ...");
+        double tasks_total = 7.0;
+        int current_task = 0.0;
+        prg->SetProgress((double)(current_task++) / tasks_total);
+
+        int dec_val = 0;
+        for (int k = 0; k < newRef.size(); k++) {
+            dec_val += refDecrements[k];
+            if(newRef[k] != -1)
+                newRef[k] -= dec_val; //Renumber references
+        }
+
+        fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+        prg->SetProgress((double)(current_task++) / tasks_total);
+
+        int nb2Delete = 0;
+        for (int k = 0; k < facets.size(); k++) {
+            if(nb2Delete > 0)
+                facets[k - nb2Delete] = facets[k];
+
+            if(already_merged[k])
+                nb2Delete++;
+        }
+        facets.resize(facets.size() - nb2Delete);
+        sh.nbFacet -= nb2Delete;
+        /*int nb2Delete = 0;
+        for (int k = facets.size() - 1 - nb2Delete; k >= 0; k--) {
+            if(already_merged[k]) {
+                for (int jj = k; jj < facets.size() - 1; jj++) {
+                    facets[jj] = facets[jj + 1];
+                }
+                nb2Delete++;
+                *//*facets.pop_back();
+                sh.nbFacet--;*//*
+            }
+        }
+        facets.resize(facets.size() - nb2Delete);
+        sh.nbFacet -= nb2Delete;*/
+        /*for (int i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
 			prg->SetProgress((1.0 + ((double)i / (double)sh.nbFacet)) / totalWork);
 			mApp->DoEvents(); //To catch eventual abort button click
 			fi = facets[i];
@@ -2844,21 +3126,40 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 				}
 				if (!merged) j++;
 			}
-		}
-		mApp->RenumberSelections(newRef);
-		mApp->RenumberFormulas(&newRef);
-		RenumberNeighbors(newRef);
-		RenumberTeleports(newRef);
-	}
-	//Collapse collinear sides. Takes some time, so only if threshold>0
+		}*/
+        fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+        prg->SetProgress((double)(current_task++) / tasks_total);
+        mApp->RenumberSelections(newRef);
+        fmt::print("Renumbered duration 4: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+        prg->SetProgress((double)(current_task++) / tasks_total);
+        mApp->RenumberFormulas(&newRef);
+        fmt::print("Renumbered duration 6: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+        prg->SetProgress((double)(current_task++) / tasks_total);
+        RenumberNeighbors(newRef);
+        fmt::print("Renumbered duration 7: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+        prg->SetProgress((double)(current_task++) / tasks_total);
+        RenumberTeleports(newRef);
+        prg->SetProgress((double)(current_task++) / tasks_total);
+
+        fmt::print("Renumbered duration 8: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        collapse_time.ReInit(); collapse_time.Start();
+    }
+    //Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
-	if (lT > 0.0 && !work->abortRequested) {
+    if (lT > 0.0 && !work->abortRequested) {
 		for (int i = 0; i < sh.nbFacet; i++) {
-			prg->SetProgress((1.0 + (double)(fT > 0.0) + ((double)i / (double)sh.nbFacet)) / totalWork);
+			prg->SetProgress((/*1.0 + (double)(fT > 0.0) +*/ ((double)i / (double)sh.nbFacet)) /*/ totalWork*/);
 			if (!doSelectedOnly || facets[i]->selected)
 				MergecollinearSides(facets[i], lT);
 		}
 	}
+    fmt::print("Collinear collapse duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
+    collapse_time.ReInit(); collapse_time.Start();
+
 	prg->SetMessage("Rebuilding geometry...");
 	
 	/*
