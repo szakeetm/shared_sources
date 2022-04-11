@@ -2506,6 +2506,16 @@ void Interface::UpdateFormula() {
 }
 */
 
+void Interface::DropEvent(char *dropped_file) {
+    // Shows directory of dropped file
+    int ret = GLMessageBox::Display(fmt::format("Do you want to load this file\n    {}?", dropped_file).c_str(), "Load file?",
+            GLDLG_OK|GLDLG_CANCEL,GLDLG_ICONWARNING);
+    /**/
+    if(ret == GLDLG_OK) {
+        LoadFile(dropped_file);
+    }
+}
+
 bool Interface::AskToSave() {
     if (!changedSinceSave) return true;
     int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved",

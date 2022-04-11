@@ -435,7 +435,8 @@ public:
 	
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
-	bool AskToSave();
+    void DropEvent(char *dropped_file);
+    bool AskToSave();
 	bool AskToReset(Worker *work = nullptr);
 	void AddStruct();
 	void DeleteStruct();
