@@ -1,6 +1,22 @@
-//
-// Created by pascal on 4/22/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef MOLFLOW_PROJ_RAY_H
 #define MOLFLOW_PROJ_RAY_H
@@ -8,15 +24,17 @@
 #include "Vector.h"
 #include "RTHelper.h"
 
-//struct SubProcessFacetTempVar;
 class MersenneTwister;
 
+//! Keep track of temporary/transparent hits in a single linked list
+//! Deprecated as replaced by HitLink
 struct HitChain {
     size_t hitId;
     SubProcessFacetTempVar *hit;
     HitChain *next;
 };
 
+//! Keep track of temporary/transparent hits; correspomds to an individual hit
 struct HitLink {
     HitLink() : hitId(9999999999), hit(SubProcessFacetTempVar()) {};
     HitLink(size_t id, SubProcessFacetTempVar h) : hitId(id), hit(h) {};
@@ -42,14 +60,18 @@ struct HitLink {
 
     ~HitLink();
 
-    size_t hitId;
-    SubProcessFacetTempVar hit;
+    size_t hitId; //! id of the hit entity
+    SubProcessFacetTempVar hit; //! Hit statistic
 };
+
+//! Additional application specific payload
+//! Unusued for Molflow
 
 struct Payload {
 };
 constexpr double inf_d = 1.0e99;
 
+//! Geometric class describing a ray for ray-object intersections in ray-tracing algorithms
 class Ray {
 public:
     Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersected(-1), hitChain(nullptr), rng(nullptr), pay(nullptr) {}
@@ -66,12 +88,11 @@ public:
     Vector3d origin;
     Vector3d direction;
 
-    // To keep track of shortest intersection
-    double tMax;
+    double tMax;     // To keep track of shortest intersection
 
     double time; // Only for td simulations in Molflow
-    int lastIntersected; //
-    int structure; //
+    int lastIntersected; // id of last intersected entity
+    int structure; // id of structure in which ray currently interacts
     //const Medium *medium;
     Payload *pay;
 
