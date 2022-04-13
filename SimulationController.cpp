@@ -424,7 +424,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
         switch (procInfo->masterCmd) {
 
             case COMMAND_LOAD: {
-                if(!Load()){
+                if(Load()){
                     SetState(PROCESS_ERROR, "Could not load simulation");
                 }
                 break;
@@ -541,13 +541,14 @@ bool SimulationController::Load() {
                 desPerThread = des_global / nbThreads;
                 remainder = des_global % nbThreads;
             }
+#if not defined(GPUCOMPABILITY)
             for (auto &thread : simThreads) {
                 if(!thread.particle)
                     return false;
                 thread.particle->totalDesorbed = desPerThread;
                 thread.particle->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
             }
-
+#endif
             SetRuntimeInfo();
         }
     }
@@ -579,10 +580,12 @@ int SimulationController::Start() {
         loadOk = false;
     }
 
+#if not defined(GPUCOMPABILITY)
     for(auto& thread : simThreads){
         if(!thread.particle)
             loadOk = false;
     }
+#endif
 
     if(!loadOk) {
         if(sane.second)
@@ -592,12 +595,14 @@ int SimulationController::Start() {
         return 1;
     }
 
+#if not defined(GPUCOMPABILITY)
     if(simulation->model->accel.empty()){
     //if(RebuildAccel()){
         loadOk = false;
         SetState(PROCESS_ERROR, "Failed building acceleration structure!");
         return 1;
     }
+#endif
 
     if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
@@ -629,10 +634,13 @@ int SimulationController::Start() {
                 remainder = limitDes_global % nbThreads;
             }
         }
+
+#if not defined(GPUCOMPABILITY)
         for(auto& thread : simThreads){
             size_t localDes = (desPerThread > thread.particle->totalDesorbed) ? desPerThread - thread.particle->totalDesorbed : 0;
             thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
         }
+#endif
 
         int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
 #pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)

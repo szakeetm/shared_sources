@@ -21,7 +21,7 @@
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
-#if defined(WITH_GPU)
+#if defined(GPUCOMPABILITY)
 #include <../src/GPUSim/SimulationGPU.h>
 #endif
 #include <Helper/ConsoleLogger.h>
@@ -310,7 +310,7 @@ int SimulationManager::CreateCPUHandle() {
 
 // return 1=error
 int SimulationManager::CreateGPUHandle(uint16_t iProc) {
-#if defined(WITH_GPU)
+#if defined(GPUCOMPABILITY)
     char cmdLine[512];
     uint32_t processId;
 
