@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -230,7 +230,7 @@ typedef struct {
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-constexpr size_t SmoothStatSizeLimit() {return 16;};
+constexpr size_t SmoothStatSizeLimit() {return 16;}
 
 class Interface : public GLApplication {
 protected:
@@ -440,7 +440,8 @@ public:
 	
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
-	bool AskToSave();
+    void DropEvent(char *dropped_file);
+    bool AskToSave();
 	bool AskToReset(Worker *work = nullptr);
 	void AddStruct();
 	void DeleteStruct();

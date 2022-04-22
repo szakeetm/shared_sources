@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -434,7 +434,7 @@ bool HistogramSettings::Apply() {
 		try{
 		    work->Update(mApp->m_fTime); //To refresh histogram cache
         }
-        catch (std::exception& e) {
+        catch (const std::exception &e) {
             GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
         }
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();

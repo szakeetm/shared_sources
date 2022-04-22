@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -182,6 +182,18 @@ private:
 	UpdateLogWindow* logWnd;
 };
 
+class UpdateWarningDialog : public GLWindow {
+public:
+    UpdateWarningDialog(AppUpdater* appUpdater);
+
+    // Implementation
+    void ProcessMessage(GLComponent *src, int message);
+private:
+    GLLabel *questionLabel;
+    GLButton *yesButton, *noButton;
+    AppUpdater* updater;
+};
+
 class ManualUpdateCheckDialog : public GLWindow {
 public:
     ManualUpdateCheckDialog(const std::string & appName, const std::string& appVersionName, AppUpdater* appUpdater, UpdateLogWindow* logWindow, UpdateFoundDialog* foundWindow);
@@ -191,6 +203,7 @@ public:
 private:
     GLLabel *questionLabel;
     GLButton *updateButton;
+    GLButton *cancelButton;
     std::string appName;
     std::string appVersionName;
     AppUpdater* updater;
@@ -203,15 +216,20 @@ private:
     void MakeDefaultConfig();
 public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
-
+    ~AppUpdater(){
+        SAFE_DELETE(updateWarning);
+    }
 	bool IsUpdateAvailable();
-	bool IsUpdateCheckAllowed();
+	bool IsUpdateCheckAllowed() const;
 	void ClearAvailableUpdates();
 	std::string GetLatestUpdateName();
 	std::string GetCumulativeChangeLog();
     std::string GetLatestChangeLog();
 
 	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
+    int NotifyServerWarning();
+    void AllowFurtherWarnings(bool allow);
+
     void PerformImmediateCheck();
 
 	void SetUserUpdatePreference(bool answer);
@@ -238,15 +256,17 @@ private:
 	std::thread updateThread;
 	bool allowUpdateCheck;
 	int appLaunchedWithoutAsking, askAfterNbLaunches; //Number of app launches before asking if user wants to check for updates. 0: default (shipping) value, -1: user already answered
-
+    int nbUpdateFailsInRow, askAfterNbUpdateFails; // Number of app launches in a row, in that an update couldn't be fetched
 	std::vector<UpdateManifest> availableUpdates; //empty in the beginning, populated upon update check
 
 	//Methods
 	void SaveConfig();
 	void LoadConfig();
 	void PerformUpdateCheck(bool forceCheck); //Actually check for updates (once we have user permission)
-	
-	std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
+
+
+    std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId);
+    std::vector<UpdateManifest> DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
 	
 	static UpdateManifest GetLatest(const std::vector<UpdateManifest>& updatesstatic );
@@ -255,7 +275,7 @@ private:
     void SkipVersions(const std::vector<UpdateManifest>& updates);
 
 	void GenerateUserId();
-	
+    UpdateWarningDialog* updateWarning;
 };
 
 class UpdateCheckDialog : public GLWindow {

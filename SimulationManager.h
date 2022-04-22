@@ -73,7 +73,7 @@ protected:
     int WaitForProcStatus(uint8_t procStatus);
 
 public:
-    SimulationManager();
+    SimulationManager(int pid = -1);
 
     ~SimulationManager();
 
@@ -134,7 +134,7 @@ public:
     bool useRemote;
 
     uint16_t nbThreads;
-    uint16_t mainProcId{};
+    uint16_t mainProcId;
 
     bool interactiveMode;
     bool isRunning;
@@ -149,7 +149,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
+    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

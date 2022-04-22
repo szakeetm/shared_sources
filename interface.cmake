@@ -33,6 +33,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
         ${EXTERNAL_DIR})]]
 
+#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
+        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
+
+#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR})]]
+
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
