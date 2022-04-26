@@ -408,10 +408,13 @@ void GLApplication::Run() {
   wereEvents = false;
   wereEvents_imgui = 2;
 
+  // TODO: Activate imgui directly on launch from here
+  /*
   if(!imWnd) {
       imWnd = new ImguiWindow(this);
       imWnd->init();
   }
+   */
 
   //Wait for user exit
   while( !quit )

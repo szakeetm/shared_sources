@@ -116,6 +116,8 @@ set(INTERFACE_FILES
         Interface/ImguiWindow.cpp
         Interface/ImguiMenu.cpp
         Interface/ImguiGlobalSettings.cpp
+        Interface/ImguiPerformancePlot.cpp
+        Interface/ImguiSidebar.cpp
         Interface/ImguiExtensions.cpp
 
         ASELoader.cpp

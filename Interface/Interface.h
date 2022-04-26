@@ -225,7 +225,11 @@ typedef struct {
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
-#define MENU_IMGUI                1002
+#define MENU_IMGUI                1100
+#define MENU_IMGUI_GLOB           1101
+#define MENU_IMGUI_SIDE           1102
+#define MENU_IMGUI_MENU           1103
+
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2

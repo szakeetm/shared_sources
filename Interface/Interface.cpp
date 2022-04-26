@@ -881,6 +881,11 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
 
+    menu->GetSubMenu("Test")->Add(nullptr);
+    menu->GetSubMenu("Test")->Add("ImGui Global Settings", MENU_IMGUI_GLOB);
+    menu->GetSubMenu("Test")->Add("ImGui Sidebar", MENU_IMGUI_SIDE);
+    menu->GetSubMenu("Test")->Add("ImGui Test Suite", MENU_IMGUI);
+
     geomNumber = new GLTextField(0, nullptr);
     geomNumber->SetEditable(false);
     Add(geomNumber);
@@ -1009,7 +1014,6 @@ void Interface::OneTimeSceneInit_shared_post() {
     menu->Add("About");
     menu->GetSubMenu("About")->Add("License", MENU_ABOUT);
     menu->GetSubMenu("About")->Add("Check for updates...", MENU_UPDATE);
-    menu->GetSubMenu("About")->Add("ImGUI", MENU_IMGUI);
 
     ClearFacetParams();
     LoadConfig();
@@ -1807,12 +1811,40 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     if(!imWnd) {
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
+                        imWnd->ToggleMainHub(); // active on start
                     }
                     else{
                         imWnd->destruct();
                         delete imWnd;
                         imWnd = nullptr;
                     }
+                    return true;
+                }
+                case MENU_IMGUI_GLOB: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleGlobalSettings();
+
+                    return true;
+                }
+                case MENU_IMGUI_SIDE: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleSimSidebar();
+
+                    return true;
+                }
+                case MENU_IMGUI_MENU: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleMainMenu();
+
                     return true;
                 }
             }

@@ -9,48 +9,40 @@
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
 #include "AppUpdater.h"
-#include "../../src/MolFlow.h"
 
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+#else
+#include "../../src/SynRad.h"
+#endif
+
+/*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
 class ImguiWindow {
 public:
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     static void destruct();
     //void render();
-    void renderSingle();
+    void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
     GLApplication* app;
 
-    bool ToggleMainMenu(){
-        show_app_main_menu_bar = !show_app_main_menu_bar;
-        return show_app_main_menu_bar;
-    }
-    bool ToggleSimStatus(){
-        show_app_sim_status = !show_app_sim_status;
-        return show_app_sim_status;
-    }
-    bool ToggleDemoWindow(){
-        show_demo_window = !show_demo_window;
-        return show_demo_window;
-    }
-    bool ToggleGlobalSettings(){
-        show_global_settings = !show_global_settings;
-        return show_global_settings;
-    }
+    bool ToggleMainHub();
+    bool ToggleMainMenu();
+    bool ToggleSimSidebar();
+    bool ToggleDemoWindow();
+    bool ToggleGlobalSettings();
 protected:
-    // Our state
-    bool show_app_main_menu_bar{false};
-    bool show_app_sim_status{false};
-    bool show_demo_window{false};
-    bool show_global_settings{false};
-    bool show_perfo{true};
+    // Window states (visible or not)
+    bool show_main_hub{false}; //!< Hub managing all other windows
+    bool show_app_main_menu_bar{false}; //!< Window main menu bar at the top
+    bool show_app_sidebar{false}; //!< Simulation sidebar for various 3d viewer, facet and simulation settings
+    bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
+    bool show_global_settings{false}; //!< Global Settings window
+    bool show_perfo{false}; //!< Plot showing history of simulation performance
 
-    double start_time;
+    double start_time; // to keep track how long the ImGui GUI is running
     static void restartProc(int nbProc, MolFlow *mApp);
-
-    //static void ProcessControlTable(MolFlow *mApp);
-
-    //static bool InputRightSide(const char *desc, double *const &val, const char *format);
 };
 
 
