@@ -531,6 +531,9 @@ struct FacetHitBuffer {
         sum_1_per_ort_velocity = 0.0;
         sum_1_per_velocity = 0.0;
         sum_v_ort = 0.0;
+		impulse = Vector3d(0.0, 0.0, 0.0);
+		impulse_square = Vector3d(0.0, 0.0, 0.0);
+		impulse_momentum = Vector3d(0.0, 0.0, 0.0);
     }
     FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
 
@@ -542,6 +545,9 @@ struct FacetHitBuffer {
     double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
     double sum_1_per_velocity;          //For average molecule speed calculation
     double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
+	Vector3d impulse; //sum of impulse changes exerted to the facet by inbound and outbound molecules, for force calculation
+	Vector3d impulse_square; //sum of impulse change squares exerted to the facet by inbound and outbound molecules, for noise estimation
+	Vector3d impulse_momentum; //sum of impulse momentum changes exerted to the facet by inbound and outbound molecules relative to user-defined axis, for torque calculation
 
 	template<class Archive>
 	void serialize(Archive & archive)
