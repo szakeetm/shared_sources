@@ -4913,7 +4913,7 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 	PhysicalValue result;
 
 	if (index == -1) { //Facet mode
-
+		//Not implemented yet, calculation in formula editor and Facet Details windows
 	}
 	else { //Texture cell mode
 		switch (mode) {
