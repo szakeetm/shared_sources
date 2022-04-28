@@ -339,7 +339,7 @@ struct WorkerParams { //Plain old data
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
 
-	Vector3d torqueAxis; //axis to which torque is measured
+	Vector3d torqueRefPoint; //point about which the torque is being measured
 
 #endif
 #if defined(SYNRAD)
@@ -368,7 +368,7 @@ struct WorkerParams { //Plain old data
 			, CEREAL_NVP(motionType)
 			, CEREAL_NVP(motionVector1)
 			, CEREAL_NVP(motionVector2)
-			, CEREAL_NVP(torqueAxis)
+			, CEREAL_NVP(torqueRefPoint)
 #endif
 
 #if defined(SYNRAD)
