@@ -559,7 +559,10 @@ struct FacetHitBuffer {
 			CEREAL_NVP(nbAbsEquiv),
 			CEREAL_NVP(sum_1_per_ort_velocity),
 			CEREAL_NVP(sum_1_per_velocity),
-			CEREAL_NVP(sum_v_ort)
+			CEREAL_NVP(sum_v_ort),
+			CEREAL_NVP(impulse),
+			CEREAL_NVP(impulse_square),
+			CEREAL_NVP(impulse_momentum)
         );
 	}
 };

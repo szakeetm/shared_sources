@@ -46,6 +46,9 @@ FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
     this->sum_1_per_ort_velocity+=rhs.sum_1_per_ort_velocity;
     this->sum_1_per_velocity+=rhs.sum_1_per_velocity;
     this->sum_v_ort+=rhs.sum_v_ort;
+    this->impulse += rhs.impulse;
+    this->impulse_square += rhs.impulse_square;
+    this->impulse_momentum += rhs.impulse_momentum;
     return *this;
 }
 #endif
