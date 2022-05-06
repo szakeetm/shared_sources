@@ -23,7 +23,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
+        ${IMGUI_DIR}
         )
+
+#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
+        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
+
+#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
+        ${EXTERNAL_DIR})]]
 
 #[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
         SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
@@ -159,6 +167,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+
+target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

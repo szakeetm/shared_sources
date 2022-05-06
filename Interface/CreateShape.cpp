@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -297,115 +297,111 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
   case MSG_BUTTON:
 	  if (src == createButton) {
           if (mApp->AskToReset()) {
-              Vector3d center, axisDir, normalDir;
-              double axis1length, axis2length, racetrackTopLength;
-              int nbSteps;
+		  Vector3d center, axisDir, normalDir;
+		  double axis1length, axis2length, racetrackTopLength;
+		  int nbSteps;
 
-              if (!centerXtext->GetNumber(&center.x)) {
-                  GLMessageBox::Display("Invalid center X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!centerYtext->GetNumber(&center.y)) {
-                  GLMessageBox::Display("Invalid center Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!centerZtext->GetNumber(&center.z)) {
-                  GLMessageBox::Display("Invalid center Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (!centerXtext->GetNumber(&center.x)) {
+			  GLMessageBox::Display("Invalid center X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!centerYtext->GetNumber(&center.y)) {
+			  GLMessageBox::Display("Invalid center Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!centerZtext->GetNumber(&center.z)) {
+			  GLMessageBox::Display("Invalid center Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (!axisXtext->GetNumber(&axisDir.x)) {
-                  GLMessageBox::Display("Invalid Axis1 direction X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!axisYtext->GetNumber(&axisDir.y)) {
-                  GLMessageBox::Display("Invalid Axis1 direction Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!axisZtext->GetNumber(&axisDir.z)) {
-                  GLMessageBox::Display("Invalid Axis1 direction Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (!axisXtext->GetNumber(&axisDir.x)) {
+			  GLMessageBox::Display("Invalid Axis1 direction X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!axisYtext->GetNumber(&axisDir.y)) {
+			  GLMessageBox::Display("Invalid Axis1 direction Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!axisZtext->GetNumber(&axisDir.z)) {
+			  GLMessageBox::Display("Invalid Axis1 direction Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (!normalXtext->GetNumber(&normalDir.x)) {
-                  GLMessageBox::Display("Invalid normal direction X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!normalYtext->GetNumber(&normalDir.y)) {
-                  GLMessageBox::Display("Invalid normal direction Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (!normalZtext->GetNumber(&normalDir.z)) {
-                  GLMessageBox::Display("Invalid normal direction Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (!normalXtext->GetNumber(&normalDir.x)) {
+			  GLMessageBox::Display("Invalid normal direction X coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!normalYtext->GetNumber(&normalDir.y)) {
+			  GLMessageBox::Display("Invalid normal direction Y coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (!normalZtext->GetNumber(&normalDir.z)) {
+			  GLMessageBox::Display("Invalid normal direction Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (IsEqual(axisDir.Norme(), 0.0)) {
-                  GLMessageBox::Display("Axis1 direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
-              if (IsEqual(normalDir.Norme(), 0.0)) {
-                  GLMessageBox::Display("Normal direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (IsEqual(axisDir.Norme(), 0.0)) {
+			  GLMessageBox::Display("Axis1 direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
+		  if (IsEqual(normalDir.Norme(),0.0)) {
+			  GLMessageBox::Display("Normal direction can't be null-vector", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (!axis1LengthText->GetNumber(&axis1length) || !(axis1length > 0.0)) {
-                  GLMessageBox::Display("Invalid axis1 length", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (!axis1LengthText->GetNumber(&axis1length) || !(axis1length>0.0)) {
+			  GLMessageBox::Display("Invalid axis1 length", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (!axis2LengthText->GetNumber(&axis2length) || !(axis2length > 0.0)) {
-                  GLMessageBox::Display("Invalid axis2 length", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                  return;
-              }
+		  if (!axis2LengthText->GetNumber(&axis2length) || !(axis2length>0.0)) {
+			  GLMessageBox::Display("Invalid axis2 length", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			  return;
+		  }
 
-              if (mode == MODE_RACETRACK) {
-                  if (!racetrackToplengthText->GetNumber(&racetrackTopLength)) {
-                      GLMessageBox::Display("Can't parse racetrack top length", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                      return;
-                  }
-                  if (racetrackTopLength >= axis1length) {
-                      GLMessageBox::Display("For a racetrack, the top length must be less than Axis1", "Error",
-                                            GLDLG_OK, GLDLG_ICONERROR);
-                      return;
-                  }
-                  if (!(racetrackTopLength >= (axis1length - axis2length))) {
-                      GLMessageBox::Display("For a racetrack, the top length must be at least (Axis1 - Axis2)", "Error",
-                                            GLDLG_OK, GLDLG_ICONERROR);
-                      return;
-                  }
-                  if (!(racetrackTopLength > 0.0)) {
-                      GLMessageBox::Display("Top length must be positive", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                      return;
-                  }
-              }
-              if (Contains({MODE_CIRCLE, MODE_RACETRACK}, mode)) {
-                  if (!nbstepsText->GetNumberInt(&nbSteps)) {
-                      GLMessageBox::Display("Can't parse number of steps in arc", "Error", GLDLG_OK, GLDLG_ICONERROR);
-                      return;
-                  }
-                  if (!(nbSteps >= 2)) {
-                      GLMessageBox::Display("Number of arc steps must be at least 2", "Error", GLDLG_OK,
-                                            GLDLG_ICONERROR);
-                      return;
-                  }
-              }
+		  if (mode == MODE_RACETRACK) {
+			  if (!racetrackToplengthText->GetNumber(&racetrackTopLength)) {
+				  GLMessageBox::Display("Can't parse racetrack top length", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  }
+			  if (racetrackTopLength >= axis1length) {
+				  GLMessageBox::Display("For a racetrack, the top length must be less than Axis1", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  } 
+			  if (!(racetrackTopLength >= (axis1length - axis2length))) {
+				  GLMessageBox::Display("For a racetrack, the top length must be at least (Axis1 - Axis2)", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  }
+			  if (!(racetrackTopLength > 0.0)) {
+				  GLMessageBox::Display("Top length must be positive", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  }
+		  }
+		  if (Contains({ MODE_CIRCLE,MODE_RACETRACK }, mode)) {
+			  if (!nbstepsText->GetNumberInt(&nbSteps)) {
+				  GLMessageBox::Display("Can't parse number of steps in arc", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  }
+			  if (!(nbSteps>=2)) {
+				  GLMessageBox::Display("Number of arc steps must be at least 2", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				  return;
+			  }
+		  }
 
-              switch (mode) {
-                  case MODE_RECTANGLE:
-                      geom->CreateRectangle(center, axisDir, normalDir, axis1length, axis2length);
-                      break;
-                  case MODE_CIRCLE:
-                      geom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (size_t) nbSteps);
-                      break;
-                  case MODE_RACETRACK:
-                      geom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength,
-                                            (size_t) nbSteps);
-                      break;
-              }
-              work->Reload();
-              mApp->changedSinceSave = true;
-              mApp->UpdateFacetlistSelected();
+		  switch (mode) {
+		  case MODE_RECTANGLE:
+			  geom->CreateRectangle(center, axisDir, normalDir, axis1length, axis2length);
+			  break;
+		  case MODE_CIRCLE:
+			  geom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (size_t)nbSteps);
+			  break;
+		  case MODE_RACETRACK:
+			  geom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
+			  break;
+		  }
+		  work->Reload();
+		  mApp->changedSinceSave = true;
+		  mApp->UpdateFacetlistSelected();
           }
 	  }
 	  else if (src == fullCircleButton) {

@@ -7,7 +7,11 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
-
+if(NOT NO_INTERFACE)
+    add_subdirectory(imgui)
+    add_subdirectory(implot)
+    add_dependencies(implot imgui)
+endif()
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -24,6 +28,7 @@ set(EXTERNAL_1 ./external)
 set(EXTERNAL_2 ./external)
 
 set(HEADER_DIR_ZIP ./external/ziplib/Source)
+set(IMGUI_DIR ./imgui)
 
 set(COPY_DIR ../copy_to_build/)
 
@@ -109,6 +114,12 @@ set(INTERFACE_FILES
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
         Interface/VertexCoordinates.cpp
+        Interface/ImguiWindow.cpp
+        Interface/ImguiMenu.cpp
+        Interface/ImguiGlobalSettings.cpp
+        Interface/ImguiPerformancePlot.cpp
+        Interface/ImguiSidebar.cpp
+        Interface/ImguiExtensions.cpp
 
         ASELoader.cpp
         Facet_shared.cpp

@@ -16,6 +16,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
+#include <imgui/imgui_impl_sdl.h>
+#include <imgui/imgui_internal.h>
+#include "ImguiWindow.h"
+
 #ifndef _WIN32
 #include <unistd.h> //_exit()
 #endif
@@ -267,6 +271,12 @@ void GLApplication::Exit() {
 #endif
   SAFE_FREE(logs);
 
+  if(imWnd) {
+      imWnd->destruct();
+      delete imWnd;
+      imWnd = nullptr;
+  }
+
   GLToolkit::InvalidateDeviceObjects();
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
@@ -417,7 +427,16 @@ void GLApplication::Run() {
 
   mApp->CheckForRecovery();
   wereEvents = false;
-				
+  wereEvents_imgui = 2;
+
+  // TODO: Activate imgui directly on launch from here
+  /*
+  if(!imWnd) {
+      imWnd = new ImguiWindow(this);
+      imWnd->init();
+  }
+   */
+
   //Wait for user exit
   while( !quit )
   {
@@ -425,8 +444,47 @@ void GLApplication::Run() {
      //While there are events to handle
      while( !quit && SDL_PollEvent( &sdlEvent ) )
      {
+         if(imWnd) {
+             auto ctx = ImGui::GetCurrentContext();
 
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) wereEvents = true;
+             bool activeImGuiEvent = (ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)
+                                     || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1)
+                                     || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1);
+             if(!activeImGuiEvent){
+                 // workaround for some mouse events getting triggered on old implementation first, results e.g. in selection-rectangle when clicking on ImGui window
+                 // ImGui_ImplSDL2_NewFrame updates the mouse position, but is only called on ImGui render cycle
+                 // Check for mouse events in imgui windows manually
+                 // FIXME: Can be removed when GUI has been fully moved to ImGui
+                 if(sdlEvent.type == SDL_MOUSEBUTTONDOWN){
+                     for(auto win : ctx->Windows){
+                         if(win->Active) {
+                             // Mouse position
+                             //auto mouse_pos = ImGui::GetIO().MousePos;
+                             auto& mouse_pos = sdlEvent.button;
+                             if (win->OuterRectClipped.Min.x < mouse_pos.x &&
+                                 win->OuterRectClipped.Max.x > mouse_pos.x
+                                 &&
+                                 win->OuterRectClipped.Min.y < mouse_pos.y &&
+                                 win->OuterRectClipped.Max.y > mouse_pos.y) {
+                                 activeImGuiEvent = true;
+                                 break;
+                             }
+                         }
+                     }
+                 }
+             }
+             if (activeImGuiEvent) {
+                 wereEvents_imgui = 3;
+                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
+
+                 }
+                 continue;
+             }
+         }
+		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
+            wereEvents = true;
+            wereEvents_imgui = 3;
+        }
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
@@ -434,6 +492,16 @@ void GLApplication::Run() {
          case SDL_QUIT:
            if (mApp->AskToSave()) quit = true;
            break;
+
+           case (SDL_DROPFILE): {      // In case if dropped file
+               char* dropped_filedir;                  // Pointer for directory of dropped file
+               dropped_filedir = sdlEvent.drop.file;
+               // Shows directory of dropped file
+               mApp->DropEvent(dropped_filedir);
+               SDL_free(dropped_filedir);    // Free dropped_filedir memory
+
+               break;
+           }
 
          case SDL_WINDOWEVENT:
            if (sdlEvent.window.event == SDL_WINDOWEVENT_RESIZED) Resize(sdlEvent.window.data1,sdlEvent.window.data2);
@@ -486,7 +554,8 @@ void GLApplication::Run() {
        }
 
        // Repaint
-	   if (wereEvents) {
+       if (wereEvents || wereEvents_imgui > 0) {
+           wereEvents_imgui -= 1; // allow to queue multiple imgui passes
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
 	   }
@@ -494,9 +563,7 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
-
        SDL_Delay(100);
-
      }
       
   }

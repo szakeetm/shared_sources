@@ -23,9 +23,7 @@ project(${PROJECT_NAME} C CXX)
 
 # Source Files
 
-#set(WRAPPER_SRC molflow_wrapper/nfd_wrapper.cpp)
-
-# Download and unpack googletest at configure time
+# Download and unpack fmt at configure time
 configure_file(CMakeLists.txt.in fmt-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
         RESULT_VARIABLE result

@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -92,6 +92,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/FormatHelper.h" //unit formatting
 
 #include "../../src/versionId.h"
+#include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
@@ -199,6 +200,8 @@ Interface::Interface() : GLApplication(){
     manualUpdate = nullptr;
     particleLogger = nullptr;
     convergencePlotter = nullptr;
+
+    imWnd = nullptr;
 
     m_strWindowTitle = appTitle;
     wnd->SetBackgroundColor(212, 208, 200);
@@ -891,6 +894,11 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Analyse Geometry", MENU_ANALYSE);
     menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
+    menu->GetSubMenu("Test")->Add(nullptr);
+    menu->GetSubMenu("Test")->Add("ImGui Global Settings", MENU_IMGUI_GLOB);
+    menu->GetSubMenu("Test")->Add("ImGui Sidebar", MENU_IMGUI_SIDE);
+    menu->GetSubMenu("Test")->Add("ImGui Test Suite", MENU_IMGUI);
+
     geomNumber = new GLTextField(0, nullptr);
     geomNumber->SetEditable(false);
     Add(geomNumber);
@@ -1543,9 +1551,15 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_LOADSEL:
                     LoadSelection();
                     return true;
-                case MENU_SELECTION_ADDNEW:
-                    AddSelection();
+                case MENU_SELECTION_ADDNEW: {
+                    std::stringstream tmp_ss;
+                    tmp_ss << "Selection #" << (selections.size() + 1);
+                    char *selectionName = GLInputBox::GetInput(tmp_ss.str().c_str(), "Selection name",
+                                                               "Enter selection name");
+                    if (selectionName)
+                        AddSelection(selectionName);
                     return true;
+                }
                 case MENU_SELECTION_CLEARALL:
                     if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL,
                                               GLDLG_ICONINFO) == GLDLG_OK) {
@@ -1825,6 +1839,46 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     manualUpdate->SetVisible(true);
                     return true;
                 }
+                case MENU_IMGUI: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                        imWnd->ToggleMainHub(); // active on start
+                    }
+                    else{
+                        imWnd->destruct();
+                        delete imWnd;
+                        imWnd = nullptr;
+                    }
+                    return true;
+                }
+                case MENU_IMGUI_GLOB: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleGlobalSettings();
+
+                    return true;
+                }
+                case MENU_IMGUI_SIDE: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleSimSidebar();
+
+                    return true;
+                }
+                case MENU_IMGUI_MENU: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleMainMenu();
+
+                    return true;
+                }
             }
             // Load recent menu
             if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {
@@ -2081,15 +2135,11 @@ void Interface::OverWriteSelection(size_t idOvr) {
     RebuildSelectionMenus();
 }
 
-void Interface::AddSelection() {
-    Geometry *geom = worker.GetGeometry();
-    std::stringstream tmp;
-    tmp << "Selection #" << (selections.size() + 1);
-    char *selectionName = GLInputBox::GetInput(tmp.str().c_str(), "Selection name", "Enter selection name");
-    if (!selectionName) return;
+void Interface::AddSelection(const std::string &selectionName) {
+    if (selectionName.empty()) return;
 
     SelectionGroup newSelection;
-    newSelection.selection = geom->GetSelectedFacets();
+    newSelection.selection = worker.GetGeometry()->GetSelectedFacets();
     newSelection.name = selectionName;
     selections.push_back(newSelection);
     RebuildSelectionMenus();
@@ -2538,6 +2588,16 @@ void Interface::UpdateFormula() {
 }
 */
 
+void Interface::DropEvent(char *dropped_file) {
+    // Shows directory of dropped file
+    int ret = GLMessageBox::Display(fmt::format("Do you want to load this file\n    {}?", dropped_file).c_str(), "Load file?",
+            GLDLG_OK|GLDLG_CANCEL,GLDLG_ICONWARNING);
+    /**/
+    if(ret == GLDLG_OK) {
+        LoadFile(dropped_file);
+    }
+}
+
 bool Interface::AskToSave() {
     if (!changedSinceSave) return true;
     int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved",
@@ -2863,6 +2923,11 @@ int Interface::FrameMove() {
         SDL_Delay(60); //was 60
     }
     */
+
+
+    /*if(imWin) {
+        imWin->renderSingle();
+    }*/
 
     double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!

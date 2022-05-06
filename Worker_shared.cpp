@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <cmath>
 #include <cstdlib>
+#include <algorithm>
 
 #include "Worker.h"
 #include "Facet_shared.h"
@@ -326,7 +327,7 @@ void Worker::SetProcNumber(size_t n) {
     }
 
     simManager.useCPU = true;
-    simManager.nbThreads = n;
+    simManager.nbThreads = std::clamp((size_t)n , (size_t)0 , MAX_PROCESS);
 
     // Launch n subprocess
     if ((model->otfParams.nbProcess = simManager.InitSimUnits())) {
@@ -667,17 +668,17 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
-    auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
-    progressDlg->SetVisible(true);
-    progressDlg->SetProgress(0.0);
+    //auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
+    //progressDlg->SetVisible(true);
+    //progressDlg->SetProgress(0.0);
 
     //To do: only close if parameters changed
-    progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
+    //progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
 
     particleLog.clear();
 
-    progressDlg->SetProgress(0.5);
-    progressDlg->SetMessage("Assembling parameters to pass...");
+    //progressDlg->SetProgress(0.5);
+    //progressDlg->SetMessage("Assembling parameters to pass...");
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
@@ -685,20 +686,20 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
             auto errString = fmt::format("Failed to send params to sub process:\n");
-            GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+            //GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
-            progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);
+            //progressDlg->SetVisible(false);
+            //SAFE_DELETE(progressDlg);
             return;
             //throw std::runtime_error(errString.c_str());
         }
     }
     catch (const std::exception &e) {
-        GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
+        //GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
-    progressDlg->SetVisible(false);
-    SAFE_DELETE(progressDlg);
+    //progressDlg->SetVisible(false);
+    //SAFE_DELETE(progressDlg);
 
 /*#if defined(SYNRAD)
     //Reset leak and hit cache
