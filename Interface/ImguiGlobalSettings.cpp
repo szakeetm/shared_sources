@@ -11,14 +11,16 @@
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 extern MolFlow *mApp;
-#endif
-
-#if defined(SYNRAD)
+#else
 #include "../src/SynRad.h"
 extern SynRad*mApp;
 #endif
 
+#if defined(MOLFLOW)
 static void ProcessControlTable(MolFlow *mApp) {
+#else
+static void ProcessControlTable(SynRad *mApp) {
+#endif
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -109,8 +111,14 @@ static void ProcessControlTable(MolFlow *mApp) {
     }
 }
 
+#if defined(MOLFLOW)
 void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
                         bool &changeDesLimit, int &nbProc) {
+#else
+void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
+                        bool &changeDesLimit, int &nbProc) {
+#endif
+
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(800.f, 0)); // Lift normal size constraint, however the presence of
@@ -179,6 +187,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
 
         /* --- Simu settings ---*/
         static bool simChanged = false;
+#if defined(MOLFLOW)
         static double gasMass = mApp->worker.model->wp.gasMass;
         static bool enableDecay = mApp->worker.model->wp.enableDecay;
         static double halfLife = mApp->worker.model->wp.halfLife;
@@ -271,6 +280,10 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
             }
         }
+
+#else
+//SYNRAD
+#endif
         ImGui::PopItemWidth();
         // PopStyleCompact();
         ImGui::EndTable();

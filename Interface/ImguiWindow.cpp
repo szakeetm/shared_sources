@@ -6,7 +6,11 @@
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
 
+#if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
+#else
+#include "../../src/SynradGeometry.h"
+#endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
 
@@ -183,7 +187,11 @@ void ImguiWindow::renderSingle() {
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 
+#if defined(MOLFLOW)
     MolFlow *mApp = (MolFlow *) app;
+#else
+    SynRad *mApp = (SynRad *) app;
+#endif
     if (mApp) {
         bool nbProcChanged = false;
         bool recalcOutg = false;
@@ -299,7 +307,11 @@ void ImguiWindow::renderSingle() {
 /**
  * \brief Function to apply changes to the number of processes.
  */
+#if defined(MOLFLOW)
 void ImguiWindow::restartProc(int nbProc, MolFlow *mApp) {
+#else
+void ImguiWindow::restartProc(int nbProc, SynRad *mApp) {
+#endif
     try {
         mApp->worker.Stop_Public();
         mApp->worker.SetProcNumber(nbProc);

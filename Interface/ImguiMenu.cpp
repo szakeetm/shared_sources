@@ -392,6 +392,8 @@ static void ShowMenuSelection(std::string& openModalName) {
         if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
         selectDialog->SetVisible(true);
     }
+
+#if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Sticking", "")) {
         // TODO: Different for Synrad?
         geom->UnselectAll();
@@ -402,6 +404,8 @@ static void ShowMenuSelection(std::string& openModalName) {
         geom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
+#endif
+
     if (ImGui::MenuItem("Select Transparent", "")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
@@ -597,6 +601,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     ImGui::Separator();
 
     // TODO: Extract Molflow only entries
+#if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Desorption")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
@@ -623,6 +628,8 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
         geom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
+#endif
+
     if (ImGui::MenuItem("Select volatile facets")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
