@@ -42,6 +42,9 @@ bool beginsWith(std::string const& fullString, std::string const& beginning);
 std::string space2underscore(std::string text);
 std::string molflowToAscii(std::string text);
 bool iequals(std::string a, std::string b);
+std::string lowercase(const std::string& s);
+std::string uppercase(const std::string& s);
+bool iContains(const std::vector<std::string>& vec, const std::string& value);
 
 namespace Util {
     std::string getTimepointString();
