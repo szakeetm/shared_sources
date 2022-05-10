@@ -57,7 +57,7 @@ static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas) : GLWindow() {
     columnRatios = { 0.333,0.333,0.333 };
 
-    int wD = 460;
+    int wD = 550;
     int hD = 230; //Height extended runtime when formula syntax panel is expanded
 
     work = w;
