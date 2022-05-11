@@ -454,7 +454,7 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
             continue;
         }
         if(iter_o->v1 == iter_next->v1 && iter_o->v2 == iter_next->v2){
-            if(iter_o->facetId[0] == iter_next->facetId[0] || iter_o->facetId[1] == iter_next->facetId[0]) {
+            if (iter_o->facetId[0] == iter_next->facetId[0] || (iter_o->facetId.size() >= 2 && iter_o->facetId[1] == iter_next->facetId[0])) {
                 nextAdd++;
                 continue;
             }
