@@ -27,11 +27,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #if defined(DEBUG) && DEBUG > 3
-#define DEBUG_INT(fmt, ...) printf("DEBUG: %s:%d:%s(): " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define DEBUG_PRINT(...) DEBUG_INT(__VA_ARGS__)
+#define DEBUG_PRINT(fmt, ...) printf("DEBUG: %s:%d:%s(): " fmt, __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 #elif defined(DEBUG) && DEBUG > 0
-#define DEBUG_INT(fmt, ...) printf("DEBUG: %s(): " fmt, __func__, __VA_ARGS__)
-#define DEBUG_PRINT(...) DEBUG_INT(__VA_ARGS__)
+#define DEBUG_PRINT(fmt, ...) printf("DEBUG: %s(): " fmt, __func__, ##__VA_ARGS__)
 #else
 #define DEBUG_PRINT(fmt, ...) /* Don't do anything in release builds */
 #endif
