@@ -264,6 +264,36 @@ bool iequals(std::string str1, std::string str2)
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
 }
 
+//
+//  Lowercases string
+//  Known to break with Unicode characters
+//
+std::string lowercase(const std::string& s)
+{
+    std::string s2 = s;
+    std::transform(s2.begin(), s2.end(), s2.begin(), tolower);
+    return s2;
+}
+
+//
+// Uppercases string
+// Known to break with Unicode characters
+//
+std::string uppercase(const std::string& s)
+{
+    std::string s2 = s;
+    std::transform(s2.begin(), s2.end(), s2.begin(), toupper);
+    return s2;
+}
+
+bool iContains(const std::vector<std::string>& vec, const std::string& value) { //Case insensitive "is value in vector". For example iContains({"Apple","Banana"},"BANANA"}) is true
+    std::string lowercaseValue = lowercase(value);
+    for (auto v = vec.begin(); v != vec.end(); v++) {
+        if (lowercase(*v) == lowercaseValue) return true;
+    }
+    return false;
+}
+
 namespace Util {
     std::string getTimepointString(){
         auto time_point = std::chrono::system_clock::now();
@@ -275,3 +305,4 @@ namespace Util {
         return s;
     }
 }
+
