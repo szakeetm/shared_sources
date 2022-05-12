@@ -18,6 +18,7 @@ class GLWindow;
 #include <string>
 #include <fmt/core.h>
 
+class ImguiWindow;
 class GLApplication {
 
 protected:
@@ -79,6 +80,7 @@ public:
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	bool wereEvents;
+	int wereEvents_imgui{2};
 
 //#if defined(_DEBUG)
     // Debugging stuff
@@ -90,6 +92,7 @@ public:
 
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
+    ImguiWindow  *imWnd;
 
 //#endif
 
