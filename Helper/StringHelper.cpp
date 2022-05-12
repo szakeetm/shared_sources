@@ -279,8 +279,7 @@ std::string lowercase(const std::string& s)
 // Uppercases string
 // Known to break with Unicode characters
 //
-template <typename T>
-std::string lowercase(const std::string& s)
+std::string uppercase(const std::string& s)
 {
     std::string s2 = s;
     std::transform(s2.begin(), s2.end(), s2.begin(), toupper);
@@ -306,3 +305,4 @@ namespace Util {
         return s;
     }
 }
+
