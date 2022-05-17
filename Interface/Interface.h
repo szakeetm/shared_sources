@@ -77,7 +77,7 @@ class ParticleLogger;
 class ConvergencePlotter;
 
 class Geometry;
-
+class ImguiWindow;
 /*
 typedef struct {
 	GLLabel     *name;
@@ -226,6 +226,11 @@ typedef struct {
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
+#define MENU_IMGUI                1100
+#define MENU_IMGUI_GLOB           1101
+#define MENU_IMGUI_SIDE           1102
+#define MENU_IMGUI_MENU           1103
+
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
@@ -280,6 +285,10 @@ public:
 	    }
 
 	    void push(T event, double time){
+	        if(!eventsAtTime.empty()){
+	            if(time == eventsAtTime.back().second)
+	                return;
+	        }
 	        if(eventsAtTime.size() >= N) {
 	            if(!useDiff)
 	                sum -= eventsAtTime.front().first;
@@ -307,8 +316,8 @@ public:
 
 	EventPerSecond<size_t>   hps;          // Hit per second
 	EventPerSecond<size_t>   dps;          // Hit per second
-	EventPerSecond<size_t,true>   hps_runtotal;          // Hit per second
-	EventPerSecond<size_t,true>   dps_runtotal;          // Hit per second
+	EventPerSecond<size_t,true>   hps_runtotal{2};          // Hit per second
+	EventPerSecond<size_t,true>   dps_runtotal{2};          // Hit per second
 
 	size_t    lastNbHit;    // measurement
 	size_t    lastNbDes;    // measurement
@@ -425,7 +434,7 @@ public:
 	// Selections
 	void SelectSelection(size_t v);
 	void AddSelection(const SelectionGroup& s);
-	void AddSelection();
+	void AddSelection(const std::string &selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);
