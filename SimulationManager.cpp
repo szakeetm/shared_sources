@@ -14,6 +14,7 @@
 //#include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
 #include "SMP.h"
 #include "ProcessControl.h"
+#include "SimulationControllerCPU.h"
 
 #include <string>
 #include <sstream>
@@ -23,10 +24,12 @@
 #include <../src/Simulation/Simulation.h>
 #if defined(GPUCOMPABILITY)
 #include <../src/GPUSim/SimulationGPU.h>
+#include <../src/GPUSim/SimulationControllerGPU.h>
 #endif
 #include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager(int pid) {
+    procInformation = std::make_shared<ProcComm>();
     simulationChanged = true; // by default, always init simulation process the first time
     interactiveMode = true;
     isRunning = false;
@@ -107,7 +110,10 @@ int SimulationManager::ResetStatsAndHits() {
  */
 int SimulationManager::StartSimulation() {
 
-    LoadSimulation();
+    if(simulationChanged)
+        LoadSimulation();
+    else
+        ResetHits();
 
     if(interactiveMode) {
         refreshProcStatus();
@@ -126,15 +132,15 @@ int SimulationManager::StartSimulation() {
     }
     else {
         /*if(simulationChanged){
-            this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
+            this->procInformation->masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
             for(auto& con : simController){
                 con.Load();
             }
             simulationChanged = false;
         }*/
-        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        this->procInformation->masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
-            con.Start();
+            con->Start();
         }
     }
 
@@ -181,7 +187,7 @@ int SimulationManager::LoadSimulation(){
     else{
         bool errorOnLoad = false;
         for(auto& con : simController){
-            errorOnLoad |= con.Load();
+            errorOnLoad |= con->Load();
         }
         if(errorOnLoad){
             std::cerr << "Failed to load simulation!" << std::endl;
@@ -266,7 +272,7 @@ int SimulationManager::CreateCPUHandle() {
     size_t nbSimUnits = 1; // nbThreads
     try{
         simUnits.resize(nbSimUnits);
-        procInformation.Resize(nbThreads);
+        procInformation->Resize(nbThreads);
         simController.clear();
         simHandles.clear();
     }
@@ -278,16 +284,16 @@ int SimulationManager::CreateCPUHandle() {
     for(size_t t = 0; t < nbSimUnits; ++t){
         simUnits[t] = new Simulation();
     }
-    simController.emplace_back(SimulationController{processId, 0, nbThreads,
-                                                    simUnits.back(), &procInformation});
+    simController.emplace_back(new SimulationControllerCPU{processId, 0, nbThreads,
+                                                    simUnits.back(), procInformation});
     if(interactiveMode) {
         simHandles.emplace_back(
                 /*StartProc(arguments, STARTPROC_NOWIN),*/
-                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                std::thread(&SimulationController::controlledLoop, simController[0], NULL, nullptr),
                 SimType::simCPU);
         /*simUnits.emplace_back(Simulation{nbThreads});
-        procInformation.emplace_back(SubDProcInfo{});
-        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        procInformation->emplace_back(SubDProcInfo{});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation->back()});
         simHandles.emplace_back(
                 *//*StartProc(arguments, STARTPROC_NOWIN),*//*
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
@@ -359,7 +365,7 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
     size_t nbSimUnits = 1; // nbThreads
     try{
         simUnits.resize(nbSimUnits);
-        procInformation.Resize(nbThreads);
+        procInformation->Resize(nbThreads);
         simController.clear();
         simHandles.clear();
     }
@@ -371,16 +377,16 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
     for(size_t t = 0; t < nbSimUnits; ++t){
         simUnits[t] = new SimulationGPU();
     }
-    simController.emplace_back(SimulationController{processId, 0, nbThreads,
-                                                    simUnits.back(), &procInformation});
+    //simController.emplace_back(new SimulationControllerGPU{processId, 0, nbThreads,simUnits.back(), &procInformation});
+    simController.emplace_back(std::make_shared<SimulationControllerGPU>(processId, 0, nbThreads, simUnits.back(), procInformation));
     if(interactiveMode) {
         simHandles.emplace_back(
                 /*StartProc(arguments, STARTPROC_NOWIN),*/
-                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                std::thread(&SimulationController::controlledLoop, simController[0], NULL, nullptr),
                 SimType::simGPU);
         /*simUnits.emplace_back(Simulation{nbThreads});
-        procInformation.emplace_back(SubDProcInfo{});
-        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        procInformation->emplace_back(SubDProcInfo{});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation->back()});
         simHandles.emplace_back(
                 *//*StartProc (arguments, STARTPROC_NOWIN),*//*
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
@@ -430,7 +436,7 @@ int SimulationManager::InitSimUnits() {
     }
     if(useRemote){
         CreateRemoteHandle();
-        //procInformation.push_back(simController.back().procInfo);
+        //procInformation->push_back(simController.back().procInfo);
     }
 
     return WaitForProcStatus(PROCESS_READY);
@@ -481,12 +487,12 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     struct StateString {
         char s[128];
     };
-    std::vector<StateString> prevStateStrings(procInformation.subProcInfo.size());
-    std::vector<StateString> stateStrings(procInformation.subProcInfo.size());
+    std::vector<StateString> prevStateStrings(procInformation->subProcInfo.size());
+    std::vector<StateString> stateStrings(procInformation->subProcInfo.size());
 
     {
-        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-            snprintf(prevStateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
+        for (size_t i = 0; i < procInformation->subProcInfo.size(); i++) {
+            snprintf(prevStateStrings[i].s, 128, "%s", procInformation->subProcInfo[i].statusString);
         }
     }
 
@@ -494,8 +500,8 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
         finished = true;
 
-        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-            auto procState = procInformation.subProcInfo[i].slaveState;
+        for (size_t i = 0; i < procInformation->subProcInfo.size(); i++) {
+            auto procState = procInformation->subProcInfo[i].slaveState;
             if(procStatus == PROCESS_KILLED) // explicitly ask for killed state
                 finished = finished & (procState==PROCESS_KILLED);
             else
@@ -504,7 +510,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
                 hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
+                snprintf(stateStrings[i].s, 128, "%s", procInformation->subProcInfo[i].statusString);
                 if(strcmp(prevStateStrings[i].s, stateStrings[i].s) != 0) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
@@ -526,10 +532,10 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     // Send command
 
-    procInformation.masterCmd = command;
-    procInformation.cmdParam = param;
-    procInformation.cmdParam2 = param2;
-    for(auto & i : procInformation.subProcInfo) {
+    procInformation->masterCmd = command;
+    procInformation->cmdParam = param;
+    procInformation->cmdParam2 = param2;
+    for(auto & i : procInformation->subProcInfo) {
         auto procState = i.slaveState;
         if(procState == PROCESS_READY || procState == PROCESS_RUN || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
             i.slaveState = PROCESS_STARTING;
@@ -562,11 +568,11 @@ int SimulationManager::KillAllSimUnits() {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
             for(auto& con : simController)
-                con.EmergencyExit();
+                con->EmergencyExit();
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
                 int i = 0;
                 for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
-                    if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
+                    if (procInformation->subProcInfo[i].slaveState != PROCESS_KILLED) {
                         auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                         //Windows
@@ -599,7 +605,7 @@ int SimulationManager::KillAllSimUnits() {
         }
 
         for(size_t i=0;i<simHandles.size();i++) {
-            if (procInformation.subProcInfo[i].slaveState == PROCESS_KILLED) {
+            if (procInformation->subProcInfo[i].slaveState == PROCESS_KILLED) {
                 simHandles[i].first.join();
             }
             else{
@@ -628,7 +634,7 @@ int SimulationManager::ResetSimulations() {
     }
     else {
         for(auto& con : simController){
-            con.Reset();
+            con->Reset();
         }
     }
     return 0;
@@ -642,7 +648,7 @@ int SimulationManager::ResetHits() {
     }
     else {
         for(auto& con : simController){
-            con.Reset();
+            con->Reset();
         }
     }
     return 0;
@@ -652,21 +658,21 @@ int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     if(simHandles.empty())
         return 1;
 
-    procInfoList.subProcInfo = procInformation.subProcInfo;
+    procInfoList.subProcInfo = procInformation->subProcInfo;
 
     return 0;
 }
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
-    if(statusStrings.size() < procInformation.subProcInfo.size())
+    if(statusStrings.size() < procInformation->subProcInfo.size())
         return 1;
 
-    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+    for (size_t i = 0; i < procInformation->subProcInfo.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = procInformation.subProcInfo[i].slaveState;
+        states[i] = procInformation->subProcInfo[i].slaveState;
         char tmp[128];
-        strncpy(tmp, procInformation.subProcInfo[i].statusString, 127);
+        strncpy(tmp, procInformation->subProcInfo[i].statusString, 127);
         tmp[127] = 0;
         statusStrings[i] = tmp;
     }
@@ -688,7 +694,7 @@ int SimulationManager::UnlockHitBuffer() {
 bool SimulationManager::GetRunningStatus(){
 
     bool done = true;
-    for (auto & i : procInformation.subProcInfo) {
+    for (auto & i : procInformation->subProcInfo) {
         auto procState = i.slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {

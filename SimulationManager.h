@@ -16,7 +16,6 @@
 typedef unsigned char BYTE;
 
 class SimulationController;
-class SimulationControllerGPU;
 
 struct Dataport;
 
@@ -122,7 +121,7 @@ public:
     int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
-    ProcComm procInformation; // ctrl
+    std::shared_ptr<ProcComm> procInformation; // ctrl
     // SimulationModel* model; // load
     // hits
 
@@ -147,7 +146,7 @@ public:
 private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;
-    std::vector<SimulationController> simController;
+    std::vector<std::shared_ptr<SimulationController>> simController;
     std::vector<SimulationUnit*> simUnits;
 
 public:

@@ -12,36 +12,10 @@
 
 class Simulation;
 
-class SimThread {
-public:
-    SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
-    ~SimThread();
-
-    size_t threadNum;
-    double stepsPerSec;
-    bool simEos;
-    size_t localDesLimit;
-    double timeLimit;
-
-    char** status;
-    ProcComm* procInfo;
-    SimulationUnit* simulation;
-    MFSim::Particle* particle;
-    bool runLoop();
-
-private:
-    [[nodiscard]] char *getSimStatus() const;
-    void setSimState(char *msg) const;
-    void setSimState(const std::string& msg) const;
-    int runSimulation(size_t desorptions);
-    int advanceForTime(double simDuration);
-    int advanceForSteps(size_t desorptions);
-};
-
 class SimulationController {
     bool UpdateParams();
-    int resetControls();
 protected:
+    int resetControls();
 
 
     virtual int StopSim() {return 0;};
@@ -59,31 +33,29 @@ protected:
     size_t GetLocalState() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                         SimulationUnit *simulationInstance, ProcComm *pInfo);
+                         SimulationUnit *simulationInstance, std::shared_ptr<ProcComm> pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
+
+    SimulationController();
+
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
-    int Start();
-    bool Load();
-    int RebuildAccel();
-    int Reset();
+    virtual int Start() = 0;
+    virtual bool Load() = 0;
+    virtual int RebuildAccel() = 0;
+    virtual int Reset() = 0;
+    virtual void EmergencyExit() = 0; // Killing threads
 
-    void EmergencyExit(){
-        for(auto& t : simThreads)
-            t.particle->allQuit = true;
-    };
 protected:
 
     SimulationUnit* simulation;
-    std::vector<SimThread> simThreads;
 
-    ProcComm* procInfo;
+    std::shared_ptr<ProcComm> procInfo;
     size_t parentPID;
     size_t nbThreads;
     int prIdx;
 
-private:
     // tmp
     double stepsPerSec;
     bool endState;

@@ -249,7 +249,10 @@ void Worker::StartStop(float appTime) {
 
         // Start
         try {
-            if (needsReload) RealReload(); //Synchronize subprocesses to main process
+            if (needsReload) {
+                RealReload(); //Synchronize subprocesses to main process
+                simManager.simulationChanged = true;
+            }
             Start();
             simuTimer.Start();
         }

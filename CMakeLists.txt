@@ -149,6 +149,7 @@ set(SIM_FILES
         Vector.cpp
         SimulationManager.cpp
         SimulationController.cpp
+        SimulationControllerCPU.cpp
         FacetData.cpp
         FacetData.h
 
