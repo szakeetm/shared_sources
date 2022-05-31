@@ -44,7 +44,11 @@ IF (WIN32)
     #set(DLL_DIR ../../_molflow/molflow_project/lib/lib)
 ELSEIF(APPLE)
     # set stuff for mac os
-    set(LINK_DIR_1 ../lib_external/mac)
+    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
+        set(LINK_DIR_1 ../../lib_external/mac_arm)
+    else()
+        set(LINK_DIR_1 ../../lib_external/mac)
+    endif()
 ELSE()
     # set stuff for other systems
 
