@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
-#include <exception>
+#include <stdexcept>
 #include <cstring> // strncpy for Error
 // Messages
 
@@ -72,22 +72,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 // Type definitions
 typedef unsigned char BYTE;
 
-class Error : public std::exception{
-
-public:
-	explicit Error(const char *message) : msg{}{
-        strncpy(msg,message,255);
-        msg[255]='\0';
-	};
-
-    virtual ~Error() throw() {}
-    virtual const char* what() const throw()
-    {
-        return msg;
-    }
-private:
-	char msg[1024];
-
+struct Error : public std::runtime_error {
+    explicit Error(const std::string& what_) : std::runtime_error(what_) {}
+    explicit Error(const char* what_) : std::runtime_error(what_) {}
 };
 
 typedef struct {
