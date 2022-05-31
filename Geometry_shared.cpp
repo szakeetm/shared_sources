@@ -2857,7 +2857,7 @@ void Geometry::CalculateFacetParams(Facet* f) {
 		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
 		v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
 		f->sh.N = CrossProduct(v1, v2);              // Cross product
-		consecutive = (f->sh.N.Norme() < 1e-11);
+		consecutive = (f->sh.N.Norme() < 1e-5);
 	}
 	f->collinear = consecutive; //mark for later that this facet was on a line
 	f->sh.N = f->sh.N.Normalized();                  // Normalize
