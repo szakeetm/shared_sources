@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -434,14 +434,14 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     if(newUpdate.zipName.empty()){
                         newUpdate.zipName = namedRelease + ".zip";
                     }
-                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + namedRelease + "/" + newUpdate.zipName;
+                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + newUpdate.zipName;
                     newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
                     if(newUpdate.folderName.empty()){
                         newUpdate.folderName = namedRelease;
                     }
 
                     // TODO: Add os dependent files
-					for (xml_node fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
+					for (const xml_node& fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
 					availables.push_back(newUpdate);
@@ -631,9 +631,9 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					try {
 						FileUtils::CreateDir(dirName);
 					}
-					catch (std::filesystem::filesystem_error err) {
+					catch (const std::filesystem::filesystem_error& e) {
 						resultCategory = "zipExtractFolderCreateError";
-						resultDetail << "zipExtractFolderCreateError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << space2underscore(name) << "_" << applicationName << "_" << currentVersionId;
+						resultDetail << "zipExtractFolderCreateError_" << space2underscore(e.what()) << "_item_" << zi << "_name_" << space2underscore(name) << "_" << applicationName << "_" << currentVersionId;
 						userResult.str(""); userResult.clear();
 						userResult << "Item #" << (zi + 1) << ": couldn't create directory " << dirName << " Maybe it already exists in your app folder (from a previous update),";
 						logWindow->Log(userResult.str());
@@ -655,9 +655,9 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					//End debug
 					ZipFile::ExtractFile(zipDest.str(), fullName, dest);
 				}
-				catch (std::runtime_error err) {
+				catch (const std::exception& e) {
 					resultCategory = "zipExtractError";
-					resultDetail << "zipExtractError_" << space2underscore(err.what()) << "_item_" << zi << "_name_" << name << "_" << applicationName << "_" << currentVersionId;
+					resultDetail << "zipExtractError_" << space2underscore(e.what()) << "_item_" << zi << "_name_" << name << "_" << applicationName << "_" << currentVersionId;
 					userResult.str(""); userResult.clear();
 					userResult << "Couldn't extract item #" << (zi + 1) << " (" << fullName << ") of " << update.zipName << " to " << dest << ". Maybe it already exists in your app folder (from a previous update),";
 					logWindow->Log(userResult.str());

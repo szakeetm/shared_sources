@@ -5,6 +5,7 @@
 #include "ImguiMenu.h"
 #include "imgui/imgui.h"
 #include <imgui/IconsFontAwesome5.h>
+#include <imgui/IconsMaterialDesign.h>
 #include <Helper/MathTools.h>
 
 #include "SmartSelection.h"
@@ -35,24 +36,97 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-static void ShowMenuFile() {
-    ImGui::MenuItem("New, empty geometry");
-    ImGui::MenuItem("Load", "Ctrl+O");
-    ImGui::MenuItem("Load recent");
+#define RET_NONE 0x0000
+#define RET_SAVE 0x0001
+#define RET_CLOSE 0x0002
+
+enum Menu_Event
+{
+    IMENU_FILE_NEW = 1 << 0, // binary 0001
+    IMENU_FILE_LOAD = 1 << 1, // binary 0010
+    IMENU_FILE_SAVE = 1 << 2, // binary 0100
+    IMENU_FILE_SAVEAS = 1 << 3,  // binary 1000
+    IMENU_FILE_INSERTGEO = 1 << 4,
+    IMENU_FILE_INSERTGEO_NEWSTR = 1 << 5,
+    IMENU_FILE_EXPORT_SELECTION = 1 << 6,
+    IMENU_FILE_EXPORTPROFILES = 1 << 7,
+    IMENU_FILE_LOADRECENT = 1 << 8,
+    IMENU_FILE_EXIT = 1 << 9,
+    IMENU_EDIT_TSCALING = 1 << 10,
+    IMENU_TOOLS_FORMULAEDITOR = 1 << 11,
+    IMENU_EDIT_GLOBALSETTINGS = 1 << 12
+};
+
+
+short AskToSave(bool *saveModal) {
+    // Always center this window when appearing
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    int ret_val = RET_NONE;
+    if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+        ImGui::Text("Save current geometry first?");
+
+        if (ImGui::Button("Yes")) {
+            *saveModal = false;
+            ret_val = RET_SAVE;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            *saveModal = false;
+            ret_val = RET_CLOSE;
+        }
+
+        if(!saveModal)
+            ImGui::CloseCurrentPopup();
+
+        ImGui::EndPopup();
+    }
+
+    return ret_val;
+}
+
+static void ShowMenuFile(int& openedMenu, bool &askToSave) {
+    if(ImGui::MenuItem(ICON_FA_MEH_BLANK "  New, empty geometry")){
+        askToSave = true;
+        openedMenu |= IMENU_FILE_NEW;
+    }
+    if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
+        askToSave = true;
+        openedMenu |= IMENU_FILE_LOAD;
+    }
+    if(ImGui::MenuItem(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
+        askToSave = true;
+        openedMenu |= IMENU_FILE_LOADRECENT;
+    }
     ImGui::Separator();
     if (ImGui::BeginMenu("Insert geometry")) {
-        ImGui::MenuItem("To current structure");
-        ImGui::MenuItem("To new structure");
+        if(ImGui::MenuItem("To current structure")){
+            askToSave = true;
+            openedMenu |= IMENU_FILE_INSERTGEO;
+        }
+        if(ImGui::MenuItem("To new structure")){
+            askToSave = true;
+            openedMenu |= IMENU_FILE_INSERTGEO_NEWSTR;
+        }
         ImGui::EndMenu();
     }
     ImGui::Separator();
-    ImGui::MenuItem("Save", "Ctrl+S");
-    ImGui::MenuItem("Save as");
+    if(ImGui::MenuItem(ICON_FA_SAVE "  Save", "Ctrl+S")){
+        if(mApp->worker.GetGeometry()->IsLoaded())
+            askToSave = true;
+        openedMenu |= IMENU_FILE_SAVE;
+    }
+    if(ImGui::MenuItem(ICON_FA_SAVE "  Save as")){
+        if(mApp->worker.GetGeometry()->IsLoaded())
+            askToSave = true;
+        openedMenu |= IMENU_FILE_SAVEAS;
+    }
     ImGui::Separator();
 
-    ImGui::MenuItem("Export selected facets");
+    ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected facets");
 
-    ImGui::MenuItem("Export selected profiles");
+    ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected profiles");
 
     //ImGui::MenuItem("File")->SetIcon(MENU_FILE_SAVE, 83, 24);
     //ImGui::MenuItem("File")->SetIcon(MENU_FILE_SAVEAS, 101, 24);
@@ -62,8 +136,111 @@ static void ShowMenuFile() {
     // TODO: Molflow only entries
 
     ImGui::Separator();
-    if (ImGui::MenuItem("Quit", "Alt+F4")) {
+    if (ImGui::MenuItem(ICON_FA_CROSS "  Quit", "Alt+F4")) {
         exit(0);
+    }
+}
+
+static void ShowFileModals(int& openedMenu) {
+
+    Worker &worker = mApp->worker;
+    Geometry *geom = worker.GetGeometry();
+
+    if(openedMenu & IMENU_FILE_NEW){
+        if (worker.IsRunning())
+            worker.Stop_Public();
+        mApp->EmptyGeometry();
+    }
+    else if(openedMenu & IMENU_FILE_LOAD){
+        if (worker.IsRunning())
+            worker.Stop_Public();
+        mApp->LoadFile("");
+    }
+    else if(openedMenu & IMENU_FILE_LOADRECENT){
+
+    }
+    else if(openedMenu & IMENU_FILE_INSERTGEO){
+        static bool openWarning = false;
+        if (geom->IsLoaded()) {
+            if (worker.IsRunning())
+                worker.Stop_Public();
+            mApp->InsertGeometry(false,"");
+        }
+        else {
+            openWarning = true;
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            ImGui::Button("OK");
+        }
+        if(openWarning){
+            ImGui::OpenPopup("No geometry");
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            if(ImGui::Button("OK"))
+                openWarning = false;
+        }
+    }
+    else if(openedMenu & IMENU_FILE_INSERTGEO_NEWSTR){
+        static bool openWarning = false;
+        if (geom->IsLoaded()) {
+            if (worker.IsRunning())
+                worker.Stop_Public();
+            mApp->InsertGeometry(true,"");
+        }
+        else {
+            openWarning = true;
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            ImGui::Button("OK");
+        }
+        if(openWarning){
+            ImGui::OpenPopup("No geometry");
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            if(ImGui::Button("OK"))
+                openWarning = false;
+        }
+    }
+    else if(openedMenu & IMENU_FILE_SAVE){
+        static bool openWarning = false;
+        if (geom->IsLoaded()) {
+            mApp->SaveFile();
+        }
+        else {
+            openWarning = true;
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            ImGui::Button("OK");
+        }
+        if(openWarning){
+            ImGui::OpenPopup("No geometry");
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            if(ImGui::Button("OK"))
+                openWarning = false;
+        }
+    }
+    else if(openedMenu & IMENU_FILE_SAVEAS){
+        static bool openWarning = false;
+        if (geom->IsLoaded()) {
+            mApp->SaveFileAs();
+        }
+        else {
+            openWarning = true;
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            ImGui::Button("OK");
+        }
+        if(openWarning){
+            ImGui::OpenPopup("No geometry");
+            ImGui::BeginPopup("No geometry");
+            ImGui::Text("No geometry loaded.");
+            if(ImGui::Button("OK"))
+                openWarning = false;
+        }
+    }
+    else if(openedMenu & IMENU_FILE_SAVE){
+
     }
 }
 
@@ -608,17 +785,19 @@ static void ShowMenuAbout() {
 // the main viewport + call BeginMenuBar() into it.
 void ShowAppMainMenuBar() {
     // TODO: Try shortcuts
-    /*if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(SDL_SCANCODE_Q)){
+    if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(SDL_SCANCODE_Q)){
         ImGui::OpenPopup("testmod");
-    }*/
+    }
 
-    //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 16.f));
-    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 16.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 8.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 8.0f));
     static std::string openmodalName = "";
+    static int openedMenu = false;
+    static bool askForSave = false;
     if (ImGui::BeginMainMenuBar()) {
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
-            ShowMenuFile();
+            ShowMenuFile(openedMenu, askForSave);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
@@ -657,11 +836,22 @@ void ShowAppMainMenuBar() {
         ImGui::EndMainMenuBar();
     }
 
+
+    if(askForSave) {
+        ImGui::OpenPopup("File not saved");
+        if(AskToSave(&askForSave) == RET_SAVE){
+            if (mApp->worker.IsRunning())
+                mApp->worker.Stop_Public();
+            mApp->EmptyGeometry();
+        }
+    }
+
     if(!openmodalName.empty()){
         ImGui::OpenPopup(openmodalName.c_str());
         openmodalName = "";
     }
+    ShowFileModals(openedMenu);
     ShowSelectionModals();
 
-    //ImGui::PopStyleVar(1);
+    ImGui::PopStyleVar(2);
 }

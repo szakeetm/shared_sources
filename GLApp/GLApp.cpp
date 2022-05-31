@@ -408,10 +408,13 @@ void GLApplication::Run() {
   wereEvents = false;
   wereEvents_imgui = 2;
 
+  // TODO: Activate imgui directly on launch from here
+  /*
   if(!imWnd) {
       imWnd = new ImguiWindow(this);
       imWnd->init();
   }
+   */
 
   //Wait for user exit
   while( !quit )
@@ -468,6 +471,16 @@ void GLApplication::Run() {
          case SDL_QUIT:
            if (mApp->AskToSave()) quit = true;
            break;
+
+           case (SDL_DROPFILE): {      // In case if dropped file
+               char* dropped_filedir;                  // Pointer for directory of dropped file
+               dropped_filedir = sdlEvent.drop.file;
+               // Shows directory of dropped file
+               mApp->DropEvent(dropped_filedir);
+               SDL_free(dropped_filedir);    // Free dropped_filedir memory
+
+               break;
+           }
 
          case SDL_WINDOWEVENT:
            if (sdlEvent.window.event == SDL_WINDOWEVENT_RESIZED) Resize(sdlEvent.window.data1,sdlEvent.window.data2);

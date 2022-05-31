@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -152,7 +152,7 @@ void Worker::Stop_Public() {
         Stop();
         Update(mApp->m_fTime);
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -165,7 +165,7 @@ bool Worker::GetHits() {
     try {
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
         return false;
     }
@@ -178,7 +178,7 @@ ParticleLog & Worker::GetLog() {
             throw std::runtime_error("Couldn't get log access");
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (GetLog)", GLDLG_OK, GLDLG_ICONERROR);
     }
     return particleLog;
@@ -215,7 +215,7 @@ void Worker::SetMaxDesorption(size_t max) {
 		Reload();
 
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 
@@ -240,7 +240,7 @@ void Worker::StartStop(float appTime) {
             Update(appTime);
 
         }
-        catch(Error &e) {
+        catch(const std::exception &e) {
             GLMessageBox::Display((char *)e.what(),"Error (Stop)",GLDLG_OK,GLDLG_ICONERROR);
 
         }
@@ -253,9 +253,9 @@ void Worker::StartStop(float appTime) {
             Start();
             simuTimer.Start();
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             //isRunning = false;
-            GLMessageBox::Display((char *)e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
+            GLMessageBox::Display(e.what(),"Error (Start)",GLDLG_OK,GLDLG_ICONERROR);
             return;
         }
 
@@ -285,7 +285,7 @@ void Worker::ResetStatsAndHits(float appTime) {
         if (needsReload) RealReload();
         Update(appTime);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -296,7 +296,7 @@ void Worker::Stop() {
             throw std::logic_error("No active simulation to stop!");
         }
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         throw Error(e.what());
     }
 }
@@ -322,7 +322,7 @@ void Worker::SetProcNumber(size_t n) {
     try{
         simManager.KillAllSimUnits();
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         throw Error("Killing subprocesses failed!");
     }
 
@@ -511,9 +511,9 @@ void Worker::RebuildTextures() {
             CalculateTextureLimits();
             geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             simManager.UnlockHitBuffer();
-            throw e;
+            throw;
         }
     }
     simManager.UnlockHitBuffer();
@@ -599,10 +599,14 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
-                if (f->selected && f->sh.anglemapParams.hasRecorded)
+                if (f->selected && f->angleMapCache.empty())
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
                 //Retrieve angle map from hits dp
-                f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
+                if(f->sh.desorbType != DES_ANGLEMAP) {
+                    /*model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
+                    f->angleMapCache = model->facets[i]->angleMap.pdf;*/
+                    f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
+                }
             }
 #endif
         }
@@ -615,7 +619,7 @@ void Worker::Update(float appTime) {
             geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
         }
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         globState.tMutex.unlock();
         GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         return;
@@ -681,16 +685,16 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
         simManager.ForwardOtfParams(&model->otfParams);
 
         if(simManager.ShareWithSimUnits((BYTE *) loaderString.c_str(), loaderString.size(),LoadType::LOADPARAM)){
-            char errMsg[1024];
-            sprintf(errMsg, "Failed to send params to sub process:\n");
-            //GLMessageBox::Display(errMsg, "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
+            auto errString = fmt::format("Failed to send params to sub process:\n");
+            //GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
             //progressDlg->SetVisible(false);
             //SAFE_DELETE(progressDlg);
             return;
+            //throw std::runtime_error(errString.c_str());
         }
     }
-    catch (std::exception& e) {
+    catch (const std::exception &e) {
         //GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
@@ -809,17 +813,18 @@ void Worker::RetrieveHistogramCache()
     }
 }
 
-void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
+// returns -1 on error, 0 on success
+int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
     // Send and Load geometry
     progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
     try {
         if (!InterfaceGeomToSimModel()) {
             std::string errString = "Failed to send geometry to sub process!\n";
-            GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
+            /*GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
 
             progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);
-            return;
+            SAFE_DELETE(progressDlg);*/
+            throw std::runtime_error(errString.c_str());
         }
 
         progressDlg->SetMessage("Initialising physical properties for model->..");
@@ -832,10 +837,15 @@ void Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
             globState.Resize(*model);
         }
 
+        progressDlg->SetMessage("Forwarding simulation model...");
         simManager.ForwardSimModel(model);
+        progressDlg->SetMessage("Forwarding global simulation state...");
         simManager.ForwardGlobalCounter(&globState, &particleLog);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
+        throw;
     }
+
+    return 0;
 }

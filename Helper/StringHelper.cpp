@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 18/06/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "StringHelper.h"
 #include "MathTools.h"
@@ -87,8 +103,8 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
                 tmp << "Invalid input number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
             }
-            catch (Error& err) {
-                throw std::runtime_error(err.what());
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
             }
         }
     }
@@ -150,8 +166,8 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
                 throw std::invalid_argument(tmp.str());
             }
-            catch (Error& err) {
-                throw std::runtime_error(err.what());
+            catch (const std::exception &e) {
+                throw std::runtime_error(e.what());
             }
         }
     }
@@ -248,6 +264,36 @@ bool iequals(std::string str1, std::string str2)
         && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b) {return std::tolower(a) == std::tolower(b);});
 }
 
+//
+//  Lowercases string
+//  Known to break with Unicode characters
+//
+std::string lowercase(const std::string& s)
+{
+    std::string s2 = s;
+    std::transform(s2.begin(), s2.end(), s2.begin(), tolower);
+    return s2;
+}
+
+//
+// Uppercases string
+// Known to break with Unicode characters
+//
+std::string uppercase(const std::string& s)
+{
+    std::string s2 = s;
+    std::transform(s2.begin(), s2.end(), s2.begin(), toupper);
+    return s2;
+}
+
+bool iContains(const std::vector<std::string>& vec, const std::string& value) { //Case insensitive "is value in vector". For example iContains({"Apple","Banana"},"BANANA"}) is true
+    std::string lowercaseValue = lowercase(value);
+    for (auto v = vec.begin(); v != vec.end(); v++) {
+        if (lowercase(*v) == lowercaseValue) return true;
+    }
+    return false;
+}
+
 namespace Util {
     std::string getTimepointString(){
         auto time_point = std::chrono::system_clock::now();
@@ -259,3 +305,4 @@ namespace Util {
         return s;
     }
 }
+

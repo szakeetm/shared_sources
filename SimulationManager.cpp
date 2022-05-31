@@ -23,8 +23,8 @@
 #include <../src/Simulation/Simulation.h>
 #include <Helper/ConsoleLogger.h>
 
-SimulationManager::SimulationManager() {
-    simulationChanged = true; // by default always init simulation process the first time
+SimulationManager::SimulationManager(int pid) {
+    simulationChanged = true; // by default, always init simulation process the first time
     interactiveMode = true;
     isRunning = false;
     hasErrorStatus = false;
@@ -37,14 +37,15 @@ SimulationManager::SimulationManager() {
 
     useRemote = false;
 
+    if(pid > -1)
+        mainProcId = pid;
+    else {
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    uint32_t pid = _getpid();
-    const char* dpPrefix = "";
+        mainProcId = _getpid();
 #else
-    uint32_t pid = ::getpid();
-    const char *dpPrefix = "/"; // creates semaphore as /dev/sem/%s_sema
+        mainProcId = ::getpid();
 #endif
-
+    }
 }
 
 SimulationManager::~SimulationManager() {
@@ -86,8 +87,8 @@ int SimulationManager::LoadInput(const std::string& fileName) {
     try {
         ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
     }
-    catch (std::runtime_error& e) {
-        throw e;
+    catch (const std::exception& e) {
+        throw;
     }
     return 0;
 }
@@ -102,29 +103,32 @@ int SimulationManager::ResetStatsAndHits() {
  * @return 0=start successful, 1=PROCESS_DONE state entered
  */
 int SimulationManager::StartSimulation() {
+
+    LoadSimulation();
+
     if(interactiveMode) {
         refreshProcStatus();
         if (simHandles.empty())
             throw std::logic_error("No active simulation handles!");
 
-        if(simulationChanged){
+        /*if(simulationChanged){
             if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
                 throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
             }
             simulationChanged = false;
-        }
+        }*/
         if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
     }
     else {
-        if(simulationChanged){
+        /*if(simulationChanged){
             this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
             for(auto& con : simController){
                 con.Load();
             }
             simulationChanged = false;
-        }
+        }*/
         this->procInformation.masterCmd = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simController){
             con.Start();
@@ -161,11 +165,15 @@ int SimulationManager::StopSimulation() {
 
 int SimulationManager::LoadSimulation(){
     if(interactiveMode) {
+        if (simHandles.empty())
+            throw std::logic_error("No active simulation handles!");
+
         if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
             std::string errString = "Failed to send geometry to sub process:\n";
             errString.append(GetErrorDetails());
             throw std::runtime_error(errString);
         }
+        simulationChanged = false;
     }
     else{
         bool errorOnLoad = false;
@@ -176,6 +184,7 @@ int SimulationManager::LoadSimulation(){
             std::cerr << "Failed to load simulation!" << std::endl;
             return 1;
         }
+        simulationChanged = false;
     }
 
     return 0;
@@ -196,8 +205,8 @@ bool SimulationManager::StartStopSimulation(){
             //Update(appTime);
         }
 
-        catch (std::runtime_error &e) {
-            throw e;
+        catch (const std::exception& e) {
+            throw;
         }
     } else {
 
@@ -207,8 +216,8 @@ bool SimulationManager::StartStopSimulation(){
 
             StartSimulation();
         }
-        catch (std::runtime_error &e) {
-            throw e;
+        catch (const std::exception& e) {
+            throw;
         }
 
         // Particular case when simulation ends before getting RUN state
@@ -229,13 +238,7 @@ int SimulationManager::TerminateSimHandles() {
 }
 
 int SimulationManager::CreateCPUHandle() {
-    uint32_t processId;
-
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    processId = _getpid();
-#else
-    processId = ::getpid();
-#endif //  WIN
+    uint32_t processId = mainProcId;
 
     //Get number of cores
     if(nbThreads == 0) {
@@ -264,7 +267,7 @@ int SimulationManager::CreateCPUHandle() {
         simController.clear();
         simHandles.clear();
     }
-    catch (std::exception& e){
+    catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
         throw std::runtime_error(e.what());
     }
@@ -481,7 +484,7 @@ int SimulationManager::KillAllSimUnits() {
                         try {
                             tIter = simHandles.erase(tIter);
                         }
-                        catch (std::exception &e) {
+                        catch (const std::exception &e) {
                             char tmp[512];
                             snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
                             throw std::runtime_error(tmp); // proc couldn't be killed!?
@@ -714,10 +717,13 @@ void SimulationManager::ForwardSimModel(const std::shared_ptr<SimulationModel>& 
         sim->model = model;
 }
 
-// Create hard copy for local usage
+// Create hard copy for local usage and resie particle logger
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
-    for(auto& sim : simUnits)
+    for(auto& sim : simUnits) {
         sim->model->otfParams = *otfParams;
+        sim->ReinitializeParticleLog();
+    }
+
 }
 
 /**

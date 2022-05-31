@@ -16,6 +16,8 @@
 #include "imgui/imgui_impl_sdl.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiShowNeighbors.h"
+#include "ImguiPerformancePlot.h"
+#include "ImguiSidebar.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -24,6 +26,30 @@
 #include <Helper/FormatHelper.h>
 #include <GeometryTools.h>
 
+// Varius toggle functions for individual window components
+bool ImguiWindow::ToggleMainHub(){
+    show_main_hub = !show_main_hub;
+    return show_main_hub;
+}
+bool ImguiWindow::ToggleMainMenu(){
+    show_app_main_menu_bar = !show_app_main_menu_bar;
+    return show_app_main_menu_bar;
+}
+bool ImguiWindow::ToggleSimSidebar(){
+    show_app_sidebar = !show_app_sidebar;
+    return show_app_sidebar;
+}
+bool ImguiWindow::ToggleDemoWindow(){
+    show_demo_window = !show_demo_window;
+    return show_demo_window;
+}
+bool ImguiWindow::ToggleGlobalSettings(){
+    show_global_settings = !show_global_settings;
+    return show_global_settings;
+}
+// --- Toggle functions ---
+
+// Setup Dear ImGui context and various default values (font, colors etc.)
 void ImguiWindow::init() {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -90,10 +116,11 @@ void ImguiWindow::init() {
     // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
     // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
+    show_main_hub = false;
     show_demo_window = false;
     show_global_settings = false;
     show_app_main_menu_bar = false;
-    show_app_sim_status = false;
+    show_app_sidebar = false;
     show_aabb = false;
     show_perfo = false;
     show_select = false;
@@ -101,6 +128,7 @@ void ImguiWindow::init() {
     start_time = ImGui::GetTime();
 }
 
+// Gracefully clears and shutsdown Dear ImGui context
 void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
@@ -109,6 +137,7 @@ void ImguiWindow::destruct() {
     ImGui::DestroyContext();
 }
 
+// TODO: When Imgui will be the main window/main GUI, use a full render cycle instead of a single frame rendering call
 /*void ImguiWindow::render() {
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
@@ -153,585 +182,8 @@ void ImguiWindow::destruct() {
   }
 }*/
 
-// Dummy data structure that we use for the Table demo.
-// (pre-C++11 doesn't allow us to instantiate ImVector<MyItem> template if this structure if defined inside the demo function)
-namespace {
-// We are passing our own identifier to TableSetupColumn() to facilitate identifying columns in the sorting code.
-// This identifier will be passed down into ImGuiTableSortSpec::ColumnUserID.
-// But it is possible to omit the user id parameter of TableSetupColumn() and just use the column index instead! (ImGuiTableSortSpec::ColumnIndex)
-// If you don't use sorting, you will generally never care about giving column an ID!
-    enum FacetDataColumnID {
-        FacetDataColumnID_ID,
-        FacetDataColumnID_Hits,
-        FacetDataColumnID_Des,
-        FacetDataColumnID_Abs
-    };
-
-    struct FacetData {
-        int ID;
-        size_t hits;
-        size_t des;
-        double abs;
-
-        // We have a problem which is affecting _only this demo_ and should not affect your code:
-        // As we don't rely on std:: or other third-party library to compile dear imgui, we only have reliable access to qsort(),
-        // however qsort doesn't allow passing user data to comparing function.
-        // As a workaround, we are storing the sort specs in a static/global for the comparing function to access.
-        // In your own use case you would probably pass the sort specs to your sorting/comparing functions directly and not use a global.
-        // We could technically call ImGui::TableGetSortSpecs() in CompareWithSortSpecs(), but considering that this function is called
-        // very often by the sorting algorithm it would be a little wasteful.
-        static const ImGuiTableSortSpecs *s_current_sort_specs;
-
-        // Compare function to be used by qsort()
-        static int IMGUI_CDECL CompareWithSortSpecs(const void *lhs, const void *rhs) {
-            const FacetData *a = (const FacetData *) lhs;
-            const FacetData *b = (const FacetData *) rhs;
-            for (int n = 0; n < s_current_sort_specs->SpecsCount; n++) {
-                // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
-                // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
-                const ImGuiTableColumnSortSpecs *sort_spec = &s_current_sort_specs->Specs[n];
-                int delta = 0;
-                switch (sort_spec->ColumnUserID) {
-                    case FacetDataColumnID_ID:
-                        delta = (a->ID - b->ID);
-                        break;
-                    case FacetDataColumnID_Hits:
-                        delta = (a->hits > b->hits) ? 1 : (a->hits == b->hits) ? 0 : -1;
-                        break;
-                    case FacetDataColumnID_Des:
-                        delta = (a->des > b->des) ? 1 : (a->des == b->des) ? 0 : -1;
-                        break;
-                    case FacetDataColumnID_Abs:
-                        delta = (a->abs > b->abs) ? 1 : (a->abs == b->abs) ? 0 : -1;
-                        break;
-                    default:
-                        IM_ASSERT(0);
-                        break;
-                }
-                if (delta > 0)
-                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
-                if (delta < 0)
-                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
-            }
-
-            // qsort() is instable so always return a way to differenciate items.
-            // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
-            return (a->ID - b->ID);
-        }
-    };
-
-    const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
-}
-
-// Demonstrate creating a simple static window with no decoration
-// + a context-menu to choose which corner of the screen to use.
-static void
-ShowExampleAppSimpleOverlay(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
-    const float PAD = 10.0f;
-    static int corner = 0;
-    static float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
-    static float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
-
-    ImGuiIO &io = ImGui::GetIO();
-
-    const ImGuiViewport *viewport = ImGui::GetMainViewport();
-    static bool use_work_area = true;
-    ImGui::SetNextWindowPos(use_work_area ?
-                            ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.25f, viewport->WorkPos.y)
-                                          : viewport->Pos);
-    ImGui::SetNextWindowSize(
-            use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y) : viewport->Size);
-    static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-            ImGuiWindowFlags_NoSavedSettings;
-
-    if (ImGui::Begin("Example: Fullscreen window", p_open, flags)) {
-        if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
-
-            ImGui::Checkbox("Use work area instead of main area", &use_work_area);
-            ImGui::SameLine();
-            ImGui::HelpMarker(
-                    "Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
-
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
-            ImGui::Indent();
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
-            ImGui::Unindent();
-
-            if (p_open && ImGui::Button("Close this window"))
-                *p_open = false;
-        }
-
-        if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-            auto curViewer = mApp->curViewer;
-            auto viewer = mApp->viewer[curViewer];
-            if (ImGui::BeginTable("table_3dviewer", 3, ImGuiTableFlags_None)) {
-                /*ImGui::TableSetupColumn("col1");
-                ImGui::TableSetupColumn("col2");
-                ImGui::TableSetupColumn("col3");
-                ImGui::TableHeadersRow();*/
-                ImGui::TableNextRow();
-                {
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Rules", &viewer->showRule);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Normals", &viewer->showNormal);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox(fmt::format("{}", u8"u\u20d7,v\u20d7").c_str(), &viewer->showUV);
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Lines", &viewer->showLine);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Leaks", &viewer->showLeak);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Hits", &viewer->showHit);
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Volume", &viewer->showVolume);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Texture", &viewer->showTexture);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("FacetIDs", &viewer->showFacetId);
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    if(ImGui::Button("<< View")){
-                        *newViewer = true;
-                    }
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("Indices", &viewer->showIndex);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("VertexIDs", &viewer->showVertexId);
-                }
-
-                ImGui::EndTable();
-
-            }
-        }
-
-        std::string title;
-        if(geom->GetNbSelectedFacets() > 1) {
-            title = fmt::format("Selected Facet ({} selected)", geom->GetNbSelectedFacets());
-        }
-        else if(geom->GetNbSelectedFacets() == 1){
-            title = fmt::format("Selected Facet (#{})", geom->GetSelectedFacets().front());
-        }
-        else {
-            title = fmt::format("Selected Facet (none)");
-        }
-        if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
-            size_t selected_facet_id = geom->GetNbSelectedFacets() ? geom->GetSelectedFacets().front() : 0;
-            auto sel = geom->GetNbSelectedFacets() ? geom->GetFacet(selected_facet_id) : nullptr;
-            if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
-                static int des_idx = 0;
-                if(sel) des_idx = sel->sh.desorbType;
-                if (ImGui::Combo("Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
-                    switch (des_idx) {
-                        case 0:
-                            fmt::print("none");
-                            break;
-                        case 1:
-                            fmt::print("uni");
-                            break;
-                        case 2:
-                            fmt::print("cos");
-                            break;
-                        case 3:
-                            fmt::print("cos \u207f");
-                            break;
-                        case 4:
-                            fmt::print("rec");
-                            break;
-                    }
-                }
-
-                static bool use_og_area = false;
-                bool use_og = !use_og_area;
-                static double og = 1.0;
-                static double og_area = 1.0;
-
-                if(sel) og = sel->sh.outgassing;
-                if (ImGui::Checkbox("Outgassing [mbar\u00b7l/s]", &use_og)) {
-                    use_og_area = !use_og;
-                }
-                ImGui::SameLine();
-                ImGui::InputDouble("##in", &og);
-                ImGui::Checkbox(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", &use_og_area);
-                ImGui::SameLine();
-                ImGui::InputDouble("##ina", &og);
-                ImGui::TreePop();
-            }
-
-            if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-                static double sf = 1.0;
-                static double ps = 1.0;
-                if(sel) sf = sel->sh.sticking;
-                ImGui::InputRightSide("Sticking factor", &sf);
-                ImGui::InputRightSide("Pumping speed [l/s]", &ps);
-                ImGui::TreePop();
-            }
-            ImGui::PopItemWidth();
-            {
-                static int sides_idx = 0;
-                if(sel) sides_idx = sel->sh.is2sided;
-                if (ImGui::Combo("Sides", &sides_idx, "1 Sided\0 2 Sided\0")) {
-                    switch (sides_idx) {
-                        case 0:
-                            fmt::print("1s");
-                            break;
-                        case 1:
-                            fmt::print("2s");
-                            break;
-                    }
-                }
-
-                static double opacity = 1.0;
-                if(sel) opacity = sel->sh.opacity;
-                ImGui::InputRightSide("Opacity", &opacity);
-
-                static double temp = 1.0;
-                if(sel) temp = sel->sh.temperature;
-                ImGui::InputRightSide("Temperature [\u00b0\u212a]", &temp);
-
-                static double area = 1.0;
-                if(sel) area = sel->sh.area;
-                ImGui::InputRightSide("Area [cm\u00b2]", &area);
-
-                static int prof_idx = 0;
-                if(sel) prof_idx = sel->sh.profileType;
-                if (ImGui::Combo("Profile", &prof_idx,
-                                 "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
-                    switch (prof_idx) {
-                        case 0:
-                            fmt::print("None");
-                            break;
-                        case 1:
-                            fmt::print("Pu");
-                            break;
-                        case 2:
-                            fmt::print("Pv");
-                            break;
-                        case 3:
-                            fmt::print("Angle");
-                            break;
-                        case 4:
-                            fmt::print("Speed");
-                            break;
-                        case 5:
-                            fmt::print("Ortho vel");
-                            break;
-                        case 6:
-                            fmt::print("Tangen vel");
-                            break;
-                    }
-                }
-            }
-            ImGui::PopItemWidth();
-        }
-
-
-        if (ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if(ImGui::Button("<< Sim")){
-                *show_global = !*show_global;
-            }
-            ImGui::SameLine();
-            {
-                if (mApp->worker.IsRunning()) {
-                    title = fmt::format("Pause");
-                } else if (mApp->worker.globalHitCache.globalHits.nbMCHit > 0) {
-                    title = fmt::format("Resume");
-                } else {
-                    title = fmt::format("Begin");
-                }
-            }
-            if(ImGui::Button(title.c_str())){
-                mApp->changedSinceSave = true;
-                mApp->StartStopSimulation();
-            }
-            ImGui::SameLine();
-            if(!mApp->worker.IsRunning() && mApp->worker.globalHitCache.globalHits.nbDesorbed > 0)
-                ImGui::BeginDisabled();
-            if(ImGui::Button("Reset")){
-                mApp->changedSinceSave = true;
-                mApp->ResetSimulation();
-            }
-            if(!mApp->worker.IsRunning() && mApp->worker.globalHitCache.globalHits.nbDesorbed > 0)
-                ImGui::EndDisabled();
-
-            ImGui::Checkbox("Auto update scene", &mApp->autoFrameMove);
-            if(mApp->autoFrameMove){
-                ImGui::BeginDisabled();
-            }
-            if(ImGui::Button("Update")){
-                mApp->updateRequested = true;
-                mApp->FrameMove();
-            }
-            if(mApp->autoFrameMove){
-                ImGui::EndDisabled();
-            }
-
-            ImVec2 outer_size = ImVec2(std::max(0.0f, ImGui::GetContentRegionAvail().x), 0.0f);
-            if (ImGui::BeginTable("simugrid", 2, ImGuiTableFlags_None/*ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-                                                 ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
-                                                 ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
-                                                 ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
-                                                 ImGuiTableFlags_Sortable*/, outer_size)) {
-
-                static std::string hit_stat;
-                static std::string des_stat;
-                bool runningState = mApp->worker.IsRunning();
-                if ((mApp->worker.simuTimer.Elapsed() <= 2.0f) && runningState) {
-                    hit_stat = "Starting...";
-                    des_stat = "Starting...";
-                } else {
-                    double current_avg = 0.0;
-                    if (!runningState) current_avg = mApp->hps_runtotal.avg();
-                    else current_avg = (current_avg != 0.0) ? current_avg : mApp->hps.last();
-
-                    hit_stat = fmt::format("{} ({})",
-                                           Util::formatInt(mApp->worker.globalHitCache.globalHits.nbMCHit, "hit"),
-                                           Util::formatPs(current_avg, "hit"));
-
-                    current_avg = 0.0;
-                    if (!runningState) current_avg = mApp->dps_runtotal.avg();
-                    else current_avg = (current_avg != 0.0) ? current_avg : mApp->dps.last();
-
-                    des_stat = fmt::format("{} ({})",
-                                           Util::formatInt(mApp->worker.globalHitCache.globalHits.nbDesorbed, "des"),
-                                           Util::formatPs(current_avg, "des"));
-                }
-
-
-                ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthFixed, 0.0f);
-                ImGui::TableSetupColumn("field", ImGuiTableColumnFlags_WidthStretch, 0.0f);
-                //ImGui::TableHeadersRow();
-
-                static char inputName[128] = "";
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Hits");
-                ImGui::TableNextColumn();
-                strcpy(inputName, fmt::format("{}", hit_stat).c_str());
-                ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::InputText("##hit", inputName, IM_ARRAYSIZE(inputName));
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Des.");
-                ImGui::TableNextColumn();
-                strcpy(inputName, fmt::format("{}", des_stat).c_str());
-                ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::InputText("##des", inputName, IM_ARRAYSIZE(inputName));
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Leaks");
-                ImGui::TableNextColumn();
-                strcpy(inputName, fmt::format("{}", "None").c_str());
-                ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::InputText("##leak", inputName, IM_ARRAYSIZE(inputName));
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Time");
-                if (runningState)
-                    strcpy(inputName,
-                           fmt::format("Running: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
-                else
-                    strcpy(inputName,
-                           fmt::format("Stopped: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
-                ImGui::TableNextColumn();
-                ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::InputText("##time", inputName, IM_ARRAYSIZE(inputName));
-
-                ImGui::EndTable();
-            }
-        }
-
-
-        try {
-            // Facet list
-            if (geom->IsLoaded()) {
-
-                /*if (worker.displayedMoment == 0) {
-                    int colors[] = { COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK };
-                    facetList->SetColumnColors(colors);
-                }
-                else
-                {
-                    int colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE };
-                    facetList->SetColumnColors(colors);
-                }*/
-
-                // Create item list
-                static ImVector<FacetData> items;
-                if (items.Size != geom->GetNbFacet()) {
-                    items.resize(geom->GetNbFacet(), FacetData());
-                    for (int n = 0; n < items.Size; n++) {
-                        InterfaceFacet *f = geom->GetFacet(n);
-                        FacetData &item = items[n];
-                        item.ID = n;
-                        item.hits = f->facetHitCache.nbMCHit;
-                        item.des = f->facetHitCache.nbDesorbed;
-                        item.abs = f->facetHitCache.nbAbsEquiv;
-                    }
-                }
-                else if (mApp->worker.IsRunning()){
-                    for (int n = 0; n < items.Size; n++) {
-                        InterfaceFacet *f = geom->GetFacet(n);
-                        FacetData &item = items[n];
-                        item.hits = f->facetHitCache.nbMCHit;
-                        item.des = f->facetHitCache.nbDesorbed;
-                        item.abs = f->facetHitCache.nbAbsEquiv;
-                    }
-                }
-
-                static ImGuiTableFlags tFlags =
-                        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-                        /*ImGuiTableFlags_RowBg | */ImGuiTableFlags_BordersOuter |
-                        ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
-                        ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
-                        ImGuiTableFlags_Sortable;
-
-                ImVec2 outer_size = ImVec2(0.0f, std::max(ImGui::GetContentRegionAvail().y, TEXT_BASE_HEIGHT * 8.f));
-                if (ImGui::BeginTable("facetlist", 4, tFlags, outer_size)) {
-                    ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
-                    ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
-                    ImGui::TableSetupColumn("Hits", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_Hits);
-                    ImGui::TableSetupColumn("Des", ImGuiTableColumnFlags_WidthStretch, 0.0f, FacetDataColumnID_Des);
-                    ImGui::TableSetupColumn("Abs", ImGuiTableColumnFlags_WidthStretch, 0.0f, FacetDataColumnID_Abs);
-                    ImGui::TableHeadersRow();
-
-                    // Sort our data if sort specs have been changed!
-                    if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
-                        if (sorts_specs->SpecsDirty) {
-                            FacetData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
-                            if (items.Size > 1)
-                                qsort(&items[0], (size_t) items.Size, sizeof(items[0]),
-                                      FacetData::CompareWithSortSpecs);
-                            FacetData::s_current_sort_specs = nullptr;
-                            sorts_specs->SpecsDirty = false;
-                        }
-
-                    // Demonstrate using clipper for large vertical lists
-                    ImGuiListClipper clipper;
-                    clipper.Begin(items.size());
-                    while (clipper.Step()) {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            FacetData *item = &items[i];
-                            //ImGui::PushID(item->ID);
-                            ImGui::TableNextRow();
-                            ImGui::TableSetColumnIndex(0);
-                            ImGui::Text("%d", item->ID);
-                            ImGui::TableNextColumn();
-                            ImGui::Text("%zd", item->hits);
-                            ImGui::TableNextColumn();
-                            ImGui::Text("%zd", item->des);
-                            ImGui::TableNextColumn();
-                            ImGui::Text("%g", item->abs);
-                            //ImGui::PopID();
-                        }
-                    }
-                    ImGui::EndTable();
-                }
-
-            }
-        }
-        catch (std::exception &e) {
-            char errMsg[512];
-            sprintf(errMsg, "%s\nError while updating facet hits", e.what());
-            /*GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);*/
-        }
-    }
-    ImGui::End();
-}
-
-// Demonstrate creating a simple static window with no decoration
-// + a context-menu to choose which corner of the screen to use.
-static void ShowPerfoPlot(bool *p_open, Interface *mApp) {
-    ImGuiIO &io = ImGui::GetIO();
-
-    // Always center this window when appearing
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                            ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-
-    static ImGuiWindowFlags flags =/*
-            ImGuiWindowFlags_AlwaysAutoResize |*/
-            ImGuiWindowFlags_NoSavedSettings;
-
-    if (ImGui::Begin("Performance Plot", p_open, flags)) {
-
-        // Fill an array of contiguous float values to plot
-        // Tip: If your float aren't contiguous but part of a structure, you can pass a pointer to your first float
-        // and the sizeof() of your structure in the "stride" parameter.
-        static float values[20] = {0.0f};
-        static float values_des[20] = {0.0f};
-        static float tvalues[20] = {0.0f};
-        static int values_offset = 0;
-        static auto refresh_time = ImGui::GetTime();
-        if (!true || refresh_time == 0.0) // force
-            refresh_time = ImGui::GetTime();
-        auto now_time = ImGui::GetTime();
-        if (mApp->worker.IsRunning() && difftime(now_time, refresh_time) > 1.0 &&
-            mApp->hps.eventsAtTime.size() >= 2)
-        {
-            //static float phase = 0.0f;
-            values[values_offset] = static_cast<float>(mApp->hps.avg());
-            values_des[values_offset] = static_cast<float>(mApp->dps.avg());
-            tvalues[values_offset] = static_cast<float>(now_time);
-            if (values[values_offset] != values[(values_offset - 1) % IM_ARRAYSIZE(values)])
-                values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
-            //phase += 0.10f * values_offset;
-            refresh_time = now_time;
-        }
-
-        // Plots can display overlay texts
-        // (in this example, we will display an average value)
-        {
-            float average = 0.0f;
-            for (float value: values)
-                average += value;
-            average /= (float) IM_ARRAYSIZE(values);
-
-            float max_val = values[0];
-            float min_val = values[0];
-            for (int i = 1; i < IM_ARRAYSIZE(values); ++i) {
-                if (values[i] > max_val) {
-                    max_val = values[i];
-                }
-                if (values[i] < min_val) {
-                    min_val = values[i];
-                }
-                if (values_des[i] > max_val) {
-                    max_val = values_des[i];
-                }
-                if (values_des[i] < min_val) {
-                    min_val = values_des[i];
-                }
-            }
-            char overlay[32];
-            sprintf(overlay, "avg %f hit/s", average);
-            //ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,ImVec2(0, 80.0f));
-
-            ImPlot::SetNextPlotLimitsY(std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1), ImPlotFlags_AntiAliased,
-                                  ImPlotAxisFlags_AutoFit/* | ImPlotAxisFlags_Time*//*, ImPlotAxisFlags_AutoFit*/)) {
-                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
-                ImPlot::PlotLine("Hit/s", tvalues, values, IM_ARRAYSIZE(values), values_offset);
-                ImPlot::PlotShaded("Hit/s", tvalues, values, IM_ARRAYSIZE(values), -INFINITY, values_offset);
-                ImPlot::PlotLine("Des/s", tvalues, values_des, IM_ARRAYSIZE(values_des), values_offset);
-                ImPlot::PlotShaded("Des/s", tvalues, values_des, IM_ARRAYSIZE(values_des), -INFINITY, values_offset);
-                ImPlot::PopStyleVar();
-                ImPlot::EndPlot();
-            }
-        }
-    }
-    ImGui::End();
-}
-
+// Function for an individual frame rendering step
+// If active, renders the individual components and handles the corresponding user actions
 void ImguiWindow::renderSingle() {
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
@@ -755,9 +207,9 @@ void ImguiWindow::renderSingle() {
             ShowAppMainMenuBar();
 
         static bool open_viewer_window = false;
-        if (show_app_sim_status)
-            ShowExampleAppSimpleOverlay(&show_app_sim_status, mApp, mApp->worker.GetGeometry(), &show_global_settings,
-                                        &open_viewer_window);
+        if (show_app_sidebar)
+            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings,
+                           &open_viewer_window);
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -770,17 +222,20 @@ void ImguiWindow::renderSingle() {
         }
 
         // 2. Show Molflow x ImGui Hub window
-        {
+        if (show_main_hub) {
             ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
             // and append into it.
 
+#if defined(DEBUG)
+// only show in debug mode
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
+#endif
             ImGui::Checkbox("Global settings", &show_global_settings);
             ImGui::Checkbox("Acceleration Structure", &show_aabb);
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
-            ImGui::Checkbox("Sidebar", &show_app_sim_status);
+            ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Select neighbors", &show_select);
 
