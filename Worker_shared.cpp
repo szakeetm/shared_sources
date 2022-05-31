@@ -240,7 +240,7 @@ void Worker::StartStop(float appTime) {
             Update(appTime);
 
         }
-        catch(Error &e) {
+        catch(const std::exception &e) {
             GLMessageBox::Display((char *)e.what(),"Error (Stop)",GLDLG_OK,GLDLG_ICONERROR);
 
         }
