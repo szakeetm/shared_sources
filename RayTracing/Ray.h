@@ -98,8 +98,7 @@ public:
     double time; // Only for td simulations in Molflow
     int lastIntersected; // id of last intersected entity
 
-    int structure; //
-id of structure in which ray currently interacts
+    int structure; //id of structure in which ray currently interacts
     //const Medium *medium;
     Payload *pay;
 

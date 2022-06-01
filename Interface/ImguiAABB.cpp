@@ -1170,6 +1170,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                                 std::vector<size_t> primIDs;
                                                 auto tree = std::dynamic_pointer_cast<KdTreeAccel>(
                                                         accel.front()).get();
+                                                if(!tree)
+                                                    break;
                                                 auto &node = tree->nodes[item->ID];
                                                 int nPrimitives = tree->nodes[item->ID].nPrimitives();
                                                 if (nPrimitives == 1) {
