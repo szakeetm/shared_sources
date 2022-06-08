@@ -14,6 +14,7 @@
 #include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
 #include "RayTracing/Ray.h" // hitlink
 
+#if defined(SYNRAD)
 bool MaterialSurface::IsHardHit(const Ray &r) {
     return !((opacity < 0.999999 //Partially transparent facet
               && r.rng->rnd() > opacity)
@@ -35,6 +36,7 @@ bool MaterialSurface::IsHardHit(const Ray &r) {
         else
             return false;*/
 }
+#endif
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;

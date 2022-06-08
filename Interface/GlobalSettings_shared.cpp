@@ -1,9 +1,3 @@
-//
-// Created by pbahr on 3/9/22.
-//
-
-#include "GlobalSettings_shared.h"
-
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -24,6 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include <sstream>
+#include "GLApp/GLList.h"
 #include "GLApp/GLLabel.h"
 #include "GlobalSettings_shared.h"
 #include "GLApp/GLToolkit.h"
@@ -36,17 +31,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-#endif
-
-#if defined(SYNRAD)
-#include "../src/SynRad.h"
-#endif
-
-#if defined(MOLFLOW)
+#include "../../src/MolflowGeometry.h"
 extern MolFlow *mApp;
 #endif
 
 #if defined(SYNRAD)
+#include "../src/SynRad.h"
+#include "../../src/SynradGeometry.h"
 extern SynRad*mApp;
 #endif
 
