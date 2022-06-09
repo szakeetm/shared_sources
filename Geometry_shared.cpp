@@ -2230,7 +2230,7 @@ size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
     for(auto& fac : facets)
-        if (fac->selected) nb++;
+        if (fac && fac->selected) nb++;
 	return nb;
 }
 
