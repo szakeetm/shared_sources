@@ -154,6 +154,7 @@ set(SIM_FILES
         Vector.cpp
         SimulationManager.cpp
         SimulationController.cpp
+        SimulationModel.cpp
         FacetData.cpp
         FacetData.h
 

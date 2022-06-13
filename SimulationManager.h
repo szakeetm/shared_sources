@@ -89,7 +89,7 @@ public:
 
     int InitSimUnits();
 
-    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
+    int InitSimulation(const std::shared_ptr<MolflowSimulationModel>& model, GlobalSimuState *globState);
 
     int KillAllSimUnits();
 
@@ -149,7 +149,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
+    void ForwardSimModel(const std::shared_ptr<MolflowSimulationModel>& model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

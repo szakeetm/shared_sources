@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <bitset>
 #endif
 
-struct SimulationModel;
+struct MolflowSimulationModel;
 class GlobalSimuState;
 
 namespace MFMPI {
