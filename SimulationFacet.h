@@ -1,13 +1,32 @@
-//
-// Created by Pascal Baehr on 14.06.22.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef SYNRAD_PROJ_SIMULATIONFACET_H
 #define SYNRAD_PROJ_SIMULATIONFACET_H
 
 #include "FacetData.h"
 
-// Local facet structure
+/*
+ * Generalised structure containing Ray Tracing and shared Simulation properties
+ * Application specific implementations are part of the corresponding code base
+ */
 struct SimulationFacet : public Facet {
 protected:
     SimulationFacet();
@@ -19,31 +38,6 @@ public:
     // Temporary var (used in FillHit for hit recording)
     bool   isReady{};         // Volatile state
     bool   isHit;
-    //size_t globalId; //Global index (to identify when superstructures are present)
-
-    // Facet hit counters
-    //std::vector<FacetHitBuffer> tmpCounter; //1+nbMoment
-    //std::vector<FacetHistogramBuffer> tmpHistograms; //1+nbMoment
-
-    //void ResetCounter();
-    //void ResizeCounter(size_t nbMoments);
-    /*bool InitializeOnLoad(const size_t &id, const size_t &nbMoments);
-
-    size_t InitializeHistogram(const size_t &nbMoments) const;
-
-    size_t InitializeDirectionTexture(const size_t &nbMoments);
-
-    size_t InitializeProfile(const size_t &nbMoments);
-
-    size_t InitializeTexture(const size_t &nbMoments);
-
-    size_t InitializeAngleMap();
-
-    void InitializeOutgassingMap();
-
-    bool InitializeLinkAndVolatile(const size_t & id);*/
-
-    void ResetCounter();
 
     size_t InitializeDirectionTexture();
 
@@ -55,8 +49,6 @@ public:
 
     [[nodiscard]] virtual size_t GetHitsSize(size_t nbMoments) const;
     [[nodiscard]] size_t GetMemSize() const;
-
-    //void RegisterTransparentPass(SubprocessFacet *facet); //Allows one shared Intersect routine between MolFlow and Synrad
 
     std::vector<double> InitTextureMesh();
 };
