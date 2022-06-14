@@ -26,11 +26,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
-#include <../src/GeometrySimu.h>
+//#include "Simulation/GeometrySimu.h"
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
+
+class SimulationModel;
+class GlobalSimuState;
+class FacetMomentSnapshot;
+class SimulationFacet;
 
 class InterfaceFacet;
 class DeletedFacet;
@@ -254,7 +259,7 @@ protected:
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
+    void InitInterfaceFacets(const std::vector<std::shared_ptr<SimulationFacet>> &sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();

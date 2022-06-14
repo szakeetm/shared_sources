@@ -9,11 +9,12 @@
 #include <string>
 #include <thread>
 #include "../src/Simulation/Simulation.h"
-#include <../src/GeometrySimu.h>
+//#include "Simulation/GeometrySimu.h"
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
+class SimulationModel;
 class SimulationController;
 
 struct Dataport;
@@ -89,7 +90,7 @@ public:
 
     int InitSimUnits();
 
-    int InitSimulation(const std::shared_ptr<MolflowSimulationModel>& model, GlobalSimuState *globState);
+    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
 
     int KillAllSimUnits();
 
@@ -149,7 +150,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(const std::shared_ptr<MolflowSimulationModel>& model);
+    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

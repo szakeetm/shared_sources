@@ -9,7 +9,9 @@
 #include "SMP.h"
 #include "Buffer_shared.h"
 #include "../src/Simulation/Particle.h"
-#include <../src/GeometrySimu.h>
+//#include "../src/Simulation/GeometrySimu.h"
+
+class SimulationModel;
 
 namespace MFSim {
     class Particle;
@@ -42,7 +44,7 @@ public:
     virtual MFSim::Particle * GetParticle(size_t i) = 0;
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
-    std::shared_ptr<MolflowSimulationModel> model;
+    std::shared_ptr<SimulationModel> model;
     //OntheflySimulationParams ontheflyParams;
     //GeomProperties sh;
     // Particle coordinates (MC)

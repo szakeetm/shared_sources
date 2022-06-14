@@ -43,6 +43,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include "SimulationManager.h"
 //#include "Buffer_shared.h"
 
+#include "SimulationFacet.h"
+
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
@@ -834,7 +836,7 @@ int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
 
         progressDlg->SetMessage("Constructing memory structure to store results...");
         if (!sendOnly) {
-            globState.Resize(*model);
+            globState.Resize(model);
         }
 
         progressDlg->SetMessage("Forwarding simulation model...");

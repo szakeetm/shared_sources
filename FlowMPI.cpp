@@ -8,7 +8,7 @@
 #include <Helper/ConsoleLogger.h>
 #include <ZipLib/ZipFile.h>
 #include "FlowMPI.h"
-#include "GeometrySimu.h"
+#include "Simulation/GeometrySimu.h"
 #include "SettingsIO.h"
 
 namespace MFMPI {

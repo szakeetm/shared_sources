@@ -4,11 +4,12 @@
 
 #include "SimulationModel.h"
 #include "FacetData.h"
+#include "SimulationFacet.h"
 #include "Helper/MathTools.h"
 #include <cmath>
 
 // Molflow or Synrad specific
-#include "../src/GeometrySimu.h"
+#include "../src/Simulation/GeometrySimu.h"
 
 size_t SimulationModel::size() {
     size_t modelSize = 0;

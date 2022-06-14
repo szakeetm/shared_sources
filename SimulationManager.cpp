@@ -341,7 +341,7 @@ int SimulationManager::InitSimUnits() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(const std::shared_ptr<MolflowSimulationModel>& model, GlobalSimuState *globState) {
+int SimulationManager::InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState) {
     if (!model->m.try_lock()) {
         return 1;
     }
@@ -712,7 +712,7 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 }
 
 // Create hard copy for local usage
-void SimulationManager::ForwardSimModel(const std::shared_ptr<MolflowSimulationModel>& model) {
+void SimulationManager::ForwardSimModel(const std::shared_ptr<SimulationModel>& model) {
     for(auto& sim : simUnits)
         sim->model = model;
 }

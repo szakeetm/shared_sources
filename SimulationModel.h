@@ -11,7 +11,7 @@
 
 class Facet;
 class AABBNODE;
-class SubprocessFacet;
+class SimulationFacet;
 class GlobalSimuState;
 
 class SuperStructure {
@@ -116,18 +116,18 @@ public:
     //Surface *GetParameterSurface(int opacity_paramId, Distribution2D *dist);
 
     // Sim functions
-    double GetOpacityAt(SubprocessFacet *f, double time) const;
+    double GetOpacityAt(SimulationFacet *f, double time) const;
 
-    double GetStickingAt(SubprocessFacet *f, double time) const;
+    double GetStickingAt(SimulationFacet *f, double time) const;
 
     // Geometry Description
-    std::vector<std::shared_ptr<SubprocessFacet>> facets;    // All facets of this geometry
+    std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry
 
     std::vector<SuperStructure> structures;
     std::vector<Vector3d> vertices3; // Vertices (3D space)
 
     std::vector<std::shared_ptr<RTPrimitive>> accel;
-    std::map<double, std::shared_ptr<Surface>> surfaces;
+    std::multimap<double,std::shared_ptr<Surface>> surfaces;
 
     // Simulation Properties
     OntheflySimulationParams otfParams;

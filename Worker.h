@@ -166,7 +166,7 @@ public:
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  std::shared_ptr<MolflowSimulationModel> model;
+  std::shared_ptr<SimulationModel> model;
   FacetHistogramBuffer globalHistogramCache;
 
   //float  startTime;         // Start time

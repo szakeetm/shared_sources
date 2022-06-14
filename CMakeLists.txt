@@ -127,6 +127,7 @@ set(INTERFACE_FILES
 
         ASELoader.cpp
         Facet_shared.cpp
+
         File.cpp
         Formulas.cpp
         FormulaEvaluator.cpp
@@ -142,6 +143,7 @@ set(SIM_FILES
         ProfileModes.cpp
 
         # subprocesses
+        SimulationFacet.cpp
         Buffer_shared.cpp
         Distributions.cpp
         #IntersectAABB_shared.cpp
