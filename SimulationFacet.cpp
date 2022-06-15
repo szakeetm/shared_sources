@@ -22,6 +22,66 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Polygon.h>
 #include <Helper/MathTools.h>
 
+/**
+* \brief Constructor for cereal initialization
+*/
+SimulationFacet::SimulationFacet() : Facet() {
+    isReady = false;
+    globalId = 0;
+    isHit = false;
+}
+
+/**
+* \brief Constructor with initialisation based on the number of indices/facets
+* \param nbIndex number of indices/facets
+*/
+SimulationFacet::SimulationFacet(size_t nbIndex) : Facet(nbIndex) {
+    isReady = false;
+    globalId = 0;
+    isHit = false;
+    indices.resize(nbIndex);                    // Ref to Geometry Vector3d
+    vertices2.resize(nbIndex);
+}
+
+SimulationFacet::SimulationFacet(const SimulationFacet& cpy)  : Facet(cpy) {
+    *this = cpy;
+}
+
+SimulationFacet::SimulationFacet(SimulationFacet&& cpy) noexcept : Facet(cpy){
+    *this = std::move(cpy);
+}
+
+SimulationFacet& SimulationFacet::operator=(const SimulationFacet& cpy){
+
+    this->largeEnough = cpy.largeEnough;
+    this->textureCellIncrements = cpy.textureCellIncrements;
+    this->sh = cpy.sh;
+
+    isReady = cpy.isReady;
+    globalId = cpy.globalId;
+    indices = cpy.indices;                    // Ref to Geometry Vector3d
+    vertices2 = cpy.vertices2;
+    if(cpy.surf) surf = cpy.surf;
+    else surf = nullptr;
+
+    return *this;
+}
+
+SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
+    this->largeEnough = std::move(cpy.largeEnough);
+    this->textureCellIncrements = std::move(cpy.textureCellIncrements);
+    this->sh = cpy.sh;
+
+    isReady = cpy.isReady;
+    globalId = cpy.globalId;
+    indices = std::move(cpy.indices);                    // Ref to Geometry Vector3d
+    vertices2 = std::move(cpy.vertices2);
+    surf = cpy.surf;
+    cpy.surf = nullptr;
+
+    return *this;
+}
+
 bool SimulationFacet::InitializeLinkAndVolatile(const size_t & id)
 {
     if (sh.superDest || sh.isVolatile) {
@@ -196,27 +256,6 @@ size_t SimulationFacet::InitializeDirectionTexture(){
     else
         directionSize = 0;
     return directionSize;
-}
-
-/**
-* \brief Constructor for cereal initialization
-*/
-SimulationFacet::SimulationFacet() : Facet() {
-    isReady = false;
-    globalId = 0;
-    isHit = false;
-}
-
-/**
-* \brief Constructor with initialisation based on the number of indices/facets
-* \param nbIndex number of indices/facets
-*/
-SimulationFacet::SimulationFacet(size_t nbIndex) : Facet(nbIndex) {
-    isReady = false;
-    globalId = 0;
-    isHit = false;
-    indices.resize(nbIndex);                    // Ref to Geometry Vector3d
-    vertices2.resize(nbIndex);
 }
 
 /**

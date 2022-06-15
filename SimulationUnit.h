@@ -24,10 +24,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include "MolflowHitCounter.h"
 #include "SMP.h"
 #include "Buffer_shared.h"
-#include "../src/Simulation/Particle.h"
+//#include "../src/Simulation/Particle.h"
 //#include "../src/Simulation/GeometrySimu.h"
 
 class SimulationModel;
+class GlobalSimuState;
+class ParticleLog;
 
 namespace MFSim {
     class Particle;

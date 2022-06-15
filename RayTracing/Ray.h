@@ -30,16 +30,16 @@ class MersenneTwister;
 //! Deprecated as replaced by HitLink
 struct HitChain {
     size_t hitId;
-    SubProcessFacetTempVar *hit;
+    SimulationFacetTempVar *hit;
     HitChain *next;
 };
 
 //! Keep track of temporary/transparent hits; correspomds to an individual hit
 struct HitLink {
-    HitLink() : hitId(9999999999), hit(SubProcessFacetTempVar()) {};
-    HitLink(size_t id, SubProcessFacetTempVar h) : hitId(id), hit(h) {};
+    HitLink() : hitId(9999999999), hit(SimulationFacetTempVar()) {};
+    HitLink(size_t id, SimulationFacetTempVar h) : hitId(id), hit(h) {};
 
-    // Move constructor called on resize, prevent from deleting SubProcessFacetTempVar
+    // Move constructor called on resize, prevent from deleting SimulationFacetTempVar
     HitLink(const HitLink &rhs) = default;
 
     HitLink(HitLink &&rhs) noexcept:
@@ -61,7 +61,7 @@ struct HitLink {
     ~HitLink();
 
     size_t hitId; //! id of the hit entity
-    SubProcessFacetTempVar hit; //! Hit statistic
+    SimulationFacetTempVar hit; //! Hit statistic
 };
 
 //! Additional application specific payload

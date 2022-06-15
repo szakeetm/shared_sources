@@ -21,10 +21,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_SIMULATIONMODEL_H
 #define MOLFLOW_PROJ_SIMULATIONMODEL_H
 
-#include <map>
-#include <string>
 #include "RayTracing/BVH.h"
 #include "SimulationFacet.h"
+
+#include <map>
+#include <string>
+#include <mutex>
 
 class Facet;
 class AABBNODE;
@@ -109,7 +111,7 @@ public:
     virtual int PrepareToRun() = 0;
 
     // Molflow will use ParameterSurfaces (for parameter outgassing) for particular construction types
-    virtual int BuildAccelStructure(GlobalSimuState *globState, int accel_type, BVHAccel::SplitMethod split,
+    virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type, BVHAccel::SplitMethod split,
                             int bvh_width) = 0;
 
     int InitialiseFacets();

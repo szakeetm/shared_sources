@@ -27,7 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FacetData.h"
 #include "Polygon.h"
 #include "Helper/MathTools.h"
-#include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
+#include "RayTracing/RTHelper.h" // SimulationFacetTempVar
 #include "RayTracing/Ray.h" // hitlink
 
 #if defined(SYNRAD)
@@ -123,15 +123,15 @@ bool Facet::Intersect(Ray &ray) {
                                         ray.hitChain->next = new HitChain();
                                         ray.hitChain = ray.hitChain->next;
                                     }
-                                    ray.hitChain->hit = new SubProcessFacetTempVar();
+                                    ray.hitChain->hit = new SimulationFacetTempVar();
                                     ray.hitChain->hit->isHit = true;
                                     ray.hitChain->hit->colU = u;
                                     ray.hitChain->hit->colV = v;
                                     ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;*/
 
-                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
-                                    /*ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
+                                    ray.hardHit = HitLink(globalId, SimulationFacetTempVar(d,u,v,true));
+                                    /*ray.hits.emplace_back(globalId, SimulationFacetTempVar());
                                     auto& hit = ray.hits.back().hit;
                                     hit.isHit = true;
                                     hit.colU = u;
@@ -145,14 +145,14 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->next = new HitChain();
                                     ray.hitChain = ray.hitChain->next;
                                 }
-                                ray.hitChain->hit = new SubProcessFacetTempVar();
+                                ray.hitChain->hit = new SimulationFacetTempVar();
                                 ray.hitChain->hit->isHit = false;
                                 ray.hitChain->hit->colU = u;
                                 ray.hitChain->hit->colV = v;
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
-                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar(d,u,v,false));
+                                ray.hits.emplace_back(globalId, SimulationFacetTempVar(d,u,v,false));
                                 /*auto& hit = ray.hits.back().hit;
                                 hit.isHit = false;
                                 hit.colU = u;

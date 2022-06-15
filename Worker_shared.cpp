@@ -348,6 +348,8 @@ size_t Worker::GetPID(size_t prIdx) {
 #ifdef MOLFLOW
 void Worker::CalculateTextureLimits(){
     // first get tmp limit
+
+    MolflowSimulationModel* mf_model = dynamic_cast<MolflowSimulationModel *>(model.get());
     TEXTURE_MIN_MAX limits[3];
     for(auto& lim : limits){
         lim.max.steady_state = lim.max.moments_only = 0;
@@ -357,7 +359,7 @@ void Worker::CalculateTextureLimits(){
     for (const auto &sub : model->facets) {
         auto& subF = *sub;
         if (subF.sh.isTextured) {
-            for (size_t m = 0; m < ( 1 + model->tdParams.moments.size()); m++) {
+            for (size_t m = 0; m < ( 1 + mf_model->tdParams.moments.size()); m++) {
                 {
                     // go on if the facet was never hit before
                     auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[m].hits;

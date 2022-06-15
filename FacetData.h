@@ -65,7 +65,22 @@ public:
 struct Facet : public RTPrimitive {
     Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
     Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    ~Facet(){
+    Facet(const Facet& cpy) {
+        globalId = cpy.globalId;
+        sh = cpy.sh;
+        indices = cpy.indices;
+        vertices2 = cpy.vertices2;
+        surf = cpy.surf; // Will be deleted tgthr with cpy
+    };
+    Facet(Facet&& cpy) noexcept{
+        globalId = std::move(cpy.globalId);
+        sh = std::move(cpy.sh);
+        indices = std::move(cpy.indices);
+        vertices2 = std::move(cpy.vertices2);
+        surf = cpy.surf;
+        cpy.surf = nullptr;
+    };
+    ~Facet() override{
         if (surf) {
             //delete surf;
             // don' t delete, origin is an unreferenced shared ptr

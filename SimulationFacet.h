@@ -31,6 +31,10 @@ struct SimulationFacet : public Facet {
 protected:
     SimulationFacet();
     explicit SimulationFacet(size_t nbIndex);
+    SimulationFacet(const SimulationFacet& cpy);
+    SimulationFacet(SimulationFacet&& cpy) noexcept;
+    SimulationFacet& operator=(const SimulationFacet& cpy);
+    SimulationFacet& operator=(SimulationFacet&& cpy) noexcept;
 public:
     std::vector<double>   textureCellIncrements;              // Texure increment
     std::vector<bool>     largeEnough;      // cells that are NOT too small for autoscaling
@@ -45,10 +49,10 @@ public:
 
     size_t InitializeTexture();
 
-    bool InitializeLinkAndVolatile(const size_t & id);
+    virtual bool InitializeLinkAndVolatile(const size_t & id);
 
     [[nodiscard]] virtual size_t GetHitsSize(size_t nbMoments) const;
-    [[nodiscard]] size_t GetMemSize() const;
+    [[nodiscard]] virtual size_t GetMemSize() const;
 
     std::vector<double> InitTextureMesh();
 };
