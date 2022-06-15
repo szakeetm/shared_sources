@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 // Temporary transparent hit
-#include "Simulation/GeometrySimu.h"
+#include "Simulation/SynradSimGeom.h"
 #include <Simulation/Particle.h>
 #include "Vector.h" //AABB
 //#include "../src/Simulation.h" //SubprocessFacet

@@ -24,10 +24,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <string>
 #include "RayTracing/BVH.h"
+#include "SimulationFacet.h"
 
 class Facet;
 class AABBNODE;
-class SimulationFacet;
+//class SimulationFacet;
 class GlobalSimuState;
 
 /*
@@ -117,6 +118,25 @@ public:
     // Molflow only
     //void CalcTotalOutgassing();
 
+    virtual Surface *GetSurface(SimulationFacet* facet) {
+        double opacity = facet->sh.opacity;
+        if (!surfaces.empty()) {
+            auto surf = surfaces.find(opacity);
+            if (surf != surfaces.end())
+                return surf->second.get();
+        }
+        std::shared_ptr<Surface> surface;
+        if (opacity == 1.0) {
+            surface = std::make_shared<Surface>();
+        } else if (opacity == 0.0) {
+            surface = std::make_shared<TransparentSurface>();
+        } else {
+            surface = std::make_shared<AlphaSurface>(opacity);
+        }
+        surfaces.insert(std::make_pair(opacity, surface));
+        return surface.get();
+    };
+
     Surface *GetSurface(double opacity) {
 
         if (!surfaces.empty()) {
@@ -140,9 +160,8 @@ public:
     //Surface *GetParameterSurface(int opacity_paramId, Distribution2D *dist);
 
     // Sim functions
-    double GetOpacityAt(SimulationFacet *f, double time) const;
-
-    double GetStickingAt(SimulationFacet *f, double time) const;
+    virtual double GetOpacityAt(SimulationFacet *f, double time) const {return -1.0;};
+    virtual double GetStickingAt(SimulationFacet *f, double time) const {return -1.0;};
 
     // Geometry Description
     std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry
@@ -163,7 +182,7 @@ public:
     bool initialized;
     std::mutex m;
 
-    void BuildPrisma(double L, double R, double angle, double s, int step);
+    virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
 };
 
 

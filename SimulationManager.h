@@ -25,7 +25,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <thread>
 #include "../src/Simulation/Simulation.h"
-//#include "Simulation/GeometrySimu.h"
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;

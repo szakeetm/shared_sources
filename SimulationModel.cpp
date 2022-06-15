@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 
 // Molflow or Synrad specific
-#include "../src/Simulation/GeometrySimu.h"
+#include "../src/Simulation/SynradSimGeom.h"
 
 size_t SimulationModel::size() {
     size_t modelSize = 0;
