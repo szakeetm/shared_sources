@@ -1,6 +1,22 @@
-//
-// Created by Pascal Baehr on 24.04.22.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
@@ -92,8 +108,11 @@ namespace {
 }
 
 // Sidebar containing 3d viewer settings, facet settings and simulation data
-void
-ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
+#if defined(MOLFLOW)
+void ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
+#else
+void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
+#endif
     const float PAD = 10.0f;
     static int corner = 0;
     static float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
@@ -214,6 +233,7 @@ ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, b
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
             size_t selected_facet_id = geom->GetNbSelectedFacets() ? geom->GetSelectedFacets().front() : 0;
             auto sel = geom->GetNbSelectedFacets() ? geom->GetFacet(selected_facet_id) : nullptr;
+#if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
                 static int des_idx = 0;
                 if(sel) des_idx = sel->sh.desorbType;
@@ -253,6 +273,7 @@ ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, b
                 ImGui::InputDouble("##ina", &og);
                 ImGui::TreePop();
             }
+#endif
 
             if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
                 static double sf = 1.0;
@@ -281,9 +302,11 @@ ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, b
                 if(sel) opacity = sel->sh.opacity;
                 ImGui::InputRightSide("Opacity", &opacity);
 
+#if defined(MOLFLOW)
                 static double temp = 1.0;
                 if(sel) temp = sel->sh.temperature;
                 ImGui::InputRightSide("Temperature [\u00b0\u212a]", &temp);
+#endif
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;

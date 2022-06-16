@@ -41,6 +41,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
+enum AccelType : int {
+    BVH = 0,
+    KD = 1
+};
+
 class HistogramParams {
 public:
 	bool recordBounce=false;
@@ -323,7 +328,7 @@ struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
 
-    int accel_type;
+    AccelType accel_type;
 #if defined(MOLFLOW)
 	double latestMoment;
 	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment

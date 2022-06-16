@@ -2240,7 +2240,7 @@ size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
     for(auto& fac : facets)
-        if (fac->selected) nb++;
+        if (fac && fac->selected) nb++;
 	return nb;
 }
 
@@ -4985,7 +4985,8 @@ void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
     sh.nbVertex = vertices.size();
 }
 
-void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sFacets, Worker* work) {
+// In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
+void Geometry::InitInterfaceFacets(const vector<shared_ptr<SimulationFacet>> &sFacets, Worker* work) {
     //Facets
     try{
         facets.resize(sFacets.size(), nullptr);
@@ -5003,19 +5004,7 @@ void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sF
         intFacet->vertices2 = fac.vertices2;
         intFacet->sh = fac.sh;
 
-        // Molflow
-        intFacet->ogMap = fac.ogMap;
-        intFacet->angleMapCache = fac.angleMap.pdf;
-
-        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0
-        || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
-            intFacet->hasOutgassingFile = true;
-        }
-
-        //Set param names for interface
-        if (intFacet->sh.sticking_paramId > -1) intFacet->userSticking = work->parameters[intFacet->sh.sticking_paramId].name;
-        if (intFacet->sh.opacity_paramId > -1) intFacet->userOpacity = work->parameters[intFacet->sh.opacity_paramId].name;
-        if (intFacet->sh.outgassing_paramId > -1) intFacet->userOutgassing = work->parameters[intFacet->sh.outgassing_paramId].name;
+        // Do Molflow or Synrad related things in an overriden function
         if (intFacet->sh.isTextured) intFacet->hasMesh = true;
         ++index;
     }

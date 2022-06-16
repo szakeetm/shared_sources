@@ -1,12 +1,32 @@
-//
-// Created by pascal on 2/26/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
 
+#if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
+#else
+#include "../../src/SynradGeometry.h"
+#endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
 
@@ -183,7 +203,11 @@ void ImguiWindow::renderSingle() {
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 
+#if defined(MOLFLOW)
     MolFlow *mApp = (MolFlow *) app;
+#else
+    SynRad *mApp = (SynRad *) app;
+#endif
     if (mApp) {
         bool nbProcChanged = false;
         bool recalcOutg = false;
@@ -299,7 +323,11 @@ void ImguiWindow::renderSingle() {
 /**
  * \brief Function to apply changes to the number of processes.
  */
+#if defined(MOLFLOW)
 void ImguiWindow::restartProc(int nbProc, MolFlow *mApp) {
+#else
+void ImguiWindow::restartProc(int nbProc, SynRad *mApp) {
+#endif
     try {
         mApp->worker.Stop_Public();
         mApp->worker.SetProcNumber(nbProc);

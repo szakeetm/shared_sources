@@ -291,7 +291,7 @@ void GLToolkit::SetIcon32x32(const char *pngName) {
     SDL_SetWindowIcon(theApp->mainScreen, s);
     //img.Release();
   //}
-
+    SDL_FreeSurface(s);
 }
 
 bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {

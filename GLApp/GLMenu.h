@@ -14,23 +14,23 @@ class GLMenuBar;
 
 typedef struct {
 
-  char         itemName[MAX_ITEM_LGTH];
-  int          itemId;
-  int          x;
-  int          y;
-  int          width;
-  int          height;
-  bool         isSeparator;
-  bool         checked;
-  bool         enabled;
-  char         shortcut;
-  int          sctPos;
-  int          sctWidth;
-  GLMenu      *subMenu;
-  char        *accName;
-  int          accWidth;
-  int          iconX;
-  int          iconY;
+  char         itemName[MAX_ITEM_LGTH]{};
+  int          itemId{};
+  int          x{};
+  int          y{};
+  int          width{};
+  int          height{};
+  bool         isSeparator{};
+  bool         checked{};
+  bool         enabled{};
+  char         shortcut{};
+  int          sctPos{};
+  int          sctWidth{};
+  GLMenu      *subMenu{nullptr};
+  char        *accName{nullptr};
+  int          accWidth{};
+  int          iconX{};
+  int          iconY{};
 
 } MENUITEM;
 

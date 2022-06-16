@@ -218,6 +218,9 @@ public:
 	AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile);
     ~AppUpdater(){
         SAFE_DELETE(updateWarning);
+        if (updateThread.joinable()) {
+            updateThread.join();
+        }
     }
 	bool IsUpdateAvailable();
 	bool IsUpdateCheckAllowed() const;

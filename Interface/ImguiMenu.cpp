@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 19/03/2021.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "ImguiMenu.h"
 #include "imgui/imgui.h"
@@ -392,6 +408,8 @@ static void ShowMenuSelection(std::string& openModalName) {
         if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
         selectDialog->SetVisible(true);
     }
+
+#if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Sticking", "")) {
         // TODO: Different for Synrad?
         geom->UnselectAll();
@@ -402,6 +420,8 @@ static void ShowMenuSelection(std::string& openModalName) {
         geom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
+#endif
+
     if (ImGui::MenuItem("Select Transparent", "")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
@@ -597,6 +617,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     ImGui::Separator();
 
     // TODO: Extract Molflow only entries
+#if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Desorption")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
@@ -623,6 +644,8 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
         geom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
+#endif
+
     if (ImGui::MenuItem("Select volatile facets")) {
         geom->UnselectAll();
         for (int i = 0; i < geom->GetNbFacet(); i++)
