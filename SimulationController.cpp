@@ -207,7 +207,7 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
 }
 
 void SimulationController::SetErrorSub(const char *message) {
-    printf("Error: %s\n", message);
+    Log::console_error("Error: {}\n", message);
     SetState(PROCESS_ERROR, message);
 }
 
@@ -322,7 +322,7 @@ bool SimulationController::UpdateParams() {
     // Load geometry
     auto* sim = simulation;
     if (sim->model->otfParams.enableLogging) {
-        printf("Logging with size limit %zd\n",
+        Log::console_msg(3, "Logging with size limit {}\n",
                sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
     sim->ReinitializeParticleLog();
