@@ -88,8 +88,8 @@ namespace SettingsIO {
         }
         else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
             Log::console_error(
-                    "Output path was set to %s, but Output file also contains a parent "
-                    "path %s\n"
+                    "Output path was set to {}, but Output file also contains a parent "
+                    "path {}\n"
                     "Output path will be appended!\n",
                     SettingsIO::outputPath.c_str(),
                     std::filesystem::path(SettingsIO::outputFile).parent_path().c_str());
@@ -109,7 +109,7 @@ namespace SettingsIO {
             }
         }
         if (!formatIsSupported) {
-            Log::console_error("File format is not supported: %s\n",
+            Log::console_error("File format is not supported: {}\n",
                                std::filesystem::path(SettingsIO::outputFile)
                                        .extension()
                                        .string()
@@ -123,7 +123,7 @@ namespace SettingsIO {
             if (!std::filesystem::exists(SettingsIO::workPath))
                 std::filesystem::create_directory(SettingsIO::workPath);
         } catch (const std::exception &e) {
-            Log::console_error("Couldn't create directory [ %s ], falling back to "
+            Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
                                SettingsIO::workPath.c_str());
             ++err;
@@ -160,7 +160,7 @@ namespace SettingsIO {
                     std::filesystem::create_directory(outputFilePath);
             } catch (const std::exception &e) {
                 Log::console_error(
-                        "Couldn't create parent directory set by output filename [ %s ], "
+                        "Couldn't create parent directory set by output filename [ {} ], "
                         "will only use default output path instead\n",
                         outputFilePath.c_str());
                 ++err;
@@ -207,7 +207,7 @@ namespace SettingsIO {
                 return 1;
             }
             SettingsIO::workFile = parseFileName;
-            Log::console_msg_master(2, "New input file: %s\n",
+            Log::console_msg_master(2, "New input file: {}\n",
                                     SettingsIO::workFile.c_str());
         } else {
             SettingsIO::workFile = SettingsIO::inputFile;

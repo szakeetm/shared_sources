@@ -493,7 +493,7 @@ int SimulationManager::KillAllSimUnits() {
                         int s;
                         s = pthread_cancel(nativeHandle);
                         if (s != 0)
-                            printf("pthread_cancel: %d\n", s);
+                            Log::console_msg(1, "pthread_cancel: {}\n", s);
                         tIter->first.detach();
 #endif
                         //assume that the process doesn't exist, so remove it from our management structure

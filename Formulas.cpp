@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 #include "Formulas.h"
+#include "Helper/ConsoleLogger.h"
 #include <cmath>
 
 // convergence constants
@@ -193,7 +194,7 @@ double Formulas::GetConvRate(int formulaId) {
     double var = invN * sumValSquared - std::pow(invN * sumVal,2);
     double convDelta = 3.0 * std::sqrt(var) / (conv_vec.size() * conv_vec.size());
 
-    if(convDelta / conv_vec.back().second < 1.0e-6) printf("[1] Sufficient convergent reached: %e\n", convDelta / conv_vec.back().second);
+    if(convDelta / conv_vec.back().second < 1.0e-6) Log::console_msg(2, "[1] Sufficient convergent reached: {:e}\n", convDelta / conv_vec.back().second);
 
     double xmean = sumVal * invN;
     double varn = 0.0;
@@ -204,13 +205,13 @@ double Formulas::GetConvRate(int formulaId) {
     double quant95Val = 1.96 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant99Val = 2.576 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant995Val = 3.0 * std::sqrt(varn) / std::sqrt(conv_vec.size());
-    if(xmean - quant95Val <= conv_vec.back().second && xmean + quant95Val >= conv_vec.back().second) printf("[95.0] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant95Val, xmean + quant95Val);
-    else if(xmean - quant99Val <= conv_vec.back().second && xmean + quant99Val >= conv_vec.back().second) printf("[99.0] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant99Val, xmean + quant99Val);
-    else if(xmean - quant995Val <= conv_vec.back().second && xmean + quant995Val >= conv_vec.back().second) printf("[99.5] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
+    if(xmean - quant95Val <= conv_vec.back().second && xmean + quant95Val >= conv_vec.back().second) Log::console_msg(2, "[95.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant95Val, xmean + quant95Val);
+    else if(xmean - quant99Val <= conv_vec.back().second && xmean + quant99Val >= conv_vec.back().second) Log::console_msg(2, "[99.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant99Val, xmean + quant99Val);
+    else if(xmean - quant995Val <= conv_vec.back().second && xmean + quant995Val >= conv_vec.back().second) Log::console_msg(2, "[99.5] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
     else {
         double dist = std::min(conv_vec.back().second - xmean + quant995Val, conv_vec.back().second + xmean - quant995Val);
-        printf("[4] Convergence distance to a995: %e --> %e close to [%e , %e]\n", dist, conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
-        printf("[4] Abs to a95: %e --> Rel to a95: %e / %e\n", quant95Val, (conv_vec.back().second - xmean) / xmean, (quant95Val / conv_vec.back().second));
+        Log::console_msg(2, "[4] Convergence distance to a995: {:e} --> {:e} close to [{:e} , {:e}]\n", dist, conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
+        Log::console_msg(2, "[4] Abs to a95: {:e} --> Rel to a95: {:e} / {:e}\n", quant95Val, (conv_vec.back().second - xmean) / xmean, (quant95Val / conv_vec.back().second));
     }
     return convDelta;
 }
