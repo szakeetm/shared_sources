@@ -33,7 +33,7 @@ namespace SettingsIO {
     bool isArchive = false;
     bool outputFacetDetails = false;
     bool outputFacetQuantities = false;
-    bool autogenerateTest = false;
+    double autogenerateTest = 0.0;
 
     std::string workFile;
     std::string workPath;
@@ -96,10 +96,15 @@ namespace SettingsIO {
         }
 
         // Use a default outputfile name if unset
-        if (SettingsIO::outputFile.empty())
-            SettingsIO::outputFile =
+        if (SettingsIO::outputFile.empty()) {
+            if(SettingsIO::inputFile.empty()){
+                SettingsIO::outputFile = "out.xml";
+            }
+            else
+                SettingsIO::outputFile =
                     "out_" +
                     std::filesystem::path(SettingsIO::inputFile).filename().string();
+        }
 
         bool formatIsSupported = false;
         for (const auto &format : supportedFileFormats) {

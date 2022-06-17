@@ -120,8 +120,8 @@ std::vector<double> SimulationFacet::InitTextureMesh()
     double sx, sy;
     double iw = 1.0 / (double)sh.texWidth_precise;
     double ih = 1.0 / (double)sh.texHeight_precise;
-    double rw = sh.U.Norme() * iw;
-    double rh = sh.V.Norme() * ih;
+    double rw = sh.U.Length() * iw;
+    double rh = sh.V.Length() * ih;
     double fullCellArea = iw*ih;
 
     std::vector<Vector2d>(4).swap(P1.pts);
@@ -225,15 +225,15 @@ size_t SimulationFacet::InitializeTexture(){
             return false;
         }*/
         // Texture increment of a full texture element
-        double fullSizeInc = (sh.texWidth_precise * sh.texHeight_precise) / (sh.U.Norme() * sh.V.Norme());
+        double fullSizeInc = (sh.texWidth_precise * sh.texHeight_precise) / (sh.U.Length() * sh.V.Length());
         for (size_t j = 0; j < nbE; j++) { //second pass, filter out very small cells
             largeEnough[j] = textureCellIncrements[j] < (5.0*fullSizeInc);
         }
 
         //double iw = 1.0 / (double)sh.texWidth_precise;
         //double ih = 1.0 / (double)sh.texHeight_precise;
-        //double rw = sh.U.Norme() * iw;
-        //double rh = sh.V.Norme() * ih;
+        //double rw = sh.U.Length() * iw;
+        //double rh = sh.V.Length() * ih;
     }
     else
         textureSize = 0;

@@ -313,7 +313,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
     auto& facets_sub = mApp->worker.model->facets;
     std::vector<Facet*> facet_ptr;
     facet_ptr.resize(facets_sub.size());
-    std::transform(facets_sub.begin(), facets_sub.end(), facet_ptr.begin(),[](std::shared_ptr<SubprocessFacet> f){return static_cast<Facet*>(f.get());});
+    std::transform(facets_sub.begin(), facets_sub.end(), facet_ptr.begin(),[](std::shared_ptr<SimulationFacet> f){return static_cast<Facet*>(f.get());});
 
     if(GeometryTools::GetAnalysedCommonEdges(facet_ptr, edges)) {
         i = 0;

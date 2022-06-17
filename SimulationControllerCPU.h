@@ -59,10 +59,7 @@ public:
     int RebuildAccel();
     int Reset();
 
-    void EmergencyExit(){
-        for(auto& t : simThreads)
-            t.particle->allQuit = true;
-    };
+    void EmergencyExit() override;
 protected:
 
     std::vector<SimThread> simThreads;

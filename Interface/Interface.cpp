@@ -1788,7 +1788,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     }
                     return true;
                 case MENU_ANALYSE:
-                    GeometryTools::AnalyseGeometry(this->worker.GetGeometry());
+                    GeometryTools::AnalyseGeometry(this->worker.model);
                     return true;
                 case MENU_CMP_RES: {
                     const std::string fileName = NFD_OpenFile_Cpp("syn7z", "");

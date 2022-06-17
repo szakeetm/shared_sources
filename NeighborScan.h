@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define MOLFLOW_PROJ_NEIGHBORSCAN_H
 
 #include "Geometry_shared.h"
+#include "FacetData.h"
 
 struct NeighborFacet;
 struct CommonEdge {

@@ -46,11 +46,11 @@ public:
 
     static int GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesMap(SimulationModel *model, std::vector<CommonEdge> &commonEdges);
 
-    static void AnalyseGeometry(SimulationModel* model);
+    static void AnalyseGeometry(std::shared_ptr<SimulationModel> model);
 
-    static void CompareAlgorithm(Geometry *geometry, size_t index);
+    static void CompareAlgorithm(SimulationModel *model, size_t index);
 
     static int GetNeighbors(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 };

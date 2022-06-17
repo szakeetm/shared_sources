@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GeometryTools.h"
 #include "Facet_shared.h"
 #include "NeighborScan.h"
+#include "SimulationModel.h"
 
 std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg)
 {
@@ -38,7 +39,7 @@ std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* ge
         }
         else {
             //Copy
-            InterfaceFacet* newFacet = new InterfaceFacet(nb);
+            auto* newFacet = new InterfaceFacet(nb);
             newFacet->indices = geometry->GetFacet(facetIndices[i])->indices;
             newFacet->CopyFacetProperties(geometry->GetFacet(facetIndices[i]), false);
             triangleFacets.push_back(newFacet);
@@ -114,7 +115,7 @@ InterfaceFacet* GeometryTools::GetTriangleFromEar(InterfaceFacet *f, const GLApp
     //Commented out sections: theoretically in a right-handed system the vertex order is inverse
     //However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
-    size_t* indices = new size_t[3];
+    auto* indices = new size_t[3];
 
     indices[0] = f->indices[Previous(ear, p.pts.size())];
     indices[1] = f->indices[IDX(ear, p.pts.size())];
@@ -241,7 +242,7 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
 
 static std::vector<std::vector<CommonEdge>> edges_algo(5); // first index = facet id, second index = neighbor id
 
-void GeometryTools::AnalyseGeometry(SimulationModel* model) {
+void GeometryTools::AnalyseGeometry(std::shared_ptr<SimulationModel> model) {
     edges_algo.resize(5);
     Chronometer stop;
     int dupli = 0, lone = 0, trans = 0;
@@ -261,11 +262,12 @@ void GeometryTools::AnalyseGeometry(SimulationModel* model) {
     printf("[%lu] Neighbor T2 Vertex: %lf\n", edges_algo[1].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[1]);
     //lone = HandleLoneEdge(edges_algo[1]);
+
     auto& facets = model->facets;
     std::vector<Facet*> facet_ptr;
     facet_ptr.resize(facets.size());
     std::transform(facets.begin(), facets.end(), facet_ptr.begin(),
-                   [](std::shared_ptr<SubprocessFacet>& f){return (Facet*)(f.get());}
+                   [](std::shared_ptr<SimulationFacet>& f){return (Facet*)(f.get());}
                );
 
     CalculateNeighborAngles(edges_algo[1], facet_ptr);
@@ -292,22 +294,22 @@ void GeometryTools::AnalyseGeometry(SimulationModel* model) {
     printf("[%lu - %d - %d - %d] Neighbor T4 Dupli: %lf\n", edges_algo[3].size(), dupli, lone, trans, stop.Elapsed());
 
     stop.ReInit(); stop.Start();
-    GetCommonEdgesMap(geometry, edges_algo[4]);
+    GetCommonEdgesMap(model.get(), edges_algo[4]);
     printf("[%lu] Neighbor T5 Map: %lf\n", edges_algo[4].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[3]);
     //lone = HandleLoneEdge(edges_algo[3]);
     //trans = HandleTransparent(edges_algo[3], geometry);
-    CalculateNeighborAngles(edges_algo[4], geometry);
+    CalculateNeighborAngles(edges_algo[4], facet_ptr);
     printf("[%lu - %d - %d - %d] Neighbor T5 Dupli: %lf\n", edges_algo[4].size(), dupli, lone, trans, stop.Elapsed());
 
     // Skip and only compare with newer algorithms
     //CompareAlgorithm(nullptr, 1);
     CompareAlgorithm(nullptr, 2);
     CompareAlgorithm(nullptr, 3);
-    CompareAlgorithm(geometry, 4);
+    CompareAlgorithm(model.get(), 4);
 }
 
-void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
+void GeometryTools::CompareAlgorithm(SimulationModel *model, size_t index) {
     // Put in order for comparism
     auto& compEdge = edges_algo[index];
 
@@ -728,7 +730,7 @@ int GeometryTools::GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge
 
 }
 
-int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesMap(SimulationModel *model, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
     size_t p11, p12;
@@ -738,12 +740,12 @@ int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge>
     std::vector<CommonEdge>& edges = commonEdges;
     std::map<size_t,std::vector<int>> hashMap;
 
-    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
-        auto facet = geometry->GetFacet(facetId);
+    for (size_t facetId = 0; facetId < model->facets.size(); facetId++) {
+        auto facet = model->facets[facetId];
         for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
 
-            p11 = facet->GetIndex(i);
-            p12 = facet->GetIndex(i + 1);
+            p11 = facet->indices[i];
+            p12 = facet->indices[i + 1];
 
             size_t hash = ((p11 << 16) | (p12));
             auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));

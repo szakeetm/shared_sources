@@ -105,15 +105,22 @@ bool SimThread::runLoop() {
 
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
         if (procInfo->activeProcs.front() == threadNum || forceQueue) {
+            size_t readdOnFail = 0;
             if(simulation->model->otfParams.desorptionLimit > 0){
-                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed)
+                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed) {
                     localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
+                    readdOnFail = particle->tmpState.globalHits.globalHits.nbDesorbed;
+                }
                 else localDesLimit = 0;
             }
 
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particle->UpdateHits(simulation->globState, simulation->globParticleLog,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+
+            if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
+                localDesLimit += readdOnFail;
+
             if(procInfo->activeProcs.front() == threadNum)
                 procInfo->NextSubProc();
             timeLoopStart = omp_get_wtime();
@@ -150,7 +157,7 @@ void SimThread::setSimState(const std::string& msg) const {
     size_t max = 0;
     if (simulation->model->otfParams.nbProcess)
         max = (simulation->model->otfParams.desorptionLimit / simulation->model->otfParams.nbProcess)
-                + ((this->threadNum < simulation->model->otfParams.desorptionLimit % simulation->model->otfParams.nbProcess) ? 1 : 0);
+              + ((this->threadNum < simulation->model->otfParams.desorptionLimit % simulation->model->otfParams.nbProcess) ? 1 : 0);
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
@@ -182,7 +189,7 @@ int SimThread::runSimulation(size_t desorptions) {
         }
         else {
             //if(particle->tmpState.globalHits.globalHits.hit.nbDesorbed <= (particle->model->otfParams.desorptionLimit - simulation->globState->globalHits.globalHits.hit.nbDesorbed)/ particle->model->otfParams.nbProcess)
-                remainingDes = desorptions - particle->tmpState.globalHits.globalHits.nbDesorbed;
+            remainingDes = desorptions - particle->tmpState.globalHits.globalHits.nbDesorbed;
         }
     }
     //auto start_time = std::chrono::high_resolution_clock::now();
@@ -191,7 +198,7 @@ int SimThread::runSimulation(size_t desorptions) {
         goOn = particle->SimulationMCStep(nbStep, threadNum, remainingDes);
         double end_time = omp_get_wtime();
 
-    //auto end_time = std::chrono::high_resolution_clock::now();
+        //auto end_time = std::chrono::high_resolution_clock::now();
 
 
         if (goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
@@ -481,3 +488,8 @@ int SimulationControllerCPU::Reset() {
 
     return 0;
 }
+
+void SimulationControllerCPU::EmergencyExit(){
+    for(auto& t : simThreads)
+        t.particle->allQuit = true;
+};

@@ -48,12 +48,11 @@ protected:
     int SetRuntimeInfo();
     size_t GetLocalState() const;
 public:
+    SimulationController() = default;
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          SimulationUnit *simulationInstance, std::shared_ptr<ProcComm> pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
-
-    SimulationController();
 
     int controlledLoop(int argc = 0, char **argv = nullptr);
 
@@ -63,7 +62,6 @@ public:
     virtual int Reset() = 0;
     virtual void EmergencyExit() = 0; // Killing threads
 
-    void EmergencyExit();
 protected:
 
     SimulationUnit* simulation;
