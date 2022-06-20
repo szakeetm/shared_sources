@@ -136,6 +136,7 @@ set(INTERFACE_FILES
         Web.cpp
         Worker_shared.cpp
         GeometryTools.cpp
+        NeighborScan.cpp
         )
 
 set(SIM_FILES

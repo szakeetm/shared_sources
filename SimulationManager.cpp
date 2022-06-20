@@ -38,6 +38,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <iostream>
 #include <cereal/archives/binary.hpp>
 #include <../src/Simulation/Simulation.h>
+
 #if defined(GPUCOMPABILITY)
 #include <../src/GPUSim/SimulationGPU.h>
 #include <../src/GPUSim/SimulationControllerGPU.h>

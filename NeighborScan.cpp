@@ -22,7 +22,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/ConsoleLogger.h>
 #include <Helper/Chronometer.h>
 #include "NeighborScan.h"
-#include "helper_math.h"
 
 std::optional<double> AngleBetween2Vertices(Vector3d& v1, Vector3d& v2){
     double denum = (v1.Length() * v2.Length());
