@@ -113,7 +113,7 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", SettingsIO::inputFile.c_str(), i);
+                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", SettingsIO::inputFile, i);
 
                     std::ifstream infile;
                     infile.open(SettingsIO::inputFile, std::ios::binary);
@@ -154,7 +154,7 @@ namespace MFMPI {
                     }
                     catch (const std::exception &e){
                         SettingsIO::outputPath = "./";
-                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", SettingsIO::outputPath.c_str());
+                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", SettingsIO::outputPath);
                     }
 
                     auto outputName = SettingsIO::outputPath+"workfile"+std::filesystem::path(SettingsIO::inputFile).extension().string();
