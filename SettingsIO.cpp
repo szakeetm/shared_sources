@@ -91,7 +91,7 @@ namespace SettingsIO {
                     "Output path was set to {}, but Output file also contains a parent "
                     "path {}\n"
                     "Output path will be appended!\n",
-                    SettingsIO::outputPath.c_str(),
+                    SettingsIO::outputPath,
                     std::filesystem::path(SettingsIO::outputFile).parent_path().string());
         }
 
@@ -115,10 +115,7 @@ namespace SettingsIO {
         }
         if (!formatIsSupported) {
             Log::console_error("File format is not supported: {}\n",
-                               std::filesystem::path(SettingsIO::outputFile)
-                                       .extension()
-                                       .string()
-                                       .c_str());
+                               std::filesystem::path(SettingsIO::outputFile).extension().string());
             return 1;
         }
 
@@ -130,7 +127,7 @@ namespace SettingsIO {
         } catch (std::exception &e) {
             Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
-                               SettingsIO::workPath.c_str());
+                               SettingsIO::workPath);
             ++err;
 
             // use fallback dir
@@ -167,7 +164,7 @@ namespace SettingsIO {
                 Log::console_error(
                         "Couldn't create parent directory set by output filename [ {} ], "
                         "will only use default output path instead\n",
-                        outputFilePath.c_str());
+                        outputFilePath);
                 ++err;
             }
         }
@@ -213,7 +210,7 @@ namespace SettingsIO {
             }
             SettingsIO::workFile = parseFileName;
             Log::console_msg_master(2, "New input file: {}\n",
-                                    SettingsIO::workFile.c_str());
+                                    SettingsIO::workFile);
         } else {
             SettingsIO::workFile = SettingsIO::inputFile;
         }
