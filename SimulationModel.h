@@ -30,7 +30,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class Facet;
 class AABBNODE;
-//class SimulationFacet;
 class GlobalSimuState;
 
 /*
@@ -138,28 +137,6 @@ public:
         surfaces.insert(std::make_pair(opacity, surface));
         return surface.get();
     };
-
-    Surface *GetSurface(double opacity) {
-
-        if (!surfaces.empty()) {
-            auto surf = surfaces.find(opacity);
-            if (surf != surfaces.end())
-                return surf->second.get();
-        }
-        std::shared_ptr<Surface> surface;
-        if (opacity == 1.0) {
-            surface = std::make_shared<Surface>();
-        } else if (opacity == 0.0) {
-            surface = std::make_shared<TransparentSurface>();
-        } else {
-            surface = std::make_shared<AlphaSurface>(opacity);
-        }
-        surfaces.insert(std::make_pair(opacity, surface));
-        return surface.get();
-    };
-
-    // Molflow model only (Time dependent)
-    //Surface *GetParameterSurface(int opacity_paramId, Distribution2D *dist);
 
     // Sim functions
     virtual double GetOpacityAt(SimulationFacet *f, double time) const {return -1.0;};

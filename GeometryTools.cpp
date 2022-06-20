@@ -142,7 +142,7 @@ std::optional<double> AngleBetween2Vertices(Vector3d& v1, Vector3d& v2){
     double numerator = std::clamp(Dot(v1, v2), -1.0, 1.0);
 
     if(denum == 0.0){
-        //Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: %lf/%lf\n", numerator, denum);
+        //Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: {}/{}\n", numerator, denum);
         return std::nullopt;
     }
     double angle_calc = numerator / (denum);
@@ -150,7 +150,7 @@ std::optional<double> AngleBetween2Vertices(Vector3d& v1, Vector3d& v2){
         angle_calc = std::clamp(angle_calc, -1.0, 1.0);
     }
     else{
-        //Log::console_error("[NeighborAnalysis] Neighbors (%d , %d) found with invalid angle: %lf/%lf = %lf\n", numerator, denum, angle_calc);
+        //Log::console_error("[NeighborAnalysis] Neighbors ({} , {}) found with invalid angle: {}/{} = {}\n", numerator, denum, angle_calc);
         return std::nullopt;
     }
 
@@ -166,7 +166,7 @@ void CalculateNeighborAngles(Container<CommonEdge, Allocator>& edges, Geometry* 
         auto g = geometry->GetFacet(iter_o->facetId[1]);
         auto angle_opt =  AngleBetween2Vertices(f->sh.N, g->sh.N);
         if(!angle_opt.has_value()) {
-            Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: %d , %d\n", iter_o->facetId[0], iter_o->facetId[1]);
+            Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: {} , {}\n", iter_o->facetId[0], iter_o->facetId[1]);
             iter_o = edges.erase(iter_o);
             continue;
         }
@@ -207,7 +207,7 @@ int HandleLoneEdge(std::vector<CommonEdge>& edge_v){
     int nRemoved = 0;
     for(auto iter_o = edge_v.begin(); iter_o != edge_v.end(); ){
         if((*iter_o).facetId.size() <= 1){
-            printf("[%d] Lone edge : %d -- %d\n",(*iter_o).facetId[0],(*iter_o).v1, (*iter_o).v2);
+            Log::console_msg(2, "[{}] Lone edge : {} -- {}\n",(*iter_o).facetId[0],(*iter_o).v1, (*iter_o).v2);
             iter_o = edge_v.erase(iter_o);
             ++nRemoved;
         }
@@ -247,49 +247,49 @@ void GeometryTools::AnalyseGeometry(Geometry* geometry) {
     // original, but slow to compare
     /*stop.Start();
     AnalyseNeighbors(geometry);
-    printf("[%lu] Neighbor T1: %lf\n", edges_algo[0].size(), stop.Elapsed());
+    printf("[{}] Neighbor T1: {}\n", edges_algo[0].size(), stop.Elapsed());
     //int dupli = RemoveDuplicates(edges_algo[0]);
     //int lone = HandleLoneEdge(edges_algo[0]);
     //int trans = HandleTransparent(edges_algo[0], geometry);
-    printf("[%lu - %d - %d - %d] Neighbor T1 Dupli: %lf\n", edges_algo[0].size(), dupli, lone, trans, stop.Elapsed());
+    printf("[{} - {} - {} - {}] Neighbor T1 Dupli: {}\n", edges_algo[0].size(), dupli, lone, trans, stop.Elapsed());
 */
     //stop.ReInit();
     stop.Start();
     GetCommonEdgesVec(geometry, edges_algo[1]);
-    printf("[%lu] Neighbor T2 Vertex: %lf\n", edges_algo[1].size(), stop.Elapsed());
+    Log::console_msg(2, "[{}] Neighbor T2 Vertex: {}\n", edges_algo[1].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[1]);
     //lone = HandleLoneEdge(edges_algo[1]);
     CalculateNeighborAngles(edges_algo[1], geometry);
     //trans = HandleTransparent(edges_algo[1], geometry);
-    printf("[%lu - %d - %d - %d] Neighbor T2 Dupli: %lf\n", edges_algo[1].size(), dupli, lone, trans, stop.Elapsed());
+    Log::console_msg(2, "[{} - {} - {} - {}] Neighbor T2 Dupli: {}\n", edges_algo[1].size(), dupli, lone, trans, stop.Elapsed());
     edges_algo[0] = std::move(edges_algo[1]);
 
     stop.ReInit(); stop.Start();
     GetCommonEdgesList(geometry, edges_algo[2]);
-    printf("[%lu] Neighbor T3 List: %lf\n", edges_algo[2].size(), stop.Elapsed());
+    Log::console_msg(2, "[{}] Neighbor T3 List: {}\n", edges_algo[2].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[2]);
     //lone = HandleLoneEdge(edges_algo[2]);
     CalculateNeighborAngles(edges_algo[2], geometry);
     //trans = HandleTransparent(edges_algo[2], geometry);
-    printf("[%lu - %d - %d - %d] Neighbor T3 Dupli: %lf\n", edges_algo[2].size(), dupli, lone, trans, stop.Elapsed());
+    Log::console_msg(2, "[{} - {} - {} - {}] Neighbor T3 Dupli: {}\n", edges_algo[2].size(), dupli, lone, trans, stop.Elapsed());
 
     stop.ReInit(); stop.Start();
     GetCommonEdgesHash(geometry, edges_algo[3]);
-    printf("[%lu] Neighbor T4 Hashmap: %lf\n", edges_algo[3].size(), stop.Elapsed());
+    Log::console_msg(2, "[{}] Neighbor T4 Hashmap: {}\n", edges_algo[3].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[3]);
     //lone = HandleLoneEdge(edges_algo[3]);
     //trans = HandleTransparent(edges_algo[3], geometry);
     CalculateNeighborAngles(edges_algo[3], geometry);
-    printf("[%lu - %d - %d - %d] Neighbor T4 Dupli: %lf\n", edges_algo[3].size(), dupli, lone, trans, stop.Elapsed());
+    Log::console_msg(2, "[{} - {} - {} - {}] Neighbor T4 Dupli: {}\n", edges_algo[3].size(), dupli, lone, trans, stop.Elapsed());
 
     stop.ReInit(); stop.Start();
     GetCommonEdgesMap(geometry, edges_algo[4]);
-    printf("[%lu] Neighbor T5 Map: %lf\n", edges_algo[4].size(), stop.Elapsed());
+    Log::console_msg(2, "[{}] Neighbor T5 Map: {}\n", edges_algo[4].size(), stop.Elapsed());
     //dupli = RemoveDuplicates(edges_algo[3]);
     //lone = HandleLoneEdge(edges_algo[3]);
     //trans = HandleTransparent(edges_algo[3], geometry);
     CalculateNeighborAngles(edges_algo[4], geometry);
-    printf("[%lu - %d - %d - %d] Neighbor T5 Dupli: %lf\n", edges_algo[4].size(), dupli, lone, trans, stop.Elapsed());
+    Log::console_msg(2, "[{} - {} - {} - {}] Neighbor T5 Dupli: {}\n", edges_algo[4].size(), dupli, lone, trans, stop.Elapsed());
 
     // Skip and only compare with newer algorithms
     //CompareAlgorithm(geometry, 1);
@@ -302,7 +302,7 @@ void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
     // Put in order for comparism
     auto& compEdge = edges_algo[index];
 
-    printf("[T1 vs. T%lu] Neighbors found: %lu - %lu\n", index+1, edges_algo[0].size(), compEdge.size());
+    Log::console_msg(2, "[T1 vs. T{}] Neighbors found: {} - {}\n", index+1, edges_algo[0].size(), compEdge.size());
 
     int j = 0;
     size_t minCompSize = compEdge.size();
@@ -312,18 +312,18 @@ void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
         bool diffFac = edges_algo[0][i].facetId[0] != compEdge[j].facetId[0] || edges_algo[0][i].facetId[1] != compEdge[j].facetId[1];
         bool diffAngle = edges_algo[0][i].angle != compEdge[j].angle;
         if(diffFac)
-            printf("[%d , %d] %d -- %d <%d , %d> c(%lf) x %d -- %d <%d , %d> c(%lf)\n", i, j,
+            Log::console_msg(2, "[{} , {}] {} -- {} <{} , {}> c({}) x {} -- {} <{} , {}> c({})\n", i, j,
                    edges_algo[0][i].facetId[0], edges_algo[0][i].facetId[1], edges_algo[0][i].v1, edges_algo[0][i].v2, edges_algo[0][i].angle * (180 / M_PI),
                    compEdge[j].facetId[0], compEdge[j].facetId[1], compEdge[j].v1, compEdge[j].v2, compEdge[j].angle * (180 / M_PI));
         if(diffSize){
-            printf("[%d , %d] %lu vs %lu <%d , %d>: \n", i, j, edges_algo[0][i].facetId.size(), compEdge[j].facetId.size(), edges_algo[0][i].v1, edges_algo[0][i].v2);
-            for(auto id : edges_algo[0][i].facetId) printf("%d , ", id);
-            printf(" --- ");
-            for(auto id : compEdge[j].facetId) printf("%d , ", id);
-            printf("\n");
+            Log::console_msg(2, "[{} , {}] {} vs {} <{} , {}>: \n", i, j, edges_algo[0][i].facetId.size(), compEdge[j].facetId.size(), edges_algo[0][i].v1, edges_algo[0][i].v2);
+            for(auto id : edges_algo[0][i].facetId) Log::console_msg(2, "{} , ", id);
+            Log::console_msg(2, " --- ");
+            for(auto id : compEdge[j].facetId) Log::console_msg(2, "{} , ", id);
+            Log::console_msg(2, "\n");
         }
         if(diffAngle){
-            printf("[%d , %d] %d -- %d <%d , %d> c(%lf) x %d -- %d <%d , %d> c(%lf)\n", i, j,
+            Log::console_msg(2, "[{} , {}] {} -- {} <{} , {}> c({}) x {} -- {} <{} , {}> c({})\n", i, j,
                    edges_algo[0][i].facetId[0], edges_algo[0][i].facetId[1], edges_algo[0][i].v1, edges_algo[0][i].v2, edges_algo[0][i].angle * (180 / M_PI),
                    compEdge[j].facetId[0], compEdge[j].facetId[1], compEdge[j].v1, compEdge[j].v2, compEdge[j].angle * (180 / M_PI));
         }
@@ -544,7 +544,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyseNeighbors(Geometry
             if(Geometry::GetCommonEdges(f,g, &c1,&c2,&l)){
                 auto angle_opt = AngleBetween2Vertices(f->sh.N, g->sh.N);
                 if(!angle_opt.has_value()) {
-                    Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: %d , %d\n", i, j);
+                    Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: {} , {}\n", i, j);
                     continue;
                 }
 

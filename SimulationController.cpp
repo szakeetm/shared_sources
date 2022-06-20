@@ -40,6 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #define WAITTIME    500  // Answer in STOP mode
 
+
 SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) {
     this->threadNum = threadNum;
     this->procInfo = procInfo;
@@ -56,6 +57,7 @@ SimThread::~SimThread() = default;
 
 
 // todo: fuse with runSimulation()
+// Should allow simulation for N steps opposed to T seconds
 int SimThread::advanceForSteps(size_t desorptions) {
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
 
@@ -100,6 +102,11 @@ int SimThread::advanceForTime(double simDuration) {
 
     return 0;
 }
+
+/**
+* \brief Simulation loop for an individual thread
+ * \return 0 when simulation end has been reached via desorption limit, 1 otherwise
+ */
 
 bool SimThread::runLoop() {
     bool eos;
@@ -184,6 +191,10 @@ void SimThread::setSimState(const std::string& msg) const {
     return ret;
 }
 
+/**
+* \brief A "single (1sec)" MC step of a simulation run for a given thread
+ * \return 0 when simulation continues, 1 when desorption limit is reached
+ */
 int SimThread::runSimulation(size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
@@ -407,7 +418,7 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
 }
 
 void SimulationController::SetErrorSub(const char *message) {
-    printf("Error: %s\n", message);
+    Log::console_error("Error: {}\n", message);
     SetState(PROCESS_ERROR, message);
 }
 
@@ -506,12 +517,22 @@ int SimulationController::controlledLoop(int argc, char **argv) {
     return 0;
 }
 
+/**
+* \brief Call a rebuild of the ADS
+ * \return 0> error code, 0 when ok
+ */
 int SimulationController::RebuildAccel() {
     if (simulation->RebuildAccelStructure()) {
         return 1;
     }
     return 0;
 }
+
+/**
+* \brief Load and init simulation geometry and initialize threads after previous sanity check
+ * Setup inidividual particles per thread and local desorption limits
+ * \return true on error, false when ok
+ */
 bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
     SetState(PROCESS_STARTING, "Loading simulation");
@@ -579,17 +600,25 @@ bool SimulationController::Load() {
     return !loadOk;
 }
 
+/**
+* \brief Update on the fly parameters when called from the GUI
+ * \return true on success
+ */
 bool SimulationController::UpdateParams() {
     // Load geometry
     auto* sim = simulation;
     if (sim->model->otfParams.enableLogging) {
-        printf("Logging with size limit %zd\n",
+        Log::console_msg(3, "Logging with size limit {}\n",
                sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
     sim->ReinitializeParticleLog();
     return true;
 }
 
+/**
+* \brief Start the simulation after previous sanity checks
+ * \return 0> error code, 0 when ok
+ */
 int SimulationController::Start() {
 
     // Check simulation model and geometry one last time

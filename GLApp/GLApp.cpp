@@ -265,8 +265,8 @@ void GLApplication::Exit() {
   }
 #else
   if(logs) {
-    printf("[Unexpected error]\n");
-    printf("%s",logs);
+    Log::console_error("[Unexpected error]\n");
+    Log::console_error("{}",logs);
   }
 #endif
   SAFE_FREE(logs);

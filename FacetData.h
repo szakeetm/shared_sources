@@ -62,6 +62,9 @@ public:
 };
 #endif
 
+/**
+* \brief Polygon class (standard facet) that extends the Ray Tracing primitive containing various components for the post-processing features (hit tracking)
+ */
 struct Facet : public RTPrimitive {
     Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
     Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };

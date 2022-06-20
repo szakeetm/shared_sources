@@ -35,6 +35,9 @@ namespace MFSim {
     class Particle;
 }
 
+/**
+* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow
+ */
 class SimulationUnit {
 public:
     SimulationUnit() : model(), totalDesorbed(0), m(){

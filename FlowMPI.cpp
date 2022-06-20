@@ -69,7 +69,7 @@ namespace MFMPI {
             MPI_Type_size(MPI_BYTE, &nByte);
             //MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
             number_bytes = nByte * contents.size();
-            Log::console_msg(4,"Sharing file size with nodes %d.\n", number_bytes);
+            Log::console_msg(4,"Sharing file size with nodes {}.\n", number_bytes);
             MPI_Bcast(&number_bytes, 1, MPI_INT, 0, MPI_COMM_WORLD);
         }
         else {
@@ -104,7 +104,7 @@ namespace MFMPI {
 
         for (int i = 1; i < MFMPI::world_size; i++) {
             MPI_Barrier(MPI_COMM_WORLD);
-            Log::console_msg_master(5,"File transfer loop %d / %d.\n", i, MFMPI::world_size);
+            Log::console_msg_master(5,"File transfer loop {} / {}.\n", i, MFMPI::world_size);
             if (MFMPI::world_rank == 0) {
                 bool hasFile[1]{false};
                 MPI_Status status;
@@ -113,14 +113,14 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file %s to node %d.\n", SettingsIO::inputFile.c_str(), i);
+                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", SettingsIO::inputFile, i);
 
                     std::ifstream infile;
                     infile.open(SettingsIO::inputFile, std::ios::binary);
                     std::string contents;
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
-                    Log::console_msg(4,"Attempt to write file to node %d.\n", i);
+                    Log::console_msg(4,"Attempt to write file to node {}.\n", i);
                     int nByte = 0;
                     MPI_Type_size(MPI_BYTE, &nByte);
                     MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
@@ -131,7 +131,7 @@ namespace MFMPI {
                 MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4,"[%d] Attempt to receive file from master.\n", MFMPI::world_rank);
+                    Log::console_msg(4,"[{}] Attempt to receive file from master.\n", MFMPI::world_rank);
                     MPI_Status status;
                     // Probe for an incoming message from process zero
                     MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
@@ -142,7 +142,7 @@ namespace MFMPI {
                     // Allocate a buffer to hold the incoming numbers
                     char *file_buffer = (char *) malloc(sizeof(char) * number_bytes);
                     // Now receive the message with the allocated buffer
-                    Log::console_msg(4,"Trying to receive %d numbers from master.\n",
+                    Log::console_msg(4,"Trying to receive {} numbers from master.\n",
                            number_bytes);
                     MPI_Recv(file_buffer, number_bytes, MPI_BYTE, 0, 0,
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -154,7 +154,7 @@ namespace MFMPI {
                     }
                     catch (const std::exception &e){
                         SettingsIO::outputPath = "./";
-                        Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", SettingsIO::outputPath.c_str());
+                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", SettingsIO::outputPath);
                     }
 
                     auto outputName = SettingsIO::outputPath+"workfile"+std::filesystem::path(SettingsIO::inputFile).extension().string();
