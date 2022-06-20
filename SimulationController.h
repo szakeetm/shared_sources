@@ -28,6 +28,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class Simulation;
 
+/**
+* \brief Inidividual simulation states and settings per thread
+ * contains local desorption limits, local simulation state, global thread number, simulation state etc.
+ */
 class SimThread {
 public:
     SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
@@ -54,6 +58,9 @@ private:
     int advanceForSteps(size_t desorptions);
 };
 
+/**
+* \brief Controller that handles communication between GUI via SimulationManager and the running @SimulationUnit
+ */
 class SimulationController {
     bool UpdateParams();
     int resetControls();
