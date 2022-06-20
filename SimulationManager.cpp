@@ -349,30 +349,6 @@ int SimulationManager::CreateGPUHandle(uint16_t iProc) {
 
     auto oldSize = simHandles.size();
 
-    /*char *arguments[4];
-    for (int arg = 0; arg < 3; arg++)
-        arguments[arg] = new char[512];
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sprintf(cmdLine, "gpuSub.exe %d %hu", processId, iProc);
-    sprintf(arguments[0], "%s", cmdLine);
-#else
-    sprintf(cmdLine,"./gpuSub");
-    sprintf(arguments[0],"%s",cmdLine);
-    sprintf(arguments[1],"%d",processId);
-    sprintf(arguments[2],"%hu",iProc);
-    arguments[3] = nullptr;
-#endif
-
-    simHandles.emplace_back(
-            StartProc(arguments, STARTPROC_NORMAL),
-            SimType::simGPU);
-
-    for (int arg = 0; arg < 3; arg++)
-        if (arguments[arg] != nullptr) delete[] arguments[arg];
-
-    if (oldSize >= simHandles.size())
-        return 0;*/
-
     if(!simUnits.empty()){
         for(auto& sim : simUnits){
             delete sim;

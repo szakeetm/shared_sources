@@ -337,7 +337,7 @@ void FormulaEditor::RebuildList() {
 void FormulaEditor::Refresh() {
 	//Load contents of window from global (interface/app) formulas
 	size_t nbFormula = formula_ptr->formulas_n.size();
-	userExpressions.resize(nbFormula);
+    userExpressions.resize(nbFormula);
 	userFormulaNames.resize(nbFormula);
 	for (size_t i = 0; i < nbFormula; i++) {
 		userExpressions[i] = formula_ptr->formulas_n.at(i)->GetExpression();

@@ -173,12 +173,14 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
 }*/
 
 int RemoveDuplicates(std::vector<CommonEdge>& edge_v){
-    for(auto& e : edge_v) {
+#if defined(DEBUG)
+for(auto& e : edge_v) {
         if (e.facetId.size() < 1) {
             fmt::print("Debug check\n");
         }
     }
-    std::sort(&edge_v[0], &edge_v[edge_v.size()],
+#endif
+    std::sort(edge_v.begin(), edge_v.end(),
               [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
                   if (e0.facetId[0] == e1.facetId[0])
                       return e0.facetId[1] < e1.facetId[1];
@@ -201,7 +203,7 @@ int RemoveDuplicates(std::vector<CommonEdge>& edge_v){
 
 
 int RemoveDuplicates(std::vector<OverlappingEdge>& edge_v){
-    std::sort(&edge_v[0], &edge_v[edge_v.size()],
+    std::sort(edge_v.begin(), edge_v.end(),
               [](const OverlappingEdge &e0, const OverlappingEdge &e1) -> bool {
                   if (e0.facetId1 == e1.facetId1)
                       return e0.facetId2 < e1.facetId2;
@@ -313,7 +315,7 @@ void CombineUnorientedEdges(Container<CommonEdge, Allocator>& edges){
     for(auto iter_o = edges.begin(); iter_o != edges.end(); ){
         auto iter_next = std::next(iter_o,nextAdd);
         // limit to prevent smart selection getting stucked
-        if(edges.size() > stop_size) {
+        if(edges.size() > (unsigned int) stop_size) {
             edges.clear();
             return;
         }
@@ -328,11 +330,11 @@ void CombineUnorientedEdges(Container<CommonEdge, Allocator>& edges){
             continue;
         }
         if(iter_o->v1 == iter_next->v1 && iter_o->v2 == iter_next->v2){
-            if(iter_o->facetId[0] == iter_next->facetId[0] || iter_o->facetId[1] == iter_next->facetId[0]) {
+            if (iter_o->facetId[0] == iter_next->facetId[0] || (iter_o->facetId.size() >= 2 && iter_o->facetId[1] == iter_next->facetId[0])) {
                 nextAdd++;
                 continue;
             }
-            else {
+            else if(iter_o->swapped != iter_next->swapped) {
                 // common edge found
                 if(iter_o->facetId.size() <= 1)
                     iter_o->Merge(*iter_next);
@@ -343,6 +345,10 @@ void CombineUnorientedEdges(Container<CommonEdge, Allocator>& edges){
                     cpy.Merge(*iter_next);
                     edge_cpy.push_back(cpy);
                 }
+                nextAdd++;
+                continue;
+            }
+            else {
                 nextAdd++;
                 continue;
             }

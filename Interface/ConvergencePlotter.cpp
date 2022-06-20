@@ -205,6 +205,7 @@ void ConvergencePlotter::Refresh() {
 
     //Rebuild selection combo box
     size_t nbFormulas = formula_ptr->formulas_n.size(); // minimum 1 for custom input
+    formula_ptr->UpdateVectorSize();
     profCombo->Clear();
     if (nbFormulas) {
         profCombo->SetSize(nbFormulas);
