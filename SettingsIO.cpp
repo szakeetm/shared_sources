@@ -92,7 +92,7 @@ namespace SettingsIO {
                     "path {}\n"
                     "Output path will be appended!\n",
                     SettingsIO::outputPath.c_str(),
-                    std::filesystem::path(SettingsIO::outputFile).parent_path().c_str());
+                    std::filesystem::path(SettingsIO::outputFile).parent_path().string());
         }
 
         // Use a default outputfile name if unset

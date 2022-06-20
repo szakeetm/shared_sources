@@ -242,7 +242,7 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
 
 static std::vector<std::vector<CommonEdge>> edges_algo(5); // first index = facet id, second index = neighbor id
 
-void GeometryTools::AnalyseGeometry(std::shared_ptr<SimulationModel> model) {
+void GeometryTools::AnalyseGeometry(const std::shared_ptr<SimulationModel>& model) {
     edges_algo.resize(5);
     Chronometer stop;
     int dupli = 0, lone = 0, trans = 0;

@@ -48,7 +48,7 @@ public:
 
     static int GetCommonEdgesMap(SimulationModel *model, std::vector<CommonEdge> &commonEdges);
 
-    static void AnalyseGeometry(std::shared_ptr<SimulationModel> model);
+    static void AnalyseGeometry(const std::shared_ptr<SimulationModel>& model);
 
     static void CompareAlgorithm(SimulationModel *model, size_t index);
 
