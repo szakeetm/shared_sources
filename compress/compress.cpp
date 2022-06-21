@@ -49,11 +49,12 @@ int main(int argc,char* argv[]) {
 	}
 	std::cout << "\n\n";
 	if (argc < 3 || argc>4 || (argc == 4 && argv[3][0] != '@')) {
-        Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\nType any letter and press ENTER to quit\n");
+        Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\n");
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        Log::console_error("Type any letter and press ENTER to quit\n");
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );
+        std::cin>>key;
 #endif
-		std::cin>>key;
 		return ERR_INC_ARG;
 	}
 	std::string command;
@@ -83,7 +84,10 @@ int main(int argc,char* argv[]) {
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
         Log::console_error("\n{} not found. Cannot compress.\n", sevenZipName);
-        //std::cin>>key;
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+        Log::console_error("Type any letter and press ENTER to quit\n");
+        std::cin>>key;
+#endif
         return ERR_NO_CMPR;
 	}
 	
@@ -147,9 +151,11 @@ int main(int argc,char* argv[]) {
 	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
-	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept."
-		"\nType any letter and press Enter to exit\n",std::filesystem::path(fileNameGeometry).extension().string().c_str());
-	std::cin>>key;
+	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n" ,std::filesystem::path(fileNameGeometry).extension().string().c_str());
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    Log::console_error("Type any letter and press Enter to exit\n");
+    std::cin>>key;
+#endif
 	return ERR_UNRSLVD;
 }
 
