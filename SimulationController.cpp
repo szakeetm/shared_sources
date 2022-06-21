@@ -23,6 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SimulationController.h"
 #include "../src/Simulation/Simulation.h"
 #include "ProcessControl.h"
+#include <Helper/ConsoleLogger.h>
 #include <Helper/OutputHelper.h>
 
 #include <omp.h>

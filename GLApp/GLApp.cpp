@@ -9,6 +9,7 @@
 
 #include "GLApp.h"
 #include "Helper/MathTools.h" //Min, max
+#include "Helper/ConsoleLogger.h" //Min, max
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
 #include "GLComponent.h"
