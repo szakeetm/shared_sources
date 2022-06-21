@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -296,6 +296,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
   switch (message) {
   case MSG_BUTTON:
 	  if (src == createButton) {
+          if (mApp->AskToReset()) {
 		  Vector3d center, axisDir, normalDir;
 		  double axis1length, axis2length, racetrackTopLength;
 		  int nbSteps;
@@ -401,6 +402,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  work->Reload();
 		  mApp->changedSinceSave = true;
 		  mApp->UpdateFacetlistSelected();
+          }
 	  }
 	  else if (src == fullCircleButton) {
 		  double axis1length, axis2length;

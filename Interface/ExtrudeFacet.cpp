@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -360,7 +360,9 @@ ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
 */
 void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 	double x0, y0, z0, dX, dY, dZ, dist, radiusLength, totalAngle, totalLength;
-	int noSteps;
+	x0 = y0 = z0 = dX = dY = dZ = dist = radiusLength = totalAngle = totalLength = 0.0; //Init to avoid debug warning
+	
+	int noSteps=0;
 
 	switch(message) {
 	case MSG_BUTTON:

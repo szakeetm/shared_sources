@@ -35,6 +35,7 @@ add_definitions(
 set(SRC_FILES ${CPP_DIR_1}/compress.cpp
         ${CPP_DIR_2}/File.cpp
         ${HEADER_DIR_1}/File.h
+        ${CPP_DIR_2}/Helper/ConsoleLogger.h
         )
 
 
@@ -53,6 +54,9 @@ target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 if(MSVC)
@@ -67,21 +71,3 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
     endif()
 endif(NOT MSVC)
-
-# Preprocessor definitions
-if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /MDd /Od /EHsc)
-        #for .pdb debugging files
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
-    endif()
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE  /W3 /GL /Oi /Gy /EHsc)
-    endif()
-endif()

@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 15/04/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef MOLFLOW_PROJ_SIMULATIONMANAGER_H
 #define MOLFLOW_PROJ_SIMULATIONMANAGER_H
@@ -9,11 +25,11 @@
 #include <string>
 #include <thread>
 #include "../src/Simulation/Simulation.h"
-#include <../src/GeometrySimu.h>
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
+class SimulationModel;
 class SimulationController;
 
 struct Dataport;
@@ -73,7 +89,7 @@ protected:
     int WaitForProcStatus(uint8_t procStatus);
 
 public:
-    SimulationManager();
+    SimulationManager(int pid = -1);
 
     ~SimulationManager();
 
@@ -134,7 +150,7 @@ public:
     bool useRemote;
 
     uint16_t nbThreads;
-    uint16_t mainProcId{};
+    uint16_t mainProcId;
 
     bool interactiveMode;
     bool isRunning;
@@ -149,7 +165,7 @@ private:
     std::vector<Simulation*> simUnits;
 
 public:
-    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
+    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

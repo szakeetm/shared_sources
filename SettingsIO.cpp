@@ -1,6 +1,22 @@
-//
-// Created by pascal on 5/17/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "SettingsIO.h"
 #include <Helper/ConsoleLogger.h>
@@ -9,20 +25,27 @@
 
 // zip
 #include <File.h>
-#include <ziplib/ZipArchive.h>
-#include <ziplib/ZipFile.h>
+#include <ZipLib/ZipArchive.h>
+#include <ZipLib/ZipFile.h>
 
 namespace SettingsIO {
     bool overwrite = false;
     bool isArchive = false;
+    bool outputFacetDetails = false;
+    bool outputFacetQuantities = false;
+    bool autogenerateTest = false;
+
     std::string workFile;
     std::string workPath;
     std::string inputFile;
     std::string inputPath;
     std::string outputFile;
     std::string outputPath;
-
-    const std::string supportedFileFormats[]{".xml", ".zip"};
+    std::vector<std::string> extraFiles;
+    std::map<std::string, std::vector<std::string>> cachedLines;
+    std::vector<std::vector<std::string>> formulas;
+    std::vector<SelectionGroup> selections;
+    const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
     int prepareIO() {
         if (initDirectories()) {
@@ -50,7 +73,8 @@ namespace SettingsIO {
         // Overwrite excludes outputpath/filename
         if (SettingsIO::overwrite) {
             SettingsIO::outputFile = SettingsIO::inputFile;
-            SettingsIO::workPath = "tmp/";
+            std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
+            SettingsIO::workPath = tmpFolder;
         } else if(!SettingsIO::outputPath.empty()){
             SettingsIO::workPath = SettingsIO::outputPath;
         }
@@ -64,11 +88,11 @@ namespace SettingsIO {
         }
         else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
             Log::console_error(
-                    "Output path was set to %s, but Output file also contains a parent "
-                    "path %s\n"
+                    "Output path was set to {}, but Output file also contains a parent "
+                    "path {}\n"
                     "Output path will be appended!\n",
-                    SettingsIO::outputPath.c_str(),
-                    std::filesystem::path(SettingsIO::outputFile).parent_path().c_str());
+                    SettingsIO::outputPath,
+                    std::filesystem::path(SettingsIO::outputFile).parent_path().string());
         }
 
         // Use a default outputfile name if unset
@@ -85,11 +109,8 @@ namespace SettingsIO {
             }
         }
         if (!formatIsSupported) {
-            Log::console_error("File format is not supported: %s\n",
-                               std::filesystem::path(SettingsIO::outputFile)
-                                       .extension()
-                                       .string()
-                                       .c_str());
+            Log::console_error("File format is not supported: {}\n",
+                               std::filesystem::path(SettingsIO::outputFile).extension().string());
             return 1;
         }
 
@@ -98,18 +119,18 @@ namespace SettingsIO {
         try {
             if (!std::filesystem::exists(SettingsIO::workPath))
                 std::filesystem::create_directory(SettingsIO::workPath);
-        } catch (std::exception &e) {
-            Log::console_error("Couldn't create directory [ %s ], falling back to "
+        } catch (const std::exception &e) {
+            Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
-                               SettingsIO::workPath.c_str());
+                               SettingsIO::workPath);
             ++err;
 
             // use fallback dir
-            SettingsIO::workPath = "tmp/";
+            SettingsIO::workPath = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
             try {
                 if (!std::filesystem::exists(SettingsIO::workPath))
                     std::filesystem::create_directory(SettingsIO::workPath);
-            } catch (std::exception &e) {
+            } catch (const std::exception &e) {
                 SettingsIO::workPath = "./";
                 Log::console_error("Couldn't create fallback directory [ tmp/ ], falling "
                                    "back to binary folder instead for output files\n");
@@ -134,11 +155,11 @@ namespace SettingsIO {
             try {
                 if (!std::filesystem::exists(outputFilePath))
                     std::filesystem::create_directory(outputFilePath);
-            } catch (std::exception &e) {
+            } catch (const std::exception &e) {
                 Log::console_error(
-                        "Couldn't create parent directory set by output filename [ %s ], "
+                        "Couldn't create parent directory set by output filename [ {} ], "
                         "will only use default output path instead\n",
-                        outputFilePath.c_str());
+                        outputFilePath);
                 ++err;
             }
         }
@@ -170,10 +191,11 @@ namespace SettingsIO {
                     ".xml") { // if it's an .xml file
                     notFoundYet = false;
 
-                    if (SettingsIO::outputPath != "tmp/")
-                        FileUtils::CreateDir("tmp"); // If doesn't exist yet
+                    std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
+                    if (SettingsIO::outputPath != tmpFolder)
+                        FileUtils::CreateDir(tmpFolder); // If doesn't exist yet
 
-                    parseFileName = "tmp/" + zipFileName;
+                    parseFileName = tmpFolder + zipFileName;
                     ZipFile::ExtractFile(SettingsIO::inputFile, zipFileName, parseFileName);
                 }
             }
@@ -182,8 +204,8 @@ namespace SettingsIO {
                 return 1;
             }
             SettingsIO::workFile = parseFileName;
-            Log::console_msg_master(2, "New input file: %s\n",
-                                    SettingsIO::workFile.c_str());
+            Log::console_msg_master(2, "New input file: {}\n",
+                                    SettingsIO::workFile);
         } else {
             SettingsIO::workFile = SettingsIO::inputFile;
         }
@@ -201,6 +223,10 @@ namespace SettingsIO {
                     .compare(std::filesystem::path("tmp"))) {
             // Settings::tmpfile_dir
             std::filesystem::remove_all("tmp");
+        }
+
+        if(!SettingsIO::workPath.empty() && is_empty(std::filesystem::path(SettingsIO::workPath))){
+            std::filesystem::remove_all(SettingsIO::workPath);
         }
     }
 } // namespace SettingsIO

@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -26,11 +26,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
-#include <../src/GeometrySimu.h>
+//#include "Simulation/GeometrySimu.h"
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
+
+class SimulationModel;
+class GlobalSimuState;
+class FacetMomentSnapshot;
+struct SimulationFacet;
 
 class InterfaceFacet;
 class DeletedFacet;
@@ -148,11 +153,13 @@ public:
 
 	// Collapsing stuff
 	static int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
-	bool RemoveNullFacet();
+    static int AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex> &refs, double vT);
+    bool RemoveNullFacet();
 	static  InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
 	static bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
+	void RenumberTeleports(const std::vector<int>& newRefs);
 
 	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
@@ -251,8 +258,9 @@ protected:
 	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
+    bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
+    virtual void InitInterfaceFacets(const std::vector<std::shared_ptr<SimulationFacet>> &sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();
@@ -280,7 +288,8 @@ public:
 	void BuildFacetMeshLists();
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
-
+    virtual bool CompareXML_simustate(const std::string &fileName_lhs, const std::string &fileName_rhs,
+                                     const std::string &fileName_out, double cmpThreshold) = 0;
 protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;

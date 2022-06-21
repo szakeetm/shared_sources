@@ -145,7 +145,7 @@ void GLWindow::SetTitle(const char *title) {
     if (title) {
 
         strcpy(this->_title, title);
-        minWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(title) + 30;
+        minWidth = std::max(minWidth, GLToolkit::GetDialogFontBold()->GetTextWidth(title) + 30);
 
         // Compute a short height for icon state
         int w = 0;

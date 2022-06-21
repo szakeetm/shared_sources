@@ -16,7 +16,9 @@ class GLComponent;
 class GLWindow;
 //#include "GLFont.h"
 #include <string>
+#include <fmt/core.h>
 
+class ImguiWindow;
 class GLApplication {
 
 protected:
@@ -62,6 +64,7 @@ public:
 
     // Internal constructor
     GLApplication();
+    virtual ~GLApplication();
 
     // Components management
     void Add(GLComponent *comp);
@@ -78,6 +81,7 @@ public:
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
 	bool wereEvents;
+	int wereEvents_imgui{2};
 
 //#if defined(_DEBUG)
     // Debugging stuff
@@ -89,6 +93,7 @@ public:
 
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
+    ImguiWindow  *imWnd;
 
 //#endif
 

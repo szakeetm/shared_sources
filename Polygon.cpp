@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -557,7 +557,7 @@ std::tuple<double,Vector2d,std::vector<Vector2d>> GetInterArea(const GLAppPolygo
   
   // Count number of pts
   size_t nbV = 0;
-  for(auto p : *polys)
+  for(auto& p : *polys)
 	  nbV += p.pts.size();
   std::vector<Vector2d> lList(nbV);
 

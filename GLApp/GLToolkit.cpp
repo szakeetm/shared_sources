@@ -291,7 +291,7 @@ void GLToolkit::SetIcon32x32(const char *pngName) {
     SDL_SetWindowIcon(theApp->mainScreen, s);
     //img.Release();
   //}
-
+    SDL_FreeSurface(s);
 }
 
 bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
@@ -939,17 +939,17 @@ void GLToolkit::DrawStringRestore() {
 
 }
 
-void GLToolkit::DrawCoordinateAxes(double length, double n) {
+void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize) {
     Vector3d O(0.0, 0.0, 0.0);
     Vector3d X(1.0, 0.0, 0.0);
     Vector3d Y(0.0, 1.0, 0.0);
     Vector3d Z(0.0, 0.0, 1.0);
-    Vector3d X_end = length * X;
-    Vector3d Y_end = length * Y;
-    Vector3d Z_end = length * Z;
-    DrawVector(O, X_end, Y, n);
-    DrawVector(O, Y_end, Z, n);
-    DrawVector(O, Z_end, X, n);
+    Vector3d X_end = vectorLength * X;
+    Vector3d Y_end = vectorLength * Y;
+    Vector3d Z_end = vectorLength * Z;
+    DrawVector(O, X_end, Y, headSize);
+    DrawVector(O, Y_end, Z, headSize);
+    DrawVector(O, Z_end, X, headSize);
   glPointSize(4.0f);
   glBegin(GL_POINTS);
   glVertex3d(0.0,0.0,0.0);
@@ -957,7 +957,7 @@ void GLToolkit::DrawCoordinateAxes(double length, double n) {
 
 }
 
-void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& nr) {
+void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& headSize) {
 
     Vector3d start(x1, y1, z1);
     Vector3d end(x2, y2, z2);
@@ -977,36 +977,36 @@ void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,dou
       // Ox
       normal = Vector3d(diffNorm.x, diffNorm.z, -diffNorm.y);
   }
-  DrawVector(start, end, normal, nr);
+  DrawVector(start, end, normal, headSize);
 }
 
-void GLToolkit::DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, const double& nr) {
+void GLToolkit::DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& parallel, double headSize) {
+
+    Vector3d diff = end - start;
+    if (headSize < 1E-10) headSize = .1 * diff.Norme(); //Default head size 10% of vector length
+    Vector3d headDiff = headSize * diff.Normalized();
+    Vector3d arrowEnd = end - headDiff;
+    Vector3d reducedParallel = headSize * parallel;
+    Vector3d p2 = end + reducedParallel - headDiff;
+    Vector3d p3 = end - reducedParallel - headDiff;
+    
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
     glDisable(GL_BLEND);
-
     glDisable(GL_CULL_FACE);
-
     glBegin(GL_LINES);
-    glVertex3d(start.x,start.y,start.z);
+
+    glVertex3d(start.x, start.y, start.z);
+    glVertex3d(arrowEnd.x, arrowEnd.y, arrowEnd.z);
+
     glVertex3d(end.x,end.y,end.z);
+    glVertex3d(p2.x,p2.y,p2.z);
 
-    if (nr > 3.0) { //Draw arrow head
-        Vector3d diff = end - start;
-        Vector3d diffNorm = (1.0 / nr) * diff.Normalized();
-        Vector3d reducedNormal = (1.0 / nr) * normal;
-        Vector3d p2 = end + reducedNormal - diffNorm;
-        Vector3d p3 = end - reducedNormal - diffNorm;
-        
-        glVertex3d(end.x, end.y, end.z);
-        glVertex3d(p2.x,p2.y,p2.z);
+    glVertex3d(end.x,end.y,end.z);
+    glVertex3d(p3.x,p3.y,p3.z);
 
-        glVertex3d(end.x, end.y, end.z);
-        glVertex3d(p3.x,p3.y,p3.z);
-
-        glVertex3d(p2.x, p2.y, p2.z);
-        glVertex3d(p3.x, p3.y, p3.z);
-    }
+    glVertex3d(p2.x, p2.y, p2.z);
+    glVertex3d(p3.x, p3.y, p3.z);
 
     glEnd();
 }

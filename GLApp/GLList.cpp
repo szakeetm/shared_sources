@@ -1042,7 +1042,7 @@ int GLList::GetValueInt(size_t row, size_t column) {
 		sscanf((this->values[row*nbCol + column]), "%d", &cmp);
 		return cmp;
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		char errMsg[512];
 		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1057,7 +1057,7 @@ double GLList::GetValueDouble(size_t row, size_t column) {
 		sscanf((this->values[row*nbCol + column]), "%g", &cmp);
 		return (double)cmp;
 	}
-	catch (Error &e) {
+	catch (const std::exception &e) {
 		char errMsg[512];
 		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);

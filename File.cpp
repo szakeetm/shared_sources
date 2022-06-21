@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -53,6 +53,9 @@ FileReader::FileReader(const char *fileName) : fileName{}, readBuffer{} {
     strcpy(this->fileName, fileName);
     isEof = 0;
     CurrentChar = ' ';
+
+    peekedKeyword = false;
+    bufferedKeyword = nullptr;
     RefillBuffer();
 }
 
@@ -158,16 +161,22 @@ void FileReader::ReadKeyword(const char *keyword) {
     }
 }
 
+// Returns true if next keyword is different, false if it is matching
 bool FileReader::PeekKeyword(const char *keyword) {
-
-    int oldBuffPos = buffPos;
+    //int oldBuffPos = buffPos;
     char *w = ReadWord();
-    bool keywordNext = (strcmp(w, keyword) != 0);
+
+    bool nextKeywordDiffers = (strcmp(w, keyword) != 0);
 
     // go back to old position, as we only wanted to peek
-    buffPos = oldBuffPos;
-
-    return keywordNext;
+    /*if (buffPos > oldBuffPos){ // but only if we actually moved in front, e.g. prevent new line
+        buffPos = oldBuffPos;
+        bufferedKeyword = w;
+        peekedKeyword = true;
+    }*/
+    bufferedKeyword = w;
+    peekedKeyword = true;
+    return nextKeywordDiffers;
 }
 
 void FileReader::SeekStart() {
@@ -273,6 +282,10 @@ int FileReader::IsEol() const {
 
 char *FileReader::ReadWord() {
 
+    if(peekedKeyword){
+        peekedKeyword = false;
+        return bufferedKeyword;
+    }
     static char retWord[MAX_WORD_LENGTH];
     int len = 0;
 
@@ -353,6 +366,60 @@ std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
     return table;
 }
 
+/**
+* \brief Extract a 7z file and return the file handle
+* \param fileName name of the input file
+* \param geomName name of the geometry file
+* \return handle to opened decompressed file
+*/
+FileReader *FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const std::string &geomName) {
+    std::ostringstream cmd;
+    std::string sevenZipName;
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    //Necessary push/pop trick to support UNC (network) paths in Windows command-line
+    auto CWD = FileUtils::get_working_path();
+    cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
+    sevenZipName += "7za.exe";
+#else //Linux, MacOS
+    sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
+                                       "/usr/bin/7za", //use p7zip installed system-wide
+                                       "/usr/local/bin/7za", //use p7zip installed for user
+                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
+    for(auto& path : possibleLocations){
+        if (FileUtils::Exist(path)) {
+            sevenZipName = path;
+        }
+    }
+#endif
+
+    if (!FileUtils::Exist(sevenZipName)) {
+        throw Error("7-zip compressor not found, can't extract file.");
+    }
+    cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
+
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    cmd << "&&popd\"";
+#endif
+    system(cmd.str().c_str());
+
+    std::string toOpen, prefix;
+    std::string shortFileName = FileUtils::GetFilename(fileName);
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+    prefix = CWD + "\\tmp\\";
+#else
+    prefix = "tmp/";
+#endif
+    toOpen = prefix + geomName;
+    if (!FileUtils::Exist(toOpen))
+        //Inside the zip, try original filename with extension changed from geo7z to geo
+        toOpen = prefix + (shortFileName).substr(0,shortFileName.length() - 2);
+
+
+    return new FileReader(toOpen); //decompressed file opened
+}
+
 // FileWriter class
 
 FileWriter::FileWriter(const char *fileName) : fileName{} {
@@ -420,7 +487,7 @@ std::string FileUtils::GetFilename(const std::string &str) {
 }
 
 std::string FileUtils::StripExtension(const std::string &str) {
-
+    //Removes last period and part after. If no period found, original string returned
     size_t lastdot = str.find_last_of('.');
     if (lastdot == std::string::npos)
         return str;

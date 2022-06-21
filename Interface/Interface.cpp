@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -92,6 +92,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/FormatHelper.h" //unit formatting
 
 #include "../../src/versionId.h"
+#include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
@@ -116,7 +117,7 @@ extern int cWidth[];
 extern const char *cName[];
 
 
-Interface::Interface() {
+Interface::Interface() : GLApplication(){
     //Get number of cores
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
     compressProcessHandle = nullptr;
@@ -200,6 +201,8 @@ Interface::Interface() {
     particleLogger = nullptr;
     convergencePlotter = nullptr;
 
+    imWnd = nullptr;
+
     m_strWindowTitle = appTitle;
     wnd->SetBackgroundColor(212, 208, 200);
     m_bResizable = true;
@@ -208,6 +211,17 @@ Interface::Interface() {
     coplanarityTolerance = 1e-8;
     largeAreaThreshold = 1.0;
     planarityThreshold = 1e-5;
+
+    updateRequested = true;
+    prevRunningState = false;
+}
+
+Interface::~Interface() {
+    SAFE_DELETE(menu);
+    SAFE_DELETE(appUpdater);
+    for (auto & recentIter : recentsList) {
+        SAFE_FREE(recentIter);
+    }
 }
 
 void Interface::UpdateViewerFlags() {
@@ -247,7 +261,7 @@ void Interface::ResetSimulation(bool askConfirm) {
             try {
                 this->worker.Stop_Public();
             }
-            catch (std::exception &err) {
+            catch (const std::exception& e) {
                 ok = GLMessageBox::Display("Could not stop simulation, reset anyway ?", "Question",
                                            GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
                 if (!ok)
@@ -362,7 +376,7 @@ void Interface::LoadSelection(const char *fName) {
 
         UpdateFacetParams(true);
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
 
         char errMsg[512];
         sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
@@ -402,7 +416,7 @@ void Interface::SaveSelection() {
             }
 
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -441,7 +455,7 @@ void Interface::ExportSelection() {
             //UpdateCurrentDir(fn->fullName);
             //UpdateTitle();
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -878,6 +892,12 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
     menu->GetSubMenu("Test")->Add("Analyse Geometry", MENU_ANALYSE);
+    menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
+
+    menu->GetSubMenu("Test")->Add(nullptr);
+    menu->GetSubMenu("Test")->Add("ImGui Global Settings", MENU_IMGUI_GLOB);
+    menu->GetSubMenu("Test")->Add("ImGui Sidebar", MENU_IMGUI_SIDE);
+    menu->GetSubMenu("Test")->Add("ImGui Test Suite", MENU_IMGUI);
 
     geomNumber = new GLTextField(0, nullptr);
     geomNumber->SetEditable(false);
@@ -1019,7 +1039,7 @@ void Interface::OneTimeSceneInit_shared_post() {
         worker.InitSimProc();
         //worker.SetProcNumber(nbProc);
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         char errMsg[512];
         sprintf(errMsg, "Failed to start working sub-process(es), simulation not available\n%s", e.what());
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1355,7 +1375,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             try {
                                 err = geom->ExplodeSelected();
                             }
-                            catch (Error &e) {
+                            catch (const std::exception &e) {
                                 GLMessageBox::Display(e.what(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
                             }
                             if (err == -1) {
@@ -1531,9 +1551,15 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_LOADSEL:
                     LoadSelection();
                     return true;
-                case MENU_SELECTION_ADDNEW:
-                    AddSelection();
+                case MENU_SELECTION_ADDNEW: {
+                    std::stringstream tmp_ss;
+                    tmp_ss << "Selection #" << (selections.size() + 1);
+                    char *selectionName = GLInputBox::GetInput(tmp_ss.str().c_str(), "Selection name",
+                                                               "Enter selection name");
+                    if (selectionName)
+                        AddSelection(selectionName);
                     return true;
+                }
                 case MENU_SELECTION_CLEARALL:
                     if (GLMessageBox::Display("Clear all selections ?", "Question", GLDLG_OK | GLDLG_CANCEL,
                                               GLDLG_ICONINFO) == GLDLG_OK) {
@@ -1560,7 +1586,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         try {
                             geom->CreatePolyFromVertices_Convex();
                         }
-                        catch (Error &e) {
+                        catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
@@ -1571,7 +1597,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         try {
                             geom->CreatePolyFromVertices_Order();
                         }
-                        catch (Error &e) {
+                        catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
@@ -1650,7 +1676,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                             return true;
                         }
                         try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
-                        catch (Error &e) {
+                        catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK,
                                                   GLDLG_ICONERROR);
                         }
@@ -1763,12 +1789,28 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_ANALYSE:
                     GeometryTools::AnalyseGeometry(this->worker.GetGeometry());
                     return true;
+                case MENU_CMP_RES: {
+                    const std::string fileName = NFD_OpenFile_Cpp("syn7z", "");
+                    const std::string fileName_rhs = NFD_OpenFile_Cpp("syn7z", "");
+
+                    if (fileName.empty() || fileName_rhs.empty()) {
+                        return false;
+                    }
+
+                    std::string fileName_out = NFD_SaveFile_Cpp("txt", "");
+                    if (fileName_out.empty()) {
+                        fileName_out = "myCmp.txt";
+                    }
+
+                    worker.GetGeometry()->CompareXML_simustate(fileName, fileName_rhs, fileName_out, 1e-3);
+                    return true;
+                }
                 case MENU_ABOUT: {
                     std::ostringstream aboutText;
                     aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
 Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
-Copyright:   CERN / E.S.R.F.   (2020)
+Copyright:   CERN / E.S.R.F.   (2021)
 Website:    https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
@@ -1795,6 +1837,46 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     }
                     manualUpdate->Refresh();
                     manualUpdate->SetVisible(true);
+                    return true;
+                }
+                case MENU_IMGUI: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                        imWnd->ToggleMainHub(); // active on start
+                    }
+                    else{
+                        imWnd->destruct();
+                        delete imWnd;
+                        imWnd = nullptr;
+                    }
+                    return true;
+                }
+                case MENU_IMGUI_GLOB: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleGlobalSettings();
+
+                    return true;
+                }
+                case MENU_IMGUI_SIDE: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleSimSidebar();
+
+                    return true;
+                }
+                case MENU_IMGUI_MENU: {
+                    if(!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleMainMenu();
+
                     return true;
                 }
             }
@@ -2053,15 +2135,11 @@ void Interface::OverWriteSelection(size_t idOvr) {
     RebuildSelectionMenus();
 }
 
-void Interface::AddSelection() {
-    Geometry *geom = worker.GetGeometry();
-    std::stringstream tmp;
-    tmp << "Selection #" << (selections.size() + 1);
-    char *selectionName = GLInputBox::GetInput(tmp.str().c_str(), "Selection name", "Enter selection name");
-    if (!selectionName) return;
+void Interface::AddSelection(const std::string &selectionName) {
+    if (selectionName.empty()) return;
 
     SelectionGroup newSelection;
-    newSelection.selection = geom->GetSelectedFacets();
+    newSelection.selection = worker.GetGeometry()->GetSelectedFacets();
     newSelection.name = selectionName;
     selections.push_back(newSelection);
     RebuildSelectionMenus();
@@ -2510,6 +2588,16 @@ void Interface::UpdateFormula() {
 }
 */
 
+void Interface::DropEvent(char *dropped_file) {
+    // Shows directory of dropped file
+    int ret = GLMessageBox::Display(fmt::format("Do you want to load this file\n    {}?", dropped_file).c_str(), "Load file?",
+            GLDLG_OK|GLDLG_CANCEL,GLDLG_ICONWARNING);
+    /**/
+    if(ret == GLDLG_OK) {
+        LoadFile(dropped_file);
+    }
+}
+
 bool Interface::AskToSave() {
     if (!changedSinceSave) return true;
     int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved",
@@ -2529,7 +2617,7 @@ bool Interface::AskToSave() {
                 UpdateTitle();
                 AddRecent(fn.c_str());
             }
-            catch (Error &e) {
+            catch (const std::exception &e) {
                 char errMsg[512];
                 sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
                 GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2552,7 +2640,7 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
                 geom->ClipSelectedPolygons(type, reverseOrder);
             }
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
         }
         //UpdateModelParams();
@@ -2580,7 +2668,7 @@ void Interface::SaveFileAs() {
             UpdateTitle();
             AddRecent(worker.fullFileName.c_str());
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2610,7 +2698,7 @@ void Interface::ExportTextures(int grouping, int mode) {
             //UpdateCurrentDir(fn->fullName);
             //UpdateTitle();
         }
-        catch (Error &e) {
+        catch (const std::exception &e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2699,9 +2787,19 @@ int Interface::FrameMove() {
 
                 // Update hits
                 try {
+                    // postpone realreload if it would be called from a delayed run state change
+                    bool refreshReload = false;
+                    if(worker.needsReload && (prevRunningState && !runningState)) {
+                        refreshReload = true;
+                        worker.needsReload = false;
+                    }
+
                     worker.Update(m_fTime);
+
+                    if(refreshReload)
+                        worker.needsReload = true;
                 }
-                catch (Error &e) {
+                catch (const std::exception &e) {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
@@ -2767,14 +2865,21 @@ int Interface::FrameMove() {
     if (timeForAutoSave) AutoSave();
 
     //Check if app updater has found updates
-    if (appUpdater && appUpdater->IsUpdateAvailable()) {
-        if (!updateLogWindow) {
-            updateLogWindow = new UpdateLogWindow(this);
+    if (appUpdater) {
+        if(appUpdater->IsUpdateAvailable()) {
+            if (!updateLogWindow) {
+                updateLogWindow = new UpdateLogWindow(this);
+            }
+            if (!updateFoundDialog) {
+                updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
+                updateFoundDialog->SetVisible(true);
+                wereEvents = true;
+            }
         }
-        if (!updateFoundDialog) {
-            updateFoundDialog = new UpdateFoundDialog(appName, appVersionName, appUpdater, updateLogWindow);
-            updateFoundDialog->SetVisible(true);
-            wereEvents = true;
+        else{
+            if(appUpdater->NotifyServerWarning()){
+
+            }
         }
     }
 
@@ -2819,6 +2924,11 @@ int Interface::FrameMove() {
     }
     */
 
+
+    /*if(imWin) {
+        imWin->renderSingle();
+    }*/
+
     double delayTime = 0.03 - (wereEvents ? fPaintTime : 0.0) - fMoveTime;
     if (delayTime > 0.0) { //static casting a double<-1 to uint is an underflow on Windows!
         auto delay_u = static_cast<uint32_t>(1000.0 * delayTime);
@@ -2861,7 +2971,7 @@ bool Interface::AutoSave(bool crashSave) {
         autosaveFilename = newAutosaveFilename;
         ResetAutoSaveTimer(); //deduct saving time from interval
     }
-    catch (Error &e) {
+    catch (const std::exception &e) {
         GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", {"OK"}, GLDLG_ICONERROR);
         progressDlg2->SetVisible(false);
         SAFE_DELETE(progressDlg2);

@@ -1,12 +1,58 @@
-//
-// Created by pbahr on 08/02/2021.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
+
+// M_PI define
+#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
+#endif
+#include <cmath>
 
 #include "FacetData.h"
 #include "Polygon.h"
 #include "Helper/MathTools.h"
-#include "RayTracing/RTHelper.h" // SubProcessFacetTempVar
+#include "RayTracing/RTHelper.h" // SimulationFacetTempVar
 #include "RayTracing/Ray.h" // hitlink
+
+#if defined(SYNRAD)
+bool MaterialSurface::IsHardHit(const Ray &r) {
+    return !((opacity < 0.999999 //Partially transparent facet
+              && r.rng->rnd() > opacity)
+             || (mat != nullptr &&/*this->sh.reflectType > 10 //Material reflection
+                     && */mat->hasBackscattering //Has complex scattering
+                 && mat->GetReflectionType(reinterpret_cast<Synpay *>(r.pay)->energy,
+                                           acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS));
+
+    /*if(opacity == 1.0)
+            return true;
+        else if(opacity == 0.0)
+            return false;
+        else if(r.rng->rnd() < opacity)
+            return true;
+        else if(mat->hasBackscattering
+                && mat->GetReflectionType(reinterpret_cast<Synpay*>(r.pay)->energy,
+                                          acos(Dot(r.direction, N)) - M_PI_2, r.rng->rnd()) == REFL_TRANS)
+            return true;
+        else
+            return false;*/
+}
+#endif
 
 bool Facet::Intersect(Ray &ray) {
     //++iSCount;
@@ -77,15 +123,15 @@ bool Facet::Intersect(Ray &ray) {
                                         ray.hitChain->next = new HitChain();
                                         ray.hitChain = ray.hitChain->next;
                                     }
-                                    ray.hitChain->hit = new SubProcessFacetTempVar();
+                                    ray.hitChain->hit = new SimulationFacetTempVar();
                                     ray.hitChain->hit->isHit = true;
                                     ray.hitChain->hit->colU = u;
                                     ray.hitChain->hit->colV = v;
                                     ray.hitChain->hit->colDistTranspPass = d;
                                     ray.hitChain->hitId = globalId;*/
 
-                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
-                                    /*ray.hits.emplace_back(globalId, SubProcessFacetTempVar());
+                                    ray.hardHit = HitLink(globalId, SimulationFacetTempVar(d,u,v,true));
+                                    /*ray.hits.emplace_back(globalId, SimulationFacetTempVar());
                                     auto& hit = ray.hits.back().hit;
                                     hit.isHit = true;
                                     hit.colU = u;
@@ -99,14 +145,14 @@ bool Facet::Intersect(Ray &ray) {
                                     ray.hitChain->next = new HitChain();
                                     ray.hitChain = ray.hitChain->next;
                                 }
-                                ray.hitChain->hit = new SubProcessFacetTempVar();
+                                ray.hitChain->hit = new SimulationFacetTempVar();
                                 ray.hitChain->hit->isHit = false;
                                 ray.hitChain->hit->colU = u;
                                 ray.hitChain->hit->colV = v;
                                 ray.hitChain->hit->colDistTranspPass = d;
                                 ray.hitChain->hitId = globalId;*/
 
-                                ray.hits.emplace_back(globalId, SubProcessFacetTempVar(d,u,v,false));
+                                ray.hits.emplace_back(globalId, SimulationFacetTempVar(d,u,v,false));
                                 /*auto& hit = ray.hits.back().hit;
                                 hit.isHit = false;
                                 hit.colU = u;

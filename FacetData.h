@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 08/02/2021.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef MOLFLOW_PROJ_FACETDATA_H
 #define MOLFLOW_PROJ_FACETDATA_H
@@ -33,10 +49,41 @@ public:
     };
 };
 
+#if defined(SYNRAD)
+#include "../src/SynradDistributions.h"
+class MaterialSurface : public Surface{
+    double opacity{1.0};
+    Material* mat;
+    Vector3d N;
+public:
+    MaterialSurface(double opacity) : opacity(opacity), mat(nullptr){};
+    MaterialSurface(Material* mat, double opacity) : opacity(opacity), mat(mat){};
+    bool IsHardHit(const Ray &r) override;
+};
+#endif
+
+/**
+* \brief Polygon class (standard facet) that extends the Ray Tracing primitive containing various components for the post-processing features (hit tracking)
+ */
 struct Facet : public RTPrimitive {
     Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
     Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    ~Facet(){
+    Facet(const Facet& cpy) {
+        globalId = cpy.globalId;
+        sh = cpy.sh;
+        indices = cpy.indices;
+        vertices2 = cpy.vertices2;
+        surf = cpy.surf; // Will be deleted tgthr with cpy
+    };
+    Facet(Facet&& cpy) noexcept{
+        globalId = std::move(cpy.globalId);
+        sh = std::move(cpy.sh);
+        indices = std::move(cpy.indices);
+        vertices2 = std::move(cpy.vertices2);
+        surf = cpy.surf;
+        cpy.surf = nullptr;
+    };
+    ~Facet() override{
         if (surf) {
             //delete surf;
             // don' t delete, origin is an unreferenced shared ptr

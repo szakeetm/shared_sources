@@ -1,6 +1,22 @@
-//
-// Created by pascal on 4/21/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 /*
  * KDTree code based on pbrt-v3
@@ -169,10 +185,10 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
               maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
 
     printf("--- KD STATS ---\n");
-    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
+    printf(" Total Primitives: {}\n", STATS_KD::totalPrimitives);
+    printf(" Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
+    printf(" Interior Nodes:   {}\n", STATS_KD::interiorNodes);
+    printf(" Leaf Nodes:       {}\n", STATS_KD::leafNodes);
 
 }
 

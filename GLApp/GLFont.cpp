@@ -12,18 +12,20 @@ using namespace cimg_library;
 
 extern GLApplication *theApp;
 
-GLFont2D::GLFont2D() {
+GLFont2D::GLFont2D() : fileName{}, pMatrix{}, cVarWidth{}{
   strcpy(fileName,"images/font.png");
   cHeight = 15;
   cWidth  = 9;
   isVariable = false;
+  std::fill(cVarWidth, cVarWidth + 256, 0);
 }
 
-GLFont2D::GLFont2D(const char *imgFileName) {
+GLFont2D::GLFont2D(const char *imgFileName) : fileName{}, pMatrix{}, cVarWidth{} {
   strcpy(fileName,imgFileName);
   cHeight = 15;
   cWidth  = 9;
   isVariable = false;
+  std::fill(cVarWidth, cVarWidth + 256, 0);
 }
 
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
@@ -156,7 +158,7 @@ void GLFont2D::SetTextSize(int width,int height) {
 }
 
 int GLFont2D::GetTextWidth(const char *text) {
-  int lgth = (int)strlen(text);
+    int lgth = text ? (int)strlen(text) : 0;
   int w = 0;
 
   if( isVariable ) {
@@ -187,7 +189,7 @@ void GLFont2D::SetTextColor(const float &r,const float &g,const float &b) {
 
 void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
 
-  int lgth = (int)strlen(text);
+    int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
   int x = cx;
   int y = cy+1;
@@ -249,7 +251,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,boo
 
 void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool &loadMatrix) {
 
-  int lgth = (int)strlen(text);
+    int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
   int x = cx;
   int y = cy+1;
@@ -309,7 +311,7 @@ void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool 
 
 void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 
-  int lgth = (int)strlen(text);
+  int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
   int x = cx;
   int y = cy+1;
@@ -358,7 +360,7 @@ void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 
 void GLFont2D::DrawTextV(int x,int y,char *text,bool loadMatrix) {
 
-  int lgth = (int)strlen(text);
+    int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
 
   glEnable(GL_TEXTURE_2D);

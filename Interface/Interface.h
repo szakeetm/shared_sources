@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -30,6 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
 #include "Clipper/clipper.hpp"
+
 class GLTextField;
 class GLToggle;
 class GLLabel;
@@ -76,7 +77,7 @@ class ParticleLogger;
 class ConvergencePlotter;
 
 class Geometry;
-
+class ImguiWindow;
 /*
 typedef struct {
 	GLLabel     *name;
@@ -221,18 +222,25 @@ typedef struct {
 
 #define MENU_TRIANGULATE          815
 #define MENU_ANALYSE              816
+#define MENU_CMP_RES              817
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
+#define MENU_IMGUI                1100
+#define MENU_IMGUI_GLOB           1101
+#define MENU_IMGUI_SIDE           1102
+#define MENU_IMGUI_MENU           1103
+
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-constexpr size_t SmoothStatSizeLimit() {return 16;};
+constexpr size_t SmoothStatSizeLimit() {return 16;}
 
 class Interface : public GLApplication {
 protected:
 	Interface();
+    virtual ~Interface();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
 	//virtual void UpdateFormula() {}
@@ -278,6 +286,10 @@ public:
 	    }
 
 	    void push(T event, double time){
+	        if(!eventsAtTime.empty()){
+	            if(time == eventsAtTime.back().second)
+	                return;
+	        }
 	        if(eventsAtTime.size() >= N) {
 	            if(!useDiff)
 	                sum -= eventsAtTime.front().first;
@@ -305,8 +317,8 @@ public:
 
 	EventPerSecond<size_t>   hps;          // Hit per second
 	EventPerSecond<size_t>   dps;          // Hit per second
-	EventPerSecond<size_t,true>   hps_runtotal;          // Hit per second
-	EventPerSecond<size_t,true>   dps_runtotal;          // Hit per second
+	EventPerSecond<size_t,true>   hps_runtotal{2};          // Hit per second
+	EventPerSecond<size_t,true>   dps_runtotal{2};          // Hit per second
 
 	size_t    lastNbHit;    // measurement
 	size_t    lastNbDes;    // measurement
@@ -423,7 +435,7 @@ public:
 	// Selections
 	void SelectSelection(size_t v);
 	void AddSelection(const SelectionGroup& s);
-	void AddSelection();
+	void AddSelection(const std::string &selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);
@@ -434,7 +446,8 @@ public:
 	
 	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
-	bool AskToSave();
+    void DropEvent(char *dropped_file);
+    bool AskToSave();
 	bool AskToReset(Worker *work = nullptr);
 	void AddStruct();
 	void DeleteStruct();

@@ -1,7 +1,7 @@
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
 Copyright:   E.S.R.F / CERN
 Website:     https://cern.ch/molflow
 
@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef FILERWH
 #define FILERWH
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include "GLApp/GLTypes.h"
@@ -77,6 +77,7 @@ public:
 
   void JumpComment();
   void JumpControlChars();
+  static FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
 
   std::vector<std::vector<std::string>> ImportCSV_string();
 private:
@@ -89,6 +90,8 @@ private:
   int curLine;
   char fileName[2048];
   char readBuffer[READ_BUFFSIZE];
+  char* bufferedKeyword;
+  bool peekedKeyword;
   int  nbLeft;
   int  buffPos;
   int  isEof;
