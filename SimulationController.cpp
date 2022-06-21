@@ -23,6 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SimulationController.h"
 #include "../src/Simulation/Simulation.h"
 #include "ProcessControl.h"
+#include <Helper/ConsoleLogger.h>
 #include <Helper/OutputHelper.h>
 
 #include <omp.h>
@@ -311,6 +312,10 @@ int SimulationController::controlledLoop(int argc, char **argv) {
     return 0;
 }
 
+/**
+* \brief Call a rebuild of the ADS
+ * \return 0> error code, 0 when ok
+ */
 int SimulationController::RebuildAccel() {
     if (simulation->RebuildAccelStructure()) {
         return 1;
@@ -318,6 +323,10 @@ int SimulationController::RebuildAccel() {
     return 0;
 }
 
+/**
+* \brief Update on the fly parameters when called from the GUI
+ * \return true on success
+ */
 bool SimulationController::UpdateParams() {
     // Load geometry
     auto* sim = simulation;
@@ -328,6 +337,7 @@ bool SimulationController::UpdateParams() {
     sim->ReinitializeParticleLog();
     return true;
 }
+
 
 int SimulationController::Reset() {
     SetState(PROCESS_STARTING, "Resetting local cache...", false, true);

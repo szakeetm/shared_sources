@@ -53,6 +53,8 @@ public:
     static void CompareAlgorithm(SimulationModel *model, size_t index);
 
     static int GetNeighbors(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+
+    static int GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 };
 
 

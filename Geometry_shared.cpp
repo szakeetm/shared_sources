@@ -4914,6 +4914,62 @@ std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
 	return plottedFacets;
 }
 
+void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
+    vertices3.clear();
+    for(auto& vert : vertices) {
+        vertices3.emplace_back(vert); // position data
+        vertices3.back().selected = false;
+    }
+
+    sh.nbVertex = vertices.size();
+}
+
+bool Geometry::InitOldStruct(SimulationModel* model){
+    for (int i = 0; i < MAX_SUPERSTR; i++) {
+        SAFE_FREE(strName[i]);
+        SAFE_FREE(strFileName[i]);
+    }
+    memset(strName, 0, MAX_SUPERSTR * sizeof(char *));
+    memset(strFileName, 0, MAX_SUPERSTR * sizeof(char *));
+    for(size_t i = 0; i < std::min((int)model->structures.size(),(int)MAX_SUPERSTR); ++i){
+        strName[i] = (char*)malloc(std::min((size_t)model->structures[i].strName.size()+1,(size_t)256) * sizeof(char));
+        strFileName[i] = (char*)malloc(std::min((size_t)model->structures[i].strFileName.size()+1,(size_t)256) * sizeof(char));
+        std::strncpy(strName[i], model->structures[i].strName.c_str(), std::min((size_t)model->structures[i].strName.size(),(size_t)256));
+        std::strncpy(strFileName[i], model->structures[i].strFileName.c_str(), std::min((size_t)model->structures[i].strFileName.size(),(size_t)256));
+        strName[i][std::min((size_t)model->structures[i].strName.size(),(size_t)256)] = '\0';
+        strFileName[i][std::min((size_t)model->structures[i].strFileName.size(),(size_t)256)] = '\0';
+    }
+
+    return true;
+}
+
+// In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
+void Geometry::InitInterfaceFacets(const vector<shared_ptr<SimulationFacet>> &sFacets, Worker* work) {
+    //Facets
+    try{
+        facets.resize(sFacets.size(), nullptr);
+    }
+    catch(const std::exception &e) {
+        throw Error("Couldn't allocate memory for facets");
+    }
+
+    size_t index = 0;
+    for(auto& sFac : sFacets) {
+        auto& fac = *sFac;
+        facets[index] = new InterfaceFacet(fac.indices.size());
+        auto& intFacet = facets[index];
+        intFacet->indices = fac.indices;
+        intFacet->vertices2 = fac.vertices2;
+        intFacet->sh = fac.sh;
+
+        // Do Molflow or Synrad related things in an overriden function
+        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
+        ++index;
+    }
+
+    sh.nbFacet = sFacets.size();
+}
+
 #if defined(MOLFLOW)
 PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
 																																	  
@@ -4973,43 +5029,6 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 	}
 
 	return result;
-}
-
-void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
-    vertices3.clear();
-    for(auto& vert : vertices) {
-        vertices3.emplace_back(vert); // position data
-        vertices3.back().selected = false;
-    }
-
-    sh.nbVertex = vertices.size();
-}
-
-// In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void Geometry::InitInterfaceFacets(const vector<shared_ptr<SimulationFacet>> &sFacets, Worker* work) {
-    //Facets
-    try{
-        facets.resize(sFacets.size(), nullptr);
-    }
-    catch(const std::exception &e) {
-        throw Error("Couldn't allocate memory for facets");
-    }
-
-    size_t index = 0;
-    for(auto& sFac : sFacets) {
-		auto& fac = *sFac;
-        facets[index] = new InterfaceFacet(fac.indices.size());
-        auto& intFacet = facets[index];
-        intFacet->indices = fac.indices;
-        intFacet->vertices2 = fac.vertices2;
-        intFacet->sh = fac.sh;
-
-        // Do Molflow or Synrad related things in an overriden function
-        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
-        ++index;
-    }
-
-    sh.nbFacet = sFacets.size();
 }
 
 #endif

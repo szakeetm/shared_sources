@@ -240,10 +240,10 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
     return nRemoved;
 }
 
-static std::vector<std::vector<CommonEdge>> edges_algo(5); // first index = facet id, second index = neighbor id
+static std::vector<std::vector<CommonEdge>> edges_algo(6); // first index = facet id, second index = neighbor id
 
 void GeometryTools::AnalyseGeometry(const std::shared_ptr<SimulationModel>& model) {
-    edges_algo.resize(5);
+    edges_algo.resize(6);
     Chronometer stop;
     int dupli = 0, lone = 0, trans = 0;
 
@@ -301,6 +301,16 @@ void GeometryTools::AnalyseGeometry(const std::shared_ptr<SimulationModel>& mode
     //trans = HandleTransparent(edges_algo[3], geometry);
     CalculateNeighborAngles(edges_algo[4], facet_ptr);
     Log::console_msg(2, "[{} - {} - {} - {}] Neighbor T5 Dupli: {}\n", edges_algo[4].size(), dupli, lone, trans, stop.Elapsed());
+
+    stop.ReInit(); stop.Start();
+    GetCommonEdgesSingleVertex(nullptr, edges_algo[5]);
+    Log::console_msg(2, "[{}] Neighbor T6 Map: {}\n", edges_algo[5].size(), stop.Elapsed());
+    //dupli = RemoveDuplicates(edges_algo[3]);
+    //lone = HandleLoneEdge(edges_algo[3]);
+    //trans = HandleTransparent(edges_algo[3], geometry);
+    //CalculateNeighborAngles(edges_algo[5], geometry);
+    //printf("[%lu - %d - %d - %d] Neighbor T6 Dupli: %lf\n", edges_algo[5].size(), dupli, lone, trans, stop.Elapsed());
+
 
     // Skip and only compare with newer algorithms
     //CompareAlgorithm(nullptr, 1);
@@ -771,6 +781,58 @@ int GeometryTools::GetCommonEdgesMap(SimulationModel *model, std::vector<CommonE
                         edges.emplace_back(CommonEdge(fac1, fac2, p11, p12));
                 }
             }
+        }
+    }
+
+    RemoveDuplicates(edges);
+    return commonEdges.size();
+
+}
+
+int GeometryTools::GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+
+    // 1. The first step is also to form the pairs of integers (i.e., two arrays of integers)
+    std::vector<std::pair<int, int>> vertex_elements; // pairs of vertex IDs, element IDs
+
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+        auto facet = geometry->GetFacet(facetId);
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) {
+            vertex_elements.emplace_back(std::make_pair(facet->GetIndex(i), facetId));
+        }
+    }
+
+    // 2. sort according to the first array of integers
+    std::sort(&vertex_elements[0], &vertex_elements[vertex_elements.size()]);
+
+    // 3. use the parallel segmented reduction and scan
+    // to further determine both the total number
+    // and the detailed indices of the neighboring elements
+
+    commonEdges.clear();
+    std::vector<CommonEdge>& edges = commonEdges;
+    std::vector<int> positions;
+    positions.resize(geometry->GetNbVertex());
+    int pos = 0;
+    positions[0] = 0;
+    for(auto& entry : vertex_elements){
+        auto vertex = entry.first;
+        pos++;
+        positions[vertex] = pos;
+    }
+
+    for(auto iter_o = vertex_elements.begin(); iter_o != vertex_elements.end(); ++iter_o){
+        if((iter_o+1) == vertex_elements.end())
+            break;
+        auto vertex1 = iter_o->first;
+        auto element1 = iter_o->second;
+
+        for(auto iter_i = iter_o+1; iter_i != vertex_elements.end() && iter_o->first != iter_i->first && iter_o->second == iter_i->second; ++iter_i){
+            auto vertex2 = iter_i->first;
+            auto element2 = iter_i->second;
+
+            auto& edge = edges.emplace_back(CommonEdge(element1, vertex1, vertex2));
+            auto edge2 = CommonEdge(element2, vertex1, vertex2);
+            edge.Merge(edge2);
         }
     }
 
