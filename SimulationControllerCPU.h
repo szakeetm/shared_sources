@@ -13,6 +13,10 @@
 
 class Simulation;
 
+/**
+* \brief Inidividual simulation states and settings per thread
+ * contains local desorption limits, local simulation state, global thread number, simulation state etc.
+ */
 class SimThread {
 public:
     SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
