@@ -56,6 +56,9 @@ protected:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
+#if defined(MOLFLOW) and defined(GPUCOMPABILITY)
+    bool show_gpu{false}; //!< Plot showing history of simulation performance
+#endif
 
     double start_time; // to keep track how long the ImGui GUI is running
 #if defined(MOLFLOW)
