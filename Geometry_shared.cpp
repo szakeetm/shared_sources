@@ -1049,7 +1049,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		try {
 			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
-		catch (Error &e) {
+		catch (const std::exception& e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}	
 	}
@@ -1164,7 +1164,7 @@ void Geometry::ShiftVertex() {
 			try {
 				SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 			}
-			catch (Error &e) {
+			catch (const std::exception& e) {
 				GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			}
 
@@ -1655,7 +1655,7 @@ void Geometry::AlignFacets(std::vector<size_t> memorizedSelection, size_t source
 		for (int i = 0; i < nbSelected; i++)
 			SetFacetTexture(selection[i], facets[selection[i]]->tRatio, facets[selection[i]]->hasMesh);
 	}
-	catch (Error &e) {
+	catch (const std::exception& e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
@@ -1697,7 +1697,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		/*try {
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 		}
-		catch (Error &e) {
+		catch (const std::exception& e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/
@@ -1754,7 +1754,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	/*try {
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
-	catch (Error &e) {
+	catch (const std::exception& e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
@@ -1828,7 +1828,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 
 		}
-		catch (Error &e) {
+		catch (const std::exception& e) {
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}*/

@@ -424,7 +424,7 @@ void Interface::LoadSelection(const char *fName) {
 
         UpdateFacetParams(true);
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
 
         char errMsg[512];
         sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
@@ -464,7 +464,7 @@ void Interface::SaveSelection() {
             }
 
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -503,7 +503,7 @@ void Interface::ExportSelection() {
             //UpdateCurrentDir(fn->fullName);
             //UpdateTitle();
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1081,7 +1081,7 @@ void Interface::OneTimeSceneInit_shared_post() {
     try {
         worker.SetProcNumber(nbProc);
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         char errMsg[512];
         sprintf(errMsg, "Failed to start working sub-process(es), simulation not available\n%s", e.what());
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1332,7 +1332,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         geom->SwapNormal();
                         // Send to sub process
                         try { worker.Reload(); }
-                        catch (Error &e) {
+                        catch (const std::exception& e) {
                             GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }
                     }
@@ -1408,7 +1408,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             try {
                                 err = geom->ExplodeSelected();
                             }
-                            catch (Error &e) {
+                            catch (const std::exception& e) {
                                 GLMessageBox::Display(e.what(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
                             }
                             if (err == -1) {
@@ -1423,7 +1423,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 UpdateFacetParams(true);
                                 // Send to sub process
                                 try { worker.Reload(); }
-                                catch (Error &e) {
+                                catch (const std::exception& e) {
                                     GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK,
                                                           GLDLG_ICONERROR);
                                 }
@@ -1617,7 +1617,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         try {
                             geom->CreatePolyFromVertices_Convex();
                         }
-                        catch (Error &e) {
+                        catch (const std::exception& e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
@@ -1628,7 +1628,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         try {
                             geom->CreatePolyFromVertices_Order();
                         }
-                        catch (Error &e) {
+                        catch (const std::exception& e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         worker.Reload();
@@ -1707,7 +1707,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                             return true;
                         }
                         try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
-                        catch (Error &e) {
+                        catch (const std::exception& e) {
                             GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK,
                                                   GLDLG_ICONERROR);
                         }
@@ -2253,7 +2253,7 @@ void Interface::AddStruct() {
     geom->AddStruct(structName);
     // Send to sub process
     try { worker.Reload(); }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -2289,7 +2289,7 @@ void Interface::DeleteStruct() {
     geom->DelStruct(structNumInt - 1);
     // Send to sub process
     try { worker.Reload(); }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -2564,7 +2564,7 @@ bool Interface::AskToSave() {
                 UpdateTitle();
                 AddRecent(fn.c_str());
             }
-            catch (Error &e) {
+            catch (const std::exception& e) {
                 char errMsg[512];
                 sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
                 GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2587,12 +2587,12 @@ void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
                 geom->ClipSelectedPolygons(type, reverseOrder);
             }
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
         }
         //UpdateModelParams();
         try { worker.Reload(); }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             GLMessageBox::Display(e.what(), "Error reloading worker", GLDLG_OK, GLDLG_ICONERROR);
         }
     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -2618,7 +2618,7 @@ void Interface::SaveFileAs() {
             UpdateTitle();
             AddRecent(worker.fullFileName);
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2648,7 +2648,7 @@ void Interface::ExportTextures(int grouping, int mode) {
             //UpdateCurrentDir(fn->fullName);
             //UpdateTitle();
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             char errMsg[512];
             sprintf(errMsg, "%s\nFile:%s", e.what(), fn.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -2738,7 +2738,7 @@ int Interface::FrameMove() {
                 try {
                     worker.Update(m_fTime);
                 }
-                catch (Error &e) {
+                catch (const std::exception& e) {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
@@ -2892,7 +2892,7 @@ bool Interface::AutoSave(bool crashSave) {
         autosaveFilename = newAutosaveFilename;
         ResetAutoSaveTimer(); //deduct saving time from interval
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", {"OK"}, GLDLG_ICONERROR);
         progressDlg2->SetVisible(false);
         SAFE_DELETE(progressDlg2);

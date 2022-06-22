@@ -147,7 +147,7 @@ void Worker::Stop_Public() {
         Stop();
         Update(mApp->m_fTime);
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
 }
@@ -160,7 +160,7 @@ BYTE *Worker::GetHits() {
     try {
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
     return simManager.GetLockedHitBuffer();
@@ -170,7 +170,7 @@ std::tuple<size_t, ParticleLoggerItem *> Worker::GetLogBuff() {
     try {
         if (needsReload) RealReload();
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
     size_t nbRec = 0;
@@ -215,7 +215,7 @@ void Worker::SetMaxDesorption(size_t max) {
 		Reload();
 
 	}
-	catch (Error &e) {
+	catch (const std::exception& e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 
@@ -307,9 +307,9 @@ void Worker::RebuildTextures() {
             geom->BuildFacetTextures(buffer,mApp->needsTexture,mApp->needsDirection);
 #endif
         }
-        catch (Error &e) {
+        catch (const std::exception& e) {
             simManager.UnlockHitBuffer();
-            throw e;
+            throw;
         }
     }
     simManager.UnlockHitBuffer();
@@ -412,7 +412,7 @@ void Worker::Update(float appTime) {
 #endif
             );
     }
-    catch (Error &e) {
+    catch (const std::exception& e) {
         GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         simManager.UnlockHitBuffer();
         return;

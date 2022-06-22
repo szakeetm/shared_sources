@@ -86,7 +86,7 @@ int SimulationManager::LoadInput(const std::string& fileName) {
         ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
     }
     catch (std::runtime_error& e) {
-        throw e;
+        throw;
     }
     return 0;
 }
@@ -184,7 +184,7 @@ bool SimulationManager::StartStopSimulation(){
         }
 
         catch (std::runtime_error &e) {
-            throw e;
+            throw;
         }
     } else {
 
@@ -195,7 +195,7 @@ bool SimulationManager::StartStopSimulation(){
             StartSimulation();
         }
         catch (std::runtime_error &e) {
-            throw e;
+            throw;
         }
 
         // Particular case when simulation ends before getting RUN state
