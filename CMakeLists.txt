@@ -139,6 +139,13 @@ set(INTERFACE_FILES
         NeighborScan.cpp
         )
 
+IF(BUILD_GPU)
+    message("ADDING IMGUI GPU CONTROL")
+    set(INTERFACE_FILES ${INTERFACE_FILES}
+            ../src/Interface/ImguiGPUControl.cpp
+            )
+ENDIF()
+
 set(SIM_FILES
         Distributions.cpp
         ProfileModes.cpp

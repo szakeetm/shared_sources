@@ -43,6 +43,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <implot/implot.h>
 #include <Helper/FormatHelper.h>
 
+#if defined(GPUCOMPABILITY) and defined(MOLFLOW)
+void ShowGPUWindow(MolFlow *mApp, bool *show_gpu, bool &nbProcChanged, bool &recalcOutg,
+                   bool &changeDesLimit, int &nbProc) {
+
+}
+#include "../src/Interface/ImguiGPUControl.h"
+#else
+void ShowGPUWindow(MolFlow *mApp, bool *show_gpu, bool &nbProcChanged, bool &recalcOutg,
+                   bool &changeDesLimit, int &nbProc) {
+
+}
+#endif
+
 // Varius toggle functions for individual window components
 bool ImguiWindow::ToggleMainHub(){
     show_main_hub = !show_main_hub;
@@ -139,7 +152,9 @@ void ImguiWindow::init() {
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
-
+#if defined(GPUCOMPABILITY) and defined(MOLFLOW)
+show_gpu = false;
+#endif
     start_time = ImGui::GetTime();
 }
 
@@ -255,7 +270,7 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
-#if defined(MOLFLOW) and defined(GPUCOMPABILITY)
+#if defined(GPUCOMPABILITY) and defined(MOLFLOW)
             ImGui::Checkbox("GPU Controls", &show_gpu);
 #endif
 
@@ -277,6 +292,13 @@ void ImguiWindow::renderSingle() {
             ShowGlobalSettings(mApp, &show_global_settings, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
             ImGui::End();
         }
+
+#if defined(GPUCOMPABILITY) and defined(MOLFLOW)
+        if (show_gpu) {
+            ShowGPUWindow(mApp, &show_gpu, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
+            ImGui::End();
+        }
+#endif
 
         // Rendering
         ImGui::Render();
