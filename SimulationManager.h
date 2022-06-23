@@ -29,6 +29,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 typedef unsigned char BYTE;
 
+#if defined(GPUCOMPABILITY)
+namespace flowgpu {
+    struct Model;
+}
+#endif
 class SimulationModel;
 class SimulationController;
 
@@ -169,7 +174,9 @@ public:
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
-
+#if defined(GPUCOMPABILITY)
+    std::vector<std::shared_ptr<SimulationController>> GetGPUControllers();
+#endif
 };
 
 

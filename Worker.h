@@ -34,6 +34,7 @@ class LoadStatus;
 
 #if defined(MOLFLOW)
 #include "../src/Parameter.h"
+#include "../src/GPUSim/GPUSettings.h"
 
 #define CDF_SIZE 100 //points in a cumulative distribution function
 
@@ -168,6 +169,10 @@ public:
 
   // Global simulation parameters
   std::shared_ptr<SimulationModel> model;
+#if defined(GPUCOMPABILITY) and defined(MOLFLOW)
+  std::shared_ptr<flowgpu::MolflowGPUSettings> settings;
+#endif
+
   FacetHistogramBuffer globalHistogramCache;
 
   //float  startTime;         // Start time
@@ -206,13 +211,12 @@ public:
 	std::vector<std::vector<std::vector<double>>> chi_distros; //3 psi-chi    maps for full/parallel/orthogonal polarizations
 #endif
 
+// Process management
+SimulationManager simManager;
 private:
 
-  // Process management
-  SimulationManager simManager;
 
-
-  // Methods
+    // Methods
   void ResetWorkerStats();
   //void ClearHits();
   std::string GetErrorDetails();

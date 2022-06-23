@@ -897,3 +897,21 @@ int SimulationManager::RefreshRNGSeed(bool fixed) {
 
     return 0;
 }
+
+#if defined(GPUCOMPABILITY)
+// Return a vector of all GPU controllers TODO: (more just for multiple GPU devices)
+std::vector<std::shared_ptr<SimulationController>> SimulationManager::GetGPUControllers(){
+    std::vector<std::shared_ptr<SimulationController>> ret;
+
+    int i = 0;
+    for(auto& sim : simHandles){
+        if(sim.second == SimType::simGPU) {
+            auto gpu_handle = std::dynamic_pointer_cast<SimulationControllerGPU>(simController[i]);
+            ret.push_back(simController[i]);
+        }
+        i++;
+    }
+
+    return ret;
+}
+#endif

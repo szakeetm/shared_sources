@@ -44,11 +44,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/FormatHelper.h>
 
 #if defined(GPUCOMPABILITY) and defined(MOLFLOW)
-void ShowGPUWindow(MolFlow *mApp, bool *show_gpu, bool &nbProcChanged, bool &recalcOutg,
-                   bool &changeDesLimit, int &nbProc) {
-
-}
 #include "../src/Interface/ImguiGPUControl.h"
+#include "../src/GPUSim/GPUSettings.h"
 #else
 void ShowGPUWindow(MolFlow *mApp, bool *show_gpu, bool &nbProcChanged, bool &recalcOutg,
                    bool &changeDesLimit, int &nbProc) {
@@ -224,6 +221,7 @@ void ImguiWindow::renderSingle() {
     SynRad *mApp = (SynRad *) app;
 #endif
     if (mApp) {
+        bool settingsChanged = false;
         bool nbProcChanged = false;
         bool recalcOutg = false;
         bool changeDesLimit = false;
@@ -295,7 +293,7 @@ void ImguiWindow::renderSingle() {
 
 #if defined(GPUCOMPABILITY) and defined(MOLFLOW)
         if (show_gpu) {
-            ShowGPUWindow(mApp, &show_gpu, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
+            ShowGPUWindow(mApp, &show_gpu, mApp->worker.settings, &settingsChanged);
             ImGui::End();
         }
 #endif
@@ -308,7 +306,33 @@ void ImguiWindow::renderSingle() {
 
         // Handle button events at the end, because some functions call GL Repaint,
         // which doesnt work well with ImGui if frame is not finalized
-        if (nbProcChanged) {
+        if (settingsChanged) {
+            try {
+                bool wasRunning = mApp->worker.IsRunning();
+                if(wasRunning){
+                    mApp->StartStopSimulation();
+                }
+                mApp->worker.simManager.simulationChanged = true;
+                /*if(wasRunning) {
+                    mApp->worker.simManager.LoadSimulation();
+                    mApp->StartStopSimulation();
+                }*/
+            } catch (std::exception &e) {
+                return;
+                /*if (ImGui::BeginPopupModal("ErrorSettings", nullptr,
+                                           ImGuiWindowFlags_AlwaysAutoResize)) {
+                    ImGui::Text("Couldn't apply new settings:\n%s", e.what());
+                    ImGui::Separator();
+
+                    if (ImGui::Button("OK", ImVec2(120, 0))) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SetItemDefaultFocus();
+                    ImGui::EndPopup();
+                }*/
+            }
+        }
+        else if (nbProcChanged) {
             restartProc(nbProc, mApp);
         } else if (recalcOutg) {
             if (mApp->AskToReset()) {
