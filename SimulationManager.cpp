@@ -71,6 +71,7 @@ SimulationManager::~SimulationManager() {
     }
 }
 
+//! Refresh proc status by looking for those that can be safely killed and remove them
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
@@ -90,28 +91,6 @@ int SimulationManager::refreshProcStatus() {
         }
     }
     return nbDead;
-}
-
-int SimulationManager::LoadInput(const std::string& fileName) {
-    std::ifstream inputFile(fileName);
-    inputFile.seekg(0, std::ios::end);
-    size_t size = inputFile.tellg();
-    std::string buffer(size, ' ');
-    inputFile.seekg(0);
-    inputFile.read(&buffer[0], size);
-
-    try {
-        ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
-    }
-    catch (const std::exception& e) {
-        throw;
-    }
-    return 0;
-}
-
-int SimulationManager::ResetStatsAndHits() {
-
-    return 0;
 }
 
 /*!
@@ -159,6 +138,7 @@ int SimulationManager::StartSimulation() {
     return 0;
 }
 
+//! Call simulation controllers to stop running simulations
 int SimulationManager::StopSimulation() {
     isRunning = false;
     if(interactiveMode) {
@@ -247,12 +227,7 @@ bool SimulationManager::StartStopSimulation(){
     return isRunning; // return previous state
 }
 
-
-int SimulationManager::TerminateSimHandles() {
-
-    return 0;
-}
-
+//! Create simulation handles for CPU simulations with n Threads
 int SimulationManager::CreateCPUHandle() {
     uint32_t processId = mainProcId;
 
@@ -440,6 +415,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     return waitTime>=timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
 }
 
+//! Forward a command to simulation controllers
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     // Send command
 

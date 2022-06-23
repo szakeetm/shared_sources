@@ -38,6 +38,7 @@ struct ConvergenceData {
     size_t chain_length;
 };
 
+//! Defines a formula object that can be used to retrieve and store a parsed result
 struct Formulas {
 
     Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){

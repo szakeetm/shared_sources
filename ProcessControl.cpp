@@ -52,6 +52,7 @@ ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
     return *this;
 }
 
+//! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
 void ProcComm::NextSubProc() {
     this->m.lock();
     activeProcs.emplace_back(activeProcs.front());
@@ -59,6 +60,7 @@ void ProcComm::NextSubProc() {
     this->m.unlock();
 }
 
+//! Removes a process from the active list, in case it is finished
 void ProcComm::RemoveAsActive(size_t id) {
     this->m.lock();
     for(auto proc = activeProcs.begin(); proc != activeProcs.end(); ++proc){
@@ -70,6 +72,7 @@ void ProcComm::RemoveAsActive(size_t id) {
     this->m.unlock();
 }
 
+//! Init list of active/simulating processes
 void ProcComm::InitActiveProcList() {
     this->m.lock();
     activeProcs.clear();
