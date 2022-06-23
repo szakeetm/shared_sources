@@ -821,7 +821,6 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
         sim->model->otfParams = *otfParams;
         sim->ReinitializeParticleLog();
     }
-
 }
 
 /**
@@ -899,7 +898,16 @@ int SimulationManager::RefreshRNGSeed(bool fixed) {
 }
 
 #if defined(GPUCOMPABILITY)
-// Return a vector of all GPU controllers TODO: (more just for multiple GPU devices)
+// Create hard copy for local usage and resie particle logger
+void SimulationManager::ForwardGPUSettings(std::shared_ptr<flowgpu::MolflowGPUSettings> settings) {
+    auto handles = GetGPUControllers();
+    for(auto& sim : handles) {
+        auto gpu_handle = std::dynamic_pointer_cast<SimulationControllerGPU>(sim);
+        gpu_handle->ChangeParams(settings);
+    }
+}
+
+// Return a vector of all GPU controllers TODO: (more controllers just for multiple GPU devices)
 std::vector<std::shared_ptr<SimulationController>> SimulationManager::GetGPUControllers(){
     std::vector<std::shared_ptr<SimulationController>> ret;
 

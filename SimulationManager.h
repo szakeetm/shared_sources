@@ -32,6 +32,7 @@ typedef unsigned char BYTE;
 #if defined(GPUCOMPABILITY)
 namespace flowgpu {
     struct Model;
+    struct MolflowGPUSettings;
 }
 #endif
 class SimulationModel;
@@ -175,6 +176,7 @@ public:
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 #if defined(GPUCOMPABILITY)
+    void ForwardGPUSettings(std::shared_ptr<flowgpu::MolflowGPUSettings> settings);
     std::vector<std::shared_ptr<SimulationController>> GetGPUControllers();
 #endif
 };

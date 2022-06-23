@@ -313,6 +313,7 @@ void ImguiWindow::renderSingle() {
                     mApp->StartStopSimulation();
                 }
                 mApp->worker.simManager.simulationChanged = true;
+                mApp->worker.simManager.ForwardGPUSettings(mApp->worker.settings);
                 /*if(wasRunning) {
                     mApp->worker.simManager.LoadSimulation();
                     mApp->StartStopSimulation();
