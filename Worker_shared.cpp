@@ -308,10 +308,12 @@ void Worker::Stop() {
 
 void Worker::InitSimProc() {
 
-    simManager.useCPU = true;
 #if defined(GPUCOMPABILITY)
-    simManager.useCPU = false;
+    simManager.useCPU = true;
     simManager.useGPU = true;
+#else
+    simManager.useCPU = true;
+    simManager.useGPU = false;
 #endif
     simManager.nbThreads = 0; // set to 0 to init max threads
 
