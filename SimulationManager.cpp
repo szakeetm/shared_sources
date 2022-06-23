@@ -42,7 +42,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #if defined(GPUCOMPABILITY)
 #include <../src/GPUSim/SimulationGPU.h>
 #include <../src/GPUSim/SimulationControllerGPU.h>
+#include <../src/GPUSim/GPUSettings.h>
 #endif
+
 #include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager(int pid) {
@@ -904,6 +906,13 @@ void SimulationManager::ForwardGPUSettings(std::shared_ptr<flowgpu::MolflowGPUSe
     for(auto& sim : handles) {
         auto gpu_handle = std::dynamic_pointer_cast<SimulationControllerGPU>(sim);
         gpu_handle->ChangeParams(settings);
+
+        if(settings->allowNewParticles){
+            gpu_handle->AllowNewParticles();
+        }
+        else {
+            gpu_handle->CheckAndBlockDesorption_exact(1.00);
+        }
     }
 }
 
