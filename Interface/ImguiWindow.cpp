@@ -307,6 +307,7 @@ void ImguiWindow::renderSingle() {
         // Handle button events at the end, because some functions call GL Repaint,
         // which doesnt work well with ImGui if frame is not finalized
         if (settingsChanged) {
+#if defined(GPUCOMPABILITY)
             try {
                 bool wasRunning = mApp->worker.IsRunning();
                 if(wasRunning){
@@ -332,6 +333,7 @@ void ImguiWindow::renderSingle() {
                     ImGui::EndPopup();
                 }*/
             }
+#endif
         }
         else if (nbProcChanged) {
             restartProc(nbProc, mApp);
