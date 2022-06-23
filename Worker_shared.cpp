@@ -309,7 +309,7 @@ void Worker::Stop() {
 void Worker::InitSimProc() {
 
 #if defined(GPUCOMPABILITY)
-    simManager.useCPU = true;
+    simManager.useCPU = false;
     simManager.useGPU = true;
 #else
     simManager.useCPU = true;
