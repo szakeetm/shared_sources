@@ -73,6 +73,7 @@ struct PROCESS_INFO{
 
 };
 
+//! Process Communication class for handling inter process/thread communication
 struct ProcComm {
 
     struct SubProcInfo {
@@ -97,6 +98,7 @@ struct ProcComm {
         subProcInfo.resize(nbProcs);
         InitActiveProcList();
     };
+
     void NextSubProc();
 
     ProcComm& operator=(const ProcComm & src);

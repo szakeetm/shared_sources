@@ -26,6 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 constexpr size_t max_vector_size() { return 65536; };
 constexpr size_t d_precision() { return 5; };
 
+//! Add a formula to the formula storage
 void Formulas::AddFormula(const char *fName, const char *formula) {
     GLParser *f2 = new GLParser();
     f2->SetExpression(formula);
@@ -36,6 +37,7 @@ void Formulas::AddFormula(const char *fName, const char *formula) {
     UpdateVectorSize();
 }
 
+//! Clear formula storage
 void Formulas::ClearFormulas() {
     for (auto &f : formulas_n)
         SAFE_DELETE(f);
@@ -43,6 +45,7 @@ void Formulas::ClearFormulas() {
     UpdateVectorSize();
 }
 
+//! Initialize formulas by parsing string to values
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
     for (auto & i : formulas_n) {
@@ -80,6 +83,7 @@ void Formulas::UpdateVectorSize() {
     }
 }
 
+//! Get updated formula values for later usage in corresponding windows
 bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
     // First fetch new variable values
     InitializeFormulas();
@@ -102,6 +106,7 @@ bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
     return true;
 }
 
+//! Add new value to convergence vector
 bool Formulas::FetchNewConvValue() {
     bool hasChanged = false;
     if (!formulas_n.empty()) {

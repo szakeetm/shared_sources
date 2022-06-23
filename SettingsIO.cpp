@@ -28,7 +28,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <ZipLib/ZipArchive.h>
 #include <ZipLib/ZipFile.h>
 
+// Input Output related settings and handy functions for the CLI application
 namespace SettingsIO {
+    // explanation in header
     bool overwrite = false;
     bool isArchive = false;
     bool outputFacetDetails = false;
@@ -47,6 +49,7 @@ namespace SettingsIO {
     std::vector<SelectionGroup> selections;
     const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
+    //! prepares work/output directories and unpacks from archive
     int prepareIO() {
         if (initDirectories()) {
             Log::console_error("Error preparing folders\n");
@@ -60,7 +63,7 @@ namespace SettingsIO {
         return 0;
     }
 
-// In
+//! Set all directory / output related variables and initialises directories depending on set parameters
     int initDirectories() {
 
         int err = 0;
@@ -172,6 +175,7 @@ namespace SettingsIO {
         return 0;
     }
 
+    //! Unzip file and set correct variables (e.g. uncompressed work file)
     int initFromZip() {
         if (std::filesystem::path(SettingsIO::inputFile).extension() == ".zip") {
             SettingsIO::isArchive = true;
@@ -217,7 +221,7 @@ namespace SettingsIO {
         return 0;
     }
 
-// Out
+//! Cleanup tmp files
     void cleanup_files() {
         // a) tmp folder if it is not our output folder
         if (std::filesystem::path(SettingsIO::outputPath)

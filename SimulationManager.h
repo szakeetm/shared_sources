@@ -53,15 +53,6 @@ enum class LoadType : uint8_t {
     LOADHITS
 };
 
-/*struct SubProcInfo {
-    size_t procId;
-    size_t masterCmd;
-    size_t cmdParam;
-    size_t cmdParam2;
-    size_t oldState;
-    char statusString[128];
-};*/
-
 /*!
  * @brief Controls concrete Simulation instances and manages their I/O needs. Can act as a standalone (CLI mode) or as a middleman (GPU mode).
  * @todo Add logger capability to console OR sdl framework
@@ -77,18 +68,6 @@ class SimulationManager {
 
     int refreshProcStatus();
 protected:
-    /*! Load/Forward serialized simulation data (pre-processed geometry data) */
-    int ResetStatsAndHits(); /*! Reset local and global stats and counters */
-    int TerminateSimHandles();
-
-    /*! Get results from simulations and clear local counters */
-    bool StartStopSimulation();
-
-    // Open/Close for shared memory
-
-    int CreateLogDP(size_t logDpSize);
-
-    int CloseLogDP();
 
     int ForwardCommand(int command, size_t param, size_t param2);
 
@@ -119,8 +98,6 @@ public:
 
     int ResetHits();
 
-    int ClearLogBuffer();
-
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
     int GetProcStatus(ProcComm &procInfoList);
@@ -134,23 +111,19 @@ public:
 
     bool GetRunningStatus();
 
-    int LoadInput(const std::string& fileName);
-
     int IncreasePriority();
     int DecreasePriority();
 
     int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
-    std::shared_ptr<ProcComm> procInformation; // ctrl
-    // SimulationModel* model; // load
-    // hits
+    std::shared_ptr<ProcComm> procInformation; // process control
 
 
 protected:
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
-    // Flags
+    // Flags for which simulation type should be run
     bool useCPU;
     bool useGPU;
     bool useRemote;

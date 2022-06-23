@@ -21,11 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_SIMULATIONUNIT_H
 #define MOLFLOW_PROJ_SIMULATIONUNIT_H
 
-//#include "MolflowHitCounter.h"
 #include "SMP.h"
 #include "Buffer_shared.h"
-//#include "../src/Simulation/Particle.h"
-//#include "../src/Simulation/GeometrySimu.h"
 
 class SimulationModel;
 class GlobalSimuState;
