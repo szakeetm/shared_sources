@@ -186,47 +186,6 @@ int SimulationManager::LoadSimulation(){
     return 0;
 }
 
-/*!
- * @brief Convenience function that stops a running simulation and starts a paused simulation
- * @return 0=success, 1=else
- * @todo add benchmark
- */
-bool SimulationManager::StartStopSimulation(){
-    if (isRunning) {
-
-        // Stop
-        //InnerStop(appTime);
-        try {
-            StopSimulation();
-            //Update(appTime);
-        }
-
-        catch (const std::exception& e) {
-            throw;
-        }
-    } else {
-
-        // Start
-        try {
-            //if (needsReload) RealReload(); //Synchronize subprocesses to main process
-
-            StartSimulation();
-        }
-        catch (const std::exception& e) {
-            throw;
-        }
-
-        // Particular case when simulation ends before getting RUN state
-        if (allProcsDone) {
-            isRunning = false;
-            //Update(appTime);
-            //GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
-        }
-
-    }
-    return isRunning; // return previous state
-}
-
 //! Create simulation handles for CPU simulations with n Threads
 int SimulationManager::CreateCPUHandle() {
     uint32_t processId = mainProcId;
