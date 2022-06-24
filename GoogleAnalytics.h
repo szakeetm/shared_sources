@@ -26,9 +26,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define GA_PROJECT_ID "UA-86802533-2"
 
 #if defined(MOLFLOW)
+#define APPLICATION_NAME "molflow"
 #define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_molflow.xml"
 #define BRANCH_NAME "molflow_public"
 #elif defined(SYNRAD)
+#define APPLICATION_NAME "synrad"
 #define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_synrad.xml"
 #define BRANCH_NAME "synrad_public"
 #endif //BRANCH_NAME
@@ -41,10 +43,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define OS_ID "debian"
 #elif defined(WIN32) || defined(_WIN32) || (defined(__CYGWIN__) && defined(__x86_64__)) || defined(__MINGW32__)
 #define BRANCH_OS_SUFFIX "_win"
-#define OS_ID "win_x86"
-#elif defined(WIN64) || defined(_WIN64) || (defined(__CYGWIN__) && defined(__X86__)) || defined(__MINGW64__)
-#define BRANCH_OS_SUFFIX "_win"
-#define OS_ID "win_x64"
+#define OS_ID "win"
 #elif (defined(__MACOSX__) || defined(__APPLE__)) && defined(__ARM_ARCH)
 #define BRANCH_OS_SUFFIX "_mac_arm"
 #define OS_ID "mac_arm"
