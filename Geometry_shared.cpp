@@ -4076,6 +4076,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 			facets[oldFacetNb + globalId]->indices[2] = oldVertexNb + 3 * globalId + 1;
 
 			if (insert) {
+				facets[oldFacetNb + globalId]->selected = true; //Highlight selected facets
 				//Assign structure
 				if (newStruct) {
 					facets[oldFacetNb + globalId]->sh.superIdx = static_cast<int>(sh.nbSuper);
