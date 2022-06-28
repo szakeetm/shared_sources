@@ -4148,7 +4148,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 }
 
 void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr) {
-
+	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
 	LoadSTL(file, prg, scaleFactor, true, newStr, structId);
