@@ -4064,7 +4064,7 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor
 
 	int nbNewFacets = 0;
 	// First pass
-	file->ReadKeyword("solid");
+	//file->ReadKeyword("solid");
 	file->ReadLine(); // solid name
 	w = file->ReadWord();
 	while (strcmp(w, "facet") == 0) {
@@ -4091,7 +4091,7 @@ void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor
 
 	// Second pass
 	file->SeekStart();
-	file->ReadKeyword("solid");
+	//file->ReadKeyword("solid");
 	file->ReadLine();
 	for (int i = 0; i < nbNewFacets; i++) {
 
