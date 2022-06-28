@@ -182,7 +182,7 @@ int RemoveDuplicates(std::vector<CommonEdge>& edge_v){
             fmt::print("Debug check\n");
         }
     }
-    std::sort(&edge_v[0], &edge_v[edge_v.size()],
+    std::sort(edge_v.begin(), edge_v.end(),
               [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
                   if (e0.facetId[0] == e1.facetId[0])
                       return e0.facetId[1] < e1.facetId[1];
@@ -612,7 +612,7 @@ int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge>
     }
 
     // 2. Sort edges
-    std::sort(&edges[0], &edges[edges.size()],
+    std::sort(edges.end(), edges.end(),
               [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
                   if (e0.v1 == e1.v1)
                       if(e0.v2 == e1.v2)
@@ -793,7 +793,7 @@ int GeometryTools::GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<Co
     }
 
     // 2. sort according to the first array of integers
-    std::sort(&vertex_elements[0], &vertex_elements[vertex_elements.size()]);
+    std::sort(vertex_elements.begin(), vertex_elements.end();
 
     // 3. use the parallel segmented reduction and scan
     // to further determine both the total number
