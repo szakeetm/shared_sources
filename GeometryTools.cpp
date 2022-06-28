@@ -793,7 +793,7 @@ int GeometryTools::GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<Co
     }
 
     // 2. sort according to the first array of integers
-    std::sort(vertex_elements.begin(), vertex_elements.end();
+    std::sort(vertex_elements.begin(), vertex_elements.end());
 
     // 3. use the parallel segmented reduction and scan
     // to further determine both the total number
