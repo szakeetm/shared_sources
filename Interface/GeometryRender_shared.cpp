@@ -1993,7 +1993,7 @@ void Geometry::DrawAABBNode(AABBNODE* node, int level) {
 
 }
 
-void Geometry::DrawHeatmap(const SubprocessFacet& facet) {
+void Geometry::DrawHeatmap(const SimulationFacet& facet) {
 
 
     if(facet.nbTests == 0 || facet.nbTraversalSteps == 0)
@@ -2163,7 +2163,7 @@ void Geometry::DrawAABB() {
     }
     else if(!mApp->worker.model->structures.empty()) {
         if(mApp->aabbVisu.oldBVH) {
-            std::vector<std::vector<SubprocessFacet *>> facetPointers;
+            std::vector<std::vector<SimulationFacet *>> facetPointers;
             facetPointers.resize(mApp->worker.model->sh.nbSuper);
             for (size_t s = 0; s < mApp->worker.model->sh.nbSuper; ++s) {
                 for (auto &sFac : mApp->worker.model->facets) {

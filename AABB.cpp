@@ -3,7 +3,7 @@
 //
 
 #include "AABB.h"
-
+#include "SimulationFacet.h"
 // AABB tree stuff
 
 // Minimum number of facet inside a BB
@@ -72,7 +72,7 @@ void AABBNODE::ComputeBB() {
 
 }
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_t depth,size_t& maxDepth) {
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet*>& facets, const size_t depth,size_t& maxDepth) {
 
     size_t    nbl = 0, nbr = 0;
     double m;
@@ -89,8 +89,8 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets, const size_
     if (nbLeft >= MINBB && nbRight >= MINBB) {
 
         // We can cut
-        std::vector<SubprocessFacet*> lList(nbLeft);
-        std::vector<SubprocessFacet*> rList(nbRight);
+        std::vector<SimulationFacet*> lList(nbLeft);
+        std::vector<SimulationFacet*> rList(nbRight);
         switch (planeType) {
             case 1: // yz
                 m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;

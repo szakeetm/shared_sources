@@ -56,7 +56,7 @@ int SimulationModel::InitialiseFacets() {
         auto& facet = *f;
         // Main facet params
         // Current facet
-        //SubprocessFacet *f = model->facets[i];
+        //SimulationFacet *f = model->facets[i];
         CalculateFacetParams(&facet);
 
         // Set some texture parameters

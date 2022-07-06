@@ -784,4 +784,4 @@ int SimulationController::Reset() {
 void SimulationController::EmergencyExit(){
     for(auto& t : simThreads)
         t.particle->allQuit = true;
-};
+}

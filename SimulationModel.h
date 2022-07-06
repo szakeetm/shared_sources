@@ -40,7 +40,7 @@ class SuperStructure {
 public:
     SuperStructure() = default;
     ~SuperStructure() = default;
-    //std::vector<SubprocessFacet>  facets;   // Facet handles
+    //std::vector<SimulationFacet>  facets;   // Facet handles
     std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
     std::string strName;
     std::string strFileName;
@@ -110,8 +110,14 @@ public:
     virtual int PrepareToRun() = 0;
 
     // Molflow will use ParameterSurfaces (for parameter outgassing) for particular construction types
-    virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type, BVHAccel::SplitMethod split,
-                            int bvh_width) = 0;
+    virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type,
+                                    int split, int bvh_width, double hybridWeight) = 0;
+
+    // ADS profiling
+    virtual int ComputeHitStats(const std::vector<TestRay>& battery) = 0;
+    virtual bool StartFromSource(Ray& ray) = 0;
+    virtual void PerformBounce(Ray& ray, SimulationFacet *iFacet) = 0;
+    // ---
 
     int InitialiseFacets();
     void CalculateFacetParams(Facet *f);
@@ -148,7 +154,7 @@ public:
     std::vector<SuperStructure> structures;
     std::vector<Vector3d> vertices3; // Vertices (3D space)
 
-    std::vector<std::shared_ptr<RTPrimitive>> accel;
+    std::vector<std::shared_ptr<RTAccel>> accel;
     std::multimap<double,std::shared_ptr<Surface>> surfaces;
 
     // Simulation Properties

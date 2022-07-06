@@ -224,7 +224,7 @@ bool Facet::IntersectT(Ray &ray) {
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
                                     if(!ray.hits.empty())ray.hits.clear();
-                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
+                                    ray.hardHit = HitLink(globalId, SimulationFacetTempVar(d,u,v,true));
 
                                 }
                             }
@@ -291,7 +291,7 @@ bool Facet::IntersectStat(RayStat &ray) {
                                     ray.tMax = d;
 
                                     if(!ray.hits.empty())ray.hits.clear();
-                                    ray.hardHit = HitLink(globalId, SubProcessFacetTempVar(d,u,v,true));
+                                    ray.hardHit = HitLink(globalId, SimulationFacetTempVar(d,u,v,true));
                                 }
                             }
                             else {
@@ -304,7 +304,7 @@ bool Facet::IntersectStat(RayStat &ray) {
                                     }
                                 }*/
 
-                                auto& thit = ray.transparentHits.emplace_back(globalId, SubProcessFacetTempVar());
+                                auto& thit = ray.transparentHits.emplace_back(globalId, SimulationFacetTempVar());
                                 auto& hit = thit.hit;
 
                                 hit.isHit = false;

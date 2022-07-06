@@ -164,18 +164,18 @@ void KdTreeAccel::PrintTreeInfo() {
             splitName = "Unknown split";
     }
     Log::console_msg_master(4, "--- KD STATS ---\n");
-    Log::console_msg_master(4, "- Split: %s -\n", splitName.c_str());
-    Log::console_msg_master(4, " Total Primitives: %d\n", STATS_KD::totalPrimitives);
-    Log::console_msg_master(4, " Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
-    Log::console_msg_master(4, " Interior Nodes:   %d\n", STATS_KD::interiorNodes);
-    Log::console_msg_master(4, " Leaf Nodes:       %d\n", STATS_KD::leafNodes);
-    Log::console_msg_master(4, " Leaf 4 BadRefine: %d [%lf]\n", STATS_KD::leafBadRefine,
+    Log::console_msg_master(4, "- Split: {} -\n", splitName.c_str());
+    Log::console_msg_master(4, " Total Primitives: {}\n", STATS_KD::totalPrimitives);
+    Log::console_msg_master(4, " Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
+    Log::console_msg_master(4, " Interior Nodes:   {}\n", STATS_KD::interiorNodes);
+    Log::console_msg_master(4, " Leaf Nodes:       {}\n", STATS_KD::leafNodes);
+    Log::console_msg_master(4, " Leaf 4 BadRefine: {} [{}]\n", STATS_KD::leafBadRefine,
            (double) STATS_KD::leafBadRefine / STATS_KD::leafNodes);
-    Log::console_msg_master(4, " Leaf 4 BadCost:   %d [%lf]\n", STATS_KD::leafHigherCost,
+    Log::console_msg_master(4, " Leaf 4 BadCost:   {} [{}]\n", STATS_KD::leafHigherCost,
            (double) STATS_KD::leafHigherCost / STATS_KD::leafNodes);
-    Log::console_msg_master(4, " Split SAH:        %d [%lf]\n", STATS_KD::splitSAH,
+    Log::console_msg_master(4, " Split SAH:        {} [{}]\n", STATS_KD::splitSAH,
            (double) STATS_KD::splitSAH / (STATS_KD::splitRay + STATS_KD::splitSAH));
-    Log::console_msg_master(4, " Split Ray:        %d [%lf]\n", STATS_KD::splitRay,
+    Log::console_msg_master(4, " Split Ray:        {} [{}]\n", STATS_KD::splitRay,
            (double) STATS_KD::splitRay / (STATS_KD::splitRay + STATS_KD::splitSAH));
 }
 

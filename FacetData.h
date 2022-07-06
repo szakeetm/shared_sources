@@ -64,22 +64,26 @@ public:
  */
 struct Facet : public RTPrimitive {
     Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
-    Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    Facet(const Facet& cpy) {
+
+    explicit Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
+
+    Facet(const Facet& cpy) : RTPrimitive(cpy) {
         globalId = cpy.globalId;
         sh = cpy.sh;
         indices = cpy.indices;
         vertices2 = cpy.vertices2;
         surf = cpy.surf; // Will be deleted tgthr with cpy
     };
+
     Facet(Facet&& cpy) noexcept{
-        globalId = std::move(cpy.globalId);
-        sh = std::move(cpy.sh);
+        globalId = cpy.globalId;
+        sh = cpy.sh;
         indices = std::move(cpy.indices);
         vertices2 = std::move(cpy.vertices2);
         surf = cpy.surf;
         cpy.surf = nullptr;
     };
+
     ~Facet() override{
         if (surf) {
             //delete surf;
@@ -87,14 +91,6 @@ struct Facet : public RTPrimitive {
             surf = nullptr;
         }
     }
-
-    Facet(const Facet &o) : RTPrimitive(o) {
-        *this = o;
-    };
-
-    Facet(Facet &&cpy) noexcept{
-        *this = std::move(cpy);
-    };
 
     Facet &operator=(const Facet &cpy){
         if(&cpy == this){
@@ -151,7 +147,6 @@ struct Facet : public RTPrimitive {
     bool Intersect(Ray &r) override;
     bool IntersectT(Ray &r);
     bool IntersectStat(RayStat &r) override;
-
 };
 
 

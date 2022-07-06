@@ -10,6 +10,7 @@
 #include "Geometry_shared.h"
 
 class AxisAlignedBoundingBox;
+struct SimulationFacet;
 
 class AABBNODE {
 public:
@@ -20,9 +21,9 @@ public:
     AxisAlignedBoundingBox             bb;
     AABBNODE *left;
     AABBNODE *right;
-    std::vector<SubprocessFacet*> facets;
+    std::vector<SimulationFacet*> facets;
 };
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet*>& facets,const size_t depth,size_t& maxDepth);
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet*>& facets,const size_t depth,size_t& maxDepth);
 
 #endif //MOLFLOW_PROJ_AABB_H

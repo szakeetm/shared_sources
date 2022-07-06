@@ -389,7 +389,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     // See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
                     const char *items[] = {"BVH", "KD-tree"};
                     if (ImGui::Combo("Accel Type", &selected_accel, items, IM_ARRAYSIZE(items))) {
-                        mApp->worker.model->wp.accel_type = selected_accel;
+                        mApp->worker.model->wp.accel_type = static_cast<AccelType>(selected_accel);
                         mApp->aabbVisu.alpha = selected_accel == 0 ? 0.04f : 0.16f;
                     }
                 }

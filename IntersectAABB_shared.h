@@ -21,9 +21,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Temporary transparent hit
 //#include "Simulation/SynradSimGeom.h"
-#include <Simulation/Particle.h>
+#include <../src/Simulation/Particle.h>
 #include "Vector.h" //AABB
-//#include "../src/Simulation.h" //SubprocessFacet
+//#include "../src/Simulation.h" //SimulationFacet
 
 // AABBTree node
 namespace MFSim {
@@ -34,18 +34,6 @@ class AABBNODE;
 class Simulation;
 struct SimulationFacet;
 
-class AABBNODE {
-public:
-	AABBNODE();
-	~AABBNODE();
-	void ComputeBB();
-	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
-	AxisAlignedBoundingBox             bb;
-	AABBNODE *left;
-	AABBNODE *right;
-	std::vector<SimulationFacet*> facets;
-};
-
 AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth);
 
 void IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
@@ -54,8 +42,8 @@ void IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const
                    SimulationFacet *&collidedFacet, double &minLength);
 std::tuple<bool, SimulationFacet *, double>
 Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh);
-/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
+/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SimulationFacet *f1, SimulationFacet *f2,
              CurrentParticleStatus &currentParticle);*/
 bool IsInFacet(const SimulationFacet &f, const double &u, const double &v);
-//Vector3d PolarToCartesian(const SubprocessFacet *const collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->currentParticle.direction
+//Vector3d PolarToCartesian(const SimulationFacet *const collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->currentParticle.direction
 //std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);

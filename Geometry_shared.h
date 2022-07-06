@@ -26,12 +26,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
+#include "RayTracing/Primitive.h"
+#include "RayTracing/BVH.h"
+#include "RayTracing/KDTree.h"
 //#include "Simulation/GeometrySimu.h"
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
+struct AABBNODE;
 class SimulationModel;
 class GlobalSimuState;
 class FacetMomentSnapshot;
@@ -365,7 +369,7 @@ protected:
 		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif
 
-    void DrawHeatmap(const SubprocessFacet& facet);
+    void DrawHeatmap(const SimulationFacet& facet);
     void DrawAABB();
 
 	void DrawAABBNode(AABBNODE *node, int level);

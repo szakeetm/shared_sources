@@ -276,7 +276,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 }
 
 
-/*std::tuple<bool,SubprocessFacet*,double>*/ void
+/*std::tuple<bool,SimulationFacet*,double>*/ void
 IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
               const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
               const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
@@ -284,7 +284,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 
 	// Returns three values
 	// bool: did collision occur?
-	// SubprocessFacet* : closest collided facet
+	// SimulationFacet* : closest collided facet
 	// double: minimum distance
 
 	// Method: 3x3 Sytem solving for ray/rectangle intersection. 
@@ -292,7 +292,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 	// nuv = u^v (for faster calculation)
 
 	/*bool found = false;
-	SubprocessFacet* collidedFacet = lastHitBefore;
+	SimulationFacet* collidedFacet = lastHitBefore;
 	double minLength=minLengthSoFar;*/
 
 	if (node.left == nullptr || node.right == nullptr) { // Leaf
@@ -500,7 +500,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 }
 
-/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
+/*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SimulationFacet *f1, SimulationFacet *f2,
              CurrentParticleStatus &currentParticle) {
 	//For AC matrix calculation, used only in MolFlow
 
@@ -520,10 +520,10 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 	//Output values
 	bool found;
-	SubprocessFacet *collidedFacet;
+	SimulationFacet *collidedFacet;
 	double minLength;
 
-	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
+	//std::vector<SimulationFacet*> transparentHitFacetPointers;
 	currentParticle.transparentHitBuffer.clear();
 
     IntersectTree(model, *sHandle->model.structures[0].aabbTree, rayPos, -1.0 * rayDir,
