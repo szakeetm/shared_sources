@@ -31,7 +31,7 @@ GLMenu::GLMenu():GLComponent(0) {
 
 GLMenu::~GLMenu() {
   for(int i=0;i<nbItem;i++) {
-    if(!items[i].subMenu->GetParent())
+    if(items[i].subMenu && !items[i].subMenu->GetParent())
       SAFE_DELETE(items[i].subMenu);
     SAFE_FREE(items[i].accName);
   }

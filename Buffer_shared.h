@@ -46,6 +46,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
+enum AccelType : int {
+    BVH = 0,
+    KD = 1
+};
+
 class HistogramParams {
 public:
 	bool recordBounce=false;
@@ -327,7 +332,8 @@ public:
 struct WorkerParams { //Plain old data
 	WorkerParams();
     HistogramParams globalHistogramParams;
-    int accel_type;
+
+    AccelType accel_type;
     bool kd_with_ropes{true};
     bool kd_restart_ropes{false};
     bool kd_with_ropes_optimized{true};

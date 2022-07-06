@@ -24,19 +24,28 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <list>
 #include <vector>
+#include <map>
+#include "GeometryTypes.h" // selecitons
 
+// Settings for the CLI application for IO related things
+// Also adds some functions to handle IO pathes/files
 namespace SettingsIO {
-    extern std::string workFile;
-    extern std::string workPath;
-    extern std::string inputFile;
-    extern std::string inputPath;
-    extern std::string outputFile;
-    extern std::string outputPath;
-    extern bool overwrite;
-    extern bool isArchive;
-    extern bool outputFacetDetails;
-    extern bool outputFacetQuantities;
-    extern bool autogenerateTest;
+    extern std::string workFile; //! Uncompressed file that is used for the simulation
+    extern std::string workPath; //! Output path for various simulation files (e.g. autosave), can be different from outputPath e.g. for cluster simulations
+    extern std::string inputFile; //! Uncompressed or compressed file that is used for the simulation
+    extern std::string inputPath; //! Path to input file
+    extern std::string outputFile; //! Output file name
+    extern std::string outputPath; //! Outputpath for output file
+    extern std::vector<std::string> extraFiles; //! deprecated
+    extern std::map<std::string, std::vector<std::string>> cachedLines; //! deprecated
+    extern std::vector<std::vector<std::string>> formulas; //! cached formula values to keep them for a valid output file
+    extern std::vector<SelectionGroup> selections; //! cached selection groups to keep them for a valid output file
+
+    extern bool overwrite; //! whether overwriting the inputfile is allowed
+    extern bool isArchive; //! whether the input file is an archive
+    extern bool outputFacetDetails; //! whether output for all facet details is wanted
+    extern bool outputFacetQuantities; //! whether output for derived facet quantities is wanted
+    extern bool autogenerateTest; //! whether an automatically generated test case should be used as input
 
     int prepareIO();
     int initDirectories();

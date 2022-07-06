@@ -42,14 +42,14 @@ namespace Log {
 
     template<typename... P>
     void console_error(const char * message, const P&... fmt){
-        fprintf(stderr, message, fmt...);
+        fmt::print(stderr, message, fmt...);
     }
 
     template<typename... P>
     void console_msg(int level, const char * message, const P&... fmt){
         if (Settings::verbosity >= level) {
             if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
-            printf(message, fmt...);
+            fmt::print(message, fmt...);
             fflush(stdout);
         }
     }
@@ -58,7 +58,7 @@ namespace Log {
     void console_msg_master(int level, const char * message, const P&... fmt){
         if (!MFMPI::world_rank && Settings::verbosity >= level) {
             if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
-            printf(message, fmt...);
+            fmt::print(message, fmt...);
             fflush(stdout);
         }
     }

@@ -320,6 +320,12 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         ints[nodeNum].level = maxDepth - ints[nodeNum].level;
     }
 
+    printf("--- KD STATS ---\n");
+    printf(" Total Primitives: {}\n", STATS_KD::totalPrimitives);
+    printf(" Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
+    printf(" Interior Nodes:   {}\n", STATS_KD::interiorNodes);
+    printf(" Leaf Nodes:       {}\n", STATS_KD::leafNodes);
+
     hasRopes = false;
     addParent(&nodes[0], nullptr);
     PrintTreeInfo();
@@ -3297,7 +3303,7 @@ void KdTreeAccel::optimizeRopes( KdAccelNode *ropes[], AxisAlignedBoundingBox bb
             KdAccelNode *leftChild, *rightChild;
             leftChild = rope_node + 1;
             rightChild = &nodes[rope_node->AboveChild()];
-            
+
             // Case I.
 
             if ( i == LEFT || i == RIGHT ) {

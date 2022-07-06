@@ -97,6 +97,7 @@ set(INTERFACE_FILES
         Interface/FormulaEditor.cpp
         Interface/GeometryRender_shared.cpp
         Interface/GeometryViewer_shared.cpp
+        Interface/GlobalSettings_shared.cpp
         Interface/HistogramPlotter.cpp
         Interface/HistogramSettings.cpp
         Interface/Interface.cpp
@@ -129,6 +130,7 @@ set(INTERFACE_FILES
 
         ASELoader.cpp
         Facet_shared.cpp
+
         File.cpp
         Formulas.cpp
         FormulaEvaluator.cpp
@@ -145,6 +147,7 @@ set(SIM_FILES
         ProfileModes.cpp
 
         # subprocesses
+        SimulationFacet.cpp
         Buffer_shared.cpp
         Distributions.cpp
         #IntersectAABB_shared.cpp
@@ -157,6 +160,7 @@ set(SIM_FILES
         Vector.cpp
         SimulationManager.cpp
         SimulationController.cpp
+        SimulationModel.cpp
         FacetData.cpp
         FacetData.h
 

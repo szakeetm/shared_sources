@@ -221,7 +221,8 @@ typedef struct {
 #define MENU_QUICKPIPE            810
 
 #define MENU_TRIANGULATE          815
-
+#define MENU_ANALYSE              816
+#define MENU_CMP_RES              817
 
 #define MENU_ABOUT                1000
 #define MENU_UPDATE               1001
@@ -239,6 +240,7 @@ constexpr size_t SmoothStatSizeLimit() {return 16;}
 class Interface : public GLApplication {
 protected:
 	Interface();
+    virtual ~Interface();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
 	//virtual void UpdateFormula() {}

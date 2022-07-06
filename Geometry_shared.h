@@ -26,11 +26,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
-#include <../src/GeometrySimu.h>
+//#include "Simulation/GeometrySimu.h"
 
 #define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
+
+class SimulationModel;
+class GlobalSimuState;
+class FacetMomentSnapshot;
+struct SimulationFacet;
 
 class InterfaceFacet;
 class DeletedFacet;
@@ -254,8 +259,9 @@ protected:
 	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
+    bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    void InitInterfaceFacets(const std::vector<std::shared_ptr<SubprocessFacet>> &sFacets, Worker* work);
+    virtual void InitInterfaceFacets(const std::vector<std::shared_ptr<SimulationFacet>> &sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();
@@ -283,7 +289,8 @@ public:
 	void BuildFacetMeshLists();
 #pragma endregion
 	//TEXTURE_SCALE_TYPE texture_limits[3];
-
+    virtual bool CompareXML_simustate(const std::string &fileName_lhs, const std::string &fileName_rhs,
+                                     const std::string &fileName_out, double cmpThreshold) = 0;
 protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;

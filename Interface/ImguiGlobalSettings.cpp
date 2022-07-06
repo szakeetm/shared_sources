@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 8/2/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "ImguiGlobalSettings.h"
 #include "ImguiExtensions.h"
@@ -10,13 +26,15 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-#endif
-
-#if defined(SYNRAD)
+#else
 #include "../src/SynRad.h"
 #endif
 
+#if defined(MOLFLOW)
 static void ProcessControlTable(MolFlow *mApp) {
+#else
+static void ProcessControlTable(SynRad *mApp) {
+#endif
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -107,8 +125,14 @@ static void ProcessControlTable(MolFlow *mApp) {
     }
 }
 
+#if defined(MOLFLOW)
 void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
                         bool &changeDesLimit, int &nbProc) {
+#else
+void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
+                        bool &changeDesLimit, int &nbProc) {
+#endif
+
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(800.f, 0)); // Lift normal size constraint, however the presence of
@@ -177,6 +201,7 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
 
         /* --- Simu settings ---*/
         static bool simChanged = false;
+#if defined(MOLFLOW)
         static double gasMass = mApp->worker.model->wp.gasMass;
         static bool enableDecay = mApp->worker.model->wp.enableDecay;
         static double halfLife = mApp->worker.model->wp.halfLife;
@@ -269,6 +294,10 @@ void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcC
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
             }
         }
+
+#else
+//SYNRAD
+#endif
         ImGui::PopItemWidth();
         // PopStyleCompact();
         ImGui::EndTable();

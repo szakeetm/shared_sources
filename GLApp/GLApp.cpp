@@ -9,6 +9,7 @@
 
 #include "GLApp.h"
 #include "Helper/MathTools.h" //Min, max
+#include "Helper/ConsoleLogger.h" //Min, max
 #include "GLToolkit.h"
 #include "GLWindowManager.h"
 #include "GLComponent.h"
@@ -31,7 +32,7 @@ LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
 #endif*/
 
-GLApplication::GLApplication() : m_Timer(false) {
+GLApplication::GLApplication() : m_Timer(false), m_strFrameStats{"\0"}, m_strEventStats{"\0"}, errMsg{"\0"} {
 
   m_bWindowed = true;
   m_strWindowTitle = "GL application";
@@ -70,6 +71,27 @@ GLApplication::GLApplication() : m_Timer(false) {
   m_fscreenHeight=1024;
 #endif
 
+    nbMouse=nbWheel=nbMouseMotion=nbJoystic=nbKey=nbSystem=nbActive=nbResize=nbExpose=nbOther=0;
+    m_fFPS = 0.0f;
+    m_bitsPerPixel = 0;
+
+    m_fTime = 0.0f;
+    fMoveTime=0.0f;
+    fPaintTime=0.0f;
+    mainScreen=nullptr;
+    mainContext={};
+    nbFrame=0;
+    nbEvent=0;
+    firstTick=0;
+    quit=false;
+    wereEvents = false;
+    nbPoly=0;
+    nbLine=0;
+    nbRestore=0;
+}
+
+GLApplication::~GLApplication(){
+    //SAFE_DELETE(wnd);
 }
 
 double GLApplication::GetTick() {
@@ -244,8 +266,8 @@ void GLApplication::Exit() {
   }
 #else
   if(logs) {
-    printf("[Unexpected error]\n");
-    printf("%s",logs);
+    Log::console_error("[Unexpected error]\n");
+    Log::console_error("{}",logs);
   }
 #endif
   SAFE_FREE(logs);

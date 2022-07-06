@@ -20,7 +20,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 // Temporary transparent hit
-//#include <Simulation/Particle.h>
+//#include "Simulation/SynradSimGeom.h"
+#include <Simulation/Particle.h>
 #include "Vector.h" //AABB
 //#include "../src/Simulation.h" //SubprocessFacet
 
@@ -31,18 +32,30 @@ namespace MFSim {
 
 class AABBNODE;
 class Simulation;
-struct SubprocessFacet;
+struct SimulationFacet;
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size_t depth, size_t& maxDepth);
+class AABBNODE {
+public:
+	AABBNODE();
+	~AABBNODE();
+	void ComputeBB();
+	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
+	AxisAlignedBoundingBox             bb;
+	AABBNODE *left;
+	AABBNODE *right;
+	std::vector<SimulationFacet*> facets;
+};
+
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth);
 
 void IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
-                   const Vector3d &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,
+                   const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
                    const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
-                   SubprocessFacet *&collidedFacet, double &minLength);
-std::tuple<bool, SubprocessFacet *, double>
+                   SimulationFacet *&collidedFacet, double &minLength);
+std::tuple<bool, SimulationFacet *, double>
 Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh);
 /*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticle);*/
-bool IsInFacet(const SubprocessFacet &f,const double &u,const double &v);
+bool IsInFacet(const SimulationFacet &f, const double &u, const double &v);
 //Vector3d PolarToCartesian(const SubprocessFacet *const collidedFacet, const double& theta, const double& phi, const bool& reverse); //sets sHandle->currentParticle.direction
 //std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);

@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 15/04/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef MOLFLOW_PROJ_SIMULATIONMANAGER_H
 #define MOLFLOW_PROJ_SIMULATIONMANAGER_H
@@ -9,11 +25,11 @@
 #include <string>
 #include <thread>
 #include "../src/Simulation/Simulation.h"
-#include <../src/GeometrySimu.h>
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;
 
+class SimulationModel;
 class SimulationController;
 
 struct Dataport;
@@ -31,15 +47,6 @@ enum class LoadType : uint8_t {
     LOADHITS
 };
 
-/*struct SubProcInfo {
-    size_t procId;
-    size_t masterCmd;
-    size_t cmdParam;
-    size_t cmdParam2;
-    size_t oldState;
-    char statusString[128];
-};*/
-
 /*!
  * @brief Controls concrete Simulation instances and manages their I/O needs. Can act as a standalone (CLI mode) or as a middleman (GPU mode).
  * @todo Add logger capability to console OR sdl framework
@@ -55,18 +62,6 @@ class SimulationManager {
 
     int refreshProcStatus();
 protected:
-    /*! Load/Forward serialized simulation data (pre-processed geometry data) */
-    int ResetStatsAndHits(); /*! Reset local and global stats and counters */
-    int TerminateSimHandles();
-
-    /*! Get results from simulations and clear local counters */
-    bool StartStopSimulation();
-
-    // Open/Close for shared memory
-
-    int CreateLogDP(size_t logDpSize);
-
-    int CloseLogDP();
 
     int ForwardCommand(int command, size_t param, size_t param2);
 
@@ -97,8 +92,6 @@ public:
 
     int ResetHits();
 
-    int ClearLogBuffer();
-
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
     int GetProcStatus(ProcComm &procInfoList);
@@ -112,23 +105,19 @@ public:
 
     bool GetRunningStatus();
 
-    int LoadInput(const std::string& fileName);
-
     int IncreasePriority();
     int DecreasePriority();
 
     int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
-    ProcComm procInformation; // ctrl
-    // SimulationModel* model; // load
-    // hits
+    ProcComm procInformation; // process control
 
 
 protected:
     //std::vector<SimulationUnit*> simHandles; // for threaded versions
 public:
-    // Flags
+    // Flags for which simulation type should be run
     bool useCPU;
     bool useGPU;
     bool useRemote;

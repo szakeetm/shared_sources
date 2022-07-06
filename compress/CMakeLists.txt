@@ -35,6 +35,7 @@ add_definitions(
 set(SRC_FILES ${CPP_DIR_1}/compress.cpp
         ${CPP_DIR_2}/File.cpp
         ${HEADER_DIR_1}/File.h
+        ${CPP_DIR_2}/Helper/ConsoleLogger.h
         )
 
 
@@ -52,6 +53,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

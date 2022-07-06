@@ -616,8 +616,8 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
                                      &totalNodes, orderedPrims, battery, indices);
     primitives.swap(orderedPrims);
 
-    Log::console_msg_master(4, "BVH created with %d nodes for %d "
-           "primitives (%.2f MB)\n",
+    Log::console_msg_master(4, "BVH created with {} nodes for {} "
+           "primitives ({:.2f} MB)\n",
            totalNodes, (int) primitives.size(),
            float(totalNodes * sizeof(LinearBVHNode)) /
            (1024.f * 1024.f));
@@ -631,10 +631,10 @@ void BVHAccel::construct(std::vector<BVHPrimitiveInfo> primitiveInfo){
     delete root;
 
     Log::console_msg_master(4,"--- BVH STATS ---\n");
-    Log::console_msg_master(4," Total Primitives: %d\n", STATS::totalPrimitives);
-    Log::console_msg_master(4," Total Leaf Nodes: %d\n", STATS::totalLeafNodes);
-    Log::console_msg_master(4," Interior Nodes:   %d\n", STATS::interiorNodes);
-    Log::console_msg_master(4," Leaf Nodes:       %d\n", STATS::leafNodes);
+    Log::console_msg_master(4," Total Primitives: {}\n", STATS::totalPrimitives);
+    Log::console_msg_master(4," Total Leaf Nodes: {}\n", STATS::totalLeafNodes);
+    Log::console_msg_master(4," Interior Nodes:   {}\n", STATS::interiorNodes);
+    Log::console_msg_master(4," Leaf Nodes:       {}\n", STATS::leafNodes);
 };
 
 BVHBuildNode *BVHAccel::recursiveBuild(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end,

@@ -1,14 +1,32 @@
-//
-// Created by pbahr on 09/10/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include "Formulas.h"
+#include "Helper/ConsoleLogger.h"
 #include <cmath>
 
 // convergence constants
 constexpr size_t max_vector_size() { return 65536; };
 constexpr size_t d_precision() { return 5; };
 
+//! Add a formula to the formula storage
 void Formulas::AddFormula(const char *fName, const char *formula) {
     GLParser *f2 = new GLParser();
     f2->SetExpression(formula);
@@ -19,6 +37,7 @@ void Formulas::AddFormula(const char *fName, const char *formula) {
     UpdateVectorSize();
 }
 
+//! Clear formula storage
 void Formulas::ClearFormulas() {
     for (auto &f : formulas_n)
         SAFE_DELETE(f);
@@ -26,6 +45,7 @@ void Formulas::ClearFormulas() {
     UpdateVectorSize();
 }
 
+//! Initialize formulas by parsing string to values
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
     for (auto & i : formulas_n) {
@@ -63,6 +83,7 @@ void Formulas::UpdateVectorSize() {
     }
 }
 
+//! Get updated formula values for later usage in corresponding windows
 bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
     // First fetch new variable values
     InitializeFormulas();
@@ -85,6 +106,7 @@ bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
     return true;
 }
 
+//! Add new value to convergence vector
 bool Formulas::FetchNewConvValue() {
     bool hasChanged = false;
     if (!formulas_n.empty()) {
@@ -177,7 +199,7 @@ double Formulas::GetConvRate(int formulaId) {
     double var = invN * sumValSquared - std::pow(invN * sumVal,2);
     double convDelta = 3.0 * std::sqrt(var) / (conv_vec.size() * conv_vec.size());
 
-    if(convDelta / conv_vec.back().second < 1.0e-6) printf("[1] Sufficient convergent reached: %e\n", convDelta / conv_vec.back().second);
+    if(convDelta / conv_vec.back().second < 1.0e-6) Log::console_msg(2, "[1] Sufficient convergent reached: {:e}\n", convDelta / conv_vec.back().second);
 
     double xmean = sumVal * invN;
     double varn = 0.0;
@@ -188,13 +210,13 @@ double Formulas::GetConvRate(int formulaId) {
     double quant95Val = 1.96 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant99Val = 2.576 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant995Val = 3.0 * std::sqrt(varn) / std::sqrt(conv_vec.size());
-    if(xmean - quant95Val <= conv_vec.back().second && xmean + quant95Val >= conv_vec.back().second) printf("[95.0] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant95Val, xmean + quant95Val);
-    else if(xmean - quant99Val <= conv_vec.back().second && xmean + quant99Val >= conv_vec.back().second) printf("[99.0] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant99Val, xmean + quant99Val);
-    else if(xmean - quant995Val <= conv_vec.back().second && xmean + quant995Val >= conv_vec.back().second) printf("[99.5] Sufficient convergent reached: %e in [%e , %e]\n", conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
+    if(xmean - quant95Val <= conv_vec.back().second && xmean + quant95Val >= conv_vec.back().second) Log::console_msg(2, "[95.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant95Val, xmean + quant95Val);
+    else if(xmean - quant99Val <= conv_vec.back().second && xmean + quant99Val >= conv_vec.back().second) Log::console_msg(2, "[99.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant99Val, xmean + quant99Val);
+    else if(xmean - quant995Val <= conv_vec.back().second && xmean + quant995Val >= conv_vec.back().second) Log::console_msg(2, "[99.5] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
     else {
         double dist = std::min(conv_vec.back().second - xmean + quant995Val, conv_vec.back().second + xmean - quant995Val);
-        printf("[4] Convergence distance to a995: %e --> %e close to [%e , %e]\n", dist, conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
-        printf("[4] Abs to a95: %e --> Rel to a95: %e / %e\n", quant95Val, (conv_vec.back().second - xmean) / xmean, (quant95Val / conv_vec.back().second));
+        Log::console_msg(2, "[4] Convergence distance to a995: {:e} --> {:e} close to [{:e} , {:e}]\n", dist, conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
+        Log::console_msg(2, "[4] Abs to a95: {:e} --> Rel to a95: {:e} / {:e}\n", quant95Val, (conv_vec.back().second - xmean) / xmean, (quant95Val / conv_vec.back().second));
     }
     return convDelta;
 }

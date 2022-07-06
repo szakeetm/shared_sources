@@ -1,16 +1,33 @@
-//
-// Created by pbahr on 5/5/21.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #include <Initializer.h>
-#include <fstream>
-#include <filesystem>
 #include <Helper/ConsoleLogger.h>
 #include <ZipLib/ZipFile.h>
 #include "FlowMPI.h"
-#include "GeometrySimu.h"
+//#include "Simulation/SynradSimGeom.h"
 #include "SettingsIO.h"
 
+
+#include <fstream>
+#include <filesystem>
 namespace MFMPI {
     // globals
     int world_rank{0};
@@ -52,7 +69,7 @@ namespace MFMPI {
             MPI_Type_size(MPI_BYTE, &nByte);
             //MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
             number_bytes = nByte * contents.size();
-            Log::console_msg(4,"Sharing file size with nodes %d.\n", number_bytes);
+            Log::console_msg(4,"Sharing file size with nodes {}.\n", number_bytes);
             MPI_Bcast(&number_bytes, 1, MPI_INT, 0, MPI_COMM_WORLD);
         }
         else {
@@ -87,7 +104,7 @@ namespace MFMPI {
 
         for (int i = 1; i < MFMPI::world_size; i++) {
             MPI_Barrier(MPI_COMM_WORLD);
-            Log::console_msg_master(5,"File transfer loop %d / %d.\n", i, MFMPI::world_size);
+            Log::console_msg_master(5,"File transfer loop {} / {}.\n", i, MFMPI::world_size);
             if (MFMPI::world_rank == 0) {
                 bool hasFile[1]{false};
                 MPI_Status status;
@@ -96,14 +113,14 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file %s to node %d.\n", SettingsIO::inputFile.c_str(), i);
+                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", SettingsIO::inputFile, i);
 
                     std::ifstream infile;
                     infile.open(SettingsIO::inputFile, std::ios::binary);
                     std::string contents;
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
-                    Log::console_msg(4,"Attempt to write file to node %d.\n", i);
+                    Log::console_msg(4,"Attempt to write file to node {}.\n", i);
                     int nByte = 0;
                     MPI_Type_size(MPI_BYTE, &nByte);
                     MPI_Send(contents.c_str(), nByte * contents.size(), MPI_BYTE, i, 0, MPI_COMM_WORLD);
@@ -114,7 +131,7 @@ namespace MFMPI {
                 MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4,"[%d] Attempt to receive file from master.\n", MFMPI::world_rank);
+                    Log::console_msg(4,"[{}] Attempt to receive file from master.\n", MFMPI::world_rank);
                     MPI_Status status;
                     // Probe for an incoming message from process zero
                     MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
@@ -125,7 +142,7 @@ namespace MFMPI {
                     // Allocate a buffer to hold the incoming numbers
                     char *file_buffer = (char *) malloc(sizeof(char) * number_bytes);
                     // Now receive the message with the allocated buffer
-                    Log::console_msg(4,"Trying to receive %d numbers from master.\n",
+                    Log::console_msg(4,"Trying to receive {} numbers from master.\n",
                            number_bytes);
                     MPI_Recv(file_buffer, number_bytes, MPI_BYTE, 0, 0,
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -137,7 +154,7 @@ namespace MFMPI {
                     }
                     catch (const std::exception &e){
                         SettingsIO::outputPath = "./";
-                        Log::console_error("Couldn't create fallback directory [ %s ], falling back to binary folder instead for output files\n", SettingsIO::outputPath.c_str());
+                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", SettingsIO::outputPath);
                     }
 
                     auto outputName = SettingsIO::outputPath+"workfile"+std::filesystem::path(SettingsIO::inputFile).extension().string();

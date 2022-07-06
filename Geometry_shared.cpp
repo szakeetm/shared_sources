@@ -2231,7 +2231,7 @@ size_t Geometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
     for(auto& fac : facets)
-        if (fac->selected) nb++;
+        if (fac && fac->selected) nb++;
 	return nb;
 }
 
@@ -4077,6 +4077,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 			facets[oldFacetNb + globalId]->indices[2] = oldVertexNb + 3 * globalId + 1;
 
 			if (insert) {
+				facets[oldFacetNb + globalId]->selected = true; //Highlight selected facets
 				//Assign structure
 				if (newStruct) {
 					facets[oldFacetNb + globalId]->sh.superIdx = static_cast<int>(sh.nbSuper);
@@ -4148,7 +4149,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 }
 
 void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr) {
-
+	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
 	LoadSTL(file, prg, scaleFactor, true, newStr, structId);
@@ -4903,6 +4904,62 @@ std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
 	return plottedFacets;
 }
 
+void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
+    vertices3.clear();
+    for(auto& vert : vertices) {
+        vertices3.emplace_back(vert); // position data
+        vertices3.back().selected = false;
+    }
+
+    sh.nbVertex = vertices.size();
+}
+
+bool Geometry::InitOldStruct(SimulationModel* model){
+    for (int i = 0; i < MAX_SUPERSTR; i++) {
+        SAFE_FREE(strName[i]);
+        SAFE_FREE(strFileName[i]);
+    }
+    memset(strName, 0, MAX_SUPERSTR * sizeof(char *));
+    memset(strFileName, 0, MAX_SUPERSTR * sizeof(char *));
+    for(size_t i = 0; i < std::min((int)model->structures.size(),(int)MAX_SUPERSTR); ++i){
+        strName[i] = (char*)malloc(std::min((size_t)model->structures[i].strName.size()+1,(size_t)256) * sizeof(char));
+        strFileName[i] = (char*)malloc(std::min((size_t)model->structures[i].strFileName.size()+1,(size_t)256) * sizeof(char));
+        std::strncpy(strName[i], model->structures[i].strName.c_str(), std::min((size_t)model->structures[i].strName.size(),(size_t)256));
+        std::strncpy(strFileName[i], model->structures[i].strFileName.c_str(), std::min((size_t)model->structures[i].strFileName.size(),(size_t)256));
+        strName[i][std::min((size_t)model->structures[i].strName.size(),(size_t)256)] = '\0';
+        strFileName[i][std::min((size_t)model->structures[i].strFileName.size(),(size_t)256)] = '\0';
+    }
+
+    return true;
+}
+
+// In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
+void Geometry::InitInterfaceFacets(const vector<shared_ptr<SimulationFacet>> &sFacets, Worker* work) {
+    //Facets
+    try{
+        facets.resize(sFacets.size(), nullptr);
+    }
+    catch(const std::exception &e) {
+        throw Error("Couldn't allocate memory for facets");
+    }
+
+    size_t index = 0;
+    for(auto& sFac : sFacets) {
+        auto& fac = *sFac;
+        facets[index] = new InterfaceFacet(fac.indices.size());
+        auto& intFacet = facets[index];
+        intFacet->indices = fac.indices;
+        intFacet->vertices2 = fac.vertices2;
+        intFacet->sh = fac.sh;
+
+        // Do Molflow or Synrad related things in an overriden function
+        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
+        ++index;
+    }
+
+    sh.nbFacet = sFacets.size();
+}
+
 #if defined(MOLFLOW)
 PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
 																																	  
@@ -4962,54 +5019,6 @@ PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& 
 	}
 
 	return result;
-}
-
-void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
-    vertices3.clear();
-    for(auto& vert : vertices) {
-        vertices3.emplace_back(vert); // position data
-        vertices3.back().selected = false;
-    }
-
-    sh.nbVertex = vertices.size();
-}
-
-void Geometry::InitInterfaceFacets(const vector<shared_ptr<SubprocessFacet>> &sFacets, Worker* work) {
-    //Facets
-    try{
-        facets.resize(sFacets.size(), nullptr);
-    }
-    catch(const std::exception &e) {
-        throw Error("Couldn't allocate memory for facets");
-    }
-
-    size_t index = 0;
-    for(auto& sFac : sFacets) {
-		auto& fac = *sFac;
-        facets[index] = new InterfaceFacet(fac.indices.size());
-        auto& intFacet = facets[index];
-        intFacet->indices = fac.indices;
-        intFacet->vertices2 = fac.vertices2;
-        intFacet->sh = fac.sh;
-
-        // Molflow
-        intFacet->ogMap = fac.ogMap;
-        intFacet->angleMapCache = fac.angleMap.pdf;
-
-        if(intFacet->ogMap.outgassingMapWidth > 0 || intFacet->ogMap.outgassingMapHeight > 0
-        || intFacet->ogMap.outgassingFileRatioU > 0.0 || intFacet->ogMap.outgassingFileRatioV > 0.0){
-            intFacet->hasOutgassingFile = true;
-        }
-
-        //Set param names for interface
-        if (intFacet->sh.sticking_paramId > -1) intFacet->userSticking = work->parameters[intFacet->sh.sticking_paramId].name;
-        if (intFacet->sh.opacity_paramId > -1) intFacet->userOpacity = work->parameters[intFacet->sh.opacity_paramId].name;
-        if (intFacet->sh.outgassing_paramId > -1) intFacet->userOutgassing = work->parameters[intFacet->sh.outgassing_paramId].name;
-        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
-        ++index;
-    }
-
-    sh.nbFacet = sFacets.size();
 }
 
 #endif
