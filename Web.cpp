@@ -41,6 +41,7 @@ std::tuple<CURLcode,std::string> DownloadString(std::string url) {
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, AppendDataToStringCurlCallback);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &body);
+	curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 	CURLcode result = curl_easy_perform(curl_handle);
 	curl_easy_cleanup(curl_handle);
 
@@ -71,6 +72,7 @@ std::tuple<CURLcode, long> DownloadFile(std::string url, std::string fileName) {
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		result = curl_easy_perform(curl);
 		if (result == CURLE_OK) {
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &respCode);
