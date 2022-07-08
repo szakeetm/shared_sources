@@ -857,7 +857,14 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
         }
 
         if (ImGui::BeginTabItem("ADS Stats")) {
+            static Chronometer runtime_clock(true);
             static bool constantUpdates = false;
+            static float update_limit_sec = 2.0f;
+
+            bool timed_refresh = runtime_clock.Elapsed() > update_limit_sec;
+            if(timed_refresh)
+                runtime_clock.ReStart();
+
             bool forceUpdate = false;
             ImGui::Checkbox("Update constantly", &constantUpdates);
             ImGui::SameLine();
@@ -871,9 +878,14 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
             static float trimMax = 0.0f;
             static float trimMin = 1.0e30f;
-            if (ImGui::SliderFloat2("Hit stat threshold", (float *) &mApp->aabbVisu.trimByProb, 0.0f,
-                                    trimMax > 0.0f ? trimMax : 1.0f,
-                                    "%.2f")) {
+            static bool refresh_hit_stats = true;
+            ImGui::Checkbox("Auto refresh hit thresholds", &refresh_hit_stats);
+            if (ImGui::SliderFloat2("Hit stat threshold", (float *) &mApp->aabbVisu.trimByProb,
+                                    trimMin > 0.0f ? trimMin : 0.0f,
+                                    trimMax > 0.0f ? trimMax : 0.000001f,
+                                    "%.4f")) {
+                trimMin = mApp->aabbVisu.trimByProb[0];
+                trimMax = mApp->aabbVisu.trimByProb[1];
                 mApp->aabbVisu.trimRange = mApp->aabbVisu.trimByProb[1] - mApp->aabbVisu.trimByProb[0];
             }
 
@@ -905,14 +917,16 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             auto &accel = mApp->worker.model->accel;
 
             RTStats tree_stats{};
-            if(mApp->worker.model->wp.accel_type == 1)
-                for( auto& acc : accel){
+            if(mApp->worker.model->wp.accel_type == 1) {
+                for (auto &acc: accel) {
                     //auto nodes = static_cast<KdTreeAccel*>(acc.get())->nodes;
-                    for(const auto& stat : acc->ints) {
+                    for (const auto &stat: acc->ints) {
                         tree_stats.nIntersections += stat.nbIntersects;
                         tree_stats.nTraversedInner += stat.nbChecks;
                     }
                 }
+            }
+
             // old_bvb
             int nInt = mApp->worker.globState.globalHits.globalHits.nbHitEquiv > 0.0 ? static_cast<int>(
                     static_cast<double>(tree_stats.nIntersections) /
@@ -955,80 +969,83 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         if (rate_vec && rate_vec->size() != stats->size())
                             rate_vec->resize(stats->size(), -1.0f);
 
-                        if (/*tabItems.empty() && */!accel.empty() && (int) tabItems.size() != (int) stats->size()) {
+                        bool full_rebuild = !accel.empty() && (int) tabItems.size() != (int) stats->size();
+                        bool called_refresh = forceUpdate || (constantUpdates && mApp->worker.IsRunning());
+                        if (full_rebuild || called_refresh) {
                             auto &bvh = accel.front();
 
-                            size_t nbIntersections_total = 0;
-                            tabItems.resize(stats->size(), BoxData());
-                            int nodeLevel_max = 0;
-                            for (int n = 0; n < tabItems.Size; n++) {
-                                BoxData &item = tabItems[n];
-                                auto &f = (*stats)[n];
-                                item.ID = n;
-                                item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
-                                item.prims = f.nbPrim;
-                                item.level = f.level;
-                                if (mApp->worker.model->wp.accel_type &&
-                                    std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
-                                    item.isLeaf = std::dynamic_pointer_cast<KdTreeAccel>(
-                                            accel.front())->nodes[n].IsLeaf();
-                                } else if (std::dynamic_pointer_cast<BVHAccel>(accel.front()) != nullptr) {
-                                    item.isLeaf = std::dynamic_pointer_cast<BVHAccel>(
-                                            accel.front())->GetNodes()[n].nPrimitives > 0;
-                                } else {
-                                    item.isLeaf = false;
-                                }
-                                nbIntersections_total += f.nbIntersects;
+                            static size_t nbIntersections_total = 0;
 
-                                nodeLevel_max = std::max(nodeLevel_max, item.level);
-                            }
-                            mApp->aabbVisu.showLevelAABB[0] = 0;
-                            mApp->aabbVisu.showLevelAABB[1] = nodeLevel_max;
-
-                            for (int n = 0; n < tabItems.Size; n++) {
-                                BoxData &item = tabItems[n];
-                                auto &f = (*stats)[item.ID];
-                                item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects /
-                                                                                            (double) nbIntersections_total
-                                                                                          : 0.0;
-                            }
-
-                            if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
+                            // only do once
+                            if(full_rebuild) {
+                                tabItems.resize(stats->size(), BoxData());
+                                int nodeLevel_max = 0;
                                 for (int n = 0; n < tabItems.Size; n++) {
                                     BoxData &item = tabItems[n];
-                                    if (selected_combo == 0)
-                                        (*rate_vec)[item.ID] = item.chance;
-                                    else if (selected_combo == 1)
-                                        (*rate_vec)[item.ID] = item.globalIntersectionRate;
+                                    auto &f = (*stats)[n];
+                                    item.ID = n;
+                                    item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks
+                                                                   : 0.0;
+                                    item.prims = f.nbPrim;
+                                    item.level = f.level;
+                                    if (mApp->worker.model->wp.accel_type &&
+                                        std::dynamic_pointer_cast<KdTreeAccel>(accel.front()) != nullptr) {
+                                        item.isLeaf = std::dynamic_pointer_cast<KdTreeAccel>(
+                                                accel.front())->nodes[n].IsLeaf();
+                                    } else if (std::dynamic_pointer_cast<BVHAccel>(accel.front()) != nullptr) {
+                                        item.isLeaf = std::dynamic_pointer_cast<BVHAccel>(
+                                                accel.front())->GetNodes()[n].nPrimitives > 0;
+                                    } else {
+                                        item.isLeaf = false;
+                                    }
+                                    nbIntersections_total += f.nbIntersects;
+
+                                    nodeLevel_max = std::max(nodeLevel_max, item.level);
                                 }
-                            }
-                        } else if (forceUpdate || (constantUpdates && mApp->worker.IsRunning())) {
-                            size_t nbIntersections_total = 0;
-
-                            auto &bvh = accel.front();
-                            for (int n = 0; n < tabItems.Size; n++) {
-                                BoxData &item = tabItems[n];
-                                auto &f = (*stats)[item.ID];
-                                item.chance = (f.nbChecks > 0) ? (double) f.nbIntersects / (double) f.nbChecks : 0.0;
-                                nbIntersections_total += f.nbIntersects;
+                                mApp->aabbVisu.showLevelAABB[0] = 0;
+                                mApp->aabbVisu.showLevelAABB[1] = nodeLevel_max;
                             }
 
-
-                            for (int n = 0; n < tabItems.Size; n++) {
-                                BoxData &item = tabItems[n];
-                                auto &f = (*stats)[item.ID];
-                                item.globalIntersectionRate = (nbIntersections_total > 0) ? (double) f.nbIntersects /
-                                                                                            (double) nbIntersections_total
-                                                                                          : 0.0;
-                            }
-
-                            if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
+                            if(timed_refresh) {
                                 for (int n = 0; n < tabItems.Size; n++) {
                                     BoxData &item = tabItems[n];
-                                    if (selected_combo == 0)
-                                        (*rate_vec)[item.ID] = item.chance;
-                                    else if (selected_combo == 1)
-                                        (*rate_vec)[item.ID] = item.globalIntersectionRate;
+                                    auto &f = (*stats)[item.ID];
+                                    item.globalIntersectionRate = (nbIntersections_total > 0) ?
+                                                                  (double) f.nbIntersects /
+                                                                  (double) nbIntersections_total
+                                                                                              : 0.0;
+                                }
+
+                                if (!mApp->aabbVisu.travStep && mApp->aabbVisu.showStats) {
+                                    for (int n = 0; n < tabItems.Size; n++) {
+                                        BoxData &item = tabItems[n];
+                                        if (selected_combo == 0)
+                                            (*rate_vec)[item.ID] = item.chance;
+                                        else if (selected_combo == 1)
+                                            (*rate_vec)[item.ID] = item.globalIntersectionRate;
+                                    }
+                                }
+
+                                if (refresh_hit_stats) {
+
+                                    // first reset
+                                    mApp->aabbVisu.trimByProb[0] = 1.0e38f;
+                                    mApp->aabbVisu.trimByProb[1] = 0;
+                                    trimMin = 1.0e30f;
+                                    trimMax = 0.0f;
+
+                                    // then update
+                                    for (int n = 0; n < tabItems.Size; n++) {
+                                        BoxData &item = tabItems[n];
+
+                                        if (selected_combo == 0) {
+                                            trimMax = std::max(trimMax, (float) item.chance);
+                                            trimMin = std::min(trimMin, (float) item.chance);
+                                        } else if (selected_combo == 1) {
+                                            trimMax = std::max(trimMax, (float) item.globalIntersectionRate);
+                                            trimMin = std::min(trimMin, (float) item.globalIntersectionRate);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1233,140 +1250,98 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     static uint64_t nbSteps_totalsum = 0;
                     if (!rate_vec && rate_vec->size() != facets.size())
                         rate_vec->resize(facets.size(), -1.0f);
-                    if (!facets.empty() && facItems.size() != facets.size()) {
+
+                    bool full_rebuild = !facets.empty() && facItems.size() != facets.size();
+                    bool called_refresh = forceUpdate || (constantUpdates && mApp->worker.IsRunning());
+                    if (full_rebuild || called_refresh) {
                         auto &fac = facets;
-                        facItems.resize(facets.size(), FacetData());
 
-                        mApp->aabbVisu.trimByProb[0] = 1.0e38f;
-                        mApp->aabbVisu.trimByProb[1] = 0;
-                        size_t nbIntersections_total = 0;
+                        if(full_rebuild) {
+                            facItems.resize(facets.size(), FacetData());
+                            for (int n = 0; n < facItems.Size; n++) {
+                                FacetData &item = facItems[n];
+                                auto &f = facets[n];
+                                item.ID = n;
+                            }
+                        }
+
+                        static size_t nbIntersections_total = 0;
                         nbSteps_total = 0;
                         nbSteps_totalsum = 0;
 
-                        for (int n = 0; n < facItems.Size; n++) {
-                            auto &f = facets[n];
-                            FacetData &item = facItems[n];
-                            item.ID = n;
-                            item.steps = (f->nbTests > 0) ? (double) f->nbTraversalSteps / (double) f->nbTests : 0.0;
-                            item.intersectionRate = (f->nbTests > 0) ? (double) f->nbIntersections / (double) f->nbTests
-                                                                     : 0.0;
-                            nbIntersections_total += f->nbIntersections;
-                            nbSteps_total += item.steps;
-                            nbSteps_totalsum += item.steps * mApp->worker.globState.facetStates[item.ID].momentResults[0].hits.nbMCHit;
-                            mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float) item.steps);
-                            mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float) item.steps);
-                            if (selected_combo == 0) {
-                                trimMax = std::max(trimMax, (float) item.steps);
-                                trimMin = std::min(trimMin, (float) item.steps);
-                            } else if (selected_combo == 1) {
-                                trimMax = std::max(trimMax, (float) item.intersectionRate);
-                                trimMin = std::min(trimMin, (float) item.intersectionRate);
-                            }
-                        }
-
-                        if(mApp->worker.globState.globalHits.globalHits.nbMCHit > 0)
-                            nbSteps_totalsum /= mApp->worker.globState.globalHits.globalHits.nbMCHit;
-
-                        for (int n = 0; n < facItems.Size; n++) {
-                            FacetData &item = facItems[n];
-                            auto &f = facets[item.ID];
-                            item.intersectionRate_global = (f->nbTests > 0) ? (double) f->nbTests /
-                                                                              (double) nbIntersections_total : 0.0;
-                            if (selected_combo == 2) {
-                                trimMax = std::max(trimMax, (float) item.intersectionRate_global);
-                                trimMin = std::min(trimMin, (float) item.intersectionRate_global);
-                            }
-                        }
-
-                        if (mApp->aabbVisu.travStep) {
-                            switch (selected_combo) {
-                                case 1:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.intersectionRate;
-                                    }
-                                    break;
-                                case 2:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = static_cast<float>(item.intersectionRate_global);
-                                    }
-                                    break;
-                                case 0:
-                                default:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = static_cast<float>(item.steps);
-                                    }
-                                    break;
+                        if(timed_refresh) {
+                            for (int n = 0; n < facItems.Size; n++) {
+                                FacetData &item = facItems[n];
+                                auto &f = facets[item.ID];
+                                item.steps = (f->nbTests > 0) ? (double) f->nbTraversalSteps / (double) f->nbTests
+                                                              : 0.0;
+                                item.intersectionRate = (f->nbTests > 0) ? (double) f->nbIntersections /
+                                                                           (double) f->nbTests
+                                                                         : 0.0;
+                                nbIntersections_total += f->nbIntersections;
+                                nbSteps_total += item.steps;
+                                nbSteps_totalsum += item.steps *
+                                                    mApp->worker.globState.facetStates[item.ID].momentResults[0].hits.nbMCHit;
                             }
 
-                        }
-                    } else if (forceUpdate || (constantUpdates && mApp->worker.IsRunning())) {
-                        auto &bvh = accel.front();
-                        //mApp->aabbVisu.trimByProb[0] = 1.0e38f;
-                        //mApp->aabbVisu.trimByProb[1] = 0;
+                            if (mApp->worker.globState.globalHits.globalHits.nbMCHit > 0)
+                                nbSteps_totalsum /= mApp->worker.globState.globalHits.globalHits.nbMCHit;
 
-                        size_t nbIntersections_total = 0;
-                        nbSteps_total = 0;
-                        nbSteps_totalsum = 0;
-                        for (int n = 0; n < facItems.Size; n++) {
-                            FacetData &item = facItems[n];
-                            auto &f = facets[item.ID];
-                            item.steps = (f->nbTests > 0) ? (double) f->nbTraversalSteps / (double) f->nbTests : 0.0;
-                            item.intersectionRate = (f->nbTests > 0) ? (double) f->nbIntersections / (double) f->nbTests
-                                                                     : 0.0;
-                            nbIntersections_total += f->nbIntersections;
-                            nbSteps_total += item.steps;
-                            nbSteps_totalsum += item.steps * mApp->worker.globState.facetStates[item.ID].momentResults[0].hits.nbMCHit;
-
-
-                            //mApp->aabbVisu.trimByProb[0] = std::min(mApp->aabbVisu.trimByProb[0], (float)item.steps);
-                            //mApp->aabbVisu.trimByProb[1] = std::max(mApp->aabbVisu.trimByProb[1], (float)item.steps);
-                            if (selected_combo == 0) {
-                                trimMax = std::max(trimMax, (float) item.steps);
-                                trimMin = std::min(trimMin, (float) item.steps);
-                            } else if (selected_combo == 1) {
-                                trimMax = std::max(trimMax, (float) item.intersectionRate);
-                                trimMin = std::min(trimMin, (float) item.intersectionRate);
+                            for (int n = 0; n < facItems.Size; n++) {
+                                FacetData &item = facItems[n];
+                                auto &f = facets[item.ID];
+                                item.intersectionRate_global = (f->nbTests > 0) ? (double) f->nbTests /
+                                                                                  (double) nbIntersections_total : 0.0;
                             }
-                        }
 
-                        if(mApp->worker.globState.globalHits.globalHits.nbMCHit > 0)
-                            nbSteps_totalsum /= mApp->worker.globState.globalHits.globalHits.nbMCHit;
+                            if (refresh_hit_stats) {
 
-                        for (int n = 0; n < facItems.Size; n++) {
-                            FacetData &item = facItems[n];
-                            auto &f = facets[item.ID];
-                            item.intersectionRate_global = (f->nbTests > 0) ? (double) f->nbTests /
-                                                                              (double) nbIntersections_total : 0.0;
-                            if (selected_combo == 2) {
-                                trimMax = std::max(trimMax, (float) item.intersectionRate_global);
-                                trimMin = std::min(trimMin, (float) item.intersectionRate_global);
+                                // first reset
+                                mApp->aabbVisu.trimByProb[0] = 1.0e38f;
+                                mApp->aabbVisu.trimByProb[1] = 0;
+                                trimMin = 1.0e30f;
+                                trimMax = 0.0f;
+
+                                // then update
+                                for (int n = 0; n < facItems.Size; n++) {
+                                    FacetData &item = facItems[n];
+
+                                    if (selected_combo == 0) {
+                                        trimMax = std::max(trimMax, (float) item.steps);
+                                        trimMin = std::min(trimMin, (float) item.steps);
+                                    } else if (selected_combo == 1) {
+                                        trimMax = std::max(trimMax, (float) item.intersectionRate);
+                                        trimMin = std::min(trimMin, (float) item.intersectionRate);
+                                    } else if (selected_combo == 2) {
+                                        trimMax = std::max(trimMax, (float) item.intersectionRate_global);
+                                        trimMin = std::min(trimMin, (float) item.intersectionRate_global);
+                                    }
+                                }
                             }
-                        }
 
-                        if (mApp->aabbVisu.travStep) {
-                            switch (selected_combo) {
-                                case 1:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.intersectionRate;
-                                    }
-                                    break;
-                                case 2:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.intersectionRate_global;
-                                    }
-                                    break;
-                                case 0:
-                                default:
-                                    for (int n = 0; n < facItems.Size; n++) {
-                                        FacetData &item = facItems[n];
-                                        (*rate_vec)[item.ID] = item.steps;
-                                    }
-                                    break;
+                            if (mApp->aabbVisu.travStep) {
+                                switch (selected_combo) {
+                                    case 1:
+                                        for (int n = 0; n < facItems.Size; n++) {
+                                            FacetData &item = facItems[n];
+                                            (*rate_vec)[item.ID] = static_cast<float>(item.intersectionRate);
+                                        }
+                                        break;
+                                    case 2:
+                                        for (int n = 0; n < facItems.Size; n++) {
+                                            FacetData &item = facItems[n];
+                                            (*rate_vec)[item.ID] = static_cast<float>(item.intersectionRate_global);
+                                        }
+                                        break;
+                                    case 0:
+                                    default:
+                                        for (int n = 0; n < facItems.Size; n++) {
+                                            FacetData &item = facItems[n];
+                                            (*rate_vec)[item.ID] = static_cast<float>(item.steps);
+                                        }
+                                        break;
+                                }
+
                             }
                         }
                     }
@@ -1436,7 +1411,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         ImGui::TableHeadersRow();
 
                         // Sort our data if sort specs have been changed!
-                        if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
+                        if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs()) {
                             if (sorts_specs->SpecsDirty) {
                                 FacetData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
                                 if (facItems.Size > 1)
@@ -1445,8 +1420,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 FacetData::s_current_sort_specs = nullptr;
                                 sorts_specs->SpecsDirty = false;
                             }
+                        }
 
-                        // Demonstrate using clipper for large vertical lists
+                        // Clipper for large vertical lists
                         ImGuiSelectableFlags selectable_flags =
                                 ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
                         auto selectedFac = mApp->worker.GetGeometry()->GetSelectedFacets();
@@ -1502,7 +1478,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                 ImGui::EndTabBar();
             }
 
-            if (forceUpdate) {
+            if (forceUpdate || (timed_refresh && constantUpdates && mApp->worker.IsRunning())) {
+            //if (forceUpdate) {
                 mApp->aabbVisu.trimByProb[1] = (trimMax > 0.0) ? trimMax : mApp->aabbVisu.trimByProb[1];
                 mApp->aabbVisu.trimByProb[0] = (trimMin < 1.0e25f) ? trimMin : mApp->aabbVisu.trimByProb[0];
                 redrawAabb = true;

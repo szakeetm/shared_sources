@@ -1164,7 +1164,7 @@ void Geometry::DrawAABBPlane(const KdAccelNode *lnode, AxisAlignedBoundingBox bb
 
         }
         else if(mApp->aabbVisu.showStats){
-            rate = (!mApp->aabbVisu.rateVector->empty() || mApp->aabbVisu.rateVector->size() <= currentNodeIndex) ? mApp->aabbVisu.rateVector->at(currentNodeIndex) : 0.0f;
+            rate = (mApp->aabbVisu.rateVector && (!mApp->aabbVisu.rateVector->empty() || mApp->aabbVisu.rateVector->size() > currentNodeIndex)) ? mApp->aabbVisu.rateVector->at(currentNodeIndex) : 0.0f;
             if(rate >= mApp->aabbVisu.trimByProb[0] && rate <= mApp->aabbVisu.trimByProb[1]) {
                 color = (mApp->aabbVisu.colorMap.empty()) ? applyGLColor4f(rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]) : applyGLColor4f(mApp->aabbVisu.colorMap, rate, mApp->aabbVisu.trimByProb[0], mApp->aabbVisu.trimByProb[1]);
             }
