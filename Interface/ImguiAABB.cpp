@@ -882,10 +882,10 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
             ImGui::Checkbox("Auto refresh hit thresholds", &refresh_hit_stats);
             if (ImGui::SliderFloat2("Hit stat threshold", (float *) &mApp->aabbVisu.trimByProb,
                                     trimMin > 0.0f ? trimMin : 0.0f,
-                                    trimMax > 0.0f ? trimMax : 0.000001f,
+                                    trimMax > 0.0f ? trimMax : 1.0f,
                                     "%.4f")) {
-                trimMin = mApp->aabbVisu.trimByProb[0];
-                trimMax = mApp->aabbVisu.trimByProb[1];
+                //trimMin = mApp->aabbVisu.trimByProb[0];
+                //trimMax = mApp->aabbVisu.trimByProb[1];
                 mApp->aabbVisu.trimRange = mApp->aabbVisu.trimByProb[1] - mApp->aabbVisu.trimByProb[0];
             }
 
@@ -1006,7 +1006,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 mApp->aabbVisu.showLevelAABB[1] = nodeLevel_max;
                             }
 
-                            if(timed_refresh) {
+                            if(forceUpdate || timed_refresh) {
                                 for (int n = 0; n < tabItems.Size; n++) {
                                     BoxData &item = tabItems[n];
                                     auto &f = (*stats)[item.ID];
@@ -1029,8 +1029,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                                 if (refresh_hit_stats) {
 
                                     // first reset
-                                    mApp->aabbVisu.trimByProb[0] = 1.0e38f;
-                                    mApp->aabbVisu.trimByProb[1] = 0;
+                                    //mApp->aabbVisu.trimByProb[0] = 1.0e38f;
+                                    //mApp->aabbVisu.trimByProb[1] = 0;
                                     trimMin = 1.0e30f;
                                     trimMax = 0.0f;
 
@@ -1269,7 +1269,7 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                         nbSteps_total = 0;
                         nbSteps_totalsum = 0;
 
-                        if(timed_refresh) {
+                        if(forceUpdate || timed_refresh) {
                             for (int n = 0; n < facItems.Size; n++) {
                                 FacetData &item = facItems[n];
                                 auto &f = facets[item.ID];
@@ -1297,8 +1297,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                             if (refresh_hit_stats) {
 
                                 // first reset
-                                mApp->aabbVisu.trimByProb[0] = 1.0e38f;
-                                mApp->aabbVisu.trimByProb[1] = 0;
+                                //mApp->aabbVisu.trimByProb[0] = 1.0e38f;
+                                //mApp->aabbVisu.trimByProb[1] = 0;
                                 trimMin = 1.0e30f;
                                 trimMax = 0.0f;
 
@@ -1480,8 +1480,8 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
             if (forceUpdate || (timed_refresh && constantUpdates && mApp->worker.IsRunning())) {
             //if (forceUpdate) {
-                mApp->aabbVisu.trimByProb[1] = (trimMax > 0.0) ? trimMax : mApp->aabbVisu.trimByProb[1];
-                mApp->aabbVisu.trimByProb[0] = (trimMin < 1.0e25f) ? trimMin : mApp->aabbVisu.trimByProb[0];
+                //mApp->aabbVisu.trimByProb[1] = (trimMax > 0.0) ? trimMax : mApp->aabbVisu.trimByProb[1];
+                //mApp->aabbVisu.trimByProb[0] = (trimMin < 1.0e25f) ? trimMin : mApp->aabbVisu.trimByProb[0];
                 redrawAabb = true;
             }
             ImGui::EndTabItem();
