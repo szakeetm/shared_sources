@@ -5,7 +5,7 @@
 #ifndef MOLFLOW_PROJ_GOOGLEANALYTICS_H
 #define MOLFLOW_PROJ_GOOGLEANALYTICS_H
 
-#define REMOTE_FEED "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"
+#define REMOTE_FEED "https://molflow.web.cern.ch/sites/default/files/autoupdate.xml"
 #define PUBLIC_WEBSITE "https://molflow.web.cern.ch/"
 #define DOWNLOAD_PAGE "https://molflow.web.cern.ch/content/downloads"
 #define GA_PROJECT_ID "UA-86802533-2"
