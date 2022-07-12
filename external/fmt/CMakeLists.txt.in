@@ -11,4 +11,5 @@ ExternalProject_Add(fmtlib
         BUILD_COMMAND     ""
         INSTALL_COMMAND   ""
         TEST_COMMAND      ""
+        UPDATE_DISCONNECTED TRUE
         )

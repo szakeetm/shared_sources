@@ -170,7 +170,7 @@ void SmpStatus::RestartProc() {
        try {
          worker->SetProcNumber(nbProc);
          worker->Reload();
-       } catch(Error &e) {
+       } catch(const std::exception &e) {
          GLMessageBox::Display((char *)e.what(),"Error",GLDLG_OK,GLDLG_ICONERROR);
        }
      }

@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 15/04/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 #ifndef MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
 #define MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
@@ -12,6 +28,10 @@
 
 class Simulation;
 
+/**
+* \brief Inidividual simulation states and settings per thread
+ * contains local desorption limits, local simulation state, global thread number, simulation state etc.
+ */
 class SimThread {
 public:
     SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
@@ -38,6 +58,9 @@ private:
     int advanceForSteps(size_t desorptions);
 };
 
+/**
+* \brief Controller that handles communication between GUI via SimulationManager and the running @SimulationUnit
+ */
 class SimulationController {
     bool UpdateParams();
     int resetControls();
@@ -69,10 +92,7 @@ public:
     int RebuildAccel();
     int Reset();
 
-    void EmergencyExit(){
-        for(auto& t : simThreads)
-            t.particle->allQuit = true;
-    };
+    void EmergencyExit();
 protected:
 
     SimulationUnit* simulation;

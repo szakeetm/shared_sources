@@ -28,7 +28,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <ZipLib/ZipArchive.h>
 #include <ZipLib/ZipFile.h>
 
+// Input Output related settings and handy functions for the CLI application
 namespace SettingsIO {
+    // explanation in header
     bool overwrite = false;
     bool isArchive = false;
     bool outputFacetDetails = false;
@@ -41,9 +43,13 @@ namespace SettingsIO {
     std::string inputPath;
     std::string outputFile;
     std::string outputPath;
+    std::vector<std::string> extraFiles;
+    std::map<std::string, std::vector<std::string>> cachedLines;
+    std::vector<std::vector<std::string>> formulas;
+    std::vector<SelectionGroup> selections;
+    const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
-    const std::string supportedFileFormats[]{".xml", ".zip"};
-
+    //! prepares work/output directories and unpacks from archive
     int prepareIO() {
         if (initDirectories()) {
             Log::console_error("Error preparing folders\n");
@@ -57,7 +63,7 @@ namespace SettingsIO {
         return 0;
     }
 
-// In
+//! Set all directory / output related variables and initialises directories depending on set parameters
     int initDirectories() {
 
         int err = 0;
@@ -85,11 +91,11 @@ namespace SettingsIO {
         }
         else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
             Log::console_error(
-                    "Output path was set to %s, but Output file also contains a parent "
-                    "path %s\n"
+                    "Output path was set to {}, but Output file also contains a parent "
+                    "path {}\n"
                     "Output path will be appended!\n",
-                    SettingsIO::outputPath.c_str(),
-                    std::filesystem::path(SettingsIO::outputFile).parent_path().c_str());
+                    SettingsIO::outputPath,
+                    std::filesystem::path(SettingsIO::outputFile).parent_path().string());
         }
 
         // Use a default outputfile name if unset
@@ -106,11 +112,8 @@ namespace SettingsIO {
             }
         }
         if (!formatIsSupported) {
-            Log::console_error("File format is not supported: %s\n",
-                               std::filesystem::path(SettingsIO::outputFile)
-                                       .extension()
-                                       .string()
-                                       .c_str());
+            Log::console_error("File format is not supported: {}\n",
+                               std::filesystem::path(SettingsIO::outputFile).extension().string());
             return 1;
         }
 
@@ -120,9 +123,9 @@ namespace SettingsIO {
             if (!std::filesystem::exists(SettingsIO::workPath))
                 std::filesystem::create_directory(SettingsIO::workPath);
         } catch (const std::exception &e) {
-            Log::console_error("Couldn't create directory [ %s ], falling back to "
+            Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
-                               SettingsIO::workPath.c_str());
+                               SettingsIO::workPath);
             ++err;
 
             // use fallback dir
@@ -157,9 +160,9 @@ namespace SettingsIO {
                     std::filesystem::create_directory(outputFilePath);
             } catch (const std::exception &e) {
                 Log::console_error(
-                        "Couldn't create parent directory set by output filename [ %s ], "
+                        "Couldn't create parent directory set by output filename [ {} ], "
                         "will only use default output path instead\n",
-                        outputFilePath.c_str());
+                        outputFilePath);
                 ++err;
             }
         }
@@ -167,6 +170,7 @@ namespace SettingsIO {
         return 0;
     }
 
+    //! Unzip file and set correct variables (e.g. uncompressed work file)
     int initFromZip() {
         if (std::filesystem::path(SettingsIO::inputFile).extension() == ".zip") {
             SettingsIO::isArchive = true;
@@ -204,15 +208,15 @@ namespace SettingsIO {
                 return 1;
             }
             SettingsIO::workFile = parseFileName;
-            Log::console_msg_master(2, "New input file: %s\n",
-                                    SettingsIO::workFile.c_str());
+            Log::console_msg_master(2, "New input file: {}\n",
+                                    SettingsIO::workFile);
         } else {
             SettingsIO::workFile = SettingsIO::inputFile;
         }
         return 0;
     }
 
-// Out
+//! Cleanup tmp files
     void cleanup_files() {
         // a) tmp folder if it is not our output folder
         if (std::filesystem::path(SettingsIO::outputPath)

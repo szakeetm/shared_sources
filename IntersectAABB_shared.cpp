@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "SimulationFacet.h"
 #include "IntersectAABB_shared.h"
 #include "Random.h"
 #include "Polygon.h" //IsInPoly
@@ -97,7 +98,7 @@ void AABBNODE::ComputeBB() {
 
 }
 
-AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size_t depth, size_t& maxDepth) {
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;
 	double m;
@@ -114,8 +115,8 @@ AABBNODE *BuildAABBTree(const std::vector<SubprocessFacet *> &facets, const size
 	if (nbLeft >= MINBB && nbRight >= MINBB) {
 
 		// We can cut
-		std::vector<SubprocessFacet*> lList(nbLeft);
-		std::vector<SubprocessFacet*> rList(nbRight);
+		std::vector<SimulationFacet*> lList(nbLeft);
+		std::vector<SimulationFacet*> rList(nbRight);
 		switch (planeType) {
 		case 1: // yz
 			m = (newNode->bb.min.x + newNode->bb.max.x) / 2.0;
@@ -275,9 +276,9 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
 IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
-              const Vector3d &rayDirOpposite, SubprocessFacet *const lastHitBefore, const bool &nullRx,
+              const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
               const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
-              SubprocessFacet *&collidedFacet, double &minLength) {
+              SimulationFacet *&collidedFacet, double &minLength) {
 
 	// Returns three values
 	// bool: did collision occur?
@@ -385,7 +386,7 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 	}
 }
 
-bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
+bool IsInFacet(const SimulationFacet &f, const double &u, const double &v) {
 
 	/*
 
@@ -449,7 +450,7 @@ bool IsInFacet(const SubprocessFacet &f, const double &u, const double &v) {
 
 }
 
-std::tuple<bool, SubprocessFacet *, double>
+std::tuple<bool, SimulationFacet *, double>
 Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
@@ -467,7 +468,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 
 	//Output values
 	bool found = false;
-	SubprocessFacet *collidedFacet = nullptr;
+	SimulationFacet *collidedFacet = nullptr;
 	currentParticle.transparentHitBuffer.clear();
 	double minLength = 1e100;
 

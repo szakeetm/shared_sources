@@ -49,8 +49,7 @@ public:
 
     bool IntersectBox(const Ray &ray, const Vector3d &invDir,
                                                      const int dirIsNeg[3]) const;
-    bool IntersectP(const Ray &ray, double *hitt0,
-                                            double *hitt1) const;
+
     template<class Archive>
     void serialize(Archive & archive)
     {

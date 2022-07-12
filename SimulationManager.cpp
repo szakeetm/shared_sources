@@ -1,6 +1,22 @@
-//
-// Created by pbahr on 15/04/2020.
-//
+/*
+Program:     MolFlow+ / Synrad+
+Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
+Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
+Copyright:   E.S.R.F / CERN
+Website:     https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+*/
 
 
 #include <thread>
@@ -55,6 +71,7 @@ SimulationManager::~SimulationManager() {
     }
 }
 
+//! Refresh proc status by looking for those that can be safely killed and remove them
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
@@ -74,28 +91,6 @@ int SimulationManager::refreshProcStatus() {
         }
     }
     return nbDead;
-}
-
-int SimulationManager::LoadInput(const std::string& fileName) {
-    std::ifstream inputFile(fileName);
-    inputFile.seekg(0, std::ios::end);
-    size_t size = inputFile.tellg();
-    std::string buffer(size, ' ');
-    inputFile.seekg(0);
-    inputFile.read(&buffer[0], size);
-
-    try {
-        ShareWithSimUnits((BYTE *) buffer.c_str(), buffer.size(), LoadType::LOADGEOM);
-    }
-    catch (const std::exception& e) {
-        throw;
-    }
-    return 0;
-}
-
-int SimulationManager::ResetStatsAndHits() {
-
-    return 0;
 }
 
 /*!
@@ -143,6 +138,7 @@ int SimulationManager::StartSimulation() {
     return 0;
 }
 
+//! Call simulation controllers to stop running simulations
 int SimulationManager::StopSimulation() {
     isRunning = false;
     if(interactiveMode) {
@@ -190,53 +186,7 @@ int SimulationManager::LoadSimulation(){
     return 0;
 }
 
-/*!
- * @brief Convenience function that stops a running simulation and starts a paused simulation
- * @return 0=success, 1=else
- * @todo add benchmark
- */
-bool SimulationManager::StartStopSimulation(){
-    if (isRunning) {
-
-        // Stop
-        //InnerStop(appTime);
-        try {
-            StopSimulation();
-            //Update(appTime);
-        }
-
-        catch (const std::exception& e) {
-            throw;
-        }
-    } else {
-
-        // Start
-        try {
-            //if (needsReload) RealReload(); //Synchronize subprocesses to main process
-
-            StartSimulation();
-        }
-        catch (const std::exception& e) {
-            throw;
-        }
-
-        // Particular case when simulation ends before getting RUN state
-        if (allProcsDone) {
-            isRunning = false;
-            //Update(appTime);
-            //GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
-        }
-
-    }
-    return isRunning; // return previous state
-}
-
-
-int SimulationManager::TerminateSimHandles() {
-
-    return 0;
-}
-
+//! Create simulation handles for CPU simulations with n Threads
 int SimulationManager::CreateCPUHandle() {
     uint32_t processId = mainProcId;
 
@@ -424,6 +374,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     return waitTime>=timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
 }
 
+//! Forward a command to simulation controllers
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
     // Send command
 
@@ -477,7 +428,7 @@ int SimulationManager::KillAllSimUnits() {
                         int s;
                         s = pthread_cancel(nativeHandle);
                         if (s != 0)
-                            printf("pthread_cancel: %d\n", s);
+                            Log::console_msg(1, "pthread_cancel: {}\n", s);
                         tIter->first.detach();
 #endif
                         //assume that the process doesn't exist, so remove it from our management structure

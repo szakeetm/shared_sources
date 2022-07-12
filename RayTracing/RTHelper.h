@@ -21,15 +21,15 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_RTHELPER_H
 #define MOLFLOW_PROJ_RTHELPER_H
 
-struct SubProcessFacetTempVar {
+struct SimulationFacetTempVar {
     // Temporary var (used in Intersect for collision)
-    SubProcessFacetTempVar(){
+    SimulationFacetTempVar(){
         colDistTranspPass=1.0E99;
         colU = 0.0;
         colV = 0.0;
         isHit=false;
     }
-    SubProcessFacetTempVar(double d, double u, double v, bool hit){
+    SimulationFacetTempVar(double d, double u, double v, bool hit){
         colDistTranspPass=d;
         colU = u;
         colV = v;

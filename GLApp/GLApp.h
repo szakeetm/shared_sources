@@ -64,6 +64,7 @@ public:
 
     // Internal constructor
     GLApplication();
+    virtual ~GLApplication();
 
     // Components management
     void Add(GLComponent *comp);
