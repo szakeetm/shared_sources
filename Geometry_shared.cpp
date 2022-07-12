@@ -412,8 +412,8 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	loopLength = ii;
 	//End graham scan
 
-	std::vector<size_t> vertexIds(selectedVertices.size());
-	for (size_t i = 0; i < selectedVertices.size(); i++) {
+	std::vector<size_t> vertexIds(loopLength);
+	for (size_t i = 0; i < loopLength; i++) {
 		vertexIds[i] = selectedVertices[returnList[i]];
 	}
 
@@ -2803,8 +2803,6 @@ void Geometry::MergecollinearSides(Facet *f, double lT) {
 void Geometry::CalculateFacetParams(Facet* f) {
 	// Calculate facet normal
 	Vector3d p0 = vertices3[f->indices[0]];
-	Vector3d v1;
-	Vector3d v2;
 	bool consecutive = true;
 	int ind = 2;
 
@@ -2813,14 +2811,13 @@ void Geometry::CalculateFacetParams(Facet* f) {
 	size_t i1 = f->indices[1];
 	while (ind < f->sh.nbIndex && consecutive) {
 		size_t i2 = f->indices[ind++];
-
-		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
-		v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
-		f->sh.N = CrossProduct(v1, v2);              // Cross product
-		consecutive = (f->sh.N.Norme() < 1e-3);
+		auto v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
+		auto v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
+		f->sh.N = CrossProduct(v1.Normalized(), v2.Normalized()); // Scale-invariant cross product
+		consecutive = (f->sh.N.Norme() < 1e-10); //They are collinear, crossproduct null
 	}
 	f->collinear = consecutive; //mark for later that this facet was on a line
-	f->sh.N = f->sh.N.Normalized();                  // Normalize
+	f->sh.N = f->sh.N.Normalized(); //Make normal vector unit-length
 
 	// Calculate Axis Aligned Bounding Box
 	f->sh.bb.min = Vector3d(1e100, 1e100, 1e100);
