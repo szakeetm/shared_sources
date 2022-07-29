@@ -612,7 +612,7 @@ int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge>
     }
 
     // 2. Sort edges
-    std::sort(edges.end(), edges.end(),
+    std::sort(edges.begin(), edges.end(),
               [](const CommonEdge &e0, const CommonEdge &e1) -> bool {
                   if (e0.v1 == e1.v1)
                       if(e0.v2 == e1.v2)
