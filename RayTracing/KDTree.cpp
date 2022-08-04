@@ -243,8 +243,8 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
     bool withSmartBattery = withBattery;
 
     if (true && withBattery) {
-        printf("--- KD with HitBattery ---\n");
-        printf(" Battery size: %zu\n", battery.size());
+        Log::console_msg_master(4, "--- KD with HitBattery ---\n");
+        Log::console_msg_master(4, " Battery size: %zu\n", battery.size());
         // if battery is too large, only use a random sample
 
         auto *batter_ptr = const_cast<std::vector<TestRay> *>(&battery);
@@ -252,7 +252,7 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
             batter_ptr = new std::vector<TestRay>;
             std::sample(battery.begin(), battery.end(), std::back_inserter(*batter_ptr),
                         HITCACHELIMIT, std::mt19937{std::random_device{}()});
-            printf(" Sample size: %zu\n", batter_ptr->size());
+            Log::console_msg_master(4, " Sample size: %zu\n", batter_ptr->size());
         }
         std::vector<TestRayLoc> indices;
         indices.reserve(batter_ptr->size());
@@ -320,11 +320,11 @@ KdTreeAccel::KdTreeAccel(SplitMethod splitMethod, std::vector<std::shared_ptr<Pr
         ints[nodeNum].level = maxDepth - ints[nodeNum].level;
     }
 
-    printf("--- KD STATS ---\n");
-    printf(" Total Primitives: {}\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   {}\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       {}\n", STATS_KD::leafNodes);
+    Log::console_msg_master(4, "--- KD STATS ---\n");
+    Log::console_msg_master(4, " Total Primitives: {}\n", STATS_KD::totalPrimitives);
+    Log::console_msg_master(4, " Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
+    Log::console_msg_master(4, " Interior Nodes:   {}\n", STATS_KD::interiorNodes);
+    Log::console_msg_master(4, " Leaf Nodes:       {}\n", STATS_KD::leafNodes);
 
     hasRopes = false;
     addParent(&nodes[0], nullptr);
@@ -2229,11 +2229,11 @@ const KdAccelNode * KdAccelNode::getNeighboringNode(const Ray &ray) const
         //std::cout << "Potential error: y axis very similar" << std::endl;
     }
     /*Vector3d p_exit = ray.origin + ( tmax[0] * ray.direction );
-    printf("Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[0]);
+    Log::console_msg_master(4, "Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[0]);
     p_exit = ray.origin + ( tmax[1] * ray.direction );
-    printf("Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[1]);
+    Log::console_msg_master(4, "Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[1]);
     p_exit = ray.origin + ( tmax[2] * ray.direction );
-    printf("Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[2]);
+    Log::console_msg_master(4, "Intersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax[2]);
 
     if ( smallestDiff >= KD_TREE_EPSILON ) {
         std::cout << "ERROR: Node neighbor could not be returned." << std::endl;
@@ -2402,7 +2402,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                     hit = true;
                 }
 
-                //printf(" Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
+                //Log::console_msg_master(4, " Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
 
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
@@ -2413,7 +2413,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
                     if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
                         hit = true;
                     }
-                    //printf(" Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
+                    //Log::console_msg_master(4, " Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
                 }
             }
             // Exit leaf
@@ -2464,7 +2464,7 @@ bool KdTreeAccel::IntersectRope(Ray &ray) {
     }
 
     /*if(!hit)
-        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+        Log::console_msg_master(4, "Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
     return hit;
@@ -2586,7 +2586,7 @@ bool KdTreeAccel::IntersectRopeStat(RayStat &ray) {
     }
 
     /*if(!hit)
-        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+        Log::console_msg_master(4, "Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
     perRayCount += ray.stats;
@@ -2690,7 +2690,7 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
                     }*/
                 }
 
-                //printf(" Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
+                //Log::console_msg_master(4, " Testing against single prim %d -- %d: %d\n", node->onePrimitive, ray.lastIntersected, hit);
 
             } else {
                 for (int i = 0; i < nPrimitives; ++i) {
@@ -2714,7 +2714,7 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
                             }
                         }*/
                     }
-                    //printf(" Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
+                    //Log::console_msg_master(4, " Testing against prim %d -- %d: %d\n", p->globalId, ray.lastIntersected, hit);
                 }
             }
             // Exit leaf
@@ -2739,15 +2739,15 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
                 double tmax_loc = -1.0;
                 node->bbox.IntersectP(ray, nullptr, &tmax_loc, 0);
                 Vector3d p_exit = ray.origin + ( tmax_loc * ray.direction );
-                printf("[0] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);
+                Log::console_msg_master(4, "[0] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);
                 tmax_loc = -1.0;
                 node->bbox.IntersectP(ray, nullptr, &tmax_loc, 1);
                 p_exit = ray.origin + ( tmax_loc * ray.direction );
-                printf("[1] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);
+                Log::console_msg_master(4, "[1] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);
                 tmax_loc = -1.0;
                 node->bbox.IntersectP(ray, nullptr, &tmax_loc, 2);
                 p_exit = ray.origin + ( tmax_loc * ray.direction );
-                printf("[2] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);*/
+                Log::console_msg_master(4, "[2] nIntersection at: %lf, %lf, %lf -- %lf\n", p_exit.x, p_exit.y, p_exit.z, tmax_loc);*/
 
                 break;
             }
@@ -2780,7 +2780,7 @@ bool KdTreeAccel::IntersectRopeRestart(Ray &ray) {
     }
 
     /*if(!hit)
-        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+        Log::console_msg_master(4, "Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
     return hit;
@@ -2929,7 +2929,7 @@ bool KdTreeAccel::IntersectRopeRestartStat(RayStat &ray) {
     }
 
     /*if(!hit)
-        printf("Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
+        Log::console_msg_master(4, "Couldn't find roped intersection for ray (%lf,%lf,%lf) --> (%lf,%lf,%lf) [%lf,%lf]\n",
                ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z, tMin, ray.tMax);
 */
     perRayCount += ray.stats;
