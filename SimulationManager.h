@@ -129,7 +129,7 @@ public:
     bool isRunning;
     bool allProcsDone;
     bool hasErrorStatus;
-    bool simulationChanged{}; // sendOnly functionality from Worker::RealReload
+    bool simulationChanged; // sendOnly functionality from Worker::RealReload
 
 private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
