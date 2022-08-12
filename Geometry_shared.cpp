@@ -4537,7 +4537,7 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 
 		if (nb < 3) {
 			char errMsg[512];
-			sprintf(errMsg, "Facet %zd has only %zd vertices. ", i, nb);
+			sprintf(errMsg, "Facet %zd has only %zd vertices. ", i+1, nb);
 			throw Error(errMsg);
 		}
 
