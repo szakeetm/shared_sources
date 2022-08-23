@@ -491,6 +491,9 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
 
                 {//if (withHitBattery) {
                     ImGui::Checkbox("ADS / Split is using hit battery?", &withHitBattery);
+                    if(ImGui::Checkbox("Sample battery per facet", &mApp->worker.globState.hitBattery.buffer_per_facet)){
+                        mApp->worker.globState.hitBattery.resize_battery(mApp->worker.globState.hitBattery.maxSamples);
+                    }
 
                     // Create item list
                     static ImVector<RayData> rayItems;
@@ -508,26 +511,37 @@ void ImguiAABBVisu::ShowAABB(MolFlow *mApp, bool *show_aabb, bool &redrawAabb, b
                     ImGui::Checkbox("Enable Ray Sampling", &mApp->worker.model->otfParams.raySampling);
                     if (ImGui::Button("Update #TestRays")) {
                         nbTestRays = 0;
-                        for (auto &bat: mApp->worker.globState.hitBattery.rays) {
-                            //for(auto& hit : bat) {
-                            if (bat.empty()) continue;
-                            nbTestRays += bat.Size();
-                        }
+                        if(mApp->worker.globState.hitBattery.buffer_per_facet)
+                            for (auto &bat: mApp->worker.globState.hitBattery.rays) {
+                                //for(auto& hit : bat) {
+                                if (bat.empty()) continue;
+                                nbTestRays += bat.Size();
+                            }
+                        else
+                            nbTestRays += mApp->worker.globState.hitBattery.grays.Size();
                         updateTestRays = true;
                     }
                     ImGui::Text("Test Rays: %d", nbTestRays);
 
                     if (updateTestRays || ((int) rayItems.size() != (int) mApp->worker.globState.hitBattery.size())) {
-                        rayItems.resize(mApp->worker.globState.hitBattery.size(), RayData());
+                        rayItems.resize(mApp->worker.globState.facetStates.size(), RayData());
                         int nodeLevel_max = 0;
 
 
                         for (int n = 0; n < rayItems.Size; n++) {
                             RayData &item = rayItems[n];
-                            auto &f = mApp->worker.globState.hitBattery.rays[n];
-                            item.ID = n;
-                            item.nRays = f.Size();
-                            item.maxRays = mApp->worker.globState.hitBattery.rays[item.ID].Capacity();
+                            if(mApp->worker.globState.hitBattery.buffer_per_facet) {
+                                auto &f = mApp->worker.globState.hitBattery.rays[n];
+                                item.ID = n;
+                                item.nRays = f.Size();
+                                item.maxRays = mApp->worker.globState.hitBattery.rays[item.ID].Capacity();
+                            }
+                            else {
+                                auto &rays = mApp->worker.globState.hitBattery.grays;
+                                item.ID = n;
+                                item.nRays = -1;
+                                item.maxRays = mApp->worker.globState.hitBattery.maxSamples / mApp->worker.globState.facetStates.size();
+                            }
                         }
                     }
 

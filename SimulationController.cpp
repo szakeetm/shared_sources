@@ -652,6 +652,7 @@ int SimulationController::Start() {
         simulation->globState->UpdateBatteryFrequencies();
         for (auto &freq: simThreads) {
             freq.particle->tmpState.hitBattery.rays = simulation->globState->hitBattery.rays;
+            freq.particle->tmpState.hitBattery.grays = simulation->globState->hitBattery.grays;
         }
     }
     else{

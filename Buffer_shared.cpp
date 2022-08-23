@@ -34,21 +34,46 @@ GlobalHitBuffer& GlobalHitBuffer::operator+=(const GlobalHitBuffer& src) {
 
 SampleBattery::SampleBattery() {
     maxSamples = HITCACHESAMPLE;
+    buffer_per_facet = false;
     initialized = false;
 };
 
-void SampleBattery::resize(size_t n) {
-    rays.resize(n,{HITCACHESIZE});
-    /*for(auto& r : rays) {
-        r.Resize(HITCACHESIZE);
-    }*/
+void SampleBattery::resize_battery(size_t n) {
+    if(buffer_per_facet) {
+        grays.Clear();
+        rays.resize(n);
+    }
+    else{
+        rays.clear();
+        //grays.Resize(n*HITCACHESIZE);
+    }
 }
+
+// default: HITCACHESIZE
+void SampleBattery::reserve_battery(size_t n, size_t n_facets) {
+    if(buffer_per_facet) {
+        grays.Clear();
+        rays.resize(n_facets);
+        for(auto& r : rays) {
+            r.Reserve(n/n_facets);
+        }
+    }
+    else{
+        rays.clear();
+        grays.Reserve(n);
+    }
+}
+
 void SampleBattery::clear(){
     rays.clear();
+    grays.Clear();
     initialized = false;
 }
 size_t SampleBattery::size() const{
-    return rays.size();
+    size_t t_size = 0;
+    for(const auto& r : rays)
+        t_size += r.Capacity();
+    return t_size + grays.Capacity();
 }
 
 #if defined(MOLFLOW)

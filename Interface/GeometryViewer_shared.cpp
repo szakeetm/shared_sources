@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <math.h>
 #include <cstdlib>
+#include <random>
 //#include <malloc.h>
 #include "Facet_shared.h"
 
@@ -2156,7 +2157,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
     constexpr int _maxHitsPerSource = 64;
     auto& hitCache = mApp->worker.globalHitCache;
     // Lines
-    if (globState.initialized && globState.hitBattery.rays.size()) {
+    if (globState.initialized && (!globState.hitBattery.rays.empty() || !globState.hitBattery.grays.empty())) {
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
@@ -2165,31 +2166,89 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
         size_t count = 0;
         size_t max_count = 0;
 
-        for(auto& source : globState.hitBattery.rays)
-            max_count += source.Size();
+        if(globState.hitBattery.buffer_per_facet)
+            for(auto& source : globState.hitBattery.rays)
+                max_count += source.Size();
+        else
+            max_count += globState.hitBattery.grays.Size();
 
         double denum = 1.0;
         double denum_lower = 1.0;
         if(max_count > dispNumHits){
             denum = (double) dispNumHits / max_count;
             max_count = 0;
-            for(auto& source : globState.hitBattery.rays){
-                if((int)std::ceil(source.Size() * denum) > _maxHitsPerSource){
+            if(globState.hitBattery.buffer_per_facet)
+                for(auto& source : globState.hitBattery.rays){
+                    if((int)std::ceil(source.Size() * denum) > _maxHitsPerSource){
+                        max_count += _maxHitsPerSource;
+                    }
+                    else {
+                        max_count += source.Size();
+                    }
+                }
+            else {
+                if((int)std::ceil(globState.hitBattery.grays.Size()) > _maxHitsPerSource){
                     max_count += _maxHitsPerSource;
                 }
                 else {
-                    max_count += source.Size();
+                    max_count += globState.hitBattery.grays.Size();
                 }
             }
+
             denum_lower = (double) dispNumHits / max_count;
         }
 
 
-        for(auto& source : globState.hitBattery.rays) {
+        if(globState.hitBattery.buffer_per_facet)
+            for(auto& source : globState.hitBattery.rays) {
+                count = 0;
+                int maxCount = std::ceil(source.Size() * denum);
+                if(maxCount > _maxHitsPerSource){
+                    maxCount = std::ceil(source.Size() * denum_lower);
+                    if (maxCount > _maxHitsPerSource)
+                        maxCount = _maxHitsPerSource;
+                }
+
+                if (mApp->antiAliasing) {
+                    glEnable(GL_BLEND);
+                    glEnable(GL_LINE_SMOOTH);
+                }
+
+                for(auto& ray : source.data) {
+
+                    //Regular (green) line color
+                    if (mApp->whiteBg) { //whitebg
+                        glColor3f(0.15f, 0.15f, 0.6f);
+                    } else {
+                        glColor3f(0.35f, 0.35f, 0.9f);
+                    }
+
+                    glBegin(GL_LINE_STRIP);
+                    glVertex3d(ray.pos.x, ray.pos.y,ray.pos.z);
+                    //Regular (green) line color
+                    if (mApp->whiteBg) { //whitebg
+                        glColor3f(0.6f, 0.15f, 0.6f);
+                    } else {
+                        glColor3f(0.9f, 0.35f, 0.9f);
+                    }
+                    glVertex3d(ray.pos.x + ray.dir.x, ray.pos.y + ray.dir.y, ray.pos.z + ray.dir.z);
+                    count++;
+                    glEnd();
+
+                    if (count >= maxCount)
+                        break;
+                }
+
+                if (mApp->antiAliasing) {
+                    glDisable(GL_LINE_SMOOTH);
+                    glDisable(GL_BLEND);
+                }
+            }
+        else
             count = 0;
-            int maxCount = std::ceil(source.Size() * denum);
+            int maxCount = std::ceil(globState.hitBattery.grays.Size());
             if(maxCount > _maxHitsPerSource){
-                maxCount = std::ceil(source.Size() * denum_lower);
+                maxCount = std::ceil(globState.hitBattery.grays.Size());
                 if (maxCount > _maxHitsPerSource)
                     maxCount = _maxHitsPerSource;
             }
@@ -2199,7 +2258,10 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
                 glEnable(GL_LINE_SMOOTH);
             }
 
-            for(auto& ray : source.data) {
+            /*std::vector<TestRay> gray;
+            std::sample( globState.hitBattery.grays.data.begin(),  globState.hitBattery.grays.data.end(), std::back_inserter(gray),
+                         globState.hitBattery.maxSamples, std::mt19937{std::random_device{}()});*/
+            for(auto& ray : globState.hitBattery.grays.data) {
 
                 //Regular (green) line color
                 if (mApp->whiteBg) { //whitebg
@@ -2228,7 +2290,7 @@ void GeometryViewer::DrawLinesAndHitsFromSamples(const GlobalSimuState& globStat
                 glDisable(GL_LINE_SMOOTH);
                 glDisable(GL_BLEND);
             }
-        }
+
     }
 
     // Hits

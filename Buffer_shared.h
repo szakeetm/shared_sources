@@ -42,7 +42,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
 #define HITCACHELIMIT      (size_t)(1048576*4)  // Max. displayed number of lines and hits.
 #define HITCACHEMIN      (size_t)(64)  // Max. displayed number of lines and hits.
-#define HITCACHESAMPLE      (size_t)(HITCACHEMIN*2*HITCACHEMIN*2*32)  // Max. displayed number of lines and hits.
+#define HITCACHESAMPLE      (size_t)(HITCACHESIZE*HITCACHEMIN)  // Max. displayed number of lines and hits.
 #define HITCACHESAMPLEN      (size_t)(2048*4)  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
@@ -648,19 +648,23 @@ struct TestRayLoc {
 
 struct SampleBattery {
     SampleBattery();
-    SampleBattery(const SampleBattery& cpy) : maxSamples(cpy.maxSamples), initialized(cpy.initialized){
-        rays = cpy.rays;
+    SampleBattery(const SampleBattery& cpy) : maxSamples(cpy.maxSamples), buffer_per_facet(cpy.buffer_per_facet), initialized(cpy.initialized){
+		rays = cpy.rays;
+		grays = cpy.grays;
     };
 
-    void resize(size_t n);
+	void resize_battery(size_t n);
+	void reserve_battery(size_t n, size_t n_facets);
     void clear();
     [[nodiscard]] size_t size() const;
     std::vector<CircularBuffer<TestRay>> rays;
-    /*std::vector<std::vector<TestRay>> rays;       // hits
+	CircularBuffer<TestRay> grays;
+	/*std::vector<std::vector<TestRay>> rays;       // hits
     std::vector<int> nRays;                       // amount to cache
     std::vector<int> cyclicIndex;                 // amount to cache
 */
     size_t maxSamples;
+	bool buffer_per_facet;
     bool initialized;
 };
 

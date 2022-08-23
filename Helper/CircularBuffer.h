@@ -20,6 +20,16 @@ struct CircularBuffer {
     };
     void Resize(int max_size = 1024) {
         // will add to back again
+        if(Size() > max_size)
+            offset  = 0;
+        if(max_size > size_max) {
+            size_max = max_size;
+        }
+
+        data.resize(max_size);
+    }
+    void Reserve(int max_size = 1024) {
+        // will add to back again
         size_max = max_size;
         offset  = 0;
         data.reserve(size_max);
@@ -38,6 +48,9 @@ struct CircularBuffer {
             data.push_back(x);
         }
     }
+    void resize_for_batch(size_t cpy_size) {
+
+    }
     void Add_Batch(const std::vector<T> &cpy) {
         if(cpy.empty() || Capacity() == 0)
             return;
@@ -46,17 +59,33 @@ struct CircularBuffer {
             return;
         }
 
-        int diff = cpy.size() - Capacity();
-        if(diff >= 0){ // cpy vector is larger or equal, so just replace all elements
-            if(Size() != Capacity())
-                Resize(std::min(Size()+diff,Capacity()));
+        int diff = cpy.size() - Size();
+        int n_fits = size_max - cpy.size() - Size();
+        if(diff >=0){  // cpy vector is larger or equal, so just replace all elements
+            Resize(std::min((size_t)size_max, Size() + cpy.size()));
+            std::copy(cpy.begin(), cpy.begin()+std::min((size_t)cpy.size(), Size()), data.begin());
+            offset = 0;
+        }
+        else if(n_fits >= 0){ //
+            size_t new_size = std::min((size_t) size_max, Size() + cpy.size());
+            Resize(new_size);
+            std::copy(cpy.begin(), cpy.begin()+std::min((size_t)cpy.size(),new_size), data.begin() + offset);
+            offset = new_size - 1;
+        }
+        else if(Size() < size_max){
+            Resize(size_max);
+        }
+        /*if(diff >= 0 || size_max > Size()){ // cpy vector is larger or equal, so just replace all elements
+            if(Size() < size_max && cpy.size() > Size()) {
+                Resize(std::min(Size() + std::max(0*//*diff*//*, (int)cpy.size()), Capacity()));
+            }
             if(diff > 0){
-                std::copy(cpy.begin(), cpy.begin()+Capacity(), data.begin());
+                std::copy(cpy.begin(), cpy.begin()+std::max((size_t)cpy.size(), Size()), data.begin());
             }
             else
                 std::copy(cpy.begin(), cpy.end(), data.begin());
             offset = 0;
-        }
+        }*/
         else {
             /*
             // for random selection, moved to sampling stage
@@ -83,7 +112,7 @@ struct CircularBuffer {
             int insertPos = offset;
             int nOverflow = insertSize - (size_max - offset);
             if(nOverflow > 0)
-                insertSize = insertSize - nOverflow;
+                insertSize = insertSize - nOverflow - 1;
             std::copy(cpy.begin() + startPos, cpy.begin() + startPos + insertSize, data.begin() + offset);
 
             if(nOverflow > 0){
@@ -104,7 +133,7 @@ struct CircularBuffer {
     void Clear() {
         if (data.size() > 0) {
             data.clear();
-            data.resize(size_max);
+            data.reserve(size_max);
             offset  = 0;
         }
     }
