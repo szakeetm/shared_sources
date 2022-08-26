@@ -240,7 +240,7 @@ public:
 	void InstallLatestUpdate(UpdateLogWindow* logWindow);
 	void IncreaseSessionCount();
 	int GetStatus(){return lastFetchStatus;};
-	std::string GetPublicWebsiteAddress(){return publicWebsite;);
+	std::string GetPublicWebsiteAddress() { return publicWebsite; };
 private:
 
 	//Initialized by constructor:
