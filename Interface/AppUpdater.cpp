@@ -235,7 +235,7 @@ UpdateWarningDialog::UpdateWarningDialog(AppUpdater* appUpdater) {
     updater = appUpdater;
     std::string question =
             "Updates could not be fetched from the server for a while.\n"
-            "Please check molflow.web.cern.ch manually.\n"
+            "Please check " + appUpdater->GetPublicWebsiteAddress() + "manually.\n"
             "Would you like to be reminded again in the future?";
 
     questionLabel = new GLLabel(question.c_str());
