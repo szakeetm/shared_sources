@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLTextField.h"
+#include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLToggle.h"
 #include "Helper/MathTools.h"
 #include "GLApp/GLList.h"
@@ -55,7 +56,7 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
         : GLWindow(), views{} {
 
     int wD = 625;
-    int hD = 375;
+    int hD = 400;
 
     SetTitle("Convergence plotter");
     SetIconfiable(true);
@@ -119,6 +120,31 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
     formulaBtn = new GLButton(0, "-> Plot expression");
     Add(formulaBtn);
 
+    panel2 = new GLTitledPanel("Convergence Band Rule");
+    panel2->SetClosable(false);
+    Add(panel2);
+    convEpsText = new GLLabel("Convergence precision {10^-d}: d=");
+    panel2->Add(convEpsText);
+    convEpsField = new GLTextField(0, "5");
+    convEpsField->SetEditable(true);
+    panel2->Add(convEpsField);
+    convBandLenText = new GLLabel("Convergence band length: C=");
+    panel2->Add(convBandLenText);
+    convBandLenField = new GLTextField(0, "51");
+    convBandLenField->SetEditable(true);
+    panel2->Add(convBandLenField);
+
+    convApplyButton = new GLButton(0, "-> Apply changes");
+    panel2->Add(convApplyButton);
+
+    shapeParamField = new GLTextField(0, "0");
+    panel2->Add(shapeParamField);
+    shapeParamField2 = new GLTextField(0, "0");
+    panel2->Add(shapeParamField2);
+    absOrRelToggle = new GLToggle(0, "Absolute precision");
+    absOrRelToggle->SetState(formula_ptr->useAbsEps);
+    panel2->Add(absOrRelToggle);
+
     // Center dialog
     int wS, hS;
     GLToolkit::GetScreenSize(&wS, &hS);
@@ -162,9 +188,20 @@ ConvergencePlotter::ConvergencePlotter(const ConvergencePlotter& copy) : Converg
 */
 void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 
-    chart->SetBounds(7, 5, w - 15, h - 110);
+    size_t lineHeightDiff = 45 + 25;
+    panel2->SetBounds(5, h - lineHeightDiff - 25, w - 10, 25*2+19);
+    absOrRelToggle->SetBounds(12, h - lineHeightDiff + 15, 105, 19);
 
-    size_t lineHeightDiff = 45;
+    lineHeightDiff += 25;
+    convEpsText->SetBounds(12, h - lineHeightDiff + 15, 170, 19);
+    convEpsField->SetBounds(182, h - lineHeightDiff + 15, 30, 19);
+    convBandLenText->SetBounds(220, h - lineHeightDiff + 15, 145, 19);
+    convBandLenField->SetBounds(368, h - lineHeightDiff + 15, 30, 19);
+    convApplyButton->SetBounds(406, h - lineHeightDiff + 15, 100, 19);
+    shapeParamField->SetBounds(w-60, h - lineHeightDiff + 15, 50, 19);
+    shapeParamField2->SetBounds(w-115, h - lineHeightDiff + 15, 50, 19);
+
+    lineHeightDiff += 25;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
     formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
     dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
@@ -183,6 +220,8 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
     addButton->SetBounds(w - 270, h - lineHeightDiff, 80, 19);
     removeButton->SetBounds(w - 180, h - lineHeightDiff, 80, 19);
     removeAllButton->SetBounds(w - 90, h - lineHeightDiff, 80, 19);
+
+    chart->SetBounds(7, 5, w - 15, h - lineHeightDiff - 10);
 
     GLWindow::SetBounds(x, y, w, h);
 
@@ -259,6 +298,7 @@ void ConvergencePlotter::Display(Worker *w) {
 
 
     SetWorker(w);
+    formula_ptr->UpdateVectorSize();
     Refresh();
     SetVisible(true);
 
@@ -269,14 +309,14 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-    if (formula_ptr->formulas_n.empty() || !formula_ptr->sampleConvValues || !nbView) {
-        return;
+    bool hasChanged = formula_ptr->FetchNewConvValue();
+    if (hasChanged || ((appTime - lastUpdate > 1.0f) && nbView)) {
+        if (worker->IsRunning())
+            refreshViews();
+        lastUpdate = appTime;
+        shapeParamField->SetText(formula_ptr->ApproxShapeParameter());
+        shapeParamField2->SetText(formula_ptr->ApproxShapeParameter2());
     }
-
-    refreshViews();
-    lastUpdate = appTime;
-
-    return;
 }
 
 /**
@@ -520,6 +560,17 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                     GLDataView *v = views[viewId];
                     v->SetLineWidth(linW);
                 }
+            } else if (src == convApplyButton) {
+                int newEps, newCBLen;
+                convEpsField->GetNumberInt(&newEps);
+                convBandLenField->GetNumberInt(&newCBLen);
+
+                if(newEps != formula_ptr->epsilon || newCBLen != formula_ptr->cb_length){
+                    formula_ptr->epsilon = newEps;
+                    formula_ptr->cb_length = newCBLen;
+                    for(int id = 0; id < formula_ptr->convergenceValues.size(); ++id)
+                        formula_ptr->RestartASCBR(id);
+                }
             }
             break;
         case MSG_COMBO:
@@ -548,6 +599,10 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                     std::string facId(v->GetName());
                     facId = facId.substr(facId.find('#') + 1);
                 }
+            } else if(src == absOrRelToggle){
+                formula_ptr->useAbsEps = absOrRelToggle->GetState();
+                for(int id = 0; id < formula_ptr->convergenceValues.size(); ++id)
+                    formula_ptr->RestartASCBR(id);
             }
             break;
     }

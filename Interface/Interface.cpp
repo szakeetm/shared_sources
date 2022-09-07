@@ -2840,6 +2840,27 @@ int Interface::FrameMove() {
                     lastNbDes = hitCache.nbDesorbed;
                     lastMeasTime = m_fTime;
                 }
+
+                // First sample every second, fine tune later
+                if (!formula_ptr->formulas_n.empty()) {
+                    if (!convergencePlotter)
+                        convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
+                    if (!formulaEditor) {
+                        formulaEditor = new FormulaEditor(&worker, formula_ptr);
+                        formulaEditor->Refresh();
+                    }
+                    if (autoUpdateFormulas && formula_ptr->sampleConvValues) {
+                        formula_ptr->InitializeFormulas();
+                        //formulaEditor->Refresh();
+                        //formulaEditor->ReEvaluate();
+                        convergencePlotter->Update(m_fTime);
+                        bool shouldStop = false;
+                        for(int formulaId = 0; formulaId < formula_ptr->convergenceValues.size(); ++formulaId)
+                            shouldStop |= formula_ptr->CheckASCBR(formulaId);
+                        if(shouldStop)
+                            worker.Stop_Public();
+                    }
+                }
             }
         }
 
