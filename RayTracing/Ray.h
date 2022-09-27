@@ -28,11 +28,13 @@ class MersenneTwister;
 
 //! Keep track of temporary/transparent hits in a single linked list
 //! Deprecated as replaced by HitLink
+/*
 struct HitChain {
     size_t hitId;
     SimulationFacetTempVar *hit;
     HitChain *next;
 };
+*/
 
 //! Keep track of temporary/transparent hits; correspomds to an individual hit
 struct HitLink {
@@ -82,11 +84,11 @@ constexpr double inf_d = 1.0e99;
 //! Geometric class describing a ray for ray-object intersections in ray-tracing algorithms
 class Ray {
 public:
-    Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersected(-1), hitChain(nullptr), rng(nullptr), pay(nullptr) {}
+    Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersected(-1), /*hitChain(nullptr),*/ rng(nullptr), pay(nullptr) {}
 
     Ray(const Vector3d &o, const Vector3d &d, Payload *payload, double tMax = inf_d,
         double time = 0.f, int structure = -1)
-            : origin(o), direction(d), tMax(tMax), time(time), structure(structure), hitChain(nullptr), rng(nullptr),
+            : origin(o), direction(d), tMax(tMax), time(time), structure(structure), /*hitChain(nullptr),*/ rng(nullptr),
               pay(payload) {}
 
     ~Ray() { if (pay) delete pay; }
@@ -104,7 +106,7 @@ public:
     //const Medium *medium;
     Payload *pay;
 
-    HitChain *hitChain;
+    //HitChain *hitChain;
     std::vector<HitLink> hits;
     HitLink hardHit;
     MersenneTwister *rng;

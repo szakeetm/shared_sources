@@ -46,7 +46,7 @@ public:
     char** status;
     ProcComm* procInfo;
     SimulationUnit* simulation;
-    MFSim::Particle* particle;
+    MFSim::ParticleTracer* particleTracer;
     bool runLoop();
 
 private:

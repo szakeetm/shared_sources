@@ -275,7 +275,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
-IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vector3d &rayPos,
+IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
               const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
               const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
               SimulationFacet *&collidedFacet, double &minLength) {
@@ -333,18 +333,18 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = currentParticle.particle.time + d / 100.0 / currentParticle.velocity;
-									double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
-									hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
+									double time = currentParticleTracer.ray.time + d / 100.0 / currentParticleTracer.velocity;
+									double currentOpacity = currentParticleTracer.model->GetOpacityAt(f, time);
+									hardHit = ((currentOpacity == 1.0) || (currentParticleTracer.randomGenerator.rnd()<currentOpacity));
 #endif
 
 #if defined(SYNRAD)
                                     hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
-										&& currentParticle.randomGenerator.rnd()>f->sh.opacity)
+										&& currentParticleTracer.randomGenerator.rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
-										&& currentParticle.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
-										&& currentParticle.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+										&& currentParticleTracer.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
+										&& currentParticleTracer.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticleTracer.energy,
+										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticleTracer.randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 
@@ -353,15 +353,15 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 											minLength = d;
 											collidedFacet = f;
 											found = true;
-                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colU = u;
-                                            currentParticle.tmpFacetVars[collidedFacet->globalId].colV = v;
+                                            currentParticleTracer.tmpFacetVars[collidedFacet->globalId].colU = u;
+                                            currentParticleTracer.tmpFacetVars[collidedFacet->globalId].colV = v;
 										}
 									}
 									else {
-                                        currentParticle.tmpFacetVars[f->globalId].colDistTranspPass = d;
-                                        currentParticle.tmpFacetVars[f->globalId].colU = u;
-                                        currentParticle.tmpFacetVars[f->globalId].colV = v;
-                                        currentParticle.transparentHitBuffer.push_back(f);
+                                        currentParticleTracer.tmpFacetVars[f->globalId].colDistTranspPass = d;
+                                        currentParticleTracer.tmpFacetVars[f->globalId].colU = u;
+                                        currentParticleTracer.tmpFacetVars[f->globalId].colV = v;
+                                        currentParticleTracer.transparentHitBuffer.push_back(f);
 									}
 								} // IsInFacet
 							} // d range
@@ -375,12 +375,12 @@ IntersectTree(MFSim::Particle &currentParticle, const AABBNODE &node, const Vect
 
 		if (IntersectBB_new(*(node.left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
             IntersectTree(
-                    currentParticle, *(node.left), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
+                    currentParticleTracer, *(node.left), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
                     inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
 		}
 		if (IntersectBB_new(*(node.right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
             IntersectTree(
-                    currentParticle, *(node.right), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
+                    currentParticleTracer, *(node.right), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
                     inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
 		}
 	}
@@ -451,7 +451,7 @@ bool IsInFacet(const SimulationFacet &f, const double &u, const double &v) {
 }
 
 std::tuple<bool, SimulationFacet *, double>
-Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
+Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
 	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
@@ -469,27 +469,27 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 	//Output values
 	bool found = false;
 	SimulationFacet *collidedFacet = nullptr;
-	currentParticle.transparentHitBuffer.clear();
+	currentParticleTracer.transparentHitBuffer.clear();
 	double minLength = 1e100;
 
-    IntersectTree(currentParticle, *bvh, rayPos, -1.0 * rayDir,
-                  currentParticle.lastHitFacet,
+    IntersectTree(currentParticleTracer, *bvh, rayPos, -1.0 * rayDir,
+                  currentParticleTracer.lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
 
 	if (found) {
 
-        currentParticle.tmpFacetVars[collidedFacet->globalId].isHit = true;
+        currentParticleTracer.tmpFacetVars[collidedFacet->globalId].isHit = true;
 
 		// Second pass for transparent hits
-		/*for (const auto& tpFacet : currentParticle.transparentHitBuffer){
+		/*for (const auto& tpFacet : currentParticleTracer.transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
-                model->RegisterTransparentPass(tpFacet, currentParticle);
+                model->RegisterTransparentPass(tpFacet, currentParticleTracer);
 			}
 		}*/
         // Second pass for transparent hits
-        for (auto& tpFacet : currentParticle.transparentHitBuffer){
-            if (currentParticle.tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
+        for (auto& tpFacet : currentParticleTracer.transparentHitBuffer){
+            if (currentParticleTracer.tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
                 tpFacet = nullptr;
             }
         }
@@ -499,7 +499,7 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 }
 
 /*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
-             CurrentParticleStatus &currentParticle) {
+             CurrentParticleStatus &currentParticleTracer) {
 	//For AC matrix calculation, used only in MolFlow
 
 	Vector3d rayPos = *c1;
@@ -522,11 +522,11 @@ Intersect(MFSim::Particle &currentParticle, const Vector3d &rayPos, const Vector
 	double minLength;
 
 	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
-	currentParticle.transparentHitBuffer.clear();
+	currentParticleTracer.transparentHitBuffer.clear();
 
     IntersectTree(model, *sHandle->model.structures[0].aabbTree, rayPos, -1.0 * rayDir,
                   f1, nullRx, nullRy, nullRz, inverseRayDir, *//*transparentHitFacetPointers,*//* found, collidedFacet,
-                  minLength, currentParticle);
+                  minLength, currentParticleTracer);
 
 	if (found) {
 		if (collidedFacet != f2) {
