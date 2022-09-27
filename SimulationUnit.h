@@ -33,7 +33,7 @@ namespace MFSim {
 }
 
 /**
-* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow
+* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation
  */
 class SimulationUnit {
 public:
