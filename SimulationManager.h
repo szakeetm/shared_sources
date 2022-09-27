@@ -125,7 +125,7 @@ public:
     uint16_t nbThreads;
     uint16_t mainProcId;
 
-    bool interactiveMode;
+    bool interactiveMode; // Looks like enables logging (off for test cases)
     bool isRunning;
     bool allProcsDone;
     bool hasErrorStatus;
