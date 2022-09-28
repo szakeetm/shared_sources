@@ -776,7 +776,8 @@ void Worker::SendToHitBuffer() {
 }
 
 /**
-* \brief Saves current facet hit counter from cache to results
+* \brief Saves current facet hit counter from cache to results, only to const. flow (moment 0)
+* Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void Worker::SendFacetHitCounts() {
     size_t nbFacet = geom->GetNbFacet();

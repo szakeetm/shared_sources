@@ -678,7 +678,8 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 }
 
 /**
-* \brief Saves current facet hit counter from cache to results
+* \brief Saves current facet hit counter from cache to results, only for constant flow (moment 0)
+* Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
     for(auto& simUnit : simulations){
