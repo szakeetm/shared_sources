@@ -653,12 +653,12 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 }
 
 void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog) {
-    for(auto& simUnit : simulations) {
-        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+    for(auto& sim : simulations) {
+        if(!sim->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
-        simUnit->globState = simState;
-        simUnit->globParticleLog = particleLog;
-        simUnit->tMutex.unlock();
+        sim->globState = simState;
+        sim->globParticleLog = particleLog;
+        sim->tMutex.unlock();
     }
 }
 
