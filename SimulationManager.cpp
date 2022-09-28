@@ -66,7 +66,7 @@ SimulationManager::SimulationManager(int pid) {
 
 SimulationManager::~SimulationManager() {
     KillAllSimUnits();
-    for(auto& unit : simUnits){
+    for(auto& unit : simulations){
         delete unit;
     }
 }
@@ -205,14 +205,14 @@ int SimulationManager::CreateCPUHandle() {
 #endif // DEBUG
     }
 
-    if(!simUnits.empty()){
-        for(auto& sim : simUnits){
+    if(!simulations.empty()){
+        for(auto& sim : simulations){
             delete sim;
         }
     }
-    size_t nbSimUnits = 1; // nbThreads
+    size_t nbSimulations = 1; // nbThreads
     try{
-        simUnits.resize(nbSimUnits);
+        simulations.resize(nbSimulations);
         procInformation.Resize(nbThreads);
         simController.clear();
         simHandles.clear();
@@ -222,19 +222,19 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
-    for(size_t t = 0; t < nbSimUnits; ++t){
-        simUnits[t] = new Simulation();
+    for(size_t t = 0; t < nbSimulations; ++t){
+        simulations[t] = new Simulation();
     }
     simController.emplace_back(SimulationController{processId, 0, nbThreads,
-                                                    simUnits.back(), &procInformation});
+                                                    simulations.back(), &procInformation});
     if(interactiveMode) {
         simHandles.emplace_back(
                 /*StartProc(arguments, STARTPROC_NOWIN),*/
                 std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
                 SimType::simCPU);
-        /*simUnits.emplace_back(Simulation{nbThreads});
+        /*simulations.emplace_back(Simulation{nbThreads});
         procInformation.emplace_back(SubDProcInfo{});
-        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simUnits.back(), &procInformation.back()});
+        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simulations.back(), &procInformation.back()});
         simHandles.emplace_back(
                 *//*StartProc(arguments, STARTPROC_NOWIN),*//*
             std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
@@ -653,7 +653,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 }
 
 void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog) {
-    for(auto& simUnit : simUnits) {
+    for(auto& simUnit : simulations) {
         if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
         simUnit->globState = simState;
@@ -664,13 +664,13 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
 
 // Create hard copy for local usage
 void SimulationManager::ForwardSimModel(const std::shared_ptr<SimulationModel>& model) {
-    for(auto& sim : simUnits)
+    for(auto& sim : simulations)
         sim->model = model;
 }
 
 // Create hard copy for local usage and resie particle logger
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
-    for(auto& sim : simUnits) {
+    for(auto& sim : simulations) {
         sim->model->otfParams = *otfParams;
         sim->ReinitializeParticleLog();
     }
@@ -681,7 +681,7 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 * \brief Saves current facet hit counter from cache to results
 */
 void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
-    for(auto& simUnit : simUnits){
+    for(auto& simUnit : simulations){
         if(simUnit->globState->facetStates.size() != hitCaches.size()) return;
         if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
@@ -742,9 +742,9 @@ int SimulationManager::DecreasePriority() {
 }
 
 int SimulationManager::RefreshRNGSeed(bool fixed) {
-    if(simUnits.empty() || nbThreads == 0)
+    if(simulations.empty() || nbThreads == 0)
         return 1;
-    for(auto& sim : simUnits){
+    for(auto& sim : simulations){
         sim->SetNParticle(nbThreads, fixed);
     }
 

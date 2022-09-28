@@ -562,7 +562,7 @@ void Worker::Update(float appTime) {
     bool needsAngleMapStatusRefresh = false;
 #endif
 
-    //for(auto& simUnit : simManager.simUnits) {
+    //for(auto& simUnit : simManager.simulations) {
         /*if (!simUnit->tMutex.try_lock_for(std::chrono::milliseconds (100))) {
             continue;
         }*/
