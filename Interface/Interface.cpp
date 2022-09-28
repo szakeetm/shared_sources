@@ -1577,6 +1577,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     return true;
                 case MENU_VERTEX_CLEAR_ISOLATED:
                     geom->DeleteIsolatedVertices(false);
+                    worker.Reload();
                     UpdateModelParams();
                     if (facetCoordinates) facetCoordinates->UpdateFromSelection();
                     if (vertexCoordinates) vertexCoordinates->Update();
