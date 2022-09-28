@@ -191,7 +191,7 @@ int SimulationManager::CreateCPUHandle() {
     uint32_t processId = mainProcId;
 
     //Get number of cores
-    if(nbThreads == 0) {
+    if(nbThreads == 0) { //Default: Use maximum available threads
 #if defined(DEBUG)
         nbThreads = 1;
 #else
@@ -269,7 +269,7 @@ int SimulationManager::CreateRemoteHandle() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimUnits() {
+int SimulationManager::InitSimulations() {
 
     if(useCPU){
         // Launch nbCores subprocesses

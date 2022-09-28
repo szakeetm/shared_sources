@@ -82,7 +82,7 @@ public:
 
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
-    int InitSimUnits();
+    int InitSimulations();
 
     int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
 
@@ -111,7 +111,7 @@ public:
     int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
-    ProcComm procInformation; // process control
+    ProcComm procInformation; // process control, facilitates round-robin access
 
 
 protected:
