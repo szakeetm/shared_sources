@@ -42,7 +42,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define WAITTIME    500  // Answer in STOP mode
 
 
-SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) {
+SimThread::SimThread(ProcComm *procInfo, Simulation_Abstract *sim, size_t threadNum) {
     this->threadNum = threadNum;
     this->procInfo = procInfo;
     this->status = nullptr;
@@ -246,7 +246,7 @@ int SimThread::runSimulation(size_t desorptions) {
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                                           SimulationUnit *simulationInstance, ProcComm *pInfo) {
+                                           Simulation_Abstract *simulationInstance, ProcComm *pInfo) {
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)

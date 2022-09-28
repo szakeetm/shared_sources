@@ -115,7 +115,7 @@ private:
 
 
 protected:
-    //std::vector<SimulationUnit*> simHandles; // for threaded versions
+    //std::vector<Simulation_Abstract*> simHandles; // for threaded versions
 public:
     // Flags for which simulation type should be run
     bool useCPU;

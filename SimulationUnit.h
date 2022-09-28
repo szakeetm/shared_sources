@@ -33,20 +33,20 @@ namespace MFSim {
 }
 
 /**
-* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation
+* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation. Old name is "SimulationUnit"
  */
-class SimulationUnit {
+class Simulation_Abstract {
 public:
-    SimulationUnit() : model(), totalDesorbed(0)/*, m()*/{
+    Simulation_Abstract() : model(), totalDesorbed(0)/*, m()*/{
         globState = nullptr;
         globParticleLog = nullptr;
     };
-    SimulationUnit(const SimulationUnit& o) : model(o.model)/* , m()*/ {
+    Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , m()*/ {
         globState = nullptr;
         globParticleLog = nullptr;
         totalDesorbed = o.totalDesorbed;
     };
-    virtual ~SimulationUnit()= default;
+    virtual ~Simulation_Abstract()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
