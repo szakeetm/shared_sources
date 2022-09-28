@@ -134,8 +134,8 @@ public:
 private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;
-    std::vector<SimulationController> simControllers;
-    std::vector<Simulation*> simulations;
+    std::vector<SimulationController> simControllers; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
+    std::vector<Simulation*> simulations; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
 
 public:
     void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
