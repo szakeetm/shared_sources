@@ -119,13 +119,13 @@ int SimulationManager::StartSimulation() {
     else {
         /*if(simulationChanged){
             this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
-            for(auto& con : simController){
+            for(auto& con : simControllers){
                 con.Load();
             }
             simulationChanged = false;
         }*/
         this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
-        for(auto& con : simController){
+        for(auto& con : simControllers){
             con.Start();
         }
     }
@@ -173,7 +173,7 @@ int SimulationManager::LoadSimulation(){
     }
     else{
         bool errorOnLoad = false;
-        for(auto& con : simController){
+        for(auto& con : simControllers){
             errorOnLoad |= con.Load();
         }
         if(errorOnLoad){
@@ -214,7 +214,7 @@ int SimulationManager::CreateCPUHandle() {
     try{
         simulations.resize(nbSimulations);
         procInformation.Resize(nbThreads);
-        simController.clear();
+        simControllers.clear();
         simHandles.clear();
     }
     catch (const std::exception &e){
@@ -225,19 +225,19 @@ int SimulationManager::CreateCPUHandle() {
     for(size_t t = 0; t < nbSimulations; ++t){
         simulations[t] = new Simulation();
     }
-    simController.emplace_back(SimulationController{processId, 0, nbThreads,
+    simControllers.emplace_back(SimulationController{processId, 0, nbThreads,
                                                     simulations.back(), &procInformation});
     if(interactiveMode) {
         simHandles.emplace_back(
                 /*StartProc(arguments, STARTPROC_NOWIN),*/
-                std::thread(&SimulationController::controlledLoop, &simController[0], NULL, nullptr),
+                std::thread(&SimulationController::controlledLoop, &simControllers[0], NULL, nullptr),
                 SimType::simCPU);
         /*simulations.emplace_back(Simulation{nbThreads});
         procInformation.emplace_back(SubDProcInfo{});
-        simController.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simulations.back(), &procInformation.back()});
+        simControllers.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simulations.back(), &procInformation.back()});
         simHandles.emplace_back(
                 *//*StartProc(arguments, STARTPROC_NOWIN),*//*
-            std::thread(&SimulationController::controlledLoop,&simController.back(),NULL,nullptr),
+            std::thread(&SimulationController::controlledLoop,&simControllers.back(),NULL,nullptr),
             SimType::simCPU);*/
         auto myHandle = simHandles.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
@@ -277,11 +277,11 @@ int SimulationManager::InitSimulations() {
     }
     if(useGPU){
         CreateGPUHandle();
-        //procInformation.push_back(simController.back().procInfo);
+        //procInformation.push_back(simControllers.back().procInfo);
     }
     if(useRemote){
         CreateRemoteHandle();
-        //procInformation.push_back(simController.back().procInfo);
+        //procInformation.push_back(simControllers.back().procInfo);
     }
 
     return WaitForProcStatus(PROCESS_READY);
@@ -413,7 +413,7 @@ int SimulationManager::KillAllSimUnits() {
     if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-            for(auto& con : simController)
+            for(auto& con : simControllers)
                 con.EmergencyExit();
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
                 int i = 0;
@@ -479,7 +479,7 @@ int SimulationManager::ResetSimulations() {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     }
     else {
-        for(auto& con : simController){
+        for(auto& con : simControllers){
             con.Reset();
         }
     }
@@ -493,7 +493,7 @@ int SimulationManager::ResetHits() {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     }
     else {
-        for(auto& con : simController){
+        for(auto& con : simControllers){
             con.Reset();
         }
     }
