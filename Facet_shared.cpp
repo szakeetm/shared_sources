@@ -140,6 +140,7 @@ Facet::Facet(size_t nbIndex) {
 	sh.isMoving = false;
 
 	hasOutgassingFile = false;
+	angleMapCache = NULL;
 	//outgassingMap = NULL;
 
 	sh.anglemapParams.record = false;
