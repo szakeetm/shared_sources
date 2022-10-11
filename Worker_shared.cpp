@@ -559,7 +559,7 @@ void Worker::Update(float appTime) {
 
 
 #if defined(MOLFLOW)
-    bool needsAngleMapStatusRefresh = false;
+    //bool needsAngleMapStatusRefresh = false;
 #endif
 
     //for(auto& simUnit : simManager.simulations) {
@@ -603,12 +603,15 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
+                /* //Commented out: angleMapCache construction is now in InterfaceGeomToSimModel()
                 if (f->selected && f->angleMapCache.empty())
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
+                    */
                 //Retrieve angle map from hits dp
                 if(f->sh.desorbType != DES_ANGLEMAP) {
                     /*model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
                     f->angleMapCache = model->facets[i]->angleMap.pdf;*/
+                    if (f->selected && f->angleMapCache.empty() && !globState.facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
                     f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
                 }
             }
@@ -632,6 +635,7 @@ void Worker::Update(float appTime) {
 
 #if defined(MOLFLOW)
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {
+        needsAngleMapStatusRefresh = false;
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
     }
 #endif
