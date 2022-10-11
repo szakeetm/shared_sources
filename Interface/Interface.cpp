@@ -2767,7 +2767,7 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if (((runningState || worker.globState.stateChanged) && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
+    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
         {
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
@@ -2787,17 +2787,7 @@ int Interface::FrameMove() {
 
                 // Update hits
                 try {
-                    // postpone realreload if it would be called from a delayed run state change
-                    bool refreshReload = false;
-                    if(worker.needsReload && (prevRunningState && !runningState)) {
-                        refreshReload = true;
-                        worker.needsReload = false;
-                    }
-
                     worker.Update(m_fTime);
-
-                    if(refreshReload)
-                        worker.needsReload = true;
                 }
                 catch (const std::exception &e) {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);

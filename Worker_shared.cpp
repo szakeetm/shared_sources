@@ -631,8 +631,9 @@ void Worker::Update(float appTime) {
     globState.tMutex.unlock();
 
 #if defined(MOLFLOW)
-    if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
+    if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
+    }
 #endif
 }
 
