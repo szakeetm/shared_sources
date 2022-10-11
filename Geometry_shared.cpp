@@ -1429,7 +1429,7 @@ int Geometry::HasIsolatedVertices() {
 }
 
 void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
-	mApp->changedSinceSave = true;
+	
 	// Remove unused vertices
 	std::vector<bool> isUsed(sh.nbVertex);
 
@@ -1481,6 +1481,11 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	vertices3.swap(nVert);
 	sh.nbVertex = vertices3.size();
+
+	if (nbUnused) {
+		mApp->changedSinceSave = true;
+		mApp->worker.Reload(); //Will need real reload
+	}
 }
 
 void Geometry::Clear() {

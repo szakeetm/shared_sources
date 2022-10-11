@@ -134,7 +134,8 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 			  return;
 		  }
 		  geom->AddVertex(X, Y, Z);
-	    geom->AddToSelectedVertexList(geom->GetNbVertex()-1);
+		  geom->AddToSelectedVertexList(geom->GetNbVertex() - 1);
+		  
 	  }
 	  else if (Contains({ facetCenterButton,facetUButton,facetVButton,facetNormalButton }, src)) {
 		  auto selFacetIds = geom->GetSelectedFacets();
