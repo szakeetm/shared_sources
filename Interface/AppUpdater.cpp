@@ -417,11 +417,11 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string os_prefix;
                     bool validOS = false;
                     for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
-                        if(std::strcmp(osNode.attribute("prefix").as_string() , APPLICATION_NAME BRANCH_OS_SUFFIX) == 0){
+                        if(std::strcmp(osNode.attribute("id").as_string() , BRANCH_OS_SUFFIX) == 0){
                             // found
                             validOS = true;
-                            os_fullname = osNode.attribute("name").as_string();
-                            os_prefix = osNode.attribute("prefix").as_string();
+                            os_fullname = osNode.attribute("name").as_string(); //Unused
+                            os_prefix = osNode.attribute("prefix").as_string(); //zip name: os_prefix+"_"+version_name.zip
                             break;
                         }
                     }
