@@ -2767,7 +2767,7 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
+    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) { //Running and and update is due (each second), or just started
         {
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
@@ -2825,15 +2825,19 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
     } else {
-        if(!runningState && worker.simuTimer.Elapsed() > 0.0) {
+        /* //Commenting out, caused constant redraw when simulation paused
+        if(!runningState && worker.simuTimer.Elapsed() > 0.0) { //Paused
             double _hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
             double _dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
-            if(hps.last() != _hps || dps.last() != _dps)
+            if (hps.last() != _hps || dps.last() != _dps) {
                 wereEvents = true;
-        } else {
-            if(hps.last() != 0.0  || dps.last() != 0.0)
+            }
+        } else { //Stopped?
+            if (hps.last() != 0.0 || dps.last() != 0.0) {
                 wereEvents = true;
+            }
         }
+        */
 
         if(runningState)
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
