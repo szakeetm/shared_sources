@@ -1082,35 +1082,26 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	if (!idx) throw Error("Out of memory: CollapseVertex");
 	int       nbRef = 0;
 
-    std::vector<int> indices;
+    
 	// Collapse
 	prg->SetMessage("Collapsing vertices...");
 	Chronometer collapse_time;
     collapse_time.Start();
+	std::vector<int> indices;
     std::list<InterfaceVertex> vertex_refs;
     vertex_refs.insert(vertex_refs.end(), vertices3.begin(), vertices3.end());
     int jj = AddRefVertex(indices, vertex_refs, vT);
     fmt::print("Collapse duration 1: {}s -- {}\n", collapse_time.Elapsed(), jj);
-    //vertex_refs.clear();
-//    collapse_time.ReInit(); collapse_time.Start();
-//    for (int i = 0; !work->abortRequested && i < sh.nbVertex; i++) {
-//		mApp->DoEvents();  //Catch abort request
-//		prg->SetProgress(((double)i / (double)sh.nbVertex));//*//* / totalWork*//*);
-//		idx[i] = AddRefVertex(vertices3[i], refs, &nbRef, vT);
-//	}
-//    fmt::print("Collapse duration 2: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
+
     collapse_time.ReInit(); collapse_time.Start();
 
 	if (work->abortRequested) {
-		delete refs;
-		delete idx;
+		free(refs);
+		free(idx);
 		return;
 	}
 
 	// Create the new vertex array
-	/*vertices3.resize(nbRef); vertices3.shrink_to_fit();
-
-	memcpy(vertices3.data(), refs, nbRef * sizeof(InterfaceVertex));*/
     vertices3.clear();
     vertices3.insert(vertices3.end(),vertex_refs.begin(),vertex_refs.end());
 	sh.nbVertex = vertex_refs.size();
@@ -1119,10 +1110,9 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
     prg->SetMessage("Collapsing vertices [Updating indices] ...");
     for (int i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
-		prg->SetProgress(((double)i / (double)sh.nbFacet) /** 0.05 + 0.45*/);
+		prg->SetProgress(((double)i / (double)sh.nbFacet));
 		for (int j = 0; j < f->sh.nbIndex; j++)
             f->indices[j] = indices[f->indices[j]];
-        //f->indices[j] = idx[f->indices[j]];
 	}
 
     fmt::print("Collapse duration 3: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
@@ -4008,7 +3998,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
         catch(const std::exception &e) {
             throw Error("Out of memory: LoadSTL");
         }
-		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
+		std::vector<InterfaceVertex>(3 * nbNewFacets).swap(vertices3);
 	}
 	else { //insert
         try{
