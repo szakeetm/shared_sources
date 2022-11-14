@@ -1,7 +1,3 @@
-//
-// Created by pbahr on 18/06/2020.
-//
-
 #include "StringHelper.h"
 #include "MathTools.h"
 

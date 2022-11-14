@@ -91,7 +91,6 @@ protected:
 	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
-	void InsertSTLGeom(FileReader *file, size_t strIdx = 0, double scaleFactor = 1.0, bool newStruct = false);
 	void AdjustProfile();
 	void BuildShapeList();
 	void BuildSelectList();
@@ -157,7 +156,7 @@ public:
 
 	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
-	void LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor);
+	void LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor = 1.0, bool insert = false, bool newStruct = false, size_t targetStructId = 0);
 	void LoadASE(FileReader *file, GLProgress *prg);
 
 	bool IsLoaded();

@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/MirrorVertex.h"
 #include "GLApp/GLList.h"
 #include "GrahamScan.h"
+#include "Helper/StringHelper.h"
 
 #include "Clipper/clipper.hpp"
 
@@ -3651,92 +3652,138 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 }
 
-void Geometry::LoadSTL(FileReader *file, GLProgress *prg, double scaleFactor) {
-	//mApp->ClearAllSelections();
-	//mApp->ClearAllViews();
-	char *w;
+void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
 
-	prg->SetMessage("Clearing current geometry...");
-	Clear();
+	if (!insert) {
+		prg->SetMessage("Clearing current geometry...");
+		Clear();
+	}
 
 	// First pass
 	prg->SetMessage("Counting facets in STL file...");
-	//file->ReadKeyword("solid");
-	file->ReadLine(); // solid name
-	w = file->ReadWord();
-	while (strcmp(w, "facet") == 0) {
-		sh.nbFacet++;
-		file->JumpSection("endfacet");
-		w = file->ReadWord();
+	std::vector<size_t> bodyFacetCounts; //Each element tells how many facets are in the Nth body
+	size_t nbNewFacets = 0; //Total facets in file
+	while (!file->IsEof()) {
+		int bodyFacetCount = 0;
+		file->ReadLine(); // solid name
+		std::string w = file->ReadWord();
+		while (beginsWith(w, "facet")) {
+			bodyFacetCount++;
+			file->JumpSection("endfacet");
+			w = file->ReadWord();
+		}
+		//All facets read in the current body
+		bodyFacetCounts.push_back(bodyFacetCount);
+		nbNewFacets += bodyFacetCount;
+		if (w != "endsolid") {
+			std::string msg = "Unexpected or not supported STL keyword \"" + w + "\", 'endsolid' required\nMaybe the STL file was saved in binary instead of ASCII format?";
+			throw Error(msg.c_str());
+		}
+		if (!(file->IsEol())) file->ReadLine(); //Read the rest of the "endsolid" line (usually solid name). Eof() not a problem, will simply return NULL character
 	}
-	if (strcmp(w, "endsolid") != 0) throw Error("Unexpected or not supported STL keyword, 'endsolid' required\nMaybe the STL file was saved in binary instead of ASCII format?");
 
-	// Allocate mem
-	sh.nbVertex = 3 * sh.nbFacet;
-	facets = (Facet **)malloc(sh.nbFacet * sizeof(Facet *));
-	if (!facets) throw Error("Out of memory: LoadSTL");
-	memset(facets, 0, sh.nbFacet * sizeof(Facet *));
+	// Allocate memory
+	if (!insert) { //load
+		facets = (Facet**)malloc(nbNewFacets * sizeof(Facet*));
+		if (!facets) throw Error("Out of memory: LoadSTL");
+		memset(facets, 0, sh.nbFacet * sizeof(Facet*));
+		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
+	}
+	else { //insert
+		facets = (Facet**)malloc((sh.nbFacet+nbNewFacets) * sizeof(Facet*));
+		if (!facets) throw Error("Out of memory: LoadSTL");
+		memset(facets, 0, sh.nbFacet * sizeof(Facet*));
+		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
+	}
 
-	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
+	size_t oldFacetNb = sh.nbFacet;
+	size_t oldVertexNb = sh.nbVertex;
 
 	// Second pass
-	prg->SetMessage("Reading facets...");
 	file->SeekStart();
-	//file->ReadKeyword("solid");
-	file->ReadLine();
-	for (int i = 0; i < sh.nbFacet; i++) {
+	size_t globalId = 0;
+	for (size_t b = 0; b < bodyFacetCounts.size(); b++) {
+		file->ReadLine(); //solid name
+		std::ostringstream progressStr;
+		progressStr << "Reading facets (body " << b + 1 << "/" << bodyFacetCounts.size() << "...";
+		prg->SetMessage(progressStr.str()); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
+		for (size_t i = 0; i < bodyFacetCounts[b]; i++) {
 
-		double p = (double)i / (double)(sh.nbFacet);
-		prg->SetProgress(p);
+			double p = (double)globalId / (double)(nbNewFacets);
+			prg->SetProgress(p);
 
-		file->ReadKeyword("facet");
-		file->ReadKeyword("normal");
-		file->ReadDouble();
-		file->ReadDouble();
-		file->ReadDouble();
-		file->ReadKeyword("outer");
-		file->ReadKeyword("loop");
+			file->ReadKeyword("facet");
+			//Read but ignore normal (redundant, will be calculated)
+			file->ReadKeyword("normal");
+			file->ReadDouble();
+			file->ReadDouble();
+			file->ReadDouble();
 
-		file->ReadKeyword("vertex");
-		vertices3[3 * i + 0].x = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 0].y = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 0].z = file->ReadDouble()*scaleFactor;
+			file->ReadKeyword("outer");
+			file->ReadKeyword("loop");
 
-		file->ReadKeyword("vertex");
-		vertices3[3 * i + 1].x = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 1].y = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 1].z = file->ReadDouble()*scaleFactor;
+			file->ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 0].x = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 0].y = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 0].z = file->ReadDouble() * scaleFactor;
 
-		file->ReadKeyword("vertex");
-		vertices3[3 * i + 2].x = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 2].y = file->ReadDouble()*scaleFactor;
-		vertices3[3 * i + 2].z = file->ReadDouble()*scaleFactor;
+			file->ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 1].x = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 1].y = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 1].z = file->ReadDouble() * scaleFactor;
 
-		file->ReadKeyword("endloop");
-		file->ReadKeyword("endfacet");
+			file->ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 2].x = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 2].y = file->ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 2].z = file->ReadDouble() * scaleFactor;
 
-		try {
-			facets[i] = new Facet(3);
+			file->ReadKeyword("endloop");
+			file->ReadKeyword("endfacet");
+
+			try {
+				facets[oldFacetNb + globalId] = new Facet(3);
+			}
+			catch (...) {
+				sh.nbFacet = oldFacetNb + globalId;
+				sh.nbVertex = oldVertexNb + 3 * globalId;
+				throw Error("Out of memory");
+			}
+			//Molflow is right-handed normal, STL standard is left-handed
+			facets[oldFacetNb + globalId]->indices[0] = oldVertexNb + 3 * globalId + 0;
+			facets[oldFacetNb + globalId]->indices[1] = oldVertexNb + 3 * globalId + 2;
+			facets[oldFacetNb + globalId]->indices[2] = oldVertexNb + 3 * globalId + 1;
+
+			if (insert) {
+				facets[oldFacetNb + globalId]->selected = true; //Highlight selected facets
+				//Assign structure
+				if (newStruct) {
+					facets[oldFacetNb + globalId]->sh.superIdx = static_cast<int>(sh.nbSuper);
+				}
+				else {
+					facets[oldFacetNb + globalId]->sh.superIdx = static_cast<int>(targetStructId);
+				}
+			}
+			globalId++;
 		}
-		catch (...) {
-			throw Error("Out of memory");
-		}
-		facets[i]->indices[0] = 3 * i + 0;
-		facets[i]->indices[1] = 3 * i + 2;
-		facets[i]->indices[2] = 3 * i + 1;
-
+		file->ReadKeyword("endsolid");
+		if (!(file->IsEol())) file->ReadLine(); //Read part after "endsolid"
 	}
 
-	sh.nbSuper = 1;
-	UpdateName(file);
-	strName[0] = strdup(sh.name.c_str());
-	strFileName[0] = strdup(file->GetName());
-	char *e = strrchr(strName[0], '.');
-	if (e) *e = 0;
+	sh.nbFacet += nbNewFacets;
+	sh.nbVertex += 3 * nbNewFacets;
+
+	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file->GetName()).c_str());
+
+	if (!insert) {
+		UpdateName(file);
+		strName[0] = strdup(sh.name.c_str());
+		strFileName[0] = strdup(file->GetName());
+		char* e = strrchr(strName[0], '.');
+		if (e) *e = 0;
+	}
 	prg->SetMessage("Initializing geometry...");
 	InitializeGeometry();
-	//isLoaded = true; //InitializeGeometry() sets to true
-
+	//InitializeInterfaceGeometry();
 }
 
 void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
@@ -3776,22 +3823,15 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 
 }
 
-void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr) {
-
-	//Clear();
+void Geometry::InsertSTL(FileReader* file, GLProgress* prg, double scaleFactor, bool newStr) {
+	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
-	InsertSTLGeom(file, structId, scaleFactor, newStr);
-	//UpdateName(file);
-	//wp.nbSuper = 1;
-	//strName[0] = strdup(wp.name);
-	//strFileName[0] = strdup(file->GetName());
-	char *e = strrchr(strName[0], '.');
+	LoadSTL(file, prg, scaleFactor, true, newStr, structId);
+	char* e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
-	//AdjustProfile();
-	//isLoaded = true; //InitializeGeometry() sets to true
-
+	//InitializeInterfaceGeometry();
 }
 
 void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
@@ -4193,89 +4233,6 @@ void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
 	if (newStruct) sh.nbSuper += nbNewSuper;
 	else if (sh.nbSuper < strIdx + nbNewSuper) sh.nbSuper = strIdx + nbNewSuper;
 
-}
-
-void Geometry::InsertSTLGeom(FileReader *file, size_t strIdx, double scaleFactor, bool newStruct) {
-
-	UnselectAll();
-	char *w;
-
-	int nbNewFacets = 0;
-	// First pass
-	//file->ReadKeyword("solid");
-	file->ReadLine(); // solid name
-	w = file->ReadWord();
-	while (strcmp(w, "facet") == 0) {
-		nbNewFacets++;
-		file->JumpSection("endfacet");
-		w = file->ReadWord();
-	}
-	if (strcmp(w, "endsolid") != 0) throw Error("Unexpected or not supported STL keyword, 'endsolid' required");
-
-	// Allocate memory
-	int nbNewVertex = 3 * nbNewFacets;
-	facets = (Facet **)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet **));
-	memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet *));
-	
-	/*
-	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
-	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + wp.nbVertex) * sizeof(InterfaceVertex));
-	memmove(tmp_vertices3, vertices3, (wp.nbVertex) * sizeof(InterfaceVertex));
-	memset(tmp_vertices3 + wp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
-	SAFE_FREEvertices3;
-	vertices3 = tmp_vertices3;
-	*/
-	vertices3.resize(nbNewVertex + sh.nbVertex);
-
-	// Second pass
-	file->SeekStart();
-	//file->ReadKeyword("solid");
-	file->ReadLine();
-	for (int i = 0; i < nbNewFacets; i++) {
-
-		file->ReadKeyword("facet");
-		file->ReadKeyword("normal");
-		file->ReadDouble(); //ignoring normal vector, will be calculated from triangle orientation
-		file->ReadDouble();
-		file->ReadDouble();
-		file->ReadKeyword("outer");
-		file->ReadKeyword("loop");
-
-		file->ReadKeyword("vertex");
-		vertices3[sh.nbVertex + 3 * i + 0].x = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 0].y = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 0].z = file->ReadDouble()*scaleFactor;
-
-		file->ReadKeyword("vertex");
-		vertices3[sh.nbVertex + 3 * i + 1].x = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 1].y = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 1].z = file->ReadDouble()*scaleFactor;
-
-		file->ReadKeyword("vertex");
-		vertices3[sh.nbVertex + 3 * i + 2].x = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 2].y = file->ReadDouble()*scaleFactor;
-		vertices3[sh.nbVertex + 3 * i + 2].z = file->ReadDouble()*scaleFactor;
-
-		file->ReadKeyword("endloop");
-		file->ReadKeyword("endfacet");
-
-		*(facets + i + sh.nbFacet) = new Facet(3);
-		facets[i + sh.nbFacet]->selected = true;
-		facets[i + sh.nbFacet]->indices[0] = sh.nbVertex + 3 * i + 0;
-		facets[i + sh.nbFacet]->indices[1] = sh.nbVertex + 3 * i + 1;
-		facets[i + sh.nbFacet]->indices[2] = sh.nbVertex + 3 * i + 2;
-
-		if (newStruct) {
-			facets[i + sh.nbFacet]->sh.superIdx = static_cast<int>(sh.nbSuper);
-		}
-		else {
-			facets[i + sh.nbFacet]->sh.superIdx = static_cast<int>(strIdx);
-		}
-	}
-
-	sh.nbVertex += nbNewVertex;
-	sh.nbFacet += nbNewFacets;
-	if (newStruct) AddStruct("Inserted STL file");
 }
 
 void Geometry::SaveSTR(bool saveSelected) {
