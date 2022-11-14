@@ -2963,7 +2963,7 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 
 void Geometry::RenumberTeleports(const std::vector<int>& newRefs) {
 	for (size_t i = 0; i < sh.nbFacet; i++) {
-		InterfaceFacet* f = facets[i];
+		Facet* f = facets[i];
 
 		if (f->sh.teleportDest > 0) {
 			f->sh.teleportDest = newRefs[f->sh.teleportDest - 1] + 1; //Shift by 1: teleport destinations are numbered from 1, 0=no teleport, -1=back to where it came from
