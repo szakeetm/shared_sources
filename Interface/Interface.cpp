@@ -90,7 +90,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "File.h" //File utils (Get extension, etc)
 
 //Test functions
-#include "GeometryConverter.h"
+#include "GeometryTools.h"
 #include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 
 #include "../../src/versionId.h"
@@ -1697,7 +1697,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     if (rep == GLDLG_OK) {
                         if (AskToReset()) {
 
-                            GeometryConverter::PolygonsToTriangles(geom, selectedFacets);
+                            GeometryTools::PolygonsToTriangles(geom, selectedFacets);
                         }
                     }
                     worker.Reload();
@@ -1815,7 +1815,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     return true;
                 case MENU_TRIANGULATE:
                     if (AskToSave()) {
-                        GeometryConverter::PolygonsToTriangles(this->worker.GetGeometry());
+                        GeometryTools::PolygonsToTriangles(this->worker.GetGeometry());
                         this->worker.Reload();
                     }
                     return true;
