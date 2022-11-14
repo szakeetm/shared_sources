@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //Common geometry handling/editing features, shared between Molflow and Synrad
 
 #include "Geometry_shared.h"
-#include "GeometryConverter.h"
+#include "GeometryTools.h"
 #include "Facet_shared.h"
 #include "Helper/MathTools.h"
 #include "GLApp/GLMessageBox.h"
@@ -275,30 +275,27 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 {
 	size_t i = 0;
 	work->abortRequested = false;
+	prg->SetMessage("Clearing previous neighborship data...");
 	for (i = 0; i < sh.nbFacet; i++) {
 		facets[i]->neighbors.clear();
 	}
-	for (i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-		mApp->DoEvents(); //Cathch possible cancel press
-		Facet *f1 = facets[i];
-		prg->SetProgress(double(i) / double(sh.nbFacet));
-		for (size_t j = i + 1; j < sh.nbFacet; j++) {
-			Facet *f2 = facets[j];
-			size_t c1, c2, l;
-			if (GetCommonEdges(facets[i], facets[j], &c1, &c2, &l)) {
-				double dotProduct = Dot(f1->sh.N, f2->sh.N);
-				Saturate(dotProduct, -1.0, 1.0); //Rounding errors...
-				double angleDiff = fabs(acos(dotProduct));
-				NeighborFacet n1, n2;
-				n1.id = i;
-				n2.id = j;
-				n1.angleDiff = n2.angleDiff = angleDiff;
-				f1->neighbors.push_back(n2);
-				f2->neighbors.push_back(n1);
-			}
+	prg->SetMessage("Comparing facets...");
+	std::vector<CommonEdge> edges;
+
+	if (GeometryTools::GetAnalysedCommonEdges(this, edges)) {
+		i = 0;
+		for (auto& edge : edges) {
+			prg->SetProgress(double(i) / double(edges.size()));
+			NeighborFacet n1{}, n2{};
+			n1.id = edge.facetId[0];
+			n2.id = edge.facetId[1];
+			n1.angleDiff = n2.angleDiff = edge.angle;
+			GetFacet(n1.id)->neighbors.push_back(n2);
+			GetFacet(n2.id)->neighbors.push_back(n1);
+			++i;
 		}
 	}
-	return i;
+	return GetNbFacet();
 }
 
 std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
@@ -909,6 +906,81 @@ int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int 
 
 }
 
+int Geometry::AddRefVertex(std::vector<int>& indices, std::list<InterfaceVertex>& refs, double vT) {
+
+	indices.resize(refs.size());
+	bool found = false;
+	int i = 0;
+	//Vector3d n;
+	double v2 = vT * vT;
+
+	std::list<std::pair<int, InterfaceVertex>> sorted_refs; // pair with index and vertex
+	int id = 0;
+	for (auto& ref : refs) {
+		sorted_refs.emplace_back(id++, ref);
+	}
+	// sort by x coordinates
+	sorted_refs.sort([](const std::pair<int, InterfaceVertex>& p0, const std::pair<int, InterfaceVertex>& p1) -> bool {
+		auto& v0 = p0.second;
+		auto& v1 = p1.second;
+		if (v0.x < v1.x)
+			return true;
+		else if (v0.x == v1.x) {
+			if (v0.y < v1.y) {
+				return true;
+			}
+			else if (v0.y == v1.y) {
+				if (v0.z < v1.z) {
+					return true;
+				}
+			}
+		}
+		return false;
+		});
+
+	// search by sorted results for 1 axis
+	int id_outer = 0;
+	int id_inner = 0;
+	int nbErased = 0; // keep track for proper index calculation
+	for (auto x_iter = sorted_refs.begin(); x_iter != sorted_refs.end(); x_iter++, id_outer++) {
+		id_inner = id_outer + 1;
+		found = false;
+		//indices[id_outer + nbErased] = id_outer;
+		indices[x_iter->first] = id_outer;
+		for (auto iter_o = std::next(x_iter); iter_o != sorted_refs.end(); id_inner++) {
+			double dx = std::abs(x_iter->second.x - iter_o->second.x);
+			if (dx < vT) {
+				double dy = std::abs(x_iter->second.y - iter_o->second.y);
+				if (dy < vT) {
+					double dz = std::abs(x_iter->second.z - iter_o->second.z);
+					if (dz < vT && (dx * dx + dy * dy + dz * dz < v2)) {
+						// found a match, merge vertices by tracking the current vertex id
+						found = true;
+						nbErased++;
+						//indices[id_outer + nbErased] = id_outer;
+						indices[iter_o->first] = id_outer;
+						iter_o = sorted_refs.erase(iter_o);
+						continue; // go on with inner loop
+					}
+				}
+			}
+			else if (iter_o->second.x - x_iter->second.x >= vT) {
+				// x range is already too large, so we can skip (list is sorted by x)
+				break; // go on with outer loop
+			}
+			iter_o++;
+		}
+	}
+
+	refs.clear();
+	for (auto& s : sorted_refs) {
+		refs.emplace_back(s.second);
+	}
+	return refs.size();
+
+}
+
+
 void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT) {
 	mApp->changedSinceSave = true;
 	if (!isLoaded) return;
@@ -921,30 +993,29 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 
 	// Collapse
 	prg->SetMessage("Collapsing vertices...");
-	for (int i = 0; !work->abortRequested && i < sh.nbVertex; i++) {
-		mApp->DoEvents();  //Catch abort request
-		prg->SetProgress(((double)i / (double)sh.nbVertex) / totalWork);
-		idx[i] = AddRefVertex(vertices3[i], refs, &nbRef, vT);
-	}
+	std::vector<int> indices;
+	std::list<InterfaceVertex> vertex_refs;
+	vertex_refs.insert(vertex_refs.end(), vertices3.begin(), vertices3.end());
+	int jj = AddRefVertex(indices, vertex_refs, vT);
 
 	if (work->abortRequested) {
-		delete refs;
-		delete idx;
+		free(refs);
+		free(idx);
 		return;
 	}
 
 	// Create the new vertex array
-	vertices3.resize(nbRef); vertices3.shrink_to_fit();
-
-	memcpy(vertices3.data(), refs, nbRef * sizeof(InterfaceVertex));
-	sh.nbVertex = nbRef;
+	vertices3.clear();
+	vertices3.insert(vertices3.end(), vertex_refs.begin(), vertex_refs.end());
+	sh.nbVertex = vertex_refs.size();
 
 	// Update facets indices
+	prg->SetMessage("Collapsing vertices [Updating indices] ...");
 	for (int i = 0; i < sh.nbFacet; i++) {
-		Facet *f = facets[i];
-		prg->SetProgress(((double)i / (double)sh.nbFacet) * 0.05 + 0.45);
+		Facet* f = facets[i];
+		prg->SetProgress(((double)i / (double)sh.nbFacet));
 		for (int j = 0; j < f->sh.nbIndex; j++)
-			f->indices[j] = idx[f->indices[j]];
+			f->indices[j] = indices[f->indices[j]];
 	}
 
 	free(idx);
@@ -2651,8 +2722,10 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 	if (vT > 0.0) {
 		CollapseVertex(work, prg, totalWork, vT);
 		InitializeGeometry(); //Find collinear facets
+		//InitializeInterfaceGeometry();
 		if (RemoveCollinear() || RemoveNullFacet()) {
 			InitializeGeometry(); //If  facets were removed, update geom.
+			//InitializeInterfaceGeometry();
 			mApp->UpdateModelParams();
 		}
 	}
@@ -2662,55 +2735,123 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 		// Collapse facets
 		prg->SetMessage("Collapsing facets...");
 		std::vector<int> newRef(sh.nbFacet);
-		for (int i = 0; i < sh.nbFacet; i++) {
+		std::iota(std::begin(newRef), std::end(newRef), 0); // index from 0,1,2, .. sh.nbFacet-1
+		std::vector<int> refDecrements(sh.nbFacet);
+		std::fill(refDecrements.begin(), refDecrements.end(), 0);
+
+		/*for (int i = 0; i < sh.nbFacet; i++) {
 			newRef[i] = i; //Default: reference doesn't change
-		}
+		}*/
+
+		//first get a general set of common edges to determine facets with shared vertices
+		AnalyzeNeighbors(work, prg);
+		std::vector<bool> already_merged;
+		already_merged.resize(sh.nbFacet, false);
+		prg->SetMessage("Collapsing facets...");
 		for (int i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-			prg->SetProgress((1.0 + ((double)i / (double)sh.nbFacet)) / totalWork);
-			mApp->DoEvents(); //To catch eventual abort button click
+			//prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/); //Would cause repaint with incorrect facet state
+			//mApp->DoEvents(); //To catch eventual abort button click
+
+			// skip, merged facet is invalid
+			if (already_merged[i])
+				continue;
+
 			fi = facets[i];
 			// Search a coplanar facet
 			int j = i + 1;
-			while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
-				fj = facets[j];
-				merged = NULL;
-				if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
-					// Collapse
-					merged = MergeFacet(fi, fj);
+			if (!doSelectedOnly || fi->selected) {
+				for (int n = 0; n < fi->neighbors.size(); n++) {
+					j = fi->neighbors[n].id;
 
-					if (merged) {
-						// Replace the old 2 facets by the new one
-						merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
-#ifdef MOLFLOW
-						if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
-							CalculateFacetParams(merged); //get area
-							merged->sh.outgassing = merged->sh.area / fi->sh.area * fi->sh.outgassing; //Maintain per-area outgassing
-						} 
-#endif //MOLFLOW
-						SAFE_DELETE(fi);
-						SAFE_DELETE(fj);
-						newRef[i] = newRef[j] = -1;
-						for (int k = j; k < sh.nbFacet - 1; k++) {
-							facets[k] = facets[k + 1];
-						}
-						for (int k = j + 1; k < newRef.size(); k++) {
-							newRef[k] --; //Renumber references
-						}
-						sh.nbFacet--;
-						facets[i] = merged;
-						//InitializeGeometry(i);
-						//SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
-						fi = facets[i];
-						j = i + 1;
+					bool reverse_neigh = 0;
+					if (already_merged[j])
+						continue;
 
+					for (auto& neighj : facets[j]->neighbors) {
+						if (neighj.id == i) {
+							reverse_neigh = true;
+							break;
+						}
 					}
+
+					/*if(!reverse_neigh)
+						continue;*/
+
+						//while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
+					fj = facets[j];
+					merged = nullptr;
+					if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
+						// Collapse
+						merged = MergeFacet(fi, fj);
+
+						if (merged) {
+							// Replace the old 2 facets by the new one
+							merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
+#ifdef MOLFLOW
+							if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
+								CalculateFacetParams(merged); //get area
+								merged->sh.outgassing = merged->sh.area / fi->sh.area *
+									fi->sh.outgassing; //Maintain per-area outgassing
+							}
+#endif //MOLFLOW
+							already_merged[j] = true;
+							//SAFE_DELETE(fi);
+							//SAFE_DELETE(fj);
+							newRef[i] = newRef[j] = -1;
+							/*for (int k = j; k < sh.nbFacet - 1; k++) {
+								facets[k] = facets[k + 1];
+							}*/
+							if (j + 1 < refDecrements.size())
+								refDecrements[j + 1] += 1;
+							/*for (int k = j + 1; k < newRef.size(); k++) {
+								newRef[k]--; //Renumber references
+							}*/
+							//sh.nbFacet--;
+							//facets.pop_back();
+
+							// combine neighbors to keep a full search (in order)
+							merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end());
+							merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
+
+							facets[i] = merged;
+							SAFE_DELETE(fi);
+							SAFE_DELETE(fj);
+							//InitializeGeometry(i);
+							//SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
+							fi = facets[i];
+							j = i + 1;
+
+						}
+					}
+					if (!merged) j++;
 				}
-				if (!merged) j++;
 			}
 		}
-		mApp->RenumberSelections(newRef);
-		mApp->RenumberFormulas(&newRef);
-		RenumberNeighbors(newRef);
+
+		//prg->SetMessage("Globally applying new facet IDs ..."); //Would render scene with incorrect sh.nbfacet
+		double tasks_total = 7.0;
+		int current_task = 0.0;
+		//prg->SetProgress((double)(current_task++) / tasks_total); //Would cause render error, incorrect facet state
+
+		int dec_val = 0;
+		for (int k = 0; k < newRef.size(); k++) {
+			dec_val += refDecrements[k];
+			if (newRef[k] != -1)
+				newRef[k] -= dec_val; //Renumber references
+		}
+
+		int nb2Delete = 0;
+		for (int k = 0; k < sh.nbFacet; k++) {
+			if (nb2Delete > 0)
+				facets[k - nb2Delete] = facets[k];
+
+			if (already_merged[k])
+				nb2Delete++;
+		}
+		//facets.resize(facets.size() - nb2Delete);
+		sh.nbFacet -= nb2Delete;
+		facets = (Facet**)realloc(facets, sh.nbFacet * sizeof(Facet**));
+		
 	}
 	//Collapse collinear sides. Takes some time, so only if threshold>0
 	prg->SetMessage("Collapsing collinear sides...");
@@ -2751,7 +2892,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 
 	// Reinitialise geom
 	InitializeGeometry();
-
+	//InitializeInterfaceGeometry();
 }
 
 void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
@@ -4159,7 +4300,7 @@ std::vector<size_t> Geometry::GetAllFacetIndices() {
 void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
     prg->SetMessage("Triangulating geometry...");
 	
-    auto triangulatedGeometry = GeometryConverter::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
+    auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg->SetMessage("Saving STL file...");
     f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {

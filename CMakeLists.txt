@@ -140,7 +140,7 @@ set(SRC_FILES
         Vector.cpp
         Web.cpp
         Worker_shared.cpp
-        GeometryConverter.cpp
+        GeometryTools.cpp
 
         # subprocesses
         Buffer_shared.cpp

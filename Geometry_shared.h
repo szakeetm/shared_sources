@@ -148,9 +148,10 @@ public:
 
 	// Collapsing stuff
 	int  AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT);
+	static int AddRefVertex(std::vector<int>& indices, std::list<InterfaceVertex>& refs, double vT);
 	bool RemoveNullFacet();
 	Facet *MergeFacet(Facet *f1, Facet *f2);
-	bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
+	static bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 
