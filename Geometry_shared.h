@@ -153,6 +153,7 @@ public:
 	static bool GetCommonEdges(Facet *f1, Facet *f2, size_t * c1, size_t * c2, size_t * chainLength);
 	void CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
+	void RenumberTeleports(const std::vector<int>& newRefs);
 
 	void LoadTXT(FileReader *file, GLProgress *prg, Worker* worker);
 	void LoadSTR(FileReader *file, GLProgress *prg);
