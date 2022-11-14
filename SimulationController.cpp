@@ -331,7 +331,7 @@ int SimulationController::ClearCommand() {
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("setstate %zd \n", state);
+        DEBUG_PRINT("setstate %s\n", prStates[state]);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -353,8 +353,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 int SimulationController::SetState(size_t state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("setstate %zd \n", state);
-        //master->procInformation[prIdx].masterCmd = state;
+        DEBUG_PRINT("setstate %s\n", prStates[state]);
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
         }
