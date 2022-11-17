@@ -11,6 +11,7 @@ add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(external EXCLUDE_FROM_ALL)
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
@@ -24,6 +25,10 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
+set(EXTERNAL_1 ./external)
+set(EXTERNAL_2 ./external)
+
+set(HEADER_DIR_ZIP ./external/ziplib/Source)
 
 set(COPY_DIR ../copy_to_build/)
 
@@ -228,7 +233,7 @@ if(MSVC)
             #libgsl.lib
             #libgslcblas.lib
             lzma.lib
-            ZipLib.lib
+            #ZipLib.lib
             #zlib.lib
             opengl32#.lib
             user32.lib
