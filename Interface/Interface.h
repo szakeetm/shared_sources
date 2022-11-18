@@ -72,7 +72,6 @@ class UpdateFoundDialog;
 class UpdateLogWindow;
 class ParticleLogger;
 class ConvergencePlotter;
-class LoadStatus;
 
 class Geometry;
 
@@ -432,7 +431,6 @@ public:
 	SmartSelection		*smartSelection;
 	FormulaEditor		*formulaEditor;
 	ConvergencePlotter   *convergencePlotter;
-	LoadStatus* loadStatus;
 
 	UpdateCheckDialog *updateCheckDialog;
 	UpdateFoundDialog *updateFoundDialog;
