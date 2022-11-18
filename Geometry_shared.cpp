@@ -2946,7 +2946,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
         already_merged.resize(facets.size(), false);
         prg->SetMessage("Collapsing facets...");
         for (int i = 0; !work->abortRequested && i < facets.size(); i++) {
-            prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/);
+            //prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/); //Commenting out, would cause incorrect state render
             //mApp->DoEvents(); //To catch eventual abort button click
 
             // skip, merged facet is invalid
@@ -3009,9 +3009,11 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                             // combine neighbors to keep a full search (in order)
                             merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end());
                             merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
+
+                            facets[i] = merged;
+
 							SAFE_DELETE(fi);
 							SAFE_DELETE(fj);
-                            facets[i] = merged;
                             //InitializeGeometry(i);
                             //SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
                             fi = facets[i];
@@ -3027,10 +3029,10 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
         fmt::print("Collapse facet duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
 
-        prg->SetMessage("Globally applying new facet IDs ...");
+        //prg->SetMessage("Globally applying new facet IDs ..."); //Commenting out, would cause incorrect state render
         double tasks_total = 7.0;
         int current_task = 0.0;
-        prg->SetProgress((double)(current_task++) / tasks_total);
+        //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
 
         int dec_val = 0;
         for (int k = 0; k < newRef.size(); k++) {
@@ -3039,9 +3041,9 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                 newRef[k] -= dec_val; //Renumber references
         }
 
-        fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
-        prg->SetProgress((double)(current_task++) / tasks_total);
+        //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
 
         int nb2Delete = 0;
         for (int k = 0; k < facets.size(); k++) {
@@ -3051,7 +3053,8 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
             if(already_merged[k])
                 nb2Delete++;
         }
-        facets.resize(facets.size() - nb2Delete);
+        
+		facets.resize(facets.size() - nb2Delete);
         sh.nbFacet -= nb2Delete;
         /*int nb2Delete = 0;
         for (int k = facets.size() - 1 - nb2Delete; k >= 0; k--) {
@@ -3111,25 +3114,25 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 				if (!merged) j++;
 			}
 		}*/
-        fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         mApp->RenumberSelections(newRef);
-        fmt::print("Renumbered duration 4: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 4: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         mApp->RenumberFormulas(&newRef);
-        fmt::print("Renumbered duration 6: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 6: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         RenumberNeighbors(newRef);
-        fmt::print("Renumbered duration 7: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 7: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         RenumberTeleports(newRef);
         prg->SetProgress((double)(current_task++) / tasks_total);
 
-        fmt::print("Renumbered duration 8: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 8: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
     }
     //Collapse collinear sides. Takes some time, so only if threshold>0
