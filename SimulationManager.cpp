@@ -74,7 +74,7 @@ int SimulationManager::refreshProcStatus() {
     return nbDead;
 }
 
-int SimulationManager::LoadInput(const std::string& fileName, LoadStatus* statusWindow, bool* abortRequested ) {
+int SimulationManager::LoadInput(const std::string& fileName) {
     std::ifstream inputFile(fileName);
     inputFile.seekg(0, std::ios::end);
     size_t size = inputFile.tellg();
