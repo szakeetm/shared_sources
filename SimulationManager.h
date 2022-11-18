@@ -130,7 +130,7 @@ public:
 
     bool GetRunningStatus();
 
-    int LoadInput(const std::string& fileName, LoadStatus* statusWindow, bool* abortRequested);
+    int LoadInput(const std::string& fileName);
 
 private:
 
