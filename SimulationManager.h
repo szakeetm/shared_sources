@@ -79,7 +79,7 @@ protected:
 
     int ForwardCommand(int command, size_t param, size_t param2);
 
-    int WaitForProcStatus(uint8_t finishStatus, LoadStatus* statusWindow);
+    int WaitForProcStatus(uint8_t finishStatus, LoadStatus* statusWindow, bool* abortrequested);
 
     // Load Buffer functions
     int UploadToLoader(void *data, size_t size);
@@ -95,18 +95,18 @@ public:
 
     int StopSimulation();
 
-    int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus* statusWindow);
+    int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus* statusWindow, bool* abortRequested);
 
-    int ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow); /*! Reload the logger if necessary */
+    int ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow, bool* abortRequested); /*! Reload the logger if necessary */
     int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
 
-    int ExecuteAndWait(int command, uint8_t finishStatus, LoadStatus* statusWindow, size_t param = 0, size_t param2 = 0);
+    int ExecuteAndWait(int command, uint8_t finishStatus, LoadStatus* statusWindow, bool* abortRequested, size_t param = 0, size_t param2 = 0);
 
-    int InitSimUnits(LoadStatus* statusWindow);
+    int InitSimUnits(LoadStatus* statusWindow, bool* abortRequested);
 
-    int KillAllSimUnits(LoadStatus* statusWindow );
+    int KillAllSimUnits(LoadStatus* statusWindow, bool* abortRequested);
 
-    int ResetSimulations(LoadStatus* statusWindow );
+    int ResetSimulations(LoadStatus* statusWindow, bool* abortRequested);
 
     int ResetHits();
 
