@@ -3009,7 +3009,8 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                             // combine neighbors to keep a full search (in order)
                             merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end());
                             merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
-
+							SAFE_DELETE(fi);
+							SAFE_DELETE(fj);
                             facets[i] = merged;
                             //InitializeGeometry(i);
                             //SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
