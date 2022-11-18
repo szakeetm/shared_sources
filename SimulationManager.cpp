@@ -101,13 +101,13 @@ int SimulationManager::ResetStatsAndHits() {
     return 0;
 }
 
-int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow) {//Send simulation mode changes to subprocesses without reloading the whole geometry
+int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow, bool* abortRequested) {//Send simulation mode changes to subprocesses without reloading the whole geometry
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
     if(!ignoreSubs) {
         //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,statusWindow,isRunning ? PROCESS_RUN : PROCESS_READY)) {
+        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,statusWindow,abortRequested,isRunning ? PROCESS_RUN : PROCESS_READY)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
         }
     }
@@ -721,7 +721,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADAC:{
-            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, statusWindow, abortReqeusted, size, 0)) {
+            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, statusWindow, abortRequested, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send AC geometry to sub process:\n";
                 errString.append(GetErrorDetails());
