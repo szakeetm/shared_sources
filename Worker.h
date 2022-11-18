@@ -26,7 +26,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class Geometry;
 class GLProgress;
-class LoadStatus;
 
 
 #if defined(MOLFLOW)

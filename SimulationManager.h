@@ -12,7 +12,7 @@
 typedef unsigned char BYTE;
 
 class SimulationController;
-
+class LoadStatus;
 class Dataport;
 
 enum class SimType : uint8_t {
@@ -79,7 +79,7 @@ protected:
 
     int ForwardCommand(int command, size_t param, size_t param2);
 
-    int WaitForProcStatus(uint8_t procStatus);
+    int WaitForProcStatus(uint8_t finishStatus, LoadStatus* statusWindow);
 
     // Load Buffer functions
     int UploadToLoader(void *data, size_t size);
@@ -95,18 +95,18 @@ public:
 
     int StopSimulation();
 
-    int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
+    int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus* statusWindow);
 
-    int ReloadLogBuffer(size_t logSize, bool ignoreSubs); /*! Reload the logger if necessary */
+    int ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow); /*! Reload the logger if necessary */
     int ReloadHitBuffer(size_t hitSize); /*! Reload the hits buffer if necessary */
 
-    int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
+    int ExecuteAndWait(int command, uint8_t finishStatus, LoadStatus* statusWindow, size_t param = 0, size_t param2 = 0);
 
-    int InitSimUnits();
+    int InitSimUnits(LoadStatus* statusWindow);
 
-    int KillAllSimUnits();
+    int KillAllSimUnits(LoadStatus* statusWindow );
 
-    int ResetSimulations();
+    int ResetSimulations(LoadStatus* statusWindow );
 
     int ResetHits();
 

@@ -96,13 +96,13 @@ int SimulationManager::ResetStatsAndHits() {
     return 0;
 }
 
-int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs) {//Send simulation mode changes to subprocesses without reloading the whole geometry
+int SimulationManager::ReloadLogBuffer(size_t logSize, bool ignoreSubs, LoadStatus* statusWindow) {//Send simulation mode changes to subprocesses without reloading the whole geometry
     if (simHandles.empty())
         throw std::logic_error("No active simulation handles!");
 
     if(!ignoreSubs) {
         //if (ExecuteAndWait(COMMAND_RELEASEDPLOG, isRunning ? PROCESS_RUN : PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
-        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,isRunning ? PROCESS_RUN : PROCESS_READY)) {
+        if (ExecuteAndWait(COMMAND_RELEASEDPLOG, PROCESS_READY,statusWindow,isRunning ? PROCESS_RUN : PROCESS_READY)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses didn't release dpLog handle"));
         }
     }
@@ -332,7 +332,7 @@ int SimulationManager::CreateHitsDP(size_t hitSize) {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimUnits() {
+int SimulationManager::InitSimUnits(LoadStatus* statusWindow) {
 
     // First create Control DP, so subprocs can communicate
     if(CreateControlDP())
@@ -353,7 +353,7 @@ int SimulationManager::InitSimUnits() {
         CreateRemoteHandle();
     }
 
-    return WaitForProcStatus(PROCESS_READY);
+    return WaitForProcStatus(PROCESS_READY, statusWindow);
 }
 
 /*!
@@ -361,62 +361,53 @@ int SimulationManager::InitSimUnits() {
  * @param procStatus Process Status that should be waited for
  * @return 0 if wait is successful
  */
-int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
-    // Wait for completion
+int SimulationManager::WaitForProcStatus(const uint8_t finishStatus, LoadStatus* statusWindow ) {
+    
+    abortRequested = false;
     bool finished = false;
-    const int waitAmount = 250;
-    int prevIncTime = 0; // save last time a wait increment has been set; allows for a dynamic/reasonable increase
+    bool error = false;
+
     int waitTime = 0;
-    int timeOutAt = 10000; // 10 sec; max time for an idle operation to timeout
-    allProcsDone = true;
-
-    // struct, because vector of char arrays is forbidden w/ clang
-    struct StateString {
-        char s[128];
-    };
-    std::vector<StateString> prevStateStrings(simHandles.size());
-    std::vector<StateString> stateStrings(simHandles.size());
-
-    AccessDataport(dpControl);
-    {
-        auto *shMaster = (SHCONTROL *) dpControl->buff;
-        for (size_t i = 0; i < simHandles.size(); i++) {
-            snprintf(prevStateStrings[i].s, 128, shMaster->procInformation[i].statusString);
-        }
-    }
-    ReleaseDataport(dpControl);
-
-    do {
+    allDone = true;
+    
+    // Wait for completion
+    while (!finished && !abortRequested) {
 
         finished = true;
         AccessDataport(dpControl);
-        auto *shMaster = (SHCONTROL *) dpControl->buff;
+        auto* shMaster = (SHCONTROL*)dpControl->buff;
 
-        for (size_t i = 0; i < simHandles.size(); i++) {
-            auto procState = shMaster->procInformation[i].slaveState;
-            finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
-            if( procState==PROCESS_ERROR ) {
+        for (size_t i = 0; i < ontheflyParams.nbProcess; i++) {
+
+            finished = finished & (procState == finishStatus || procState == PROCESS_ERROR || procState == PROCESS_DONE); if (procState == PROCESS_ERROR) {
                 hasErrorStatus = true;
-            }
-            else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i].s, 128, shMaster->procInformation[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s)) { // if strings are different
-                    timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
-                                                                                10000); // if task properly started, increase allowed wait time
-                    prevIncTime = waitTime;
-                }
             }
             allProcsDone = allProcsDone & (procState == PROCESS_DONE);
         }
+
         ReleaseDataport(dpControl);
 
         if (!finished) {
-            ProcessSleep(waitAmount);
-            waitTime += waitAmount;
-        }
-    } while (!finished && waitTime<timeOutAt);
 
-    return waitTime>=timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
+            if (statusWindow) {
+                if (waitTime >= 500) {
+                    statusWindow->SetVisible(true);
+                }
+                statusWindow->SMPUpdate();
+                mApp->DoEvents(); //Do a few refreshes during waiting for subprocesses
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            waitTime += 250;
+        }
+
+    }
+
+    if (statusWindow) {
+        statusWindow->SetVisible(false);
+        statusWindow->EnableStopButton();
+    }
+
+    return !finished || error; // 0 = finished, 1 = timeout or error
 }
 
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
@@ -451,19 +442,19 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param,
-                                      const size_t param2) {
+int SimulationManager::ExecuteAndWait(const int command, uint8_t finishStatus, LoadStatus* statusWindow, 
+                                            const size_t param, const size_t param2) {
     if(!ForwardCommand(command, param, param2)) { // execute
-        if (!WaitForProcStatus(procStatus)) { // and wait
+        if (!WaitForProcStatus(finishStatus, statusWindow)) { // and wait
             return 0;
         }
     }
     return 1;
 }
 
-int SimulationManager::KillAllSimUnits() {
+int SimulationManager::KillAllSimUnits(LoadStatus* statusWindow) {
     if( dpControl && !simHandles.empty() ) {
-        if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
+        if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED, statusWindow)){ // execute
             // Force kill
             AccessDataport(dpControl);
             auto *shMaster = (SHCONTROL *)dpControl->buff;
@@ -495,8 +486,8 @@ int SimulationManager::ClearLogBuffer() {
     return 0;
 }
 
-int SimulationManager::ResetSimulations() {
-    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
+int SimulationManager::ResetSimulations(LoadStatus* statusWindow) {
+    if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, statusWindow, 0, 0))
         throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     return 0;
 }
@@ -689,7 +680,7 @@ std::string SimulationManager::MakeSubProcError(const char *message) {
 }
 
 
-int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType) {
+int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus* statusWindow) {
     if(loadType < LoadType::NLOADERTYPES){
         if(CreateLoaderDP(size))
             return 1;
@@ -700,7 +691,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
-            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY,statusWindow, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -712,7 +703,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         case LoadType::LOADPARAM:{
 
             //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
-            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, statusWindow, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -725,7 +716,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADAC:{
-            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, size, 0)) {
+            if (ExecuteAndWait(COMMAND_LOADAC, PROCESS_RUNAC, statusWindow, size, 0)) {
                 CloseLoaderDP();
                 std::string errString = "Failed to send AC geometry to sub process:\n";
                 errString.append(GetErrorDetails());
