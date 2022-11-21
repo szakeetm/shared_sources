@@ -328,7 +328,7 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+    #[[# Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
     if (NOT TARGET libzip)
         add_library( libzip STATIC IMPORTED GLOBAL)
     endif()
@@ -340,8 +340,7 @@ if(NOT MSVC)
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
     else()
         set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    endif()
-    target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
+    endif()]]
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
@@ -355,7 +354,7 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+#target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
