@@ -27,7 +27,7 @@ set(HEADER_DIR_5 ./Interface)
 #set(EXTERNAL_1 ./external)
 #set(EXTERNAL_2 ./external)
 
-set(HEADER_DIR_ZIP ./external/ziplib/Source)
+#set(HEADER_DIR_ZIP ./external/ziplib/Source)
 set(IMGUI_DIR ./imgui)
 
 set(COPY_DIR ../copy_to_build/)
