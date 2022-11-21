@@ -23,9 +23,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include "Buffer_shared.h" //LEAK, HIT
 #include "SimulationManager.h"
-#include <ziplib/ZipArchive.h>
-#include <ziplib/ZipArchiveEntry.h>
-#include <ziplib/ZipFile.h>
 
 class Geometry;
 class GLProgress;
