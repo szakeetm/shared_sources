@@ -214,6 +214,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
+        ${HEADER_DIR_ZIP}
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -233,7 +234,6 @@ if(MSVC)
             #libgsl.lib
             #libgslcblas.lib
             lzma.lib
-            #ZipLib.lib
             #zlib.lib
             opengl32#.lib
             user32.lib
@@ -353,8 +353,6 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
-
-#target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
