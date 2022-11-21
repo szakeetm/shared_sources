@@ -37,7 +37,6 @@ if(MSVC)
             #libgsl.lib
             #libgslcblas.lib
             lzma.lib
-            #ZipLib.lib
             #zlib.lib
             opengl32#.lib
             user32.lib
