@@ -26,20 +26,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${IMGUI_DIR}
         )
 
-#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
-        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
-
-#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
-        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
-        ${EXTERNAL_DIR})]]
-
-#[[target_include_directories(${PROJECT_NAME} PRIVATE ${HEADER_DIR_ZIP}
-        SYSTEM INTERFACE ${HEADER_DIR_ZIP})]]
-
-#[[target_include_directories(${PROJECT_NAME} PUBLIC ${HEADER_DIR_ZIP}
-        ${EXTERNAL_DIR} SYSTEM INTERFACE ${HEADER_DIR_ZIP}
-        ${EXTERNAL_DIR})]]
-
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
@@ -48,11 +34,7 @@ if(MSVC)
             libcurl_a_x64.lib
             SDL2.lib
             SDL2main.lib
-            #libgsl.lib
-            #libgslcblas.lib
             lzma.lib
-            #ZipLib.lib
-            #zlib.lib
             opengl32#.lib
             user32.lib
             shell32.lib
@@ -61,9 +43,8 @@ if(MSVC)
 ELSE() #not MSVC
 
     if(APPLE)
-        #link to self-build sdl shared lib
+        #link to self-built sdl shared lib
         target_link_libraries(${PROJECT_NAME} PRIVATE "-framework AppKit")
-        #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
 
         FIND_PACKAGE(SDL2 REQUIRED)
         Message("")
@@ -76,10 +57,6 @@ ELSE() #not MSVC
             Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
             Message( FATAL_ERROR "SDL2 NOT FOUND" )
         ENDIF()
-        #add_library( libSDL2 SHARED IMPORTED GLOBAL)
-        #get_filename_component(ABS_LINK_DIR_2 "${LINK_DIR_2}" REALPATH)
-        #set_target_properties( libSDL2 PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_2}/libSDL2-2.0.dylib)
-        #target_link_libraries(${PROJECT_NAME} libSDL2) # from ./lib/
 
     else()
         # Use the package PkgConfig to detect GTK+ headers/library files
@@ -135,20 +112,6 @@ ELSE() #not MSVC
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    #[[# Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
-    if (NOT TARGET libzip)
-        add_library( libzip STATIC IMPORTED GLOBAL)
-    endif()
-    # You can define two import-locations: one for debug and one for release.
-    get_filename_component(ABS_LINK_DIR_1 "${LINK_DIR_1}" REALPATH)
-
-    # other static libraries need to be built with similar settings for clang (here: libc++)
-    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
-    else()
-        set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    endif()]]
-
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
@@ -176,25 +139,3 @@ target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-#[[target_compile_options(${PROJECT_NAME} PRIVATE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-        -Wall>
-        $<$<CXX_COMPILER_ID:MSVC>:
-        /W4>)
-# Preprocessor definitions
-if(CMAKE_BUILD_TYPE MATCHES Debug|RelWithDebInfo)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /MDd /Od /EHsc)
-        #for .pdb debugging files
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-        set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /DEBUG:FULL /OPT:REF /OPT:ICF")
-    endif()
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /GL /Oi /Gy /EHsc)
-    endif()
-endif()]]

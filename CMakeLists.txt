@@ -13,10 +13,6 @@ if(NOT NO_INTERFACE)
     add_dependencies(implot imgui)
 endif()
 
-# Project
-#get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-#set(DEPENDENCIES_DIR ${PROJECT_DIR}/dependencies)
-
 # Folders files
 set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
@@ -39,9 +35,6 @@ IF (WIN32)
     set(HEADER_DIR_7 ../include/windows_only/png)
 
     set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
-    #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
-    #set(LINK_DIR_3 ../../lib_external/win/${MY_BUILD_TYPE})
-    #set(DLL_DIR ../../_molflow/molflow_project/lib/lib)
 ELSEIF(APPLE)
     # set stuff for mac os
     if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
@@ -222,8 +215,6 @@ set(GL_FILES
         GLApp/GLChart/GLDataView.cpp
         GLApp/GLChart/GLDataViewOptions.cpp
         )
-
-#include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
 include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
