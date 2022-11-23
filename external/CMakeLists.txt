@@ -20,7 +20,7 @@ if(NOT NO_INTERFACE)
     add_subdirectory(NativeFileDialog)
 endif()
 
-#cmake_policy(SET CMP0076 OLD)
+cmake_policy(SET CMP0076 OLD)
 add_library(cereal INTERFACE)
 file(GLOB CEREAL_FILES cereal/*.hpp)
 target_sources(cereal INTERFACE ${CEREAL_FILES})
