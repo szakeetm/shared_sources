@@ -186,7 +186,8 @@ SRes SzArEx_Extract(
 
 
 /*
-SzArEx_Open Errors:
+SzArEx_Open 
+s:
 SZ_ERROR_NO_ARCHIVE
 SZ_ERROR_ARCHIVE
 SZ_ERROR_UNSUPPORTED
