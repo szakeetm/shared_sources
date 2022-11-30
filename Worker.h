@@ -182,6 +182,7 @@ public:
 #if defined(MOLFLOW)
   std::vector<Parameter> parameters;
   int displayedMoment;
+  bool needsAngleMapStatusRefresh = false; //Interface helper: if IterfaceGeomToSimModel() constructs angle map, mark that facet adv. paramas update is necessary
   size_t InsertParametersBeforeCatalog(const std::vector<Parameter>& newParams);
 
   std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature

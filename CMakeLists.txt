@@ -13,21 +13,17 @@ if(NOT NO_INTERFACE)
     add_dependencies(implot imgui)
 endif()
 
-# Project
-#get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-#set(DEPENDENCIES_DIR ${PROJECT_DIR}/dependencies)
-
 # Folders files
 set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
-set(HEADER_DIR_EXT ../src/)
-set(EXTERNAL_1 ./external)
-set(EXTERNAL_2 ./external)
+#set(HEADER_DIR_EXT ../src/)
+#set(EXTERNAL_1 ./external)
+#set(EXTERNAL_2 ./external)
 
-set(HEADER_DIR_ZIP ./external/ziplib/Source)
+#set(HEADER_DIR_ZIP ./external/ziplib/Source)
 set(IMGUI_DIR ./imgui)
 
 set(COPY_DIR ../copy_to_build/)
@@ -39,9 +35,6 @@ IF (WIN32)
     set(HEADER_DIR_7 ../include/windows_only/png)
 
     set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
-    #set(LINK_DIR_2 ../../_molflow/molflow_project/lib/lib)
-    #set(LINK_DIR_3 ../../lib_external/win/${MY_BUILD_TYPE})
-    #set(DLL_DIR ../../_molflow/molflow_project/lib/lib)
 ELSEIF(APPLE)
     # set stuff for mac os
     if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
@@ -53,7 +46,7 @@ ELSE()
     # set stuff for other systems
 
     # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
-    IF(os_version_suffix STREQUAL ".el7")
+    IF(os_version_suffix MATCHES "\\.el[1-9]")
         set(LINK_DIR_1 ../lib_external/linux_fedora)
     ELSE()
         set(LINK_DIR_1 ../lib_external/linux_debian)
@@ -222,8 +215,6 @@ set(GL_FILES
         GLApp/GLChart/GLDataView.cpp
         GLApp/GLChart/GLDataViewOptions.cpp
         )
-
-#include(${CMAKE_CURRENT_SOURCE_DIR}/SetOpenMP.cmake)
 
 include(SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)

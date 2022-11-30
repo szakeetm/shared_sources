@@ -2733,7 +2733,7 @@ void Interface::DoEvents(bool forced) {
 
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
-    if (work->globalHitCache.globalHits.nbMCHit > 0) {
+    if (work->globalHitCache.globalHits.nbMCHit || work->IsRunning()  > 0) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
@@ -2767,7 +2767,7 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalHitCache.globalHits;
-    if (((runningState || worker.globState.stateChanged) && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) {
+    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) { //Running and and update is due (each second), or just started
         {
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
@@ -2787,17 +2787,7 @@ int Interface::FrameMove() {
 
                 // Update hits
                 try {
-                    // postpone realreload if it would be called from a delayed run state change
-                    bool refreshReload = false;
-                    if(worker.needsReload && (prevRunningState && !runningState)) {
-                        refreshReload = true;
-                        worker.needsReload = false;
-                    }
-
                     worker.Update(m_fTime);
-
-                    if(refreshReload)
-                        worker.needsReload = true;
                 }
                 catch (const std::exception &e) {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
@@ -2835,15 +2825,19 @@ int Interface::FrameMove() {
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
     } else {
-        if(!runningState && worker.simuTimer.Elapsed() > 0.0) {
+        /* //Commenting out, caused constant redraw when simulation paused
+        if(!runningState && worker.simuTimer.Elapsed() > 0.0) { //Paused
             double _hps = (double) (hitCache.nbMCHit - nbHitStart) / worker.simuTimer.Elapsed();
             double _dps = (double) (hitCache.nbDesorbed - nbDesStart) / worker.simuTimer.Elapsed();
-            if(hps.last() != _hps || dps.last() != _dps)
+            if (hps.last() != _hps || dps.last() != _dps) {
                 wereEvents = true;
-        } else {
-            if(hps.last() != 0.0  || dps.last() != 0.0)
+            }
+        } else { //Stopped?
+            if (hps.last() != 0.0 || dps.last() != 0.0) {
                 wereEvents = true;
+            }
         }
+        */
 
         if(runningState)
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));

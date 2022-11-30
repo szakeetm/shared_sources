@@ -34,7 +34,7 @@ class Simulation;
  */
 class SimThread {
 public:
-    SimThread(ProcComm* procInfo, SimulationUnit* sim, size_t threadNum);
+    SimThread(ProcComm* procInfo, Simulation_Abstract* sim, size_t threadNum);
     ~SimThread();
 
     size_t threadNum;
@@ -45,8 +45,8 @@ public:
 
     char** status;
     ProcComm* procInfo;
-    SimulationUnit* simulation;
-    MFSim::Particle* particle;
+    Simulation_Abstract* simulation;
+    MFSim::ParticleTracer* particleTracer;
     bool runLoop();
 
 private:
@@ -59,7 +59,7 @@ private:
 };
 
 /**
-* \brief Controller that handles communication between GUI via SimulationManager and the running @SimulationUnit
+* \brief Controller that handles communication between GUI via SimulationManager and the running @Simulation_Abstract
  */
 class SimulationController {
     bool UpdateParams();
@@ -82,7 +82,7 @@ protected:
     size_t GetLocalState() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                         SimulationUnit *simulationInstance, ProcComm *pInfo);
+                         Simulation_Abstract *simulationInstance, ProcComm *pInfo);
     ~SimulationController();
     SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
@@ -95,7 +95,7 @@ public:
     void EmergencyExit();
 protected:
 
-    SimulationUnit* simulation;
+    Simulation_Abstract* simulation;
     std::vector<SimThread> simThreads;
 
     ProcComm* procInfo;

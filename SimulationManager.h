@@ -82,7 +82,7 @@ public:
 
     int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
 
-    int InitSimUnits();
+    int InitSimulations();
 
     int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
 
@@ -111,11 +111,11 @@ public:
     int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
-    ProcComm procInformation; // process control
+    ProcComm procInformation; // process control, facilitates round-robin access
 
 
 protected:
-    //std::vector<SimulationUnit*> simHandles; // for threaded versions
+    //std::vector<Simulation_Abstract*> simHandles; // for threaded versions
 public:
     // Flags for which simulation type should be run
     bool useCPU;
@@ -125,7 +125,7 @@ public:
     uint16_t nbThreads;
     uint16_t mainProcId;
 
-    bool interactiveMode;
+    bool interactiveMode; // Looks like enables logging (off for test cases)
     bool isRunning;
     bool allProcsDone;
     bool hasErrorStatus;
@@ -134,8 +134,8 @@ public:
 private:
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
     //std::vector<std::thread> cpuSim;
-    std::vector<SimulationController> simController;
-    std::vector<Simulation*> simUnits;
+    std::vector<SimulationController> simControllers; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
+    std::vector<Simulation*> simulations; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
 
 public:
     void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);

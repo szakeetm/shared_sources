@@ -42,14 +42,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define WAITTIME    500  // Answer in STOP mode
 
 
-SimThread::SimThread(ProcComm *procInfo, SimulationUnit *sim, size_t threadNum) {
+SimThread::SimThread(ProcComm *procInfo, Simulation_Abstract *sim, size_t threadNum) {
     this->threadNum = threadNum;
     this->procInfo = procInfo;
     this->status = nullptr;
     timeLimit = 0.0;
     simulation = sim;
     stepsPerSec = 1.0;
-    particle = nullptr;
+    particleTracer = nullptr;
     simEos = false;
     localDesLimit = 0;
 }
@@ -65,7 +65,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
     do {
-        simEos = !particle->SimulationMCStep(nbStep, threadNum, desorptions);
+        simEos = !particleTracer->SimulationMCStep(nbStep, threadNum, desorptions);
         timeEnd = omp_get_wtime();
 
         const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
@@ -74,7 +74,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
 
-        desorptions -= particle->tmpState.globalHits.globalHits.nbDesorbed;
+        desorptions -= particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
     } while (desorptions);
 
 
@@ -89,7 +89,7 @@ int SimThread::advanceForTime(double simDuration) {
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
     do {
-        simEos = !particle->SimulationMCStep(nbStep, threadNum, 0);
+        simEos = !particleTracer->SimulationMCStep(nbStep, threadNum, 0);
         timeEnd = omp_get_wtime();
 
         const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
@@ -131,15 +131,15 @@ bool SimThread::runLoop() {
         if (procInfo->activeProcs.front() == threadNum || forceQueue) {
             size_t readdOnFail = 0;
             if(simulation->model->otfParams.desorptionLimit > 0){
-                if(localDesLimit > particle->tmpState.globalHits.globalHits.nbDesorbed) {
-                    localDesLimit -= particle->tmpState.globalHits.globalHits.nbDesorbed;
-                    readdOnFail = particle->tmpState.globalHits.globalHits.nbDesorbed;
+                if(localDesLimit > particleTracer->tmpState.globalHits.globalHits.nbDesorbed) {
+                    localDesLimit -= particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
+                    readdOnFail = particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
                 }
                 else localDesLimit = 0;
             }
 
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
-            lastUpdateOk = particle->UpdateHits(simulation->globState, simulation->globParticleLog,
+            lastUpdateOk = particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
                                                 timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
@@ -153,14 +153,14 @@ bool SimThread::runLoop() {
             lastUpdateOk = false;
         }
         //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
-        eos = simEos || (this->particle->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particle->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
+        eos = simEos || (this->particleTracer->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particleTracer->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
 
     procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         //printf("[%zu] Updating on finish!\n",threadNum);
         setSimState("Final update...");
-        particle->UpdateHits(simulation->globState, simulation->globParticleLog,
+        particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
                              20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
     }
     return simEos;
@@ -176,7 +176,7 @@ void SimThread::setSimState(const std::string& msg) const {
 
 [[nodiscard]] char *SimThread::getSimStatus() const {
     static char ret[128];
-    size_t count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;;
+    size_t count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
     if (simulation->model->otfParams.nbProcess)
@@ -210,20 +210,20 @@ int SimThread::runSimulation(size_t desorptions) {
     bool goOn = true;
     size_t remainingDes = 0;
 
-    if (particle->model->otfParams.desorptionLimit > 0) {
-        if (desorptions <= particle->tmpState.globalHits.globalHits.nbDesorbed){
+    if (particleTracer->model->otfParams.desorptionLimit > 0) {
+        if (desorptions <= particleTracer->tmpState.globalHits.globalHits.nbDesorbed){
             //lastHitFacet = nullptr; // reset full particle status or go on from where we left
             goOn = false;
         }
         else {
             //if(particle->tmpState.globalHits.globalHits.hit.nbDesorbed <= (particle->model->otfParams.desorptionLimit - simulation->globState->globalHits.globalHits.hit.nbDesorbed)/ particle->model->otfParams.nbProcess)
-                remainingDes = desorptions - particle->tmpState.globalHits.globalHits.nbDesorbed;
+                remainingDes = desorptions - particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
         }
     }
     //auto start_time = std::chrono::high_resolution_clock::now();
     if(goOn) {
         double start_time = omp_get_wtime();
-        goOn = particle->SimulationMCStep(nbStep, threadNum, remainingDes);
+        goOn = particleTracer->SimulationMCStep(nbStep, threadNum, remainingDes);
         double end_time = omp_get_wtime();
 
     //auto end_time = std::chrono::high_resolution_clock::now();
@@ -246,7 +246,7 @@ int SimThread::runSimulation(size_t desorptions) {
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                                           SimulationUnit *simulationInstance, ProcComm *pInfo) {
+                                           Simulation_Abstract *simulationInstance, ProcComm *pInfo) {
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)
@@ -296,7 +296,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     for (size_t t = 0; t < nbThreads; t++) {
         simThreads.emplace_back(
                 SimThread(procInfo, simulation, t));
-        simThreads.back().particle = simulation->GetParticle(t);
+        simThreads.back().particleTracer = simulation->GetParticleTracer(t);
     }
 }
 
@@ -331,7 +331,7 @@ int SimulationController::ClearCommand() {
 int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("setstate %zd \n", state);
+        DEBUG_PRINT("setstate %s\n", prStates[state]);
         //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
@@ -353,8 +353,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
 int SimulationController::SetState(size_t state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("setstate %zd \n", state);
-        //master->procInformation[prIdx].masterCmd = state;
+        DEBUG_PRINT("setstate %s\n", prStates[state]);
         for (auto &pInfo : procInfo->subProcInfo) {
             pInfo.slaveState = state;
         }
@@ -391,14 +390,14 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
         size_t threadId = 0;
         auto* sim = simulation;
         for(size_t p = 0; p < nbThreads; ++p) {
-            auto* particle = (simulation)->GetParticle(p);
-            if(particle == nullptr) break;
-            if(!particle->tmpState.initialized){
+            auto* particleTracer = (simulation)->GetParticleTracer(p);
+            if(particleTracer == nullptr) break;
+            if(!particleTracer->tmpState.initialized){
                 ret_vec[threadId]= "[NONE]";
             }
             else {
                 size_t count = 0;
-                count = particle->totalDesorbed + particle->tmpState.globalHits.globalHits.nbDesorbed;
+                count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
                 size_t max = 0;
                 if (sim->model->otfParams.nbProcess)
                     max = sim->model->otfParams.desorptionLimit / sim->model->otfParams.nbProcess + ((threadId < sim->model->otfParams.desorptionLimit % sim->model->otfParams.nbProcess) ? 1 : 0);
@@ -531,7 +530,7 @@ int SimulationController::RebuildAccel() {
 
 /**
 * \brief Load and init simulation geometry and initialize threads after previous sanity check
- * Setup inidividual particles per thread and local desorption limits
+ * Setup inidividual particleTracers per thread and local desorption limits
  * \return true on error, false when ok
  */
 bool SimulationController::Load() {
@@ -543,7 +542,7 @@ bool SimulationController::Load() {
         SetState(PROCESS_STARTING, "Loading simulation");
         bool loadError = false;
 
-        // Init particles / threads
+        // Init particleTracers / threads
         simulation->SetNParticle(nbThreads, false);
         if (simulation->LoadSimulation(procInfo->subProcInfo[0].statusString)) {
             loadError = true;
@@ -558,7 +557,7 @@ bool SimulationController::Load() {
                 for (size_t t = 0; t < nbThreads; t++) {
                     simThreads.emplace_back(
                             SimThread(procInfo, simulation, t));
-                    simThreads.back().particle = simulation->GetParticle(t);
+                    simThreads.back().particleTracer = simulation->GetParticleTracer(t);
                 }
             }
 
@@ -585,8 +584,8 @@ bool SimulationController::Load() {
                 remainder = des_global % nbThreads;
             }
             for (auto &thread : simThreads) {
-                thread.particle->totalDesorbed = desPerThread;
-                thread.particle->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
+                thread.particleTracer->totalDesorbed = desPerThread;
+                thread.particleTracer->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
             }
 
             SetRuntimeInfo();
@@ -629,7 +628,7 @@ int SimulationController::Start() {
     }
 
     for(auto& thread : simThreads){
-        if(!thread.particle)
+        if(!thread.particleTracer)
             loadOk = false;
     }
 
@@ -679,7 +678,7 @@ int SimulationController::Start() {
             }
         }
         for(auto& thread : simThreads){
-            size_t localDes = (desPerThread > thread.particle->totalDesorbed) ? desPerThread - thread.particle->totalDesorbed : 0;
+            size_t localDes = (desPerThread > thread.particleTracer->totalDesorbed) ? desPerThread - thread.particleTracer->totalDesorbed : 0;
             thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
         }
 
@@ -734,5 +733,5 @@ int SimulationController::Reset() {
 
 void SimulationController::EmergencyExit(){
     for(auto& t : simThreads)
-        t.particle->allQuit = true;
+        t.particleTracer->allQuit = true;
 };

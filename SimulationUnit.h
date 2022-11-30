@@ -29,24 +29,24 @@ class GlobalSimuState;
 struct ParticleLog;
 
 namespace MFSim {
-    class Particle;
+    class ParticleTracer;
 }
 
 /**
-* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow
+* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation. Old name is "SimulationUnit"
  */
-class SimulationUnit {
+class Simulation_Abstract {
 public:
-    SimulationUnit() : model(), totalDesorbed(0), m(){
+    Simulation_Abstract() : model(), totalDesorbed(0)/*, m()*/{
         globState = nullptr;
         globParticleLog = nullptr;
     };
-    SimulationUnit(const SimulationUnit& o) : model(o.model) , m() {
+    Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , m()*/ {
         globState = nullptr;
         globParticleLog = nullptr;
         totalDesorbed = o.totalDesorbed;
     };
-    virtual ~SimulationUnit()= default;
+    virtual ~Simulation_Abstract()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
     virtual size_t LoadSimulation(char *loadStatus) = 0;
@@ -59,7 +59,7 @@ public:
     virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
-    virtual MFSim::Particle * GetParticle(size_t i) = 0;
+    virtual MFSim::ParticleTracer * GetParticleTracer(size_t i) = 0;
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
@@ -71,7 +71,7 @@ public:
     //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"
-    std::timed_mutex m;
+    //std::timed_mutex m;
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

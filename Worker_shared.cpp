@@ -309,7 +309,7 @@ void Worker::InitSimProc() {
     simManager.nbThreads = 0; // set to 0 to init max threads
 
     // Launch n subprocess
-    if(simManager.InitSimUnits()) {
+    if(simManager.InitSimulations()) {
         throw Error("Initialising simulation unit failed!");
     }
 
@@ -332,7 +332,7 @@ void Worker::SetProcNumber(size_t n) {
     simManager.nbThreads = std::clamp((size_t)n , (size_t)0 , MAX_PROCESS);
 
     // Launch n subprocess
-    if ((model->otfParams.nbProcess = simManager.InitSimUnits())) {
+    if ((model->otfParams.nbProcess = simManager.InitSimulations())) {
         throw Error("Starting subprocesses failed!");
     }
 
@@ -559,10 +559,10 @@ void Worker::Update(float appTime) {
 
 
 #if defined(MOLFLOW)
-    bool needsAngleMapStatusRefresh = false;
+    //bool needsAngleMapStatusRefresh = false;
 #endif
 
-    //for(auto& simUnit : simManager.simUnits) {
+    //for(auto& simUnit : simManager.simulations) {
         /*if (!simUnit->tMutex.try_lock_for(std::chrono::milliseconds (100))) {
             continue;
         }*/
@@ -603,12 +603,15 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
             if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
+                /* //Commented out: angleMapCache construction is now in InterfaceGeomToSimModel()
                 if (f->selected && f->angleMapCache.empty())
                     needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
+                    */
                 //Retrieve angle map from hits dp
                 if(f->sh.desorbType != DES_ANGLEMAP) {
                     /*model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
                     f->angleMapCache = model->facets[i]->angleMap.pdf;*/
+                    if (f->selected && f->angleMapCache.empty() && !globState.facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
                     f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
                 }
             }
@@ -631,8 +634,10 @@ void Worker::Update(float appTime) {
     globState.tMutex.unlock();
 
 #if defined(MOLFLOW)
-    if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh)
+    if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {
+        needsAngleMapStatusRefresh = false;
         mApp->facetAdvParams->Refresh(geom->GetSelectedFacets());
+    }
 #endif
 }
 
@@ -776,7 +781,8 @@ void Worker::SendToHitBuffer() {
 }
 
 /**
-* \brief Saves current facet hit counter from cache to results
+* \brief Saves current facet hit counter from cache to results, only to const. flow (moment 0)
+* Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void Worker::SendFacetHitCounts() {
     size_t nbFacet = geom->GetNbFacet();

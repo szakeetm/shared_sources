@@ -1082,35 +1082,26 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
 	if (!idx) throw Error("Out of memory: CollapseVertex");
 	int       nbRef = 0;
 
-    std::vector<int> indices;
+    
 	// Collapse
 	prg->SetMessage("Collapsing vertices...");
 	Chronometer collapse_time;
     collapse_time.Start();
+	std::vector<int> indices;
     std::list<InterfaceVertex> vertex_refs;
     vertex_refs.insert(vertex_refs.end(), vertices3.begin(), vertices3.end());
     int jj = AddRefVertex(indices, vertex_refs, vT);
     fmt::print("Collapse duration 1: {}s -- {}\n", collapse_time.Elapsed(), jj);
-    //vertex_refs.clear();
-//    collapse_time.ReInit(); collapse_time.Start();
-//    for (int i = 0; !work->abortRequested && i < sh.nbVertex; i++) {
-//		mApp->DoEvents();  //Catch abort request
-//		prg->SetProgress(((double)i / (double)sh.nbVertex));//*//* / totalWork*//*);
-//		idx[i] = AddRefVertex(vertices3[i], refs, &nbRef, vT);
-//	}
-//    fmt::print("Collapse duration 2: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
+
     collapse_time.ReInit(); collapse_time.Start();
 
 	if (work->abortRequested) {
-		delete refs;
-		delete idx;
+		free(refs);
+		free(idx);
 		return;
 	}
 
 	// Create the new vertex array
-	/*vertices3.resize(nbRef); vertices3.shrink_to_fit();
-
-	memcpy(vertices3.data(), refs, nbRef * sizeof(InterfaceVertex));*/
     vertices3.clear();
     vertices3.insert(vertices3.end(),vertex_refs.begin(),vertex_refs.end());
 	sh.nbVertex = vertex_refs.size();
@@ -1119,10 +1110,9 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
     prg->SetMessage("Collapsing vertices [Updating indices] ...");
     for (int i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
-		prg->SetProgress(((double)i / (double)sh.nbFacet) /** 0.05 + 0.45*/);
+		prg->SetProgress(((double)i / (double)sh.nbFacet));
 		for (int j = 0; j < f->sh.nbIndex; j++)
             f->indices[j] = indices[f->indices[j]];
-        //f->indices[j] = idx[f->indices[j]];
 	}
 
     fmt::print("Collapse duration 3: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
@@ -1429,7 +1419,7 @@ int Geometry::HasIsolatedVertices() {
 }
 
 void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
-	mApp->changedSinceSave = true;
+	
 	// Remove unused vertices
 	std::vector<bool> isUsed(sh.nbVertex);
 
@@ -1481,6 +1471,11 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	vertices3.swap(nVert);
 	sh.nbVertex = vertices3.size();
+
+	if (nbUnused) {
+		mApp->changedSinceSave = true;
+		mApp->worker.Reload(); //Will need real reload
+	}
 }
 
 void Geometry::Clear() {
@@ -2951,7 +2946,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
         already_merged.resize(facets.size(), false);
         prg->SetMessage("Collapsing facets...");
         for (int i = 0; !work->abortRequested && i < facets.size(); i++) {
-            prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/);
+            //prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/); //Commenting out, would cause incorrect state render
             //mApp->DoEvents(); //To catch eventual abort button click
 
             // skip, merged facet is invalid
@@ -3016,6 +3011,9 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                             merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
 
                             facets[i] = merged;
+
+							SAFE_DELETE(fi);
+							SAFE_DELETE(fj);
                             //InitializeGeometry(i);
                             //SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
                             fi = facets[i];
@@ -3031,10 +3029,10 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
         fmt::print("Collapse facet duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
 
-        prg->SetMessage("Globally applying new facet IDs ...");
+        //prg->SetMessage("Globally applying new facet IDs ..."); //Commenting out, would cause incorrect state render
         double tasks_total = 7.0;
         int current_task = 0.0;
-        prg->SetProgress((double)(current_task++) / tasks_total);
+        //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
 
         int dec_val = 0;
         for (int k = 0; k < newRef.size(); k++) {
@@ -3043,9 +3041,9 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                 newRef[k] -= dec_val; //Renumber references
         }
 
-        fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
-        prg->SetProgress((double)(current_task++) / tasks_total);
+        //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
 
         int nb2Delete = 0;
         for (int k = 0; k < facets.size(); k++) {
@@ -3055,7 +3053,8 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
             if(already_merged[k])
                 nb2Delete++;
         }
-        facets.resize(facets.size() - nb2Delete);
+        
+		facets.resize(facets.size() - nb2Delete);
         sh.nbFacet -= nb2Delete;
         /*int nb2Delete = 0;
         for (int k = facets.size() - 1 - nb2Delete; k >= 0; k--) {
@@ -3115,25 +3114,25 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
 				if (!merged) j++;
 			}
 		}*/
-        fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         mApp->RenumberSelections(newRef);
-        fmt::print("Renumbered duration 4: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 4: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         mApp->RenumberFormulas(&newRef);
-        fmt::print("Renumbered duration 6: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 6: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         RenumberNeighbors(newRef);
-        fmt::print("Renumbered duration 7: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 7: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
         RenumberTeleports(newRef);
         prg->SetProgress((double)(current_task++) / tasks_total);
 
-        fmt::print("Renumbered duration 8: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Renumbered duration 8: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
     }
     //Collapse collinear sides. Takes some time, so only if threshold>0
@@ -4003,7 +4002,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
         catch(const std::exception &e) {
             throw Error("Out of memory: LoadSTL");
         }
-		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
+		std::vector<InterfaceVertex>(3 * nbNewFacets).swap(vertices3);
 	}
 	else { //insert
         try{
