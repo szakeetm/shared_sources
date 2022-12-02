@@ -344,7 +344,7 @@ struct WorkerParams { //Plain old data
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
 
-	bool measureForce;		//if enabled, spend compute time with force and torque calculation
+	bool enableForceMeasurement;		//if enabled, spend compute time with force and torque calculation
 	Vector3d torqueRefPoint; //point about which the torque is being measured
 
 #endif
