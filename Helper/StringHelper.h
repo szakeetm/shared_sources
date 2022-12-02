@@ -46,10 +46,6 @@ std::string lowercase(const std::string& s);
 std::string uppercase(const std::string& s);
 bool iContains(const std::vector<std::string>& vec, const std::string& value);
 
-std::string lowercase(const std::string& s);
-std::string uppercase(const std::string& s);
-bool iContains(const std::vector<std::string>& vec, const std::string& value);
-
 namespace Util {
     std::string getTimepointString();
 }
