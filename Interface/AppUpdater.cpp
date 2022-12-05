@@ -408,7 +408,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.name = updateNode.child("Version").attribute("name").as_string();
 					newUpdate.date = updateNode.child("Version").attribute("date").as_string();
 					bool enabled = updateNode.child("Version").attribute("enabled").as_bool();
-					if (!enabled) continue;
+					if (!enabled) continue; //If manually disabled, get next manifest
 
 					newUpdate.changeLog = updateNode.child("ChangeLog").child_value("Global");
                     //TODO: Consider OS dependent changelogs
@@ -421,7 +421,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                             // found
                             validOS = true;
                             os_fullname = osNode.attribute("name").as_string(); //Unused
-                            os_prefix = osNode.attribute("prefix").as_string(); //zip name: os_prefix+"_"+version_name.zip
+                            os_prefix = osNode.attribute("prefix").as_string(); //zip name: os_prefix+"_"+version_name.zip, molflow_win, molflow_mac, molflow_mac_arm, molflow_debian, molflow_fedora
                             break;
                         }
                     }
