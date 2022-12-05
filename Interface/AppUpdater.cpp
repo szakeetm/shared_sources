@@ -407,8 +407,8 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					newUpdate.versionId = versionId;
 					newUpdate.name = updateNode.child("Version").attribute("name").as_string();
 					newUpdate.date = updateNode.child("Version").attribute("date").as_string();
-                    if(std::strcmp(updateNode.child("Version").attribute("enabled").as_string(),"true") != 0)
-                        continue;
+					bool enabled = updateNode.child("Version").attribute("enabled").as_bool();
+					if (!enabled) continue;
 
 					newUpdate.changeLog = updateNode.child("ChangeLog").child_value("Global");
                     //TODO: Consider OS dependent changelogs
