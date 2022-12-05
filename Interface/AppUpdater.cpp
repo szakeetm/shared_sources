@@ -85,7 +85,7 @@ void AppUpdater::MakeDefaultConfig(){
     localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = "3";
     localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = "0";
     localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = "5";
-    localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX;
+    localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX; //molflow_public or synrad_public + suffix (_win, _mac, _mac_arm, _debian, _fedora)
     localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
     localConfigNode.append_child("SkippedVersions");
 
@@ -417,7 +417,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string os_prefix;
                     bool validOS = false;
                     for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
-                        if(std::strcmp(osNode.attribute("id").as_string() , BRANCH_OS_SUFFIX) == 0){
+                        if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){ //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
                             // found
                             validOS = true;
                             os_fullname = osNode.attribute("name").as_string(); //Unused
