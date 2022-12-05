@@ -85,7 +85,7 @@ void AppUpdater::MakeDefaultConfig(){
     localConfigNode.child("Permission").append_attribute("askAfterNbLaunches") = "3";
     localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = "0";
     localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = "5";
-    localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX; //molflow_public or synrad_public + suffix (_win, _mac, _mac_arm, _debian, _fedora)
+    localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX; //molflow_public or synrad_public + suffix (_win, _mac, _mac_arm, _linux_debian, _linux_fedora)
     localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
     localConfigNode.append_child("SkippedVersions");
 
@@ -399,7 +399,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 	xml_node rootNode = updateDoc.child("UpdateFeed");
 	for (auto& branchNode : rootNode.child("Branches").children("Branch")) { //Look for a child with matching branch name
 		std::string currentBranchName = branchNode.attribute("name").as_string();
-		if (currentBranchName == BRANCH_NAME) {
+		if (currentBranchName == BRANCH_NAME) { //new schema, OS-independent, such as "molflow_public" or "synrad_public"
 			for (xml_node updateNode : branchNode.children("UpdateManifest")) {
 				int versionId = updateNode.child("Version").attribute("id").as_int();
 				if (!Contains(skippedVersionIds, versionId) && versionId > currentVersionId) {
@@ -428,20 +428,21 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     if(!validOS)
                         continue; // get next Manifest
 
-                    std::string namedRelease = os_prefix + "_" + newUpdate.name;
-					newUpdate.zipUrl = updateNode.child("Content").attribute("zipUrlPathPrefix").as_string();
-                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string();
+					//Update is valid for this OS, auto-construct URL and name
+                    std::string namedRelease = os_prefix + "_" + newUpdate.name; // "molflow_debian_2.9.8" 
+                    newUpdate.zipName = updateNode.child("Content").attribute("zipName").as_string(); //empty by default
                     if(newUpdate.zipName.empty()){
-                        newUpdate.zipName = namedRelease + ".zip";
+                        newUpdate.zipName = namedRelease + ".zip"; // "molflow_debian_2.9.8.zip"
                     }
-                    newUpdate.zipUrl = newUpdate.zipUrl + "/" + newUpdate.zipName;
-                    newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string();
+                    newUpdate.zipUrl = fmt::format("{}/{}", updateNode.child("Content").attribute("zipUrlPathPrefix").as_string() , newUpdate.zipName); //"https://gitlab.cern.ch/api/v4/projects/5577/packages/generic/Molflow/2.9.8_beta/molflow_debian_2.9.8.zip"
+                    newUpdate.folderName = updateNode.child("Content").attribute("zipFolder").as_string(); //empty by default
                     if(newUpdate.folderName.empty()){
-                        newUpdate.folderName = namedRelease;
+                        newUpdate.folderName = namedRelease; // "molflow_debian_2.9.8"
                     }
 
                     // TODO: Add os dependent files
 					for (const xml_node& fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
+
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
 					availables.push_back(newUpdate);
