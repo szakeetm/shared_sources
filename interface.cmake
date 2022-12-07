@@ -2,6 +2,8 @@
 # The main options of project                              #
 ############################################################
 
+#This is a separate project, excluded if NO_INTERFACE cmake option is set
+
 set(PROJECT_NAME shared_interface)
 project(${PROJECT_NAME} CXX)
 

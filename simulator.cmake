@@ -2,6 +2,8 @@
 # The main options of project                              #
 ############################################################
 
+#CMake project file called from src_shared's CMakeLists.txt
+
 set(PROJECT_NAME shared_simulator)
 project(${PROJECT_NAME} CXX)
 
