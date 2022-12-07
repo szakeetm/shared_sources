@@ -24,6 +24,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
         ${IMGUI_DIR}
+        ${HEADER_DIR_ZIP}
         )
 
 if(MSVC)
