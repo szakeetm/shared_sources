@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 project(lzma)
 
 if (CMAKE_VERSION VERSION_LESS "3.1")
