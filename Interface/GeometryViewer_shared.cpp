@@ -990,7 +990,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 		view.camDist = 1.0;
 
 		double mDist = Max((xMax - xMin), (yMax - yMin)*aspect);
-		mDist *= 1.1; // 10% margin
+		mDist = mDist*1.1+.1; // 10% margin and small extra for 0-width geometries
 		double dx = (xMax + xMin) / 2.0;
 		double dy = (yMax + yMin) / 2.0;
 		view.vLeft = dx - mDist / 2.0;
