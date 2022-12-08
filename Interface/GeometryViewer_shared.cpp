@@ -578,7 +578,7 @@ void GeometryViewer::UpdateMatrix() {
 
 		// 30% margin for extra geometry
 		double l = zFar - zNear;
-		if ((l > 0.0) && (view.vRight - view.vLeft) > 0.0 && (view.vBottom - view.vTop) > 0.0)
+		if ((l > 1e-3) && (view.vRight - view.vLeft) > 1e-3 && (view.vBottom - view.vTop) > 1e-3)
 			glOrtho(view.vLeft, view.vRight, view.vBottom, view.vTop, -zFar - l*0.3, -zNear + l*0.3);
 
 	}
