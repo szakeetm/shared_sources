@@ -177,9 +177,7 @@ MoveFacet::MoveFacet(Geometry *g,Worker *w):GLWindow() {
 }
 
 void MoveFacet::ProcessMessage(GLComponent *src,int message) {
-	double dX=0.0;
-	double dY=0.0;
-	double dZ=0.0;
+	double dX, dY, dZ;
 	double distance=0.0;
 
 	switch(message) {
