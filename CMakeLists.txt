@@ -242,7 +242,6 @@ if(MSVC)
             )
 
     target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
-    #target_link_libraries(${PROJECT_NAME} nativefiledialog)
 endif(MSVC)
 if(NOT MSVC)
 
@@ -353,6 +352,8 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
