@@ -94,24 +94,24 @@ bool Facet::Intersect(Ray &ray) {
 
                             if(typeid(*surf) == typeid(MaterialSurface))
                             hardHit &= (this->sh.reflectType > 10 //Material reflection
-                                        && currentParticle.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
-                                        && currentParticle.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-                                                                                                                         acos(Dot(currentParticle.direction, this->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+                                        && currentParticleTracer.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
+                                        && currentParticleTracer.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticleTracer.energy,
+                                                                                                                         acos(Dot(currentParticleTracer.direction, this->sh.N)) - PI / 2, currentParticleTracer.randomGenerator.rnd()) == REFL_TRANS));
 
 #endif*/
                             /*#if defined(MOLFLOW)
-                            double time = ray.time + d / 100.0 / currentParticle.velocity;
-                            double currentOpacity = currentParticle.model->GetOpacityAt(f, time);
-                            hardHit = ((currentOpacity == 1.0) || (currentParticle.randomGenerator.rnd()<currentOpacity));
+                            double time = ray.time + d / 100.0 / currentParticleTracer.velocity;
+                            double currentOpacity = currentParticleTracer.model->GetOpacityAt(f, time);
+                            hardHit = ((currentOpacity == 1.0) || (currentParticleTracer.randomGenerator.rnd()<currentOpacity));
 #endif
 
 #if defined(SYNRAD)
                             hardHit = !((this->sh.opacity < 0.999999 //Partially transparent facet
-										&& currentParticle.randomGenerator.rnd()>this->sh.opacity)
+										&& currentParticleTracer.randomGenerator.rnd()>this->sh.opacity)
 										|| (this->sh.reflectType > 10 //Material reflection
-										&& currentParticle.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
-										&& currentParticle.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticle.energy,
-										acos(Dot(currentParticle.direction, this->sh.N)) - PI / 2, currentParticle.randomGenerator.rnd()) == REFL_TRANS));
+										&& currentParticleTracer.model->materials[this->sh.reflectType - 10].hasBackscattering //Has complex scattering
+										&& currentParticleTracer.model->materials[this->sh.reflectType - 10].GetReflectionType(currentParticleTracer.energy,
+										acos(Dot(currentParticleTracer.direction, this->sh.N)) - PI / 2, currentParticleTracer.randomGenerator.rnd()) == REFL_TRANS));
 #endif*/
                             if (hardHit) {
 

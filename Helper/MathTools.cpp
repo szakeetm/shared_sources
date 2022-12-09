@@ -571,7 +571,7 @@ Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
                  const bool &reverse) {
 
-    //returns sHandle->currentParticle.direction
+    //returns sHandle->currentParticleTracer.direction
 
     //Vector3d U, V, N;
     //double u, v, n;
