@@ -194,11 +194,7 @@ int SimThread::runSimulation(size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
-    {
-        char msg[128];
-        snprintf(msg, 128, "%s [%zu event/s]", getSimStatus(), nbStep);
-        setSimState(msg);
-    }
+    setSimState(fmt::format("{} [{} events/s",getSimStatus(), nbStep));
 
     // Check end of simulation
     bool goOn = true;
