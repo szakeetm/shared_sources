@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class SimulationModel;
 class GlobalSimuState;
 class FacetMomentSnapshot;
-struct SimulationFacet;
+class SimulationFacet;
 
 class InterfaceFacet;
 class DeletedFacet;
