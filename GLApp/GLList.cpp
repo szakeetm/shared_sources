@@ -533,7 +533,11 @@ void GLList::SetRow(size_t row, const char **vals) {
 		SetValueAt(i, row, vals[i]);
 }
 
-void GLList::SetValueAt(size_t col, size_t row, const char *value, int userData, bool searchIndex) {
+void GLList::SetValueAt(const size_t& col, const size_t& row, const std::string &value, const int& userData, const bool& searchIndex) {
+	SetValueAt(col, row, value.c_str(), userData, searchIndex);
+}
+
+void GLList::SetValueAt(const size_t& col, const size_t& row, const char *value, const int& userData, const bool& searchIndex) {
 	assert(col < nbCol); assert(row < nbRow);
 	if (this->values) {
 		if (col >= 0 && col < this->nbCol && row >= 0 && row < this->nbRow) {

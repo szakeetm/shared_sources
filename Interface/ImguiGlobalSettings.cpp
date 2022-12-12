@@ -59,11 +59,6 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        size_t states[MAX_PROCESS];
-        std::vector<std::string> statusStrings(MAX_PROCESS);
-        memset(states, 0, MAX_PROCESS * sizeof(int));
-        mApp->worker.GetProcStatus(states, statusStrings);
-
         ProcComm procInfo;
         mApp->worker.GetProcStatus(procInfo);
 

@@ -107,16 +107,9 @@ void LoadStatus::SMPUpdate() {
 		
 	if ((processList->GetNbRow() - 1) != worker->model->otfParams.nbProcess) RefreshNbProcess();
 
-		char tmp[512];
-		PROCESS_INFO pInfo;
-		size_t  states[MAX_PROCESS];
-		std::vector<std::string> statusStrings(MAX_PROCESS);
-
-		memset(states,0,MAX_PROCESS*sizeof(int));
-		worker->GetProcStatus(states,statusStrings);
-
     ProcComm procInfo;
     worker->GetProcStatus(procInfo);
+
 		processList->ResetValues();
 
 		//Interface
@@ -127,26 +120,25 @@ void LoadStatus::SMPUpdate() {
 		size_t currPid = getpid();
 		double memDenominator = (1024.0);
 #endif
-		GetProcInfo(currPid, &pInfo);
+		PROCESS_INFO parentInfo{};
+		GetProcInfo(currPid, &parentInfo);
+
 		processList->SetValueAt(0, 0, "Interface");
-		sprintf(tmp, "%.0f MB", (double)pInfo.mem_use/(1024.0*1024.0));
-		processList->SetValueAt(1, 0, tmp);
+		processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
+		processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
+		processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
+		processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
 
-
-		for(size_t i=0;i<worker->GetProcNumber();i++) {
-			size_t pid = worker->GetPID(i);
-			sprintf(tmp,"Subproc.%zd",i+1);
-			processList->SetValueAt(0,i+1,tmp);
-			if( !GetProcInfo(pid,&pInfo) ) {
-				processList->SetValueAt(1,i + 1,"0 MB");
-				processList->SetValueAt(2,i + 1,"Dead");
-			} else {
-				sprintf(tmp, "%.0f MB", (double)pInfo.mem_use / memDenominator);
-				processList->SetValueAt(1, i+1, tmp);
-				// State/Status
-				strncpy(tmp, statusStrings[i].c_str(), 127); tmp[127] = 0;
-				processList->SetValueAt(2,i+1,tmp);
-			}
+		size_t i = 1;
+		for (auto& proc : procInfo.subProcInfo)
+		{
+			DWORD pid = proc.procId;
+			processList->SetValueAt(0, i, fmt::format("Thread {}", i));
+			processList->SetValueAt(1, i, ""); //placeholder for thread id
+			processList->SetValueAt(2, i, ""); //placeholder for memory
+			processList->SetValueAt(3, i, ""); //placeholder for memory
+			processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfo.subProcInfo[i - 1].slaveState, procInfo.subProcInfo[i - 1].statusString));
+			++i;
 		}
 }
 

@@ -71,108 +71,41 @@ void GlobalSettingsBase::SMPUpdate() {
 
     if( time-lastUpdate>333 ) {
 
-        char tmp[512];
-        size_t  states[MAX_PROCESS];
-        std::vector<std::string> statusStrings(MAX_PROCESS);
-
-        memset(states, 0, MAX_PROCESS * sizeof(int));
-        worker->GetProcStatus(states, statusStrings);
-
         ProcComm procInfo;
         worker->GetProcStatus(procInfo);
 
         processList->ResetValues();
 
         //Interface
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
         size_t currPid = GetCurrentProcessId();
-    PROCESS_INFO parentInfo{};
-    GetProcInfo(currPid, &parentInfo);
-
-    processList->SetValueAt(0, 0, "Interface");
-	sprintf(tmp, "%zd", currPid);
-	processList->SetValueAt(1, 0, tmp, currPid);
-	sprintf(tmp, "%.0f MB", (double)parentInfo.mem_use / (1024.0*1024.0));
-	processList->SetValueAt(2, 0, tmp);
-	sprintf(tmp, "%.0f MB", (double)parentInfo.mem_peak / (1024.0*1024.0));
-	processList->SetValueAt(3, 0, tmp);
-    sprintf(tmp, "[Geom. %s]", worker->model->sh.name.c_str());
-    processList->SetValueAt(4, 0, tmp);
+        double memDenominator = (1024.0 * 1024.0);
 #else
         size_t currPid = getpid();
+        double memDenominator = (1024.0);
+#endif
         PROCESS_INFO parentInfo{};
         GetProcInfo(currPid, &parentInfo);
 
-        //GetProcInfo(currpid, &parentInfo);
         processList->SetValueAt(0, 0, "Interface");
-        sprintf(tmp, "%zd", currPid);
-        processList->SetValueAt(1, 0, tmp, (int)currPid);
-        sprintf(tmp, "%.0f MB", (double)parentInfo.mem_use / (1024.0));
-        processList->SetValueAt(2, 0, tmp);
-        sprintf(tmp, "%.0f MB", (double)parentInfo.mem_peak / (1024.0));
-        processList->SetValueAt(3, 0, tmp);
-        sprintf(tmp, "[Geom. %s]", worker->model->sh.name.c_str());
-        processList->SetValueAt(4, 0, tmp);
-#endif
+        processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
+        processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
+        processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
+        processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
 
         size_t i = 1;
         for (auto& proc : procInfo.subProcInfo)
         {
-            //auto& proc = procInfo.subProcInfo[0];
             DWORD pid = proc.procId;
-            sprintf(tmp, "Thread %zu", i);
-            processList->SetValueAt(0, i, tmp);
-            sprintf(tmp, "");
-            processList->SetValueAt(1, i, tmp);
-
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-            PROCESS_INFO pInfo = proc.runtimeInfo;
-        /*if (!GetProcInfo(pid, &pInfo)) {
-			processList->SetValueAt(2, i, "0 KB");
-			processList->SetValueAt(3, i, "0 KB");
-			//processList->SetValueAt(4,i,"0 %");
-			processList->SetValueAt(4, i, "Dead");
-		}
-		else*/
-        {
-            processList->SetValueAt(2, i, "");
-            processList->SetValueAt(3, i, "");
-			// State/Status
-			std::stringstream tmp_ss; tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
-			processList->SetValueAt(4, i, tmp_ss.str().c_str());
-		}
-
-#else
-            if (pid == currPid) {
-                processList->SetValueAt(2, i, "");
-                processList->SetValueAt(3, i, "");
-                //processList->SetValueAt(4,i,"0 %");
-                processList->SetValueAt(4, i, "");
-            }
-            else {
-                PROCESS_INFO pInfo = proc.runtimeInfo;
-                //GetProcInfo(pid, &pInfo);
-
-
-                sprintf(tmp, "");
-                processList->SetValueAt(2, i, tmp);
-                sprintf(tmp, "");
-                processList->SetValueAt(3, i, tmp);
-                //sprintf(tmp, "%d %%", (int)pInfo.cpu_time);
-                //processList->SetValueAt(4, i, tmp);
-
-                // State/Status
-
-                std::stringstream tmp_ss; //tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
-                tmp_ss << "[" << prStates[proc.slaveState] << "] " << proc.statusString;
-                processList->SetValueAt(4, i, tmp_ss.str().c_str());
-            }
-#endif
+            processList->SetValueAt(0, i, fmt::format("Thread {}", i));
+            processList->SetValueAt(1, i, ""); //placeholder for thread id
+            processList->SetValueAt(2, i, ""); //placeholder for memory
+            processList->SetValueAt(3, i, ""); //placeholder for memory
+            processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfo.subProcInfo[i - 1].slaveState, procInfo.subProcInfo[i - 1].statusString));
             ++i;
         }
         lastUpdate = SDL_GetTicks();
     }
-
 }
 
 /**

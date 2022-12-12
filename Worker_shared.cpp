@@ -641,12 +641,6 @@ void Worker::Update(float appTime) {
 #endif
 }
 
-void Worker::GetProcStatus(size_t *states, std::vector<std::string> &statusStrings) {
-
-    if (model->otfParams.nbProcess == 0) return;
-    simManager.GetProcStatus(states, statusStrings);
-}
-
 void Worker::GetProcStatus(ProcComm &procInfoList) {
     simManager.GetProcStatus(procInfoList);
 }

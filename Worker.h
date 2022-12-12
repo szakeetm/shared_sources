@@ -102,7 +102,6 @@ public:
   void RetrieveHistogramCache();
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
-  void GetProcStatus(size_t *states,std::vector<std::string>& statusStrings);// Get process status
     void GetProcStatus(ProcComm &procInfoList);// Get process status
     void ChangePriority(int prioLevel);
 
