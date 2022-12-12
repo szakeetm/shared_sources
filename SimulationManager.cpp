@@ -517,10 +517,7 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
     for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
         states[i] = procInformation.subProcInfo[i].slaveState;
-        char tmp[128];
-        strncpy(tmp, procInformation.subProcInfo[i].statusString, 127);
-        tmp[127] = 0;
-        statusStrings[i] = tmp;
+        statusStrings[i] = procInformation.subProcInfo[i].statusString;
     }
     return 0;
 }

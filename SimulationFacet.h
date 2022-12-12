@@ -27,7 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  * Generalised structure containing Ray Tracing and shared Simulation properties
  * Application specific implementations are part of the corresponding code base
  */
-struct SimulationFacet : public Facet {
+class SimulationFacet : public Facet {
 protected:
     SimulationFacet();
     explicit SimulationFacet(size_t nbIndex);

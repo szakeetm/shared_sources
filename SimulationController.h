@@ -50,8 +50,7 @@ public:
     bool runLoop();
 
 private:
-    [[nodiscard]] char *getSimStatus() const;
-    void setSimState(char *msg) const;
+    [[nodiscard]] std::string getSimStatus() const;
     void setSimState(const std::string& msg) const;
     int runSimulation(size_t desorptions);
     int advanceForTime(double simDuration);
@@ -70,12 +69,12 @@ protected:
     virtual int StopSim() {return 0;};
     virtual int TerminateSim() {return 0;};
 
-    int SetState(size_t state, const char *status, bool changeState = true, bool changeStatus = true);
+    int SetState(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true);
     int SetState(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     void GetState();
     std::vector<std::string> GetSimuStatus();
-    void SetErrorSub(const char *message);
-    void SetStatus(char *status);
+    void SetErrorSub(const std::string& message);
+    void SetStatus(const std::string &status);
     void SetReady(const bool loadOk);
     int ClearCommand();
     int SetRuntimeInfo();

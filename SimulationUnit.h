@@ -49,7 +49,7 @@ public:
     virtual ~Simulation_Abstract()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual size_t LoadSimulation(char *loadStatus) = 0;
+    virtual size_t LoadSimulation(std::string& loadStatus) = 0;
     virtual int RebuildAccelStructure() = 0;
 
     virtual int ReinitializeParticleLog() = 0;

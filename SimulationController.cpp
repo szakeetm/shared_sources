@@ -166,16 +166,11 @@ bool SimThread::runLoop() {
     return simEos;
 }
 
-void SimThread::setSimState(char *msg) const {
-    snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg);
-}
-
 void SimThread::setSimState(const std::string& msg) const {
-    snprintf(procInfo->subProcInfo[threadNum].statusString, 128, "%s", msg.c_str());
+    procInfo->subProcInfo[threadNum].statusString=msg;
 }
 
-[[nodiscard]] char *SimThread::getSimStatus() const {
-    static char ret[128];
+[[nodiscard]] std::string SimThread::getSimStatus() const {
     size_t count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
@@ -185,11 +180,10 @@ void SimThread::setSimState(const std::string& msg) const {
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
-        sprintf(ret, "MC %zd/%zd (%.1f%%)", count, max, percent);
+        return fmt::format("MC {}/{} ({:.1f}%)",count, max, percent);
     } else {
-        sprintf(ret, "MC %zd", count);
+        return fmt::format("MC {}", count);
     }
-    return ret;
 }
 
 /**
@@ -328,7 +322,7 @@ int SimulationController::ClearCommand() {
     return 0;
 }
 
-int SimulationController::SetState(size_t state, const char *status, bool changeState, bool changeStatus) {
+int SimulationController::SetState(size_t state, const std::string &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
         DEBUG_PRINT("setstate %s\n", prStates[state]);
@@ -339,8 +333,7 @@ int SimulationController::SetState(size_t state, const char *status, bool change
     }
     if (changeStatus) {
         for (auto &pInfo : procInfo->subProcInfo) {
-            strncpy(pInfo.statusString, status, 127);
-            pInfo.statusString[127] = '\0';
+            pInfo.statusString=status;
         }
     }
 
@@ -361,15 +354,13 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
     if (changeStatus) {
         if(procInfo->subProcInfo.size() != status.size()){
             for (auto &pInfo : procInfo->subProcInfo) {
-                strncpy(pInfo.statusString, "invalid state", 127);
-                pInfo.statusString[127] = '\0';
+               pInfo.statusString="invalid state (subprocess number mismatch)";
             }
         }
         else {
             size_t pInd = 0;
             for (auto &pInfo : procInfo->subProcInfo) {
-                strncpy(pInfo.statusString, status[pInd++].c_str(), 127);
-                pInfo.statusString[127] = '\0';
+                pInfo.statusString=status[pInd++];
             }
         }
     }
@@ -402,14 +393,13 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
                 if (sim->model->otfParams.nbProcess)
                     max = sim->model->otfParams.desorptionLimit / sim->model->otfParams.nbProcess + ((threadId < sim->model->otfParams.desorptionLimit % sim->model->otfParams.nbProcess) ? 1 : 0);
 
-                char tmp[128];
                 if (max != 0) {
                     double percent = (double) (count) * 100.0 / (double) (max);
-                    sprintf(tmp, "MC %zd/%zd (%.1f%%)", count, max, percent);
-                } else {
-                    sprintf(tmp, "MC %zd", count);
+                    ret_vec[threadId] = fmt::format("MC {}/{} ({:.1f}%)", count, max, percent);
                 }
-                ret_vec[threadId] = tmp;
+                else {
+                    ret_vec[threadId] = fmt::format("MC {}", count);
+                }
             }
             ++threadId;
         }
@@ -417,15 +407,14 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
     return ret_vec;
 }
 
-void SimulationController::SetErrorSub(const char *message) {
+void SimulationController::SetErrorSub(const std::string& message) {
     Log::console_error("Error: {}\n", message);
     SetState(PROCESS_ERROR, message);
 }
 
-void SimulationController::SetStatus(char *status) {
+void SimulationController::SetStatus(const std::string& status) {
     for (auto &pInfo : procInfo->subProcInfo) {
-        strncpy(pInfo.statusString, status, 127);
-        pInfo.statusString[127] = '\0';
+        pInfo.statusString=status;
     }
 }
 

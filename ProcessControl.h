@@ -79,7 +79,7 @@ struct ProcComm {
     struct SubProcInfo {
         size_t procId;
         size_t slaveState;
-        char statusString[128];
+        std::string statusString;
         PROCESS_INFO runtimeInfo;
     };
 
