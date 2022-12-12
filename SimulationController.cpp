@@ -119,7 +119,7 @@ bool SimThread::runLoop() {
     double timeLoopStart = timeStart;
     double timeEnd;
     do {
-        setSimState(getSimStatus());
+        setSimStatus(getSimStatus());
         size_t desorptions = localDesLimit;//(localDesLimit > 0 && localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed) ? localDesLimit - particle->tmpState.globalHits.globalHits.hit.nbDesorbed : 0;
         //printf("Pre[%zu] %lu + %lu / %lu\n",threadNum, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
         simEos = runSimulation(desorptions);      // Run during 1 sec
@@ -159,14 +159,14 @@ bool SimThread::runLoop() {
     procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         //printf("[%zu] Updating on finish!\n",threadNum);
-        setSimState("Final update...");
+        setSimStatus("Final update...");
         particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
                              20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
     }
     return simEos;
 }
 
-void SimThread::setSimState(const std::string& msg) const {
+void SimThread::setSimStatus(const std::string& msg) const {
     procInfo->subProcInfo[threadNum].statusString=msg;
 }
 
@@ -180,9 +180,9 @@ void SimThread::setSimState(const std::string& msg) const {
 
     if (max != 0) {
         double percent = (double) (count) * 100.0 / (double) (max);
-        return fmt::format("MC {}/{} ({:.1f}%)",count, max, percent);
+        return fmt::format("{}/{} des ({:.1f}%)",count, max, percent);
     } else {
-        return fmt::format("MC {}", count);
+        return fmt::format("{} des", count);
     }
 }
 
@@ -194,7 +194,7 @@ int SimThread::runSimulation(size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
-    setSimState(fmt::format("{} [{} events/s]",getSimStatus(), nbStep));
+    setSimStatus(fmt::format("{} [{} events/s]",getSimStatus(), nbStep));
 
     // Check end of simulation
     bool goOn = true;
@@ -391,10 +391,10 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
 
                 if (max != 0) {
                     double percent = (double) (count) * 100.0 / (double) (max);
-                    ret_vec[threadId] = fmt::format("MC {}/{} ({:.1f}%)", count, max, percent);
+                    ret_vec[threadId] = fmt::format("{}/{} des ({:.1f}%)", count, max, percent);
                 }
                 else {
-                    ret_vec[threadId] = fmt::format("MC {}", count);
+                    ret_vec[threadId] = fmt::format("{} des", count);
                 }
             }
             ++threadId;

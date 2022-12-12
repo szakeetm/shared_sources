@@ -51,7 +51,7 @@ public:
 
 private:
     [[nodiscard]] std::string getSimStatus() const;
-    void setSimState(const std::string& msg) const;
+    void setSimStatus(const std::string& msg) const;
     int runSimulation(size_t desorptions);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
@@ -71,7 +71,6 @@ protected:
 
     int SetState(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true);
     int SetState(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
-    void GetState();
     std::vector<std::string> GetSimuStatus();
     void SetErrorSub(const std::string& message);
     void SetStatus(const std::string &status);
