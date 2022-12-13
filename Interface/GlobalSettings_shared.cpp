@@ -89,8 +89,8 @@ void GlobalSettingsBase::SMPUpdate() {
 
         processList->SetValueAt(0, 0, "Interface");
         processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-        processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
-        processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
+        processList->SetValueAt(2, 0, fmt::format("{:.0f MB}", (double)parentInfo.mem_use / memDenominator));
+        processList->SetValueAt(3, 0, fmt::format("{:.0f MB}", (double)parentInfo.mem_peak / memDenominator));
         processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
 
         size_t i = 1;
@@ -101,7 +101,7 @@ void GlobalSettingsBase::SMPUpdate() {
             processList->SetValueAt(1, i, ""); //placeholder for thread id
             processList->SetValueAt(2, i, ""); //placeholder for memory
             processList->SetValueAt(3, i, ""); //placeholder for memory
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfo.subProcInfo[i - 1].slaveState, procInfo.subProcInfo[i - 1].statusString));
+            processList->SetValueAt(4, i, fmt::format("[{}] {}", prStates[procInfo.subProcInfo[i - 1].slaveState], procInfo.subProcInfo[i - 1].statusString));
             ++i;
         }
         lastUpdate = SDL_GetTicks();
