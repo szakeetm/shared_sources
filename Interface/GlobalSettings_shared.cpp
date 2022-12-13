@@ -89,9 +89,9 @@ void GlobalSettingsBase::SMPUpdate() {
 
         processList->SetValueAt(0, 0, "Interface");
         processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-        processList->SetValueAt(2, 0, fmt::format("{:.0f MB}", (double)parentInfo.mem_use / memDenominator));
-        processList->SetValueAt(3, 0, fmt::format("{:.0f MB}", (double)parentInfo.mem_peak / memDenominator));
-        processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
+        processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator));
+        processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator));
+        processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
         size_t i = 1;
         for (auto& proc : procInfo.subProcInfo)
