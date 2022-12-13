@@ -167,7 +167,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                 }
             }
             else if (src==applyButton) {
-                mApp->useOldXMLFormat = useOldXMLFormat->GetState();
+                
                 mApp->antiAliasing = chkAntiAliasing->GetState();
                 mApp->whiteBg = chkWhiteBg->GetState();
                 mApp->highlightSelection = highlightSelectionToggle->GetState();
