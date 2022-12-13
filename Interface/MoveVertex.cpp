@@ -177,7 +177,10 @@ MoveVertex::MoveVertex(Geometry *g, Worker *w) :GLWindow() {
 }
 
 void MoveVertex::ProcessMessage(GLComponent *src, int message) {
-	double dX, dY, dZ, distance;
+	double dX = 0.0;
+	double dY = 0.0;
+	double dZ=0.0;
+	double distance=0.0;
 
 	switch (message) {
 	case MSG_BUTTON:
