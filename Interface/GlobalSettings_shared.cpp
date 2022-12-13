@@ -265,8 +265,5 @@ void GlobalSettingsBase::Update_shared() {
     }
     chkAutoUpdateFormulas->SetState(mApp->autoUpdateFormulas);
     chkCompressSavedFiles->SetState(mApp->compressSavedFiles);
-
-    size_t nb = worker->GetProcNumber();
-    sprintf(tmp, "%zd", nb);
-    nbProcText->SetText(tmp);
+    nbProcText->SetText(fmt::format("{}", worker->GetProcNumber()));
 }
