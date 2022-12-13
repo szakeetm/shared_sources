@@ -167,15 +167,14 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                 }
             }
             else if (src==applyButton) {
-                //mApp->useOldXMLFormat = useOldXMLFormat->GetState();
+                mApp->useOldXMLFormat = useOldXMLFormat->GetState();
                 mApp->antiAliasing = chkAntiAliasing->GetState();
                 mApp->whiteBg = chkWhiteBg->GetState();
                 mApp->highlightSelection = highlightSelectionToggle->GetState();
                 if(mApp->highlightSelection)
                     worker->GetGeometry()->UpdateSelection();
+                mApp->highlightNonplanarFacets = highlightNonplanarToggle->GetState();
                 mApp->leftHandedView = (bool)leftHandedToggle->GetState();
-                //mApp->highlightNonplanarFacets = highlightNonplanarToggle->GetState();
-
                 for (auto & i : mApp->viewer) {
                     i->UpdateMatrix();
                     i->UpdateLabelColors();
@@ -227,7 +226,6 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                 cutoffText->SetEditable(lowFluxToggle->GetState());
             }
             else if (src == prioToggle) {
-                //prioToggle->SetState(prioToggle->GetState() ? 0 : 1);
                 worker->ChangePriority(prioToggle->GetState());
             }
             break;
