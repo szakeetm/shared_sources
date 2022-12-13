@@ -80,7 +80,6 @@ protected:
     /*GLTextField *outgassingText;
     GLTextField *gasmassText;*/
     GLToggle *highlightSelectionToggle;
-    GLToggle *prioToggle;
 
     GLToggle* highlightNonplanarToggle;
     GLToggle* useOldXMLFormat;
