@@ -247,12 +247,7 @@ void GlobalSettingsBase::Update_shared() {
     cutoffText->SetText(worker->model->otfParams.lowFluxCutoff);
     cutoffText->SetEditable(worker->model->otfParams.lowFluxMode);
     lowFluxToggle->SetState(worker->model->otfParams.lowFluxMode);
-
-    //syn
-    //chkNewReflectionModel->SetState(worker->model->wp.newReflectionModel);
-
-    // mol?
-    //highlightNonplanarToggle->SetState(mApp->highlightNonplanarFacets);
+    highlightNonplanarToggle->SetState(mApp->highlightNonplanarFacets);
 
     autoSaveText->SetText(mApp->autoSaveFrequency);
     chkSimuOnly->SetState(mApp->autoSaveSimuOnly);
