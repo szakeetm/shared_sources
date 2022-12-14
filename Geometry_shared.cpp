@@ -166,17 +166,9 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Current facet
 			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
+			SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
 		}
 	}
-
-    // Update mesh
-    for (int i = 0; i < sh.nbFacet; i++) {
-        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
-            // Main facet params
-            InterfaceFacet *f = facets[i];
-            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
-        }
-    }
 }
 
 void Geometry::InitializeInterfaceGeometry(int facet_number) {
@@ -184,25 +176,8 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
     for (int i = 0; i < sh.nbFacet; i++) {
         //initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
         if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
-            // Main facet params
-            // Current facet
             InterfaceFacet *f = facets[i];
-            // Detect non visible edge
             f->InitVisibleEdge();
-
-            // Detect orientation
-            //f->DetectOrientation();
-            //f->sign = -1;
-        }
-    }
-
-    // Update mesh
-    for (int i = 0; i < sh.nbFacet; i++) {
-        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
-            // Main facet params
-            InterfaceFacet *f = facets[i];
-            SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
-            //SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
         }
     }
 
@@ -212,10 +187,6 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
         mApp->UpdateModelParams();
         mApp->UpdateFacetParams(false);
     }
-
-    //initGeoPrg->SetVisible(false);
-    //SAFE_DELETE(initGeoPrg);
-    //assert(_CrtCheckMemory());
 }
 
 void Geometry::InitializeMesh() {
@@ -572,7 +543,8 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
-		std::vector<size_t> closestIndexToChild(nbHoles), closestIndexToParent(nbHoles);
+		std::vector<size_t> closestIndexToChild(nbHoles); //i-th index tells which index of the parent is closest to hole (child) i
+		std::vector<size_t> closestIndexToParent(nbHoles); //i-th index tells which index of the hole (child) is closest to parent
 		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
 			double minDist = 9E99;
 			
@@ -608,7 +580,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
 					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
 					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
-					for (size_t k = 0; k < solution.Childs[i]->Childs[0]->Contour.size(); k++) { //Register hole
+					for (size_t k = 0; k < solution.Childs[i]->Childs[holeIndex]->Contour.size(); k++) { //Register hole
 						vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].X;
 						vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].Y;
 						RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
