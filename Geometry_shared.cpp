@@ -534,7 +534,8 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
 		size_t nbHoles = solution.Childs[i]->ChildCount();
-		std::vector<size_t> closestIndexToChild(nbHoles), closestIndexToParent(nbHoles);
+		std::vector<size_t> closestIndexToChild(nbHoles); //i-th index tells which index of the parent is closest to hole (child) i
+		std::vector<size_t> closestIndexToParent(nbHoles); //i-th index tells which index of the hole (child) is closest to parent
 		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
 			double minDist = 9E99;
 			
@@ -570,7 +571,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
 					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
 					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
-					for (size_t k = 0; k < solution.Childs[i]->Childs[0]->Contour.size(); k++) { //Register hole
+					for (size_t k = 0; k < solution.Childs[i]->Childs[holeIndex]->Contour.size(); k++) { //Register hole
 						vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].X;
 						vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].Y;
 						RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
