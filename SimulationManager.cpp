@@ -329,15 +329,12 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     hasErrorStatus = false;
 
     // struct, because vector of char arrays is forbidden w/ clang
-    struct StateString {
-        char s[128];
-    };
-    std::vector<StateString> prevStateStrings(procInformation.subProcInfo.size());
-    std::vector<StateString> stateStrings(procInformation.subProcInfo.size());
+    std::vector<std::string> prevStateStrings(procInformation.subProcInfo.size());
+    std::vector<std::string> stateStrings(procInformation.subProcInfo.size());
 
     {
         for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-            snprintf(prevStateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
+            prevStateStrings[i]=procInformation.subProcInfo[i].statusString;
         }
     }
 
@@ -348,21 +345,21 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
         for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
             auto procState = procInformation.subProcInfo[i].slaveState;
             if(procStatus == PROCESS_KILLED) // explicitly ask for killed state
-                finished = finished & (procState==PROCESS_KILLED);
+                finished = finished && (procState==PROCESS_KILLED);
             else
-                finished = finished & (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
+                finished = finished && (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
             if( procState==PROCESS_ERROR ) {
                 hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
-                snprintf(stateStrings[i].s, 128, "%s", procInformation.subProcInfo[i].statusString);
-                if(strcmp(prevStateStrings[i].s, stateStrings[i].s) != 0) { // if strings are different
+                stateStrings[i]=procInformation.subProcInfo[i].statusString;
+                if(prevStateStrings[i]!=stateStrings[i]) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
                     prevIncTime = waitTime;
                 }
             }
-            allProcsDone = allProcsDone & (procState == PROCESS_DONE);
+            allProcsDone = allProcsDone && (procState == PROCESS_DONE);
         }
 
         if (!finished) {
@@ -436,14 +433,10 @@ int SimulationManager::KillAllSimUnits() {
                             tIter = simHandles.erase(tIter);
                         }
                         catch (const std::exception &e) {
-                            char tmp[512];
-                            snprintf(tmp, 512, "Could not terminate sub processes: %s\n", e.what());
-                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                            throw std::runtime_error(fmt::format("Could not terminate subprocesses: {}\n",e.what())); // proc couldn't be killed!?
                         }
                         catch (...) {
-                            char tmp[512];
-                            snprintf(tmp, 512, "Could not terminate sub processes\n");
-                            throw std::runtime_error(tmp); // proc couldn't be killed!?
+                            throw std::runtime_error("Could not terminate subprocesses.\n"); // proc couldn't be killed!?
                         }
                     }
                 }
@@ -561,29 +554,14 @@ std::string SimulationManager::GetErrorDetails() {
     GetProcStatus(procInfo);
 
     std::string err;
-    //static char err[1024];
-    //std::memset(err, 0, 1024);
 
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
-        char tmp[512]{'\0'};
         size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            sprintf(tmp, "[Thread #%zd] %s: %s\n", i, prStates[state],
-                    procInfo.subProcInfo[i].statusString);
+            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfo[i].statusString));
         } else {
-            sprintf(tmp, "[Thread #%zd] %s\n", i, prStates[state]);
+            err.append(fmt::format("[Thread #{}] {}", i, prStates[state]));
         }
-        // Append at most up to character 1024, strncat would otherwise overwrite in memory
-        err.append(tmp);
-        if(err.size() >= 1024) {
-            err.resize(1024);
-            break;
-        }
-        /*strncat(err, tmp, std::min(1024 - strlen(err), (size_t)512));
-        if(strlen(err) >= 1024) {
-            err[1023] = '\0';
-            break;
-        }*/
     }
     return err;
 }
