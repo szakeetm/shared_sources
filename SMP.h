@@ -31,7 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 extern "C" {
 #endif
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -93,7 +93,7 @@ Dataport *OpenDataport(char *name, size_t size);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 bool CloseDataport(Dataport *dp);
 #else
 bool CloseDataport(Dataport *dp, bool unlinkShm);
@@ -110,7 +110,7 @@ DWORD GetSeed();
 
 // Helper functions
 inline void ProcessSleep(const unsigned int milliseconds) {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     Sleep(milliseconds);
 #else
     struct timespec tv;
@@ -124,7 +124,7 @@ inline void ProcessSleep(const unsigned int milliseconds) {
 extern DWORD         StartProc_foreground(char *pname); //TODO: unite these three*/
 
 // seperate
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #define CLOSEDP(dp) if(dp) { CloseDataport(dp);(dp)=NULL; }
 #define CLOSEDPSUB(dp) CLOSEDP(dp)
 #else

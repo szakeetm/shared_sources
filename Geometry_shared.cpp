@@ -3899,8 +3899,8 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 		}
 		else {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-            sprintf(fName, "%s\\%s", fPath, sName);
+#ifdef _WIN32
+			sprintf(fName, "%s\\%s", fPath, sName);
 #else
             sprintf(fName, "%s/%s", fPath, sName);
 #endif

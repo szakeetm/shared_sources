@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <GLApp/GLTypes.h>
 #include <chrono>
-#if defined(WIN32) || defined(WIN64)
+#ifdef _WIN32
 #include <ctime> // for time_t
 #endif
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error

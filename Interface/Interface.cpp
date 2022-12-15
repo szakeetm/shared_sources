@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include <direct.h> //_getcwd()
 //#include <io.h> // Check for recovery
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 
 #else
 //#include <sys/sysinfo.h>
@@ -119,7 +119,7 @@ extern const char *cName[];
 
 Interface::Interface() : GLApplication(){
     //Get number of cores
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);

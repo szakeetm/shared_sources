@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "File.h"
 #include <cstring>
 #define NOMINMAX
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #include <Windows.h> //Showwindow
 #endif
 
@@ -50,8 +50,8 @@ int main(int argc,char* argv[]) {
 	std::cout << "\n\n";
 	if (argc < 3 || argc>4 || (argc == 4 && argv[3][0] != '@')) {
         Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\n");
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        Log::console_error("Type any letter and press ENTER to quit\n");
+#ifdef _WIN32
+		Log::console_error("Type any letter and press ENTER to quit\n");
 		ShowWindow( GetConsoleWindow(), SW_RESTORE );
         std::cin>>key;
 #endif
@@ -68,8 +68,8 @@ int main(int argc,char* argv[]) {
 
 	fileNameWith7z = fileName + "7z";
 	std::string sevenZipName;
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    sevenZipName += "7za.exe";
+#ifdef _WIN32
+	sevenZipName += "7za.exe";
 #else //Linux, MacOS
     sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
@@ -84,8 +84,8 @@ int main(int argc,char* argv[]) {
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
         Log::console_error("\n{} not found. Cannot compress.\n", sevenZipName);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-        Log::console_error("Type any letter and press ENTER to quit\n");
+#ifdef _WIN32
+		Log::console_error("Type any letter and press ENTER to quit\n");
         std::cin>>key;
 #endif
         return ERR_NO_CMPR;
@@ -100,7 +100,7 @@ int main(int argc,char* argv[]) {
 	std::filesystem::remove(fileNameWith7z);
 	command = "";
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	//Trick so Windows command line supports UNC (network) paths
 	std::string cwd = FileUtils::get_working_path();
 	command += "cmd /C \"pushd \"" + cwd + "\"&&";
@@ -122,12 +122,12 @@ int main(int argc,char* argv[]) {
 		}
 		*/
 	}
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	command+="&&popd\"";
 #endif
 
 	std::cout << "\nCommand:\n" << command << "\n\nStarting compression...";
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	std::cout << "\nYou can continue using Molflow/Synrad while compressing.\n"; //On Windows, compress.exe is launched as a background process
 #endif
 	result=exec(command);
@@ -147,13 +147,13 @@ int main(int argc,char* argv[]) {
 	}
 
 	//Handle errors:
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
 	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n" ,std::filesystem::path(fileNameGeometry).extension().string().c_str());
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    Log::console_error("Type any letter and press Enter to exit\n");
+#ifdef _WIN32
+	Log::console_error("Type any letter and press Enter to exit\n");
     std::cin>>key;
 #endif
 	return ERR_UNRSLVD;
@@ -165,7 +165,7 @@ std::string exec(const std::string& command) {
 
 std::string exec(const char* cmd) { //Execute a command and return what it prints to the command line / terinal
     FILE* pipe = 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 		_popen
 #else
 		popen
@@ -180,7 +180,7 @@ std::string exec(const char* cmd) { //Execute a command and return what it print
 		        printf("%s",buffer);
     }
 	result=result+'0';
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	_pclose
 #else
 	pclose

@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #define NOMINMAX
 //#include <Windows.h>
 //#include <Process.h>
@@ -721,7 +721,7 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
     std::ostringstream cmd;
     std::string sevenZipName;
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     //Necessary push/pop trick to support UNC (network) paths in Windows command-line
     auto CWD = FileUtils::get_working_path();
     cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
@@ -744,14 +744,14 @@ FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std:
     }
     cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     cmd << "&&popd\"";
 #endif
     system(cmd.str().c_str());
 
     std::string toOpen, prefix;
     std::string shortFileName = FileUtils::GetFilename(fileName);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     prefix = CWD + "\\tmp\\";
 #else
     prefix = "tmp/";

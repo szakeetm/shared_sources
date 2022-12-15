@@ -19,7 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 // M_PI define
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
 #endif
 #include <cmath>

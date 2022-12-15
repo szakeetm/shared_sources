@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "SMP.h"
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #define NOMINMAX
 
 #include <windows.h>
@@ -71,7 +71,7 @@ int build_key (char *name)
 }
 #endif
 
-#if not (defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64))
+#ifndef _WIN32
 //#if defined(__MACOSX__) || defined(__APPLE__)
 // according to https://stackoverflow.com/questions/1405132/unix-osx-version-of-semtimedop
 #include <signal.h>
@@ -88,7 +88,7 @@ void alarm_handler(int sig)
 // create named semaphore related to dp->semaname
 // ret -1 on fail
 int CreateSemaphore(Dataport *dp) {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     SetLastError(ERROR_SUCCESS);
     dp->sema = CreateMutex(NULL, false, dp->semaname);
 
@@ -144,7 +144,7 @@ int CreateSemaphore(Dataport *dp) {
 // get access to semaphore related to dp->semaname
 // ret -1 on fail
 int LinkSemaphore(Dataport *dp) {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     //SetLastError (ERROR_SUCCESS);
     //dp->sema = CreateMutex (NULL, false, dp->semaname);
     dp->sema = OpenMutex(SYNCHRONIZE, false, dp->semaname);
@@ -207,7 +207,7 @@ Dataport *CreateDataport(char *name, size_t size) {
     sprintf(dp->semaname,"%s_sema",name); // for linux creates semaphore as /dev/sem/%s_sema
     /* ------------------- Create shared memory ------------------- */
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     SetLastError(ERROR_SUCCESS);
 
 
@@ -281,7 +281,7 @@ Dataport *CreateDataport(char *name, size_t size) {
     }
 
     /* ------------------- Map the memomy ------------------- */
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 
     dp->buff = MapViewOfFile(dp->mem, FILE_MAP_WRITE, 0, 0, 0); //With this function write access equals all_access
 
@@ -350,7 +350,7 @@ Dataport *OpenDataport(char *name, size_t size) {
     //
 
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     dp->mem = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, name);
 
     if ( /*GetLastError()!=ERROR_ALREADY_EXISTS*/ !dp->mem) {
@@ -379,7 +379,7 @@ Dataport *OpenDataport(char *name, size_t size) {
 
     /* ------------------- Map the memory ------------------- */
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     dp->buff = MapViewOfFile(dp->mem, FILE_MAP_WRITE, 0, 0, 0);  //With this function write access equals all_access
 
     if (dp->buff == NULL) {
@@ -407,7 +407,7 @@ Dataport *OpenDataport(char *name, size_t size) {
 // Get access by getting ownership of the semaphore
 bool AccessDataport(Dataport *dp) {
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     DWORD retVal = WaitForSingleObject(dp->sema, 8000);
     if (retVal == WAIT_OBJECT_0)
         return true;
@@ -464,7 +464,7 @@ bool AccessDataport(Dataport *dp) {
 // timeout in milliseconds
 bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     DWORD retVal = WaitForSingleObject(dp->sema, timeout);
     if (retVal == WAIT_OBJECT_0)
         return true;
@@ -516,7 +516,7 @@ bool AccessDataportTimed(Dataport *dp, DWORD timeout) {
 
 bool ReleaseDataport(Dataport *dp) {
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     if (dp)
         if (ReleaseMutex(dp->sema) == 0)
             return true;
@@ -543,13 +543,13 @@ bool ReleaseDataport(Dataport *dp) {
     return false;
 }
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 
 bool CloseDataport(Dataport *dp) {
 #else
     bool CloseDataport(Dataport *dp, bool unlinkShm) {
 #endif
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     UnmapViewOfFile(dp->buff);
     CloseHandle(dp->mem);
     CloseHandle(dp->sema);
@@ -578,7 +578,7 @@ bool CloseDataport(Dataport *dp) {
 
 // Timing stuff
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 bool usePerfCounter;         // Performance counter usage
 LARGE_INTEGER perfTickStart; // First tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
@@ -588,7 +588,7 @@ struct timespec tickStart;
 #endif
 
 void InitTick(){
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 		LARGE_INTEGER qwTicksPerSec;
 		usePerfCounter = QueryPerformanceFrequency(&qwTicksPerSec);
 		if (usePerfCounter) {
@@ -603,7 +603,7 @@ void InitTick(){
 double GetTick() {
 
     // Number of sec since the application startup
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     if (usePerfCounter) {
 		LARGE_INTEGER t, dt;
 		QueryPerformanceCounter(&t);
@@ -626,7 +626,7 @@ double GetTick() {
 
 DWORD GetSeed() {
     int processId;
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     processId = _getpid();
 #else
     processId = ::getpid();
@@ -636,7 +636,7 @@ DWORD GetSeed() {
 }
 
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 
 void PrintLastErrorText(LPTSTR suff) {
     DWORD dwRet;

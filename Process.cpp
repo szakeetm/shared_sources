@@ -18,7 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
 //#include <winperf.h>
@@ -39,7 +39,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "SMP.h"
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 // Get process info
 #define INITIAL_SIZE        51200
 #define EXTEND_SIZE         25600
@@ -63,7 +63,7 @@ static bool   counterInited = false;
 
 
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 static bool privilegeEnabled = false;
 
 // Enable required process privilege for system tasks
@@ -121,7 +121,7 @@ static bool EnablePrivilege() {
 
 // Kill a process
 bool KillProc(DWORD pID) {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     HANDLE p;
 
     if( !EnablePrivilege() )
@@ -142,7 +142,7 @@ bool KillProc(DWORD pID) {
 
 // Launch the process procv[0] and return its PID.
 DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in Release mode
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     PROCESS_INFORMATION pi;
 	STARTUPINFO si;
 
@@ -220,7 +220,7 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 }
 
 bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;
 
@@ -297,7 +297,7 @@ return true;
 bool IsProcessRunning(DWORD pid)
 {
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     HANDLE process = OpenProcess(SYNCHRONIZE, false, pid);
 	DWORD ret = WaitForSingleObject(process, 0);
 	CloseHandle(process);

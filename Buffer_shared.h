@@ -638,7 +638,7 @@ public:
 
 #if defined(MOLFLOW)
 	double distTraveledTotal_fullHitsOnly;
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 	//TODO: Remove at some point when smarter memory padding is introduced
 	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture
 #endif // WIN
@@ -665,7 +665,7 @@ public:
 
 #if defined(MOLFLOW)
 			, CEREAL_NVP(distTraveledTotal_fullHitsOnly)
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 			, CEREAL_NVP(texture_limits) //Min-max on texture
 #endif // WIN
 #endif

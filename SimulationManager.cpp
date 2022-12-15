@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 
 #include <thread>
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
 #include <process.h>
 #elif not(defined(__MACOSX__) || defined(__APPLE__))
 #include <cstring> //memset on unix
@@ -56,7 +56,7 @@ SimulationManager::SimulationManager(int pid) {
     if(pid > -1)
         mainProcId = pid;
     else {
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
         mainProcId = _getpid();
 #else
         mainProcId = ::getpid();
@@ -195,7 +195,7 @@ int SimulationManager::CreateCPUHandle() {
 #if defined(DEBUG)
         nbThreads = 1;
 #else
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
         nbThreads = (size_t) sysinfo.dwNumberOfProcessors;

@@ -65,7 +65,7 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableNextRow();
 
         // Interface
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
         size_t currPid = GetCurrentProcessId();
         double memDenom = (1024.0 * 1024.0);
 #else

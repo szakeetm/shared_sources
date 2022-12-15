@@ -376,7 +376,7 @@ FileReader *FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const 
     std::ostringstream cmd;
     std::string sevenZipName;
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     //Necessary push/pop trick to support UNC (network) paths in Windows command-line
     auto CWD = FileUtils::get_working_path();
     cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
@@ -399,14 +399,14 @@ FileReader *FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const 
     }
     cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
 
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     cmd << "&&popd\"";
 #endif
     system(cmd.str().c_str());
 
     std::string toOpen, prefix;
     std::string shortFileName = FileUtils::GetFilename(fileName);
-#if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
+#ifdef _WIN32
     prefix = CWD + "\\tmp\\";
 #else
     prefix = "tmp/";
