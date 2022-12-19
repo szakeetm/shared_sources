@@ -25,7 +25,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 
 #define SYNVERSION   12
-#define PARAMVERSION 4
+#define PARAMVERSION 5
+//4: added structureId
+//5: added globalComponents, startS
 
 typedef struct {
     std::string    name;       // Selection name
