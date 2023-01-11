@@ -11,6 +11,7 @@ add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
 add_subdirectory(TruncatedGaussian)
+add_subdirectory(external EXCLUDE_FROM_ALL)
 
 # Project
 #get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
