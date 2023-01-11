@@ -24,6 +24,10 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
+set(EXTERNAL_1 ./external)
+set(EXTERNAL_2 ./external)
+
+set(HEADER_DIR_ZIP ./external/ziplib/Source)
 
 set(COPY_DIR ../copy_to_build/)
 
@@ -213,6 +217,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
+        ${HEADER_DIR_ZIP}
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
