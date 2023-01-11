@@ -48,7 +48,7 @@ ELSE()
     # set stuff for other systems
 
     # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
-    IF(os_version_suffix STREQUAL ".el7")
+    IF(os_version_suffix MATCHES "\\.el[1-9]")
         set(LINK_DIR_1 ../../lib_external/linux_fedora)
     ELSE()
         set(LINK_DIR_1 ../../lib_external/linux_debian)
