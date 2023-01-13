@@ -982,7 +982,7 @@ void ManualUpdateCheckDialog::Refresh() {
                 updateError = true;
             }
             else {
-                aboutText << "This is already the latest version!" << std::endl;
+                aboutText << "This is already the latest version." << std::endl;
                 aboutText << updater->GetLatestChangeLog();
             }
         }
@@ -998,7 +998,7 @@ void ManualUpdateCheckDialog::Refresh() {
         updateError = false;
     }
     if(updateError){ // app updater error
-        aboutText << "Could not check for updates!" << std::endl;
+        aboutText << "Could not check for updates." << std::endl;
         aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
         aboutText << "    https://molflow.web.cern.ch/" << std::endl;
     }
