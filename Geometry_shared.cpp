@@ -1678,7 +1678,7 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
 
 	sh.nbFacet += nbInsert;
 	facets.clear();
-	facets = tempFacets;
+	facets = { tempFacets.begin(),tempFacets.begin() + sh.nbFacet }; //Since we allocated for maimum size case
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 }
