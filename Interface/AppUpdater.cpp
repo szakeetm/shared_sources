@@ -212,7 +212,6 @@ void AppUpdater::PerformUpdateCheck() {
 		std::string resultCategory;
 		std::stringstream resultDetail;
 		std::string os = GLToolkit::GetOSName();
-
 		auto[downloadResult, body] = DownloadString(feedUrl);
 		//Handle errors
 		if (downloadResult == CURLE_OK) {
