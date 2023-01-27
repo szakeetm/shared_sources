@@ -127,7 +127,8 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 			}
 			else {
 				int answer = GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-				geom->RestoreFacets(deletedFacetList, true); //Restore to end
+				if (answer == GLDLG_OK) geom->RestoreFacets(deletedFacetList, true); //Restore to end
+				else return;
 			}
 			deletedFacetList.clear();
 			undoButton->SetEnabled(false);
