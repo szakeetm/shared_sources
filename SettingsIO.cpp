@@ -226,11 +226,15 @@ namespace SettingsIO {
                     .parent_path()
                     .compare(std::filesystem::path("tmp"))) {
             // Settings::tmpfile_dir
+            Log::console_msg_master(2, "Removing tmp directory...");
             std::filesystem::remove_all("tmp");
+            Log::console_msg_master(2, "done.\n");
         }
 
         if(!SettingsIO::workPath.empty() && is_empty(std::filesystem::path(SettingsIO::workPath))){
+            Log::console_msg_master(2, "Removing empty work directory {} ...",SettingsIO::workPath);
             std::filesystem::remove_all(SettingsIO::workPath);
+            Log::console_msg_master(2, "done.\n");
         }
     }
 } // namespace SettingsIO
