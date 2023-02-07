@@ -39,7 +39,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 std::string exec(const std::string& command);
 std::string exec(const char* cmd);
 
-int main(int argc,char* argv[]) {
+int main(int argc, char* argv[]) {
 	std::cout << "MolFlow / SynRad wrapper for 7-zip executable\n";
 	std::cout << "Renames a file, compresses it and on success it deletes the original.\n\n";
 	char key;
@@ -54,12 +54,13 @@ int main(int argc,char* argv[]) {
 	if (argc < 3 || argc>5) {
 		Log::console_error("Incorrect number of arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
 		return ERR_INC_ARG;
-	} else {
+	}
+	else {
 		if (args.back() == "autoclose") {
 			autoclose = true;
 			args.pop_back(); //autoclose arg processed, treat the rest in common code
 		}
-		if (args.size()==4 && args[3][0] != '@') {
+		if (args.size() == 4 && args[3][0] != '@') {
 			Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
 #ifdef _WIN32
 			if (!autoclose) {
@@ -68,7 +69,8 @@ int main(int argc,char* argv[]) {
 				std::cin >> key;
 			}
 #endif
-		return ERR_INC_ARG;
+			return ERR_INC_ARG;
+		}
 	}
 	std::string command;
 	std::string fileName;
@@ -77,33 +79,35 @@ int main(int argc,char* argv[]) {
 	fileName = args[1];
 	std::cout << "\nFile to compress: " << args[1];
 	std::cout << "\nNew name in archive: " << args[2] << "\n";
-	if (args.size()==4) std::cout << "Additional file list: " << args[3] << "\n";
+	if (args.size() == 4) std::cout << "Additional file list: " << args[3] << "\n";
 
 	fileNameWith7z = fileName + "7z";
 	std::string sevenZipName;
 #ifdef _WIN32
 	sevenZipName += "7za.exe";
 #else //Linux, MacOS
-    sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
-    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
-                                       "/usr/bin/7za", //use p7zip installed system-wide
-                                       "/usr/local/bin/7za", //use p7zip installed for user
-                                       "/opt/homebrew/bin/7za"}; //homebrew on Apple chip mac
-    for(auto& path : possibleLocations){
-        if (FileUtils::Exist(path)) {
-            sevenZipName = path;
-        }
-    }
+	sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
+	std::string possibleLocations[] = { "./7za", //use 7za binary shipped with Molflow
+									   "/usr/bin/7za", //use p7zip installed system-wide
+									   "/usr/local/bin/7za", //use p7zip installed for user
+									   "/opt/homebrew/bin/7za" }; //homebrew on Apple chip mac
+	for (auto& path : possibleLocations) {
+		if (FileUtils::Exist(path)) {
+			sevenZipName = path;
+		}
+	}
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
-        Log::console_error("\n{} not found. Cannot compress.\n", sevenZipName);
+		Log::console_error("\n{} not found. Cannot compress.\n", sevenZipName);
 #ifdef _WIN32
-		Log::console_error("Type any letter and press ENTER to quit\n");
-        std::cin>>key;
+		if (!autoclose) {
+			Log::console_error("Type any letter and press ENTER to quit\n");
+			std::cin >> key;
+		}
 #endif
-        return ERR_NO_CMPR;
+		return ERR_NO_CMPR;
 	}
-	
+
 	fileNameGeometry = FileUtils::GetPath(fileName) + args[2];
 	/*
 	command = "move \"" + fileName + "\" \"" + fileNameGeometry + "\"";
@@ -119,8 +123,8 @@ int main(int argc,char* argv[]) {
 	command += "cmd /C \"pushd \"" + cwd + "\"&&";
 #endif
 
-	command+=sevenZipName + " u -t7z \"" + fileNameWith7z + "\" \"" + fileNameGeometry + "\"";
-	if (args.size()==4) { //include file list
+	command += sevenZipName + " u -t7z \"" + fileNameWith7z + "\" \"" + fileNameGeometry + "\"";
+	if (args.size() == 4) { //include file list
 		command = command + " " + args[3];
 		/*
 		bool duplicate=false;
@@ -136,14 +140,14 @@ int main(int argc,char* argv[]) {
 		*/
 	}
 #ifdef _WIN32
-	command+="&&popd\"";
+	command += "&&popd\"";
 #endif
 
 	std::cout << "\nCommand:\n" << command << "\n\nStarting compression...";
 #ifdef _WIN32
 	std::cout << "\nYou can continue using Molflow/Synrad while compressing.\n"; //On Windows, compress.exe is launched as a background process
 #endif
-	result=exec(command);
+	result = exec(command);
 
 	if (args.size() == 4) { //Delete list file
 		std::string listFile = args[3];
@@ -152,19 +156,19 @@ int main(int argc,char* argv[]) {
 	}
 
 	size_t found;
-	found=result.find("Everything is Ok");
-	if (found!=std::string::npos) {
-        Log::console_error("\nCompression seems legit. Deleting original {} file.\n",std::filesystem::path(fileNameGeometry).extension().string().c_str());
+	found = result.find("Everything is Ok");
+	if (found != std::string::npos) {
+		Log::console_error("\nCompression seems legit. Deleting original {} file.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
 		std::filesystem::remove(fileNameGeometry);
 		return 0;
 	}
 
 	//Handle errors:
 #ifdef _WIN32
-	ShowWindow( GetConsoleWindow(), SW_RESTORE ); //Make window visible on error
+	ShowWindow(GetConsoleWindow(), SW_RESTORE); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
-	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n" ,std::filesystem::path(fileNameGeometry).extension().string().c_str());
+	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
 #ifdef _WIN32
 	if (!autoclose) {
 		Log::console_error("Type any letter and press Enter to exit\n");
@@ -179,27 +183,27 @@ std::string exec(const std::string& command) {
 }
 
 std::string exec(const char* cmd) { //Execute a command and return what it prints to the command line / terinal
-    FILE* pipe = 
+	FILE* pipe =
 #ifdef _WIN32
 		_popen
 #else
 		popen
 #endif
 		(cmd, "r");
-    if (!pipe) return "ERROR";
-    char buffer[128];
-    std::string result = "";
-    while(!feof(pipe)) {
-        if(fgets(buffer, 128, pipe) != NULL)
-                result += buffer;
-		        printf("%s",buffer);
-    }
-	result=result+'0';
+	if (!pipe) return "ERROR";
+	char buffer[128];
+	std::string result = "";
+	while (!feof(pipe)) {
+		if (fgets(buffer, 128, pipe) != NULL)
+			result += buffer;
+		printf("%s", buffer);
+	}
+	result = result + '0';
 #ifdef _WIN32
 	_pclose
 #else
 	pclose
 #endif
-	(pipe);
-    return result;
+		(pipe);
+	return result;
 }
