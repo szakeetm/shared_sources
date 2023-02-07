@@ -43,17 +43,30 @@ int main(int argc,char* argv[]) {
 	std::cout << "MolFlow / SynRad wrapper for 7-zip executable\n";
 	std::cout << "Renames a file, compresses it and on success it deletes the original.\n\n";
 	char key;
+	bool autoclose = false;
 	std::string result;
+	std::vector<std::string> args;
 	for (int i = 0; i < argc; i++) {
 		std::cout << argv[i] << " ";
+		args.push_back(argv[i]);
 	}
 	std::cout << "\n\n";
-	if (argc < 3 || argc>4 || (argc == 4 && argv[3][0] != '@')) {
-        Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt]\n");
+	if (argc < 3 || argc>5) {
+		Log::console_error("Incorrect number of arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
+		return ERR_INC_ARG;
+	} else {
+		if (args.back() == "autoclose") {
+			autoclose = true;
+			args.pop_back(); //autoclose arg processed, treat the rest in common code
+		}
+		if (args.size()==4 && args[3][0] != '@') {
+			Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
 #ifdef _WIN32
-		Log::console_error("Type any letter and press ENTER to quit\n");
-		ShowWindow( GetConsoleWindow(), SW_RESTORE );
-        std::cin>>key;
+			if (!autoclose) {
+				Log::console_error("Type any letter and press ENTER to quit\n");
+				ShowWindow(GetConsoleWindow(), SW_RESTORE);
+				std::cin >> key;
+			}
 #endif
 		return ERR_INC_ARG;
 	}
@@ -61,10 +74,10 @@ int main(int argc,char* argv[]) {
 	std::string fileName;
 	std::string fileNameWith7z;
 	std::string fileNameGeometry;
-	fileName = argv[1];
-	std::cout << "\nFile to compress: " << argv[1];
-	std::cout << "\nNew name in archive: " << argv[2] << "\n";
-	if (argc == 4) std::cout << "Additional file list: " << argv[3] << "\n";
+	fileName = args[1];
+	std::cout << "\nFile to compress: " << args[1];
+	std::cout << "\nNew name in archive: " << args[2] << "\n";
+	if (args.size()==4) std::cout << "Additional file list: " << args[3] << "\n";
 
 	fileNameWith7z = fileName + "7z";
 	std::string sevenZipName;
@@ -75,7 +88,7 @@ int main(int argc,char* argv[]) {
     std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
                                        "/usr/bin/7za", //use p7zip installed system-wide
                                        "/usr/local/bin/7za", //use p7zip installed for user
-                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
+                                       "/opt/homebrew/bin/7za"}; //homebrew on Apple chip mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
             sevenZipName = path;
@@ -91,7 +104,7 @@ int main(int argc,char* argv[]) {
         return ERR_NO_CMPR;
 	}
 	
-	fileNameGeometry = FileUtils::GetPath(fileName) + argv[2];
+	fileNameGeometry = FileUtils::GetPath(fileName) + args[2];
 	/*
 	command = "move \"" + fileName + "\" \"" + fileNameGeometry + "\"";
 	result=exec(command);
@@ -107,8 +120,8 @@ int main(int argc,char* argv[]) {
 #endif
 
 	command+=sevenZipName + " u -t7z \"" + fileNameWith7z + "\" \"" + fileNameGeometry + "\"";
-	if (argc==4) { //include file list
-		command = command + " " + argv[3];
+	if (args.size()==4) { //include file list
+		command = command + " " + args[3];
 		/*
 		bool duplicate=false;
 		for (int j=3;!duplicate && j<i;j++) { //check for duplicate include files
@@ -132,8 +145,8 @@ int main(int argc,char* argv[]) {
 #endif
 	result=exec(command);
 
-	if (argc == 4) { //Delete list file
-		std::string listFile = argv[3];
+	if (args.size() == 4) { //Delete list file
+		std::string listFile = args[3];
 		listFile = listFile.substr(1, std::string::npos);
 		std::filesystem::remove(listFile);
 	}
@@ -153,8 +166,10 @@ int main(int argc,char* argv[]) {
 	std::filesystem::rename(fileNameGeometry, fileName);
 	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n" ,std::filesystem::path(fileNameGeometry).extension().string().c_str());
 #ifdef _WIN32
-	Log::console_error("Type any letter and press Enter to exit\n");
-    std::cin>>key;
+	if (!autoclose) {
+		Log::console_error("Type any letter and press Enter to exit\n");
+		std::cin >> key;
+	}
 #endif
 	return ERR_UNRSLVD;
 }
