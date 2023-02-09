@@ -3745,8 +3745,9 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 		std::vector<InterfaceVertex>(sh.nbVertex + 3 * nbNewFacets).swap(vertices3);
 	}
 	else { //insert
-		facets = (Facet**)realloc(facets, (nbNewFacets + sh.nbFacet) * sizeof(Facet**));
-		memset(facets + sh.nbFacet, 0, nbNewFacets * sizeof(Facet*));
+		facets = (Facet**)realloc(facets,(sh.nbFacet+nbNewFacets) * sizeof(Facet*)); //increase by nbNewFacets
+		if (!facets) throw Error("Out of memory: LoadSTL");
+		memset(&(facets[sh.nbFacet]), 0, nbNewFacets * sizeof(Facet*)); //0-init newly created facets
 		vertices3.resize(sh.nbVertex + 3 * nbNewFacets);
 	}
 
@@ -3759,7 +3760,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 	for (size_t b = 0; b < bodyFacetCounts.size();b++) {
 		file->ReadLine(); //solid name
 		std::ostringstream progressStr;
-		progressStr << "Reading facets (body " << b+1 << "/" << bodyFacetCounts.size() << "...";
+		progressStr << "Reading facets (body " << b + 1 << "/" << bodyFacetCounts.size() << ")...";
 		prg->SetMessage(progressStr.str()); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
 		for (size_t i = 0; i < bodyFacetCounts[b]; i++) {
 
