@@ -3995,7 +3995,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 	for (size_t b = 0; b < bodyFacetCounts.size();b++) {
 		file->ReadLine(); //solid name
 		std::ostringstream progressStr;
-		progressStr << "Reading facets (body " << b+1 << "/" << bodyFacetCounts.size() << "...";
+		progressStr << "Reading facets (body " << b+1 << "/" << bodyFacetCounts.size() << ")...";
 		prg->SetMessage(progressStr.str()); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
 		for (size_t i = 0; i < bodyFacetCounts[b]; i++) {
 
