@@ -43,11 +43,7 @@ public:
     bool   isReady{};         // Volatile state
     bool   isHit;
 
-    size_t InitializeDirectionTexture();
-
-    size_t InitializeProfile();
-
-    size_t InitializeTexture();
+    void InitializeTexture();
 
     virtual bool InitializeLinkAndVolatile(const size_t & id);
 

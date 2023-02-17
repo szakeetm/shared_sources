@@ -95,24 +95,7 @@ bool SimulationFacet::InitializeLinkAndVolatile(const size_t & id)
     return true;
 }
 
-size_t SimulationFacet::InitializeProfile() {
-    size_t profileSize = 0;
 
-    //Profiles
-    if (sh.isProfile) {
-        profileSize = PROFILE_SIZE * sizeof(ProfileSlice);
-        try {
-            //profile = std::vector<std::vector<ProfileSlice>>(1 + nbMoments, std::vector<ProfileSlice>(PROFILE_SIZE));
-        }
-        catch (...) {
-            throw std::runtime_error("Not enough memory to load profiles");
-            return false;
-        }
-    }
-    else
-        profileSize = 0;
-    return profileSize;
-}
 
 std::vector<double> SimulationFacet::InitTextureMesh()
 {
@@ -210,52 +193,17 @@ std::vector<double> SimulationFacet::InitTextureMesh()
     return interCellArea;
 }
 
-size_t SimulationFacet::InitializeTexture(){
-    size_t textureSize = 0;
+void SimulationFacet::InitializeTexture(){
     //Textures
     if (sh.isTextured) {
         size_t nbE = sh.texWidth*sh.texHeight;
         largeEnough.resize(nbE);
-        textureSize = nbE * sizeof(TextureCell);
-        /*try {
-            texture = std::vector<std::vector<TextureCell>>(1 + nbMoments, std::vector<TextureCell>(nbE));
-        }
-        catch (...) {
-            throw std::runtime_error("Not enough memory to load textures");
-            return false;
-        }*/
         // Texture increment of a full texture element
         double fullSizeInc = (sh.texWidth_precise * sh.texHeight_precise) / (sh.U.Norme() * sh.V.Norme());
         for (size_t j = 0; j < nbE; j++) { //second pass, filter out very small cells
             largeEnough[j] = textureCellIncrements[j] < (5.0*fullSizeInc);
         }
-
-        //double iw = 1.0 / (double)sh.texWidth_precise;
-        //double ih = 1.0 / (double)sh.texHeight_precise;
-        //double rw = sh.U.Norme() * iw;
-        //double rh = sh.V.Norme() * ih;
     }
-    else
-        textureSize = 0;
-    return textureSize;
-}
-
-size_t SimulationFacet::InitializeDirectionTexture(){
-    size_t directionSize = 0;
-
-    //Direction
-    if (sh.countDirection) {
-        directionSize = sh.texWidth*sh.texHeight * sizeof(DirectionCell);
-        try {
-            //direction = std::vector<std::vector<DirectionCell>>(1 + nbMoments, std::vector<DirectionCell>(sh.texWidth*sh.texHeight));
-        }
-        catch (...) {
-            throw std::runtime_error("Not enough memory to load direction textures");
-        }
-    }
-    else
-        directionSize = 0;
-    return directionSize;
 }
 
 /**
