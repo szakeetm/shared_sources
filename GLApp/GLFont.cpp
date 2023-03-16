@@ -121,7 +121,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
     return 0;
   }
 
-  // Compute othographic matrix (for Transfomed Lit vertex)
+  // Compute othographic matrix (for Transformed Lit vertex)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
   glOrtho( 0, scrWidth, scrHeight, 0, -1, 1 );

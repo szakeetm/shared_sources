@@ -1897,7 +1897,7 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 }
 
 #define TRANSFORMBB( X,Y,Z )                                                \
-	mv.TransfomVec((float)bbO.X,(float)bbO.Y,(float)bbO.Z,1.0f,&rx,&ry,&rz,&rw);\
+	mv.TransformVec((float)bbO.X,(float)bbO.Y,(float)bbO.Z,1.0f,&rx,&ry,&rz,&rw);\
 	dx = (double)rx;                                                            \
 	dy = (double)ry;                                                            \
 	dz = (double)rz;                                                            \
@@ -1909,7 +1909,7 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 	if( dz > zFar ) zFar = dz;
 
 #define TRANSFORMVERTEX( X,Y,Z )                                  \
-	mv.TransfomVec((float)X,(float)Y,(float)Z,1.0f,&rx,&ry,&rz,&rw);  \
+	mv.TransformVec((float)X,(float)Y,(float)Z,1.0f,&rx,&ry,&rz,&rw);  \
 	dx = (double)rx;                                                  \
 	dy = (double)ry;                                                  \
 	dz = (double)rz;                                                  \

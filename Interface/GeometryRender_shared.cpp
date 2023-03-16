@@ -114,7 +114,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 			while (j < nb && isInside) {
 
 				size_t idx = f->indices[j];
-				m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
+				m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
 					&rx, &ry, &rz, &rw);
 
 				if (rw > 0.0f) {
@@ -350,7 +350,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 
 			bool isInside;
 			int idx = i;
-			m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
+			m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
 				&rx, &ry, &rz, &rw);
 
 			if (rw > 0.0f) {
@@ -650,7 +650,7 @@ float Geometry::getMaxDistToCamera(Facet* f){
 
     for(int i=0;i<f->sh.nbIndex;++i){
         size_t idx = f->indices[i];
-        m.TransfomVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
+        m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
                       &rx, &ry, &rz, &rw);
         distToCamera = std::max(rz,distToCamera);
     }
