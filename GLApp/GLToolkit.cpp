@@ -858,7 +858,7 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
   GLMatrix m; m.Multiply(&proj,&view);
 
   float rx,ry,rz,rw;
-  m.TransfomVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
+  m.TransformVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
   if(rw<=0.0f) return std::nullopt;
 
   return std::make_tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
@@ -874,8 +874,8 @@ float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,do
 
   glGetFloatv( GL_MODELVIEW_MATRIX , mView );
   GLMatrix view; view.LoadGL(mView);
-  view.TransfomVec((float)x,(float)y,(float)z,1.0f,&rx,&ry,&rz,&rw);
-  view.TransfomVec((float)nx,(float)ny,(float)nz,0.0f,&ntx,&nty,&ntz,&ntw);
+  view.TransformVec((float)x,(float)y,(float)z,1.0f,&rx,&ry,&rz,&rw);
+  view.TransformVec((float)nx,(float)ny,(float)nz,0.0f,&ntx,&nty,&ntz,&ntw);
   return rx*ntx + ry*nty + rz*ntz;
 
 }
@@ -884,7 +884,7 @@ float GLToolkit::GetCamDistance(GLfloat *mView,double x,double y,double z) {
 
   float rx,ry,rz,rw;
   GLMatrix view; view.LoadGL(mView);
-  view.TransfomVec((float)x,(float)y,(float)z,1.0f,&rx,&ry,&rz,&rw);
+  view.TransformVec((float)x,(float)y,(float)z,1.0f,&rx,&ry,&rz,&rw);
   return sqrtf(rx*rx + ry*ry + rz*rz);
 
 }
@@ -920,7 +920,7 @@ void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt
 
   // Compute location on screen
   float rx,ry,rz,rw;
-  dsm.TransfomVec(x,y,z,1.0f,&rx,&ry,&rz,&rw);
+  dsm.TransformVec(x,y,z,1.0f,&rx,&ry,&rz,&rw);
   if(rw<0.0f) return;
   int xe = dsg.x +(int)(((rx / rw) + 1.0f) * (float)dsg.width/2.0f);
   int ye = dsg.y +(int)(((-ry / rw) + 1.0f) * (float)dsg.height/2.0f);

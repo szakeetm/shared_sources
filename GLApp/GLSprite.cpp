@@ -150,7 +150,7 @@ int Sprite2D::RestoreDeviceObjects(const char *diffName, const char *alphaName,i
     return 0;    
   }
 
-  // Compute othographic matrix (for Transfomed Lit vertex)
+  // Compute othographic matrix (for Transformed Lit vertex)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
   glOrtho( 0, scrWidth, scrHeight, 0, -1, 1 );
