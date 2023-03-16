@@ -630,7 +630,7 @@ void Geometry::DrawPolys() {
 	glEnd();
 }
 
-// returns 1 if lhs is greater, -1 otherwise
+// returns 1 if lhs is greater, -1 otherwise. unused
 float Geometry::getMaxDistToCamera(InterfaceFacet* f){
 
     float rx, ry, rz, rw;

@@ -103,8 +103,8 @@ protected:
 	void BuildNonPlanarList();
 	void BuildVolumeFacetList();
 
-	float getMaxDistToCamera(InterfaceFacet* f);
-	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs);
+	float getMaxDistToCamera(InterfaceFacet* f); //unused
+	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs); //unused
 public:
 	Geometry();
 	virtual ~Geometry();
