@@ -866,7 +866,7 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
 
 }
 
-float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,double nz) {
+float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,double nz) { //unused
 
   GLfloat mView[16];
   float rx,ry,rz,rw;
@@ -880,7 +880,7 @@ float GLToolkit::GetVisibility(double x,double y,double z,double nx,double ny,do
 
 }
 
-float GLToolkit::GetCamDistance(GLfloat *mView,double x,double y,double z) {
+float GLToolkit::GetCamDistance(GLfloat *mView,double x,double y,double z) { //unused
 
   float rx,ry,rz,rw;
   GLMatrix view; view.LoadGL(mView);

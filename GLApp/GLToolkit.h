@@ -57,8 +57,8 @@ public:
   static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
   static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
-  static float GetCamDistance(GLfloat *mView,double x,double y,double z);
-  static float GetVisibility(double x,double y,double z,double nx,double ny,double nz);
+  static float GetCamDistance(GLfloat *mView,double x,double y,double z); //unused
+  static float GetVisibility(double x,double y,double z,double nx,double ny,double nz); //unused
   static void SetCursor(int cursor);
   static int  GetCursor();
   static void SetIcon32x32(const char *pngName);
