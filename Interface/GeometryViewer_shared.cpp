@@ -1840,11 +1840,13 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
 	Geometry *geom = work->GetGeometry();
+	/*
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(matProj);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(matView);
+	*/
 	selectionChange = true;
 	geom->SelectCoplanar(this->width, this->height, tolerance);
 }
