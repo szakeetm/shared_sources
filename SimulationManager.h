@@ -84,7 +84,7 @@ public:
 
     int InitSimulations();
 
-    int InitSimulation(const std::shared_ptr<SimulationModel>& model, GlobalSimuState *globState);
+    int InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState);
 
     int KillAllSimUnits();
 
@@ -138,7 +138,7 @@ private:
     std::vector<Simulation*> simulations; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
 
 public:
-    void ForwardSimModel(const std::shared_ptr<SimulationModel>& model);
+    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
     void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);

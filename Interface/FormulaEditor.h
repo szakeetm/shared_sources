@@ -39,7 +39,7 @@ class FormulaEditor : public GLWindow {
 public:
 
   // Construction
-  FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas);
+  FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas);
 
   void RebuildList();
   void Refresh();

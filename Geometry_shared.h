@@ -260,7 +260,7 @@ protected:
 public:
     bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    virtual void InitInterfaceFacets(const std::vector<std::shared_ptr<SimulationFacet>> &sFacets, Worker* work);
+    virtual void InitInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();

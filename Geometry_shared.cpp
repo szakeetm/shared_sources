@@ -4901,7 +4901,7 @@ bool Geometry::InitOldStruct(SimulationModel* model){
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void Geometry::InitInterfaceFacets(const vector<shared_ptr<SimulationFacet>> &sFacets, Worker* work) {
+void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
     //Facets
     try{
         facets.resize(sFacets.size(), nullptr);

@@ -169,7 +169,7 @@ namespace MFMPI {
         }
     }
 
-    void mpi_receive_states(std::shared_ptr<SimulationModel>& model, GlobalSimuState& globState) {
+    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globState) {
         // First prepare receive structure
         MPI_Status status;
         GlobalSimuState tmpState{};
