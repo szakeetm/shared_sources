@@ -173,7 +173,7 @@ namespace MFMPI {
         // First prepare receive structure
         MPI_Status status;
         GlobalSimuState tmpState{};
-        tmpState.Resize(*model);
+        tmpState.Resize(model);
 
         // Retrieve global simu state from other ranks
         // Binary Fan-in pattern
