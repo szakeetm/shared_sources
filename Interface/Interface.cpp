@@ -1135,6 +1135,7 @@ int Interface::RestoreDeviceObjects_shared() {
     RVALIDATE_DLG(updateCheckDialog);
     RVALIDATE_DLG(updateFoundDialog);
     RVALIDATE_DLG(updateLogWindow);
+    RVALIDATE_DLG(convergencePlotter);
 
     UpdateTitle();
 
@@ -1177,6 +1178,7 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(updateCheckDialog);
     IVALIDATE_DLG(updateFoundDialog);
     IVALIDATE_DLG(updateLogWindow);
+    IVALIDATE_DLG(convergencePlotter);
 
     UpdateTitle();
 
