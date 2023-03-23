@@ -1133,7 +1133,7 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(facetCoordinates);
     IVALIDATE_DLG(vertexCoordinates);
     IVALIDATE_DLG(particleLogger);
-    RVALIDATE_DLG(convergencePlotter);
+    IVALIDATE_DLG(convergencePlotter);
 
     IVALIDATE_DLG(updateCheckDialog);
     IVALIDATE_DLG(updateFoundDialog);
