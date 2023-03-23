@@ -54,7 +54,7 @@ static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 
 
-FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> &formulas) : GLWindow() {
+FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
     columnRatios = { 0.333,0.333,0.333 };
 
     int wD = 460;
