@@ -19,6 +19,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
         ${HEADER_DIR_ZIP}
+        ${HEADER_DIR_ZIP2}
         )
 
 

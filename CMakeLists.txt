@@ -24,6 +24,8 @@ set(HEADER_DIR_5 ./Interface)
 #set(EXTERNAL_2 ./external)
 
 set(HEADER_DIR_ZIP ./external/ziplib/Source)
+set(HEADER_DIR_ZIP2 ./external/miniz-cpp)
+
 set(IMGUI_DIR ./imgui)
 
 #set(COPY_DIR ../copy_to_build/)
