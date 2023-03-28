@@ -24,7 +24,7 @@ namespace
 
   std::string MakeTempFilename(const std::string& fileName)
   {
-    return "~" + fileName + ".tmp"; //likely won't be indexed or picked up by cloud sync clients
+    return fileName + ".tmp";
   }
 }
 
