@@ -118,7 +118,7 @@ void GLProgress::PositionComponents()
 	int screenWidth, screenHeight;
 	GLToolkit::GetScreenSize(&screenWidth, &screenHeight);
 	if (windowWidth > screenWidth) windowWidth = screenWidth;
-	int windowX = (screenWidth - windowWidth) / 2 - 20;
+	int windowX = (screenWidth - windowWidth) / 2 - 30;
 	int windowY = (screenHeight - windowHeight) / 2;
 	SetBounds(windowX, windowY, windowWidth, windowHeight);
 }
