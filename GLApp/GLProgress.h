@@ -18,16 +18,18 @@ public:
   void SetProgress(double value);
   double GetProgress();
   void SetMessage(const char *msg, const bool& force=true);
-  void SetMessage(std::string msg, const bool& force=true);
+  void SetMessage(const std::string& msg, const bool& force=true);
+  void PositionComponents(); //Resizes window in cae of wide/multiline text
 
 private:
 
-  GLLabel   *scroll;
-  GLLabel   *scrollText;
-  GLLabel	*label;
-  int        progress;
-  int        xP,yP,wP,hP;
-  Uint32     lastUpd;
+  GLLabel   *progressBar; //rectangle that grows right
+  GLLabel	*progressBarBackground; //rectangle background
+  GLLabel   *percentLabel; //percent display in middle
+  GLLabel	*progressStatus; //Showing what is being done
+  size_t        progress; //percent, 0-100
+  int        progressBarX,progressBarY,progressBarWidth,progressBarMaxWidth,progressBarHeight; //progressBar bounds
+  Uint32     lastUpd; //update time to limit update to 2fps
 
   void ProcessMessage(GLComponent *src,int message) override;
 
