@@ -68,7 +68,7 @@ add_definitions(
 IF (WIN32)
     add_definitions(
             -DWIN
-            -D_WINDOWS
+            #-D_WINDOWS
             -D_WITHGL
     )
 ENDIF()
