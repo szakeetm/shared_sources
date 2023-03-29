@@ -6,7 +6,7 @@
 #include "GLToolkit.h"
 #include "Helper/MathTools.h" //Min max Saturate
 #include "GLWindowManager.h"
-#include <fmt/core.h>
+#include <sstream>
 
 // Construct a message dialog box
 GLProgress::GLProgress(const char *message,const char *title):GLWindow() {
@@ -70,8 +70,9 @@ void GLProgress::SetProgress(double value) {
   size_t p = (size_t)( value*100.0 + 0.5 );
   if( progress != p ) {
     progress = p;
-
-    percentLabel->SetText(fmt::format("{}%",progress));
+	std::ostringstream pct;
+	pct << progress << "%";
+    percentLabel->SetText(pct.str());
 	progressBarWidth = (int)((double)progressBarMaxWidth*value+0.5);
     progressBar->SetBounds(progressBarX,progressBarY,progressBarWidth,progressBarHeight); //lighter than PositionComponents()
 
