@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLMatrix.h"
 #include <tuple>
 #include <Helper/GraphicsHelper.h>
+#include <set>
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -1650,13 +1651,42 @@ void Geometry::BuildGLList() {
 
 	// Compile geometry for OpenGL
 	for (int j = 0; j < sh.nbSuper; j++) {
+
+typedef std::pair<size_t, size_t> Edge;
+typedef std::set<Edge> EdgeSet;
+
+	EdgeSet edgeSet;
+
+	//construct edge map
+    for (size_t i = 0; i < facets.size(); ++i) {
+        const auto& f = facets[i];
+
+        for (size_t j = 0; j < f->indices.size(); ++j) {
+            size_t v1 = f->indices[j];
+            size_t v2 = f->indices[(j + 1) % f->indices.size()];
+
+            // Ensure canonical order for edge vertices
+            if (v1 > v2) {
+                std::swap(v1, v2);
+            }
+
+			Edge newEdge = std::make_pair(v1, v2);
+			edgeSet.insert(newEdge);
+			
+        }
+    }
+
+	std::vector<GLuint> lines;
+	lines.reserve(edgeSet.size()*2);
+	for (const auto& it : edgeSet) {
+		lines.push_back((GLuint)it.first);
+		lines.push_back((GLuint)it.second);
+	}
+
+
+
 		lineList[j] = glGenLists(1);
 		glNewList(lineList[j], GL_COMPILE);
-		std::vector<GLuint> lines;
-		for (int i = 0; i < sh.nbFacet; i++) {
-			if (facets[i]->sh.superIdx == j || facets[i]->sh.superIdx == -1)
-				DrawFacet_array(facets[i], lines);
-		}
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
