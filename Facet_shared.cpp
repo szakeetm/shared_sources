@@ -577,8 +577,8 @@ void InterfaceFacet::BuildMeshGLList() {
 	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texWidth);
 	for (size_t y=0;y<=sh.texHeight;y++) {
 		for (size_t x=0;x<=sh.texWidth;x++) {		
-			meshNodeLocations.push_back(x*iw);
-			meshNodeLocations.push_back(y*ih);
+			meshNodeLocations.push_back((double)x*iw);
+			meshNodeLocations.push_back((double)y*ih);
 			if (x!=sh.texWidth && y!=sh.texHeight) {//not on last row or col
 				size_t index_topleft = y*(sh.texWidth+1) + x;
 				size_t index_topright = index_topleft + 1;
@@ -598,12 +598,12 @@ void InterfaceFacet::BuildMeshGLList() {
 
 	glElem = glGenLists(1);
 	glNewList(glElem, GL_COMPILE);
-
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(2,GL_DOUBLE,0,meshNodeLocations.data());
 	glDrawElements(GL_TRIANGLES,2*sh.texWidth*sh.texHeight,GL_UNSIGNED_BYTE,meshTriangleIndices.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
-
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEndList();
 
 }

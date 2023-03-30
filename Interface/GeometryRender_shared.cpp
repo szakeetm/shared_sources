@@ -1174,10 +1174,11 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			if (!f->cellPropertiesIds.empty()  && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
-				glEnable(GL_POLYGON_OFFSET_LINE);
-				glPolygonOffset(1.0f, 2.0f);
+				//glEnable(GL_POLYGON_OFFSET_LINE);
+				//glPolygonOffset(1.0f, 2.0f);
+				//glEnable(GL_LINE_STRIP);
 				glCallList(f->glElem);
-				glDisable(GL_POLYGON_OFFSET_LINE);
+				//glDisable(GL_LINE_STRIP);
 			}
 		}
 		if (mApp->antiAliasing) {
