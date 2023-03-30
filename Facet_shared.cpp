@@ -572,18 +572,21 @@ void InterfaceFacet::BuildMeshGLList() {
 	double iw = 1.0 / (double)sh.texWidth_precise;  //horizontal spacing
 	double ih = 1.0 / (double)sh.texHeight_precise; //vertical spacing
 	std::vector<GLdouble> meshNodeLocations;
-	meshNodeLocations.reserve(2*(sh.texWidth+1)*(sh.texHeight+1));
-	std::vector<GLubyte> meshTriangleIndices;
-	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texWidth);
-	for (size_t y=0;y<=sh.texHeight;y++) {
-		for (size_t x=0;x<=sh.texWidth;x++) {		
-			meshNodeLocations.push_back((double)x*iw);
-			meshNodeLocations.push_back((double)y*ih);
+	meshNodeLocations.reserve(3*(sh.texWidth+1)*(sh.texHeight+1));
+	std::vector<GLuint> meshTriangleIndices;
+	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texHeight);
+	for (GLuint y=0;y<=sh.texHeight;y++) {
+		for (GLuint x=0;x<=sh.texWidth;x++) {
+			double u = (double)x * iw;
+			double v = (double)y * ih;
+			meshNodeLocations.push_back(sh.O.x + sh.U.x * u + sh.V.x * v); //model X
+			meshNodeLocations.push_back(sh.O.y + sh.U.y * u + sh.V.y * v); //model Y
+			meshNodeLocations.push_back(sh.O.z + sh.U.z * u + sh.V.z * v); //model Z
 			if (x!=sh.texWidth && y!=sh.texHeight) {//not on last row or col
-				size_t index_topleft = y*(sh.texWidth+1) + x;
-				size_t index_topright = index_topleft + 1;
-				size_t index_bottomleft = index_topleft + (sh.texWidth+1);
-				size_t index_bottomright = index_bottomleft + 1;
+				GLuint index_topleft = y*(sh.texWidth+1) + x;
+				GLuint index_topright = index_topleft + 1;
+				GLuint index_bottomleft = index_topleft + (sh.texWidth+1);
+				GLuint index_bottomright = index_bottomleft + 1;
 				
 				meshTriangleIndices.push_back(index_topleft);
 				meshTriangleIndices.push_back(index_topright);
@@ -600,8 +603,8 @@ void InterfaceFacet::BuildMeshGLList() {
 	glNewList(glElem, GL_COMPILE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2,GL_DOUBLE,0,meshNodeLocations.data());
-	glDrawElements(GL_TRIANGLES,2*sh.texWidth*sh.texHeight,GL_UNSIGNED_BYTE,meshTriangleIndices.data());
+	glVertexPointer(3,GL_DOUBLE,0,meshNodeLocations.data());
+	glDrawElements(GL_TRIANGLES,2*3*sh.texWidth*sh.texHeight,GL_UNSIGNED_INT,meshTriangleIndices.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEndList();
