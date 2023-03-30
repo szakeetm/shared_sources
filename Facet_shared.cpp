@@ -544,69 +544,45 @@ void InterfaceFacet::BuildMeshGLList() {
 
 	DELETE_LIST(glElem);
 
-	/*
+	
 	// Build OpenGL geometry for meshing
-	glElem = glGenLists(1);
-	glNewList(glElem, GL_COMPILE);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	std::vector < Vector2d> points2;
+	std::vector<GLuint> lines;
 	size_t nb = sh.texWidth*sh.texHeight;
 	for (size_t i = 0; i < nb; i++) {
 		if (cellPropertiesIds[i] != -2) {
-			glBegin(GL_POLYGON);
 			size_t nbPts = GetMeshNbPoint(i);
-			for (size_t n=0;n<nbPts;n++) {
-				glEdgeFlag(true);
+			size_t startIndex = points2.size();
+			for (size_t n = 0; n < nbPts; n++) {
 				Vector2d pt = GetMeshPoint(i, n);
-				glVertex2u(pt.u, pt.v);
+				points2.push_back(pt);
 			}
-			glEnd();
-		}
-
-	}
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glEndList();
-	*/
-
-	double iw = 1.0 / (double)sh.texWidth_precise;  //horizontal spacing
-	double ih = 1.0 / (double)sh.texHeight_precise; //vertical spacing
-	std::vector<GLdouble> meshNodeLocations;
-	meshNodeLocations.reserve(3*(sh.texWidth+1)*(sh.texHeight+1));
-	std::vector<GLuint> meshTriangleIndices;
-	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texHeight);
-	for (GLuint y=0;y<=sh.texHeight;y++) {
-		for (GLuint x=0;x<=sh.texWidth;x++) {
-			double u = (double)x * iw;
-			double v = (double)y * ih;
-			meshNodeLocations.push_back(sh.O.x + sh.U.x * u + sh.V.x * v); //model X
-			meshNodeLocations.push_back(sh.O.y + sh.U.y * u + sh.V.y * v); //model Y
-			meshNodeLocations.push_back(sh.O.z + sh.U.z * u + sh.V.z * v); //model Z
-			if (x!=sh.texWidth && y!=sh.texHeight) {//not on last row or col
-				GLuint index_topleft = y*(sh.texWidth+1) + x;
-				GLuint index_topright = index_topleft + 1;
-				GLuint index_bottomleft = index_topleft + (sh.texWidth+1);
-				GLuint index_bottomright = index_bottomleft + 1;
-				
-				meshTriangleIndices.push_back(index_topleft);
-				meshTriangleIndices.push_back(index_topright);
-				meshTriangleIndices.push_back(index_bottomright);
-				
-				meshTriangleIndices.push_back(index_bottomleft);
-				meshTriangleIndices.push_back(index_topleft);
-				meshTriangleIndices.push_back(index_bottomright);
+			for (size_t n = 0; n < nbPts-1; n++) {
+				lines.push_back(startIndex+n);
+				lines.push_back(startIndex + n + 1);
 			}
+			//Close loop
+			lines.push_back(startIndex + nbPts - 1);
+			lines.push_back(startIndex);
 		}
 	}
+
+	std::vector<GLdouble> points3;
+	points3.reserve(points2.size() * 3);
+	for (const auto& p2 : points2) {
+		points3.push_back(sh.O.x + sh.U.x * p2.u + sh.V.x * p2.v);
+		points3.push_back(sh.O.y + sh.U.y * p2.u + sh.V.y * p2.v);
+		points3.push_back(	sh.O.z + sh.U.z * p2.u + sh.V.z * p2.v);
+	}
+
+	
 
 	glElem = glGenLists(1);
 	glNewList(glElem, GL_COMPILE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3,GL_DOUBLE,0,meshNodeLocations.data());
-	glDrawElements(GL_TRIANGLES,2*3*sh.texWidth*sh.texHeight,GL_UNSIGNED_INT,meshTriangleIndices.data());
+	glVertexPointer(3,GL_DOUBLE,0,points3.data());
+	glDrawElements(GL_LINES, lines.size(),GL_UNSIGNED_INT,lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEndList();
 
 }
