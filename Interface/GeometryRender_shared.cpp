@@ -585,6 +585,24 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 
 }
 
+void Geometry::DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines) {
+
+	// Render a facet (wireframe)
+	size_t nb = f->sh.nbIndex;
+	size_t j;
+	for (j = 0; j < nb - 1; j++) {
+		if (f->visible[j]) {
+			lines.push_back((GLuint)f->indices[j]);
+			lines.push_back((GLuint)f->indices[j + 1]);
+		}
+	}
+	// Last segment
+	if (f->visible[j]) {
+		lines.push_back((GLuint)f->indices[j]);
+		lines.push_back((GLuint)f->indices[0]);
+	}
+}
+
 
 void Geometry::DrawPolys() {
 
@@ -1634,10 +1652,17 @@ void Geometry::BuildGLList() {
 	for (int j = 0; j < sh.nbSuper; j++) {
 		lineList[j] = glGenLists(1);
 		glNewList(lineList[j], GL_COMPILE);
+		std::vector<GLuint> lines;
 		for (int i = 0; i < sh.nbFacet; i++) {
 			if (facets[i]->sh.superIdx == j || facets[i]->sh.superIdx == -1)
-				DrawFacet(facets[i], false, true, false);
+				DrawFacet_array(facets[i], lines);
 		}
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
+		glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
+		glDisableClientState(GL_VERTEX_ARRAY);
+
 		glEndList();
 	}
 

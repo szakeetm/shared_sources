@@ -169,6 +169,23 @@ void Geometry::InitializeGeometry(int facet_number) {
 			SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
 		}
 	}
+
+	if (facet_number == -1) {
+		vertices_raw.clear();
+		vertices_raw.reserve(3 * vertices3.size());
+		for (const auto& iv : vertices3) {
+			vertices_raw.push_back(iv.x);
+			vertices_raw.push_back(iv.y);
+			vertices_raw.push_back(iv.z);
+		}
+	}
+	else {
+		for (const auto& index : facets[facet_number]->indices) {
+			vertices_raw[3 * index] = vertices3[index].x;
+			vertices_raw[3 * index+1] = vertices3[index].y;
+			vertices_raw[3 * index+2] = vertices3[index].z;
+		}
+	}
 }
 
 void Geometry::InitializeInterfaceGeometry(int facet_number) {
