@@ -544,6 +544,7 @@ void InterfaceFacet::BuildMeshGLList() {
 
 	DELETE_LIST(glElem);
 
+	/*
 	// Build OpenGL geometry for meshing
 	glElem = glGenLists(1);
 	glNewList(glElem, GL_COMPILE);
@@ -554,25 +555,10 @@ void InterfaceFacet::BuildMeshGLList() {
 		if (cellPropertiesIds[i] != -2) {
 			glBegin(GL_POLYGON);
 			size_t nbPts = GetMeshNbPoint(i);
-			/*size_t nbDrawn = 0;
-			size_t n;
-			if (mApp->leftHandedView) {
-				n = 0;
-			}
-			else {
-				n = nbPts - 1;
-			}
-			for (; nbDrawn < nbPts; nbDrawn++) {*/
 			for (size_t n=0;n<nbPts;n++) {
 				glEdgeFlag(true);
 				Vector2d pt = GetMeshPoint(i, n);
 				glVertex2u(pt.u, pt.v);
-				/*if (mApp->leftHandedView) {
-					n++;
-				}
-				else {
-					n--;
-				}*/
 			}
 			glEnd();
 		}
@@ -580,6 +566,44 @@ void InterfaceFacet::BuildMeshGLList() {
 	}
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEndList();
+	*/
+
+	double iw = 1.0 / (double)sh.texWidth_precise;  //horizontal spacing
+	double ih = 1.0 / (double)sh.texHeight_precise; //vertical spacing
+	std::vector<GLdouble> meshNodeLocations;
+	meshNodeLocations.reserve(2*(sh.texWidth+1)*(sh.texHeight+1));
+	std::vector<GLubyte> meshTriangleIndices;
+	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texWidth);
+	for (size_t y;y<=sh.texHeight;y++) {
+		for (size_t x=0;x<=sh.texWidth;x++) {		
+			meshNodeLocations.push_back(x*iw);
+			meshNodeLocations.push_back(y*ih);
+			if (x!=sh.texWidth && y!=sh.texHeight) {//not on last row or col
+				size_t index_topleft = y*(sh.texWidth+1) + x;
+				size_t index_topright = index_topleft + 1;
+				size_t index_bottomleft = index_topleft + (sh.texWidth+1);
+				size_t index_bottomright = index_bottomleft + 1;
+				
+				meshTriangleIndices.push_back(index_topleft);
+				meshTriangleIndices.push_back(index_topright);
+				meshTriangleIndices.push_back(index_bottomright);
+				
+				meshTriangleIndices.push_back(index_bottomleft);
+				meshTriangleIndices.push_back(index_topleft);
+				meshTriangleIndices.push_back(index_bottomright);
+			}
+		}
+	}
+
+	glElem = glGenLists(1);
+	glNewList(glElem, GL_COMPILE);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2,GL_DOUBLE,0,meshNodeLocations.data());
+	glDrawElements(GL_TRIANGLES,2*sh.texWidth*sh.texHeight,GL_UNSIGNED_BYTE,meshTriangleIndices.data());
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glEndList();
 
 }
