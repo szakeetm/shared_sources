@@ -575,7 +575,7 @@ void InterfaceFacet::BuildMeshGLList() {
 	meshNodeLocations.reserve(2*(sh.texWidth+1)*(sh.texHeight+1));
 	std::vector<GLubyte> meshTriangleIndices;
 	meshTriangleIndices.reserve(2*3*sh.texWidth*sh.texWidth);
-	for (size_t y;y<=sh.texHeight;y++) {
+	for (size_t y=0;y<=sh.texHeight;y++) {
 		for (size_t x=0;x<=sh.texWidth;x++) {		
 			meshNodeLocations.push_back(x*iw);
 			meshNodeLocations.push_back(y*ih);
