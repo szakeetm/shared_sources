@@ -615,6 +615,58 @@ std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vect
 
 }
 
+std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX)
+{
+    //returns list of u,v intersection points of a horizontal or vertical gridline whose distance is 'coord' from 0,0
+    //returns empty vector if no intersection, two points for convex facets, possibly more for concave/holed
+
+    std::vector<Vector2d> result;
+
+    for (int i = 0; i < poly.size(); i++) {
+        const Vector2d& q1 = poly[i];
+        const Vector2d& q2 = poly[(i + 1) % poly.size()];
+        if (isX) { //cut by vertical gridline
+            if (q1.u == q2.u) {// ignore vertical edges
+                continue;
+            }
+            else if ((q1.u<coord) != (q2.u<coord)) {
+                Vector2d diff = q2 - q1;
+                double diffPortion = (coord - q1.u) / diff.u;
+                Vector2d intersection = q1 + diffPortion * diff;
+                result.push_back(intersection);
+            }
+        }
+        else { //cut by horizontal line
+            if (q1.v == q2.v) {// ignore horizontal edges
+                continue;
+            }
+            else if ((q1.v < coord) != (q2.v < coord)) {
+                Vector2d diff = q2 - q1;
+                double diffPortion = (coord - q1.v) / diff.v;
+                Vector2d intersection = q1 + diffPortion * diff;
+                result.push_back(intersection);
+            }
+        }
+    }
+
+    //Sort
+    if (isX) {
+        std::sort(std::begin(result), std::end(result),
+            [](const auto& lhs, const auto& rhs) {
+                return lhs.u < rhs.u;
+            });
+    }
+    else
+    {
+        std::sort(std::begin(result), std::end(result),
+            [](const auto& lhs, const auto& rhs) {
+                return lhs.v < rhs.v;
+            });
+    }
+
+    return result;
+}
+
 bool IsInPoly(const Vector2d &p, const std::vector<Vector2d>& polyPoints) {
 
     // Fast method to check if a point is inside a polygon or not.

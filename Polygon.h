@@ -67,4 +67,6 @@ bool   IsOnSection(const double & u, const double & v, const double & baseU, con
 std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& p1, const GLAppPolygon& p2,const std::vector<bool>& visible2);
 std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& edgeVisible);
 std::tuple<double,Vector2d> GetInterAreaBF(const GLAppPolygon& inP1,const Vector2d& p0, const Vector2d& p1);
+std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX);
+
 

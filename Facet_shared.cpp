@@ -545,6 +545,31 @@ void InterfaceFacet::BuildMeshGLList() {
 	DELETE_LIST(glElem);
 
 	
+	std::vector<Vector2d> intersectPoints;
+	
+	double dx = 1.0 / sh.texWidth_precise;
+	double dy = 1.0 / sh.texHeight_precise;
+	
+	for (int i = 1; i < sh.texWidth; i++) {
+		double x = (double)i * dx;
+		auto newIntersections = IntersectPolyWithGridline(vertices2, x, true);
+		intersectPoints.insert(intersectPoints.end(), newIntersections.begin(), newIntersections.end());
+	}
+	for (int i = 1; i < sh.texHeight; i++) {
+		double y = (double)i * dy;
+		auto newIntersections = IntersectPolyWithGridline(vertices2, y, false);
+		intersectPoints.insert(intersectPoints.end(), newIntersections.begin(), newIntersections.end());
+	}
+
+	std::vector<GLuint> lines;
+
+	for (int i = 0; i < intersectPoints.size(); i+=2) {
+		lines.push_back(i);
+		lines.push_back(i + 1);
+	}
+
+	/*
+
 	// Build OpenGL geometry for meshing
 	std::vector < Vector2d> points2;
 	std::vector<GLuint> lines;
@@ -574,13 +599,28 @@ void InterfaceFacet::BuildMeshGLList() {
 		points3.push_back(sh.O.y + sh.U.y * p2.u + sh.V.y * p2.v);
 		points3.push_back(	sh.O.z + sh.U.z * p2.u + sh.V.z * p2.v);
 	}
-
+	*/
 	
+	std::vector<Vector3d> points3d;
+	points3d.reserve(intersectPoints.size());
+	for (int i = 0; i < intersectPoints.size(); i += 2) {
+
+		points3d.push_back(
+			Vector3d(sh.O.x + sh.U.x * intersectPoints[i].u + sh.V.x * intersectPoints[i].v,
+				sh.O.y + sh.U.y * intersectPoints[i].u + sh.V.y * intersectPoints[i].v,
+				sh.O.z + sh.U.z * intersectPoints[i].u + sh.V.z * intersectPoints[i].v)
+		);
+		points3d.push_back(
+			Vector3d(sh.O.x + sh.U.x * intersectPoints[i+1].u + sh.V.x * intersectPoints[i+1].v,
+				sh.O.y + sh.U.y * intersectPoints[i+1].u + sh.V.y * intersectPoints[i+1].v,
+				sh.O.z + sh.U.z * intersectPoints[i+1].u + sh.V.z * intersectPoints[i+1].v)
+		);
+	}
 
 	glElem = glGenLists(1);
 	glNewList(glElem, GL_COMPILE);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3,GL_DOUBLE,0,points3.data());
+	glVertexPointer(3,GL_DOUBLE,0, points3d.data());
 	glDrawElements(GL_LINES, lines.size(),GL_UNSIGNED_INT,lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glEndList();
