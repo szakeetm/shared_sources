@@ -1520,8 +1520,11 @@ void Geometry::BuildSelectList() {
 	const auto selectedFacets = GetSelectedFacets();
     const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 
+	std::vector<GLuint> selectionLines;
+
     for (auto& sel : selectedFacets) {
 		InterfaceFacet *f = facets[sel];
+
 		//DrawFacet(f,false,true,true);
         if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
             auto it = colorHighlighting.find(sel);
@@ -1532,13 +1535,24 @@ void Geometry::BuildSelectList() {
                 glLineWidth(1.5f);
                 glColor3f(0.937f,0.957f,1.0f);    //metro light blue
             }
+			DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
         }
-        else{
-            glColor3f(1.0f, 0.0f, 0.0f);    //red
+        else{ //regular selected facet, will be drawn later
+			for (size_t j = 0; j < f->indices.size(); ++j) {
+				size_t v1 = f->indices[j];
+				size_t v2 = f->indices[(j + 1) % f->indices.size()];
+
+				selectionLines.push_back(v1);
+				selectionLines.push_back(v2);
+			}
         }
-		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
-        glLineWidth(2.0f);
     }
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
+	glDrawElements(GL_LINES, selectionLines.size(), GL_UNSIGNED_INT, selectionLines.data());
+	glDisableClientState(GL_VERTEX_ARRAY);
+
     // give profiled selection priority for being rendered last
     if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
         for (auto& sel : selectedFacets) {
