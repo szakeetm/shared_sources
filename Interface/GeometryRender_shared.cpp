@@ -1102,7 +1102,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 		float color = (mApp->whiteBg) ? 0.0f : 1.0f; //whitebg here
 		if (viewStruct == -1) {
-			glColor4f(color, color, color, 0.5f);
+			glColor4f(color, color, color, .8f);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
 				glEnable(GL_BLEND);
@@ -1688,8 +1688,6 @@ typedef std::set<Edge> EdgeSet;
 		lineList[j] = glGenLists(1);
 		glNewList(lineList[j], GL_COMPILE);
 
-		//glLineWidth(2.0f);
-		glColor3f(.95f, .95f, .95f);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
 		glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
