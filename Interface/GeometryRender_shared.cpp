@@ -734,7 +734,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 
     glBegin(GL_TRIANGLES);
     for (const auto& sel : selectedFacets) {
-        if(!colorHighlighting.empty()) {
+        if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
@@ -1523,7 +1523,7 @@ void Geometry::BuildSelectList() {
     for (auto& sel : selectedFacets) {
 		InterfaceFacet *f = facets[sel];
 		//DrawFacet(f,false,true,true);
-        if(!colorHighlighting.empty()){
+        if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
             if (it != colorHighlighting.end()) {
@@ -1540,7 +1540,7 @@ void Geometry::BuildSelectList() {
         glLineWidth(2.0f);
     }
     // give profiled selection priority for being rendered last
-    if(!colorHighlighting.empty()){
+    if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
         for (auto& sel : selectedFacets) {
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
@@ -1688,6 +1688,8 @@ typedef std::set<Edge> EdgeSet;
 		lineList[j] = glGenLists(1);
 		glNewList(lineList[j], GL_COMPILE);
 
+		//glLineWidth(2.0f);
+		glColor3f(.95f, .95f, .95f);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
 		glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
