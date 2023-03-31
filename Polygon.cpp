@@ -653,14 +653,14 @@ std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& pol
     if (isX) {
         std::sort(std::begin(result), std::end(result),
             [](const auto& lhs, const auto& rhs) {
-                return lhs.u < rhs.u;
+                return lhs.v < rhs.v;
             });
     }
     else
     {
         std::sort(std::begin(result), std::end(result),
             [](const auto& lhs, const auto& rhs) {
-                return lhs.v < rhs.v;
+                return lhs.u < rhs.u;
             });
     }
 
