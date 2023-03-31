@@ -724,6 +724,37 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glDisable(GL_DEPTH_TEST);
 		GLToolkit::SetMaterial(&greenMaterial);
 		GLToolkit::DrawCoordinateAxes(vectorLength,headSize);
+
+		GLVIEWPORT viewPort;
+		glGetIntegerv(GL_VIEWPORT, (GLint*)&viewPort);
+
+		//glViewport(13, 37, 809, 748);
+
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, viewPort.width, 0, viewPort.height, -50, 50);
+		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
+		glScaled(handedness, 1.0, 1.0);
+		glTranslatef(handedness * 50, 50, 0);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+		//glScaled(- view.camDist, -view.camDist, -view.camDist);
+
+		glRotated(ToDeg(view.camAngleOx), 1.0, 0.0, 0.0);
+		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
+		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
+
+		glLineWidth(2.0f);
+		GLToolkit::DrawCoordinateAxes(50, 5, true);
+		glPopMatrix();
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+
+		//glViewport(viewPort[0],viewPort[1], viewPort[2], viewPort[3]);
+
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
 		GLToolkit::DrawString((float)vectorLength+.5f*(float)headSize, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
@@ -731,6 +762,8 @@ void GeometryViewer::DrawCoordinateAxes() {
 		GLToolkit::DrawString(0.0f, 0.0f, (float)vectorLength + .5f*(float)headSize, "z", GLToolkit::GetDialogFontBold());
 		GLToolkit::DrawStringRestore();
 	}
+
+	
 
 }
 

@@ -939,7 +939,7 @@ void GLToolkit::DrawStringRestore() {
 
 }
 
-void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize) {
+void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize,bool colored) {
     Vector3d O(0.0, 0.0, 0.0);
     Vector3d X(1.0, 0.0, 0.0);
     Vector3d Y(0.0, 1.0, 0.0);
@@ -947,8 +947,11 @@ void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize) {
     Vector3d X_end = vectorLength * X;
     Vector3d Y_end = vectorLength * Y;
     Vector3d Z_end = vectorLength * Z;
+    if (colored) glColor3f(1.0, 0.0, 0.0);
     DrawVector(O, X_end, Y, headSize);
+    if (colored) glColor3f(0.0, 1.0, 0.0);
     DrawVector(O, Y_end, Z, headSize);
+    if (colored) glColor3f(0.0, 0.0, 1.0);
     DrawVector(O, Z_end, X, headSize);
   glPointSize(4.0f);
   glBegin(GL_POINTS);
