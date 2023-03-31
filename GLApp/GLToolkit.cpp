@@ -956,10 +956,11 @@ void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize,bool col
     DrawVector(O, X_end, Y, headSize);
     if (colored) glColor3f(0.0, 1.0, 0.0);
     DrawVector(O, Y_end, Z, headSize);
-    if (colored) glColor3f(0.3, 0.3, 1.0);
+    if (colored) glColor3f(0.6, 0.6, 1.0);
     DrawVector(O, Z_end, X, headSize);
   glPointSize(4.0f);
   glBegin(GL_POINTS);
+  glColor3f(0.4f, 0.8f, 0.8f);
   glVertex3d(0.0,0.0,0.0);
   glEnd();
 
