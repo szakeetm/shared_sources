@@ -910,7 +910,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     showNormal = new GLToggle(0, "Normals");
     togglePanel->Add(showNormal);
 
-    showRule = new GLToggle(0, "Rules");
+    showRule = new GLToggle(0, "Axes");
     togglePanel->Add(showRule);
 
     showUV = new GLToggle(0, "\201,\202");

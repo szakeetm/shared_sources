@@ -183,7 +183,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
                 ImGui::TableNextRow();
                 {
                     ImGui::TableNextColumn();
-                    ImGui::Checkbox("Rules", &viewer->showRule);
+                    ImGui::Checkbox("Axes", &viewer->showRule);
                     ImGui::TableNextColumn();
                     ImGui::Checkbox("Normals", &viewer->showNormal);
                     ImGui::TableNextColumn();
