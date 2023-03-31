@@ -761,16 +761,16 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
 		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
 
+		glLineWidth(2.0f);
 		GLToolkit::DrawCoordinateAxes(35, 5, true);
-		
 
 		GLToolkit::DrawStringInit();
-		GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.0f, 0.0f);
-		GLToolkit::DrawString(43, 0.0f, 0.0f, "X", GLToolkit::GetDialogFont(), -2, -7);
-		GLToolkit::GetDialogFont()->SetTextColor(0.0f, 1.0f, 0.0f);
-		GLToolkit::DrawString(0.0f, 43, 0.0f, "Y", GLToolkit::GetDialogFont(), -2, -7);
-		GLToolkit::GetDialogFont()->SetTextColor(0.6f, 0.6f, 1.0f);
-		GLToolkit::DrawString(0.0f, 0.0f, 43, "Z", GLToolkit::GetDialogFont(), -2, -7);
+		GLToolkit::GetDialogFontBold()->SetTextColor(1.0f, 0.0f, 0.0f);
+		GLToolkit::DrawString(43, 0.0f, 0.0f, "X", GLToolkit::GetDialogFontBold(), -2, -7,false);
+		GLToolkit::GetDialogFontBold()->SetTextColor(0.0f, 1.0f, 0.0f);
+		GLToolkit::DrawString(0.0f, 43, 0.0f, "Y", GLToolkit::GetDialogFontBold(), -2, -7,false);
+		GLToolkit::GetDialogFontBold()->SetTextColor(0.6f, 0.6f, 1.0f);
+		GLToolkit::DrawString(0.0f, 0.0f, 43, "Z", GLToolkit::GetDialogFontBold(), -2, -7,false);
 		GLToolkit::DrawStringRestore();
 
 		glPopMatrix();
