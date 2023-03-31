@@ -727,7 +727,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 
 		//Draw origin
 		glPointSize(4.0f);
-		glColor3f(0.0f, 1.0f, 0.0f);
+		glColor3f(0.4f, 0.8f, 0.8f);
 		glBegin(GL_POINTS);
 		glVertex3d(0.0, 0.0, 0.0);
 		glEnd();
@@ -742,8 +742,15 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glLoadIdentity();
 		glOrtho(0, viewPort.width, 0, viewPort.height, -50, 50);
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
-		glScaled(handedness, 1.0, 1.0);
-		glTranslatef(handedness * 50, 50, 0);
+		if (view.projMode == ORTHOGRAPHIC_PROJ) {
+			glScaled(handedness, 1.0, 1.0);
+			glTranslatef(handedness * 50, 50, 0);
+		}
+		else {
+			glScaled(-handedness, 1.0, 1.0);
+			glTranslatef(-handedness * 50, 50, 0);
+		}
+		
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -754,16 +761,32 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
 		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
 
-		glLineWidth(2.0f);
+		//glLineWidth(2.0f);
 		GLToolkit::DrawCoordinateAxes(50, 5, true);
+
+		glEnable(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		GLToolkit::DrawStringInit();
+		GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.0f, 0.0f);
+		GLToolkit::DrawString(50.0f, 0.0f, 0.0f, "X", GLToolkit::GetDialogFont(), 3, -7);
+		GLToolkit::GetDialogFont()->SetTextColor(0.0f, 1.0f, 0.0f);
+		GLToolkit::DrawString(0.0f, 50.0f, 0.0f, "Y", GLToolkit::GetDialogFont(), 3, -7);
+		GLToolkit::GetDialogFont()->SetTextColor(0.3f, 0.3f, 1.0f);
+		GLToolkit::DrawString(0.0f, 0.0f, 50.0f, "Z", GLToolkit::GetDialogFont(), 3, -7);
+		GLToolkit::DrawStringRestore();
+
 		glPopMatrix();
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 
+		/*
 		GLToolkit::GetDialogFont()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
-		GLToolkit::DrawString(0.0f, 0.0f, 0.0f, "Origin", GLToolkit::GetDialogFont(),3,0);
+		GLToolkit::DrawString(0.0f, 0.0f, 0.0f, "Origin", GLToolkit::GetDialogFont(),3,-7);
 		GLToolkit::DrawStringRestore();
+		*/
+
 	}
 
 	
@@ -898,7 +921,7 @@ void GeometryViewer::DrawUV() {
 
 void GeometryViewer::DrawFacetId() {
 
-    char tmp[256];
+    
 
     // Draw index number
     // Get selected vertex
@@ -907,6 +930,7 @@ void GeometryViewer::DrawFacetId() {
     std::vector<size_t> selectedFacets = geom->GetSelectedFacets();
     if (nbVertex <= 0 || selectedFacets.empty()) return;
 
+	/*
     //Mark vertices of selected facets
     std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
     std::vector<size_t> vertexId(nbVertex);
@@ -917,20 +941,22 @@ void GeometryViewer::DrawFacetId() {
             vertexId[f->indices[i]] = i;
         }
     }
+	*/
 
 
     // Save context
     GLToolkit::DrawStringInit();
-    GLToolkit::GetDialogFont()->SetTextColor(0.9f, 0.1f, 0.1f);
+    GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.0f, 0.0f);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    //glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_BLEND);
 
     // Draw Labels
     for (auto& selId:selectedFacets) {
         InterfaceFacet *f = geom->GetFacet(selId);
         Vector3d center = geom->GetFacetCenter(selId);
-        Vector3d origin = geom->GetFacetCenter(selId);
+        /*
+		Vector3d origin = geom->GetFacetCenter(selId);
         Vector3d labelVec = geom->GetFacetCenter(selId);
         double labelDist = 99999999.0;
         for (size_t i = 1; i < f->sh.nbIndex; i++) {
@@ -942,12 +968,17 @@ void GeometryViewer::DrawFacetId() {
                 labelVec = *v;
                 labelDist = distance;
             }
-
+		
 
         }
         labelVec = center;
-        sprintf(tmp, " F#%zd ", selId+1);
-        GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10);
+		*/
+        //sprintf(tmp, " F#%zd ", selId+1);
+		std::string labelText = fmt::format(" F#{} ", selId + 1);
+		int labelLength = labelText.length()*5;
+		int labelHeight = 16;
+        //GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10,true);
+		GLToolkit::DrawString(center.x, center.y, center.z, labelText.c_str(), GLToolkit::GetDialogFont(), -labelLength/2, -labelHeight/2, true);
     }
 
     //Restore

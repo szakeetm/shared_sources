@@ -916,7 +916,7 @@ void GLToolkit::DrawStringInit() {
 
 }
 
-void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy) {
+void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy,const bool& fast) {
 
   // Compute location on screen
   float rx,ry,rz,rw;
@@ -925,8 +925,12 @@ void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt
   int xe = dsg.x +(int)(((rx / rw) + 1.0f) * (float)dsg.width/2.0f);
   int ye = dsg.y +(int)(((-ry / rw) + 1.0f) * (float)dsg.height/2.0f);
 
-  fnt->DrawTextFast(xe+offx,ye+offy,str);
-
+  if (fast) {
+      fnt->DrawTextFast(xe + offx, ye + offy, str);
+  }
+  else {
+      fnt->DrawText(xe + offx, ye + offy, str, false);
+  }
 }
 
 void GLToolkit::DrawStringRestore() {
@@ -936,6 +940,7 @@ void GLToolkit::DrawStringRestore() {
   glLoadMatrixf(dsmProj);
   glMatrixMode( GL_MODELVIEW );
   glLoadMatrixf(dsmView);
+  glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -951,7 +956,7 @@ void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize,bool col
     DrawVector(O, X_end, Y, headSize);
     if (colored) glColor3f(0.0, 1.0, 0.0);
     DrawVector(O, Y_end, Z, headSize);
-    if (colored) glColor3f(0.0, 0.0, 1.0);
+    if (colored) glColor3f(0.3, 0.3, 1.0);
     DrawVector(O, Z_end, X, headSize);
   glPointSize(4.0f);
   glBegin(GL_POINTS);
