@@ -722,8 +722,15 @@ void GeometryViewer::DrawCoordinateAxes() {
 			glOrtho(view.vLeft, view.vRight, view.vBottom, view.vTop, -1E6, 1E6);
 		}
 		glDisable(GL_DEPTH_TEST);
-		GLToolkit::SetMaterial(&greenMaterial);
-		GLToolkit::DrawCoordinateAxes(vectorLength,headSize);
+		//GLToolkit::SetMaterial(&greenMaterial);
+		//GLToolkit::DrawCoordinateAxes(vectorLength,headSize);
+
+		//Draw origin
+		glPointSize(4.0f);
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glBegin(GL_POINTS);
+		glVertex3d(0.0, 0.0, 0.0);
+		glEnd();
 
 		GLVIEWPORT viewPort;
 		glGetIntegerv(GL_VIEWPORT, (GLint*)&viewPort);
@@ -753,13 +760,9 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 
-		//glViewport(viewPort[0],viewPort[1], viewPort[2], viewPort[3]);
-
-		GLToolkit::GetDialogFontBold()->SetTextColor(0.4f, 0.8f, 0.8f);
+		GLToolkit::GetDialogFont()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
-		GLToolkit::DrawString((float)vectorLength+.5f*(float)headSize, 0.0f, 0.0f, "x", GLToolkit::GetDialogFontBold());
-		GLToolkit::DrawString(0.0f, (float)vectorLength + .5f*(float)headSize, 0.0f, "y", GLToolkit::GetDialogFontBold());
-		GLToolkit::DrawString(0.0f, 0.0f, (float)vectorLength + .5f*(float)headSize, "z", GLToolkit::GetDialogFontBold());
+		GLToolkit::DrawString(0.0f, 0.0f, 0.0f, "Origin", GLToolkit::GetDialogFont(),3,0);
 		GLToolkit::DrawStringRestore();
 	}
 
@@ -1834,8 +1837,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					// Rotate view
 
 					if (GetWindow()->IsAltDown()) {            //Lights direction rotation
-						view.lightAngleOx += diffY * angleStep*factor;
-						view.lightAngleOy += diffX * angleStep*factor;
+						view.lightAngleOx += diffY * factor;
+						view.lightAngleOy += diffX * factor;
 					}
 					else {                                  //Camera angle rotation
 						if (view.projMode == PERSPECTIVE_PROJ) {
