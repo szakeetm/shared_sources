@@ -79,8 +79,8 @@ void ImguiWindow::init() {
     // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    // ImGui::StyleColorsDark();
-    // ImGui::StyleColorsClassic();
+    //ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
     ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
@@ -255,6 +255,7 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
+            ImGui::Checkbox("Demo window",&show_demo_window);
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
