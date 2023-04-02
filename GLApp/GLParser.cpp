@@ -96,7 +96,7 @@ char *GLParser::GetExpression() {
   return expr;
 }
 
-// Extract a part of the string to analyse 
+// Extract a part of the string to analyze 
 char *GLParser::Extract(int lg)
 {
   static char s[128];
@@ -109,7 +109,7 @@ char *GLParser::Extract(int lg)
   return s;
 }
 
-// Return fisrt significative char in the string to analyse 
+// Return fisrt significative char in the string to analyze 
 void GLParser::AV()
 {
   do {

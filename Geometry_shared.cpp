@@ -295,7 +295,7 @@ size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
 	prg->SetMessage("Comparing facets...");
     std::vector<CommonEdge> edges;
 
-    if(GeometryTools::GetAnalysedCommonEdges(this, edges)) {
+    if(GeometryTools::GetAnalyzedCommonEdges(this, edges)) {
         i = 0;
         for (auto &edge : edges) {
             prg->SetProgress(double(i) / double(edges.size()));

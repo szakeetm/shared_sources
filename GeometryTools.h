@@ -65,12 +65,12 @@ class GeometryTools {
     //void Triangulate(Facet *f);
     static InterfaceFacet* GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear);
 public:
-    static std::vector<std::vector<NeighborFacet>> AnalyseNeighbors(Geometry* geometry);
+    static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(Geometry* geometry);
     static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
     static void PolygonsToTriangles(Geometry* geometry);
     static void PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices);
 
-    static int GetAnalysedCommonEdges(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetAnalyzedCommonEdges(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 
     static int GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 
@@ -80,7 +80,7 @@ public:
 
     static int GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static void AnalyseGeometry(Geometry *geometry);
+    static void AnalyzeGeometry(Geometry *geometry);
 
     static void CompareAlgorithm(Geometry *geometry, size_t index);
 

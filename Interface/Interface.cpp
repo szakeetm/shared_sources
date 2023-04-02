@@ -891,7 +891,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
-    menu->GetSubMenu("Test")->Add("Analyse Geometry", MENU_ANALYSE);
+    menu->GetSubMenu("Test")->Add("Analyze Geometry", MENU_ANALYZE);
     menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     menu->GetSubMenu("Test")->Add(nullptr);
@@ -1788,8 +1788,8 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         this->worker.Reload();
                     }
                     return true;
-                case MENU_ANALYSE:
-                    GeometryTools::AnalyseGeometry(this->worker.GetGeometry());
+                case MENU_ANALYZE:
+                    GeometryTools::AnalyzeGeometry(this->worker.GetGeometry());
                     return true;
                 case MENU_CMP_RES: {
                     const std::string fileName = NFD_OpenFile_Cpp("syn7z", "");
