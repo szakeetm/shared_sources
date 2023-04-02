@@ -100,6 +100,8 @@ void grahamInit()
         addPoint(tempPoints[i]);
         //cout<<"angle: "<<tempPoints[i].angle<<" x: "<<tempPoints[i].x<<" y: "<<tempPoints[i].y<<endl;
     }
+
+    free(tempPoints);
     
     tempPtr=GRfirstPoint;
     do  //FIND LAST NODE IN LINKED LIST
