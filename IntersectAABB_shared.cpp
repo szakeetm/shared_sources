@@ -388,64 +388,6 @@ IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node
 
 bool IsInFacet(const SimulationFacet &f, const double &u, const double &v) {
 
-	/*
-
-	// 2D polygon "is inside" solving
-	// Using the "Jordan curve theorem" (we intersect in v direction here)
-
-	int n_updown, n_found, j;
-	double x1, x2, y1, y2, a, minx, maxx;
-
-	n_updown = 0;
-	n_found = 0;
-
-	for (j = 0; j < f.indices.size() - 1; j++) {
-
-		x1 = f.vertices2[j].u;
-		y1 = f.vertices2[j].v;
-		x2 = f.vertices2[j + 1].u;
-		y2 = f.vertices2[j + 1].v;
-
-		minx = std::min(x1, x2);
-		maxx = std::max(x1, x2);
-
-		if (u > minx && u <= maxx) {
-			a = (y2 - y1) / (x2 - x1);
-			if ((a*(u - x1) + y1) < v) {
-				n_updown++;
-			}
-			else {
-				n_updown--;
-			}
-			n_found++;
-		}
-
-	}
-
-	// Last point
-	x1 = f.vertices2[j].u;
-	y1 = f.vertices2[j].v;
-	x2 = f.vertices2[0].u;
-	y2 = f.vertices2[0].v;
-
-	minx = std::min(x1, x2);
-	maxx = std::max(x1, x2);
-
-	if (u > minx && u <= maxx) {
-		a = (y2 - y1) / (x2 - x1);
-		if ((a*(u - x1) + y1) < v) {
-			n_updown++;
-		}
-		else {
-			n_updown--;
-		}
-		n_found++;
-	}
-
-	if (n_updown<0) n_updown = -n_updown;
-	return (((n_found / 2) & 1) ^ ((n_updown / 2) & 1));
-	*/
-
 	return IsInPoly(u, v, f.vertices2);
 
 }

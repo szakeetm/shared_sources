@@ -410,10 +410,10 @@ bool InterfaceFacet::BuildMesh() {
 			if (sh.nbIndex <= 4) {
 
 				// Optimization for quad and triangle
-                allInside = IsInPoly(Vector2d(u0,v0), vertices2)
-                            && IsInPoly(Vector2d(u0, v1), vertices2)
-                            && IsInPoly(Vector2d(u1, v0), vertices2)
-                            && IsInPoly(Vector2d(u1, v1), vertices2);
+                allInside = IsInPoly(u0,v0, vertices2)
+                            && IsInPoly(u0, v1, vertices2)
+                            && IsInPoly(u1, v0, vertices2)
+                            && IsInPoly(u1, v1, vertices2);
 
 			}
 
