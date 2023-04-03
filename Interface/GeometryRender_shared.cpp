@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 #include "Geometry_shared.h"
+#include "GeometryTools.h" //FindEar
 #include "Worker.h"
 #include "Helper/MathTools.h" //Min max
 #include "GLApp/GLToolkit.h"
@@ -931,26 +932,6 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-int Geometry::FindEar(const GLAppPolygon& p) {
-
-	int i = 0;
-	bool earFound = false;
-	while (i < p.pts.size() && !earFound) {
-		if (IsConvex(p, i))
-			earFound = !ContainsConcave(p, i - 1, i, i + 1);
-		if (!earFound) i++;
-	}
-
-	// REM: Theoritically, it should always find an ear (2-Ears theorem).
-	// However on degenerated geometry (flat poly) it may not find one.
-	// Returns first point in case of failure.
-	if (earFound)
-		return i;
-	else
-		return 0;
-
-}
-
 void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
@@ -1056,7 +1037,7 @@ void Geometry::Triangulate(InterfaceFacet *f, bool addTextureCoord) {
 	
 	// Perform triangulation
 	while (p.pts.size() > 3) {
-		int e = FindEar(p);
+		int e = GeometryTools::FindEar(p);
 		DrawEar(f, p, e, addTextureCoord);
 		// Remove the ear
 		p.pts.erase(p.pts.begin() + e);

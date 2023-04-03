@@ -60,11 +60,12 @@ struct CommonEdge {
 
 class GeometryTools {
 
-    static int  FindEar(const GLAppPolygon& p);
+    
     static std::vector<InterfaceFacet*> Triangulate(InterfaceFacet *f);
     //void Triangulate(Facet *f);
     static InterfaceFacet* GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear);
 public:
+    static int  FindEar(const GLAppPolygon& p);
     static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(Geometry* geometry);
     static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
     static void PolygonsToTriangles(Geometry* geometry);
