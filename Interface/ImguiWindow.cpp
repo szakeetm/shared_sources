@@ -82,6 +82,8 @@ void ImguiWindow::init() {
     //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
     ImGui::StyleColorsLight();
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f); //Frame borders
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f); //Window rounding
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(app->mainScreen, app->mainContext);
