@@ -1865,8 +1865,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					// Rotate view
 
 					if (GetWindow()->IsAltDown()) {            //Lights direction rotation
-						view.lightAngleOx += diffY * factor;
-						view.lightAngleOy += diffX * factor;
+						view.lightAngleOx += diffY * factor * 0.005;
+						view.lightAngleOy += diffX * factor * 0.005;
 					}
 					else {                                  //Camera angle rotation
 						if (view.projMode == PERSPECTIVE_PROJ) {
