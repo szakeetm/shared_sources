@@ -307,23 +307,11 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	texDimW = 0;
 	texDimH = 0;
 	hasMesh = false;
-	//SAFE_FREE(mesh);
-	/*for (size_t i = 0; i < meshvectorsize; i++)
-        SAFE_DELETE(meshvector[i].points);*/
-	//SAFE_DELETE(meshvector);
 	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
 	DELETE_TEX(glTex);
 	DELETE_LIST(glList);
 	DELETE_LIST(glElem);
-	/*if (meshPts) {
-		for (size_t i = 0; i < nbElem; i++)
-			SAFE_FREE(meshPts[i].pts);
-	}*/
-
-	//SAFE_FREE(meshPts);
-	//SAFE_FREE(cellPropertiesIds);
-	//nbElem = 0;
 	UnselectElem();
 
 	if (dimOK) {
@@ -340,7 +328,6 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 		if (sh.countDirection) {
 			dirCache = (DirectionCell *)calloc(sh.texWidth*sh.texHeight, sizeof(DirectionCell));
 			if (!dirCache) return false;
-			//memset(dirCache,0,dirSize); //already done by calloc
 		}
 
 	}
@@ -380,12 +367,12 @@ void InterfaceFacet::glVertex2uVertexArray(double u, double v, std::vector<doubl
 
 /**
 * \brief Allocate memory for mesh and initialise
-* \return true if mesh properly build
+* \return true if mesh properly built
 */
 bool InterfaceFacet::BuildMesh() {
 	try{
         cellPropertiesIds.resize(sh.texWidth * sh.texHeight, 0);
-	    meshvector.resize(sh.texWidth * sh.texHeight, CellProperties()); //will shrink at the end
+	    meshvector.resize(sh.texWidth * sh.texHeight); //will shrink at the end
 	}
     catch (const std::exception &e) {
 		std::cerr << "Couldn't allocate memory for mesh" << std::endl;
@@ -498,6 +485,7 @@ bool InterfaceFacet::BuildMesh() {
 	//Shrink mesh vector
     meshvector.resize(meshvectorsize);
 	if (mApp->needsMesh) BuildMeshGLList();
+	return true;
 }
 
 /**
