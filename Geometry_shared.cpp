@@ -3724,7 +3724,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
     f->tRatioU = ratio;
     f->tRatioV = ratio;
 
-    BuildFacetTextureGLList(f);
+    BuildFacetList(f);
 
 }
 
@@ -3757,7 +3757,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, boo
     f->tRatioU = ratioU;
     f->tRatioV = ratioV;
 
-    BuildFacetTextureGLList(f);
+    BuildFacetList(f);
 
 }
 

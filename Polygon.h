@@ -23,19 +23,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <optional>
 #include <vector>
 
-class Triangle { //Three indices of a triangle, referring to facet indices (so 0..f->nbVertex)
-public:	
-	Triangle() {}
-	Triangle(int _p1, int _p2, int _p3) : p1(_p1), p2(_p2), p3(_p3) {}
-	int p1, p2, p3;
-};
-
 class GLAppPolygon { //To distinguish from possible other Polygon classes in the namespace
 public:
   std::vector<Vector2d>  pts;   // Array of 2D vertex
-  GLAppPolygon() {}
-  GLAppPolygon(const std::vector<Vector2d>& points) : pts(points) {}
   //int sign;  // Polygon orientation
+
 };
 
 class PolyVertex  {
@@ -65,19 +57,13 @@ public:
   std::vector<PolyArc> arcs;
 };
 
-//bool   IsConvex(const GLAppPolygon& p,size_t idx);
-//bool   ContainsConcave(const GLAppPolygon& p,int i1,int i2,int i3);
-//std::tuple<bool,Vector2d>  EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int i3);
+bool   IsConvex(const GLAppPolygon& p,size_t idx);
+bool   ContainsConcave(const GLAppPolygon& p,int i1,int i2,int i3);
+std::tuple<bool,Vector2d>  EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int i3);
 bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon);
 bool IsInPoly(const double& u, const double& v, const std::vector<Vector2d>& polygon);
 bool   IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance);
 bool   IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance);
-
-std::vector<Triangle> earClipping(const std::vector<Vector2d>& vertices2, const std::vector<size_t>& globalIndices);
-bool isEar(const std::vector<int>& localIndices, const std::vector<Vector2d>& vertices2, const std::vector<size_t>& globalIndices, const int& i);
-double crossProduct(const Vector2d& a, const Vector2d& b, const Vector2d& c);
-bool isInsideTriangle(const Vector2d& p, const Vector2d& a, const Vector2d& b, const Vector2d& c);
-
 std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& p1, const GLAppPolygon& p2,const std::vector<bool>& visible2);
 std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& edgeVisible);
 std::tuple<double,Vector2d> GetInterAreaBF(const GLAppPolygon& inP1,const Vector2d& p0, const Vector2d& p1);

@@ -49,8 +49,9 @@ std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* ge
 
 std::vector<InterfaceFacet*> GeometryTools::Triangulate(InterfaceFacet *f) {
 
-    // Triangulate a facet
+    // Triangulate a facet (rendering purpose)
     // The facet must have at least 3 points
+    // Use the very simple "Two-Ears" theorem. It computes in O(n^2).
     std::vector<InterfaceFacet*> triangleFacets;
     if (f->nonSimple) {
         // Not a simple polygon
@@ -58,32 +59,36 @@ std::vector<InterfaceFacet*> GeometryTools::Triangulate(InterfaceFacet *f) {
         return triangleFacets;
     }
 
+    // Build a Polygon
+    GLAppPolygon p;
+    p.pts = f->vertices2;
+    //p.sign = f->sign;
+
     std::unique_ptr<InterfaceFacet> facetCopy(new InterfaceFacet(f->sh.nbIndex)); //Create a copy and don't touch original
     facetCopy->CopyFacetProperties(f);
     facetCopy->indices = f->indices;
 
     // Perform triangulation
-    auto triangles = earClipping(f->vertices2,f->indices);
-    FacetsFromTriangles(triangleFacets, triangles, f);
+    while (p.pts.size() > 3) {
+        int e = FindEar(p);
+        //DrawEar(f, p, e, addTextureCoord);
+
+        // Create new triangle facet and copy polygon parameters, but change indices
+        InterfaceFacet* triangle = GetTriangleFromEar(facetCopy.get(), p, e);
+        triangleFacets.push_back(triangle);
+
+        // Remove the ear
+        p.pts.erase(p.pts.begin() + e);
+    }
+
+    // Draw the last ear
+    InterfaceFacet* triangle = GetTriangleFromEar(facetCopy.get(), p, 0);
+    triangleFacets.push_back(triangle);
+    //DrawEar(f, p, 0, addTextureCoord);
 
     return triangleFacets;
 }
 
-void GeometryTools::FacetsFromTriangles(std::vector<InterfaceFacet*>& triangleFacets, const std::vector<Triangle>& triangles, InterfaceFacet* f) {
-    //converts indice triplets into actual interfacefacet triangles
-    for (const auto& t : triangles) {
-        InterfaceFacet* triangleFacet = new InterfaceFacet(3);
-        triangleFacet->CopyFacetProperties(f, false);
-        triangleFacet->indices = {
-            f->indices[t.p1],
-            f->indices[t.p2],
-            f->indices[t.p3],
-            };
-        triangleFacets.push_back(triangleFacet);
-    }
-}
-
-/* //was part of old ear clipping algorithm
 int  GeometryTools::FindEar(const GLAppPolygon& p){
 
     int i = 0;
@@ -102,9 +107,7 @@ int  GeometryTools::FindEar(const GLAppPolygon& p){
     else
         return 0;
 }
-*/
 
-/* //Was part of old framework
 // Return indices to vertices3d for new triangle facet
 InterfaceFacet* GeometryTools::GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear) {
 
@@ -126,9 +129,12 @@ InterfaceFacet* GeometryTools::GetTriangleFromEar(InterfaceFacet *f, const GLApp
     f->indices.erase(f->indices.begin()+IDX(ear, p.pts.size()));
     delete[] indices;
 
+/*    const Vector2d* p1 = &(p.pts[Previous(ear, p.pts.size())]);
+    const Vector2d* p2 = &(p.pts[IDX(ear, p.pts.size())]);
+    const Vector2d* p3 = &(p.pts[Next(ear, p.pts.size())]);*/
+
     return triangle;
 }
-*/
 
 std::optional<double> AngleBetween2Vertices(Vector3d& v1, Vector3d& v2){
     double denum = (v1.Norme() * v2.Norme());
