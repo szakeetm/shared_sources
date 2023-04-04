@@ -688,41 +688,6 @@ int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs){
 }
 void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 
-    //std::vector<size_t> f3; f3.reserve(sh.nbFacet);
-    //std::vector<size_t> f4; f4.reserve(sh.nbFacet);
-    //std::vector<size_t> fp; fp.reserve(sh.nbFacet);
-
-
-    //---Draw transparent selected polygons
-    // Group TRI,QUAD and POLY
-    /*for (int i = 0; i < selectedFacets.size(); ++i) {
-        const size_t nb = facets[i]->sh.nbIndex;
-        if (nb == 3) {
-            f3.push_back(selectedFacets[i]);
-        }
-        else if (nb==4){
-            f4.push_back(selectedFacets[i]);
-        }
-        else{
-            fp.push_back(selectedFacets[i]);
-        }
-    }*/
-    /*std::list<size_t> sortedFacets;
-    for (int i = 0; i < selectedFacets.size(); ++i) {
-        *//*bool isBiggest = true;
-        for (std::list<size_t>::iterator it=sortedFacets.begin(); it!=sortedFacets.end(); ++it){
-            if(compareFacetDepth(facets[selectedFacets[i]],facets[*it])){
-                continue;
-            }
-            else{
-                isBiggest = false;
-                sortedFacets.insert(it,selectedFacets[i]);
-            }
-        }
-        if(isBiggest)*//*
-            sortedFacets.push_back(selectedFacets[i]);
-    }*/
-
     const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
     // Draw
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -952,31 +917,13 @@ void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
 }
 
 void Geometry::FillFacet(InterfaceFacet *f, bool addTextureCoord) {
-	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
-	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
-	/*size_t nbDrawn = 0;
-	size_t i;
-	if (mApp->leftHandedView) {
-			i = 0;
-			glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
-	}
-	else {
-			i = f->wp.nbIndex-1;
-			glNormal3d(f->wp.N.x, f->wp.N.y, f->wp.N.z);
-	}
-	for (; nbDrawn < f->wp.nbIndex; nbDrawn++) {*/
 	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
 		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]));
 		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
-		/*if (mApp->leftHandedView) {
-			i++;
-		}
-		else {
-			i--;
-		}*/
+
 	}
 }
 
@@ -990,29 +937,17 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool a
 	const Vector2d* p2;
 	const Vector2d* p3;
 
-	// Follow orientation
-	/*double handedness = mApp->leftHandedView ? 1.0 : -1.0;*/
-	
-	//if (/*handedness * */ p.sign > 0) {
-	//	p1 = &(p.pts[Previous(ear, p.pts.size())]);
-	//	p2 = &(p.pts[Next(ear, p.pts.size())]);
-	//	p3 = &(p.pts[IDX(ear, p.pts.size())]);
-	//}
-	//else {
-		p1 = &(p.pts[Previous(ear, p.pts.size())]);
-		p2 = &(p.pts[IDX(ear, p.pts.size())]);
-		p3 = &(p.pts[Next(ear, p.pts.size())]);
-	//}
+	p1 = &(p.pts[Previous(ear, p.pts.size())]);
+	p2 = &(p.pts[IDX(ear, p.pts.size())]);
+	p3 = &(p.pts[Next(ear, p.pts.size())]);
 
 	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p1);
 	f->glVertex2u(p1->u, p1->v);
 
-	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p2);
 	f->glVertex2u(p2->u, p2->v);
 
-	//glNormal3d(-f->wp.N.x, -f->wp.N.y, -f->wp.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p3);
 	f->glVertex2u(p3->u, p3->v);
 
@@ -1174,11 +1109,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			if (!f->cellPropertiesIds.empty()  && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
-				//glEnable(GL_POLYGON_OFFSET_LINE);
-				//glPolygonOffset(1.0f, 2.0f);
-				//glEnable(GL_LINE_STRIP);
 				glCallList(f->glElem);
-				//glDisable(GL_LINE_STRIP);
 			}
 		}
 		if (mApp->antiAliasing) {
@@ -1300,8 +1231,46 @@ void Geometry::BuildDirectionList() {
 	// Shapes used for direction field rendering
 
 	// 3D arrow (direction field)
-	int nbDiv = 10;
-	double alpha = 2.0*PI / (double)nbDiv;
+
+	// Draw a cone
+	const float radius = .5f;
+	const int cone_slices = 10;
+	const int cone_numVerts = (cone_slices + 1) * 2;
+
+	GLfloat vertices[cone_numVerts * 3];
+	GLfloat normals[cone_numVerts * 3];
+
+	GLfloat* vertPtr = vertices;
+	GLfloat* normPtr = normals;
+
+	GLfloat cap_vertices[(cone_slices + 2) * 3];
+	GLfloat* cap_vertPtr = cap_vertices;
+	
+	//cap centerpoint
+	*cap_vertPtr++ = -.5f;
+	*cap_vertPtr++ = 0.0f;
+	*cap_vertPtr++ = 0.0f;
+
+	// Calculate the vertices, normals and texture coordinates of the cone
+	for (int i = 0; i <= cone_slices; i++) {
+		float theta = i * 2 * M_PI / cone_slices;
+		float x = radius * cos(theta);
+		float z = radius * sin(theta);
+
+		*normPtr++ = radius / sqrt(x * x + z * z);
+		*normPtr++ = x;
+		*normPtr++ = z;
+		*vertPtr++ = *cap_vertPtr++ = -.5f;
+		*vertPtr++ = *cap_vertPtr++ = x;		
+		*vertPtr++ = *cap_vertPtr++ = z;
+
+		*normPtr++ = radius / sqrt(x * x + z * z);
+		*normPtr++ = x;
+		*normPtr++ = z;
+		*vertPtr++ = .5f;
+		*vertPtr++ = 0.0f;
+		*vertPtr++ = 0.0f;
+	}
 
 	arrowList = glGenLists(1);
 	glNewList(arrowList, GL_COMPILE);
@@ -1314,50 +1283,61 @@ void Geometry::BuildDirectionList() {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
 
-	glBegin(GL_TRIANGLES);
+	//Draw sides
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
 
-	// Arrow
-	for (int i = 0; i < nbDiv; i++) {
+	glVertexPointer(3, GL_FLOAT, 0, vertices);
+	glNormalPointer(GL_FLOAT, 0, normals);
 
-		double y1 = sin(alpha*(double)i);
-		double z1 = cos(alpha*(double)i);
-		double y2 = sin(alpha*(double)((i + 1) % nbDiv));
-		double z2 = cos(alpha*(double)((i + 1) % nbDiv));
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, cone_numVerts);
 
-		glNormal3d(0.0, y1, z1);
-		glVertex3d(-0.5, 0.5*y1, 0.5*z1);
-		glNormal3d(1.0, 0.0, 0.0);
-		glVertex3d(0.5, 0.0, 0.0);
-		glNormal3d(0.0, y2, z2);
-		glVertex3d(-0.5, 0.5*y2, 0.5*z2);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
 
-	}
+	//Draw cap
+	glNormal3f(-1.0f, 0.0f, 0.0f);
+	glEnableClientState(GL_VERTEX_ARRAY);
 
-	// Cap facets
-	for (int i = 0; i < nbDiv; i++) {
+	glVertexPointer(3, GL_FLOAT, 0, cap_vertices);
 
-		double y1 = sin(alpha*(double)i);
-		double z1 = cos(alpha*(double)i);
-		double y2 = sin(alpha*(double)((i + 1) % nbDiv));
-		double z2 = cos(alpha*(double)((i + 1) % nbDiv));
+	glDrawArrays(GL_TRIANGLE_FAN, 0, cone_slices+2);
 
-		glNormal3d(-1.0, 0.0, 0.0);
-		glVertex3d(-0.5, 0.5*y1, 0.5*z1);
-		glNormal3d(-1.0, 0.0, 0.0);
-		glVertex3d(-0.5, 0.5*y2, 0.5*z2);
-		glNormal3d(-1.0, 0.0, 0.0);
-		glVertex3d(-0.5, 0.0, 0.0);
+	glDisableClientState(GL_VERTEX_ARRAY);
 
-	}
-
-	glEnd();
 	glEndList();
 
 	// Shpere list (isotropic case)
-	int nbPhi = 16;
-	int nbTetha = 7;
-	double dphi = 2.0*PI / (double)(nbPhi);
-	double dtetha = PI / (double)(nbTetha + 1);
+	//const float radius = 1.0f; //radius is 1.0f
+	const int sphere_slices = 16;
+	const int stacks = 7;
+	const int sphere_numVerts = (stacks + 1) * 2 * sphere_slices;
+
+	GLfloat vertices_normals[sphere_numVerts * 3];
+
+	GLfloat* vert_normPtr = vertices_normals;
+
+	// Calculate the vertices, normals and texture coordinates of the sphere
+	for (int i = 0; i < sphere_slices; i++) {
+		float theta1 = i * 2 * M_PI / sphere_slices;
+		float theta2 = (i + 1) * 2 * M_PI / sphere_slices;
+		for (int j = 0; j <= stacks; j++) {
+			float phi = j * M_PI / stacks;
+			float x1 = /*radius * */cos(theta1) * sin(phi);
+			float y1 = /*radius * */sin(theta1) * sin(phi);
+			float z1 = /*radius * */cos(phi);
+			float x2 = /*radius * */cos(theta2) * sin(phi);
+			float y2 = /*radius * */sin(theta2) * sin(phi);
+			float z2 = /*radius * */cos(phi);
+
+			*vert_normPtr++ = x1;
+			*vert_normPtr++ = y1;
+			*vert_normPtr++ = z1;
+			*vert_normPtr++ = x2;
+			*vert_normPtr++ = y2;
+			*vert_normPtr++ = z2;
+		}
+	}
 
 	sphereList = glGenLists(1);
 	glNewList(sphereList, GL_COMPILE);
@@ -1370,51 +1350,17 @@ void Geometry::BuildDirectionList() {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
 
-	glBegin(GL_TRIANGLES);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
 
-	for (int i = 0; i <= nbTetha; i++) {
-		for (int j = 0; j < nbPhi; j++) {
+	glVertexPointer(3, GL_FLOAT, 0, vertices_normals);
+	glNormalPointer(GL_FLOAT, 0, vertices_normals);
 
-			Vector3d v1, v2, v3, v4;
+	glDrawArrays(GL_QUAD_STRIP, 0, sphere_numVerts);
 
-			v1.x = sin(dtetha*(double)i)*cos(dphi*(double)j);
-			v1.y = sin(dtetha*(double)i)*sin(dphi*(double)j);
-			v1.z = cos(dtetha*(double)i);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
 
-			v2.x = sin(dtetha*(double)(i + 1))*cos(dphi*(double)j);
-			v2.y = sin(dtetha*(double)(i + 1))*sin(dphi*(double)j);
-			v2.z = cos(dtetha*(double)(i + 1));
-
-			v3.x = sin(dtetha*(double)(i + 1))*cos(dphi*(double)(j + 1));
-			v3.y = sin(dtetha*(double)(i + 1))*sin(dphi*(double)(j + 1));
-			v3.z = cos(dtetha*(double)(i + 1));
-
-			v4.x = sin(dtetha*(double)i)*cos(dphi*(double)(j + 1));
-			v4.y = sin(dtetha*(double)i)*sin(dphi*(double)(j + 1));
-			v4.z = cos(dtetha*(double)i);
-
-			if (i < nbTetha) {
-				glNormal3d(v1.x, v1.y, v1.z);
-				glVertex3d(v1.x, v1.y, v1.z);
-				glNormal3d(v2.x, v2.y, v2.z);
-				glVertex3d(v2.x, v2.y, v2.z);
-				glNormal3d(v3.x, v3.y, v3.z);
-				glVertex3d(v3.x, v3.y, v3.z);
-			}
-
-			if (i > 0) {
-				glNormal3d(v1.x, v1.y, v1.z);
-				glVertex3d(v1.x, v1.y, v1.z);
-				glNormal3d(v3.x, v3.y, v3.z);
-				glVertex3d(v3.x, v3.y, v3.z);
-				glNormal3d(v4.x, v4.y, v4.z);
-				glVertex3d(v4.x, v4.y, v4.z);
-			}
-
-		}
-	}
-
-	glEnd();
 	glEndList();
 
 }
