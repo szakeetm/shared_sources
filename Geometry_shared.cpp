@@ -4079,7 +4079,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
 	sh.nbFacet += nbNewFacets;
 	sh.nbVertex += 3 * nbNewFacets;
 
-	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file->GetName()).c_str());
+	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file->GetName()).c_str(),true);
 
 	if (!insert) {
 		UpdateName(file);
