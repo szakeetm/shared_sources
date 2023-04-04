@@ -388,16 +388,13 @@ bool InterfaceFacet::BuildMesh() {
 	    meshvector.resize(sh.texWidth * sh.texHeight, CellProperties()); //will shrink at the end
 	}
     catch (const std::exception &e) {
-		std::cerr << "Couldn't allocate memory" << std::endl;
+		std::cerr << "Couldn't allocate memory for mesh" << std::endl;
 		return false;
-		//throw Error("malloc failed on Facet::BuildMesh()");
 	}
-	//memset(meshvector, 0, sh.texWidth * sh.texHeight * sizeof(CellProperties));
 	
 	meshvectorsize = 0;
 	hasMesh = true;
 	
-	GLAppPolygon P1, P2;
 	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidth_precise;
 	double ih = 1.0 / (double)sh.texHeight_precise;
@@ -405,148 +402,102 @@ bool InterfaceFacet::BuildMesh() {
 	double rh = sh.V.Norme() * ih;
 	double fullCellArea = iw*ih;
 
-	std::vector<Vector2d>(4).swap(P1.pts);
-	//P1.sign = 1;
-	P2.pts = vertices2; 
-	//P2.sign = -sign;
-
-	for (size_t j = 0;j < sh.texHeight;j++) {
+	std::vector<bool> isInside((sh.texWidth+1) * (sh.texHeight+1));
+	for (int j = 0; j < (sh.texHeight+1); j++) {
 		sy = (double)j;
-		for (size_t i = 0;i < sh.texWidth;i++) {
+		for (int i = 0; i < (sh.texWidth+1); i++) {
+			sx = (double)i;
+			int index = j * (sh.texWidth+1) + i;
+			double u0 = sx * iw;
+			double v0 = sy * ih;
+			isInside[index] = IsInPoly(u0, v0, vertices2);
+		}
+	}
+	for (int j = 0;j < sh.texHeight;j++) {
+		sy = (double)j;
+		for (int i = 0; i < sh.texWidth; i++) {
 			sx = (double)i;
 
-			bool allInside = false;
 			double u0 = sx * iw;
 			double v0 = sy * ih;
 			double u1 = (sx + 1.0) * iw;
 			double v1 = (sy + 1.0) * ih;
-			//mesh[i + j*wp.texWidth].elemId = -1;
 
-			if (sh.nbIndex <= 4) {
+			int index = j * (sh.texWidth + 1) + i;
+			bool allInside = isInside[index]
+				&& isInside[index + 1] //right
+				&& isInside[index + sh.texWidth + 1] //below
+				&& isInside[index + sh.texWidth + 1 + 1]; //right and below
 
-				// Optimization for quad and triangle
-                allInside = IsInPoly(u0,v0, vertices2)
-                            && IsInPoly(u0, v1, vertices2)
-                            && IsInPoly(u1, v0, vertices2)
-                            && IsInPoly(u1, v1, vertices2);
-
+			if (allInside) {
+				cellPropertiesIds[i + j * sh.texWidth] = -1;
 			}
-
-			if (!allInside) {
-				CellProperties cellprop{};
-
-				// Intersect element with the facet (facet boundaries)
-				P1.pts[0].u = u0;
-				P1.pts[0].v = v0;
-				P1.pts[1].u = u1;
-				P1.pts[1].v = v0;
-				P1.pts[2].u = u1;
-				P1.pts[2].v = v1;
-				P1.pts[3].u = u0;
-				P1.pts[3].v = v1;
-				auto [A,center,vList] = GetInterArea(P1, P2, visible);
-				if (!IsZero(A)) {
-
+			else {
+				bool allOutside = !isInside[index]
+					&& !isInside[index + 1] //right
+					&& !isInside[index + sh.texWidth + 1] //below
+					&& !isInside[index + sh.texWidth + 1 + 1]; //right and below
+				if (allOutside) {
+					cellPropertiesIds[i + j * sh.texWidth] = -2; //zero element
+				}
+				else { //intersect rectangle with polygon
+					std::vector<Vector2d> tmpPoints = {
+						Vector2d(u0,v0),
+						Vector2d(u1,v0),
+						Vector2d(u1,v1),
+						Vector2d(u0,v1)
+					};
+					GLAppPolygon P1;
+					P1.pts = tmpPoints;
+					GLAppPolygon P2;
+					P2.pts = vertices2;
+					auto [A, center, vList] = GetInterArea(P1, P2, visible);
 					if (A > (fullCellArea + 1e-10)) {
-
 						// Polyon intersection error !
 						// Switch back to brute force
-						auto [bfArea,center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
+						auto [bfArea, center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
 						bool fullElem = IsZero(fullCellArea - bfArea);
 						if (!fullElem) {
-							cellprop.area = (bfArea*(rw*rh) / (iw*ih));
+							CellProperties cellprop;
+							cellprop.area = (bfArea * (rw * rh) / (iw * ih));
 							cellprop.uCenter = (float)center.u;
 							cellprop.vCenter = (float)center.v;
 							cellprop.nbPoints = 0;
 							cellprop.points.clear();
-							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
+							cellPropertiesIds[i + j * sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
 						}
 						else {
-							cellPropertiesIds[i + j*sh.texWidth] = -1;
+							cellPropertiesIds[i + j * sh.texWidth] = -1;
 						}
-
-						//cellprop.full = IsZero(fullCellArea - A);
-
 					}
 					else {
 
 						bool fullElem = IsZero(fullCellArea - A);
 						if (!fullElem) {
 							// !! P1 and P2 are in u,v coordinates !!
-							cellprop.area = (A*(rw*rh) / (iw*ih));
+							CellProperties cellprop;
+							cellprop.area = (A * (rw * rh) / (iw * ih));
 							cellprop.uCenter = (float)center.u;
 							cellprop.vCenter = (float)center.v;
-							//cellprop.full = IsZero(fullCellArea - A);
-							//cellprop.elemId = nbElem;
 
 							// Mesh coordinates
-							cellprop.points = //(Vector2d*)malloc(sizeof(vList[0])*vList.size());
-							    vList;
-							//memcpy(cellprop.points, vList.data(), sizeof(vList[0])*vList.size());
+							cellprop.points = vList;
 							cellprop.nbPoints = vList.size();
-							cellPropertiesIds[i + j*sh.texWidth] = (int)meshvectorsize;
+							cellPropertiesIds[i + j * sh.texWidth] = (int)meshvectorsize;
 							meshvector[meshvectorsize++] = cellprop;
-							//nbElem++;
-
 						}
 						else {
-							cellPropertiesIds[i + j*sh.texWidth] = -1;
+							cellPropertiesIds[i + j * sh.texWidth] = -1;
 						}
-
 					}
-
-				}
-				else cellPropertiesIds[i + j*sh.texWidth] = -2; //zero element
-
+				} //end intersect
 			}
-			else {  //All indide and triangle or quad
-				cellPropertiesIds[i + j*sh.texWidth] = -1;
-
-				/*mesh[i + j*wp.texWidth].area = (float)(rw*rh);
-				mesh[i + j*wp.texWidth].uCenter = (float)(u0 + u1) / 2.0f;
-				mesh[i + j*wp.texWidth].vCenter = (float)(v0 + v1) / 2.0f;
-				mesh[i + j*wp.texWidth].full = true;
-				mesh[i + j*wp.texWidth].elemId = nbElem;
-
-				// Mesh coordinates
-				meshPts[nbElem].nbPts = 4;
-				meshPts[nbElem].pts = (Vector2d *)malloc(4 * sizeof(Vector2d));
-
-				if (!meshPts[nbElem].pts) {
-					throw Error("Couldn't allocate memory for texture mesh points.");
-				}
-				meshPts[nbElem].pts[0].u = u0;
-				meshPts[nbElem].pts[0].v = v0;
-				meshPts[nbElem].pts[1].u = u1;
-				meshPts[nbElem].pts[1].v = v0;
-				meshPts[nbElem].pts[2].u = u1;
-				meshPts[nbElem].pts[2].v = v1;
-				meshPts[nbElem].pts[3].u = u0;
-				meshPts[nbElem].pts[3].v = v1;
-				nbElem++;*/
-
-			}
-
-			//tA += mesh[i + j*wp.texWidth].area;
-
 		}
 	}
 	//Shrink mesh vector
-	//meshvector = (CellProperties*)realloc(meshvector, sizeof(CellProperties)*meshvectorsize);
     meshvector.resize(meshvectorsize);
-
-	// Check meshing accuracy (TODO)
-	/*
-	int p = (int)(ceil(log10(wp.area)));
-	double delta = pow(10.0,(double)(p-5));
-	if( fabs(wp.area - tA)>delta ) {
-	}
-	*/
-
 	if (mApp->needsMesh) BuildMeshGLList();
-	return true;
-
 }
 
 /**
@@ -582,39 +533,6 @@ void InterfaceFacet::BuildMeshGLList() {
 		lines.push_back(i);
 		lines.push_back(i + 1);
 	}
-
-	/*
-
-	// Build OpenGL geometry for meshing
-	std::vector < Vector2d> points2;
-	std::vector<GLuint> lines;
-	size_t nb = sh.texWidth*sh.texHeight;
-	for (size_t i = 0; i < nb; i++) {
-		if (cellPropertiesIds[i] != -2) {
-			size_t nbPts = GetMeshNbPoint(i);
-			size_t startIndex = points2.size();
-			for (size_t n = 0; n < nbPts; n++) {
-				Vector2d pt = GetMeshPoint(i, n);
-				points2.push_back(pt);
-			}
-			for (size_t n = 0; n < nbPts-1; n++) {
-				lines.push_back(startIndex+n);
-				lines.push_back(startIndex + n + 1);
-			}
-			//Close loop
-			lines.push_back(startIndex + nbPts - 1);
-			lines.push_back(startIndex);
-		}
-	}
-
-	std::vector<GLdouble> points3;
-	points3.reserve(points2.size() * 3);
-	for (const auto& p2 : points2) {
-		points3.push_back(sh.O.x + sh.U.x * p2.u + sh.V.x * p2.v);
-		points3.push_back(sh.O.y + sh.U.y * p2.u + sh.V.y * p2.v);
-		points3.push_back(	sh.O.z + sh.U.z * p2.u + sh.V.z * p2.v);
-	}
-	*/
 	
 	std::vector<Vector3d> points3d;
 	points3d.reserve(intersectPoints.size());
