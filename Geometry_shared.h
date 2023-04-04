@@ -223,7 +223,7 @@ public:
 	bool    GetAutoNorme() const;
 	void    SetCenterNorme(bool enable);
 	bool    GetCenterNorme() const;
-	void    BuildFacetList(InterfaceFacet *f);
+	void    BuildFacetTextureGLList(InterfaceFacet *f);
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
 	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
@@ -248,15 +248,15 @@ protected:
 	bool AlreadySelected(size_t f);
 	void DrawFacet(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines);
-	void FillFacet(InterfaceFacet *f, bool addTextureCoord);
-	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p);
+	//void FillFacet(InterfaceFacet *f, bool addTextureCoord);
+	void AddTextureCoord(InterfaceFacet *f, const Vector2d &p);
 	void DrawPolys();
 	void DrawTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
-	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
+	void TriangulateForFacetRender(InterfaceFacet *f, bool addTextureCoord);
+	//void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
     bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);

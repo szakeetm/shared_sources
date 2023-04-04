@@ -21,7 +21,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <math.h>
 #include <algorithm> //min max
+#include <numeric> //iota
 
+/* //was part of old ear clipping algorithm
+* 
 bool IsConvex(const GLAppPolygon &p,size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
@@ -36,7 +39,9 @@ bool IsConvex(const GLAppPolygon &p,size_t idx) {
   //return (d*p.sign)>=0.0;
   return d <= 0.0;
 }
+*/
 
+/* //was part of old ear clipping algorithm
 bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
 {
 
@@ -62,7 +67,9 @@ bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
   return found;
 
 }
+*/
 
+/* //was used for detectorientation()
 std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int i3)
 {
 
@@ -87,6 +94,7 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
   return { !found,(1.0 / 3.0)*(p1 + p2 + p3) };
 
 }
+*/
 bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance)
 {
 	bool onEdge = false;
@@ -680,4 +688,73 @@ bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& pol
             inside = !inside;
     }
     return inside;
+}
+
+std::vector<Triangle> earClipping(const std::vector<Vector2d>& vertices2, const std::vector<size_t>& globalIndices) {
+    // input: facet->vertices2, facet->indices
+    // (global) vertex indices are required to identify possible duplicate nodes of concave facets
+    // return: triangles consisting of 3 local (facet) vertex ids each
+    // based on https://github.com/mapbox/earcut.hpp
+
+    int n = globalIndices.size();
+    std::vector<int> localIndices(n); //refers to local facet indices, changes as ears are clipped
+    std::iota(localIndices.begin(), localIndices.end(), 0);
+    std::vector<Triangle> result; 
+    
+    for (int i = 0; i < n; i++) {
+        if (isEar(localIndices, vertices2, globalIndices, i)) {
+            result.push_back(Triangle(
+                localIndices[Previous(i, n)],
+                localIndices[i],
+                localIndices[Next(i,n)]
+            ));
+            localIndices.erase(localIndices.begin() + i);
+            n--;
+            i--;
+        }
+    }
+
+    return result;
+}
+
+bool isEar(const std::vector<int>& localIndices, const std::vector<Vector2d>& vertices2, const std::vector<size_t>& globalIndices, const int& i) {
+    int n = localIndices.size();
+    int previndex = localIndices[(i - 1 + n) % n];
+    int currindex = localIndices[i];
+    int nextindex = localIndices[(i + 1) % n];
+    const Vector2d& prev = vertices2[previndex];
+    const Vector2d& curr = vertices2[currindex];
+    const Vector2d& next = vertices2[nextindex];
+
+    if (crossProduct(prev, curr, next) <= 0) {
+        return false;
+    }
+
+    
+    for (int j = 0; j < n; j++) {
+        int jLocalIndex = localIndices[j];
+        int jGlobalIndex = globalIndices[localIndices[j]];
+        int prevGlobalIndex = globalIndices[previndex];
+        int currGlobalIndex = globalIndices[currindex];
+        int nextGlobalIndex = globalIndices[nextindex];
+        if (jGlobalIndex != prevGlobalIndex && jGlobalIndex != currGlobalIndex && jGlobalIndex != nextGlobalIndex) {
+            if (isInsideTriangle(vertices2[jLocalIndex], prev, curr, next)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+double crossProduct(const Vector2d& a, const Vector2d& b, const Vector2d& c) {
+    return (b.u - a.u) * (c.v - a.v) - (b.v - a.v) * (c.u - a.u);
+}
+
+bool isInsideTriangle(const Vector2d& p, const Vector2d& a, const Vector2d& b, const Vector2d& c) {
+    double alpha = ((b.v - c.v) * (p.u - c.u) + (c.u - b.u) * (p.v - c.v)) / ((b.v - c.v) * (a.u - c.u) + (c.u - b.u) * (a.v - c.v));
+    double beta = ((c.v - a.v) * (p.u - c.u) + (a.u - c.u) * (p.v - c.v)) / ((b.v - c.v) * (a.u - c.u) + (c.u - b.u) * (a.v - c.v));
+    double gamma = 1.0f - alpha - beta;
+
+    return alpha >= 0 && beta >= 0 && gamma >= 0;
 }
