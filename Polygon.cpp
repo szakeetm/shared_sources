@@ -730,14 +730,14 @@ bool isEar(const std::vector<int>& localIndices, const std::vector<Vector2d>& ve
         return false;
     }
 
-	int prevGlobalIndex = globalIndices[previndex];
-	int currGlobalIndex = globalIndices[currindex];
-	int nextGlobalIndex = globalIndices[nextindex];
+    
     for (int j = 0; j < n; j++) {
         int jLocalIndex = localIndices[j];
         int jGlobalIndex = globalIndices[localIndices[j]];
-        
-        if (jGlobalIndex != prevGlobalIndex && jLocalIndex != currindex && jGlobalIndex != nextGlobalIndex) {
+        int prevGlobalIndex = globalIndices[previndex];
+        int currGlobalIndex = globalIndices[currindex];
+        int nextGlobalIndex = globalIndices[nextindex];
+        if (jGlobalIndex != prevGlobalIndex && jGlobalIndex != currGlobalIndex && jGlobalIndex != nextGlobalIndex) {
             if (isInsideTriangle(vertices2[jLocalIndex], prev, curr, next)) {
                 return false;
             }
