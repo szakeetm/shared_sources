@@ -1647,36 +1647,36 @@ void Geometry::BuildGLList() {
 	// Compile geometry for OpenGL
 	for (int j = 0; j < sh.nbSuper; j++) {
 
-typedef std::pair<size_t, size_t> Edge;
-typedef std::set<Edge> EdgeSet;
+		typedef std::pair<size_t, size_t> Edge;
+		typedef std::set<Edge> EdgeSet;
 
-	EdgeSet edgeSet;
+		EdgeSet edgeSet;
 
-	//construct edge map
-    for (size_t i = 0; i < facets.size(); ++i) {
-        const auto& f = facets[i];
+		//construct edge map
+		for (size_t i = 0; i < facets.size(); ++i) {
+			const auto& f = facets[i];
 
-        for (size_t j = 0; j < f->indices.size(); ++j) {
-            size_t v1 = f->indices[j];
-            size_t v2 = f->indices[(j + 1) % f->indices.size()];
+			for (size_t j = 0; j < f->indices.size(); ++j) {
+				size_t v1 = f->indices[j];
+				size_t v2 = f->indices[(j + 1) % f->indices.size()];
 
-            // Ensure canonical order for edge vertices
-            if (v1 > v2) {
-                std::swap(v1, v2);
-            }
+				// Ensure canonical order for edge vertices
+				if (v1 > v2) {
+					std::swap(v1, v2);
+				}
 
-			Edge newEdge = std::make_pair(v1, v2);
-			edgeSet.insert(newEdge);
-			
-        }
-    }
+				Edge newEdge = std::make_pair(v1, v2);
+				edgeSet.insert(newEdge);
 
-	std::vector<GLuint> lines;
-	lines.reserve(edgeSet.size()*2);
-	for (const auto& it : edgeSet) {
-		lines.push_back((GLuint)it.first);
-		lines.push_back((GLuint)it.second);
-	}
+			}
+		}
+
+		std::vector<GLuint> lines;
+		lines.reserve(edgeSet.size() * 2);
+		for (const auto& it : edgeSet) {
+			lines.push_back((GLuint)it.first);
+			lines.push_back((GLuint)it.second);
+		}
 
 
 

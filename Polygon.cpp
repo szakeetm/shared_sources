@@ -672,12 +672,28 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon) {
 }
 
 bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& polygon) {
-//https://stackoverflow.com/questions/11716268/point-in-polygon-algorithm
-    bool inside = false;
-    for (int i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++) {
-        if (((polygon[i].v > v) != (polygon[j].v > v)) &&
-            (u < (polygon[j].u - polygon[i].u) * (v - polygon[i].v) / (polygon[j].v - polygon[i].v) + polygon[i].u))
-            inside = !inside;
+    // Fast method to check if a point is inside a polygon or not.
+    // Works with convex and concave polys, orientation independent
+    int n_updown = 0;
+    int n_found = 0;
+    int n = polygon.size();
+
+    for (int j = 0; j < polygon.size(); j++) {
+        const Vector2d& p1 = polygon[j];
+        const Vector2d& p2 = polygon[Next(j,n)];
+
+        if (u < p1.u != u < p2.u) {
+            double slope = (p2.v - p1.v) / (p2.u - p1.u);
+            if ((slope * u - v) < (slope * p1.u - p1.v)) {
+                n_updown++;
+            }
+            else {
+                n_updown--;
+            }
+            n_found++;
+        }
     }
-    return inside;
+
+    return !(n_found & 2u) ^ !(n_updown & 2u);
+    
 }
