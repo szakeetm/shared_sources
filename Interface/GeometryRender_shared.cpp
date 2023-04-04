@@ -608,16 +608,14 @@ void Geometry::DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines) {
 
 void Geometry::DrawPolys() {
 
-	std::vector<size_t> f3; f3.reserve(sh.nbFacet);
-	std::vector<size_t> f4; f4.reserve(sh.nbFacet);
-	std::vector<size_t> fp; fp.reserve(sh.nbFacet);
+	std::vector<int> f3; f3.reserve(sh.nbFacet);
+	std::vector<int> f4; f4.reserve(sh.nbFacet);
+	std::vector<int> fp; fp.reserve(sh.nbFacet);
 
 	// Group TRI,QUAD and POLY
-	for (size_t i = 0; i < sh.nbFacet; i++) {
-		size_t nb = facets[i]->sh.nbIndex;
-		if (facets[i]->volumeVisible
-		//&& !facets[i]->selected // don't draw part of the volume that is selected
-		) {
+	for (int i = 0; i < sh.nbFacet; i++) {
+		int nb = facets[i]->sh.nbIndex;
+		if (facets[i]->volumeVisible) {
 			if (nb == 3) {
 				f3.push_back(i);
 			}
@@ -631,23 +629,57 @@ void Geometry::DrawPolys() {
 	}
 
 	// Draw
-	glBegin(GL_TRIANGLES);
+	std::vector<double> vertexCoords, normalCoords;
+	std::vector<float> textureCoords, colorValues;
+	GLCOLOR currentColor; //unused
+	currentColor.r = 0.0f;
+	currentColor.r = 0.0f;
+	currentColor.r = 0.0f;
+	currentColor.r = 0.0f;
 
 	// Triangle
-	for (const auto& i : f3)
-		FillFacet(facets[i], false);
+	for (const auto& i : f3) {
+		FillFacet(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+	}
 
 	// Triangulate polygon
 	for (const auto& i : fp)
-		TriangulateForRender(facets[i], false);
+	{
+		TriangulateForRender(facets[i], vertexCoords, normalCoords, textureCoords,  colorValues, currentColor, false);
+	}
 
-	glEnd();
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+
+	glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+
+	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+
+	vertexCoords.clear();
+	normalCoords.clear();
+	textureCoords.clear();
 
 	// Quads
-	glBegin(GL_QUADS);
 	for (const auto& i : f4)
-		FillFacet(facets[i], false);
-	glEnd();
+	{
+		FillFacet(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+	}
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+
+	glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+
+	glDrawArrays(GL_QUADS, 0, vertexCoords.size()/3);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
@@ -686,7 +718,7 @@ int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs){
     else return 0;
 
 }
-void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
+void Geometry::DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacets) {
 
     const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
     // Draw
@@ -697,8 +729,10 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 		std::array<float,4> color; //to pass components to glColor4f
 	};
 	std::vector<ArrowToDraw> arrowsToDraw;
+	std::vector<double> vertexCoords, normalCoords;
+	std::vector<float> textureCoords,colorValues;
+	GLCOLOR currentColor;
 
-    glBegin(GL_TRIANGLES);
     for (const auto& sel : selectedFacets) {
         if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
             auto it = colorHighlighting.find(sel);
@@ -709,11 +743,21 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 				float r = static_cast<float>(it->second.r) / 255.0f;
 				float g = static_cast<float>(it->second.g) / 255.0f;
 				float b = static_cast<float>(it->second.b) / 255.0f;
-				glColor4f(r, g, b, 0.5f);
+				GLCOLOR newColor;
+				newColor.r = r;
+				newColor.g = g;
+				newColor.b = b;
+				newColor.a = .5f;
+				currentColor = newColor;
 				arrow.color = {r, g, b, 0.3f};
             } else {
-                glColor4f(0.937f,0.957f,1.0f, 0.08f);    //metro light blue
-				arrow.color = {0.937f,0.957f,1.0f, 0.08f};
+				GLCOLOR newColor;
+				newColor.r = 0.937f;
+				newColor.g = 0.957f;
+				newColor.b = 1.0f;
+				newColor.a = 0.08f;
+				currentColor = newColor; 
+				arrow.color = {0.937f,0.957f,1.0f, 0.08f};//metro light blue
             }
 			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
 				Vector3d& center = facets[sel]->sh.center;
@@ -725,17 +769,35 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
 			}
         }
         else{
-            glColor4f(0.933f, 0.067f, 0.067f, 0.15f);    //metro red
+			GLCOLOR newColor;
+			newColor.r = 0.933f;
+			newColor.g = 0.067f;
+			newColor.b = 0.067f;
+			newColor.a = 0.15f;
+			currentColor = newColor; //metro red   
         }
         size_t nb = facets[sel]->sh.nbIndex;
         if (nb == 3) {
-            FillFacet(facets[sel], false);
+            FillFacet(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
         }
         else {
-            TriangulateForRender(facets[sel], false);
+            TriangulateForRender(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor,false);
         }
     }
-    glEnd();
+	
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+	glColorPointer(4, GL_FLOAT, 0, colorValues.data());
+
+	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 
 	AxisAlignedBoundingBox bb = GetBB();
 	double arrowLength = 30.0 / Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
@@ -897,7 +959,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
+void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p , std::vector<float>& textureCoords) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -906,28 +968,37 @@ void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p) {
 #if 1
 	double fu = f->sh.texWidth_precise * uStep;
 	double fv = f->sh.texHeight_precise * vStep;
-	glTexCoord2f((float)(uStep + p->u*fu), (float)(vStep + p->v*fv));
+	textureCoords.push_back((float)(uStep + p->u*fu));
+	textureCoords.push_back((float)(vStep + p->v*fv));
 #else
 	// Show border (debugging purpose)
 	double fu = (f->sh.texWidth_precise + 2.0) * uStep;
 	double fv = (f->sh.texHeight_precise + 2.0) * vStep;
-	glTexCoord2f((float)(p->u*fu), (float)(p->v*fv));
+	textureCoords.push_back((float)(uStep + p->u * fu));
+	textureCoords.push_back((float)(vStep + p->v * fv));
 #endif
 
 }
 
-void Geometry::FillFacet(InterfaceFacet *f, bool addTextureCoord) {
+void Geometry::FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
-	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
 	for (size_t i=0;i<f->sh.nbIndex;i++) {
 		size_t idx = f->indices[i];
-		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]));
-		glVertex3d(vertices3[idx].x, vertices3[idx].y, vertices3[idx].z);
-
+		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]),textureCoords);
+		vertexCoords.push_back(vertices3[idx].x);
+		vertexCoords.push_back(vertices3[idx].y);
+		vertexCoords.push_back(vertices3[idx].z);
+		normalCoords.push_back(-f->sh.N.x);
+		normalCoords.push_back(-f->sh.N.y);
+		normalCoords.push_back(-f->sh.N.z);
+		colorValues.push_back(currentColor.r);
+		colorValues.push_back(currentColor.g);
+		colorValues.push_back(currentColor.b);
+		colorValues.push_back(currentColor.a);
 	}
 }
 
-void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord) {
+void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
@@ -941,19 +1012,39 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool a
 	p2 = &(p.pts[IDX(ear, p.pts.size())]);
 	p3 = &(p.pts[Next(ear, p.pts.size())]);
 
-	glNormal3d(-f->sh.N.x, -f->sh.N.y, -f->sh.N.z);
-	if (addTextureCoord) AddTextureCoord(f, p1);
-	f->glVertex2u(p1->u, p1->v);
+	normalCoords.push_back(-f->sh.N.x);
+	normalCoords.push_back(-f->sh.N.y);
+	normalCoords.push_back(-f->sh.N.z);
+	if (addTextureCoord) AddTextureCoord(f, p1, textureCoords);
+	f->glVertex2uVertexArray(p1->u, p1->v,vertexCoords);
+	colorValues.push_back(currentColor.r);
+	colorValues.push_back(currentColor.g);
+	colorValues.push_back(currentColor.b);
+	colorValues.push_back(currentColor.a);
 
-	if (addTextureCoord) AddTextureCoord(f, p2);
-	f->glVertex2u(p2->u, p2->v);
+	normalCoords.push_back(-f->sh.N.x);
+	normalCoords.push_back(-f->sh.N.y);
+	normalCoords.push_back(-f->sh.N.z);
+	if (addTextureCoord) AddTextureCoord(f, p2, textureCoords);
+	f->glVertex2uVertexArray(p2->u, p2->v, vertexCoords);
+	colorValues.push_back(currentColor.r);
+	colorValues.push_back(currentColor.g);
+	colorValues.push_back(currentColor.b);
+	colorValues.push_back(currentColor.a);
 
-	if (addTextureCoord) AddTextureCoord(f, p3);
-	f->glVertex2u(p3->u, p3->v);
+	normalCoords.push_back(-f->sh.N.x);
+	normalCoords.push_back(-f->sh.N.y);
+	normalCoords.push_back(-f->sh.N.z);
+	if (addTextureCoord) AddTextureCoord(f, p3, textureCoords);
+	f->glVertex2uVertexArray(p3->u, p3->v, vertexCoords);
+	colorValues.push_back(currentColor.r);
+	colorValues.push_back(currentColor.g);
+	colorValues.push_back(currentColor.b);
+	colorValues.push_back(currentColor.a);
 
 }
 
-void Geometry::TriangulateForRender(InterfaceFacet *f, bool addTextureCoord) {
+void Geometry::TriangulateForRender(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -973,13 +1064,13 @@ void Geometry::TriangulateForRender(InterfaceFacet *f, bool addTextureCoord) {
 	// Perform triangulation
 	while (p.pts.size() > 3) {
 		int e = GeometryTools::FindEar(p);
-		DrawEar(f, p, e, addTextureCoord);
+		DrawEar(f, p, e, vertexCoords, normalCoords, textureCoords , colorValues, currentColor, addTextureCoord);
 		// Remove the ear
 		p.pts.erase(p.pts.begin() + e);
 	}
 
 	// Draw the last ear
-	DrawEar(f, p, 0, addTextureCoord);
+	DrawEar(f, p, 0, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, addTextureCoord);
 
 }
 
@@ -1527,7 +1618,7 @@ void Geometry::BuildSelectList() {
 			//glEnable(GL_MULTISAMPLE);
 			//glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
-			DrawTransparentPolys(selectedFacets);
+			DrawSemiTransparentPolys(selectedFacets);
 
 			//glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 			//glDisable(GL_MULTISAMPLE);
@@ -1536,8 +1627,6 @@ void Geometry::BuildSelectList() {
 		}
         glEndList();
 	}
-
-
 }
 
 void Geometry::BuildVolumeFacetList() {
@@ -1677,24 +1766,54 @@ void Geometry::BuildFacetList(InterfaceFacet *f) {
 
 	if (f->sh.isTextured) {
 
+		std::vector<double> vertexCoords, normalCoords;
+		std::vector<float> textureCoords, colorValues;
+		GLCOLOR currentColor; //unused
+		currentColor.r = 0.0f;
+		currentColor.r = 0.0f;
+		currentColor.r = 0.0f;
+		currentColor.r = 0.0f;
+
 		// Facet geometry
 		glNewList(f->glList, GL_COMPILE);
-		if (f->sh.nbIndex == 3) {
-			glBegin(GL_TRIANGLES);
-			FillFacet(f, true);
-			glEnd();
-		}
-		else if (f->sh.nbIndex == 4) {
+		if (f->sh.nbIndex == 4) {
 
-			glBegin(GL_QUADS);
-			FillFacet(f, true);
-			glEnd();
+			FillFacet(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
+			
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_NORMAL_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+			glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+			glTexCoordPointer(2, GL_FLOAT, 0, textureCoords.data());
+
+			glDrawArrays(GL_QUADS, 0, vertexCoords.size()/3);
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_NORMAL_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		else {
+			if (f->sh.nbIndex == 3) {
+				FillFacet(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
+			}
+			else {
+				TriangulateForRender(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
+			}
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_NORMAL_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-			glBegin(GL_TRIANGLES);
-			TriangulateForRender(f, true);
-			glEnd();
+			glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+			glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+			glTexCoordPointer(2, GL_FLOAT, 0, textureCoords.data());
+
+			glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_NORMAL_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		glEndList();
 	}

@@ -248,15 +248,15 @@ protected:
 	bool AlreadySelected(size_t f);
 	void DrawFacet(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines);
-	void FillFacet(InterfaceFacet *f, bool addTextureCoord);
-	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p);
+	void FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
+	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p, std::vector<float>& textureCoords);
 	void DrawPolys();
-	void DrawTransparentPolys(const std::vector<size_t> &selectedFacets);
+	void DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	void TriangulateForRender(InterfaceFacet *f, bool addTextureCoord);
-	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
+	void TriangulateForRender(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
+	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
     bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);

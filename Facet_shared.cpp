@@ -357,9 +357,24 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 */
 void InterfaceFacet::glVertex2u(double u, double v) {
 
-	glVertex3d(sh.O.x + sh.U.x*u + sh.V.x*v,
-		sh.O.y + sh.U.y*u + sh.V.y*v,
-		sh.O.z + sh.U.z*u + sh.V.z*v);
+	glVertex3d(
+	sh.O.x + sh.U.x * u + sh.V.x * v,
+	sh.O.y + sh.U.y * u + sh.V.y * v,
+	sh.O.z + sh.U.z * u + sh.V.z * v
+		);
+
+}
+
+/**
+* \brief Converts (u,v) Vertex to 3D Vertex
+* \param u local u coordinate of facet
+* \param v local v coordinate of facet
+*/
+void InterfaceFacet::glVertex2uVertexArray(double u, double v, std::vector<double>& vertexCoords) {
+
+	vertexCoords.push_back(sh.O.x + sh.U.x*u + sh.V.x*v);
+	vertexCoords.push_back(sh.O.y + sh.U.y * u + sh.V.y * v);
+	vertexCoords.push_back(sh.O.z + sh.U.z * u + sh.V.z * v);
 
 }
 
