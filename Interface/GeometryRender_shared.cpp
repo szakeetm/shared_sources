@@ -822,7 +822,7 @@ void Geometry::ClearFacetTextures()
 
 void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d) {
 
-	if (!arrowList) BuildShapeList();
+	if (!arrowList) BuildDirectionList();
 
 	// Compute transformation matrix for the arrow
 	GLMatrix mView;
@@ -1295,7 +1295,7 @@ std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
 	return result;
 }
 
-void Geometry::BuildShapeList() {
+void Geometry::BuildDirectionList() {
 
 	// Shapes used for direction field rendering
 

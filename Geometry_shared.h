@@ -98,7 +98,7 @@ protected:
 	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
 	void AdjustProfile();
-	void BuildShapeList();
+	void BuildDirectionList();
 	void BuildSelectList();
 	void BuildNonPlanarList();
 	void BuildVolumeFacetList();
