@@ -639,7 +639,7 @@ void Geometry::DrawPolys() {
 
 	// Triangulate polygon
 	for (const auto& i : fp)
-		Triangulate(facets[i], false);
+		TriangulateForRender(facets[i], false);
 
 	glEnd();
 
@@ -767,7 +767,7 @@ void Geometry::DrawTransparentPolys(const std::vector<size_t> &selectedFacets) {
             FillFacet(facets[sel], false);
         }
         else {
-            Triangulate(facets[sel], false);
+            TriangulateForRender(facets[sel], false);
         }
     }
     glEnd();
@@ -1018,7 +1018,7 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool a
 
 }
 
-void Geometry::Triangulate(InterfaceFacet *f, bool addTextureCoord) {
+void Geometry::TriangulateForRender(InterfaceFacet *f, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -1747,7 +1747,7 @@ void Geometry::BuildFacetList(InterfaceFacet *f) {
 		else {
 
 			glBegin(GL_TRIANGLES);
-			Triangulate(f, true);
+			TriangulateForRender(f, true);
 			glEnd();
 		}
 		glEndList();

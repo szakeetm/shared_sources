@@ -255,7 +255,7 @@ protected:
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	void Triangulate(InterfaceFacet *f, bool addTextureCoord);
+	void TriangulateForRender(InterfaceFacet *f, bool addTextureCoord);
 	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, bool addTextureCoord);
 public:
     bool InitOldStruct(SimulationModel* model);

@@ -49,7 +49,7 @@ std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* ge
 
 std::vector<InterfaceFacet*> GeometryTools::Triangulate(InterfaceFacet *f) {
 
-    // Triangulate a facet (rendering purpose)
+    // Triangulate a facet (for geometry edits)
     // The facet must have at least 3 points
     // Use the very simple "Two-Ears" theorem. It computes in O(n^2).
     std::vector<InterfaceFacet*> triangleFacets;
@@ -102,10 +102,12 @@ int  GeometryTools::FindEar(const GLAppPolygon& p){
     // REM: Theoretically, it should always find an ear (2-Ears theorem).
     // However on degenerated geometry (flat poly) it may not find one.
     // Returns first point in case of failure.
-    if (earFound)
+    if (earFound) {
         return i;
-    else
+    }
+    else {
         return 0;
+    }
 }
 
 // Return indices to vertices3d for new triangle facet
