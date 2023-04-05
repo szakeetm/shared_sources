@@ -90,7 +90,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 	maxVertexTextbox->SetBounds(185, 55, 80, 18);
 	Add(maxVertexTextbox);
 
-	l3 = new GLToggle(0,"Sides more collinear than (degrees):");
+	l3 = new GLToggle(0,"Sides more collinear than (deg):");
 	l3->SetBounds(5,80,170,18);
 	l3->SetState(true);
 	Add(l3);
