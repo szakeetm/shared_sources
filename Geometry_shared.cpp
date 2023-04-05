@@ -2894,7 +2894,7 @@ InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 
 }
 
-void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Worker *work, GLProgress *prg) {
+void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress *prg) {
 	mApp->changedSinceSave = true;
 	work->abortRequested = false;
 	InterfaceFacet *fi, *fj;
@@ -2966,7 +2966,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
                     //while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
                     fj = facets[j];
                     merged = nullptr;
-                    if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
+                    if ((!doSelectedOnly || fj->selected) && fi->sh.nbIndex<maxVertex && fi->IsCoplanarAndEqual(fj, fT)) {
                         // Collapse
                         merged = MergeFacet(fi, fj);
 
@@ -3045,64 +3045,7 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
         
 		facets.resize(facets.size() - nb2Delete);
         sh.nbFacet -= nb2Delete;
-        /*int nb2Delete = 0;
-        for (int k = facets.size() - 1 - nb2Delete; k >= 0; k--) {
-            if(already_merged[k]) {
-                for (int jj = k; jj < facets.size() - 1; jj++) {
-                    facets[jj] = facets[jj + 1];
-                }
-                nb2Delete++;
-                *//*facets.pop_back();
-                sh.nbFacet--;*//*
-            }
-        }
-        facets.resize(facets.size() - nb2Delete);
-        sh.nbFacet -= nb2Delete;*/
-        /*for (int i = 0; !work->abortRequested && i < sh.nbFacet; i++) {
-			prg->SetProgress((1.0 + ((double)i / (double)sh.nbFacet)) / totalWork);
-			mApp->DoEvents(); //To catch eventual abort button click
-			fi = facets[i];
-			// Search a coplanar facet
-			int j = i + 1;
-			while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
-				fj = facets[j];
-				merged = nullptr;
-				if ((!doSelectedOnly || fj->selected) && fi->IsCoplanarAndEqual(fj, fT)) {
-					// Collapse
-					merged = MergeFacet(fi, fj);
-
-					if (merged) {
-						// Replace the old 2 facets by the new one
-						merged->CopyFacetProperties(fi); //Copies properties, and absolute outgassing
-#ifdef MOLFLOW
-						if (merged->sh.outgassing > 0.0 && fi->sh.area > 0.0) {
-							CalculateFacetParams(merged); //get area
-							merged->sh.outgassing = merged->sh.area / fi->sh.area * fi->sh.outgassing; //Maintain per-area outgassing
-						} 
-#endif //MOLFLOW
-						SAFE_DELETE(fi);
-						SAFE_DELETE(fj);
-						newRef[i] = newRef[j] = -1;
-						for (int k = j; k < sh.nbFacet - 1; k++) {
-							facets[k] = facets[k + 1];
-						}
-						for (int k = j + 1; k < newRef.size(); k++) {
-							newRef[k] --; //Renumber references
-						}
-						sh.nbFacet--;
-                        facets.pop_back();
-
-						facets[i] = merged;
-						//InitializeGeometry(i);
-						//SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
-						fi = facets[i];
-						j = i + 1;
-
-					}
-				}
-				if (!merged) j++;
-			}
-		}*/
+  
         //fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
         prg->SetProgress((double)(current_task++) / tasks_total);
@@ -3137,28 +3080,6 @@ void Geometry::Collapse(double vT, double fT, double lT, bool doSelectedOnly, Wo
     collapse_time.ReInit(); collapse_time.Start();
 
 	prg->SetMessage("Rebuilding geometry...");
-	
-	/*
-	for (int i = 0; i < sh.nbFacet; i++) {
-
-		Facet *f = facets[i];
-
-		// Revert orientation if normal has been swapped
-		// This happens when the second vertex is no longer convex
-		Vector3d n, v1, v2;
-		double   d;
-		size_t i0 = facets[i]->indices[0];
-		size_t i1 = facets[i]->indices[1];
-		size_t i2 = facets[i]->indices[2];
-
-		v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
-		v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
-		n = CrossProduct(v1, v2);           // Cross product
-		d = Dot(n, f->sh.N);
-		if (d < 0.0) f->SwapNormal();
-
-	}
-	*/
 
 	// Delete old resources
 	for (int i = 0; i < sh.nbSuper; i++)

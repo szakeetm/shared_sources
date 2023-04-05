@@ -216,7 +216,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 					clipped = true;
 				}
 			}
-			if (vertexBound) { //CAPS LOCK on, select facets onyl with at least one seleted vertex
+			if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
 				for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
 					size_t idx = facets[i]->indices[j];
 					if (vertices3[idx].selected) hasSelectedVertex = true;
