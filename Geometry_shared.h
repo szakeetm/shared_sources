@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Buffer_shared.h"
 //#include "Simulation/GeometrySimu.h"
 
-#define SEL_HISTORY  100
+//#define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
@@ -311,8 +311,7 @@ protected:
 	
 
 	// Rendering/Selection stuff
-	size_t selectHist[SEL_HISTORY];
-	size_t nbSelectedHist;
+	std::unordered_set<size_t> selectHist;
 
 	std::vector<size_t> selectedVertexList_ordered; //Vertex selection history, used for creating ordered polygon
 	std::map<int,GLColor> plottedFacets;

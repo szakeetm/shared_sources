@@ -1529,7 +1529,7 @@ void Geometry::Clear() {
 	arrowMaterial.Ambient.g = 0.3f;
 	arrowMaterial.Ambient.b = 0.0f;
 
-	nbSelectedHist = 0;    // Selection history
+	selectHist.clear();    // Selection history
 }
 
 void  Geometry::SelectIsolatedVertices() {

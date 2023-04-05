@@ -59,8 +59,7 @@ void Geometry::SelectFacet(size_t facetId) {
 	InterfaceFacet *f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
 	if (!f->selected) f->UnselectElem();
-	nbSelectedHist = 0;
-	AddToSelectionHist(facetId);
+	selectHist = { facetId }; //reset with only this facet id
 }
 
 void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
@@ -93,7 +92,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	GLMatrix m; m.Multiply(&proj, &view);
 
 	if (clear && !unselect) UnselectAll();
-	nbSelectedHist = 0;
+	selectHist.clear();
 	int lastPaintedProgress = -1;
 	char tmp[256];
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
@@ -266,8 +265,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 	if (!found && lastFound >= 0) {
 		if (!unselect) {
 			// Restart
-			nbSelectedHist = 0;
-			AddToSelectionHist(lastFound);
+			selectHist = { (size_t)lastFound };
 		}
 		facets[lastFound]->selected = !unselect;
 		if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
@@ -291,8 +289,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			if (!unselect) mApp->facetList->ScrollToVisible(i, 0, true); //scroll to selected facet
 		}
 		else {
-
-			nbSelectedHist = 0;
+			selectHist.clear();
 		}
 	}
 	UpdateSelection();
@@ -446,25 +443,11 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 }
 
 void Geometry::AddToSelectionHist(size_t f) {
-
-	if (nbSelectedHist < SEL_HISTORY) {
-		selectHist[nbSelectedHist] = f;
-		nbSelectedHist++;
-	}
-
+	selectHist.insert(f);
 }
 
 bool Geometry::AlreadySelected(size_t f) {
-
-	// Check if the facet has already been selected
-	bool found = false;
-	size_t i = 0;
-	while (!found && i < nbSelectedHist) {
-		found = (selectHist[i] == f);
-		if (!found) i++;
-	}
-	return found;
-
+	return selectHist.find(f)!=selectHist.end();
 }
 
 void Geometry::SelectAll() {
