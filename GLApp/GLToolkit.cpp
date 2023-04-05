@@ -1070,7 +1070,7 @@ void GLToolkit::SetMaterial(GLMATERIAL *mat) {
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, scolor);
   float ecolor[] = { mat->Emissive.r, mat->Emissive.g, mat->Emissive.b, mat->Emissive.a };
   glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ecolor);
-  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat->Power);
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat->Shininess);
   glColor4f(mat->Ambient.r, mat->Ambient.g, mat->Ambient.b, mat->Ambient.a);
 
 }

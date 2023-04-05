@@ -101,7 +101,7 @@ typedef struct {
   GLCOLOR   Ambient;
   GLCOLOR   Specular;
   GLCOLOR   Emissive;
-  float     Power;
+  float     Shininess;
 
 } GLMATERIAL;
 

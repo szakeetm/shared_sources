@@ -1520,6 +1520,7 @@ void Geometry::Clear() {
 	fillMaterial.Ambient.r = 0.45f;
 	fillMaterial.Ambient.g = 0.41f;
 	fillMaterial.Ambient.b = 0.41f;
+	fillMaterial.Shininess = 64.0f;
 
 	memset(&arrowMaterial, 0, sizeof(GLMATERIAL));
 	arrowMaterial.Diffuse.r = 0.4f;
