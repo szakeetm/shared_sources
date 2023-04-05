@@ -654,11 +654,6 @@ void Geometry::DrawPolys() {
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
-
-	vertexCoords.clear();
-	normalCoords.clear();
-	textureCoords.clear();
-
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
