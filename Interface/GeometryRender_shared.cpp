@@ -609,7 +609,6 @@ void Geometry::DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines) {
 void Geometry::DrawPolys() {
 
 	std::vector<int> f3; f3.reserve(sh.nbFacet);
-	std::vector<int> f4; f4.reserve(sh.nbFacet);
 	std::vector<int> fp; fp.reserve(sh.nbFacet);
 
 	// Group TRI,QUAD and POLY
@@ -618,9 +617,6 @@ void Geometry::DrawPolys() {
 		if (facets[i]->volumeVisible) {
 			if (nb == 3) {
 				f3.push_back(i);
-			}
-			else if (nb == 4) {
-				f4.push_back(i);
 			}
 			else {
 				fp.push_back(i);
@@ -662,23 +658,6 @@ void Geometry::DrawPolys() {
 	vertexCoords.clear();
 	normalCoords.clear();
 	textureCoords.clear();
-
-	// Quads
-	for (const auto& i : f4)
-	{
-		FillFacet(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
-	}
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-
-	glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
-	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
-
-	glDrawArrays(GL_QUADS, 0, vertexCoords.size()/3);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
 
 }
 
@@ -1776,45 +1755,26 @@ void Geometry::BuildFacetList(InterfaceFacet *f) {
 
 		// Facet geometry
 		glNewList(f->glList, GL_COMPILE);
-		if (f->sh.nbIndex == 4) {
-
+		if (f->sh.nbIndex == 3) {
 			FillFacet(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
-			
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_NORMAL_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
-			glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
-			glTexCoordPointer(2, GL_FLOAT, 0, textureCoords.data());
-
-			glDrawArrays(GL_QUADS, 0, vertexCoords.size()/3);
-
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_NORMAL_ARRAY);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		else {
-			if (f->sh.nbIndex == 3) {
-				FillFacet(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
-			}
-			else {
-				TriangulateForRender(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
-			}
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_NORMAL_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
-			glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
-			glTexCoordPointer(2, GL_FLOAT, 0, textureCoords.data());
-
-			glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
-
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_NORMAL_ARRAY);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			TriangulateForRender(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
 		}
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
+		glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
+		glTexCoordPointer(2, GL_FLOAT, 0, textureCoords.data());
+
+		glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size() / 3);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
 		glEndList();
 	}
 }
