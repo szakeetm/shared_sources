@@ -59,7 +59,7 @@ extern SynRad*mApp;
 CollapseSettings::CollapseSettings():GLWindow() {
 
 	int wD = 270;
-	int hD = 225;
+	int hD = 250;
 
 	SetTitle("Collapse Settings");
 
@@ -81,33 +81,44 @@ CollapseSettings::CollapseSettings():GLWindow() {
 	pThreshold->SetBounds(185,30,80,18);
 	Add(pThreshold);
 
+	maxVertexToggle = new GLToggle(0, "Max. vertices on a facet:");
+	maxVertexToggle->SetBounds(20, 55, 170, 18);
+	maxVertexToggle->SetState(true);
+	Add(maxVertexToggle);
+
+	maxVertexTextbox = new GLTextField(0, "100");
+	maxVertexTextbox->SetBounds(185, 55, 80, 18);
+	Add(maxVertexTextbox);
+
 	l3 = new GLToggle(0,"Sides more collinear than (degrees):");
-	l3->SetBounds(5,55,170,18);
+	l3->SetBounds(5,80,170,18);
 	l3->SetState(true);
 	Add(l3);
 
 	lThreshold = new GLTextField(0,"1E-3");
-	lThreshold->SetBounds(185,55,80,18);
+	lThreshold->SetBounds(185,80,80,18);
 	Add(lThreshold);
 
-	GLTitledPanel *panel = new GLTitledPanel("Optimisation results");
-	panel->SetBounds(5,80,wD-10,hD-105);
+	GLTitledPanel *panel = new GLTitledPanel("Collapse results");
+	panel->SetBounds(5,105,wD-10,hD-157);
 	Add(panel);
 
+
+	
 	resultLabel = new GLLabel("");
-	resultLabel->SetBounds(10,95,wD-20,hD-125);
+	panel->SetCompBounds(resultLabel, 10, 15, wD - 20, 60);
 	Add(resultLabel);
 
 	goButton = new GLButton(0,"Collapse");
-	goButton->SetBounds(wD-265,hD-44,85,21);
+	goButton->SetBounds(wD-265,hD-45,85,21);
 	Add(goButton);
 
 	goSelectedButton = new GLButton(0,"Collapse Selected");
-	goSelectedButton->SetBounds(wD-175,hD-44,105,21);
+	goSelectedButton->SetBounds(wD-175,hD-45,105,21);
 	Add(goSelectedButton);
 
 	cancelButton = new GLButton(0,"Dismiss");
-	cancelButton->SetBounds(wD-65,hD-44,60,21);
+	cancelButton->SetBounds(wD-65,hD-45,60,21);
 	Add(cancelButton);
 
 	// Center dialog
@@ -153,6 +164,7 @@ void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
 */
 void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 	double vT,fT,lT;
+	int maxVertex;
 
 	switch(message) {
 	case MSG_BUTTON:
@@ -175,6 +187,10 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display("Invalid linearity threshold value.\nMust be a positive number.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
+				if (!maxVertexTextbox->GetNumberInt(&maxVertex) || !(maxVertex > 0)) {
+					GLMessageBox::Display("Invalid max. vertex per facet number.\nMust be a positive number.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					return;
+				}
 				if (!mApp->AskToReset(work)) return;
 				GLProgress *progressDlg = new GLProgress("Collapse", "Please wait");
 				progressDlg->SetClosable(false);
@@ -183,11 +199,12 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (!l1->GetState()) vT = 0.0;
 				if (!l2->GetState()) fT = 0.0;
 				if (!l3->GetState()) lT = 0.0;
+				if (!maxVertexToggle->GetState()) maxVertex = 1000000; //"infinity"
 
 				((GLButton*)src)->SetText("Stop collapse");
 				isRunning = true;
 
-				geom->Collapse(vT, fT, lT, (src == goSelectedButton), work,progressDlg);
+				geom->Collapse(vT, fT, lT, maxVertex, (src == goSelectedButton), work,progressDlg);
 
 				if (src == goButton) goButton->SetText("Collapse");
 				else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");

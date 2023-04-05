@@ -57,9 +57,11 @@ private:
   GLTextField *vThreshold;
   GLTextField *pThreshold;
   GLTextField *lThreshold;
+  GLTextField* maxVertexTextbox;
   GLToggle *l1;
   GLToggle *l2;
   GLToggle *l3;
+  GLToggle* maxVertexToggle;
 
   bool isRunning;
 
