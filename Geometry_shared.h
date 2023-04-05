@@ -246,8 +246,8 @@ public:
 protected:
 	void AddToSelectionHist(size_t f);
 	bool AlreadySelected(size_t f);
-	void DrawFacet(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
-	void DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines);
+	void DrawFacetWireframe(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
+	void DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines);
 	void FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p, std::vector<float>& textureCoords);
 	void DrawPolys();

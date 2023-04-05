@@ -506,7 +506,7 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool selOffset) {
+void Geometry::DrawFacetWireframe(InterfaceFacet *f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -570,21 +570,15 @@ void Geometry::DrawFacet(InterfaceFacet *f, bool offset, bool showHidden, bool s
 
 }
 
-void Geometry::DrawFacet_array(InterfaceFacet* f, std::vector<GLuint>& lines) {
+void Geometry::DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines) {
 
 	// Render a facet (wireframe)
-	size_t nb = f->sh.nbIndex;
-	size_t j;
-	for (j = 0; j < nb - 1; j++) {
+	int nb = f->sh.nbIndex;
+	for (int j = 0; j < nb ; j++) {
 		if (f->visible[j]) {
 			lines.push_back((GLuint)f->indices[j]);
-			lines.push_back((GLuint)f->indices[j + 1]);
+			lines.push_back((GLuint)f->indices[(j + 1)%nb]);
 		}
-	}
-	// Last segment
-	if (f->visible[j]) {
-		lines.push_back((GLuint)f->indices[j]);
-		lines.push_back((GLuint)f->indices[0]);
 	}
 }
 
@@ -1434,8 +1428,8 @@ void Geometry::BuildSelectList() {
 	for(int i=0;i<wp.nbFacet;i++ ) {
 	Facet *f = facets[i];
 	if( f->selected ) {
-	//DrawFacet(f,false);
-	DrawFacet(f,1,1,1);
+	//DrawFacetWireframe(f,false);
+	DrawFacetWireframe(f,1,1,1);
 	nbSelected++;
 	}
 	}
@@ -1466,8 +1460,8 @@ void Geometry::BuildSelectList() {
 	Facet *f = facets[i];
 	if( f->selected )
 	{
-	//DrawFacet(f,true,false,true);
-	DrawFacet(f,1,1,1);
+	//DrawFacetWireframe(f,true,false,true);
+	DrawFacetWireframe(f,1,1,1);
 	}
 	}
 	glLineWidth(1.0f);
@@ -1500,17 +1494,17 @@ void Geometry::BuildSelectList() {
     for (auto& sel : selectedFacets) {
 		InterfaceFacet *f = facets[sel];
 
-		//DrawFacet(f,false,true,true);
+		//DrawFacetWireframe(f,false,true,true);
         if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
             auto it = colorHighlighting.find(sel);
             // Check if element exists in map or not
             if (it != colorHighlighting.end()) {
-                continue;
+                continue; //highlighted facet, will draw outside of this loop
             } else {
                 glLineWidth(1.5f);
                 glColor3f(0.937f,0.957f,1.0f);    //metro light blue
             }
-			DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
+			DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
         }
         else{ //regular selected facet, will be drawn later
 			for (size_t j = 0; j < f->indices.size(); ++j) {
@@ -1544,7 +1538,7 @@ void Geometry::BuildSelectList() {
 
                 glColor3f(r, g, b);
                 InterfaceFacet *f = facets[sel];
-                DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
+                DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
                 glLineWidth(2.0f);
             }
         }
@@ -1614,8 +1608,8 @@ void Geometry::BuildNonPlanarList() {
 	hasNonPlanar = !nonPlanarFacetIds.empty();
 	for (const auto& np : nonPlanarFacetIds) {
 		InterfaceFacet *f = facets[np];
-		//DrawFacet(f,false,true,true);
-		DrawFacet(f, false, true, false); //Faster than true true true, without noticeable glitches
+		//DrawFacetWireframe(f,false,true,true);
+		DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
 	}
 	glLineWidth(1.0f);
 	if (mApp->antiAliasing) {
