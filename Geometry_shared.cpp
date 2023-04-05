@@ -2920,50 +2920,23 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
 
 		// Collapse facets
 		prg->SetMessage("Collapsing facets...");
-		std::vector<int> newRef(sh.nbFacet);
-        std::iota (std::begin(newRef), std::end(newRef), 0); // index from 0,1,2, .. sh.nbFacet-1
-        std::vector<int> refDecrements(sh.nbFacet);
-        std::fill(refDecrements.begin(), refDecrements.end(), 0);
-
-        /*for (int i = 0; i < sh.nbFacet; i++) {
-			newRef[i] = i; //Default: reference doesn't change
-		}*/
+		std::vector<bool> already_swallowed(sh.nbFacet,false); //facets that have been already merged into an other
+		std::vector<bool> modified(sh.nbFacet, false); //facets that have swallowed an other (to invalidate references in formulas, selections, ...)
 
         //first get a general set of common edges to determine facets with shared vertices
         AnalyzeNeighbors(work, prg);
-        std::vector<bool> already_merged;
-        already_merged.resize(facets.size(), false);
         prg->SetMessage("Collapsing facets...");
         for (int i = 0; !work->abortRequested && i < facets.size(); i++) {
-            //prg->SetProgress((((double)i / (double)sh.nbFacet))/* / totalWork*/); //Commenting out, would cause incorrect state render
-            //mApp->DoEvents(); //To catch eventual abort button click
-
-            // skip, merged facet is invalid
-            if(already_merged[i])
-                continue;
+			
+			if (already_swallowed[i]) continue; //Skip if already merged into sg.
 
             fi = facets[i];
             // Search a coplanar facet
-            int j = i + 1;
             if(!doSelectedOnly || fi->selected) {
                 for (int n = 0; n < fi->neighbors.size(); n++) {
-                    j = fi->neighbors[n].id;
+                    int j = fi->neighbors[n].id;
+					if (j<=i || already_swallowed[j]) continue; //Skip if neighbor already merged into sg., or skip reverse neighbors (smaller id swallows larger id)
 
-                    bool reverse_neigh = 0;
-                    if(already_merged[j])
-                        continue;
-
-                    for(auto& neighj : facets[j]->neighbors){
-                        if(neighj.id == i) {
-                            reverse_neigh = true;
-                            break;
-                        }
-                    }
-
-                    /*if(!reverse_neigh)
-                        continue;*/
-
-                    //while ((!doSelectedOnly || fi->selected) && j < sh.nbFacet) {
                     fj = facets[j];
                     merged = nullptr;
                     if ((!doSelectedOnly || fj->selected) && fi->sh.nbIndex<maxVertex && fi->IsCoplanarAndEqual(fj, fT)) {
@@ -2980,37 +2953,20 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
                                                         fi->sh.outgassing; //Maintain per-area outgassing
                             }
 #endif //MOLFLOW
-                            already_merged[j] = true;
-                            //SAFE_DELETE(fi);
-                            //SAFE_DELETE(fj);
-                            newRef[i] = newRef[j] = -1;
-                            /*for (int k = j; k < sh.nbFacet - 1; k++) {
-                                facets[k] = facets[k + 1];
-                            }*/
-                            if(j+1 < refDecrements.size())
-                                refDecrements[j+1] += 1;
-                            /*for (int k = j + 1; k < newRef.size(); k++) {
-                                newRef[k]--; //Renumber references
-                            }*/
-                            //sh.nbFacet--;
-                            //facets.pop_back();
-
+                            
                             // combine neighbors to keep a full search (in order)
-                            merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end());
+                            merged->neighbors.insert(merged->neighbors.end(), fi->neighbors.begin(), fi->neighbors.end()); //So that nth neighbor of fi remains the same
                             merged->neighbors.insert(merged->neighbors.end(), fj->neighbors.begin(), fj->neighbors.end());
 
-                            facets[i] = merged;
+							already_swallowed[j] = true;
+							modified[i] = true;
 
 							SAFE_DELETE(fi);
 							SAFE_DELETE(fj);
-                            //InitializeGeometry(i);
-                            //SetFacetTexture(i,facets[i]->tRatio,facets[i]->hasMesh);  //rebuild mesh
-                            fi = facets[i];
-                            j = i + 1;
 
+                            fi = facets[i] = merged;
                         }
                     }
-                    if (!merged) j++;
                 }
             }
         }
@@ -3023,28 +2979,27 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
         int current_task = 0.0;
         //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
 
-        int dec_val = 0;
-        for (int k = 0; k < newRef.size(); k++) {
-            dec_val += refDecrements[k];
-            if(newRef[k] != -1)
-                newRef[k] -= dec_val; //Renumber references
-        }
-
-        //fmt::print("Renumbered duration 1: {}s -- {}\n", collapse_time.Elapsed(), 0);
-        collapse_time.ReInit(); collapse_time.Start();
-        //prg->SetProgress((double)(current_task++) / tasks_total); //Commenting out, would cause incorrect state render
-
-        int nb2Delete = 0;
-        for (int k = 0; k < facets.size(); k++) {
-            if(nb2Delete > 0)
-                facets[k - nb2Delete] = facets[k];
-
-            if(already_merged[k])
-                nb2Delete++;
+		//rebuild facet array
+		int n = 0;
+		std::vector<int> newRef(sh.nbFacet);
+        for (int k = 0; k < already_swallowed.size(); k++) {
+			if (!already_swallowed[k]) {
+				facets[n] = facets[k]; //k>=n
+				if (!modified[k]) {
+					newRef[k] = n;
+				}
+				else {
+					newRef[k] = -1;
+				}
+				n++;
+			}
+			else {
+				newRef[k] = -1;
+			}
         }
         
-		facets.resize(facets.size() - nb2Delete);
-        sh.nbFacet -= nb2Delete;
+		facets.resize(n);
+        sh.nbFacet = n;
   
         //fmt::print("Renumbered duration 2: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
