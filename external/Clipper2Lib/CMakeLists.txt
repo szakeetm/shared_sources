@@ -19,7 +19,11 @@ project(${PROJECT_NAME} CXX)
 ################# Flags ################
 # Defines Flags for Windows and Linux. #
 ########################################
-
+if(MSVC)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+else()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+endif()
 
 ################ Files ################
 #   --   Add files to project.   --   #
