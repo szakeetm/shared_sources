@@ -400,151 +400,152 @@ bool CheckLoop(const PolyGraph& g)
 
 }
 
-std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& visible2)
+std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& visible2)
 {
 
-  // Computes the polygon intersection between p1 and p2.
-  // Operates on simple polygon only. (Hole connection segments 
-  // must be marked non visible in visible2)
-  // Return the number of polygon created (0 on null intersection, -1 on failure)
+	// Computes the polygon intersection between p1 and p2.
+	// Operates on simple polygon only. (Hole connection segments 
+	// must be marked non visible in visible2)
+	// Return the number of polygon created (0 on null intersection, -1 on failure)
 
-  size_t MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
+	size_t MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
 
-  // Create polygraph
-  PolyGraph g = CreateGraph(inP1,inP2,visible2);
+	// Create polygraph
+	PolyGraph g = CreateGraph(inP1, inP2, visible2);
 
-  // Search a divergent point
-  
+	// Search a divergent point
 
-  int vertexId = SearchFirst(g);
 
-  if( vertexId==-1 ) { //Not found
+	int vertexId = SearchFirst(g);
 
-    // Check particular cases
+	if (vertexId == -1) { //Not found
 
-    if( (g.nodes.size()==inP1.pts.size()) && (g.nodes.size()==inP2.pts.size()) ) {
-      // P1 and P2 are equal
-		auto resultVector = { inP1 };
-		return resultVector;
-    }
+		// Check particular cases
 
-    if( CheckLoop(g) ) {
-      // Only tangent edge/point found => null intersection
-      return std::nullopt;
-    }
+		if ((g.nodes.size() == inP1.pts.size()) && (g.nodes.size() == inP2.pts.size())) {
+			// P1 and P2 are equal
+			auto resultVector = { inP1 };
+			return resultVector;
+		}
 
-    int i;
-	bool insideP1 = false;
-	bool insideP2 = false;
+		if (CheckLoop(g)) {
+			// Only tangent edge/point found => null intersection
+			return std::nullopt;
+		}
 
-	std::vector<Vector2d> p1Pts = inP1.pts;
-	std::vector<Vector2d> p2Pts = inP2.pts;
+		int i;
+		bool insideP1 = false;
+		bool insideP2 = false;
 
-    i=0;
-    while( i < inP1.pts.size() && !insideP2 ) {
-      insideP2 = IsInPoly(inP1.pts[i], p2Pts);
-      i++;
-    }
-    if( insideP2 ) {
-      // P1 is fully inside P2
-	  auto resultVector = { inP1 };
-      return resultVector;
-    }
+		std::vector<Vector2d> p1Pts = inP1.pts;
+		std::vector<Vector2d> p2Pts = inP2.pts;
 
-    i=0;
-    while( i < inP2.pts.size() && !insideP1 ) {
-      insideP1 = IsInPoly(inP2.pts[i],p1Pts);
-      i++;
-    }
-    if( insideP1 ) {
-      // P2 is fully inside P1
-		auto resultVector = { inP2 };
-		return resultVector;
-    }
+		i = 0;
+		while (i < inP1.pts.size() && !insideP2) {
+			insideP2 = IsInPoly(inP1.pts[i], p2Pts);
+			i++;
+		}
+		if (insideP2) {
+			// P1 is fully inside P2
+			auto resultVector = { inP1 };
+			return resultVector;
+		}
 
-    return std::nullopt;
+		i = 0;
+		while (i < inP2.pts.size() && !insideP1) {
+			insideP1 = IsInPoly(inP2.pts[i], p1Pts);
+			i++;
+		}
+		if (insideP1) {
+			// P2 is fully inside P1
+			auto resultVector = { inP2 };
+			return resultVector;
+		}
 
-  }
+		return std::nullopt;
 
-  // Compute intersection
-  int eop;
-  Vector2d n1,n2;
-  double sine;
-  std::vector<GLAppPolygon> polys;
-  do {
+	}
 
-    // Starts a new polygon
-	  GLAppPolygon newPoly;
-	  //newPoly.sign = 1;
-	  polys.push_back(newPoly);
+	// Compute intersection
+	int eop;
+	Vector2d n1, n2;
+	double sine;
+	std::vector<GLAppPolygon> polys;
+	do {
 
-    eop = 0;
-	PolyVertex* s = &g.nodes[vertexId]; //Not a reference, can change
-	PolyVertex* s0 = &g.nodes[vertexId];
+		// Starts a new polygon
+		GLAppPolygon newPoly;
+		//newPoly.sign = 1;
+		polys.push_back(newPoly);
 
-    while( !eop && polys.back().pts.size()<MAXEDGE ) {
+		eop = 0;
+		PolyVertex* s = &g.nodes[vertexId]; //Not a reference, can change
+		PolyVertex* s0 = &g.nodes[vertexId];
 
-      // Add point to the current polygon
-      polys.back().pts.push_back(s->p);
-      s->mark = 1;
+		while (!eop && polys.back().pts.size() < MAXEDGE) {
 
-      // Go to next point
-      switch( s->nbOut ) {
+			// Add point to the current polygon
+			polys.back().pts.push_back(s->p);
+			s->mark = 1;
 
-        case 1:
+			// Go to next point
+			switch (s->nbOut) {
 
-          // Next point
-          if(s->VO[0]>=0) {
-            // On a P1 edge
-            s = &g.nodes[s->VO[0]];
-          } else {
-            // On a P2 edge
-            s = &g.nodes[s->VO[1]];
-          }
-          break;
+			case 1:
 
-        case 2:
+				// Next point
+				if (s->VO[0] >= 0) {
+					// On a P1 edge
+					s = &g.nodes[s->VO[0]];
+				}
+				else {
+					// On a P2 edge
+					s = &g.nodes[s->VO[1]];
+				}
+				break;
 
-          if( s->VO[0]==-1 || s->VO[1]==-1 ) {
-            //Failure!!! (tangent edge not marked)
-            return std::nullopt;
-          }
-            
-          // We have to turn left
-          n1 = g.nodes[s->VO[0]].p;
-          n2 = g.nodes[s->VO[1]].p;
+			case 2:
 
-          sine = DET22(n1.u-(s->p.u),n2.u-(s->p.u),
-                       n1.v-(s->p.v),n2.v-(s->p.v));
+				if (s->VO[0] == -1 || s->VO[1] == -1) {
+					//Failure!!! (tangent edge not marked)
+					return std::nullopt;
+				}
 
-          if( sine<0.0 )
-            // Go to n1
-            s = &g.nodes[s->VO[0]];
-          else
-            // Go to n2
-            s = &g.nodes[s->VO[1]];
+				// We have to turn left
+				n1 = g.nodes[s->VO[0]].p;
+				n2 = g.nodes[s->VO[1]].p;
 
-          break;
+				sine = DET22(n1.u - (s->p.u), n2.u - (s->p.u),
+					n1.v - (s->p.v), n2.v - (s->p.v));
 
-        default:
-          //Failure!!! (not ended polygon)
-          return std::nullopt;
+				if (sine < 0.0)
+					// Go to n1
+					s = &g.nodes[s->VO[0]];
+				else
+					// Go to n2
+					s = &g.nodes[s->VO[1]];
 
-      }
+				break;
 
-      // Reach start point, end of polygon
-      eop = (s0==s); 
+			default:
+				//Failure!!! (not ended polygon)
+				return std::nullopt;
 
-    }
+			}
 
-    if( !eop ) {
-      //Failure!!! (inner cycle found)
-      return std::nullopt;
-    }
+			// Reach start point, end of polygon
+			eop = (s0 == s);
 
-  } while( (vertexId = SearchFirst(g))!=-1 );
+		}
 
-  return polys;
+		if (!eop) {
+			//Failure!!! (inner cycle found)
+			return std::nullopt;
+		}
+
+	} while ((vertexId = SearchFirst(g)) != -1);
+
+	return polys;
 
 }
 
