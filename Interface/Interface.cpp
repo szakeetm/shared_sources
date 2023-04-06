@@ -1582,6 +1582,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     UpdateModelParams();
                     if (facetCoordinates) facetCoordinates->UpdateFromSelection();
                     if (vertexCoordinates) vertexCoordinates->Update();
+                    geom->BuildGLList();
                     return true;
                 case MENU_VERTEX_CREATE_POLY_CONVEX:
                     if (AskToReset()) {
@@ -1606,22 +1607,22 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     }
                     return true;
                 case MENU_FACET_CREATE_DIFFERENCE:
-                    CreateOfTwoFacets(ClipperLib::ctDifference, 0);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 0);
                     return true;
                 case MENU_FACET_CREATE_DIFFERENCE2:
-                    CreateOfTwoFacets(ClipperLib::ctDifference, 1);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 1);
                     return true;
                 case MENU_FACET_CREATE_DIFFERENCE_AUTO:
-                    CreateOfTwoFacets(ClipperLib::ctDifference, 2);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 2);
                     return true;
                 case MENU_FACET_CREATE_UNION:
-                    CreateOfTwoFacets(ClipperLib::ctUnion);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Union);
                     return true;
                 case MENU_FACET_CREATE_INTERSECTION:
-                    CreateOfTwoFacets(ClipperLib::ctIntersection);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Intersection);
                     return true;
                 case MENU_FACET_CREATE_XOR:
-                    CreateOfTwoFacets(ClipperLib::ctXor);
+                    CreateOfTwoFacets(Clipper2Lib::ClipType::Xor);
                     return true;
                 case MENU_FACET_LOFT:
                     if (geom->GetNbSelectedFacets() != 2) {
@@ -2633,7 +2634,7 @@ bool Interface::AskToSave() {
     return false;
 }
 
-void Interface::CreateOfTwoFacets(ClipperLib::ClipType type, int reverseOrder) {
+void Interface::CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder) {
     Geometry *geom = worker.GetGeometry();
     if (geom->IsLoaded()) {
         try {

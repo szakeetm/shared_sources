@@ -41,10 +41,10 @@
 #include <cstdlib>
 #include <vector>
 
-#include "clipper2/clipper.core.h"
-#include "clipper2/clipper.engine.h"
-#include "clipper2/clipper.offset.h"
-#include "clipper2/clipper.rectclip.h"
+#include "clipper.core.h"
+#include "clipper.engine.h"
+#include "clipper.offset.h"
+#include "clipper.rectclip.h"
 
 namespace Clipper2Lib {
 

@@ -34,7 +34,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GrahamScan.h"
 #include "Helper/StringHelper.h"
 
-#include "Clipper/clipper.hpp"
+#include "Clipper2Lib/include/clipper2/clipper.h"
 
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
@@ -509,7 +509,7 @@ void Geometry::CreateDifference() {
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
-void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder) {
+void Geometry::ClipSelectedPolygons(Clipper2Lib::ClipType type, int reverseOrder) {
 	auto selFacetIds = GetSelectedFacets();
 	if (selFacetIds.size() != 2) {
 		char errMsg[512];
@@ -525,7 +525,7 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 	else if (reverseOrder == 1) ClipPolygon(secondFacet, firstFacet, type);
 	else {
 		//Auto
-		ClipperLib::PolyTree solution;
+		Clipper2Lib::PolyTreeD solution;
 		std::vector<ProjectedPoint> projectedPoints;
 		std::vector<std::vector<size_t>> clippingPaths;
 
@@ -542,9 +542,9 @@ void Geometry::ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder)
 	}
 }
 
-void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type) {
+void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, Clipper2Lib::ClipType type) {
 	mApp->changedSinceSave = true;
-	ClipperLib::PolyTree solution;
+	Clipper2Lib::PolyTreeD solution;
 	std::vector<ProjectedPoint> projectedPoints;
 	ExecuteClip(id1, clippingPaths, projectedPoints, solution, type); //Returns solution in a polygon/hole list, we have to convert it to a continous outline
 
@@ -552,7 +552,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
     UnselectAll();
 
 	//a new facet
-	size_t nbNewFacets = solution.ChildCount(); //Might be more than one if clipping facet splits subject to pieces
+	size_t nbNewFacets = solution.Count(); //Might be more than one if clipping facet splits subject to pieces
     try{
         facets.resize(sh.nbFacet+nbNewFacets);
     }
@@ -562,20 +562,20 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 
 	std::vector<InterfaceVertex> newVertices;
 	for (size_t i = 0; i < nbNewFacets; i++) {
-		size_t nbHoles = solution.Childs[i]->ChildCount();
+		size_t nbHoles = solution.Child(i)->Count();
 		std::vector<size_t> closestIndexToChild(nbHoles); //i-th index tells which index of the parent is closest to hole (child) i
 		std::vector<size_t> closestIndexToParent(nbHoles); //i-th index tells which index of the hole (child) is closest to parent
 		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
 			double minDist = 9E99;
 			
-				for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) { //Find closest parent point
+				for (size_t j = 0; j < solution.Child(i)->Polygon().size(); j++) { //Find closest parent point
 					Vector2d vert;
-					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
-					for (size_t k = 0; k < solution.Childs[i]->Childs[holeIndex]->Contour.size(); k++) {//Find closest child point
+					vert.u = 1E-6*(double)solution.Child(i)->Polygon()[j].x;
+					vert.v = 1E-6*(double)solution.Child(i)->Polygon()[j].y;
+					for (size_t k = 0; k < solution.Child(i)->Child(holeIndex)->Polygon().size(); k++) {//Find closest child point
 						Vector2d childVert;
-						childVert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].X;
-						childVert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[k].Y;
+						childVert.u = 1E-6 * (double)solution.Child(i)->Child(holeIndex)->Polygon()[k].x;
+						childVert.v = 1E-6*(double)solution.Child(i)->Child(holeIndex)->Polygon()[k].y;
 						double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
 						if (dist < minDist) {
 							minDist = dist;
@@ -587,31 +587,31 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 			
 		}
 		size_t nbRegistered = 0;
-		size_t nbVertex = solution.Childs[i]->Contour.size();
+		size_t nbVertex = solution.Child(i)->Polygon().size();
 		for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
-			nbVertex += 2 + solution.Childs[i]->Childs[holeIndex]->Contour.size();
+			nbVertex += 2 + solution.Child(i)->Child(holeIndex)->Polygon().size();
 		}
 
 		auto *f = new InterfaceFacet(nbVertex);
-		for (size_t j = 0; j < solution.Childs[i]->Contour.size(); j++) {
+		for (size_t j = 0; j < solution.Child(i)->Polygon().size(); j++) {
 			Vector2d vert;
 			for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
 				if (j == closestIndexToChild[holeIndex]) { //Create hole
-					vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-					vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
+					vert.u = solution.Child(i)->Polygon()[j].x;
+					vert.v = solution.Child(i)->Polygon()[j].y;
 					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
-					for (size_t k = 0; k < solution.Childs[i]->Childs[holeIndex]->Contour.size(); k++) { //Register hole
-						vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].X;
-						vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[(k + closestIndexToParent[holeIndex]) % solution.Childs[i]->Childs[holeIndex]->Contour.size()].Y;
+					for (size_t k = 0; k < solution.Child(i)->Child(holeIndex)->Polygon().size(); k++) { //Register hole
+						vert.u = solution.Child(i)->Child(holeIndex)->Polygon()[(k + closestIndexToParent[holeIndex]) % solution.Child(i)->Child(holeIndex)->Polygon().size()].x;
+						vert.v = solution.Child(i)->Child(holeIndex)->Polygon()[(k + closestIndexToParent[holeIndex]) % solution.Child(i)->Child(holeIndex)->Polygon().size()].y;
 						RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
 					}
-					vert.u = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[closestIndexToParent[holeIndex]].X;
-					vert.v = 1E-6*(double)solution.Childs[i]->Childs[holeIndex]->Contour[closestIndexToParent[holeIndex]].Y;
+					vert.u = solution.Child(i)->Child(holeIndex)->Polygon()[closestIndexToParent[holeIndex]].x;
+					vert.v = solution.Child(i)->Child(holeIndex)->Polygon()[closestIndexToParent[holeIndex]].y;
 					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++); //Re-register hole entry point before exit
 				}
 			}
-			vert.u = 1E-6*(double)solution.Childs[i]->Contour[j].X;
-			vert.v = 1E-6*(double)solution.Childs[i]->Contour[j].Y;
+			vert.u = solution.Child(i)->Polygon()[j].x;
+			vert.v = solution.Child(i)->Polygon()[j].y;
 			RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
 		}
 		f->selected = true;
@@ -630,102 +630,31 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	UpdateSelection();
 }
 
-size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree& solution, ClipperLib::ClipType& type) {
+size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, Clipper2Lib::PolyTreeD& solution, Clipper2Lib::ClipType& type) {
 	
-	ClipperLib::Paths subj(1), clip(clippingPaths.size());
+	Clipper2Lib::PathsD subj(1), clip(clippingPaths.size());
 
 	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
-		subj[0] << ClipperLib::IntPoint((int)(facets[id1]->vertices2[i1].u*1E6), (int)(facets[id1]->vertices2[i1].v*1E6));
+		subj[0].push_back(Clipper2Lib::PointD(facets[id1]->vertices2[i1].u, facets[id1]->vertices2[i1].v));
 	}
 
-	for (auto & clippingPath : clippingPaths) {
-		for (unsigned long long i2 : clippingPath) {
+	for (const auto & clippingPath : clippingPaths) {
+		for (const auto & i2 : clippingPath) {
 			ProjectedPoint proj;
 			proj.globalId = i2;
 			proj.vertex2d = ProjectVertex(vertices3[i2], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
-			clip[0] << ClipperLib::IntPoint((int)(proj.vertex2d.u*1E6), (int)(proj.vertex2d.v*1E6));
+			clip[0].push_back(Clipper2Lib::PointD(proj.vertex2d.u, proj.vertex2d.v));
 			projectedPoints.push_back(proj);
 		}
 	}
-	ClipperLib::Clipper c;
-	c.AddPaths(subj, ClipperLib::ptSubject, true);
-	c.AddPaths(clip, ClipperLib::ptClip, true);
-	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
-	return solution.ChildCount();
-
-	//The code below could identify holes in Molflow logic and convert them to Polygon/hole-subpolygon format.
-	//Turns out it wasn't necessary for the Clipper library to recognize holes, so we return to the original code above for simplicty
-	/*
-	//Identify holes in source facet
-	std::vector<size_t> existingVertices;
-	std::vector < std::vector<size_t> > holePaths; // list of list of vertices
-	bool skipNext = false;
-	for (size_t i1 = 0; i1 < facets[id1]->wp.nbIndex; i1++) {
-		if (skipNext) {
-			skipNext = false;
-			continue;
-		}
-		if (Contains(existingVertices, facets[id1]->indices[i1])) {
-			//Identify last occurrence of the same index (beginning of hole)
-			size_t holeStartIndex = Previous(i1, facets[id1]->wp.nbIndex);
-			while (facets[id1]->indices[holeStartIndex] != facets[id1]->indices[i1]) {
-				holeStartIndex = Previous(holeStartIndex, facets[id1]->wp.nbIndex);
-			}
-			std::vector<size_t> newHolePath;
-			for (int i2 = holeStartIndex; i2 != i1; i2 = Next(i2, facets[id1]->wp.nbIndex)) {
-				newHolePath.push_back(i2);
-			}
-			holePaths.push_back(newHolePath);
-			skipNext = true;
-		}
-		existingVertices.push_back(facets[id1]->indices[i1]);
-	}
-
-
-	
-	ClipperLib::Paths subj(1+ holePaths.size()), clip(clippingPaths.size());
-
-	size_t lastAdded = -1;
-	for (size_t i1 = 0; i1 < facets[id1]->wp.nbIndex; i1++) {
-		bool notPartOfHole = true;
-		for (auto& path : holePaths) {
-			for (auto& v : path) {
-				if (facets[id1]->indices[v] == facets[id1]->indices[i1]) {
-					notPartOfHole = false;
-					break;
-				}
-			}
-		}
-		if (notPartOfHole && facets[id1]->indices[i1]!=lastAdded) {
-			subj[0] << ClipperLib::IntPoint((int)(facets[id1]->vertices2[i1].u*1E6), (int)(facets[id1]->vertices2[i1].v*1E6));
-			lastAdded = facets[id1]->indices[i1];
-		}
-	}
-
-	for (size_t i1 = 0; i1 < holePaths.size(); i1++) {
-		for (size_t i2 : holePaths[i1]) {
-			subj[i1+1] << ClipperLib::IntPoint((int)(facets[id1]->vertices2[i2].u*1E6), (int)(facets[id1]->vertices2[i2].v*1E6));
-		}
-	}
-
-	for (size_t i3 = 0; i3 < clippingPaths.size(); i3++) {
-		for (size_t i2 = 0; i2 < clippingPaths[i3].size(); i2++) {
-			ProjectedPoint proj;
-			proj.globalId = clippingPaths[i3][i2];
-			proj.vertex2d = ProjectVertex(vertices3[clippingPaths[i3][i2]], facets[id1]->wp.U, facets[id1]->wp.V, facets[id1]->wp.O);
-			clip[0] << ClipperLib::IntPoint((int)(proj.vertex2d.u*1E6), (int)(proj.vertex2d.v*1E6));
-			projectedPoints.push_back(proj);
-		}
-	}
-	ClipperLib::Clipper c;
-	c.AddPaths(subj, ClipperLib::ptSubject, true);
-	c.AddPaths(clip, ClipperLib::ptClip, true);
-	c.Execute(type, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
-	return solution.ChildCount();
-	*/
+	Clipper2Lib::ClipperD c;
+	c.AddSubject(subj);
+	c.AddClip(clip);
+	c.Execute(type, Clipper2Lib::FillRule::NonZero, solution);
+	return solution.Count();
 }
 
-void Geometry::ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type) {
+void Geometry::ClipPolygon(size_t id1, size_t id2, Clipper2Lib::ClipType type) {
 	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
@@ -1428,14 +1357,6 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 	}
 
 	size_t nbVert = sh.nbVertex - nbUnused;
-
-	/*
-	if (nbVert == 0) {
-		// Remove all
-		Clear();
-		return;
-	}
-	*/
 
 	// Update facet indices
 	std::vector<size_t> newIndex(sh.nbVertex);
@@ -2624,7 +2545,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 			}
 			clippingPaths.push_back(newPath);
 		}
-		ClipPolygon(selectedFacets[facetId].id, clippingPaths,ClipperLib::ctIntersection);
+		ClipPolygon(selectedFacets[facetId].id, clippingPaths,Clipper2Lib::ctIntersection);
 		*/
 	}
 

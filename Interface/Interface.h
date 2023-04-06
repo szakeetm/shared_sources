@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "GLApp/GLApp.h"
 #include "GLApp/GLParser.h"
-#include "Clipper/clipper.hpp"
+#include "Clipper2Lib/include/clipper2/clipper.h"
 
 class GLTextField;
 class GLToggle;
@@ -444,7 +444,7 @@ public:
 	
 	void UpdateFacetlistSelected();
 	
-	void CreateOfTwoFacets(ClipperLib::ClipType type,int reverseOrder=0);
+	void CreateOfTwoFacets(Clipper2Lib::ClipType type,int reverseOrder=0);
 	//void UpdateMeasurements();
     void DropEvent(char *dropped_file);
     bool AskToSave();

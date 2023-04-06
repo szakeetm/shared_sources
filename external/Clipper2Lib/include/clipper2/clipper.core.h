@@ -50,7 +50,9 @@ namespace Clipper2Lib
   const int non_pair_error_i    = 4; // non-fatal 
   const int range_error_i = 64;
 
+ #ifndef PI
   static const double PI = 3.141592653589793238;
+#endif
   static const int64_t MAX_COORD = INT64_MAX >> 2;
   static const int64_t MIN_COORD = -MAX_COORD;
   static const int64_t INVALID = INT64_MAX;

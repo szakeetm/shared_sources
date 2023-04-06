@@ -14,7 +14,7 @@
 #include <numeric>
 #include <algorithm>
 
-#include "clipper2/clipper.engine.h"
+#include "clipper.engine.h"
 
 // https://github.com/AngusJohnson/Clipper2/discussions/334
 // #discussioncomment-4248602
