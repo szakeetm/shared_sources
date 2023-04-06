@@ -548,70 +548,70 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 
 }
 
-std::tuple<double,Vector2d,std::vector<Vector2d>> GetInterArea(const GLAppPolygon &inP1,const GLAppPolygon &inP2,const std::vector<bool>& edgeVisible)
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible)
 {
 	Vector2d center(0.0, 0.0);
 
-  auto polys = IntersectPoly(inP1, inP2, edgeVisible);
-  if (!(polys)) return { 0.0,center,{} };
-  
-  // Count number of pts
-  size_t nbV = 0;
-  for(auto& p : *polys)
-	  nbV += p.pts.size();
-  std::vector<Vector2d> lList(nbV);
+	auto polys = IntersectPoly(inP1, inP2, edgeVisible);
+	if (!(polys)) return { 0.0,center,{} };
 
-  // Area
-  size_t nbE = 0;
-  double sum = 0.0;
-  double A0;
-  for(size_t i=0;i<(*polys).size();i++) {
-    double A = 0.0;
-    for(size_t j=0;j<(*polys)[i].pts.size();j++) {
-      size_t j1 = Next(j,(*polys)[i].pts.size());
-      A += ((*polys)[i].pts[j].u*(*polys)[i].pts[j1].v - (*polys)[i].pts[j1].u*(*polys)[i].pts[j].v);
-      lList[nbE++] = (*polys)[i].pts[j];
-    }
-    if( i==0 ) A0 = std::fabs(0.5 * A);
-    sum += std::fabs(0.5 * A);
-  }
+	// Count number of pts
+	size_t nbV = 0;
+	for (auto& p : *polys)
+		nbV += p.pts.size();
+	std::vector<Vector2d> lList(nbV);
 
-  // Centroid (polygon 0)
-  for(int j=0;j<(*polys)[0].pts.size();j++) {
-    size_t j1 = Next(j,(*polys)[0].pts.size());
-    double d = (*polys)[0].pts[j].u*(*polys)[0].pts[j1].v - (*polys)[0].pts[j1].u*(*polys)[0].pts[j].v;
-    center = center + ( (*polys)[0].pts[j]+(*polys)[0].pts[j1] )*d;
-  }
+	// Area
+	size_t nbE = 0;
+	double sum = 0.0;
+	double A0;
+	for (size_t i = 0; i < (*polys).size(); i++) {
+		double A = 0.0;
+		for (size_t j = 0; j < (*polys)[i].pts.size(); j++) {
+			size_t j1 = Next(j, (*polys)[i].pts.size());
+			A += ((*polys)[i].pts[j].u * (*polys)[i].pts[j1].v - (*polys)[i].pts[j1].u * (*polys)[i].pts[j].v);
+			lList[nbE++] = (*polys)[i].pts[j];
+		}
+		if (i == 0) A0 = std::fabs(0.5 * A);
+		sum += std::fabs(0.5 * A);
+	}
 
-  return { sum,(1.0 / (6.0*A0))*center,lList };
+	// Centroid (polygon 0)
+	for (int j = 0; j < (*polys)[0].pts.size(); j++) {
+		size_t j1 = Next(j, (*polys)[0].pts.size());
+		double d = (*polys)[0].pts[j].u * (*polys)[0].pts[j1].v - (*polys)[0].pts[j1].u * (*polys)[0].pts[j].v;
+		center = center + ((*polys)[0].pts[j] + (*polys)[0].pts[j1]) * d;
+	}
+
+	return { sum,(1.0 / (6.0 * A0)) * center,lList };
 }
 
 std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vector2d& p0, const Vector2d& p1)
 {
 
-  // Compute area of the intersection between the (u0,v0,u1,v1) rectangle 
-  // and the inP1 polygon using Jordan theorem.
-  // Slow but sure, scan by 50x50 matrix and return center
+	// Compute area of the intersection between the (u0,v0,u1,v1) rectangle 
+	// and the inP1 polygon using Jordan theorem.
+	// Slow but sure, scan by 50x50 matrix and return center
 
-  int step = 50;
-  int nbTestHit = 0;
-  Vector2d center;
-  double ui = (p1.u-p0.u) / (double)step;
-  double vi = (p1.v-p0.v) / (double)step;
+	int step = 50;
+	int nbTestHit = 0;
+	Vector2d center;
+	double ui = (p1.u - p0.u) / (double)step;
+	double vi = (p1.v - p0.v) / (double)step;
 
-  for(int i=0;i<step;i++) {
-    double uc = p0.u + ui*((double)i+0.5);
-    for(int j=0;j<step;j++) {
-      double vc = p0.v + vi*((double)j+0.5);
-	  Vector2d testPoint(uc, vc);
-      if( IsInPoly(testPoint,inP1.pts) ) {
-        nbTestHit++;
-		center = testPoint;
-      }
-    }
-  }
+	for (int i = 0; i < step; i++) {
+		double uc = p0.u + ui * ((double)i + 0.5);
+		for (int j = 0; j < step; j++) {
+			double vc = p0.v + vi * ((double)j + 0.5);
+			Vector2d testPoint(uc, vc);
+			if (IsInPoly(testPoint, inP1.pts)) {
+				nbTestHit++;
+				center = testPoint;
+			}
+		}
+	}
 
-  return { (p1.u - p0.u)*(p1.v - p0.v)*((double)nbTestHit / (double)(step*step)) , center};
+	return { (p1.u - p0.u) * (p1.v - p0.v) * ((double)nbTestHit / (double)(step * step)) , center };
 
 }
 
