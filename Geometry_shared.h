@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 #include "Polygon.h"
 #include "GLApp/GLProgress.h"
-#include "Clipper/clipper.hpp"
+#include "Clipper2Lib/include/clipper2/clipper.h"
 #include <vector>
 #include <list>
 #include <map>
@@ -138,10 +138,10 @@ public:
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
 	void CreatePolyFromVertices_Order(); //create facet from selected vertices following selection order
 	void CreateDifference(); //creates the difference from 2 selected facets. Not used anymore, superseded by ClipPolygon
-	void ClipSelectedPolygons(ClipperLib::ClipType type, int reverseOrder);
-	void ClipPolygon(size_t id1, size_t id2, ClipperLib::ClipType type);
-	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, ClipperLib::ClipType type);
-	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, ClipperLib::PolyTree & solution, ClipperLib::ClipType& type);
+	void ClipSelectedPolygons(Clipper2Lib::ClipType type, int reverseOrder);
+	void ClipPolygon(size_t id1, size_t id2, Clipper2Lib::ClipType type);
+	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, Clipper2Lib::ClipType type);
+	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, Clipper2Lib::PolyTreeD & solution, Clipper2Lib::ClipType& type);
 	void RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
 	void SelectCoplanar(int width, int height, double tolerance);
 	InterfaceFacet    *GetFacet(size_t facet);
@@ -212,6 +212,7 @@ public:
     void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
+	void    RecalcRawVertices(const int& facet_number);
 	void	MergecollinearSides(InterfaceFacet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();

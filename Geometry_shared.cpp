@@ -169,7 +169,10 @@ void Geometry::InitializeGeometry(int facet_number) {
 			SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
 		}
 	}
+	RecalcRawVertices(facet_number);
+}
 
+void Geometry::RecalcRawVertices(const int& facet_number) {
 	if (facet_number == -1) {
 		vertices_raw.clear();
 		vertices_raw.reserve(3 * vertices3.size());
@@ -182,8 +185,8 @@ void Geometry::InitializeGeometry(int facet_number) {
 	else {
 		for (const auto& index : facets[facet_number]->indices) {
 			vertices_raw[3 * index] = vertices3[index].x;
-			vertices_raw[3 * index+1] = vertices3[index].y;
-			vertices_raw[3 * index+2] = vertices3[index].z;
+			vertices_raw[3 * index + 1] = vertices3[index].y;
+			vertices_raw[3 * index + 2] = vertices3[index].z;
 		}
 	}
 }
@@ -1460,6 +1463,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	vertices3.swap(nVert);
 	sh.nbVertex = vertices3.size();
+	RecalcRawVertices(-1);
 
 	if (nbUnused) {
 		mApp->changedSinceSave = true;
