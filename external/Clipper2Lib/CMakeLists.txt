@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 # Change if you want modify path or other values. #
 ###################################################
 
-set(PROJECT_NAME clipper)
+set(PROJECT_NAME clipper2)
 
 # Folders files
-set(CPP_DIR_1 .)
-set(HEADER_DIR_1 .)
+set(CPP_DIR_1 src)
+set(HEADER_DIR_1 include/clipper2)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -27,9 +27,17 @@ project(${PROJECT_NAME} CXX)
 
 # Source Files
 file(GLOB SRC_FILES
-        ${CPP_DIR_1}/clipper.cpp
-        ${HEADER_DIR_1}/clipper.hpp
-        )
+		${CPP_DIR_1}/clipper.engine.cpp
+		${CPP_DIR_1}/clipper.offset.cpp
+		${CPP_DIR_1}/clipper.rectclip.cpp
+		${HEADER_DIR_1}/clipper.h
+		${HEADER_DIR_1}/clipper.core.h
+		${HEADER_DIR_1}/clipper.engine.h
+		${HEADER_DIR_1}/clipper.export.h
+		${HEADER_DIR_1}/clipper.minkowski.h
+		${HEADER_DIR_1}/clipper.offset.h
+		${HEADER_DIR_1}/clipper.rectclip.h
+    )
 
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC

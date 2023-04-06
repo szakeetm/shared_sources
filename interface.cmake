@@ -128,7 +128,7 @@ ELSE() #not MSVC
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 endif() #NOT MSVC
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper sdl_savepng truncatedgaussian nativefiledialog)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
