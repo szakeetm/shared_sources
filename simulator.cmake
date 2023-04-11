@@ -66,6 +66,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+target_link_libraries(${PROJECT_NAME} PUBLIC clipper2)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
