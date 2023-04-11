@@ -861,7 +861,7 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
   m.TransformVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
   if(rw<=0.0f) return std::nullopt;
 
-  return std::make_tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
+  return std::tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
   (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f) );
 
 }

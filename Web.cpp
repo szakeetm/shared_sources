@@ -45,7 +45,7 @@ std::tuple<CURLcode,std::string> DownloadString(std::string url) {
 	CURLcode result = curl_easy_perform(curl_handle);
 	curl_easy_cleanup(curl_handle);
 
-	return std::tie(result,body);
+	return { result,body };
 }
 
 CURLcode SendHTTPPostRequest(std::string hostname, std::string payload) {
