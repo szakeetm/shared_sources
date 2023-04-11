@@ -13,10 +13,10 @@ add_subdirectory(PugiXML)
 add_subdirectory(TruncatedGaussian)
 add_subdirectory(ziplib)
 add_subdirectory(fmt)
+add_subdirectory(Clipper2Lib)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
-    add_subdirectory(Clipper2Lib)
     add_subdirectory(NativeFileDialog)
 endif()
 
