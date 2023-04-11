@@ -34,8 +34,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GrahamScan.h"
 #include "Helper/StringHelper.h"
 
-#include "Clipper2Lib/include/clipper2/clipper.h"
-
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #include "../src/MolflowTypes.h"
@@ -570,12 +568,12 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 			
 				for (size_t j = 0; j < solution.Child(i)->Polygon().size(); j++) { //Find closest parent point
 					Vector2d vert;
-					vert.u = 1E-6*(double)solution.Child(i)->Polygon()[j].x;
-					vert.v = 1E-6*(double)solution.Child(i)->Polygon()[j].y;
+					vert.u = solution.Child(i)->Polygon()[j].x;
+					vert.v = solution.Child(i)->Polygon()[j].y;
 					for (size_t k = 0; k < solution.Child(i)->Child(holeIndex)->Polygon().size(); k++) {//Find closest child point
 						Vector2d childVert;
-						childVert.u = 1E-6 * (double)solution.Child(i)->Child(holeIndex)->Polygon()[k].x;
-						childVert.v = 1E-6*(double)solution.Child(i)->Child(holeIndex)->Polygon()[k].y;
+						childVert.u = solution.Child(i)->Child(holeIndex)->Polygon()[k].x;
+						childVert.v = solution.Child(i)->Child(holeIndex)->Polygon()[k].y;
 						double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
 						if (dist < minDist) {
 							minDist = dist;
@@ -594,25 +592,16 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 
 		auto *f = new InterfaceFacet(nbVertex);
 		for (size_t j = 0; j < solution.Child(i)->Polygon().size(); j++) {
-			Vector2d vert;
 			for (size_t holeIndex = 0; holeIndex < nbHoles; holeIndex++) {
 				if (j == closestIndexToChild[holeIndex]) { //Create hole
-					vert.u = solution.Child(i)->Polygon()[j].x;
-					vert.v = solution.Child(i)->Polygon()[j].y;
-					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
+					RegisterVertex(f, solution.Child(i)->Polygon()[j], id1, projectedPoints, newVertices, nbRegistered++);//Register entry from parent
 					for (size_t k = 0; k < solution.Child(i)->Child(holeIndex)->Polygon().size(); k++) { //Register hole
-						vert.u = solution.Child(i)->Child(holeIndex)->Polygon()[(k + closestIndexToParent[holeIndex]) % solution.Child(i)->Child(holeIndex)->Polygon().size()].x;
-						vert.v = solution.Child(i)->Child(holeIndex)->Polygon()[(k + closestIndexToParent[holeIndex]) % solution.Child(i)->Child(holeIndex)->Polygon().size()].y;
-						RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
+						RegisterVertex(f, solution.Child(i)->Child(holeIndex)->Polygon()[(k + closestIndexToParent[holeIndex]) % solution.Child(i)->Child(holeIndex)->Polygon().size()], id1, projectedPoints, newVertices, nbRegistered++);
 					}
-					vert.u = solution.Child(i)->Child(holeIndex)->Polygon()[closestIndexToParent[holeIndex]].x;
-					vert.v = solution.Child(i)->Child(holeIndex)->Polygon()[closestIndexToParent[holeIndex]].y;
-					RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++); //Re-register hole entry point before exit
+					RegisterVertex(f, solution.Child(i)->Child(holeIndex)->Polygon()[closestIndexToParent[holeIndex]], id1, projectedPoints, newVertices, nbRegistered++); //Re-register hole entry point before exit
 				}
 			}
-			vert.u = solution.Child(i)->Polygon()[j].x;
-			vert.v = solution.Child(i)->Polygon()[j].y;
-			RegisterVertex(f, vert, id1, projectedPoints, newVertices, nbRegistered++);
+			RegisterVertex(f, solution.Child(i)->Polygon()[j], id1, projectedPoints, newVertices, nbRegistered++);
 		}
 		f->selected = true;
 		if (viewStruct != -1) f->sh.superIdx = viewStruct;
@@ -635,7 +624,11 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 	Clipper2Lib::PathsD subj(1), clip(clippingPaths.size());
 
 	for (size_t i1 = 0; i1 < facets[id1]->sh.nbIndex; i1++) {
-		subj[0].push_back(Clipper2Lib::PointD(facets[id1]->vertices2[i1].u, facets[id1]->vertices2[i1].v));
+		Clipper2Lib::PointD p;
+		p.x = facets[id1]->vertices2[i1].u;
+		p.y = facets[id1]->vertices2[i1].v;
+		p.z = facets[id1]->indices[i1]; //global id
+		subj[0].push_back(p);
 	}
 
 	for (const auto & clippingPath : clippingPaths) {
@@ -643,11 +636,15 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 			ProjectedPoint proj;
 			proj.globalId = i2;
 			proj.vertex2d = ProjectVertex(vertices3[i2], facets[id1]->sh.U, facets[id1]->sh.V, facets[id1]->sh.O);
-			clip[0].push_back(Clipper2Lib::PointD(proj.vertex2d.u, proj.vertex2d.v));
+			Clipper2Lib::PointD p;
+			p.x = proj.vertex2d.u;
+			p.y = proj.vertex2d.v;
+			p.z = i2;
+			clip[0].push_back(p);
 			projectedPoints.push_back(proj);
 		}
 	}
-	Clipper2Lib::ClipperD c;
+	Clipper2Lib::ClipperD c(8); //Precision to 8 digits
 	c.AddSubject(subj);
 	c.AddClip(clip);
 	c.Execute(type, Clipper2Lib::FillRule::NonZero, solution);
@@ -658,20 +655,24 @@ void Geometry::ClipPolygon(size_t id1, size_t id2, Clipper2Lib::ClipType type) {
 	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
-void Geometry::RegisterVertex(InterfaceFacet *f, const Vector2d &vert, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
+void Geometry::RegisterVertex(InterfaceFacet *f, const Clipper2Lib::PointD& p, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
+	
+	//Old routine that identified vertex by location
+	/*
 	int foundId = -1;
 	for (size_t k = 0; foundId == -1 && k < facets[id1]->sh.nbIndex; k++) { //Check if part of facet 1
 		double dist = (vert - facets[id1]->vertices2[k]).Norme();
-		foundId = (dist < 1E-5) ? (int)facets[id1]->indices[k] : -1;
+		foundId = (dist < 1E-8) ? (int)facets[id1]->indices[k] : -1;
 	}
 	for (size_t k = 0; foundId == -1 && k < projectedPoints.size(); k++) { //Check if part of facet 2
 		double dist = (vert - projectedPoints[k].vertex2d).Norme();
-		foundId = (dist < 1E-5) ? (int)projectedPoints[k].globalId : -1;
-	}
+		foundId = (dist < 1E-8) ? (int)projectedPoints[k].globalId : -1;
+	}*/
+	const auto& foundId = p.z; //We stored globalId as Z coord, -1 for newly created
 	if (foundId == -1) { //Create new vertex
 		InterfaceVertex newVertex;
 		newVertex.selected = true;
-		newVertex.SetLocation(facets[id1]->sh.O + vert.u*facets[id1]->sh.U + vert.v*facets[id1]->sh.V);
+		newVertex.SetLocation(facets[id1]->sh.O + p.x*facets[id1]->sh.U + p.y*facets[id1]->sh.V);
 		f->indices[registerLocation] = sh.nbVertex + newVertices.size();
 		newVertices.push_back(newVertex);
 	}

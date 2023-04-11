@@ -9,6 +9,7 @@
 
 #ifndef CLIPPER_CORE_H
 #define CLIPPER_CORE_H
+#define USINGZ //Allows clipper library to store user data (globalId)
 
 #include <cstdint>
 #include <cstdlib>
@@ -95,7 +96,7 @@ namespace Clipper2Lib
     int64_t z;
 
     template <typename T2>
-    inline void Init(const T2 x_ = 0, const T2 y_ = 0, const int64_t z_ = 0)
+    inline void Init(const T2 x_ = 0, const T2 y_ = 0, const int64_t z_ = -1)
     {
       if constexpr (std::numeric_limits<T>::is_integer &&
         !std::numeric_limits<T2>::is_integer)
@@ -112,10 +113,10 @@ namespace Clipper2Lib
       }
     }
 
-    explicit Point() : x(0), y(0), z(0) {};
+    explicit Point() : x(0), y(0), z(-1) {};
 
     template <typename T2>
-    Point(const T2 x_, const T2 y_, const int64_t z_ = 0)
+    Point(const T2 x_, const T2 y_, const int64_t z_ = -1)
     {
       Init(x_, y_);
       z = z_;
