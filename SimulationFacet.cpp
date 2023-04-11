@@ -167,7 +167,7 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 
 					std::vector<bool>visible(P2.pts.size(), true); //Since SimulationFacet doesn't have 'visible' property
 
-					auto [A, center, vList] = GetInterArea(P1, P2, visible);
+					auto [A, center, vList] = GetInterArea_Clipper2Lib(P1, P2, visible);
 					if (A > (fullCellArea + 1e-10)) {
 						// Polyon intersection error !
 						// Switch back to brute force

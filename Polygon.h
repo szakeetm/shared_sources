@@ -27,7 +27,8 @@ class GLAppPolygon { //To distinguish from possible other Polygon classes in the
 public:
   std::vector<Vector2d>  pts;   // Array of 2D vertex
   //int sign;  // Polygon orientation
-
+  Vector2d GetCenter();
+  double GetArea();
 };
 
 class PolyVertex  {
@@ -51,11 +52,13 @@ public:
 
 } ;
 
+/*
 class PolyGraph {
 public:
   std::vector<PolyVertex> nodes;
   std::vector<PolyArc> arcs;
 };
+*/
 
 bool   IsConvex(const GLAppPolygon& p,size_t idx);
 bool   ContainsConcave(const GLAppPolygon& p,int i1,int i2,int i3);
@@ -64,8 +67,9 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon);
 bool IsInPoly(const double& u, const double& v, const std::vector<Vector2d>& polygon);
 bool   IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance);
 bool   IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance);
-std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& p1, const GLAppPolygon& p2,const std::vector<bool>& visible2);
-std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& edgeVisible);
+//std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& p1, const GLAppPolygon& p2,const std::vector<bool>& visible2);
+//std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& edgeVisible);
+std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea_Clipper2Lib(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible);
 std::tuple<double,Vector2d> GetInterAreaBF(const GLAppPolygon& inP1,const Vector2d& p0, const Vector2d& p1);
 std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX);
 

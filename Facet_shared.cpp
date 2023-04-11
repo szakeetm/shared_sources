@@ -438,8 +438,9 @@ bool InterfaceFacet::BuildMesh() {
 					P1.pts = tmpPoints;
 					GLAppPolygon P2;
 					P2.pts = vertices2;
-					auto [A, center, vList] = GetInterArea(P1, P2, visible);
-					if (A > (fullCellArea + 1e-10)) {
+					//auto [A, center, vList] = GetInterArea(P1, P2, visible);
+					auto [A, center, vList] = GetInterArea_Clipper2Lib(P1, P2, visible);
+					if (A > (fullCellArea + 1e-9)) {
 						// Polyon intersection error !
 						// Switch back to brute force
 						auto [bfArea, center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));

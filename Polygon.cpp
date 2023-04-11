@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <math.h>
 #include <algorithm> //min max
+#include <Clipper2Lib/include/clipper2/clipper.h>
 
 bool IsConvex(const GLAppPolygon &p,size_t idx) {
 
@@ -136,6 +137,7 @@ bool IsOnEdge(const Vector2d& p1,const Vector2d& p2,const Vector2d& p)
 
 }
 
+/*
 std::optional<size_t> GetNode(const PolyGraph& g, const Vector2d& p)
 {
 
@@ -223,6 +225,7 @@ void CutArc(PolyGraph& g, size_t idx, size_t ni)
 
 }
 
+
 void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int &a0)
 {
 
@@ -263,7 +266,9 @@ void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int &a0
   if( !itFound ) AddArc(g,n1,n2,2);
 
 }
+*/
 
+/*
 PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const std::vector<bool>& visible2)
 {
 
@@ -369,7 +374,9 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   }
   return g;
 }
+*/
 
+/*
 bool CheckLoop(const PolyGraph& g)
 {
 
@@ -399,7 +406,9 @@ bool CheckLoop(const PolyGraph& g)
     return nbVisited==g.nodes.size();
 
 }
+*/
 
+/*
 std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& visible2)
 {
 
@@ -548,43 +557,135 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 	return polys;
 
 }
+*/
 
-std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible)
-{
-	Vector2d center(0.0, 0.0);
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible) {
 
-	auto polys = IntersectPoly(inP1, inP2, edgeVisible);
-	if (!(polys)) return { 0.0,center,{} };
+	Clipper2Lib::PathD subject(inP1.pts.size()), clip(inP2.pts.size());
+	for (int i = 0; i < inP1.pts.size(); i++) {
+		subject[i].x = inP1.pts[i].u;
+		subject[i].y = inP1.pts[i].v;
+	}
+	for (int i = 0; i < inP2.pts.size(); i++) {
+		clip[i].x = inP2.pts[i].u;
+		clip[i].y = inP2.pts[i].v;
+	}
+	Clipper2Lib::ClipperD c(8);
+	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
+	Clipper2Lib::PathsD clips; clips.push_back(clip);
+	c.AddSubject(subjects);
+	c.AddClip(clips);
+	Clipper2Lib::PolyTreeD solution;
+	c.Execute(Clipper2Lib::ClipType::Intersection, Clipper2Lib::FillRule::NonZero, solution);
+
+	if (solution.Count() == 0) {
+		return { 0.0,Vector2d(0.0,0.0),{} };
+	}
+
+	Clipper2Lib::PointD centerP(0.0, 0.0);
+	auto pts = solution.Child(0)->Polygon();
+	for (int j = 0; j < pts.size(); j++) {
+		size_t j1 = Next(j, pts.size());
+		double d = pts[j].x * pts[j1].y - pts[j1].x * pts[j].y;
+		centerP = centerP + (pts[j] + pts[j1]) * d;
+	}
+	Vector2d center(centerP.x, centerP.y); //PointD to Vector2d
 
 	// Count number of pts
 	size_t nbV = 0;
-	for (auto& p : *polys)
+	for (int i = 0; i < solution.Count(); i++) {
+		const auto& child = solution.Child(i);
+		const auto& pts = child->Polygon();
+		nbV += pts.size();
+	}
+	std::vector<Vector2d> pointList(nbV);
+	
+	//Points to list
+	size_t nbE = 0;
+	for (int i = 0; i < solution.Count(); i++) {
+		const auto& child = solution.Child(i);
+		const auto& pts = child->Polygon();
+		for (const auto& p:pts) {
+			pointList[nbE++] = Vector2d(p.x,p.y);
+		}
+	}
+
+
+	//Area
+	double sum = 0.0;
+	double A0; //first polygon area
+	for (int i = 0; i < solution.Count(); i++) { //loop through outer polygons
+		const auto& child = solution.Child(i);
+		const auto& cPts = child->Polygon();
+		double A = 0.0; //Current polygon area
+
+		for (size_t j = 0; j < cPts.size(); j++) {
+			size_t j1 = Next(j, cPts.size());
+			A += (cPts[j].x * cPts[j1].y - cPts[j1].x * cPts[j].y);
+		}
+
+		for (int h = 0; h < child->Count(); h++) { //deduct holes
+			const auto& hole = child->Child(h);
+			const auto& hPts = hole->Polygon();
+			
+			for (size_t j = 0; j < hPts.size(); j++) {
+				size_t j1 = Next(j, hPts.size());
+				A -= (hPts[j].x * hPts[j1].y - hPts[j1].x * hPts[j].y);
+			}
+		}
+
+		if (i == 0) A0 = std::fabs(0.5 * A);
+		sum += std::fabs(0.5 * A);
+
+	}
+
+	return { sum,(1.0 / (6.0 * A0)) * center, pointList };
+}
+
+/*
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible)
+{
+
+	auto polys = IntersectPoly(inP1, inP2, edgeVisible);
+	if (!(polys)) return { 0.0,Vector2d(0.0,0.0),{} };
+
+	// Count number of pts
+	size_t nbV = 0;
+	for (const auto& p : *polys)
 		nbV += p.pts.size();
-	std::vector<Vector2d> lList(nbV);
+	std::vector<Vector2d> pointList(nbV);
+
+	//Points to list
+	size_t nbE = 0;
+	for (size_t i = 0; i < (*polys).size(); i++) {
+		const auto& polyPts = (*polys)[i].pts;
+		for (size_t j = 0; j < polyPts.size(); j++) {
+			pointList[nbE++] = polyPts[j];
+		}
+	}
 
 	// Area
-	size_t nbE = 0;
 	double sum = 0.0;
-	double A0;
+	double A0; //first polygon area
 	for (size_t i = 0; i < (*polys).size(); i++) {
-		double A = 0.0;
-		for (size_t j = 0; j < (*polys)[i].pts.size(); j++) {
-			size_t j1 = Next(j, (*polys)[i].pts.size());
-			A += ((*polys)[i].pts[j].u * (*polys)[i].pts[j1].v - (*polys)[i].pts[j1].u * (*polys)[i].pts[j].v);
-			lList[nbE++] = (*polys)[i].pts[j];
-		}
+		double A = (*polys)[i].GetArea();
 		if (i == 0) A0 = std::fabs(0.5 * A);
 		sum += std::fabs(0.5 * A);
 	}
 
-	// Centroid (polygon 0)
-	for (int j = 0; j < (*polys)[0].pts.size(); j++) {
-		size_t j1 = Next(j, (*polys)[0].pts.size());
-		double d = (*polys)[0].pts[j].u * (*polys)[0].pts[j1].v - (*polys)[0].pts[j1].u * (*polys)[0].pts[j].v;
-		center = center + ((*polys)[0].pts[j] + (*polys)[0].pts[j1]) * d;
-	}
+	Vector2d center = (*polys)[0].GetCenter();
 
-	return { sum,(1.0 / (6.0 * A0)) * center,lList };
+	return { sum,(1.0 / (6.0 * A0)) * center, pointList };
+}
+*/
+
+double GLAppPolygon::GetArea() {
+	double A = 0.0;
+	for (size_t j = 0; j < pts.size(); j++) {
+		size_t j1 = Next(j, pts.size());
+		A += (pts[j].u * pts[j1].v - pts[j1].u * pts[j].v);
+	}
+	return A;
 }
 
 std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vector2d& p0, const Vector2d& p1)
@@ -697,4 +798,16 @@ bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& pol
 
     return !(n_found & 2u) ^ !(n_updown & 2u);
     
+}
+
+Vector2d GLAppPolygon::GetCenter()
+{
+	Vector2d center(0.0, 0.0);
+	// Centroid (polygon 0)
+	for (int j = 0; j < pts.size(); j++) {
+		size_t j1 = Next(j, pts.size());
+		double d = pts[j].u * pts[j1].v - pts[j1].u * pts[j].v;
+		center = center + (pts[j] + pts[j1]) * d;
+	}
+	return center;
 }
