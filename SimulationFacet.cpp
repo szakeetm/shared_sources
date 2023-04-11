@@ -102,7 +102,7 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 	//Horrible duplicate of InterfaceFacet::BuildMesh()
 	std::vector<double> interCellArea;
 	try {
-		interCellArea.swap(std::vector<double>(sh.texWidth * sh.texHeight, -1.0));
+		interCellArea = std::vector<double>(sh.texWidth * sh.texHeight, -1.0);
 	}
 	catch (const std::exception& e) {
 		throw Error("Couldn't allocate memory for mesh");
