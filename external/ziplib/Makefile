@@ -11,7 +11,7 @@ ST_LIBRARY = Bin/libzip.a
 #CC        = cc
 #CXX       = cc++
 CFLAGS    = -Wno-enum-conversion -O3
-CXXFLAGS  = -stdlib=libc++ -std=c++11 -O3
+CXXFLAGS  = -stdlib=libc++ -std=c++17 -O3
 #compile with -stdlib=libc++ when using clang in other projects
 #compile with stdlibc++ when using gcc in other projects
 

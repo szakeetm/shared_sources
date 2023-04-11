@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(ziplib)
 
 if (CMAKE_VERSION VERSION_LESS "3.1")
-    add_definitions(-std=c++11)
+    add_definitions(-std=c++17)
 else()
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
