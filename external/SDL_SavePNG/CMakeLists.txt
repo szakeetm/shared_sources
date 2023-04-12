@@ -42,15 +42,6 @@ IF (WIN32)
 
     target_link_libraries(${PROJECT_NAME} png_zlib_win_library)
 
-ELSEIF(APPLE)
-    # apple linking against a shipped version of SDL2
-    target_include_directories(${PROJECT_NAME} PRIVATE
-            ${HEADER_DIR_1}
-            )
-
-    find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${PNG_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
 ELSE()
     target_include_directories(${PROJECT_NAME} PRIVATE
             ${HEADER_DIR_1}
