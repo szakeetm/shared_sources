@@ -34,13 +34,6 @@ file(GLOB SRC_FILES
 		${CPP_DIR_1}/clipper.engine.cpp
 		${CPP_DIR_1}/clipper.offset.cpp
 		${CPP_DIR_1}/clipper.rectclip.cpp
-		${HEADER_DIR_1}/clipper.h
-		${HEADER_DIR_1}/clipper.core.h
-		${HEADER_DIR_1}/clipper.engine.h
-		${HEADER_DIR_1}/clipper.export.h
-		${HEADER_DIR_1}/clipper.minkowski.h
-		${HEADER_DIR_1}/clipper.offset.h
-		${HEADER_DIR_1}/clipper.rectclip.h
     )
 
 # Add library to build.
