@@ -1013,7 +1013,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
     std::list<InterfaceVertex> vertex_refs;
     vertex_refs.insert(vertex_refs.end(), vertices3.begin(), vertices3.end());
     int jj = AddRefVertex(indices, vertex_refs, vT);
-    fmt::print("Collapse duration 1: {}s -- {}\n", collapse_time.Elapsed(), jj);
+    //fmt::print("Collapse duration 1: {}s -- {}\n", collapse_time.Elapsed(), jj);
 
     collapse_time.ReInit(); collapse_time.Start();
 
@@ -1037,7 +1037,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, d
             f->indices[j] = indices[f->indices[j]];
 	}
 
-    fmt::print("Collapse duration 3: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
+    //fmt::print("Collapse duration 3: {}s -- {}\n", collapse_time.Elapsed(), nbRef);
     prg->SetMessage("Collapsing vertices [done] ...");
 
     free(idx);
@@ -2897,7 +2897,7 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
             }
         }
 
-        fmt::print("Collapse facet duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
+        //fmt::print("Collapse facet duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
         collapse_time.ReInit(); collapse_time.Start();
 
         //prg->SetMessage("Globally applying new facet IDs ..."); //Commenting out, would cause incorrect state render
@@ -2957,7 +2957,7 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
 				MergecollinearSides(facets[i], lT);
 		}
 	}
-    fmt::print("Collinear collapse duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
+    //fmt::print("Collinear collapse duration: {}s -- {}\n", collapse_time.Elapsed(), 0);
     collapse_time.ReInit(); collapse_time.Start();
 
 	prg->SetMessage("Rebuilding geometry...");
