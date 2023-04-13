@@ -780,16 +780,19 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 				}
 
 				//Post install scripts
-				if (update.postInstallScripts.size()>0) logWindow->Log("Executing post-install scripts (check console for results):");
+				if (update.postInstallScripts.size()>0) logWindow->Log("Executing post-install scripts asynchronously (check console for results):");
 				for (int i = 0; i < update.postInstallScripts.size();i++) {
 					const auto& script = update.postInstallScripts[i];
 					logWindow->Log(fmt::format("   [{}/{}] {}", i+1,update.postInstallScripts.size(), script.first));
 				}
-				DoAsyncSystemCalls(update.postInstallScripts, folderDest.str()); //Separate thread, non-blocking
+
+				std::string workDir = folderDest.str();
+				std::thread t = std::thread(&AppUpdater::DoSystemCalls, this, update.postInstallScripts, workDir);
+				t.detach();
 
 				resultCategory = "updateSuccess";
 				resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
-				logWindow->Log("Update successful.");
+				logWindow->Log("Update successful (post-install scripts might still be running).");
 				userResult.str(""); userResult.clear();
 				userResult << "If you wish, you can now close this version and launch the new one in the adjacent " << folderDest.str() << " folder.";
 				logWindow->Log(userResult.str());
@@ -820,7 +823,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	//logWindow->Log("[Background update thread closed.]");
 }
 
-void AppUpdater::DoAsyncSystemCalls(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, const std::filesystem::path& workingDir) {
+void AppUpdater::DoSystemCalls(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir) {
 	
 	auto oldCwd = std::filesystem::current_path();
 	if (!workingDir.empty()) std::filesystem::current_path(workingDir); //Change work dir
