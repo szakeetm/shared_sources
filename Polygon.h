@@ -70,7 +70,7 @@ bool   IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector
 bool   IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance);
 //std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& p1, const GLAppPolygon& p2,const std::vector<bool>& visible2);
 //std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea(const GLAppPolygon& inP1,const GLAppPolygon& inP2,const std::vector<bool>& edgeVisible);
-std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subject, const Clipper2Lib::PathsD& clips, const std::vector<bool>& edgeVisible);
+std::tuple<double, Vector2d, std::vector<Vector2d>>  GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subject, const Clipper2Lib::RectD& rect, const bool& isConvex);
 std::tuple<double,Vector2d> GetInterAreaBF(const GLAppPolygon& inP1,const Vector2d& p0, const Vector2d& p1);
 std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX);
 

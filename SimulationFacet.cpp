@@ -136,16 +136,15 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 			int index = j * (sh.texWidth + 1) + i;
 
 			//intersect polygon with rectangle
-			Clipper2Lib::PathD clip(4);
-			clip[0] = Clipper2Lib::PointD(u0, v0, -1);
-			clip[1] = Clipper2Lib::PointD(u1, v0, -1);
-			clip[2] = Clipper2Lib::PointD(u1, v1, -1);
-			clip[3] = Clipper2Lib::PointD(u0, v1, -1);
-			Clipper2Lib::PathsD clips; clips.push_back(clip);
+			Clipper2Lib::RectD rect;
+			rect.left = u0;
+			rect.right = u1;
+			rect.bottom = v1; //bottom>top in Clipper2
+			rect.top = v0;
 
 			std::vector<bool>visible(vertices2.size(), true); //Since SimulationFacet doesn't have 'visible' property
 
-			auto [A, center, vList] = GetInterArea_Clipper2Lib(subjects, clips, visible);
+			auto [A, center, vList] = GetInterArea_Clipper2Lib(subjects, rect, sh.isConvex);
 			if (A == 0.0) { //outside the polygon
 				interCellArea[i + j * sh.texWidth] = -2.0;
 			}

@@ -3109,9 +3109,14 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 
 	// Calculate facet area (Meister/Gauss formula)
 	double area = 0.0;
+	f->sh.isConvex = true;
 	for (size_t j = 0; j < f->sh.nbIndex; j++) {
 		size_t j_next = Next(j,f->sh.nbIndex);
-		area += f->vertices2[j].u*f->vertices2[j_next].v - f->vertices2[j_next].u*f->vertices2[j].v; //Equal to Z-component of vectorial product
+		double increment = f->vertices2[j].u * f->vertices2[j_next].v - f->vertices2[j_next].u * f->vertices2[j].v; //Equal to Z-component of vectorial product
+		if (f->sh.isConvex && increment < 0.0) {
+			f->sh.isConvex = false;
+		}
+		area += increment; 
 	}
 	if (area > 0.0) {
 		//f->sign = -1;

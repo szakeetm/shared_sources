@@ -159,6 +159,7 @@ public:
 					  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	AxisAlignedBoundingBox       bb;
 	Vector3d   center;
+	bool isConvex; //intersections can be sped up
 
 	// Hit/Abs/Des/Density recording on 2D texture map
 	size_t    texWidth;    // Rounded texture resolution (U)

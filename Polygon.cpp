@@ -558,20 +558,22 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 }
 */
 
-std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::PathsD& clips, const std::vector<bool>& edgeVisible) {
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool& isConvex) {
 
-	Clipper2Lib::ClipperD c(8);
-	c.AddSubject(subjects);
-	c.AddClip(clips);
-	Clipper2Lib::PolyTreeD solution;
-	c.Execute(Clipper2Lib::ClipType::Intersection, Clipper2Lib::FillRule::NonZero, solution);
+	//Clipper2Lib::ClipperD c(8);
+	//c.AddSubject(subjects);
+	//c.AddClip(clips);
+	//Clipper2Lib::PolyTreeD solution;
+	//c.Execute(Clipper2Lib::ClipType::Intersection, Clipper2Lib::FillRule::NonZero, solution);
+	auto solRect = Clipper2Lib::ExecuteRectClip(rect, subjects,isConvex,8);
 
-	if (solution.Count() == 0) {
+
+	if (solRect.size() == 0) {
 		return { 0.0,Vector2d(0.0,0.0),{} };
 	}
 
 	Clipper2Lib::PointD centerP(0.0, 0.0);
-	auto pts = solution.Child(0)->Polygon();
+	auto pts = solRect[0];
 	for (int j = 0; j < pts.size(); j++) {
 		size_t j1 = Next(j, pts.size());
 		double d = pts[j].x * pts[j1].y - pts[j1].x * pts[j].y;
@@ -581,18 +583,16 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 
 	// Count number of pts
 	size_t nbV = 0;
-	for (int i = 0; i < solution.Count(); i++) {
-		const auto& child = solution.Child(i);
-		const auto& pts = child->Polygon();
+	for (int i = 0; i < solRect.size(); i++) {
+		const auto& pts = solRect[i];
 		nbV += pts.size();
 	}
 	std::vector<Vector2d> pointList(nbV);
 	
 	//Points to list
 	size_t nbE = 0;
-	for (int i = 0; i < solution.Count(); i++) {
-		const auto& child = solution.Child(i);
-		const auto& pts = child->Polygon();
+	for (int i = 0; i < solRect.size(); i++) {
+		const auto& pts = solRect[i];
 		for (const auto& p:pts) {
 			pointList[nbE++] = Vector2d(p.x,p.y);
 		}
@@ -602,17 +602,18 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 	//Area
 	double sum = 0.0;
 	double A0 = 0.0; //first polygon area
-	for (int i = 0; i < solution.Count(); i++) { //loop through outer polygons
-		const auto& child = solution.Child(i);
-		const auto& cPts = child->Polygon();
+	for (int i = 0; i < solRect.size(); i++) { //loop through outer polygons
+		const auto& cPts = solRect[i];
 		double A = 0.0; //Current polygon area
 		A += Clipper2Lib::Area(cPts);
 
+		/*
 		for (int h = 0; h < child->Count(); h++) { //deduct holes
 			const auto& hole = child->Child(h);
 			const auto& hPts = hole->Polygon();
 			A -= Clipper2Lib::Area(hPts);
 		}
+		*/
 
 		if (i == 0) A0 = std::fabs(A);
 		sum += std::fabs(A);
