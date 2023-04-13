@@ -787,7 +787,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 				}
 
 				std::string workDir = folderDest.str();
-				std::thread t = std::thread(&AppUpdater::DoSystemCalls, this, update.postInstallScripts, workDir);
+				std::thread t = std::thread(&AppUpdater::ExecutePostInstallScripts, this, update.postInstallScripts, workDir);
 				t.detach();
 
 				resultCategory = "updateSuccess";
@@ -823,14 +823,14 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	//logWindow->Log("[Background update thread closed.]");
 }
 
-void AppUpdater::DoSystemCalls(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir) {
+void AppUpdater::ExecutePostInstallScripts(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir) {
 	
 	auto oldCwd = std::filesystem::current_path();
 	if (!workingDir.empty()) std::filesystem::current_path(workingDir); //Change work dir
 	std::cout << "\n";
 	for (int i = 0; i < postInstallScripts.size();i++) {
 		const auto& script = postInstallScripts[i];
-		std::cout << fmt::format("Post install script [{}/{}]: {}\n", i + 1, postInstallScripts.size(), script.first);
+		//std::cout << fmt::format("Post install script [{}/{}]: {}\n", i + 1, postInstallScripts.size(), script.first);
 		for (int j = 0; j < script.second.size(); j++) {
 			const auto& command = script.second[j];
 			std::cout << fmt::format("Script [{}/{}], command [{}/{}]: \"{}\"\n", i + 1, postInstallScripts.size(),j + 1, script.second.size(), command) << std::flush;
@@ -839,6 +839,7 @@ void AppUpdater::DoSystemCalls(const std::vector<std::pair<std::string, std::vec
 		}
 	}
 	std::filesystem::current_path(oldCwd); //to release OS lock on folder
+	std::cout << "Post install scripts finished.\n" << std::flush;
 }
 
 /**
