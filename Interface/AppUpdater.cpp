@@ -417,7 +417,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string os_prefix;
                     bool validOS = false;
                     for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
-                        if(std::strcmp(osNode.attribute("id").as_string() , OS_ID) == 0){ //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+						if (osNode.attribute("id").as_string()==OS_ID) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
                             // found
                             validOS = true;
                             os_fullname = osNode.attribute("name").as_string(); //Unused
@@ -445,6 +445,33 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
 					}
+
+					//Post-install scripts
+					for (const xml_node& scriptNode : updateNode.child("PostInstallScripts").children("Script")) {
+						bool validOs = false;
+						const xml_node& validOsNode = updateNode.child("ValidForOS");
+						if (!validOsNode) {
+							validOs = true; //No ValidForOS node, so valid for all
+						}
+						else {
+							for (const xml_node& osNode : validOsNode.children("OS")) {
+								if (osNode.attribute("id").as_string() == OS_ID) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+									// found
+									validOs = true;
+									break;
+								}
+							}
+						}
+						if (validOs) {
+							std::pair<std::string, std::vector<std::string>> postInstallScript;
+							postInstallScript.first = scriptNode.attribute("comment").as_string();
+							for (const xml_node& commandNode : scriptNode.children("Command")) {
+								postInstallScript.second.push_back(commandNode.attribute("string").as_string());
+							}
+							newUpdate.postInstallScripts.push_back(postInstallScript);
+						}
+					}
+
 					availables.push_back(newUpdate);
 				}
 			}

@@ -142,6 +142,7 @@ public:
 	std::string zipName; //Local download target fileName
 	std::string folderName; //Folder name expected in ZIP file, also the unzipped program is moved to this sister folder
 	std::vector<std::string> filesToCopy; //Config files to copy to new dir
+	std::vector<std::pair<std::string, std::vector<std::string>>> postInstallScripts; //first component: comment, second component: vector of OS system commands
 };
 
 class GLButton;
