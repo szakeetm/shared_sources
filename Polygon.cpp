@@ -21,7 +21,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <math.h>
 #include <algorithm> //min max
-#include <Clipper2Lib/include/clipper2/clipper.h>
 
 bool IsConvex(const GLAppPolygon &p,size_t idx) {
 
@@ -559,20 +558,9 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 }
 */
 
-std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const GLAppPolygon& inP1, const GLAppPolygon& inP2, const std::vector<bool>& edgeVisible) {
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::PathsD& clips, const std::vector<bool>& edgeVisible) {
 
-	Clipper2Lib::PathD subject(inP1.pts.size()), clip(inP2.pts.size());
-	for (int i = 0; i < inP1.pts.size(); i++) {
-		subject[i].x = inP1.pts[i].u;
-		subject[i].y = inP1.pts[i].v;
-	}
-	for (int i = 0; i < inP2.pts.size(); i++) {
-		clip[i].x = inP2.pts[i].u;
-		clip[i].y = inP2.pts[i].v;
-	}
 	Clipper2Lib::ClipperD c(8);
-	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
-	Clipper2Lib::PathsD clips; clips.push_back(clip);
 	c.AddSubject(subjects);
 	c.AddClip(clips);
 	Clipper2Lib::PolyTreeD solution;
@@ -613,29 +601,21 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 
 	//Area
 	double sum = 0.0;
-	double A0; //first polygon area
+	double A0 = 0.0; //first polygon area
 	for (int i = 0; i < solution.Count(); i++) { //loop through outer polygons
 		const auto& child = solution.Child(i);
 		const auto& cPts = child->Polygon();
 		double A = 0.0; //Current polygon area
-
-		for (size_t j = 0; j < cPts.size(); j++) {
-			size_t j1 = Next(j, cPts.size());
-			A += (cPts[j].x * cPts[j1].y - cPts[j1].x * cPts[j].y);
-		}
+		A += Clipper2Lib::Area(cPts);
 
 		for (int h = 0; h < child->Count(); h++) { //deduct holes
 			const auto& hole = child->Child(h);
 			const auto& hPts = hole->Polygon();
-			
-			for (size_t j = 0; j < hPts.size(); j++) {
-				size_t j1 = Next(j, hPts.size());
-				A -= (hPts[j].x * hPts[j1].y - hPts[j1].x * hPts[j].y);
-			}
+			A -= Clipper2Lib::Area(hPts);
 		}
 
-		if (i == 0) A0 = std::fabs(0.5 * A);
-		sum += std::fabs(0.5 * A);
+		if (i == 0) A0 = std::fabs(A);
+		sum += std::fabs(A);
 
 	}
 

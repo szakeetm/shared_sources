@@ -115,17 +115,14 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 	double rh = sh.V.Norme() * ih;
 	double fullCellArea = iw * ih;
 
-	std::vector<bool> isInside((sh.texWidth + 1) * (sh.texHeight + 1));
-	for (int j = 0; j < (sh.texHeight + 1); j++) {
-		sy = (double)j;
-		for (int i = 0; i < (sh.texWidth + 1); i++) {
-			sx = (double)i;
-			int index = j * (sh.texWidth + 1) + i;
-			double u0 = sx * iw;
-			double v0 = sy * ih;
-			isInside[index] = IsInPoly(u0, v0, vertices2);
-		}
+	//Construct clipping subject only once per facet
+	Clipper2Lib::PathD subject(vertices2.size());
+	for (int i = 0; i < vertices2.size(); i++) {
+		subject[i].x = vertices2[i].u;
+		subject[i].y = vertices2[i].v;
 	}
+	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
+
 	for (size_t j = 0; j < sh.texHeight; j++) {
 		sy = (double)j;
 		for (size_t i = 0; i < sh.texWidth; i++) {
@@ -137,61 +134,40 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 			double v1 = (sy + 1.0) * ih;
 
 			int index = j * (sh.texWidth + 1) + i;
-			bool allInside = isInside[index]
-				&& isInside[index + 1] //right
-				&& isInside[index + sh.texWidth + 1] //below
-				&& isInside[index + sh.texWidth + 1 + 1]; //right and below
 
-			if (allInside) {
-				interCellArea[i + j * sh.texWidth] = -1.0;
+			//intersect polygon with rectangle
+			Clipper2Lib::PathD clip(4);
+			clip[0] = Clipper2Lib::PointD(u0, v0, -1);
+			clip[1] = Clipper2Lib::PointD(u1, v0, -1);
+			clip[2] = Clipper2Lib::PointD(u1, v1, -1);
+			clip[3] = Clipper2Lib::PointD(u0, v1, -1);
+			Clipper2Lib::PathsD clips; clips.push_back(clip);
+
+			std::vector<bool>visible(vertices2.size(), true); //Since SimulationFacet doesn't have 'visible' property
+
+			auto [A, center, vList] = GetInterArea_Clipper2Lib(subjects, clips, visible);
+			if (A == 0.0) { //outside the polygon
+				interCellArea[i + j * sh.texWidth] = -2.0;
 			}
-			else {
-				bool allOutside = !isInside[index]
-					&& !isInside[index + 1] //right
-					&& !isInside[index + sh.texWidth + 1] //below
-					&& !isInside[index + sh.texWidth + 1 + 1]; //right and below
-				if (allOutside) {
-					interCellArea[i + j * sh.texWidth] = -2.0; //zero element
+			else if (IsEqual(fullCellArea, A, 1E-8)) { //full element
+				interCellArea[i + j * sh.texWidth] = -1.0;
+			} else if (A > (fullCellArea * 1.00000001)) {
+				// Polyon intersection error
+				// Switch back to brute force
+				GLAppPolygon P2;
+				P2.pts = vertices2;
+				auto [bfArea, center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
+				bool fullElem = IsZero(fullCellArea - bfArea);
+				if (!fullElem) { //brute force - partial element
+					interCellArea[i + j * sh.texWidth] = bfArea * (rw * rh) / (iw * ih);
 				}
-				else { // Intersect rectangle with the facet (facet boundaries)
-					std::vector<Vector2d> tmpPoints = {
-							Vector2d(u0,v0),
-							Vector2d(u1,v0),
-							Vector2d(u1,v1),
-							Vector2d(u0,v1)
-					};
-					GLAppPolygon P1;
-					P1.pts = tmpPoints;
-					GLAppPolygon P2;
-					P2.pts = vertices2;
-
-					std::vector<bool>visible(P2.pts.size(), true); //Since SimulationFacet doesn't have 'visible' property
-
-					auto [A, center, vList] = GetInterArea_Clipper2Lib(P1, P2, visible);
-					if (A > (fullCellArea + 1e-10)) {
-						// Polyon intersection error !
-						// Switch back to brute force
-						auto [bfArea, center_loc] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
-						bool fullElem = IsZero(fullCellArea - bfArea);
-						if (!fullElem) {
-							interCellArea[i + j * sh.texWidth] = (bfArea * (rw * rh) / (iw * ih));
-						}
-						else {
-							interCellArea[i + j * sh.texWidth] = -1.0;
-						}
-					}
-					else {
-
-						bool fullElem = IsZero(fullCellArea - A);
-						if (!fullElem) {
-							// !! P1 and P2 are in u,v coordinates !!
-							interCellArea[i + j * sh.texWidth] = (A * (rw * rh) / (iw * ih));
-						}
-						else {
-							interCellArea[i + j * sh.texWidth] = -1.0;
-						}
-					}
+				else { //brute force - full element
+					interCellArea[i + j * sh.texWidth] = -1.0;
 				}
+			}
+			else { //Partial element
+				// !! P1 and P2 are in u,v coordinates !!
+				interCellArea[i + j * sh.texWidth] = (A * (rw * rh) / (iw * ih));
 			}
 		}
 	}
