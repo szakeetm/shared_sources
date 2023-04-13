@@ -423,7 +423,7 @@ bool InterfaceFacet::BuildMesh() {
 			}
 			else if (IsEqual(fullCellArea, A, 1E-8)) { //full element
 				cellPropertiesIds[i + j * sh.texWidth] = -1;
-			} else if (A>(fullCellArea * 1.00000001)) {
+			} else if (A>(fullCellArea * 1.000001)) {
 				// Polyon intersection error
 				// Switch back to brute force
 				GLAppPolygon P2;

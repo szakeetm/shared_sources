@@ -164,7 +164,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Current facet
 			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
-			SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+			SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 	}
 	RecalcRawVertices(facet_number);
@@ -213,8 +213,8 @@ void Geometry::InitializeMesh() {
         /*double p = (double)i / (double)sh.nbFacet;
         progressDlg->SetProgress(p);*/
         InterfaceFacet *f = facets[i];
-        SetFacetTextureProperties(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
-        SetFacetTexture(i, f->sh.texWidth_precise / f->sh.U.Norme(), f->sh.texHeight_precise / f->sh.V.Norme(), f->hasMesh);
+        SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
+        SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
     }
 }
 
