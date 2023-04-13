@@ -17,7 +17,6 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#pragma once
 
 #ifndef FILERWH
 #define FILERWH
@@ -32,16 +31,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class FileUtils {
 
 public:
-  // Utils functions
+	// Utils functions
 	static bool Exist(const std::string& fileName);
-	static bool Exist(const char *fileName);
-	static std::string GetPath(const std::string &str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
-	static std::string GetFilename(const std::string &str); //Extracts string after the last "\"
-	static std::string StripExtension(const std::string & str);
-	static std::string GetExtension(const std::string &str); //Extracts string after the last "."
+	static bool Exist(const char* fileName);
+	static std::string GetPath(const std::string& str); //Extracts string up to to last "\" (inlcuding "\"). If no path found, returns empty string
+	static std::string GetFilename(const std::string& str); //Extracts string after the last "\"
+	static std::string StripExtension(const std::string& str);
+	static std::string GetExtension(const std::string& str); //Extracts string after the last "."
 	//static bool Copy(const std::string& src, const std::string& dst);
 	static std::string get_working_path();
 	static void CreateDir(const std::string& path);
+	static std::string exec(const std::string& command);
+	static std::string exec(const char* cmd);
+
 };
 
 class FileReader {

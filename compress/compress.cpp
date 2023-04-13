@@ -36,9 +36,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define ERR_NO_CMPR 2
 #define ERR_UNRSLVD 42
 
-std::string exec(const std::string& command);
-std::string exec(const char* cmd);
-
 int main(int argc, char* argv[]) {
 	std::cout << "MolFlow / SynRad wrapper for 7-zip executable\n";
 	std::cout << "Renames a file, compresses it and on success it deletes the original.\n\n";
@@ -109,10 +106,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	fileNameGeometry = FileUtils::GetPath(fileName) + args[2];
-	/*
-	command = "move \"" + fileName + "\" \"" + fileNameGeometry + "\"";
-	result=exec(command);
-	*/
 	std::filesystem::rename(fileName, fileNameGeometry);
 	std::filesystem::remove(fileNameWith7z);
 	command = "";
@@ -147,7 +140,7 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
 	std::cout << "\nYou can continue using Molflow/Synrad while compressing.\n"; //On Windows, compress.exe is launched as a background process
 #endif
-	result = exec(command);
+	result = FileUtils::exec(command);
 
 	if (args.size() == 4) { //Delete list file
 		std::string listFile = args[3];
@@ -176,34 +169,4 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 	return ERR_UNRSLVD;
-}
-
-std::string exec(const std::string& command) {
-	return exec(command.c_str());
-}
-
-std::string exec(const char* cmd) { //Execute a command and return what it prints to the command line / terinal
-	FILE* pipe =
-#ifdef _WIN32
-		_popen
-#else
-		popen
-#endif
-		(cmd, "r");
-	if (!pipe) return "ERROR";
-	char buffer[128];
-	std::string result = "";
-	while (!feof(pipe)) {
-		if (fgets(buffer, 128, pipe) != NULL)
-			result += buffer;
-		printf("%s", buffer);
-	}
-	result = result + '0';
-#ifdef _WIN32
-	_pclose
-#else
-	pclose
-#endif
-		(pipe);
-	return result;
 }

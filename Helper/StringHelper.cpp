@@ -33,7 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 // String to Number parser, on fail returns a default value (returnDefValOnErr==true) or throws an error
 template <class T>
-T stringToNumber(std::string const& s, bool returnDefValOnErr) {
+T stringToNumber(const std::string& s, bool returnDefValOnErr) {
     std::istringstream i(s);
     T x;
     if (!(i >> x)) {
@@ -45,9 +45,9 @@ T stringToNumber(std::string const& s, bool returnDefValOnErr) {
     return x;
 }
 
-template int stringToNumber<int>(std::string const& s, bool returnDefValOnErr);
-template size_t stringToNumber<size_t>(std::string const& s, bool returnDefValOnErr);
-template double stringToNumber<double>(std::string const& s, bool returnDefValOnErr);
+template int stringToNumber<int>(const std::string& s, bool returnDefValOnErr);
+template size_t stringToNumber<size_t>(const std::string& s, bool returnDefValOnErr);
+template double stringToNumber<double>(const std::string& s, bool returnDefValOnErr);
 
 void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit) {
     auto ranges = SplitString(inputString, ',');
@@ -191,7 +191,7 @@ std::string AbbreviateString(const std::string& input, size_t maxLength)
     return result;
 }
 
-std::vector<std::string> SplitString(std::string const& input) {
+std::vector<std::string> SplitString(const std::string& input) {
     //Split string by whitespaces
     std::istringstream buffer(input);
     std::vector<std::string> ret;
@@ -202,7 +202,7 @@ std::vector<std::string> SplitString(std::string const& input) {
     return ret;
 }
 
-std::vector<std::string> SplitString(std::string const& input, const char& delimiter)
+std::vector<std::string> SplitString(const std::string& input, const char& delimiter)
 {
     std::vector<std::string> result;
     char* str = strdup(input.c_str());
@@ -218,7 +218,7 @@ std::vector<std::string> SplitString(std::string const& input, const char& delim
     return result;
 }
 
-bool endsWith(std::string const& fullString, std::string const& ending) {
+bool endsWith(const std::string& fullString, const std::string& ending) {
     if (fullString.length() >= ending.length()) {
         return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
     }
@@ -227,7 +227,7 @@ bool endsWith(std::string const& fullString, std::string const& ending) {
     }
 }
 
-bool beginsWith(std::string const& fullString, std::string const& beginning) {
+bool beginsWith(const std::string& fullString, const std::string& beginning) {
     return (fullString.compare(0, beginning.length(), beginning) == 0);
 }
 
@@ -292,6 +292,14 @@ bool iContains(const std::vector<std::string>& vec, const std::string& value) { 
         if (lowercase(*v) == lowercaseValue) return true;
     }
     return false;
+}
+
+std::string FlattenLines(const std::vector<std::string>& lines) {
+    std::stringstream out;
+    for (const auto& line : lines) {
+        out << line << "\n";
+    }
+    return out.str();
 }
 
 namespace Util {

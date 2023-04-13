@@ -530,3 +530,33 @@ void FileUtils::CreateDir(const std::string &path) {
         std::filesystem::create_directory(path);
     }
 }
+
+std::string FileUtils::exec(const std::string& command) {
+    return exec(command.c_str());
+}
+
+std::string FileUtils::exec(const char* cmd) { //Execute a command and return what it prints to the command line / terminal
+    FILE* pipe =
+#ifdef _WIN32
+        _popen
+#else
+        popen
+#endif
+        (cmd, "r");
+    if (!pipe) return "ERROR";
+    char buffer[128];
+    std::string result = "";
+    while (!feof(pipe)) {
+        if (fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+        printf("%s", buffer);
+    }
+    result = result + '0';
+#ifdef _WIN32
+    _pclose
+#else
+    pclose
+#endif
+        (pipe);
+    return result;
+}

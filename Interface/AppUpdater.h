@@ -126,6 +126,7 @@ if (appUpdater && appUpdater->IsUpdateAvailable()) {
 using namespace pugi;
 #include "GLApp/GLWindow.h"
 #include "Interface/Interface.h" //DoEvents
+#include <filesystem>
 
 #define ANSWER_DONTASKYET 1
 #define ANSWER_ALREADYDECIDED 2
@@ -273,7 +274,8 @@ private:
     std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int& currentVersionId);
     std::vector<UpdateManifest> DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateFeed, const int& currentVersionId, const std::string& branchName);
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
-	
+	void AppUpdater::DoAsyncSystemCalls(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, const std::filesystem::path& workingDir); //Async sys calls
+
 	static UpdateManifest GetLatest(const std::vector<UpdateManifest>& updatesstatic );
     std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
     std::string GetLatestChangeLog(const std::vector<UpdateManifest>& updates);

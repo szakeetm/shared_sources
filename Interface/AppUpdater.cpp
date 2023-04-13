@@ -24,7 +24,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
-#include <filesystem>
 #include <sstream>
 #include "Helper/MathTools.h" //Contains
 #include "Helper/StringHelper.h"
@@ -323,8 +322,8 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 
 			if (parseResult.status == status_ok) { //parsed successfully
 				availableUpdates = DetermineAvailableUpdates(updateDoc, currentVersionId);
-                auto availableUpdates_old = DetermineAvailableUpdatesOldScheme(updateDoc, currentVersionId, branchName);
-                availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
+                //auto availableUpdates_old = DetermineAvailableUpdatesOldScheme(updateDoc, currentVersionId, branchName);
+                //availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
                 resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
                 lastFetchStatus = (int)FetchStatus::OKAY;
@@ -417,7 +416,9 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     std::string os_prefix;
                     bool validOS = false;
                     for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
-						if (osNode.attribute("id").as_string()==OS_ID) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+						std::string nodeOs = osNode.attribute("id").as_string();
+						std::string thisOs = OS_ID; //Convert to string
+						if (nodeOs == thisOs) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
                             // found
                             validOS = true;
                             os_fullname = osNode.attribute("name").as_string(); //Unused
@@ -449,13 +450,15 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					//Post-install scripts
 					for (const xml_node& scriptNode : updateNode.child("PostInstallScripts").children("Script")) {
 						bool validOs = false;
-						const xml_node& validOsNode = updateNode.child("ValidForOS");
+						const xml_node& validOsNode = scriptNode.child("ValidForOS");
 						if (!validOsNode) {
 							validOs = true; //No ValidForOS node, so valid for all
 						}
 						else {
 							for (const xml_node& osNode : validOsNode.children("OS")) {
-								if (osNode.attribute("id").as_string() == OS_ID) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+								std::string nodeOs = osNode.attribute("id").as_string();
+								std::string thisOs = OS_ID; //Convert to string
+								if (nodeOs == thisOs) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
 									// found
 									validOs = true;
 									break;
@@ -520,10 +523,21 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const
 std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates) {
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
-	for (const auto& update : updates) {
+	size_t max_updates = 3; //display only last 3 updates
+	for (int i = 0; i < std::min(max_updates, updates.size());i++) {
+		const auto& update = updates[i];
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
-	return cumulativeChangeLog.str();
+
+	//Truncate
+	size_t max_lines = 40;
+	auto lines = SplitString(cumulativeChangeLog.str(), '\n');
+	if (lines.size() > max_lines) {
+		lines.resize(max_lines);
+		lines.push_back(fmt::format("---Changelog truncated after {} lines ---", max_lines));
+	}
+	
+	return FlattenLines(lines);
 }
 
 /**
@@ -538,7 +552,16 @@ std::string AppUpdater::GetLatestChangeLog(const std::vector<UpdateManifest>& up
     std::stringstream latestChangeLog;
     auto update = GetLatest(updates);
     latestChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
-    return latestChangeLog.str();
+	
+	//Truncate
+	size_t max_lines = 40;
+	auto lines = SplitString(latestChangeLog.str(), '\n');
+	if (lines.size() > max_lines) {
+		lines.resize(max_lines);
+		lines.push_back(fmt::format("---Changelog truncated after {} lines ---", max_lines));
+	}
+
+	return FlattenLines(lines);
 }
 
 /**
@@ -729,8 +752,9 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 				userResult.str(""); userResult.clear();
 				userResult << "Moved the extracted folder " << update.folderName << " to " << folderDest.str();
 				logWindow->Log(userResult.str());
+
 				//Copy current config file to new version's dir
-				for (auto& copyFile : update.filesToCopy) {
+				for (const auto& copyFile : update.filesToCopy) {
 					std::stringstream configDest; configDest << folderDest.str() << "/" << copyFile;
 					try {
 						std::filesystem::copy(copyFile, configDest.str(), std::filesystem::copy_options::overwrite_existing);
@@ -754,6 +778,15 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					userResult << "Copied " << copyFile << " to " << configDest.str();
 					logWindow->Log(userResult.str());
 				}
+
+				//Post install scripts
+				if (update.postInstallScripts.size()>0) logWindow->Log("Executing post-install scripts (check console for results):");
+				for (int i = 0; i < update.postInstallScripts.size();i++) {
+					const auto& script = update.postInstallScripts[i];
+					logWindow->Log(fmt::format("   [{}/{}] {}", i+1,update.postInstallScripts.size(), script.first));
+				}
+				DoAsyncSystemCalls(update.postInstallScripts, folderDest.str()); //Separate thread, non-blocking
+
 				resultCategory = "updateSuccess";
 				resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
 				logWindow->Log("Update successful.");
@@ -785,6 +818,24 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload3.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
 
 	//logWindow->Log("[Background update thread closed.]");
+}
+
+void AppUpdater::DoAsyncSystemCalls(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, const std::filesystem::path& workingDir) {
+	
+	auto oldCwd = std::filesystem::current_path();
+	if (!workingDir.empty()) std::filesystem::current_path(workingDir); //Change work dir
+	std::cout << "\n";
+	for (int i = 0; i < postInstallScripts.size();i++) {
+		const auto& script = postInstallScripts[i];
+		std::cout << fmt::format("Post install script [{}/{}]: {}\n", i + 1, postInstallScripts.size(), script.first);
+		for (int j = 0; j < script.second.size(); j++) {
+			const auto& command = script.second[j];
+			std::cout << fmt::format("Script [{}/{}], command [{}/{}]: \"{}\"\n", i + 1, postInstallScripts.size(),j + 1, script.second.size(), command) << std::flush;
+			//std::cout << FileUtils::exec(command.c_str()) << std::flush;
+			system(command.c_str());
+		}
+	}
+	std::filesystem::current_path(oldCwd); //to release OS lock on folder
 }
 
 /**
@@ -1003,14 +1054,15 @@ void ManualUpdateCheckDialog::Refresh() {
         else { // no updates found
             // Try again
             updater->PerformImmediateCheck();
-            if (updater->IsUpdateAvailable())
-                updateAvailable = true;
+			if (updater->IsUpdateAvailable()) {
+				updateAvailable = true;
+			}
+			else {
+				aboutText << "This is already the latest version." << std::endl;
+                aboutText << updater->GetLatestChangeLog();
+			}
             if(updater->GetStatus() != (int)FetchStatus::OKAY){
                 updateError = true;
-            }
-            else {
-                aboutText << "This is already the latest version." << std::endl;
-                aboutText << updater->GetLatestChangeLog();
             }
         }
     }
@@ -1180,8 +1232,8 @@ UpdateLogWindow::UpdateLogWindow(Interface *app) {
 
 	mApp = app;
 
-	int wD = 400;
-	int hD = 250;
+	int wD = 500;
+	int hD = 350;
 
 	logList = new GLList(0);
 
