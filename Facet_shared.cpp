@@ -405,8 +405,8 @@ bool InterfaceFacet::BuildMesh() {
 	{
 	#pragma omp for private(meshvector_partial,i) collapse(2)
 		for (int j = 0;j < sh.texHeight;j++) {
-			sy = (double)j;
 			for ( i = 0; i < sh.texWidth; i++) {
+				sy = (double)j;
 				sx = (double)i;
 
 				double u0 = sx * iw;
