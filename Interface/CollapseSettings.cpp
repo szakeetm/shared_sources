@@ -83,7 +83,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 
 	maxVertexToggle = new GLToggle(0, "Max. vertices on a facet:");
 	maxVertexToggle->SetBounds(20, 55, 170, 18);
-	maxVertexToggle->SetState(true);
+	maxVertexToggle->SetState(false);
 	Add(maxVertexToggle);
 
 	maxVertexTextbox = new GLTextField(0, "100");
