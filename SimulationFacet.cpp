@@ -124,10 +124,10 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
 int i;
-#pragma omp parallel private(i)
+#pragma omp parallel 
 {
-#pragma omp for collapse(2)
-	for (size_t j = 0; j < sh.texHeight; j++) {
+#pragma omp for private(i) collapse(2)
+	for (int j = 0; j < sh.texHeight; j++) {
 		sy = (double)j;
 		for ( i = 0; i < sh.texWidth; i++) {
 			sx = (double)i;
