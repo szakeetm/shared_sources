@@ -94,8 +94,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../src/versionId.h"
 #include "ImguiWindow.h"
 
-#include <omp.h>
-
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
 //extern const char* appTitle;
@@ -685,15 +683,6 @@ int Interface::OnExit() {
 
 void Interface::OneTimeSceneInit_shared_pre() {
     GLToolkit::SetIcon32x32("images/app_icon.png");
-
-     // Beginning of parallel region
-    #pragma omp parallel num_threads(4)
-    {
- 
-        std::cout<<"Hello World... from thread = " <<
-               omp_get_thread_num() << std::endl;
-    }
-    // Ending of parallel region
 
     for (int i = 0; i < MAX_VIEWER; i++) {
         viewer[i] = new GeometryViewer(i);
