@@ -9,6 +9,7 @@
 #include <SDL2/SDL_opengl.h>
 #include "GLTypes.h"  //GL_OK
 #include "Helper/Chronometer.h"
+#include <omp.h>
 //#include "GLWindow.h"
 //#include "GLComponent.h"
 //class GLWindow;
