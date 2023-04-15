@@ -33,7 +33,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLToolkit.h"
 #include "Helper/MathTools.h"
 #include <sstream>
-#include <omp.h>
 
 using namespace pugi;
 
@@ -398,8 +397,6 @@ bool InterfaceFacet::BuildMesh() {
 	}
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
-	std::cout<<"maxthread="<<omp_get_max_threads()<<std::endl;
-	#pragma omp parallel for
 	for (int j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
 		for (int i = 0; i < sh.texWidth; i++) {
