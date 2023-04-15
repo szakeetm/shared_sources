@@ -221,3 +221,5 @@ if(NOT NO_INTERFACE)
 endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
+include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
+find_package(OpenMP REQUIRED)
