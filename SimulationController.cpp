@@ -559,6 +559,7 @@ bool SimulationController::Load() {
                 randomCounter += local_result;
             }
             DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+            
 
             // Calculate remaining work
             size_t desPerThread = 0;

@@ -398,22 +398,10 @@ bool InterfaceFacet::BuildMesh() {
 	}
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
-    // Beginning of parallel region
-    #pragma omp parallel num_threads(4)
-    {
- 
-        std::cout<<"Hello World... from thread = " <<
-               omp_get_thread_num() << std::endl;
-    }
-    // Ending of parallel region
-
 	std::cout<<"maxthread="<<omp_get_max_threads()<<std::endl;
 	#pragma omp parallel for
 	for (int j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
-
-		std::cout<<"j="<<j<<" thread="<<omp_get_thread_num()<<std::endl;
-/*
 		for (int i = 0; i < sh.texWidth; i++) {
 			sx = (double)i;
 
@@ -473,7 +461,6 @@ bool InterfaceFacet::BuildMesh() {
 				meshvector[meshvectorsize++] = cellprop;
 			}
 		}
-		*/
 	}
 	//Shrink mesh vector
     meshvector.resize(meshvectorsize);
