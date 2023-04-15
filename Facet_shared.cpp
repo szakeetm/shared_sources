@@ -399,12 +399,14 @@ bool InterfaceFacet::BuildMesh() {
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
 	std::map<int,CellProperties> meshvector_partial;
+	int i;
+	
 #pragma omp parallel private(meshvector_partial,i) shared (meshvector)
 	{
 	#pragma omp for collapse(2)
 		for (int j = 0;j < sh.texHeight;j++) {
 			sy = (double)j;
-			for (int i = 0; i < sh.texWidth; i++) {
+			for ( i = 0; i < sh.texWidth; i++) {
 				sx = (double)i;
 
 				double u0 = sx * iw;
