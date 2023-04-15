@@ -123,6 +123,9 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 	}
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
+#pragma omp parallel private(i)
+{
+#pragma omp for collapse(2)
 	for (size_t j = 0; j < sh.texHeight; j++) {
 		sy = (double)j;
 		for (size_t i = 0; i < sh.texWidth; i++) {
@@ -170,6 +173,7 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 			}
 		}
 	}
+}
 	return interCellArea;
 }
 
