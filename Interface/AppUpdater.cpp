@@ -787,12 +787,11 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 				}
 
 				std::string workDir = folderDest.str();
-				std::thread t = std::thread(&AppUpdater::ExecutePostInstallScripts, this, update.postInstallScripts, workDir);
-				t.detach();
+				ExecutePostInstallScripts( update.postInstallScripts, workDir);
 
 				resultCategory = "updateSuccess";
 				resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
-				logWindow->Log("Update successful (post-install scripts might still be running).");
+				logWindow->Log("Update successful.");
 				userResult.str(""); userResult.clear();
 				userResult << "If you wish, you can now close this version and launch the new one in the adjacent " << folderDest.str() << " folder.";
 				logWindow->Log(userResult.str());
