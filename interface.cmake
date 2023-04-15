@@ -142,3 +142,10 @@ target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
+find_package(OpenMP REQUIRED)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()

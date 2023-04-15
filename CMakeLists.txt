@@ -216,9 +216,6 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-include(SetOpenMP.cmake)
-find_package(OpenMP REQUIRED)
-
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
 endif()

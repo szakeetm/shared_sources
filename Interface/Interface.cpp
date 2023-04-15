@@ -682,6 +682,7 @@ int Interface::OnExit() {
 }
 
 void Interface::OneTimeSceneInit_shared_pre() {
+
     GLToolkit::SetIcon32x32("images/app_icon.png");
 
     for (int i = 0; i < MAX_VIEWER; i++) {
@@ -691,15 +692,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     modeSolo = true;
     //nbSt = 0;
 
-    	std::cout<<"Init: OMP max = " <<
-               omp_get_max_threads() << std::endl;
-     // Beginning of parallel region
-    #pragma omp parallel
-    {
-        std::cout<<omp_get_thread_num();
-    }
-    // Ending of parallel region
-	std::cout<<"\nOMP init ok.\n";
+
 
     menu = new GLMenuBar(0);
     wnd->SetMenuBar(menu);

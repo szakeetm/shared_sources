@@ -2117,7 +2117,7 @@ std::vector<size_t> Geometry::GetSelectedFacets() {
     {
         std::vector<size_t> selection_local;
 #pragma omp for
-        for (size_t i = 0; i < facets.size(); i++) {
+        for (int i = 0; i < facets.size(); i++) {
             if (facets[i]->selected)
                 selection_local.push_back(i);
         }
