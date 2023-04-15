@@ -2747,7 +2747,7 @@ void Interface::DoEvents(bool forced) {
 
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
-    if (work->globalHitCache.globalHits.nbMCHit || work->IsRunning()  > 0) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
+    if (work->globalHitCache.globalHits.nbMCHit > 0 || work->IsRunning()) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
