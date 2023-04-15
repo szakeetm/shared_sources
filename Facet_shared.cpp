@@ -397,10 +397,8 @@ bool InterfaceFacet::BuildMesh() {
 	}
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
-#pragma omp parallel for
 	for (int j = 0;j < sh.texHeight;j++) {
 		sy = (double)j;
-		std::cout << omp_get_thread_num();
 		for (int i = 0; i < sh.texWidth; i++) {
 			sx = (double)i;
 
