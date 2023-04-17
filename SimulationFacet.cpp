@@ -108,7 +108,6 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 		throw Error("Couldn't allocate memory for mesh");
 	}
 
-	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidth_precise;
 	double ih = 1.0 / (double)sh.texHeight_precise;
 	double rw = sh.U.Norme() * iw;
@@ -124,13 +123,12 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
 int i;
-#pragma omp parallel 
-{
-#pragma omp for private(i) collapse(2)
+#pragma omp parallel private(i) //safe to concurrently modify interCellArea, each thread writes to different index
+#pragma omp for collapse(2)
 	for (int j = 0; j < sh.texHeight; j++) {
 		for ( i = 0; i < sh.texWidth; i++) {
-			sy = (double)j;
-			sx = (double)i;
+			double sy = (double)j;
+			double sx = (double)i;
 
 			double u0 = sx * iw;
 			double v0 = sy * ih;
@@ -174,7 +172,6 @@ int i;
 			}
 		}
 	}
-}
 	return interCellArea;
 }
 

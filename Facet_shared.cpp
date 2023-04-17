@@ -383,7 +383,6 @@ bool InterfaceFacet::BuildMesh() {
 	meshvectorsize = 0;
 	hasMesh = true;
 	
-	double sx, sy;
 	double iw = 1.0 / (double)sh.texWidth_precise;
 	double ih = 1.0 / (double)sh.texHeight_precise;
 	double rw = sh.U.Norme() * iw;
@@ -401,13 +400,13 @@ bool InterfaceFacet::BuildMesh() {
 	std::map<int,CellProperties> meshvector_partial;
 	int i;
 	
-#pragma omp parallel private(meshvector_partial,i) //shared(meshvector.data(),cellPropertiesIds.data())
+#pragma omp parallel private(meshvector_partial,i)  //safe to concurrently modify cellPropertiesIds, each thread writes to different index
 	{
 	#pragma omp for  collapse(2)
 		for (int j = 0;j < sh.texHeight;j++) {
 			for ( i = 0; i < sh.texWidth; i++) {
-				sy = (double)j;
-				sx = (double)i;
+				double sy = (double)j;
+				double sx = (double)i;
 
 				double u0 = sx * iw;
 				double v0 = sy * ih;
