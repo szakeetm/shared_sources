@@ -401,9 +401,9 @@ bool InterfaceFacet::BuildMesh() {
 	std::map<int,CellProperties> meshvector_partial;
 	int i;
 	
-#pragma omp parallel 
+#pragma omp parallel private(meshvector_partial,i) //shared(meshvector.data(),cellPropertiesIds.data())
 	{
-	#pragma omp for private(meshvector_partial,i) collapse(2)
+	#pragma omp for  collapse(2)
 		for (int j = 0;j < sh.texHeight;j++) {
 			for ( i = 0; i < sh.texWidth; i++) {
 				sy = (double)j;
