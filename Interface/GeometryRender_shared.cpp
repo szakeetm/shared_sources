@@ -1631,7 +1631,7 @@ void Geometry::UpdateSelection() {
 void Geometry::BuildGLList() {
 
 	// Compile geometry for OpenGL
-	for (int j = 0; j < sh.nbSuper; j++) {
+	for (int s = 0; s < sh.nbSuper; s++) {
 
 		typedef std::pair<size_t, size_t> Edge;
 		typedef std::set<Edge> EdgeSet;
@@ -1641,19 +1641,20 @@ void Geometry::BuildGLList() {
 		//construct edge map
 		for (size_t i = 0; i < facets.size(); ++i) {
 			const auto& f = facets[i];
+			if (f->sh.superIdx == s || f->sh.superIdx == -1) {
+				for (size_t j = 0; j < f->indices.size(); ++j) {
+					size_t v1 = f->indices[j];
+					size_t v2 = f->indices[(j + 1) % f->indices.size()];
 
-			for (size_t j = 0; j < f->indices.size(); ++j) {
-				size_t v1 = f->indices[j];
-				size_t v2 = f->indices[(j + 1) % f->indices.size()];
+					// Ensure canonical order for edge vertices
+					if (v1 > v2) {
+						std::swap(v1, v2);
+					}
 
-				// Ensure canonical order for edge vertices
-				if (v1 > v2) {
-					std::swap(v1, v2);
+					Edge newEdge = std::make_pair(v1, v2);
+					edgeSet.insert(newEdge);
+
 				}
-
-				Edge newEdge = std::make_pair(v1, v2);
-				edgeSet.insert(newEdge);
-
 			}
 		}
 
@@ -1664,10 +1665,8 @@ void Geometry::BuildGLList() {
 			lines.push_back((GLuint)it.second);
 		}
 
-
-
-		lineList[j] = glGenLists(1);
-		glNewList(lineList[j], GL_COMPILE);
+		lineList[s] = glGenLists(1);
+		glNewList(lineList[s], GL_COMPILE);
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
