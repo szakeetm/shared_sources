@@ -275,7 +275,7 @@ public:
 	void SelectFacet(size_t facetId);
 	void SelectAllVertex();
 	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound);
-	void SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound);
+	Vector3d SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound);
 	void SelectVertex(int facet);
 	void UnselectAllVertex();
 	std::vector<size_t> GetSelectedVertices();

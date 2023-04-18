@@ -1758,8 +1758,9 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				//selectionChange = true;
 				if (std::abs(selX1 - selX2) <= 1 && std::abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
-					geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
+					auto result = geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
+					view.rotationCenter = glm::vec3((float)result.x, (float)result.y, (float)result.z);
 				}
 				else {
 					// Select region

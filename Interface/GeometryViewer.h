@@ -26,6 +26,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Vector.h"
 #include <vector>
 
+#include "glm/glm.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 class Worker;
 class GLButton;
 class GLLabel;
@@ -86,6 +90,8 @@ typedef struct {
 
   Vector3d camOffset;  // Camera target offset
   int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
+
+  glm::vec3 rotationCenter;
 
   double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
   double   vRight;     // Viewport in 2D proj space (used for orthographic autoscaling)

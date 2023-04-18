@@ -380,9 +380,10 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound) {
+Vector3d Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound) {
 	int i;
-	if (!isLoaded) return;
+	Vector3d result(0.0, 0.0, 0.0);
+	if (!isLoaded) return result;
 
 	// Select a vertex on a mouse click in 3D perspectivce view 
 	// (x,y) are in screen coordinates
@@ -430,16 +431,20 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 
 	if (minDist < 250.0) {
 		vertices3[minId].selected = !ctrlDown;
-		if (ctrlDown) RemoveFromSelectedVertexList(minId);
+		if (ctrlDown) {
+			RemoveFromSelectedVertexList(minId);
+			result = std::move(Vector3d(0.0, 0.0, 0.0));
+		}
 		else {
 			AddToSelectedVertexList(minId);
 			if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(minId);
-			//nbSelectedHistVertex++;
+			result = vertices3[minId];
 		}
 	}
 
 	//UpdateSelection();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+	return result;
 }
 
 void Geometry::AddToSelectionHist(size_t f) {
