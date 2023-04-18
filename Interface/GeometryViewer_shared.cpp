@@ -87,6 +87,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.camDist = 100.0;
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
+
 	view.camOffset.z = 0.0;
 	view.vLeft = 0.0;
 	view.vRight = 0.0;
@@ -115,6 +116,8 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	showFilter = false;
 	//showColormap = true;
 	hideLot = 500;
+
+	rotationCenter = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	showTP = true;
 #if defined(MOLFLOW)
@@ -496,28 +499,6 @@ void GeometryViewer::UpdateMatrix() {
 	// Convert polar coordinates
 	Vector3d org = geom->GetCenter();
 
-	/*
-	Vector3d X(1.0, 0.0, 0.0);
-	Vector3d Y(0.0, 1.0, 0.0);
-	Vector3d Z(0.0, 0.0, 1.0);
-
-	camDir = Z;
-	camLeft = X * handedness;
-	camUp = Y;
-
-	camDir = Rotate(camDir, org, X, -view.camAngleOx);
-	camDir = Rotate(camDir, org, Y, -view.camAngleOy);
-	camDir = Rotate(camDir, org, Z, -view.camAngleOz);
-
-	camLeft = Rotate(camLeft, org, X, -view.camAngleOx);
-	camLeft = Rotate(camLeft, org, Y, -view.camAngleOy);
-	camLeft = Rotate(camLeft, org, Z, -view.camAngleOz);
-
-	camUp = Rotate(camUp, org, X, -view.camAngleOx);
-	camUp = Rotate(camUp, org, Y, -view.camAngleOy);
-	camUp = Rotate(camUp, org, Z, -view.camAngleOz);
-	*/
-
 	
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
@@ -558,6 +539,7 @@ void GeometryViewer::UpdateMatrix() {
 	}
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, matView);
+
 
 	// Projection matrix ---------------------------------------------------
 
@@ -1760,7 +1742,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					// Simple click, select/unselect vertex
 					auto result = geom->SelectVertex(mX - posX, mY - posY, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
-					view.rotationCenter = glm::vec3((float)result.x, (float)result.y, (float)result.z);
+					rotationCenter = glm::vec3((float)result.x, (float)result.y, (float)result.z);
 				}
 				else {
 					// Select region
@@ -1875,8 +1857,42 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 							view.camAngleOy -= diffX * angleStep*factor*handedness;
 						}
 						else {
-							view.camAngleOx -= diffY * angleStep*factor;
-							view.camAngleOy -= diffX * angleStep*factor*handedness;
+
+							double deltaX = -diffY * angleStep * factor;
+							double deltaY = -diffX * angleStep * factor * handedness;
+
+							
+							auto viewMatrix = glm::make_mat4(matView);
+							glm::mat4 worldToCameraMatrix = glm::inverse(viewMatrix);
+							glm::vec3 cameraPosition = glm::vec3(worldToCameraMatrix[3]); // extract translation component
+							// View center of the model
+							glm::vec3 viewCenter = glm::vec3((float)view.camOffset.x, (float)view.camOffset.y, (float)view.camOffset.z);
+
+							// Calculate camera position relative to the rotation point
+							glm::vec3 relativePos = cameraPosition - rotationCenter;
+							float camDistance = glm::length(cameraPosition - viewCenter);
+
+							glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -rotationCenter);
+
+							// Rotate the model based on the camera angles
+							glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), (float)deltaX, glm::vec3(1.0f, 0.0f, 0.0f));
+							rotationMatrix = glm::rotate(rotationMatrix, (float)deltaY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+							// Apply the translation to move the world coordinate back to its original position
+							glm::mat4 inverseTranslationMatrix = glm::translate(glm::mat4(1.0f), rotationCenter);
+
+							glm::mat4 modelviewMatrix = inverseTranslationMatrix * rotationMatrix * translationMatrix * viewMatrix;
+
+							// Calculate the new camera position and view center based on the modelview matrix
+							glm::vec3 cameraPos = glm::vec3(modelviewMatrix[3]);
+							glm::vec3 viewVector = glm::column(modelviewMatrix, 2);
+							viewCenter = cameraPos + (camDistance * viewVector);
+
+
+							view.camOffset = Vector3d(viewCenter.x, viewCenter.y, viewCenter.z);
+
+							view.camAngleOx +=deltaX;
+							view.camAngleOy +=deltaY;
 						}
 					}
 				}

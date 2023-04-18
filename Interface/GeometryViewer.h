@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 class Worker;
@@ -90,8 +91,6 @@ typedef struct {
 
   Vector3d camOffset;  // Camera target offset
   int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
-
-  glm::vec3 rotationCenter;
 
   double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
   double   vRight;     // Viewport in 2D proj space (used for orthographic autoscaling)
@@ -280,6 +279,8 @@ private:
   GLfloat matProj[16];
   GLMATERIAL greenMaterial;
   GLMATERIAL blueMaterial;
+
+  glm::vec3 rotationCenter;
 
   //Debug
   //GLLabel* debugLabel;
