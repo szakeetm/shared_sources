@@ -532,14 +532,11 @@ void GeometryViewer::UpdateMatrix() {
 	{
 		Vector3d camPos = org + view.camOffset;
 
-		glLoadMatrixf(glm::value_ptr(view.modelMatrix));
-
 		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
 		break;
 	}
 	case ORTHOGRAPHIC_PROJ:
-		//glLoadIdentity();
-		glLoadMatrixf(glm::value_ptr(view.modelMatrix));
+		glLoadIdentity();
 
 		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);
 
@@ -552,13 +549,14 @@ void GeometryViewer::UpdateMatrix() {
 	}
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, matView);
-
-
-	// Projection matrix ---------------------------------------------------
-
+	auto viewMatrix = glm::make_mat4(matView);
+	auto mvm = viewMatrix * view.modelMatrix;
+	glLoadMatrixf(glm::value_ptr(mvm));
+	glGetFloatv(GL_MODELVIEW_MATRIX, matView);
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
 	ComputeBB(/*true*/);
 
+	// Projection matrix ---------------------------------------------------
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
@@ -1873,11 +1871,17 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 							double deltaX = -diffY * angleStep * factor;
 							double deltaY = -diffX * angleStep * factor * handedness;
+							/*
+							auto org = work->GetGeometry()->GetCenter();
+							auto org_glm = glm::vec3((float)org.x,(float)org.y,(float)org.z));
+							auto vect = rotationCenter - org_glm;
+							*/
+						auto vect = rotationCenter;
 
-							auto transl = glm::translate(glm::mat4(1.0f),-rotationCenter);
+							auto transl = glm::translate(glm::mat4(1.0f),-vect);
 							auto rotX = glm::rotate(glm::mat4(1.0f),(float)deltaX,glm::vec3(1.0f,0.0f,0.0f));
 							auto rotY = glm::rotate(glm::mat4(1.0f),(float)deltaY,glm::vec3(0.0f,1.0f,0.0f));
-							auto inv_transl = glm::translate(glm::mat4(1.0f),rotationCenter);
+							auto inv_transl = glm::translate(glm::mat4(1.0f),vect);
 
 							view.modelMatrix = inv_transl * rotY * rotX * transl * view.modelMatrix;
 						}
