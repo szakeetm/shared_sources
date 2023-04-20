@@ -82,6 +82,8 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	view.camAngleOy = 0.0;
 	view.camAngleOz = 0.0;
 
+	view.modelMatrix = glm::mat4(1.0f);
+
 	view.lightAngleOx = 0.0;
 	view.lightAngleOy = 0.0;
 	view.camDist = 100.0;
@@ -291,6 +293,8 @@ void GeometryViewer::ToOrigo() {
 	view.camAngleOy = (view.projMode == PERSPECTIVE_PROJ) ? PI : 0.0;
 	view.camAngleOz = 0.0;
 
+	view.modelMatrix = glm::mat4(1.0f);
+
 	view.camDist = 100.0;
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
@@ -392,6 +396,8 @@ void GeometryViewer::ToTopView() {
 		view.camAngleOy = /*mApp->leftHandedView ? PI :*/ 0.0;
 		view.camAngleOz = 0.0;
 		view.performXY = XYZ_TOP;
+		view.modelMatrix = glm::mat4(1.0f);
+
 	}
 	else { //Perspective
 		view.camAngleOx = .5 * PI;
@@ -409,8 +415,10 @@ void GeometryViewer::ToSideView() {
 
 	view.camAngleOx = 0.0;
 	view.camAngleOy = PI / 2.0;
-
 	view.camAngleOz = 0.0;
+
+	view.modelMatrix = glm::mat4(1.0f);
+
 
 	view.performXY = (view.projMode == PERSPECTIVE_PROJ) ? XYZ_NONE : XYZ_SIDE;
 	AutoScale();
@@ -523,11 +531,16 @@ void GeometryViewer::UpdateMatrix() {
 	case PERSPECTIVE_PROJ:
 	{
 		Vector3d camPos = org + view.camOffset;
+
+		glLoadMatrixf(glm::value_ptr(view.modelMatrix));
+
 		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
 		break;
 	}
 	case ORTHOGRAPHIC_PROJ:
-		glLoadIdentity();
+		//glLoadIdentity();
+		glLoadMatrixf(glm::value_ptr(view.modelMatrix));
+
 		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);
 
 		glRotated(ToDeg(view.camAngleOx), 1.0, 0.0, 0.0);
@@ -1861,38 +1874,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 							double deltaX = -diffY * angleStep * factor;
 							double deltaY = -diffX * angleStep * factor * handedness;
 
-							
-							auto viewMatrix = glm::make_mat4(matView);
-							glm::mat4 worldToCameraMatrix = glm::inverse(viewMatrix);
-							glm::vec3 cameraPosition = glm::vec3(worldToCameraMatrix[3]); // extract translation component
-							// View center of the model
-							glm::vec3 viewCenter = glm::vec3((float)view.camOffset.x, (float)view.camOffset.y, (float)view.camOffset.z);
+							auto transl = glm::translate(glm::mat4(1.0f),-rotationCenter);
+							auto rotX = glm::rotate(glm::mat4(1.0f),(float)deltaX,glm::vec3(1.0f,0.0f,0.0f));
+							auto rotY = glm::rotate(glm::mat4(1.0f),(float)deltaY,glm::vec3(0.0f,1.0f,0.0f));
+							auto inv_transl = glm::translate(glm::mat4(1.0f),rotationCenter);
 
-							// Calculate camera position relative to the rotation point
-							glm::vec3 relativePos = cameraPosition - rotationCenter;
-							float camDistance = glm::length(cameraPosition - viewCenter);
-
-							glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -rotationCenter);
-
-							// Rotate the model based on the camera angles
-							glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), (float)deltaX, glm::vec3(1.0f, 0.0f, 0.0f));
-							rotationMatrix = glm::rotate(rotationMatrix, (float)deltaY, glm::vec3(0.0f, 1.0f, 0.0f));
-
-							// Apply the translation to move the world coordinate back to its original position
-							glm::mat4 inverseTranslationMatrix = glm::translate(glm::mat4(1.0f), rotationCenter);
-
-							glm::mat4 modelviewMatrix = inverseTranslationMatrix * rotationMatrix * translationMatrix * viewMatrix;
-
-							// Calculate the new camera position and view center based on the modelview matrix
-							glm::vec3 cameraPos = glm::vec3(modelviewMatrix[3]);
-							glm::vec3 viewVector = glm::column(modelviewMatrix, 2);
-							viewCenter = cameraPos + (camDistance * viewVector);
-
-
-							view.camOffset = Vector3d(viewCenter.x, viewCenter.y, viewCenter.z);
-
-							view.camAngleOx +=deltaX;
-							view.camAngleOy +=deltaY;
+							view.modelMatrix = inv_transl * rotY * rotX * transl * view.modelMatrix;
 						}
 					}
 				}

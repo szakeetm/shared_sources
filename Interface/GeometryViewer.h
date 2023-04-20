@@ -97,6 +97,8 @@ typedef struct {
   double   vTop;       // Viewport in 2D proj space (used for orthographic autoscaling)
   double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
+  glm::mat4 modelMatrix;
+
 } AVIEW;
 
 typedef struct {
