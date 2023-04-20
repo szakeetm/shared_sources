@@ -278,11 +278,11 @@ void UpdateWarningDialog::ProcessMessage(GLComponent *src, int message) {
     switch (message) {
         case MSG_BUTTON:
             if (src == yesButton) {
-                updater->AllowFurtherWarnings(false);
+                updater->AllowFurtherWarnings(true);
                 SetVisible(false);
             }
             else if (src == noButton) {
-                updater->AllowFurtherWarnings(true);
+                updater->AllowFurtherWarnings(false);
                 SetVisible(false);
             }
             break;
