@@ -530,9 +530,10 @@ void GeometryViewer::UpdateMatrix() {
 	switch (view.projMode) {
 	case PERSPECTIVE_PROJ:
 	{
-		Vector3d camPos = org + view.camOffset;
+		auto camTarget = /*org +*/ view.camOffset;
+		auto eyePos = -1.0 * camDir * view.camDist + camTarget;
 
-		GLToolkit::LookAt(camDir * view.camDist + camPos, camPos, camUp, handedness);
+		GLToolkit::LookAt(eyePos, camTarget, camUp, handedness);
 		break;
 	}
 	case ORTHOGRAPHIC_PROJ:
@@ -540,19 +541,23 @@ void GeometryViewer::UpdateMatrix() {
 
 		glScaled(-handedness * view.camDist, -view.camDist, -view.camDist);
 
-		glRotated(ToDeg(view.camAngleOx), 1.0, 0.0, 0.0);
-		glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
-		glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
+		//glRotated(ToDeg(view.camAngleOx), 1.0, 0.0, 0.0);
+		//glRotated(ToDeg(view.camAngleOy), 0.0, 1.0, 0.0);
+		//glRotated(ToDeg(view.camAngleOz), 0.0, 0.0, 1.0);
 
-		glTranslated(-(org.x + view.camOffset.x), -(org.y + view.camOffset.y), -(org.z + view.camOffset.z));
+		auto transl = view.camOffset;
+
+		glTranslated(-transl.x, -transl.y, -transl.z);
 		break;
 	}
 
 	glGetFloatv(GL_MODELVIEW_MATRIX, matView);
 	auto viewMatrix = glm::make_mat4(matView);
 	auto mvm = viewMatrix * view.modelMatrix;
+	auto org_mvm=glm::vec3((float)org.x,(float)org.y,(float)org.z);
 	glLoadMatrixf(glm::value_ptr(mvm));
 	glGetFloatv(GL_MODELVIEW_MATRIX, matView);
+
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
 	ComputeBB(/*true*/);
 
@@ -1871,6 +1876,10 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 							double deltaX = -diffY * angleStep * factor;
 							double deltaY = -diffX * angleStep * factor * handedness;
+
+							view.camAngleOx += diffY * angleStep*factor;
+							view.camAngleOy -= diffX * angleStep*factor*handedness;
+
 							/*
 							auto org = work->GetGeometry()->GetCenter();
 							auto org_glm = glm::vec3((float)org.x,(float)org.y,(float)org.z));
@@ -1878,12 +1887,14 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 							*/
 						auto vect = rotationCenter;
 
+							view.modelMatrix = glm::mat4(1.0f);
+
 							auto transl = glm::translate(glm::mat4(1.0f),-vect);
-							auto rotX = glm::rotate(glm::mat4(1.0f),(float)deltaX,glm::vec3(1.0f,0.0f,0.0f));
-							auto rotY = glm::rotate(glm::mat4(1.0f),(float)deltaY,glm::vec3(0.0f,1.0f,0.0f));
+							auto rotX = glm::rotate(glm::mat4(1.0f),(float)view.camAngleOx,glm::vec3(1.0f,0.0f,0.0f));
+							auto rotY = glm::rotate(glm::mat4(1.0f),(float)view.camAngleOy,glm::vec3(0.0f,1.0f,0.0f));
 							auto inv_transl = glm::translate(glm::mat4(1.0f),vect);
 
-							view.modelMatrix = inv_transl * rotY * rotX * transl * view.modelMatrix;
+							view.modelMatrix = inv_transl *  rotY * rotX * transl * view.modelMatrix;
 						}
 					}
 				}
