@@ -4,7 +4,6 @@
 #include "GLFont.h"
 #include "GLApp.h"
 #include "GLWindow.h"
-#include "GLMatrix.h"
 #include "GLSprite.h"
 //#include "File.h"
 #include <math.h>
@@ -863,6 +862,17 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
 
   return std::tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
   (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f) );
+
+}
+
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& m, const GLVIEWPORT& g) {
+
+    float rx, ry, rz, rw;
+    m.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
+    if (rw <= 0.0f) return std::nullopt;
+
+    return std::tuple((int)(((rx / rw) + 1.0f) * (float)g.width / 2.0f),
+        (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f));
 
 }
 

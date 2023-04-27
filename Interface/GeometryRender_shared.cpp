@@ -153,24 +153,42 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 
 void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
 
-	int i;
+
 	if (!isLoaded) return;
 
 	// Select a facet on a mouse click in 3D perspectivce view 
 	// (x,y) are in screen coordinates
 	// TODO: Handle clipped polygon
 
-	// Check intersection of the facet and a "perspective ray"
+// Check intersection of the facet and a "perspective ray"
 	std::vector<int> screenXCoords(sh.nbVertex);
 	std::vector<int> screenYCoords(sh.nbVertex);
 
 	// Transform points to screen coordinates
 	std::vector<bool> ok(sh.nbVertex);
 	std::vector<bool> onScreen(sh.nbVertex);
-	for (i = 0; i < sh.nbVertex; i++) {//here we could speed up by choosing visible vertices only?
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord(vertices3[i])) {
+
+	GLfloat mProj[16];
+	GLfloat mView[16];
+	GLVIEWPORT g;
+
+	// Compute location on screen
+	glGetFloatv(GL_PROJECTION_MATRIX, mProj);
+	glGetFloatv(GL_MODELVIEW_MATRIX, mView);
+	glGetIntegerv(GL_VIEWPORT, (GLint*)&g);
+
+	GLMatrix proj; proj.LoadGL(mProj);
+	GLMatrix view; view.LoadGL(mView);
+	GLMatrix m; m.Multiply(&proj, &view);
+
+#pragma omp parallel for
+	for (int i = 0; i < sh.nbVertex; i++) {
+		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,g);
+		if (screenCoords) {
 			ok[i] = true;
-			std::tie(screenXCoords[i],screenYCoords[i]) = *screenCoords;
+			auto [x,y] = *screenCoords;
+			screenXCoords[i] = x;
+			screenYCoords[i] = y;
 			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
 		}
 		else {
@@ -179,12 +197,14 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 		}
 	}
 
+
+
 	// Check facets
 	bool found = false;
 	bool clipped;
 	bool hasVertexOnScreen;
 	bool hasSelectedVertex;
-	i = 0;
+	int i = 0;
 	char tmp[256];
 	int lastFound = -1;
 	int lastPaintedProgress = -1;

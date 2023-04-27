@@ -24,7 +24,7 @@ public:
   void Multiply(GLMatrix *m1,GLMatrix *m2);
   void Multiply(GLMatrix *m2);
 
-  void TransformVec(float x,float y,float z,float w,float *rx,float *ry,float *rz,float *rw);
+  void TransformVec(float x,float y,float z,float w,float *rx,float *ry,float *rz,float *rw) const;
 
   GLfloat *GetGL();
   void LoadGL(GLfloat *m);

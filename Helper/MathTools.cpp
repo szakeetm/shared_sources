@@ -577,7 +577,7 @@ PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, con
     //double u, v, n;
 
     // Polar in (nU,nV,N) to Cartesian(x,y,z) transformation  ( nU = U/|U| , nV = V/|V| )
-    // tetha is the angle to the normal of the facet N, phi to U
+    // theta is the angle to the normal of the facet N, phi to U
     // ! See Geometry::InitializeGeometry() for further informations on the (U,V,N) basis !
     // (nU,nV,N) and (x,y,z) are both left handed
 

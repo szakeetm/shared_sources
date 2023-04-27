@@ -84,7 +84,7 @@ void GLMatrix::Multiply(GLMatrix *m1,GLMatrix *m2) {
   
 }
 
-void GLMatrix::TransformVec(float x,float y,float z,float w,float *rx,float *ry,float *rz,float *rw) {
+void GLMatrix::TransformVec(float x,float y,float z,float w,float *rx,float *ry,float *rz,float *rw) const {
 
   *rx = x * _11 + y * _12 + z * _13 + w * _14;
   *ry = x * _21 + y * _22 + z * _23 + w * _24;

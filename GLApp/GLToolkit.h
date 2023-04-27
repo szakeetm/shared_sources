@@ -9,6 +9,7 @@
 #include <tuple>
 #include "GLTypes.h"
 #include "GLFont.h"
+#include "GLMatrix.h"
 #include "Vector.h"
 //class GLFont2D;
 
@@ -55,6 +56,7 @@ public:
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
   static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
+  static std::optional<std::tuple<int, int>> Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& m, const GLVIEWPORT& g);
   static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z); //unused
