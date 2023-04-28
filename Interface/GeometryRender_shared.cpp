@@ -79,7 +79,9 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
+	GLMatrix view,proj,mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
 	if (clear && !unselect) UnselectAll();
 	selectHist.clear();
@@ -90,7 +92,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	std::vector<std::pair<int, int>> screenCoords(vertices3.size());
 #pragma omp parallel for
 	for (int i = 0; i < vertices3.size(); i++) {
-		auto c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		int xe = -1, ye = -1;
 		if (c) {
 			std::tie(xe, ye) = *c;
@@ -171,14 +173,16 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 	std::vector<bool> ok(sh.nbVertex);
 	std::vector<bool> onScreen(sh.nbVertex);
 
-	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
+	GLMatrix view,proj,mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (screenCoords) {
+		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		if (c) {
 			ok[i] = true;
-			auto [x, y] = *screenCoords;
+			auto [x, y] = *c;
 			screenXCoords[i] = x;
 			screenYCoords[i] = y;
 			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
@@ -206,7 +210,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			int lastFound_local=-1;
 #pragma omp for
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (found) break; //this or an other thread have found a valid facet
+			if (found) continue; //this or an other thread have found a valid facet
 
 			/*
 			if (sh.nbFacet > 5000) {
@@ -387,7 +391,9 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
+	GLMatrix view,proj,mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();
@@ -411,10 +417,10 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 				int idx = i;
 
 				int xe, ye;
-				auto coords = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
-				if (coords)
+				std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		if (c)
 				{
-					std::tie(xe, ye) = *coords;
+					std::tie(xe, ye) = *c;
 
 					if (!circularSelection)
 						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
@@ -459,15 +465,19 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
+	GLMatrix view,proj,mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
 	// Transform points to screen coordinates
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort)) {
+		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		
+		if (c) {
 			ok[i] = true;
-			std::tie(allXe[i], allYe[i]) = *screenCoords;
+			std::tie(allXe[i], allYe[i]) = *c;
 		}
 		else {
 			ok[i] = false;
