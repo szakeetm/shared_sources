@@ -249,6 +249,8 @@ public:
 protected:
 	void AddToSelectionHist(size_t f);
 	bool AlreadySelected(size_t f);
+	std::optional<size_t> GetLastSelected();
+	std::optional<size_t> GetFirstSelected();
 	void DrawFacetWireframe(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines);
 	void FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
@@ -272,6 +274,7 @@ public:
 	void RemoveFromSelectedVertexList(size_t vertexId);
 	void SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection);
 	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
+	void TreatNewSelection(int lastFound, bool unselect);
 	void SelectFacet(size_t facetId);
 	void SelectAllVertex();
 	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound);
@@ -314,7 +317,7 @@ protected:
 	
 
 	// Rendering/Selection stuff
-	std::unordered_set<size_t> selectHist;
+	std::vector<size_t> selectHist;
 
 	std::vector<size_t> selectedVertexList_ordered; //Vertex selection history, used for creating ordered polygon
 	std::map<int,GLColor> plottedFacets;

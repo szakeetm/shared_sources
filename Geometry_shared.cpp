@@ -2115,9 +2115,10 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 std::vector<size_t> Geometry::GetSelectedFacets() {
 	std::vector<size_t> selection;
 	selection.reserve(facets.size());
-#pragma omp parallel default(none)  shared(selection)
+#pragma omp parallel
     {
         std::vector<size_t> selection_local;
+		selection_local.reserve(facets.size());
 #pragma omp for
         for (int i = 0; i < facets.size(); i++) {
             if (facets[i]->selected)

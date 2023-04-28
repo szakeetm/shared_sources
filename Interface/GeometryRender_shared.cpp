@@ -87,51 +87,15 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	char tmp[256];
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
-	//See which vertices to check
-	std::vector<size_t> vertexIds_vect;
-	{
-		std::unordered_set<size_t> vertexIds;
-
-#pragma omp parallel
-		{
-			std::unordered_set<size_t> vertexIds_local;
-#pragma omp for
-			for (int i = 0; i < sh.nbFacet; i++) {
-
-				InterfaceFacet* f = facets[i];
-				if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
-
-					for (auto j : f->indices) {
-						vertexIds_local.insert(j);
-					}
-				}
-			}
-#pragma omp critical
-			vertexIds.insert(vertexIds_local.begin(), vertexIds_local.end());
+	std::vector<std::pair<int, int>> screenCoords(vertices3.size());
+#pragma omp parallel for
+	for (int i = 0; i < vertices3.size(); i++) {
+		auto c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		int xe = -1, ye = -1;
+		if (c) {
+			std::tie(xe, ye) = *c;
 		}
-		//convert unordered set to vector for OpenMP parallel for
-		vertexIds_vect.reserve(vertexIds.size());
-		for (auto id : vertexIds) vertexIds_vect.push_back(id);
-	}
-
-	//Calculate their screen coords
-	std::unordered_map<size_t, std::pair<int, int>> screenCoords; //2d vertex coords of vertices in facetIds
-#pragma omp parallel
-	{
-		std::unordered_map<size_t, std::pair<int, int>> screenCoords_local; //2d vertex coords of vertices in facetIds
-
-#pragma omp for
-		for (int i = 0; i < vertexIds_vect.size(); i++) {
-			size_t id = vertexIds_vect[i];
-			auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[id], mvp, viewPort);
-			int xe = -1, ye = -1;
-			if (screenCoords) {
-				std::tie(xe, ye) = *screenCoords;
-			}
-			screenCoords_local[id] = std::make_pair(xe, ye);
-		}
-#pragma omp critical
-		screenCoords.insert(screenCoords_local.begin(), screenCoords_local.end());
+		screenCoords[i] = std::make_pair(xe, ye);
 	}
 
 	//Check facets if all vertices inside
@@ -225,123 +189,177 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 		}
 	}
 
-
-
 	// Check facets
 	bool found = false;
 	bool clipped;
 	bool hasVertexOnScreen;
 	bool hasSelectedVertex;
-	int i = 0;
 	char tmp[256];
 	int lastFound = -1;
 	int lastPaintedProgress = -1;
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
+	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
+	bool assigned=false;
+#pragma omp parallel
+	{
+			bool found_local=false;
+			int lastFound_local=-1;
+#pragma omp for
+		for (int i = 0; i < sh.nbFacet; i++) {
+			if (found) break; //this or an other thread have found a valid facet
 
-	while (i < sh.nbFacet && !found) {
-		if (sh.nbFacet > 5000) {
-			if ((i - lastPaintedProgress) > paintStep) {
-				lastPaintedProgress = i;;
-				sprintf(tmp, "Facet search: %d%%", (int)(i * 100.0 / (double)sh.nbFacet));
-				mApp->SetFacetSearchPrg(true, tmp);
+			/*
+			if (sh.nbFacet > 5000) {
+				if ((i - lastPaintedProgress) > paintStep) {
+					lastPaintedProgress = i;;
+					sprintf(tmp, "Facet search: %d%%", (int)(i * 100.0 / (double)sh.nbFacet));
+					mApp->SetFacetSearchPrg(true, tmp);
+				}
+			}
+			*/
+			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
+
+				clipped = false;
+				hasVertexOnScreen = false;
+				hasSelectedVertex = false;
+				// Build array of 2D points
+				std::vector<Vector2d> v(facets[i]->indices.size());
+
+				for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
+					size_t idx = facets[i]->indices[j];
+					if (ok[idx]) {
+						v[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
+						if (onScreen[idx]) hasVertexOnScreen = true;
+					}
+					else {
+						clipped = true;
+					}
+				}
+				if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
+					for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
+						size_t idx = facets[i]->indices[j];
+						if (vertices3[idx].selected) hasSelectedVertex = true;
+					}
+				}
+
+				if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex) && (unselect || !facets[i]->selected)) {
+
+					found_local = IsInPoly((double)x, (double)y, v);
+					if (found_local) {
+						
+						if (unselect) {
+							if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+								facets[i]->selected = false;
+								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
+							}
+							else { //Smart selection
+								double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+								std::vector<size_t> connectedFacets;
+								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
+								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
+								for (auto& ind : connectedFacets)
+									facets[ind]->selected = false;
+								//mApp->SetFacetSearchPrg(false, "");
+							}
+						} //end unselect
+						
+						lastFound_local = i;
+						if (AlreadySelected(i)) {
+							found_local = false; //Continue looking for facets
+						}
+					} //end found
+					if (found_local) { //found a facet not yet in the selection history, valid
+#pragma omp critical
+						{
+							found = true; //set global found flag to true, all threads will stop
+						}
+					}
+				}
 			}
 		}
-		if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
-
-			clipped = false;
-			hasVertexOnScreen = false;
-			hasSelectedVertex = false;
-			// Build array of 2D points
-			std::vector<Vector2d> v(facets[i]->indices.size());
-
-			for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
-				size_t idx = facets[i]->indices[j];
-				if (ok[idx]) {
-					v[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
-					if (onScreen[idx]) hasVertexOnScreen = true;
+#pragma omp critical
+		if (!assigned) {
+			//fmt::print("Thread{} found_local={} lastFound_local={}", omp_get_thread_num(), found_local, lastFound_local);
+			if (found) { //There was at least one facet found not yet in the seletion history
+				if (found_local) {
+					lastFound = lastFound_local; //If this thread was one of those that found, assign it to global
+					assigned = true; //Don't process other threads
+					//fmt::print(" assign\n");
 				}
 				else {
-					clipped = true;
+					//fmt::print(" skip\n");
 				}
 			}
-			if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
-				for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
-					size_t idx = facets[i]->indices[j];
-					if (vertices3[idx].selected) hasSelectedVertex = true;
+			else { //No threads found new facet
+				if (lastFound_local != -1) { //This thread has a facet already in the selection history
+					foundInSelectionHistory.insert(lastFound_local); //we'll process later
+					//fmt::print(" add\n");
+				}
+				else {
+					//fmt::print(" skip\n");
 				}
 			}
-
-			if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex)) {
-
-				found = IsInPoly((double)x, (double)y, v);
-
-				if (found) {
-					if (unselect) {
-						if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
-							facets[i]->selected = false;
-							found = false; //Continue looking for facets
-						}
-						else { //Smart selection
-							double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-							std::vector<size_t> connectedFacets;
-							mApp->SetFacetSearchPrg(true, "Smart selecting...");
-							if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-							for (auto& ind : connectedFacets)
-								facets[ind]->selected = false;
-							mApp->SetFacetSearchPrg(false, "");
-						}
-					} //end unselect
-
-					if (AlreadySelected(i)) {
-
-						lastFound = i;
-						found = false; //Continue looking for facets
-
-					}
-				} //end found
-
-			}
-
+			
 		}
-
-		if (!found) i++;
-
 	}
+
 	mApp->SetFacetSearchPrg(false, "");
 	if (clear && !unselect) UnselectAll();
 
-	if (!found && lastFound >= 0) {
-		if (!unselect) {
-			// Restart
-			selectHist = { (size_t)lastFound };
-		}
-		facets[lastFound]->selected = !unselect;
-		if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
-	}
-	else {
-
-		if (found) {
-			if (!unselect) AddToSelectionHist(i);
-			if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
-				facets[i]->selected = !unselect;
+	if (!found && foundInSelectionHistory.size()>0) { //found one that was already selected previously
+		size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
+		if (!unselect) { //select
+			for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
+				if (foundInSelectionHistory.count(selectHist[s])) {
+					lastIndex = selectHist[s];
+					break;
+				}
 			}
-			else { //Smart selection
-				double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-				std::vector<size_t> connectedFacets;
-				mApp->SetFacetSearchPrg(true, "Smart selecting...");
-				if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-				for (auto& ind : connectedFacets)
-					facets[ind]->selected = !unselect;
-				mApp->SetFacetSearchPrg(false, "");
+			selectHist = { (size_t)lastIndex }; //reset
+			TreatNewSelection(lastIndex, unselect);
+		}
+		/*
+		else { //unselect last selected facet
+			for (int s = selectHist.size()-1; s >=0; s--) { //find the newest in the history that's under our pointer
+				if (foundInSelectionHistory.count(selectHist[s]) && facets[selectHist[s]]->selected) {
+					lastIndex = selectHist[s];
+					break;
+				}
 			}
-			if (!unselect) mApp->facetList->ScrollToVisible(i, 0, true); //scroll to selected facet
-		}
-		else {
-			selectHist.clear();
-		}
+		}*/
+		
+		
 	}
+	else if (found) {
+		if (!unselect) AddToSelectionHist(lastFound);
+		TreatNewSelection(lastFound, unselect);
+	}
+	else { //not found at all
+		selectHist.clear();
+	}
+	
+	//fmt::print("Found:{} Lastfound:{} Selection history:", found, lastFound);
+	//for (auto i : selectHist) fmt::print("{} ", i);
+	//fmt::print("\n\n");
 	UpdateSelection();
 
+}
+
+void Geometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
+{
+	if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+		facets[lastFound]->selected = !unselect;
+	}
+	else { //Smart selection
+		double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+		std::vector<size_t> connectedFacets;
+		mApp->SetFacetSearchPrg(true, "Smart selecting...");
+		if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(lastFound, maxAngleDiff);
+		for (auto& ind : connectedFacets)
+			facets[ind]->selected = !unselect;
+		mApp->SetFacetSearchPrg(false, "");
+	}
+	if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
 }
 
 void Geometry::SelectVertex(int vertexId) {
@@ -507,11 +525,23 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 }
 
 void Geometry::AddToSelectionHist(size_t f) {
-	selectHist.insert(f);
+	selectHist.push_back(f);
 }
 
 bool Geometry::AlreadySelected(size_t f) {
-	return selectHist.find(f) != selectHist.end();
+	return std::find(selectHist.begin(), selectHist.end(), f) != selectHist.end();
+}
+
+std::optional<size_t> Geometry::GetLastSelected()
+{
+	if (selectHist.empty()) return false;
+	else return selectHist.back();
+}
+
+std::optional<size_t> Geometry::GetFirstSelected()
+{
+	if (selectHist.empty()) return false;
+	else return selectHist.front();
 }
 
 void Geometry::SelectAll() {
@@ -533,6 +563,7 @@ void Geometry::AddToSelectedVertexList(size_t vertexId) {
 }
 
 void Geometry::SelectAllVertex() {
+#pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++)
 		SelectVertex(i);
 	//UpdateSelectionVertex();
@@ -547,6 +578,7 @@ size_t Geometry::GetNbSelectedVertex() {
 }
 
 void Geometry::UnselectAll() {
+#pragma omp parallel for
 	for (int i = 0; i < sh.nbFacet; i++) {
 		facets[i]->selected = false;
 		facets[i]->UnselectElem();
@@ -555,6 +587,7 @@ void Geometry::UnselectAll() {
 }
 
 void Geometry::UnselectAllVertex() {
+#pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		vertices3[i].selected = false;
 		//facets[i]->UnselectElem(); //what is this?
