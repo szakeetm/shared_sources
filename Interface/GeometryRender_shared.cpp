@@ -92,7 +92,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	std::vector<std::pair<int, int>> screenCoords(vertices3.size());
 #pragma omp parallel for
 	for (int i = 0; i < vertices3.size(); i++) {
-		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		int xe = -1, ye = -1;
 		if (c) {
 			std::tie(xe, ye) = *c;
@@ -179,7 +179,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (c) {
 			ok[i] = true;
 			auto [x, y] = *c;
@@ -417,7 +417,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 				int idx = i;
 
 				int xe, ye;
-				std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+				std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (c)
 				{
 					std::tie(xe, ye) = *c;
@@ -473,7 +473,7 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-		std::optional<std::pair<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		
 		if (c) {
 			ok[i] = true;

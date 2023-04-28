@@ -709,12 +709,15 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
 
-	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
+	GLMatrix view, proj, mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
 	for (int i = 0; i < sh.nbVertex; i++) {
 		Vector3d *v = GetVertex(i);
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(*v,mvp,viewPort)) { //To improve
-			auto[outX, outY] = *screenCoords;
+		std::optional<std::tuple<int, int>> c = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
+		if (c) { //To improve
+			auto[outX, outY] = *c;
 			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
 				distance = std::abs(A*v->x + B * v->y + C * v->z + D);
 				if (distance < tolerance) { //vertex is on the plane
