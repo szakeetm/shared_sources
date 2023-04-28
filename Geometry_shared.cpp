@@ -709,11 +709,11 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
 
-	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
+	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
 
 	for (int i = 0; i < sh.nbVertex; i++) {
 		Vector3d *v = GetVertex(i);
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(*v,m,viewPort)) { //To improve
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(*v,mvp,viewPort)) { //To improve
 			auto[outX, outY] = *screenCoords;
 			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
 				distance = std::abs(A*v->x + B * v->y + C * v->z + D);

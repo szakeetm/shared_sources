@@ -47,16 +47,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 #if defined(MOLFLOW)
-extern MolFlow *mApp;
+extern MolFlow* mApp;
 #endif
 
 #if defined(SYNRAD)
-extern SynRad*mApp;
+extern SynRad* mApp;
 #endif
 
 void Geometry::SelectFacet(size_t facetId) {
 	if (!isLoaded) return;
-	InterfaceFacet *f = facets[facetId];
+	InterfaceFacet* f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
 	if (!f->selected) f->UnselectElem();
 	selectHist = { facetId }; //reset with only this facet id
@@ -67,7 +67,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
 
-	float rx, ry, rz, rw, r2;
+	float r2;
 	int _x1, _y1, _x2, _y2;
 
 	_x1 = Min(x1, x2);
@@ -79,17 +79,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLfloat mProj[16];
-	GLfloat mView[16];
-	GLVIEWPORT g;
-
-	glGetFloatv(GL_PROJECTION_MATRIX, mProj);
-	glGetFloatv(GL_MODELVIEW_MATRIX, mView);
-	glGetIntegerv(GL_VIEWPORT, (GLint *)&g);
-
-	GLMatrix proj; proj.LoadGL(mProj);
-	GLMatrix view; view.LoadGL(mView);
-	GLMatrix m; m.Multiply(&proj, &view);
+	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
 
 	if (clear && !unselect) UnselectAll();
 	selectHist.clear();
@@ -97,57 +87,106 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	char tmp[256];
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
-	for (int i = 0; i < sh.nbFacet; i++) {
-		if (sh.nbFacet > 5000) {
-			if ((i - lastPaintedProgress) > paintStep) {
-				lastPaintedProgress = i;;
-				sprintf(tmp, "Facet search: %d%%", (int)(i*100.0 / (double)sh.nbFacet));
-				mApp->SetFacetSearchPrg(true, tmp);
+	//See which vertices to check
+	std::vector<size_t> vertexIds_vect;
+	{
+		std::unordered_set<size_t> vertexIds;
+
+#pragma omp parallel
+		{
+			std::unordered_set<size_t> vertexIds_local;
+#pragma omp for
+			for (int i = 0; i < sh.nbFacet; i++) {
+
+				InterfaceFacet* f = facets[i];
+				if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
+
+					for (auto j : f->indices) {
+						vertexIds_local.insert(j);
+					}
+				}
 			}
+#pragma omp critical
+			vertexIds.insert(vertexIds_local.begin(), vertexIds_local.end());
 		}
-		InterfaceFacet *f = facets[i];
-		if (viewStruct == -1 || f->sh.superIdx == viewStruct || f->sh.superIdx == -1) {
+		//convert unordered set to vector for OpenMP parallel for
+		vertexIds_vect.reserve(vertexIds.size());
+		for (auto id : vertexIds) vertexIds_vect.push_back(id);
+	}
 
-			size_t nb = facets[i]->sh.nbIndex;
-			bool isInside = true;
-			size_t j = 0;
-			bool hasSelectedVertex = false;
-			while (j < nb && isInside) {
+	//Calculate their screen coords
+	std::unordered_map<size_t, std::pair<int, int>> screenCoords; //2d vertex coords of vertices in facetIds
+#pragma omp parallel
+	{
+		std::unordered_map<size_t, std::pair<int, int>> screenCoords_local; //2d vertex coords of vertices in facetIds
 
-				size_t idx = f->indices[j];
-				m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
-					&rx, &ry, &rz, &rw);
+#pragma omp for
+		for (int i = 0; i < vertexIds_vect.size(); i++) {
+			size_t id = vertexIds_vect[i];
+			auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[id], mvp, viewPort);
+			int xe = -1, ye = -1;
+			if (screenCoords) {
+				std::tie(xe, ye) = *screenCoords;
+			}
+			screenCoords_local[id] = std::make_pair(xe, ye);
+		}
+#pragma omp critical
+		screenCoords.insert(screenCoords_local.begin(), screenCoords_local.end());
+	}
 
-				if (rw > 0.0f) {
-					int xe = (int)(((rx / rw) + 1.0f) * (float)g.width / 2.0f);
-					int ye = (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f);
-					if (!circularSelection)
+	//Check facets if all vertices inside
+	std::vector<size_t> facetIds_vect;
+	{
+		std::unordered_set<size_t> facetIds; //vertices of facets in current struct
+#pragma omp parallel
+		{
+			std::unordered_set<size_t> facetIds_local;
+#pragma omp for
+			for (int i = 0; i < sh.nbFacet; i++) {
+
+				InterfaceFacet* f = facets[i];
+				size_t nb = f->sh.nbIndex;
+				bool isInside = true;
+				size_t j = 0;
+				bool hasSelectedVertex = false;
+				while (j < nb && isInside) {
+					size_t idx = f->indices[j];
+					int xe = screenCoords[idx].first;
+					int ye = screenCoords[idx].second;
+					if (!circularSelection) {
 						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
-					else //circular selection
+					}
+					else { //circular selection
 						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
+					}
 					if (vertices3[idx].selected) hasSelectedVertex = true;
+					j++;
 				}
-				else {
-
-					isInside = false;
+				if (isInside && (!vertexBound || hasSelectedVertex)) {
+					facetIds_local.insert(i);
 				}
-				j++;
 
 			}
+#pragma omp critical
+			facetIds.insert(facetIds_local.begin(), facetIds_local.end());
+		}
+		//Convert unordered set to vector for OpenMP parallel for
+		facetIds_vect.reserve(facetIds.size());
+		for (auto id : facetIds) facetIds_vect.push_back(id);
+	}
 
-			if (isInside && (!vertexBound || hasSelectedVertex)) {
-				if (!unselect) {
-					f->selected = !unselect;
-				}
-				else {
-
-					f->selected = !unselect;
-				}
-			}
-
+	//Process found facets
+#pragma omp parallel for
+	for (int id = 0; id < facetIds_vect.size();id++) {
+		size_t i = facetIds_vect[id];
+		if (!unselect) {
+			facets[i]->selected = !unselect;
+		}
+		else {
+			facets[i]->selected = !unselect;
 		}
 	}
-	mApp->SetFacetSearchPrg(false, NULL);
+	mApp->SetFacetSearchPrg(false, "");
 	UpdateSelection();
 }
 
@@ -168,14 +207,14 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 	std::vector<bool> ok(sh.nbVertex);
 	std::vector<bool> onScreen(sh.nbVertex);
 
-	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
+	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m, viewPort);
+		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (screenCoords) {
 			ok[i] = true;
-			auto [x,y] = *screenCoords;
+			auto [x, y] = *screenCoords;
 			screenXCoords[i] = x;
 			screenYCoords[i] = y;
 			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
@@ -203,7 +242,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 		if (sh.nbFacet > 5000) {
 			if ((i - lastPaintedProgress) > paintStep) {
 				lastPaintedProgress = i;;
-				sprintf(tmp, "Facet search: %d%%", (int)(i*100.0 / (double)sh.nbFacet));
+				sprintf(tmp, "Facet search: %d%%", (int)(i * 100.0 / (double)sh.nbFacet));
 				mApp->SetFacetSearchPrg(true, tmp);
 			}
 		}
@@ -218,7 +257,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 			for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
 				size_t idx = facets[i]->indices[j];
 				if (ok[idx]) {
-					v[j] = Vector2d((double)screenXCoords[idx],(double)screenYCoords[idx]);
+					v[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
 					if (onScreen[idx]) hasVertexOnScreen = true;
 				}
 				else {
@@ -234,7 +273,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 			if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex)) {
 
-				found = IsInPoly((double)x,(double)y, v);
+				found = IsInPoly((double)x, (double)y, v);
 
 				if (found) {
 					if (unselect) {
@@ -330,7 +369,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
+	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();
@@ -345,7 +384,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	{
 #pragma omp for
 		for (int i = 0; i < sh.nbVertex; i++) {
-			if (facetBound && selectedFacetsVertices.count(i)==0) continue; //doesn't belong to selected facet
+			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			Vector3d* v = GetVertex(i);
 			//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
 			if (true) {
@@ -354,7 +393,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 				int idx = i;
 
 				int xe, ye;
-				auto coords = GLToolkit::Get2DScreenCoord_fast(*v, m, viewPort);
+				auto coords = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
 				if (coords)
 				{
 					std::tie(xe, ye) = *coords;
@@ -387,7 +426,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 }
 
 void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
-	
+
 	if (!isLoaded) return;
 
 	// Select a vertex on a mouse click in 3D perspectivce view 
@@ -402,13 +441,13 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
+	auto [view, proj, mvp, viewPort] = GLToolkit::GetCurrentMatrices();
 
 	// Transform points to screen coordinates
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && selectedFacetsVertices.count(i)==0) continue; //doesn't belong to selected facet
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,viewPort)) {
+		if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort)) {
 			ok[i] = true;
 			std::tie(allXe[i], allYe[i]) = *screenCoords;
 		}
@@ -429,7 +468,7 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 #pragma omp for
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-			if (ok[i] && allXe[i] >= 0 && allXe[i] < width && allYe[i] >= 0 && allYe[i]<height) { //calculate only for points on screen
+			if (ok[i] && allXe[i] >= 0 && allXe[i] < width && allYe[i] >= 0 && allYe[i] < height) { //calculate only for points on screen
 				double distanceSqr = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
 				if (distanceSqr < minDist_local) {
 					minDist_local = distanceSqr;
@@ -472,7 +511,7 @@ void Geometry::AddToSelectionHist(size_t f) {
 }
 
 bool Geometry::AlreadySelected(size_t f) {
-	return selectHist.find(f)!=selectHist.end();
+	return selectHist.find(f) != selectHist.end();
 }
 
 void Geometry::SelectAll() {
@@ -531,7 +570,7 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-void Geometry::DrawFacetWireframe(InterfaceFacet *f, bool offset, bool showHidden, bool selOffset) {
+void Geometry::DrawFacetWireframe(InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -599,10 +638,10 @@ void Geometry::DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLu
 
 	// Render a facet (wireframe)
 	int nb = f->sh.nbIndex;
-	for (int j = 0; j < nb ; j++) {
+	for (int j = 0; j < nb; j++) {
 		if (f->visible[j]) {
 			lines.push_back((GLuint)f->indices[j]);
-			lines.push_back((GLuint)f->indices[(j + 1)%nb]);
+			lines.push_back((GLuint)f->indices[(j + 1) % nb]);
 		}
 	}
 }
@@ -643,7 +682,7 @@ void Geometry::DrawPolys() {
 	// Triangulate polygon
 	for (const auto& i : fp)
 	{
-		TriangulateForRender(facets[i], vertexCoords, normalCoords, textureCoords,  colorValues, currentColor, false);
+		TriangulateForRender(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
 	}
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -652,67 +691,67 @@ void Geometry::DrawPolys() {
 	glVertexPointer(3, GL_DOUBLE, 0, vertexCoords.data());
 	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
 
-	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
+	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size() / 3);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
-float Geometry::getMaxDistToCamera(InterfaceFacet* f){
+float Geometry::getMaxDistToCamera(InterfaceFacet* f) {
 
-    float rx, ry, rz, rw;
+	float rx, ry, rz, rw;
 
-    GLfloat mProj[16];
-    GLfloat mView[16];
-    GLVIEWPORT g;
+	GLfloat mProj[16];
+	GLfloat mView[16];
+	GLVIEWPORT g;
 
-    glGetFloatv(GL_PROJECTION_MATRIX, mProj);
-    glGetFloatv(GL_MODELVIEW_MATRIX, mView);
-    glGetIntegerv(GL_VIEWPORT, (GLint *)&g);
+	glGetFloatv(GL_PROJECTION_MATRIX, mProj);
+	glGetFloatv(GL_MODELVIEW_MATRIX, mView);
+	glGetIntegerv(GL_VIEWPORT, (GLint*)&g);
 
-    GLMatrix proj; proj.LoadGL(mProj);
-    GLMatrix view; view.LoadGL(mView);
-    GLMatrix m; m.Multiply(&proj, &view);
-    float distToCamera = -99999.99f;
+	GLMatrix proj; proj.LoadGL(mProj);
+	GLMatrix view; view.LoadGL(mView);
+	GLMatrix m; m.Multiply(&proj, &view);
+	float distToCamera = -99999.99f;
 
-    for(int i=0;i<f->sh.nbIndex;++i){
-        size_t idx = f->indices[i];
-        m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
-                      &rx, &ry, &rz, &rw);
-        distToCamera = std::max(rz,distToCamera);
-    }
-    return distToCamera;
+	for (int i = 0; i < f->sh.nbIndex; ++i) {
+		size_t idx = f->indices[i];
+		m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
+			&rx, &ry, &rz, &rw);
+		distToCamera = std::max(rz, distToCamera);
+	}
+	return distToCamera;
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
-int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs){
+int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs) {
 
-    if(getMaxDistToCamera(lhs) > getMaxDistToCamera(rhs)){
-        return 1;
-    }
-    else return 0;
+	if (getMaxDistToCamera(lhs) > getMaxDistToCamera(rhs)) {
+		return 1;
+	}
+	else return 0;
 
 }
-void Geometry::DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacets) {
+void Geometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacets) {
 
-    const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
-    // Draw
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
+	// Draw
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct ArrowToDraw {
 		Vector3d startPoint, endPoint, parallel;
-		std::array<float,4> color; //to pass components to glColor4f
+		std::array<float, 4> color; //to pass components to glColor4f
 	};
 	std::vector<ArrowToDraw> arrowsToDraw;
 	std::vector<double> vertexCoords, normalCoords;
-	std::vector<float> textureCoords,colorValues;
+	std::vector<float> textureCoords, colorValues;
 	GLCOLOR currentColor;
 
-    for (const auto& sel : selectedFacets) {
-        if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
-            auto it = colorHighlighting.find(sel);
-            // Check if element exists in map or not
+	for (const auto& sel : selectedFacets) {
+		if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+			auto it = colorHighlighting.find(sel);
+			// Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
 			ArrowToDraw arrow;
 			if (it != colorHighlighting.end()) {
@@ -725,42 +764,43 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacet
 				newColor.b = b;
 				newColor.a = .5f;
 				currentColor = newColor;
-				arrow.color = {r, g, b, 0.3f};
-            } else {
+				arrow.color = { r, g, b, 0.3f };
+			}
+			else {
 				GLCOLOR newColor;
 				newColor.r = 0.937f;
 				newColor.g = 0.957f;
 				newColor.b = 1.0f;
 				newColor.a = 0.08f;
-				currentColor = newColor; 
-				arrow.color = {0.937f,0.957f,1.0f, 0.08f};//metro light blue
-            }
+				currentColor = newColor;
+				arrow.color = { 0.937f,0.957f,1.0f, 0.08f };//metro light blue
+			}
 			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
 				Vector3d& center = facets[sel]->sh.center;
 				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
 				arrow.startPoint = center - .5 * dir;
-				arrow.endPoint = center + .5* dir;
+				arrow.endPoint = center + .5 * dir;
 				arrow.parallel = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
 				arrowsToDraw.push_back(arrow);
 			}
-        }
-        else{
+		}
+		else {
 			GLCOLOR newColor;
 			newColor.r = 0.933f;
 			newColor.g = 0.067f;
 			newColor.b = 0.067f;
 			newColor.a = 0.15f;
 			currentColor = newColor; //metro red   
-        }
-        size_t nb = facets[sel]->sh.nbIndex;
-        if (nb == 3) {
-            FillFacet(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
-        }
-        else {
-            TriangulateForRender(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor,false);
-        }
-    }
-	
+		}
+		size_t nb = facets[sel]->sh.nbIndex;
+		if (nb == 3) {
+			FillFacet(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+		}
+		else {
+			TriangulateForRender(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+		}
+	}
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -769,7 +809,7 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacet
 	glNormalPointer(GL_DOUBLE, 0, normalCoords.data());
 	glColorPointer(4, GL_FLOAT, 0, colorValues.data());
 
-	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size()/3);
+	glDrawArrays(GL_TRIANGLES, 0, vertexCoords.size() / 3);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
@@ -786,7 +826,7 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacet
 		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.parallel);
 	}
 	glPopAttrib();
-    //---end transparent
+	//---end transparent
 }
 
 void Geometry::SetCullMode(int mode) {
@@ -808,10 +848,10 @@ void Geometry::SetCullMode(int mode) {
 
 void Geometry::ClearFacetTextures()
 {
-	GLProgress *prg = new GLProgress("Clearing texture", "Frame update");
+	GLProgress* prg = new GLProgress("Clearing texture", "Frame update");
 	prg->SetBounds(5, 28, 300, 90);
 	int startTime = SDL_GetTicks();
-	for (int i = 0; i<sh.nbFacet; i++) {
+	for (int i = 0; i < sh.nbFacet; i++) {
 		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) {
 			prg->SetVisible(true);
 		}
@@ -823,7 +863,7 @@ void Geometry::ClearFacetTextures()
 	SAFE_DELETE(prg);
 }
 
-void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d) {
+void Geometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float px, float py, float pz, float d) {
 
 	if (!arrowList) BuildDirectionList();
 
@@ -838,7 +878,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 	mView.LoadGL(matView);
 
 	// Direction
-	float n = sqrtf(dx*dx + dy*dy + dz*dz);
+	float n = sqrtf(dx * dx + dy * dy + dz * dz);
 	if (IsZero(n)) {
 
 		// Isotropic (render a sphere)
@@ -889,7 +929,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 		// Null vector -> isotropic
 	}
 
-	float n1 = sqrtf(v1x*v1x + v1y*v1y + v1z*v1z);
+	float n1 = sqrtf(v1x * v1x + v1y * v1y + v1z * v1z);
 	v1x /= n1;
 	v1y /= n1;
 	v1z /= n1;
@@ -898,13 +938,13 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 	mRot._32 = v1z;
 
 	// Cross product
-	mRot._13 = (dy)*(v1z)-(dz)*(v1y);
-	mRot._23 = (dz)*(v1x)-(dx)*(v1z);
-	mRot._33 = (dx)*(v1y)-(dy)*(v1x);
+	mRot._13 = (dy) * (v1z)-(dz) * (v1y);
+	mRot._23 = (dz) * (v1x)-(dx) * (v1z);
+	mRot._33 = (dx) * (v1y)-(dy) * (v1x);
 
 	// Scale
 	if (!autoNorme) {
-		mScale._11 = (n*d*normeRatio);
+		mScale._11 = (n * d * normeRatio);
 		mScale._22 = (d / 4.0f);
 		mScale._33 = (d / 4.0f);
 	}
@@ -935,7 +975,7 @@ void Geometry::RenderArrow(GLfloat *matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p , std::vector<float>& textureCoords) {
+void Geometry::AddTextureCoord(InterfaceFacet* f, const Vector2d* p, std::vector<float>& textureCoords) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -944,8 +984,8 @@ void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p , std::vecto
 #if 1
 	double fu = f->sh.texWidth_precise * uStep;
 	double fv = f->sh.texHeight_precise * vStep;
-	textureCoords.push_back((float)(uStep + p->u*fu));
-	textureCoords.push_back((float)(vStep + p->v*fv));
+	textureCoords.push_back((float)(uStep + p->u * fu));
+	textureCoords.push_back((float)(vStep + p->v * fv));
 #else
 	// Show border (debugging purpose)
 	double fu = (f->sh.texWidth_precise + 2.0) * uStep;
@@ -956,11 +996,11 @@ void Geometry::AddTextureCoord(InterfaceFacet *f, const Vector2d *p , std::vecto
 
 }
 
-void Geometry::FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::FillFacet(InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
-	for (size_t i=0;i<f->sh.nbIndex;i++) {
+	for (size_t i = 0; i < f->sh.nbIndex; i++) {
 		size_t idx = f->indices[i];
-		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]),textureCoords);
+		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]), textureCoords);
 		vertexCoords.push_back(vertices3[idx].x);
 		vertexCoords.push_back(vertices3[idx].y);
 		vertexCoords.push_back(vertices3[idx].z);
@@ -974,7 +1014,7 @@ void Geometry::FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, s
 	}
 }
 
-void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::DrawEar(InterfaceFacet* f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
@@ -992,7 +1032,7 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::v
 	normalCoords.push_back(-f->sh.N.y);
 	normalCoords.push_back(-f->sh.N.z);
 	if (addTextureCoord) AddTextureCoord(f, p1, textureCoords);
-	f->glVertex2uVertexArray(p1->u, p1->v,vertexCoords);
+	f->glVertex2uVertexArray(p1->u, p1->v, vertexCoords);
 	colorValues.push_back(currentColor.r);
 	colorValues.push_back(currentColor.g);
 	colorValues.push_back(currentColor.b);
@@ -1020,7 +1060,7 @@ void Geometry::DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::v
 
 }
 
-void Geometry::TriangulateForRender(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::TriangulateForRender(InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -1036,11 +1076,11 @@ void Geometry::TriangulateForRender(InterfaceFacet *f, std::vector<double>& vert
 	GLAppPolygon p;
 	p.pts = f->vertices2;
 	//p.sign = f->sign;
-	
+
 	// Perform triangulation
 	while (p.pts.size() > 3) {
 		int e = GeometryTools::FindEar(p);
-		DrawEar(f, p, e, vertexCoords, normalCoords, textureCoords , colorValues, currentColor, addTextureCoord);
+		DrawEar(f, p, e, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, addTextureCoord);
 		// Remove the ear
 		p.pts.erase(p.pts.begin() + e);
 	}
@@ -1050,14 +1090,14 @@ void Geometry::TriangulateForRender(InterfaceFacet *f, std::vector<double>& vert
 
 }
 
-void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+void Geometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 
 	if (!isLoaded) return;
 
 	// Render the geometry
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
-	
+
 	// Render Volume
 	if (renderVolume) {
 		glPolygonOffset(1.0f, 4.0f);
@@ -1093,7 +1133,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 			}
 			glPolygonOffset(1.0f, 5.0f);
 			glEnable(GL_POLYGON_OFFSET_LINE);
-			for (int i = 0;i < sh.nbSuper;i++)
+			for (int i = 0; i < sh.nbSuper; i++)
 				glCallList(lineList[i]);
 			glDisable(GL_POLYGON_OFFSET_LINE);
 			glDisable(GL_BLEND);
@@ -1109,7 +1149,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
 			}
-			for (int i = 0;i < sh.nbSuper;i++)
+			for (int i = 0; i < sh.nbSuper; i++)
 				if (viewStruct != i)
 					glCallList(lineList[i]);
 			// Selectable in white
@@ -1132,8 +1172,8 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		glBlendFunc(GL_ONE, GL_ZERO);
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0f, 3.0f);
-		for (size_t i = 0;i < sh.nbFacet && renderTexture;i++) {
-			InterfaceFacet *f = facets[i];
+		for (size_t i = 0; i < sh.nbFacet && renderTexture; i++) {
+			InterfaceFacet* f = facets[i];
 			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #if defined(MOLFLOW)
 			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
@@ -1151,7 +1191,7 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				}
-				
+
 				glCallList(f->glList);
 			}
 		}
@@ -1170,10 +1210,10 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 		}
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		for (int i = 0; i < sh.nbFacet;i++) {
+		for (int i = 0; i < sh.nbFacet; i++) {
 
-			InterfaceFacet *f = facets[i];
-			if (!f->cellPropertiesIds.empty()  && f->textureVisible) {
+			InterfaceFacet* f = facets[i];
+			if (!f->cellPropertiesIds.empty() && f->textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
 				glCallList(f->glElem);
@@ -1189,21 +1229,21 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 	if (showDir) {
 
 		GLToolkit::SetMaterial(&arrowMaterial);
-		for (int i = 0;i < sh.nbFacet;i++) {
-			InterfaceFacet *f = facets[i];
+		for (int i = 0; i < sh.nbFacet; i++) {
+			InterfaceFacet* f = facets[i];
 			if (f->sh.countDirection && f->dirCache) {
 				double iw = 1.0 / (double)f->sh.texWidth_precise;
 				double ih = 1.0 / (double)f->sh.texHeight_precise;
 				double rw = f->sh.U.Norme() * iw;
-				for (int x = 0;x < f->sh.texWidth;x++) {
-					for (int y = 0;y < f->sh.texHeight;y++) {
-						size_t add = x + y*f->sh.texWidth;
+				for (int x = 0; x < f->sh.texWidth; x++) {
+					for (int y = 0; y < f->sh.texHeight; y++) {
+						size_t add = x + y * f->sh.texWidth;
 						if (f->GetMeshArea(add) > 0.0) {
 							double uC = ((double)x + 0.5) * iw;
 							double vC = ((double)y + 0.5) * ih;
-							float xc = (float)(f->sh.O.x + f->sh.U.x*uC + f->sh.V.x*vC);
-							float yc = (float)(f->sh.O.y + f->sh.U.y*uC + f->sh.V.y*vC);
-							float zc = (float)(f->sh.O.z + f->sh.U.z*uC + f->sh.V.z*vC);
+							float xc = (float)(f->sh.O.x + f->sh.U.x * uC + f->sh.V.x * vC);
+							float yc = (float)(f->sh.O.y + f->sh.U.y * uC + f->sh.V.y * vC);
+							float zc = (float)(f->sh.O.z + f->sh.U.z * uC + f->sh.V.z * vC);
 
 							RenderArrow(matView,
 								(float)f->dirCache[add].dir.x,
@@ -1223,51 +1263,51 @@ void Geometry::Render(GLfloat *matView, bool renderVolume, bool renderTexture, i
 
 	// Paint non-planar and selected facets
 	//if (GetNbSelectedFacets()>0) {
-		if (mApp->antiAliasing) {
-			glEnable(GL_BLEND);
-			glEnable(GL_LINE_SMOOTH);
-		}
-		glBlendFunc(GL_ONE, GL_ZERO);
-		if (mApp->highlightNonplanarFacets) {
-			glColor3f(1.0f, 0.0f, 1.0f);    //purple
-			glCallList(nonPlanarList);
-		}
-		glColor3f(1.0f, 0.0f, 0.0f);    //red
-		if (showHidden) {
-			glDisable(GL_DEPTH_TEST);
-			glCallList(selectList3);
-			glEnable(GL_DEPTH_TEST);
-		}
-		else {
-			glCallList(selectList3);
-		}
-		if (mApp->antiAliasing) {
-			glDisable(GL_LINE_SMOOTH);
-			glDisable(GL_BLEND);
-		}
+	if (mApp->antiAliasing) {
+		glEnable(GL_BLEND);
+		glEnable(GL_LINE_SMOOTH);
+	}
+	glBlendFunc(GL_ONE, GL_ZERO);
+	if (mApp->highlightNonplanarFacets) {
+		glColor3f(1.0f, 0.0f, 1.0f);    //purple
+		glCallList(nonPlanarList);
+	}
+	glColor3f(1.0f, 0.0f, 0.0f);    //red
+	if (showHidden) {
+		glDisable(GL_DEPTH_TEST);
+		glCallList(selectList3);
+		glEnable(GL_DEPTH_TEST);
+	}
+	else {
+		glCallList(selectList3);
+	}
+	if (mApp->antiAliasing) {
+		glDisable(GL_LINE_SMOOTH);
+		glDisable(GL_BLEND);
+	}
 
 	//}
 
 	// Paint selected cell on mesh
-	for (int i = 0; i < sh.nbFacet;i++) {
-		InterfaceFacet *f = facets[i];
+	for (int i = 0; i < sh.nbFacet; i++) {
+		InterfaceFacet* f = facets[i];
 		f->RenderSelectedElem();
 	}
 
 }
 
-void Geometry::RenderSemiTransparent(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
-    if (mApp->antiAliasing) {
-        glEnable(GL_BLEND);
-        glEnable(GL_LINE_SMOOTH);
-    }
+void Geometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+	if (mApp->antiAliasing) {
+		glEnable(GL_BLEND);
+		glEnable(GL_LINE_SMOOTH);
+	}
 
-    glCallList(selectHighlightList);
+	glCallList(selectHighlightList);
 
-    if (mApp->antiAliasing) {
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_BLEND);
-    }
+	if (mApp->antiAliasing) {
+		glDisable(GL_LINE_SMOOTH);
+		glDisable(GL_BLEND);
+	}
 }
 
 void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
@@ -1278,8 +1318,8 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deletePoly) DELETE_LIST(polyList);
 	DELETE_LIST(selectList);
 	DELETE_LIST(selectList2);
-    DELETE_LIST(selectList3);
-    DELETE_LIST(selectHighlightList);
+	DELETE_LIST(selectList3);
+	DELETE_LIST(selectHighlightList);
 }
 
 std::unordered_set<int> Geometry::GetVertexBelongsToSelectedFacet() {
@@ -1312,7 +1352,7 @@ void Geometry::BuildDirectionList() {
 
 	GLfloat cap_vertices[(cone_slices + 2) * 3];
 	GLfloat* cap_vertPtr = cap_vertices;
-	
+
 	//cap centerpoint
 	*cap_vertPtr++ = -.5f;
 	*cap_vertPtr++ = 0.0f;
@@ -1328,7 +1368,7 @@ void Geometry::BuildDirectionList() {
 		*normPtr++ = x;
 		*normPtr++ = z;
 		*vertPtr++ = *cap_vertPtr++ = -.5f;
-		*vertPtr++ = *cap_vertPtr++ = x;		
+		*vertPtr++ = *cap_vertPtr++ = x;
 		*vertPtr++ = *cap_vertPtr++ = z;
 
 		*normPtr++ = radius / sqrt(x * x + z * z);
@@ -1368,7 +1408,7 @@ void Geometry::BuildDirectionList() {
 
 	glVertexPointer(3, GL_FLOAT, 0, cap_vertices);
 
-	glDrawArrays(GL_TRIANGLE_FAN, 0, cone_slices+2);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, cone_slices + 2);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 
@@ -1512,26 +1552,27 @@ void Geometry::BuildSelectList() {
 	glLineWidth(2.0f);
 
 	const auto selectedFacets = GetSelectedFacets();
-    const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
+	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 
 	std::vector<GLuint> selectionLines;
 
-    for (auto& sel : selectedFacets) {
-		InterfaceFacet *f = facets[sel];
+	for (auto& sel : selectedFacets) {
+		InterfaceFacet* f = facets[sel];
 
 		//DrawFacetWireframe(f,false,true,true);
-        if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
-            auto it = colorHighlighting.find(sel);
-            // Check if element exists in map or not
-            if (it != colorHighlighting.end()) {
-                continue; //highlighted facet, will draw outside of this loop
-            } else {
-                glLineWidth(1.5f);
-                glColor3f(0.937f,0.957f,1.0f);    //metro light blue
-            }
+		if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+			auto it = colorHighlighting.find(sel);
+			// Check if element exists in map or not
+			if (it != colorHighlighting.end()) {
+				continue; //highlighted facet, will draw outside of this loop
+			}
+			else {
+				glLineWidth(1.5f);
+				glColor3f(0.937f, 0.957f, 1.0f);    //metro light blue
+			}
 			DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
-        }
-        else{ //regular selected facet, will be drawn later
+		}
+		else { //regular selected facet, will be drawn later
 			for (size_t j = 0; j < f->indices.size(); ++j) {
 				size_t v1 = f->indices[j];
 				size_t v2 = f->indices[(j + 1) % f->indices.size()];
@@ -1539,35 +1580,35 @@ void Geometry::BuildSelectList() {
 				selectionLines.push_back(v1);
 				selectionLines.push_back(v2);
 			}
-        }
-    }
+		}
+	}
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
 	glDrawElements(GL_LINES, selectionLines.size(), GL_UNSIGNED_INT, selectionLines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-    // give profiled selection priority for being rendered last
-    if(!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()){
-        for (auto& sel : selectedFacets) {
-            auto it = colorHighlighting.find(sel);
-            // Check if element exists in map or not
-            if (it != colorHighlighting.end()) {
-                glLineWidth(3.0f);
-                float r = static_cast<float>(it->second.r) / 255.0f;
-                float g = static_cast<float>(it->second.g) / 255.0f;
-                float b = static_cast<float>(it->second.b) / 255.0f;
+	// give profiled selection priority for being rendered last
+	if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+		for (auto& sel : selectedFacets) {
+			auto it = colorHighlighting.find(sel);
+			// Check if element exists in map or not
+			if (it != colorHighlighting.end()) {
+				glLineWidth(3.0f);
+				float r = static_cast<float>(it->second.r) / 255.0f;
+				float g = static_cast<float>(it->second.g) / 255.0f;
+				float b = static_cast<float>(it->second.b) / 255.0f;
 
-                // incrase brightness and saturity
-                modifyRGBColor(r, g, b, 1.2f, 1.2f);
+				// incrase brightness and saturity
+				modifyRGBColor(r, g, b, 1.2f, 1.2f);
 
-                glColor3f(r, g, b);
-                InterfaceFacet *f = facets[sel];
-                DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
-                glLineWidth(2.0f);
-            }
-        }
-    }
+				glColor3f(r, g, b);
+				InterfaceFacet* f = facets[sel];
+				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
+				glLineWidth(2.0f);
+			}
+		}
+	}
 	glLineWidth(1.0f);
 	if (mApp->antiAliasing) {
 		glDisable(GL_BLEND);
@@ -1575,10 +1616,10 @@ void Geometry::BuildSelectList() {
 	}
 	glEndList();
 
-	if(mApp->highlightSelection){ //Above 500 selected facets rendering can be slow
-        // Fourth list with transparent highlighting for selected facets
-        selectHighlightList = glGenLists(1);
-        glNewList(selectHighlightList, GL_COMPILE);
+	if (mApp->highlightSelection) { //Above 500 selected facets rendering can be slow
+		// Fourth list with transparent highlighting for selected facets
+		selectHighlightList = glGenLists(1);
+		glNewList(selectHighlightList, GL_COMPILE);
 		if (GetNbSelectedFacets() < 500) {  //Above 500 selected facets rendering can be slow
 			glDepthMask(GL_FALSE);
 			/*glDisable(GL_CULL_FACE);
@@ -1601,20 +1642,20 @@ void Geometry::BuildSelectList() {
 			glDisable(GL_BLEND);
 			glDepthMask(GL_TRUE);
 		}
-        glEndList();
+		glEndList();
 	}
 }
 
 void Geometry::BuildVolumeFacetList() {
-    polyList = glGenLists(1);
-    glNewList(polyList, GL_COMPILE);
-    DrawPolys();
-    glEndList();
+	polyList = glGenLists(1);
+	glNewList(polyList, GL_COMPILE);
+	DrawPolys();
+	glEndList();
 }
 
 void Geometry::BuildNonPlanarList() {
 
-	
+
 	nonPlanarList = glGenLists(1);
 	glNewList(nonPlanarList, GL_COMPILE);
 
@@ -1632,7 +1673,7 @@ void Geometry::BuildNonPlanarList() {
 	auto nonPlanarFacetIds = GetNonPlanarFacetIds();
 	hasNonPlanar = !nonPlanarFacetIds.empty();
 	for (const auto& np : nonPlanarFacetIds) {
-		InterfaceFacet *f = facets[np];
+		InterfaceFacet* f = facets[np];
 		//DrawFacetWireframe(f,false,true,true);
 		DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
 	}
@@ -1724,7 +1765,7 @@ int Geometry::RestoreDeviceObjects() {
 	if (!IsLoaded()) return GL_OK;
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		InterfaceFacet *f = facets[i];
+		InterfaceFacet* f = facets[i];
 		f->RestoreDeviceObjects();
 		BuildFacetList(f);
 	}
@@ -1735,7 +1776,7 @@ int Geometry::RestoreDeviceObjects() {
 
 }
 
-void Geometry::BuildFacetList(InterfaceFacet *f) {
+void Geometry::BuildFacetList(InterfaceFacet* f) {
 
 	// Rebuild OpenGL geometry with texture
 

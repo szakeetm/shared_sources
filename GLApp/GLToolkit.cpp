@@ -174,8 +174,8 @@ std::tuple<GLMatrix, GLMatrix, GLMatrix, GLVIEWPORT> GLToolkit::GetCurrentMatric
 
     GLMatrix proj; proj.LoadGL(mProj);
     GLMatrix view; view.LoadGL(mView);
-    GLMatrix m; m.Multiply(&proj, &view);
-    return { proj,view,m,viewPort };
+    GLMatrix mvp; mvp.Multiply(&proj, &view);
+    return { proj,view,mvp,viewPort };
 }
 
 int GLToolkit::GetCursor() {
@@ -871,10 +871,10 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
 
   GLMatrix proj; proj.LoadGL(mProj);
   GLMatrix view; view.LoadGL(mView);
-  GLMatrix m; m.Multiply(&proj,&view);
+  GLMatrix mvp; mvp.Multiply(&proj,&view);
 
   float rx,ry,rz,rw;
-  m.TransformVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
+  mvp.TransformVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
   if(rw<=0.0f) return std::nullopt;
 
   return std::tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
@@ -882,10 +882,10 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
 
 }
 
-std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& m, const GLVIEWPORT& viewPort) {
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& mvp, const GLVIEWPORT& viewPort) {
 
     float rx, ry, rz, rw;
-    m.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
+    mvp.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
     if (rw <= 0.0f) return std::nullopt;
 
     return std::tuple((int)(((rx / rw) + 1.0f) * (float)viewPort.width / 2.0f),
