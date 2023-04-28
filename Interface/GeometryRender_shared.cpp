@@ -337,7 +337,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 		//nbSelectedHistVertex = 0;
 	}
 
-	std::vector<bool> selectedFacetsVertices;
+	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
 	std::unordered_set<int> vertices_local, vertices_global;
@@ -345,7 +345,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	{
 #pragma omp for
 		for (int i = 0; i < sh.nbVertex; i++) {
-			if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
+			if (facetBound && selectedFacetsVertices.count(i)==0) continue; //doesn't belong to selected facet
 			Vector3d* v = GetVertex(i);
 			//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
 			if (true) {
@@ -399,7 +399,7 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	std::vector<int> allYe(sh.nbVertex);
 	std::vector<bool> ok(sh.nbVertex);
 
-	std::vector<bool> selectedFacetsVertices;
+	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
 	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
@@ -407,7 +407,7 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	// Transform points to screen coordinates
 #pragma omp parallel for
 	for (i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
+		if (facetBound && selectedFacetsVertices.count(i)==0) continue; //doesn't belong to selected facet
 		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,viewPort)) {
 			ok[i] = true;
 			std::tie(allXe[i], allYe[i]) = *screenCoords;
@@ -1280,13 +1280,13 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
     DELETE_LIST(selectHighlightList);
 }
 
-std::vector<bool> Geometry::GetVertexBelongsToSelectedFacet() {
-	std::vector<bool> result(sh.nbVertex, false);
+std::unordered_set<int> Geometry::GetVertexBelongsToSelectedFacet() {
+	std::unordered_set<int> result;
 	std::vector<size_t> selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
 		InterfaceFacet* f = facets[facetId];
 		for (size_t i = 0; i < f->sh.nbIndex; i++)
-			result[f->indices[i]] = true;
+			result.insert(f->indices[i]);
 	}
 	return result;
 }

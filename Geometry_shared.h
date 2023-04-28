@@ -283,7 +283,7 @@ public:
 	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void RenderSemiTransparent(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void ClearFacetTextures();
-	std::vector<bool> GetVertexBelongsToSelectedFacet();
+	std::unordered_set<int> GetVertexBelongsToSelectedFacet();
 #pragma endregion
 
 #pragma region GeometryViewer_Shared.cpp
