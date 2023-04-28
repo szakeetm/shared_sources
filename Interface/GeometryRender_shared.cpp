@@ -387,7 +387,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 }
 
 void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
-	int i;
+	
 	if (!isLoaded) return;
 
 	// Select a vertex on a mouse click in 3D perspectivce view 
@@ -406,7 +406,7 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 
 	// Transform points to screen coordinates
 #pragma omp parallel for
-	for (i = 0; i < sh.nbVertex; i++) {
+	for (int i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && selectedFacetsVertices.count(i)==0) continue; //doesn't belong to selected facet
 		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,viewPort)) {
 			ok[i] = true;
@@ -418,45 +418,47 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	}
 
 	//Get Closest Point to click
-	double distance;
-	double minDist=1e10;
-	int localMinId, minId = -1;
-	double localMinDist = 1e10;
-	i = -1;
+	double minDist_global = std::numeric_limits<double>::max();
+	int minId_global = -1;
 
-#pragma omp parallel for private(localMinDist, localMinId)
-	for (i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		if (ok[i] && !(allXe[i] < 0) && !(allYe[i] < 0)) { //calculate only for points on screen
-			distance = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
-			if (distance < localMinDist) {
-				localMinDist = distance;
-				localMinId = i;
+#pragma omp parallel
+	{
+		//These will be private
+		double minDist_local = std::numeric_limits<double>::max();
+		int minId_local = -1;
+#pragma omp for
+		for (int i = 0; i < sh.nbVertex; i++) {
+			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
+			if (ok[i] && allXe[i] >= 0 && allXe[i] < width && allYe[i] >= 0 && allYe[i]<height) { //calculate only for points on screen
+				double distanceSqr = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
+				if (distanceSqr < minDist_local) {
+					minDist_local = distanceSqr;
+					minId_local = i;
+				}
+			}
+		}
+
+		// After the parallel loop, combine the local minDist and minId to find the overall minimum
+#pragma omp critical
+		{
+			if (minDist_local < minDist_global) {
+				minDist_global = minDist_local;
+				minId_global = minId_local;
 			}
 		}
 	}
-
-	// After the parallel loop, combine the local minDist and minId to find the overall minimum
-#pragma omp critical
-	{
-		if (localMinDist < minDist) {
-			minDist = localMinDist;
-			minId = localMinId;
-		}
-	}
-
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();
 		//nbSelectedHistVertex = 0;
 	}
 
-	if (minDist < 250.0) {
-		vertices3[minId].selected = !ctrlDown;
-		if (ctrlDown) RemoveFromSelectedVertexList(minId);
+	if (minDist_global < 250.0) {
+		vertices3[minId_global].selected = !ctrlDown;
+		if (ctrlDown) RemoveFromSelectedVertexList(minId_global);
 		else {
-			AddToSelectedVertexList(minId);
-			if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(minId);
+			AddToSelectedVertexList(minId_global);
+			if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(minId_global);
 			//nbSelectedHistVertex++;
 		}
 	}
