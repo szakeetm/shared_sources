@@ -168,22 +168,11 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 	std::vector<bool> ok(sh.nbVertex);
 	std::vector<bool> onScreen(sh.nbVertex);
 
-	GLfloat mProj[16];
-	GLfloat mView[16];
-	GLVIEWPORT g;
-
-	// Compute location on screen
-	glGetFloatv(GL_PROJECTION_MATRIX, mProj);
-	glGetFloatv(GL_MODELVIEW_MATRIX, mView);
-	glGetIntegerv(GL_VIEWPORT, (GLint*)&g);
-
-	GLMatrix proj; proj.LoadGL(mProj);
-	GLMatrix view; view.LoadGL(mView);
-	GLMatrix m; m.Multiply(&proj, &view);
+	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,g);
+		const auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m, viewPort);
 		if (screenCoords) {
 			ok[i] = true;
 			auto [x,y] = *screenCoords;
@@ -329,7 +318,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	// Select a set of vertices according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
 
-	float rx, ry, rz, rw, r2;
+	float r2;
 	int _x1, _y1, _x2, _y2;
 
 	_x1 = Min(x1, x2);
@@ -341,17 +330,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLfloat mProj[16];
-	GLfloat mView[16];
-	GLVIEWPORT g;
-
-	glGetFloatv(GL_PROJECTION_MATRIX, mProj);
-	glGetFloatv(GL_MODELVIEW_MATRIX, mView);
-	glGetIntegerv(GL_VIEWPORT, (GLint *)&g);
-
-	GLMatrix proj; proj.LoadGL(mProj);
-	GLMatrix view; view.LoadGL(mView);
-	GLMatrix m; m.Multiply(&proj, &view);
+	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();
@@ -361,38 +340,45 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	std::vector<bool> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	for (int i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		Vector3d *v = GetVertex(i);
-		//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
-		if (true) {
+	std::unordered_set<int> vertices_local, vertices_global;
+#pragma omp parallel private(vertices_local)
+	{
+#pragma omp for
+		for (int i = 0; i < sh.nbVertex; i++) {
+			if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
+			Vector3d* v = GetVertex(i);
+			//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
+			if (true) {
 
-			bool isInside;
-			int idx = i;
-			m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
-				&rx, &ry, &rz, &rw);
+				bool isInside = false;
+				int idx = i;
 
-			if (rw > 0.0f) {
-				int xe = (int)(((rx / rw) + 1.0f) * (float)g.width / 2.0f);
-				int ye = (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f);
-				if (!circularSelection)
-					isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
-				else //circular selection
-					isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
-			}
-			else {
+				int xe, ye;
+				auto coords = GLToolkit::Get2DScreenCoord_fast(*v, m, viewPort);
+				if (coords)
+				{
+					std::tie(xe, ye) = *coords;
 
-				isInside = false;
-			}
+					if (!circularSelection)
+						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
+					else //circular selection
+						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
+				}
 
-			if (isInside) {
-				vertices3[i].selected = !ctrlDown;
-				if (ctrlDown) RemoveFromSelectedVertexList(i);
-				else {
-					AddToSelectedVertexList(i);
-					if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(i);
+				if (isInside) {
+					vertices_local.insert(i);
 				}
 			}
+		}
+#pragma omp critical
+		vertices_global.insert(vertices_local.begin(), vertices_local.end());
+	}
+	for (auto index : vertices_global) {
+		vertices3[index].selected = !ctrlDown;
+		if (ctrlDown) RemoveFromSelectedVertexList(index);
+		else {
+			AddToSelectedVertexList(index);
+			if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateId(index);
 		}
 	}
 
@@ -400,7 +386,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool facetBound) {
+void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
 	int i;
 	if (!isLoaded) return;
 
@@ -416,10 +402,13 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 	std::vector<bool> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
+	auto [view, proj, m, viewPort] = GLToolkit::GetCurrentMatrices();
+
 	// Transform points to screen coordinates
+#pragma omp parallel for
 	for (i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
-		if (auto screenCoords = GLToolkit::Get2DScreenCoord(vertices3[i])) {
+		if (auto screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i],m,viewPort)) {
 			ok[i] = true;
 			std::tie(allXe[i], allYe[i]) = *screenCoords;
 		}
@@ -429,19 +418,33 @@ void Geometry::SelectVertex(int x, int y, bool shiftDown, bool ctrlDown, bool fa
 	}
 
 	//Get Closest Point to click
-	double minDist = 9999;
 	double distance;
-	int minId = -1;
+	double minDist=1e10;
+	int localMinId, minId = -1;
+	double localMinDist = 1e10;
+	i = -1;
+
+#pragma omp parallel for private(localMinDist, localMinId)
 	for (i = 0; i < sh.nbVertex; i++) {
 		if (facetBound && !selectedFacetsVertices[i]) continue; //doesn't belong to selected facet
 		if (ok[i] && !(allXe[i] < 0) && !(allYe[i] < 0)) { //calculate only for points on screen
 			distance = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
-			if (distance < minDist) {
-				minDist = distance;
-				minId = i;
+			if (distance < localMinDist) {
+				localMinDist = distance;
+				localMinId = i;
 			}
 		}
 	}
+
+	// After the parallel loop, combine the local minDist and minId to find the overall minimum
+#pragma omp critical
+	{
+		if (localMinDist < minDist) {
+			minDist = localMinDist;
+			minId = localMinId;
+		}
+	}
+
 
 	if (!ctrlDown && !shiftDown) {
 		UnselectAllVertex(); EmptySelectedVertexList();

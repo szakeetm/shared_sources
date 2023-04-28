@@ -161,6 +161,23 @@ std::string GLToolkit::GetOSName() {
 #endif
 }
 
+std::tuple<GLMatrix, GLMatrix, GLMatrix, GLVIEWPORT> GLToolkit::GetCurrentMatrices()
+{
+    GLfloat mProj[16];
+    GLfloat mView[16];
+    GLVIEWPORT viewPort;
+
+    // Compute location on screen
+    glGetFloatv(GL_PROJECTION_MATRIX, mProj);
+    glGetFloatv(GL_MODELVIEW_MATRIX, mView);
+    glGetIntegerv(GL_VIEWPORT, (GLint*)&viewPort);
+
+    GLMatrix proj; proj.LoadGL(mProj);
+    GLMatrix view; view.LoadGL(mView);
+    GLMatrix m; m.Multiply(&proj, &view);
+    return { proj,view,m,viewPort };
+}
+
 int GLToolkit::GetCursor() {
   return currentCursor;
 }
@@ -865,14 +882,14 @@ std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& 
 
 }
 
-std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& m, const GLVIEWPORT& g) {
+std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& m, const GLVIEWPORT& viewPort) {
 
     float rx, ry, rz, rw;
     m.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
     if (rw <= 0.0f) return std::nullopt;
 
-    return std::tuple((int)(((rx / rw) + 1.0f) * (float)g.width / 2.0f),
-        (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f));
+    return std::tuple((int)(((rx / rw) + 1.0f) * (float)viewPort.width / 2.0f),
+        (int)(((-ry / rw) + 1.0f) * (float)viewPort.height / 2.0f));
 
 }
 
