@@ -81,5 +81,4 @@ private:
     int SplitMiddleProb(std::vector<BVHPrimitiveInfo> &primitiveInfo, int start, int end, int dim);
 };
 
-
 #endif //MOLFLOW_PROJ_BVH_H

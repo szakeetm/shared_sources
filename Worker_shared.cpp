@@ -823,7 +823,7 @@ int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
     progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
     try {
         if (!InterfaceGeomToSimModel()) {
-            std::string errString = "Failed to send geometry to sub process!\n";
+            std::string errString = "Failed to convert interface geometry to simulation model.\n";
             /*GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
 
             progressDlg->SetVisible(false);
@@ -842,9 +842,9 @@ int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
         }
 
         progressDlg->SetMessage("Forwarding simulation model...");
-        simManager.ForwardSimModel(model);
+        simManager.ForwardSimModel(model); //copy worker::model to simManager::simulations[0].model (only once)
         progressDlg->SetMessage("Forwarding global simulation state...");
-        simManager.ForwardGlobalCounter(&globState, &particleLog);
+        simManager.ForwardGlobalCounter(&globState, &particleLog);  //copy worker::globState and particleLog to simManager::simulations[0]
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
