@@ -86,6 +86,12 @@ void GLProgress::SetProgress(double value) {
 
 }
 
+void GLProgress::SetProgress(GLStatus progress)
+{
+	SetProgress(progress.progress);
+	SetMessage(progress.status);
+}
+
 double GLProgress::GetProgress() {
 
  return (double)progress/100.0;

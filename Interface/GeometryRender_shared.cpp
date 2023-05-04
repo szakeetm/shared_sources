@@ -613,7 +613,7 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-void Geometry::DrawFacetWireframe(InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
+void Geometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -677,14 +677,14 @@ void Geometry::DrawFacetWireframe(InterfaceFacet* f, bool offset, bool showHidde
 
 }
 
-void Geometry::DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines) {
+void Geometry::DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vector<GLuint>& lines) {
 
 	// Render a facet (wireframe)
 	int nb = f->sh.nbIndex;
 	for (int j = 0; j < nb; j++) {
 		if (f->visible[j]) {
-			lines.push_back((GLuint)f->indices[j]);
-			lines.push_back((GLuint)f->indices[(j + 1) % nb]);
+			lines.emplace_back((GLuint)f->indices[j]);
+			lines.emplace_back((GLuint)f->indices[(j + 1) % nb]);
 		}
 	}
 }
@@ -1605,31 +1605,33 @@ void Geometry::BuildSelectList() {
 
 	std::vector<GLuint> selectionLines;
 
-	for (auto& sel : selectedFacets) {
-		InterfaceFacet* f = facets[sel];
+#pragma omp parallel
+	{
+		std::vector<GLuint> selectionLines_local;
+#pragma omp for
+		for (int i = 0; i < selectedFacets.size(); i++) {
+			InterfaceFacet* f = facets[selectedFacets[i]];
 
-		//DrawFacetWireframe(f,false,true,true);
-		if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
-			auto it = colorHighlighting.find(sel);
-			// Check if element exists in map or not
-			if (it != colorHighlighting.end()) {
-				continue; //highlighted facet, will draw outside of this loop
+			//DrawFacetWireframe(f,false,true,true);
+			if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+				auto it = colorHighlighting.find(i);
+				// Check if element exists in map or not
+				if (it != colorHighlighting.end()) {
+					continue; //highlighted facet, will draw outside of this loop
+				}
+				else {
+					glLineWidth(1.5f);
+					glColor3f(0.937f, 0.957f, 1.0f);    //metro light blue
+				}
+#pragma omp critical
+				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
 			}
-			else {
-				glLineWidth(1.5f);
-				glColor3f(0.937f, 0.957f, 1.0f);    //metro light blue
-			}
-			DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
-		}
-		else { //regular selected facet, will be drawn later
-			for (size_t j = 0; j < f->indices.size(); ++j) {
-				size_t v1 = f->indices[j];
-				size_t v2 = f->indices[(j + 1) % f->indices.size()];
-
-				selectionLines.push_back(v1);
-				selectionLines.push_back(v2);
+			else { //regular selected facet, will be drawn later
+				DrawFacetWireframe_Vertexarray(f, selectionLines_local);
 			}
 		}
+#pragma omp critical
+		selectionLines.insert(selectionLines.end(), selectionLines_local.begin(), selectionLines_local.end());
 	}
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);

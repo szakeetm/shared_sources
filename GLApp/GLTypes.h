@@ -86,16 +86,16 @@ struct Error : public std::runtime_error {
     explicit Error( const char * what_ ) : std::runtime_error(what_) {}
 };
 
-typedef struct {
+struct GLCOLOR {
 
   float r;
   float g;
   float b;
   float a;
 
-} GLCOLOR;
+} ;
 
-typedef struct {
+struct GLMATERIAL {
 
   GLCOLOR   Diffuse;
   GLCOLOR   Ambient;
@@ -103,13 +103,18 @@ typedef struct {
   GLCOLOR   Emissive;
   float     Shininess;
 
-} GLMATERIAL;
+} ;
 
-typedef struct {
+struct GLVIEWPORT {
 
   int x;
   int y;
   int width;
   int height;
 
-} GLVIEWPORT;
+} ;
+
+struct GLStatus {
+    int progress=0;
+    std::string status;
+};

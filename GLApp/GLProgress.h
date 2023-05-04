@@ -4,6 +4,7 @@
 
 //#include <SDL_opengl.h>
 #include "GLWindow.h"
+#include "GLTypes.h" //glstatus
 #include <string>
 
 class GLLabel;
@@ -16,6 +17,7 @@ public:
 
   // Update progress bar (0 to 1)
   void SetProgress(double value);
+  void SetProgress(GLStatus progress);
   double GetProgress();
   void SetMessage(const char *msg, const bool& force=true);
   void SetMessage(const std::string& msg, const bool& force=true);

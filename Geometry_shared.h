@@ -251,8 +251,8 @@ protected:
 	bool AlreadySelected(size_t f);
 	std::optional<size_t> GetLastSelected();
 	std::optional<size_t> GetFirstSelected();
-	void DrawFacetWireframe(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
-	void DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines);
+	void DrawFacetWireframe(const InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
+	void DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vector<GLuint>& lines);
 	void FillFacet(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void AddTextureCoord(const InterfaceFacet *f, const Vector2d &p, std::vector<float>& textureCoords);
 	void DrawPolys();
