@@ -533,11 +533,11 @@ void GLList::SetRow(size_t row, const char **vals) {
 		SetValueAt(i, row, vals[i]);
 }
 
-void GLList::SetValueAt(const size_t col, const size_t row, const std::string &value, const int userData, const bool searchIndex) {
+void GLList::SetValueAt(const size_t& col, const size_t& row, const std::string &value, const int& userData, const bool& searchIndex) {
 	SetValueAt(col, row, value.c_str(), userData, searchIndex);
 }
 
-void GLList::SetValueAt(const size_t col, const size_t row, const char *value, const int userData, const bool searchIndex) {
+void GLList::SetValueAt(const size_t& col, const size_t& row, const char *value, const int& userData, const bool& searchIndex) {
 	assert(col < nbCol); assert(row < nbRow);
 	if (this->values) {
 		if (col >= 0 && col < this->nbCol && row >= 0 && row < this->nbRow) {
@@ -693,7 +693,7 @@ std::vector<size_t> GLList::GetSelectedRows(bool searchIndex) {
 	if (!searchIndex) return selectedRows;
 	else {
 		std::vector<size_t> ret;
-		for (const auto sel : selectedRows)
+		for (const auto& sel : selectedRows)
 			ret.push_back(GetValueInt(sel, 0) - 1);
 		return ret;
 	}
@@ -730,7 +730,7 @@ void GLList::AddSelectedRow(int row, bool searchIndex) {
 void GLList::SetSelectedRows(std::vector<size_t> selection, bool searchIndex) {
 	if (searchIndex) {
 		selectedRows.clear();
-		for (const auto sel : selection)
+		for (const auto& sel : selection)
 			selectedRows.push_back((size_t)FindIndex(sel, 0));
 	}
 	else

@@ -57,7 +57,7 @@ public:
   static void printGlError(GLenum glError);
   static std::optional<std::tuple<int,int>> Get2DScreenCoord(const Vector3d& p);
   static std::optional<std::tuple<int, int>> Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& mvp, const GLVIEWPORT& viewPort);
-  static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double handedness);
+  static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
   static float GetCamDistance(GLfloat *mView,double x,double y,double z); //unused
   static float GetVisibility(double x,double y,double z,double nx,double ny,double nz); //unused
@@ -77,12 +77,12 @@ public:
 	  const bool &shadow,const bool &iShadow,const bool &isEtched);
   static void DrawStringInit();
   static void DrawStringRestore();
-  static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0,const bool fast=true);
+  static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0,const bool& fast=true);
   static void DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int nbPoint, int *pointX, int *pointY,
                        bool useSmooth);
   static void DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer);
   static void DrawCoordinateAxes(double vectorLength,double headSize=0.0,bool colored=false);
-  static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double headSize=0.0); //Auto-choose a normal and draw vector
+  static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& headSize=0.0); //Auto-choose a normal and draw vector
   static void DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, double headSize=0.0); //Draw vector with passed normal
   static void DrawButtonBack(const int &x,const int &y,const int &width,
 	  const int &height,const int &state);

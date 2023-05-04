@@ -92,10 +92,10 @@ bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d
 {
 	bool onEdge = false;
 	for (int i = 0;!onEdge && i < polyPoints.size();i++) {
-		const double x1 = polyPoints[i].u;
-		const double y1 = polyPoints[i].v;
-		const double x2 = polyPoints[(i + 1) % polyPoints.size()].u;
-		const double y2 = polyPoints[(i + 1) % polyPoints.size()].v;
+		const double& x1 = polyPoints[i].u;
+		const double& y1 = polyPoints[i].v;
+		const double& x2 = polyPoints[(i + 1) % polyPoints.size()].u;
+		const double& y2 = polyPoints[(i + 1) % polyPoints.size()].v;
 		onEdge = IsOnSection(u, v, x1, y1, x2, y2, tolerance);
 	}
 	return onEdge;
@@ -559,7 +559,7 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 }
 */
 
-std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool isConvex) {
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool& isConvex) {
 
 	//Clipper2Lib::ClipperD c(8);
 	//c.AddSubject(subjects);
@@ -699,7 +699,7 @@ std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vect
 
 }
 
-std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double coord, const bool isX)
+std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX)
 {
     //returns list of u,v intersection points of a horizontal or vertical gridline whose distance is 'coord' from 0,0
     //returns empty vector if no intersection, two points for convex facets, possibly more for concave/holed
@@ -755,14 +755,14 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon) {
     return IsInPoly(point.u, point.v, polygon);
 }
 
-bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polygon) {
+bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& polygon) {
     // Fast method to check if a point is inside a polygon or not.
     // Works with convex and concave polys, orientation independent
     int n_updown = 0;
     int n_found = 0;
-    const int n = polygon.size();
+    int n = polygon.size();
 
-    for (int j = 0; j < n; ++j) {
+    for (int j = 0; j < polygon.size(); j++) {
         const Vector2d& p1 = polygon[j];
         const Vector2d& p2 = polygon[Next(j,n)];
 
@@ -778,7 +778,7 @@ bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polyg
         }
     }
 
-    return !((n_found & 0x2) ^ (n_updown & 0x2));
+    return !(n_found & 2u) ^ !(n_updown & 2u);
     
 }
 

@@ -170,7 +170,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 	RecalcRawVertices(facet_number);
 }
 
-void Geometry::RecalcRawVertices(const int facet_number) {
+void Geometry::RecalcRawVertices(const int& facet_number) {
 	if (facet_number == -1) {
 		vertices_raw.clear();
 		vertices_raw.reserve(3 * vertices3.size());
@@ -181,7 +181,7 @@ void Geometry::RecalcRawVertices(const int facet_number) {
 		}
 	}
 	else {
-		for (const auto index : facets[facet_number]->indices) {
+		for (const auto& index : facets[facet_number]->indices) {
 			vertices_raw[3 * index] = vertices3[index].x;
 			vertices_raw[3 * index + 1] = vertices3[index].y;
 			vertices_raw[3 * index + 2] = vertices3[index].z;
@@ -1469,7 +1469,7 @@ void  Geometry::SelectIsolatedVertices() {
 	std::vector<bool> isolated(sh.nbVertex, true);
 
 	for (size_t i = 0; i < sh.nbFacet; i++) {
-		for (const auto ind : facets[i]->indices) {
+		for (const auto& ind : facets[i]->indices) {
 			isolated[ind]=false;
 		}
 	}
@@ -1671,10 +1671,10 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	Vector3d Translation = vertices3[anchorDestVertexId] - vertices3[anchorSourceVertexId];
 
 	int nb = 0;
-	for (const auto sel : memorizedSelection) {
+	for (const auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / (double)memorizedSelection.size());
-		for (const auto ind: facets[sel]->indices) {
+		for (const auto& ind: facets[sel]->indices) {
 			if (!alreadyMoved[ind]) {
 				vertices3[ind].SetLocation(vertices3[ind] + Translation);
 				alreadyMoved[ind] = true;
@@ -1715,7 +1715,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	for (auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / (double)memorizedSelection.size());
-		for (const auto ind : facets[sel]->indices) {
+		for (const auto& ind : facets[sel]->indices) {
 			if (!alreadyRotated[ind]) {
 				//rotation comes here
 				vertices3[ind].SetLocation(Rotate(vertices3[ind], vertices3[anchorDestVertexId], Axis, angle));
@@ -1757,7 +1757,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	for (auto& sel : memorizedSelection) {
 		counter += 0.333;
 		prgAlign->SetProgress(counter / memorizedSelection.size());
-		for (const auto ind : facets[sel]->indices) {
+		for (const auto& ind : facets[sel]->indices) {
 			if (!alreadyRotated2[ind]) {
 				//rotation comes here
 				vertices3[ind].SetLocation(Rotate(vertices3[ind], vertices3[anchorDestVertexId], Axis, angle));
@@ -1802,10 +1802,10 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 
 		std::set<int> toMoveIds;
 
-		for (const auto sel : selectedFacets) {
+		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / (double)selectedFacets.size());
-			for (const auto ind : facets[sel]->indices) {
+			for (const auto& ind : facets[sel]->indices) {
 				toMoveIds.insert(ind);
 			}
 		}
@@ -1838,11 +1838,11 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	selectedFacets = GetSelectedFacets(); //Update selection to cloned
 	std::vector<bool> alreadyMirrored(sh.nbVertex, false);
 
-	for (const auto sel : selectedFacets) {
+	for (const auto& sel : selectedFacets) {
 		counter += 1.0;
 		prgMirror->SetProgress(counter / selectedFacets.size());
 		nbSelFacet++;
-		for (const auto ind : facets[sel]->indices) {
+		for (const auto& ind : facets[sel]->indices) {
 			if (!alreadyMirrored[ind]) {
 				Vector3d newPosition;
 				if (project) {
@@ -1932,10 +1932,10 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 
 		std::vector<bool> alreadyRotated(sh.nbVertex, false);
 
-		for (const auto sel : selectedFacets) {
+		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgRotate->SetProgress(counter / selectedFacets.size());
-			for (const auto ind : facets[sel]->indices) {
+			for (const auto& ind : facets[sel]->indices) {
 				if (!alreadyRotated[ind]) {
 					//rotation comes here
 					vertices3[ind].SetLocation(Rotate(vertices3[ind], AXIS_P0, AXIS_DIR, theta));
@@ -1990,7 +1990,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
 	std::vector<size_t> newVertices;		//vertices that we create
 	std::vector<size_t> newIndices(sh.nbVertex);    //which new vertex was created from this old one
 
-	for (const auto sel : selectedFacetIds) {
+	for (const auto& sel : selectedFacetIds) {
 		for (size_t ind = 0; ind < facets[sel]->sh.nbIndex; ind++) {
 			size_t vertexId = facets[sel]->indices[ind];
 			if (!isCopied[vertexId]) {
@@ -2128,7 +2128,7 @@ std::vector<size_t> Geometry::GetSelectedFacets() {
 	return selection;
 }
 
-std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double tolerance) {
+std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double& tolerance) {
 	std::vector<size_t> nonPlanar;
 	for (size_t i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->nonSimple || std::abs(facets[i]->planarityError)>=tolerance) nonPlanar.push_back(i);
@@ -3045,7 +3045,7 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 	f->sh.bb.min = Vector3d(1e100, 1e100, 1e100);
 	f->sh.bb.max = Vector3d(-1e100, -1e100, -1e100);
 
-	for (const auto i : f->indices) {
+	for (const auto& i : f->indices) {
 		const Vector3d& p = vertices3[i];
 		f->sh.bb.min.x = std::min(f->sh.bb.min.x,p.x);
 		f->sh.bb.min.y = std::min(f->sh.bb.min.y, p.y);
@@ -4391,7 +4391,7 @@ void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
         f->Write(fac->sh.N.x);f->Write(fac->sh.N.y);f->Write(fac->sh.N.z,"\n");
         f->Write("\t\touter loop\n");
 		std::vector<size_t> vertexOrder = {0,2,1}; //Molflow uses right-handed normal, STL standard is left-handed
-        for (const auto v:vertexOrder) {
+        for (const auto& v:vertexOrder) {
             f->Write("\t\t\tvertex");
             f->Write(GetVertex(fac->indices[v])->x);
             f->Write(GetVertex(fac->indices[v])->y);
@@ -4495,7 +4495,7 @@ bool Geometry::IsLoaded() const {
 	return isLoaded;
 }
 
-void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double axis1Length, const double axis2Length) {
+void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double& axis1Length, const double& axis2Length) {
 	
 	std::vector<size_t> vertexIds;
 	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
@@ -4751,7 +4751,7 @@ void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, 
 }
 
 #if defined(MOLFLOW)
-PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double moleculesPerTP, const double densityCorrection, const double gasMass, const int index, const FacetMomentSnapshot &facetSnap) {
+PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap) {
 																																	  
 	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value
 	//buff is either NULL or a (BYTE*) pointer to texture or direction buffer, must be locked by AccessDataport before call

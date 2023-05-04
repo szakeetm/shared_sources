@@ -34,19 +34,19 @@ template <class Datatype> class Distribution{ //All methods except Interpolate
 protected:
 	std::vector<std::pair<double,Datatype>> values;
 public:
-	void AddPair(const std::pair<double, Datatype>& pair, const bool keepOrdered=false);
-	void AddPair(const double x, const Datatype& y, const bool keepOrdered=false);
-	void RemoveValue(const size_t pos);
-	void SetPair(const size_t index, const std::pair<double, Datatype>& pair);
-	void SetPair(const size_t index, const double x, const Datatype& y);
-	void SetValues(std::vector<std::pair<double, Datatype>> insertValues, const bool sort); //sort then set
-	void SetX(const size_t index, const double x);
-	void SetY(const size_t index, const Datatype& y);
-	void Resize(const size_t N); //Clear, resize and shrink.
+	void AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered=false);
+	void AddPair(const double& x, const Datatype& y, const bool& keepOrdered=false);
+	void RemoveValue(const size_t& pos);
+	void SetPair(const size_t& index, const std::pair<double, Datatype>& pair);
+	void SetPair(const size_t& index, const double& x, const Datatype& y);
+	void SetValues(std::vector<std::pair<double, Datatype>> insertValues, const bool& sort); //sort then set
+	void SetX(const size_t& index, const double& x);
+	void SetY(const size_t& index, const Datatype& y);
+	void Resize(const size_t& N); //Clear, resize and shrink.
 	size_t GetSize();
 	size_t GetMemSize();
-	double GetX(const size_t index);
-	Datatype GetY(const size_t index); //GetYValue seems reserved
+	double GetX(const size_t& index);
+	Datatype GetY(const size_t& index); //GetYValue seems reserved
 	[[nodiscard]] const std::vector<std::pair<double,Datatype>>& GetValues() const {
 	    return values;
 	}
@@ -54,7 +54,7 @@ public:
 	bool logYinterp=false;
 };
 
-template <class Datatype> void Distribution<Datatype>::AddPair(const std::pair<double, Datatype>& pair, const bool keepOrdered) {
+template <class Datatype> void Distribution<Datatype>::AddPair(const std::pair<double, Datatype>& pair, const bool& keepOrdered) {
 	if (keepOrdered) {
 		//Assuming existing values are stored in order
 		size_t pos = 0;
@@ -66,35 +66,35 @@ template <class Datatype> void Distribution<Datatype>::AddPair(const std::pair<d
 	}
 }
 
-template <class Datatype> void Distribution<Datatype>::AddPair(const double x, const Datatype& y, const bool keepOrdered) {
+template <class Datatype> void Distribution<Datatype>::AddPair(const double& x, const Datatype& y, const bool& keepOrdered) {
 	AddPair(std::make_pair(x, y),keepOrdered);
 }
 
-template <class Datatype> void Distribution<Datatype>::RemoveValue(const size_t pos) {
+template <class Datatype> void Distribution<Datatype>::RemoveValue(const size_t& pos) {
 	values.erase(values.begin() + pos);
 }
 
-template <class Datatype> void Distribution<Datatype>::SetPair(const size_t index, const std::pair<double, Datatype>& pair) {
+template <class Datatype> void Distribution<Datatype>::SetPair(const size_t& index, const std::pair<double, Datatype>& pair) {
 	assert(index < values.size());
 	values[index]=pair;
 }
 
-template <class Datatype> void Distribution<Datatype>::SetPair(const size_t index, const double x, const Datatype& y) {
+template <class Datatype> void Distribution<Datatype>::SetPair(const size_t& index, const double& x, const Datatype& y) {
 	SetPair(index,std::make_pair(x, y));
 }
 
 
-template <class Datatype> void Distribution<Datatype>::SetX(const size_t index, const double x) {
+template <class Datatype> void Distribution<Datatype>::SetX(const size_t& index, const double& x) {
 	assert(index < values.size());
 	values[index].first = x;
 }
 
-template <class Datatype> void Distribution<Datatype>::SetY(const size_t index, const Datatype& y) {
+template <class Datatype> void Distribution<Datatype>::SetY(const size_t& index, const Datatype& y) {
 	assert(index < values.size());
 	values[index].second = y;
 }
 
-template <class Datatype> void Distribution<Datatype>::Resize(const size_t N) {
+template <class Datatype> void Distribution<Datatype>::Resize(const size_t& N) {
 	values.resize(N,std::pair<double, Datatype>());
 }
 
@@ -107,20 +107,20 @@ template <class Datatype> size_t Distribution<Datatype>::GetMemSize() {
     + (sizeof(std::pair<double,Datatype>) * values.capacity());
 }
 
-template <class Datatype> double Distribution<Datatype>::GetX(const size_t index) {
+template <class Datatype> double Distribution<Datatype>::GetX(const size_t& index) {
 	assert(index < values.size());
 	return values[index].first;
 }
 
-template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t index) {
+template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t& index) {
 	assert(index < values.size());
 	return values[index].second;
 }
 
 class Distribution2D:public Distribution<double> { //Standard x-y pairs of double
 public:
-	[[nodiscard]] double InterpolateY(const double &x,const bool allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
-	[[nodiscard]] double InterpolateX(const double &y,const bool allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
+	[[nodiscard]] double InterpolateY(const double &x,const bool& allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
+	[[nodiscard]] double InterpolateX(const double &y,const bool& allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
 
     template<class Archive>
     void serialize(Archive & archive)
@@ -135,8 +135,8 @@ public:
 
 class DistributionND:public Distribution<std::vector<double>> { //x-y pairs where y is a vector of double values
 public:
-	std::vector<double> InterpolateY(const double x, const bool allowExtrapolate);
-	double InterpolateX(const double y, const size_t elementIndex, const bool allowExtrapolate);
+	std::vector<double> InterpolateY(const double& x, const bool& allowExtrapolate);
+	double InterpolateX(const double& y, const size_t& elementIndex, const bool& allowExtrapolate);
     template<class Archive>
     void serialize(Archive & archive)
     {
@@ -152,7 +152,7 @@ template <class Datatype> bool sorter (const std::pair<double, Datatype> &i, con
 	return (i.first<j.first);
 }
 
-template <class Datatype> void Distribution<Datatype>::SetValues(std::vector<std::pair<double, Datatype>> insertValues, const bool sort) { //sort then set
+template <class Datatype> void Distribution<Datatype>::SetValues(std::vector<std::pair<double, Datatype>> insertValues, const bool& sort) { //sort then set
 	if (sort) std::sort(insertValues.begin(), insertValues.end()/*, sorter*/); //sort pairs by time first
 	this->values = insertValues;
 }

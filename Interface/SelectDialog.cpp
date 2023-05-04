@@ -117,7 +117,7 @@ void SelectDialog::ProcessMessage(GLComponent *src,int message) {
       if (src == selButton)
           geom->UnselectAll();
 
-      for (const auto facetId : facetIds) {
+      for (const auto& facetId : facetIds) {
           geom->GetFacet(facetId)->selected = Contains({ selButton,addButton },src);
       }
       geom->UpdateSelection();

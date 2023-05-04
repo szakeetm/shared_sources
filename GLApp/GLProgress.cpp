@@ -98,7 +98,7 @@ double GLProgress::GetProgress() {
 
 }
 
-void GLProgress::SetMessage(const std::string& msg, const bool force) {
+void GLProgress::SetMessage(const std::string& msg, const bool& force) {
 	SetMessage(msg.c_str(),force);
 }
 
@@ -129,7 +129,7 @@ void GLProgress::PositionComponents()
 	SetBounds(windowX, windowY, windowWidth, windowHeight);
 }
 
-void GLProgress::SetMessage(const char *msg, const bool force) {
+void GLProgress::SetMessage(const char *msg, const bool& force) {
 
     progressStatus->SetText(msg);
 	PositionComponents(); //If message length or height changed
