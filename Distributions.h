@@ -119,8 +119,8 @@ template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t ind
 
 class Distribution2D:public Distribution<double> { //Standard x-y pairs of double
 public:
-	[[nodiscard]] double InterpolateY(const double &x,const bool allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
-	[[nodiscard]] double InterpolateX(const double &y,const bool allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
+	[[nodiscard]] double InterpolateY(const doublex,const bool allowExtrapolate) const; //interpolates the Y value corresponding to X (allows extrapolation)
+	[[nodiscard]] double InterpolateX(const doubley,const bool allowExtrapolate) const; //interpolates the X value corresponding to Y (allows extrapolation)
 
     template<class Archive>
     void serialize(Archive & archive)

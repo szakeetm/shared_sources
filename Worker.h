@@ -121,8 +121,8 @@ public:
   std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
-  void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
-	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
+  void ImportDesorption_SYN(const char *fileName, const size_tsource, const doubletime,
+	  const size_tmode, const doubleeta0, const doublealpha, const doublecutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress *prg);
   void LoadTexturesGEO(FileReader *f, int version);

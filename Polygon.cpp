@@ -88,7 +88,7 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
 
 }
 */
-bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance)
+bool IsOnPolyEdge(const double u, const double v, const std::vector<Vector2d>& polyPoints, const double tolerance)
 {
 	bool onEdge = false;
 	for (int i = 0;!onEdge && i < polyPoints.size();i++) {
@@ -101,7 +101,7 @@ bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d
 	return onEdge;
 }
 
-bool IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance)
+bool IsOnSection(const double u, const double v, const double baseU, const double baseV, const double targetU, const double targetV, const double tolerance)
 {
 	//Notation from https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 	//u=x0
@@ -194,7 +194,7 @@ size_t AddNode(PolyGraph& g,const Vector2d& p)
 
 }
 
-size_t AddArc(PolyGraph& g,const size_t &i1,const size_t &i2,const size_t &source)
+size_t AddArc(PolyGraph& g,const size_ti1,const size_ti2,const size_tsource)
 {
 
   // Add an arc to the polygraph and returns its id
@@ -226,7 +226,7 @@ void CutArc(PolyGraph& g, size_t idx, size_t ni)
 }
 
 
-void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int &a0)
+void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const inta0)
 {
 
   // Insert a polygon edge in the polygraph, a0 = first arc to be checked

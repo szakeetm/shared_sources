@@ -20,7 +20,7 @@ public:
   int RestoreDeviceObjects(int srcWidth,int scrHeight);
   
   // Draw a 2D text (in viewport coordinates)
-  void DrawText(const int &x,const int &y,const char *text,const bool &loadMatrix=true);
+  void DrawText(const intx,const inty,const char *text,const boolloadMatrix=true);
   void DrawLargeText(int x,int y,const char *text,float sizeFactor,bool loadMatrix=true);
   void DrawTextFast(int cx,int cy,const char *text);
   void DrawTextV(int x,int y,char *text,bool loadMatrix=true);

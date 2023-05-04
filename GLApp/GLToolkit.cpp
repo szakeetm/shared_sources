@@ -244,7 +244,7 @@ void GLToolkit::SetCursor(int cursor) {
 
 }
 
-SDL_Cursor *InitCursor(const char *pngName,const int &tx,const int &ty) {
+SDL_Cursor *InitCursor(const char *pngName,const inttx,const intty) {
 
   int i, row, col;
   Uint8 data[4*32];
@@ -310,7 +310,7 @@ void GLToolkit::SetIcon32x32(const char *pngName) {
     SDL_FreeSurface(s);
 }
 
-bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
+bool GLToolkit::RestoreDeviceObjects(const intwidth,const intheight) {
 
   scrWidth = width;
   scrHeight = height;
@@ -398,7 +398,7 @@ void GLToolkit::SetViewport(const GLVIEWPORT &v) {
   GLToolkit::SetViewport(v.x,v.y,v.width,v.height);
 }
 
-void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int &height) {
+void GLToolkit::SetViewport(const intx,const inty,const intwidth,const intheight) {
 
   int vy = scrHeight - (y+height);
   int vx = x;
@@ -408,7 +408,7 @@ void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int
 
 #define TW 256.0f
 
-void GLToolkit::DrawButtonBack(const int &x,const int &y,const int &width,const int &height,const int &state) {
+void GLToolkit::DrawButtonBack(const intx,const inty,const intwidth,const intheight,const intstate) {
 
   int w1 = width / 2;
   int w2 = width - w1;
@@ -472,8 +472,8 @@ void GLToolkit::DrawBar(int x,int y,int width,int height) {
 
 }
 
-void GLToolkit::DrawTextBack(const int &x,const int &y,const int &width,const int &height,
-							 const int &rBack, const int &gBack, const int &bBack) {
+void GLToolkit::DrawTextBack(const intx,const inty,const intwidth,const intheight,
+							 const intrBack, const intgBack, const intbBack) {
 
   int w1 = width / 2;
   int w2 = width - w1;
@@ -660,8 +660,8 @@ void GLToolkit::DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer) {
 
 }
 
-void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
-						   const int &height,const bool &shadow,const bool &iShadow,const bool &isEtched) {
+void GLToolkit::DrawBorder(const intx,const inty,const intwidth,
+						   const intheight,const boolshadow,const booliShadow,const boolisEtched) {
 
   float rL = 1.0f;
   float gL = 1.0f;
@@ -764,9 +764,9 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
 
 }
 
-void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &height,
-	  const int &r,const int &g,const int &b,const bool &shadow,const bool &iShadow,
-	  const bool &isEtched) {
+void GLToolkit::DrawBox(const intx,const inty,const intwidth,const intheight,
+	  const intr,const intg,const intb,const boolshadow,const booliShadow,
+	  const boolisEtched) {
 
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;

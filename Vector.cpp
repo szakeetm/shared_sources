@@ -23,7 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 Vector2d::Vector2d() {}
 
-Vector2d::Vector2d(const double &u, const double &v) {
+Vector2d::Vector2d(const doubleu, const doublev) {
 		this->u = u;
 		this->v = v;
 }
@@ -34,13 +34,13 @@ Vector3d::Vector3d() {
     this->z = 0.0;
 }
 
-Vector3d::Vector3d(const double &val) {
+Vector3d::Vector3d(const doubleval) {
     this->x = val;
     this->y = val;
     this->z = val;
 }
 
-Vector3d::Vector3d(const double &x, const double &y,const double &z) {
+Vector3d::Vector3d(const doublex, const doubley,const doublez) {
 		this->x = x;
 		this->y = y;
 		this->z = z;
@@ -244,7 +244,7 @@ double GetOrientedAngle(const Vector2d& v1,const Vector2d& v2) {
 
 }
 
-Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length){
+Vector3d RandomPerpendicularVector(const Vector3d &v,const doublelength){
 	Vector3d randomVector=Vector3d(
             ((double) rand() / (RAND_MAX)) + 1,
             ((double) rand() / (RAND_MAX)) + 1,

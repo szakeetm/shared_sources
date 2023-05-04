@@ -4513,7 +4513,7 @@ void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t & nbSteps)
+void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double axis1Length, const double axis2Length, const size_t nbSteps)
 {	
 	std::vector<size_t> vertexIds;
 	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
@@ -4530,7 +4530,7 @@ void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t & nbSteps)
+void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double axis1Length, const double axis2Length, const double topLength, const size_t nbSteps)
 {
 	//Set of 3 equations:
 	// r: radius of racetrack arc

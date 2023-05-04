@@ -45,7 +45,7 @@ Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
 Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double theta);
 
 double GetOrientedAngle(const Vector2d& v1, const Vector2d& v2);
-Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length);
+Vector3d RandomPerpendicularVector(const Vector3d &v,const doublelength);
 bool VertexEqual(const Vector2d& p1, const Vector2d& p2);
 
 class Vector3d {
@@ -54,8 +54,8 @@ public:
 	double y;
 	double z;
 	Vector3d();
-    Vector3d(const double &val);
-	Vector3d(const double &x, const double &y, const double &z);
+    Vector3d(const doubleval);
+	Vector3d(const doublex, const doubley, const doublez);
 	double Norme() const;
 	Vector3d Normalized() const;
 	Vector3d& operator+=(const Vector3d & rhs);
@@ -74,7 +74,7 @@ public:
 	double u;
 	double v;
 	Vector2d();
-	Vector2d(const double &u, const double &v);
+	Vector2d(const doubleu, const doublev);
 	double Norme() const;
 	Vector2d Normalized() const;
 
