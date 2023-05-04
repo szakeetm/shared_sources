@@ -45,7 +45,7 @@ public:
 
     void InitializeTexture();
 
-    virtual bool InitializeLinkAndVolatile(const size_t  id);
+    virtual bool InitializeLinkAndVolatile(const size_t & id);
 
     [[nodiscard]] virtual size_t GetHitsSize(size_t nbMoments) const;
     [[nodiscard]] virtual size_t GetMemSize() const;

@@ -18,7 +18,7 @@ Sprite2D::Sprite2D() {
   bC = 1.0f;
 }
 
-void Sprite2D::SetSpriteMapping(const float  mx1,const float  my1,const float  mx2,const float  my2) {
+void Sprite2D::SetSpriteMapping(const float &mx1,const float &my1,const float &mx2,const float &my2) {
 
   this->mx1 = mx1;
   this->my1 = my1;
@@ -27,8 +27,8 @@ void Sprite2D::SetSpriteMapping(const float  mx1,const float  my1,const float  m
 
 }
 
-void Sprite2D::UpdateSprite(const int x1,const int y1,const int x2,const int y2,
-							const float  mx1,const float  my1,const float  mx2,const float  my2) {
+void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2,
+							const float &mx1,const float &my1,const float &mx2,const float &my2) {
 
   this->x1 = x1;
   this->y1 = y1;
@@ -41,7 +41,7 @@ void Sprite2D::UpdateSprite(const int x1,const int y1,const int x2,const int y2,
 
 }
 
-void Sprite2D::UpdateSprite(const int x1,const int y1,const int x2,const int y2) {
+void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2) {
 
   this->x1 = x1;
   this->y1 = y1;
@@ -50,7 +50,7 @@ void Sprite2D::UpdateSprite(const int x1,const int y1,const int x2,const int y2)
 
 }
 
-void Sprite2D::SetColor(const float  r,const float  g,const float  b) {
+void Sprite2D::SetColor(const float &r,const float &g,const float &b) {
   rC = r;
   gC = g;
   bC = b;
@@ -167,7 +167,7 @@ void Sprite2D::InvalidateDeviceObjects() {
 
 }
 
-void Sprite2D::Render(const bool doLinear) {
+void Sprite2D::Render(const bool &doLinear) {
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D,texId);

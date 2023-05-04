@@ -54,7 +54,7 @@ public:
     void   SetSeed(unsigned long seed); // Initialise the random generator with the specified seed
     double rnd(); // Returns a uniform distributed double value in the interval ]0,1[
 
-    double Gaussian(const double sigma);
+    double Gaussian(const double &sigma);
 
     unsigned long GetSeed();
 
@@ -80,7 +80,7 @@ public:
         gsl_rng_free(this->gen);
     };
 
-    double GetGaussian(const double mean, const double sigma, const double lowerBound, const double upperBound);
+    double GetGaussian(const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
 private:
     gsl_rng *gen;
 

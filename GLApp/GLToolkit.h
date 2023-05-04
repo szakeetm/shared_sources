@@ -51,7 +51,7 @@ public:
   static GLFont2D *GetDialogFont();
   static GLFont2D *GetDialogFontBold();
   static void GetScreenSize(int *width,int *height);
-  static void SetViewport(const int x,const int y,const int width,const int height);
+  static void SetViewport(const int &x,const int &y,const int &width,const int &height);
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
@@ -70,11 +70,11 @@ public:
   static void CheckGLErrors(const char *compname);
 
   // Drawing functions
-  static void DrawBox(const int x,const int y,const int width,const int height,
-	  const int r,const int g,const int b,const bool shadow=false,const bool iShadow=false,
-	  const bool isEtched=false);
-  static void DrawBorder(const int x,const int y,const int width,const int height,
-	  const bool shadow,const bool iShadow,const bool isEtched);
+  static void DrawBox(const int &x,const int &y,const int &width,const int &height,
+	  const int &r,const int &g,const int &b,const bool &shadow=false,const bool &iShadow=false,
+	  const bool &isEtched=false);
+  static void DrawBorder(const int &x,const int &y,const int &width,const int &height,
+	  const bool &shadow,const bool &iShadow,const bool &isEtched);
   static void DrawStringInit();
   static void DrawStringRestore();
   static void DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx=0,int offy=0,const bool fast=true);
@@ -84,14 +84,14 @@ public:
   static void DrawCoordinateAxes(double vectorLength,double headSize=0.0,bool colored=false);
   static void DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double headSize=0.0); //Auto-choose a normal and draw vector
   static void DrawVector(const Vector3d& start, const Vector3d& end, const Vector3d& normal, double headSize=0.0); //Draw vector with passed normal
-  static void DrawButtonBack(const int x,const int y,const int width,
-	  const int height,const int state);
+  static void DrawButtonBack(const int &x,const int &y,const int &width,
+	  const int &height,const int &state);
   static void DrawSmallButton(int x,int y,int state);
   static void DrawTinyButton(int x,int y,int state);
   static void DrawToggle(int x,int y);
   static void DrawBar(int x,int y,int width,int height);
-  static void DrawTextBack(const int x,const int y,const int width,
-	  const int height,const int rBack,const int gBack,const int bBack);
+  static void DrawTextBack(const int &x,const int &y,const int &width,
+	  const int &height,const int &rBack,const int &gBack,const int &bBack);
   static void DrawVGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
   static void DrawHGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
   static void DrawHIGradientBox(int x,int y,int width,int height,bool shadow=false,bool iShadow=false,bool isEtched=false);
@@ -100,7 +100,7 @@ public:
   static void Draw16x16(int x,int y,int xt,int yt);
 
   // Initialisation
-  static bool RestoreDeviceObjects(const int width,const int height);
+  static bool RestoreDeviceObjects(const int &width,const int &height);
   static void InvalidateDeviceObjects();
 
   static void CopyTextToClipboard(const std::string& text);

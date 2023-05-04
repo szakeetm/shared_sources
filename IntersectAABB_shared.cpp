@@ -276,8 +276,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
 IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
-              const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,
-              const bool nullRy, const bool nullRz, const Vector3d &inverseRayDir, bool &found,
+              const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
+              const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
               SimulationFacet *&collidedFacet, double &minLength) {
 
 	// Returns three values
@@ -386,7 +386,7 @@ IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node
 	}
 }
 
-bool IsInFacet(const SimulationFacet &f, const double u, const double v) {
+bool IsInFacet(const SimulationFacet &f, const double &u, const double &v) {
 
 	return IsInPoly(u, v, f.vertices2);
 

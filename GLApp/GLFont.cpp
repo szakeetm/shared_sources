@@ -181,7 +181,7 @@ void GLFont2D::InvalidateDeviceObjects() {
 
 }
 
-void GLFont2D::SetTextColor(const float  r,const float  g,const float  b) {
+void GLFont2D::SetTextColor(const float &r,const float &g,const float &b) {
   rC = r;
   gC = g;
   bC = b;
@@ -249,7 +249,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,boo
 
 }
 
-void GLFont2D::DrawText(const int cx,const int cy,const char *text,const bool loadMatrix) {
+void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool &loadMatrix) {
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
