@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include <algorithm> //min max
 
-bool IsConvex(const GLAppPolygon &p,size_t idx) {
+bool IsConvex(const GLAppPolygon &p,const size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
 
@@ -37,7 +37,7 @@ bool IsConvex(const GLAppPolygon &p,size_t idx) {
   return d <= 0.0;
 }
 
-bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
+bool ContainsConcave(const GLAppPolygon &p,const int i1,const int i2,const int i3)
 {
 
   // Determine if the specified triangle contains or not a concave point
@@ -53,7 +53,7 @@ bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
   int i = 0;
   while(!found && i<p.pts.size()) {
     if( i!=_i1 && i!=_i2 && i!=_i3 ) {
-	  if (IsInPoly(p.pts[i], { p1,p2,p3 }))
+	  if (Point_in_triangle(p.pts[i], p1,p2,p3 ))
         found = !IsConvex(p,i);
     }
     i++;
@@ -62,7 +62,7 @@ bool ContainsConcave(const GLAppPolygon &p,int i1,int i2,int i3)
   return found;
 
 }
-
+/*
 std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int i3)
 {
 
@@ -79,7 +79,7 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
   size_t i = 0;
   while(!found && i<p.pts.size()) {
     if( i!=_i1 && i!=_i2 && i!=_i3 ) { 
-	  found = IsInPoly(p.pts[i], { p1,p2,p3 });
+	  found = Point_in_triangle(p.pts[i], p1,p2,p3 );
     }
     i++;
   }
@@ -87,6 +87,7 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
   return { !found,(1.0 / 3.0)*(p1 + p2 + p3) };
 
 }
+*/
 bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance)
 {
 	bool onEdge = false;
@@ -779,6 +780,21 @@ bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& pol
 
     return !(n_found & 2u) ^ !(n_updown & 2u);
     
+}
+
+// Returns true if the point p is inside the triangle abc, false otherwise
+bool Point_in_triangle(const Vector2d& p, const Vector2d& a, const Vector2d& b, const Vector2d& c) {
+	double d1 = sign(p, a, b);
+	double d2 = sign(p, b, c);
+	double d3 = sign(p, c, a);
+	bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+	bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+	return !(has_neg && has_pos);
+}
+
+// Helper function to compute the sign of the cross product of vectors p1->p2 and p1->p3
+double sign(const Vector2d& p1, const Vector2d& p2, const Vector2d& p3) {
+	return (p1.u - p3.u) * (p2.v - p3.v) - (p2.u - p3.u) * (p1.v - p3.v);
 }
 
 Vector2d GLAppPolygon::GetCenter()

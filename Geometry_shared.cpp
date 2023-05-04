@@ -1800,29 +1800,21 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		selectedFacets = GetSelectedFacets(); //Update selection to cloned
 		double counter = 1.0;
 
-		std::vector<bool> alreadyMoved(sh.nbVertex, false);
+		std::set<int> toMoveIds;
 
 		for (const auto& sel : selectedFacets) {
 			counter += 1.0;
 			prgMove->SetProgress(counter / (double)selectedFacets.size());
 			for (const auto& ind : facets[sel]->indices) {
-				if (!alreadyMoved[ind]) {
-					vertices3[ind].SetLocation(vertices3[ind] + translation);
-					alreadyMoved[ind] = true;
-				}
+				toMoveIds.insert(ind);
 			}
 		}
 
+		for (auto ind : toMoveIds)
+			vertices3[ind].SetLocation(vertices3[ind] + translation);
+
 		InitializeGeometry();
         InitializeInterfaceGeometry();
-		//update textures
-		/*try {
-			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
-		}
-		catch (const std::exception &e) {
-			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-			return;
-		}*/
 	}
 	prgMove->SetVisible(false);
 	SAFE_DELETE(prgMove);
