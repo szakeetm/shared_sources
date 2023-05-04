@@ -119,10 +119,10 @@ GLList::~GLList() {
 }
 
 void GLList::Clear(bool keepColumns, bool showProgress) {
-	GLProgress *prgList = NULL;
+	GLProgress_GUI *prgList = NULL;
 	double all = (double)nbCol*nbRow;
 	if (showProgress) {
-		prgList = new GLProgress("Clearing facet hits list...", "Please wait");
+		prgList = new GLProgress_GUI("Clearing facet hits list...", "Please wait");
 		prgList->SetProgress(0.0);
 		prgList->SetVisible(true);
 	}

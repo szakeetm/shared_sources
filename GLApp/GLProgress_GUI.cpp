@@ -1,5 +1,5 @@
 // Copyright (c) 2011 rubicon IT GmbH
-#include "GLProgress.h"
+#include "GLProgress_GUI.hpp"
 #include "GLButton.h"
 #include "GLLabel.h"
 #include "GLIcon.h"
@@ -9,12 +9,11 @@
 #include <fmt/core.h>
 
 // Construct a message dialog box
-GLProgress::GLProgress(const char *message,const char *title):GLWindow() {
-
+GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &title) : GLProgress_Abstract(message)  {
 
   lastUpd = 0;
 
-  if(title) SetTitle(title);
+  if(!title.empty()) SetTitle(title);
   else      SetTitle("Message");
 
   // Label
@@ -58,21 +57,21 @@ GLProgress::GLProgress(const char *message,const char *title):GLWindow() {
 
 }
 
-void GLProgress::ProcessMessage(GLComponent *src,int message) {
+void GLProgress_GUI::ProcessMessage(GLComponent *src,int message) {
 
   GLWindow::ProcessMessage(src,message);
 
 }
 
-void GLProgress::SetProgress(double value) {
-  
-  Saturate(value,0.0,1.0);
-  size_t p = (size_t)( value*100.0 + 0.5 );
+void GLProgress_GUI::SetProgress(const double value) {
+	double myVal = value;
+  Saturate(myVal,0.0,1.0);
+  size_t p = (size_t)(myVal *100.0 + 0.5 );
   if( progress != p ) {
     progress = p;
 
     percentLabel->SetText(fmt::format("{}%",progress));
-	progressBarWidth = (int)((double)progressBarMaxWidth*value+0.5);
+	progressBarWidth = (int)((double)progressBarMaxWidth* myVal +0.5);
     progressBar->SetBounds(progressBarX,progressBarY,progressBarWidth,progressBarHeight); //lighter than PositionComponents()
 
 	Uint32 now = SDL_GetTicks();
@@ -86,23 +85,23 @@ void GLProgress::SetProgress(double value) {
 
 }
 
-void GLProgress::SetProgress(GLStatus progress)
-{
-	SetProgress(progress.progress);
-	SetMessage(progress.status);
+void GLProgress_GUI::SetMessage(const std::string& msg, const bool force) {
+	status = msg;
+	progressStatus->SetText(msg);
+	PositionComponents(); //If message length or height changed
+	if (force) {
+		GLWindowManager::Repaint();
+	}
+	else {
+		Uint32 now = SDL_GetTicks();
+		if (IsVisible() && (now - lastUpd) > 500) {
+			GLWindowManager::Repaint();
+			lastUpd = now;
+		}
+	}
 }
 
-double GLProgress::GetProgress() {
-
- return (double)progress/100.0;
-
-}
-
-void GLProgress::SetMessage(const std::string& msg, const bool force) {
-	SetMessage(msg.c_str(),force);
-}
-
-void GLProgress::PositionComponents()
+void GLProgress_GUI::PositionComponents()
 {
 	int txtWidth, txtHeight;
 	progressStatus->GetTextBounds(&txtWidth, &txtHeight);
@@ -127,22 +126,4 @@ void GLProgress::PositionComponents()
 	int windowX = (screenWidth - windowWidth) / 2 - 30;
 	int windowY = (screenHeight - windowHeight) / 2;
 	SetBounds(windowX, windowY, windowWidth, windowHeight);
-}
-
-void GLProgress::SetMessage(const char *msg, const bool force) {
-
-    progressStatus->SetText(msg);
-	PositionComponents(); //If message length or height changed
-	if (force) {
-		GLWindowManager::Repaint();
-	}
-	else {
-		Uint32 now = SDL_GetTicks();
-		if (IsVisible() && (now - lastUpd) > 500) {
-			GLWindowManager::Repaint();
-			lastUpd = now;
-		}
-	}
-	//this->Paint();
-	//SDL_GL_SwapBuffers();
 }

@@ -114,8 +114,3 @@ struct GLVIEWPORT {
   int height;
 
 } ;
-
-struct GLStatus {
-    int progress=0;
-    std::string status;
-};

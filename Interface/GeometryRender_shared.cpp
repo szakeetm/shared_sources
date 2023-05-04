@@ -918,7 +918,7 @@ void Geometry::SetCullMode(int mode) {
 
 void Geometry::ClearFacetTextures()
 {
-	GLProgress* prg = new GLProgress("Clearing texture", "Frame update");
+	GLProgress_GUI* prg = new GLProgress_GUI("Clearing texture", "Frame update");
 	prg->SetBounds(5, 28, 300, 90);
 	int startTime = SDL_GetTicks();
 	for (int i = 0; i < sh.nbFacet; i++) {

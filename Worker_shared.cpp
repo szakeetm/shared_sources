@@ -671,7 +671,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
-    //auto *progressDlg = new GLProgress("Creating dataport...", "Passing simulation mode to workers");
+    //auto *progressDlg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
     //progressDlg->SetVisible(true);
     //progressDlg->SetProgress(0.0);
 
@@ -818,7 +818,7 @@ void Worker::RetrieveHistogramCache()
 }
 
 // returns -1 on error, 0 on success
-int Worker::ReloadSim(bool sendOnly, GLProgress *progressDlg) {
+int Worker::ReloadSim(bool sendOnly, GLProgress_GUI *progressDlg) {
     // Send and Load geometry
     progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
     try {

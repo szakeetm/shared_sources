@@ -13,6 +13,7 @@ public:
 
   // Construction
   GLLabel(const char *text);
+  GLLabel(const std::string& text) : GLLabel(text.c_str()) {}
   ~GLLabel();
 
   // Component method

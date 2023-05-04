@@ -286,7 +286,7 @@ void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 	//BuildGLList();
 }
 
-size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress *prg)
+size_t Geometry::AnalyzeNeighbors(Worker *work, GLProgress_GUI *prg)
 {
 	size_t i = 0;
 	work->abortRequested = false;
@@ -1000,7 +1000,7 @@ int Geometry::AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex>
 
 }
 
-void Geometry::CollapseVertex(Worker *work, GLProgress *prg, double totalWork, double vT) {
+void Geometry::CollapseVertex(Worker *work, GLProgress_GUI *prg, double totalWork, double vT) {
 	mApp->changedSinceSave = true;
 	if (!isLoaded) return;
 	// Collapse neighbor vertices
@@ -1649,7 +1649,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker) {
 
 	double counter = 0.0;
-	auto *prgAlign = new GLProgress("Aligning facets...", "Please wait");
+	auto *prgAlign = new GLProgress_GUI("Aligning facets...", "Please wait");
 	prgAlign->SetProgress(0.0);
 	prgAlign->SetVisible(true);
 	if (!mApp->AskToReset(worker)) return;
@@ -1783,7 +1783,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 
 void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
-	auto *prgMove = new GLProgress("Moving selected facets...", "Please wait");
+	auto *prgMove = new GLProgress_GUI("Moving selected facets...", "Please wait");
 	prgMove->SetProgress(0.0);
 	prgMove->SetVisible(true);
 	auto selectedFacets = GetSelectedFacets();
@@ -1825,7 +1825,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	double counter = 0.0;
 	auto selectedFacets = GetSelectedFacets();
 	if (selectedFacets.empty()) return undoPoints;
-	auto *prgMirror = new GLProgress("Mirroring selected facets...", "Please wait");
+	auto *prgMirror = new GLProgress_GUI("Mirroring selected facets...", "Please wait");
 	prgMirror->SetProgress(0.0);
 	prgMirror->SetVisible(true);
 
@@ -1918,7 +1918,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 	auto selectedFacets = GetSelectedFacets();
 	double counter = 0.0;
 	if (selectedFacets.empty()) return;
-	auto *prgRotate = new GLProgress("Rotating selected facets...", "Please wait");
+	auto *prgRotate = new GLProgress_GUI("Rotating selected facets...", "Please wait");
 	prgRotate->SetProgress(0.0);
 	prgRotate->SetVisible(true);
 
@@ -2051,7 +2051,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
 
 void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
-	auto *prgMove = new GLProgress("Moving selected vertices...", "Please wait");
+	auto *prgMove = new GLProgress_GUI("Moving selected vertices...", "Please wait");
 	prgMove->SetProgress(0.0);
 	prgMove->SetVisible(true);
 	auto selectedVertices = GetSelectedVertices();
@@ -2208,7 +2208,7 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 
 void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
-	auto *prgMove = new GLProgress("Scaling selected facets...", "Please wait");
+	auto *prgMove = new GLProgress_GUI("Scaling selected facets...", "Please wait");
 	prgMove->SetProgress(0.0);
 	prgMove->SetVisible(true);
 
@@ -2568,7 +2568,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	return deletedFacetList;
 }
 
-std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress *prg) {
+std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress_GUI *prg) {
 	mApp->changedSinceSave = true;
 	std::vector<DeletedFacet> deletedFacetList;
 	size_t oldNbFacets = sh.nbFacet;
@@ -2819,7 +2819,7 @@ InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 
 }
 
-void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress *prg) {
+void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_GUI *prg) {
 	mApp->changedSinceSave = true;
 	work->abortRequested = false;
 	InterfaceFacet *fi, *fj;
@@ -3629,7 +3629,7 @@ void Geometry::ResetTextureLimits() {
 #endif
 }
 
-void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
+void Geometry::LoadASE(FileReader *file, GLProgress_GUI *prg) {
 
 	Clear();
 
@@ -3684,7 +3684,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress *prg) {
 
 }
 
-void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
+void Geometry::LoadSTR(FileReader *file, GLProgress_GUI *prg) {
 
 	char nPath[512];
 	char fPath[512];
@@ -3759,7 +3759,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress *prg) {
 
 }
 
-void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
+void Geometry::LoadSTL(FileReader* file, GLProgress_GUI* prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
 
 	if (!insert) {
 		prg->SetMessage("Clearing current geometry...");
@@ -3899,7 +3899,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress* prg, double scaleFactor, bo
     InitializeInterfaceGeometry();
 }
 
-void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
+void Geometry::LoadTXT(FileReader *file, GLProgress_GUI *prg, Worker* worker) {
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
@@ -3919,7 +3919,7 @@ void Geometry::LoadTXT(FileReader *file, GLProgress *prg, Worker* worker) {
 
 }
 
-void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
+void Geometry::InsertTXT(FileReader *file, GLProgress_GUI *prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -3938,7 +3938,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress *prg, bool newStr) {
 
 }
 
-void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, bool newStr) {
+void Geometry::InsertSTL(FileReader *file, GLProgress_GUI *prg, double scaleFactor, bool newStr) {
 	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
@@ -3949,7 +3949,7 @@ void Geometry::InsertSTL(FileReader *file, GLProgress *prg, double scaleFactor, 
     InitializeInterfaceGeometry();
 }
 
-void Geometry::InsertGEO(FileReader *file, GLProgress *prg, bool newStr) {
+void Geometry::InsertGEO(FileReader *file, GLProgress_GUI *prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -4378,7 +4378,7 @@ std::vector<size_t> Geometry::GetAllFacetIndices() const {
 	return facetIndices;
 }
 
-void Geometry::SaveSTL(FileWriter* f, GLProgress* prg) {
+void Geometry::SaveSTL(FileWriter* f, GLProgress_GUI* prg) {
     prg->SetMessage("Triangulating geometry...");
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);

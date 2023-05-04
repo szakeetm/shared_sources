@@ -289,7 +289,7 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 	tmp.str(std::string());
 
 	//Lines
-	GLProgress* prg = new GLProgress("Assembling text", "Particle logger");
+	GLProgress_GUI* prg = new GLProgress_GUI("Assembling text", "Particle logger");
 	prg->SetVisible(true);
     for (size_t i = 0; !work->abortRequested && i < log.size(); i++) {
         prg->SetProgress((double)i / (double)log.size());

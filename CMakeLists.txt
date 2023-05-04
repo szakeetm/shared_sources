@@ -174,6 +174,8 @@ set(HELPER_FILES
         Helper/Chronometer.cpp
         Helper/FormatHelper.cpp
         Helper/ConsoleLogger.h
+        Helper/GLProgress_abstract.cpp
+        Helper/GLProgress_abstract.hpp
         AppSettings.cpp
         )
 
@@ -195,7 +197,7 @@ set(GL_FILES
         GLApp/GLMenuBar.cpp
         GLApp/GLMessageBox.cpp
         GLApp/GLParser.cpp
-        GLApp/GLProgress.cpp
+        GLApp/GLProgress_GUI.cpp
         GLApp/GLSaveDialog.cpp
         GLApp/GLScrollBar.cpp
         GLApp/GLSpinner.cpp

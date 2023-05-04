@@ -308,7 +308,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 					return;
 			}
 			if (mApp->AskToReset()) {
-				GLProgress *prg = new GLProgress("Splitting facets", "Facet split");
+				GLProgress_GUI *prg = new GLProgress_GUI("Splitting facets", "Facet split");
 				
 				ClearUndoFacets();
 				nbCreated = 0;

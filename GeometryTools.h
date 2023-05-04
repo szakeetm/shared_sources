@@ -67,7 +67,7 @@ class GeometryTools {
 public:
     static int  FindEar(const GLAppPolygon& p);
     static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(Geometry* geometry);
-    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress* prg = NULL);
+    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress_GUI* prg = NULL);
     static void PolygonsToTriangles(Geometry* geometry);
     static void PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices);
 

@@ -2139,7 +2139,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 void Geometry::ClearFacetMeshLists()
 {
-	GLProgress *prg = new GLProgress("Please wait...", "Clearing facet meshes...");
+	GLProgress_GUI *prg = new GLProgress_GUI("Please wait...", "Clearing facet meshes...");
 	prg->SetVisible(true);
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
@@ -2152,7 +2152,7 @@ void Geometry::ClearFacetMeshLists()
 
 void Geometry::BuildFacetMeshLists()
 {
-	GLProgress *prg = new GLProgress("Please wait...", "Building facet meshes...");
+	GLProgress_GUI *prg = new GLProgress_GUI("Please wait...", "Building facet meshes...");
 	prg->SetVisible(true);
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {

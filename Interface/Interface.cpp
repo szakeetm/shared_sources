@@ -394,7 +394,7 @@ void Interface::SaveSelection() {
     FileWriter *f = nullptr;
     Geometry *geom = worker.GetGeometry();
     if (geom->GetNbSelectedFacets() == 0) return;
-    auto *progressDlg2 = new GLProgress("Saving file", "Please wait");
+    auto *progressDlg2 = new GLProgress_GUI("Saving file", "Please wait");
     progressDlg2->SetProgress(0.5);
     progressDlg2->SetVisible(true);
     //GLWindowManager::Repaint();
@@ -440,7 +440,7 @@ void Interface::ExportSelection() {
 
     //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
     std::string fileName = NFD_SaveFile_Cpp(fileSaveFilters, "");
-    auto *progressDlg2 = new GLProgress("Saving file...", "Please wait");
+    auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
     progressDlg2->SetProgress(0.0);
     progressDlg2->SetVisible(true);
     //GLWindowManager::Repaint();
@@ -2612,7 +2612,7 @@ bool Interface::AskToSave() {
         //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
         std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
         if (!fn.empty()) {
-            auto *progressDlg2 = new GLProgress("Saving file...", "Please wait");
+            auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
             progressDlg2->SetVisible(true);
             progressDlg2->SetProgress(0.0);
             //GLWindowManager::Repaint();
@@ -2659,7 +2659,7 @@ void Interface::SaveFileAs() {
     //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
     std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
 
-    auto *progressDlg2 = new GLProgress("Saving file...", "Please wait");
+    auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
     progressDlg2->SetProgress(0.0);
     progressDlg2->SetVisible(true);
     //GLWindowManager::Repaint();
@@ -2948,7 +2948,7 @@ void Interface::ResetAutoSaveTimer() {
 
 bool Interface::AutoSave(bool crashSave) {
     if (!changedSinceSave) return true;
-    auto *progressDlg2 = new GLProgress("Peforming autosave...", "Please wait");
+    auto *progressDlg2 = new GLProgress_GUI("Peforming autosave...", "Please wait");
     progressDlg2->SetProgress(0.0);
     progressDlg2->SetVisible(true);
     //GLWindowManager::Repaint();
