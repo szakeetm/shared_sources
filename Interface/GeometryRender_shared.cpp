@@ -713,19 +713,46 @@ void Geometry::DrawPolys() {
 	std::vector<float> textureCoords, colorValues;
 	GLCOLOR currentColor; //unused
 	currentColor.r = 0.0f;
-	currentColor.r = 0.0f;
-	currentColor.r = 0.0f;
-	currentColor.r = 0.0f;
+	currentColor.g = 0.0f;
+	currentColor.b = 0.0f;
+	currentColor.a = 0.0f;
 
-	// Triangle
-	for (const auto& i : f3) {
-		FillFacet(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+#pragma omp parallel
+	{
+		std::vector<double> vertexCoords_local, normalCoords_local;
+		std::vector<float> textureCoords_local, colorValues_local;
+		// Triangle
+#pragma omp for
+		for (int i = 0; i < f3.size(); i++) {
+			int j = f3[i];
+			FillFacet(facets[j], vertexCoords_local, normalCoords_local, textureCoords_local, colorValues_local, currentColor, false);
+		}
+#pragma omp critical
+		{
+			vertexCoords.insert(vertexCoords.end(), vertexCoords_local.begin(), vertexCoords_local.end());
+			normalCoords.insert(normalCoords.end(), normalCoords_local.begin(), normalCoords_local.end());
+			textureCoords.insert(textureCoords.end(), textureCoords_local.begin(), textureCoords_local.end());
+			colorValues.insert(colorValues.end(), colorValues_local.begin(), colorValues_local.end());
+		}
 	}
 
-	// Triangulate polygon
-	for (const auto& i : fp)
+#pragma omp parallel
 	{
-		TriangulateForRender(facets[i], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
+		std::vector<double> vertexCoords_local, normalCoords_local;
+		std::vector<float> textureCoords_local, colorValues_local;
+		// Triangulate polygon
+#pragma omp for
+		for (int i = 0; i < fp.size(); i++) {
+			int j = fp[i];
+			TriangulateForRender(facets[j], vertexCoords_local, normalCoords_local, textureCoords_local, colorValues_local, currentColor, false);
+		}
+#pragma omp critical
+		{
+			vertexCoords.insert(vertexCoords.end(), vertexCoords_local.begin(), vertexCoords_local.end());
+			normalCoords.insert(normalCoords.end(), normalCoords_local.begin(), normalCoords_local.end());
+			textureCoords.insert(textureCoords.end(), textureCoords_local.begin(), textureCoords_local.end());
+			colorValues.insert(colorValues.end(), colorValues_local.begin(), colorValues_local.end());
+		}
 	}
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -1018,7 +1045,7 @@ void Geometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-void Geometry::AddTextureCoord(InterfaceFacet* f, const Vector2d* p, std::vector<float>& textureCoords) {
+void Geometry::AddTextureCoord(const InterfaceFacet* f, const Vector2d& p, std::vector<float>& textureCoords) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -1027,23 +1054,23 @@ void Geometry::AddTextureCoord(InterfaceFacet* f, const Vector2d* p, std::vector
 #if 1
 	double fu = f->sh.texWidth_precise * uStep;
 	double fv = f->sh.texHeight_precise * vStep;
-	textureCoords.push_back((float)(uStep + p->u * fu));
-	textureCoords.push_back((float)(vStep + p->v * fv));
+	textureCoords.push_back((float)(uStep + p.u * fu));
+	textureCoords.push_back((float)(vStep + p.v * fv));
 #else
 	// Show border (debugging purpose)
 	double fu = (f->sh.texWidth_precise + 2.0) * uStep;
 	double fv = (f->sh.texHeight_precise + 2.0) * vStep;
-	textureCoords.push_back((float)(uStep + p->u * fu));
-	textureCoords.push_back((float)(vStep + p->v * fv));
+	textureCoords.push_back((float)(uStep + p.u * fu));
+	textureCoords.push_back((float)(vStep + p.v * fv));
 #endif
 
 }
 
-void Geometry::FillFacet(InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::FillFacet(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	for (size_t i = 0; i < f->sh.nbIndex; i++) {
 		size_t idx = f->indices[i];
-		if (addTextureCoord) AddTextureCoord(f, &(f->vertices2[i]), textureCoords);
+		if (addTextureCoord) AddTextureCoord(f, f->vertices2[i], textureCoords);
 		vertexCoords.push_back(vertices3[idx].x);
 		vertexCoords.push_back(vertices3[idx].y);
 		vertexCoords.push_back(vertices3[idx].z);
@@ -1057,53 +1084,32 @@ void Geometry::FillFacet(InterfaceFacet* f, std::vector<double>& vertexCoords, s
 	}
 }
 
-void Geometry::DrawEar(InterfaceFacet* f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::DrawEar(const InterfaceFacet* f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
 	Vector3d  p3D;
-	const Vector2d* p1;
-	const Vector2d* p2;
-	const Vector2d* p3;
+	const Vector2d* points[] = {
+		&p.pts[Previous(ear, p.pts.size())],
+		&p.pts[IDX(ear, p.pts.size())],
+		&p.pts[Next(ear, p.pts.size())]
+	};
 
-	p1 = &(p.pts[Previous(ear, p.pts.size())]);
-	p2 = &(p.pts[IDX(ear, p.pts.size())]);
-	p3 = &(p.pts[Next(ear, p.pts.size())]);
-
-	normalCoords.push_back(-f->sh.N.x);
-	normalCoords.push_back(-f->sh.N.y);
-	normalCoords.push_back(-f->sh.N.z);
-	if (addTextureCoord) AddTextureCoord(f, p1, textureCoords);
-	f->glVertex2uVertexArray(p1->u, p1->v, vertexCoords);
-	colorValues.push_back(currentColor.r);
-	colorValues.push_back(currentColor.g);
-	colorValues.push_back(currentColor.b);
-	colorValues.push_back(currentColor.a);
-
-	normalCoords.push_back(-f->sh.N.x);
-	normalCoords.push_back(-f->sh.N.y);
-	normalCoords.push_back(-f->sh.N.z);
-	if (addTextureCoord) AddTextureCoord(f, p2, textureCoords);
-	f->glVertex2uVertexArray(p2->u, p2->v, vertexCoords);
-	colorValues.push_back(currentColor.r);
-	colorValues.push_back(currentColor.g);
-	colorValues.push_back(currentColor.b);
-	colorValues.push_back(currentColor.a);
-
-	normalCoords.push_back(-f->sh.N.x);
-	normalCoords.push_back(-f->sh.N.y);
-	normalCoords.push_back(-f->sh.N.z);
-	if (addTextureCoord) AddTextureCoord(f, p3, textureCoords);
-	f->glVertex2uVertexArray(p3->u, p3->v, vertexCoords);
-	colorValues.push_back(currentColor.r);
-	colorValues.push_back(currentColor.g);
-	colorValues.push_back(currentColor.b);
-	colorValues.push_back(currentColor.a);
-
+	for (auto p : points) {
+		normalCoords.push_back(-f->sh.N.x);
+		normalCoords.push_back(-f->sh.N.y);
+		normalCoords.push_back(-f->sh.N.z);
+		if (addTextureCoord) AddTextureCoord(f, *p, textureCoords);
+		f->glVertex2uVertexArray(p->u, p->v, vertexCoords);
+		colorValues.push_back(currentColor.r);
+		colorValues.push_back(currentColor.g);
+		colorValues.push_back(currentColor.b);
+		colorValues.push_back(currentColor.a);
+	}
 }
 
-void Geometry::TriangulateForRender(InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void Geometry::TriangulateForRender(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -1834,9 +1840,9 @@ void Geometry::BuildFacetList(InterfaceFacet* f) {
 		std::vector<float> textureCoords, colorValues;
 		GLCOLOR currentColor; //unused
 		currentColor.r = 0.0f;
-		currentColor.r = 0.0f;
-		currentColor.r = 0.0f;
-		currentColor.r = 0.0f;
+		currentColor.g = 0.0f;
+		currentColor.b = 0.0f;
+		currentColor.a = 0.0f;
 
 		// Facet geometry
 		glNewList(f->glList, GL_COMPILE);

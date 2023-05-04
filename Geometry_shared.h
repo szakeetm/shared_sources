@@ -253,15 +253,15 @@ protected:
 	std::optional<size_t> GetFirstSelected();
 	void DrawFacetWireframe(InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
 	void DrawFacetWireframe_Vertexarray(InterfaceFacet* f, std::vector<GLuint>& lines);
-	void FillFacet(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
-	void AddTextureCoord(InterfaceFacet *f, const Vector2d *p, std::vector<float>& textureCoords);
+	void FillFacet(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
+	void AddTextureCoord(const InterfaceFacet *f, const Vector2d &p, std::vector<float>& textureCoords);
 	void DrawPolys();
 	void DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(int mode);
-	void TriangulateForRender(InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
-	void DrawEar(InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
+	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
+	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
     bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);

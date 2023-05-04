@@ -71,7 +71,7 @@ public:
 	bool  SetTexture(double width, double height, bool useMesh);
     bool  SetTextureProperties(double width, double height, bool useMesh);
 	void  glVertex2u(double u, double v);
-	void  glVertex2uVertexArray(double u, double v, std::vector<double>& vertexCoords);
+	void  glVertex2uVertexArray(const double u, const double v, std::vector<double>& vertexCoords) const;
 	bool  BuildMesh();
 	void  BuildMeshGLList();
 	void  BuildSelElemList();

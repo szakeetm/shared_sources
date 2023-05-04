@@ -358,7 +358,7 @@ void InterfaceFacet::glVertex2u(double u, double v) {
 * \param u local u coordinate of facet
 * \param v local v coordinate of facet
 */
-void InterfaceFacet::glVertex2uVertexArray(double u, double v, std::vector<double>& vertexCoords) {
+void InterfaceFacet::glVertex2uVertexArray(const double u, const double v, std::vector<double>& vertexCoords) const {
 
 	vertexCoords.push_back(sh.O.x + sh.U.x*u + sh.V.x*v);
 	vertexCoords.push_back(sh.O.y + sh.U.y * u + sh.V.y * v);
