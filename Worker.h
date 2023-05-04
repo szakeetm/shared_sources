@@ -158,7 +158,7 @@ public:
   void RecalcRegion(int regionId);
   void SaveRegion(const char* fileName, int position, bool overwrite = false);
   void SetRegionFileLocation(const std::string fileName, int position);
-  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
 
 
 #endif

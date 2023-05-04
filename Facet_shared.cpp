@@ -784,7 +784,7 @@ void InterfaceFacet::SwapNormal() {
 * \brief Shift vertex order by offset to the left
 * \param offset offset for left shift
 */
-void InterfaceFacet::ShiftVertex(const int& offset) {
+void InterfaceFacet::ShiftVertex(const int offset) {
 	// Shift vertex
 	/*
 	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));

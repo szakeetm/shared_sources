@@ -85,7 +85,7 @@ public:
 	size_t GetNbCellForRatio(double ratio);
     std::pair<size_t, size_t> GetNbCellForRatio(double ratioU, double ratioV);
     void  SwapNormal();
-	void  ShiftVertex(const int& offset = 1);
+	void  ShiftVertex(const int offset = 1);
 	void  InitVisibleEdge();
 	size_t   GetIndex(int idx);
 	size_t   GetIndex(size_t idx);
@@ -121,7 +121,7 @@ public:
     size_t GetTexRamSizeForRatio(double ratioU, double ratioV, size_t nbMoments);
     void  BuildTexture(const std::vector<TextureCell> &texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
 	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
-	void Sum_Neighbor(const int& i, const int& j, const double& weight, TextureCell *texBuffer, const int& textureMode, const double& scaleF, double *sum, double *totalWeight);
+	void Sum_Neighbor(const int i, const int j, const double weight, TextureCell *texBuffer, const int textureMode, const double scaleF, double *sum, double *totalWeight);
 	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 	double DensityCorrection();
@@ -135,9 +135,9 @@ public:
 	size_t GetTexRamSize();
 	size_t GetTexRamSizeForRatio(double ratio) const;
     size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
-    void  BuildTexture(const std::vector<TextureCell> &texture, const size_t& textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double& no_scans, const bool& useColorMap, bool doLog, const bool& normalize = true);
-	void Weigh_Neighbor(const size_t& i, const size_t& j, const double& weight, const std::vector<TextureCell> &texture, const size_t& textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
-	double GetSmooth(const int &i, const int &j, const std::vector<TextureCell> &texture, const size_t& textureMode, const float &scaleF);
+    void  BuildTexture(const std::vector<TextureCell> &texture, const size_t textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double no_scans, const bool useColorMap, bool doLog, const bool normalize = true);
+	void Weigh_Neighbor(const size_t i, const size_t j, const double weight, const std::vector<TextureCell> &texture, const size_t textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
+	double GetSmooth(const int &i, const int &j, const std::vector<TextureCell> &texture, const size_t textureMode, const float &scaleF);
 #endif
 
 

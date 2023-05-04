@@ -81,8 +81,8 @@ public:
   void ScrollDown();
   char *GetValueAt(size_t col, size_t row);
   int  GetUserValueAt(size_t col, size_t row);
-  void SetValueAt(const size_t& col, const size_t& row, const std::string& value, const int& userData=0, const bool& searchIndex=false);
-  void SetValueAt(const size_t& col, const size_t& row, const char *value,const int& userData=0,const bool& searchIndex=false);
+  void SetValueAt(const size_t col, const size_t row, const std::string& value, const int userData=0, const bool searchIndex=false);
+  void SetValueAt(const size_t col, const size_t row, const char *value,const int userData=0,const bool searchIndex=false);
   int  GetRowForLocation(int x,int y);
   int  GetColForLocation(int x,int y);
   void SetMotionSelection(bool enable);

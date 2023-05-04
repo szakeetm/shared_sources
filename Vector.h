@@ -26,15 +26,15 @@ class Vector2d;
 
 Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
-Vector3d operator*(const Vector3d &v1, const double& mult);
-Vector3d operator*(const double& mult, const Vector3d &v1);
+Vector3d operator*(const Vector3d &v1, const double mult);
+Vector3d operator*(const double mult, const Vector3d &v1);
 double Dot(const Vector3d &v1, const Vector3d &v2);
 Vector3d CrossProduct(const Vector3d &v1, const Vector3d &v2);
 
 Vector2d operator+ (const Vector2d &v1, const Vector2d& v2);
 Vector2d operator-(const Vector2d &v1, const Vector2d& v2);
-Vector2d operator*(const Vector2d &v1, const double& mult);
-Vector2d operator*(const double& mult, const Vector2d &v1);
+Vector2d operator*(const Vector2d &v1, const double mult);
+Vector2d operator*(const double mult, const Vector2d &v1);
 double Dot(const Vector2d &v1, const Vector2d &v2);
 
 Vector2d ProjectVertex(const Vector3d& v, const Vector3d& U, const Vector3d& V, const Vector3d& origin);
@@ -42,7 +42,7 @@ std::optional<Vector2d> Intersect2D(const Vector2d &p1, const Vector2d& p2, cons
 
 Vector3d Mirror(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
 Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N);
-Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta);
+Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double theta);
 
 double GetOrientedAngle(const Vector2d& v1, const Vector2d& v2);
 Vector3d RandomPerpendicularVector(const Vector3d &v,const double &length);
@@ -60,7 +60,7 @@ public:
 	Vector3d Normalized() const;
 	Vector3d& operator+=(const Vector3d & rhs);
     double& operator[] (int);
-	const double& operator[] (int) const;
+	const double operator[] (int) const;
 
     template<class Archive>
 	void serialize(Archive & archive)

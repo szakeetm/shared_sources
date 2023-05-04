@@ -32,11 +32,11 @@ double DistributionND::InterpolateX(const double & y, const size_t & elementInde
 	return InterpolateVectorX(y, values, elementIndex, logXinterp, logYinterp, allowExtrapolate);
 }
 
-double Distribution2D::InterpolateY(const double &x, const bool& allowExtrapolate) const {
+double Distribution2D::InterpolateY(const double &x, const bool allowExtrapolate) const {
 	return InterpolateXY(x, values, true, logXinterp, logYinterp, allowExtrapolate);
 }
 
-double Distribution2D::InterpolateX(const double &y, const bool& allowExtrapolate) const {
+double Distribution2D::InterpolateX(const double &y, const bool allowExtrapolate) const {
 	return InterpolateXY(y, values, false, logXinterp, logYinterp, allowExtrapolate);
 }
 

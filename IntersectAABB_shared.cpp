@@ -154,7 +154,7 @@ AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size
 
 }
 
-bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nullRx,const bool& nullRy,const bool& nullRz,const Vector3d& inverseRayDir) {
+bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool nullRx,const bool nullRy,const bool nullRz,const Vector3d& inverseRayDir) {
 	double tNear, tFar;
 	//X component
 

@@ -943,7 +943,7 @@ void GLToolkit::DrawStringInit() {
 
 }
 
-void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy,const bool& fast) {
+void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy,const bool fast) {
 
   // Compute location on screen
   float rx,ry,rz,rw;
@@ -993,7 +993,7 @@ void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize,bool col
 
 }
 
-void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& headSize) {
+void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double headSize) {
 
     Vector3d start(x1, y1, z1);
     Vector3d end(x2, y2, z2);
@@ -1064,7 +1064,7 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness) {
+void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double handedness) {
 	//handedness =  -1: left handed
 	// Create and load a left- or right-handed view matrix
 
