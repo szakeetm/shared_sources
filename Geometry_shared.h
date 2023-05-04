@@ -116,7 +116,7 @@ public:
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 
-	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double& moleculesPerTP, const double& densityCorrection, const double& gasMass, const int& index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
+	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double moleculesPerTP, const double densityCorrection, const double gasMass, const int index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
 	void InitializeInterfaceGeometry(int facet_number = -1);
@@ -214,7 +214,7 @@ public:
     void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
-	void    RecalcRawVertices(const int& facet_number);
+	void    RecalcRawVertices(const int facet_number);
 	void	MergecollinearSides(InterfaceFacet *f, double fT);
 	void    ShiftVertex();
 	int     HasIsolatedVertices();
@@ -230,14 +230,14 @@ public:
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
 	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length);
-	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t& nbSteps);
-	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t& nbSteps);
+	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const size_t nbSteps);
+	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double & axis1Length, const double & axis2Length, const double & topLength, const size_t nbSteps);
 
 	void UpdateName(FileReader *file);
 	std::string GetName() const;
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();
-	std::vector<size_t> GetNonPlanarFacetIds(const double& tolerance=1E-5);
+	std::vector<size_t> GetNonPlanarFacetIds(const double tolerance=1E-5);
 	size_t GetNbSelectedFacets();
 	void SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown);
 	int  RestoreDeviceObjects();

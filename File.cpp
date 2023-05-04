@@ -437,14 +437,14 @@ char *FileWriter::GetName() { return fileName; }
 
 FileWriter::~FileWriter() { fclose(file); }
 
-void FileWriter::Write(const int &v, const char *sep) {
+void FileWriter::Write(const int v, const char *sep) {
     if (!fprintf(file, "%d", v))
         throw Error("Error while writing to file");
     if (sep)
         fprintf(file, "%s", sep);
 }
 
-void FileWriter::Write(const size_t &v, const char *sep) {
+void FileWriter::Write(const size_t v, const char *sep) {
     //#ifdef _WIN32
     if (!fprintf(file, "%zd", v))
         throw Error("Error while writing to file");

@@ -27,7 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 bool    IsEqual(const double &a, const double &b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
 size_t    GetPower2(size_t n);
-double Pow10(const double& a);
+double Pow10(const double a);
 /*
 int isinf(double x);
 int isnan(double x);
@@ -35,12 +35,12 @@ int isnan(double x);
 template <typename TYPE> TYPE Min(const TYPE& x, const TYPE& y) { return (x < y) ? x : y; }
 template <typename TYPE> TYPE Max(const TYPE& x, const TYPE& y) { return (x < y) ? y : x; }
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
-size_t IDX(const int& i, const size_t& nb);
-size_t IDX(const size_t& i, const size_t& nb);
-size_t Next(const int& i, const size_t& nb, const bool& inverseDir=false);
-size_t Next(const size_t& i, const size_t& nb, const bool& inverseDir=false);
-size_t Previous(const int& i, const size_t& nb, const bool& inverseDir=false);
-size_t Previous(const size_t& i, const size_t& nb, const bool& inverseDir=false);
+size_t IDX(const int i, const size_t nb);
+size_t IDX(const size_t i, const size_t nb);
+size_t Next(const int i, const size_t nb, const bool inverseDir=false);
+size_t Next(const size_t i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const int i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const size_t i, const size_t nb, const bool inverseDir=false);
 #define NEXT_OF(list,element) (std::next(element)==(list).end())?(list).begin():std::next(element);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }
@@ -59,14 +59,14 @@ char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
 [[maybe_unused]] double my_erf(double x);
-double Weigh(const double& a, const double& b, const double& weigh);
-double InterpolateY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
-double InterpolateX(const double& y, const std::vector<std::pair<double, double>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
-double InterpolateXY(const double& lookupValue, const std::vector<std::pair<double, double>>& table, const bool& first, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
-std::vector<double> InterpolateVectorY(const double& x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false );
-double InterpolateVectorX(const double& y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t& elementIndex, const bool& logX=false, const bool& logY=false, const bool& allowExtrapolate = false);
+double Weigh(const double a, const double b, const double weigh);
+double InterpolateY(const double x, const std::vector<std::pair<double, double>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false );
+double InterpolateX(const double y, const std::vector<std::pair<double, double>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
+double InterpolateXY(const double lookupValue, const std::vector<std::pair<double, double>>& table, const bool first, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
+std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false );
+double InterpolateVectorX(const double y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t elementIndex, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
 //double QuadraticInterpolateX(const double & y, const double & a, const double & b, const double & c, const double & FA, const double & FB, const double & FC);
-//double FastLookupY(const double& x, const std::vector<std::pair<double, double>>& table, const bool& allowExtrapolate = false);
+//double FastLookupY(const double x, const std::vector<std::pair<double, double>>& table, const bool allowExtrapolate = false);
 
 template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) != vec.end());
@@ -76,25 +76,25 @@ template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const T
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
-int my_lower_bound(const double& key, const double* A,const size_t& size);
-int my_lower_bound(const double& key, const std::vector<double>& A);
-int my_lower_bound(const double& key, const std::vector<std::pair<double, double>>& A, const bool& first);
-int my_lower_bound(const double& key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool& first, const size_t& elementIndex);
+int my_lower_bound(const double key, const double* A,const size_t size);
+int my_lower_bound(const double key, const std::vector<double>& A);
+int my_lower_bound(const double key, const std::vector<std::pair<double, double>>& A, const bool first);
+int my_lower_bound(const double key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool first, const size_t elementIndex);
 
-int weighed_lower_bound_X(const double& key, const double& weigh, double* A, double* B, const size_t& size);
+int weighed_lower_bound_X(const double key, const double weigh, double* A, double* B, const size_t size);
 
-double GetElement(const std::pair<double, double>& pair, const bool& first);
-double GetElement(const std::pair<double, std::vector<double>> & pair, const bool& first, const size_t& elementIndex);
+double GetElement(const std::pair<double, double>& pair, const bool first);
+double GetElement(const std::pair<double, std::vector<double>> & pair, const bool first, const size_t elementIndex);
 
 [[maybe_unused]] size_t GetSysTimeMs();
 
 [[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t &startIndex);
+int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
 
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
 Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
-                 const bool &reverse); //sets sHandle->currentParticleTracer.direction
+                 const bool reverse); //sets sHandle->currentParticleTracer.direction
 
 //Elementwise addition of two vectors:
 #include <algorithm>

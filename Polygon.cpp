@@ -194,7 +194,7 @@ size_t AddNode(PolyGraph& g,const Vector2d& p)
 
 }
 
-size_t AddArc(PolyGraph& g,const size_t &i1,const size_t &i2,const size_t &source)
+size_t AddArc(PolyGraph& g,const size_t i1,const size_t i2,const size_t source)
 {
 
   // Add an arc to the polygraph and returns its id
@@ -226,7 +226,7 @@ void CutArc(PolyGraph& g, size_t idx, size_t ni)
 }
 
 
-void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int &a0)
+void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int a0)
 {
 
   // Insert a polygon edge in the polygraph, a0 = first arc to be checked
@@ -559,7 +559,7 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 }
 */
 
-std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool& isConvex) {
+std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool isConvex) {
 
 	//Clipper2Lib::ClipperD c(8);
 	//c.AddSubject(subjects);
@@ -699,7 +699,7 @@ std::tuple<double, Vector2d> GetInterAreaBF(const GLAppPolygon& inP1, const Vect
 
 }
 
-std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double& coord, const bool& isX)
+std::vector<Vector2d> IntersectPolyWithGridline(const std::vector<Vector2d>& poly, const double coord, const bool isX)
 {
     //returns list of u,v intersection points of a horizontal or vertical gridline whose distance is 'coord' from 0,0
     //returns empty vector if no intersection, two points for convex facets, possibly more for concave/holed
@@ -755,7 +755,7 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon) {
     return IsInPoly(point.u, point.v, polygon);
 }
 
-bool IsInPoly(const double &u, const double& v, const std::vector<Vector2d>& polygon) {
+bool IsInPoly(const double &u, const double v, const std::vector<Vector2d>& polygon) {
     // Fast method to check if a point is inside a polygon or not.
     // Works with convex and concave polys, orientation independent
     int n_updown = 0;

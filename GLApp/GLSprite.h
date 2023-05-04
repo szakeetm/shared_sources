@@ -16,14 +16,14 @@ public:
   int RestoreDeviceObjects(const char *diffName, const char *alphaName,int srcWidth,int scrHeight);
 
   // Update sprite mapping and coordinates
-  void UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2);
-  void UpdateSprite(const int &x1,const int &y1,const int &x2,
-	  const int &y2,const float &mx1,const float &my1,const float &mx2,const float &my2);
-  void SetSpriteMapping(const float &mx1,const float &my1,const float &mx2,const float &my2);
-  void SetColor(const float &r,const float &g,const float &b);
+  void UpdateSprite(const int x1,const int y1,const int x2,const int y2);
+  void UpdateSprite(const int x1,const int y1,const int x2,
+	  const int y2,const float mx1,const float my1,const float mx2,const float my2);
+  void SetSpriteMapping(const float mx1,const float my1,const float mx2,const float my2);
+  void SetColor(const float r,const float g,const float b);
   
   // Draw a 2D sprite (in screen coordinates)
-  void Render(const bool &doLinear);
+  void Render(const bool doLinear);
   void Render90(bool doLinear);
 
   // Release any allocated resource

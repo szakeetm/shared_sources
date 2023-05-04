@@ -121,8 +121,8 @@ public:
   std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
   void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
-  void ImportDesorption_SYN(const char *fileName, const size_t &source, const double &time,
-	  const size_t &mode, const double &eta0, const double &alpha, const double &cutoffdose,
+  void ImportDesorption_SYN(const char *fileName, const size_t source, const double &time,
+	  const size_t mode, const double &eta0, const double &alpha, const double &cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress *prg);
   void LoadTexturesGEO(FileReader *f, int version);
@@ -158,7 +158,7 @@ public:
   void RecalcRegion(int regionId);
   void SaveRegion(const char* fileName, int position, bool overwrite = false);
   void SetRegionFileLocation(const std::string fileName, int position);
-  bool CheckFilenameConflict(const std::string& newPath, const size_t& regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+  bool CheckFilenameConflict(const std::string& newPath, const size_t regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
 
 
 #endif

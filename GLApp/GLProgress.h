@@ -19,8 +19,8 @@ public:
   void SetProgress(double value);
   void SetProgress(GLStatus progress);
   double GetProgress();
-  void SetMessage(const char *msg, const bool& force=true);
-  void SetMessage(const std::string& msg, const bool& force=true);
+  void SetMessage(const char *msg, const bool force=true);
+  void SetMessage(const std::string& msg, const bool force=true);
   void PositionComponents(); //Resizes window in cae of wide/multiline text
 
 private:

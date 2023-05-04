@@ -414,7 +414,7 @@ bool HistogramSettings::Apply() {
 #endif
 
 		auto selectedFacets = geom->GetSelectedFacets();
-		for (const auto& facetId : selectedFacets) {
+		for (const auto facetId : selectedFacets) {
 			InterfaceFacet* f = geom->GetFacet(facetId);
 			if (doFacetRecBounce) f->sh.facetHistogramParams.recordBounce = facetRecBounce;
 			if (doFacetHitLimit) f->sh.facetHistogramParams.nbBounceMax = facetHitLimit;

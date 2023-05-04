@@ -94,13 +94,13 @@ void GLTextField::SetText(const double &val) {
 	SetText(tmp);
 }
 
-void GLTextField::SetText(const int &val) {
+void GLTextField::SetText(const int val) {
 	char tmp[256];
 	sprintf(tmp, "%d", val);
 	SetText(tmp);
 }
 
-void GLTextField::SetText(const size_t &val) {
+void GLTextField::SetText(const size_t val) {
 	char tmp[256];
 	sprintf(tmp, "%zd", val);
 	SetText(tmp);

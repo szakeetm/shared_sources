@@ -52,7 +52,7 @@ enum class FetchStatus : int
 * \param versionId hardcoded version ID of the app (@see versionId.h)
 * \param configFile xml file with the updater config (usually in bin folder)
 */
-AppUpdater::AppUpdater(const std::string& appName, const int& versionId, const std::string& configFile) {
+AppUpdater::AppUpdater(const std::string& appName, const int versionId, const std::string& configFile) {
 	applicationName = appName;
 	currentVersionId = versionId;
     lastFetchStatus = 0;
@@ -392,7 +392,7 @@ UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates)
 * \param currentVersionId version ID of current version
 * \return vector with newer releases
 */
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int& currentVersionId) {
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xml_node& updateDoc, const int currentVersionId) {
 	std::vector<UpdateManifest> availables;
 
 	xml_node rootNode = updateDoc.child("UpdateFeed");
@@ -484,7 +484,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 }
 
 // Function to retrieve updates with old XML scheme
-std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateDoc, const int& currentVersionId, const std::string& branchName) {
+std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateDoc, const int currentVersionId, const std::string& branchName) {
     std::vector<UpdateManifest> availables;
 
     xml_node rootNode = updateDoc.child("UpdateFeed");

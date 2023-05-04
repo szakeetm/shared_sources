@@ -154,7 +154,7 @@ AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size
 
 }
 
-bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool& nullRx,const bool& nullRy,const bool& nullRz,const Vector3d& inverseRayDir) {
+bool IntersectBB_new(const AABBNODE& node,const Vector3d& rayPos,const bool nullRx,const bool nullRy,const bool nullRz,const Vector3d& inverseRayDir) {
 	double tNear, tFar;
 	//X component
 
@@ -276,8 +276,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
 IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
-              const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool &nullRx,
-              const bool &nullRy, const bool &nullRz, const Vector3d &inverseRayDir, bool &found,
+              const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,
+              const bool nullRy, const bool nullRz, const Vector3d &inverseRayDir, bool &found,
               SimulationFacet *&collidedFacet, double &minLength) {
 
 	// Returns three values

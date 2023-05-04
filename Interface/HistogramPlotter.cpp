@@ -204,7 +204,7 @@ void HistogramPlotter::Refresh() {
 	//Construct combo
 	histCombo->SetSize(histogramFacetIds.size());
 	size_t nbProf = 0;
-	for (const int& id : histogramFacetIds) {
+	for (const int id : histogramFacetIds) {
 		std::ostringstream name;
 		if (id == -1)
 			name << "Global";

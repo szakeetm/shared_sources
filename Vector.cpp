@@ -58,13 +58,13 @@ Vector3d operator-(const Vector3d &v1, const Vector3d& v2) {
 					v1.z - v2.z);
 }
 
-Vector3d operator*(const Vector3d &v1, const double& mult) {
+Vector3d operator*(const Vector3d &v1, const double mult) {
 	return Vector3d(v1.x * mult,
 					v1.y * mult,
 					v1.z * mult);
 }
 
-Vector3d operator*(const double& mult, const Vector3d &v1) {
+Vector3d operator*(const double mult, const Vector3d &v1) {
 	return v1*mult;
 }
 
@@ -78,12 +78,12 @@ Vector2d operator-(const Vector2d &v1, const Vector2d& v2) {
 					v1.v - v2.v);
 }
 
-Vector2d operator*(const Vector2d &v1, const double& mult) {
+Vector2d operator*(const Vector2d &v1, const double mult) {
 	return Vector2d(v1.u * mult,
 					v1.v * mult);
 }
 
-Vector2d operator*(const double& mult, const Vector2d &v1) {
+Vector2d operator*(const double mult, const Vector2d &v1) {
 	return v1*mult;
 }
 
@@ -133,7 +133,7 @@ double & Vector3d::operator[] (int dim) {
     }
 }
 
-const double& Vector3d::operator[] (int dim) const {
+const double Vector3d::operator[] (int dim) const {
     if(dim == 0){
         return x;
     }
@@ -164,7 +164,7 @@ Vector3d Project(const Vector3d& P, const Vector3d& P0, const Vector3d& N) {
 	return P - Dot(P - P0, N)*N;
 }
 
-Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double& theta) {
+Vector3d Rotate(const Vector3d& P, const Vector3d& AXIS_P0, const Vector3d& AXIS_DIR, const double theta) {
 	//theta = theta / 180 * PI; //degree->radians
 	Vector3d dir = AXIS_DIR.Normalized();
 	double x, y, z, a, b, c, u, v, w, costh, sinth, precalc1;

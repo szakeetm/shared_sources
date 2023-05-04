@@ -818,7 +818,7 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacet
 	std::vector<float> textureCoords, colorValues;
 	GLCOLOR currentColor;
 
-	for (const auto& sel : selectedFacets) {
+	for (const auto sel : selectedFacets) {
 		if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not

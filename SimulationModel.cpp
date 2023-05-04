@@ -107,7 +107,7 @@ void SimulationModel::CalculateFacetParams(Facet* f) {
     f->sh.bb.min = Vector3d(1e100, 1e100, 1e100);
     f->sh.bb.max = Vector3d(-1e100, -1e100, -1e100);
 
-    for (const auto& i : f->indices) {
+    for (const auto i : f->indices) {
         const Vector3d& p = vertices3[i];
         f->sh.bb.min.x = std::min(f->sh.bb.min.x,p.x);
         f->sh.bb.min.y = std::min(f->sh.bb.min.y, p.y);

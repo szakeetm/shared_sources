@@ -244,7 +244,7 @@ void GLToolkit::SetCursor(int cursor) {
 
 }
 
-SDL_Cursor *InitCursor(const char *pngName,const int &tx,const int &ty) {
+SDL_Cursor *InitCursor(const char *pngName,const int tx,const int ty) {
 
   int i, row, col;
   Uint8 data[4*32];
@@ -310,7 +310,7 @@ void GLToolkit::SetIcon32x32(const char *pngName) {
     SDL_FreeSurface(s);
 }
 
-bool GLToolkit::RestoreDeviceObjects(const int &width,const int &height) {
+bool GLToolkit::RestoreDeviceObjects(const int width,const int height) {
 
   scrWidth = width;
   scrHeight = height;
@@ -398,7 +398,7 @@ void GLToolkit::SetViewport(const GLVIEWPORT &v) {
   GLToolkit::SetViewport(v.x,v.y,v.width,v.height);
 }
 
-void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int &height) {
+void GLToolkit::SetViewport(const int x,const int y,const int width,const int height) {
 
   int vy = scrHeight - (y+height);
   int vx = x;
@@ -408,7 +408,7 @@ void GLToolkit::SetViewport(const int &x,const int &y,const int &width,const int
 
 #define TW 256.0f
 
-void GLToolkit::DrawButtonBack(const int &x,const int &y,const int &width,const int &height,const int &state) {
+void GLToolkit::DrawButtonBack(const int x,const int y,const int width,const int height,const int state) {
 
   int w1 = width / 2;
   int w2 = width - w1;
@@ -472,8 +472,8 @@ void GLToolkit::DrawBar(int x,int y,int width,int height) {
 
 }
 
-void GLToolkit::DrawTextBack(const int &x,const int &y,const int &width,const int &height,
-							 const int &rBack, const int &gBack, const int &bBack) {
+void GLToolkit::DrawTextBack(const int x,const int y,const int width,const int height,
+							 const int rBack, const int gBack, const int bBack) {
 
   int w1 = width / 2;
   int w2 = width - w1;
@@ -660,8 +660,8 @@ void GLToolkit::DrawLumBitmap(int x,int y,int width,int height,BYTE *buffer) {
 
 }
 
-void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
-						   const int &height,const bool &shadow,const bool &iShadow,const bool &isEtched) {
+void GLToolkit::DrawBorder(const int x,const int y,const int width,
+						   const int height,const bool shadow,const bool iShadow,const bool isEtched) {
 
   float rL = 1.0f;
   float gL = 1.0f;
@@ -764,9 +764,9 @@ void GLToolkit::DrawBorder(const int &x,const int &y,const int &width,
 
 }
 
-void GLToolkit::DrawBox(const int &x,const int &y,const int &width,const int &height,
-	  const int &r,const int &g,const int &b,const bool &shadow,const bool &iShadow,
-	  const bool &isEtched) {
+void GLToolkit::DrawBox(const int x,const int y,const int width,const int height,
+	  const int r,const int g,const int b,const bool shadow,const bool iShadow,
+	  const bool isEtched) {
 
   float rN = (float)r / 255.0f;
   float gN = (float)g / 255.0f;
@@ -943,7 +943,7 @@ void GLToolkit::DrawStringInit() {
 
 }
 
-void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy,const bool& fast) {
+void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt,int offx,int offy,const bool fast) {
 
   // Compute location on screen
   float rx,ry,rz,rw;
@@ -993,7 +993,7 @@ void GLToolkit::DrawCoordinateAxes(double vectorLength, double headSize,bool col
 
 }
 
-void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double& headSize) {
+void GLToolkit::DrawVector(double x1,double y1,double z1,double x2,double y2,double z2, const double headSize) {
 
     Vector3d start(x1, y1, z1);
     Vector3d end(x2, y2, z2);
@@ -1064,7 +1064,7 @@ void GLToolkit::PerspectiveLH(double fovy,double aspect,double zNear,double zFar
 
 }
 
-void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double& handedness) {
+void GLToolkit::LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double handedness) {
 	//handedness =  -1: left handed
 	// Create and load a left- or right-handed view matrix
 
