@@ -700,10 +700,10 @@ void Geometry::DrawPolys() {
 		int nb = facets[i]->sh.nbIndex;
 		if (facets[i]->volumeVisible) {
 			if (nb == 3) {
-				f3.push_back(i);
+				f3.emplace_back(i);
 			}
 			else {
-				fp.push_back(i);
+				fp.emplace_back(i);
 			}
 		}
 	}
@@ -1748,23 +1748,28 @@ void Geometry::BuildGLList() {
 		EdgeSet edgeSet;
 
 		//construct edge map
-		for (size_t i = 0; i < facets.size(); ++i) {
-			const auto& f = facets[i];
-			if (f->sh.superIdx == s || f->sh.superIdx == -1) {
-				for (size_t j = 0; j < f->indices.size(); ++j) {
-					size_t v1 = f->indices[j];
-					size_t v2 = f->indices[(j + 1) % f->indices.size()];
+#pragma omp parallel
+		{
+			EdgeSet edgeSet_local;
+#pragma omp for
+			for (int i = 0; i < facets.size(); ++i) {
+				const auto& f = facets[i];
+				if (f->sh.superIdx == s || f->sh.superIdx == -1) {
+					for (size_t j = 0; j < f->indices.size(); ++j) {
+						size_t v1 = f->indices[j];
+						size_t v2 = f->indices[(j + 1) % f->indices.size()];
 
-					// Ensure canonical order for edge vertices
-					if (v1 > v2) {
-						std::swap(v1, v2);
+						// Ensure canonical order for edge vertices
+						if (v1 > v2) {
+							std::swap(v1, v2);
+						}
+						Edge newEdge = std::make_pair(v1, v2);
+						edgeSet_local.insert(newEdge);
 					}
-
-					Edge newEdge = std::make_pair(v1, v2);
-					edgeSet.insert(newEdge);
-
 				}
 			}
+#pragma omp critical
+			edgeSet.insert(edgeSet_local.begin(), edgeSet_local.end());
 		}
 
 		std::vector<GLuint> lines;

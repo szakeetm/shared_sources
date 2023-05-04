@@ -191,13 +191,14 @@ void Geometry::RecalcRawVertices(const int& facet_number) {
 
 void Geometry::InitializeInterfaceGeometry(int facet_number) {
 
-    for (int i = 0; i < sh.nbFacet; i++) {
-        //initGeoPrg->SetProgress((double)i/(double)wp.nbFacet);
-        if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
-            InterfaceFacet *f = facets[i];
-            f->InitVisibleEdge();
-        }
-    }
+	if (facet_number == -1) { //all facets
+#pragma omp parallel for
+		for (int i = 0; i < sh.nbFacet; i++) {
+			facets[i]->InitVisibleEdge();
+		}
+	}
+	else facets[facet_number]->InitVisibleEdge();
+
 
     isLoaded = true;
     if (facet_number == -1) {
