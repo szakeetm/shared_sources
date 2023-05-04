@@ -10,7 +10,7 @@ void GLProgress_Abstract::SetMessage(const std::string& msg)
 	status = msg;
 }
 
-std::string GLProgress_Abstract::GetMessage()
+std::string GLProgress_Abstract::GetMsg()
 {
 	return status;
 }

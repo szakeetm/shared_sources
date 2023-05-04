@@ -10,7 +10,7 @@ public:
 	virtual void SetMessage(const std::string& msg);
 	virtual void SetProgress(const double prg);
 	virtual double GetProgress();
-	virtual std::string GetMessage();
+	virtual std::string GetMsg();
 	GLProgress_Abstract() = default;
 	GLProgress_Abstract(const std::string msg) : status(msg) {}
 };
