@@ -1603,16 +1603,21 @@ void Geometry::BuildSelectList() {
 	const auto selectedFacets = GetSelectedFacets();
 	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 
-	std::vector<GLuint> selectionLines;
 
+
+
+	typedef std::pair<size_t, size_t> Edge;
+	typedef std::set<Edge> EdgeSet;
+
+	EdgeSet edgeSet;
+
+	//construct edge map
 #pragma omp parallel
 	{
-		std::vector<GLuint> selectionLines_local;
+		EdgeSet edgeSet_local;
 #pragma omp for
-		for (int i = 0; i < selectedFacets.size(); i++) {
-			InterfaceFacet* f = facets[selectedFacets[i]];
-
-			//DrawFacetWireframe(f,false,true,true);
+		for (int i = 0; i < selectedFacets.size(); ++i) {
+			const auto& f = facets[selectedFacets[i]];
 			if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
 				auto it = colorHighlighting.find(i);
 				// Check if element exists in map or not
@@ -1627,16 +1632,34 @@ void Geometry::BuildSelectList() {
 				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
 			}
 			else { //regular selected facet, will be drawn later
-				DrawFacetWireframe_Vertexarray(f, selectionLines_local);
+				for (size_t j = 0; j < f->indices.size(); ++j) {
+					size_t v1 = f->indices[j];
+					size_t v2 = f->indices[(j + 1) % f->indices.size()];
+
+					// Ensure canonical order for edge vertices
+					if (v1 > v2) {
+						std::swap(v1, v2);
+					}
+					Edge newEdge = std::make_pair(v1, v2);
+					edgeSet_local.insert(newEdge);
+				}
 			}
 		}
 #pragma omp critical
-		selectionLines.insert(selectionLines.end(), selectionLines_local.begin(), selectionLines_local.end());
+		edgeSet.insert(edgeSet_local.begin(), edgeSet_local.end());
 	}
+
+	std::vector<GLuint> lines;
+	lines.reserve(edgeSet.size() * 2);
+	for (const auto& it : edgeSet) {
+		lines.push_back((GLuint)it.first);
+		lines.push_back((GLuint)it.second);
+	}
+
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
-	glDrawElements(GL_LINES, selectionLines.size(), GL_UNSIGNED_INT, selectionLines.data());
+	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last
