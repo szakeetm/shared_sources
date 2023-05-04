@@ -51,6 +51,6 @@ std::tuple<bool, SimulationFacet *, double>
 Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh);
 /*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticleTracer);*/
-bool IsInFacet(const SimulationFacet &f, const double &u, const double &v);
+bool IsInFacet(const SimulationFacet &f, const double u, const double v);
 //Vector3d PolarToCartesian(const SubprocessFacet *const collidedFacet, const double theta, const double phi, const bool reverse); //sets sHandle->currentParticleTracer.direction
 //std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);

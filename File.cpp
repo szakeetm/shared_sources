@@ -455,7 +455,7 @@ void FileWriter::Write(const size_t v, const char *sep) {
         fprintf(file, "%s", sep);
 }
 
-void FileWriter::Write(const double &v, const char *sep) {
+void FileWriter::Write(const double v, const char *sep) {
 
     // if(v>=0.0) fprintf(file," ");
     fprintf(file, " ");

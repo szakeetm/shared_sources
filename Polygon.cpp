@@ -88,7 +88,7 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
 
 }
 */
-bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d>& polyPoints, const double & tolerance)
+bool IsOnPolyEdge(const double  u, const double  v, const std::vector<Vector2d>& polyPoints, const double  tolerance)
 {
 	bool onEdge = false;
 	for (int i = 0;!onEdge && i < polyPoints.size();i++) {
@@ -101,7 +101,7 @@ bool IsOnPolyEdge(const double & u, const double & v, const std::vector<Vector2d
 	return onEdge;
 }
 
-bool IsOnSection(const double & u, const double & v, const double & baseU, const double & baseV, const double & targetU, const double & targetV, const double & tolerance)
+bool IsOnSection(const double  u, const double  v, const double  baseU, const double  baseV, const double  targetU, const double  targetV, const double  tolerance)
 {
 	//Notation from https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 	//u=x0
@@ -755,7 +755,7 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon) {
     return IsInPoly(point.u, point.v, polygon);
 }
 
-bool IsInPoly(const double &u, const double v, const std::vector<Vector2d>& polygon) {
+bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polygon) {
     // Fast method to check if a point is inside a polygon or not.
     // Works with convex and concave polys, orientation independent
     int n_updown = 0;

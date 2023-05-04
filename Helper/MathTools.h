@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cassert>
 #include <Vector.h>
 
-bool    IsEqual(const double &a, const double &b, double toleranceRatio=1E-6);
+bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
 size_t    GetPower2(size_t n);
 double Pow10(const double a);
@@ -65,7 +65,7 @@ double InterpolateX(const double y, const std::vector<std::pair<double, double>>
 double InterpolateXY(const double lookupValue, const std::vector<std::pair<double, double>>& table, const bool first, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
 std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false );
 double InterpolateVectorX(const double y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t elementIndex, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
-//double QuadraticInterpolateX(const double & y, const double & a, const double & b, const double & c, const double & FA, const double & FB, const double & FC);
+//double QuadraticInterpolateX(const double  y, const double  a, const double  b, const double  c, const double  FA, const double  FB, const double  FC);
 //double FastLookupY(const double x, const std::vector<std::pair<double, double>>& table, const bool allowExtrapolate = false);
 
 template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE& value) {
@@ -88,12 +88,12 @@ double GetElement(const std::pair<double, std::vector<double>> & pair, const boo
 
 [[maybe_unused]] size_t GetSysTimeMs();
 
-[[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
+[[maybe_unused]] int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments);
+int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
 
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
 Vector3d
-PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
                  const bool reverse); //sets sHandle->currentParticleTracer.direction
 
 //Elementwise addition of two vectors:

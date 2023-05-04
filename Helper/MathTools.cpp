@@ -27,7 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <chrono>
 #include <cstring> //strdup
 
-bool IsEqual(const double &a, const double &b, double toleranceRatio) {
+bool IsEqual(const double a, const double b, double toleranceRatio) {
 	return std::abs(a - b) < Max(1E-99, Max(std::abs(a),std::abs(b))*toleranceRatio);
 }
 
@@ -149,7 +149,7 @@ char* FormatMemoryLL(long long size) {
 	return sign*y;
 }
 
-double Weigh(const double & a, const double & b, const double & weigh)
+double Weigh(const double  a, const double  b, const double  weigh)
 {
 	return a + (b - a)*weigh;
 }
@@ -162,7 +162,7 @@ double InterpolateX(const double y, const std::vector<std::pair<double, double>>
 	return InterpolateXY(y, table, false, logX, logY, allowExtrapolate);
 }
 
-double InterpolateXY(const double & lookupValue, const std::vector<std::pair<double, double>>& table, const bool  first, const bool logX, const bool logY, const bool  allowExtrapolate) {
+double InterpolateXY(const double  lookupValue, const std::vector<std::pair<double, double>>& table, const bool  first, const bool logX, const bool logY, const bool  allowExtrapolate) {
 	//InterpolateX and InterpolateY, only differing by first param
 	//Avoids repeated code with minor changes only
 	//returns double
@@ -303,7 +303,7 @@ double FastLookupY(const double x, const std::vector<std::pair<double, double>>&
 */
 
 
-int my_lower_bound(const double & key, const double* A,const size_t size)
+int my_lower_bound(const double  key, const double* A,const size_t size)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
 //key: searched value
 //A: the lookup table
@@ -327,7 +327,7 @@ int my_lower_bound(const double & key, const double* A,const size_t size)
 	return l - 1;
 }
 
-int my_lower_bound(const double & key, const std::vector<double>& A)
+int my_lower_bound(const double  key, const std::vector<double>& A)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
 //key: searched value
 //A: the lookup table
@@ -351,7 +351,7 @@ int my_lower_bound(const double & key, const std::vector<double>& A)
 	return l - 1;
 }
 
-int my_lower_bound(const double & key, const std::vector<std::pair<double, double>>& A, const bool  first)
+int my_lower_bound(const double  key, const std::vector<std::pair<double, double>>& A, const bool  first)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
 //key: searched value
 //A: the lookup table
@@ -375,7 +375,7 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, doubl
 	return l - 1;
 }
 
-int my_lower_bound(const double & key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool  first, const size_t  elementIndex)
+int my_lower_bound(const double  key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool  first, const size_t  elementIndex)
 //"iterative" version of algorithm, modified from https://en.wikipedia.org/wiki/Binary_search_algorithm
 //key: searched value
 //A: the lookup table
@@ -405,7 +405,7 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
  * @param moments vector of time intervals
  * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
  */
-[[maybe_unused]] int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments){
+[[maybe_unused]] int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments){
     /*int lowerBound = my_lower_bound(key, moments, true);
     if(lowerBound != -1 && lowerBound < moments.size()){
         if(moments[lowerBound].first <= key && key < moments[lowerBound].second){
@@ -429,7 +429,7 @@ int my_lower_bound(const double & key, const std::vector<std::pair<double, std::
  * @param startIndex offset to only look in a subset of moments
  * @return -1 if moment doesnt relate to an interval, else index of moment (+1 to account for [0]== steady state)
  */
-int LookupMomentIndex(const double & key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
+int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex){
 
     if(!moments.empty()) {
         auto lowerBound = std::lower_bound(moments.begin() + startIndex, moments.end(), std::make_pair(key, key));
@@ -476,7 +476,7 @@ int LookupMomentIndex(const double & key, const std::vector<std::pair<double, do
 	}
 }*/
 
-int weighed_lower_bound_X(const double & key, const double & weigh, double * A, double * B, const size_t  size)
+int weighed_lower_bound_X(const double  key, const double  weigh, double * A, double * B, const size_t  size)
 {
 	//interpolates among two lines of a cumulative distribution
 	//all elements of line 1 and line 2 must be monotonously increasing (except equal consecutive values)
@@ -568,7 +568,7 @@ std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const V
 }
 
 Vector3d
-PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double &theta, const double &phi,
+PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
                  const bool reverse) {
 
     //returns sHandle->currentParticleTracer.direction

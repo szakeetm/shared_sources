@@ -386,7 +386,7 @@ IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node
 	}
 }
 
-bool IsInFacet(const SimulationFacet &f, const double &u, const double &v) {
+bool IsInFacet(const SimulationFacet &f, const double u, const double v) {
 
 	return IsInPoly(u, v, f.vertices2);
 
