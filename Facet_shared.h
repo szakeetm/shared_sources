@@ -137,7 +137,7 @@ public:
     size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
     void  BuildTexture(const std::vector<TextureCell> &texture, const size_t textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double no_scans, const bool useColorMap, bool doLog, const bool normalize = true);
 	void Weigh_Neighbor(const size_t i, const size_t j, const double weight, const std::vector<TextureCell> &texture, const size_t textureMode, const float& scaleF, double& weighedSum, double& totalWeigh);
-	double GetSmooth(const inti, const intj, const std::vector<TextureCell> &texture, const size_t textureMode, const float &scaleF);
+	double GetSmooth(const int &i, const int &j, const std::vector<TextureCell> &texture, const size_t textureMode, const float &scaleF);
 #endif
 
 

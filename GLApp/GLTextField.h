@@ -17,9 +17,9 @@ public:
   // Component methods
   void SetText(const char *text);
   void SetText(std::string string);
-  void SetText(const doubleval);
-  void SetText(const intval);
-  void SetText(const size_tval);
+  void SetText(const double &val);
+  void SetText(const int &val);
+  void SetText(const size_t &val);
   std::string GetText();
   void ScrollToVisible();
   void SetCursorPos(int pos);

@@ -27,7 +27,7 @@ void Sprite2D::SetSpriteMapping(const float &mx1,const float &my1,const float &m
 
 }
 
-void Sprite2D::UpdateSprite(const intx1,const inty1,const intx2,const inty2,
+void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2,
 							const float &mx1,const float &my1,const float &mx2,const float &my2) {
 
   this->x1 = x1;
@@ -41,7 +41,7 @@ void Sprite2D::UpdateSprite(const intx1,const inty1,const intx2,const inty2,
 
 }
 
-void Sprite2D::UpdateSprite(const intx1,const inty1,const intx2,const inty2) {
+void Sprite2D::UpdateSprite(const int &x1,const int &y1,const int &x2,const int &y2) {
 
   this->x1 = x1;
   this->y1 = y1;
@@ -167,7 +167,7 @@ void Sprite2D::InvalidateDeviceObjects() {
 
 }
 
-void Sprite2D::Render(const booldoLinear) {
+void Sprite2D::Render(const bool &doLinear) {
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D,texId);

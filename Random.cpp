@@ -59,7 +59,7 @@ void MersenneTwister::SetSeed(unsigned long seed)
 
 double MersenneTwister::rnd() { return rk_double(); }
 
-double MersenneTwister::Gaussian(const double sigma) //inline
+double MersenneTwister::Gaussian(const double & sigma) //inline
 {
 
     //Box-Muller transform
@@ -146,7 +146,7 @@ MersenneTwister::MersenneTwister() {
 #endif
 }
 
-double TruncatedGaussian::GetGaussian(const double mean, const double sigma, const double lowerBound, const double upperBound) //inline
+double TruncatedGaussian::GetGaussian(const double & mean, const double & sigma, const double & lowerBound, const double & upperBound) //inline
 {
     std::pair<double, double> s;  // Output argument of rtnorm
     s = rtnorm(this->gen, lowerBound, upperBound, mean, sigma);

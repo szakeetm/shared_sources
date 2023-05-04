@@ -249,7 +249,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,boo
 
 }
 
-void GLFont2D::DrawText(const intcx,const intcy,const char *text,const boolloadMatrix) {
+void GLFont2D::DrawText(const int &cx,const int &cy,const char *text,const bool &loadMatrix) {
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;

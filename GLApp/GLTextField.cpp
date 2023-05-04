@@ -88,19 +88,19 @@ void GLTextField::SetText(std::string string) {
 	SetText(string.c_str());
 }
 
-void GLTextField::SetText(const doubleval) {
+void GLTextField::SetText(const double &val) {
 	char tmp[256];
 	sprintf(tmp, "%.10g", val);
 	SetText(tmp);
 }
 
-void GLTextField::SetText(const intval) {
+void GLTextField::SetText(const int &val) {
 	char tmp[256];
 	sprintf(tmp, "%d", val);
 	SetText(tmp);
 }
 
-void GLTextField::SetText(const size_tval) {
+void GLTextField::SetText(const size_t &val) {
 	char tmp[256];
 	sprintf(tmp, "%zd", val);
 	SetText(tmp);
