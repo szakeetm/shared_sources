@@ -546,9 +546,9 @@ public:
 	void ExportTextures(int grouping, int mode);
 	
 	// Recent files
-    std::list<char *> recentsList;
-	void AddRecent(const char *fileName);
-	void RemoveRecent(const char *fileName);
+    std::vector<std::string> recentsList; //Last in the vector is latest file (top in menu)
+	void AddRecent(const std::string& fileName);
+	void RemoveRecent(const std::string& fileName);
 	void UpdateRecentMenu();
 
 	bool needsMesh;    //At least one viewer displays mesh

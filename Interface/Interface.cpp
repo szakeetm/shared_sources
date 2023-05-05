@@ -219,9 +219,6 @@ Interface::Interface() : GLApplication(){
 Interface::~Interface() {
     SAFE_DELETE(menu);
     SAFE_DELETE(appUpdater);
-    for (auto & recentIter : recentsList) {
-        SAFE_FREE(recentIter);
-    }
 }
 
 void Interface::UpdateViewerFlags() {
@@ -1889,9 +1886,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {
                 if (AskToSave()) {
                     if (worker.IsRunning()) worker.Stop_Public();
-                    auto recentEntry = recentsList.begin();
-                    std::advance(recentEntry, src->GetId() - MENU_FILE_LOADRECENT);
-                    LoadFile(*recentEntry);
+                    LoadFile(recentsList[src->GetId() - MENU_FILE_LOADRECENT]);
                 }
                 return true;
             }
@@ -2237,24 +2232,14 @@ void Interface::AddView() {
     RebuildViewMenus();
 }
 
-void Interface::RemoveRecent(const char *fileName) {
+void Interface::RemoveRecent(const std::string& fileName) {
 
     if (!fileName) return;
     bool found = false;
 
-    for (auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter) {
-        found = strcmp(fileName, *recentIter) == 0;
-        if (found) {
-            SAFE_FREE(*recentIter);
-            recentsList.erase(recentIter);
-            break;
-        }
-    }
-    if (!found) return;
-
-    // Remove oldest elements exceeding the limit
-    while (recentsList.size() >= MAX_RECENT) {
-        recentsList.pop_front();
+    auto pos=std::find(recentsList.begin(),recentsList.end(),fileName);
+    if (pos!=recentsList.end()) {
+        recentsList.erase(pos);
     }
 
     // Update menu
@@ -2262,26 +2247,19 @@ void Interface::RemoveRecent(const char *fileName) {
     SaveConfig();
 }
 
-void Interface::AddRecent(const char *fileName) {
+void Interface::AddRecent(const std::string &fileName) {
 
-    // Check if already exists
-    bool found = false;
-
-    for (auto recentIter = recentsList.begin(); recentIter != recentsList.end(); ++recentIter) {
-        found = strcmp(fileName, *recentIter) == 0;
-        if (found) {
-            SAFE_FREE(*recentIter);
-            recentsList.erase(recentIter);
-            break;
-        }
+    auto pos=std::find(recentsList.begin(),recentsList.end(),fileName);
+    if (pos!=recentsList.end()) {
+        recentsList.erase(pos);
     }
 
     // Add new element
-    recentsList.emplace_back(strdup(fileName));
+    recentsList.push_back(fileName);
 
     // Remove oldest elements exceedint the limit
     while (recentsList.size() >= MAX_RECENT) {
-        recentsList.pop_front();
+        recentsList.pop_front(); //Remove first=oldest
     }
 
     // Update menu
@@ -2291,12 +2269,10 @@ void Interface::AddRecent(const char *fileName) {
 
 void Interface::UpdateRecentMenu() {
     // Update menu
-    GLMenu *m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
+    auto m = menu->GetSubMenu("File")->GetSubMenu("Load recent");
     m->Clear();
-    int i = recentsList.size() - 1;
-    for (auto recentIter = recentsList.rbegin(); recentIter != recentsList.rend(); ++recentIter) {
-        m->Add(AbbreviateString(*recentIter, MAX_ITEM_LGTH - 1).c_str(), MENU_FILE_LOADRECENT + i);
-        --i;
+    for (int i = recentsList.size() - 1;i>=0;i--) { //Add in reverse order (last in vector is latest file)
+        m->Add(AbbreviateString(recentsList[i], MAX_ITEM_LGTH - 1), MENU_FILE_LOADRECENT + i);
     }
 }
 
