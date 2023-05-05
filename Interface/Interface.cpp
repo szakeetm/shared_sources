@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#include "Interface.h"
+#include <Interface.h>
 //#include <direct.h> //_getcwd()
 //#include <io.h> // Check for recovery
 
@@ -30,7 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <filesystem>
 #include <string>
-#include "AppUpdater.h"
+#include <AppUpdater.h>
 
 //#include "GLApp/GLFileBox.h"
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"

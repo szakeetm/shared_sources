@@ -27,8 +27,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Worker.h"
 #include "GeometryViewer.h"
 
-#include "GLApp/GLApp.h"
-#include "GLApp/GLParser.h"
+#include <GLApp/GLApp.h>
+#include <GLApp/GLParser.h>
 
 #define USINGZ //Allows clipper library to store user data (globalId)
 #include "Clipper2Lib/include/clipper2/clipper.h"

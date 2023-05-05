@@ -10,12 +10,8 @@
 #include "GLTypes.h"  //GL_OK
 #include "Helper/Chronometer.h"
 #include <omp.h>
-//#include "GLWindow.h"
-//#include "GLComponent.h"
-//class GLWindow;
 class GLComponent;
 class GLWindow;
-//#include "GLFont.h"
 #include <string>
 #include <fmt/core.h>
 
