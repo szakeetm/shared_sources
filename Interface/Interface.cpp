@@ -2213,7 +2213,7 @@ void Interface::AddView() {
 
 void Interface::RemoveRecent(const std::string& fileName) {
 
-    if (!fileName) return;
+    if (fileName.empty()) return;
     bool found = false;
 
     auto pos=std::find(recentsList.begin(),recentsList.end(),fileName);
@@ -2228,6 +2228,8 @@ void Interface::RemoveRecent(const std::string& fileName) {
 
 void Interface::AddRecent(const std::string &fileName) {
 
+    if (fileName.empty()) return;
+
     auto pos=std::find(recentsList.begin(),recentsList.end(),fileName);
     if (pos!=recentsList.end()) {
         recentsList.erase(pos);
@@ -2238,7 +2240,7 @@ void Interface::AddRecent(const std::string &fileName) {
 
     // Remove oldest elements exceedint the limit
     while (recentsList.size() >= MAX_RECENT) {
-        recentsList.pop_front(); //Remove first=oldest
+        recentsList.erase(recentsList.begin()); //Remove first=oldest
     }
 
     // Update menu

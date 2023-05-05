@@ -129,6 +129,10 @@ void GLMenu::Clear() {
 
 }
 
+GLMenu* GLMenu::Add(const std::string& itemName,int itemId,int accKeyCode,int accKeyModifier) {
+  return Add(itemName.c_str(),itemId,accKeyCode,accKeyModifier);
+}
+
 GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyModifier) {
 
   if(nbItem>=MAX_MENU_ITEM) return NULL;
@@ -173,6 +177,10 @@ GLMenu* GLMenu::Add(const char *itemName,int itemId,int accKeyCode,int accKeyMod
 
   nbItem++;
   return items[i].subMenu;
+}
+
+GLMenu *GLMenu::GetSubMenu(const std::string& itemName) {
+  return GetSubMenu(itemName.c_str());
 }
 
 GLMenu *GLMenu::GetSubMenu(const char *itemName) {

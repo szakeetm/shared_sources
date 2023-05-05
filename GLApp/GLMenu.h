@@ -45,9 +45,11 @@ public:
   ~GLMenu();
 
   // Menu items
+  GLMenu* Add(const std::string& itemName,int itemId=0,int accKeyCode=0,int accKeyModifier=0);
   GLMenu* Add(const char *itemName,int itemId=0,int accKeyCode=0,int accKeyModifier=0);
   int     GetNbItem();
   GLMenu *GetSubMenu(const char *itemName);
+  GLMenu *GetSubMenu(const std::string& itemName);
   void    SetCheck(int itemId,bool checked);
   bool    GetCheck(int itemId);
   void    SetEnabled(int itemId,bool enabled);
