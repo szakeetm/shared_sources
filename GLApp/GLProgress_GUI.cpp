@@ -33,7 +33,7 @@ GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &tit
   
   Add(progressBar);
 
-  percentLabel = new GLLabel("100%");
+  percentLabel = new GLLabel("0%");
   percentLabel->SetOpaque(false);
   Add(percentLabel);
 
@@ -45,7 +45,8 @@ GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &tit
 
   //Fixed values
   progressBarX = 69;
-  progressBarWidth = progressBarMaxWidth = 249;
+  progressBarWidth = 0; //0%
+  progressBarMaxWidth = 249;
   progressBarHeight = 18;
 
   PositionComponents(); //Dynamic values depending on text width, height
