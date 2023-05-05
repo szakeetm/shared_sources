@@ -127,7 +127,6 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 
 				size_t nbAnalyzed = geom->AnalyzeNeighbors(work,progressDlg);
 
-				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);
 				analyzeButton->SetText("Analyze");
 				isRunning = false;

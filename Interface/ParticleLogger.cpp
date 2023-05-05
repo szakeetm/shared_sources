@@ -337,7 +337,6 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 		tmp.str(std::string());
 
 	}
-	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 	return targetString.str();
 }

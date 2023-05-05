@@ -1777,7 +1777,6 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}*/
-	prgAlign->SetVisible(false);
 	SAFE_DELETE(prgAlign);
 }
 
@@ -1816,7 +1815,6 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 		InitializeGeometry();
         InitializeInterfaceGeometry();
 	}
-	prgMove->SetVisible(false);
 	SAFE_DELETE(prgMove);
 }
 
@@ -1877,7 +1875,6 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 		return;
 	}*/
 
-	prgMirror->SetVisible(false);
 	SAFE_DELETE(prgMirror);
 	return undoPoints;
 }
@@ -1957,7 +1954,6 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 		}*/
 
 	}
-	prgRotate->SetVisible(false);
 	SAFE_DELETE(prgRotate);
 }
 
@@ -2080,7 +2076,6 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
             InitializeInterfaceGeometry();
 		}
 	}
-	prgMove->SetVisible(false);
 	SAFE_DELETE(prgMove);
 }
 
@@ -2208,9 +2203,8 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
 
 void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
-	auto *prgMove = new GLProgress_GUI("Scaling selected facets...", "Please wait");
-	prgMove->SetProgress(0.0);
-	prgMove->SetVisible(true);
+	auto prgMove = GLProgress_GUI("Scaling selected facets...", "Please wait");
+	prgMove.SetVisible(true);
 
 	if (!mApp->AskToReset(worker)) return;
 	if (copy)
@@ -2226,7 +2220,7 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 
 	for (auto& i:selectedFacets) {
 			counter += 1.0;
-			prgMove->SetProgress(counter / selected);
+			prgMove.SetProgress(counter / selected);
 			for (int j = 0; j < facets[i]->sh.nbIndex; j++) {
 				if (!alreadyMoved[facets[i]->indices[j]]) {
 					vertices3[facets[i]->indices[j]].x = invariant.x + factorX*(vertices3[facets[i]->indices[j]].x - invariant.x);
@@ -2239,9 +2233,6 @@ void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double fa
 
 	InitializeGeometry();
     InitializeInterfaceGeometry();
-
-	prgMove->SetVisible(false);
-	SAFE_DELETE(prgMove);
 }
 
 ClippingVertex::ClippingVertex() {

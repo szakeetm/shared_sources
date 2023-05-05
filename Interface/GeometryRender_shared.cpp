@@ -929,7 +929,6 @@ void Geometry::ClearFacetTextures()
 		DELETE_TEX(facets[i]->glTex);
 		glGenTextures(1, &facets[i]->glTex);
 	}
-	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 }
 

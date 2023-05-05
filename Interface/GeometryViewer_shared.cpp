@@ -2146,7 +2146,6 @@ void Geometry::ClearFacetMeshLists()
 		prg->SetProgress((double)i / (double)nbFacet);
 		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
 	}
-	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 }
 
@@ -2160,7 +2159,6 @@ void Geometry::BuildFacetMeshLists()
 		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshGLList();
 
 	}
-	prg->SetVisible(false);
 	SAFE_DELETE(prg);
 
 }

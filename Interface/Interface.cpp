@@ -425,7 +425,6 @@ void Interface::SaveSelection() {
         SAFE_DELETE(f);
 
     }
-    progressDlg2->SetVisible(false);
     SAFE_DELETE(progressDlg2);
     changedSinceSave = false;
 }
@@ -463,7 +462,6 @@ void Interface::ExportSelection() {
 
     }
 
-    progressDlg2->SetVisible(false);
     SAFE_DELETE(progressDlg2);
 }
 
@@ -2631,7 +2629,6 @@ bool Interface::AskToSave() {
                 GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
                 RemoveRecent(fn.c_str());
             }
-            progressDlg2->SetVisible(false);
             SAFE_DELETE(progressDlg2);
             return true;
         } else return false;
@@ -2685,7 +2682,6 @@ void Interface::SaveFileAs() {
 
     }
 
-    progressDlg2->SetVisible(false);
     SAFE_DELETE(progressDlg2);
 }
 
@@ -2975,13 +2971,11 @@ bool Interface::AutoSave(bool crashSave) {
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", {"OK"}, GLDLG_ICONERROR);
-        progressDlg2->SetVisible(false);
         SAFE_DELETE(progressDlg2);
         ResetAutoSaveTimer();
         return false;
     }
     //lastSaveTime=(worker.simuTime+(m_fTime-worker.startTime));
-    progressDlg2->SetVisible(false);
     SAFE_DELETE(progressDlg2);
     wereEvents = true;
     return true;

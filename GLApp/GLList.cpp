@@ -155,7 +155,7 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	labWidth = 0; //Row labels
 
 	isEditing = false;
-	if (showProgress) prgList->SetVisible(false);
+	if (showProgress)
 	SAFE_DELETE(prgList);
 }
 

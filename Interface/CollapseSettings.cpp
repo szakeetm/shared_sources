@@ -229,7 +229,6 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				// Send to sub process
 				work->Reload();
 
-				progressDlg->SetVisible(false);
 				SAFE_DELETE(progressDlg);
 
 				// Update result
