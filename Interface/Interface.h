@@ -501,13 +501,6 @@ public:
 	UpdateLogWindow   *updateLogWindow;
     ManualUpdateCheckDialog* manualUpdate;
 
-	// Current directory
-	void UpdateCurrentDir(const char *fileName);
-	char currentDir[1024];
-
-    [[maybe_unused]] void UpdateCurrentSelDir(const char *fileName);
-	char currentSelDir[1024];
-
 	void LoadSelection(const char *fName = nullptr);
 	void SaveSelection();
 	void ExportSelection();

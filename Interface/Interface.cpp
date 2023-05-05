@@ -165,8 +165,6 @@ Interface::Interface() : GLApplication(){
 #endif
 
     curViewer = 0;
-    strcpy(currentDir, ".");
-    strcpy(currentSelDir, ".");
     //memset(formulas, 0, sizeof formulas);
 
     //formulaSettings = nullptr;
@@ -311,22 +309,6 @@ void Interface::UpdateStructMenu() {
     UpdateTitle();
 }
 
-void Interface::UpdateCurrentDir(const char *fileName) {
-
-    strncpy(currentDir, fileName, 1024);
-    char *dp = strrchr(currentDir, '\\');
-    if (!dp) dp = strrchr(currentDir, '/');
-    if (dp) *dp = 0;
-
-}
-
-[[maybe_unused]] void Interface::UpdateCurrentSelDir(const char *fileName) {
-    strncpy(currentDir, fileName, 1024);
-    char *dp = strrchr(currentDir, '\\');
-    if (!dp) dp = strrchr(currentDir, '/');
-    if (dp) *dp = 0;
-}
-
 void Interface::UpdateTitle() {
 
     std::string title;
@@ -432,7 +414,6 @@ void Interface::ExportSelection() {
         return;
     }
 
-    //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
     std::string fileName = NFD_SaveFile_Cpp(fileSaveFilters, "");
     auto prg = GLProgress_GUI("Saving file...", "Please wait");
     
@@ -445,9 +426,7 @@ void Interface::ExportSelection() {
                                             : ".xml"); //This is also done within worker.SaveGeometry but we need it to add to recents
         try {
             worker.SaveGeometry(fileName, prg, true, true);
-            AddRecent(fileName.c_str());
-            //UpdateCurrentDir(fn->fullName);
-            //UpdateTitle();
+            AddRecent(fileName);
         }
         catch (const std::exception &e) {
             char errMsg[512];
@@ -2584,7 +2563,6 @@ bool Interface::AskToSave() {
     int ret = GLSaveDialog::Display("Save current geometry first?", "File not saved",
                                     GLDLG_SAVE | GLDLG_DISCARD | GLDLG_CANCEL_S, GLDLG_ICONINFO);
     if (ret == GLDLG_SAVE) {
-        //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
         std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
         if (!fn.empty()) {
             auto prg = GLProgress_GUI("Saving file...", "Please wait");
@@ -2593,9 +2571,8 @@ bool Interface::AskToSave() {
             try {
                 worker.SaveGeometry(fn, prg);
                 changedSinceSave = false;
-                UpdateCurrentDir(fn.c_str());
                 UpdateTitle();
-                AddRecent(fn.c_str());
+                AddRecent(fn);
             }
             catch (const std::exception &e) {
                 char errMsg[512];
@@ -2628,7 +2605,6 @@ void Interface::CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder) 
 
 void Interface::SaveFileAs() {
 
-    //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
     std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
 
     auto prg = GLProgress_GUI("Saving file...", "Please wait");
@@ -2641,9 +2617,8 @@ void Interface::SaveFileAs() {
             worker.SaveGeometry(fn, prg);
             ResetAutoSaveTimer();
             changedSinceSave = false;
-            UpdateCurrentDir(worker.fullFileName.c_str());
             UpdateTitle();
-            AddRecent(worker.fullFileName.c_str());
+            AddRecent(worker.fullFileName);
         }
         catch (const std::exception &e) {
             char errMsg[512];
@@ -2663,14 +2638,11 @@ void Interface::ExportTextures(int grouping, int mode) {
         return;
     }
 
-    //FILENAME *fn = GLFileBox::SaveFile(currentDir, nullptr, "Save File", fileTexFilters, 0);
     std::string fn = NFD_SaveFile_Cpp(fileTexFilters, "");
     if (!fn.empty()) {
 
         try {
             worker.ExportTextures(fn.c_str(), grouping, mode, true, true);
-            //UpdateCurrentDir(fn->fullName);
-            //UpdateTitle();
         }
         catch (const std::exception &e) {
             char errMsg[512];
