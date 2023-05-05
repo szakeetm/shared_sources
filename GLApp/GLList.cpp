@@ -119,13 +119,9 @@ GLList::~GLList() {
 }
 
 void GLList::Clear(bool keepColumns, bool showProgress) {
-	GLProgress_GUI *prgList = NULL;
+	GLProgress_GUI prgList("Clearing facet hits list...", "Please wait");
 	double all = (double)nbCol*nbRow;
-	if (showProgress) {
-		prgList = new GLProgress_GUI("Clearing facet hits list...", "Please wait");
-		prgList->SetProgress(0.0);
-		prgList->SetVisible(true);
-	}
+	if (showProgress) prgList.SetVisible(true);
 	if (!keepColumns) {
 		for (int i = 0; i < nbCol; i++)
 			SAFE_FREE(cNames[i]);
@@ -133,7 +129,7 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	for (int i = 0; i < nbRow; i++)
 		SAFE_FREE(rNames[i]);
 	for (int i = 0; i < nbCol*nbRow; i++) {
-		if (showProgress) prgList->SetProgress((double)i / all);
+		if (showProgress) prgList.SetProgress((double)i / all);
 		SAFE_FREE(values[i]);
 	}
 
@@ -155,8 +151,6 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	labWidth = 0; //Row labels
 
 	isEditing = false;
-	if (showProgress)
-	SAFE_DELETE(prgList);
 }
 
 void GLList::SetCornerLabel(const char *text) {

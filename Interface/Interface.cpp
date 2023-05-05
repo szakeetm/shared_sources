@@ -394,9 +394,8 @@ void Interface::SaveSelection() {
     FileWriter *f = nullptr;
     Geometry *geom = worker.GetGeometry();
     if (geom->GetNbSelectedFacets() == 0) return;
-    auto *progressDlg2 = new GLProgress_GUI("Saving file", "Please wait");
-    progressDlg2->SetProgress(0.5);
-    progressDlg2->SetVisible(true);
+    auto prg = GLProgress_GUI("Saving file", "Please wait");
+    prg.SetVisible(true);
     //GLWindowManager::Repaint();
 
     std::string fileName = NFD_SaveFile_Cpp(fileSelFilters, "");
@@ -425,7 +424,6 @@ void Interface::SaveSelection() {
         SAFE_DELETE(f);
 
     }
-    SAFE_DELETE(progressDlg2);
     changedSinceSave = false;
 }
 
@@ -439,9 +437,9 @@ void Interface::ExportSelection() {
 
     //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Export selection", fileSFilters, 0);
     std::string fileName = NFD_SaveFile_Cpp(fileSaveFilters, "");
-    auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
-    progressDlg2->SetProgress(0.0);
-    progressDlg2->SetVisible(true);
+    auto prg = GLProgress_GUI("Saving file...", "Please wait");
+    
+    prg.SetVisible(true);
     //GLWindowManager::Repaint();
     if (!fileName.empty()) {
         std::string ext = FileUtils::GetExtension(fileName);
@@ -449,7 +447,7 @@ void Interface::ExportSelection() {
             fileName += (compressSavedFiles ? ".zip"
                                             : ".xml"); //This is also done within worker.SaveGeometry but we need it to add to recents
         try {
-            worker.SaveGeometry(fileName, progressDlg2, true, true);
+            worker.SaveGeometry(fileName, prg, true, true);
             AddRecent(fileName.c_str());
             //UpdateCurrentDir(fn->fullName);
             //UpdateTitle();
@@ -461,8 +459,6 @@ void Interface::ExportSelection() {
         }
 
     }
-
-    SAFE_DELETE(progressDlg2);
 }
 
 // Name: UpdateModelParams()
@@ -1655,8 +1651,9 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                                                     GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
                     if (rep == GLDLG_OK) {
                         if (AskToReset()) {
-
-                            GeometryTools::PolygonsToTriangles(geom, selectedFacets);
+                            auto prg = GLProgress_GUI("Triangulating", "Triangulating");
+                            prg.SetVisible(true);
+                            GeometryTools::PolygonsToTriangles(geom, selectedFacets, prg);
                         }
                     }
                     worker.Reload();
@@ -1788,7 +1785,9 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     return true;
                 case MENU_TRIANGULATE:
                     if (AskToSave()) {
-                        GeometryTools::PolygonsToTriangles(this->worker.GetGeometry());
+                        auto prg = GLProgress_GUI("Triangulating", "Triangulating");
+                        prg.SetVisible(true);
+                        GeometryTools::PolygonsToTriangles(this->worker.GetGeometry(),prg);
                         this->worker.Reload();
                     }
                     return true;
@@ -2612,12 +2611,11 @@ bool Interface::AskToSave() {
         //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
         std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
         if (!fn.empty()) {
-            auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
-            progressDlg2->SetVisible(true);
-            progressDlg2->SetProgress(0.0);
+            auto prg = GLProgress_GUI("Saving file...", "Please wait");
+            prg.SetVisible(true);
             //GLWindowManager::Repaint();
             try {
-                worker.SaveGeometry(fn, progressDlg2);
+                worker.SaveGeometry(fn, prg);
                 changedSinceSave = false;
                 UpdateCurrentDir(fn.c_str());
                 UpdateTitle();
@@ -2629,7 +2627,6 @@ bool Interface::AskToSave() {
                 GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
                 RemoveRecent(fn.c_str());
             }
-            SAFE_DELETE(progressDlg2);
             return true;
         } else return false;
     } else if (ret == GLDLG_DISCARD) return true;
@@ -2658,15 +2655,14 @@ void Interface::SaveFileAs() {
     //FILENAME *fn = GLFileBox::SaveFile(currentDir, worker.GetCurrentShortFileName(), "Save File", fileSFilters, 0);
     std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
 
-    auto *progressDlg2 = new GLProgress_GUI("Saving file...", "Please wait");
-    progressDlg2->SetProgress(0.0);
-    progressDlg2->SetVisible(true);
+    auto prg = GLProgress_GUI("Saving file...", "Please wait");
+    prg.SetVisible(true);
     //GLWindowManager::Repaint();
     if (!fn.empty()) {
 
         try {
 
-            worker.SaveGeometry(fn, progressDlg2);
+            worker.SaveGeometry(fn, prg);
             ResetAutoSaveTimer();
             changedSinceSave = false;
             UpdateCurrentDir(worker.fullFileName.c_str());
@@ -2681,8 +2677,6 @@ void Interface::SaveFileAs() {
         }
 
     }
-
-    SAFE_DELETE(progressDlg2);
 }
 
 void Interface::ExportTextures(int grouping, int mode) {
@@ -2946,9 +2940,8 @@ void Interface::ResetAutoSaveTimer() {
 
 bool Interface::AutoSave(bool crashSave) {
     if (!changedSinceSave) return true;
-    auto *progressDlg2 = new GLProgress_GUI("Peforming autosave...", "Please wait");
-    progressDlg2->SetProgress(0.0);
-    progressDlg2->SetVisible(true);
+    auto prg = GLProgress_GUI("Peforming autosave...", "Please wait");
+    prg.SetVisible(true);
     //GLWindowManager::Repaint();
 
     std::string shortFn(worker.GetCurrentShortFileName());
@@ -2963,7 +2956,7 @@ bool Interface::AutoSave(bool crashSave) {
     char fn[1024];
     strcpy(fn, newAutosaveFilename.c_str());
     try {
-        worker.SaveGeometry(fn, progressDlg2, false, false, true, crashSave);
+        worker.SaveGeometry(fn, prg, false, false, true, crashSave);
         //Success:
         if (!autosaveFilename.empty() && autosaveFilename != newAutosaveFilename) remove(autosaveFilename.c_str());
         autosaveFilename = newAutosaveFilename;
@@ -2971,12 +2964,10 @@ bool Interface::AutoSave(bool crashSave) {
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(std::string(e.what()) + "\n" + fn, "Autosave error", {"OK"}, GLDLG_ICONERROR);
-        SAFE_DELETE(progressDlg2);
         ResetAutoSaveTimer();
         return false;
     }
     //lastSaveTime=(worker.simuTime+(m_fTime-worker.startTime));
-    SAFE_DELETE(progressDlg2);
     wereEvents = true;
     return true;
 }

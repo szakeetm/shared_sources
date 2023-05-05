@@ -25,11 +25,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 
-std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress_GUI* prg)
+std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg)
 {
     std::vector<InterfaceFacet*> triangleFacets;
     for (size_t i = 0; i < facetIndices.size(); i++) {
-        if (prg) prg->SetProgress((double)i/(double(facetIndices.size())));
+        prg.SetProgress((double)i/(double(facetIndices.size())));
         size_t nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
         if (nb > 3) {
             // Create new triangle facets (does not invalidate old ones, you have to manually delete them)
@@ -352,15 +352,15 @@ void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
 }
 
 // Update facet list of geometry by removing polygon facets and replacing them with triangular facets with the same properties
-void GeometryTools::PolygonsToTriangles(Geometry* geometry) {
+void GeometryTools::PolygonsToTriangles(Geometry* geometry, GLProgress_Abstract& prg) {
     auto allIndices = geometry->GetAllFacetIndices();
-    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices);
+    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices, prg);
     geometry->RemoveFacets(allIndices);
     geometry->AddFacets(triangleFacets);
 }
 
-void GeometryTools::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices) {
-    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices);
+void GeometryTools::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg) {
+    std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices, prg);
     geometry->RemoveFacets(selectedIndices);
     geometry->AddFacets(triangleFacets);
 }
@@ -539,7 +539,7 @@ int GeometryTools::GetAnalyzedCommonEdges(Geometry *geometry, std::vector<Common
     CalculateNeighborAngles(commonEdges, geometry);
     return res;
 }
-
+/*
 std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Geometry* geometry){
 
     // 1. First find neighbors
@@ -586,7 +586,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Geometry
     edges_algo[0] = edges;
     return neighbors;
 }
-
+*/
 int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet

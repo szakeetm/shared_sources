@@ -918,18 +918,17 @@ void Geometry::SetCullMode(int mode) {
 
 void Geometry::ClearFacetTextures()
 {
-	GLProgress_GUI* prg = new GLProgress_GUI("Clearing texture", "Frame update");
-	prg->SetBounds(5, 28, 300, 90);
+	GLProgress_GUI prg = GLProgress_GUI("Clearing texture", "Frame update");
+	prg.SetBounds(5, 28, 300, 90);
 	int startTime = SDL_GetTicks();
 	for (int i = 0; i < sh.nbFacet; i++) {
-		if (!prg->IsVisible() && ((SDL_GetTicks() - startTime) > 500)) {
-			prg->SetVisible(true);
+		if (!prg.IsVisible() && ((SDL_GetTicks() - startTime) > 500)) {
+			prg.SetVisible(true);
 		}
-		prg->SetProgress((double)i / (double)sh.nbFacet);
+		prg.SetProgress((double)i / (double)sh.nbFacet);
 		DELETE_TEX(facets[i]->glTex);
 		glGenTextures(1, &facets[i]->glTex);
 	}
-	SAFE_DELETE(prg);
 }
 
 void Geometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float px, float py, float pz, float d) {

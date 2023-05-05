@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SimulationManager.h"
 
 class Geometry;
-class GLProgress_GUI;
+class GLProgress_Abstract;
 class LoadStatus;
 
 
@@ -66,11 +66,11 @@ public:
     void CalculateTextureLimits();
 
   // Save a geometry (throws Error)
-  void SaveGeometry(std::string fileName,GLProgress_GUI *prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
+  void SaveGeometry(std::string fileName,GLProgress_Abstract& prg,bool askConfirm=true,bool saveSelected=false,bool autoSave=false,bool crashSave=false);
 
   // Export textures (throws Error)
   void ExportTextures(const char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
-  //void ExportRegionPoints(const char *fileName,GLProgress_GUI *prg,int regionId,int exportFrequency,bool doFullScan);
+  //void ExportRegionPoints(const char *fileName,GLProgress_Abstract& prg,int regionId,int exportFrequency,bool doFullScan);
   //void ExportDesorption(const char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
 
     [[maybe_unused]] static std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
@@ -88,7 +88,7 @@ public:
  static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void Reload();    // Reload simulation (throws Error)
-  int ReloadSim(bool sendOnly, GLProgress_GUI *progressDlg);
+  int ReloadSim(bool sendOnly, GLProgress_Abstract& prg);
   void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
@@ -124,7 +124,7 @@ public:
   void ImportDesorption_SYN(const char *fileName, const size_t source, const double time,
 	  const size_t mode, const double eta0, const double alpha, const double cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
-	  GLProgress_GUI *prg);
+	  GLProgress_Abstract& prg);
   void LoadTexturesGEO(FileReader *f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string&); //Get ID of parameter name

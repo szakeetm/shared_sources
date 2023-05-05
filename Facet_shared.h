@@ -110,7 +110,7 @@ public:
 	//Different signature (and implementation)
 #if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
 	void  ConvertOldDesorbType();
-	void  LoadSYN(FileReader *file, int version, size_t nbVertex);
+	void  LoadSYN_facet(FileReader *file, int version, size_t nbVertex);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
 	void  SaveGEO(FileWriter *file, int idx);
 	void  SaveXML_geom(pugi::xml_node f);

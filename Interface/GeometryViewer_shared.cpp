@@ -2139,27 +2139,25 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
 void Geometry::ClearFacetMeshLists()
 {
-	GLProgress_GUI *prg = new GLProgress_GUI("Please wait...", "Clearing facet meshes...");
-	prg->SetVisible(true);
+	GLProgress_GUI prg("Please wait...", "Clearing facet meshes...");
+	prg.SetVisible(true);
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
-		prg->SetProgress((double)i / (double)nbFacet);
+		prg.SetProgress((double)i / (double)nbFacet);
 		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
 	}
-	SAFE_DELETE(prg);
 }
 
 void Geometry::BuildFacetMeshLists()
 {
-	GLProgress_GUI *prg = new GLProgress_GUI("Please wait...", "Building facet meshes...");
-	prg->SetVisible(true);
+	GLProgress_GUI prg = GLProgress_GUI("Please wait...", "Building facet meshes...");
+	prg.SetVisible(true);
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
-		prg->SetProgress((double)i / (double)nbFacet);
+		prg.SetProgress((double)i / (double)nbFacet);
 		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshGLList();
 
 	}
-	SAFE_DELETE(prg);
 
 }
 

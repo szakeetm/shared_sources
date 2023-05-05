@@ -671,17 +671,16 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions
 
-    //auto *progressDlg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
-    //progressDlg->SetVisible(true);
-    //progressDlg->SetProgress(0.0);
+    //auto *prg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
+    //prg.SetVisible(true);
 
     //To do: only close if parameters changed
-    //progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
+    //prg.SetMessage("Waiting for subprocesses to release log dataport...");
 
     particleLog.clear();
 
-    //progressDlg->SetProgress(0.5);
-    //progressDlg->SetMessage("Assembling parameters to pass...");
+    //prg.SetProgress(0.5);
+    //prg.SetMessage("Assembling parameters to pass...");
 
     std::string loaderString = SerializeParamsForLoader().str();
     try {
@@ -691,8 +690,6 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
             auto errString = fmt::format("Failed to send params to sub process:\n");
             //GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
 
-            //progressDlg->SetVisible(false);
-            //SAFE_DELETE(progressDlg);
             return;
             //throw std::runtime_error(errString.c_str());
         }
@@ -701,8 +698,6 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
         //GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
     }
 
-    //progressDlg->SetVisible(false);
-    //SAFE_DELETE(progressDlg);
 
 /*#if defined(SYNRAD)
     //Reset leak and hit cache
@@ -818,32 +813,29 @@ void Worker::RetrieveHistogramCache()
 }
 
 // returns -1 on error, 0 on success
-int Worker::ReloadSim(bool sendOnly, GLProgress_GUI *progressDlg) {
+int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
     // Send and Load geometry
-    progressDlg->SetMessage("Waiting for subprocesses to load geometry...");
+    prg.SetMessage("Waiting for subprocesses to load geometry...");
     try {
         if (!InterfaceGeomToSimModel()) {
             std::string errString = "Failed to convert interface geometry to simulation model.\n";
-            /*GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
-
-            progressDlg->SetVisible(false);
-            SAFE_DELETE(progressDlg);*/
+            //GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
             throw std::runtime_error(errString.c_str());
         }
 
-        progressDlg->SetMessage("Initializing physics...");
+        prg.SetMessage("Initializing physics...");
         if(model->PrepareToRun()){
             throw std::runtime_error("Error preparing simulation");
         }
 
-        progressDlg->SetMessage("Constructing memory structure to store results...");
+        prg.SetMessage("Constructing memory structure to store results...");
         if (!sendOnly) {
             globState.Resize(model);
         }
 
-        progressDlg->SetMessage("Forwarding simulation model...");
+        prg.SetMessage("Forwarding simulation model...");
         simManager.ForwardSimModel(model); //copy worker::model to simManager::simulations[0].model (only once)
-        progressDlg->SetMessage("Forwarding global simulation state...");
+        prg.SetMessage("Forwarding global simulation state...");
         simManager.ForwardGlobalCounter(&globState, &particleLog);  //copy worker::globState and particleLog to simManager::simulations[0]
     }
     catch (const std::exception &e) {

@@ -289,10 +289,10 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 	tmp.str(std::string());
 
 	//Lines
-	GLProgress_GUI* prg = new GLProgress_GUI("Assembling text", "Particle logger");
-	prg->SetVisible(true);
+	GLProgress_GUI prg = GLProgress_GUI("Assembling text", "Particle logger");
+	prg.SetVisible(true);
     for (size_t i = 0; !work->abortRequested && i < log.size(); i++) {
-        prg->SetProgress((double)i / (double)log.size());
+        prg.SetProgress((double)i / (double)log.size());
 		mApp->DoEvents(); //To catch eventual abort button click
 		InterfaceFacet* f = work->GetGeometry()->GetFacet(work->model->otfParams.logFacetId);
 		Vector3d hitPos = f->sh.O + log[i].facetHitPosition.u*f->sh.U + log[i].facetHitPosition.v*f->sh.V;
@@ -337,6 +337,5 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 		tmp.str(std::string());
 
 	}
-	SAFE_DELETE(prg);
 	return targetString.str();
 }

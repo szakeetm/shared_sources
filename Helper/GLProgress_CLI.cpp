@@ -1,7 +1,12 @@
 #include "GLProgress_CLI.hpp"
 #include <iostream>
 
-void GLProgress_CLI::SetMessage(const std::string& msg, const bool newLine) 
+GLProgress_CLI::GLProgress_CLI(const std::string& message)
+{
+	SetMessage(message,true);
+}
+
+void GLProgress_CLI::SetMessage(const std::string& msg, const bool newLine)
 {
 	status = msg;
 	if (newLine) {

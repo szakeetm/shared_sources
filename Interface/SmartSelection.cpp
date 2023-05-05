@@ -120,14 +120,11 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				}
 				analyzeButton->SetText("Stop analyzing");
 				isRunning = true;
-				GLProgress_GUI *progressDlg = new GLProgress_GUI("Analyzing facets", "Please wait");
-				progressDlg->SetClosable(false); //Use stop button
-				progressDlg->SetProgress(0.0);
-				progressDlg->SetVisible(true);
+				GLProgress_GUI prg("Analyzing facets", "Please wait");
+				prg.SetClosable(false); //Use stop button
+				prg.SetVisible(true);
 
-				size_t nbAnalyzed = geom->AnalyzeNeighbors(work,progressDlg);
-
-				SAFE_DELETE(progressDlg);
+				size_t nbAnalyzed = geom->AnalyzeNeigbors(work,prg);
 				analyzeButton->SetText("Analyze");
 				isRunning = false;
 				std::stringstream tmp;

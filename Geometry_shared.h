@@ -127,7 +127,7 @@ public:
 	void CheckNonSimple();
 	void CheckIsolatedVertex();
 	void CorrectNonSimple(int *nonSimpleList, int nbNonSimple);
-	size_t AnalyzeNeighbors(Worker *work, GLProgress_GUI *prg);
+	size_t AnalyzeNeigbors(Worker *work, GLProgress_Abstract& prg);
 	std::vector<size_t> GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff);
 	std::vector<size_t> GetAllFacetIndices() const;
 	size_t      GetNbFacet() const;
@@ -159,22 +159,22 @@ public:
     bool RemoveNullFacet();
 	static  InterfaceFacet *MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2);
 	static bool GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength);
-	void CollapseVertex(Worker *work, GLProgress_GUI *prg, double totalWork, double vT);
+	void CollapseVertex(Worker *work, GLProgress_Abstract& prg, double totalWork, double vT);
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 	void RenumberTeleports(const std::vector<int>& newRefs);
 
-	void LoadTXT(FileReader *file, GLProgress_GUI *prg, Worker* worker);
-	void LoadSTR(FileReader *file, GLProgress_GUI *prg);
-	void LoadSTL(FileReader *file, GLProgress_GUI *prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
-	void LoadASE(FileReader *file, GLProgress_GUI *prg);
+	void LoadTXT(FileReader *file, GLProgress_Abstract& prg, Worker* worker);
+	void LoadSTR(FileReader *file, GLProgress_Abstract& prg);
+	void LoadSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
+	void LoadASE(FileReader *file, GLProgress_Abstract& prg);
 
 	bool IsLoaded() const;
-	void InsertTXT(FileReader *file, GLProgress_GUI *prg, bool newStr);
-	void InsertGEO(FileReader *file, GLProgress_GUI *prg, bool newStr);
-	void InsertSTL(FileReader *file, GLProgress_GUI *prg, double scaleFactor, bool newStr);
+	void InsertTXT(FileReader *file, GLProgress_Abstract& prg, bool newStr);
+	void InsertGEO(FileReader *file, GLProgress_Abstract& prg, bool newStr);
+	void InsertSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(bool saveSelected);
-	void SaveSTL(FileWriter* f, GLProgress_GUI* prg);
+	void SaveSTL(FileWriter* f, GLProgress_Abstract& prg);
 	void SaveSuper(int s);
 	static void SaveProfileTXT(FileWriter *file);
 	void UpdateSelection();
@@ -193,7 +193,7 @@ public:
 	virtual void MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	void ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
 	void ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker);
-	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,/*Worker *worker,*/GLProgress_GUI *prg = nullptr);
+	std::vector<DeletedFacet> SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated, GLProgress_Abstract& prg);
 	static bool IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection = false);
 	void MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy);
 	std::vector<UndoPoint> MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker);
@@ -208,7 +208,7 @@ public:
 	void DelStruct(int numToDel);
 	std::vector<DeletedFacet> BuildIntersection(size_t *nbCreated);
 	void    MoveVertexTo(size_t idx, double x, double y, double z);
-	void	Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_GUI *prg);
+	void	Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_Abstract& prg);
 	void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
     void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);

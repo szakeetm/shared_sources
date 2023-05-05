@@ -192,10 +192,9 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 					return;
 				}
 				if (!mApp->AskToReset(work)) return;
-				GLProgress_GUI *progressDlg = new GLProgress_GUI("Collapse", "Please wait");
-				progressDlg->SetClosable(false);
-				progressDlg->SetProgress(0.0);
-				progressDlg->SetVisible(true);
+				GLProgress_GUI prg("Collapse", "Please wait");
+				prg.SetClosable(false);
+				prg.SetVisible(true);
 				if (!l1->GetState()) vT = 0.0;
 				if (!l2->GetState()) fT = 0.0;
 				if (!l3->GetState()) lT = 0.0;
@@ -204,7 +203,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				((GLButton*)src)->SetText("Stop collapse");
 				isRunning = true;
 
-				geom->Collapse(vT, fT, lT, maxVertex, (src == goSelectedButton), work,progressDlg);
+				geom->Collapse(vT, fT, lT, maxVertex, (src == goSelectedButton), work,prg);
 
 				if (src == goButton) goButton->SetText("Collapse");
 				else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
@@ -228,8 +227,6 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 #endif
 				// Send to sub process
 				work->Reload();
-
-				SAFE_DELETE(progressDlg);
 
 				// Update result
 				char tmp[512];

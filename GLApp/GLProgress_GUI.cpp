@@ -37,8 +37,6 @@ GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &tit
   percentLabel->SetOpaque(false);
   Add(percentLabel);
 
-  progress = 100;
-
   // Icon
   
   GLIcon   *gIcon = new GLIcon("images/icon_wait.png");
@@ -79,8 +77,6 @@ void GLProgress_GUI::SetProgress(const double value) {
 		GLWindowManager::Repaint();
 		lastUpd = now;
 	}
-	//this->Paint();
-	//SDL_GL_SwapBuffers();
   }
 
 }
@@ -90,18 +86,11 @@ void GLProgress_GUI::SetMessage(const std::string& msg, const bool newLine) {
 	status = msg;
 	progressStatus->SetText(msg);
 	PositionComponents(); //If message length or height changed
-	/*
-	if (force) {
+	Uint32 now = SDL_GetTicks();
+	if (IsVisible() && (now - lastUpd) > 500) {
 		GLWindowManager::Repaint();
+		lastUpd = now;
 	}
-	else {
-	*/
-		Uint32 now = SDL_GetTicks();
-		if (IsVisible() && (now - lastUpd) > 500) {
-			GLWindowManager::Repaint();
-			lastUpd = now;
-		}
-	//}
 }
 
 void GLProgress_GUI::PositionComponents()

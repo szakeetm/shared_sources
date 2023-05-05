@@ -308,13 +308,12 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 					return;
 			}
 			if (mApp->AskToReset()) {
-				GLProgress_GUI *prg = new GLProgress_GUI("Splitting facets", "Facet split");
+				GLProgress_GUI prg = GLProgress_GUI("Splitting facets", "Facet split");
 				
 				ClearUndoFacets();
 				nbCreated = 0;
 				deletedFacetList=geom->SplitSelectedFacets(P0, N, &nbCreated,prg);
 				nbFacet = geom->GetNbFacet();
-				SAFE_DELETE(prg);
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets split, creating " << nbCreated <<" new.";
 				resultLabel->SetText(tmp.str().c_str());
