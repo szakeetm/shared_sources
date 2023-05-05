@@ -831,7 +831,7 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_GUI *progressDlg) {
             throw std::runtime_error(errString.c_str());
         }
 
-        progressDlg->SetMessage("Initializing physical properties for model->..");
+        progressDlg->SetMessage("Initializing physics...");
         if(model->PrepareToRun()){
             throw std::runtime_error("Error preparing simulation");
         }

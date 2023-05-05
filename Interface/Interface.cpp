@@ -677,7 +677,9 @@ int Interface::OnExit() {
     remove(autosaveFilename.c_str());
     auto cwd = std::filesystem::current_path();
     auto tempDir = cwd / "tmp";
+    fmt::print("\nFlushing temp directory {} ...", tempDir.string());
     std::filesystem::remove_all(tempDir);
+    fmt::print("done.\n");
     return GL_OK;
 }
 

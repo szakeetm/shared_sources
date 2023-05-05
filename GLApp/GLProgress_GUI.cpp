@@ -85,20 +85,23 @@ void GLProgress_GUI::SetProgress(const double value) {
 
 }
 
-void GLProgress_GUI::SetMessage(const std::string& msg, const bool force) {
+void GLProgress_GUI::SetMessage(const std::string& msg, const bool newLine) {
+	//The newLine is unused in GUI, required to override abstract progress bar
 	status = msg;
 	progressStatus->SetText(msg);
 	PositionComponents(); //If message length or height changed
+	/*
 	if (force) {
 		GLWindowManager::Repaint();
 	}
 	else {
+	*/
 		Uint32 now = SDL_GetTicks();
 		if (IsVisible() && (now - lastUpd) > 500) {
 			GLWindowManager::Repaint();
 			lastUpd = now;
 		}
-	}
+	//}
 }
 
 void GLProgress_GUI::PositionComponents()

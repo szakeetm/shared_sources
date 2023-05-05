@@ -1,10 +1,16 @@
 #include "GLProgress_CLI.hpp"
 #include <iostream>
 
-void GLProgress_CLI::SetMessage(const std::string& msg) 
+void GLProgress_CLI::SetMessage(const std::string& msg, const bool newLine) 
 {
 	status = msg;
-	std::cout << std::endl << status;
+	if (newLine) {
+		std::cout << std::endl;
+	}
+	else {
+		std::cout << "\r";
+	}
+	std::cout << status;
 }
 
 void GLProgress_CLI::SetProgress(const double prg) 

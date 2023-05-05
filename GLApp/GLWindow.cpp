@@ -65,6 +65,8 @@ GLWindow::GLWindow() : _title{}, iconTitle{}, GLContainer() {
 
 GLWindow::~GLWindow() {
 
+    SetVisible(false);
+
     if (menuBar) {
         menuBar->InvalidateDeviceObjects();
         SAFE_DELETE(menuBar);
