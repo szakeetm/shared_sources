@@ -348,7 +348,7 @@ void Interface::LoadSelection(const char *fName) {
         {
             auto f = FileReader(fileName);
             while (!f.IsEof()) {
-                int s = f.ReadInt();
+                int s = file.ReadInt();
                 if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
             }
         }
@@ -388,7 +388,7 @@ void Interface::SaveSelection() {
             //int nbSelected = geom->GetNbSelectedFacets();
             size_t nbFacet = geom->GetNbFacet();
             for (size_t i = 0; i < nbFacet; i++) {
-                if (geom->GetFacet(i)->selected) f.Write(i, "\n");
+                if (geom->GetFacet(i)->selected) file.Write(i, "\n");
             }
 
         }

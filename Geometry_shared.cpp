@@ -4366,23 +4366,23 @@ void Geometry::SaveSTL(FileWriter& f, GLProgress_Abstract& prg) {
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg.SetMessage("Saving STL file...");
-    f->Write("solid ");f->Write("\"");f->Write(GetName());f->Write("\"\n");
+    file.Write("solid ");file.Write("\"");file.Write(GetName());file.Write("\"\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {
         prg.SetProgress((double)i / (double)triangulatedGeometry.size());
         InterfaceFacet* fac = triangulatedGeometry[i];
-        f->Write("\tfacet normal ");
-        f->Write(fac->sh.N.x);f->Write(fac->sh.N.y);f->Write(fac->sh.N.z,"\n");
-        f->Write("\t\touter loop\n");
+        file.Write("\tfacet normal ");
+        file.Write(fac->sh.N.x);file.Write(fac->sh.N.y);file.Write(fac->sh.N.z,"\n");
+        file.Write("\t\touter loop\n");
 		std::vector<size_t> vertexOrder = {0,2,1}; //Molflow uses right-handed normal, STL standard is left-handed
         for (const auto v:vertexOrder) {
-            f->Write("\t\t\tvertex");
-            f->Write(GetVertex(fac->indices[v])->x);
-            f->Write(GetVertex(fac->indices[v])->y);
-            f->Write(GetVertex(fac->indices[v])->z, "\n");
+            file.Write("\t\t\tvertex");
+            file.Write(GetVertex(fac->indices[v])->x);
+            file.Write(GetVertex(fac->indices[v])->y);
+            file.Write(GetVertex(fac->indices[v])->z, "\n");
         }
-        f->Write("\t\tendloop\n\tendfacet\n");
+        file.Write("\t\tendloop\n\tendfacet\n");
     }
-    f->Write("endsolid\n");
+    file.Write("endsolid\n");
     //Manually delete created facets
     for (auto& fac : triangulatedGeometry) {
         SAFE_DELETE(fac);

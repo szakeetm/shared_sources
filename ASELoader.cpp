@@ -134,7 +134,7 @@ void ASELoader::Load()
   /**********************************/
   /* CHECK BEGINING OF CONFIG FILE  */
   /**********************************/
-  w=f->ReadWord();
+  w=file.ReadWord();
   if( strlen(w)==0 ) 
     throw Error("File empty");
   lex = class_lex(w);
@@ -148,23 +148,23 @@ void ASELoader::Load()
 
       // Header section
     case _3DSMAX_ASCIIEXPORT_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,NUMBER);
       break;
 
       // Comment section
     case COMMENT_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,STRING);
       break;
 
       // Scene section 
     case SCENE_KW:
-      w=f->ReadWord(); lex2=class_lex(w);
+      w=file.ReadWord(); lex2=class_lex(w);
       CHECK_LEX(lex2,OPEN_BLOCK);
       while( lex2!=CLOSE_BLOCK )
       {
-        w=f->ReadWord(); lex2=class_lex(w);
+        w=file.ReadWord(); lex2=class_lex(w);
         if(  strlen(w)==0  )
           throw Error("Unexpected end of file '}' is missing.");
       }
@@ -172,93 +172,93 @@ void ASELoader::Load()
 
       // Meterial section
     case MATERIAL_LIST_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,OPEN_BLOCK);
-      w=f->ReadWord(); lex2=class_lex(w);
+      w=file.ReadWord(); lex2=class_lex(w);
       CHECK_LEX(lex2,MATERIAL_COUNT_KW);
       // Number of material
-      nb_mat = f->ReadInt();
+      nb_mat = file.ReadInt();
 
       for( i=0 ; i < nb_mat ; i++) {
-        w=f->ReadWord(); lex2=class_lex(w);
+        w=file.ReadWord(); lex2=class_lex(w);
         CHECK_LEX(lex2,MATERIAL_KW);
-        w=f->ReadWord(); lex2=class_lex(w);
+        w=file.ReadWord(); lex2=class_lex(w);
         CHECK_LEX(lex2,NUMBER);
-        w=f->ReadWord(); lex2=class_lex(w);
+        w=file.ReadWord(); lex2=class_lex(w);
         CHECK_LEX(lex2,OPEN_BLOCK);
-        w=f->ReadWord(); lex3=class_lex(w);
+        w=file.ReadWord(); lex3=class_lex(w);
         while( lex3 != CLOSE_BLOCK ) {
           switch( lex3 ) {
 
     case MATERIAL_NAME_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       strcpy( materials[i].ref , w );
       break;
 
     case MATERIAL_CLASS_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       break;
 
     case MATERIAL_AMBIENT_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
 
     case MATERIAL_DIFFUSE_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
 
     case MATERIAL_SPECULAR_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
 
     case MATERIAL_SHINE_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_SHINESTRENGTH_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_TRANSPARENCY_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_WIRESIZE_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_SHADING_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       break;
 
     case MATERIAL_XP_FALLOFF_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_SELFILLUM_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MATERIAL_FALLOFF_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       break;
 
@@ -266,36 +266,36 @@ void ASELoader::Load()
       break;
 
     case MATERIAL_XP_TYPE_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       break;
 
     case MAP_DIFFUSE_KW:
     case MAP_OPACITY_KW:
       map_type=lex3;
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       while( lex4 != CLOSE_BLOCK ) {
         switch( lex4 ) {
     case MAP_NAME_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,STRING);
       break;
     case MAP_CLASS_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,STRING);
       break;
     case MAP_SUBNO_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case MAP_AMOUNT_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case BITMAP_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,STRING);
       if( map_type==MAP_DIFFUSE_KW ) 
         strcpy( materials[i].diff_name , w );
@@ -303,55 +303,55 @@ void ASELoader::Load()
         strcpy( materials[i].alpha_name , w );
       break;
     case MAP_TYPE_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,STRING);
       break;
     case UVW_U_OFFSET_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_V_OFFSET_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_U_TILING_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_V_TILING_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_ANGLE_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_BLUR_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_BLUR_OFFSET_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_NOUSE_AMT_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_NOISE_SIZE_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_NOISE_LEVEL_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case UVW_NOISE_PHASE_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
     case BITMAP_FILTER_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,STRING);
       break;
     default:
@@ -359,7 +359,7 @@ void ASELoader::Load()
         ,w,f->GetCurrentLine());
       throw Error(err_str);
         }
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
       }
       break;     
 
@@ -368,21 +368,21 @@ void ASELoader::Load()
         ,w,materials[i].ref,f->GetCurrentLine());
       throw Error(err_str);
           }
-          w=f->ReadWord(); lex3=class_lex(w);
+          w=file.ReadWord(); lex3=class_lex(w);
         }
       }
 
-      w=f->ReadWord(); lex2=class_lex(w);
+      w=file.ReadWord(); lex2=class_lex(w);
       CHECK_LEX(lex2,CLOSE_BLOCK);
 
       break;
 
       //Group
     case GROUP_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,STRING);
       //get_string(cur_group,w);     
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,OPEN_BLOCK);
       break;
 
@@ -393,13 +393,13 @@ void ASELoader::Load()
       //Geometry section
 
     case GEOMOBJECT_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,OPEN_BLOCK);
-      w=f->ReadWord(); lex2=class_lex(w);
+      w=file.ReadWord(); lex2=class_lex(w);
       while( lex2!=CLOSE_BLOCK ) {
         switch( lex2 ) {
     case NODE_NAME_KW:
-      w=f->ReadWord(); lex=class_lex(w);
+      w=file.ReadWord(); lex=class_lex(w);
       CHECK_LEX(lex,STRING);
 
       OBJ[nbObj].nb_face=0;
@@ -411,151 +411,151 @@ void ASELoader::Load()
       break;
 
     case NODE_PARENT_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
       break;
 
     case NODE_TM_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,OPEN_BLOCK);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NODE_NAME_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,STRING);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,INHERIT_POS_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,INHERIT_ROT_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,INHERIT_SCL_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROW0_KW);
-      //OBJ[nbObj].rot._11 = f->ReadDouble();
-      //OBJ[nbObj].rot._12 = f->ReadDouble();
-      //OBJ[nbObj].rot._13 = f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
+      //OBJ[nbObj].rot._11 = file.ReadDouble();
+      //OBJ[nbObj].rot._12 = file.ReadDouble();
+      //OBJ[nbObj].rot._13 = file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROW1_KW);
-      //OBJ[nbObj].rot._21 = f->ReadDouble();
-      //OBJ[nbObj].rot._22 = f->ReadDouble();
-      //OBJ[nbObj].rot._23 = f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
+      //OBJ[nbObj].rot._21 = file.ReadDouble();
+      //OBJ[nbObj].rot._22 = file.ReadDouble();
+      //OBJ[nbObj].rot._23 = file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROW2_KW);
-      //OBJ[nbObj].rot._31 = f->ReadDouble();
-      //OBJ[nbObj].rot._32 = f->ReadDouble();
-      //OBJ[nbObj].rot._33 = f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
-      f->ReadDouble();
+      //OBJ[nbObj].rot._31 = file.ReadDouble();
+      //OBJ[nbObj].rot._32 = file.ReadDouble();
+      //OBJ[nbObj].rot._33 = file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
+      file.ReadDouble();
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROW3_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_POS_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROTAXIS_KW);
-      OBJ[nbObj].u.x = f->ReadDouble();
-      OBJ[nbObj].u.y = f->ReadDouble();
-      OBJ[nbObj].u.z = f->ReadDouble();
+      OBJ[nbObj].u.x = file.ReadDouble();
+      OBJ[nbObj].u.y = file.ReadDouble();
+      OBJ[nbObj].u.z = file.ReadDouble();
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_ROTANGLE_KW);
-      OBJ[nbObj].angle = f->ReadDouble();
+      OBJ[nbObj].angle = file.ReadDouble();
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_SCALE_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_SCALEAXIS_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
 
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,TM_SCALEAXISANG_KW);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,CLOSE_BLOCK);
 
       break;
     case MESH_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,OPEN_BLOCK);
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       while( lex3!=CLOSE_BLOCK ) {
         switch( lex3 ) {
     case TIMEVALUE_KW:
-      w=f->ReadWord(); lex3=class_lex(w);
+      w=file.ReadWord(); lex3=class_lex(w);
       CHECK_LEX(lex3,NUMBER);
       break;
     case MESH_NUMVERTEX_KW:
-      OBJ[nbObj].nb_pts= f->ReadInt();
+      OBJ[nbObj].nb_pts= file.ReadInt();
       OBJ[nbObj].pts = (Vector3d *)malloc( OBJ[nbObj].nb_pts * sizeof(Vector3d) );
       break;
     case MESH_NUMFACES_KW:
-      OBJ[nbObj].nb_face= f->ReadInt();
+      OBJ[nbObj].nb_face= file.ReadInt();
       OBJ[nbObj].face = (ASEFACE *)malloc( OBJ[nbObj].nb_face * sizeof(ASEFACE) );
       break;
     case MESH_NUMTVERTEX_KW:
-      OBJ[nbObj].nb_map= f->ReadInt();
+      OBJ[nbObj].nb_map= file.ReadInt();
       OBJ[nbObj].map = (ASEMAP *)malloc( OBJ[nbObj].nb_map * sizeof(ASEMAP) );
       break;
     case MESH_NUMTVFACES_KW:
-      nb = f->ReadInt();
+      nb = file.ReadInt();
       if( nb!=OBJ[nbObj].nb_face ) {
         sprintf(err_str,"%s NUM_TVFACE must be equal to NB_FACE line %d.",
           OBJ[nbObj].name,f->GetCurrentLine());
@@ -564,177 +564,177 @@ void ASELoader::Load()
       break;
 
     case MESH_VERTEX_LIST_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       for(i=0;i<OBJ[nbObj].nb_pts;i++) {
         CHECK_LEX(lex4,MESH_VERTEX_KW);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER); // Vertex idx
-        OBJ[nbObj].pts[i].x = f->ReadDouble();
-        OBJ[nbObj].pts[i].y = f->ReadDouble();
-        OBJ[nbObj].pts[i].z = f->ReadDouble();
-        w=f->ReadWord(); lex4=class_lex(w);
+        OBJ[nbObj].pts[i].x = file.ReadDouble();
+        OBJ[nbObj].pts[i].y = file.ReadDouble();
+        OBJ[nbObj].pts[i].z = file.ReadDouble();
+        w=file.ReadWord(); lex4=class_lex(w);
       }
       CHECK_LEX(lex4,CLOSE_BLOCK);
       break;
 
     case MESH_FACE_LIST_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       for(i=0;i<OBJ[nbObj].nb_face;i++) {
         CHECK_LEX(lex4,MESH_FACE_KW);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         // Face idx
         CHECK_LEX(lex4,NUMBER);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
         // Face vertex 1
-        OBJ[nbObj].face[i].v1 = f->ReadInt();
+        OBJ[nbObj].face[i].v1 = file.ReadInt();
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
         // Face vertex 2
-        OBJ[nbObj].face[i].v2 = f->ReadInt();
+        OBJ[nbObj].face[i].v2 = file.ReadInt();
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
         // Face vertex 3
-        OBJ[nbObj].face[i].v3 = f->ReadInt();
+        OBJ[nbObj].face[i].v3 = file.ReadInt();
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,COLON);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
 
         while(lex4!=STRING) {
-          w=f->ReadWord(); lex4=class_lex(w);
+          w=file.ReadWord(); lex4=class_lex(w);
         }
 
         CHECK_LEX(lex4,STRING);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
       }
       CHECK_LEX(lex4,CLOSE_BLOCK);
       break;
 
     case MESH_NORMALS_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       for(i=0;i<OBJ[nbObj].nb_face;i++) {
         CHECK_LEX(lex4,MESH_FACENORMAL_KW);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
-        OBJ[nbObj].face[i].n0.x = f->ReadDouble();
+        OBJ[nbObj].face[i].n0.x = file.ReadDouble();
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].face[i].n0.y = f->ReadDouble();
+        OBJ[nbObj].face[i].n0.y = file.ReadDouble();
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,NUMBER);
-        OBJ[nbObj].face[i].n0.z = f->ReadDouble();
+        OBJ[nbObj].face[i].n0.z = file.ReadDouble();
 
         // First normal
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,MESH_VERTEXNORMAL_KW);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].face[i].n1.x = f->ReadDouble();
-        OBJ[nbObj].face[i].n1.y = f->ReadDouble();
-        OBJ[nbObj].face[i].n1.z = f->ReadDouble();
+        OBJ[nbObj].face[i].n1.x = file.ReadDouble();
+        OBJ[nbObj].face[i].n1.y = file.ReadDouble();
+        OBJ[nbObj].face[i].n1.z = file.ReadDouble();
 
         // Second normal
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,MESH_VERTEXNORMAL_KW);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].face[i].n2.x = f->ReadDouble();
-        OBJ[nbObj].face[i].n2.y = f->ReadDouble();
-        OBJ[nbObj].face[i].n2.z = f->ReadDouble();
+        OBJ[nbObj].face[i].n2.x = file.ReadDouble();
+        OBJ[nbObj].face[i].n2.y = file.ReadDouble();
+        OBJ[nbObj].face[i].n2.z = file.ReadDouble();
 
         // Third
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4,MESH_VERTEXNORMAL_KW);
 
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].face[i].n3.x = f->ReadDouble();
-        OBJ[nbObj].face[i].n3.y = f->ReadDouble();
-        OBJ[nbObj].face[i].n3.z = f->ReadDouble();
-        w=f->ReadWord(); lex4=class_lex(w);
+        OBJ[nbObj].face[i].n3.x = file.ReadDouble();
+        OBJ[nbObj].face[i].n3.y = file.ReadDouble();
+        OBJ[nbObj].face[i].n3.z = file.ReadDouble();
+        w=file.ReadWord(); lex4=class_lex(w);
 
       }
       CHECK_LEX(lex4,CLOSE_BLOCK);
       break;
 
     case MESH_TVERTLIST_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       for(i=0;i<OBJ[nbObj].nb_map;i++) {
         CHECK_LEX(lex4,MESH_TVERT_KW);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].map[i].u = f->ReadDouble();
-        OBJ[nbObj].map[i].v = f->ReadDouble();
-        w=f->ReadWord(); lex4=class_lex(w);
+        OBJ[nbObj].map[i].u = file.ReadDouble();
+        OBJ[nbObj].map[i].v = file.ReadDouble();
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
       }
       CHECK_LEX(lex4,CLOSE_BLOCK);
       break;
 
     case MESH_TFACELIST_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,OPEN_BLOCK);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       for(i=0;i<OBJ[nbObj].nb_face;i++) {
         CHECK_LEX(lex4,MESH_TFACE_KW);
-        w=f->ReadWord(); lex4=class_lex(w);
+        w=file.ReadWord(); lex4=class_lex(w);
         CHECK_LEX(lex4, NUMBER );
-        OBJ[nbObj].face[i].tv1 = f->ReadInt();
-        OBJ[nbObj].face[i].tv2 = f->ReadInt();
-        OBJ[nbObj].face[i].tv3 = f->ReadInt();
-        w=f->ReadWord(); lex4=class_lex(w);
+        OBJ[nbObj].face[i].tv1 = file.ReadInt();
+        OBJ[nbObj].face[i].tv2 = file.ReadInt();
+        OBJ[nbObj].face[i].tv3 = file.ReadInt();
+        w=file.ReadWord(); lex4=class_lex(w);
       }
       CHECK_LEX(lex4,CLOSE_BLOCK);
       break;
@@ -746,35 +746,35 @@ void ASELoader::Load()
         ,w,OBJ[nbObj].name,f->GetCurrentLine());
       throw Error(err_str);
         }
-        w=f->ReadWord(); lex3=class_lex(w);
+        w=file.ReadWord(); lex3=class_lex(w);
       }
       break;
 
     case PROP_MOTIONBLUR_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
 
     case PROP_CASTSHADOW_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
 
     case PROP_RECVSHADOW_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       break;
 
     case MATERIAL_REF_KW:
-      OBJ[nbObj].mat= f->ReadInt();
+      OBJ[nbObj].mat= file.ReadInt();
       break;
 
     case WIREFRAME_COLOR_KW:
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
-      w=f->ReadWord(); lex4=class_lex(w);
+      w=file.ReadWord(); lex4=class_lex(w);
       CHECK_LEX(lex4,NUMBER);
       OBJ[nbObj].mat=-1;
       break;
@@ -786,7 +786,7 @@ void ASELoader::Load()
         ,w,OBJ[nbObj].name,f->GetCurrentLine());
       throw Error(err_str);
         }
-        w=f->ReadWord(); lex2=class_lex(w);
+        w=file.ReadWord(); lex2=class_lex(w);
       }
       nbObj++;
       if( nbObj>=MAX_NUMBER_OF_OBJECT )
@@ -803,7 +803,7 @@ void ASELoader::Load()
         ,w,f->GetCurrentLine());
       throw Error(err_str);
     }
-    w=f->ReadWord(); lex=class_lex(w);
+    w=file.ReadWord(); lex=class_lex(w);
     eof=(strlen(w)==0);
   }
 
