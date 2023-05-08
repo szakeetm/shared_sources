@@ -43,7 +43,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/SynRad.h"
 #endif
 
-#include "ASELoader.h"
 //#include <algorithm>
 #include <list>
 #include <numeric> //std::iota
@@ -3611,62 +3610,6 @@ void Geometry::ResetTextureLimits() {
 	textureMax_manual.power = 0.0;
 #endif
 }
-
-void Geometry::LoadASE(FileReader& file, GLProgress_Abstract& prg) {
-
-	Clear();
-
-	//mApp->ClearAllSelections();
-	//mApp->ClearAllViews();
-	ASELoader ase(file);
-	ase.Load();
-
-	// Compute total of facet
-	sh.nbFacet = 0;
-	for (int i = 0; i < ase.nbObj; i++) sh.nbFacet += ase.OBJ[i].nb_face;
-
-	// Allocate mem
-	sh.nbVertex = 3 * sh.nbFacet;
-    try{
-        facets.resize(sh.nbFacet, nullptr);
-    }
-    catch(const std::exception &e) {
-        throw Error("Couldn't allocate memory for facets");
-    }
-
-	/*vertices3 = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
-	memset(vertices3, 0, wp.nbVertex * sizeof(InterfaceVertex));*/
-	std::vector<InterfaceVertex>(sh.nbVertex).swap(vertices3);
-
-	// Fill 
-	int nb = 0;
-	for (int i = 0; i < ase.nbObj; i++) {
-
-		for (int j = 0; j < ase.OBJ[i].nb_face; j++) {
-			vertices3[3 * nb + 0].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v1]);
-			vertices3[3 * nb + 1].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v2]);
-			vertices3[3 * nb + 2].SetLocation(ase.OBJ[i].pts[ase.OBJ[i].face[j].v3]);
-			facets[nb] = new InterfaceFacet(3);
-			facets[nb]->indices[0] = 3 * nb + 0;
-			facets[nb]->indices[1] = 3 * nb + 1;
-			facets[nb]->indices[2] = 3 * nb + 2;
-			nb++;
-		}
-
-	}
-
-	UpdateName(file);
-	sh.nbSuper = 1;
-	strName[0] = strdup(sh.name.c_str());
-	strFileName[0] = strdup(file->GetName());
-	char *e = strrchr(strName[0], '.');
-	if (e) *e = 0;
-	InitializeGeometry();
-    InitializeInterfaceGeometry();
-	//isLoaded = true; //InitializeGeometry() sets to true
-
-}
-
 void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 	char nPath[512];

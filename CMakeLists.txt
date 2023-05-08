@@ -117,8 +117,6 @@ set(INTERFACE_FILES
         Interface/ImguiPerformancePlot.cpp
         Interface/ImguiSidebar.cpp
         Interface/ImguiExtensions.cpp
-
-        ASELoader.cpp
         Facet_shared.cpp
 
         File.cpp

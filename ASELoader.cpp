@@ -33,7 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 * \brief Constructor with a file handle f
 * \param f file handle
 */
-ASELoader::ASELoader(FileReader& f) {
+ASELoader::ASELoader(FileReader& file) {
 
   this->f = f;
   OBJ = NULL;

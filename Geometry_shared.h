@@ -166,7 +166,6 @@ public:
 	void LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker);
 	void LoadSTR(FileReader& file, GLProgress_Abstract& prg);
 	void LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
-	void LoadASE(FileReader& file, GLProgress_Abstract& prg);
 
 	bool IsLoaded() const;
 	void InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr);
