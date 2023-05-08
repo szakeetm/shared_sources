@@ -3619,24 +3619,26 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 	/*size_t nF, nV;
 	Facet **F;
 	InterfaceVertex *V;*/
-	FileReader& fr;
+	
 
 	Clear();
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
 	// Load multiple structure file
-	sh.nbSuper = file->ReadInt();
+	sh.nbSuper = file.ReadInt();
 
-	strcpy(fPath, file->ReadLine());
+	strcpy(fPath, file.ReadLine());
 	strcpy(nPath, FileUtils::GetPath(file->GetName()).c_str());
+
+	FileReader* fr = nullptr;
 
 	for (int n = 0; n < sh.nbSuper; n++) {
 
-		file->ReadInt();
-		file->ReadInt();
+		file.ReadInt();
+		file.ReadInt();
 		fr = nullptr;
-		strcpy(sName, file->ReadWord());
+		strcpy(sName, file.ReadWord());
 		strName[n] = strdup(sName);
 		char *e = strrchr(strName[n], '.');
 		if (e) *e = 0;
@@ -3667,7 +3669,7 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 		strFileName[n] = strdup(sName);
 		//LoadTXTGeom(fr, n);
-		InsertTXTGeom(fr, n, true);
+		InsertTXTGeom(*fr, n, true);
 		/*
 		Merge(nV, nF, V, F);
 		SAFE_FREE(V);

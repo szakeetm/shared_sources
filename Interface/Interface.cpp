@@ -346,8 +346,8 @@ void Interface::LoadSelection(const char *fName) {
         size_t nbFacet = geom->GetNbFacet();
 
         {
-            auto f = FileReader(fileName);
-            while (!f.IsEof()) {
+            auto file = FileReader(fileName);
+            while (!file.IsEof()) {
                 int s = file.ReadInt();
                 if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
             }
