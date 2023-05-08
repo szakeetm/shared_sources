@@ -96,9 +96,9 @@ protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
 	void CalculateFacetParams(InterfaceFacet *f);
 	void Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF); // Merge geometry
-	void LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx = 0);
-	void InsertTXTGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
-	void InsertGEOGeom(FileReader *file, size_t strIdx = 0, bool newStruct = false);
+	void LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx = 0);
+	void InsertTXTGeom(FileReader& file, size_t strIdx = 0, bool newStruct = false);
+	void InsertGEOGeom(FileReader& file, size_t strIdx = 0, bool newStruct = false);
 	void AdjustProfile();
 	void BuildDirectionList();
 	void BuildSelectList();
@@ -163,15 +163,15 @@ public:
 	void RenumberNeighbors(const std::vector<int> &newRefs);
 	void RenumberTeleports(const std::vector<int>& newRefs);
 
-	void LoadTXT(FileReader *file, GLProgress_Abstract& prg, Worker* worker);
-	void LoadSTR(FileReader *file, GLProgress_Abstract& prg);
-	void LoadSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
-	void LoadASE(FileReader *file, GLProgress_Abstract& prg);
+	void LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker);
+	void LoadSTR(FileReader& file, GLProgress_Abstract& prg);
+	void LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
+	void LoadASE(FileReader& file, GLProgress_Abstract& prg);
 
 	bool IsLoaded() const;
-	void InsertTXT(FileReader *file, GLProgress_Abstract& prg, bool newStr);
-	void InsertGEO(FileReader *file, GLProgress_Abstract& prg, bool newStr);
-	void InsertSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
+	void InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr);
+	void InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr);
+	void InsertSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter& f, GLProgress_Abstract& prg);
@@ -233,7 +233,7 @@ public:
 	void CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const size_t nbSteps);
 	void CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const double  topLength, const size_t nbSteps);
 
-	void UpdateName(FileReader *file);
+	void UpdateName(FileReader& file);
 	std::string GetName() const;
 	void UpdateName(const char *fileName);
 	std::vector<size_t> GetSelectedFacets();

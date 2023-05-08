@@ -332,7 +332,6 @@ void Interface::UpdateTitle() {
 void Interface::LoadSelection(const char *fName) {
 
     std::string fileName = fName;
-    FileReader *f = nullptr;
 
     if (fileName.empty()) {
         fileName = NFD_OpenFile_Cpp(fileSelFilters, "");
@@ -346,10 +345,12 @@ void Interface::LoadSelection(const char *fName) {
         geom->UnselectAll();
         size_t nbFacet = geom->GetNbFacet();
 
-        f = new FileReader(fileName);
-        while (!f->IsEof()) {
-            int s = f->ReadInt();
-            if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
+        {
+            auto f = FileReader(fileName);
+            while (!f.IsEof()) {
+                int s = f.ReadInt();
+                if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
+            }
         }
         geom->UpdateSelection();
 
@@ -362,10 +363,7 @@ void Interface::LoadSelection(const char *fName) {
         GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 
     }
-
-    SAFE_DELETE(f);
     changedSinceSave = false;
-
 }
 
 void Interface::SaveSelection() {

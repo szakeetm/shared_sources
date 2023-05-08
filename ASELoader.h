@@ -286,7 +286,7 @@ class ASELoader {
 public:
 
   // Construction
-  ASELoader(FileReader *f);
+  ASELoader(FileReader& f);
   ~ASELoader();
 
   // Load an ASE file (throw Error in case of failure)

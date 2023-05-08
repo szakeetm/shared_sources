@@ -645,21 +645,6 @@ void Worker::ChangePriority(int prioLevel) {
         simManager.DecreasePriority();
 }
 
-[[maybe_unused]] std::vector<std::vector<double>> Worker::ImportCSV_double(FileReader *file) {
-    std::vector<std::vector<double>> table;
-    do {
-        std::vector<double> currentRow;
-        do {
-            currentRow.push_back(file->ReadDouble());
-            if (!file->IsEol()) file->ReadKeyword(",");
-        } while (!file->IsEol());
-        table.push_back(currentRow);
-    } while (!file->IsEof());
-    return table;
-}
-
-
-
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
     if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
     if (needsReload) RealReload(); //Sync (number of) regions

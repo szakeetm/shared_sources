@@ -61,7 +61,7 @@ public:
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
-  void LoadTexturesSYN(FileReader* f, GlobalSimuState &globState, int version);  // Load a textures(throws Error)
+  void LoadTexturesSYN(FileReader& f, GlobalSimuState &globState, int version);  // Load a textures(throws Error)
   void RebuildTextures();
     void CalculateTextureLimits();
 
@@ -70,11 +70,7 @@ public:
 
   // Export textures (throws Error)
   void ExportTextures(const char *fileName,int grouping,int mode,bool askConfirm=true,bool saveSelected=false);
-  //void ExportRegionPoints(const char *fileName,GLProgress_Abstract& prg,int regionId,int exportFrequency,bool doFullScan);
-  //void ExportDesorption(const char *fileName,bool selectedOnly,int mode,double eta0,double alpha,const Distribution2D &distr);
-
-    [[maybe_unused]] static std::vector<std::vector<double>> ImportCSV_double(FileReader *file);
-
+  
   // Return/Set the current filename
   std::string GetCurrentFileName() const;
   std::string GetCurrentShortFileName() const;
@@ -122,7 +118,7 @@ public:
 	  const size_t mode, const double eta0, const double alpha, const double cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress_Abstract& prg);
-  void LoadTexturesGEO(FileReader *f, int version);
+  void LoadTexturesGEO(FileReader& f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string&); //Get ID of parameter name
   void SendFacetHitCounts();

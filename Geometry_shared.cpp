@@ -3552,7 +3552,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, boo
 
 // File handling
 
-void Geometry::UpdateName(FileReader *file) {
+void Geometry::UpdateName(FileReader& file) {
 	UpdateName(file->GetName());
 }
 
@@ -3612,7 +3612,7 @@ void Geometry::ResetTextureLimits() {
 #endif
 }
 
-void Geometry::LoadASE(FileReader *file, GLProgress_Abstract& prg) {
+void Geometry::LoadASE(FileReader& file, GLProgress_Abstract& prg) {
 
 	Clear();
 
@@ -3667,7 +3667,7 @@ void Geometry::LoadASE(FileReader *file, GLProgress_Abstract& prg) {
 
 }
 
-void Geometry::LoadSTR(FileReader *file, GLProgress_Abstract& prg) {
+void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 	char nPath[512];
 	char fPath[512];
@@ -3676,7 +3676,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress_Abstract& prg) {
 	/*size_t nF, nV;
 	Facet **F;
 	InterfaceVertex *V;*/
-	FileReader *fr;
+	FileReader& fr;
 
 	Clear();
 
@@ -3742,7 +3742,7 @@ void Geometry::LoadSTR(FileReader *file, GLProgress_Abstract& prg) {
 
 }
 
-void Geometry::LoadSTL(FileReader* file, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
+void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
 
 	if (!insert) {
 		prg.SetMessage("Clearing current geometry...");
@@ -3882,7 +3882,7 @@ void Geometry::LoadSTL(FileReader* file, GLProgress_Abstract& prg, double scaleF
     InitializeInterfaceGeometry();
 }
 
-void Geometry::LoadTXT(FileReader *file, GLProgress_Abstract& prg, Worker* worker) {
+void Geometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker) {
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
@@ -3902,7 +3902,7 @@ void Geometry::LoadTXT(FileReader *file, GLProgress_Abstract& prg, Worker* worke
 
 }
 
-void Geometry::InsertTXT(FileReader *file, GLProgress_Abstract& prg, bool newStr) {
+void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -3921,7 +3921,7 @@ void Geometry::InsertTXT(FileReader *file, GLProgress_Abstract& prg, bool newStr
 
 }
 
-void Geometry::InsertSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
+void Geometry::InsertSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
 	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
@@ -3932,7 +3932,7 @@ void Geometry::InsertSTL(FileReader *file, GLProgress_Abstract& prg, double scal
     InitializeInterfaceGeometry();
 }
 
-void Geometry::InsertGEO(FileReader *file, GLProgress_Abstract& prg, bool newStr) {
+void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -3952,7 +3952,7 @@ void Geometry::InsertGEO(FileReader *file, GLProgress_Abstract& prg, bool newStr
 
 }
 
-void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
+void Geometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
 
 	file->ReadInt(); // Unused
 	worker->globState.globalHits.globalHits.nbMCHit = file->ReadSizeT();
@@ -4006,7 +4006,7 @@ void Geometry::LoadTXTGeom(FileReader *file, Worker* worker, size_t strIdx) {
 
 }
 
-void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
+void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
@@ -4075,7 +4075,7 @@ void Geometry::InsertTXTGeom(FileReader *file, size_t strIdx, bool newStruct) {
 
 }
 
-void Geometry::InsertGEOGeom(FileReader *file, size_t strIdx, bool newStruct) {
+void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
