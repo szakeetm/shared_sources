@@ -340,6 +340,19 @@ char *FileReader::ReadWord() {
     return retWord;
 }
 
+std::vector<std::vector<double>> FileReader::ImportCSV_double() {
+    std::vector<std::vector<double>> table;
+    do {
+        std::vector<double> currentRow;
+        do {
+            currentRow.push_back(this->ReadDouble());
+            if (!this->IsEol()) this->ReadKeyword(",");
+        } while (!this->IsEol());
+        table.push_back(currentRow);
+    } while (!this->IsEof());
+    return table;
+}
+
 std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
     std::vector<std::vector<std::string>> table; //reset table
     do {
