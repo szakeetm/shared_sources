@@ -4393,10 +4393,10 @@ void Geometry::SaveSuper(int s) {
 
 	char fName[512+128+1];
 	sprintf(fName, "%s/%s", strPath, strFileName[s]);
-	auto *file = new FileWriter(fName);
+	auto file = FileWriter(fName);
 
 	// Unused
-	file->Write(0, "\n");
+	file.Write(0, "\n");
 
 	//Extract data of the specified super structure
 
@@ -4462,8 +4462,6 @@ void Geometry::SaveSuper(int s) {
 	}
 
 	SaveProfileTXT(file);
-
-	SAFE_DELETE(file);
 	free(refIdx);
 
 }

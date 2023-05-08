@@ -384,11 +384,11 @@ void Interface::SaveSelection() {
 
             if (FileUtils::GetExtension(fileName).empty()) fileName = fileName + ".sel";
 
-            f = new FileWriter(fileName);
+            auto f = FileWriter(fileName);
             //int nbSelected = geom->GetNbSelectedFacets();
             size_t nbFacet = geom->GetNbFacet();
             for (size_t i = 0; i < nbFacet; i++) {
-                if (geom->GetFacet(i)->selected) f->Write(i, "\n");
+                if (geom->GetFacet(i)->selected) f.Write(i, "\n");
             }
 
         }
@@ -397,8 +397,6 @@ void Interface::SaveSelection() {
             sprintf(errMsg, "%s\nFile:%s", e.what(), fileName.c_str());
             GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
         }
-
-        SAFE_DELETE(f);
 
     }
     changedSinceSave = false;
