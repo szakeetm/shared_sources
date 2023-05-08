@@ -4361,7 +4361,7 @@ std::vector<size_t> Geometry::GetAllFacetIndices() const {
 	return facetIndices;
 }
 
-void Geometry::SaveSTL(FileWriter* f, GLProgress_Abstract& prg) {
+void Geometry::SaveSTL(FileWriter& f, GLProgress_Abstract& prg) {
     prg.SetMessage("Triangulating geometry...");
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
@@ -4468,7 +4468,7 @@ void Geometry::SaveSuper(int s) {
 
 }
 
-void Geometry::SaveProfileTXT(FileWriter *file) {
+void Geometry::SaveProfileTXT(FileWriter& file) {
 	// Profiles
 	for (int j = 0; j < PROFILE_SIZE; j++)
 		file->Write("\n");

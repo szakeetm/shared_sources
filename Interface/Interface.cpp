@@ -370,7 +370,7 @@ void Interface::LoadSelection(const char *fName) {
 
 void Interface::SaveSelection() {
 
-    FileWriter *f = nullptr;
+    FileWriter& f = nullptr;
     Geometry *geom = worker.GetGeometry();
     if (geom->GetNbSelectedFacets() == 0) return;
     auto prg = GLProgress_GUI("Saving file", "Please wait");

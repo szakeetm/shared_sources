@@ -98,11 +98,6 @@ public:
 
     std::string GetErrorDetails();
 
-    // Hit Buffer functions
-    bool GetLockedHitBuffer();
-
-    int UnlockHitBuffer();
-
     bool GetRunningStatus();
 
     int IncreasePriority();

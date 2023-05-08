@@ -102,7 +102,7 @@ public:
 	//Different implementation within Molflow/Synrad
 	size_t GetGeometrySize();
 	void  LoadTXT(FileReader *file);
-	void  SaveTXT(FileWriter *file);
+	void  SaveTXT(FileWriter& file);
 	void  LoadGEO(FileReader *file, int version, size_t nbVertex);
 	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold);
 	void  CopyFacetProperties(InterfaceFacet *f, bool copyMesh = false);
@@ -112,7 +112,7 @@ public:
 	void  ConvertOldDesorbType();
 	void  LoadSYN_facet(FileReader *file, int version, size_t nbVertex);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
-	void  SaveGEO(FileWriter *file, int idx);
+	void  SaveGEO(FileWriter& file, int idx);
 	void  SaveXML_geom(pugi::xml_node f);
 	size_t GetHitsSize(size_t nbMoments);
 	size_t GetTexRamSize(size_t nbMoments);
@@ -130,7 +130,7 @@ public:
 	void LoadSYN(FileReader *file, const std::vector<Material> &materials, int version, size_t nbVertex);
     void LoadSYNResults(FileReader *file, int version, FacetHitBuffer &facetCounter);
 	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
-	void  SaveSYN(FileWriter *file, const std::vector<Material> &materials, int idx, bool crashSave = false);
+	void  SaveSYN(FileWriter& file, const std::vector<Material> &materials, int idx, bool crashSave = false);
 	size_t GetHitsSize();
 	size_t GetTexRamSize();
 	size_t GetTexRamSizeForRatio(double ratio) const;

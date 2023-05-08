@@ -174,9 +174,9 @@ public:
 	void InsertSTL(FileReader *file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(bool saveSelected);
-	void SaveSTL(FileWriter* f, GLProgress_Abstract& prg);
+	void SaveSTL(FileWriter& f, GLProgress_Abstract& prg);
 	void SaveSuper(int s);
-	static void SaveProfileTXT(FileWriter *file);
+	static void SaveProfileTXT(FileWriter& file);
 	void UpdateSelection();
 	void SwapNormal(); //Swap normals of selected facets
 	void RevertFlippedNormals(); //Reverts flipping for facets with normalFlipped flag

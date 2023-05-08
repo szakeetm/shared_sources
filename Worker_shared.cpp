@@ -143,7 +143,6 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
 #if defined(SYNRAD)
     geom->ExportTextures(f, grouping, mode, no_scans, globState, saveSelected);
 #endif
-    //simManager.UnlockHitBuffer();
     fclose(f);
 }
 
@@ -157,10 +156,6 @@ void Worker::Stop_Public() {
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
     }
-}
-
-void Worker::ReleaseHits() {
-    simManager.UnlockHitBuffer();
 }
 
 bool Worker::GetHits() {
@@ -516,11 +511,9 @@ void Worker::RebuildTextures() {
             geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
         }
         catch (const std::exception &e) {
-            simManager.UnlockHitBuffer();
             throw;
         }
     }
-    simManager.UnlockHitBuffer();
 }
 
 size_t Worker::GetProcNumber() const {

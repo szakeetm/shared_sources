@@ -108,7 +108,6 @@ public:
     bool GetHits(); // Access to dataport (HIT)
     ParticleLog & GetLog();
     void UnlockLog();
-  void ReleaseHits();
 
     bool InterfaceGeomToSimModel();
     bool SimModelToInterfaceGeom();

@@ -515,14 +515,6 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
     return 0;
 }
 
-bool SimulationManager::GetLockedHitBuffer() {
-    return true;
-}
-
-int SimulationManager::UnlockHitBuffer() {
-    return 0;
-}
-
 /*!
  * @brief Actively check running state (evaluate done & error)
  * @return 1 if simulation processes are running, 0 else
