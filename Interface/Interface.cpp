@@ -368,7 +368,6 @@ void Interface::LoadSelection(const char *fName) {
 
 void Interface::SaveSelection() {
 
-    FileWriter& f = nullptr;
     Geometry *geom = worker.GetGeometry();
     if (geom->GetNbSelectedFacets() == 0) return;
     auto prg = GLProgress_GUI("Saving file", "Please wait");
@@ -384,7 +383,7 @@ void Interface::SaveSelection() {
 
             if (FileUtils::GetExtension(fileName).empty()) fileName = fileName + ".sel";
 
-            auto f = FileWriter(fileName);
+            auto file = FileWriter(fileName);
             //int nbSelected = geom->GetNbSelectedFacets();
             size_t nbFacet = geom->GetNbFacet();
             for (size_t i = 0; i < nbFacet; i++) {
