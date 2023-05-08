@@ -700,61 +700,6 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 }
 
 /**
-* \brief Extract a 7z file and return the file handle
-* \param fileName name of the input file
-* \param geomName name of the geometry file
-* \return handle to opened decompressed file
-*/
-FileReader *Worker::ExtractFrom7zAndOpen(const std::string &fileName, const std::string &geomName) {
-    std::ostringstream cmd;
-    std::string sevenZipName;
-
-#ifdef _WIN32
-    //Necessary push/pop trick to support UNC (network) paths in Windows command-line
-    auto CWD = FileUtils::get_working_path();
-    cmd << "cmd /C \"pushd \"" << CWD << "\"&&";
-    sevenZipName += "7za.exe";
-#else //Linux, MacOS
-    sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
-    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
-                                       "/usr/bin/7za", //use p7zip installed system-wide
-                                       "/usr/local/bin/7za", //use p7zip installed for user
-                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
-    for(auto& path : possibleLocations){
-        if (FileUtils::Exist(path)) {
-            sevenZipName = path;
-        }
-    }
-#endif
-
-    if (!FileUtils::Exist(sevenZipName)) {
-        throw Error("7-zip compressor not found, can't extract file.");
-    }
-    cmd << sevenZipName << " x -t7z -aoa \"" << fileName << "\" -otmp";
-
-#ifdef _WIN32
-    cmd << "&&popd\"";
-#endif
-    system(cmd.str().c_str());
-
-    std::string toOpen, prefix;
-    std::string shortFileName = FileUtils::GetFilename(fileName);
-#ifdef _WIN32
-    prefix = CWD + "\\tmp\\";
-#else
-    prefix = "tmp/";
-#endif
-    toOpen = prefix + geomName;
-    if (!FileUtils::Exist(toOpen))
-        //Inside the zip, try original filename with extension changed from geo7z to geo
-        toOpen = prefix + (shortFileName).substr(0,shortFileName.length() - 2);
-
-
-    return new FileReader(toOpen); //decompressed file opened
-}
-
-
-/**
 * \brief Function that updates the global hit counter with the cached value + releases the mutex
 * Send total hit counts to subprocesses
 */

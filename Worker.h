@@ -112,8 +112,6 @@ public:
     bool InterfaceGeomToSimModel();
     bool SimModelToInterfaceGeom();
 
-  static FileReader* ExtractFrom7zAndOpen(const std::string& fileName, const std::string& geomName);
-
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);
