@@ -196,7 +196,7 @@ void Worker::ThrowSubProcError(const char *message) {
 
 }
 
-void Worker::Reload() {
+void Worker::MarkToReload() {
     //Schedules a reload
     //Actual reloading is done by RealReload() method
     needsReload = true;

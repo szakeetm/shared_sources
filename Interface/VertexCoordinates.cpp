@@ -258,7 +258,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 			}
 			geom->Rebuild();
           // Send to sub process
-          worker->Reload();
+          worker->MarkToReload();
           //GLWindowManager::FullRepaint();
 		 }
         }

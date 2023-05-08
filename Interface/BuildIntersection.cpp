@@ -131,7 +131,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 			undoButton->SetEnabled(false);
 			resultLabel->SetText("");
 			//Renumberformula
-			work->Reload();
+			work->MarkToReload();
 			mApp->UpdateModelParams();
 			mApp->UpdateFacetlistSelected();
 			mApp->UpdateViewers();
@@ -150,7 +150,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				tmp << deletedFacetList.size() << " facets intersected, creating " << nbCreated << " new.";
 				resultLabel->SetText(tmp.str().c_str());
 				if (!deletedFacetList.empty()) undoButton->SetEnabled(true);
-				work->Reload();
+				work->MarkToReload();
 				mApp->UpdateModelParams();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();

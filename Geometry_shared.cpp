@@ -1395,7 +1395,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 
 	if (nbUnused) {
 		mApp->changedSinceSave = true;
-		mApp->worker.Reload(); //Will need real reload
+		mApp->worker.MarkToReload(); //Will need real reload
 	}
 }
 

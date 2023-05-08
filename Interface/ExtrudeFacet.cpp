@@ -496,7 +496,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 					(mode==1)?dist:radiusLength,
 					totalAngle/180*PI, noSteps);
 
-				work->Reload(); 
+				work->MarkToReload(); 
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
 				mApp->UpdateViewers();

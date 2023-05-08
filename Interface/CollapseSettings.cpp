@@ -226,7 +226,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				if (mApp->spectrumPlotter) mApp->spectrumPlotter->Refresh();
 #endif
 				// Send to sub process
-				work->Reload();
+				work->MarkToReload();
 
 				// Update result
 				char tmp[512];

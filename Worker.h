@@ -87,7 +87,7 @@ public:
  // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
  static size_t GetPID(size_t prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
-  void Reload();    // Reload simulation (throws Error)
+  void MarkToReload();    // Reload simulation (throws Error)
   int ReloadSim(bool sendOnly, GLProgress_Abstract& prg);
   void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();

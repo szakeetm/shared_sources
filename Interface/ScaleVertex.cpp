@@ -306,7 +306,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
 				geom->ScaleSelectedVertices(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
-				work->Reload();
+				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 				mApp->changedSinceSave = true;

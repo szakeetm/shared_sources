@@ -1278,14 +1278,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     if (AskToReset()) {
                         geom->SwapNormal();
                         // Send to sub process
-                        worker.Reload();
+                        worker.MarkToReload();
                     }
                     return true;
                 case MENU_FACET_REVERTFLIP:
                     if (AskToReset()) {
                         geom->RevertFlippedNormals();
                         // Send to sub process
-                        worker.Reload();
+                        worker.MarkToReload();
                     }
                     return true;
                 case MENU_FACET_EXTRUDE:
@@ -1300,7 +1300,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     if (AskToReset()) {
                         geom->ShiftVertex();
                         // Send to sub process
-                        worker.Reload();
+                        worker.MarkToReload();
                     }
                     return true;
                 case MENU_FACET_COORDINATES:
@@ -1366,7 +1366,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 UpdateModelParams();
                                 UpdateFacetParams(true);
                                 // Send to sub process
-                                worker.Reload();
+                                worker.MarkToReload();
                             }
                         }
                     }
@@ -1567,7 +1567,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
-                        worker.Reload();
+                        worker.MarkToReload();
                     }
                     return true;
                 case MENU_VERTEX_CREATE_POLY_ORDER:
@@ -1578,7 +1578,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
                         }
-                        worker.Reload();
+                        worker.MarkToReload();
                     }
                     return true;
                 case MENU_FACET_CREATE_DIFFERENCE:
@@ -1608,7 +1608,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     if (AskToReset()) {
                         geom->CreateLoft();
                     }
-                    worker.Reload();
+                    worker.MarkToReload();
                     UpdateModelParams();
                     UpdateFacetlistSelected();
                     UpdateViewers();
@@ -1632,7 +1632,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                             GeometryTools::PolygonsToTriangles(geom, selectedFacets, prg);
                         }
                     }
-                    worker.Reload();
+                    worker.MarkToReload();
                     UpdateModelParams();
                     UpdateFacetlistSelected();
                     UpdateViewers();
@@ -1665,14 +1665,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     if (geom->IsLoaded()) {
                         if (!moveVertex) moveVertex = new MoveVertex(geom, &worker);
 
-                        //moveVertex->DoModal();
                         moveVertex->SetVisible(true);
-
-                        /*
-                        UpdateModelParams();
-                        try { worker.Reload(); } catch(Error &e) {
-                        GLMessageBox::Display(e.what(),"Error reloading worker",GLDLG_OK,GLDLG_ICONERROR);
-                        */
 
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
@@ -1764,7 +1757,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         auto prg = GLProgress_GUI("Triangulating", "Triangulating");
                         prg.SetVisible(true);
                         GeometryTools::PolygonsToTriangles(this->worker.GetGeometry(),prg);
-                        this->worker.Reload();
+                        this->worker.MarkToReload();
                     }
                     return true;
                 case MENU_ANALYZE:
@@ -2265,7 +2258,7 @@ void Interface::AddStruct() {
     if (!structName) return;
     geom->AddStruct(structName);
     // Send to sub process
-    worker.Reload();
+    worker.MarkToReload();
 }
 
 void Interface::DeleteStruct() {
@@ -2297,7 +2290,7 @@ void Interface::DeleteStruct() {
     if (!AskToReset()) return;
     geom->DelStruct(structNumInt - 1);
     // Send to sub process
-    worker.Reload();
+    worker.MarkToReload();
 }
 
 void Interface::DisplayCollapseDialog() {
@@ -2601,7 +2594,7 @@ void Interface::CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder) 
             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
         }
         //UpdateModelParams();
-        worker.Reload();
+        worker.MarkToReload();
     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
 }
 

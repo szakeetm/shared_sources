@@ -256,7 +256,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
 					(src == mirrorCopyButton) || (src == projectCopyButton), work);
 				undoProjectButton->SetEnabled(src == projectButton);
 				//theApp->UpdateModelParams();
-				work->Reload();
+				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 	       		//GLWindowManager::FullRepaint();
@@ -309,7 +309,7 @@ void MirrorVertex::ProcessMessage(GLComponent *src,int message) {
             geom->InitializeInterfaceGeometry();
             //for(int i=0;i<nbSelected;i++)
 			 //	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
-			 work->Reload();
+			 work->MarkToReload();
 			 mApp->UpdateFacetlistSelected();
 			 mApp->UpdateViewers();
 		 }

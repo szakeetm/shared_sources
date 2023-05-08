@@ -215,7 +215,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			if (mApp->AskToReset()) {
 
 				geom->MoveSelectedVertex(dX, dY, dZ, towardsDirectionMode, distance, src == copyButton);
-				work->Reload();
+				work->MarkToReload();
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();

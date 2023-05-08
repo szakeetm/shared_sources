@@ -234,7 +234,7 @@ dirDestVertexId,
 				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
-				work->Reload();
+				work->MarkToReload();
 
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();	
@@ -251,7 +251,7 @@ dirDestVertexId,
 			}
 			geom->InitializeGeometry();
             geom->InitializeInterfaceGeometry();
-			work->Reload();			 
+			work->MarkToReload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();
 		}

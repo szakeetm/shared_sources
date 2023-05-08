@@ -399,7 +399,7 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  geom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
 			  break;
 		  }
-		  work->Reload();
+		  work->MarkToReload();
 		  mApp->changedSinceSave = true;
 		  mApp->UpdateFacetlistSelected();
           }

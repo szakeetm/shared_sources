@@ -421,7 +421,7 @@ void FacetCoordinates::ApplyChanges(){
 			geom->Rebuild(); //Will recalculate facet parameters
 
 			// Send to sub process
-			worker->Reload();
+			worker->MarkToReload();
 
 			//GLWindowManager::FullRepaint();
 		}

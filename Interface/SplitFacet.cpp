@@ -233,7 +233,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		undoButton->SetEnabled(false);
 		resultLabel->SetText("");
 		//Renumberformula
-		work->Reload();
+		work->MarkToReload();
 		mApp->UpdateModelParams();
 		mApp->UpdateFacetlistSelected();
 		mApp->UpdateViewers();
@@ -318,7 +318,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				tmp << deletedFacetList.size() << " facets split, creating " << nbCreated <<" new.";
 				resultLabel->SetText(tmp.str().c_str());
 				if (deletedFacetList.size() > 0) undoButton->SetEnabled(true);
-				work->Reload();
+				work->MarkToReload();
 				mApp->UpdateModelParams();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();

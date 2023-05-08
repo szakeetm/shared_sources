@@ -363,7 +363,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			if (mApp->AskToReset()) {
 				geom->RotateSelectedFacets(AXIS_P0,AXIS_DIR,rad,src==copyButton,work);
 				//mApp->UpdateModelParams();
-				work->Reload();
+				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();
 				mApp->UpdateViewers();
 				//GLWindowManager::FullRepaint();
