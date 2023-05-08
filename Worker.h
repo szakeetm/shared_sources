@@ -105,7 +105,7 @@ public:
     void GetProcStatus(ProcComm &procInfoList);// Get process status
     void ChangePriority(int prioLevel);
 
-    bool GetHits(); // Access to dataport (HIT)
+    bool ReloadIfNeeded(); // Access to dataport (HIT)
     ParticleLog & GetLog();
     void UnlockLog();
 

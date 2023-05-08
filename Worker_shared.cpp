@@ -158,7 +158,7 @@ void Worker::Stop_Public() {
     }
 }
 
-bool Worker::GetHits() {
+bool Worker::ReloadIfNeeded() {
     try {
         if (needsReload) RealReload();
     }
