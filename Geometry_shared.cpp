@@ -1323,26 +1323,19 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) 
 }
 
 int Geometry::HasIsolatedVertices() {
-
 	// Check if there are unused vertices
-	int *check = (int *)malloc(sh.nbVertex * sizeof(int));
-	memset(check, 0, sh.nbVertex * sizeof(int));
 
-	for (int i = 0; i < sh.nbFacet; i++) {
-		InterfaceFacet *f = facets[i];
-		for (int j = 0; j < f->sh.nbIndex; j++) {
-			check[f->indices[j]]++;
+	std::vector<bool> used(sh.nbVertex,false);
+	int nbUnused = sh.nbVertex;
+
+	for (auto f:facets) {
+		for (auto i:f->indices) {
+			if (!used[i]) nbUnused--;
+			used[i]=true;
 		}
 	}
 
-	int nbUnused = 0;
-	for (int i = 0; i < sh.nbVertex; i++) {
-		if (!check[i]) nbUnused++;
-	}
-
-	SAFE_FREE(check);
 	return nbUnused;
-
 }
 
 void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
@@ -2077,15 +2070,6 @@ void Geometry::AddVertex(const Vector3d& location, bool selected) {
 	newVertex.SetLocation(location);
 	newVertex.selected = selected;
 	vertices3.push_back(newVertex);
-	
-	/*
-	InterfaceVertex *verticesNew = (InterfaceVertex *)malloc(wp.nbVertex * sizeof(InterfaceVertex));
-	memcpy(verticesNew, vertices3, (wp.nbVertex - 1) * sizeof(InterfaceVertex)); //copy old vertices
-	SAFE_FREE(vertices3);
-	verticesNew[wp.nbVertex - 1].SetLocation(location);
-	verticesNew[wp.nbVertex - 1].selected = selected;
-	vertices3 = verticesNew;
-	*/
 }
 
 void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
@@ -3668,13 +3652,8 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 		}
 
 		strFileName[n] = strdup(sName);
-		//LoadTXTGeom(fr, n);
 		InsertTXTGeom(*fr, n, true);
-		/*
-		Merge(nV, nF, V, F);
-		SAFE_FREE(V);
-		SAFE_FREE(F);
-		*/
+
 		delete fr;
 
 	}
@@ -4188,15 +4167,6 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
         throw Error("Couldn't allocate memory for facets");
     }
 
-	/*
-	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+*nbVertex) * sizeof(Vector3d));
-	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + *nbVertex) * sizeof(InterfaceVertex));
-	if (!tmp_vertices3) throw Error("Out of memory: InsertGEOGeom");
-	memmove(tmp_vertices3, vertices3, (*nbVertex) * sizeof(InterfaceVertex));
-	memset(tmp_vertices3 + *nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
-	SAFE_FREE(vertices3);
-	vertices3 = tmp_vertices3;
-	*/
 	vertices3.resize(sh.nbVertex + nbNewVertex);
 
 	// Read geometry vertices
