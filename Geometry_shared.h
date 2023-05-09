@@ -216,7 +216,7 @@ public:
 	void    RecalcRawVertices(const int facet_number);
 	void	MergecollinearSides(InterfaceFacet *f, double fT);
 	void    ShiftVertex();
-	int     HasIsolatedVertices();
+	int     GetNbIsolatedVertices();
 	void    DeleteIsolatedVertices(bool selectedOnly);
 	void	SelectIsolatedVertices();
 	void    SetNormeRatio(float r);

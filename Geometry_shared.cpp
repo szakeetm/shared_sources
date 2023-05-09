@@ -129,7 +129,7 @@ void Geometry::CheckNonSimple() {
 }
 
 void Geometry::CheckIsolatedVertex() {
-	int nbI = HasIsolatedVertices();
+	int nbI = GetNbIsolatedVertices();
 	if (nbI) {
 		char tmp[256];
 		sprintf(tmp, "Remove %d isolated vertices ?", nbI);
@@ -1322,7 +1322,7 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) 
 
 }
 
-int Geometry::HasIsolatedVertices() {
+int Geometry::GetNbIsolatedVertices() {
 	// Check if there are unused vertices
 
 	std::vector<bool> used(sh.nbVertex,false);
