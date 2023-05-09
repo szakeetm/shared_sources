@@ -7,7 +7,6 @@
 #include "GLSprite.h"
 //#include "File.h"
 #include <math.h>
-//#include <malloc.h>
 #define cimg_display 0
 #define cimg_use_png 1
 #include <CImg/CImg.h>

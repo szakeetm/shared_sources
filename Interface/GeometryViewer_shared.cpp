@@ -32,7 +32,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <math.h>
 #include <cstdlib>
-//#include <malloc.h>
 #include "Facet_shared.h"
 
 #if defined(MOLFLOW)
@@ -2071,70 +2070,17 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 	zFar = -1e100;
 	mv.LoadGL(matView);
 
-	//Transform the AxisAlignedBoundingBox (fast method, but less accurate 
-	//than full vertex transform)
-	//AxisAlignedBoundingBox bbO = geom->GetBB();
-	//TRANSFORMBB(min.x,min.y,min.z);
-	//TRANSFORMBB(max.x,min.y,min.z);
-	//TRANSFORMBB(max.x,min.y,max.z);
-	//TRANSFORMBB(min.x,min.y,max.z);
-	//TRANSFORMBB(min.x,max.y,min.z);
-	//TRANSFORMBB(max.x,max.y,min.z);
-	//TRANSFORMBB(max.x,max.y,max.z);
-	//TRANSFORMBB(min.x,max.y,max.z);
-
-	size_t nbV = geom->GetNbVertex();
-
-	if (true /*geom->viewStruct < 0 || getAll*/) {
-
-		/*
-		for (int i = 0; i < nbV; i++) {
-			Vector3d *p = geom->GetVertex(i);
-			TRANSFORMVERTEX(p->x, p->y, p->z);
-		}*/
-
-//#if defined(SYNRAD)
-		//regions included
-		AxisAlignedBoundingBox bb = geom->GetBB();
-		vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
-		headSize = .1 * vectorLength;
-		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
-		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
-		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);
-		TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.max.z);
-		TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.max.z);
-		TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.max.z);
-		TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.min.z);
-		TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.max.z);
-//#endif
-
-	}
-	else { //ignored
-
-		bool *refIdx = (bool *)malloc(nbV * sizeof(bool));
-		memset(refIdx, 0, nbV * sizeof(bool));
-
-		// Get facet of the selected structure
-		size_t nbF = geom->GetNbFacet();
-		for (int i = 0; i < nbF; i++) {
-			InterfaceFacet *f = geom->GetFacet(i);
-			if (f->sh.superIdx == geom->viewStruct || f->sh.superIdx == -1) {
-				for (int j = 0; j < f->sh.nbIndex; j++) refIdx[f->indices[j]] = true;
-			}
-		}
-
-		// Transform vertex
-		for (size_t i = 0; i < nbV; i++) {
-			if (refIdx[i]) {
-				Vector3d *p = geom->GetVertex(i);
-				TRANSFORMVERTEX(p->x, p->y, p->z);
-			}
-		}
-
-		free(refIdx);
-
-	}
-
+	AxisAlignedBoundingBox bb = geom->GetBB();
+	vectorLength = Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+	headSize = .1 * vectorLength;
+	TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);
+	TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.min.z);
+	TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.min.z);
+	TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.max.z);
+	TRANSFORMVERTEX(bb.min.x, bb.max.y, bb.max.z);
+	TRANSFORMVERTEX(bb.max.x, bb.min.y, bb.max.z);
+	TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.min.z);
+	TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.max.z);
 }
 
 void Geometry::ClearFacetMeshLists()
@@ -2188,11 +2134,9 @@ void GeometryViewer::Screenshot() {
 	}
 	free(temp_row);
 	SDL_SavePNG_RW(image, SDL_RWFromFile(screenshotStatus.fileName.c_str(), "wb"), 1);
-	//SDL_SavePNG(image, screenshotStatus.fileName.c_str());
 	SDL_FreeSurface(image);
 
 	screenshotLabel->SetVisible(false);
-	//mApp->wereEvents = true; //Hide screensot status label
 }
 
 void GeometryViewer::RequestScreenshot(std::string fileName, int x, int y, int w, int h) {
