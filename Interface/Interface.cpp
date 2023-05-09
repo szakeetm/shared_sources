@@ -2323,53 +2323,6 @@ void Interface::RenumberFormulas(std::vector<int> *newRefs) const {
     if (formulaEditor && formulaEditor->IsVisible()) formulaEditor->Refresh();
 }
 
-/*
-
-// Name: ProcessFormulaButtons()
-// Desc: Handle forumla button event
-
-void Interface::ProcessFormulaButtons(GLComponent *src) {
-
-	// Search formula buttons
-	bool found = false;
-	int i = 0;
-	while (!found && i < nbFormula) {
-		found = (src == formulas[i].setBtn);
-		if (!found) i++;
-	}
-	if (found) {
-		if (!formulaSettings) formulaSettings = new FormulaSettings();
-		formulaSettings->Update(formulas[i].parser, i);
-		formulaSettings->SetVisible(true);
-	}
-}
-*/
-
-/*void Interface::AddFormula(GLParser *f, bool doUpdate) {
-
-	if (f) {
-		if (nbFormula < MAX_FORMULA) {
-			formulas[nbFormula].parser = f;
-			std::string formulaName = f->GetName();
-			if (formulaName.empty()) formulaName = f->GetExpression();
-			formulas[nbFormula].name = new GLLabel(formulaName.c_str());
-			Add(formulas[nbFormula].name);
-			formulas[nbFormula].value = new GLTextField(0, "");
-			formulas[nbFormula].value->SetEditable(false);
-			Add(formulas[nbFormula].value);
-			formulas[nbFormula].setBtn = new GLButton(0, "...");
-			Add(formulas[nbFormula].setBtn);
-			nbFormula++;
-			PlaceComponents();
-			if (doUpdate) UpdateFormula();
-		}
-		else {
-			SAFE_DELETE(f);
-		}
-	}
-
-}*/
-
 void Interface::AddFormula(const char *fName, const char *formula) const {
     formula_ptr->AddFormula(fName, formula);
 }
@@ -2378,35 +2331,6 @@ void Interface::ClearFormulas() const {
     formula_ptr->ClearFormulas();
     if (formulaEditor) formulaEditor->Refresh();
 }
-
-/*
-void Interface::UpdateFormulaName(int i) {
-		std::string formulaName = formulas[i].parser->GetName();
-		if (formulaName.empty()) formulaName = formulas[i].parser->GetExpression();
-		formulas[i].name->SetText(formulaName.c_str());
-		UpdateFormula();
-}
-*/
-
-/*
-void Interface::DeleteFormula(int i) {
-			// Delete
-			wnd->PostDelete(formulas[i].name);
-			wnd->PostDelete(formulas[i].value);
-			wnd->PostDelete(formulas[i].setBtn);
-			formulas[i].name = nullptr;
-			formulas[i].value = nullptr;
-			formulas[i].setBtn = nullptr;
-			SAFE_DELETE(formulas[i].parser);
-			for (int j = i; j < nbFormula - 1; j++) {
-				formulas[j] = formulas[j + 1];
-			}
-			nbFormula--;
-			PlaceComponents();
-			wnd->DoPostDelete(); //forces redraw
-			//UpdateFormula(); //no new values needed
-}
-*/
 
 bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vector<int> *newRefs) {
     //will increase or decrease facet numbers in a formula

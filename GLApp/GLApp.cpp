@@ -91,7 +91,7 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
 }
 
 GLApplication::~GLApplication(){
-    //SAFE_DELETE(wnd);
+    //SAFE_DELETE(wnd); //Program terminates, no need to spend time with manual release of resources
 }
 
 double GLApplication::GetTick() {
