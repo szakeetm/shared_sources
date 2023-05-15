@@ -69,11 +69,11 @@ protected:
     virtual int StopSim() {return 0;};
     virtual int TerminateSim() {return 0;};
 
-    int SetState(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true);
+    int SetState(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
     int SetState(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     std::vector<std::string> GetSimuStatus();
     void SetErrorSub(const std::string& message);
-    void SetStatus(const std::string &status);
+    void SetStatus(const std::string &status); //Sets for all
     void SetReady(const bool loadOk);
     int ClearCommand();
     int SetRuntimeInfo();

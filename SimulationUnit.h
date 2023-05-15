@@ -63,15 +63,10 @@ public:
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
-    //OntheflySimulationParams ontheflyParams;
-    //GeomProperties sh;
-    // Particle coordinates (MC)
     GlobalSimuState* globState;
     ParticleLog* globParticleLog; //Recorded particle log since last UpdateMCHits
-    //GlobalSimuState tmpResults;
 
     size_t totalDesorbed; // todo: should be a "sim counter"
-    //std::timed_mutex m;
 };
 
 #endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

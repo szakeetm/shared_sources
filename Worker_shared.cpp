@@ -733,7 +733,7 @@ void Worker::RetrieveHistogramCache()
 // returns -1 on error, 0 on success
 int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
     // Send and Load geometry
-    prg.SetMessage("Waiting for subprocesses to load geometry...");
+    prg.SetMessage("Converting geometry to simulation model...");
     try {
         if (!InterfaceGeomToSimModel()) {
             std::string errString = "Failed to convert interface geometry to simulation model.\n";
@@ -752,9 +752,9 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
         }
 
         prg.SetMessage("Forwarding simulation model...");
-        simManager.ForwardSimModel(model); //copy worker::model to simManager::simulations[0].model (only once)
+        simManager.ForwardSimModel(model); //set shared pointers simManager::simulations[i].model to worker::model
         prg.SetMessage("Forwarding global simulation state...");
-        simManager.ForwardGlobalCounter(&globState, &particleLog);  //copy worker::globState and particleLog to simManager::simulations[0]
+        simManager.ForwardGlobalCounter(&globState, &particleLog);  //set worker::globState and particleLog pointers to simManager::simulations[0]
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);

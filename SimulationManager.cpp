@@ -41,7 +41,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 SimulationManager::SimulationManager(int pid) {
     simulationChanged = true; // by default, always init simulation process the first time
-    interactiveMode = true;
+    interactiveMode = true; //print to console or GUI, disabled for test cases
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
@@ -99,19 +99,15 @@ int SimulationManager::refreshProcStatus() {
  */
 int SimulationManager::StartSimulation() {
 
-    LoadSimulation();
+    if (simulationChanged) {
+        LoadSimulation(); //sets simulationChanged to false
+    }
 
     if(interactiveMode) {
         refreshProcStatus();
         if (simHandles.empty())
             throw std::logic_error("No active simulation handles!");
 
-        /*if(simulationChanged){
-            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
-                throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
-            }
-            simulationChanged = false;
-        }*/
         if (ExecuteAndWait(COMMAND_START, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
