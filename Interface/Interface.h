@@ -556,5 +556,5 @@ protected:
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
 	bool ProcessMessage_shared(GLComponent *src, int message);
-	int  OnExit() override;
+	void  BeforeExit() override;
 };

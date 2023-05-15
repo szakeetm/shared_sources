@@ -634,20 +634,6 @@ void Interface::SetFacetSearchPrg(bool visible, const char *text) {
     }
 }
 
-int Interface::OnExit() {
-    SaveConfig();
-    if (appUpdater) {
-        appUpdater->IncreaseSessionCount();
-    }
-    remove(autosaveFilename.c_str());
-    auto cwd = std::filesystem::current_path();
-    auto tempDir = cwd / "tmp";
-    fmt::print("\nFlushing temp directory {} ...", tempDir.string());
-    std::filesystem::remove_all(tempDir);
-    fmt::print("done.\n");
-    return GL_OK;
-}
-
 void Interface::OneTimeSceneInit_shared_pre() {
 
     GLToolkit::SetIcon32x32("images/app_icon.png");
@@ -2023,6 +2009,23 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             return false;
     }
     return false;
+}
+
+void Interface::BeforeExit()
+{
+    auto prg = GLProgress_GUI("Saving config file...", "Exiting...");
+    prg.SetVisible(true);
+    SaveConfig();
+    if (appUpdater) {
+        appUpdater->IncreaseSessionCount();
+    }
+    prg.SetMessage("Removing autosave file...");
+    remove(autosaveFilename.c_str());
+    auto cwd = std::filesystem::current_path();
+    auto tempDir = cwd / "tmp";
+    prg.SetMessage(fmt::format("Flushing temp directory\n{} ...\nIf this takes long, indexing or a cloud sync client is locking the file.", tempDir.string()));
+    std::filesystem::remove_all(tempDir);
+    prg.SetProgress(1.0);
 }
 
 void Interface::CheckNeedsTexture() {

@@ -98,7 +98,7 @@ void GLProgress_GUI::PositionComponents()
 {
 	int txtWidth, txtHeight;
 	progressStatus->GetTextBounds(&txtWidth, &txtHeight);
-	txtWidth = Max(txtWidth, 250); //For short status, minimum 150
+	txtWidth = Max(txtWidth, 250); //For short status, minimum 250
 	progressStatus->SetBounds(67, 14, txtWidth, txtHeight);
 
 	progressBar->SetBounds(68, 20 + txtHeight, progressBarMaxWidth, 20);

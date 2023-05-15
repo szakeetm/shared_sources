@@ -93,7 +93,7 @@ if (mApp->appUpdater) {
 ---In interface constructor ----------
 appUpdater = NULL; //We'll initialize later, when the app name and version id is known
 
----In Interface::OnExit()-------------
+---In Interface::AfterExit()-------------
 if (appUpdater) {
 	appUpdater->IncreaseSessionCount();
 }

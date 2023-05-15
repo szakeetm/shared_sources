@@ -42,8 +42,8 @@ protected:
     virtual int RestoreDeviceObjects()                     { return GL_OK; }
 	virtual int FrameMove() { return GL_OK; }
     virtual int InvalidateDeviceObjects()                  { return GL_OK; }
-    virtual int OnExit()                                   { return GL_OK; }
-    
+    virtual int AfterExit()                                { return GL_OK; } //GUI already destroyed
+    virtual void BeforeExit() {} //GUI still present
 
 public:
 	virtual int EventProc(SDL_Event *event)                { return GL_OK; }

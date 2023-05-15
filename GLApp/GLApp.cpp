@@ -254,7 +254,7 @@ void GLApplication::Add(GLComponent *comp) {
 }
 
 void GLApplication::Exit() {
-
+    BeforeExit(); //While GUI still exists
   char *logs = GLToolkit::GetLogs();
 #ifdef _WIN32
   if(logs) {
@@ -281,13 +281,13 @@ void GLApplication::Exit() {
   GLToolkit::InvalidateDeviceObjects();
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
-  OnExit();
+
+  AfterExit(); //After GUI destroyed
+
   SDL_GL_DeleteContext(mainContext);
   SDL_DestroyWindow(mainScreen);
   SDL_Quit();
   this->quit = true;
-  //exit(0);
-  //_exit(0);
 }
 
 void GLApplication::UpdateStats() {
