@@ -501,11 +501,6 @@ void Worker::RebuildTextures() {
         if (needsReload)
             RealReload();
 
-        bool buffer_old = simManager.GetLockedHitBuffer();
-        if (!buffer_old)
-            return;
-
-
         try {
             CalculateTextureLimits();
             geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);

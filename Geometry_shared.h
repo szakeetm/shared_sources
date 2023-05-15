@@ -173,7 +173,7 @@ public:
 	void InsertSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(bool saveSelected);
-	void SaveSTL(FileWriter& f, GLProgress_Abstract& prg);
+	void SaveSTL(FileWriter& file, GLProgress_Abstract& prg);
 	void SaveSuper(int s);
 	static void SaveProfileTXT(FileWriter& file);
 	void UpdateSelection();

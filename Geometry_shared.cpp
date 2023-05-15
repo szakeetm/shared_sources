@@ -3536,7 +3536,7 @@ void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, boo
 // File handling
 
 void Geometry::UpdateName(FileReader& file) {
-	UpdateName(file->GetName());
+	UpdateName(file.GetName());
 }
 
 std::string Geometry::GetName() const {
@@ -3613,7 +3613,7 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 	sh.nbSuper = file.ReadInt();
 
 	strcpy(fPath, file.ReadLine());
-	strcpy(nPath, FileUtils::GetPath(file->GetName()).c_str());
+	strcpy(nPath, FileUtils::GetPath(file.GetName()).c_str());
 
 	FileReader* fr = nullptr;
 
@@ -3677,14 +3677,14 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 	prg.SetMessage("Counting facets in STL file...");
 	std::vector<size_t> bodyFacetCounts; //Each element tells how many facets are in the Nth body
 	size_t nbNewFacets = 0; //Total facets in file
-	while (!file->IsEof()) {
+	while (!file.IsEof()) {
 		int bodyFacetCount = 0;
-		file->ReadLine(); // solid name
-		std::string w = file->ReadWord();
+		file.ReadLine(); // solid name
+		std::string w = file.ReadWord();
 		while (beginsWith(w, "facet")) {
 			bodyFacetCount++;
-			file->JumpSection("endfacet");
-			w = file->ReadWord();
+			file.JumpSection("endfacet");
+			w = file.ReadWord();
 		}
 		//All facets read in the current body
 		bodyFacetCounts.push_back(bodyFacetCount);
@@ -3693,7 +3693,7 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 			std::string msg = "Unexpected or not supported STL keyword \"" + w + "\", 'endsolid' required\nMaybe the STL file was saved in binary instead of ASCII format?";
 			throw Error(msg.c_str());
 		}
-		if (!(file->IsEol())) file->ReadLine(); //Read the rest of the "endsolid" line (usually solid name). Eof() not a problem, will simply return NULL character
+		if (!(file.IsEol())) file.ReadLine(); //Read the rest of the "endsolid" line (usually solid name). Eof() not a problem, will simply return NULL character
 	}
 
 	// Allocate memory
@@ -3720,10 +3720,10 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 	size_t oldVertexNb = sh.nbVertex;
 
 	// Second pass
-	file->SeekStart();
+	file.SeekStart();
 	size_t globalId = 0;
 	for (size_t b = 0; b < bodyFacetCounts.size();b++) {
-		file->ReadLine(); //solid name
+		file.ReadLine(); //solid name
 		std::ostringstream progressStr;
 		progressStr << "Reading facets (body " << b+1 << "/" << bodyFacetCounts.size() << ")...";
 		prg.SetMessage(progressStr.str()); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
@@ -3732,33 +3732,33 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 			double p = (double)globalId / (double)(nbNewFacets);
 			prg.SetProgress(p);
 
-			file->ReadKeyword("facet");
+			file.ReadKeyword("facet");
 			//Read but ignore normal (redundant, will be calculated)
-			file->ReadKeyword("normal");
-			file->ReadDouble();
-			file->ReadDouble();
-			file->ReadDouble();
+			file.ReadKeyword("normal");
+			file.ReadDouble();
+			file.ReadDouble();
+			file.ReadDouble();
 
-			file->ReadKeyword("outer");
-			file->ReadKeyword("loop");
+			file.ReadKeyword("outer");
+			file.ReadKeyword("loop");
 
-			file->ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 0].x = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 0].y = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 0].z = file->ReadDouble() * scaleFactor;
+			file.ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 0].x = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 0].y = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 0].z = file.ReadDouble() * scaleFactor;
 
-			file->ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 1].x = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 1].y = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 1].z = file->ReadDouble() * scaleFactor;
+			file.ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 1].x = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 1].y = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 1].z = file.ReadDouble() * scaleFactor;
 
-			file->ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 2].x = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 2].y = file->ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 2].z = file->ReadDouble() * scaleFactor;
+			file.ReadKeyword("vertex");
+			vertices3[oldVertexNb + 3 * globalId + 2].x = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 2].y = file.ReadDouble() * scaleFactor;
+			vertices3[oldVertexNb + 3 * globalId + 2].z = file.ReadDouble() * scaleFactor;
 
-			file->ReadKeyword("endloop");
-			file->ReadKeyword("endfacet");
+			file.ReadKeyword("endloop");
+			file.ReadKeyword("endfacet");
 
 			try {
 				facets[oldFacetNb + globalId] = new InterfaceFacet(3);
@@ -3785,19 +3785,19 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 			}
 			globalId++;
 		}
-		file->ReadKeyword("endsolid");
-		if (!(file->IsEol())) file->ReadLine(); //Read part after "endsolid"
+		file.ReadKeyword("endsolid");
+		if (!(file.IsEol())) file.ReadLine(); //Read part after "endsolid"
 	}
 
 	sh.nbFacet += nbNewFacets;
 	sh.nbVertex += 3 * nbNewFacets;
 
-	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file->GetName()).c_str(),true);
+	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file.GetName()).c_str(),true);
 
 	if (!insert) {
 		UpdateName(file);
 		strName[0] = strdup(sh.name.c_str());
-		strFileName[0] = strdup(file->GetName());
+		strFileName[0] = strdup(file.GetName());
 		char* e = strrchr(strName[0], '.');
 		if (e) *e = 0;
 	}
@@ -3815,7 +3815,7 @@ void Geometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worke
 	UpdateName(file);
 	sh.nbSuper = 1;
 	strName[0] = strdup(sh.name.c_str());
-	strFileName[0] = strdup(file->GetName());
+	strFileName[0] = strdup(file.GetName());
 
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
@@ -3835,7 +3835,7 @@ void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr
 	//UpdateName(file);
 	//wp.nbSuper = 1;
 	//strName[0] = strdup(wp.name);
-	//strFileName[0] = strdup(file->GetName());
+	//strFileName[0] = strdup(file.GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3865,7 +3865,7 @@ void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr
 	//UpdateName(file);
 	//wp.nbSuper = 1;
 	//strName[0] = strdup(wp.name);
-	//strFileName[0] = strdup(file->GetName());
+	//strFileName[0] = strdup(file.GetName());
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
@@ -3878,15 +3878,15 @@ void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr
 
 void Geometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
 
-	file->ReadInt(); // Unused
-	worker->globState.globalHits.globalHits.nbMCHit = file->ReadSizeT();
+	file.ReadInt(); // Unused
+	worker->globState.globalHits.globalHits.nbMCHit = file.ReadSizeT();
 	worker->globState.globalHits.globalHits.nbHitEquiv = (double)worker->globState.globalHits.globalHits.nbMCHit; //Backward comp
-	worker->globState.globalHits.nbLeakTotal = file->ReadSizeT();
-	worker->globState.globalHits.globalHits.nbDesorbed = file->ReadSizeT();
-	worker->model->otfParams.desorptionLimit = file->ReadSizeT();
+	worker->globState.globalHits.nbLeakTotal = file.ReadSizeT();
+	worker->globState.globalHits.globalHits.nbDesorbed = file.ReadSizeT();
+	worker->model->otfParams.desorptionLimit = file.ReadSizeT();
 
-	sh.nbVertex = file->ReadInt();
-	sh.nbFacet = file->ReadInt();
+	sh.nbVertex = file.ReadInt();
+	sh.nbFacet = file.ReadInt();
 
 	// Allocate memory
 	std::vector<InterfaceFacet*> f(sh.nbFacet, nullptr);
@@ -3898,17 +3898,17 @@ void Geometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
 
 	// Read geometry vertices
 	for (int i = 0; i < sh.nbVertex; i++) {
-		vertices3[i].x = file->ReadDouble();
-		vertices3[i].y = file->ReadDouble();
-		vertices3[i].z = file->ReadDouble();
+		vertices3[i].x = file.ReadDouble();
+		vertices3[i].y = file.ReadDouble();
+		vertices3[i].z = file.ReadDouble();
 	}
 
 	// Read geometry facets (indexed from 1)
 	for (int i = 0; i < sh.nbFacet; i++) {
-		int nb = file->ReadInt();
+		int nb = file.ReadInt();
 		f[i] = new InterfaceFacet(nb);
 		for (int j = 0; j < nb; j++) {
-			f[i]->indices[j] = file->ReadInt() - 1;
+			f[i]->indices[j] = file.ReadInt() - 1;
 			if (f[i]->indices[j] >= sh.nbVertex) {
 				std::string errMsg = "Facet " + std::to_string(i + 1) + " refers to non-existent vertex (" + std::to_string(f[i]->indices[j]+1)  + ")";
 				throw Error(errMsg.c_str());
@@ -3934,14 +3934,14 @@ void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
-	//loaded_nbMCHit = file->ReadSizeT();
-	//loaded_nbLeak = file->ReadInt();
-	//loaded_nbDesorption = file->ReadSizeT();
-	//loaded_desorptionLimit = file->ReadSizeT(); 
-	for (int i = 0; i < 5; i++) file->ReadInt(); //leading lines
+	//loaded_nbMCHit = file.ReadSizeT();
+	//loaded_nbLeak = file.ReadInt();
+	//loaded_nbDesorption = file.ReadSizeT();
+	//loaded_desorptionLimit = file.ReadSizeT(); 
+	for (int i = 0; i < 5; i++) file.ReadInt(); //leading lines
 
-	int nbNewVertex = file->ReadInt();
-	int nbNewFacets = file->ReadInt();
+	int nbNewVertex = file.ReadInt();
+	int nbNewFacets = file.ReadInt();
 
 	// Allocate memory
     try{
@@ -3963,19 +3963,19 @@ void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	// Read geometry vertices
 	for (size_t i = sh.nbVertex; i < (sh.nbVertex + nbNewVertex); i++) {
-		vertices3[i].x = file->ReadDouble();
-		vertices3[i].y = file->ReadDouble();
-		vertices3[i].z = file->ReadDouble();
+		vertices3[i].x = file.ReadDouble();
+		vertices3[i].y = file.ReadDouble();
+		vertices3[i].z = file.ReadDouble();
 		vertices3[i].selected = false;
 	}
 
 	// Read geometry facets (indexed from 1)
 	for (size_t i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
-		size_t nb = file->ReadSizeT();
+		size_t nb = file.ReadSizeT();
 		facets[i] = new InterfaceFacet(nb);
 		(facets)[i]->selected = true;
 		for (size_t j = 0; j < nb; j++)
-			(facets)[i]->indices[j] = file->ReadSizeT() - 1 + sh.nbVertex;
+			(facets)[i]->indices[j] = file.ReadSizeT() - 1 + sh.nbVertex;
 	}
 
 	// Read facets params
@@ -4003,94 +4003,94 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
-	file->ReadKeyword("version"); file->ReadKeyword(":");
+	file.ReadKeyword("version"); file.ReadKeyword(":");
 	int version2;
-	version2 = file->ReadInt();
+	version2 = file.ReadInt();
 	if (version2 > GEOVERSION) {
 		char errMsg[512];
 		sprintf(errMsg, "Unsupported GEO version V%d", version2);
 		throw Error(errMsg);
 	}
 
-	file->ReadKeyword("totalHit"); file->ReadKeyword(":");
-	file->ReadSizeT();
-	file->ReadKeyword("totalDes"); file->ReadKeyword(":");
-	file->ReadSizeT();
-	file->ReadKeyword("totalLeak"); file->ReadKeyword(":");
-	file->ReadSizeT();
+	file.ReadKeyword("totalHit"); file.ReadKeyword(":");
+	file.ReadSizeT();
+	file.ReadKeyword("totalDes"); file.ReadKeyword(":");
+	file.ReadSizeT();
+	file.ReadKeyword("totalLeak"); file.ReadKeyword(":");
+	file.ReadSizeT();
 	if (version2 >= 12) {
-		file->ReadKeyword("totalAbs"); file->ReadKeyword(":");
-		file->ReadSizeT();
+		file.ReadKeyword("totalAbs"); file.ReadKeyword(":");
+		file.ReadSizeT();
 		if (version2 >= 15) {
-			file->ReadKeyword("totalDist_total");
+			file.ReadKeyword("totalDist_total");
 		}
 		else { //between versions 12 and 15
-			file->ReadKeyword("totalDist");
+			file.ReadKeyword("totalDist");
 		}
-		file->ReadKeyword(":");
-		file->ReadDouble();
+		file.ReadKeyword(":");
+		file.ReadDouble();
 		if (version2 >= 15) {
-			file->ReadKeyword("totalDist_fullHitsOnly"); file->ReadKeyword(":");
-			file->ReadDouble();
+			file.ReadKeyword("totalDist_fullHitsOnly"); file.ReadKeyword(":");
+			file.ReadDouble();
 		}
 	}
-	file->ReadKeyword("maxDes"); file->ReadKeyword(":");
-	file->ReadSizeT();
-	file->ReadKeyword("nbVertex"); file->ReadKeyword(":");
-	int nbNewVertex = file->ReadInt();
-	file->ReadKeyword("nbFacet"); file->ReadKeyword(":");
-	int nbNewFacets = file->ReadInt();
-	file->ReadKeyword("nbSuper"); file->ReadKeyword(":");
-	int nbNewSuper = file->ReadInt();
+	file.ReadKeyword("maxDes"); file.ReadKeyword(":");
+	file.ReadSizeT();
+	file.ReadKeyword("nbVertex"); file.ReadKeyword(":");
+	int nbNewVertex = file.ReadInt();
+	file.ReadKeyword("nbFacet"); file.ReadKeyword(":");
+	int nbNewFacets = file.ReadInt();
+	file.ReadKeyword("nbSuper"); file.ReadKeyword(":");
+	int nbNewSuper = file.ReadInt();
 	int nbF = 0; std::vector<std::vector<std::string>> loadFormulas;
 	int nbV = 0;
 	if (version2 >= 2) {
-		file->ReadKeyword("nbFormula"); file->ReadKeyword(":");
-		nbF = file->ReadInt();
-		file->ReadKeyword("nbView"); file->ReadKeyword(":");
-		nbV = file->ReadInt();
+		file.ReadKeyword("nbFormula"); file.ReadKeyword(":");
+		nbF = file.ReadInt();
+		file.ReadKeyword("nbView"); file.ReadKeyword(":");
+		nbV = file.ReadInt();
 	}
 	int nbS = 0;
 	if (version2 >= 8) {
-		file->ReadKeyword("nbSelection"); file->ReadKeyword(":");
-		nbS = file->ReadInt();
+		file.ReadKeyword("nbSelection"); file.ReadKeyword(":");
+		nbS = file.ReadInt();
 	}
 	if (version2 >= 7) {
-		file->ReadKeyword("gasMass"); file->ReadKeyword(":");
-		/*wp.gasMass = */file->ReadDouble();
+		file.ReadKeyword("gasMass"); file.ReadKeyword(":");
+		/*wp.gasMass = */file.ReadDouble();
 	}
 	if (version2 >= 10) { //time-dependent version
-		file->ReadKeyword("userMoments"); file->ReadKeyword("{");
-		file->ReadKeyword("nb"); file->ReadKeyword(":");
-		int nb = file->ReadInt();
+		file.ReadKeyword("userMoments"); file.ReadKeyword("{");
+		file.ReadKeyword("nb"); file.ReadKeyword(":");
+		int nb = file.ReadInt();
 
 		for (int i = 0; i < nb; i++)
-			file->ReadString();
-		file->ReadKeyword("}");
+			file.ReadString();
+		file.ReadKeyword("}");
 	}
 	if (version2 >= 11) { //gas pulse parameters
-		file->ReadKeyword("desorptionStart"); file->ReadKeyword(":");
-		file->ReadDouble();
-		file->ReadKeyword("desorptionStop"); file->ReadKeyword(":");
-		file->ReadDouble();
-		file->ReadKeyword("timeWindow"); file->ReadKeyword(":");
-		file->ReadDouble();
-		file->ReadKeyword("useMaxwellian"); file->ReadKeyword(":");
-		file->ReadInt();
+		file.ReadKeyword("desorptionStart"); file.ReadKeyword(":");
+		file.ReadDouble();
+		file.ReadKeyword("desorptionStop"); file.ReadKeyword(":");
+		file.ReadDouble();
+		file.ReadKeyword("timeWindow"); file.ReadKeyword(":");
+		file.ReadDouble();
+		file.ReadKeyword("useMaxwellian"); file.ReadKeyword(":");
+		file.ReadInt();
 	}
 
 	if (version2 >= 12) { //2013.aug.22
-		file->ReadKeyword("calcConstantFlow"); file->ReadKeyword(":");
-		file->ReadInt();
+		file.ReadKeyword("calcConstantFlow"); file.ReadKeyword(":");
+		file.ReadInt();
 	}
 
 	if (version2 >= 2) {
-		file->ReadKeyword("formulas"); file->ReadKeyword("{");
+		file.ReadKeyword("formulas"); file.ReadKeyword("{");
 		for (int i = 0; i < nbF; i++) {
 			char tmpName[256];
 			char tmpExpr[512];
-			strcpy(tmpName, file->ReadString());
-			strcpy(tmpExpr, file->ReadString());
+			strcpy(tmpName, file.ReadString());
+			strcpy(tmpExpr, file.ReadString());
 			//mApp->OffsetFormula(tmpExpr, wp.nbFacet);
 			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
 #if defined(MOLFLOW)
@@ -4101,63 +4101,63 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 			loadFormulas.push_back(newFormula);
 #endif
 		}
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 
-		file->ReadKeyword("views"); file->ReadKeyword("{");
+		file.ReadKeyword("views"); file.ReadKeyword("{");
 		for (int i = 0; i < nbV; i++) {
 			char tmpName[256];
 			AVIEW v;
-			strcpy(tmpName, file->ReadString());
-			v.projMode = file->ReadInt();
-			v.camAngleOx = file->ReadDouble();
-			v.camAngleOy = file->ReadDouble();
+			strcpy(tmpName, file.ReadString());
+			v.projMode = file.ReadInt();
+			v.camAngleOx = file.ReadDouble();
+			v.camAngleOy = file.ReadDouble();
 			v.camAngleOz = 0.0; //No support for Z angle in current GEO version
-			v.camDist = file->ReadDouble();
-			v.camOffset.x = file->ReadDouble();
-			v.camOffset.y = file->ReadDouble();
-			v.camOffset.z = file->ReadDouble();
-			v.performXY = file->ReadInt();
+			v.camDist = file.ReadDouble();
+			v.camOffset.x = file.ReadDouble();
+			v.camOffset.y = file.ReadDouble();
+			v.camOffset.z = file.ReadDouble();
+			v.performXY = file.ReadInt();
 
-			v.vLeft = file->ReadDouble();
-			v.vRight = file->ReadDouble();
-			v.vTop = file->ReadDouble();
-			v.vBottom = file->ReadDouble();
+			v.vLeft = file.ReadDouble();
+			v.vRight = file.ReadDouble();
+			v.vTop = file.ReadDouble();
+			v.vBottom = file.ReadDouble();
 			mApp->AddView(tmpName, v);
 		}
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 	}
 
 	if (version2 >= 8) {
-		file->ReadKeyword("selections"); file->ReadKeyword("{");
+		file.ReadKeyword("selections"); file.ReadKeyword("{");
 		for (int i = 0; i < nbS; i++) {
 			SelectionGroup s;
 			char tmpName[256];
-			strcpy(tmpName, file->ReadString());
+			strcpy(tmpName, file.ReadString());
 			s.name = strdup(tmpName);
-			int nbFS = file->ReadInt();
+			int nbFS = file.ReadInt();
 
 			for (int j = 0; j < nbFS; j++) {
-				s.selection.push_back((size_t)file->ReadInt() + sh.nbFacet); //offset facet number by current number of facets
+				s.selection.push_back((size_t)file.ReadInt() + sh.nbFacet); //offset facet number by current number of facets
 			}
 			mApp->AddSelection(s);
 		}
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 	}
 #if defined(MOLFLOW)
 	for (int i = 0; i < nbF; i++) { //parse formulas now that selection groups are loaded
 		mApp->AddFormula(loadFormulas[i][0].c_str(), loadFormulas[i][1].c_str());
 	}
 #endif
-	file->ReadKeyword("structures"); file->ReadKeyword("{");
+	file.ReadKeyword("structures"); file.ReadKeyword("{");
 	for (int i = 0; i < nbNewSuper; i++) {
-		strName[sh.nbSuper + i] = strdup(file->ReadString());
+		strName[sh.nbSuper + i] = strdup(file.ReadString());
 		// For backward compatibilty with STR
 		/* //Commented out for GEO
 		sprintf(tmp, "%s.txt", strName[i]);
 		strFileName[i] = strdup(tmp);
 		*/
 	}
-	file->ReadKeyword("}");
+	file.ReadKeyword("}");
 
 	// Reallocate memory
     try{
@@ -4170,62 +4170,62 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 	vertices3.resize(sh.nbVertex + nbNewVertex);
 
 	// Read geometry vertices
-	file->ReadKeyword("vertices"); file->ReadKeyword("{");
+	file.ReadKeyword("vertices"); file.ReadKeyword("{");
 	for (size_t i = sh.nbVertex; i < (sh.nbVertex + nbNewVertex); i++) {
 		// Check idx
-		size_t idx = file->ReadSizeT();
-		if (idx != i - sh.nbVertex + 1) throw Error(file->MakeError("Wrong vertex index !"));
-		vertices3[i].x = file->ReadDouble();
-		vertices3[i].y = file->ReadDouble();
-		vertices3[i].z = file->ReadDouble();
+		size_t idx = file.ReadSizeT();
+		if (idx != i - sh.nbVertex + 1) throw Error(file.MakeError("Wrong vertex index !"));
+		vertices3[i].x = file.ReadDouble();
+		vertices3[i].y = file.ReadDouble();
+		vertices3[i].z = file.ReadDouble();
 		vertices3[i].selected = false;
 	}
-	file->ReadKeyword("}");
+	file.ReadKeyword("}");
 
 	if (version2 >= 6) {
 		// Read leaks
-		file->ReadKeyword("leaks"); file->ReadKeyword("{");
-		file->ReadKeyword("nbLeak"); file->ReadKeyword(":");
-		int nbleak2 = file->ReadInt();
+		file.ReadKeyword("leaks"); file.ReadKeyword("{");
+		file.ReadKeyword("nbLeak"); file.ReadKeyword(":");
+		int nbleak2 = file.ReadInt();
 		for (int i = 0; i < nbleak2; i++) {
-			file->ReadInt();
-			//if( idx != i ) throw Error(file->MakeError("Wrong leak index !"));
-			file->ReadDouble();
-			file->ReadDouble();
-			file->ReadDouble();
+			file.ReadInt();
+			//if( idx != i ) throw Error(file.MakeError("Wrong leak index !"));
+			file.ReadDouble();
+			file.ReadDouble();
+			file.ReadDouble();
 
-			file->ReadDouble();
-			file->ReadDouble();
-			file->ReadDouble();
+			file.ReadDouble();
+			file.ReadDouble();
+			file.ReadDouble();
 		}
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 
 		// Read hit cache
-		file->ReadKeyword("hits"); file->ReadKeyword("{");
-		file->ReadKeyword("nbHHit"); file->ReadKeyword(":");
-		int nbHHit2 = file->ReadInt();
+		file.ReadKeyword("hits"); file.ReadKeyword("{");
+		file.ReadKeyword("nbHHit"); file.ReadKeyword(":");
+		int nbHHit2 = file.ReadInt();
 		for (int i = 0; i < nbHHit2; i++) {
-			file->ReadInt();
-			//if( idx != i ) throw Error(file->MakeError("Wrong hit cache index !"));
-			file->ReadDouble();
-			file->ReadDouble();
-			file->ReadDouble();
+			file.ReadInt();
+			//if( idx != i ) throw Error(file.MakeError("Wrong hit cache index !"));
+			file.ReadDouble();
+			file.ReadDouble();
+			file.ReadDouble();
 
-			file->ReadInt();
+			file.ReadInt();
 		}
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 	}
 
 	// Read geometry facets (indexed from 1)
 	for (size_t i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
-		file->ReadKeyword("facet");
+		file.ReadKeyword("facet");
 		// Check idx
-		size_t idx = file->ReadSizeT();
-		if (idx != i + 1 - sh.nbFacet) throw Error(file->MakeError("Wrong facet index !"));
-		file->ReadKeyword("{");
-		file->ReadKeyword("nbIndex");
-		file->ReadKeyword(":");
-		size_t nb = file->ReadSizeT();
+		size_t idx = file.ReadSizeT();
+		if (idx != i + 1 - sh.nbFacet) throw Error(file.MakeError("Wrong facet index !"));
+		file.ReadKeyword("{");
+		file.ReadKeyword("nbIndex");
+		file.ReadKeyword(":");
+		size_t nb = file.ReadSizeT();
 
 		if (nb < 3) {
 			char errMsg[512];
@@ -4238,7 +4238,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 		facets[i]->selected = true;
 		for (int j = 0; j < nb; j++)
 			facets[i]->indices[j] += sh.nbVertex;
-		file->ReadKeyword("}");
+		file.ReadKeyword("}");
 		if (newStruct) {
 			facets[i]->sh.superIdx += static_cast<int>(sh.nbSuper);
 			if (facets[i]->sh.superDest > 0) facets[i]->sh.superDest += sh.nbSuper;
@@ -4276,7 +4276,7 @@ std::vector<size_t> Geometry::GetAllFacetIndices() const {
 	return facetIndices;
 }
 
-void Geometry::SaveSTL(FileWriter& f, GLProgress_Abstract& prg) {
+void Geometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
     prg.SetMessage("Triangulating geometry...");
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
@@ -4336,20 +4336,20 @@ void Geometry::SaveSuper(int s) {
 		}
 	}
 
-	file->Write(0, "\n");
-	file->Write(0, "\n");
-	file->Write(0, "\n");
-	file->Write(0, "\n");
+	file.Write(0, "\n");
+	file.Write(0, "\n");
+	file.Write(0, "\n");
+	file.Write(0, "\n");
 
-	file->Write(nbV, "\n");
-	file->Write(nbF, "\n");
+	file.Write(nbV, "\n");
+	file.Write(nbF, "\n");
 
 	// Read geometry vertices
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (refIdx[i] >= 0) {
-			file->Write(vertices3[i].x, " ");
-			file->Write(vertices3[i].y, " ");
-			file->Write(vertices3[i].z, "\n");
+			file.Write(vertices3[i].x, " ");
+			file.Write(vertices3[i].y, " ");
+			file.Write(vertices3[i].z, "\n");
 		}
 	}
 
@@ -4358,10 +4358,10 @@ void Geometry::SaveSuper(int s) {
 		InterfaceFacet *f = facets[i];
 		int j;
 		if (f->sh.superIdx == s) {
-			file->Write(f->sh.nbIndex, " ");
+			file.Write(f->sh.nbIndex, " ");
 			for (j = 0; j < f->sh.nbIndex - 1; j++)
-				file->Write(refIdx[f->indices[j]] + 1, " ");
-			file->Write(refIdx[f->indices[j]] + 1, "\n");
+				file.Write(refIdx[f->indices[j]] + 1, " ");
+			file.Write(refIdx[f->indices[j]] + 1, "\n");
 		}
 	}
 
@@ -4384,7 +4384,7 @@ void Geometry::SaveSuper(int s) {
 void Geometry::SaveProfileTXT(FileWriter& file) {
 	// Profiles
 	for (int j = 0; j < PROFILE_SIZE; j++)
-		file->Write("\n");
+		file.Write("\n");
 }
 
 bool Geometry::IsLoaded() const {
