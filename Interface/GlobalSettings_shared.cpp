@@ -230,7 +230,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
             }
             break;
     }
-    GLWindow::ProcessMessage(src, message);
+    //GLWindow::ProcessMessage(src, message); //Let molflow/synrad child functions Gloablsettings::ProcessMessage call them
 }
 
 /**
