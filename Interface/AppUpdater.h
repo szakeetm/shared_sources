@@ -80,7 +80,7 @@ wereEvents = true;
 ----In GlobalSettings-------------
 
 if (mApp->appUpdater) { //Updater initialized
-	chkCheckForUpdates->SetState(mApp->appUpdater->IsUpdateCheckAllowed());
+	chkCheckForUpdates->SetThreadStates(mApp->appUpdater->IsUpdateCheckAllowed());
 }
 //...
 if (mApp->appUpdater) {

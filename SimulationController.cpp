@@ -309,12 +309,12 @@ int SimulationController::ClearCommand() {
     procInfo->masterCmd = COMMAND_NONE;
     procInfo->cmdParam = 0;
     procInfo->cmdParam2 = 0;
-    SetState(PROCESS_READY,GetSimuStatus());
+    SetThreadStates(PROCESS_READY,GetThreadStatuses());
 
     return 0;
 }
 
-int SimulationController::SetState(size_t state, const std::string &status, bool changeState, bool changeStatus) {
+int SimulationController::SetThreadStates(size_t state, const std::string &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
         DEBUG_PRINT("setstate %s\n", prStates[state]);
@@ -335,7 +335,7 @@ int SimulationController::SetState(size_t state, const std::string &status, bool
     return 0;
 }
 
-int SimulationController::SetState(size_t state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
+int SimulationController::SetThreadStates(size_t state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
         DEBUG_PRINT("setstate %s\n", prStates[state]);
@@ -363,7 +363,7 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
     return 0;
 }
 
-std::vector<std::string> SimulationController::GetSimuStatus() {
+std::vector<std::string> SimulationController::GetThreadStatuses() {
 
     std::vector<std::string> threadStatuses(nbThreads);
     if (!simulation) {
@@ -386,7 +386,7 @@ std::vector<std::string> SimulationController::GetSimuStatus() {
 
 void SimulationController::SetErrorSub(const std::string& message) {
     Log::console_error("Error: {}\n", message);
-    SetState(PROCESS_ERROR, message);
+    SetThreadStates(PROCESS_ERROR, message);
 }
 
 void SimulationController::SetStatus(const std::string& status) {
@@ -398,9 +398,9 @@ void SimulationController::SetStatus(const std::string& status) {
 void SimulationController::SetReady(const bool loadOk) {
 
     if (loadOk)
-        SetState(PROCESS_READY, this->GetSimuStatus());
+        SetThreadStates(PROCESS_READY, this->GetThreadStatuses());
     else
-        SetState(PROCESS_READY, "(No geometry)");
+        SetThreadStates(PROCESS_READY, "(No geometry)");
 
     ClearCommand();
 }
@@ -428,13 +428,13 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_UPDATEPARAMS: {
-                SetState(PROCESS_WAIT, GetSimuStatus());
+                SetThreadStates(PROCESS_WAIT, GetThreadStatuses());
                 DEBUG_PRINT("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
                 if (UpdateParams()) {
                     SetReady(loadOk);
-                    //SetState(procInfo->cmdParam2, GetSimuStatus());
+                    //SetThreadStates(procInfo->cmdParam2, GetThreadStatuses());
                 } else {
-                    SetState(PROCESS_ERROR, "Could not update parameters");
+                    SetThreadStates(PROCESS_ERROR, "Could not update parameters");
                 }
                 break;
             }
@@ -447,9 +447,9 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 if (!lastHitUpdateOK) {
                     // Last update not successful, retry with a longer timeout
                     if ((GetLocalState() != PROCESS_ERROR)) {
-                        SetState(PROCESS_STARTING, "Updating hits...", false, true);
+                        SetThreadStates(PROCESS_STARTING, "Updating hits...", false, true);
                         //lastHitUpdateOK = simulation->UpdateHits(prIdx, 60000);
-                        SetState(PROCESS_STARTING, GetSimuStatus(), false, true);
+                        SetThreadStates(PROCESS_STARTING, GetThreadStatuses(), false, true);
                     }
                 }
                 SetReady(loadOk);
@@ -479,7 +479,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
         }
     }
-    SetState(PROCESS_KILLED, "Process terminated peacefully");
+    SetThreadStates(PROCESS_KILLED, "Process terminated peacefully");
     return 0;
 }
 
@@ -501,11 +501,11 @@ int SimulationController::RebuildAccel() {
  */
 bool SimulationController::Load() {
     DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-    SetState(PROCESS_STARTING, "Loading simulation");
+    SetThreadStates(PROCESS_STARTING, "Loading simulation");
 
     auto sane = simulation->SanityCheckModel(false);
     if(!sane.first) {
-        SetState(PROCESS_STARTING, "Loading simulation");
+        SetThreadStates(PROCESS_STARTING, "Loading simulation");
         bool loadError = false;
 
         // Init particleTracers / threads
@@ -560,7 +560,7 @@ bool SimulationController::Load() {
     }
     else {
         loadOk = false;
-        SetState(PROCESS_ERROR, sane.second->c_str());
+        SetThreadStates(PROCESS_ERROR, sane.second->c_str());
     }
     SetReady(loadOk);
 
@@ -601,16 +601,16 @@ int SimulationController::Start() {
 
     if(!loadOk) {
         if(sane.second)
-            SetState(PROCESS_ERROR, sane.second->c_str());
+            SetThreadStates(PROCESS_ERROR, sane.second->c_str());
         else
-            SetState(PROCESS_ERROR, GetSimuStatus());
+            SetThreadStates(PROCESS_ERROR, GetThreadStatuses());
         return 1;
     }
 
     if(simulation->model->accel.empty()){
     //if(RebuildAccel()){
         loadOk = false;
-        SetState(PROCESS_ERROR, "Failed building acceleration structure!");
+        SetThreadStates(PROCESS_ERROR, "Failed building acceleration structure!");
         return 1;
     }
 
@@ -619,13 +619,13 @@ int SimulationController::Start() {
             simulation->model->otfParams.desorptionLimit /
             simulation->model->otfParams.nbProcess) {
             ClearCommand();
-            SetState(PROCESS_DONE, GetSimuStatus());
+            SetThreadStates(PROCESS_DONE, GetThreadStatuses());
         }
     }
 
     if (GetLocalState() != PROCESS_RUN) {
         DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-        SetState(PROCESS_RUN, GetSimuStatus());
+        SetThreadStates(PROCESS_RUN, GetThreadStatuses());
     }
 
 
@@ -668,7 +668,7 @@ int SimulationController::Start() {
             if (GetLocalState() != PROCESS_ERROR) {
                 // Max desorption reached
                 ClearCommand();
-                SetState(PROCESS_DONE, GetSimuStatus());
+                SetThreadStates(PROCESS_DONE, GetThreadStatuses());
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
             }
         }
@@ -676,7 +676,7 @@ int SimulationController::Start() {
             if (GetLocalState() != PROCESS_ERROR) {
                 // Time limit reached
                 ClearCommand();
-                SetState(PROCESS_DONE, GetSimuStatus());
+                SetThreadStates(PROCESS_DONE, GetThreadStatuses());
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
@@ -689,7 +689,7 @@ int SimulationController::Start() {
 
 int SimulationController::Reset() {
     DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-    SetState(PROCESS_STARTING, "Resetting local cache...", false, true);
+    SetThreadStates(PROCESS_STARTING, "Resetting local cache...", false, true);
     resetControls();
     auto *sim = simulation;
     sim->ResetSimulation();
