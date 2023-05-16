@@ -35,7 +35,7 @@ ProcComm& ProcComm::operator=(const ProcComm & src) {
     masterCmd = src.masterCmd;
     cmdParam = src.cmdParam;
     cmdParam2 = src.cmdParam2;
-    subProcInfo = src.subProcInfo;
+    subProcInfos = src.subProcInfos;
     return *this;
 }
 
@@ -48,7 +48,7 @@ ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
     masterCmd = src.masterCmd;
     cmdParam = src.cmdParam;
     cmdParam2 = src.cmdParam2;
-    subProcInfo = std::move(src.subProcInfo);
+    subProcInfos = std::move(src.subProcInfos);
     return *this;
 }
 
@@ -76,7 +76,7 @@ void ProcComm::RemoveAsActive(size_t id) {
 void ProcComm::InitActiveProcList() {
     this->m.lock();
     activeProcs.clear();
-    for(size_t id = 0; id < this->subProcInfo.size(); ++id)
+    for(size_t id = 0; id < this->subProcInfos.size(); ++id)
         activeProcs.emplace_back(id);
     this->m.unlock();
 }

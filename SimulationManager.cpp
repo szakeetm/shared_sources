@@ -325,57 +325,58 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     hasErrorStatus = false;
 
     // struct, because vector of char arrays is forbidden w/ clang
-    std::vector<std::string> prevStateStrings(procInformation.subProcInfo.size());
-    std::vector<std::string> stateStrings(procInformation.subProcInfo.size());
+    std::vector<std::string> prevSlaveStatuses(procInformation.subProcInfos.size());
+    std::vector<std::string> newSlaveStatuses(procInformation.subProcInfos.size());
 
-    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-        prevStateStrings[i]=procInformation.subProcInfo[i].slaveStatus;
+    for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
+        prevSlaveStatuses[i]=procInformation.subProcInfos[i].slaveStatus;
     }
 
-    do {
+	do {
 
-        finished = true;
+		finished = true;
 
-        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-            auto procState = procInformation.subProcInfo[i].slaveState;
-            if(procStatus == PROCESS_KILLED) // explicitly ask for killed state
-                finished = finished && (procState==PROCESS_KILLED);
-            else
-                finished = finished && (procState==procStatus || procState==PROCESS_ERROR || procState==PROCESS_DONE);
-            if( procState==PROCESS_ERROR ) {
-                hasErrorStatus = true;
-            }
-            else if(procState == PROCESS_STARTING){
-                stateStrings[i]=procInformation.subProcInfo[i].slaveStatus;
-                if(prevStateStrings[i]!=stateStrings[i]) { // if strings are different
-                    timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
-                                                                                10000); // if task properly started, increase allowed wait time
-                    prevIncTime = waitTime;
-                }
-            }
-            allProcsDone = allProcsDone && (procState == PROCESS_DONE);
-        }
+		for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
+			auto procState = procInformation.subProcInfos[i].slaveState;
+			if (procStatus == PROCESS_KILLED) {// explicitly ask for killed state
+				finished = finished && (procState == PROCESS_KILLED);
+			}
+			else {
+				finished = finished && (procState == procStatus || procState == PROCESS_ERROR || procState == PROCESS_DONE);
+			}
+			if (procState == PROCESS_ERROR) {
+				hasErrorStatus = true;
+			}
+			else if (procState == PROCESS_STARTING) {
+				newSlaveStatuses[i] = procInformation.subProcInfos[i].slaveStatus;
+				if (prevSlaveStatuses[i] != newSlaveStatuses[i]) { // if strings are different
+					timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
+						10000); // if task properly started, increase allowed wait time
+					prevIncTime = waitTime;
+				}
+			}
+			allProcsDone = allProcsDone && (procState == PROCESS_DONE);
+		}
 
-        if (!finished) {
-            ProcessSleep(waitAmount);
-            waitTime += waitAmount;
-        }
-    } while (!finished && waitTime<timeOutAt);
+		if (!finished) {
+			ProcessSleep(waitAmount);
+			waitTime += waitAmount;
+		}
+	} while (!finished && waitTime < timeOutAt);
 
-    return waitTime>=timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
+	return waitTime >= timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
 }
 
 //! Forward a command to simulation controllers
 int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
-    // Send command
 
     procInformation.masterCmd = command;
     procInformation.cmdParam = param;
     procInformation.cmdParam2 = param2;
-    for(auto & i : procInformation.subProcInfo) {
-        auto procState = i.slaveState;
+    for(auto & spi : procInformation.subProcInfos) {
+        auto& procState = spi.slaveState;
         if(procState == PROCESS_READY || procState == PROCESS_RUN || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
-            i.slaveState = PROCESS_STARTING;
+            procState = PROCESS_STARTING;
         }
     }
 
@@ -409,7 +410,7 @@ int SimulationManager::KillAllSimUnits() {
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
                 int i = 0;
                 for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
-                    if (procInformation.subProcInfo[i].slaveState != PROCESS_KILLED) {
+                    if (procInformation.subProcInfos[i].slaveState != PROCESS_KILLED) {
                         auto nativeHandle = simHandles[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                         //Windows
@@ -438,7 +439,7 @@ int SimulationManager::KillAllSimUnits() {
         }
 
         for(size_t i=0;i<simHandles.size();i++) {
-            if (procInformation.subProcInfo[i].slaveState == PROCESS_KILLED) {
+            if (procInformation.subProcInfos[i].slaveState == PROCESS_KILLED) {
                 simHandles[i].first.join();
             }
             else{
@@ -491,20 +492,20 @@ int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     if(simHandles.empty())
         return 1;
 
-    procInfoList.subProcInfo = procInformation.subProcInfo;
+    procInfoList.subProcInfos = procInformation.subProcInfos;
 
     return 0;
 }
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
-    if(statusStrings.size() < procInformation.subProcInfo.size())
+    if(statusStrings.size() < procInformation.subProcInfos.size())
         return 1;
 
-    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+    for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = procInformation.subProcInfo[i].slaveState;
-        statusStrings[i] = procInformation.subProcInfo[i].slaveStatus;
+        states[i] = procInformation.subProcInfos[i].slaveState;
+        statusStrings[i] = procInformation.subProcInfos[i].slaveStatus;
     }
     return 0;
 }
@@ -516,7 +517,7 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
 bool SimulationManager::GetRunningStatus(){
 
     bool done = true;
-    for (auto & i : procInformation.subProcInfo) {
+    for (auto & i : procInformation.subProcInfos) {
         auto procState = i.slaveState;
         done = done & (procState==PROCESS_ERROR || procState==PROCESS_DONE);
         if( procState==PROCESS_ERROR ) {
@@ -541,10 +542,10 @@ std::string SimulationManager::GetErrorDetails() {
 
     std::string err;
 
-    for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
-        size_t state = procInfo.subProcInfo[i].slaveState;
+    for (size_t i = 0; i < procInfo.subProcInfos.size(); i++) {
+        size_t state = procInfo.subProcInfos[i].slaveState;
         if (state == PROCESS_ERROR) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfo[i].slaveStatus));
+            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfos[i].slaveStatus));
         } else {
             err.append(fmt::format("[Thread #{}] {}", i, prStates[state]));
         }

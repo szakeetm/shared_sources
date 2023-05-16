@@ -130,14 +130,14 @@ void LoadStatus::SMPUpdate() {
 		processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
 
 		size_t i = 1;
-		for (auto& proc : procInfo.subProcInfo)
+		for (auto& proc : procInfo.subProcInfos)
 		{
 			DWORD pid = proc.procId;
 			processList->SetValueAt(0, i, fmt::format("Thread {}", i));
 			processList->SetValueAt(1, i, ""); //placeholder for thread id
 			processList->SetValueAt(2, i, ""); //placeholder for memory
 			processList->SetValueAt(3, i, ""); //placeholder for memory
-			processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfo.subProcInfo[i - 1].slaveState, procInfo.subProcInfo[i - 1].slaveStatus));
+			processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfo.subProcInfos[i - 1].slaveState, procInfo.subProcInfos[i - 1].slaveStatus));
 			++i;
 		}
 }

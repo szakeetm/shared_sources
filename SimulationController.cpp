@@ -153,7 +153,7 @@ bool SimThread::runLoop() {
             lastUpdateOk = false;
         }
         //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
-        eos = simEos || (this->particleTracer->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particleTracer->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfo[threadNum].slaveState == PROCESS_ERROR);
+        eos = simEos || (this->particleTracer->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particleTracer->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfos[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
 
     procInfo->RemoveAsActive(threadNum);
@@ -167,7 +167,7 @@ bool SimThread::runLoop() {
 }
 
 void SimThread::setSimStatus(const std::string& msg) const {
-    procInfo->subProcInfo[threadNum].slaveStatus=msg;
+    procInfo->subProcInfos[threadNum].slaveStatus=msg;
 }
 
 [[nodiscard]] std::string SimThread::getSimStatus() const {
@@ -302,7 +302,7 @@ int SimulationController::resetControls() {
 int SimulationController::SetRuntimeInfo() {
 
     // Update runtime information
-    for (auto &pInfo : procInfo->subProcInfo)
+    for (auto &pInfo : procInfo->subProcInfos)
         GetProcInfo(pInfo.procId, &pInfo.runtimeInfo);
 
     return 0;
@@ -323,12 +323,12 @@ int SimulationController::SetState(size_t state, const std::string &status, bool
     if (changeState) {
         DEBUG_PRINT("setstate %s\n", prStates[state]);
         //master->procInformation[prIdx].masterCmd = state;
-        for (auto &pInfo : procInfo->subProcInfo) {
+        for (auto &pInfo : procInfo->subProcInfos) {
             pInfo.slaveState = state;
         }
     }
     if (changeStatus) {
-        for (auto &pInfo : procInfo->subProcInfo) {
+        for (auto &pInfo : procInfo->subProcInfos) {
             pInfo.slaveStatus=status;
         }
     }
@@ -343,19 +343,19 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
 
     if (changeState) {
         DEBUG_PRINT("setstate %s\n", prStates[state]);
-        for (auto &pInfo : procInfo->subProcInfo) {
+        for (auto &pInfo : procInfo->subProcInfos) {
             pInfo.slaveState = state;
         }
     }
     if (changeStatus) {
-        if(procInfo->subProcInfo.size() != status.size()){
-            for (auto &pInfo : procInfo->subProcInfo) {
+        if(procInfo->subProcInfos.size() != status.size()){
+            for (auto &pInfo : procInfo->subProcInfos) {
                pInfo.slaveStatus="invalid state (subprocess number mismatch)";
             }
         }
         else {
             size_t pInd = 0;
-            for (auto &pInfo : procInfo->subProcInfo) {
+            for (auto &pInfo : procInfo->subProcInfos) {
                 pInfo.slaveStatus=status[pInd++];
             }
         }
@@ -409,7 +409,7 @@ void SimulationController::SetErrorSub(const std::string& message) {
 }
 
 void SimulationController::SetStatus(const std::string& status) {
-    for (auto &pInfo : procInfo->subProcInfo) {
+    for (auto &pInfo : procInfo->subProcInfos) {
         pInfo.slaveStatus=status;
     }
 }
@@ -426,8 +426,8 @@ void SimulationController::SetReady(const bool loadOk) {
 
 // Return Error code if subproc info is out of sync
 size_t SimulationController::GetLocalState() const {
-    size_t locState = procInfo->subProcInfo[0].slaveState;
-    for (auto &pInfo : procInfo->subProcInfo) {
+    size_t locState = procInfo->subProcInfos[0].slaveState;
+    for (auto &pInfo : procInfo->subProcInfos) {
         if (locState != pInfo.slaveState)
             return PROCESS_ERROR;
     }
@@ -529,7 +529,7 @@ bool SimulationController::Load() {
 
         // Init particleTracers / threads
         simulation->SetNParticle(nbThreads, false);
-        if (simulation->LoadSimulation(procInfo->subProcInfo[0].slaveStatus)) {
+        if (simulation->LoadSimulation(procInfo->subProcInfos[0].slaveStatus)) {
             loadError = true;
         }
 

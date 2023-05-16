@@ -88,14 +88,14 @@ struct ProcComm {
     size_t cmdParam2;
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
     std::mutex m;
-    std::vector<SubProcInfo> subProcInfo;
+    std::vector<SubProcInfo> subProcInfos;
 
     ProcComm();
     explicit ProcComm(size_t nbProcs) : ProcComm() {
         Resize(nbProcs);
     };
     void Resize(size_t nbProcs){
-        subProcInfo.resize(nbProcs);
+        subProcInfos.resize(nbProcs);
         InitActiveProcList();
     };
 
