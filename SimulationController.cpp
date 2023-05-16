@@ -405,8 +405,8 @@ void SimulationController::SetReady(const bool loadOk) {
     ClearCommand();
 }
 
-// Return Error code if subproc info is out of sync
-size_t SimulationController::GetLocalState() const {
+// Returns the thread state if equal for all, otherwise PROCESS_ERROR
+size_t SimulationController::GetThreadStates() const {
     size_t locState = procInfo->subProcInfos[0].slaveState;
     for (auto &pInfo : procInfo->subProcInfos) {
         if (locState != pInfo.slaveState)
@@ -444,14 +444,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_PAUSE: {
                 DEBUG_PRINT("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
-                if (!lastHitUpdateOK) {
-                    // Last update not successful, retry with a longer timeout
-                    if ((GetLocalState() != PROCESS_ERROR)) {
-                        SetThreadStates(PROCESS_STARTING, "Updating hits...", false, true);
-                        //lastHitUpdateOK = simulation->UpdateHits(prIdx, 60000);
-                        SetThreadStates(PROCESS_STARTING, GetThreadStatuses(), false, true);
-                    }
-                }
                 SetReady(loadOk);
                 break;
             }
@@ -623,7 +615,7 @@ int SimulationController::Start() {
         }
     }
 
-    if (GetLocalState() != PROCESS_RUN) {
+    if (GetThreadStates() != PROCESS_RUN) {
         DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfo->cmdParam, procInfo->cmdParam2);
         SetThreadStates(PROCESS_RUN, GetThreadStatuses());
     }
@@ -665,7 +657,7 @@ int SimulationController::Start() {
         }
 
         if (simuEnd) {
-            if (GetLocalState() != PROCESS_ERROR) {
+            if (GetThreadStates() != PROCESS_ERROR) {
                 // Max desorption reached
                 ClearCommand();
                 SetThreadStates(PROCESS_DONE, GetThreadStatuses());
@@ -673,7 +665,7 @@ int SimulationController::Start() {
             }
         }
         else {
-            if (GetLocalState() != PROCESS_ERROR) {
+            if (GetThreadStates() != PROCESS_ERROR) {
                 // Time limit reached
                 ClearCommand();
                 SetThreadStates(PROCESS_DONE, GetThreadStatuses());
