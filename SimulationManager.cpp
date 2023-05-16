@@ -113,14 +113,7 @@ int SimulationManager::StartSimulation() {
         }
     }
     else {
-        /*if(simulationChanged){
-            this->procInformation.masterCmd  = COMMAND_LOAD; // TODO: currently needed to not break the loop
-            for(auto& con : simControllers){
-                con.Load();
-            }
-            simulationChanged = false;
-        }*/
-        this->procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
+        procInformation.masterCmd  = COMMAND_START; // TODO: currently needed to not break the loop
         for(auto& con : simControllers){
             con.Start();
         }

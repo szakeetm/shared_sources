@@ -119,12 +119,10 @@ bool SimThread::runLoop() {
     double timeLoopStart = timeStart;
     double timeEnd;
     do {
-        setSimStatus(getSimStatus());
-        size_t desorptions = localDesLimit;//(localDesLimit > 0 && localDesLimit > particle->tmpState.globalHits.globalHits.hit.nbDesorbed) ? localDesLimit - particle->tmpState.globalHits.globalHits.hit.nbDesorbed : 0;
-        //printf("Pre[%zu] %lu + %lu / %lu\n",threadNum, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
-        simEos = runSimulation(desorptions);      // Run during 1 sec
-        //printf("Pos[%zu][%d] %lu + %lu / %lu\n",threadNum, simEos, desorptions, particle->tmpState.globalHits.globalHits.hit.nbDesorbed, localDesLimit);
-
+        setMyStatus(ConstructThreadStatus());
+        size_t desorptions = localDesLimit;
+        simEos = runSimulation(desorptions); // Run for 1 sec
+        
         timeEnd = omp_get_wtime();
 
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
@@ -152,25 +150,23 @@ bool SimThread::runLoop() {
         else{
             lastUpdateOk = false;
         }
-        //printf("[%zu] PUP: %lu , %lu , %lu\n",threadNum, desorptions,localDesLimit, particle->tmpState.globalHits.globalHits.hit.nbDesorbed);
         eos = simEos || (this->particleTracer->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particleTracer->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfos[threadNum].slaveState == PROCESS_ERROR);
     } while (!eos);
 
     procInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
-        //printf("[%zu] Updating on finish!\n",threadNum);
-        setSimStatus("Final update...");
+        setMyStatus("Final update...");
         particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
                              20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
     }
     return simEos;
 }
 
-void SimThread::setSimStatus(const std::string& msg) const {
+void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
     procInfo->subProcInfos[threadNum].slaveStatus=msg;
 }
 
-[[nodiscard]] std::string SimThread::getSimStatus() const {
+[[nodiscard]] std::string SimThread::ConstructThreadStatus() const {
     size_t count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;;
 
     size_t max = 0;
@@ -194,7 +190,7 @@ int SimThread::runSimulation(size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
-    setSimStatus(fmt::format("{} [{} hits/s]",getSimStatus(), nbStep));
+    setMyStatus(fmt::format("{} [{} hits/s]",ConstructThreadStatus(), nbStep));
 
     // Check end of simulation
     bool goOn = true;
@@ -369,38 +365,23 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
 
 std::vector<std::string> SimulationController::GetSimuStatus() {
 
-    std::vector<std::string> ret_vec(nbThreads);
+    std::vector<std::string> threadStatuses(nbThreads);
     if (!simulation) {
-        ret_vec.assign(nbThreads, "[NONE]");
+        threadStatuses.assign(nbThreads, "[NONE]");
     }
     else{
-        size_t threadId = 0;
-        auto* sim = simulation;
-        for(size_t p = 0; p < nbThreads; ++p) {
-            auto* particleTracer = (simulation)->GetParticleTracer(p);
+        for(size_t threadId = 0; threadId < nbThreads; ++threadId) {
+            auto* particleTracer = simulation->GetParticleTracer(p);
             if(particleTracer == nullptr) break;
             if(!particleTracer->tmpState.initialized){
-                ret_vec[threadId]= "[NONE]";
+                threadStatuses[threadId]= "[NONE]";
             }
             else {
-                size_t count = 0;
-                count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
-                size_t max = 0;
-                if (sim->model->otfParams.nbProcess)
-                    max = sim->model->otfParams.desorptionLimit / sim->model->otfParams.nbProcess + ((threadId < sim->model->otfParams.desorptionLimit % sim->model->otfParams.nbProcess) ? 1 : 0);
-
-                if (max != 0) {
-                    double percent = (double) (count) * 100.0 / (double) (max);
-                    ret_vec[threadId] = fmt::format("{}/{} des ({:.1f}%)", count, max, percent);
-                }
-                else {
-                    ret_vec[threadId] = fmt::format("{} des", count);
-                }
+                threadStatuses[threadId] = simThreads[threadId].ConstructThreadStatus();
             }
-            ++threadId;
         }
     }
-    return ret_vec;
+    return threadStatuses;
 }
 
 void SimulationController::SetErrorSub(const std::string& message) {

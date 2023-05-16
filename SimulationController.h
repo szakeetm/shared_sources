@@ -43,15 +43,16 @@ public:
     size_t localDesLimit;
     double timeLimit;
 
-    char** status;
+    //char** status; //unused, kept track in master procInfo
     ProcComm* procInfo;
     Simulation_Abstract* simulation;
     MFSim::ParticleTracer* particleTracer;
     bool runLoop();
+    [[nodiscard]] std::string ConstructThreadStatus() const;
 
 private:
-    [[nodiscard]] std::string getSimStatus() const;
-    void setSimStatus(const std::string& msg) const;
+    
+    void setMyStatus(const std::string& msg) const;
     int runSimulation(size_t desorptions);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
