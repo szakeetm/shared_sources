@@ -328,10 +328,8 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
     std::vector<std::string> prevStateStrings(procInformation.subProcInfo.size());
     std::vector<std::string> stateStrings(procInformation.subProcInfo.size());
 
-    {
-        for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
-            prevStateStrings[i]=procInformation.subProcInfo[i].statusString;
-        }
+    for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
+        prevStateStrings[i]=procInformation.subProcInfo[i].slaveStatus;
     }
 
     do {
@@ -348,7 +346,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
                 hasErrorStatus = true;
             }
             else if(procState == PROCESS_STARTING){
-                stateStrings[i]=procInformation.subProcInfo[i].statusString;
+                stateStrings[i]=procInformation.subProcInfo[i].slaveStatus;
                 if(prevStateStrings[i]!=stateStrings[i]) { // if strings are different
                     timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
                                                                                 10000); // if task properly started, increase allowed wait time
@@ -393,7 +391,7 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
  */
 int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param,
                                       const size_t param2) {
-    if(!ForwardCommand(command, param, param2)) { // execute
+    if(!ForwardCommand(command, param, param2)) { // sets master state to command, param and param2, and sets processes to "starting" if they are ready
         if (!WaitForProcStatus(procStatus)) { // and wait
             return 0;
         }
@@ -506,7 +504,7 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
     for (size_t i = 0; i < procInformation.subProcInfo.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
         states[i] = procInformation.subProcInfo[i].slaveState;
-        statusStrings[i] = procInformation.subProcInfo[i].statusString;
+        statusStrings[i] = procInformation.subProcInfo[i].slaveStatus;
     }
     return 0;
 }
@@ -546,7 +544,7 @@ std::string SimulationManager::GetErrorDetails() {
     for (size_t i = 0; i < procInfo.subProcInfo.size(); i++) {
         size_t state = procInfo.subProcInfo[i].slaveState;
         if (state == PROCESS_ERROR) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfo[i].statusString));
+            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfo[i].slaveStatus));
         } else {
             err.append(fmt::format("[Thread #{}] {}", i, prStates[state]));
         }

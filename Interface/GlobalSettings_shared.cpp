@@ -101,7 +101,7 @@ void GlobalSettingsBase::SMPUpdate() {
             processList->SetValueAt(1, i, ""); //placeholder for thread id
             processList->SetValueAt(2, i, ""); //placeholder for memory
             processList->SetValueAt(3, i, ""); //placeholder for memory
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", prStates[procInfo.subProcInfo[i - 1].slaveState], procInfo.subProcInfo[i - 1].statusString));
+            processList->SetValueAt(4, i, fmt::format("[{}] {}", prStates[procInfo.subProcInfo[i - 1].slaveState], procInfo.subProcInfo[i - 1].slaveStatus));
             ++i;
         }
         lastUpdate = SDL_GetTicks();

@@ -167,7 +167,7 @@ bool SimThread::runLoop() {
 }
 
 void SimThread::setSimStatus(const std::string& msg) const {
-    procInfo->subProcInfo[threadNum].statusString=msg;
+    procInfo->subProcInfo[threadNum].slaveStatus=msg;
 }
 
 [[nodiscard]] std::string SimThread::getSimStatus() const {
@@ -329,7 +329,7 @@ int SimulationController::SetState(size_t state, const std::string &status, bool
     }
     if (changeStatus) {
         for (auto &pInfo : procInfo->subProcInfo) {
-            pInfo.statusString=status;
+            pInfo.slaveStatus=status;
         }
     }
 
@@ -350,13 +350,13 @@ int SimulationController::SetState(size_t state, const std::vector<std::string> 
     if (changeStatus) {
         if(procInfo->subProcInfo.size() != status.size()){
             for (auto &pInfo : procInfo->subProcInfo) {
-               pInfo.statusString="invalid state (subprocess number mismatch)";
+               pInfo.slaveStatus="invalid state (subprocess number mismatch)";
             }
         }
         else {
             size_t pInd = 0;
             for (auto &pInfo : procInfo->subProcInfo) {
-                pInfo.statusString=status[pInd++];
+                pInfo.slaveStatus=status[pInd++];
             }
         }
     }
@@ -410,7 +410,7 @@ void SimulationController::SetErrorSub(const std::string& message) {
 
 void SimulationController::SetStatus(const std::string& status) {
     for (auto &pInfo : procInfo->subProcInfo) {
-        pInfo.statusString=status;
+        pInfo.slaveStatus=status;
     }
 }
 
@@ -529,7 +529,7 @@ bool SimulationController::Load() {
 
         // Init particleTracers / threads
         simulation->SetNParticle(nbThreads, false);
-        if (simulation->LoadSimulation(procInfo->subProcInfo[0].statusString)) {
+        if (simulation->LoadSimulation(procInfo->subProcInfo[0].slaveStatus)) {
             loadError = true;
         }
 
