@@ -108,6 +108,17 @@ std::vector<T> operator+(const std::vector<T>& lhs, const std::vector<T>& rhs)
 
 	std::transform(lhs.begin(), lhs.end(), rhs.begin(), result.begin(), std::plus<T>());
 
+	/*
+	auto it1 = lhs.begin();
+	auto it2 = rhs.begin();
+	auto it3 = result.begin();
+
+	while (it1 != lhs.end()) {
+		*it3 = *it1 + *it2;
+		it1++; it2++; it3++;
+	}
+	*/
+
     return result;
 }
 
@@ -117,6 +128,15 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 	assert(lhs.size() == rhs.size());
 
 	std::transform(lhs.begin(), lhs.end(), rhs.begin(), lhs.begin(), std::plus<T>());
+
+	/*
+	auto it1 = lhs.begin();
+	auto it2 = rhs.begin();
+	while (it1 != lhs.end()) {
+		*it1 += *it2;
+		it1++; it2++;
+	}
+	*/
 
 	return lhs;
 }
