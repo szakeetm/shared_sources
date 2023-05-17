@@ -138,10 +138,10 @@ void Worker::ExportTextures(const char *fileName, int grouping, int mode, bool a
 
     //bool buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
-    geom->ExportTextures(f, grouping, mode, globState, saveSelected);
+    geom->ExportTextures(f, grouping, mode, interfaceGlobalState, saveSelected);
 #endif
 #if defined(SYNRAD)
-    geom->ExportTextures(f, grouping, mode, no_scans, globState, saveSelected);
+    geom->ExportTextures(f, grouping, mode, no_scans, interfaceGlobalState, saveSelected);
 #endif
     fclose(f);
 }
@@ -357,17 +357,17 @@ void Worker::CalculateTextureLimits(){
             for (size_t m = 0; m < ( 1 + mf_model->tdParams.moments.size()); m++) {
                 {
                     // go on if the facet was never hit before
-                    auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[m].hits;
+                    auto &facetHitBuffer = interfaceGlobalState.facetStates[subF.globalId].momentResults[m].hits;
                     if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
                 }
 
-                //double dCoef = globState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
+                //double dCoef = interfaceGlobalState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
                 const double timeCorrection =
                         m == 0 ? model->wp.finalOutgassingRate : (model->wp.totalDesorbedMolecules) /
                                 moments[m - 1].second;//model->tdParams.moments[m - 1].second;
                 //model->wp.timeWindowSize;
                 //Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
-                const auto &texture = globState.facetStates[subF.globalId].momentResults[m].texture;
+                const auto &texture = interfaceGlobalState.facetStates[subF.globalId].momentResults[m].texture;
                 const size_t textureSize = texture.size();
                 for (size_t t = 0; t < textureSize; t++) {
                     //Add temporary hit counts
@@ -405,9 +405,9 @@ void Worker::CalculateTextureLimits(){
     double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
     //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
     //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
-    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
-    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
 
     // Add coefficient scaling
     for(int v = 0; v < 3; ++v) {
@@ -440,11 +440,11 @@ void Worker::CalculateTextureLimits(){
         if (subF.sh.isTextured) {
                 {
                     // go on if the facet was never hit before
-                    auto &facetHitBuffer = globState.facetStates[subF.globalId].momentResults[0].hits;
+                    auto &facetHitBuffer = interfaceGlobalState.facetStates[subF.globalId].momentResults[0].hits;
                     if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
                 }
 
-                const auto &texture = globState.facetStates[subF.globalId].momentResults[0].texture;
+                const auto &texture = interfaceGlobalState.facetStates[subF.globalId].momentResults[0].texture;
                 const size_t textureSize = texture.size();
                 for (size_t t = 0; t < textureSize; t++) {
                     //Add temporary hit counts
@@ -472,9 +472,9 @@ void Worker::CalculateTextureLimits(){
     /*double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
     //Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
     //Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-    dCoef_custom[0] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
-    dCoef_custom[1] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
-    dCoef_custom[2] = 1E4 / (double)globState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+    dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
+    dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
 
     // Add coefficient scaling
     for(int v = 0; v < 3; ++v) {
@@ -503,7 +503,7 @@ void Worker::RebuildTextures() {
 
         try {
             CalculateTextureLimits();
-            geom->BuildFacetTextures(globState,mApp->needsTexture,mApp->needsDirection);
+            geom->BuildFacetTextures(interfaceGlobalState,mApp->needsTexture,mApp->needsDirection);
         }
         catch (const std::exception &e) {
             throw;
@@ -541,24 +541,24 @@ void Worker::Update(float appTime) {
 
     // Retrieve hit count recording from the shared memory
     // Globals
-    if(!globState.initialized || !simManager.nbThreads)
+    if(!interfaceGlobalState.initialized || !simManager.nbThreads)
         return;
     mApp->changedSinceSave = true;
 
         {
             size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-            if (!globState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
+            if (!interfaceGlobalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
                 return;
             }
         }
 
-        globState.stateChanged = false;
-        globState.globalHits = globState.globalHits;
+        interfaceGlobalState.stateChanged = false;
+        interfaceGlobalState.globalHits = interfaceGlobalState.globalHits;
 
 #if defined(SYNRAD)
 
-        if (globState.globalHits.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
-            no_scans = (double)globState.globalHits.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+        if (interfaceGlobalState.globalHits.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
+            no_scans = (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
         }
         else {
             no_scans = 1.0;
@@ -587,10 +587,10 @@ void Worker::Update(float appTime) {
                     */
                 //Retrieve angle map from hits dp
                 if(f->sh.desorbType != DES_ANGLEMAP) {
-                    /*model->facets[i]->angleMap.pdf = globState.facetStates[i].recordedAngleMapPdf;
+                    /*model->facets[i]->angleMap.pdf = interfaceGlobalState.facetStates[i].recordedAngleMapPdf;
                     f->angleMapCache = model->facets[i]->angleMap.pdf;*/
-                    if (f->selected && f->angleMapCache.empty() && !globState.facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
-                    f->angleMapCache = globState.facetStates[i].recordedAngleMapPdf;
+                    if (f->selected && f->angleMapCache.empty() && !interfaceGlobalState.facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
+                    f->angleMapCache = interfaceGlobalState.facetStates[i].recordedAngleMapPdf;
                 }
             }
 #endif
@@ -601,15 +601,15 @@ void Worker::Update(float appTime) {
     try {
         if (mApp->needsTexture || mApp->needsDirection) {
             CalculateTextureLimits();
-            geom->BuildFacetTextures(globState, mApp->needsTexture, mApp->needsDirection);
+            geom->BuildFacetTextures(interfaceGlobalState, mApp->needsTexture, mApp->needsDirection);
         }
     }
     catch (const std::exception &e) {
-        globState.tMutex.unlock();
+        interfaceGlobalState.tMutex.unlock();
         GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
-    globState.tMutex.unlock();
+    interfaceGlobalState.tMutex.unlock();
 
 #if defined(MOLFLOW)
     if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {
@@ -674,7 +674,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 * Send total hit counts to subprocesses
 */
 void Worker::SendToHitBuffer() {
-    simManager.ForwardGlobalCounter(&globState, &particleLog);
+    simManager.ForwardGlobalCounter(&interfaceGlobalState, &particleLog);
 }
 
 /**
@@ -700,22 +700,22 @@ void Worker::RetrieveHistogramCache()
     //GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
 #if defined(MOLFLOW)
-    globalHistogramCache = globState.globalHistograms[displayedMoment];
+    globalHistogramCache = interfaceGlobalState.globalHistograms[displayedMoment];
 #endif
 #if defined(SYNRAD)
-    if(!globState.globalHistograms.empty())
-        globalHistogramCache = globState.globalHistograms[0];
+    if(!interfaceGlobalState.globalHistograms.empty())
+        globalHistogramCache = interfaceGlobalState.globalHistograms[0];
 #endif
     //FACET HISTOGRAMS
     for (size_t i = 0;i < geom->GetNbFacet();i++) {
         InterfaceFacet* f = geom->GetFacet(i);
 #if defined(MOLFLOW)
-        f->facetHitCache = globState.facetStates[i].momentResults[displayedMoment].hits;
-        f->facetHistogramCache = globState.facetStates[i].momentResults[displayedMoment].histogram;
+        f->facetHitCache = interfaceGlobalState.facetStates[i].momentResults[displayedMoment].hits;
+        f->facetHistogramCache = interfaceGlobalState.facetStates[i].momentResults[displayedMoment].histogram;
 #endif
 #if defined(SYNRAD)
-        f->facetHitCache = globState.facetStates[i].momentResults[0].hits;
-        f->facetHistogramCache = globState.facetStates[i].momentResults[0].histogram;
+        f->facetHitCache = interfaceGlobalState.facetStates[i].momentResults[0].hits;
+        f->facetHistogramCache = interfaceGlobalState.facetStates[i].momentResults[0].histogram;
 #endif
     }
 }
@@ -738,13 +738,13 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 
         prg.SetMessage("Constructing memory structure to store results...");
         if (!sendOnly) {
-            globState.Resize(model);
+            interfaceGlobalState.Resize(model);
         }
 
         prg.SetMessage("Forwarding simulation model...");
         simManager.ForwardSimModel(model); //set shared pointers simManager::simulations[i].model to worker::model
         prg.SetMessage("Forwarding global simulation state...");
-        simManager.ForwardGlobalCounter(&globState, &particleLog);  //set worker::globState and particleLog pointers to simManager::simulations[0]
+        simManager.ForwardGlobalCounter(&interfaceGlobalState, &particleLog);  //set worker::interfaceGlobalState and particleLog pointers to simManager::simulations[0]
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);

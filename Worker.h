@@ -226,5 +226,5 @@ private:
 
 public:
     ParticleLog particleLog; //replaces dpLog
-    GlobalSimuState globState;
+    GlobalSimuState interfaceGlobalState; //An interface copy of the simulation state. Updated through Worker::Update, and ile load/save, texturing, etc. uses this local cache
 };
