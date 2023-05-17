@@ -353,7 +353,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
             {
                 if (mApp->worker.IsRunning()) {
                     title = fmt::format("Pause");
-                } else if (mApp->worker.interfaceGlobalState.globalHits.globalHits.nbMCHit > 0) {
+                } else if (mApp->worker.interfaceGlobalState.globalStats.globalHits.nbMCHit > 0) {
                     title = fmt::format("Resume");
                 } else {
                     title = fmt::format("Begin");
@@ -364,13 +364,13 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
                 mApp->StartStopSimulation();
             }
             ImGui::SameLine();
-            if(!mApp->worker.IsRunning() && mApp->worker.interfaceGlobalState.globalHits.globalHits.nbDesorbed > 0)
+            if(!mApp->worker.IsRunning() && mApp->worker.interfaceGlobalState.globalStats.globalHits.nbDesorbed > 0)
                 ImGui::BeginDisabled();
             if(ImGui::Button("Reset")){
                 mApp->changedSinceSave = true;
                 mApp->ResetSimulation();
             }
-            if(!mApp->worker.IsRunning() && mApp->worker.interfaceGlobalState.globalHits.globalHits.nbDesorbed > 0)
+            if(!mApp->worker.IsRunning() && mApp->worker.interfaceGlobalState.globalStats.globalHits.nbDesorbed > 0)
                 ImGui::EndDisabled();
 
             ImGui::Checkbox("Auto update scene", &mApp->autoFrameMove);
@@ -405,7 +405,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
                     else current_avg = (current_avg != 0.0) ? current_avg : mApp->hps.last();
 
                     hit_stat = fmt::format("{} ({})",
-                                           Util::formatInt(mApp->worker.interfaceGlobalState.globalHits.globalHits.nbMCHit, "hit"),
+                                           Util::formatInt(mApp->worker.interfaceGlobalState.globalStats.globalHits.nbMCHit, "hit"),
                                            Util::formatPs(current_avg, "hit"));
 
                     current_avg = 0.0;
@@ -413,7 +413,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
                     else current_avg = (current_avg != 0.0) ? current_avg : mApp->dps.last();
 
                     des_stat = fmt::format("{} ({})",
-                                           Util::formatInt(mApp->worker.interfaceGlobalState.globalHits.globalHits.nbDesorbed, "des"),
+                                           Util::formatInt(mApp->worker.interfaceGlobalState.globalStats.globalHits.nbDesorbed, "des"),
                                            Util::formatPs(current_avg, "des"));
                 }
 

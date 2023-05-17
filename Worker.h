@@ -134,7 +134,6 @@ public:
   int GetCDFId(double temperature) const;
   int GetIDId(size_t paramId) const;
   //Different signature:
-  void SendToHitBuffer();// Send total and facet hit counts to subprocesses
   #endif
 
 #if defined(SYNRAD)
@@ -144,7 +143,6 @@ public:
   void WriteHitBuffer();
     //Different signature:
     void SendFacetHitCounts();
-    void SendToHitBuffer();// Send total and facet hit counts to subprocesses
 
   void RemoveRegion(int index);
   void AddRegion(const char* fileName, int position = -1); //load region (position==-1: add as new region)

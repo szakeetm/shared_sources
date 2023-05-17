@@ -71,7 +71,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
 
-        desorptions -= particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
+        desorptions -= particleTracer->tmpState.globalStats.globalHits.nbDesorbed;
     } while (desorptions);
 
 
@@ -124,9 +124,9 @@ bool SimThread::runLoop() {
         if (masterProcInfo->activeProcs.front() == threadNum || forceQueue) {
             size_t readdOnFail = 0;
             if(simulation->model->otfParams.desorptionLimit > 0){
-                if(localDesLimit > particleTracer->tmpState.globalHits.globalHits.nbDesorbed) {
-                    localDesLimit -= particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
-                    readdOnFail = particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
+                if(localDesLimit > particleTracer->tmpState.globalStats.globalHits.nbDesorbed) {
+                    localDesLimit -= particleTracer->tmpState.globalStats.globalHits.nbDesorbed;
+                    readdOnFail = particleTracer->tmpState.globalStats.globalHits.nbDesorbed;
                 }
                 else localDesLimit = 0;
             }
@@ -162,7 +162,7 @@ void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's
 }
 
 [[nodiscard]] std::string SimThread::ConstructThreadStatus() const {
-    size_t count = particleTracer->totalDesorbed + particleTracer->tmpState.globalHits.globalHits.nbDesorbed;;
+    size_t count = particleTracer->totalDesorbed + particleTracer->tmpState.globalStats.globalHits.nbDesorbed;;
 
     size_t max = 0;
     if (simulation->model->otfParams.nbProcess)
@@ -192,11 +192,11 @@ bool SimThread::runSimulation1sec(const size_t desorptions) {
     size_t remainingDes = 0;
 
     if (particleTracer->model->otfParams.desorptionLimit > 0) {
-        if (desorptions <= particleTracer->tmpState.globalHits.globalHits.nbDesorbed){
+        if (desorptions <= particleTracer->tmpState.globalStats.globalHits.nbDesorbed){
             limitReachedOrDesError = true;
         }
         else {
-            remainingDes = desorptions - particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
+            remainingDes = desorptions - particleTracer->tmpState.globalStats.globalHits.nbDesorbed;
         }
     }
 
@@ -524,7 +524,7 @@ bool SimulationController::Load() {
             // Calculate remaining work
             size_t desPerThread = 0;
             size_t remainder = 0;
-            size_t des_global = simulation->globState->globalHits.globalHits.nbDesorbed;
+            size_t des_global = simulation->globState->globalStats.globalHits.nbDesorbed;
             if (des_global > 0) {
                 desPerThread = des_global / nbThreads;
                 remainder = des_global % nbThreads;
@@ -614,7 +614,7 @@ int SimulationController::Start() {
         size_t desPerThread = 0;
         size_t remainder = 0;
         if(simulation->model->otfParams.desorptionLimit > 0){
-            if(simulation->model->otfParams.desorptionLimit > (simulation->globState->globalHits.globalHits.nbDesorbed)) {
+            if(simulation->model->otfParams.desorptionLimit > (simulation->globState->globalStats.globalHits.nbDesorbed)) {
                 size_t limitDes_global = simulation->model->otfParams.desorptionLimit;
                 desPerThread = limitDes_global / nbThreads;
                 remainder = limitDes_global % nbThreads;

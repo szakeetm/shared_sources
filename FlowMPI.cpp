@@ -222,7 +222,7 @@ namespace MFMPI {
                 tmpState.Resize(model);
                 MPI_Recv_serialized(tmpState, i, 0, MPI_COMM_WORLD, &status);
 
-                printf("Adding tmpState from %d with %zu hits to %zu hits.\n", i, tmpState.globalHits.globalHits.nbMCHit, globState.globalHits.globalHits.nbMCHit);
+                printf("Adding tmpState from %d with %zu hits to %zu hits.\n", i, tmpState.globalStats.globalStats.nbMCHit, globState.globalStats.globalStats.nbMCHit);
                 globState += tmpState;
             } else if(world_rank == i){
                 MPI_Send_serialized(globState, 0, 0, MPI_COMM_WORLD);

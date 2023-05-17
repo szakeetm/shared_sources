@@ -361,7 +361,7 @@ void Worker::CalculateTextureLimits() {
 					if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
 				}
 
-				//double dCoef = interfaceGlobalState.globalHits.globalHits.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
+				//double dCoef = interfaceGlobalState.globalStats.globalStats.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
 				const double timeCorrection =
 					m == 0 ? model->wp.finalOutgassingRate : (model->wp.totalDesorbedMolecules) /
 					moments[m - 1].second;//model->tdParams.moments[m - 1].second;
@@ -405,9 +405,9 @@ void Worker::CalculateTextureLimits() {
 	double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
 	//Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
 	//Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-	dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23 * 0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
-	dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
-	dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
+	dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalStats.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23 * 0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+	dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalStats.globalHits.nbDesorbed;
+	dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalStats.globalHits.nbDesorbed;
 
 	// Add coefficient scaling
 	for (int v = 0; v < 3; ++v) {
@@ -472,9 +472,9 @@ void Worker::CalculateTextureLimits() {
 	/*double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
 	//Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
 	//Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-	dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
-	dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
-	dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed;
+	dCoef_custom[0] = 1E4 / (double)interfaceGlobalState.globalStats.globalStats.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+	dCoef_custom[1] = 1E4 / (double)interfaceGlobalState.globalStats.globalStats.nbDesorbed;
+	dCoef_custom[2] = 1E4 / (double)interfaceGlobalState.globalStats.globalStats.nbDesorbed;
 
 	// Add coefficient scaling
 	for(int v = 0; v < 3; ++v) {
@@ -550,8 +550,8 @@ void Worker::Update(float appTime) {
 
 #if defined(SYNRAD)
 
-	if (interfaceGlobalState.globalHits.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
-		no_scans = (double)interfaceGlobalState.globalHits.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+	if (interfaceGlobalState.globalStats.globalStats.nbDesorbed && model->wp.nbTrajPoints) {
+		no_scans = (double)interfaceGlobalState.globalStats.globalStats.nbDesorbed / (double)model->wp.nbTrajPoints;
 	}
 	else {
 		no_scans = 1.0;
@@ -649,14 +649,6 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 		ResetWorkerStats();
 		Update(0.0f);
 	#endif*/
-}
-
-/**
-* \brief Function that updates the global hit counter with the cached value + releases the mutex
-* Send total hit counts to subprocesses
-*/
-void Worker::SendToHitBuffer() {
-	simManager.ForwardGlobalCounter(&interfaceGlobalState, &particleLog);
 }
 
 /**
