@@ -224,5 +224,7 @@ private:
 
 public:
     ParticleLog particleLog; //replaces dpLog
-    GlobalSimuState globalState; //A pointer to it is passed to simulation, UpdateMCHits updates it (sim->interf) or File load updates it (interf->sim)
+    GlobalSimuState globState;
+    GlobalHitBuffer globalHitCache; //A cache is copied of global counters at every Worker::Update(), so that we don't have to lock the globState mutax every time we use nbDes, etc.
+    
 };

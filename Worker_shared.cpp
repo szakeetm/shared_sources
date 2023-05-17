@@ -541,20 +541,21 @@ void Worker::Update(float appTime) {
 	if (!globalState.initialized || !simManager.nbThreads) return;
 	mApp->changedSinceSave = true;
 
-	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
+        	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
 	std::unique_lock<std::timed_mutex> lock(globalState.tMutex, std::chrono::milliseconds(waitTime));
 	if (!lock.owns_lock()) {
 		return;
 	}
+        globalHitCache = globState.globalHits;
 
 #if defined(SYNRAD)
 
-	if (globalState.globalStats.globalStats.nbDesorbed && model->wp.nbTrajPoints) {
-		no_scans = (double)globalState.globalStats.globalStats.nbDesorbed / (double)model->wp.nbTrajPoints;
-	}
-	else {
-		no_scans = 1.0;
-	}
+        if (globalHitCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
+            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+        }
+        else {
+            no_scans = 1.0;
+        }
 #endif
 
 
