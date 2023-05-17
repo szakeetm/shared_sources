@@ -206,7 +206,7 @@ bool SimThread::runSimulation1sec(const size_t desorptions) {
         double end_time = omp_get_wtime();
 
 
-        if (limitReachedOrDesError) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
+        if (!limitReachedOrDesError) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
         {
             const double elapsedTimeMs = (end_time - start_time);
             if (elapsedTimeMs != 0.0)
