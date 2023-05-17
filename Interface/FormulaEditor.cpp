@@ -138,7 +138,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	}
 	case MSG_BUTTON:
 		if (src == recalcButton) {
-            formula_ptr->UpdateFormulaValues(work->globalHitCache.globalHits.nbDesorbed);
+            formula_ptr->UpdateFormulaValues(work->globalStatCache.globalHits.nbDesorbed);
             UpdateValues();
 		}
 		else if (src == convPlotterButton) {
@@ -250,7 +250,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		EnableDisableMoveButtons();
 		formula_ptr->formulasChanged = true;
 
-        formula_ptr->UpdateFormulaValues(work->globalHitCache.globalHits.nbDesorbed);
+        formula_ptr->UpdateFormulaValues(work->globalStatCache.globalHits.nbDesorbed);
         UpdateValues();
 
 		break;

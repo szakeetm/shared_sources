@@ -131,9 +131,9 @@ bool SimThread::runLoop() {
                 else localDesLimit = 0;
             }
 
-            size_t timeOut = lastUpdateOk ? 0 : 100; //ms
+            size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
-                                                timeOut); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                                                timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;

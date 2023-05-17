@@ -137,7 +137,6 @@ public:
     void ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
-
 };
 
 

@@ -499,12 +499,10 @@ void Worker::RebuildTextures() {
 
 		// Only reload if we are even rebuilding textures
 		ReloadIfNeeded();
-		std::unique_lock<std::timed_mutex> lock(globalState.tMutex, std::chrono::seconds(10));
-		if (!lock.owns_lock()) {
-			return;
-		}
+		auto lock = GetHitLock(&globalState, 10000);
+		if (!lock) return;
 		CalculateTextureLimits();
-		geom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);		
+		geom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
 	}
 }
 
@@ -541,21 +539,19 @@ void Worker::Update(float appTime) {
 	if (!globalState.initialized || !simManager.nbThreads) return;
 	mApp->changedSinceSave = true;
 
-        	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-	std::unique_lock<std::timed_mutex> lock(globalState.tMutex, std::chrono::milliseconds(waitTime));
-	if (!lock.owns_lock()) {
-		return;
-	}
-        globalHitCache = globState.globalHits;
+	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
+	auto lock = GetHitLock(&globalState,waitTime);
+	if (!lock) return;
+	globalStatCache = globalState.globalStats; //Make a copy for quick GUI access
 
 #if defined(SYNRAD)
 
-        if (globalHitCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
-            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
-        }
-        else {
-            no_scans = 1.0;
-        }
+	if (globalStatCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
+		no_scans = (double)globalStatCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+	}
+	else {
+		no_scans = 1.0;
+	}
 #endif
 
 
