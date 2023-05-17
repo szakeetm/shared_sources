@@ -543,15 +543,10 @@ void Worker::Update(float appTime) {
 	if (!interfaceGlobalState.initialized || !simManager.nbThreads) return;
 	mApp->changedSinceSave = true;
 
-	{
-		size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-		if (!interfaceGlobalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
-			return;
-		}
+	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
+	if (!interfaceGlobalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
+		return;
 	}
-
-	interfaceGlobalState.stateChanged = false;
-	interfaceGlobalState.globalHits = interfaceGlobalState.globalHits;
 
 #if defined(SYNRAD)
 
@@ -565,12 +560,9 @@ void Worker::Update(float appTime) {
 
 
 	//Copy global histogram
-	//Prepare vectors to receive data
-	RetrieveHistogramCache();
+	RetrieveHistogramCacheAndFacetHitCache();
 
-	//buffer = bufferStart; //Commented out as not used anymore
-
-		// Refresh local facet hit cache for the displayed moment
+	// Refresh local facet hit cache for the displayed moment
 	size_t nbFacet = geom->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
 		InterfaceFacet* f = geom->GetFacet(i);
@@ -579,22 +571,14 @@ void Worker::Update(float appTime) {
 #endif
 #if defined(MOLFLOW)
 		if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
-			/* //Commented out: angleMapCache construction is now in InterfaceGeomToSimModel()
-			if (f->selected && f->angleMapCache.empty())
-				needsAngleMapStatusRefresh = true; //Will update facetadvparams panel
-				*/
-				//Retrieve angle map from hits dp
+			//Retrieve angle map from hits dp
 			if (f->sh.desorbType != DES_ANGLEMAP) {
-				/*model->facets[i]->angleMap.pdf = interfaceGlobalState.facetStates[i].recordedAngleMapPdf;
-				f->angleMapCache = model->facets[i]->angleMap.pdf;*/
 				if (f->selected && f->angleMapCache.empty() && !interfaceGlobalState.facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
 				f->angleMapCache = interfaceGlobalState.facetStates[i].recordedAngleMapPdf;
 			}
 		}
 #endif
 	}
-
-	//simUnit->tMutex.unlock();
 
 	try {
 		if (mApp->needsTexture || mApp->needsDirection) {
@@ -689,11 +673,10 @@ void Worker::SendFacetHitCounts() {
 	simManager.ForwardFacetHitCounts(facetHitCaches);
 }
 
-void Worker::RetrieveHistogramCache()
+void Worker::RetrieveHistogramCacheAndFacetHitCache()
 {
 	//Copy histograms from hit dataport to local cache
 	//The hit dataport contains histograms for all moments, the cache only for the displayed
-	//dpHitStartAddress is the beginning of the dpHit buffer
 
 	//GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
