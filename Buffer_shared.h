@@ -477,10 +477,6 @@ public:
 		this->count += rhs.count;
 		return *this;
 	}
-	DirectionCell& operator+(const DirectionCell& rhs) {
-		*this += rhs;
-		return *this;
-	}
 	Vector3d dir = Vector3d(0.0, 0.0, 0.0);
 	size_t count = 0;
 	template<class Archive>
@@ -492,6 +488,7 @@ public:
 		);
 	}
 };
+DirectionCell operator+(const DirectionCell& lhs, const DirectionCell& rhs);
 
 class LEAK {
 public:
@@ -530,6 +527,7 @@ public:
 		);
 	}
 };
+FacetHistogramBuffer operator+(const FacetHistogramBuffer& lhs, const FacetHistogramBuffer& rhs);
 
 #if defined(MOLFLOW)
 struct FacetHitBuffer {
@@ -577,6 +575,7 @@ struct FacetHitBuffer {
 		);
 	}
 };
+FacetHitBuffer operator+(const FacetHitBuffer& lhs, const FacetHitBuffer& rhs);
 #endif
 
 #if defined(SYNRAD)

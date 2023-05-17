@@ -36,7 +36,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #define COMMAND_NONE     10  // No change
 #define COMMAND_LOAD     11  // Load geometry
-#define COMMAND_START    12  // Start simu
+#define COMMAND_RUN    12  // Run simu
 #define COMMAND_PAUSE    13  // Pause simu
 #define COMMAND_RESET    14  // Reset simu
 #define COMMAND_EXIT     15  // Exit
@@ -56,12 +56,12 @@ static const char *prStates[] = {
         "",
         "",
         "No command",
-        "Loading",
-        "Starting",
-        "Stopping",
-        "Resetting",
-        "Exiting",
-        "Closing",
+        "Load",
+        "Run",
+        "Pause",
+        "Reset",
+        "Exit",
+        "Close",
         "Update params"
 };
 

@@ -390,10 +390,10 @@ void Worker::CalculateTextureLimits(){
                             }
                             //Autoscale ignoring constant flow (moments only)
                             else { //if (m != 0)
-                                limits[v].max.moments_only = std::max(val[v],limits[v].max.moments_only);;
+                                limits[v].max.moments_only = std::max(val[v],limits[v].max.moments_only);
 
                                 if (val[v] > 0.0)
-                                    limits[v].min.moments_only = std::min(val[v],limits[v].min.moments_only);;
+                                    limits[v].min.moments_only = std::min(val[v],limits[v].min.moments_only);
                             }
                         }
                     } // if largeenough
@@ -545,16 +545,6 @@ void Worker::Update(float appTime) {
         return;
     mApp->changedSinceSave = true;
 
-
-#if defined(MOLFLOW)
-    //bool needsAngleMapStatusRefresh = false;
-#endif
-
-    //for(auto& simUnit : simManager.simulations) {
-        /*if (!simUnit->tMutex.try_lock_for(std::chrono::milliseconds (100))) {
-            continue;
-        }*/
-        // Global hits and leaks
         {
             size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
             if (!globState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {

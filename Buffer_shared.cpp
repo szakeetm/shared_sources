@@ -51,6 +51,13 @@ FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
 	this->impulse_momentum += rhs.impulse_momentum;
 	return *this;
 }
+
+FacetHitBuffer operator+(const FacetHitBuffer& lhs, const FacetHitBuffer& rhs) {
+	FacetHitBuffer result(lhs);
+	result += rhs;
+	return result;
+}
+
 #endif
 #if defined(SYNRAD)
 FacetHitBuffer::FacetHitBuffer() {

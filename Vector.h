@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class Vector3d;
 class Vector2d;
 
-Vector3d operator+ (const Vector3d &v1, const Vector3d& v2);
+Vector3d operator+(const Vector3d &v1, const Vector3d& v2);
 Vector3d operator-(const Vector3d &v1, const Vector3d& v2);
 Vector3d operator*(const Vector3d &v1, const double mult);
 Vector3d operator*(const double mult, const Vector3d &v1);

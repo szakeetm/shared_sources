@@ -106,8 +106,7 @@ public:
     //const Medium *medium;
     Payload *pay;
 
-    //HitChain *hitChain;
-    std::vector<HitLink> hits;
+    std::vector<HitLink> transparentHits;
     HitLink hardHit;
     MersenneTwister *rng;
 };

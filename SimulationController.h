@@ -35,16 +35,14 @@ class Simulation;
 class SimThread {
 public:
     SimThread(ProcComm* procInfo, Simulation_Abstract* sim, size_t threadNum);
-    ~SimThread();
 
     size_t threadNum;
     double stepsPerSec;
-    bool simEos;
+    bool desLimitReachedOrDesError;
     size_t localDesLimit;
     double timeLimit;
 
-    //char** status; //unused, kept track in master procInfo
-    ProcComm* procInfo;
+    ProcComm* masterProcInfo;
     Simulation_Abstract* simulation;
     MFSim::ParticleTracer* particleTracer;
     bool runLoop();
@@ -53,7 +51,7 @@ public:
 private:
     
     void setMyStatus(const std::string& msg) const;
-    int runSimulation(size_t desorptions);
+    bool runSimulation1sec(const size_t desorptions);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
 };
@@ -78,7 +76,7 @@ protected:
     void SetReady(const bool loadOk);
     int ClearCommand();
     int SetRuntimeInfo();
-    size_t GetLocalState() const;
+    size_t GetThreadStates() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm *pInfo);

@@ -44,20 +44,17 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 SimThread::SimThread(ProcComm *procInfo, Simulation_Abstract *sim, size_t threadNum) {
     this->threadNum = threadNum;
-    this->procInfo = procInfo;
-    this->status = nullptr;
+    masterProcInfo = procInfo;
     timeLimit = 0.0;
     simulation = sim;
     stepsPerSec = 1.0;
     particleTracer = nullptr;
-    simEos = false;
+    desLimitReachedOrDesError = false;
     localDesLimit = 0;
 }
 
-SimThread::~SimThread() = default;
 
-
-// todo: fuse with runSimulation()
+// todo: fuse with runSimulation1sec()
 // Should allow simulation for N steps opposed to T seconds
 int SimThread::advanceForSteps(size_t desorptions) {
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
@@ -65,7 +62,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
     do {
-        simEos = !particleTracer->SimulationMCStep(nbStep, threadNum, desorptions);
+        desLimitReachedOrDesError = particleTracer->SimulationMCStep(nbStep, threadNum, desorptions);
         timeEnd = omp_get_wtime();
 
         const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
@@ -89,7 +86,7 @@ int SimThread::advanceForTime(double simDuration) {
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
     do {
-        simEos = !particleTracer->SimulationMCStep(nbStep, threadNum, 0);
+        desLimitReachedOrDesError = particleTracer->SimulationMCStep(nbStep, threadNum, 0);
         timeEnd = omp_get_wtime();
 
         const double elapsedTimeMs = (timeEnd - timeStart); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
@@ -106,14 +103,12 @@ int SimThread::advanceForTime(double simDuration) {
 
 /**
 * \brief Simulation loop for an individual thread
- * \return 0 when simulation end has been reached via desorption limit, 1 otherwise
+ * \return true when simulation end has been reached via desorption limit, false otherwise
  */
 
 bool SimThread::runLoop() {
-    bool eos;
+    bool finishLoop;
     bool lastUpdateOk = false;
-
-    //printf("Lim[%zu] %lu --> %lu\n",threadNum, localDesLimit, simulation->globState->globalHits.globalHits.hit.nbDesorbed);
 
     double timeStart = omp_get_wtime();
     double timeLoopStart = timeStart;
@@ -121,12 +116,12 @@ bool SimThread::runLoop() {
     do {
         setMyStatus(ConstructThreadStatus());
         size_t desorptions = localDesLimit;
-        simEos = runSimulation(desorptions); // Run for 1 sec
+        desLimitReachedOrDesError = runSimulation1sec(desorptions); // Run for 1 sec
         
         timeEnd = omp_get_wtime();
 
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
-        if (procInfo->activeProcs.front() == threadNum || forceQueue) {
+        if (masterProcInfo->activeProcs.front() == threadNum || forceQueue) {
             size_t readdOnFail = 0;
             if(simulation->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particleTracer->tmpState.globalHits.globalHits.nbDesorbed) {
@@ -137,33 +132,33 @@ bool SimThread::runLoop() {
             }
 
             size_t timeOut = lastUpdateOk ? 0 : 100; //ms
-            lastUpdateOk = particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
-                                                timeOut); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+            lastUpdateOk = particleTracer->UpdateHitsAndLog(simulation->globState, simulation->globParticleLog,
+                                                timeOut); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
 
-            if(procInfo->activeProcs.front() == threadNum)
-                procInfo->NextSubProc();
+            if(masterProcInfo->activeProcs.front() == threadNum)
+                masterProcInfo->NextSubProc();
             timeLoopStart = omp_get_wtime();
         }
         else{
             lastUpdateOk = false;
         }
-        eos = simEos || (this->particleTracer->model->otfParams.timeLimit != 0 ? timeEnd-timeStart >= this->particleTracer->model->otfParams.timeLimit : false) || (procInfo->masterCmd != COMMAND_START) || (procInfo->subProcInfos[threadNum].slaveState == PROCESS_ERROR);
-    } while (!eos);
+        finishLoop = desLimitReachedOrDesError || (this->particleTracer->model->otfParams.timeLimit != 0 && ((timeEnd-timeStart) >= this->particleTracer->model->otfParams.timeLimit)) || (masterProcInfo->masterCmd != COMMAND_RUN) || (masterProcInfo->subProcInfos[threadNum].slaveState == PROCESS_ERROR);
+    } while (!finishLoop);
 
-    procInfo->RemoveAsActive(threadNum);
+    masterProcInfo->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
-        setMyStatus("Final update...");
-        particleTracer->UpdateHits(simulation->globState, simulation->globParticleLog,
-                             20000); // Update hit with 20ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).)
+        setMyStatus("Final hit update...");
+        particleTracer->UpdateHitsAndLog(simulation->globState, simulation->globParticleLog,
+                             20000); // Update hit with 20s timeout
     }
-    return simEos;
+    return desLimitReachedOrDesError;
 }
 
 void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
-    procInfo->subProcInfos[threadNum].slaveStatus=msg;
+    masterProcInfo->subProcInfos[threadNum].slaveStatus=msg;
 }
 
 [[nodiscard]] std::string SimThread::ConstructThreadStatus() const {
@@ -184,51 +179,43 @@ void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's
 
 /**
 * \brief A "single (1sec)" MC step of a simulation run for a given thread
- * \return 0 when simulation continues, 1 when desorption limit is reached
+ * \return false when simulation continues, true when desorption limit is reached or des error
  */
-int SimThread::runSimulation(size_t desorptions) {
+bool SimThread::runSimulation1sec(const size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
 
     setMyStatus(fmt::format("{} [{} hits/s]",ConstructThreadStatus(), nbStep));
 
     // Check end of simulation
-    bool goOn = true;
+    bool limitReachedOrDesError = false;
     size_t remainingDes = 0;
 
     if (particleTracer->model->otfParams.desorptionLimit > 0) {
         if (desorptions <= particleTracer->tmpState.globalHits.globalHits.nbDesorbed){
-            //lastHitFacet = nullptr; // reset full particle status or go on from where we left
-            goOn = false;
+            limitReachedOrDesError = true;
         }
         else {
-            //if(particle->tmpState.globalHits.globalHits.hit.nbDesorbed <= (particle->model->otfParams.desorptionLimit - simulation->globState->globalHits.globalHits.hit.nbDesorbed)/ particle->model->otfParams.nbProcess)
-                remainingDes = desorptions - particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
+            remainingDes = desorptions - particleTracer->tmpState.globalHits.globalHits.nbDesorbed;
         }
     }
-    //auto start_time = std::chrono::high_resolution_clock::now();
-    if(goOn) {
+
+    if(!limitReachedOrDesError) {
         double start_time = omp_get_wtime();
-        goOn = particleTracer->SimulationMCStep(nbStep, threadNum, remainingDes);
+        limitReachedOrDesError = particleTracer->SimulationMCStep(nbStep, threadNum, remainingDes);
         double end_time = omp_get_wtime();
 
-    //auto end_time = std::chrono::high_resolution_clock::now();
 
-
-        if (goOn) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
+        if (limitReachedOrDesError) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
         {
-            const double elapsedTimeMs = (end_time - start_time); //std::chrono::duration<float, std::ratio<1, 1>>(end_time - start_time).count();
+            const double elapsedTimeMs = (end_time - start_time);
             if (elapsedTimeMs != 0.0)
-                stepsPerSec = (1.0 * nbStep) / (elapsedTimeMs); // every 1.0 second
+                stepsPerSec = static_cast<double>(nbStep) / elapsedTimeMs; // every 1.0 second
             else
-                stepsPerSec = (100.0 * nbStep); // in case of fast initial run
+                stepsPerSec = (100.0 * static_cast<double>(nbStep)); // in case of fast initial run
         }
     }
-#if defined(_DEBUG)
-    //printf("Running: stepPerSec = %lf [%lu]\n", stepsPerSec, threadNum);
-#endif
-
-    return !goOn;
+    return limitReachedOrDesError;
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
@@ -371,7 +358,7 @@ std::vector<std::string> SimulationController::GetThreadStatuses() {
     }
     else{
         for(size_t threadId = 0; threadId < nbThreads; ++threadId) {
-            auto* particleTracer = simulation->GetParticleTracer(p);
+            auto* particleTracer = simulation->GetParticleTracer(threadId);
             if(particleTracer == nullptr) break;
             if(!particleTracer->tmpState.initialized){
                 threadStatuses[threadId]= "[NONE]";
@@ -438,7 +425,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 }
                 break;
             }
-            case COMMAND_START: {
+            case COMMAND_RUN: {
                 Start();
                 break;
             }
@@ -587,31 +574,31 @@ int SimulationController::Start() {
     }
 
     for(auto& thread : simThreads){
-        if(!thread.particleTracer)
+        if (!thread.particleTracer) {
             loadOk = false;
+            break;
+        }
     }
 
     if(!loadOk) {
         if(sane.second)
-            SetThreadStates(PROCESS_ERROR, sane.second->c_str());
+            SetThreadStates(PROCESS_ERROR, *sane.second);
         else
             SetThreadStates(PROCESS_ERROR, GetThreadStatuses());
         return 1;
     }
 
-    if(simulation->model->accel.empty()){
-    //if(RebuildAccel()){
-        loadOk = false;
-        SetThreadStates(PROCESS_ERROR, "Failed building acceleration structure!");
-        return 1;
-    }
+	if (simulation->model->accel.empty()) {
+		loadOk = false;
+		SetThreadStates(PROCESS_ERROR, "Failed building acceleration structure");
+		return 1;
+	}
 
     if (simulation->model->otfParams.desorptionLimit > 0) {
         if (simulation->totalDesorbed >=
             simulation->model->otfParams.desorptionLimit /
             simulation->model->otfParams.nbProcess) {
             ClearCommand();
-            SetThreadStates(PROCESS_DONE, GetThreadStatuses());
         }
     }
 
@@ -620,9 +607,6 @@ int SimulationController::Start() {
         SetThreadStates(PROCESS_RUN, GetThreadStatuses());
     }
 
-
-    bool eos = false;
-    bool lastUpdateOk = true;
     if (loadOk) {
         procInfo->InitActiveProcList();
 
@@ -637,38 +621,34 @@ int SimulationController::Start() {
             }
         }
         for(auto& thread : simThreads){
-            size_t localDes = (desPerThread > thread.particleTracer->totalDesorbed) ? desPerThread - thread.particleTracer->totalDesorbed : 0;
+            size_t localDes = (desPerThread > thread.particleTracer->totalDesorbed) ? desPerThread - thread.particleTracer->totalDesorbed : 0; //remaining
             thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
         }
 
-        int simuEnd = 0; // bool atomic is not supported by MSVC OMP implementation
-#pragma omp parallel num_threads(nbThreads) default(none) firstprivate(/*stepsPerSec,*/ lastUpdateOk, eos) shared(/*procInfo,*/  simuEnd/*, simulation,simThreads*/)
+        bool maxReachedOrDesError_global = false;
+#pragma omp parallel num_threads(nbThreads)
         {
+            bool maxReachedOrDesError_private = false;
+            bool lastUpdateOk_private = true;
+
             // Set OpenMP thread priority on Windows whenever we start a simulation run
 #if defined(_WIN32) && defined(_MSC_VER)
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
-            eos = simThreads[omp_get_thread_num()].runLoop();
+            maxReachedOrDesError_private = simThreads[omp_get_thread_num()].runLoop();
 
-            if(eos) {
-#pragma omp atomic
-                simuEnd += 1;
+            if(maxReachedOrDesError_private) {
+//#pragma omp atomic
+                maxReachedOrDesError_global = true; //Race condition ok, maxReachedOrDesError_global means "at least one thread finished"
             }
         }
 
-        if (simuEnd) {
-            if (GetThreadStates() != PROCESS_ERROR) {
-                // Max desorption reached
-                ClearCommand();
-                SetThreadStates(PROCESS_DONE, GetThreadStatuses());
+        ClearCommand();
+        if (GetThreadStates() != PROCESS_ERROR) {
+            if (maxReachedOrDesError_global) {
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
             }
-        }
-        else {
-            if (GetThreadStates() != PROCESS_ERROR) {
-                // Time limit reached
-                ClearCommand();
-                SetThreadStates(PROCESS_DONE, GetThreadStatuses());
+            else {
                 DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
