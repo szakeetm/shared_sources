@@ -499,19 +499,12 @@ void Worker::RebuildTextures() {
 
 		// Only reload if we are even rebuilding textures
 		ReloadIfNeeded();
-
-		try {
-			size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-			if (!globalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
-				return;
-			}
-			CalculateTextureLimits();
-			geom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
-			globalState.tMutex.unlock();
+		std::unique_lock<std::timed_mutex> lock(globalState.tMutex, std::chrono::seconds(10));
+		if (!lock.owns_lock()) {
+			return;
 		}
-		catch (const std::exception& e) {
-			throw;
-		}
+		CalculateTextureLimits();
+		geom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);		
 	}
 }
 
@@ -549,7 +542,8 @@ void Worker::Update(float appTime) {
 	mApp->changedSinceSave = true;
 
 	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-	if (!globalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
+	std::unique_lock<std::timed_mutex> lock(globalState.tMutex, std::chrono::milliseconds(waitTime));
+	if (!lock.owns_lock()) {
 		return;
 	}
 
@@ -592,11 +586,9 @@ void Worker::Update(float appTime) {
 		}
 	}
 	catch (const std::exception& e) {
-		globalState.tMutex.unlock();
 		GLMessageBox::Display(e.what(), "Error building texture", GLDLG_OK, GLDLG_ICONERROR);
 		return;
 	}
-	globalState.tMutex.unlock();
 
 #if defined(MOLFLOW)
 	if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {

@@ -617,7 +617,7 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simStatePtr, Parti
     }
 }
 
-void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
+void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
     for(auto& sim : simulations)
         sim->model = model;
 }
