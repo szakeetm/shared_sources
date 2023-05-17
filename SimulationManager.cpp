@@ -611,7 +611,7 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, Particle
     for(auto& sim : simulations) {
         if(!sim->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
-        sim->globState = simState;
+        sim->globState = simState; //copy from worker::globState to sim
         sim->globParticleLog = particleLog;
         sim->tMutex.unlock();
     }

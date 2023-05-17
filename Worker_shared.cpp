@@ -553,12 +553,12 @@ void Worker::Update(float appTime) {
         }
 
         globState.stateChanged = false;
-        globalHitCache = globState.globalHits;
+        globState.globalHits = globState.globalHits;
 
 #if defined(SYNRAD)
 
-        if (globalHitCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
-            no_scans = (double)globalHitCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+        if (globState.globalHits.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
+            no_scans = (double)globState.globalHits.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
         }
         else {
             no_scans = 1.0;

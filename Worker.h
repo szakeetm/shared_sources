@@ -227,5 +227,4 @@ private:
 public:
     ParticleLog particleLog; //replaces dpLog
     GlobalSimuState globState;
-    GlobalHitBuffer globalHitCache;
 };
