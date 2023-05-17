@@ -1693,7 +1693,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		if (evt->wheel.x !=0) { //Shift+wheel on an external mouse is horizontal scroll on MacOS
 			TranslateScale(-2.0 * evt->wheel.x); //As if SHIFT was down and appleInversionFactor==-1
 			autoScaleOn = false;
-			autoBtn->SetThreadStates(false);
+			autoBtn->SetState(false);
 		}
 #endif
 	}
@@ -1946,7 +1946,7 @@ void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
 #endif
 		else if (src == autoBtn) {
 			autoScaleOn = !autoScaleOn;
-			//autoBtn->SetThreadStates(autoScaleOn);
+			//autoBtn->SetState(autoScaleOn);
 			if (autoScaleOn) AutoScale(false);
 		}
 		else if (src == handBtn) {
