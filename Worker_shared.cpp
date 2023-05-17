@@ -540,8 +540,7 @@ void Worker::Update(float appTime) {
 
 	// Retrieve hit count recording from the shared memory
 	// Globals
-	if (!interfaceGlobalState.initialized || !simManager.nbThreads)
-		return;
+	if (!interfaceGlobalState.initialized || !simManager.nbThreads) return;
 	mApp->changedSinceSave = true;
 
 	{
