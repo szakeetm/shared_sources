@@ -501,8 +501,13 @@ void Worker::RebuildTextures() {
 		ReloadIfNeeded();
 
 		try {
+			size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
+			if (!interfaceGlobalState.tMutex.try_lock_for(std::chrono::milliseconds(waitTime))) {
+				return;
+			}
 			CalculateTextureLimits();
 			geom->BuildFacetTextures(interfaceGlobalState, mApp->needsTexture, mApp->needsDirection);
+			interfaceGlobalState.tMutex.unlock();
 		}
 		catch (const std::exception& e) {
 			throw;
