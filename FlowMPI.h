@@ -39,7 +39,7 @@ namespace MFMPI {
 #if defined(USE_MPI)
     void mpi_initialize();
     void mpi_transfer_simu();
-    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globState);
+    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globStatePtr);
 
     template<class T>
     int MPI_Send_serialized(const T &data, int dest, int tag, MPI_Comm comm) {

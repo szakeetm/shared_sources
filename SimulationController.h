@@ -34,7 +34,7 @@ class Simulation;
  */
 class SimThread {
 public:
-    SimThread(ProcComm* procInfo, Simulation_Abstract* sim, size_t threadNum);
+    SimThread(ProcComm* procInfoPtr, Simulation_Abstract* simPtr, size_t threadNum);
 
     size_t threadNum;
     double stepsPerSec;
@@ -42,9 +42,9 @@ public:
     size_t localDesLimit;
     double timeLimit;
 
-    ProcComm* masterProcInfo;
-    Simulation_Abstract* simulation;
-    MFSim::ParticleTracer* particleTracer;
+    ProcComm* masterProcInfoPtr;
+    Simulation_Abstract* simulationPtr;
+    MFSim::ParticleTracer* particleTracerPtr;
     bool runLoop();
     [[nodiscard]] std::string ConstructThreadStatus() const;
 
@@ -92,10 +92,10 @@ public:
     void EmergencyExit();
 protected:
 
-    Simulation_Abstract* simulation;
+    Simulation_Abstract* simulationPtr;
     std::vector<SimThread> simThreads;
 
-    ProcComm* procInfo;
+    ProcComm* procInfoPtr;
     size_t parentPID;
     size_t nbThreads;
     int prIdx;

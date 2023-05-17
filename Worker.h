@@ -156,7 +156,7 @@ public:
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  std::shared_ptr<SimulationModel> model;
+  std::shared_ptr<SimulationModel> model; //Worker constructs it, then passes to simcontroller
   FacetHistogramBuffer globalHistogramCache;
 
   //float  startTime;         // Start time
@@ -224,5 +224,5 @@ private:
 
 public:
     ParticleLog particleLog; //replaces dpLog
-    GlobalSimuState interfaceGlobalState; //A temporary interface copy of the simulation state. Used for file load/save, then sent to simManager's globalState
+    GlobalSimuState globalState; //A pointer to it is passed to simulation, UpdateMCHits updates it (sim->interf) or File load updates it (interf->sim)
 };

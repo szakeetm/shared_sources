@@ -59,8 +59,8 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        ProcComm procInfo;
-        mApp->worker.GetProcStatus(procInfo);
+        ProcComm procInfoPtr;
+        mApp->worker.GetProcStatus(procInfoPtr);
 
         ImGui::TableNextRow();
 
@@ -88,11 +88,11 @@ static void ProcessControlTable(SynRad *mApp) {
         size_t i = 1;
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(procInfo.subProcInfos.size());
+        clipper.Begin(procInfoPtr.subProcInfos.size());
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 i = row;
-                auto &proc = procInfo.subProcInfos[i];
+                auto &proc = procInfoPtr.subProcInfos[i];
                 DWORD pid = proc.procId;
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);

@@ -280,14 +280,14 @@ int SimulationManager::InitSimulations() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState) {
+int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
     if (!model->m.try_lock()) {
         return 1;
     }
     // Prepare simulation unit
     ResetSimulations();
     ForwardSimModel(model);
-    ForwardGlobalCounter(globState, nullptr);
+    ForwardGlobalCounter(globStatePtr, nullptr);
 
     //bool invalidLoad = LoadSimulation();
     model->m.unlock();
@@ -530,15 +530,15 @@ bool SimulationManager::GetRunningStatus(){
  */
 std::string SimulationManager::GetErrorDetails() {
 
-    ProcComm procInfo;
-    GetProcStatus(procInfo);
+    ProcComm procInfoPtr;
+    GetProcStatus(procInfoPtr);
 
     std::string err;
 
-    for (size_t i = 0; i < procInfo.subProcInfos.size(); i++) {
-        size_t state = procInfo.subProcInfos[i].slaveState;
+    for (size_t i = 0; i < procInfoPtr.subProcInfos.size(); i++) {
+        size_t state = procInfoPtr.subProcInfos[i].slaveState;
         if (state == PROCESS_ERROR) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfo.subProcInfos[i].slaveStatus));
+            err.append(fmt::format("[Thread #{}] {}: {}", i, prStates[state], procInfoPtr.subProcInfos[i].slaveStatus));
         } else {
             err.append(fmt::format("[Thread #{}] {}", i, prStates[state]));
         }
@@ -607,17 +607,16 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     return 0;
 }
 
-void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog) {
+void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
     for(auto& sim : simulations) {
         if(!sim->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
-        sim->globState = simState; //copy from worker::globState to sim
-        sim->globParticleLog = particleLog;
+        sim->globStatePtr = simStatePtr;
+        sim->globParticleLogPtr = particleLogPtr;
         sim->tMutex.unlock();
     }
 }
 
-// Create hard copy for local usage
 void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) {
     for(auto& sim : simulations)
         sim->model = model;
@@ -638,11 +637,11 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 */
 void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
     for(auto& simUnit : simulations){
-        if(simUnit->globState->facetStates.size() != hitCaches.size()) return;
+        if(simUnit->globStatePtr->facetStates.size() != hitCaches.size()) return;
         if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
             return;
         for (size_t i = 0; i < hitCaches.size(); i++) {
-            simUnit->globState->facetStates[i].momentResults[0].hits = *hitCaches[i];
+            simUnit->globStatePtr->facetStates[i].momentResults[0].hits = *hitCaches[i];
         }
         simUnit->tMutex.unlock();
     }

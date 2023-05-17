@@ -38,12 +38,12 @@ namespace MFSim {
 class Simulation_Abstract {
 public:
     Simulation_Abstract() : model(), totalDesorbed(0)/*, m()*/{
-        globState = nullptr;
-        globParticleLog = nullptr;
+        globStatePtr = nullptr;
+        globParticleLogPtr = nullptr;
     };
     Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , m()*/ {
-        globState = nullptr;
-        globParticleLog = nullptr;
+        globStatePtr = nullptr;
+        globParticleLogPtr = nullptr;
         totalDesorbed = o.totalDesorbed;
     };
     virtual ~Simulation_Abstract()= default;
@@ -59,12 +59,12 @@ public:
     virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
-    virtual MFSim::ParticleTracer * GetParticleTracer(size_t i) = 0;
+    virtual MFSim::ParticleTracer * GetParticleTracerPtr(size_t i) = 0;
     virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
-    GlobalSimuState* globState;
-    ParticleLog* globParticleLog; //Recorded particle log since last UpdateMCHits
+    GlobalSimuState* globStatePtr;
+    ParticleLog* globParticleLogPtr; //Recorded particle log since last UpdateMCHits
 
     size_t totalDesorbed; // todo: should be a "sim counter"
 };

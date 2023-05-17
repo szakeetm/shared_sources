@@ -84,7 +84,7 @@ public:
 
     int InitSimulations();
 
-    int InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globState);
+    int InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr);
 
     int KillAllSimUnits();
 
@@ -134,7 +134,7 @@ private:
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);
-    void ForwardGlobalCounter(GlobalSimuState *simState, ParticleLog *particleLog);
+    void ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 

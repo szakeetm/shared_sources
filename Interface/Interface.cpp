@@ -1166,7 +1166,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
                         // Load values on init
-                        formula_ptr->UpdateFormulaValues(worker.interfaceGlobalState.globalStats.globalHits.nbDesorbed);
+                        formula_ptr->UpdateFormulaValues(worker.globalState.globalStats.globalHits.nbDesorbed);
                         formulaEditor->UpdateValues();
                         // ---
                         formulaEditor->SetVisible(true);
@@ -2596,7 +2596,7 @@ void Interface::DoEvents(bool forced) {
 
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
-    if (work->interfaceGlobalState.globalStats.globalHits.nbMCHit > 0 || work->IsRunning()) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
+    if (work->globalState.globalStats.globalHits.nbMCHit > 0 || work->IsRunning()) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
         int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
@@ -2629,7 +2629,7 @@ int Interface::FrameMove() {
         }
     }
 
-    auto& hitCache = worker.interfaceGlobalState.globalStats.globalHits;
+    auto& hitCache = worker.globalState.globalStats.globalHits;
     if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) { //Running and and update is due (each second), or just started
         {
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
@@ -2740,9 +2740,9 @@ int Interface::FrameMove() {
         }
     }
 
-    if (worker.interfaceGlobalState.globalStats.nbLeakTotal) {
-        sprintf(tmp, "%g (%.4f%%)", (double) worker.interfaceGlobalState.globalStats.nbLeakTotal,
-                (double) (worker.interfaceGlobalState.globalStats.nbLeakTotal) * 100.0 /
+    if (worker.globalState.globalStats.nbLeakTotal) {
+        sprintf(tmp, "%g (%.4f%%)", (double) worker.globalState.globalStats.nbLeakTotal,
+                (double) (worker.globalState.globalStats.nbLeakTotal) * 100.0 /
                 (double) hitCache.nbDesorbed);
         leakNumber->SetText(tmp);
     } else {

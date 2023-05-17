@@ -371,7 +371,7 @@ void ConvergencePlotter::refreshViews() {
         }
 
         v->Reset();
-        if (worker->interfaceGlobalState.globalStats.globalHits.nbDesorbed > 0) {
+        if (worker->globalState.globalStats.globalHits.nbDesorbed > 0) {
             auto& conv_vec = formula_ptr->convergenceValues[formId].conv_vec;
             for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
                 v->Add(conv_vec[j].first, conv_vec[j].second, false);

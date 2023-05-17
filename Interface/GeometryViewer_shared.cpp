@@ -992,7 +992,7 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
-        auto& hitCache = mApp->worker.interfaceGlobalState.globalStats;
+        auto& hitCache = mApp->worker.globalState.globalStats;
         for (size_t i = 0; i < Min(dispNumLeaks,hitCache.leakCacheSize); i++) {
 
 			Vector3d p = hitCache.leakCache[i].pos;
