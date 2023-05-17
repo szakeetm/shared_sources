@@ -173,7 +173,7 @@ ParticleLog & Worker::GetLog() {
     try {
         if(!particleLog.tMutex.try_lock_for(std::chrono::seconds(1)))
             throw std::runtime_error("Couldn't get log access");
-        if (needsReload) RealReload();
+        ReloadIfNeeded();
     }
     catch (const std::exception &e) {
         GLMessageBox::Display(e.what(), "Error (GetLog)", GLDLG_OK, GLDLG_ICONERROR);
@@ -246,7 +246,7 @@ void Worker::StartStop(float appTime) {
 
         // Start
         try {
-            if (needsReload) RealReload(); //Synchronize subprocesses to main process
+            ReloadIfNeeded();
             Start();
             simuTimer.Start();
         }
@@ -279,7 +279,7 @@ void Worker::ResetStatsAndHits(float appTime) {
         ResetWorkerStats();
         simManager.ResetHits();
 
-        if (needsReload) RealReload();
+        ReloadIfNeeded();
         Update(appTime);
     }
     catch (const std::exception &e) {
@@ -498,8 +498,7 @@ void Worker::RebuildTextures() {
     if (mApp->needsTexture || mApp->needsDirection) {
 
         // Only reload if we are even rebuilding textures
-        if (needsReload)
-            RealReload();
+        ReloadIfNeeded();
 
         try {
             CalculateTextureLimits();
@@ -632,7 +631,7 @@ void Worker::ChangePriority(int prioLevel) {
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
     if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
-    if (needsReload) RealReload(); //Sync (number of) regions
+    ReloadIfNeeded(); //Sync (number of) regions
 
     //auto *prg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
     //prg.SetVisible(true);
