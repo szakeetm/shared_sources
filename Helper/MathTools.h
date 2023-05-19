@@ -35,6 +35,12 @@ int isnan(double x);
 template <typename TYPE> TYPE Min(const TYPE& x, const TYPE& y) { return (x < y) ? x : y; }
 template <typename TYPE> TYPE Max(const TYPE& x, const TYPE& y) { return (x < y) ? y : x; }
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
+size_t IDX(const int i, const size_t nb);
+size_t IDX(const size_t i, const size_t nb);
+size_t Next(const int i, const size_t nb, const bool inverseDir=false);
+size_t Next(const size_t i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const int i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const size_t i, const size_t nb, const bool inverseDir=false);
 #define NEXT_OF(list,element) (std::next(element)==(list).end())?(list).begin():std::next(element);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }
@@ -140,60 +146,3 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 #else
 #define DEBUG_BREAK __builtin_trap()
 #endif
-
-inline size_t IDX(const int i, const size_t nb) {
-	//Return circular index restrained within [0..nb[, allows negative index (Python logics: -1=last)
-	int ret = i % static_cast<int>(nb);
-	if (ret < 0) ret += nb;
-	return ret;
-}
-
-inline size_t IDX(const size_t i, const size_t nb) {
-	//Return circular index restrained within [0..nb[
-	return i % nb;
-}
-
-inline size_t Next(const size_t i, const size_t nb) {
-	// Returns the next or previous element of a circular index 
-	// (next of last is first)
-	return (i + 1) % nb;
-}
-
-inline size_t Next(const int i, const size_t nb) {
-	//Returns the next element of a circular index (next of last is first)
-	return Next(static_cast<size_t>(i), nb);
-}
-
-inline size_t Previous(const size_t i, const size_t nb) {
-	//Returns the previous element of a circular index (previous of first is last)
-	return (i == 0) ? nb - 1 : i - 1;
-}
-
-inline size_t Previous(const int i, const size_t nb) {
-	return Previous(static_cast<size_t>(i), nb);
-}
-
-inline size_t Next(const size_t i, const size_t nb, bool inverseDir) {
-	//Returns the next element of a circular index (next of last is first)
-	return (!inverseDir) ? Next(i, nb) : Previous(i, nb);
-}
-
-inline size_t Next(const int i, const size_t nb, bool inverseDir) {
-	//Returns the next element of a circular index (next of last is first)
-	return Next(static_cast<size_t>(i), nb, inverseDir);
-}
-
-inline size_t Previous(const size_t i, const size_t nb, bool inverseDir) {
-	//Returns the next element of a circular index (next of last is first)
-	return (!inverseDir) ? Previous(i, nb) : Next(i, nb);
-}
-
-inline size_t Previous(const int i, const size_t nb, bool inverseDir) {
-	//Returns the next element of a circular index (next of last is first)
-	return Previous(static_cast<size_t>(i), nb, inverseDir);
-}
-
-
-
-
-
