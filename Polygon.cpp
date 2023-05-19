@@ -762,7 +762,7 @@ bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polyg
     int n_found = 0;
     int n = polygon.size();
 
-    for (int j = 0; j < polygon.size(); j++) {
+    for (int j = 0; j < n; ++j) {
         const Vector2d& p1 = polygon[j];
         const Vector2d& p2 = polygon[Next(j,n)];
 
