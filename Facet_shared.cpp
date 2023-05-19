@@ -34,6 +34,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <sstream>
 #include <map>
+#include <map>
+#include <utility>
 
 using namespace pugi;
 
@@ -805,21 +807,45 @@ void InterfaceFacet::InitVisibleEdge() {
 	// Detect non visible edge (for polygon which contains holes)
 	std::fill(visible.begin(), visible.end(), true);
 
-	for (int i = 0;i < sh.nbIndex;i++) {
+	/* //O(n^2)
+	for (size_t i = 0;i < sh.nbIndex;++i) {
 
 		size_t p11 = GetIndex(i);
 		size_t p12 = GetIndex(i + 1);
 
 		for (size_t j = i + 1;j < sh.nbIndex;j++) {
 
-			size_t p21 = GetIndex((int)j);
-			size_t p22 = GetIndex((int)j + 1);
+			size_t p21 = GetIndex(j);
+			size_t p22 = GetIndex(j + 1);
 
 			if ((p11 == p22 && p12 == p21) || (p11 == p21 && p12 == p22)) {
 				// Invisible edge found
 				visible[i] = false;
 				visible[j] = false;
 			}
+		}
+	}
+	*/
+
+	//O(n)
+	std::map<std::pair<size_t, size_t>, size_t> edge_to_index;
+
+	for (size_t i = 0; i < sh.nbIndex; ++i) {
+		size_t p1 = GetIndex(i);
+		size_t p2 = GetIndex(i + 1);
+
+		// Make the pair ordered, so that it doesn't matter which way round the edge is
+		std::pair<size_t, size_t> edge = std::minmax(p1, p2);
+
+		// Try to insert this edge into the map. If it's already there, this will fail, and it will
+		// return an iterator to the existing element
+		auto inserted = edge_to_index.insert({ edge, i });
+
+		if (!inserted.second) {
+			// The edge was already in the map, so it must be a non-visible edge
+			size_t other_index = inserted.first->second;
+			visible[i] = false;
+			visible[other_index] = false;
 		}
 	}
 }
