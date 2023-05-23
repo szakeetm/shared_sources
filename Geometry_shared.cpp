@@ -163,6 +163,17 @@ void Geometry::InitializeGeometry(int facet_number) {
 			// Current facet
 			InterfaceFacet *f = facets[i];
 			CalculateFacetParams(f);
+			if (f->sh.texWidth_precise > 0.0 && f->tRatioU == 0) { //Not yet initialized after loading
+				const double nU = f->sh.U.Norme();
+				const double nV = f->sh.V.Norme();
+
+				f->tRatioU = f->sh.texWidth_precise / nU;
+				f->tRatioV = f->sh.texHeight_precise / nV;
+
+				if (std::abs(f->tRatioU - f->tRatioV) <= DBL_EPSILON) {
+					f->tRatioV = f->tRatioU;
+				}
+			}
 			SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 	}
