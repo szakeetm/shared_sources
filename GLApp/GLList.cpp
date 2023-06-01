@@ -110,7 +110,7 @@ void GLList::DestroyComponents()
 }
 
 GLList::~GLList() {
-	Clear(false, false);
+	Clear(false, "");
 	SAFE_DELETE(sbH);
 	SAFE_DELETE(sbV);
 	SAFE_DELETE(edit);
