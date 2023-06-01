@@ -2161,7 +2161,7 @@ void GLList::PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, i
 					bool ok = true;
 					if (Max(needsMoreRows * (row + clipboardRows - nbRow), needsMoreCols*(col + clipboardCols - nbCol)) >= 20)
 						ok = GLMessageBox::Display("Increase list size by more than 20 rows/columns?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
-					if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns ? Max(nbCol, col + clipboardCols) : nbCol, allowExpandRows ? Max(nbRow, row + clipboardRows + extraRowsAtEnd) : nbRow, true, false);
+					if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns ? Max(nbCol, col + clipboardCols) : nbCol, allowExpandRows ? Max(nbRow, row + clipboardRows + extraRowsAtEnd) : nbRow, true);
 				}
 
 				size_t cursor = 0;
