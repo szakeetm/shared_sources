@@ -119,9 +119,12 @@ GLList::~GLList() {
 }
 
 void GLList::Clear(bool keepColumns, bool showProgress) {
-	GLProgress_GUI prgList("Clearing facet hits list...", "Please wait");
+	std::unique_ptr<GLProgress_GUI> prgList = nullptr;
 	double all = (double)nbCol*nbRow;
-	if (showProgress) prgList.SetVisible(true);
+	if (showProgress) {
+		prgList = std::make_unique<GLProgress_GUI>("Clearing facet hits list...", "Please wait");
+		prgList->SetVisible(true);
+	}
 	if (!keepColumns) {
 		for (int i = 0; i < nbCol; i++)
 			SAFE_FREE(cNames[i]);
@@ -129,7 +132,7 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	for (int i = 0; i < nbRow; i++)
 		SAFE_FREE(rNames[i]);
 	for (int i = 0; i < nbCol*nbRow; i++) {
-		if (showProgress) prgList.SetProgress((double)i / all);
+		if (showProgress) prgList->SetProgress((double)i / all);
 		SAFE_FREE(values[i]);
 	}
 
