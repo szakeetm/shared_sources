@@ -440,7 +440,7 @@ void Interface::UpdateModelParams() {
     Geometry *geom = worker.GetGeometry();
     char tmp[256];
     double sumArea = 0;
-    facetList->SetSize(cSize, geom->GetNbFacet(), false, true);
+    facetList->SetSize(cSize, geom->GetNbFacet(), false, "Clearing facet hit list...");
     facetList->SetColumnWidths((int *) cWidth);
     facetList->SetColumnLabels((const char **) cName);
     UpdateFacetHits(true);

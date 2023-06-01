@@ -1307,7 +1307,7 @@ void UpdateLogWindow::Log(const std::string & text) {
 */
 void UpdateLogWindow::RebuildList() {
 	int oldColumnWidth = logList->GetColWidth(0);
-	logList->SetSize(1, lines.size(), false, false);
+	logList->SetSize(1, lines.size());
 	logList->SetColumnWidth(0, oldColumnWidth); //Restore after SetSize reset it to default
 	for (size_t i = 0; i < lines.size(); i++) {
 		logList->SetValueAt(0, i, lines[i].c_str());

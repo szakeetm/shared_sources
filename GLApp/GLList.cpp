@@ -100,7 +100,7 @@ void GLList::InvalidateDeviceObjects() {
 
 void GLList::DestroyComponents()
 {
-	Clear(false, false);
+	Clear(false, "");
 	SAFE_DELETE(sbH);
 	SAFE_DELETE(sbV);
 	SAFE_DELETE(edit);
@@ -118,11 +118,11 @@ GLList::~GLList() {
 	SAFE_DELETE(menu);
 }
 
-void GLList::Clear(bool keepColumns, bool showProgress) {
+void GLList::Clear(bool keepColumns, const std::string& progressStatus) {
 	std::unique_ptr<GLProgress_GUI> prgList = nullptr;
 	double all = (double)nbCol*nbRow;
-	if (showProgress) {
-		prgList = std::make_unique<GLProgress_GUI>("Clearing facet hits list...", "Please wait");
+	if (!progressStatus.empty()) {
+		prgList = std::make_unique<GLProgress_GUI>(progressStatus, "Please wait");
 		prgList->SetVisible(true);
 	}
 	if (!keepColumns) {
@@ -132,7 +132,10 @@ void GLList::Clear(bool keepColumns, bool showProgress) {
 	for (int i = 0; i < nbRow; i++)
 		SAFE_FREE(rNames[i]);
 	for (int i = 0; i < nbCol*nbRow; i++) {
-		if (showProgress) prgList->SetProgress((double)i / all);
+		if (!progressStatus.empty()) {
+			prgList->SetProgress((double)i / all);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 		SAFE_FREE(values[i]);
 	}
 
@@ -289,7 +292,7 @@ void GLList::SetBounds(int x, int y, int width, int height) {
 
 }
 
-void GLList::SetSize(size_t nbColumn, size_t nbR, bool keepData, bool showProgress) {
+void GLList::SetSize(size_t nbColumn, size_t nbR, bool keepData, const std::string& progressStatus) {
 
 	if (nbColumn == nbCol && nbR == this->nbRow)
 		// Already the good size
@@ -299,7 +302,7 @@ void GLList::SetSize(size_t nbColumn, size_t nbR, bool keepData, bool showProgre
 
 	if (!keepData) {
 		//Clear & reallocate
-		Clear(false, showProgress);
+		Clear(false, progressStatus);
 		nbCol = nbColumn;
 		this->nbRow = nbR;
 		cEdits = (int *)malloc(nbCol * sizeof(int));

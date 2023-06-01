@@ -42,7 +42,7 @@ public:
 
   // Component methods
   void SetWorker(Worker *w);
-  void SetSize(size_t nbColumn,size_t nbRow,bool keepData=false,bool showProgress=false);
+  void SetSize(size_t nbColumn, size_t nbRow, bool keepData = false, const std::string& progressStatus = "");
   void SetColumnLabels(const char ** names);
   void SetColumnLabel(size_t colId, const char *name);
   void SetAutoColumnLabel(bool enable);
@@ -70,7 +70,7 @@ public:
   void SetSelectionMode(int mode);
   void SetSelectedCell(size_t column,size_t row);
   void SetCornerLabel(const char *text);
-  void Clear(bool keepColumns=false,bool showProgress=false);
+  void Clear(bool keepColumns=false,const std::string& progressStatus="");
   void ResetValues();
   size_t  GetNbRow();
   size_t  GetNbColumn();
