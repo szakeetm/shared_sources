@@ -134,7 +134,6 @@ void GLList::Clear(bool keepColumns, const std::string& progressStatus) {
 	for (int i = 0; i < nbCol*nbRow; i++) {
 		if (!progressStatus.empty()) {
 			prgList->SetProgress((double)i / all);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		SAFE_FREE(values[i]);
 	}

@@ -334,8 +334,6 @@ void GLMenu::ManageEvent(SDL_Event *evt) {
   if(sub) sub->ManageEvent(evt);
 
   if (IsVisible()) {
-	  /*GLWindowManager::Repaint();
-	  std::this_thread::sleep_for(std::chrono::milliseconds(30));*/
 	  theApp->wereEvents = true;
   }
 }
@@ -552,8 +550,7 @@ int GLMenu::Track(GLWindow *assignedParent,int x,int y) {
 
 	if( IsVisible() ) {
       GLWindowManager::Repaint();
-	  std::this_thread::sleep_for(std::chrono::milliseconds(30));
-		//theApp->wereEvents = true;
+	    std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
 
   }
