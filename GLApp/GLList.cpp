@@ -59,7 +59,6 @@ GLList::GLList(int compId) :GLComponent(compId) {
 	values = nullptr;
 	uValues = nullptr;
 	edit = nullptr;
-	cornerLabel = nullptr;
 	isEditing = false;
 	gridVisible = false;
 	SetBorder(BORDER_BEVEL_IN);
@@ -104,7 +103,6 @@ void GLList::DestroyComponents()
 	SAFE_DELETE(sbH);
 	SAFE_DELETE(sbV);
 	SAFE_DELETE(edit);
-	SAFE_FREE(cornerLabel);
 	SAFE_DELETE(menu);
 	//selectedRows.clear(); selectedRows.shrink_to_fit();
 }
@@ -114,7 +112,6 @@ GLList::~GLList() {
 	SAFE_DELETE(sbH);
 	SAFE_DELETE(sbV);
 	SAFE_DELETE(edit);
-	SAFE_FREE(cornerLabel);
 	SAFE_DELETE(menu);
 }
 
@@ -158,9 +155,8 @@ void GLList::Clear(bool keepColumns, const std::string& progressStatus) {
 	isEditing = false;
 }
 
-void GLList::SetCornerLabel(const char *text) {
-	SAFE_FREE(cornerLabel);
-	if (text) cornerLabel = strdup(text);
+void GLList::SetCornerLabel(const std::string& text) {
+	cornerLabel = text;
 }
 
 void GLList::SetWorker(Worker *w) {
@@ -794,10 +790,10 @@ void GLList::Paint() {
 	GLToolkit::GetDialogFont()->SetTextColor(0.0f, 0.0f, 0.0f);
 
 	// Upper left corner (when both column and row labels)
-	if (showCLabel && showRLabel && cornerLabel) {
-		int wT = GLToolkit::GetDialogFont()->GetTextWidth(cornerLabel);
+	if (showCLabel && showRLabel && !cornerLabel.empty()) {
+		int wT = GLToolkit::GetDialogFont()->GetTextWidth(cornerLabel.c_str());
 		int px = (labW - wT) / 2;
-		GLToolkit::GetDialogFont()->DrawText(posX + px, posY + 2, cornerLabel, false);
+		GLToolkit::GetDialogFont()->DrawText(posX + px, posY + 2, cornerLabel.c_str(), false);
 	}
 
 	// Column labels

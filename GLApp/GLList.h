@@ -69,7 +69,7 @@ public:
   void SetHScrollVisible(bool visible);
   void SetSelectionMode(int mode);
   void SetSelectedCell(size_t column,size_t row);
-  void SetCornerLabel(const char *text);
+  void SetCornerLabel(const std::string& text);
   void Clear(bool keepColumns=false,const std::string& progressStatus="");
   void ResetValues();
   size_t  GetNbRow();
@@ -169,7 +169,7 @@ private:
   int   lastColSel;
   bool  selDragged;
   int   labelRowMargin;
-  char  *cornerLabel;
+  std::string  cornerLabel;
 
   int FontColorR;
   int FontColorG;
