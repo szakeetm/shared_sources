@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <memory>
 #include "GLApp/GLTypes.h"
 
 #define READ_BUFFSIZE 4096
