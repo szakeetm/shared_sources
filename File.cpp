@@ -430,7 +430,7 @@ std::unique_ptr<FileReader> FileReader::ExtractFrom7zAndOpen(const std::string &
         toOpen = prefix + (shortFileName).substr(0,shortFileName.length() - 2);
 
 
-    return std::make_unique<FileReader>(new FileReader(toOpen)); //decompressed file opened
+    return std::make_unique<FileReader>(toOpen); //decompressed file opened
 }
 
 // FileWriter class
