@@ -385,7 +385,7 @@ std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
 * \param geomName name of the geometry file
 * \return handle to opened decompressed file
 */
-FileReader* FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const std::string &geomName) {
+std::unique_ptr<FileReader> FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const std::string &geomName) {
     std::ostringstream cmd;
     std::string sevenZipName;
 
@@ -430,7 +430,7 @@ FileReader* FileReader::ExtractFrom7zAndOpen(const std::string &fileName, const 
         toOpen = prefix + (shortFileName).substr(0,shortFileName.length() - 2);
 
 
-    return new FileReader(toOpen); //decompressed file opened
+    return std::make_unique<FileReader>(new FileReader(toOpen)); //decompressed file opened
 }
 
 // FileWriter class

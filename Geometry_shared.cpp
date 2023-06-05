@@ -3626,13 +3626,12 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 	strcpy(fPath, file.ReadLine());
 	strcpy(nPath, FileUtils::GetPath(file.GetName()).c_str());
 
-	FileReader* fr = nullptr;
+	std::unique_ptr<FileReader> file2 = nullptr;
 
 	for (int n = 0; n < sh.nbSuper; n++) {
 
 		file.ReadInt();
 		file.ReadInt();
-		fr = nullptr;
 		strcpy(sName, file.ReadWord());
 		strName[n] = strdup(sName);
 		char *e = strrchr(strName[n], '.');
@@ -3640,7 +3639,7 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 		sprintf(fName, "%s%s", nPath, sName);
 		if (FileUtils::Exist(fName)) {
-			fr = new FileReader(fName);
+			file2.reset(new FileReader(fName));
 			strcpy(strPath, nPath);
 
 		}
@@ -3651,21 +3650,19 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
             sprintf(fName, "%s/%s", fPath, sName);
 #endif
 			if (FileUtils::Exist(fName)) {
-				fr = new FileReader(fName);
+				file2.reset(new FileReader(fName));
 				strcpy(strPath, fPath);
 			}
 		}
 
-		if (!fr) {
+		if (!file2) {
 			char errMsg[560];
 			sprintf(errMsg, "Cannot find %s", sName);
 			throw Error(errMsg);
 		}
 
 		strFileName[n] = strdup(sName);
-		InsertTXTGeom(*fr, n, true);
-
-		delete fr;
+		InsertTXTGeom(*file2, n, true);
 
 	}
 
