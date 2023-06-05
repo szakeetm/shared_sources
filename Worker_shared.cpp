@@ -136,7 +136,6 @@ void Worker::ExportTextures(const char* fileName, int grouping, int mode, bool a
 		throw Error(tmp);
 	}
 
-	//bool buffer_old = simManager.GetLockedHitBuffer();
 #if defined(MOLFLOW)
 	geom->ExportTextures(f, grouping, mode, globalState, saveSelected);
 #endif
