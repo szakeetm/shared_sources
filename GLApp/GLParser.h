@@ -121,15 +121,15 @@ public:
 
 private:
 
-	double EvalTree(std::shared_ptr<EtreeNode> node);
-	void   ReadExpression(std::shared_ptr<EtreeNode> node);
-	bool TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode> node);
-	void   ReadTerm(std::shared_ptr<EtreeNode> node);
-	void   ReadPower(std::shared_ptr<EtreeNode> node);
-	void   ReadFactor(std::shared_ptr<EtreeNode> node);
+	double EvalTree(std::shared_ptr<EtreeNode>& node);
+	void   ReadExpression(std::shared_ptr<EtreeNode>& node);
+	bool   TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode>& node);
+	void   ReadTerm(std::shared_ptr<EtreeNode>& node);
+	void   ReadPower(std::shared_ptr<EtreeNode>& node);
+	void   ReadFactor(std::shared_ptr<EtreeNode>& node);
 	std::string ReadVariable();
 	void   ReadDouble(double* R);
-	void   AddNode(int type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::shared_ptr<EtreeNode> node, std::shared_ptr<EtreeNode> left, std::shared_ptr<EtreeNode> right);
+	void   AddNode(int type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::shared_ptr<EtreeNode>& node, std::shared_ptr<EtreeNode> left, std::shared_ptr<EtreeNode> right);
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
 	std::list<Variable>::iterator GLFormula::FindVar(const std::string& var_name);
 	void   SetError(const std::string& errMsg, int pos);
@@ -143,7 +143,7 @@ private:
 	int  currentPos;     // Current char pos
 	bool error = false;       // Error flag
 
-	std::shared_ptr<EtreeNode> evalTree=nullptr;
+	std::shared_ptr<EtreeNode> evalTree = nullptr;
 	std::list<Variable> varList;
 
 };

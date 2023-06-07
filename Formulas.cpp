@@ -33,7 +33,7 @@ void Formulas::AddFormula(const std::string& name, const std::string& expression
     p.SetName(name);
     p.Parse();
 
-    formulas_n.push_back(p);
+    formulas_n.push_back(std::move(p));
     UpdateVectorSize();
 }
 
