@@ -5,7 +5,7 @@ project(fmt-download NONE)
 include(ExternalProject)
 ExternalProject_Add(fmtlib
         GIT_REPOSITORY    https://github.com/fmtlib/fmt.git
-        GIT_TAG           9.1.0 #latest official release as April 2023
+        GIT_TAG           10.0.0 #latest official release as June 2023
         SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/fmt-src"
         BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/fmt-build"
         CONFIGURE_COMMAND ""
