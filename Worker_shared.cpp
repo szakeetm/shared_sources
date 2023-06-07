@@ -313,7 +313,7 @@ void Worker::SetProcNumber(size_t n) {
 	try {
 		simManager.KillAllSimUnits();
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception&) {
 		throw Error("Killing subprocesses failed!");
 	}
 

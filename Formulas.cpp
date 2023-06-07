@@ -47,9 +47,9 @@ void Formulas::ClearFormulas() {
 void Formulas::EvaluateFormulaVariables(){
     for (auto & formula : formulas) {
         // Evaluate variables
-        int nbVar = formula.GetNbVariable();
+        size_t nbVar = formula.GetNbVariable();
         bool ok = true; //for each formula, stop at first invalid variable name
-        for (int j = 0; j < nbVar && ok; j++) {
+        for (size_t j = 0; j < nbVar && ok; j++) {
             auto varIterator = formula.GetVariableAt(j);
             ok = evaluator->EvaluateVariable(varIterator);
             if (!ok) {
@@ -104,54 +104,54 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 
 //! Add new value to convergence vector
 bool Formulas::FetchNewConvValue() {
-    bool hasChanged = false;
-    if (!formulas.empty()) {
-        UpdateVectorSize();
-        for (int formulaId = 0; formulaId < formulas.size(); ++formulaId) {
-            if(formulas[formulaId].hasVariableEvalError) {
-                continue;
-            }
+	bool hasChanged = false;
+	if (formulas.empty()) return hasChanged;
+	UpdateVectorSize();
+	for (int formulaId = 0; formulaId < formulas.size(); ++formulaId) {
+		if (formulas[formulaId].hasVariableEvalError) {
+			continue;
+		}
 
-            auto& currentValues = lastFormulaValues[formulaId];
-            // Check against potential nan values to skip
-            if(std::isnan(currentValues.second))
-                continue;
-            auto& conv_vec = convergenceValues[formulaId].conv_vec;
-            if (conv_vec.size() >= max_vector_size()) {
-                pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
-                hasChanged = true;
-            }
-            // Insert new value when completely new value pair inserted
-            if(conv_vec.empty() || (currentValues.first != conv_vec.back().first && currentValues.second != conv_vec.back().second)){
-                convergenceValues[formulaId].n_samples += 1;
-                convergenceValues[formulaId].conv_total += currentValues.second;
-                conv_vec.emplace_back(currentValues);
-                hasChanged = true;
-            }
-            else if (currentValues.first == conv_vec.back().first && currentValues.second != conv_vec.back().second){
-                // if (for some reason) the nbDesorptions dont change but the formula value, only update the latter
-                convergenceValues[formulaId].conv_total -= conv_vec.back().second + currentValues.second;
-                conv_vec.back().second = currentValues.second;
-                hasChanged = true;
-            }
-            else if (currentValues.second == conv_vec.back().second){
-                if(conv_vec.size() > 1 && currentValues.second == (conv_vec.rbegin()[1]).second){
-                    // if the value remains constant, just update the nbDesorbptions
-                    conv_vec.back().first = currentValues.first;
-                    hasChanged = true;
-                }
-                else {
-                    // if there was no previous point with the same value, add a new one (only a second one to save space)
-                    convergenceValues[formulaId].n_samples += 1;
-                    convergenceValues[formulaId].conv_total += currentValues.second;
-                    conv_vec.emplace_back(currentValues);
-                    hasChanged = true;
-                }
-            }
-        }
-    }
+		auto& currentValues = lastFormulaValues[formulaId];
+		// Check against potential nan values to skip
+		if (std::isnan(currentValues.second))
+			continue;
+		auto& conv_vec = convergenceValues[formulaId].conv_vec;
+		if (conv_vec.size() >= max_vector_size()) {
+			pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
+			hasChanged = true;
+		}
+		// Insert new value when completely new value pair inserted
+		if (conv_vec.empty() || (currentValues.first != conv_vec.back().first && currentValues.second != conv_vec.back().second)) {
+			//convergenceValues[formulaId].n_samples += 1;
+			//convergenceValues[formulaId].conv_total += currentValues.second;
+			conv_vec.emplace_back(currentValues);
+			hasChanged = true;
+		}
+		else if (currentValues.first == conv_vec.back().first && currentValues.second != conv_vec.back().second) {
+			// if (for some reason) the nbDesorptions dont change but the formula value, only update the latter
+			//convergenceValues[formulaId].conv_total -= conv_vec.back().second + currentValues.second;
+			conv_vec.back().second = currentValues.second;
+			hasChanged = true;
+		}
+		else if (currentValues.second == conv_vec.back().second) {
+			if (conv_vec.size() > 1 && currentValues.second == (conv_vec.rbegin()[1]).second) {
+				// if the value remains constant, just update the nbDesorbptions
+				conv_vec.back().first = currentValues.first;
+				hasChanged = true;
+			}
+			else {
+				// if there was no previous point with the same value, add a new one (only a second one to save space)
+				//convergenceValues[formulaId].n_samples += 1;
+				//convergenceValues[formulaId].conv_total += currentValues.second;
+				conv_vec.emplace_back(currentValues);
+				hasChanged = true;
+			}
+		}
+	}
 
-    return hasChanged;
+
+	return hasChanged;
 };
 
 /**

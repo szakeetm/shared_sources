@@ -27,10 +27,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEvaluator.h"
 
 struct ConvergenceData {
-    ConvergenceData() : conv_total(0.0), n_samples(0), upper_bound(0.0), lower_bound(0.0), chain_length(0) {};
-    std::vector<std::pair<size_t,double>> conv_vec;
-    double conv_total; /* for now unused accumulator, where convegence values are summed up */
-    size_t n_samples;
+    ConvergenceData() : /*conv_total(0.0), n_samples(0),*/ upper_bound(0.0), lower_bound(0.0), chain_length(0) {};
+    std::vector<std::pair<size_t,double>> conv_vec; //series of nbDes,value pairs 
+    //double conv_total; /* for now unused accumulator, where convegence values are summed up */
+    //size_t n_samples;
 
     // ASCBR values
     double upper_bound;
@@ -63,8 +63,8 @@ struct Formulas {
     void pruneFirstN(size_t n, int formulaId);
 
     std::vector<GLFormula> formulas;
-    std::vector<std::pair<size_t,double>> lastFormulaValues;
-    std::vector<ConvergenceData> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
+    std::vector<std::pair<size_t,double>> lastFormulaValues; //nbDesorbed,value
+    std::vector<ConvergenceData> convergenceValues; // One per formula
     std::vector<size_t> freq_accum;
     bool formulasChanged;
     bool sampleConvValues;

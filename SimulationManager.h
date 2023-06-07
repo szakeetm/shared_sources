@@ -117,8 +117,8 @@ public:
     bool useGPU;
     bool useRemote;
 
-    uint16_t nbThreads;
-    uint16_t mainProcId;
+    size_t nbThreads;
+    size_t mainProcId;
 
     bool interactiveMode; // Looks like enables logging (off for test cases)
     bool isRunning;
