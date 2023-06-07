@@ -173,9 +173,11 @@ bool GLFormula::TreatTerm(const std::string& term, int operand, std::shared_ptr<
 		AV(term.length());
 		auto left = std::make_shared<EtreeNode>(std::monostate{});
 		ReadPlusMinus(left);
-		AddNode(OPER_ABS, std::monostate{}, node, left, nullptr);
-		if (currentChar != ')') SetError(") expected", currentPos);
-		AV();
+		AddNode(operand, std::monostate{}, node, left, nullptr);
+		if (currentChar != ')') {
+			SetError(") expected", currentPos);
+		}
+		else AV();
 		return true;
 	}
 	else return false;
