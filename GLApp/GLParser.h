@@ -131,7 +131,7 @@ private:
 	void   ReadDouble(double* R);
 	void   AddNode(int type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::shared_ptr<EtreeNode>& node, std::shared_ptr<EtreeNode> left, std::shared_ptr<EtreeNode> right);
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
-	std::list<Variable>::iterator GLFormula::FindVar(const std::string& var_name);
+	std::list<Variable>::iterator FindVar(const std::string& var_name);
 	void   SetError(const std::string& errMsg, int pos);
 	void   AV(size_t times = 1); //advance by one (or more) non-whitespace char
 	std::string Extract(int n); //Left n characters of string
