@@ -287,13 +287,8 @@ void Worker::ResetStatsAndHits(float appTime) {
 }
 
 void Worker::Stop() {
-	try {
-		if (simManager.StopSimulation()) {
-			throw std::logic_error("No active simulation to stop!");
-		}
-	}
-	catch (const std::exception& e) {
-		throw Error(e.what());
+	if (simManager.StopSimulation()) {
+		throw std::logic_error("No active simulation to stop!");
 	}
 }
 
@@ -621,27 +616,11 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 	//prg.SetMessage("Assembling parameters to pass...");
 
 	std::string loaderString = SerializeParamsForLoader().str();
-	try {
 		simManager.ForwardOtfParams(&model->otfParams);
-
 		if (simManager.ShareWithSimUnits((BYTE*)loaderString.c_str(), loaderString.size(), LoadType::LOADPARAM)) {
 			auto errString = fmt::format("Failed to send params to sub process:\n");
-			//GLMessageBox::Display(errString.c_str(), "Warning (Updateparams)", GLDLG_OK, GLDLG_ICONWARNING);
-
 			return;
-			//throw std::runtime_error(errString.c_str());
 		}
-	}
-	catch (const std::exception& e) {
-		//GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
-	}
-
-
-	/*#if defined(SYNRAD)
-		//Reset leak and hit cache
-		ResetWorkerStats();
-		Update(0.0f);
-	#endif*/
 }
 
 /**

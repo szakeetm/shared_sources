@@ -210,7 +210,7 @@ void ConvergencePlotter::Refresh() {
         profCombo->SetSize(nbFormulas);
         for (size_t i = 0; i < nbFormulas; i++) {
             char tmp[128];
-            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i]->GetExpression());
+            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i].GetExpression());
             profCombo->SetValueAt(i, tmp, (int) i);
         }
         profCombo->SetEditable(true);
@@ -234,7 +234,7 @@ void ConvergencePlotter::Refresh() {
         }
         int formId = 0;
         while (views[v]->userData1 !=
-               (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
+               (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId].GetExpression())) {
             ++formId;
             if (formId >= formula_ptr->formulas_n.size()) {
                 chart->GetY1Axis()->RemoveDataView(views[v]);
@@ -284,14 +284,14 @@ void ConvergencePlotter::Update(float appTime) {
 */
 void ConvergencePlotter::plot() {
 
-    GLParser parser;
-    parser.SetExpression(formulaText->GetText().c_str());
-    if (!parser.Parse()) {
-        GLMessageBox::Display(parser.GetErrorMsg(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+    GLFormula formula;
+    formula.SetExpression(formulaText->GetText().c_str());
+    if (!formula.Parse()) {
+        GLMessageBox::Display(formula.GetErrorMsg().c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
 
-    int nbVar = parser.GetNbVariable();
+    int nbVar = formula.GetNbVariable();
     if (nbVar == 0) {
         GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
@@ -300,8 +300,8 @@ void ConvergencePlotter::plot() {
         GLMessageBox::Display("Too much variables or unknown constant", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
-    VLIST *var = parser.GetVariableAt(0);
-    if (!iequals(var->name, "x")) {
+    auto varIterator = formula.GetVariableAt(0);
+    if (!iequals(varIterator->varName, "x")) {
         GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -338,8 +338,8 @@ void ConvergencePlotter::plot() {
     for (i = 0; i < 1000; i++) {
         double x = (double) i;
         double y;
-        var->value = x;
-        parser.Evaluate(&y);
+        varIterator->value = x;
+        formula.Evaluate(&y);
         v->Add(x, y, false);
     }
     v->CommitChange();
@@ -358,7 +358,7 @@ void ConvergencePlotter::refreshViews() {
         GLDataView *v = views[i];
         if (formula_ptr->formulas_n.empty()) return;
         int formId = 0;
-        while (v->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId]->GetExpression())) {
+        while (v->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId].GetExpression())) {
             ++formId;
             if (formId >= formula_ptr->formulas_n.size())
                 return;
@@ -382,7 +382,7 @@ void ConvergencePlotter::refreshViews() {
 */
 int ConvergencePlotter::addView(int formulaHash) {
 
-    char tmp[128];
+    if (formula_ptr->formulas_n.empty()) return 0;
 
     // Check that view is not already added
     bool found = false;
@@ -395,18 +395,18 @@ int ConvergencePlotter::addView(int formulaHash) {
         return 1;
     }
     if (nbView < MAX_VIEWS) {
-        GLParser *formula = nullptr;
-        for (GLParser *f : formula_ptr->formulas_n) {
-            int str_hash = std::hash<std::string>{}(f->GetExpression());
+        found = false;
+        GLFormula* formula;
+        for (i = 0; !found && i < formula_ptr->formulas_n.size();i++) {
+            formula = &(formula_ptr->formulas_n[i]);
+            int str_hash = std::hash<std::string>{}(formula->GetExpression());
             if (str_hash == formulaHash) {
-                formula = f;
-                break;
+                found = true;
             }
         }
-        if (!formula || formula_ptr->formulas_n.empty()) return 0;
+        if (!found) return 0;
         GLDataView *v = new GLDataView();
-        sprintf(tmp, "%s", formula->GetExpression());
-        v->SetName(tmp);
+        v->SetName(formula->GetExpression().c_str());
         //Look for first available color
         GLColor col = chart->GetFirstAvailableColor();
         int lineStyle = chart->GetFirstAvailableLinestyle(col);
@@ -482,12 +482,12 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
-                    if(formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->hasVariableEvalError){
+                    if(formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].hasVariableEvalError){
                         GLMessageBox::Display("Formula can't be evaluated.", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         break;
                     }
                     int str_hash = std::hash<std::string>{}(
-                            formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
+                            formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].GetExpression());
                     if (addView(str_hash))
                         GLMessageBox::Display("Profile already plotted", "Info", GLDLG_OK, GLDLG_ICONINFO);
                     refreshViews();
@@ -497,7 +497,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
                     int str_hash = std::hash<std::string>{}(
-                            formula_ptr->formulas_n.at(profCombo->GetUserValueAt(idx))->GetExpression());
+                            formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].GetExpression());
                     if (remView(str_hash)) {
                         GLMessageBox::Display("Profile not plotted", "Error", GLDLG_OK, GLDLG_ICONERROR);
                     }

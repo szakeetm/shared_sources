@@ -26,28 +26,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 * \param name char string containing the full variable including index
 * \param prefix char string containing the prefix for the variable that name should be checked against for validity
 * \return integer describing index of the variable
+* \example: GetFacetIndex("D12","D") returns 12
 */
-int FormulaEvaluator::GetVariable(const char *name, const char *prefix) {
-    char tmp[256];
-    int idx;
-    int lgthP = (int) strlen(prefix);
-    int lgthN = (int) strlen(name);
+int FormulaEvaluator::GetFacetIndex(const std::string &varName, const std::string& prefix) {
 
-    if (lgthP >= lgthN) {
-        return -1;
-    } else {
-        strcpy(tmp, name);
-        tmp[lgthP] = 0;
-
-        if (iequals(tmp, prefix)) {
-            strcpy(tmp, name + lgthP);
-            int conv = sscanf(tmp, "%d", &idx);
-            if (conv) {
-                return idx;
-            } else {
-                return -1;
-            }
+    if (prefix.length() >= varName.length()) return -1;
+    
+    if (iBeginsWith(varName, lowercase(prefix))) {
+        std::string remainder=varName.substr(prefix.length());
+        try {
+            return std::stoi(remainder);
         }
-    }
-    return -1;
+        catch (...) {
+            return -1; //can't convert to int
+        }
+    } else return -1; //prefix doesn't match
 }

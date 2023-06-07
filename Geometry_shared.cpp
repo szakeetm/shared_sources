@@ -380,12 +380,7 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	//Recalculates geometry after execution, so shouldn't be used repetitively
 
 	//a new facet
-    try {
-        facets.emplace_back(new InterfaceFacet(vertexIds.size()));
-    }
-    catch (const std::exception& e){
-        throw;
-    }
+    facets.emplace_back(new InterfaceFacet(vertexIds.size()));
 
     sh.nbFacet++;
     if (viewStruct != -1) facets[sh.nbFacet - 1]->sh.superIdx = viewStruct;
@@ -565,7 +560,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
     try{
         facets.resize(sh.nbFacet+nbNewFacets);
     }
-    catch(const std::exception &e) {
+    catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
     }
 
@@ -1210,7 +1205,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
             try{
                 facets.resize(sh.nbFacet + nbNewFacets);
             }
-            catch(const std::exception &e) {
+            catch(const std::exception &) {
                 throw Error("Couldn't allocate memory for facets");
             }
 
@@ -2020,7 +2015,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
     try{
         facets.resize(sh.nbFacet + selectedFacetIds.size());
     }
-    catch(const std::exception &e) {
+    catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
         return 1;
     }
@@ -2690,7 +2685,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
                     try{
                         facets.resize(sh.nbFacet + newFacetsIndices.size());
                     }
-                    catch(const std::exception &e) {
+                    catch(const std::exception &) {
                         throw Error("Couldn't allocate memory for facets");
                     }
                 }
@@ -3709,7 +3704,7 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
         try{
             facets.resize(nbNewFacets, nullptr);
         }
-        catch(const std::exception &e) {
+        catch(const std::exception &) {
             throw Error("Out of memory: LoadSTL");
         }
 		std::vector<InterfaceVertex>(3 * nbNewFacets).swap(vertices3);
@@ -3718,7 +3713,7 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
         try{
             facets.resize(nbNewFacets + sh.nbFacet);
         }
-        catch(const std::exception &e) {
+        catch(const std::exception &) {
             throw Error("Couldn't allocate memory for facets");
         }
 		vertices3.resize(sh.nbVertex + 3 * nbNewFacets);
@@ -3955,7 +3950,7 @@ void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
     try{
         facets.resize(nbNewFacets + sh.nbFacet);
     }
-    catch(const std::exception &e) {
+    catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
     }
 	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
@@ -4095,17 +4090,14 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 	if (version2 >= 2) {
 		file.ReadKeyword("formulas"); file.ReadKeyword("{");
 		for (int i = 0; i < nbF; i++) {
-			char tmpName[256];
-			char tmpExpr[512];
-			strcpy(tmpName, file.ReadString());
-			strcpy(tmpExpr, file.ReadString());
-			//mApp->OffsetFormula(tmpExpr, wp.nbFacet);
-			//mApp->AddFormula(tmpName, tmpExpr); //parse after selection groups are loaded
+
+			std::string name = file.ReadString();
+			std::string expr = file.ReadString();
 #if defined(MOLFLOW)
 			std::vector<std::string> newFormula;
-			newFormula.emplace_back(tmpName);
-			MolFlow::OffsetFormula(tmpExpr, (int)sh.nbFacet); //offset formula
-			newFormula.emplace_back(tmpExpr);
+			newFormula.emplace_back(name);
+			MolFlow::OffsetFormula(expr, (int)sh.nbFacet); //offset formula
+			newFormula.emplace_back(expr);
 			loadFormulas.push_back(newFormula);
 #endif
 		}
@@ -4153,7 +4145,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 	}
 #if defined(MOLFLOW)
 	for (int i = 0; i < nbF; i++) { //parse formulas now that selection groups are loaded
-		mApp->AddFormula(loadFormulas[i][0].c_str(), loadFormulas[i][1].c_str());
+		mApp->formula_ptr->AddFormula(loadFormulas[i][0], loadFormulas[i][1]);
 	}
 #endif
 	file.ReadKeyword("structures"); file.ReadKeyword("{");
@@ -4171,7 +4163,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
     try{
         facets.resize(nbNewFacets + sh.nbFacet);
     }
-    catch(const std::exception &e) {
+    catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
     }
 
@@ -4633,7 +4625,7 @@ void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, 
     try{
         facets.resize(sFacets.size(), nullptr);
     }
-    catch(const std::exception &e) {
+    catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
     }
 

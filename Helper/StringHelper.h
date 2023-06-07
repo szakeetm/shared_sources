@@ -35,13 +35,16 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets);
 std::string AbbreviateString(const std::string& input, size_t maxLength);
 std::vector<std::string> SplitString(const std::string & input);
-std::vector<std::string> SplitString(const std::string & input, const char& delimiter);
+std::vector<std::string> SplitString(const std::string & input, char delimiter);
 
-bool endsWith(const std::string& fullString, const std::string& ending);
 bool beginsWith(const std::string& fullString, const std::string& beginning);
+bool endsWith(const std::string& fullString, const std::string& ending);
+bool iBeginsWith(const std::string& fullString, const std::string& beginning);
+bool iEndsWith(const std::string& fullString, const std::string& ending);
+
 std::string space2underscore(std::string text);
 std::string molflowToAscii(std::string text);
-bool iequals(std::string a, std::string b);
+bool iequals(const std::string& a, const std::string& b);
 std::string lowercase(const std::string& s);
 std::string uppercase(const std::string& s);
 bool iContains(const std::vector<std::string>& vec, const std::string& value);

@@ -12,7 +12,7 @@ class GLMenuBar;
 
 // Menu item struct ----------------------------
 
-typedef struct {
+struct MENUITEM {
 
   char         itemName[MAX_ITEM_LGTH]{};
   int          itemId{};
@@ -32,7 +32,7 @@ typedef struct {
   int          iconX{};
   int          iconY{};
 
-} MENUITEM;
+};
 
 // Menu Popup ---------------------------------
 

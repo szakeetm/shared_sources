@@ -5,7 +5,6 @@
 #include <math.h>
 #include <errno.h>
 #include "GLParser.h"
-#include <cstring> //strcpy, etc.
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
 #if defined(MOLFLOW)
@@ -24,613 +23,375 @@ extern MolFlow *mApp;
 extern SynRad *mApp;
 #endif
 
-// Utils functions
+// GLFormula
 
-// Add a character to a string
-void stradd(char *s,char c)
-{
-  int l=(int)strlen(s);
-  s[l]=c;
-  s[l+1]=0;
+void GLFormula::SetName(const std::string& _name) {
+  this->name=_name;
 }
 
-// free a list
-void free_list(VLIST *l) {
-  if(l->next!=NULL) free_list(l->next);
-  free(l);
-}
-
-void safe_free_list(VLIST **l)
-{
-  if(*l!=NULL) {
-    free_list(*l);
-    *l=NULL;
-  }
-}
-
-// free a tree
-void free_tree(ETREE *t) {
-  if(t->left!=NULL)  free_tree(t->left);
-  if(t->right!=NULL) free_tree(t->right);
-  free(t);
-}
-
-void safe_free_tree(ETREE **t)
-{
-  if(*t!=NULL) {
-    free_tree(*t);
-    *t=NULL;
-  }
-}
-
-// GLParser
-
-GLParser::GLParser() {
-
- evalTree=NULL;
- varList=NULL;
- strcpy(expr,"");
- strcpy(name,"");
- hasVariableEvalError = false;
-
-}
-
-GLParser::~GLParser() {
-  safe_free_tree(&evalTree);
-  safe_free_list(&varList);
-}
-
-void GLParser::SetName(const char *name) {
-  strncpy(this->name,name,256);
-}
-
-char *GLParser::GetName() {
+std::string GLFormula::GetName() {
   return name;
 }
 
-void GLParser::SetExpression(const char *expr) {
-  strncpy(this->expr,expr,4096);
+void GLFormula::SetExpression(const std::string& _expression) {
+    this->expression = _expression;
 }
 
-char *GLParser::GetExpression() {
-  return expr;
+std::string GLFormula::GetExpression() {
+  return expression;
 }
 
 // Extract a part of the string to analyze 
-char *GLParser::Extract(int lg)
+std::string GLFormula::Extract(int n)
 {
-  static char s[128];
-  int i;
-
-  s[0]=0;
-  for(i=current;i<current+lg;i++)
-    stradd(s,expr[i]);
-
-  return s;
+  return expression.substr(0,n);
 }
 
-// Return fisrt significative char in the string to analyze 
-void GLParser::AV()
+// Return fisrt significative char in the string to analyze, repeat 'times' times 
+void GLFormula::AV(size_t times)
 {
-  do {
-    current++;
-    EC=expr[current];
-  } while (EC==' ' || EC=='\t');
+    for (size_t i = 0; i < times; i++) {
+        do {
+            currentPos++;
+            currentChar = expression[currentPos];
+        } while (currentChar == ' ' || currentChar == '\t');
+    }
 }
 
 // Set global error
-void GLParser::SetError(const char *err,int p) {
-  sprintf(errMsg,"%s at %d",err,p);
-  error=true;
+void GLFormula::SetError(const std::string& _errMsg,int pos) {
+  this->errMsg=fmt::format("{} at pos. {}", _errMsg, pos);
+  this->error=true;
 }
 
-VLIST *GLParser::FindVar(const char *var_name,VLIST *l) {
-
-  VLIST *p = l;
-  bool found = false;
-  while(!found && p) {
-    found = (iequals(p->name,var_name));
-    if(!found) p=p->next;
-  }
-  if( found ) return p;
-  else        return NULL;
-
+std::list<Variable>::iterator GLFormula::FindVar(const std::string& var_name) {
+    auto p = varList.begin();
+    while(!iequals(p->varName, var_name)) {
+        p++;
+    }
+    return p; //either points to found element or varList.end()
 }
 
 // Add variables into the chained list
-VLIST *GLParser::AddVar(const char *var_name,VLIST **l)
+std::list<Variable>::iterator GLFormula::AddVar(const std::string& _var_name)
 {
-  // Search if already added
-  VLIST *a = FindVar(var_name,*l);
-  if(!a) {
-    VLIST *elem;
-    elem=(VLIST *)malloc(sizeof(VLIST));
-    strcpy(elem->name,var_name);
-    elem->next=*l;
-    *l=elem;
-    return elem;
-  } else {
-    return a;
-  }
-
+	// Search if already added
+	auto pos = FindVar(_var_name);
+	if (pos == varList.end()) { //not found
+		Variable newVar;
+		newVar.varName = _var_name;
+		varList.push_front(newVar); //insert to front
+        return varList.begin(); //return iterator to front
+	}
+	else {
+		return pos; //found position
+	}
 }
 
 // Add node into the evaluation tree
-void GLParser::AddNode( int type , ETREE_NODE info ,
-                        ETREE **t,ETREE *left,ETREE *right) {
+// Sets "node" pointer to a newly created element with type,value passed as arguments, and left/right set
+void GLFormula::AddNode(int type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::shared_ptr<EtreeNode> node, std::shared_ptr<EtreeNode> left, std::shared_ptr<EtreeNode> right) {
 
-  ETREE *elem;
-
-  elem=(ETREE *)malloc(sizeof(ETREE));
-  elem->type=type;
-  elem->info=info;
-  elem->left=left;
-  elem->right=right;
-
-  *t=elem;
+	node = std::make_shared<EtreeNode>(value);
+    node->type = type;
+	node->left = left;
+	node->right = right;
+	
 }
 
-// Gramar functions
+// Grammar functions
 
-void GLParser::ReadDouble(double *R)
+void GLFormula::ReadDouble(double *R)
 {
-  char S[128];
-  char ex[128];
+  std::string S,ex;
   int  c;
   int  p;
   int nega;
   int n;
 
-  S[0]=0;
-  ex[0]=0;
-  p=current;
+  p=currentPos;
 
   do {
-    stradd(S,EC);
+    S+= currentChar;
     AV();
-  }while ( (EC>='0' && EC<='9') || EC=='.');
+  }while ( (currentChar>='0' && currentChar<='9') || currentChar=='.');
 
-  if (EC=='E' || EC=='e') {
+  if (currentChar=='E' || currentChar=='e') {
     AV();
     nega=false;
 
-    if (EC=='-') {
+    if (currentChar=='-') {
       nega=true;
       AV();
     }
 
-    while (EC>='0' && EC<='9')
+    while (currentChar>='0' && currentChar<='9')
     {
-      stradd(ex,EC);
+      ex+=currentChar;
       AV();
     }
-    c=sscanf(ex,"%d",&n);
-    if (c==0) { SetError("Incorrect exposant in number",p);return; }
-    if (nega) { strcat(S,"e-");strcat(S,ex);}
-    else      { strcat(S,"e");strcat(S,ex); }
+    try {
+        n = std::stoi(ex);
+    } catch (...) {
+        SetError("Incorrect exponent in number",p);
+        return;
+    }
+	if (nega) { S = S + "e-" + ex; }
+	else { S = S + "e" + ex; }
   }
-  c=sscanf(S,"%lf",R);
-  if (c==0) SetError("Incorrect number",p);
+  try {
+      *R = std::stod(S);
+  }
+  catch (...) {
+      SetError("Incorrect number", p);
+  }
 }
 
-void GLParser::ReadVariable( char *name ) {
+std::string GLFormula::ReadVariable() {
   int i=0;
   int p;
-  p=current;
+  p=currentPos;
 
-  name[0]=0;
+  std::string result;
   do {
-
-    stradd(name,EC);
+    result +=currentChar;
     AV();
     i++;
     if(i>=63) SetError("Variable name too long",p);
-
   } while ( (!error) && (
-     (EC>='A' && EC<='Z') || 
-     (EC>='a' && EC<='z') ||
-     (EC>='0' && EC<='9') ||
-     (EC=='_') ||
-	 (EC=='[') ||
-	 (EC==']')));
+     (currentChar>='A' && currentChar<='Z') || 
+     (currentChar>='a' && currentChar<='z') ||
+     (currentChar>='0' && currentChar<='9') ||
+     (currentChar=='_') ||
+	 (currentChar=='[') ||
+	 (currentChar==']')));
+  return result;
 }
 
-void GLParser::ReadTerm(ETREE **node,VLIST **var_list)
+bool GLFormula::TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode> node) { //searches for "term" in expression, and makes tree node with operand. returns true if found and treated
+    if (std::string term = "abs("; iBeginsWith(expression, term)) {
+        AV(term.length());
+        std::shared_ptr<EtreeNode> left;
+        ReadExpression(left);
+        AddNode(OPER_ABS, std::monostate{}, node, left, nullptr);
+        if (currentChar != ')') SetError(") expected", currentPos);
+        AV();
+        return true;
+    }
+    else return false;
+}
+
+void GLFormula::ReadTerm(std::shared_ptr<EtreeNode> node) //read mathematical term at current pos, write to node
 {
-  ETREE *l_t=NULL;
-  ETREE *r_t=NULL;
-  ETREE_NODE elem;
-  char v_name[64];
-  elem.value = 0.0;
-  elem.variable = NULL;
 
-  if(!error)
-  switch(EC) {
+	if (error) return;
 
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-    case '.':  ReadDouble(&(elem.value));
-               if(!error) AddNode( TDOUBLE , elem , node , NULL , NULL);
-               break;
-         
-    case '(' : AV();
-               ReadExpression(node,var_list);
-               if (EC!=')') SetError(") expected",current);
-               AV();
-               break;
+	if (currentChar == '.') {
+		double val;
+		ReadDouble(&val);
+		if (!error) AddNode(TDOUBLE, val, node, nullptr, nullptr);
+	}
+	else if (currentChar == '(') {
 
-    
-    // unary operator
-    
-
-    case '-' :AV();
-              ReadTerm(&l_t,var_list);
-              AddNode( OPER_MINUS1 , elem , node , l_t , NULL);
-        break;
-
+		AV(); //opening (
+		ReadExpression(node);
+		if (currentChar != ')') {
+			SetError(") expected", currentPos);
+		}
+		AV(); //closing )
+	}
+	else if (currentChar == '-') {
+		// unary operator
+		AV();
+		std::shared_ptr<EtreeNode> left; ReadTerm(left);
+		AddNode(OPER_MINUS1, std::monostate{}, node, left, nullptr);
+	}
     
     // Math functions
-    
+    if (TreatTerm("abs(", OPER_ABS, node)) return;
+    if (TreatTerm("asin(", OPER_ASIN, node)) return;
+    if (TreatTerm("acos(", OPER_ACOS, node)) return;
+    if (TreatTerm("atan(", OPER_ATAN, node)) return;
 
-    case 'a':
-    case 'A': if ( iequals(Extract(4),"abs(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_ABS , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"asin(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_ASIN , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"acos(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_ACOS , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else  if ( iequals(Extract(5),"atan(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_ATAN , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              }
-			  else if (iequals(Extract(4), "AVG(") ) {
-				  std::string avgExpression;
-				  avgExpression += EC;
-				  while (EC != ')') {
-					  AV();
-					  avgExpression += EC;
-				  };
-				  AV();
-				  elem.variable = AddVar(avgExpression.c_str(), var_list);
-				  AddNode(TVARIABLE, elem, node, NULL, NULL);
-			  }
-			  else{
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
+    if (TreatTerm("cos(", OPER_COS, node)) return;
+    if (TreatTerm("cosh(", OPER_COSH, node)) return;
 
-    case 'S':
-    case 's': if ( iequals(Extract(4),"sin(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_SIN , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"sqrt(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_SQRT , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"sinh(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_SINH , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-			  }
-			  else if (iequals(Extract(4), "SUM(")) {
-				  std::string sumExpression;
-				  sumExpression+= EC;
-				  while (EC != ')') {
-					  AV();
-					  sumExpression += EC;
-				  } ;
-				  AV();
-				  elem.variable = AddVar(sumExpression.c_str(), var_list);
-				  AddNode(TVARIABLE, elem, node, NULL, NULL);
-			  } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
+    if (TreatTerm("exp(", OPER_EXP, node)) return;
 
-    case 'C':
-    case 'c': if ( iequals(Extract(4),"cos(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_COS , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"cosh(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_COSH , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } /*else if ( iequals(Extract(5),"ci95(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                if (EC!=',') SetError(", expected",current);
-                AV();
-                ReadExpression(&r_t,var_list);
-                AddNode( OPER_CI95 , elem , node , l_t , r_t);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              }*/ else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
+    if (TreatTerm("fact(", OPER_FACT, node)) return;
 
-    case 'E':
-    case 'e': if ( iequals(Extract(4),"exp(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_EXP , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
+    if (TreatTerm("ln(", OPER_LN, node)) return;
+    if (TreatTerm("log2(", OPER_LOG2, node)) return;
+    if (TreatTerm("log10(", OPER_LOG10, node)) return;
 
-    case 'F':
-    case 'f': if ( iequals(Extract(5),"fact(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_FACT , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
+    if (TreatTerm("sin(", OPER_SIN, node)) return;
+    if (TreatTerm("sqrt(", OPER_SQRT, node)) return;
+    if (TreatTerm("sinh(", OPER_SINH, node)) return;
 
-    case 'I':
-    case 'i': if ( iequals(Extract(4),"inv(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_INV , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
-    
-    case 'L':
-    case 'l': if ( iequals(Extract(3),"ln(") ) {
-                AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_LN , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"log2(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_LOG2 , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(6),"log10(") ) {
-                AV();AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_LOG10 , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
-
-    case 'T':
-    case 't': if ( iequals(Extract(4),"tan(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_TAN , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else if ( iequals(Extract(5),"tanh(") ) {
-                AV();AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                AddNode( OPER_TANH , elem , node , l_t , NULL);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
-
-    
-    // Constants
-    
-
-    case 'P':
-    case 'p': if ( iequals(Extract(2),"pi") ) {
-                AV();AV();
-                elem.value=3.14159265358979323846;
-                AddNode( TDOUBLE , elem , node , NULL , NULL);
-              } else if ( iequals(Extract(4),"pow(") ) {
-                AV();AV();AV();AV();
-                ReadExpression(&l_t,var_list);
-                if (EC!=',') SetError(", expected",current);
-                AV();
-                ReadExpression(&r_t,var_list);
-                AddNode( OPER_POW , elem , node , l_t , r_t);
-                if (EC!=')') SetError(") expected",current);
-                AV();
-              } else {
-                ReadVariable(v_name);
-                elem.variable=AddVar(v_name,var_list);
-                AddNode( TVARIABLE , elem , node , NULL , NULL);
-              }
-              break;
-
-    default: if( (EC>='A' && EC<='Z') || 
-                 (EC>='a' && EC<='z') ||
-                 (EC=='_')) 
-             {
-               ReadVariable(v_name);
-               elem.variable=AddVar(v_name,var_list);
-               AddNode( TVARIABLE , elem , node , NULL , NULL);
-             } else
-               SetError("Syntax error",current);
-  }
-
-}
-
-void GLParser::ReadPower(ETREE **node,VLIST **var_list)
-{
-  ETREE *l_t=NULL;
-  ETREE *r_t=NULL;
-  ETREE_NODE elem;
-  elem.value = 0.0;
-  elem.variable = NULL;
-
-  if (!error)
-  {
-    ReadTerm(&l_t,var_list);
-    if (EC=='^')
-    {
-      AV();
-      ReadTerm(&r_t,var_list);
-      AddNode( OPER_PUIS , elem , node , l_t , r_t );
-    } else {
-      *node=l_t;
+    if (TreatTerm("tan(", OPER_TAN, node)) return;
+    if (TreatTerm("tanh(", OPER_TANH, node)) return;
+        
+	if (std::string term = "AVG("; iBeginsWith(expression, term)) {
+		std::string avgExpression;
+		avgExpression += currentChar;
+		while (currentChar != ')') {
+			AV();
+			avgExpression += currentChar;
+		};
+		AV();
+        auto varIterator = AddVar(avgExpression);
+		AddNode(TVARIABLE, varIterator, node, nullptr, nullptr);
+	}
+	else if (iequals(Extract(4), "SUM(")) {
+		std::string sumExpression;
+		sumExpression += currentChar;
+		while (currentChar != ')') {
+			AV();
+			sumExpression += currentChar;
+		};
+		AV();
+        auto varIterator = AddVar(sumExpression);
+		AddNode(TVARIABLE, varIterator, node, nullptr, nullptr);
+	} else if (std::string term = "pi"; iBeginsWith(expression, term)) {
+        AV(term.length());
+        AddNode(TDOUBLE, M_PI, node, nullptr, nullptr);
     }
-  }
-}
-
-void GLParser::ReadFactor(ETREE **node,VLIST **var_list)
-{
-  ETREE *l_t=NULL;
-  ETREE *r_t=NULL;
-  ETREE_NODE elem;
-  elem.value = 0.0;
-  elem.variable = NULL;
-
-  if(!error)
-  {
-    ReadPower(&l_t,var_list);
-
-    while((EC=='*' || EC=='/') && !error)
-    {
-      switch(EC) {
-      case '*': AV();
-                ReadPower(&r_t,var_list);
-                AddNode( OPER_MUL , elem , &l_t , l_t , r_t );
-                break;
-
-      case '/': AV();
-                ReadPower(&r_t,var_list);
-                AddNode( OPER_DIV , elem , &l_t , l_t , r_t );
-                break;
-      }
+    else if (std::string term = "pow("; iBeginsWith(expression, term)) {
+        AV(term.length());
+        std::shared_ptr<EtreeNode> left; ReadExpression(left);
+        if (currentChar != ',') SetError(", expected", currentPos);
+        AV();
+        std::shared_ptr<EtreeNode> right; ReadExpression(right);
+        AddNode(OPER_POW, std::monostate{}, node, left, right);
+        if (currentChar != ')') SetError(") expected", currentPos);
+        AV();
     }
-    *node=l_t;
-  }
+	else {
+        if ((currentChar >= 'A' && currentChar <= 'Z') ||
+            (currentChar >= 'a' && currentChar <= 'z') ||
+            (currentChar == '_'))
+        {
+            auto varIterator = AddVar(ReadVariable());
+            AddNode(TVARIABLE, varIterator, node, nullptr, nullptr);
+        }
+        else {
+            SetError("Syntax error", currentPos);
+        }
+	}  
 }
 
-void GLParser::ReadExpression(ETREE **node,VLIST **var_list)
+void GLFormula::ReadPower(std::shared_ptr<EtreeNode> node) //parse "(left)^(right)", write to node
 {
-  ETREE *l_t=NULL;
-  ETREE *r_t=NULL;
-  ETREE_NODE elem;
-  elem.value = 0.0;
-  elem.variable = NULL;
+	if (error) return;
 
-  if(!error)
-  {
-    ReadFactor(&l_t,var_list);
-
-    while((EC=='+' || EC=='-') && !error)
-    {
-      switch(EC) {
-      case '+': AV();
-                ReadFactor(&r_t,var_list);
-                AddNode( OPER_PLUS , elem , &l_t , l_t , r_t );
-                break;
-
-      case '-': AV();
-                ReadFactor(&r_t,var_list);
-                AddNode( OPER_MINUS , elem , &l_t , l_t , r_t );
-                break;
-      }
-    }
-    *node=l_t;
-  }
+    std::shared_ptr<EtreeNode> left;
+    ReadTerm(left);
+	if (currentChar == '^')
+	{
+		AV();
+        std::shared_ptr<EtreeNode> right;
+        ReadTerm(right);
+        AddNode(OPER_POWER, std::monostate{}, node, left, right);
+	}
+	else {
+		node = left;
+	}
 }
 
-char *GLParser::GetErrorMsg() {
+void GLFormula::ReadFactor(std::shared_ptr<EtreeNode> node) //write to node
+{
+    if (error) return;
+
+    std::shared_ptr<EtreeNode> left;
+    ReadFactor(left);
+
+    while((currentChar=='*' || currentChar=='/') && !error)
+    {
+        switch (currentChar) {
+        case '*': {
+            AV();
+            std::shared_ptr<EtreeNode> right;
+            ReadPower(right);
+            AddNode(OPER_MUL, std::monostate{}, left, left, right);
+            break;
+        }
+
+        case '/': {
+            AV();
+            std::shared_ptr<EtreeNode> right;
+            ReadPower(right);
+            AddNode(OPER_DIV, std::monostate{}, left, left, right);
+            break;
+        }
+        }
+    }
+    node=left;  
+}
+
+void GLFormula::ReadExpression(std::shared_ptr<EtreeNode> node) //write to node
+{
+	if (error) return;
+
+	std::shared_ptr<EtreeNode> left;
+	ReadFactor(left);
+
+	while ((currentChar == '+' || currentChar == '-') && !error)
+	{
+		switch (currentChar) {
+		case '+': {
+			AV();
+			std::shared_ptr<EtreeNode> right;
+			ReadFactor(right);
+			AddNode(OPER_PLUS, 0.0, left, left, right);
+			break;
+		}
+
+		case '-': {
+			AV();
+            std::shared_ptr<EtreeNode> right;
+            ReadFactor(right);
+			AddNode(OPER_MINUS, 0.0, left, left, right);
+			break;
+		}
+		}
+	}
+	node = left;
+}
+
+std::string GLFormula::GetErrorMsg() {
   return errMsg;
 }
 
-bool GLParser::Parse()
+bool GLFormula::Parse()
 {
-  if( strlen(expr)==0 ) {
-    sprintf(errMsg,"Empty expression");
-    return false;
-  }
+	if (expression.empty()) {
+		errMsg = "Empty expression";
+		return false;
+	}
 
-  current=0;
-  EC=expr[0];
-  error=false;
-  strcpy(errMsg,"No error");
+	currentPos = 0;
+	currentChar = expression[0];
+	error = false;
+	errMsg = "No error";
 
-  safe_free_tree(&evalTree);
-  safe_free_list(&varList);
+	evalTree=std::make_shared<EtreeNode>(0.0);
+	varList.clear();
 
-  ReadExpression(&evalTree,&varList);
+	ReadExpression(evalTree);
 
-  if(current != (int)strlen(expr)) 
-    SetError("Syntax error",current);
+    if (currentPos != (int)expression.length()) { //couldn't parse till end
+        SetError("Syntax error", currentPos);
+    }
 
-  if(error) {
-    safe_free_tree(&evalTree);
-    safe_free_list(&varList);
-  }
+	if (error) {
+        evalTree=nullptr;
+        varList.clear();
+	}
 
-  return !error;
+	return !error;
 }
 
-double fact(double x) {
+double factorial(double x) {
 
   int f = (int)(x+0.5);
   size_t r = 1;
@@ -641,227 +402,209 @@ double fact(double x) {
 
 }
 
-double GLParser::EvalTree(ETREE *t) {
+double GLFormula::EvalTree(std::shared_ptr<EtreeNode> node) {
 
   double a,b,r;
   r=0.0;
 
   if(!error) 
-  switch( t->type ) {
+  switch( node->type ) {
    case OPER_PLUS : 
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         r=a+b;
         break;
    case OPER_MINUS: 
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         r=a-b;
         break;
    case OPER_MUL:   
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         r=a*b;
         break;
    case OPER_DIV:   
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         if(b==0.0) {
           error=true;
-          sprintf(errMsg,"Divide by 0");
+          errMsg="Divide by 0";
         } else {
           r=a/b;
         }
         break;
-   case OPER_PUIS: 
-       a=EvalTree(t->left);
-       b=EvalTree(t->right);
+   case OPER_POWER: 
+       a=EvalTree(node->left);
+       b=EvalTree(node->right);
        r=pow(a,b);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
    case OPER_COS:  
-       a=EvalTree(t->left);
+       a=EvalTree(node->left);
        r=cos(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
    case OPER_CI95:  
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         r=1.96*sqrt(a*(1.0-a)/b);
         break;
    case OPER_POW:  
-        a=EvalTree(t->left);
-        b=EvalTree(t->right);
+        a=EvalTree(node->left);
+        b=EvalTree(node->right);
         r=pow(a,b);
         break;
-   case OPER_FACT:  a=EvalTree(t->left);
-       r=fact(a);
+   case OPER_FACT:  a=EvalTree(node->left);
+       r=factorial(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_ACOS:  a=EvalTree(t->left);
+   case OPER_ACOS:  a=EvalTree(node->left);
        r=acos(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_SIN:  a=EvalTree(t->left);
+   case OPER_SIN:  a=EvalTree(node->left);
        r=sin(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_ASIN:  a=EvalTree(t->left);
+   case OPER_ASIN:  a=EvalTree(node->left);
        r=asin(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_COSH:  a=EvalTree(t->left);
+   case OPER_COSH:  a=EvalTree(node->left);
        r=cosh(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_SINH:  a=EvalTree(t->left);
+   case OPER_SINH:  a=EvalTree(node->left);
        r=sinh(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_EXP:   a=EvalTree(t->left);
+   case OPER_EXP:   a=EvalTree(node->left);
        r=exp(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_LN:   a=EvalTree(t->left);
+   case OPER_LN:   a=EvalTree(node->left);
        r=log(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_LOG10:   a=EvalTree(t->left);
+   case OPER_LOG10:   a=EvalTree(node->left);
        r=log10(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_LOG2:   a=EvalTree(t->left);
+   case OPER_LOG2:   a=EvalTree(node->left);
        r=log(a)/log(2.0);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_INV:  a=EvalTree(t->left);
-       if(a==0.0) {
-         error=true;
-         sprintf(errMsg,"Divide by 0");
-       } else {
-         r=1/a;
-       }
-       break;
-   case OPER_SQRT: a=EvalTree(t->left);
+   case OPER_SQRT: a=EvalTree(node->left);
        r=sqrt(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_TAN:  a=EvalTree(t->left);
+   case OPER_TAN:  a=EvalTree(node->left);
        r=tan(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_ATAN:  a=EvalTree(t->left);
+   case OPER_ATAN:  a=EvalTree(node->left);
        r=atan(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_TANH:  a=EvalTree(t->left);
+   case OPER_TANH:  a=EvalTree(node->left);
        r=tanh(a);
        if( errno!=0 ) {
           error=true;
-          strcpy(errMsg,strerror(errno));
+          errMsg = strerror(errno);
        }
        break;
-   case OPER_ABS:  a=EvalTree(t->left);
+   case OPER_ABS:  a=EvalTree(node->left);
        r=fabs(a);
        break;
-   case OPER_MINUS1: a=EvalTree(t->left);
+   case OPER_MINUS1: a=EvalTree(node->left);
        r=-a;
        break;
-   case TDOUBLE:   r=(t->info.value);
+   case TDOUBLE:   r=std::get<double>(node->value);
        break;
-   case TVARIABLE: r=(t->info.variable)->value;
+   case TVARIABLE: r=std::get<std::list<Variable>::iterator>(node->value)->value;
        break;
   }
 
   return r;
 }
 
-int GLParser::GetNbVariable() {
-  int nb = 0;
-  VLIST *p = varList;
-  while(p) {
-    nb++;
-    p=p->next;
-  }
-  return nb;
+size_t GLFormula::GetNbVariable() {
+    return varList.size();
 }
 
-VLIST *GLParser::GetVariableAt(int idx) {
-  int nb = 0;
-  VLIST *p = varList;
-  while(nb<idx && p) {
-    nb++;
-    p=p->next;
-  }
-  return p;
+std::list<Variable>::iterator GLFormula::GetVariableAt(size_t n) {
+    auto it = varList.begin();
+    std::advance(it, std::min(n,varList.size()-1));
+    return it;
 }
 
-void   GLParser::SetVariable(const char *name,double value) {
-  VLIST *v = FindVar(name,varList);
-  if( v ) v->value = value;
+void   GLFormula::SetVariable(const std::string& name,double value) {
+  auto v = FindVar(name);
+  if( v!=varList.end() ) v->value = value;
 }
 
-std::string GLParser::GetVariableEvalError()
+std::string GLFormula::GetVariableEvalError()
 {
 	return variableEvalErrorMsg;
 }
 
-void GLParser::SetVariableEvalError(std::string errMsg)
+void GLFormula::SetVariableEvalError(const std::string& errMsg)
 {
 	variableEvalErrorMsg = errMsg;
 	hasVariableEvalError = true;
 }
 
-int GLParser::GetCurrentPos() {
-  return current;
+int GLFormula::GetCurrentPos() {
+  return currentPos;
 }
 
-bool GLParser::Evaluate(double *result)
+bool GLFormula::Evaluate(double *result)
 {
   error=false;
   errno=0;
@@ -872,7 +615,6 @@ bool GLParser::Evaluate(double *result)
   {
     *result=EvalTree(evalTree);
   } else {
-    //sprintf(errMsg,"Parsing failed"); //Already has an error message
     error=true;
   }
 

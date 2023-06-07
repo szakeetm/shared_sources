@@ -41,18 +41,12 @@ struct ConvergenceData {
 //! Defines a formula object that can be used to retrieve and store a parsed result
 struct Formulas {
 
-    Formulas(FormulaEvaluator* eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){
+    Formulas(std::shared_ptr<FormulaEvaluator> eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){
         evaluator=eval;
         freq_accum.resize(cb_length);
     };
-    ~Formulas(){
-        for(auto f : formulas_n){
-            SAFE_DELETE(f);
-        }
-        delete evaluator;
-    };
 
-    void AddFormula(const char *fName, const char *formula);
+    void AddFormula(const std::string& name, const std::string& expression);
     void ClearFormulas();
 
     void UpdateVectorSize();
@@ -68,7 +62,7 @@ struct Formulas {
     void pruneEveryN(size_t everyN, int formulaId, size_t skipLastN);
     void pruneFirstN(size_t n, int formulaId);
 
-    std::vector<GLParser*> formulas_n;
+    std::vector<GLFormula> formulas_n;
     std::vector<std::pair<size_t,double>> lastFormulaValues;
     std::vector<ConvergenceData> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
     std::vector<size_t> freq_accum;
@@ -78,7 +72,7 @@ struct Formulas {
     bool useAbsEps;
     int epsilon;
     size_t cb_length;
-    FormulaEvaluator* evaluator;
+    std::shared_ptr<FormulaEvaluator> evaluator=nullptr;
 };
 
 #endif //MOLFLOW_PROJ_FORMULAS_H

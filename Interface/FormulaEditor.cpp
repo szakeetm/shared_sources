@@ -200,13 +200,12 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				}
 				if (*(formulaList->GetValueAt(0, row)) != 0 || *(formulaList->GetValueAt(1, row)) != 0) //Name or expr. not empty
 				{
-                    formula_ptr->formulas_n.at(row)->SetExpression(formulaList->GetValueAt(0, row));
-                    formula_ptr->formulas_n.at(row)->Parse();
+                    formula_ptr->formulas_n[row].SetExpression(formulaList->GetValueAt(0, row));
+                    formula_ptr->formulas_n[row].Parse();
 					Refresh();
 				}
 				else
 				{
-					SAFE_DELETE(formula_ptr->formulas_n.at(row));
                     formula_ptr->formulas_n.erase(formula_ptr->formulas_n.begin() + row);
                     formula_ptr->UpdateVectorSize();
 					Refresh();
@@ -218,12 +217,11 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			if (strcmp(formulaList->GetValueAt(1, row), userFormulaNames[row].c_str()) != 0) { //Name changed
 				if (*(formulaList->GetValueAt(0, row)) != 0 || *(formulaList->GetValueAt(1, row)) != 0) //Name or expr. not empty
 				{
-					formula_ptr->formulas_n.at(row)->SetName(formulaList->GetValueAt(1, row));
+					formula_ptr->formulas_n[row].SetName(formulaList->GetValueAt(1, row));
 					Refresh();
 				}
 				else
 				{
-					SAFE_DELETE(formula_ptr->formulas_n.at(row));
 					formula_ptr->formulas_n.erase(formula_ptr->formulas_n.begin() + row);
                     formula_ptr->UpdateVectorSize();
                     Refresh();
@@ -340,8 +338,8 @@ void FormulaEditor::Refresh() {
 	userExpressions.resize(nbFormula);
 	userFormulaNames.resize(nbFormula);
 	for (size_t i = 0; i < nbFormula; i++) {
-		userExpressions[i] = formula_ptr->formulas_n.at(i)->GetExpression();
-		userFormulaNames[i] = formula_ptr->formulas_n.at(i)->GetName();
+		userExpressions[i] = formula_ptr->formulas_n[i].GetExpression();
+		userFormulaNames[i] = formula_ptr->formulas_n[i].GetName();
 	}
 	RebuildList();
     formula_ptr->formulasChanged = true;
@@ -349,25 +347,19 @@ void FormulaEditor::Refresh() {
 }
 
 void FormulaEditor::UpdateValues() {
-	
-	//       NEW CODE
 
-	// Formulas should be updated beforehand
+	// This only displays formula values already evaluated in formula_ptr
+	// Therefore formulas should be updated beforehand by calling formula_ptr->UpdateFormulaValues
 	for (size_t i = 0; i < formula_ptr->formulas_n.size(); i++) {
 		// Evaluation
-		if (!formula_ptr->formulas_n.at(i)->hasVariableEvalError) { //Variables succesfully evaluated
-            double r = formula_ptr->lastFormulaValues[i].second;
-            std::stringstream tmp;
-            tmp << r;
-            formulaList->SetValueAt(2, i, tmp.str().c_str());
+		if (!formula_ptr->formulas_n[i].hasVariableEvalError) { //Variables succesfully evaluated
+            formulaList->SetValueAt(2, i, std::to_string(formula_ptr->lastFormulaValues[i].second));
 #if defined(MOLFLOW)
-			//formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
 			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif
 		}
 		else { //Error while evaluating variables
-		    //formulas[i].value->SetText("Invalid variable name"); //We set it directly at the error location
-            formulaList->SetValueAt(2, i, formula_ptr->formulas_n.at(i)->GetErrorMsg());
+            formulaList->SetValueAt(2, i, formula_ptr->formulas_n[i].GetErrorMsg());
         }
 	}
 }

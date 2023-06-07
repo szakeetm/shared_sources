@@ -377,7 +377,7 @@ bool InterfaceFacet::BuildMesh() {
         cellPropertiesIds.resize(sh.texWidth * sh.texHeight, 0);
 	    meshvector.resize(sh.texWidth * sh.texHeight); //will shrink at the end
 	}
-    catch (const std::exception &e) {
+    catch (const std::exception &) {
 		std::cerr << "Couldn't allocate memory for mesh" << std::endl;
 		return false;
 	}

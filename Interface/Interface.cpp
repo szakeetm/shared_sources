@@ -165,39 +165,6 @@ Interface::Interface() : GLApplication(){
 #endif
 
     curViewer = 0;
-    //memset(formulas, 0, sizeof formulas);
-
-    //formulaSettings = nullptr;
-    collapseSettings = nullptr;
-    histogramSettings = nullptr;
-    histogramPlotter = nullptr;
-    moveVertex = nullptr;
-    scaleVertex = nullptr;
-    scaleFacet = nullptr;
-    selectDialog = nullptr;
-    selectTextureType = nullptr;
-    selectFacetByResult = nullptr;
-    moveFacet = nullptr;
-    createShape = nullptr;
-    extrudeFacet = nullptr;
-    mirrorFacet = nullptr;
-    mirrorVertex = nullptr;
-    splitFacet = nullptr;
-    buildIntersection = nullptr;
-    rotateFacet = nullptr;
-    rotateVertex = nullptr;
-    alignFacet = nullptr;
-    addVertex = nullptr;
-    loadStatus = nullptr;
-    facetCoordinates = nullptr;
-    vertexCoordinates = nullptr;
-    smartSelection = nullptr;
-    updateCheckDialog = nullptr;
-    updateFoundDialog = nullptr;
-    updateLogWindow = nullptr;
-    manualUpdate = nullptr;
-    particleLogger = nullptr;
-    convergencePlotter = nullptr;
 
     imWnd = nullptr;
 
@@ -241,7 +208,6 @@ void Interface::UpdateViewerFlags() {
     viewer[curViewer]->showFilter = false;//showFilter->GetState();
     viewer[curViewer]->showVertexId = showVertexId->GetState();
     viewer[curViewer]->showIndex = showIndex->GetState();
-    //worker.Update(0.0);
 }
 
 void Interface::ResetSimulation(bool askConfirm) {
@@ -256,7 +222,7 @@ void Interface::ResetSimulation(bool askConfirm) {
             try {
                 this->worker.Stop_Public();
             }
-            catch (const std::exception& e) {
+            catch (const std::exception&) {
                 ok = GLMessageBox::Display("Could not stop simulation, reset anyway ?", "Question",
                                            GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
                 if (!ok)
@@ -2319,15 +2285,11 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) const {
     for (auto &f:formula_ptr->formulas_n) {
-        if (OffsetFormula(f->GetExpression(), 0, -1, newRefs)) {
-            f->Parse();
+        if (OffsetFormula(f.GetExpression(), 0, -1, newRefs)) {
+            f.Parse();
         }
     }
     if (formulaEditor && formulaEditor->IsVisible()) formulaEditor->Refresh();
-}
-
-void Interface::AddFormula(const char *fName, const char *formula) const {
-    formula_ptr->AddFormula(fName, formula);
 }
 
 void Interface::ClearFormulas() const {
@@ -2335,7 +2297,7 @@ void Interface::ClearFormulas() const {
     if (formulaEditor) formulaEditor->Refresh();
 }
 
-bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vector<int> *newRefs) {
+bool Interface::OffsetFormula(std::string& expression, int offset, int filter, std::vector<int> *newRefs) {
     //will increase or decrease facet numbers in a formula
     //only applies to facet numbers larger than "filter" parameter
     //If *newRefs is not nullptr, a vector is passed containing the new references
@@ -2394,7 +2356,7 @@ bool Interface::OffsetFormula(char *expression, int offset, int filter, std::vec
         if (minPos != std::string::npos) pos = minPos + maxLength + digitsLength;
         else pos = minPos;
     }
-    strcpy(expression, newExpr.c_str());
+    expression = newExpr;
     return changed;
 }
 
@@ -2427,7 +2389,7 @@ void Interface::UpdateFormula() {
 	for (int i = 0; i < nbFormula; i++) {
 
 
-		GLParser *f = formulas[i].parser;
+		GLFormula *f = formulas[i].parser;
 		//f->Parse(); //If selection group changed
 
 

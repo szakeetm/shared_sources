@@ -30,7 +30,7 @@ class GLChart;
 class GLLabel;
 class GLCombo;
 class GLButton;
-class GLParser;
+class GLFormula;
 class GLDataView;
 class GLToggle;
 class GLTextField;

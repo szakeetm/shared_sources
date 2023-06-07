@@ -202,42 +202,42 @@ std::vector<std::string> SplitString(const std::string& input) {
     return ret;
 }
 
-std::vector<std::string> SplitString(const std::string& input, const char& delimiter)
+std::vector<std::string> SplitString(const std::string& input, char delimiter)
 {
     std::vector<std::string> result;
-    char* str = strdup(input.c_str());
-    char* str_ptr = str; // keep to free memory
-    do
-    {
-        char* begin = str;
-        while (*str != delimiter && *str)
-            str++;
-        result.emplace_back(std::string(begin, str));
-    } while (0 != *str++);
-    free(str_ptr);
+    std::istringstream iss(input);
+    std::string token;
+    while (std::getline(iss, token, delimiter)) {
+        result.push_back(std::move(token));
+    }
     return result;
-}
-
-bool endsWith(const std::string& fullString, const std::string& ending) {
-    if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
-    }
-    else {
-        return false;
-    }
 }
 
 bool beginsWith(const std::string& fullString, const std::string& beginning) {
     return (fullString.compare(0, beginning.length(), beginning) == 0);
 }
 
-std::string space2underscore(std::string text) {
-    for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
-        if (*it == ' ') {
-            *it = '_';
-        }
-    }
-    return text;
+bool endsWith(const std::string& fullString, const std::string& ending) {
+    if (fullString.length() < ending.length()) return false;
+    return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+}
+
+bool iBeginsWith(const std::string& fullString, const std::string& beginning) {
+    size_t bl = beginning.length();
+    if (bl > fullString.length()) return false;
+    return lowercase(fullString.substr(0,bl))==lowercase(beginning);
+}
+
+bool iEndsWith(const std::string& fullString, const std::string& ending) {
+    size_t el = ending.length();
+    if (el > fullString.length()) return false;
+    return lowercase(fullString.substr(fullString.length() - el)) == lowercase(ending);
+}
+
+std::string space2underscore(std::string str) {
+    std::string newStr = str;
+    std::replace(newStr.begin(), newStr.end(), ' ', '_');
+    return newStr;
 }
 
 std::string molflowToAscii(std::string text) {
@@ -257,7 +257,7 @@ std::string molflowToAscii(std::string text) {
     return text;
 }
 
-bool iequals(std::string str1, std::string str2)
+bool iequals(const std::string& str1, const std::string& str2)
 {
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
     return str1.size() == str2.size()
@@ -268,22 +268,22 @@ bool iequals(std::string str1, std::string str2)
 //  Lowercases string
 //  Known to break with Unicode characters
 //
-std::string lowercase(const std::string& s)
+std::string lowercase(const std::string& str)
 {
-    std::string s2 = s;
-    std::transform(s2.begin(), s2.end(), s2.begin(), tolower);
-    return s2;
+    std::string lowerCaseStr;
+    std::transform(str.begin(), str.end(), std::back_inserter(lowerCaseStr), ::tolower);
+    return lowerCaseStr;
 }
 
 //
 // Uppercases string
 // Known to break with Unicode characters
 //
-std::string uppercase(const std::string& s)
+std::string uppercase(const std::string& str)
 {
-    std::string s2 = s;
-    std::transform(s2.begin(), s2.end(), s2.begin(), toupper);
-    return s2;
+    std::string upperCaseStr;
+    std::transform(str.begin(), str.end(), std::back_inserter(upperCaseStr), ::toupper);
+    return upperCaseStr;
 }
 
 bool iContains(const std::vector<std::string>& vec, const std::string& value) { //Case insensitive "is value in vector". For example iContains({"Apple","Banana"},"BANANA"}) is true

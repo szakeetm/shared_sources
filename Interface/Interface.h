@@ -41,7 +41,7 @@ class GLTitledPanel;
 class GLList;
 class GLCombo;
 class GLMenuBar;
-class GLParser;
+class GLFormula;
 class GLMenu;
 
 class GeometryViewer;
@@ -85,7 +85,7 @@ typedef struct {
 	GLLabel     *name;
 	GLTextField *value;
 	GLButton    *setBtn;
-	GLParser    *parser;
+	GLFormula    *parser;
 } FORMULA;
 */
 
@@ -246,7 +246,7 @@ protected:
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
 	//virtual void UpdateFormula() {}
-	virtual bool EvaluateVariable(VLIST *v) { return false; }
+	//virtual bool EvaluateVariable(VLIST *v) { return false; }
 	virtual void ClearFacetParams() {}
 	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }
@@ -329,7 +329,7 @@ public:
 	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
 	size_t      numCPU;
 
-    bool useOldXMLFormat;
+    bool useOldXMLFormat = false;
     bool     antiAliasing;
 	bool     whiteBg;
 	bool highlightSelection;
@@ -468,38 +468,38 @@ public:
 	size_t idSelection; //Allows "select next" / "select previous" commands
 
 	//Dialog
-	CollapseSettings   *collapseSettings;
-	HistogramSettings  *histogramSettings;
-	HistogramPlotter   *histogramPlotter;
-	MoveVertex		   *moveVertex;
-	ScaleFacet         *scaleFacet;
-	ScaleVertex        *scaleVertex;
-	SelectDialog       *selectDialog;
-	SelectTextureType  *selectTextureType;
-	SelectFacetByResult *selectFacetByResult;
-	ExtrudeFacet	   *extrudeFacet;
-	MoveFacet	  	   *moveFacet;
-	ParticleLogger     *particleLogger;
-	MirrorFacet	       *mirrorFacet;
-	MirrorVertex       *mirrorVertex;
-	CreateShape			*createShape;
-	SplitFacet         *splitFacet;
-	BuildIntersection  *buildIntersection;
-	RotateFacet        *rotateFacet;
-	RotateVertex	   *rotateVertex;
-	AlignFacet         *alignFacet;
-	AddVertex		   *addVertex;
-	LoadStatus			*loadStatus;
-	FacetCoordinates	*facetCoordinates;
-	VertexCoordinates	*vertexCoordinates;
-	SmartSelection		*smartSelection;
-	FormulaEditor		*formulaEditor;
-	ConvergencePlotter   *convergencePlotter;
+	CollapseSettings   *collapseSettings = nullptr;
+	HistogramSettings  *histogramSettings = nullptr;
+	HistogramPlotter   *histogramPlotter = nullptr;
+	MoveVertex		   *moveVertex = nullptr;
+	ScaleFacet         *scaleFacet = nullptr;
+	ScaleVertex        *scaleVertex = nullptr;
+	SelectDialog       *selectDialog = nullptr;
+	SelectTextureType  *selectTextureType = nullptr;
+	SelectFacetByResult *selectFacetByResult = nullptr;
+	ExtrudeFacet	   *extrudeFacet = nullptr;
+	MoveFacet	  	   *moveFacet = nullptr;
+	ParticleLogger     *particleLogger = nullptr;
+	MirrorFacet	       *mirrorFacet = nullptr;
+	MirrorVertex       *mirrorVertex = nullptr;
+	CreateShape			*createShape = nullptr;
+	SplitFacet         *splitFacet = nullptr;
+	BuildIntersection  *buildIntersection = nullptr;
+	RotateFacet        *rotateFacet = nullptr;
+	RotateVertex	   *rotateVertex = nullptr;
+	AlignFacet         *alignFacet = nullptr;
+	AddVertex		   *addVertex = nullptr;
+	LoadStatus			*loadStatus = nullptr;
+	FacetCoordinates	*facetCoordinates = nullptr;
+	VertexCoordinates	*vertexCoordinates = nullptr;
+	SmartSelection		*smartSelection = nullptr;
+	FormulaEditor		*formulaEditor = nullptr;
+	ConvergencePlotter   *convergencePlotter = nullptr;
 
-	UpdateCheckDialog *updateCheckDialog;
-	UpdateFoundDialog *updateFoundDialog;
-	UpdateLogWindow   *updateLogWindow;
-    ManualUpdateCheckDialog* manualUpdate;
+	UpdateCheckDialog *updateCheckDialog = nullptr;
+	UpdateFoundDialog *updateFoundDialog = nullptr;
+	UpdateLogWindow   *updateLogWindow = nullptr;
+    ManualUpdateCheckDialog* manualUpdate = nullptr;
 
 	void LoadSelection(const char *fName = nullptr);
 	void SaveSelection();
@@ -524,15 +524,7 @@ public:
 	int  Resize(size_t width, size_t height, bool forceWindowed) override;
 
 	// Formula management
-	//int nbFormula;
-	//FORMULA formulas[MAX_FORMULA];
-	//void ProcessFormulaButtons(GLComponent *src);
-	//void AddFormula(GLParser *f, bool doUpdate = true);
-	void AddFormula(const char *fName, const char *formula) const; //file loading
-	//void UpdateFormulaName(int i);
-	//void DeleteFormula(int id);
-	static bool OffsetFormula(char* expression, int offset, int filter = -1, std::vector<int> *newRefs = nullptr);
-	//void UpdateFormula();
+	static bool OffsetFormula(std::string& expression, int offset, int filter = -1, std::vector<int> *newRefs = nullptr);
 	void RenumberFormulas(std::vector<int> *newRefs) const;
 	void ClearFormulas() const;
 

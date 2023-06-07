@@ -27,20 +27,18 @@ constexpr size_t max_vector_size() { return 65536; };
 constexpr size_t d_precision() { return 5; };
 
 //! Add a formula to the formula storage
-void Formulas::AddFormula(const char *fName, const char *formula) {
-    GLParser *f2 = new GLParser();
-    f2->SetExpression(formula);
-    f2->SetName(fName);
-    f2->Parse();
+void Formulas::AddFormula(const std::string& name, const std::string& expression) {
+    GLFormula p;
+    p.SetExpression(expression);
+    p.SetName(name);
+    p.Parse();
 
-    formulas_n.push_back(f2);
+    formulas_n.push_back(p);
     UpdateVectorSize();
 }
 
 //! Clear formula storage
 void Formulas::ClearFormulas() {
-    for (auto &f : formulas_n)
-        SAFE_DELETE(f);
     formulas_n.clear();
     UpdateVectorSize();
 }
@@ -48,21 +46,22 @@ void Formulas::ClearFormulas() {
 //! Initialize formulas by parsing string to values
 bool Formulas::InitializeFormulas(){
     bool allOk = true;
-    for (auto & i : formulas_n) {
-
+    for (auto & formula : formulas_n) {
         // Evaluate variables
-        int nbVar = i->GetNbVariable();
+        int nbVar = formula.GetNbVariable();
         bool ok = true;
         for (int j = 0; j < nbVar && ok; j++) {
-            VLIST *v = i->GetVariableAt(j);
-            ok = evaluator->EvaluateVariable(v);
+            auto varIterator = formula.GetVariableAt(j);
+            ok = evaluator->EvaluateVariable(varIterator);
+            if (!ok) {
+                formula.SetVariableEvalError(fmt::format("Unknown variable '{}'", varIterator->varName));
+            }
         }
 
         if (ok) {
-            i->hasVariableEvalError = false;
+            formula.hasVariableEvalError = false;
         }
         else{
-            i->SetVariableEvalError("Unknown formula specifier");
             allOk = false;
         }
     }
@@ -93,11 +92,11 @@ bool Formulas::UpdateFormulaValues(size_t nbDesorbed) {
     if (!formulas_n.empty()) {
         for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
             double r;
-            if (formulas_n[formulaId]->Evaluate(&r)) {
+            if (formulas_n[formulaId].Evaluate(&r)) {
                 lastFormulaValues[formulaId] = std::make_pair(nbDesorbed, r);
             }
             else{
-                formulas_n[formulaId]->SetVariableEvalError(formulas_n.at(formulaId)->GetErrorMsg());
+                formulas_n[formulaId].SetVariableEvalError(formulas_n[formulaId].GetErrorMsg());
             }
         }
         FetchNewConvValue();
@@ -112,7 +111,7 @@ bool Formulas::FetchNewConvValue() {
     if (!formulas_n.empty()) {
         UpdateVectorSize();
         for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
-            if(formulas_n.at(formulaId)->hasVariableEvalError) {
+            if(formulas_n[formulaId].hasVariableEvalError) {
                 continue;
             }
 

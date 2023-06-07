@@ -122,7 +122,7 @@ namespace SettingsIO {
         try {
             if (!std::filesystem::exists(SettingsIO::workPath))
                 std::filesystem::create_directory(SettingsIO::workPath);
-        } catch (const std::exception &e) {
+        } catch (const std::exception &) {
             Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
                                SettingsIO::workPath);
@@ -133,7 +133,7 @@ namespace SettingsIO {
             try {
                 if (!std::filesystem::exists(SettingsIO::workPath))
                     std::filesystem::create_directory(SettingsIO::workPath);
-            } catch (const std::exception &e) {
+            } catch (const std::exception &) {
                 SettingsIO::workPath = "./";
                 Log::console_error("Couldn't create fallback directory [ tmp/ ], falling "
                                    "back to binary folder instead for output files\n");
@@ -158,7 +158,7 @@ namespace SettingsIO {
             try {
                 if (!std::filesystem::exists(outputFilePath))
                     std::filesystem::create_directory(outputFilePath);
-            } catch (const std::exception &e) {
+            } catch (const std::exception &) {
                 Log::console_error(
                         "Couldn't create parent directory set by output filename [ {} ], "
                         "will only use default output path instead\n",
