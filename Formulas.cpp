@@ -33,19 +33,19 @@ void Formulas::AddFormula(const std::string& name, const std::string& expression
     p.SetName(name);
     p.Parse();
 
-    formulas_n.push_back(std::move(p)); //copy constructing is not permissible as evalTree would be destroyed
+    formulas.push_back(std::move(p)); //copy constructing is not permissible as evalTree would be destroyed
     UpdateVectorSize();
 }
 
 //! Clear formula storage
 void Formulas::ClearFormulas() {
-    formulas_n.clear();
+    formulas.clear();
     UpdateVectorSize();
 }
 
 //! Initialize formulas by parsing string to values
 void Formulas::EvaluateFormulaVariables(){
-    for (auto & formula : formulas_n) {
+    for (auto & formula : formulas) {
         // Evaluate variables
         int nbVar = formula.GetNbVariable();
         bool ok = true; //for each formula, stop at first invalid variable name
@@ -68,7 +68,7 @@ void Formulas::EvaluateFormulaVariables(){
 */
 void Formulas::UpdateVectorSize() {
     //Rebuild vector size
-    size_t nbFormulas = formulas_n.size();
+    size_t nbFormulas = formulas.size();
     if (convergenceValues.size() != nbFormulas) {
         convergenceValues.resize(nbFormulas);
     }
@@ -80,22 +80,22 @@ void Formulas::UpdateVectorSize() {
 //Calculate formula values for later usage in corresponding windows
 void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 
-	if (formulas_n.empty()) return;
+	if (formulas.empty()) return;
 
 	// First evaluate variable values
 	EvaluateFormulaVariables();
 
 	// Next evaluate each formula and cache values for later usage
 	// in FormulaEditor, ConvergencePlotter
-	for (int i = 0; i < formulas_n.size(); ++i) {
+	for (int i = 0; i < formulas.size(); ++i) {
 
-        if (!formulas_n[i].hasVariableEvalError) {
+        if (!formulas[i].hasVariableEvalError) {
             double r;
-            if (formulas_n[i].Evaluate(&r)) {
+            if (formulas[i].Evaluate(&r)) {
                 lastFormulaValues[i] = std::make_pair(nbDesorbed, r);
             }
             else {
-                formulas_n[i].SetVariableEvalError(formulas_n[i].GetErrorMsg());
+                formulas[i].SetVariableEvalError(formulas[i].GetErrorMsg());
             }
         }
 	}
@@ -105,10 +105,10 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 //! Add new value to convergence vector
 bool Formulas::FetchNewConvValue() {
     bool hasChanged = false;
-    if (!formulas_n.empty()) {
+    if (!formulas.empty()) {
         UpdateVectorSize();
-        for (int formulaId = 0; formulaId < formulas_n.size(); ++formulaId) {
-            if(formulas_n[formulaId].hasVariableEvalError) {
+        for (int formulaId = 0; formulaId < formulas.size(); ++formulaId) {
+            if(formulas[formulaId].hasVariableEvalError) {
                 continue;
             }
 

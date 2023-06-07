@@ -2284,7 +2284,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) const {
-    for (auto &f:formula_ptr->formulas_n) {
+    for (auto &f:formula_ptr->formulas) {
         if (OffsetFormula(f.GetExpression(), 0, -1, newRefs)) {
             f.Parse();
         }

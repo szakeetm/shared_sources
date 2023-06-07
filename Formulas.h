@@ -62,7 +62,7 @@ struct Formulas {
     void pruneEveryN(size_t everyN, int formulaId, size_t skipLastN);
     void pruneFirstN(size_t n, int formulaId);
 
-    std::vector<GLFormula> formulas_n;
+    std::vector<GLFormula> formulas;
     std::vector<std::pair<size_t,double>> lastFormulaValues;
     std::vector<ConvergenceData> convergenceValues; // One vector of nbDesorption,formulaValue pairs for each formula
     std::vector<size_t> freq_accum;

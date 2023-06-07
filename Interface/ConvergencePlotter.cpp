@@ -204,13 +204,13 @@ void ConvergencePlotter::ResetData() {
 void ConvergencePlotter::Refresh() {
 
     //Rebuild selection combo box
-    size_t nbFormulas = formula_ptr->formulas_n.size(); // minimum 1 for custom input
+    size_t nbFormulas = formula_ptr->formulas.size(); // minimum 1 for custom input
     profCombo->Clear();
     if (nbFormulas) {
         profCombo->SetSize(nbFormulas);
         for (size_t i = 0; i < nbFormulas; i++) {
             char tmp[128];
-            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas_n[i].GetExpression());
+            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas[i].GetExpression());
             profCombo->SetValueAt(i, tmp, (int) i);
         }
         profCombo->SetEditable(true);
@@ -225,7 +225,7 @@ void ConvergencePlotter::Refresh() {
 
     //Remove profiles that aren't present anymore
     for (int v = nbView - 1; v >= 0; v--) { //int because it can be -1, nbView is also int
-        if (formula_ptr->formulas_n.empty()) {
+        if (formula_ptr->formulas.empty()) {
             chart->GetY1Axis()->RemoveDataView(views[v]);
             SAFE_DELETE(views[v]);
             for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
@@ -234,9 +234,9 @@ void ConvergencePlotter::Refresh() {
         }
         int formId = 0;
         while (views[v]->userData1 !=
-               (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId].GetExpression())) {
+               (int) std::hash<std::string>{}(formula_ptr->formulas[formId].GetExpression())) {
             ++formId;
-            if (formId >= formula_ptr->formulas_n.size()) {
+            if (formId >= formula_ptr->formulas.size()) {
                 chart->GetY1Axis()->RemoveDataView(views[v]);
                 SAFE_DELETE(views[v]);
                 for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
@@ -269,7 +269,7 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-    if (formula_ptr->formulas_n.empty() || !formula_ptr->sampleConvValues || !nbView) {
+    if (formula_ptr->formulas.empty() || !formula_ptr->sampleConvValues || !nbView) {
         return;
     }
 
@@ -356,11 +356,11 @@ void ConvergencePlotter::refreshViews() {
     for (int i = 0; i < nbView; i++) {
 
         GLDataView *v = views[i];
-        if (formula_ptr->formulas_n.empty()) return;
+        if (formula_ptr->formulas.empty()) return;
         int formId = 0;
-        while (v->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas_n[formId].GetExpression())) {
+        while (v->userData1 != (int) std::hash<std::string>{}(formula_ptr->formulas[formId].GetExpression())) {
             ++formId;
-            if (formId >= formula_ptr->formulas_n.size())
+            if (formId >= formula_ptr->formulas.size())
                 return;
         }
 
@@ -382,7 +382,7 @@ void ConvergencePlotter::refreshViews() {
 */
 int ConvergencePlotter::addView(int formulaHash) {
 
-    if (formula_ptr->formulas_n.empty()) return 0;
+    if (formula_ptr->formulas.empty()) return 0;
 
     // Check that view is not already added
     bool found = false;
@@ -397,8 +397,8 @@ int ConvergencePlotter::addView(int formulaHash) {
     if (nbView < MAX_VIEWS) {
         found = false;
         GLFormula* formula;
-        for (i = 0; !found && i < formula_ptr->formulas_n.size();i++) {
-            formula = &(formula_ptr->formulas_n[i]);
+        for (i = 0; !found && i < formula_ptr->formulas.size();i++) {
+            formula = &(formula_ptr->formulas[i]);
             int str_hash = std::hash<std::string>{}(formula->GetExpression());
             if (str_hash == formulaHash) {
                 found = true;
@@ -470,24 +470,24 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             if (src == dismissButton) {
                 SetVisible(false);
             } else if (src == pruneEveryNButton) {
-                for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
+                for (int formulaId = 0; formulaId < formula_ptr->formulas.size(); ++formulaId) {
                     formula_ptr->pruneEveryN(4, formulaId, 0);
                 }
                 refreshViews();
             } else if (src == pruneFirstNButton) {
-                for (int formulaId = 0; formulaId < formula_ptr->formulas_n.size(); ++formulaId) {
+                for (int formulaId = 0; formulaId < formula_ptr->formulas.size(); ++formulaId) {
                     formula_ptr->pruneFirstN(100, formulaId);
                 }
                 refreshViews();
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
-                if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
-                    if(formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].hasVariableEvalError){
+                if (idx >= 0 && !formula_ptr->formulas.empty()) { //Something selected (not -1)
+                    if(formula_ptr->formulas[profCombo->GetUserValueAt(idx)].hasVariableEvalError){
                         GLMessageBox::Display("Formula can't be evaluated.", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         break;
                     }
                     int str_hash = std::hash<std::string>{}(
-                            formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].GetExpression());
+                            formula_ptr->formulas[profCombo->GetUserValueAt(idx)].GetExpression());
                     if (addView(str_hash))
                         GLMessageBox::Display("Profile already plotted", "Info", GLDLG_OK, GLDLG_ICONINFO);
                     refreshViews();
@@ -495,9 +495,9 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == removeButton) {
 
                 int idx = profCombo->GetSelectedIndex();
-                if (idx >= 0 && !formula_ptr->formulas_n.empty()) { //Something selected (not -1)
+                if (idx >= 0 && !formula_ptr->formulas.empty()) { //Something selected (not -1)
                     int str_hash = std::hash<std::string>{}(
-                            formula_ptr->formulas_n[profCombo->GetUserValueAt(idx)].GetExpression());
+                            formula_ptr->formulas[profCombo->GetUserValueAt(idx)].GetExpression());
                     if (remView(str_hash)) {
                         GLMessageBox::Display("Profile not plotted", "Error", GLDLG_OK, GLDLG_ICONERROR);
                     }
