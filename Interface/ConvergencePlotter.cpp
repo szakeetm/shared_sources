@@ -209,16 +209,12 @@ void ConvergencePlotter::Refresh() {
     if (nbFormulas) {
         profCombo->SetSize(nbFormulas);
         for (size_t i = 0; i < nbFormulas; i++) {
-            char tmp[128];
-            sprintf(tmp, "[%zd] %s", i + 1, formula_ptr->formulas[i].GetExpression());
-            profCombo->SetValueAt(i, tmp, (int) i);
+            profCombo->SetValueAt(i, fmt::format("[{}] {}",i + 1, formula_ptr->formulas[i].GetExpression()), (int) i);
         }
         profCombo->SetEditable(true);
     } else {
         profCombo->SetSize(1);
-        char tmp[128];
-        sprintf(tmp, "%s", "No formula found");
-        profCombo->SetValueAt(0, tmp, (int) -1);
+        profCombo->SetValueAt(0, "No formula found", (int) -1);
         profCombo->SetEditable(false);
     }
     profCombo->SetSelectedIndex(0);

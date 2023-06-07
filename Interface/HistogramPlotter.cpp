@@ -210,7 +210,7 @@ void HistogramPlotter::Refresh() {
 			name << "Global";
 		else
 			name << "Facet #" << (id + 1);
-		histCombo->SetValueAt(nbProf++, name.str().c_str(),id);
+		histCombo->SetValueAt(nbProf++, name.str(),id);
 	}
 	histCombo->SetSelectedIndex(histogramFacetIds.size() ? 0 : -1);
 	//Refresh chart

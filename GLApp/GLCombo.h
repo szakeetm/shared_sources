@@ -17,7 +17,7 @@ public:
   // Component methods
   void Clear();
   void SetSize(size_t nbRow);
-  void SetValueAt(size_t row,const char *value,int userValue=0);
+  void SetValueAt(size_t row, const std::string& value, int userValue = 0);
   int  GetUserValueAt(size_t row);
   void SetSelectedValue(const char *value);
   void ScrollTextToEnd();
