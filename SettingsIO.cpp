@@ -32,7 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 namespace SettingsIO {
     // explanation in header
     bool overwrite = false;
-    bool isArchive = false;
+    //bool isArchive = false;
     bool outputFacetDetails = false;
     bool outputFacetQuantities = false;
     bool autogenerateTest = false;
@@ -40,13 +40,13 @@ namespace SettingsIO {
     std::string workFile;
     std::string workPath;
     std::string inputFile;
-    std::string inputPath;
+    //std::string inputPath;
     std::string outputFile;
     std::string outputPath;
-    std::vector<std::string> extraFiles;
-    std::map<std::string, std::vector<std::string>> cachedLines;
-    std::vector<std::vector<std::string>> formulas;
-    std::vector<SelectionGroup> selections;
+    //std::vector<std::string> extraFiles;
+    //std::map<std::string, std::vector<std::string>> cachedLines;
+    //std::vector<std::vector<std::string>> formulas;
+    //std::vector<SelectionGroup> selections;
     const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
     //! prepares work/output directories and unpacks from archive
@@ -67,11 +67,13 @@ namespace SettingsIO {
     int initDirectories() {
 
         int err = 0;
-
+        
+        /*
         if (std::filesystem::path(SettingsIO::inputFile).has_parent_path()) {
             SettingsIO::inputPath =
                     std::filesystem::path(SettingsIO::inputFile).parent_path().string();
         }
+        */
 
         // Overwrite excludes outputpath/filename
         if (SettingsIO::overwrite) {
@@ -173,7 +175,7 @@ namespace SettingsIO {
     //! Unzip file and set correct variables (e.g. uncompressed work file)
     int initFromZip() {
         if (std::filesystem::path(SettingsIO::inputFile).extension() == ".zip") {
-            SettingsIO::isArchive = true;
+            //SettingsIO::isArchive = true;
 
             // decompress file
             std::string parseFileName;

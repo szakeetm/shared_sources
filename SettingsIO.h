@@ -33,16 +33,16 @@ namespace SettingsIO {
     extern std::string workFile; //! Uncompressed file that is used for the simulation
     extern std::string workPath; //! Output path for various simulation files (e.g. autosave), can be different from outputPath e.g. for cluster simulations
     extern std::string inputFile; //! Uncompressed or compressed file that is used for the simulation
-    extern std::string inputPath; //! Path to input file
+    //extern std::string inputPath; //! Path to input file
     extern std::string outputFile; //! Output file name
     extern std::string outputPath; //! Outputpath for output file
-    extern std::vector<std::string> extraFiles; //! deprecated
-    extern std::map<std::string, std::vector<std::string>> cachedLines; //! deprecated
-    extern std::vector<std::vector<std::string>> formulas; //! cached formula values to keep them for a valid output file
-    extern std::vector<SelectionGroup> selections; //! cached selection groups to keep them for a valid output file
+    //extern std::vector<std::string> extraFiles; //! deprecated
+    //extern std::map<std::string, std::vector<std::string>> cachedLines; //! deprecated
+    //extern std::vector<std::vector<std::string>> formulas; //! cached formula values to keep them for a valid output file
+    //extern std::vector<SelectionGroup> selections; //! cached selection groups to keep them for a valid output file
 
     extern bool overwrite; //! whether overwriting the inputfile is allowed
-    extern bool isArchive; //! whether the input file is an archive
+    //extern bool isArchive; //! whether the input file is an archive
     extern bool outputFacetDetails; //! whether output for all facet details is wanted
     extern bool outputFacetQuantities; //! whether output for derived facet quantities is wanted
     extern bool autogenerateTest; //! whether an automatically generated test case should be used as input
