@@ -50,8 +50,8 @@ struct Formulas {
     void ClearFormulas();
 
     void UpdateVectorSize();
-    bool InitializeFormulas();
-    bool UpdateFormulaValues(size_t nbDesorbed);
+    void EvaluateFormulaVariables();
+    void EvaluateFormulas(size_t nbDesorbed);
     bool FetchNewConvValue();
     double GetConvRate(int formulaId);
     void RestartASCBR(int formulaId);

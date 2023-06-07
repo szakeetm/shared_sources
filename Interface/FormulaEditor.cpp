@@ -138,7 +138,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	}
 	case MSG_BUTTON:
 		if (src == recalcButton) {
-            formula_ptr->UpdateFormulaValues(work->globalStatCache.globalHits.nbDesorbed);
+            formula_ptr->EvaluateFormulas(work->globalStatCache.globalHits.nbDesorbed);
             UpdateValues();
 		}
 		else if (src == convPlotterButton) {
@@ -248,7 +248,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		EnableDisableMoveButtons();
 		formula_ptr->formulasChanged = true;
 
-        formula_ptr->UpdateFormulaValues(work->globalStatCache.globalHits.nbDesorbed);
+        formula_ptr->EvaluateFormulas(work->globalStatCache.globalHits.nbDesorbed);
         UpdateValues();
 
 		break;
@@ -349,17 +349,20 @@ void FormulaEditor::Refresh() {
 void FormulaEditor::UpdateValues() {
 
 	// This only displays formula values already evaluated in formula_ptr
-	// Therefore formulas should be updated beforehand by calling formula_ptr->UpdateFormulaValues
+	// Therefore formulas should be updated beforehand by calling formula_ptr->EvaluateFormulas
 	for (size_t i = 0; i < formula_ptr->formulas_n.size(); i++) {
 		// Evaluation
 		if (!formula_ptr->formulas_n[i].hasVariableEvalError) { //Variables succesfully evaluated
-            formulaList->SetValueAt(2, i, std::to_string(formula_ptr->lastFormulaValues[i].second));
+			double r = formula_ptr->lastFormulaValues[i].second;
+			std::stringstream tmp;
+			tmp << r; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
+			formulaList->SetValueAt(2, i, tmp.str());
 #if defined(MOLFLOW)
 			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif
 		}
 		else { //Error while evaluating variables
-            formulaList->SetValueAt(2, i, formula_ptr->formulas_n[i].GetErrorMsg());
+            formulaList->SetValueAt(2, i, formula_ptr->formulas_n[i].GetVariableEvalError());
         }
 	}
 }

@@ -122,7 +122,7 @@ public:
 private:
 
 	double EvalTree(std::shared_ptr<EtreeNode>& node);
-	void   ReadExpression(std::shared_ptr<EtreeNode>& node);
+	void   ReadPlusMinus(std::shared_ptr<EtreeNode>& node);
 	bool   TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode>& node);
 	void   ReadTerm(std::shared_ptr<EtreeNode>& node);
 	void   ReadPower(std::shared_ptr<EtreeNode>& node);

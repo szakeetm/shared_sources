@@ -1132,7 +1132,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         formulaEditor = new FormulaEditor(&worker, formula_ptr);
                         formulaEditor->Refresh();
                         // Load values on init
-                        formula_ptr->UpdateFormulaValues(worker.globalStatCache.globalHits.nbDesorbed);
+                        formula_ptr->EvaluateFormulas(worker.globalStatCache.globalHits.nbDesorbed);
                         formulaEditor->UpdateValues();
                         // ---
                         formulaEditor->SetVisible(true);
@@ -2618,7 +2618,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                formula_ptr->UpdateFormulaValues(hitCache.nbDesorbed);
+                formula_ptr->EvaluateFormulas(hitCache.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas

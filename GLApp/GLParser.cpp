@@ -60,7 +60,7 @@ void GLFormula::AV(size_t times)
 
 // Set global error
 void GLFormula::SetError(const std::string& _errMsg, int pos) {
-	this->errMsg = fmt::format("{} at pos. {}", _errMsg, pos);
+	this->errMsg = fmt::format("{} at pos. {}", _errMsg, pos+1);
 	this->error = true;
 }
 
@@ -169,10 +169,10 @@ std::string GLFormula::ReadVariable() {
 }
 
 bool GLFormula::TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode>& node) { //searches for "term" in expression, and makes tree node with operand. returns true if found and treated
-	if (std::string term = "abs("; iBeginsWith(expression, term)) {
+	if (iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
 		auto left = std::make_shared<EtreeNode>(std::monostate{});
-		ReadExpression(left);
+		ReadPlusMinus(left);
 		AddNode(OPER_ABS, std::monostate{}, node, left, nullptr);
 		if (currentChar != ')') SetError(") expected", currentPos);
 		AV();
@@ -186,7 +186,7 @@ void GLFormula::ReadTerm(std::shared_ptr<EtreeNode>& node) //read mathematical t
 
 	if (error) return;
 
-	if (currentChar == '.') {
+	if (currentChar == '.' || (currentChar >= '0' && currentChar <= '9')) { //digit
 		double val;
 		ReadDouble(&val);
 		if (!error) AddNode(TDOUBLE, val, node, nullptr, nullptr);
@@ -194,7 +194,7 @@ void GLFormula::ReadTerm(std::shared_ptr<EtreeNode>& node) //read mathematical t
 	else if (currentChar == '(') {
 
 		AV(); //opening (
-		ReadExpression(node);
+		ReadPlusMinus(node);
 		if (currentChar != ')') {
 			SetError(") expected", currentPos);
 		}
@@ -206,32 +206,7 @@ void GLFormula::ReadTerm(std::shared_ptr<EtreeNode>& node) //read mathematical t
 		auto left = std::make_shared<EtreeNode>(std::monostate{}); ReadTerm(left);
 		AddNode(OPER_MINUS1, std::monostate{}, node, left, nullptr);
 	}
-
-	// Math functions
-	if (TreatTerm("abs(", OPER_ABS, node)) return;
-	if (TreatTerm("asin(", OPER_ASIN, node)) return;
-	if (TreatTerm("acos(", OPER_ACOS, node)) return;
-	if (TreatTerm("atan(", OPER_ATAN, node)) return;
-
-	if (TreatTerm("cos(", OPER_COS, node)) return;
-	if (TreatTerm("cosh(", OPER_COSH, node)) return;
-
-	if (TreatTerm("exp(", OPER_EXP, node)) return;
-
-	if (TreatTerm("fact(", OPER_FACT, node)) return;
-
-	if (TreatTerm("ln(", OPER_LN, node)) return;
-	if (TreatTerm("log2(", OPER_LOG2, node)) return;
-	if (TreatTerm("log10(", OPER_LOG10, node)) return;
-
-	if (TreatTerm("sin(", OPER_SIN, node)) return;
-	if (TreatTerm("sqrt(", OPER_SQRT, node)) return;
-	if (TreatTerm("sinh(", OPER_SINH, node)) return;
-
-	if (TreatTerm("tan(", OPER_TAN, node)) return;
-	if (TreatTerm("tanh(", OPER_TANH, node)) return;
-
-	if (std::string term = "AVG("; iBeginsWith(expression, term)) {
+	else if (std::string term = "AVG("; iBeginsWith(expression.substr(currentPos), term)) {
 		std::string avgExpression;
 		avgExpression += currentChar;
 		while (currentChar != ')') {
@@ -253,29 +228,56 @@ void GLFormula::ReadTerm(std::shared_ptr<EtreeNode>& node) //read mathematical t
 		auto varIterator = AddVar(sumExpression);
 		AddNode(TVARIABLE, varIterator, node, nullptr, nullptr);
 	}
-	else if (std::string term = "pi"; iBeginsWith(expression, term)) {
+	else if (std::string term = "pi"; iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
 		AddNode(TDOUBLE, M_PI, node, nullptr, nullptr);
 	}
-	else if (std::string term = "pow("; iBeginsWith(expression, term)) {
+	else if (std::string term = "pow("; iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
-		auto left = std::make_shared<EtreeNode>(std::monostate{}); ReadExpression(left);
+		auto left = std::make_shared<EtreeNode>(std::monostate{}); ReadPlusMinus(left);
 		if (currentChar != ',') SetError(", expected", currentPos);
 		AV();
-		auto right = std::make_shared<EtreeNode>(std::monostate{}); ReadExpression(right);
+		auto right = std::make_shared<EtreeNode>(std::monostate{}); ReadPlusMinus(right);
 		AddNode(OPER_POW, std::monostate{}, node, left, right);
 		if (currentChar != ')') SetError(") expected", currentPos);
 		AV();
 	}
 	else {
+
+		// Math functions
+		if (TreatTerm("abs(", OPER_ABS, node)) return;
+		if (TreatTerm("asin(", OPER_ASIN, node)) return;
+		if (TreatTerm("acos(", OPER_ACOS, node)) return;
+		if (TreatTerm("atan(", OPER_ATAN, node)) return;
+
+		if (TreatTerm("cos(", OPER_COS, node)) return;
+		if (TreatTerm("cosh(", OPER_COSH, node)) return;
+
+		if (TreatTerm("exp(", OPER_EXP, node)) return;
+
+		if (TreatTerm("fact(", OPER_FACT, node)) return;
+
+		if (TreatTerm("ln(", OPER_LN, node)) return;
+		if (TreatTerm("log2(", OPER_LOG2, node)) return;
+		if (TreatTerm("log10(", OPER_LOG10, node)) return;
+
+		if (TreatTerm("sin(", OPER_SIN, node)) return;
+		if (TreatTerm("sqrt(", OPER_SQRT, node)) return;
+		if (TreatTerm("sinh(", OPER_SINH, node)) return;
+
+		if (TreatTerm("tan(", OPER_TAN, node)) return;
+		if (TreatTerm("tanh(", OPER_TANH, node)) return;
+
+		//Variable name
 		if ((currentChar >= 'A' && currentChar <= 'Z') ||
 			(currentChar >= 'a' && currentChar <= 'z') ||
-			(currentChar == '_'))
-		{
+			(currentChar == '_')) {
 			auto varIterator = AddVar(ReadVariable());
 			AddNode(TVARIABLE, varIterator, node, nullptr, nullptr);
 		}
 		else {
+
+			//Nothing could treat the term, set error	
 			SetError("Syntax error", currentPos);
 		}
 	}
@@ -329,7 +331,7 @@ void GLFormula::ReadFactor(std::shared_ptr<EtreeNode>& node) //write to node
 	node = left;
 }
 
-void GLFormula::ReadExpression(std::shared_ptr<EtreeNode>& node) //write to node
+void GLFormula::ReadPlusMinus(std::shared_ptr<EtreeNode>& node) //write to node
 {
 	if (error) return;
 
@@ -378,7 +380,7 @@ bool GLFormula::Parse()
 	evalTree = std::make_shared<EtreeNode>(std::monostate{});
 	varList.clear();
 
-	ReadExpression(evalTree);
+	ReadPlusMinus(evalTree);
 
 	if (currentPos != (int)expression.length()) { //couldn't parse till end
 		SetError("Syntax error", currentPos);
