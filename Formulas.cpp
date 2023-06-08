@@ -44,23 +44,22 @@ void Formulas::ClearFormulas() {
 }
 
 //! Initialize formulas by parsing string to values
-void Formulas::EvaluateFormulaVariables(){
-    for (auto & formula : formulas) {
-        // Evaluate variables
-        size_t nbVar = formula.GetNbVariable();
-        bool ok = true; //for each formula, stop at first invalid variable name
-        for (size_t j = 0; j < nbVar && ok; j++) {
-            auto varIterator = formula.GetVariableAt(j);
-            ok = evaluator->EvaluateVariable(varIterator);
-            if (!ok) {
-                formula.SetVariableEvalError(fmt::format("Unknown variable '{}'", varIterator->varName));
-            }
-        }
+void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& previousFormulaValues){
+    auto& formula = formulas[formulaIndex];
+	
+	size_t nbVar = formula.GetNbVariable();
+	bool ok = true; //for each formula, stop at first invalid variable name
+	for (size_t j = 0; j < nbVar && ok; j++) {
+		auto varIterator = formula.GetVariableAt(j);
+		ok = evaluator->EvaluateVariable(varIterator,previousFormulaValues);
+		if (!ok) {
+			formula.SetVariableEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
+		}
+	}
 
-        if (ok) {
-            formula.hasVariableEvalError = false;
-        }
-    }
+	if (ok) {
+		formula.hasVariableEvalError = false;
+	}
 };
 
 /**
@@ -82,22 +81,24 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 
 	if (formulas.empty()) return;
 
-	// First evaluate variable values
-	EvaluateFormulaVariables();
+    std::vector <std::pair<std::string, std::optional<double>>> previousFormulaValues; //Formulas can refer to previous formulas by number or by name. If evaluation was succesful, they can see their value
 
-	// Next evaluate each formula and cache values for later usage
+	// Evaluate each formula and cache values for later usage
 	// in FormulaEditor, ConvergencePlotter
-	for (int i = 0; i < formulas.size(); ++i) {
-
+	for (size_t i = 0; i < formulas.size(); ++i) {
+        // First evaluate variable values
+        EvaluateFormulaVariables(i,previousFormulaValues);
         if (!formulas[i].hasVariableEvalError) {
             auto res = formulas[i].Evaluate();
             if (res.has_value()) {
                 lastFormulaValues[i] = std::make_pair(nbDesorbed, res.value());
+                previousFormulaValues.push_back({ formulas[i].GetName(),res.value()});
             }
             else {
                 formulas[i].SetVariableEvalError(formulas[i].GetErrorMsg());
+                previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
             }
-        }
+        } else previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
 	}
 	FetchNewConvValue();
 }

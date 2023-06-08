@@ -50,7 +50,7 @@ struct Formulas {
     void ClearFormulas();
 
     void UpdateVectorSize();
-    void EvaluateFormulaVariables();
+    void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& previousFormulaValues);
     void EvaluateFormulas(size_t nbDesorbed);
     bool FetchNewConvValue();
     double GetConvRate(int formulaId);
