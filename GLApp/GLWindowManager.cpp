@@ -127,13 +127,13 @@ void GLWindowManager::DrawStats() {
     char polys[256];
     sprintf(polys,"Quad:%d Line:%d Paint:%.2f ms   ",
     theApp->nbPoly,theApp->nbLine,theApp->fPaintTime*1000.0);
-    GLToolkit::GetDialogFont()->DrawTextFast(7,h-99,polys);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-99,polys);
     sprintf(polys,"Restore:%d FrameMove:%.2f ms   ",theApp->nbRestore,theApp->fMoveTime*1000.0);
-    GLToolkit::GetDialogFont()->DrawTextFast(7,h-83,polys);
-    GLToolkit::GetDialogFont()->DrawTextFast(7,h-65,theApp->m_strEventStats);
-    GLToolkit::GetDialogFont()->DrawTextFast(7,h-48,theApp->m_strFrameStats);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-83,polys);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-65,theApp->m_strEventStats);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-48,theApp->m_strFrameStats);
 	sprintf(polys,"m_fTime:%4.2f",theApp->m_fTime);
-	GLToolkit::GetDialogFont()->DrawTextFast(150,h-48,polys);
+	GLToolkit::GetDialogFont()->GLDrawTextFast(150,h-48,polys);
   }
   
 #endif

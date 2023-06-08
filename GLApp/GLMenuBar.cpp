@@ -117,7 +117,7 @@ void GLMenuBar::Paint() {
       if( selMenu==i )
         GLToolkit::DrawBox(p->x,p->y+1,p->width,p->height,rBack,gBack,bBack,true,false);
     }
-    GLToolkit::GetDialogFont()->DrawText(p->x+SIDE_MARGIN,p->y+3,p->itemName,false);
+    GLToolkit::GetDialogFont()->GLDrawText(p->x+SIDE_MARGIN,p->y+3,p->itemName,false);
 
     // Shortcut underline
     if( p->shortcut ) {

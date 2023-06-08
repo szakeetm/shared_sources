@@ -952,10 +952,10 @@ void GLToolkit::DrawString(float x,float y,float z,const char *str,GLFont2D *fnt
   int ye = dsg.y +(int)(((-ry / rw) + 1.0f) * (float)dsg.height/2.0f);
 
   if (fast) {
-      fnt->DrawTextFast(xe + offx, ye + offy, str);
+      fnt->GLDrawTextFast(xe + offx, ye + offy, str);
   }
   else {
-      fnt->DrawText(xe + offx, ye + offy, str, false);
+      fnt->GLDrawText(xe + offx, ye + offy, str, false);
   }
 }
 

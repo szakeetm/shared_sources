@@ -50,7 +50,7 @@ private:
   GLuint  texId;
   int     fWidth;
   int     fHeight;
-  int     cWidth;
+  int     cMaxWidth;
   int     cHeight;
   float   rC;
   float   gC;

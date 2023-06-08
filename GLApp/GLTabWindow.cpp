@@ -119,7 +119,7 @@ private:
 
     int sx = x+(w-font->GetTextWidth(panels[idx].name))/2;
     font->SetTextColor(rText,gText,bText);
-    font->DrawText(sx,y+3,panels[idx].name);
+    font->GLDrawText(sx,y+3,panels[idx].name);
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_CULL_FACE);

@@ -77,6 +77,7 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
     formulaList->SetRowLabelVisible(true);
     formulaList->SetHScrollVisible(false);
     formulaList->SetGrid(true);
+	formulaList->SetAutoRowLabel(true);
     Add(formulaList);
 
     recalcButton = new GLButton(0, "Recalculate now");

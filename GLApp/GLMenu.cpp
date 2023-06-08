@@ -427,7 +427,7 @@ void GLMenu::Paint() {
         } else {
           font->SetTextColor(0.0f,0.0f,0.0f);
         }
-        font->DrawText(posX+4+p->x+SIDE_MARGIN,posY+p->y+3,p->itemName,false);
+        font->GLDrawText(posX+4+p->x+SIDE_MARGIN,posY+p->y+3,p->itemName,false);
 
         // Underline shortcut char
         if( p->shortcut ) {
@@ -442,26 +442,26 @@ void GLMenu::Paint() {
       } else {
 
         font->SetTextColor(1.0f,1.0f,1.0f);
-        font->DrawText(posX+p->x+SIDE_MARGIN+5,posY+p->y+4,p->itemName,false);
+        font->GLDrawText(posX+p->x+SIDE_MARGIN+5,posY+p->y+4,p->itemName,false);
         font->SetTextColor(0.4f,0.4f,0.4f);
-        font->DrawText(posX+p->x+SIDE_MARGIN+4,posY+p->y+3,p->itemName,false);
+        font->GLDrawText(posX+p->x+SIDE_MARGIN+4,posY+p->y+3,p->itemName,false);
 
       }
 
       GLMenu *sub = p->subMenu;
       if( sub && sub->GetNbItem() ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+p->x+width-15,posY+p->y+2,"\213",false);
+        font->GLDrawText(posX+p->x+width-15,posY+p->y+2,"\213",false);
       }
 
       if( !HasSub(i) && p->accName ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+p->x+width-items[i].accWidth-10,posY+p->y+3,p->accName,false);
+        font->GLDrawText(posX+p->x+width-items[i].accWidth-10,posY+p->y+3,p->accName,false);
       }
 
       if( p->checked ) {
         font->SetTextColor(0.0f,0.0f,0.0f);
-        font->DrawText(posX+SIDE_MARGIN-1,posY+p->y+3,"\215",false);
+        font->GLDrawText(posX+SIDE_MARGIN-1,posY+p->y+3,"\215",false);
       }
 
       if( p->iconX || p->iconY ) {

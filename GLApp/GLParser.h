@@ -121,7 +121,7 @@ private:
 
 	double EvalTree(std::shared_ptr<EvalTreeNode>& node);
 	std::optional< std::unique_ptr<EvalTreeNode> > TreatTerm(const std::string& term, OperandType operand);
-	std::unique_ptr<EvalTreeNode> ReadPlusMinus();
+	std::unique_ptr<EvalTreeNode> ReadExpression();
 	std::unique_ptr<EvalTreeNode> ReadTerm();
 	std::unique_ptr<EvalTreeNode> ReadPower();
 	std::unique_ptr<EvalTreeNode> ReadFactor();

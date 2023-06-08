@@ -112,17 +112,17 @@ void GLButton::Paint() {
     if( !enabled ) {
 
       font->SetTextColor(1.0f,1.0f,1.0f);
-      font->DrawText(sw+1,posY+4,text,false);
+      font->GLDrawText(sw+1,posY+4,text,false);
       font->SetTextColor(0.4f,0.4f,0.4f);
-      font->DrawText(sw,posY+3,text,false);
+      font->GLDrawText(sw,posY+3,text,false);
 
     } else {
 
       font->SetTextColor(r,g,b);
       if(state || toggleState)
-        font->DrawText(sw+1,posY+4,text,false);
+        font->GLDrawText(sw+1,posY+4,text,false);
       else
-        font->DrawText(sw,posY+3,text,false);
+        font->GLDrawText(sw,posY+3,text,false);
 
     }
 

@@ -101,7 +101,7 @@ void GLLabel::Paint() {
   //Message
   font->SetTextColor(rText,gText,bText);
   for (int i = 0; i < nbLine; i++) {
-	  font->DrawText(posX, posY + 14 * i + 2, lines[i], false);
+	  font->GLDrawText(posX, posY + 14 * i + 2, lines[i], false);
   }
   GLToolkit::CheckGLErrors("GLLabel::Paint()");
 }
@@ -128,7 +128,7 @@ void GLOverlayLabel::Paint() {
 	font->SetTextColor(rText,gText,bText);
 	//font->SetTextSize((int)(size*0.6),size);
 	for(int i=0;i<nbLine;i++)
-		font->DrawLargeText(posX,posY+14*i+2,lines[i],sizeFactor,false);
+		font->GLDrawLargeText(posX,posY+14*i+2,lines[i],sizeFactor,false);
 	//font->SetTextSize(9,15);
 	GLToolkit::CheckGLErrors("GLOverlayLabel::Paint()");
 }

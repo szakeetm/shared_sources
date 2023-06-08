@@ -145,10 +145,10 @@ void GLCombo::Paint() {
   GLToolkit::DrawSmallButton(posX+width-16,posY+1,dropped);
   if(dropped) {
     //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,true,true);
-    font->DrawText(posX+width-11,posY+4,"\211",false);
+    font->GLDrawText(posX+width-11,posY+4,"\211",false);
   } else {
     //GLToolkit::DrawBox(posX+width-16,posY+1,15,height-2,rBack,gBack,bBack,true);
-    font->DrawText(posX+width-12,posY+3,"\211",false);
+    font->GLDrawText(posX+width-12,posY+3,"\211",false);
   }
   GLToolkit::CheckGLErrors("GLCombo::Paint()");
 }

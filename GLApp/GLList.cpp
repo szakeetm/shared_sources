@@ -365,7 +365,7 @@ void GLList::CreateAutoLabel() {
 
 		char tmp[256];
 		for (int i = 0; i < nbCol; i++) {
-			sprintf(tmp, "%d", i);
+			sprintf(tmp, "%d", i+1);
 			cNames[i] = strdup(tmp);
 		}
 
@@ -379,7 +379,7 @@ void GLList::CreateAutoLabel() {
 		char tmp[256];
 		labWidth = 0;
 		for (int i = 0; i < nbRow; i++) {
-			sprintf(tmp, "%d", i);
+			sprintf(tmp, "%d", i+1);
 			rNames[i] = strdup(tmp);
 			int w = GLToolkit::GetDialogFont()->GetTextWidth(rNames[i]);
 			if (w > labWidth) labWidth = w;
@@ -793,7 +793,7 @@ void GLList::Paint() {
 	if (showCLabel && showRLabel && !cornerLabel.empty()) {
 		int wT = GLToolkit::GetDialogFont()->GetTextWidth(cornerLabel.c_str());
 		int px = (labW - wT) / 2;
-		GLToolkit::GetDialogFont()->DrawText(posX + px, posY + 2, cornerLabel.c_str(), false);
+		GLToolkit::GetDialogFont()->GLDrawText(posX + px, posY + 2, cornerLabel.c_str(), false);
 	}
 
 	// Column labels
@@ -829,7 +829,7 @@ void GLList::Paint() {
 				}
 				int wT = GLToolkit::GetDialogFont()->GetTextWidth(cNames[i]);
 				int xT = (cWidths[i] - wT) / 2;
-				GLToolkit::GetDialogFont()->DrawText(xT + dx, 2, cNames[i], false);
+				GLToolkit::GetDialogFont()->GLDrawText(xT + dx, 2, cNames[i], false);
 			}
 			sx += cWidths[i];
 		}
@@ -947,7 +947,7 @@ void GLList::Paint() {
 							font->SetTextColor(0.0f, 0.0f, 0.0f);
 							break;
 						}
-						font->DrawText(px + dx, j*cHeight - sY + (showCLabel ? 1 : 2), value + offset, false);
+						font->GLDrawText(px + dx, j*cHeight - sY + (showCLabel ? 1 : 2), value + offset, false);
 					}
 				} // End if row visible
 			} // End row loop
@@ -1005,7 +1005,7 @@ void GLList::Paint() {
 					px = labW - wT - 2;
 					break;
 				}
-				GLToolkit::GetDialogFont()->DrawText(px, j*cHeight - sY + (showCLabel ? 1 : 2), value, false);
+				GLToolkit::GetDialogFont()->GLDrawText(px, j*cHeight - sY + (showCLabel ? 1 : 2), value, false);
 			}
 		}
 	}

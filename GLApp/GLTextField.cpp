@@ -247,7 +247,7 @@ void GLTextField::Paint() {
   x = 1;
   
   GLToolkit::GetDialogFont()->SetTextColor(rText,gText,bText);
-  GLToolkit::GetDialogFont()->DrawText(x,y,m_Text+m_Zero,false);
+  GLToolkit::GetDialogFont()->GLDrawText(x,y,m_Text+m_Zero,false);
 
   // Draw cursor
   if( m_CursorState && m_Editable ) {

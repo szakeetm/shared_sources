@@ -3109,7 +3109,7 @@ GLuint GLAxis::initMarker(const char *name) {
           x = x0 + (csize.width - 4) - li->size.width;
           y = (int)(li->pos + 0.5) + y0;
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawText(x + tr + li->offsetX, y + li->offsetY - li->size.height / 2,li->value,false);
+          GLToolkit::GetDialogFont()->GLDrawText(x + tr + li->offsetX, y + li->offsetY - li->size.height / 2,li->value,false);
 
           //Draw the grid
           if (gridVisible) {
@@ -3133,7 +3133,7 @@ GLuint GLAxis::initMarker(const char *name) {
           // Draw vertical label
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawTextV(x0, y0+csize.height/2+w/2,name,false);
+          GLToolkit::GetDialogFont()->GLDrawTextV(x0, y0+csize.height/2+w/2,name,false);
         }
         break;
 
@@ -3154,7 +3154,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           y = (int)(li->pos + 0.5) + y0;
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawText(x0 + tr + li->offsetX + 6, y + li->offsetY - li->size.height / 2,li->value,false);
+          GLToolkit::GetDialogFont()->GLDrawText(x0 + tr + li->offsetX + 6, y + li->offsetY - li->size.height / 2,li->value,false);
 
           //Draw the grid
           if (gridVisible) {
@@ -3178,7 +3178,7 @@ GLuint GLAxis::initMarker(const char *name) {
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
           int h = GLToolkit::GetDialogFont()->GetTextHeight();
           GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-          GLToolkit::GetDialogFont()->DrawTextV(x0+csize.width-h+2, y0+csize.height/2+w/2,name,false);
+          GLToolkit::GetDialogFont()->GLDrawTextV(x0+csize.width-h+2, y0+csize.height/2+w/2,name,false);
         }
 
         break;
@@ -3213,10 +3213,10 @@ GLuint GLAxis::initMarker(const char *name) {
           y = y0;
           if (orientation==HORIZONTAL_UP) {
             GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr - 2 - li->size.height,li->value,false);
+            GLToolkit::GetDialogFont()->GLDrawText(x + li->offsetX - li->size.width / 2, y + tr - 2 - li->size.height,li->value,false);
           } else {
             GLToolkit::GetDialogFont()->SetTextColor((float)labelColor.r/255.0f,(float)labelColor.g/255.0f,(float)labelColor.b/255.0f);
-            GLToolkit::GetDialogFont()->DrawText(x + li->offsetX - li->size.width / 2, y + tr + li->offsetY + 2,li->value,false);
+            GLToolkit::GetDialogFont()->GLDrawText(x + li->offsetX - li->size.width / 2, y + tr + li->offsetY + 2,li->value,false);
           }
 
           //Draw sub tick
@@ -3240,7 +3240,7 @@ GLuint GLAxis::initMarker(const char *name) {
         if (strlen(name)>0) {
           int h = GLToolkit::GetDialogFont()->GetTextHeight();
           int w = GLToolkit::GetDialogFont()->GetTextWidth(name);
-          GLToolkit::GetDialogFont()->DrawText(x0 + ((csize.width)-w) / 2,
+          GLToolkit::GetDialogFont()->GLDrawText(x0 + ((csize.width)-w) / 2,
             y0 + (labelShift-1) * h,name,false);
         }
 

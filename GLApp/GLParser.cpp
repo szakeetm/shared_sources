@@ -195,7 +195,7 @@ std::string GLFormula::ReadVariable() {
 std::optional< std::unique_ptr<EvalTreeNode> > GLFormula::TreatTerm(const std::string& term, OperandType operand) { //searches for "term" in expression, and makes tree node with operand. returns true if found and treated
 	if (iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
-		auto left = ReadPlusMinus();
+		auto left = ReadExpression();
 		auto resultNode = AddNode(operand, std::monostate{}, std::move(left), nullptr);
 		if (currentChar != ')') {
 			SetError(") expected", currentPos);
@@ -218,11 +218,29 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 	else if (currentChar == '(') {
 
 		AV(); //opening (
-		resultNode = ReadPlusMinus();
+		resultNode = ReadExpression();
 		if (currentChar != ')') {
 			SetError(") expected", currentPos);
 		}
 		AV(); //closing )
+	}
+	else if (currentChar == '"') { //support for variables referring to "formula name"
+		std::string formulaName = "\"";AV(); //opening "
+		while (currentChar != '\0' && currentChar != '"') {
+			formulaName += currentChar;
+			AV();
+		}
+		if (currentChar == '\0') {
+			SetError("closing \" expected", currentPos);
+		}
+		else if (formulaName.length() == 1) {
+			SetError("Empty formula name \"\" not valid", currentPos);
+		}
+		else {
+			formulaName += currentChar;AV(); //closing "
+			auto varIterator = AddVar(formulaName);
+			resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
+		}
 	}
 	else if (currentChar == '-') {
 		// unary operator
@@ -258,10 +276,10 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 	}
 	else if (std::string term = "pow("; iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
-		auto left = ReadPlusMinus();
+		auto left = ReadExpression();
 		if (currentChar != ',') SetError(", expected", currentPos);
 		AV();
-		auto right = ReadPlusMinus();
+		auto right = ReadExpression();
 		resultNode = AddNode(OperandType::POW, std::monostate{}, std::move(left), std::move(right));
 		if (currentChar != ')') SetError(") expected", currentPos);
 		AV();
@@ -327,7 +345,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadFactor()
 	return left;
 }
 
-std::unique_ptr<EvalTreeNode> GLFormula::ReadPlusMinus()
+std::unique_ptr<EvalTreeNode> GLFormula::ReadExpression()
 {
 	if (error) return nullptr;
 
@@ -363,7 +381,7 @@ bool GLFormula::Parse()
 	evalTree.reset();
 	varList.clear();
 
-	evalTree = ReadPlusMinus();
+	evalTree = ReadExpression();
 
 	if (currentPos != (int)expression.length()) { //couldn't parse till end
 		SetError("Syntax error", currentPos);

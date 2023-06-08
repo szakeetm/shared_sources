@@ -50,7 +50,7 @@ extern SynRad*mApp;
 // Construct a message dialog box
 SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 
-	int xD, yD, wD, hD;
+	int wD, hD;
 	wD = 280; hD = 260;
 	SetTitle("Select facets by texture properties");
 

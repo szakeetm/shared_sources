@@ -412,7 +412,7 @@ void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
 	GLAxis::DrawSampleLine(posX+xm,posY+ym + labelHeight/2 + 1, v);
 	GLColor c = v->GetLabelColor();
 	GLToolkit::GetDialogFont()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-	GLToolkit::GetDialogFont()->DrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
+	GLToolkit::GetDialogFont()->GLDrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
 	labelRect[nbLabel].rect.x = xm;
 	labelRect[nbLabel].rect.y = ym;
 	labelRect[nbLabel].rect.width  = labelWidth;
@@ -433,7 +433,7 @@ void GLChart::paintLabelAndHeader() {
 		int xpos = ((headerR.width - headerWidth) / 2);
 		GLColor c = headerColor;
 		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-		GLToolkit::GetDialogFontBold()->DrawText(posX+xpos,posY+headerR.y + 1,header,false);
+		GLToolkit::GetDialogFontBold()->GLDrawText(posX+xpos,posY+headerR.y + 1,header,false);
 	}
 
 	// Draw labels
@@ -1397,11 +1397,11 @@ void GLChart::showPanel(SearchInfo *si) {
 	//Draw info
 	GLToolkit::GetDialogFontBold()->SetTextColor(0.0f,0.0f,0.0f);
 	GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
-	GLToolkit::GetDialogFontBold()->DrawText(x0 + 4, y0 + 3 ,str[0],false);
+	GLToolkit::GetDialogFontBold()->GLDrawText(x0 + 4, y0 + 3 ,str[0],false);
 	y0 += 3;
 	for (int i = 1; i < 4; i++) {
 		if( str[i] )
-			GLToolkit::GetDialogFont()->DrawText(x0 + 5, y0 + 3 + i*h,str[i],false);
+			GLToolkit::GetDialogFont()->GLDrawText(x0 + 5, y0 + 3 + i*h,str[i],false);
 	}
 
 	lastSearch = *si;

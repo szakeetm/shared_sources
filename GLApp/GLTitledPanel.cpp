@@ -122,19 +122,19 @@ void GLTitledPanel::Paint() {
     if( isBold ) {
       GLToolkit::DrawBox(posX+5+cw,posY,txtWidth+10,15,rBack,gBack,bBack);
       GLToolkit::GetDialogFontBold()->SetTextColor(rText,gText,bText);
-      GLToolkit::GetDialogFontBold()->DrawText(posX+10+cw,posY,title,false);
+      GLToolkit::GetDialogFontBold()->GLDrawText(posX+10+cw,posY,title,false);
     } else {
       GLToolkit::DrawBox(posX+5+cw,posY,txtWidth+10,15,rBack,gBack,bBack);
       GLToolkit::GetDialogFont()->SetTextColor(rText,gText,bText);
-      GLToolkit::GetDialogFont()->DrawText(posX+10+cw,posY,title,false);
+      GLToolkit::GetDialogFont()->GLDrawText(posX+10+cw,posY,title,false);
     }
     if( closeAble ) {
       GLToolkit::DrawTinyButton(posX+7,posY+1,closeState);
       GLToolkit::GetDialogFont()->SetTextColor(0,0,0);
       if( closed ) {
-        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"+",false);
+        GLToolkit::GetDialogFont()->GLDrawText(posX+10,posY-1,"+",false);
       } else {
-        GLToolkit::GetDialogFont()->DrawText(posX+10,posY-1,"-",false);
+        GLToolkit::GetDialogFont()->GLDrawText(posX+10,posY-1,"-",false);
       }
     }
   }

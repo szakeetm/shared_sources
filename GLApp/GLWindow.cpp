@@ -932,9 +932,9 @@ void GLWindow::PaintTitle(int width, int height) {
         //GLToolkit::DrawBox(posX+2,posY+1,width-5,18,50,80,140);
         GLToolkit::GetDialogFontBold()->SetTextColor(1.0f, 1.0f, 1.0f);
         if (_iconified)
-            GLToolkit::GetDialogFontBold()->DrawText(posX + 5, posY + 3, iconTitle, false);
+            GLToolkit::GetDialogFontBold()->GLDrawText(posX + 5, posY + 3, iconTitle, false);
         else
-            GLToolkit::GetDialogFontBold()->DrawText(posX + 5, posY + 3, _title, false);
+            GLToolkit::GetDialogFontBold()->GLDrawText(posX + 5, posY + 3, _title, false);
     }
 
     // System menu
@@ -943,10 +943,10 @@ void GLWindow::PaintTitle(int width, int height) {
         else GLToolkit::GetDialogFont()->SetTextColor(0.7f, 0.7f, 0.7f);
         if (!closeState) {
             GLToolkit::DrawBox(posX + width - 18, posY + 4, 13, 12, 212, 208, 200, true, false);
-            GLToolkit::GetDialogFont()->DrawText(posX + width - 15, posY + 2, "x", false);
+            GLToolkit::GetDialogFont()->GLDrawText(posX + width - 15, posY + 2, "x", false);
         } else {
             GLToolkit::DrawBox(posX + width - 18, posY + 4, 13, 12, 212, 208, 200, true, true);
-            GLToolkit::GetDialogFont()->DrawText(posX + width - 14, posY + 3, "x", false);
+            GLToolkit::GetDialogFont()->GLDrawText(posX + width - 14, posY + 3, "x", false);
         }
 
         if (!isModal) {
@@ -955,24 +955,24 @@ void GLWindow::PaintTitle(int width, int height) {
                 else GLToolkit::GetDialogFont()->SetTextColor(0.7f, 0.7f, 0.7f);
                 GLToolkit::DrawBox(posX + width - 35, posY + 4, 13, 12, 212, 208, 200, true, false);
                 if (maximized && !_iconified)
-                    GLToolkit::GetDialogFont()->DrawText(posX + width - 34, posY + 2, "\210", false);
+                    GLToolkit::GetDialogFont()->GLDrawText(posX + width - 34, posY + 2, "\210", false);
                 else
-                    GLToolkit::GetDialogFont()->DrawText(posX + width - 34, posY + 2, "\207", false);
+                    GLToolkit::GetDialogFont()->GLDrawText(posX + width - 34, posY + 2, "\207", false);
             } else {
                 GLToolkit::DrawBox(posX + width - 34, posY + 4, 13, 12, 212, 208, 200, true, true);
                 if (maximized)
-                    GLToolkit::GetDialogFont()->DrawText(posX + width - 33, posY + 3, "\210", false);
+                    GLToolkit::GetDialogFont()->GLDrawText(posX + width - 33, posY + 3, "\210", false);
                 else
-                    GLToolkit::GetDialogFont()->DrawText(posX + width - 33, posY + 3, "\207", false);
+                    GLToolkit::GetDialogFont()->GLDrawText(posX + width - 33, posY + 3, "\207", false);
             }
             if (!iconState) {
                 if (_iconifiable) GLToolkit::GetDialogFont()->SetTextColor(0.0f, 0.0f, 0.0f);
                 else GLToolkit::GetDialogFont()->SetTextColor(0.7f, 0.7f, 0.7f);
                 GLToolkit::DrawBox(posX + width - 52, posY + 4, 13, 12, 212, 208, 200, true, false);
-                GLToolkit::GetDialogFont()->DrawText(posX + width - 49, posY + 2, "_", false);
+                GLToolkit::GetDialogFont()->GLDrawText(posX + width - 49, posY + 2, "_", false);
             } else {
                 GLToolkit::DrawBox(posX + width - 52, posY + 4, 13, 12, 212, 208, 200, true, true);
-                GLToolkit::GetDialogFont()->DrawText(posX + width - 48, posY + 3, "_", false);
+                GLToolkit::GetDialogFont()->GLDrawText(posX + width - 48, posY + 3, "_", false);
             }
         }
     }

@@ -15,7 +15,7 @@ extern GLApplication *theApp;
 GLFont2D::GLFont2D() : fileName{}, pMatrix{}, cVarWidth{}{
   strcpy(fileName,"images/font.png");
   cHeight = 15;
-  cWidth  = 9;
+  cMaxWidth  = 9;
   isVariable = false;
   std::fill(cVarWidth, cVarWidth + 256, 0);
 }
@@ -23,7 +23,7 @@ GLFont2D::GLFont2D() : fileName{}, pMatrix{}, cVarWidth{}{
 GLFont2D::GLFont2D(const char *imgFileName) : fileName{}, pMatrix{}, cVarWidth{} {
   strcpy(fileName,imgFileName);
   cHeight = 15;
-  cWidth  = 9;
+  cMaxWidth  = 9;
   isVariable = false;
   std::fill(cVarWidth, cVarWidth + 256, 0);
 }
@@ -65,11 +65,11 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
                     bool hasWhite = false;
                     for (int j = 0; !hasWhite && j < cHeight; j++) {
                         hasWhite = (*(img.data(col, yO + j)) != 0);
-				}
+                    }
                     if (hasWhite) {
                         lastWhite = col;
                     }
-				}
+                }
 
                 cVarWidth[i] = std::min(lastWhite - xO+1,cMaxWidth);
 
@@ -148,7 +148,7 @@ void GLFont2D::SetVariableWidth(bool variable) {
 
 void GLFont2D::SetTextSize(int width,int height) {
   cHeight = height;
-  cWidth  = width;
+  cMaxWidth  = width;
 }
 
 int GLFont2D::GetTextWidth(const char *text) {
@@ -159,7 +159,7 @@ int GLFont2D::GetTextWidth(const char *text) {
     for(int i=0;i<lgth;i++)
       w+=cVarWidth[ (unsigned char)text[i] ];
   } else {
-    w = cWidth * lgth;
+    w = cMaxWidth * lgth;
   }
   return w;
 }
@@ -216,12 +216,12 @@ void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,b
 
     if(!isVariable) {
 
-      float cW   = (float)cWidth / (float)fWidth;
+      float cW   = (float)cMaxWidth / (float)fWidth;
       glTexCoord2f(xPos   ,yPos   );glVertex2i(xcPos       ,y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cWidth,y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cWidth,y+cHeight);
+      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cMaxWidth,y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cMaxWidth,y+cHeight);
       glTexCoord2f(xPos   ,yPos+cH);glVertex2i(xcPos       ,y+cHeight);
-      xcPos += cWidth;
+      xcPos += cMaxWidth;
 
     } else {
       float cW   = (float)cVarWidth[c] / (float)fWidth;
@@ -276,12 +276,12 @@ void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool 
 
     if(!isVariable) {
 
-      float cW   = (float)cWidth / (float)fWidth;
+      float cW   = (float)cMaxWidth / (float)fWidth;
       glTexCoord2f(xPos   ,yPos   );glVertex2i(xcPos       ,y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cWidth,y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cWidth,y+cHeight);
+      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cMaxWidth,y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cMaxWidth,y+cHeight);
       glTexCoord2f(xPos   ,yPos+cH);glVertex2i(xcPos       ,y+cHeight);
-      xcPos += cWidth;
+      xcPos += cMaxWidth;
 
     } else {
 
@@ -325,12 +325,12 @@ void GLFont2D::GLDrawTextFast(int cx,int cy,const char *text) {
 
     if(!isVariable) {
 
-      float cW   = (float)cWidth / (float)fWidth;
+      float cW   = (float)cMaxWidth / (float)fWidth;
       glTexCoord2f(xPos   ,yPos   );glVertex2i(xcPos       ,y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cWidth,y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cWidth,y+cHeight);
+      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cMaxWidth,y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cMaxWidth,y+cHeight);
       glTexCoord2f(xPos   ,yPos+cH);glVertex2i(xcPos       ,y+cHeight);
-      xcPos += cWidth;
+      xcPos += cMaxWidth;
 
     } else {
 
@@ -381,15 +381,15 @@ void GLFont2D::GLDrawTextV(int x,int y,char *text,bool loadMatrix) {
 
     if(!isVariable) {
 
-      float cW   = (float)cWidth / (float)fWidth;
+      float cW   = (float)cMaxWidth / (float)fWidth;
       float cH   = (float)cHeight / (float)fWidth;
       glBegin(GL_QUADS);
       glTexCoord2f(xPos   ,yPos   );glVertex2i(x        ,ycPos       );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2i(x        ,ycPos-cWidth);
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(x+cHeight,ycPos-cWidth);
+      glTexCoord2f(xPos+cW,yPos   );glVertex2i(x        ,ycPos-cMaxWidth);
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(x+cHeight,ycPos-cMaxWidth);
       glTexCoord2f(xPos   ,yPos+cH);glVertex2i(x+cHeight,ycPos       );
       glEnd();
-      ycPos += cWidth;
+      ycPos += cMaxWidth;
 
     } else {
 

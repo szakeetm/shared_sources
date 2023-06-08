@@ -48,8 +48,7 @@ extern SynRad*mApp;
 // Construct a message dialog box
 SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 
-	int xD, yD, wD;
-	wD = 250;
+	int wD = 250;
 	SetTitle("Select facets by simulation result");
 
 	int startX = 5;
@@ -74,15 +73,8 @@ SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 	hitsLessThanText->SetBounds(startX,startY,80,20);
 	Add(hitsLessThanText);
 	
-
-
-
-
-	
 	startX=5;
 	startY+=25;
-
-
 
 	absMoreThanText = new GLTextField(0,"");
 	absMoreThanText->SetBounds(startX,startY,80,20);
@@ -96,9 +88,7 @@ SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 	absLessThanText = new GLTextField(0,"");
 	absLessThanText->SetBounds(startX,startY,80,20);
 	Add(absLessThanText);
-	
 
-	
 	startX=5;
 	startY+=25;
 
@@ -116,8 +106,7 @@ SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 	desLessThanText = new GLTextField(0,"");
 	desLessThanText->SetBounds(startX,startY,80,20);
 	Add(desLessThanText);
-	
-	
+
 	startX=5;
 	startY+=25;
 	#endif
@@ -170,7 +159,7 @@ SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 	addSelectButton->SetBounds(startX, startY, 70, 20);
 	Add(addSelectButton);
 	startX += 75;
-remSelectButton = new GLButton(GLDLG_SELECT_REM, "Remove from sel.");
+	remSelectButton = new GLButton(GLDLG_SELECT_REM, "Remove from sel.");
 	remSelectButton->SetBounds(startX, startY, 95, 20);
 	Add(remSelectButton);
 	
@@ -324,7 +313,6 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 		geom->UpdateSelection();
 		mApp->UpdateFacetParams(true);
 		mApp->UpdateFacetlistSelected();
-
 	}
 	
 	GLWindow::ProcessMessage(src, message);
