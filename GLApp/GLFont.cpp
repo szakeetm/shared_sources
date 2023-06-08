@@ -59,28 +59,22 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 				int yO = ((i / 16) * 16);
 
 				//scan columns
-				bool black = true;
-				while (black && xO < img.width()) {
-					for (int j = 0; j < cHeight && black; j++)
-						black = (/*data[(xO) * 3 + (yO + j) * 3 * fWidth]*/ *(img.data(xO,yO+j)) == 0);
-					cVarWidth[i]++;
-					xO++;
+                int lastWhite = 0;
+				
+                for (int col = xO; col < (xO + img.width() / 16); col++) {
+                    bool hasWhite = false;
+                    for (int j = 0; !hasWhite && j < cHeight; j++) {
+                        hasWhite = (*(img.data(col, yO + j)) != 0);
+				}
+                    if (hasWhite) {
+                        lastWhite = col;
+                    }
 				}
 
-				bool white = true;
-				while (white && xO < img.width()) {
-					black = true;
-					for (int j = 0; j < cHeight && black; j++)
-						black = (/*data[(xO) * 3 + (yO + j) * 3 * fWidth]*/ *(img.data(xO, yO+j)) == 0);
-					white = !black;
-					if (white) cVarWidth[i]++;
-					xO++;
-				}
-
-				if (cVarWidth[i] > cWidth) cVarWidth[i] = cWidth;
+                cVarWidth[i] = std::min(lastWhite - xO+1,cMaxWidth);
 
 				//Comprime space char when variable width font
-				if (i == 32) cVarWidth[i] = cWidth / 3;
+				if (i == 32) cVarWidth[i] = cMaxWidth / 3;
 
 			}
 		}
