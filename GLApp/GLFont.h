@@ -20,10 +20,10 @@ public:
   int RestoreDeviceObjects(int srcWidth,int scrHeight);
   
   // Draw a 2D text (in viewport coordinates)
-  void DrawText(const int x,const int y,const char *text,const bool loadMatrix=true);
-  void DrawLargeText(int x,int y,const char *text,float sizeFactor,bool loadMatrix=true);
-  void DrawTextFast(int cx,int cy,const char *text);
-  void DrawTextV(int x,int y,char *text,bool loadMatrix=true);
+  void GLDrawText(const int x,const int y,const char *text,const bool loadMatrix=true);
+  void GLDrawLargeText(int x,int y,const char *text,float sizeFactor,bool loadMatrix=true);
+  void GLDrawTextFast(int cx,int cy,const char *text);
+  void GLDrawTextV(int x,int y,char *text,bool loadMatrix=true);
 
   // Release any allocated resource
   void InvalidateDeviceObjects();

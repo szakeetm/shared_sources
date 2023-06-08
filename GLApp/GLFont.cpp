@@ -181,7 +181,7 @@ void GLFont2D::SetTextColor(const float r,const float g,const float b) {
   bC = b;
 }
 
-void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
+void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
@@ -243,7 +243,7 @@ void GLFont2D::DrawLargeText(int cx,int cy,const char *text,float sizeFactor,boo
 
 }
 
-void GLFont2D::DrawText(const int cx,const int cy,const char *text,const bool loadMatrix) {
+void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool loadMatrix) {
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
@@ -303,7 +303,7 @@ void GLFont2D::DrawText(const int cx,const int cy,const char *text,const bool lo
 
 }
 
-void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
+void GLFont2D::GLDrawTextFast(int cx,int cy,const char *text) {
 
   int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
@@ -352,7 +352,7 @@ void GLFont2D::DrawTextFast(int cx,int cy,const char *text) {
 
 }
 
-void GLFont2D::DrawTextV(int x,int y,char *text,bool loadMatrix) {
+void GLFont2D::GLDrawTextV(int x,int y,char *text,bool loadMatrix) {
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
