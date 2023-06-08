@@ -90,9 +90,9 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 	for (int i = 0; i < formulas.size(); ++i) {
 
         if (!formulas[i].hasVariableEvalError) {
-            double r;
-            if (formulas[i].Evaluate(&r)) {
-                lastFormulaValues[i] = std::make_pair(nbDesorbed, r);
+            auto res = formulas[i].Evaluate();
+            if (res.has_value()) {
+                lastFormulaValues[i] = std::make_pair(nbDesorbed, res.value());
             }
             else {
                 formulas[i].SetVariableEvalError(formulas[i].GetErrorMsg());

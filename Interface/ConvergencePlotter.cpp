@@ -334,9 +334,10 @@ void ConvergencePlotter::plot() {
     for (i = 0; i < 1000; i++) {
         double x = (double) i;
         double y;
-        varIterator->value = x;
-        formula.Evaluate(&y);
-        v->Add(x, y, false);
+        varIterator->value = x; //overwrites 'X' variable value in the formula
+        auto yres = formula.Evaluate();
+        if (!yres.has_value()) break;
+        v->Add(x, yres.value(), false);
     }
     v->CommitChange();
 

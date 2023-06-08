@@ -399,79 +399,82 @@ bool InterfaceFacet::BuildMesh() {
 	}
 	Clipper2Lib::PathsD subjects; subjects.push_back(subject);
 
-	std::map<int,CellProperties> meshvector_partial;
-	int i;
-	
-#pragma omp parallel private(meshvector_partial,i)  //safe to concurrently modify cellPropertiesIds, each thread writes to different index
+#pragma omp parallel  //safe to concurrently modify cellPropertiesIds, each thread writes to different index
 	{
-	#pragma omp for  collapse(2)
-		for (int j = 0;j < sh.texHeight;j++) {
-			for ( i = 0; i < sh.texWidth; i++) {
-				double sy = (double)j;
-				double sx = (double)i;
+		std::map<int, CellProperties> meshvector_partial;
+		
+#pragma omp for
+		for (int k = 0; k < sh.texHeight * sh.texWidth; k++) { //collapsed loop for omp
 
-				double u0 = sx * iw;
-				double v0 = sy * ih;
-				double u1 = (sx + 1.0) * iw;
-				double v1 = (sy + 1.0) * ih;
+			int j = k / sh.texWidth;
+			int i = k % sh.texWidth;
 
-				int index = j * (sh.texWidth + 1) + i;
+			double sy = (double)j;
+			double sx = (double)i;
 
-				//intersect polygon with rectangle
-				Clipper2Lib::RectD rect;
-				rect.left = u0;
-				rect.right = u1;
-				rect.bottom = v1; //bottom>top in Clipper2
-				rect.top = v0;
+			double u0 = sx * iw;
+			double v0 = sy * ih;
+			double u1 = (sx + 1.0) * iw;
+			double v1 = (sy + 1.0) * ih;
 
-				auto [A, center, vList] = GetInterArea_Clipper2Lib(subjects, rect, sh.isConvex);
-				if (A == 0.0) { //outside the polygon
-					cellPropertiesIds[i + j * sh.texWidth] = -2;
-				}
-				else if (IsEqual(fullCellArea, A, 1E-8)) { //full element
-					cellPropertiesIds[i + j * sh.texWidth] = -1;
-				} else if (A>(fullCellArea * 1.000001)) {
-					// Polyon intersection error
-					// Switch back to brute force
-					GLAppPolygon P2;
-					P2.pts = vertices2;
-					auto [bfArea, center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
-					bool fullElem = IsZero(fullCellArea - bfArea);
-					if (!fullElem) { //brute force - partial element
-						CellProperties cellprop;
-						cellprop.area = (bfArea * (rw * rh) / (iw * ih));
-						cellprop.uCenter = (float)center.u;
-						cellprop.vCenter = (float)center.v;
-						cellprop.nbPoints = 0;
-						cellprop.points.clear();
-						meshvector_partial[i + j * sh.texWidth]=cellprop;
-					}
-					else { //brute force - full element
-						cellPropertiesIds[i + j * sh.texWidth] = -1;
-					}
-				}
-				else { //Partial element
+			int index = j * (sh.texWidth + 1) + i;
 
-					// !! P1 and P2 are in u,v coordinates !!
+			//intersect polygon with rectangle
+			Clipper2Lib::RectD rect;
+			rect.left = u0;
+			rect.right = u1;
+			rect.bottom = v1; //bottom>top in Clipper2
+			rect.top = v0;
+
+			auto [A, center, vList] = GetInterArea_Clipper2Lib(subjects, rect, sh.isConvex);
+			if (A == 0.0) { //outside the polygon
+				cellPropertiesIds[i + j * sh.texWidth] = -2;
+			}
+			else if (IsEqual(fullCellArea, A, 1E-8)) { //full element
+				cellPropertiesIds[i + j * sh.texWidth] = -1;
+			}
+			else if (A > (fullCellArea * 1.000001)) {
+				// Polyon intersection error
+				// Switch back to brute force
+				GLAppPolygon P2;
+				P2.pts = vertices2;
+				auto [bfArea, center] = GetInterAreaBF(P2, Vector2d(u0, v0), Vector2d(u1, v1));
+				bool fullElem = IsZero(fullCellArea - bfArea);
+				if (!fullElem) { //brute force - partial element
 					CellProperties cellprop;
-					cellprop.area = (A * (rw * rh) / (iw * ih));
+					cellprop.area = (bfArea * (rw * rh) / (iw * ih));
 					cellprop.uCenter = (float)center.u;
 					cellprop.vCenter = (float)center.v;
-
-					// Mesh coordinates
-					cellprop.points = vList;
-					cellprop.nbPoints = vList.size();
+					cellprop.nbPoints = 0;
+					cellprop.points.clear();
 					meshvector_partial[i + j * sh.texWidth] = cellprop;
 				}
+				else { //brute force - full element
+					cellPropertiesIds[i + j * sh.texWidth] = -1;
+				}
+			}
+			else { //Partial element
+
+				// !! P1 and P2 are in u,v coordinates !!
+				CellProperties cellprop;
+				cellprop.area = (A * (rw * rh) / (iw * ih));
+				cellprop.uCenter = (float)center.u;
+				cellprop.vCenter = (float)center.v;
+
+				// Mesh coordinates
+				cellprop.points = vList;
+				cellprop.nbPoints = vList.size();
+				meshvector_partial[i + j * sh.texWidth] = cellprop;
+
 			}
 		}
-		#pragma omp critical
+#pragma omp critical
 		{
 			//Merge mesh info for partial cells
 			for (auto const& pair : meshvector_partial) {
 				auto cellIndex = pair.first;
 				auto cellProperties = pair.second;
-				cellPropertiesIds[cellIndex]=meshvector.size();
+				cellPropertiesIds[cellIndex] = meshvector.size();
 				meshvector.push_back(cellProperties);
 			}
 		}

@@ -1,80 +1,43 @@
-// Copyright (c) 2011 rubicon IT GmbH
+#pragma once
 
-/* Supported grammar :                                           */
-/*                                                              */
-/* <expr>   ::= <factor> [ <oper1> <factor> ]*                  */
-/* <factor> ::= <power>  [ <oper2> <power> ]*                   */
-/* <power>  ::= <term> [ <oper3> <term> ]                       */
-/* <term>   ::= '(' <exp> ')'      |                            */
-/*                <double>         |                            */
-/*                <variable>       |                            */
-/*               '-' <term>        |                            */
-/*               'sin(' <exp> ')'  |                            */
-/*               'cos(' <exp> ')'  |                            */
-/*               'tan(' <exp> ')'  |                            */
-/*               'asin(' <exp> ')' |                            */
-/*               'acos(' <exp> ')' |                            */
-/*               'atan(' <exp> ')' |                            */
-/*               'sinh(' <exp> ')' |                            */
-/*               'cosh(' <exp> ')' |                            */
-/*               'tanh(' <exp> ')' |                            */
-/*               'exp(' <exp> ')'  |                            */
-/*               'ln(' <exp> ')'   |                            */
-/*               'log(' <exp> ')'  |                            */
-/*               'inv(' <exp> ')'  |                            */
-/*               'sqrt(' <exp> ')' |                            */
-/*               'abs(' <exp> ')'  |                            */
-/*               'fact(' <exp> ')'  |                           */
-/*               'pow(' <exp>,<exp> ')'  |                      */
-/*               'ci95(' <exp>,<exp> ')' |                      */
-/*               'sum(' <variable>,<double>,<double> ')' |      */
-/*               'PI'                                           */
-/* <oper1>    ::= '+' | '-'                                     */
-/* <oper2>    ::= '*' | '/'                                     */
-/* <oper3>    ::= '^'                                           */
-/* <double>   ::= <nb>* '.' <nb> <nb>* ['E' [-] <nb> <nb>*]     */
-/* <nb>       ::= '0'..'9'                                      */
-/* <variable> ::= <letter>[<letter> | <nb>]*                    */
-/* <letter>   ::= 'A'..'Z' | 'a'..'z' | '_'                     */
-
-#ifndef _GLPARSERH_
-#define _GLPARSERH_
-
-#include "GLTypes.h" // For bool typedef
 #include <string>
 #include <variant>
 #include <list>
 #include <memory>
+#include <optional>
+#include <map>
 
 // Evaluation tree node type
-#define OPER_PLUS   1
-#define OPER_MINUS  2
-#define OPER_MUL    3
-#define OPER_DIV    4
-#define OPER_POWER   5
-#define OPER_COS    6
-#define OPER_SIN    7
-#define OPER_TAN    8
-#define OPER_ACOS   9
-#define OPER_ASIN   10
-#define OPER_ATAN   11
-#define OPER_COSH   12
-#define OPER_SINH   13
-#define OPER_TANH   14
-#define OPER_EXP    15
-#define OPER_LN     16
-#define OPER_LOG2   17
-#define OPER_LOG10  18
-#define OPER_INV    19
-#define OPER_SQRT   20
-#define OPER_ABS    21
-#define OPER_MINUS1 22
-#define OPER_FACT   23
-#define OPER_CI95   24
-#define OPER_POW    25
+enum class OperandType : int {
+	PLUS,
+	MINUS,
+	MUL,
+	DIV,
+	POWER,
+	COS,
+	SIN,
+	TAN,
+	ACOS,
+	ASIN,
+	ATAN,
+	COSH,
+	SINH,
+	TANH,
+	EXP,
+	LN,
+	LOG2,
+	LOG10,
+	INV,
+	SQRT,
+	ABS,
+	MINUS1,
+	FACT,
+	CI95,
+	POW,
 
-#define TDOUBLE     50
-#define TVARIABLE   51
+	TDOUBLE,
+	TVARIABLE
+};
 
 struct Variable {
 	std::string varName;
@@ -82,13 +45,45 @@ struct Variable {
 };
 
 //Evaluation tree node
-struct EtreeNode {
-	int type; //operand, value, etc.
+struct EvalTreeNode {
+	OperandType type;
 	std::variant<std::monostate, double, std::list<Variable>::iterator> value; //constant value, evaluated variable, or nothing (monostate) in case of operand
-	std::shared_ptr<EtreeNode> left = nullptr;
-	std::shared_ptr<EtreeNode> right = nullptr;
-	template <typename T>
-	EtreeNode(T val) : value(val) {} //accepts either double or Variable as value
+	std::unique_ptr<EvalTreeNode> left = nullptr;
+	std::unique_ptr<EvalTreeNode> right = nullptr;
+	template <typename T> EvalTreeNode(T val) : value(val) {} //accepts either double or Variable or "nothing" (monostate) as value
+
+	// Copy constructor
+	EvalTreeNode(const EvalTreeNode& other)
+		: type(other.type), value(other.value)
+	{
+		if (other.left) {
+			left = std::make_unique<EvalTreeNode>(*other.left);
+		}
+		if (other.right) {
+			right = std::make_unique<EvalTreeNode>(*other.right);
+		}
+	}
+
+	// Copy assignment operator
+	EvalTreeNode& operator=(const EvalTreeNode& other)
+	{
+		if (this != &other) {
+			type = other.type;
+			value = other.value;
+
+			left.reset();
+			right.reset();
+
+			if (other.left) {
+				left = std::make_unique<EvalTreeNode>(*other.left);
+			}
+			if (other.right) {
+				right = std::make_unique<EvalTreeNode>(*other.right);
+			}
+		}
+
+		return *this;
+	}
 };
 
 class GLFormula {
@@ -115,21 +110,24 @@ public:
 	void SetVariableEvalError(const std::string& errMsg);
 
 	// Evaluation
-	bool   Evaluate(double* result); // Evaluate the expression (after it was parsed)
+	std::optional<double> EvaluateNode(const std::unique_ptr<EvalTreeNode>& node); // Evaluate the expression (after it was parsed)
+	std::optional<double> Evaluate();
 	bool   hasVariableEvalError;
 	std::string variableEvalErrorMsg;
 
+	static const std::map<std::string, OperandType> mathExpressionsMap;
+
 private:
 
-	double EvalTree(std::shared_ptr<EtreeNode>& node);
-	void   ReadPlusMinus(std::shared_ptr<EtreeNode>& node);
-	bool   TreatTerm(const std::string& term, int operand, std::shared_ptr<EtreeNode>& node);
-	void   ReadTerm(std::shared_ptr<EtreeNode>& node);
-	void   ReadPower(std::shared_ptr<EtreeNode>& node);
-	void   ReadFactor(std::shared_ptr<EtreeNode>& node);
+	double EvalTree(std::shared_ptr<EvalTreeNode>& node);
+	std::optional< std::unique_ptr<EvalTreeNode> > TreatTerm(const std::string& term, OperandType operand);
+	std::unique_ptr<EvalTreeNode> ReadPlusMinus();
+	std::unique_ptr<EvalTreeNode> ReadTerm();
+	std::unique_ptr<EvalTreeNode> ReadPower();
+	std::unique_ptr<EvalTreeNode> ReadFactor();
 	std::string ReadVariable();
-	void   ReadDouble(double* R);
-	void   AddNode(int type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::shared_ptr<EtreeNode>& node, std::shared_ptr<EtreeNode> left, std::shared_ptr<EtreeNode> right);
+	std::optional<double> ReadDouble();
+	std::unique_ptr<EvalTreeNode>   AddNode(OperandType type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::unique_ptr<EvalTreeNode> left, std::unique_ptr<EvalTreeNode> right);
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
 	std::list<Variable>::iterator FindVar(const std::string& var_name);
 	void   SetError(const std::string& errMsg, int pos);
@@ -143,9 +141,7 @@ private:
 	int  currentPos;     // Current char pos
 	bool error = false;       // Error flag
 
-	std::shared_ptr<EtreeNode> evalTree = nullptr;
+	std::unique_ptr<EvalTreeNode> evalTree;
 	std::list<Variable> varList;
 
 };
-
-#endif /* _GLPARSERH_ */
