@@ -355,9 +355,8 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadExpression()
 	{
 		auto opType = currentChar == '+' ? OperandType::PLUS : OperandType::MINUS;
 		AV();
-		auto right = ReadPower();
+		auto right = ReadFactor();
 		left = AddNode(opType, std::monostate{}, std::move(left), std::move(right));
-		break;
 	}
 	return left;
 }
