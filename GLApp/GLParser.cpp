@@ -575,6 +575,7 @@ std::optional<double> GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode
 	case OperandType::TVARIABLE:
 		return std::get<std::list<Variable>::iterator>(node->value)->value;
 	}
+	return std::nullopt;
 }
 
 size_t GLFormula::GetNbVariable() {
