@@ -86,11 +86,6 @@ int weighed_lower_bound_X(const double key, const double weigh, double* A, doubl
 double GetElement(const std::pair<double, double>& pair, const bool first);
 double GetElement(const std::pair<double, std::vector<double>> & pair, const bool first, const size_t elementIndex);
 
-[[maybe_unused]] size_t GetSysTimeMs();
-
-[[maybe_unused]] int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments);
-int LookupMomentIndex(const double  key, const std::vector<std::pair<double, double>>& moments, const size_t startIndex);
-
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
 Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,

@@ -113,7 +113,7 @@ public:
     virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type, BVHAccel::SplitMethod split,
                             int bvh_width) = 0;
 
-    int InitialiseFacets();
+    int InitializeFacets();
     void CalculateFacetParams(Facet *f);
 
     // Molflow only

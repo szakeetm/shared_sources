@@ -1389,7 +1389,7 @@ if( showVolume || showTexture ) {
 
 #if defined(MOLFLOW)
 	if (work->displayedMoment)
-		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1].first);
+		sprintf(tmp, "t= %g s", work->moments[work->displayedMoment - 1].time);
 	else
 		sprintf(tmp, "Const. flow");
 	timeLabel->SetText(tmp);

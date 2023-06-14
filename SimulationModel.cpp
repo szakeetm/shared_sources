@@ -47,7 +47,7 @@ size_t SimulationModel::size() {
 * \brief Initialises geometry properties that haven't been loaded from file
 * \return error code: 0=no error, 1=error
 */
-int SimulationModel::InitialiseFacets() {
+int SimulationModel::InitializeFacets() {
     if (!m.try_lock()) {
         return 1;
     }
