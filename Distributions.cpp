@@ -27,10 +27,12 @@ std::vector<double> DistributionND::InterpolateY(const double  x, const bool  al
 	return InterpolateVectorY(x, values, logXinterp, logYinterp, allowExtrapolate);
 }
 
+/*
 double DistributionND::InterpolateX(const double  y, const size_t  elementIndex, const bool  allowExtrapolate)
 {
 	return InterpolateVectorX(y, values, elementIndex, logXinterp, logYinterp, allowExtrapolate);
 }
+*/
 
 double Distribution2D::InterpolateY(const double x, const bool allowExtrapolate) const {
 	return InterpolateXY(x, values, true, logXinterp, logYinterp, allowExtrapolate);

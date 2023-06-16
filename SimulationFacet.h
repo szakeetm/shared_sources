@@ -38,6 +38,7 @@ protected:
 public:
     std::vector<double>   textureCellIncrements;              // Texure increment
     std::vector<bool>     largeEnough;      // cells that are NOT too small for autoscaling
+    double sqrtTemp; //pre-caculated sqrt(sh.temperature) for frequent multiplication
 
     // Temporary var (used in FillHit for hit recording)
     bool   isReady{};         // Volatile state

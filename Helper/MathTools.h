@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cassert>
 #include <Vector.h>
 
+
 bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
 size_t    GetPower2(size_t n);
@@ -44,7 +45,7 @@ size_t Previous(const size_t i, const size_t nb, const bool inverseDir=false);
 #define NEXT_OF(list,element) (std::next(element)==(list).end())?(list).begin():std::next(element);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }
-template <typename TYPE> TYPE Sqr(const TYPE& a) { return a*a; }
+template <typename TYPE> TYPE Square(const TYPE& a) { return a*a; }
 
 #define PI 3.14159265358979323846
 #define DET22(_11,_12,_21,_22) ( (_11)*(_22) - (_21)*(_12) )
@@ -60,13 +61,17 @@ char  *FormatMemoryLL(long long size);
 
 [[maybe_unused]] double my_erf(double x);
 double Weigh(const double a, const double b, const double weigh);
-double InterpolateY(const double x, const std::vector<std::pair<double, double>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false );
-double InterpolateX(const double y, const std::vector<std::pair<double, double>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
-double InterpolateXY(const double lookupValue, const std::vector<std::pair<double, double>>& table, const bool first, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
+
+template <typename T> inline double InterpolateY(const double x, const std::vector<T>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
+	return InterpolateXY(x, table, true, logX, logY, allowExtrapolate, T.GetElement);
+}
+
+template <typename T> inline double InterpolateX(const double y, const std::vector<T>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
+	return InterpolateXY(y, table, false, logX, logY, allowExtrapolate);
+}
+
 std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false );
 double InterpolateVectorX(const double y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t elementIndex, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
-//double QuadraticInterpolateX(const double  y, const double  a, const double  b, const double  c, const double  FA, const double  FB, const double  FC);
-//double FastLookupY(const double x, const std::vector<std::pair<double, double>>& table, const bool allowExtrapolate = false);
 
 template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) != vec.end());
@@ -76,15 +81,101 @@ template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const T
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
-int my_lower_bound(const double key, const double* A,const size_t size);
+
+int weighed_lower_bound_X(const double key, const double weigh, double* A, double* B, const size_t size);
+
+//Function calling lower_bound_universal for different data types
+int lower_bound_c_array(const double key, const double* data,const size_t size); //c-style array of double
+int my_lower_bound(const double key, const std::vector<double>& data);
+int my_lower_bound(const double key, const std::vector<std::pair<double, double>>& data, const bool first); //pairs, search in first or second element
+template <typename T> int my_lower_bound(const double  key, const std::vector<std::pair<double, T>>& data)
+{
+	// Define the getElement function for a pair of double,T
+	auto getElement = [](const std::pair<double, T>& pair) {
+		return pair.first;
+	};
+	return lower_bound_universal(key, data, getElement);
+}
+
+//A universal lower bound function
+//input: double lookup key, a vector of any type of data, and a getElement function that returns the a double value of T type
+//return:	if larger or equal to last element, returns the size of the vector
+//			if key is between discrete data points, it returns the index of the next element that's greater
+//			consequently, if smaller than all elements, returns 0
+//			if it matches an element, it returns its index
+
+template <typename T, typename Func>
+int lower_bound_universal(double key, const std::vector<T>& data, Func getElement) {
+	auto it = std::lower_bound(data.begin(), data.end(), key,
+		[&](const T& obj, double val) {
+			return getElement(obj) < val;
+		});
+	return std::distance(data.begin(), it);
+}
+
+int InterpolateXY(const double lookupValue, values, true, logXinterp, logYinterp, allowExtrapolate););
 int my_lower_bound(const double key, const std::vector<double>& A);
 int my_lower_bound(const double key, const std::vector<std::pair<double, double>>& A, const bool first);
 int my_lower_bound(const double key, const std::vector<std::pair<double, std::vector<double>>>& A, const bool first, const size_t elementIndex);
 
-int weighed_lower_bound_X(const double key, const double weigh, double* A, double* B, const size_t size);
+template <typename T, typename Func>
+double InterpolateXY_universal(const double lookupValue,
+	const std::vector<T>& data, //X-Y pairs
+	const bool first, //if true, search in X (and return interpolated Y)
+	const bool logX,
+	const bool logY,
+	const bool allowExtrapolate, //if false, clamped to first/last value
+	Func getElement) { //lambda function 
+	if (table.empty()) {
+		// handle this case appropriately
+		return 0.0;
+	}
 
-double GetElement(const std::pair<double, double>& pair, const bool first);
-double GetElement(const std::pair<double, std::vector<double>> & pair, const bool first, const size_t elementIndex);
+	if (table.size() == 1) {
+		return getElement(table[0], !first);
+	}
+
+	int lowerIndex = my_lower_bound(lookupValue, table, first);
+
+	// If lower index is -1, set to 0, or return the first element if not allowing extrapolation.
+	if (lowerIndex == -1) {
+		lowerIndex = 0;
+		if (!allowExtrapolate) {
+			return getElement(table[lowerIndex], !first);
+		}
+	}
+	// If lower index is at the end, decrease by one, or return the last element if not allowing extrapolation.
+	else if (lowerIndex == (static_cast<int>(table.size()) - 1)) {
+		if (allowExtrapolate) {
+			lowerIndex = static_cast<int>(table.size()) - 2;
+		}
+		else {
+			return getElement(table[lowerIndex], !first);
+		}
+	}
+
+	double valueLowerIndex = getElement(table[lowerIndex], first);
+	double valueLowerIndexNext = getElement(table[lowerIndex + 1], first);
+
+	// Compute delta and overshoot considering whether to use logarithmic scale or not.
+	double delta = (first ? logX : logY) ? log10(valueLowerIndexNext) - log10(valueLowerIndex)
+		: valueLowerIndexNext - valueLowerIndex;
+
+	double overshoot = (first ? logX : logY) ? log10(lookupValue) - log10(valueLowerIndex)
+		: lookupValue - valueLowerIndex;
+
+	// Compute the result considering whether to use logarithmic scale or not.
+	if (first ? logY : logX) {
+		return Pow10(Weigh(log10(getElement(table[lowerIndex], !first)),
+			log10(getElement(table[lowerIndex + 1], !first)),
+			overshoot / delta));
+	}
+	else {
+		return Weigh(getElement(table[lowerIndex], !first),
+			GetElement(table[lowerIndex + 1], !first),
+			overshoot / delta);
+	}
+}
 
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
 Vector3d

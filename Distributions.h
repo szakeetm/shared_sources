@@ -136,7 +136,7 @@ public:
 class DistributionND:public Distribution<std::vector<double>> { //x-y pairs where y is a vector of double values
 public:
 	std::vector<double> InterpolateY(const double x, const bool allowExtrapolate);
-	double InterpolateX(const double y, const size_t elementIndex, const bool allowExtrapolate);
+	//double InterpolateX(const double y, const size_t elementIndex, const bool allowExtrapolate);
     template<class Archive>
     void serialize(Archive & archive)
     {

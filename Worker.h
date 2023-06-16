@@ -128,10 +128,10 @@ public:
   double GetMoleculesPerTP(size_t moment) const;
   IntegratedDesorption Generate_ID(size_t paramId);
   int GenerateNewID(size_t paramId);
-  static std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
-  int GenerateNewCDF(double temperature);
+  //static std::vector<std::pair<double, double>> Generate_CDF(double gasTempKelvins, double gasMassGramsPerMol, size_t size);
+  //int GenerateNewCDF(double temperature);
   void CalcTotalOutgassing();
-  int GetCDFId(double temperature) const;
+  //int GetCDFId(double temperature) const;
   int GetIDId(size_t paramId) const;
   //Different signature:
   #endif
@@ -175,9 +175,10 @@ public:
   bool needsAngleMapStatusRefresh = false; //Interface helper: if IterfaceGeomToSimModel() constructs angle map, mark that facet adv. paramas update is necessary
   size_t InsertParametersBeforeCatalog(const std::vector<Parameter>& newParams);
 
-  std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
+  //std::vector<std::vector<std::pair<double, double>>> CDFs; //cumulative distribution function for each temperature
   std::vector<IntegratedDesorption> IDs; //integrated distribution function for each time-dependent desorption type
-  std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
+  //std::vector<double> temperatures; //keeping track of all temperatures that have a CDF already generated
+  //std::vector<IntegratedVelocityEntry> maxwell_CDF_1K; //cumulative surface M-B for 1K, to be multiplied by sqrt)temp
   std::set<size_t> desorptionParameterIDs; //time-dependent parameters which are used as desorptions, therefore need to be integrated
   std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)

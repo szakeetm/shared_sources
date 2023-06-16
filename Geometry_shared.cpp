@@ -580,7 +580,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 						Vector2d childVert;
 						childVert.u = solution.Child(i)->Child(holeIndex)->Polygon()[k].x;
 						childVert.v = solution.Child(i)->Child(holeIndex)->Polygon()[k].y;
-						double dist = Sqr(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Sqr(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
+						double dist = Square(facets[id1]->sh.U.Norme() * (vert.u - childVert.u)) + Square(facets[id1]->sh.V.Norme() * (vert.v - childVert.v));
 						if (dist < minDist) {
 							minDist = dist;
 							closestIndexToChild[holeIndex] = j;
@@ -3218,7 +3218,7 @@ void Geometry::CreateLoft() {
 			//Stop when the currently scanned index on facet2 would be the out of the search area (next or previous of searchEndIndex, depending on the loop direction)
 			Vector2d projection = ProjectVertex(vertices3[f2->indices[i2]], f1->sh.U, f1->sh.V, f1->sh.O);
 			projection = projection + centerOffset;
-			double dist = Sqr(u1Length*(projection.u - f1->vertices2[i1].u)) + Sqr(v1Length*(projection.v - f1->vertices2[i1].v)); //We need the absolute distance
+			double dist = Square(u1Length*(projection.u - f1->vertices2[i1].u)) + Square(v1Length*(projection.v - f1->vertices2[i1].v)); //We need the absolute distance
 			if (dist < min) {
 				min = dist;
 				minPos = i2;
@@ -3301,7 +3301,7 @@ void Geometry::CreateLoft() {
 			for (size_t i1 = i1index_lower; i1 <= i1index_higher; i1++) {
 				Vector2d projection = ProjectVertex(vertices3[f1->indices[i1]], f2->sh.U, f2->sh.V, f2->sh.O);
 				projection = projection + centerOffset;
-				double dist = Sqr(u2Length*(projection.u - f2->vertices2[i2].u)) + Sqr(v2Length*(projection.v - f2->vertices2[i2].v)); //We need the absolute distance
+				double dist = Square(u2Length*(projection.u - f2->vertices2[i2].u)) + Square(v2Length*(projection.v - f2->vertices2[i2].v)); //We need the absolute distance
 				if (!closestIndices1[i1].boundary) dist += 1E6; //penalty -> try to connect with boundaries
 
 				if (dist < min) {
@@ -4438,7 +4438,7 @@ void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & ax
 	//Equation2: topLength == 2*(r*cos(alpha)+delta)
 
 	//Solution by Wolfram Alpha:
-	double r = (Sqr(axis1Length) - 2 * axis1Length*topLength + Sqr(axis2Length) + Sqr(topLength)) / (4 * (axis1Length - topLength));
+	double r = (Square(axis1Length) - 2 * axis1Length*topLength + Square(axis2Length) + Square(topLength)) / (4 * (axis1Length - topLength));
 	double delta = axis1Length / 2 - r;
 	double alpha = acos((topLength / 2 - delta) / r);
 
