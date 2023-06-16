@@ -33,7 +33,7 @@ GLInputBox::GLInputBox(const char *message,const char *label,const char *title):
   Add(text);
 
   // Buttons
-  wD = Max(txtWidth + 110,170);
+  wD = std::max(txtWidth + 110,170);
   int startX = (wD-160)/2 + 3;
   int startY = hD - 43;
 

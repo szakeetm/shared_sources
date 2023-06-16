@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring> //strdup
 
 bool IsEqual(const double a, const double b, double toleranceRatio) {
-	return std::abs(a - b) < Max(1E-99, Max(std::abs(a),std::abs(b))*toleranceRatio);
+	return std::abs(a - b) < std::max(1E-99, std::max(std::abs(a),std::abs(b))*toleranceRatio);
 }
 
 size_t IDX(const int i, const size_t nb) {
@@ -136,7 +136,7 @@ std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pa
 	//Must repeat most of code because C++ doesn't allow runtime evaluated return-type (and only 'bool first' decides what to return)
 	if (table.size() == 1) return table[0].second;
 
-	int lowerIndex = my_lower_bound(x, table);
+	int lowerIndex = lower_index(x, table);
 
 	if (lowerIndex == -1) {
 		lowerIndex = 0;
@@ -165,36 +165,25 @@ std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pa
 
 
 //An overload of the function above that accepts C-style arrays as data
-int lower_bound_c_array(double key, const double* data, size_t array_size) {
+int lower_index(double key, const double* data, size_t array_size) {
 	const double* it = std::lower_bound(data, data + array_size, key);
-
-	if (it == data + array_size) {
-		// handle this case (key is greater than any element)
-		return array_size;
-	}
-	return std::distance(data, it);
+	return std::distance(data, it)-1; //off by one, see lower_index_universal for explanation
 }
 
-inline int my_lower_bound(const double key, const std::vector<double>& data) {
-	// Define the getElement function for doubles
-	auto getElement = [](const double& value) {
-		return value;
-	};
-	int index = lower_bound_universal(key, data, getElement);
-	return index;
+int lower_index(const double key, const std::vector<double>& data) {
+	auto it = std::lower_bound(data.begin(), data.end(), key);
+	return std::distance(data.begin(), it) - 1;
 }
 
-int my_lower_bound(const double  key, const std::vector<std::pair<double, double>>& data, const bool first)
-{
-	// Define the getElement function for pairs
-	auto getElement = [](const std::pair<double, double>& pair, const bool first) {
-		return first?pair.first:pair.second;
-	};
-	int index = lower_bound_universal(key, data, getElement);
-	return index;
+int lower_index(const double key, const std::vector<std::pair<double, double>>& data, const bool first) {
+	auto it = std::lower_bound(data.begin(), data.end(), key, [&](const std::pair<double, double>& pair, double val) {
+		return first ? pair.first < val : pair.second < val;
+		});
+
+	return std::distance(data.begin(), it)-1;
 }
 
-int weighed_lower_bound_X(const double  key, const double  weigh, double * A, double * B, const size_t  size)
+int weighed_lower_index_X(const double  key, const double  weigh, double * A, double * B, const size_t  size)
 {
 	//interpolates among two lines of a cumulative distribution
 	//all elements of line 1 and line 2 must be monotonously increasing (except equal consecutive values)

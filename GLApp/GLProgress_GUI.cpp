@@ -98,7 +98,7 @@ void GLProgress_GUI::PositionComponents()
 {
 	int txtWidth, txtHeight;
 	progressStatus->GetTextBounds(&txtWidth, &txtHeight);
-	txtWidth = Max(txtWidth, 250); //For short status, minimum 250
+	txtWidth = std::max(txtWidth, 250); //For short status, minimum 250
 	progressStatus->SetBounds(67, 14, txtWidth, txtHeight);
 
 	progressBar->SetBounds(68, 20 + txtHeight, progressBarMaxWidth, 20);
@@ -110,7 +110,7 @@ void GLProgress_GUI::PositionComponents()
 	percentLabel->SetBounds(progressBarX + progressBarMaxWidth / 2 - 10, progressBarY, 20, progressBarHeight);
 
 	int windowWidth = txtWidth + 94;
-	int windowHeight = Max(txtHeight + 70, 90);
+	int windowHeight = std::max(txtHeight + 70, 90);
 
 	// Center dialog
 	int screenWidth, screenHeight;

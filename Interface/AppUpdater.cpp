@@ -244,8 +244,8 @@ UpdateWarningDialog::UpdateWarningDialog(AppUpdater* appUpdater) {
     int textWidth, textHeight;
     questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = std::min(800, std::max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = std::min(800, std::max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
     yesButton = new GLButton(0, "Yes");
     yesButton->SetBounds(5, hD - 45, 80, 19);
@@ -1013,8 +1013,8 @@ ManualUpdateCheckDialog::ManualUpdateCheckDialog(const std::string & appName, co
 	int textWidth, textHeight;
 	questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = std::min(800, std::max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = std::min(800, std::max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
     updateButton = new GLButton(0, "Download");
     updateButton->SetBounds(5, hD - 45, 80, 19);
@@ -1090,8 +1090,8 @@ void ManualUpdateCheckDialog::Refresh() {
     int textWidth, textHeight;
     questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = std::min(800, std::max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = std::min(800, std::max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
     updateButton->SetBounds(5, hD - 45, 80, 19);
     updateButton->SetEnabled(updateAvailable);
@@ -1194,8 +1194,8 @@ UpdateFoundDialog::UpdateFoundDialog(const std::string & appName, const std::str
     int textWidth, textHeight;
     questionLabel->GetTextBounds(&textWidth, &textHeight);
 
-    int wD = Min(800, Max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
-    int hD = Min(800, Max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
+    int wD = std::min(800, std::max(405, textWidth + 20));  //Dynamic between 405 and 600 pixel width
+    int hD = std::min(800, std::max(100, textHeight + 50)); //Dynamic between 200 and 600 pixel width
 
     updateButton = new GLButton(0, "Download");
     updateButton->SetBounds(5, hD - 45, 80, 19);

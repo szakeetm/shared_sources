@@ -505,7 +505,7 @@ int GLMenu::Track(GLWindow *assignedParent,int x,int y) {
   int menuHeight = 0;
   for(int i=0;i<nbItem;i++) { 
     MENUITEM *p = items + i;
-    menuWidth=Max(menuWidth,p->width);
+    menuWidth=std::max(menuWidth,p->width);
     menuHeight += p->height;
   }
   // margin
@@ -572,7 +572,7 @@ void GLMenu::Drop(GLContainer *parent,int x,int y) {
   int menuHeight = 0;
   for(int i=0;i<nbItem;i++) { 
     MENUITEM *p = items + i;
-    menuWidth=Max(menuWidth,p->width);
+    menuWidth=std::max(menuWidth,p->width);
     menuHeight += p->height;
   }
   // margin

@@ -70,10 +70,10 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	float r2;
 	int _x1, _y1, _x2, _y2;
 
-	_x1 = Min(x1, x2);
-	_x2 = Max(x1, x2);
-	_y1 = Min(y1, y2);
-	_y2 = Max(y1, y2);
+	_x1 = std::min(x1, x2);
+	_x2 = std::max(x1, x2);
+	_y1 = std::min(y1, y2);
+	_y2 = std::max(y1, y2);
 
 	if (circularSelection) {
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
@@ -382,10 +382,10 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	float r2;
 	int _x1, _y1, _x2, _y2;
 
-	_x1 = Min(x1, x2);
-	_x2 = Max(x1, x2);
-	_y1 = Min(y1, y2);
-	_y2 = Max(y1, y2);
+	_x1 = std::min(x1, x2);
+	_x2 = std::max(x1, x2);
+	_y1 = std::min(y1, y2);
+	_y2 = std::max(y1, y2);
 
 	if (circularSelection) {
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
@@ -698,7 +698,7 @@ void Geometry::DrawPolys() {
 	// Group TRI,QUAD and POLY
 	for (int i = 0; i < sh.nbFacet; i++) {
 		int nb = facets[i]->sh.nbIndex;
-		if (facets[i]->volumeVisible) {
+		if (facets[i]->viewSettings.volumeVisible) {
 			if (nb == 3) {
 				f3.emplace_back(i);
 			}
@@ -886,7 +886,7 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacet
 	glDisableClientState(GL_COLOR_ARRAY);
 
 	AxisAlignedBoundingBox bb = GetBB();
-	double arrowLength = 30.0 / Max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
+	double arrowLength = 30.0 / std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glLineStipple(2, 0xAAAA);
@@ -1221,9 +1221,9 @@ void Geometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, i
 		glPolygonOffset(1.0f, 3.0f);
 		for (size_t i = 0; i < sh.nbFacet && renderTexture; i++) {
 			InterfaceFacet* f = facets[i];
-			bool paintRegularTexture = f->sh.isTextured && f->textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
+			bool paintRegularTexture = f->sh.isTextured && f->viewSettings.textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #if defined(MOLFLOW)
-			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->textureVisible && (f->sh.countACD || f->sh.countDes));
+			paintRegularTexture = paintRegularTexture || (f->sh.isTextured && f->viewSettings.textureVisible && (f->sh.countACD || f->sh.countDes));
 #endif
 			if (paintRegularTexture) {
 				if (f->sh.is2sided)   glDisable(GL_CULL_FACE);
@@ -1260,7 +1260,7 @@ void Geometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, i
 		for (int i = 0; i < sh.nbFacet; i++) {
 
 			InterfaceFacet* f = facets[i];
-			if (!f->cellPropertiesIds.empty() && f->textureVisible) {
+			if (!f->cellPropertiesIds.empty() && f->viewSettings.textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
 				glCallList(f->glElem);

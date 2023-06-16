@@ -87,8 +87,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	sh.teleportDest = 0;
 	sh.isVolatile = false;
 
-	textureVisible = true;
-	volumeVisible = true;
+	viewSettings.textureVisible = true;
+	viewSettings.volumeVisible = true;
 
 	texDimW = 0;
 	texDimH = 0;
@@ -624,8 +624,8 @@ void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height)
 		size_t maxH = sh.texHeight - v;
 		selectedElem.u = u;
 		selectedElem.v = v;
-		selectedElem.width = Min(maxW, width);
-		selectedElem.height = Min(maxH, height);
+		selectedElem.width = std::min(maxW, width);
+		selectedElem.height = std::min(maxH, height);
 		BuildSelElemList();
 
 	}
@@ -692,7 +692,7 @@ size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 		int iwidth = (int)ceil(width);
 		int iheight = (int)ceil(height);
-		int m = Max(iwidth, iheight);
+		int m = std::max(iwidth, iheight);
 		size_t tDim = GetPower2(m);
 		if (tDim < 16) tDim = 16;
 		size_t tSize = tDim*tDim;
@@ -1141,8 +1141,8 @@ void InterfaceFacet::CopyFacetProperties(InterfaceFacet *f, bool copyMesh) {
         tRatioV = f->tRatioV;
     }
 	this->UpdateFlags();
-	textureVisible = f->textureVisible;
-	volumeVisible = f->volumeVisible;
+	viewSettings.textureVisible = f->viewSettings.textureVisible;
+	viewSettings.volumeVisible = f->viewSettings.volumeVisible;
 	selected = f->selected;
 	
 	

@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 
 
-std::vector<double> DistributionND::InterpolateY(const double  x, const bool  allowExtrapolate)
+std::vector<double> DistributionND::InterpY(const double  x, const bool  allowExtrapolate)
 {
 	return InterpolateVectorY(x, values, logXinterp, logYinterp, allowExtrapolate);
 }
@@ -34,11 +34,11 @@ double DistributionND::InterpolateX(const double  y, const size_t  elementIndex,
 }
 */
 
-double Distribution2D::InterpolateY(const double x, const bool allowExtrapolate) const {
-	return InterpolateXY(x, values, true, logXinterp, logYinterp, allowExtrapolate);
+double Distribution2D::InterpY(const double x, const bool allowExtrapolate) const {
+	return InterpolateY(x, values, logXinterp, logYinterp,allowExtrapolate); //In MathTools.h
 }
 
-double Distribution2D::InterpolateX(const double y, const bool allowExtrapolate) const {
-	return InterpolateXY(y, values, false, logXinterp, logYinterp, allowExtrapolate);
+double Distribution2D::InterpX(const double y, const bool allowExtrapolate) const {
+	return InterpolateX(y, values, logXinterp, logYinterp, allowExtrapolate); //In MathTools.h
 }
 

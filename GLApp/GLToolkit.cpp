@@ -563,7 +563,7 @@ void GLToolkit::DrawHScroll(int x,int y,int width,int height,int state) {
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
-    int sleft = Min(left-i,200);
+    int sleft = std::min(left-i,200);
     compTex->UpdateSprite(x+w1+i,y,x+w1+i+sleft,y+height);
     compTex->Render(false);
   }
@@ -615,7 +615,7 @@ void GLToolkit::DrawVScroll(int x,int y,int width,int height,int state) {
   // Middle parts
   compTex->SetSpriteMapping(0.1f,ftu,0.9f,ftd);
   for(int i=0;i<left;i+=200) {
-    int sleft = Min(left-i,200);
+    int sleft = std::min(left-i,200);
     compTex->UpdateSprite(x,y+h1+i,x+width,y+h1+i+sleft);
     compTex->Render90(false);
   }

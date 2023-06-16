@@ -265,7 +265,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 		double rD = sqrt(D);
 		double t0 = (-B - rD) / 2.0;
 		double t1 = (-B + rD) / 2.0;
-		*dist = Min(t0, t1);
+		*dist = std::min(t0, t1);
 		return (*dist >= 0.0);
 	}
 

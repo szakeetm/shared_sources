@@ -755,7 +755,7 @@ void GLList::Paint() {
 	int _height = sbHeight ? (height - sbHeight) : height;
 	int _width = sbWidth ? (width - sbWidth - labW) : width - 2 - labW;
 	int wT = GetColumnStart(nbCol);
-	int maxX = Min(wT - sX, _width);
+	int maxX = std::min(wT - sX, _width);
 	int sx = -sX, sy = -sY + labHeight - 2;
 
 	// Vertical scroll
@@ -845,7 +845,7 @@ void GLList::Paint() {
 		for (auto& sel : selectedRows) {
 			if ((sel + 1)*cHeight >= sY && sel*cHeight <= sY + _height) {
 				int mu = (showCLabel ? labHeight : 1);
-				GetWindow()->Clip(this, 1 + labW, mu, (sbWidth ? sbWidth : 1), Min(mb, this->GetHeight() - mu - 1)); //maintain minimum height to avoid SetViewPort error
+				GetWindow()->Clip(this, 1 + labW, mu, (sbWidth ? sbWidth : 1), std::min(mb, this->GetHeight() - mu - 1)); //maintain minimum height to avoid SetViewPort error
 				GLToolkit::DrawBox(0, (int)sel*cHeight - sY, maxX - 1, cHeight, 160, 160, 255);
 			}
 		}
@@ -975,7 +975,7 @@ void GLList::Paint() {
 				_glVertex2i(posX + maxX + labW, posY + sy + 1);
 			}
 		}
-		int py = Min(_height, sy + 1);
+		int py = std::min(_height, sy + 1);
 		for (int i = 0; i < nbCol; i++) {
 			if (sx + cWidths[i] > 0 && sx + cWidths[i] <= _width + 1) {
 				_glVertex2i(posX + sx + cWidths[i] + labW, posY + 1);
@@ -1417,10 +1417,10 @@ bool GLList::GetSelectionBox(size_t *row, size_t *col, size_t *rowLength, size_t
 
 	//if( selectionMode==BOX_CELL && selectedRows.size()==1 && selectedCol!=-1 ) {
 	if (selectedRows.size() == 1 && selectedCol != -1 && lastRowSel != -1) {
-		*row = Min(selectedRows[0], (size_t)lastRowSel);
-		*col = Min(selectedCol, lastColSel);
-		*rowLength = Max((size_t)lastRowSel, selectedRows[0]) - Min((size_t)lastRowSel, selectedRows[0]) + 1;
-		*colLength = Max(lastColSel, selectedCol) - Min(lastColSel, selectedCol) + 1;
+		*row = std::min(selectedRows[0], (size_t)lastRowSel);
+		*col = std::min(selectedCol, lastColSel);
+		*rowLength = std::max((size_t)lastRowSel, selectedRows[0]) - std::min((size_t)lastRowSel, selectedRows[0]) + 1;
+		*colLength = std::max(lastColSel, selectedCol) - std::min(lastColSel, selectedCol) + 1;
 		return (*rowLength > 0) && (*colLength > 0);
 	}
 	return false;
@@ -2154,9 +2154,9 @@ void GLList::PasteClipboardText(bool allowExpandRows, bool allowExpandColumns, i
 					bool needsMoreRows = allowExpandRows && (row + clipboardRows + extraRowsAtEnd > nbRow);
 					bool needsMoreCols = allowExpandColumns && (col + clipboardCols > nbCol);
 					bool ok = true;
-					if (Max(needsMoreRows * (row + clipboardRows - nbRow), needsMoreCols*(col + clipboardCols - nbCol)) >= 20)
+					if (std::max(needsMoreRows * (row + clipboardRows - nbRow), needsMoreCols*(col + clipboardCols - nbCol)) >= 20)
 						ok = GLMessageBox::Display("Increase list size by more than 20 rows/columns?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK;
-					if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns ? Max(nbCol, col + clipboardCols) : nbCol, allowExpandRows ? Max(nbRow, row + clipboardRows + extraRowsAtEnd) : nbRow, true);
+					if (ok && (needsMoreRows || needsMoreCols)) this->SetSize(allowExpandColumns ? std::max(nbCol, col + clipboardCols) : nbCol, allowExpandRows ? std::max(nbRow, row + clipboardRows + extraRowsAtEnd) : nbRow, true);
 				}
 
 				size_t cursor = 0;

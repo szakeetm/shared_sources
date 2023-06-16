@@ -228,8 +228,8 @@ void GLTextField::Paint() {
 
   if( m_Start!=m_Stop ) {
 
-    int min = Min(m_Stop,m_Start);
-    int max = Max(m_Stop,m_Start);
+    int min = std::min(m_Stop,m_Start);
+    int max = std::max(m_Stop,m_Start);
 
     int tMargin = (border?2:1);
 

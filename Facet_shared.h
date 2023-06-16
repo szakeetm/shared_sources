@@ -167,9 +167,8 @@ public:
 	size_t texDimW;         // Texture dimension (a power of 2)
     double tRatioU;       // Texture sample per unit
     double tRatioV;       // Texture sample per unit
-    bool	textureVisible; //Draw the texture?
+    FacetViewSetting viewSettings;
 	bool  collinear;      //All vertices are on a line (non-simple)
-	bool	volumeVisible;	//Draw volume?
 	bool    hasMesh;     // Has texture
 	bool textureError;   // Disable rendering if the texture has an error
 
