@@ -20,7 +20,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "MathTools.h"
 #include "Random.h"
 
-#include <cmath>
 #include <cstdio>
 #include <algorithm> //std::Lower_bound
 #include <iterator>
