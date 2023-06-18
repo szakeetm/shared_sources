@@ -200,37 +200,39 @@ int weighed_lower_index_X(const double  key, const double  weigh, double * A, do
 	//A* and B* : pointers to arrays of 'size' number of CDF values. The first value (not included) is assumed to be 0, the last (not included) is assumed to be 1
 	//return value: lower index. If -1, then key is smaller than first element, if 'size-1', then key is larger than last element
 	
-		if (size == 0) return -1;
-		if (size == 1) {
-			double weighed = Weigh(A[0], B[0], weigh);
-			if (key < weighed) return -1;
-			else return 0;
+	if (size == 0) return -1;
+
+	// Handles the case when size is 1
+	if (size == 1) {
+		double weighed = Weigh(A[0], B[0], weigh);
+		return (key < weighed) ? -1 : 0;
+	}
+
+	int left = 0;
+	int right = static_cast<int>(size - 1);
+	int mid;
+	double weighed, nextWeighed;
+
+	// Binary search
+	while (left <= right) {
+		mid = (left + right) / 2;
+		weighed = Weigh(A[mid], B[mid], weigh);
+		nextWeighed = Weigh(A[mid + 1], B[mid + 1], weigh);
+
+		if (weighed <= key && key < nextWeighed) {
+			// key found at index mid
+			return mid;
 		}
-		int L = 0;
-		int R = (int)(size - 1);
-		// continue searching while [imin,imax] is not empty
-		int M; double weighed,nextWeighed;
-		while (L<=R)
-		{
-			M = (L + R) / 2;
-			weighed = Weigh(A[M], B[M], weigh);
-			nextWeighed = Weigh(A[M + 1], B[M + 1], weigh);
-			if (weighed <= key && key < nextWeighed) {
-				// key found at index M
-				return M;
-			}
-			else if (weighed < key) {
-				L = M + 1;
-			}
-			else  {
-				R = M - 1;
-			}
+		else if (weighed < key) {
+			left = mid + 1;
 		}
-		//Not found
-		if (M == 0)
-			return -1; //key lower than first element
-		else
-			return (int)size - 1; //key larger than last element
+		else {
+			right = mid - 1;
+		}
+	}
+
+	// Key not found. Check if it is out of the bounds.
+	return (mid == 0) ? -1 : static_cast<int>(size - 1);
 	
 }
 
