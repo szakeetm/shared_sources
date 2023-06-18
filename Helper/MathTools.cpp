@@ -133,30 +133,39 @@ double Weigh(const double  a, const double  b, const double  weigh)
 std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
 	//Same as InterpolateY but returns a vector.
 	//Must repeat most of code because C++ doesn't allow runtime evaluated return-type (and only 'bool first' decides what to return)
-	if (table.size() == 1) return table[0].second;
+	if (table.size() == 1)
+		return table[0].second;
 
 	int lowerIndex = lower_index(x, table);
-
+	int tableSize = static_cast<int>(table.size());
 	if (lowerIndex == -1) {
 		lowerIndex = 0;
-		if (!allowExtrapolate) return table[lowerIndex].second; //return first element
+		if (!allowExtrapolate)
+			return table[lowerIndex].second; //return first element
 	}
-	else if (lowerIndex == (static_cast<int>(table.size()) - 1)) {
+	else if (lowerIndex == (tableSize - 1)) {
 		if (allowExtrapolate) {
-			lowerIndex = static_cast<int>(table.size()) - 2;
+			lowerIndex = tableSize - 2;
 		}
-		else return table[lowerIndex].second; //return last element
+		else
+			return table[lowerIndex].second; //return last element
 	}
 
-	double delta = (logX) ? log10(table[lowerIndex + 1].first) - log10(table[lowerIndex].first) : table[lowerIndex + 1].first - table[lowerIndex].first;
-	double overshoot = (logX) ? log10(x) - log10(table[lowerIndex].first) : x - table[lowerIndex].first;
+	double lowerFirst = (logX) ? log10(table[lowerIndex].first) : table[lowerIndex].first;
+	double lowerFirstNext = (logX) ? log10(table[lowerIndex + 1].first) : table[lowerIndex + 1].first;
+	double xValue = (logX) ? log10(x) : x;
+
+	double delta = lowerFirstNext - lowerFirst;
+	double overshoot = xValue - lowerFirst;
 
 	size_t distrYsize = table[0].second.size();
-	std::vector<double> result; result.resize(distrYsize);
+	std::vector<double> result(distrYsize);
 	for (size_t e = 0; e < distrYsize; e++)
 	{
-		if (logY) result[e]=Pow10(Weigh(log10(table[lowerIndex].second[e]),log10(table[lowerIndex + 1].second[e]), overshoot / delta)); //log-log interpolation
-		else result[e]=Weigh(table[lowerIndex].second[e],table[lowerIndex + 1].second[e],overshoot / delta);
+		double lowerSecond = (logY) ? log10(table[lowerIndex].second[e]) : table[lowerIndex].second[e];
+		double lowerSecondNext = (logY) ? log10(table[lowerIndex + 1].second[e]) : table[lowerIndex + 1].second[e];
+
+		result[e] = (logY) ? Pow10(Weigh(lowerSecond, lowerSecondNext, overshoot / delta)) : Weigh(lowerSecond, lowerSecondNext, overshoot / delta);
 	}
 	return result;
 }
