@@ -46,18 +46,25 @@ template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; 
 template <typename TYPE> TYPE Square(const TYPE& a) { return a*a; }
 
 #define PI 3.14159265358979323846
-#define DET22(_11,_12,_21,_22) ( (_11)*(_22) - (_21)*(_12) )
-#define DET33(_11,_12,_13,_21,_22,_23,_31,_32,_33)  \
-  ((_11)*( (_22)*(_33) - (_32)*(_23) ) +            \
-   (_12)*( (_23)*(_31) - (_33)*(_21) ) +            \
-   (_13)*( (_21)*(_32) - (_31)*(_22) ))
+inline double DET22(double _11, double _12, double _21, double _22) {
+	return (_11) * (_22)-(_21) * (_12);
+}
+
+inline double DET33(double _11, double _12, double _13,
+	double _21, double _22, double _23,
+	double _31, double _32, double _33) {
+	return (_11) * ((_22) * (_33)-(_32) * (_23))
+		+ (_12) * ((_23) * (_31)-(_33) * (_21))
+		+ (_13) * ((_21) * (_32)-(_31) * (_22));
+}
+
 #define VERY_SMALL 1.0E-30
 #define MY_INFINITY 1.e100
 
 char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
-[[maybe_unused]] double my_erf(double x);
+//[[maybe_unused]] double my_erf(double x);
 double Weigh(const double a, const double b, const double weigh);
 
 template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE& value) {
