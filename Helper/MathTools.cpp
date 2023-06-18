@@ -241,58 +241,46 @@ double Pow10(const double a) {
 }
 
 std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN) {
+	// Ensure all input vectors are normalized.
 
-    //input vectors need to be normalized
+	// Convert Cartesian (x,y,z) coordinates to polar coordinates in the (nU,nV,N) basis.
+	// Note: The facet is parallel to (U,V), and we use its (nU,nV,N) orthonormal basis.
+	// Both (nU,nV,N) and (x,y,z) are left-handed.
 
-    // Get polar coordinates of the incoming particule direction in the (U,V,N) facet space.
-    // Note: The facet is parallel to (U,V), we use its (nU,nV,N) orthonormal basis here.
-    // (nU,nV,N) and (x,y,z) are both left handed
+	// Perform basis change from (x,y,z) to (nU,nV,N).
+	// This leverages the fact that (nU,nV,N) is a member of the Special Orthogonal Group (SO(3)).
 
-    // Cartesian(x,y,z) to polar in (nU,nV,N) transformation
+	// Calculate the dot product of the incident direction with the orthonormal basis.
+	double uComponent = Dot(incidentDir, normU);
+	double vComponent = Dot(incidentDir, normV);
+	double nComponent = Dot(incidentDir, normN);
 
-    // Basis change (x,y,z) -> (nU,nV,N)
-    // We use the fact that (nU,nV,N) belongs to SO(3)
-    double u = Dot(incidentDir, normU);
-    double v = Dot(incidentDir, normV);
-    double n = Dot(incidentDir, normN);
-    Saturate(n, -1.0, 1.0); //sometimes rounding errors do occur, 'acos' function would return no value for theta
+	// Handle any rounding errors that could cause issues with the 'acos' function.
+	Saturate(nComponent, -1.0, 1.0);
 
-    // (u,v,n) -> (theta,phi)
+	// Convert from (u,v,n) to polar coordinates (inTheta, inPhi).
+	double inTheta = acos(nComponent);  // The angle between the incident direction and the normal vector. Ranges from PI/2 to PI.
+	double inPhi = atan2(vComponent, uComponent);  // The angle between the projection of the incident direction in the (U,V) plane and the U axis. Ranges from -PI to PI.
 
-    double inTheta = acos(n);              // Angle to normal (PI/2 => PI
-    //double rho = sqrt(v*v + u*u);
-    //double inPhi = asin(v / rho);     //At this point, -PI/2 < inPhi < PI/2
-    //if (u < 0.0) inPhi = PI - inPhi;  // Angle to U
-    double inPhi = atan2(v, u); //-PI .. PI, and the angle is 0 when pointing towards u
-    return { inTheta, inPhi };
+	return { inTheta, inPhi };
 }
 
 Vector3d
-PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
-                 const bool reverse) {
+PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& normN, const double theta, const double phi, const bool reverse) {
+	// This function converts polar coordinates to Cartesian coordinates in the (normU,normV,normN) basis.
+	// Note: (normU,normV,normN) and (x,y,z) are both left-handed.
+	// theta is the angle to the normal of the facet normN, phi to normU
 
-    //returns sHandle->currentParticleTracer.direction
+	// Convert from polar coordinates (theta, phi) to Cartesian coordinates (u,v,n).
+	const double u = sin(theta) * cos(phi);
+	const double v = sin(theta) * sin(phi);
+	const double n = cos(theta);
 
-    //Vector3d U, V, N;
-    //double u, v, n;
+	// Get the (normU,normV,normN) orthonormal basis of the facet
+	Vector3d U = normU;
+	Vector3d V = normV;
+	Vector3d N = reverse ? -1.0 * normN : normN;
 
-    // Polar in (nU,nV,N) to Cartesian(x,y,z) transformation  ( nU = U/|U| , nV = V/|V| )
-    // theta is the angle to the normal of the facet N, phi to U
-    // ! See Geometry::InitializeGeometry() for further informations on the (U,V,N) basis !
-    // (nU,nV,N) and (x,y,z) are both left handed
-
-    double u = sin(theta)*cos(phi);
-    double v = sin(theta)*sin(phi);
-    double n = cos(theta);
-    //#endif
-
-    // Get the (nU,nV,N) orthonormal basis of the facet
-    Vector3d U = nU; // nU
-    Vector3d V = nV; // nV
-    Vector3d N = nN; // nN
-    if (reverse) {
-        N = -1.0 * N;
-    }
-    // Basis change (nU,nV,N) -> (x,y,z)
-    return u*U + v*V + n * N;
+	// Perform basis change from (normU,normV,normN) to (x,y,z) 
+	return u * U + v * V + n * N;
 }
