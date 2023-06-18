@@ -46,6 +46,7 @@ template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; 
 template <typename TYPE> TYPE Square(const TYPE& a) { return a*a; }
 
 #define PI 3.14159265358979323846
+
 inline double DET22(double _11, double _12, double _21, double _22) {
 	return (_11) * (_22)-(_21) * (_12);
 }
