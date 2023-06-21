@@ -183,7 +183,6 @@ public:
   std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
 
-    GeometrySettings geometrySettings; // for loader and writer
   #endif
 
 #if defined(SYNRAD)
