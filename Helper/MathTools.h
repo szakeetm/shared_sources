@@ -131,7 +131,7 @@ double InterpolateXY_universal(const double lookupValue, //X or Y depending on s
 	// If lower index is -1, set to 0, or return the first element if not allowing extrapolation.
 	if (lowerIndex == -1) {
 		if (!allowExtrapolate) {
-			return getElement(data[lowerIndex], !searchFirst); //clamp to first value
+			return getElement(data[0], !searchFirst); //clamp to first value
 		}
 		else {
 			lowerIndex = 0; //extrapolate based on first 2 datapoints
