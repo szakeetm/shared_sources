@@ -114,9 +114,11 @@ bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir
     double tyMin = (bounds[dirIsNeg[1]].y - ray.origin.y) * invDir.y;
     double tyMax = (bounds[1 - dirIsNeg[1]].y - ray.origin.y) * invDir.y;
 
+    constexpr double precalc_1_2_gamma3 = 1 + 2 * gamma(3);
+
     // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
-    tMax *= 1 + 2 * gamma(3);
-    tyMax *= 1 + 2 * gamma(3);
+    tMax *= precalc_1_2_gamma3;
+    tyMax *= precalc_1_2_gamma3;
     if (tMin > tyMax || tyMin > tMax) return false;
     if (tyMin > tMin) tMin = tyMin;
     if (tyMax < tMax) tMax = tyMax;
@@ -126,7 +128,7 @@ bool AxisAlignedBoundingBox::IntersectBox(const Ray &ray, const Vector3d &invDir
     double tzMax = (bounds[1 - dirIsNeg[2]].z - ray.origin.z) * invDir.z;
 
     // Update _tzMax_ to ensure robust bounds intersection
-    tzMax *= 1 + 2 * gamma(3);
+    tzMax *= precalc_1_2_gamma3;
     if (tMin > tzMax || tzMin > tMax) return false;
     if (tzMin > tMin) tMin = tzMin;
     if (tzMax < tMax) tMax = tzMax;
