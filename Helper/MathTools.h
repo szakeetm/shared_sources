@@ -18,6 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
+
 #include <vector>
 #include <algorithm> //std::find
 #include <string>
@@ -179,7 +180,7 @@ template <typename T> inline double InterpolateY(const double x, const std::vect
 }
 
 //specialization for vector of pair of double,double
-template<> inline double InterpolateY<std::pair<double,double>>(const double x, const std::vector<std::pair<double, double>>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
+template<> inline double InterpolateY<std::pair<double, double>>(const double x, const std::vector<std::pair<double, double>>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
 	// Define the getElement function for pairs
 	auto getElement = [](const std::pair<double, double>& pair, const bool first) {
 		return first ? pair.first : pair.second;
@@ -196,7 +197,7 @@ template <typename T> inline double InterpolateX(const double y, const std::vect
 }
 
 //specialization for vector of pair of double,double
-template<> inline double InterpolateX<std::pair<double,double>>(const double y, const std::vector<std::pair<double, double>>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
+template<> inline double InterpolateX<std::pair<double, double>>(const double y, const std::vector<std::pair<double, double>>& table, const bool logX, const bool logY, const bool allowExtrapolate) {
 	// Define the getElement function for pairs
 	auto getElement = [](const std::pair<double, double>& pair, const bool first) {
 		return first ? pair.first : pair.second;

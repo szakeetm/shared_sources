@@ -284,3 +284,4 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 	// Perform basis change from (normU,normV,normN) to (x,y,z) 
 	return u * U + v * V + n * N;
 }
+
