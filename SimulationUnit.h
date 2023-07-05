@@ -37,11 +37,11 @@ namespace MFSim {
  */
 class Simulation_Abstract {
 public:
-    Simulation_Abstract() : model(), totalDesorbed(0)/*, m()*/{
+    Simulation_Abstract() : model(), totalDesorbed(0)/*, modelMutex()*/{
         globStatePtr = nullptr;
         globParticleLogPtr = nullptr;
     };
-    Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , m()*/ {
+    Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , modelMutex()*/ {
         globStatePtr = nullptr;
         globParticleLogPtr = nullptr;
         totalDesorbed = o.totalDesorbed;

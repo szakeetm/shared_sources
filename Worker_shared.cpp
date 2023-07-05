@@ -677,8 +677,11 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 		}
 
 		prg.SetMessage("Initializing physics...");
-		if (model->PrepareToRun()) {
-			throw std::runtime_error("Error preparing simulation");
+		try {
+			model->PrepareToRun();
+		}
+		catch (std::exception& err) {
+			throw Error(fmt::format("Error in model->PrepareToRun():\n{}", err.what()));
 		}
 
 		prg.SetMessage("Constructing memory structure to store results...");

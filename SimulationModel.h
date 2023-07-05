@@ -62,15 +62,15 @@ public:
  */
 class SimulationModel {
 protected:
-    SimulationModel() : otfParams(), wp(), sh(), m(), initialized(false) {};
+    SimulationModel() : otfParams(), wp(), sh(), modelMutex(), initialized(false) {};
 
     ~SimulationModel() = default;
 
-    SimulationModel(SimulationModel &&o) noexcept: m(), initialized(false) {
+    SimulationModel(SimulationModel &&o) noexcept: modelMutex(), initialized(false) {
         *this = std::move(o);
     };
 
-    SimulationModel(const SimulationModel &o) : m(), initialized(false) {
+    SimulationModel(const SimulationModel &o) : modelMutex(), initialized(false) {
         *this = o;
     };
 
@@ -107,7 +107,7 @@ public:
         return *this;
     };
 
-    virtual int PrepareToRun() = 0;
+    virtual void PrepareToRun() = 0; //throws error
 
     // Molflow will use ParameterSurfaces (for parameter outgassing) for particular construction types
     virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type, BVHAccel::SplitMethod split,
@@ -159,7 +159,7 @@ public:
     GeomProperties sh;
 
     bool initialized;
-    std::mutex m;
+    std::mutex modelMutex;
 
     virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
 };

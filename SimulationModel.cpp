@@ -37,7 +37,7 @@ size_t SimulationModel::size() {
     modelSize += sizeof(otfParams);
     modelSize += sizeof(wp);
     modelSize += sizeof(sh);
-    modelSize += sizeof(m);
+    modelSize += sizeof(modelMutex);
     modelSize += sizeof(initialized);
 
     return modelSize;
@@ -48,7 +48,10 @@ size_t SimulationModel::size() {
 * \return error code: 0=no error, 1=error
 */
 int SimulationModel::InitializeFacets() {
-    if (!m.try_lock()) {
+    try { //unti InitializeFacets will throw error
+        std::lock_guard<std::mutex> lock(modelMutex);
+    }
+    catch (...) {
         return 1;
     }
 
@@ -74,7 +77,6 @@ int SimulationModel::InitializeFacets() {
         }
     }
 
-    m.unlock();
     return 0;
 }
 
