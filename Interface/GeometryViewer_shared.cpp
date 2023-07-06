@@ -649,7 +649,7 @@ void GeometryViewer::DrawIndex() {
 		// Get selected vertex
 	Geometry *geom = work->GetGeometry();
 	size_t nbVertex = geom->GetNbVertex();
-	std::vector<size_t> selectedFacets = geom->GetSelectedFacets();
+	auto selectedFacets = geom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
 
 	//Mark vertices of selected facets
@@ -923,7 +923,7 @@ void GeometryViewer::DrawFacetId() {
     // Get selected vertex
     Geometry *geom = work->GetGeometry();
     size_t nbVertex = geom->GetNbVertex();
-    std::vector<size_t> selectedFacets = geom->GetSelectedFacets();
+    auto selectedFacets = geom->GetSelectedFacets();
     if (nbVertex <= 0 || selectedFacets.empty()) return;
 
 	/*

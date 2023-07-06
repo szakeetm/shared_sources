@@ -1371,7 +1371,7 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 
 std::unordered_set<int> Geometry::GetVertexBelongsToSelectedFacet() {
 	std::unordered_set<int> result;
-	std::vector<size_t> selFacetIds = GetSelectedFacets();
+	auto selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
 		InterfaceFacet* f = facets[facetId];
 		for (size_t i = 0; i < f->sh.nbIndex; i++)

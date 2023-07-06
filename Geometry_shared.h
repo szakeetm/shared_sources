@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Clipper2Lib/include/clipper2/clipper.h"
 
 #include <vector>
+#include <set>
 #include <list>
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>

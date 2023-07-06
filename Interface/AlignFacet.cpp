@@ -144,7 +144,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				GLMessageBox::Display("No facets memorized","Nothing to align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-			std::vector<size_t> appSelectedFacets = geom->GetSelectedFacets();
+			auto appSelectedFacets = geom->GetSelectedFacets();
 			if (appSelectedFacets.size()!=2) {
 				GLMessageBox::Display("Two facets (source and destination) must be selected","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
