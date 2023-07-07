@@ -76,8 +76,9 @@ void AppUpdater::MakeDefaultConfig(){
     serverNode.append_child("RemoteFeed").append_attribute("url") = REMOTE_FEED;
     serverNode.append_child("PublicWebsite").append_attribute("url") = PUBLIC_WEBSITE;
     serverNode.child("PublicWebsite").append_attribute("downloadsPage") = DOWNLOAD_PAGE;
-    serverNode.append_child("MatomoAnalytics").append_attribute("siteId") = MATOMO_SITE_ID;
-	serverNode.append_child("MatomoAnalytics").append_attribute("requestTarget") = MATOMO_REQUEST_TARGET;
+	auto matomoNode = serverNode.append_child("MatomoAnalytics");
+	matomoNode.append_attribute("siteId") = MATOMO_SITE_ID;
+	matomoNode.append_attribute("requestTarget") = MATOMO_REQUEST_TARGET;
 
     xml_node localConfigNode = rootNode.append_child("LocalConfig");
     localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = "false";
@@ -103,8 +104,9 @@ void AppUpdater::SaveConfig() {
 	serverNode.append_child("RemoteFeed").append_attribute("url") = feedUrl.c_str();
 	serverNode.append_child("PublicWebsite").append_attribute("url") = publicWebsite.c_str();
 	serverNode.child("PublicWebsite").append_attribute("downloadsPage") = publicDownloadsPage.c_str();
-	serverNode.append_child("MatomoAnalytics").append_attribute("siteId") = tracker.siteId.c_str();
-	serverNode.append_child("MatomoAnalytics").append_attribute("requestTarget") = tracker.requestTarget.c_str();
+	auto matomoNode = serverNode.append_child("MatomoAnalytics");
+	matomoNode.append_attribute("siteId") = tracker.siteId.c_str();
+	matomoNode.append_attribute("requestTarget") = tracker.requestTarget.c_str();
 
 	xml_node localConfigNode = rootNode.append_child("LocalConfig");
 	localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = allowUpdateCheck;
