@@ -89,7 +89,7 @@ std::tuple<CURLcode, long> DownloadFile(const std::string& url, const std::strin
 
 CURLcode MatomoTracker::Send(const MatomoHttpRequest& request, const ScreenSize& size) {
 	std::string payload = fmt::format("idsite={}&rec=1",FormatHttpString(siteId));
-	if (!userId.empty()) payload += fmt::format("&uid={}&_id={}",userId,userId);
+	if (!userId.empty()) payload += fmt::format("&uid={}",userId);
 	if (size.width!=0 && size.height!=0) payload += fmt::format("&res={}x{}",size.width,size.height);
 
 	if (!request.eventCategory.empty()) payload += fmt::format("&e_c={}",FormatHttpString(request.eventCategory));
