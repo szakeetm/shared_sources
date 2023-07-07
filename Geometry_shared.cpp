@@ -2083,30 +2083,26 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 }
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
-	std::vector<std::vector<size_t>> indices(omp_get_max_threads());
-	int nbFacets = static_cast<int>(facets.size());
+	std::set<size_t> selection_set;
+	//selection.reserve(facets.size());
+#pragma omp parallel
+    {
+        std::set<size_t> selection_local;
+		//selection_local.reserve(facets.size());
+#pragma omp for
+        for (int i = 0; i < facets.size(); i++) {
+            if (facets[i]->selected)
+                selection_local.insert(i);
+        }
 
-#pragma omp parallel for schedule(static)
-	for (int i = 0; i < nbFacets; i++) {
-		if (facets[i]->selected) {
-			indices[omp_get_thread_num()].push_back(static_cast<size_t>(i));
-		}
-	}
+#pragma omp critical
+        selection_set.insert(selection_local.begin(), selection_local.end());
+    }
 
-	// Remove empty vectors
-	indices.erase(std::remove_if(indices.begin(), indices.end(), [](const std::vector<size_t>& v) { return v.empty(); }), indices.end());
+	//set to vector
+	std::vector<size_t> selection_vector(selection_set.begin(), selection_set.end());
 
-	// Sort the vector of vectors based on the first element of each vector (vectors are contigious)
-	std::sort(indices.begin(), indices.end(),
-		[](const std::vector<size_t>& a, const std::vector<size_t>& b) { return a[0] < b[0]; });
-
-	// Combine all vectors into a single vector
-	std::vector<size_t> result;
-	for (auto& indexVector : indices) {
-		result.insert(result.end(), indexVector.begin(), indexVector.end());
-	}
-
-	return result;
+	return selection_vector;
 }
 
 std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double tolerance) {
