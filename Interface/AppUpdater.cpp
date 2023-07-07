@@ -18,7 +18,6 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
-#include "Web.h"
 #include <ZipLib/ZipArchive.h>
 #include <ZipLib/ZipArchiveEntry.h>
 #include <ZipLib/ZipFile.h>
@@ -34,7 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLButton.h"
 #include "GLApp/GLLabel.h"
 
-#include "GoogleAnalytics.h"
+#include "MatomoAnalytics.h"
 
 #ifndef _WIN32
 #include <unistd.h> //Get user name
@@ -58,6 +57,7 @@ AppUpdater::AppUpdater(const std::string& appName, const int versionId, const st
     lastFetchStatus = 0;
 	configFileName = configFile;
     updateWarning = nullptr;
+	os = GLToolkit::GetOSName();
 
 	if(!std::filesystem::exists(configFileName))
 	    MakeDefaultConfig();
@@ -66,7 +66,7 @@ AppUpdater::AppUpdater(const std::string& appName, const int versionId, const st
 }
 
 /**
-* \brief Creates a default config from GoogleAnalytics.h info
+* \brief Creates a default config from MatomoAnalytics.h info
 */
 void AppUpdater::MakeDefaultConfig(){
     xml_document configDoc;
@@ -76,7 +76,8 @@ void AppUpdater::MakeDefaultConfig(){
     serverNode.append_child("RemoteFeed").append_attribute("url") = REMOTE_FEED;
     serverNode.append_child("PublicWebsite").append_attribute("url") = PUBLIC_WEBSITE;
     serverNode.child("PublicWebsite").append_attribute("downloadsPage") = DOWNLOAD_PAGE;
-    serverNode.append_child("GoogleAnalytics").append_attribute("projectId") = GA_PROJECT_ID;
+    serverNode.append_child("MatomoAnalytics").append_attribute("siteId") = MATOMO_SITE_ID;
+	serverNode.append_child("MatomoAnalytics").append_attribute("requestTarget") = MATOMO_REQUEST_TARGET;
 
     xml_node localConfigNode = rootNode.append_child("LocalConfig");
     localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = "false";
@@ -85,7 +86,7 @@ void AppUpdater::MakeDefaultConfig(){
     localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = "0";
     localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = "5";
     localConfigNode.append_child("Branch").append_attribute("name") = BRANCH_NAME BRANCH_OS_SUFFIX; //molflow_public or synrad_public + suffix (_win, _mac, _mac_arm, _linux_debian, _linux_fedora)
-    localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = "";
+    localConfigNode.append_child("MatomoAnalytics").append_attribute("userHash") = "";
     localConfigNode.append_child("SkippedVersions");
 
     configDoc.save_file(configFileName.c_str());
@@ -102,7 +103,8 @@ void AppUpdater::SaveConfig() {
 	serverNode.append_child("RemoteFeed").append_attribute("url") = feedUrl.c_str();
 	serverNode.append_child("PublicWebsite").append_attribute("url") = publicWebsite.c_str();
 	serverNode.child("PublicWebsite").append_attribute("downloadsPage") = publicDownloadsPage.c_str();
-	serverNode.append_child("GoogleAnalytics").append_attribute("projectId") = googleAnalyticsTrackingId.c_str();
+	serverNode.append_child("MatomoAnalytics").append_attribute("siteId") = tracker.siteId.c_str();
+	serverNode.append_child("MatomoAnalytics").append_attribute("requestTarget") = tracker.requestTarget.c_str();
 
 	xml_node localConfigNode = rootNode.append_child("LocalConfig");
 	localConfigNode.append_child("Permission").append_attribute("allowUpdateCheck") = allowUpdateCheck;
@@ -111,7 +113,7 @@ void AppUpdater::SaveConfig() {
     localConfigNode.child("Permission").append_attribute("nbUpdateFailsInRow") = nbUpdateFailsInRow;
     localConfigNode.child("Permission").append_attribute("askAfterNbUpdateFails") = askAfterNbUpdateFails;
 	localConfigNode.append_child("Branch").append_attribute("name") = branchName.c_str();
-	localConfigNode.append_child("GoogleAnalytics").append_attribute("cookie") = userId.c_str();
+	localConfigNode.append_child("MatomoAnalytics").append_attribute("userHash") = tracker.userId.c_str();
 	xml_node skippedVerNode = localConfigNode.append_child("SkippedVersions");
 	for (auto& version : skippedVersionIds) {
 		skippedVerNode.append_child("Version").append_attribute("id") = version;
@@ -132,7 +134,8 @@ void AppUpdater::LoadConfig() {
 	feedUrl = serverNode.child("RemoteFeed").attribute("url").as_string();
 	publicWebsite = serverNode.child("PublicWebsite").attribute("url").as_string();
 	publicDownloadsPage = serverNode.child("PublicWebsite").attribute("downloadsPage").as_string();
-	googleAnalyticsTrackingId = serverNode.child("GoogleAnalytics").attribute("projectId").as_string();
+	tracker.siteId = serverNode.child("MatomoAnalytics").attribute("siteId").as_string();
+	tracker.requestTarget = serverNode.child("MatomoAnalytics").attribute("requestTarget").as_string();
 
 	xml_node localConfigNode = rootNode.child("LocalConfig");
 	allowUpdateCheck = localConfigNode.child("Permission").attribute("allowUpdateCheck").as_bool();
@@ -142,11 +145,14 @@ void AppUpdater::LoadConfig() {
     askAfterNbUpdateFails = localConfigNode.child("Permission").attribute("askAfterNbUpdateFails").as_int(5);
 
     branchName = localConfigNode.child("Branch").attribute("name").as_string();
-	userId = localConfigNode.child("GoogleAnalytics").attribute("cookie").as_string();
+	tracker.userId = localConfigNode.child("MatomoAnalytics").attribute("userHash").as_string();
 	xml_node skippedVerNode = localConfigNode.child("SkippedVersions");
 	for (auto& version : skippedVerNode.children("Version")) {
 		skippedVersionIds.push_back(version.attribute("id").as_int());
 	}
+	tracker.persistentCustomDimensions.push_back(applicationName);
+	tracker.persistentCustomDimensions.push_back(branchName);
+	tracker.persistentCustomDimensions.push_back(fmt::format("{}_{}", currentVersionId, os));
 }
 
 /**
@@ -304,11 +310,9 @@ void AppUpdater::PerformImmediateCheck() {
 void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 	//Update checker
 	if (allowUpdateCheck || forceCheck) { //One extra safeguard to ensure that we (still) have the permission
-		//std::string url = "https://molflow.web.cern.ch/sites/molflow.web.cern.ch/files/autoupdate.xml"; //Update feed
 
 		std::string resultCategory;
 		std::stringstream resultDetail;
-		std::string os = GLToolkit::GetOSName();
 
 		auto[downloadResult, body] = DownloadString(feedUrl);
 
@@ -351,7 +355,7 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
             }
         }
 
-		if (Contains({ "","not_set","default" }, userId)) {
+		if (Contains({ "","not_set","default" }, tracker.userId)) {
 			//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
 			//It is generated based on the computer's network name and the logged in user name
 			//FOR USER PRIVACY, THESE ARE NOT SENT TO GOOGLE ANALYTICS, JUST AN ANONYMOUS HASH
@@ -361,11 +365,12 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 			SaveConfig();
 		}
 
+		MatomoHttpRequest request;
 		std::stringstream payload;
-		payload << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
-		payload << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
-		payload << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
-		SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+		request.eventAction = resultDetail.str();
+		request.eventCategory = resultCategory.c_str();
+		request.eventName = fmt::format("{} {} {} {}", os, applicationName, currentVersionId, branchName);
+		tracker.Send(request, GLToolkit::GetScreenSize());
 	}
 }
 
@@ -418,7 +423,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
                     for (xml_node osNode : updateNode.child("ValidForOS").children("OS")) {
 						std::string nodeOs = osNode.attribute("id").as_string();
 						std::string thisOs = OS_ID; //Convert to string
-						if (nodeOs == thisOs) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+						if (nodeOs == thisOs) { //OS_ID: as defined in MatomoAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
                             // found
                             validOS = true;
                             os_fullname = osNode.attribute("name").as_string(); //Unused
@@ -458,7 +463,7 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 							for (const xml_node& osNode : validOsNode.children("OS")) {
 								std::string nodeOs = osNode.attribute("id").as_string();
 								std::string thisOs = OS_ID; //Convert to string
-								if (nodeOs == thisOs) { //OS_ID: as defined in GoogleAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+								if (nodeOs == thisOs) { //OS_ID: as defined in MatomoAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
 									// found
 									validOs = true;
 									break;
@@ -584,7 +589,7 @@ void AppUpdater::GenerateUserId() {
 	id += "/";
 	id += userName;
 
-	//Create hash code from computer name
+	//Create hash code from computer and user name
 	//Hash algorithm source: http://www.cse.yorku.ca/~oz/hash.html
 	size_t hashCode = 5381;
 	int c;
@@ -593,18 +598,14 @@ void AppUpdater::GenerateUserId() {
 		hashCode = ((hashCode << 5) + hashCode) + c; /* hash * 33 + c */
 	}
 
-	//Convert hash number to alphanumerical hash (base62)
-	std::string alphaNum =
-		"0123456789"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz";
+	std::string hexa = "0123456789abcdef";
 
-	userId = "";
+	tracker.userId = "";
 	while (hashCode > 0) {
-		size_t dividend = (size_t)(hashCode / alphaNum.length());
-		size_t remainder = hashCode - dividend * alphaNum.length();
+		size_t dividend = (size_t)(hashCode / hexa.length());
+		size_t remainder = hashCode - dividend * hexa.length();
 		hashCode = dividend;
-		userId = alphaNum[remainder] + userId;
+		tracker.userId = hexa[remainder] + tracker.userId;
 	}
 }
 
@@ -617,11 +618,15 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	//logWindow->Log("[Background update thread started.]");
 
 	std::stringstream payload;
-	std::string os = GLToolkit::GetOSName();
-	payload << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << "updateStart" << "&ea=" << "updateStart_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
-	payload << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
-	payload << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
-	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+
+	{
+		MatomoHttpRequest request;
+		request.eventCategory = "updateStart";
+		request.eventAction = fmt::format("updateStart_{}_{}_to_{}", applicationName, currentVersionId, update.versionId);
+		request.eventName = fmt::format("{} {} {} {}", os, applicationName, currentVersionId, branchName);
+		tracker.Send(request, GLToolkit::GetScreenSize());
+	}
+	
 	logWindow->Log("Current directory: " + std::filesystem::current_path().u8string());
 	logWindow->Log("Downloading update file...");
 
@@ -766,13 +771,12 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 						userResult << "Couldn't copy " << copyFile << " to " << configDest.str() << "  File skipped.";
 						logWindow->Log(userResult.str());
 
-						std::stringstream payload2;
-						payload2 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
-						payload2 << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
-						payload2 << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
-						SendHTTPPostRequest("http://www.google-analytics.com/collect", payload2.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
+						MatomoHttpRequest request;
+						request.eventCategory = resultCategory.c_str();
+						request.eventAction = resultDetail.str();
+						request.eventName = fmt::format("{} {} {} {}", os, applicationName, currentVersionId, branchName);
+						tracker.Send(request, GLToolkit::GetScreenSize());
 						return;
-
 					}
 					userResult.str(""); userResult.clear();
 					userResult << "Copied " << copyFile << " to " << configDest.str();
@@ -813,13 +817,11 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 		logWindow->Log("Aborting update process.");
 	}
 
-	std::stringstream payload3;
-	payload3 << "v=1&t=event&tid=" << googleAnalyticsTrackingId << "&cid=" << userId << "&ec=" << resultCategory << "&ea=" << resultDetail.str();
-	payload3 << "&an=" << applicationName << "&aid=" << branchName << "&av=" << currentVersionId << "_" << os;
-	payload3 << "&el=" << os << "%20" << applicationName << "%20" << currentVersionId << "%20" << branchName;
-	SendHTTPPostRequest("http://www.google-analytics.com/collect", payload3.str()); //Sends random app and version id for analytics. Also sends install id to count number of users
-
-	//logWindow->Log("[Background update thread closed.]");
+	MatomoHttpRequest request;
+	request.eventCategory = resultCategory.c_str();
+	request.eventAction = resultDetail.str();
+	request.eventName = fmt::format("{} {} {} {}", os, applicationName, currentVersionId, branchName);
+	tracker.Send(request, GLToolkit::GetScreenSize());
 }
 
 void AppUpdater::ExecutePostInstallScripts(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir) {

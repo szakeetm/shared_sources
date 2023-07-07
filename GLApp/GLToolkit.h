@@ -43,6 +43,12 @@
 #define _glVertex2i(x,y) glVertex2f((float)(x)-0.001f,(float)(y)+0.001f)
 //#define _glVertex2i(x,y) glVertex2i(x,y)
 
+struct ScreenSize {
+	int width = 0;
+	int height = 0;
+	ScreenSize(int w, int h) : width(w), height(h) {};
+};
+
 class GLToolkit {
 
 public:
@@ -51,6 +57,7 @@ public:
   static GLFont2D *GetDialogFont();
   static GLFont2D *GetDialogFontBold();
   static void GetScreenSize(int *width,int *height);
+  static ScreenSize GetScreenSize();
   static void SetViewport(const int x,const int y,const int width,const int height);
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);

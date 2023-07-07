@@ -393,6 +393,10 @@ void GLToolkit::GetScreenSize(int *width,int *height) {
   *height = scrHeight;
 }
 
+ScreenSize GLToolkit::GetScreenSize() {
+    return ScreenSize(scrWidth,scrHeight);
+}
+
 void GLToolkit::SetViewport(const GLVIEWPORT &v) {
   GLToolkit::SetViewport(v.x,v.y,v.width,v.height);
 }

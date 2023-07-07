@@ -51,12 +51,12 @@ Adding it to a program requires the following:
 	<ServerConfig>
 		<RemoteFeed url="https://company.com/autoupdate.xml" />
 		<PublicWebsite url="https://company.com/" downloadsPage="https://company.com/content/downloads" />
-		<GoogleAnalytics projectId="UA-12345678-1" />
+		<MatomoAnalytics siteId="123" requestTarget="https://acme.com/matomo.php" />
 	</ServerConfig>
 	<LocalConfig>
 		<Permission allowUpdateCheck="false" appLaunchedBeforeAsking="0" askAfterNbLaunches="3" />
 		<Branch name="appname_public" />
-		<GoogleAnalytics cookie="not_set" />
+		<MatomoAnalytics userHash="not_set" />
 		<SkippedVersions />
 	</LocalConfig>
 </UpdaterConfigFile>
@@ -127,6 +127,7 @@ using namespace pugi;
 #include "GLApp/GLWindow.h"
 #include "Interface/Interface.h" //DoEvents
 #include <filesystem>
+#include "Web.h"
 
 #define ANSWER_DONTASKYET 1
 #define ANSWER_ALREADYDECIDED 2
@@ -252,12 +253,11 @@ private:
 	std::string configFileName;
 
 	//Initialized by shipped config file:
-	std::string branchName;
+	std::string branchName,os;
 	std::string feedUrl,publicWebsite,publicDownloadsPage;
-	std::string googleAnalyticsTrackingId;
+	MatomoTracker tracker;
 	
 	//Values that are generated during run
-	std::string	userId; //User unique identifier. Default value: "not_set"
 	std::vector<int> skippedVersionIds;
 	std::thread updateThread;
 	bool allowUpdateCheck;
