@@ -97,11 +97,12 @@ CURLcode MatomoTracker::Send(const MatomoHttpRequest& request, const ScreenSize&
 	if (!request.eventName.empty()) payload += fmt::format("&e_n={}",FormatHttpString(request.eventName));
 	if (request.eventValue!=0.0) payload += fmt::format("&e_v={}",request.eventValue);
 
+	int dimId = 1;
 	for (int i = 0; i < persistentCustomDimensions.size(); i++) {
-		if (!persistentCustomDimensions[i].empty()) payload += fmt::format("&dimension{}={}", i, FormatHttpString(persistentCustomDimensions[i]));
+		if (!persistentCustomDimensions[i].empty()) payload += fmt::format("&dimension{}={}", dimId++, FormatHttpString(persistentCustomDimensions[i]));
 	}
 	for (int i=0;i<request.customDimensions.size();i++) {
-		if (!request.customDimensions[i].empty()) payload += fmt::format("&dimension{}={}",i,FormatHttpString(request.customDimensions[i]));
+		if (!request.customDimensions[i].empty()) payload += fmt::format("&dimension{}={}", dimId++,FormatHttpString(request.customDimensions[i]));
 	}
 
 	return SendHTTPPostRequest(requestTarget,payload);

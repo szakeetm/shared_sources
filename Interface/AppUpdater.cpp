@@ -153,8 +153,9 @@ void AppUpdater::LoadConfig() {
 		skippedVersionIds.push_back(version.attribute("id").as_int());
 	}
 	tracker.persistentCustomDimensions.push_back(applicationName);
+	tracker.persistentCustomDimensions.push_back(fmt::format("{}",currentVersionId));
+	tracker.persistentCustomDimensions.push_back(os);
 	tracker.persistentCustomDimensions.push_back(branchName);
-	tracker.persistentCustomDimensions.push_back(fmt::format("{}_{}", currentVersionId, os));
 }
 
 /**
