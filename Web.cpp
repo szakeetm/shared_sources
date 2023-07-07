@@ -92,10 +92,10 @@ CURLcode MatomoTracker::Send(const MatomoHttpRequest& request, const ScreenSize&
 	if (!userId.empty()) payload += fmt::format("&uid={}&_id={}",userId,userId);
 	if (size.width!=0 && size.height!=0) payload += fmt::format("&res={}x{}",size.width,size.height);
 
-	if (!request.eventCategory.empty()) payload += fmt::format("&e_a={}",FormatHttpString(request.eventCategory));
+	if (!request.eventCategory.empty()) payload += fmt::format("&e_c={}",FormatHttpString(request.eventCategory));
 	if (!request.eventAction.empty()) payload += fmt::format("&e_a={}",FormatHttpString(request.eventAction));
-	if (!request.eventName.empty()) payload += fmt::format("&e_a={}",FormatHttpString(request.eventName));
-	if (request.eventValue!=0.0) payload += fmt::format("&e_a={}",request.eventValue);
+	if (!request.eventName.empty()) payload += fmt::format("&e_n={}",FormatHttpString(request.eventName));
+	if (request.eventValue!=0.0) payload += fmt::format("&e_v={}",request.eventValue);
 
 	for (int i = 0; i < persistentCustomDimensions.size(); i++) {
 		if (!persistentCustomDimensions[i].empty()) payload += fmt::format("&dimension{}={}", i, FormatHttpString(persistentCustomDimensions[i]));
