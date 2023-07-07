@@ -2083,26 +2083,11 @@ void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
 }
 
 std::vector<size_t> Geometry::GetSelectedFacets() {
-	std::set<size_t> selection_set;
-	//selection.reserve(facets.size());
-#pragma omp parallel
-    {
-        std::set<size_t> selection_local;
-		//selection_local.reserve(facets.size());
-#pragma omp for
-        for (int i = 0; i < facets.size(); i++) {
-            if (facets[i]->selected)
-                selection_local.insert(i);
-        }
-
-#pragma omp critical
-        selection_set.insert(selection_local.begin(), selection_local.end());
-    }
-
-	//set to vector
-	std::vector<size_t> selection_vector(selection_set.begin(), selection_set.end());
-
-	return selection_vector;
+	std::vector<size_t> result; result.reserve(facets.size());
+	for (size_t i = 0; i < facets.size(); i++) {
+		if (facets[i]->selected) result.push_back(i);
+	}
+	return result;
 }
 
 std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double tolerance) {
