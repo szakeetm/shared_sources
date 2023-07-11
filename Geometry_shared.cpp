@@ -3475,24 +3475,13 @@ void Geometry::Rebuild() {
     InitializeInterfaceGeometry();
 }
 
-
+/*
 void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
-    InterfaceFacet *f = facets[facetId];
-    double nU = f->sh.U.Norme();
-    double nV = f->sh.V.Norme();
-
-    if (!f->SetTexture(nU*ratio, nV*ratio, mesh)) {
-        char errMsg[512];
-        sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
-        throw Error(errMsg);
-    }
-    f->tRatioU = ratio;
-    f->tRatioV = ratio;
-
-    BuildFacetList(f);
+	SetFacetTexture(facetId, ratio, ratio, mesh);
 
 }
+*/
 
 void Geometry::SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
