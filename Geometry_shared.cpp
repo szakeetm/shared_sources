@@ -3458,13 +3458,6 @@ float Geometry::GetNormeRatio() const {
 
 void Geometry::Rebuild() {
 
-	// Rebuild internal structure on geometry change
-
-	// Remove texture (improvement TODO)
-	/*for (int i = 0; i < wp.nbFacet; i++)
-		if (facets[i]->wp.isTextured)
-			facets[i]->SetTexture(0.0, 0.0, false);*/
-
 			// Delete old resources
 	DeleteGLLists(true, true);
 
@@ -3487,13 +3480,12 @@ void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, boo
 	double nU = f->sh.U.Norme();
 	double nV = f->sh.V.Norme();
 
-    if (!f->SetTextureProperties(nU*ratioU, nV*ratioV, mesh)) {
-        char errMsg[512];
-        sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
-        throw Error(errMsg);
-    }
+	double texWidth = nU*ratioU;
+	double texHeight = nV*ratioV;
 
-	if (!f->SetTexture(nU*ratioU, nV*ratioV, mesh)) {
+    f->SetTextureProperties(texWidth, texHeight); //sets sh.texWidth, sh.texWidth_precise, ...
+
+	if (!f->SetTexture(texWidth, texHeight, mesh)) {
 		char errMsg[512];
 		sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
 		throw Error(errMsg);

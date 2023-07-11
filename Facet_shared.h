@@ -69,7 +69,7 @@ public:
 	int   RestoreDeviceObjects();
 	int   InvalidateDeviceObjects();
 	bool  SetTexture(double width, double height, bool useMesh);
-    bool  SetTextureProperties(double width, double height, bool useMesh);
+    bool  SetTextureProperties(double width, double height);
 	void  glVertex2u(double u, double v);
 	void  glVertex2uVertexArray(const double u, const double v, std::vector<double>& vertexCoords) const;
 	bool  BuildMesh();

@@ -272,10 +272,8 @@ int InterfaceFacet::InvalidateDeviceObjects() {
 * \param useMesh true if a new mesh needs to be created (if none exists f->hasMesh)
 * \return true if texture was set
 */
-bool InterfaceFacet::SetTextureProperties(double width, double height, bool useMesh) {
-
+bool InterfaceFacet::SetTextureProperties(double width, double height) {
 	bool dimOK = (width*height > 0.0000001);
-
 	if (dimOK) {
         const double ceilCutoff = 0.9999999;
         sh.texWidth_precise = width;
@@ -290,6 +288,7 @@ bool InterfaceFacet::SetTextureProperties(double width, double height, bool useM
 		sh.texWidth_precise = 0.0;
 		sh.texHeight_precise = 0.0;
 	}
+
 
 	UpdateFlags(); //set hasMesh to true if everything was OK
 	return true;
@@ -335,7 +334,7 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 
 	}
 
-    UpdateFlags(); //set hasMesh to true if everything was OK
+    UpdateFlags(); //set sh.isTextured to true if everything was OK
     return true;
 
 }
