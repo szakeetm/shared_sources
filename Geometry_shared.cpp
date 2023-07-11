@@ -174,7 +174,6 @@ void Geometry::InitializeGeometry(int facet_number) {
 					f->tRatioV = f->tRatioU;
 				}
 			}
-			SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
 			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 	}
@@ -224,7 +223,7 @@ void Geometry::InitializeMesh() {
     // Update mesh
     for (size_t i = 0; i < sh.nbFacet; i++) {
         InterfaceFacet *f = facets[i];
-        SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
+        //SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
         SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
     }
 }
@@ -1153,7 +1152,6 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 		InitializeGeometry((int)i);
         InitializeInterfaceGeometry((int)i);
 		try {
-            SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
             SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 		catch (const std::exception &e) {
@@ -1278,7 +1276,6 @@ void Geometry::ShiftVertex() {
 			InitializeGeometry(i);// Reinitialise geom
             InitializeInterfaceGeometry(i);
 			try {
-				SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
                 SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
             }
 			catch (const std::exception &e) {
@@ -3484,26 +3481,17 @@ void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 }
 */
 
-void Geometry::SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh) {
+void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
-    InterfaceFacet *f = facets[facetId];
-    double nU = f->sh.U.Norme();
-    double nV = f->sh.V.Norme();
+	InterfaceFacet *f = facets[facetId];
+	double nU = f->sh.U.Norme();
+	double nV = f->sh.V.Norme();
 
     if (!f->SetTextureProperties(nU*ratioU, nV*ratioV, mesh)) {
         char errMsg[512];
         sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
         throw Error(errMsg);
     }
-    f->tRatioU = ratioU;
-    f->tRatioV = ratioV;
-}
-
-void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
-
-	InterfaceFacet *f = facets[facetId];
-	double nU = f->sh.U.Norme();
-	double nV = f->sh.V.Norme();
 
 	if (!f->SetTexture(nU*ratioU, nV*ratioV, mesh)) {
 		char errMsg[512];

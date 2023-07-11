@@ -211,7 +211,6 @@ public:
 	void	Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_Abstract& prg);
 	//void    SetFacetTexture(size_t facetId, double ratio, bool corrMap);
     void    SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool corrMap);
-    void SetFacetTextureProperties(size_t facetId, double ratioU, double ratioV, bool mesh);
 
     void    Rebuild();
 	void    RecalcRawVertices(const int facet_number);
