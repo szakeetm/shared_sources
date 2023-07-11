@@ -56,7 +56,9 @@ CURLcode SendHTTPPostRequest(const std::string& hostname, const std::string& pay
 	curl_handle = curl_easy_init();
 	curl_easy_setopt(curl_handle, CURLOPT_URL, hostname.c_str()); //host
 	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload.c_str()); //payload
+	std::cout << "CURL http request result (ascii or binary): ";
 	retVal = curl_easy_perform(curl_handle);
+	std::cout << std::endl;
 	curl_easy_cleanup(curl_handle);
 	return retVal;
 }
