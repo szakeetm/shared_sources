@@ -175,6 +175,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 				}
 			}
 			SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
+			SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
 	}
 	RecalcRawVertices(facet_number);
