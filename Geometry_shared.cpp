@@ -218,16 +218,16 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
     }
 }
 
+/*
 void Geometry::InitializeMesh() {
     // Update mesh
     for (size_t i = 0; i < sh.nbFacet; i++) {
-        /*double p = (double)i / (double)sh.nbFacet;
-        prg.SetProgress(p);*/
         InterfaceFacet *f = facets[i];
         SetFacetTextureProperties(i, f->tRatioU, f->tRatioV, f->hasMesh);
         SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
     }
 }
+*/
 
 void Geometry::RecalcBoundingBox(int facet_number) {
 

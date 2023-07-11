@@ -122,7 +122,7 @@ public:
 	void BuildGLList();
 	void InitializeInterfaceGeometry(int facet_number = -1);
     void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
-    void InitializeMesh();
+    //void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
 	void CheckCollinear();
 	void CheckNonSimple();
