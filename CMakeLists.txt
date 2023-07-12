@@ -227,6 +227,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
