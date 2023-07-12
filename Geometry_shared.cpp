@@ -180,7 +180,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 	RecalcRawVertices(facet_number);
 }
 
-void Geometry::RecalcRawVertices(const int facet_number) {
+void Geometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
 	if (facet_number == -1) {
 		vertices_raw.clear();
 		vertices_raw.reserve(3 * vertices3.size());
