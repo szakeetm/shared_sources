@@ -47,6 +47,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <list>
 #include <numeric> //std::iota
 #include <utility>
+#include <fstream>
 
 #if defined(MOLFLOW)
 extern MolFlow *mApp;
@@ -3627,99 +3628,53 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 }
 
-void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
+void Geometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
+
+	prg.SetMessage("Loading STL file...");
+	RawSTLfile rawGeom = LoadRawSTL(filePath, prg);
 
 	if (!insert) {
 		prg.SetMessage("Clearing current geometry...");
 		Clear();
 	}
-
-	// First pass
-	prg.SetMessage("Counting facets in STL file...");
-	std::vector<size_t> bodyFacetCounts; //Each element tells how many facets are in the Nth body
-	size_t nbNewFacets = 0; //Total facets in file
-	while (!file.IsEof()) {
-		int bodyFacetCount = 0;
-		file.ReadLine(); // solid name
-		std::string w = file.ReadWord();
-		while (beginsWith(w, "facet")) {
-			bodyFacetCount++;
-			file.JumpSection("endfacet");
-			w = file.ReadWord();
-		}
-		//All facets read in the current body
-		bodyFacetCounts.push_back(bodyFacetCount);
-		nbNewFacets += bodyFacetCount;
-		if (w != "endsolid") {
-			std::string msg = "Unexpected or not supported STL keyword \"" + w + "\", 'endsolid' required\nMaybe the STL file was saved in binary instead of ASCII format?";
-			throw Error(msg.c_str());
-		}
-		if (!(file.IsEol())) file.ReadLine(); //Read the rest of the "endsolid" line (usually solid name). Eof() not a problem, will simply return NULL character
+	else {
+		UnselectAll(); //Highlight inserted facets
 	}
 
 	// Allocate memory
 	if (!insert) { //load
         try{
-            facets.resize(nbNewFacets, nullptr);
+            facets.resize(rawGeom.triangleCount, nullptr);
         }
         catch(const std::exception &) {
             throw Error("Out of memory: LoadSTL");
         }
-		std::vector<InterfaceVertex>(3 * nbNewFacets).swap(vertices3);
+		std::vector<InterfaceVertex>(3 * rawGeom.triangleCount).swap(vertices3);
 	}
 	else { //insert
         try{
-            facets.resize(nbNewFacets + sh.nbFacet);
+            facets.resize(rawGeom.triangleCount + sh.nbFacet);
         }
         catch(const std::exception &) {
             throw Error("Couldn't allocate memory for facets");
         }
-		vertices3.resize(sh.nbVertex + 3 * nbNewFacets);
+		vertices3.resize(sh.nbVertex + 3 * rawGeom.triangleCount);
 	}
 
 	size_t oldFacetNb = sh.nbFacet;
 	size_t oldVertexNb = sh.nbVertex;
 
 	// Second pass
-	file.SeekStart();
 	size_t globalId = 0;
-	for (size_t b = 0; b < bodyFacetCounts.size();b++) {
-		file.ReadLine(); //solid name
-		std::ostringstream progressStr;
-		progressStr << "Reading facets (body " << b+1 << "/" << bodyFacetCounts.size() << ")...";
-		prg.SetMessage(progressStr.str()); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
-		for (size_t i = 0; i < bodyFacetCounts[b]; i++) {
+	for (size_t b = 0; b < rawGeom.bodies.size();b++) {
+		prg.SetMessage(fmt::format("Constructing body {} / {} ...", b+1, rawGeom.bodies.size())); //Will repaint scene, and read sh.nbFacet and sh.nbVertex!
+		for (size_t i = 0; i < rawGeom.bodies[b].triangles.size(); i++) {
 
-			double p = (double)globalId / (double)(nbNewFacets);
-			prg.SetProgress(p);
+			prg.SetProgress((double)globalId / (double)(rawGeom.triangleCount));
 
-			file.ReadKeyword("facet");
-			//Read but ignore normal (redundant, will be calculated)
-			file.ReadKeyword("normal");
-			file.ReadDouble();
-			file.ReadDouble();
-			file.ReadDouble();
-
-			file.ReadKeyword("outer");
-			file.ReadKeyword("loop");
-
-			file.ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 0].x = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 0].y = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 0].z = file.ReadDouble() * scaleFactor;
-
-			file.ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 1].x = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 1].y = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 1].z = file.ReadDouble() * scaleFactor;
-
-			file.ReadKeyword("vertex");
-			vertices3[oldVertexNb + 3 * globalId + 2].x = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 2].y = file.ReadDouble() * scaleFactor;
-			vertices3[oldVertexNb + 3 * globalId + 2].z = file.ReadDouble() * scaleFactor;
-
-			file.ReadKeyword("endloop");
-			file.ReadKeyword("endfacet");
+			vertices3[oldVertexNb + 3 * globalId + 0] = scaleFactor * rawGeom.bodies[b].triangles[i].v1;
+			vertices3[oldVertexNb + 3 * globalId + 1] = scaleFactor * rawGeom.bodies[b].triangles[i].v2;
+			vertices3[oldVertexNb + 3 * globalId + 2] = scaleFactor * rawGeom.bodies[b].triangles[i].v3;
 
 			try {
 				facets[oldFacetNb + globalId] = new InterfaceFacet(3);
@@ -3746,22 +3701,21 @@ void Geometry::LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleF
 			}
 			globalId++;
 		}
-		file.ReadKeyword("endsolid");
-		if (!(file.IsEol())) file.ReadLine(); //Read part after "endsolid"
 	}
 
-	sh.nbFacet += nbNewFacets;
-	sh.nbVertex += 3 * nbNewFacets;
+	sh.nbFacet += rawGeom.triangleCount;
+	sh.nbVertex += 3 * rawGeom.triangleCount;
 
-	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(file.GetName()).c_str(),true);
+	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(FileUtils::GetFilename(filePath)).c_str(),true);
 
 	if (!insert) {
-		UpdateName(file);
+		UpdateName(filePath.c_str());
 		strName[0] = strdup(sh.name.c_str());
-		strFileName[0] = strdup(file.GetName());
-		char* e = strrchr(strName[0], '.');
-		if (e) *e = 0;
+		strFileName[0] = strdup(filePath.c_str());
 	}
+	char* e = strrchr(strName[0], '.');
+	if (e) *e = 0;
+	
 	prg.SetMessage("Initializing geometry...");
 	InitializeGeometry();
     InitializeInterfaceGeometry();
@@ -3806,16 +3760,18 @@ void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr
 
 }
 
-void Geometry::InsertSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
+/*
+void Geometry::InsertSTL(std::ifstream& file, bool binarySTL, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
 	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
-	LoadSTL(file, prg, scaleFactor, true, newStr, structId);
+	LoadSTL(file, binarySTL, prg, scaleFactor, true, newStr, structId);
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 }
+*/
 
 void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
 
@@ -4604,65 +4560,166 @@ void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, 
     sh.nbFacet = sFacets.size();
 }
 
-#if defined(MOLFLOW)
-PhysicalValue Geometry::GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double moleculesPerTP, const double densityCorrection, const double gasMass, const int index, const FacetMomentSnapshot &facetSnap) {
-																																	  
-	//if x==y==-1 and buffer=NULL then returns facet value, otherwise texture cell [x,y] value
-	//buff is either NULL or a (BYTE*) pointer to texture or direction buffer, must be locked by AccessDataport before call
-	//texture position must be calculated before call (index=i+j*w)
-
-
-	PhysicalValue result;
-
-	if (index == -1) { //Facet mode
-		//Not implemented yet, calculation in formula editor and Facet Details windows
-	}
-	else { //Texture cell mode
-		switch (mode) {
-		case PhysicalMode::CellArea:
-			result.value = f->GetMeshArea(index);
-			break;
-		case PhysicalMode::MCHits:
-			result.value = facetSnap.texture[index].countEquiv;
-			break;
-		case PhysicalMode::ImpingementRate:
-		{
-			double area = (f->GetMeshArea(index, true));
-			if (area == 0.0) area = 1.0;
-			result.value = facetSnap.texture[index].countEquiv / (area * 1E-4) * moleculesPerTP;
-			break;
-		}
-		case PhysicalMode::ParticleDensity:
-		{
-			double density = facetSnap.texture[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
-			result.value = density;
-			break;
-		}
-		case PhysicalMode::GasDensity:
-		{
-			double density = facetSnap.texture[index].sum_1_per_ort_velocity / (f->GetMeshArea(index, true) * 1E-4) * moleculesPerTP * densityCorrection;
-			result.value = density * gasMass / 1000.0 / 6E23;
-			break;
-		}
-		case PhysicalMode::Pressure:
-			result.value = facetSnap.texture[index].sum_v_ort_per_area * 1E4 * (gasMass / 1000 / 6E23) * 0.0100 * moleculesPerTP;  //1E4 is conversion from m2 to cm2; 0.01 is Pa->mbar
-			break;
-		case PhysicalMode::AvgGasVelocity:
-			result.value = 4.0 * facetSnap.texture[index].countEquiv / facetSnap.texture[index].sum_1_per_ort_velocity; //Different from FacetDetails, since textures don't record sum_1_per_v to save memory
-			break;
-		case PhysicalMode::GasVelocityVector:
-		{
-			double denominator = (facetSnap.direction[index].count > 0) ? (1.0 / facetSnap.direction[index].count) : 1.0;
-			result.vect = facetSnap.direction[index].dir * denominator;
-			break;
-		}
-		case PhysicalMode::NbVelocityVectors:
-			result.count = facetSnap.direction[index].count;
-			break;
-		}
+RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
+{
+	prg.SetMessage("Checking if STL file is binary or ascii...");
+	bool isBinary = FileUtils::isBinarySTL(filePath);
+	std::ifstream file(filePath, isBinary ? std::ios::binary : std::ios::in);
+	if (!file) {
+		throw Error(fmt::format("Failed to open file:\n{}", filePath));
 	}
 
+	RawSTLfile result;
+
+	if (isBinary) {
+		result.bodies.resize(1); //currently no multibody support for binary as SpaceClaim format unclear
+		
+		// Read the header (80 bytes) - ignored in this example
+		file.ignore(80);
+
+		// Read the number of triangles (4 bytes)
+		uint32_t numTriangles;
+		file.read(reinterpret_cast<char*>(&numTriangles), sizeof(numTriangles));
+		result.triangleCount = numTriangles;
+		prg.SetMessage("Reading triangles in binary STL...");
+		// Read each triangle
+		for (uint32_t i = 0; i < numTriangles; ++i) {
+
+			prg.SetProgress((double)i / (double)numTriangles);
+
+			STLTriangle triangle;
+
+			// Read the normal vector as floats (12 bytes - 3 floats)
+			float nx, ny, nz;
+			file.read(reinterpret_cast<char*>(&nx), sizeof(nx));
+			file.read(reinterpret_cast<char*>(&ny), sizeof(ny));
+			file.read(reinterpret_cast<char*>(&nz), sizeof(nz));
+
+			// Convert the normal vector to doubles
+			triangle.normal.x = static_cast<double>(nx);
+			triangle.normal.y = static_cast<double>(ny);
+			triangle.normal.z = static_cast<double>(nz);
+
+			// Read the three vertex coordinates as floats (36 bytes - 9 floats)
+			float v1x, v1y, v1z;
+			file.read(reinterpret_cast<char*>(&v1x), sizeof(v1x));
+			file.read(reinterpret_cast<char*>(&v1y), sizeof(v1y));
+			file.read(reinterpret_cast<char*>(&v1z), sizeof(v1z));
+
+			float v2x, v2y, v2z;
+			file.read(reinterpret_cast<char*>(&v2x), sizeof(v2x));
+			file.read(reinterpret_cast<char*>(&v2y), sizeof(v2y));
+			file.read(reinterpret_cast<char*>(&v2z), sizeof(v2z));
+
+			float v3x, v3y, v3z;
+			file.read(reinterpret_cast<char*>(&v3x), sizeof(v3x));
+			file.read(reinterpret_cast<char*>(&v3y), sizeof(v3y));
+			file.read(reinterpret_cast<char*>(&v3z), sizeof(v3z));
+
+			// Convert the vertex coordinates to doubles
+			triangle.v1.x = static_cast<double>(v1x);
+			triangle.v1.y = static_cast<double>(v1y);
+			triangle.v1.z = static_cast<double>(v1z);
+
+			triangle.v2.x = static_cast<double>(v2x);
+			triangle.v2.y = static_cast<double>(v2y);
+			triangle.v2.z = static_cast<double>(v2z);
+
+			triangle.v3.x = static_cast<double>(v3x);
+			triangle.v3.y = static_cast<double>(v3y);
+			triangle.v3.z = static_cast<double>(v3z);
+
+			// Read the attribute byte count (2 bytes)
+			file.read(reinterpret_cast<char*>(&triangle.attributeByteCount), sizeof(triangle.attributeByteCount));
+
+			// Add the triangle to the current body
+			result.bodies.back().triangles.push_back(triangle);
+		}
+	}
+	else { //ASCII
+		std::string line;
+		STLBody currentBody;
+
+		// Skip the header
+		while (std::getline(file, line)) {
+			if (line.find("solid") != std::string::npos)
+				break;
+		}
+
+
+		// Read each triangle
+		while (std::getline(file, line)) {
+			if (line.find("endsolid") != std::string::npos) {
+				if (!currentBody.triangles.empty())
+					result.bodies.push_back(currentBody);
+
+				currentBody = STLBody();
+				continue;
+			}
+
+			if (line.find("solid") != std::string::npos) {
+				std::istringstream iss(line);
+				iss.ignore(6); // Skip "solid " prefix
+				iss >> currentBody.name;
+				continue;
+			}
+
+			if (line.find("facet normal") != std::string::npos) {
+				prg.SetMessage(fmt::format("Reading ASCII STL file (body {}, triangle {})...", result.bodies.size() + 1, currentBody.triangles.size() + 1));
+				std::istringstream iss(line);
+				STLTriangle triangle;
+
+				// Read the normal vector
+				std::string normalPrefix;
+				iss >> normalPrefix >> triangle.normal.x >> triangle.normal.y >> triangle.normal.z;
+
+				// Skip "outer loop" line
+				std::getline(file, line);
+
+				// Read vertex coordinates
+				for (int i = 0; i < 3; ++i) {
+					std::getline(file, line);
+					iss.str(line);
+					iss.clear();
+
+					std::string vertexPrefix;
+					float x, y, z;
+					iss >> vertexPrefix >> x >> y >> z;
+
+					// Handle scientific notation in vertex coordinates
+					if (iss.fail()) {
+						std::string scientificNotation;
+						iss.clear();
+						iss >> vertexPrefix >> scientificNotation;
+
+						x = std::stof(scientificNotation);
+						iss >> scientificNotation;
+						y = std::stof(scientificNotation);
+						iss >> scientificNotation;
+						z = std::stof(scientificNotation);
+					}
+
+					if (i == 0) {
+						triangle.v1.x = x;
+						triangle.v1.y = y;
+						triangle.v1.z = z;
+					}
+					else if (i == 1) {
+						triangle.v2.x = x;
+						triangle.v2.y = y;
+						triangle.v2.z = z;
+					}
+					else if (i == 2) {
+						triangle.v3.x = x;
+						triangle.v3.y = y;
+						triangle.v3.z = z;
+					}
+				}
+
+				currentBody.triangles.push_back(triangle);
+				++result.triangleCount;
+			}
+		}
+	}
 	return result;
 }
-
-#endif

@@ -166,12 +166,12 @@ public:
 
 	void LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker);
 	void LoadSTR(FileReader& file, GLProgress_Abstract& prg);
-	void LoadSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
+	void LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, double scaleFactor=1.0, bool insert = false, bool newStruct=false, size_t targetStructId = 0);
 
 	bool IsLoaded() const;
 	void InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr);
 	void InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr);
-	void InsertSTL(FileReader& file, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
+	//void InsertSTL(FileReader& file, bool binarySTL, GLProgress_Abstract& prg, double scaleFactor, bool newStr);
 
 	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter& file, GLProgress_Abstract& prg);
@@ -368,3 +368,21 @@ protected:
 		TextureCell textureMin_auto, textureMin_manual, textureMax_auto,textureMax_manual;
 #endif
 };
+
+struct STLTriangle {
+	Vector3d normal;
+	Vector3d v1, v2, v3;
+	short attributeByteCount; //2-byte
+};
+
+struct STLBody {
+	std::string name;
+	std::vector<STLTriangle> triangles;
+};
+
+struct RawSTLfile {
+	std::vector<STLBody> bodies;
+	size_t triangleCount=0;
+};
+
+RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg);
