@@ -4638,36 +4638,50 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 	}
 	else { //ASCII
 		std::string line;
-		STLBody currentBody;
-
-		// Skip the header
-		while (std::getline(file, line)) {
-			if (line.find("solid") != std::string::npos)
-				break;
+		{
+			STLBody currentBody;
+			prg.SetMessage("Counting bodies and triangles in ASCII STL file...", true, true);
+			while (std::getline(file, line)) {
+				if (line.find("endsolid") != std::string::npos) {
+					// End of body
+					result.bodies.push_back(currentBody);
+					currentBody = STLBody();
+				} else if (line.find("solid") != std::string::npos) {
+					// New body found (and not 'endsolid')
+					currentBody.name = line.substr(line.find_first_not_of("solid"));
+				} else if (line.find("endfacet") != std::string::npos) {
+					// Count the triangle for the current body
+					currentBody.triangles.push_back(STLTriangle());
+					result.triangleCount++;
+				}
+			}
 		}
 
+		//Second pass
+		double triangleCount = (double)result.triangleCount;
+		size_t nbTrianglesRead = 0;
+		size_t bodyIndex = 0;
+		size_t triangleIndex = 0;
+
+		file.clear();
+		file.seekg(0, std::ios::beg);
 
 		// Read each triangle
 		while (std::getline(file, line)) {
 			if (line.find("endsolid") != std::string::npos) {
-				if (!currentBody.triangles.empty())
-					result.bodies.push_back(currentBody);
-
-				currentBody = STLBody();
-				continue;
-			}
-
-			if (line.find("solid") != std::string::npos) {
+				bodyIndex++;
+			} else if (line.find("solid") != std::string::npos) {
+				prg.SetMessage(fmt::format("Reading ASCII STL file (body {}/{})...", bodyIndex + 1,result.bodies.size()));
 				std::istringstream iss(line);
 				iss.ignore(6); // Skip "solid " prefix
-				iss >> currentBody.name;
-				continue;
-			}
-
-			if (line.find("facet normal") != std::string::npos) {
-				prg.SetMessage(fmt::format("Reading ASCII STL file (body {}, triangle {})...", result.bodies.size() + 1, currentBody.triangles.size() + 1));
+				iss >> result.bodies[bodyIndex].name;
+				triangleIndex = 0;
+			} else if (line.find("facet normal") != std::string::npos) {
+				
 				std::istringstream iss(line);
-				STLTriangle triangle;
+				STLTriangle& triangle=result.bodies[bodyIndex].triangles[triangleIndex++];
+				nbTrianglesRead++;
+				prg.SetProgress((double)nbTrianglesRead / triangleCount);
 
 				// Read the normal vector
 				std::string normalPrefix;
@@ -4715,9 +4729,6 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 						triangle.v3.z = z;
 					}
 				}
-
-				currentBody.triangles.push_back(triangle);
-				++result.triangleCount;
 			}
 		}
 	}
