@@ -4580,12 +4580,14 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 		// Read the number of triangles (4 bytes)
 		uint32_t numTriangles;
 		file.read(reinterpret_cast<char*>(&numTriangles), sizeof(numTriangles));
-		result.triangleCount = numTriangles;
+		double numTriangles_double = (double)numTriangles;
+		result.triangleCount = (size_t)numTriangles;
+
 		prg.SetMessage("Reading triangles in binary STL...");
 		// Read each triangle
 		for (uint32_t i = 0; i < numTriangles; ++i) {
 
-			prg.SetProgress((double)i / (double)numTriangles);
+			prg.SetProgress((double)i / numTriangles_double);
 
 			STLTriangle triangle;
 
