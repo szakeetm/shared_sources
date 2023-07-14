@@ -135,7 +135,8 @@ public:
 	size_t      GetNbVertex() const;
 	Vector3d GetFacetCenter(int facet);
 	size_t      GetNbStructure() const;
-	char     *GetStructureName(int idx);
+	std::string GetStructureName(const int idx);
+	void SetStructureName(const int idx, const std::string& name);
 	GeomProperties* GetGeomProperties();
 	void AddFacet(const std::vector<size_t>& vertexIds);
 	void CreatePolyFromVertices_Convex(); //create convex facet from selected vertices
@@ -175,7 +176,7 @@ public:
 
 	void SaveSTR(bool saveSelected);
 	void SaveSTL(FileWriter& file, GLProgress_Abstract& prg);
-	void SaveSuper(int s);
+	void SaveStrStructure(int s);
 	static void SaveProfileTXT(FileWriter& file);
 	void UpdateSelection();
 	void SwapNormal(); //Swap normals of selected facets
@@ -204,7 +205,7 @@ public:
 	int CloneSelectedFacets();
 	void AddVertex(double X, double Y, double Z, bool selected = true);
 	void AddVertex(const Vector3d& location, bool selected = true);
-	void AddStruct(const char *name,bool deferDrawing=false);
+	void AddStruct(const std::string& name,bool deferDrawing=false);
 	void DelStruct(int numToDel);
 	std::vector<DeletedFacet> BuildIntersection(size_t *nbCreated);
 	void    MoveVertexTo(size_t idx, double x, double y, double z);
@@ -262,7 +263,6 @@ protected:
 	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
-    bool InitOldStruct(SimulationModel* model);
     void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
     virtual void InitInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, Worker* work);
 
@@ -299,9 +299,7 @@ protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;
 	Vector3d  center;                     // Center (3D space)
-	char      *strName[MAX_SUPERSTR];     // Structure name
-	char      *strFileName[MAX_SUPERSTR]; // Structure file name
-	char      strPath[512];               // Path were are stored files (super structure)
+	std::vector<std::string> structNames;
 
     // Geometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
@@ -312,8 +310,6 @@ protected:
 	bool  autoNorme;      // Auto normalize (direction field)
 	bool  centerNorme;    // Center vector (direction field)
 	bool isLoaded;  // Is loaded flag
-
-	
 
 	// Rendering/Selection stuff
 	std::vector<size_t> selectHist;

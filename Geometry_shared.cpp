@@ -83,7 +83,7 @@ Geometry::Geometry() {
 #endif
 	viewStruct = -1;
 
-	strcpy(strPath, "");
+	structNames.resize(MAX_SUPERSTR);
 }
 
 Geometry::~Geometry() {
@@ -367,8 +367,13 @@ size_t Geometry::GetNbStructure() const {
 	return sh.nbSuper;
 }
 
-char *Geometry::GetStructureName(int idx) {
-	return strName[idx];
+std::string Geometry::GetStructureName(const int idx) {
+	return structNames[idx];
+}
+
+
+void Geometry::SetStructureName(const int idx, const std::string& name) {
+	structNames[idx] = name;
 }
 
 GeomProperties* Geometry::GetGeomProperties(){
@@ -1406,12 +1411,7 @@ void Geometry::Clear() {
 	}
 	//if (vertices3) free(vertices3);
 	vertices3.clear(); vertices3.shrink_to_fit();
-	for (int i = 0; i < sh.nbSuper; i++) {
-		SAFE_FREE(strName[i]);
-		SAFE_FREE(strFileName[i]);
-	}
-	memset(strName, 0, MAX_SUPERSTR * sizeof(char *));
-	memset(strFileName, 0, MAX_SUPERSTR * sizeof(char *));
+	structNames = std::vector<std::string>(MAX_SUPERSTR);
 	DeleteGLLists(true, true);
 
 	if (mApp && mApp->splitFacet) mApp->splitFacet->ClearUndoFacets();
@@ -2114,8 +2114,8 @@ void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown
 	mApp->UpdateFacetParams(true);
 }
 
-void Geometry::AddStruct(const char *name, bool deferDrawing) {
-	strName[sh.nbSuper++] = strdup(name);
+void Geometry::AddStruct(const std::string& name, bool deferDrawing) {
+	structNames[sh.nbSuper++] = name;
 	if (!deferDrawing) BuildGLList();
 }
 
@@ -2129,13 +2129,9 @@ void Geometry::DelStruct(int numToDel) {
 		if (facets[i]->sh.superIdx > numToDel) facets[i]->sh.superIdx--;
 		if (facets[i]->sh.superDest > numToDel) facets[i]->sh.superDest--;
 	}
-	SAFE_FREE(strName[numToDel]);
-	SAFE_FREE(strFileName[numToDel]);
 	for (int j = numToDel; j < (sh.nbSuper - 1); j++)
 	{
-		//strName[j] = strdup(strName[j + 1]);
-		strName[j] = strName[j + 1];
-		strFileName[j] = strFileName[j + 1];
+		structNames[j] = structNames[j + 1];
 	}
 	sh.nbSuper--;
 	BuildGLList();
@@ -3561,24 +3557,12 @@ void Geometry::ResetTextureLimits() {
 }
 void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
-	char nPath[512];
-	char fPath[512];
-	char fName[1028];
-	char sName[512];
-	/*size_t nF, nV;
-	Facet **F;
-	InterfaceVertex *V;*/
-	
-
 	Clear();
-
-	//mApp->ClearAllSelections();
-	//mApp->ClearAllViews();
 	// Load multiple structure file
 	sh.nbSuper = file.ReadInt();
 
-	strcpy(fPath, file.ReadLine());
-	strcpy(nPath, FileUtils::GetPath(file.GetName()).c_str());
+	std::string fPath = file.ReadLine();
+	std::string nPath = FileUtils::GetPath(file.GetName());
 
 	std::unique_ptr<FileReader> file2 = nullptr;
 
@@ -3586,46 +3570,36 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 		file.ReadInt();
 		file.ReadInt();
-		strcpy(sName, file.ReadWord());
-		strName[n] = strdup(sName);
-		char *e = strrchr(strName[n], '.');
-		if (e) *e = 0;
+		std::string sName = file.ReadWord();
+		structNames[n] = FileUtils::StripExtension(sName);
 
-		sprintf(fName, "%s%s", nPath, sName);
+		std::string fName = nPath + sName;
 		if (FileUtils::Exist(fName)) {
 			file2.reset(new FileReader(fName));
-			strcpy(strPath, nPath);
-
 		}
 		else {
 #ifdef _WIN32
-			sprintf(fName, "%s\\%s", fPath, sName);
+			fName = fPath + "\\" + sName;
 #else
-            sprintf(fName, "%s/%s", fPath, sName);
+            fName = fPath + "/" + sName;
 #endif
 			if (FileUtils::Exist(fName)) {
 				file2.reset(new FileReader(fName));
-				strcpy(strPath, fPath);
 			}
 		}
 
 		if (!file2) {
 			char errMsg[560];
-			sprintf(errMsg, "Cannot find %s", sName);
+			sprintf(errMsg, "Cannot find %s", fName);
 			throw Error(errMsg);
 		}
-
-		strFileName[n] = strdup(sName);
 		InsertTXTGeom(*file2, n, true);
-
 	}
 
 	UpdateName(file);
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 	AdjustProfile();
-	//isLoaded = true; //InitializeGeometry() sets to true
-
 }
 
 void Geometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
@@ -3706,15 +3680,12 @@ void Geometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, do
 	sh.nbFacet += rawGeom.triangleCount;
 	sh.nbVertex += 3 * rawGeom.triangleCount;
 
-	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(FileUtils::GetFilename(filePath)).c_str(),true);
+	if (!insert || newStruct) AddStruct(FileUtils::StripExtension(FileUtils::GetFilename(filePath)),true);
 
 	if (!insert) {
 		UpdateName(filePath.c_str());
-		strName[0] = strdup(sh.name.c_str());
-		strFileName[0] = strdup(filePath.c_str());
+		structNames[0] = FileUtils::StripExtension(sh.name);
 	}
-	char* e = strrchr(strName[0], '.');
-	if (e) *e = 0;
 	
 	prg.SetMessage("Initializing geometry...");
 	InitializeGeometry();
@@ -3729,15 +3700,11 @@ void Geometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worke
 	LoadTXTGeom(file, worker);
 	UpdateName(file);
 	sh.nbSuper = 1;
-	strName[0] = strdup(sh.name.c_str());
-	strFileName[0] = strdup(file.GetName());
+	structNames[0] = FileUtils::StripExtension(sh.name);
 
-	char *e = strrchr(strName[0], '.');
-	if (e) *e = 0;
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 	AdjustProfile();
-	//isLoaded = true; //InitializeGeometry() sets to true
 
 }
 
@@ -3747,12 +3714,6 @@ void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
 	InsertTXTGeom(file, structId, newStr);
-	//UpdateName(file);
-	//wp.nbSuper = 1;
-	//strName[0] = strdup(wp.name);
-	//strFileName[0] = strdup(file.GetName());
-	char *e = strrchr(strName[0], '.');
-	if (e) *e = 0;
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 	AdjustProfile();
@@ -3779,17 +3740,8 @@ void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
 	InsertGEOGeom(file, structId, newStr);
-	//UpdateName(file);
-	//wp.nbSuper = 1;
-	//strName[0] = strdup(wp.name);
-	//strFileName[0] = strdup(file.GetName());
-	char *e = strrchr(strName[0], '.');
-	if (e) *e = 0;
 	InitializeGeometry();
     InitializeInterfaceGeometry();
-
-	//AdjustProfile();
-	//isLoaded = true; //InitializeGeometry() sets to true
 
 }
 
@@ -4064,12 +4016,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 #endif
 	file.ReadKeyword("structures"); file.ReadKeyword("{");
 	for (int i = 0; i < nbNewSuper; i++) {
-		strName[sh.nbSuper + i] = strdup(file.ReadString());
-		// For backward compatibilty with STR
-		/* //Commented out for GEO
-		sprintf(tmp, "%s.txt", strName[i]);
-		strFileName[i] = strdup(tmp);
-		*/
+		structNames[sh.nbSuper + i] = file.ReadString();
 	}
 	file.ReadKeyword("}");
 
@@ -4176,11 +4123,10 @@ void Geometry::SaveSTR(bool saveSelected) {
 	if (!IsLoaded()) throw Error("Nothing to save !");
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
 
-	// Block dpHit during the whole disc writting
+	// Block dpHit during the whole disc writing
 
 	for (int i = 0; i < sh.nbSuper; i++)
-		SaveSuper(i);
-
+		SaveStrStructure(i);
 }
 
 std::vector<size_t> Geometry::GetAllFacetIndices() const {
@@ -4218,10 +4164,9 @@ void Geometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
     }
 }
 
-void Geometry::SaveSuper(int s) {
+void Geometry::SaveStrStructure(int s) {
 
-	char fName[512+128+1];
-	sprintf(fName, "%s/%s", strPath, strFileName[s]);
+	std::string fName = structNames[s] + ".str";
 	auto file = FileWriter(fName);
 
 	// Unused
@@ -4490,7 +4435,7 @@ void  Geometry::EmptyGeometry() {
 
 	//Initialize a default structure:
 	sh.nbSuper = 1;
-	strName[0] = strdup("");
+	structNames[0] = "";
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
     InitializeInterfaceGeometry();
@@ -4512,25 +4457,6 @@ void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
     }
 
     sh.nbVertex = vertices.size();
-}
-
-bool Geometry::InitOldStruct(SimulationModel* model){
-    for (int i = 0; i < MAX_SUPERSTR; i++) {
-        SAFE_FREE(strName[i]);
-        SAFE_FREE(strFileName[i]);
-    }
-    memset(strName, 0, MAX_SUPERSTR * sizeof(char *));
-    memset(strFileName, 0, MAX_SUPERSTR * sizeof(char *));
-    for(size_t i = 0; i < std::min((int)model->structures.size(),(int)MAX_SUPERSTR); ++i){
-        strName[i] = (char*)malloc(std::min((size_t)model->structures[i].strName.size()+1,(size_t)256) * sizeof(char));
-        strFileName[i] = (char*)malloc(std::min((size_t)model->structures[i].strFileName.size()+1,(size_t)256) * sizeof(char));
-        std::strncpy(strName[i], model->structures[i].strName.c_str(), std::min((size_t)model->structures[i].strName.size(),(size_t)256));
-        std::strncpy(strFileName[i], model->structures[i].strFileName.c_str(), std::min((size_t)model->structures[i].strFileName.size(),(size_t)256));
-        strName[i][std::min((size_t)model->structures[i].strName.size(),(size_t)256)] = '\0';
-        strFileName[i][std::min((size_t)model->structures[i].strFileName.size(),(size_t)256)] = '\0';
-    }
-
-    return true;
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them

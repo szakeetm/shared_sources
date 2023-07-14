@@ -42,8 +42,7 @@ public:
     ~SuperStructure() = default;
     //std::vector<SubprocessFacet>  facets;   // Facet handles
     std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
-    std::string strName;
-    std::string strFileName;
+    std::string name;
 
     size_t GetMemSize(){
         size_t sum = 0;

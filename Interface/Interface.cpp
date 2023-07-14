@@ -250,7 +250,6 @@ void Interface::ResetSimulation(bool askConfirm) {
 
 void Interface::UpdateStructMenu() {
 
-    char tmp[128];
     Geometry *geom = worker.GetGeometry();
 
     structMenu->Clear();
@@ -263,11 +262,11 @@ void Interface::UpdateStructMenu() {
     structMenu->Add(nullptr); //Separator
 
     for (int i = 0; i < geom->GetNbStructure(); i++) {
-        sprintf(tmp, "Show #%d (%s)", i + 1, geom->GetStructureName(i));
+        std::string label = fmt::format("Show #{} ({})", i + 1, geom->GetStructureName(i));
         if (i < 10)
-            structMenu->Add(tmp, MENU_VIEW_STRUCTURE + (i + 1), SDLK_F1 + i + 1, CTRL_MODIFIER);
+            structMenu->Add(label, MENU_VIEW_STRUCTURE + (i + 1), SDLK_F1 + i + 1, CTRL_MODIFIER);
         else
-            structMenu->Add(tmp, MENU_VIEW_STRUCTURE + (i + 1));
+            structMenu->Add(label, MENU_VIEW_STRUCTURE + (i + 1));
     }
 
     structMenu->SetCheck(MENU_VIEW_STRUCTURE + geom->viewStruct + 1, true);
