@@ -6,8 +6,9 @@ GLProgress_CLI::GLProgress_CLI(const std::string& message)
 	SetMessage(message,true);
 }
 
-void GLProgress_CLI::SetMessage(const std::string& msg, const bool newLine)
+void GLProgress_CLI::SetMessage(const std::string& msg, const bool newLine, const bool forceDraw)
 {
+	//forceDraw is ignored, only for GUI
 	status = msg;
 	if (newLine) {
 		std::cout << std::endl;

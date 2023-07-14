@@ -7,7 +7,7 @@ protected:
 	int progress = 0;
 	std::string status;
 public:
-	virtual void SetMessage(const std::string& msg, const bool newLine=true);
+	virtual void SetMessage(const std::string& msg, const bool newLine=true, const bool forceDraw=false);
 	virtual void SetProgress(const double prg);
 	virtual double GetProgress();
 	virtual std::string GetMsg();

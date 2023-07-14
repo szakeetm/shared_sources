@@ -14,7 +14,7 @@ public:
 
 	// Update progress bar (0 to 1)
 	void SetProgress(const double value) override;
-	void SetMessage(const std::string& msg, const bool newLine=true) override;
+	void SetMessage(const std::string& msg, const bool newLine=true, const bool forceDraw=false) override;
 	void PositionComponents(); //Resizes window in case of wide/multiline text
 
 private:
