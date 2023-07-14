@@ -22,6 +22,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring> //strcpy, etc.
 #include <filesystem>
 #include <sstream>
+#include <fstream>
+#include <fmt/core.h>
 
 #define MAX_WORD_LENGTH 65536 // expected length of the longest line
 
@@ -572,4 +574,17 @@ std::string FileUtils::exec(const char* cmd) { //Execute a command and return wh
 #endif
         (pipe);
     return result;
+}
+
+bool FileUtils::isBinarySTL(const std::string& filePath) {
+    std::ifstream file(filePath); //file closed when goes out of scope
+
+    if (!file) {
+        throw Error(fmt::format("Failed to open file\n{}", filePath));
+    }
+
+    std::string firstLine;
+    std::getline(file, firstLine);
+
+    return (firstLine.find("solid") != 0); //binary if doesn't begin with "solid"
 }

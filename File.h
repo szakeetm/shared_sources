@@ -44,7 +44,7 @@ public:
 	static void CreateDir(const std::string& path);
 	static std::string exec(const std::string& command);
 	static std::string exec(const char* cmd);
-
+	static bool isBinarySTL(const std::string& filePath); //throws error
 };
 
 class FileReader {
