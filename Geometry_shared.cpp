@@ -4141,7 +4141,7 @@ void Geometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
     prg.SetMessage("Saving STL file...");
-    file.Write("solid ");file.Write("\"");file.Write(GetName());file.Write("\" UNITS=cm\n");
+    file.Write("solid ");file.Write("\"");file.Write(GetName());file.Write("\" unit=cm\n");
     for (size_t i = 0;i < triangulatedGeometry.size();i++) {
         prg.SetProgress((double)i / (double)triangulatedGeometry.size());
         InterfaceFacet* fac = triangulatedGeometry[i];
