@@ -353,7 +353,7 @@ void FormulaEditor::UpdateValues() {
 	// Therefore formulas should be updated beforehand by calling formula_ptr->EvaluateFormulas
 	for (size_t i = 0; i < formula_ptr->formulas.size(); i++) {
 		// Evaluation
-		if (!formula_ptr->formulas[i].hasVariableEvalError) { //Variables succesfully evaluated
+		if (!formula_ptr->formulas[i].hasEvalError) { //Variables succesfully evaluated
 			double r = formula_ptr->lastFormulaValues[i].second;
 			std::stringstream tmp;
 			tmp << r; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
@@ -363,7 +363,7 @@ void FormulaEditor::UpdateValues() {
 #endif
 		}
 		else { //Error while evaluating variables
-            formulaList->SetValueAt(2, i, formula_ptr->formulas[i].GetVariableEvalError());
+            formulaList->SetValueAt(2, i, formula_ptr->formulas[i].GetEvalErrorMsg());
         }
 	}
 }

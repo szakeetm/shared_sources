@@ -53,12 +53,12 @@ void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <
 		auto varIterator = formula.GetVariableAt(j);
 		ok = evaluator->EvaluateVariable(varIterator,previousFormulaValues);
 		if (!ok) {
-			formula.SetVariableEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
+			formula.SetEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
 		}
 	}
 
 	if (ok) {
-		formula.hasVariableEvalError = false;
+		formula.hasEvalError = false;
 	}
 };
 
@@ -88,17 +88,14 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 	for (size_t i = 0; i < formulas.size(); ++i) {
         // First evaluate variable values
         EvaluateFormulaVariables(i,previousFormulaValues);
-        if (!formulas[i].hasVariableEvalError) {
-            auto res = formulas[i].Evaluate();
-            if (res.has_value()) {
-                lastFormulaValues[i] = std::make_pair(nbDesorbed, res.value());
-                previousFormulaValues.push_back({ formulas[i].GetName(),res.value()});
-            }
-            else {
-                formulas[i].SetVariableEvalError(formulas[i].GetErrorMsg());
-                previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
-            }
-        } else previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
+        try {
+            double value = formulas[i].Evaluate();       
+            lastFormulaValues[i] = std::make_pair(nbDesorbed, value);
+            previousFormulaValues.push_back({ formulas[i].GetName(),value });
+        }
+        catch (...) {
+            previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
+        }
 	}
 	FetchNewConvValue();
 }
@@ -109,7 +106,7 @@ bool Formulas::FetchNewConvValue() {
 	if (formulas.empty()) return hasChanged;
 	UpdateVectorSize();
 	for (int formulaId = 0; formulaId < formulas.size(); ++formulaId) {
-		if (formulas[formulaId].hasVariableEvalError) {
+		if (formulas[formulaId].hasEvalError) {
 			continue;
 		}
 

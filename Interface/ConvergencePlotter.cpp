@@ -283,7 +283,7 @@ void ConvergencePlotter::plot() {
     GLFormula formula;
     formula.SetExpression(formulaText->GetText().c_str());
     if (!formula.Parse()) {
-        GLMessageBox::Display(formula.GetErrorMsg().c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+        GLMessageBox::Display(formula.GetParseErrorMsg().c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
 
@@ -296,8 +296,8 @@ void ConvergencePlotter::plot() {
         GLMessageBox::Display("Too much variables or unknown constant", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
-    auto varIterator = formula.GetVariableAt(0);
-    if (!iequals(varIterator->varName, "x")) {
+    auto xVariable = formula.GetVariableAt(0);
+    if (!iequals(xVariable->varName, "x")) {
         GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -332,12 +332,14 @@ void ConvergencePlotter::plot() {
 
     // Plot
     for (i = 0; i < 1000; i++) {
-        double x = (double) i;
-        double y;
-        varIterator->value = x; //overwrites 'X' variable value in the formula
-        auto yres = formula.Evaluate();
-        if (!yres.has_value()) break;
-        v->Add(x, yres.value(), false);
+        double x = (double)i;
+        xVariable->value = x;
+        try {
+            v->Add(x, formula.Evaluate());
+        }
+        catch (...) {
+            continue; //Eval. error, but maybe for other x it is possible to evaluate (ex. div by zero)
+        }
     }
     v->CommitChange();
 
@@ -479,7 +481,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == addButton) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !formula_ptr->formulas.empty()) { //Something selected (not -1)
-                    if(formula_ptr->formulas[profCombo->GetUserValueAt(idx)].hasVariableEvalError){
+                    if(formula_ptr->formulas[profCombo->GetUserValueAt(idx)].hasEvalError){
                         GLMessageBox::Display("Formula can't be evaluated.", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         break;
                     }

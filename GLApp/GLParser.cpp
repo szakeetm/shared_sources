@@ -67,12 +67,6 @@ std::string GLFormula::GetExpression() {
 	return expression;
 }
 
-// Extract a part of the string to analyze 
-std::string GLFormula::Extract(int n)
-{
-	return expression.substr(0, n);
-}
-
 // Return fisrt significative char in the string to analyze, repeat 'times' times 
 void GLFormula::AV(size_t times)
 {
@@ -85,17 +79,17 @@ void GLFormula::AV(size_t times)
 }
 
 // Set global error
-void GLFormula::SetError(const std::string& _errMsg, int pos) {
-	this->errMsg = fmt::format("{} at pos. {}", _errMsg, pos + 1);
-	this->error = true;
+void GLFormula::SetParseError(const std::string& _errMsg, int pos) {
+	this->parseErrorMsg = fmt::format("{} at pos. {}", _errMsg, pos + 1);
+	this->hasParseError = true;
 }
 
 std::list<Variable>::iterator GLFormula::FindVar(const std::string& var_name) {
-	auto p = varList.begin();
-	while (p != varList.end() && !iequals(p->varName, var_name)) {
+	auto p = variables.begin();
+	while (p != variables.end() && !iequals(p->varName, var_name)) {
 		p++;
 	}
-	return p; //either points to found element or varList.end()
+	return p; //either points to found element or variables.end()
 }
 
 // Add variables into the chained list
@@ -103,11 +97,11 @@ std::list<Variable>::iterator GLFormula::AddVar(const std::string& _var_name)
 {
 	// Search if already added
 	auto pos = FindVar(_var_name);
-	if (pos == varList.end()) { //not found
+	if (pos == variables.end()) { //not found
 		Variable newVar;
 		newVar.varName = _var_name;
-		varList.push_front(newVar); //insert to front
-		return varList.begin(); //return iterator to front
+		variables.push_front(newVar); //insert to front
+		return variables.begin(); //return iterator to front
 	}
 	else {
 		return pos; //found position
@@ -127,13 +121,13 @@ std::unique_ptr<EvalTreeNode> GLFormula::AddNode(OperandType type, std::variant<
 
 // Grammar functions
 
-std::optional<double> GLFormula::ReadDouble()
+double GLFormula::ReadDouble()
 {
 	std::string numberStr, exponentStr;
-	int  localPos;
+	int  oriPos;
 	int negativeExponent;
 
-	localPos = currentPos;
+	oriPos = currentPos;
 
 	do {
 		numberStr += currentChar;
@@ -158,8 +152,7 @@ std::optional<double> GLFormula::ReadDouble()
 			auto dummy = std::stoi(exponentStr); //test if exponent is parsable
 		}
 		catch (...) {
-			SetError("Incorrect exponent in number", localPos);
-			return std::nullopt;
+			throw Error("Incorrect exponent \""+exponentStr);
 		}
 		if (negativeExponent) { numberStr = numberStr + "e-" + exponentStr; }
 		else { numberStr = numberStr + "e" + exponentStr; }
@@ -168,8 +161,7 @@ std::optional<double> GLFormula::ReadDouble()
 		return std::stod(numberStr);
 	}
 	catch (...) {
-		SetError("Incorrect number", localPos);
-		return std::nullopt;
+		throw Error("Incorrect number \"" + numberStr);
 	}
 }
 
@@ -181,8 +173,8 @@ std::string GLFormula::ReadVariable() {
 	do {
 		result += currentChar;
 		AV();
-		if (result.length() > 64) SetError("Variable name too long (max.64)", localPos);
-	} while ((!error) && (
+		if (result.length() > 64) SetParseError("Variable name too long (max.64)", localPos);
+	} while ((!hasParseError) && (
 		(currentChar >= 'A' && currentChar <= 'Z') ||
 		(currentChar >= 'a' && currentChar <= 'z') ||
 		(currentChar >= '0' && currentChar <= '9') ||
@@ -192,13 +184,16 @@ std::string GLFormula::ReadVariable() {
 	return result;
 }
 
-std::optional< std::unique_ptr<EvalTreeNode> > GLFormula::TreatTerm(const std::string& term, OperandType operand) { //searches for "term" in expression, and makes tree node with operand. returns true if found and treated
+std::optional< std::unique_ptr<EvalTreeNode> > GLFormula::CheckAndTreatTerm(const std::string& term, OperandType operand) { //searches for "term" in expression, and makes tree node with operand. returns true if found and treated
+	//Check if the expression's part from "currentPos" starts with "term", if yes, treat it by creating a new node
+	//It is not an error if not, then other terms will be checked
+	//However, if there is no closing ) then it's a parsing error
 	if (iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
 		auto left = ReadExpression();
 		auto resultNode = AddNode(operand, std::monostate{}, std::move(left), nullptr);
 		if (currentChar != ')') {
-			SetError(") expected", currentPos);
+			SetParseError(") expected", currentPos);
 		}
 		else AV();
 		return resultNode;
@@ -209,18 +204,23 @@ std::optional< std::unique_ptr<EvalTreeNode> > GLFormula::TreatTerm(const std::s
 std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at current pos, write to node
 {
 	std::unique_ptr<EvalTreeNode> resultNode = nullptr;
-	if (error) return resultNode;
+	if (hasParseError) return resultNode;
 
 	if (currentChar == '.' || (currentChar >= '0' && currentChar <= '9')) { //digit
-		auto val = ReadDouble();
-		if (val.has_value() && !error) resultNode = AddNode(OperandType::TDOUBLE, val.value(), nullptr, nullptr);
+		try {
+			double val = ReadDouble();
+			resultNode = AddNode(OperandType::TDOUBLE, val, nullptr, nullptr);
+		}
+		catch (std::exception error) {
+			SetParseError(error.what(), currentPos);
+		}
 	}
 	else if (currentChar == '(') {
 
 		AV(); //opening (
 		resultNode = ReadExpression();
 		if (currentChar != ')') {
-			SetError(") expected", currentPos);
+			SetParseError(") expected", currentPos);
 		}
 		AV(); //closing )
 	}
@@ -231,10 +231,10 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 			AV();
 		}
 		if (currentChar == '\0') {
-			SetError("closing \" expected", currentPos);
+			SetParseError("closing \" expected", currentPos);
 		}
 		else if (formulaName.length() == 1) {
-			SetError("Empty formula name \"\" not valid", currentPos);
+			SetParseError("Empty formula name \"\" not valid", currentPos);
 		}
 		else {
 			formulaName += currentChar;AV(); //closing "
@@ -259,7 +259,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 		auto varIterator = AddVar(avgExpression);
 		resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
 	}
-	else if (iequals(Extract(4), "SUM(")) {
+	else if (iBeginsWith(expression,"SUM(")) {
 		std::string sumExpression;
 		sumExpression += currentChar;
 		while (currentChar != ')') {
@@ -277,18 +277,18 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 	else if (std::string term = "pow("; iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
 		auto left = ReadExpression();
-		if (currentChar != ',') SetError(", expected", currentPos);
+		if (currentChar != ',') SetParseError(", expected", currentPos);
 		AV();
 		auto right = ReadExpression();
 		resultNode = AddNode(OperandType::POW, std::monostate{}, std::move(left), std::move(right));
-		if (currentChar != ')') SetError(") expected", currentPos);
+		if (currentChar != ')') SetParseError(") expected", currentPos);
 		AV();
 	}
 	else {
 
 		// Math functions
 		for (const auto& key : mathExpressionsMap) {
-			auto res = TreatTerm(key.first, key.second);
+			auto res = CheckAndTreatTerm(key.first, key.second);
 			if (res.has_value()) {
 				resultNode = std::move(res.value());
 				return resultNode;
@@ -305,7 +305,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 		}
 		else {
 			//Nothing could treat the term, set error	
-			SetError("Syntax error", currentPos);
+			SetParseError("Syntax error", currentPos);
 		}
 	}
 	return resultNode;
@@ -314,7 +314,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 std::unique_ptr<EvalTreeNode> GLFormula::ReadPower() //parse "(left)^(right)"
 {
 	std::unique_ptr<EvalTreeNode> resultNode = nullptr;
-	if (error) return resultNode;
+	if (hasParseError) return resultNode;
 
 	auto left = ReadTerm();
 	if (currentChar == '^')
@@ -331,11 +331,11 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadPower() //parse "(left)^(right)"
 
 std::unique_ptr<EvalTreeNode> GLFormula::ReadFactor()
 {
-	if (error) return nullptr;
+	if (hasParseError) return nullptr;
 
 	auto left = ReadPower();
 
-	while ((currentChar == '*' || currentChar == '/') && !error) {
+	while ((currentChar == '*' || currentChar == '/') && !hasParseError) {
 		auto opType = currentChar == '*' ? OperandType::MUL : OperandType::DIV;
 		AV();
 		auto right = ReadPower();
@@ -347,11 +347,11 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadFactor()
 
 std::unique_ptr<EvalTreeNode> GLFormula::ReadExpression()
 {
-	if (error) return nullptr;
+	if (hasParseError) return nullptr;
 
 	auto left = ReadFactor();
 
-	while ((currentChar == '+' || currentChar == '-') && !error)
+	while ((currentChar == '+' || currentChar == '-') && !hasParseError)
 	{
 		auto opType = currentChar == '+' ? OperandType::PLUS : OperandType::MINUS;
 		AV();
@@ -361,37 +361,37 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadExpression()
 	return left;
 }
 
-std::string GLFormula::GetErrorMsg() {
-	return errMsg;
+std::string GLFormula::GetParseErrorMsg() {
+	return parseErrorMsg;
 }
 
 bool GLFormula::Parse()
 {
 	if (expression.empty()) {
-		errMsg = "Empty expression";
+		parseErrorMsg = "Empty expression";
 		return false;
 	}
 
 	currentPos = 0;
 	currentChar = expression[0];
-	error = false;
-	errMsg = "No error";
+	hasParseError = false;
+	parseErrorMsg = "No error";
 
 	evalTree.reset();
-	varList.clear();
+	variables.clear();
 
 	evalTree = ReadExpression();
 
 	if (currentPos != (int)expression.length()) { //couldn't parse till end
-		SetError("Syntax error", currentPos);
+		SetParseError("Syntax error", currentPos);
 	}
 
-	if (error) {
+	if (hasParseError) {
 		evalTree.reset();
-		varList.clear();
+		variables.clear();
 	}
 
-	return !error;
+	return !hasParseError;
 }
 
 double factorial(double x) {
@@ -405,22 +405,16 @@ double factorial(double x) {
 
 }
 
-std::optional<double> GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode>& node) {
+double GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode>& node) {
 
 	double a, b; //eval. of left and right
 	if (node->left) {
-		auto res = EvaluateNode(node->left);
-		if (!res.has_value()) return std::nullopt;
-		else a = res.value();
+		a = EvaluateNode(node->left);
 	}
 	if (node->right) {
-		auto res = EvaluateNode(node->right);
-		if (!res.has_value()) return std::nullopt;
-		else b = res.value();
+		b = EvaluateNode(node->right);
 	}
 	double r; //temp result before error check
-
-	if (error) return std::nullopt;
 
 	switch (node->type) {
 	case OperandType::PLUS:
@@ -431,25 +425,19 @@ std::optional<double> GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode
 		return a * b;
 	case OperandType::DIV:
 		if (b == 0.0) {
-			error = true;
-			errMsg = "Divide by 0";
-			return std::nullopt;
+			throw Error("Division by 0");
 		}
 		else return a / b;
 	case OperandType::POW:
 		r = pow(a, b);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::COS:
 		r = cos(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::CI95:
@@ -457,113 +445,85 @@ std::optional<double> GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode
 	case OperandType::FACT:
 		r = factorial(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::ACOS:
 		r = acos(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::SIN:
 		r = sin(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::ASIN:
 		r = asin(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::COSH:
 		r = cosh(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::SINH:
 		r = sinh(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::EXP:
 		r = exp(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::LN:
 		r = log(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::LOG10:
 		r = log10(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::LOG2:
 		r = log(a) / log(2.0);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::SQRT:
 		r = sqrt(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::TAN:
 		r = tan(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::ATAN:
 		r = atan(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::TANH:
 		r = tanh(a);
 		if (errno != 0) {
-			error = true;
-			errMsg = strerror(errno);
-			return std::nullopt;
+			throw Error(strerror(errno));
 		}
 		else return r;
 	case OperandType::ABS:
@@ -575,53 +535,53 @@ std::optional<double> GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode
 	case OperandType::TVARIABLE:
 		return std::get<std::list<Variable>::iterator>(node->value)->value;
 	}
-	return std::nullopt;
+	throw Error("Unknown operand type");
 }
 
 size_t GLFormula::GetNbVariable() {
-	return varList.size();
+	return variables.size();
 }
 
 std::list<Variable>::iterator GLFormula::GetVariableAt(size_t n) {
-	auto it = varList.begin();
-	std::advance(it, std::min(n, varList.size() - 1));
+	auto it = variables.begin();
+	std::advance(it, std::min(n, variables.size() - 1));
 	return it;
 }
 
-void GLFormula::SetVariable(const std::string& name, double value) {
+void GLFormula::SetVariableValue(const std::string& name, double value) {
 	auto v = FindVar(name);
-	if (v != varList.end()) v->value = value;
+	if (v != variables.end()) v->value = value;
 }
 
-std::string GLFormula::GetVariableEvalError()
+std::string GLFormula::GetEvalErrorMsg()
 {
-	return variableEvalErrorMsg;
+	return evalErrorMsg;
 }
 
-void GLFormula::SetVariableEvalError(const std::string& errMsg)
+void GLFormula::SetEvalError(const std::string& errMsg)
 {
-	variableEvalErrorMsg = errMsg;
-	hasVariableEvalError = true;
+	evalErrorMsg = errMsg;
+	hasEvalError = true;
 }
 
 int GLFormula::GetCurrentPos() {
 	return currentPos;
 }
 
-std::optional<double> GLFormula::Evaluate()
-{
-	error = false;
+double GLFormula::Evaluate()
+{	
+	if (!evalTree) throw Error("Formula not parsed");
+	if (hasParseError) throw Error("Formula couldn't be parsed");
+
+	hasEvalError = false;
 	errno = 0;
-
-	/* Evaluate expression */
-
-	if (evalTree)
-	{
-		auto res = EvaluateNode(evalTree);
-		if (res.has_value()) return res.value();
+		
+	try {
+		return EvaluateNode(evalTree);
 	}
+	catch (std::exception& err) {
+		hasEvalError = true;
 
-	//Here either evalTree is nullptr or EvaluateNode returned nullopt
-	error = true;
-	return std::nullopt;
+		throw err;
+	}
 }

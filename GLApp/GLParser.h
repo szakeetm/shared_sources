@@ -98,50 +98,51 @@ public:
 	void SetExpression(const std::string& expression);  // Set formula expression
 	std::string GetExpression();     // Get the expression
 	bool Parse();                    // Construct eval tree
-	std::string GetErrorMsg();       // Return error message
+	bool hasParseError = false;       // Error flag
+	std::string parseErrorMsg; // Error message
+
+	std::string GetParseErrorMsg();       // Return error message
 	int   GetCurrentPos();           // Current parsing cursor position
 
 	// Variables
 	size_t    GetNbVariable();          // Return num of variables created during parsing
 	std::list<Variable>::iterator GetVariableAt(size_t n);   // Return iterator to nth variable
-	void   SetVariable(const std::string&, double value); // Set the variable value
+	void   SetVariableValue(const std::string&, double value); // Set the variable value
 
-	std::string GetVariableEvalError();
-	void SetVariableEvalError(const std::string& errMsg);
+	std::string GetEvalErrorMsg();
+	void SetEvalError(const std::string& errMsg);
 
 	// Evaluation
-	std::optional<double> EvaluateNode(const std::unique_ptr<EvalTreeNode>& node); // Evaluate the expression (after it was parsed)
-	std::optional<double> Evaluate();
-	bool   hasVariableEvalError;
-	std::string variableEvalErrorMsg;
+	double EvaluateNode(const std::unique_ptr<EvalTreeNode>& node); // Evaluate the expression (after it was parsed). Throws error if math invalid (div by 0 etc)
+	double Evaluate();
+	bool   hasEvalError;
+	std::string evalErrorMsg;
 
 	static const std::map<std::string, OperandType> mathExpressionsMap;
 
 private:
 
-	double EvalTree(std::shared_ptr<EvalTreeNode>& node);
-	std::optional< std::unique_ptr<EvalTreeNode> > TreatTerm(const std::string& term, OperandType operand);
+	std::optional< std::unique_ptr<EvalTreeNode> > CheckAndTreatTerm(const std::string& term, OperandType operand);
 	std::unique_ptr<EvalTreeNode> ReadExpression();
 	std::unique_ptr<EvalTreeNode> ReadTerm();
 	std::unique_ptr<EvalTreeNode> ReadPower();
 	std::unique_ptr<EvalTreeNode> ReadFactor();
 	std::string ReadVariable();
-	std::optional<double> ReadDouble();
+	double ReadDouble(); //throws error
 	std::unique_ptr<EvalTreeNode>   AddNode(OperandType type, std::variant<std::monostate, double, std::list<Variable>::iterator> value, std::unique_ptr<EvalTreeNode> left, std::unique_ptr<EvalTreeNode> right);
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
 	std::list<Variable>::iterator FindVar(const std::string& var_name);
-	void   SetError(const std::string& errMsg, int pos);
+	void   SetParseError(const std::string& errMsg, int pos);
 	void   AV(size_t times = 1); //advance by one (or more) non-whitespace char
-	std::string Extract(int n); //Left n characters of string
 
 	std::string name;   // Name (optional)
-	std::string errMsg; // Error message
+	
 	std::string expression;  // Expression
+
 	char currentChar;          // Current parsed char
 	int  currentPos;     // Current char pos
-	bool error = false;       // Error flag
 
 	std::unique_ptr<EvalTreeNode> evalTree;
-	std::list<Variable> varList;
+	std::list<Variable> variables;
 
 };
