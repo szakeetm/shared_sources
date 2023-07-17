@@ -2380,54 +2380,6 @@ void Interface::UpdateFacetlistSelected() {
     }
 }
 
-/*
-void Interface::UpdateFormula() {
-
-	char tmp[256];
-
-	Geometry *geom = worker.GetGeometry();
-
-	for (int i = 0; i < nbFormula; i++) {
-
-
-		GLFormula *f = formulas[i].parser;
-		//f->Parse(); //If selection group changed
-
-
-					// Evaluate variables
-		int nbVar = f->GetNbVariable();
-		bool ok = true;
-		for (int j = 0; j < nbVar && ok; j++) {
-			VLIST *v = f->GetVariableAt(j);
-			ok = EvaluateVariable(v);
-			if (!ok) {
-				std::stringstream tmp;
-				tmp << "Invalid variable " << v->name;
-				formulas[i].value->SetText(tmp.str());
-			}
-		}
-
-		// Evaluation
-		if (ok) { //Variables succesfully evaluated
-			double r;
-			if (f->Evaluate(&r)) {
-				sprintf(tmp, "%g", r);
-				formulas[i].value->SetText(tmp);
-			}
-			else { //Variables OK but the formula itself can't be evaluated
-				formulas[i].value->SetText(f->GetErrorMsg());
-			}
-#if defined(MOLFLOW)
-			formulas[i].value->SetTextColor(0.0f, 0.0f, worker.displayedMoment == 0 ? 0.0f : 1.0f);
-#endif
-		}
-		else { //Error while evaluating variables
-			//formulas[i].value->SetText("Invalid variable name"); //We set it directly at the error location
-		}
-	}
-}
-*/
-
 void Interface::DropEvent(char *dropped_file) {
     // Shows directory of dropped file
     int ret = GLMessageBox::Display(fmt::format("Do you want to load this file\n    {}?", dropped_file).c_str(), "Load file?",
@@ -2619,7 +2571,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                formula_ptr->EvaluateFormulas(hitCache.nbDesorbed);
+                if (formula_ptr->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) formula_ptr->EvaluateFormulas(hitCache.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas

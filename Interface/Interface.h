@@ -245,8 +245,6 @@ protected:
     virtual ~Interface();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
-	//virtual void UpdateFormula() {}
-	//virtual bool EvaluateVariable(VLIST *v) { return false; }
 	virtual void ClearFacetParams() {}
 	virtual void LoadConfig() {}
 	//virtual bool AskToReset(Worker *work = NULL) { return false; }

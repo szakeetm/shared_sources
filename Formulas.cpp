@@ -43,17 +43,22 @@ void Formulas::ClearFormulas() {
 }
 
 //! Initialize formulas by parsing string to values
-void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& previousFormulaValues){
+void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues){
     auto& formula = formulas[formulaIndex];
 	
 	size_t nbVar = formula.GetNbVariable();
-	bool ok = true; //for each formula, stop at first invalid variable name
+	bool ok = true; //for each formula, stop at first variable that can't be evaluated
 	for (size_t j = 0; j < nbVar && ok; j++) {
 		auto varIterator = formula.GetVariableAt(j);
-		ok = evaluator->EvaluateVariable(varIterator,previousFormulaValues);
-		if (!ok) {
-			formula.SetEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
-		}
+        formula.evalErrorMsg = "";
+        try {
+            ok = evaluator->EvaluateVariable(varIterator, aboveFormulaValues);
+            if (!ok) formula.SetEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
+        }
+        catch (std::exception err) {//Specific evaluation error message to display to user, currently used for "formula not found" and "formula not yet evaluated"
+            formula.SetEvalError(err.what());
+            ok = false;
+        }
 	}
 
 	if (ok) {
@@ -67,86 +72,80 @@ void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <
 void Formulas::UpdateVectorSize() {
     //Rebuild vector size
     size_t nbFormulas = formulas.size();
-    if (convergenceValues.size() != nbFormulas) {
-        convergenceValues.resize(nbFormulas);
+    if (convergenceData.size() != nbFormulas) {
+        convergenceData.resize(nbFormulas);
     }
-    if (previousFormulaValues.size() != nbFormulas) {
-        previousFormulaValues.resize(nbFormulas);
+    if (formulaValueCache.size() != nbFormulas) {
+        formulaValueCache.resize(nbFormulas);
     }
 }
 
 //Calculate formula values for later usage in corresponding windows
 void Formulas::EvaluateFormulas(size_t nbDesorbed) {
 
-	if (formulas.empty()) return;
-
-    std::vector <std::pair<std::string, std::optional<double>>> previousFormulaValues; //Formulas can refer to previous formulas by number or by name. If evaluation was succesful, they can see their value
+    std::vector <std::pair<std::string, std::optional<double>>> aboveFormulaValues; //Formulas can refer to previous formulas (above) by number or by name. If evaluation was successful, they can see their value
 
 	// Evaluate each formula and cache values for later usage
 	// in FormulaEditor, ConvergencePlotter
 	for (size_t i = 0; i < formulas.size(); ++i) {
         // First evaluate variable values
-        EvaluateFormulaVariables(i,previousFormulaValues);
+        EvaluateFormulaVariables(i,aboveFormulaValues);
         try {
             double value = formulas[i].Evaluate();       
-            previousFormulaValues[i] = std::make_pair(nbDesorbed, value);
-            previousFormulaValues.push_back({ formulas[i].GetName(),value });
+            formulaValueCache[i] = FormulaHistoryDatapoint(nbDesorbed, value);
+            aboveFormulaValues.push_back({ formulas[i].GetName(),value });
         }
         catch (...) {
-            previousFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
+            aboveFormulaValues.push_back({ formulas[i].GetName(),std::nullopt });
         }
 	}
-	FetchNewConvValue();
+	if (recordConvergence) RecordNewConvergenceDataPoint();
 }
 
 //! Add new value to convergence vector
-bool Formulas::FetchNewConvValue() {
+bool Formulas::RecordNewConvergenceDataPoint() {
 	bool hasChanged = false;
-	if (formulas.empty()) return hasChanged;
+	if (formulas.empty()) return false;
 	UpdateVectorSize();
 	for (int formulaId = 0; formulaId < formulas.size(); ++formulaId) {
-		if (formulas[formulaId].hasEvalError) {
+		if (formulas[formulaId].hasParseError || formulas[formulaId].hasEvalError) {
 			continue;
 		}
 
-		auto& currentValues = previousFormulaValues[formulaId];
+		auto& lastValue_local = formulaValueCache[formulaId];
 		// Check against potential nan values to skip
-		if (std::isnan(currentValues.second))
+		if (std::isnan(lastValue_local.value))
 			continue;
-		auto& conv_vec = convergenceValues[formulaId].valueHistory;
-		if (conv_vec.size() >= max_vector_size) {
+
+		auto& convergenceData_local = convergenceData[formulaId];
+		if (convergenceData_local.size() >= max_vector_size) {
 			removeEveryNth(4, formulaId, 1000); // delete every 4th element for now
 			hasChanged = true;
 		}
+
 		// Insert new value when completely new value pair inserted
-		if (conv_vec.empty() || (currentValues.first != conv_vec.back().first && currentValues.second != conv_vec.back().second)) {
-			//convergenceValues[formulaId].n_samples += 1;
-			//convergenceValues[formulaId].conv_total += currentValues.second;
-			conv_vec.emplace_back(currentValues);
+		if (convergenceData_local.empty() || (lastValue_local.nbDes != convergenceData_local.back().nbDes && lastValue_local.value != convergenceData_local.back().value)) {
+			convergenceData_local.emplace_back(lastValue_local);
 			hasChanged = true;
 		}
-		else if (currentValues.first == conv_vec.back().first && currentValues.second != conv_vec.back().second) {
+		else if (lastValue_local.nbDes == convergenceData_local.back().nbDes && lastValue_local.value != convergenceData_local.back().value) {
 			// if (for some reason) the nbDesorptions dont change but the formula value, only update the latter
-			//convergenceValues[formulaId].conv_total -= conv_vec.back().second + currentValues.second;
-			conv_vec.back().second = currentValues.second;
+			convergenceData_local.back().value = lastValue_local.value;
 			hasChanged = true;
 		}
-		else if (currentValues.second == conv_vec.back().second) {
-			if (conv_vec.size() > 1 && currentValues.second == (conv_vec.rbegin()[1]).second) {
+		else if (lastValue_local.value == convergenceData_local.back().value) {
+			if (convergenceData_local.size() > 1 && lastValue_local.value == (convergenceData_local.rbegin()[1]).value) {
 				// if the value remains constant, just update the nbDesorbptions
-				conv_vec.back().first = currentValues.first;
+				convergenceData_local.back().nbDes = lastValue_local.nbDes;
 				hasChanged = true;
 			}
 			else {
 				// if there was no previous point with the same value, add a new one (only a second one to save space)
-				//convergenceValues[formulaId].n_samples += 1;
-				//convergenceValues[formulaId].conv_total += currentValues.second;
-				conv_vec.emplace_back(currentValues);
+				convergenceData_local.emplace_back(lastValue_local);
 				hasChanged = true;
 			}
 		}
 	}
-
 
 	return hasChanged;
 };
@@ -158,7 +157,7 @@ bool Formulas::FetchNewConvValue() {
 * \param skipLastN skips last N data points e.g. to retain a sharp view, while freeing other data points
 */
 void Formulas::removeEveryNth(size_t everyN, int formulaId, size_t skipLastN) {
-    auto &conv_vec = convergenceValues[formulaId].valueHistory;
+    auto &conv_vec = convergenceData[formulaId];
     for (int i = conv_vec.size() - everyN - skipLastN; i > 0; i = i - everyN)
         conv_vec.erase(conv_vec.begin() + i);
 }
@@ -169,7 +168,7 @@ void Formulas::removeEveryNth(size_t everyN, int formulaId, size_t skipLastN) {
  * \param formulaId formula whose convergence values shall be pruned
 */
 void Formulas::removeFirstN(size_t n, int formulaId) {
-    auto &conv_vec = convergenceValues[formulaId].valueHistory;
+    auto &conv_vec = convergenceData[formulaId];
     conv_vec.erase(conv_vec.begin(), conv_vec.begin() + std::min(n, conv_vec.size()));
 }
 
@@ -182,31 +181,31 @@ double Formulas::GetConvRate(int formulaId) {
     double sumValSquared = 0.0;
     double sumVal = 0.0;
     for(auto& convVal : conv_vec){
-        sumValSquared += convVal.second * convVal.second;
-        sumVal += convVal.second;
+        sumValSquared += convVal.value * convVal.value;
+        sumVal += convVal.value;
     }
     double invN = 1.0 / conv_vec.size();
     double var = invN * sumValSquared - std::pow(invN * sumVal,2);
     double convDelta = 3.0 * std::sqrt(var) / (conv_vec.size() * conv_vec.size());
 
-    if(convDelta / conv_vec.back().second < 1.0e-6) Log::console_msg(2, "[1] Sufficient convergent reached: {:e}\n", convDelta / conv_vec.back().second);
+    if(convDelta / conv_vec.back().value < 1.0e-6) Log::console_msg(2, "[1] Sufficient convergent reached: {:e}\n", convDelta / conv_vec.back().value);
 
     double xmean = sumVal * invN;
     double varn = 0.0;
     for(auto& convVal : conv_vec){
-        varn += std::pow(convVal.second - xmean,2);
+        varn += std::pow(convVal.value - xmean,2);
     }
     varn *= 1.0 / (conv_vec.size() - 1.0);
     double quant95Val = 1.96 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant99Val = 2.576 * std::sqrt(varn) / std::sqrt(conv_vec.size());
     double quant995Val = 3.0 * std::sqrt(varn) / std::sqrt(conv_vec.size());
-    if(xmean - quant95Val <= conv_vec.back().second && xmean + quant95Val >= conv_vec.back().second) Log::console_msg(2, "[95.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant95Val, xmean + quant95Val);
-    else if(xmean - quant99Val <= conv_vec.back().second && xmean + quant99Val >= conv_vec.back().second) Log::console_msg(2, "[99.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant99Val, xmean + quant99Val);
-    else if(xmean - quant995Val <= conv_vec.back().second && xmean + quant995Val >= conv_vec.back().second) Log::console_msg(2, "[99.5] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
+    if(xmean - quant95Val <= conv_vec.back().value && xmean + quant95Val >= conv_vec.back().value) Log::console_msg(2, "[95.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().value, xmean - quant95Val, xmean + quant95Val);
+    else if(xmean - quant99Val <= conv_vec.back().value && xmean + quant99Val >= conv_vec.back().value) Log::console_msg(2, "[99.0] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().value, xmean - quant99Val, xmean + quant99Val);
+    else if(xmean - quant995Val <= conv_vec.back().value && xmean + quant995Val >= conv_vec.back().value) Log::console_msg(2, "[99.5] Sufficient convergent reached: {:e} in [{:e} , {:e}]\n", conv_vec.back().value, xmean - quant995Val, xmean + quant995Val);
     else {
-        double dist = std::min(conv_vec.back().second - xmean + quant995Val, conv_vec.back().second + xmean - quant995Val);
-        Log::console_msg(2, "[4] Convergence distance to a995: {:e} --> {:e} close to [{:e} , {:e}]\n", dist, conv_vec.back().second, xmean - quant995Val, xmean + quant995Val);
-        Log::console_msg(2, "[4] Abs to a95: {:e} --> Rel to a95: {:e} / {:e}\n", quant95Val, (conv_vec.back().second - xmean) / xmean, (quant95Val / conv_vec.back().second));
+        double dist = std::min(conv_vec.back().value - xmean + quant995Val, conv_vec.back().value + xmean - quant995Val);
+        Log::console_msg(2, "[4] Convergence distance to a995: {:e} --> {:e} close to [{:e} , {:e}]\n", dist, conv_vec.back().value, xmean - quant995Val, xmean + quant995Val);
+        Log::console_msg(2, "[4] Abs to a95: {:e} --> Rel to a95: {:e} / {:e}\n", quant95Val, (conv_vec.back().value - xmean) / xmean, (quant95Val / conv_vec.back().value));
     }
     return convDelta;
 }
@@ -243,11 +242,11 @@ bool Formulas::CheckASCBR(int formulaId) {
     // done outside
 
     // Step 2: Increment value for variable total T
-    // done outside in FetchNewConvValue()
+    // done outside in RecordNewConvergenceDataPoint()
 
     // & calculate new mean
     //double conv_mean_local = convData.conv_total / convData.n_samples;
-    const double conv_mean_local = convData.valueHistory.back().second;
+    const double conv_mean_local = convData.valueHistory.back().value;
 
     // Step 3: Check if mean still within bounds
     bool withinBounds = (conv_mean_local >= convData.lower_bound && conv_mean_local <= convData.upper_bound) ? true : false;

@@ -252,23 +252,29 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 		std::string avgExpression;
 		avgExpression += currentChar;
 		while (currentChar != ')') {
+			if (currentPos == expression.length()) SetParseError("\"AVG(\" expression without closing \")\"", currentPos);
 			AV();
 			avgExpression += currentChar;
 		};
-		AV();
-		auto varIterator = AddVar(avgExpression);
-		resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
+		if (!hasParseError) {
+			AV();
+			auto varIterator = AddVar(avgExpression);
+			resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
+		}
 	}
 	else if (iBeginsWith(expression,"SUM(")) {
 		std::string sumExpression;
 		sumExpression += currentChar;
 		while (currentChar != ')') {
+			if (currentPos == expression.length()) SetParseError("\"SUM(\" expression without closing \")\"",currentPos);
 			AV();
 			sumExpression += currentChar;
 		};
-		AV();
-		auto varIterator = AddVar(sumExpression);
-		resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
+		if (!hasParseError) {
+			AV();
+			auto varIterator = AddVar(sumExpression);
+			resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
+		}
 	}
 	else if (std::string term = "pi"; iBeginsWith(expression.substr(currentPos), term)) {
 		AV(term.length());
@@ -572,6 +578,7 @@ double GLFormula::Evaluate()
 {	
 	if (!evalTree) throw Error("Formula not parsed");
 	if (hasParseError) throw Error("Formula couldn't be parsed");
+	if (hasEvalError) throw Error(evalErrorMsg); //created at variable evaluation during EvaluateFormulaVariables()->EvaluateVariable()
 
 	hasEvalError = false;
 	errno = 0;
@@ -580,8 +587,7 @@ double GLFormula::Evaluate()
 		return EvaluateNode(evalTree);
 	}
 	catch (std::exception& err) {
-		hasEvalError = true;
-
+		SetEvalError(err.what());
 		throw err;
 	}
 }

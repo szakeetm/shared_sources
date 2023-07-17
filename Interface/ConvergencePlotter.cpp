@@ -192,9 +192,8 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 * \brief Resets convergence data e.g. when simulation resets
 */
 void ConvergencePlotter::ResetData() {
-    //Rebuild vector size
-    for (auto &convVec : formula_ptr->convergenceValues) {
-        convVec = ConvergenceData();
+    for (auto &convVec : formula_ptr->convergenceData) {
+        convVec.clear();
     }
 }
 
@@ -365,9 +364,9 @@ void ConvergencePlotter::refreshViews() {
 
         v->Reset();
         if (worker->globalStatCache.globalHits.nbDesorbed > 0) {
-            auto& conv_vec = formula_ptr->convergenceValues[formId].valueHistory;
+            auto& conv_vec = formula_ptr->convergenceData[formId];
             for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
-                v->Add(conv_vec[j].first, conv_vec[j].second, false);
+                v->Add(conv_vec[j].nbDes, conv_vec[j].value, false);
         }
         v->CommitChange();
 

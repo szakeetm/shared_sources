@@ -25,12 +25,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLFormula.h"
 #include "FormulaEvaluator.h"
 
-struct ConvergenceData {
-    std::vector<std::pair<size_t,double>> valueHistory; //series of nbDes,value pairs 
-    // ASCBR values
-    double upper_bound=0.0;
-    double lower_bound=0.0;
-    size_t chain_length=0.0;
+struct FormulaHistoryDatapoint {
+    FormulaHistoryDatapoint() = default; //So that a vector for this can be defined
+    FormulaHistoryDatapoint(size_t _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
+    size_t nbDes=0.0;
+    double value=0.0;
 };
 
 //App storage of GLFormula with helper methods and convergence stuff
@@ -45,9 +44,9 @@ struct Formulas {
     void ClearFormulas();
 
     void UpdateVectorSize();
-    void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& previousFormulaValues);
+    void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues);
     void EvaluateFormulas(size_t nbDesorbed);
-    bool FetchNewConvValue();
+    bool RecordNewConvergenceDataPoint();
     //double GetConvRate(int formulaId);
     //void RestartASCBR(int formulaId);
     //bool CheckASCBR(int formulaId);
@@ -56,8 +55,8 @@ struct Formulas {
     void removeFirstN(size_t n, int formulaId);
 
     std::vector<GLFormula> formulas;
-    std::vector<std::pair<size_t,double>> previousFormulaValues; //nbDesorbed,value
-    std::vector<ConvergenceData> convergenceValues; // One per formula
+    std::vector<FormulaHistoryDatapoint> formulaValueCache; //One per formula. Keeps Evaluate() results (From EvaluateFormulas()) in memory so convergenc values can be recorded
+    std::vector<std::vector<FormulaHistoryDatapoint>> convergenceData; // One per formula
     //std::vector<size_t> freq_accum;
     bool convergenceDataChanged=true;
     bool recordConvergence=true;

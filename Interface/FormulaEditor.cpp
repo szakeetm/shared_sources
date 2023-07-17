@@ -162,8 +162,8 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 			std::swap(formula_ptr->formulas[selRow], formula_ptr->formulas[selRow - 1]);
-            std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow - 1]);
-            std::swap(formula_ptr->previousFormulaValues[selRow], formula_ptr->previousFormulaValues[selRow - 1]);
+            std::swap(formula_ptr->convergenceData[selRow], formula_ptr->convergenceData[selRow - 1]);
+            std::swap(formula_ptr->formulaValueCache[selRow], formula_ptr->formulaValueCache[selRow - 1]);
             formulaList->SetSelectedRow(selRow - 1);
 			EnableDisableMoveButtons();
 			Refresh();
@@ -176,8 +176,8 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 				return;
 			}
 			std::swap(formula_ptr->formulas[selRow], formula_ptr->formulas[selRow + 1]);
-            std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow + 1]);
-            std::swap(formula_ptr->previousFormulaValues[selRow], formula_ptr->previousFormulaValues[selRow + 1]);
+            std::swap(formula_ptr->convergenceData[selRow], formula_ptr->convergenceData[selRow + 1]);
+            std::swap(formula_ptr->formulaValueCache[selRow], formula_ptr->formulaValueCache[selRow + 1]);
             formulaList->SetSelectedRow(selRow + 1);
 			EnableDisableMoveButtons();
 			Refresh();
@@ -354,7 +354,7 @@ void FormulaEditor::UpdateValues() {
 	for (size_t i = 0; i < formula_ptr->formulas.size(); i++) {
 		// Evaluation
 		if (!formula_ptr->formulas[i].hasEvalError) { //Variables succesfully evaluated
-			double r = formula_ptr->previousFormulaValues[i].second;
+			double r = formula_ptr->formulaValueCache[i].value;
 			std::stringstream tmp;
 			tmp << r; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
 			formulaList->SetValueAt(2, i, tmp.str());
