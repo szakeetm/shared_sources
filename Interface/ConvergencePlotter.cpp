@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include "GLApp/GLList.h"
 #include "GLApp/GLChart/GLChart.h"
-#include "GLApp/GLParser.h"
+#include "GLApp/GLFormula.h"
 #include "Formulas.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"

@@ -23,7 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <memory>
 #include <vector>
-#include "GLApp/GLParser.h"
+#include "GLApp/GLFormula.h"
 #include "FormulaEvaluator.h"
 
 struct ConvergenceData {

@@ -1,5 +1,5 @@
 #pragma once
-#include "GLApp/GLParser.h"
+#include "GLApp/GLFormula.h"
 #include <vector>
 #include <string>
 #include <optional>

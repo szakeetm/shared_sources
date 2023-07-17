@@ -194,7 +194,7 @@ set(GL_FILES
         GLApp/GLMenu.cpp
         GLApp/GLMenuBar.cpp
         GLApp/GLMessageBox.cpp
-        GLApp/GLParser.cpp
+        GLApp/GLFormula.cpp
         GLApp/GLProgress_GUI.cpp
         GLApp/GLSaveDialog.cpp
         GLApp/GLScrollBar.cpp
