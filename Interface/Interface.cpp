@@ -2724,9 +2724,9 @@ int Interface::FrameMove() {
         //startSimu->SetFontColor(0, 140, 0);
     }
 
-    if(convergencePlotter && formulaEditor && formula_ptr->formulasChanged) {
+    if(convergencePlotter && formulaEditor && formula_ptr->convergenceDataChanged) {
         convergencePlotter->Refresh();
-        formula_ptr->formulasChanged = false;
+        formula_ptr->convergenceDataChanged = false;
     }
 
     /*

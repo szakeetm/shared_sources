@@ -62,7 +62,7 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
 
     work = w;
     formula_ptr = formulas;
-    formula_ptr->formulasChanged = false;
+    formula_ptr->convergenceDataChanged = false;
 
     SetTitle("Formula Editor");
     SetIconfiable(true);
@@ -88,7 +88,7 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
 
     sampleConvergenceTgl = new GLToggle(0, "Record values for convergence");
     sampleConvergenceTgl->SetState(true);
-    formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
+    formula_ptr->recordConvergence = sampleConvergenceTgl->GetState();
     Add(sampleConvergenceTgl);
 
     moveUpButton = new GLButton(0, "Move Up");
@@ -163,7 +163,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			}
 			std::swap(formula_ptr->formulas[selRow], formula_ptr->formulas[selRow - 1]);
             std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow - 1]);
-            std::swap(formula_ptr->lastFormulaValues[selRow], formula_ptr->lastFormulaValues[selRow - 1]);
+            std::swap(formula_ptr->previousFormulaValues[selRow], formula_ptr->previousFormulaValues[selRow - 1]);
             formulaList->SetSelectedRow(selRow - 1);
 			EnableDisableMoveButtons();
 			Refresh();
@@ -177,7 +177,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			}
 			std::swap(formula_ptr->formulas[selRow], formula_ptr->formulas[selRow + 1]);
             std::swap(formula_ptr->convergenceValues[selRow], formula_ptr->convergenceValues[selRow + 1]);
-            std::swap(formula_ptr->lastFormulaValues[selRow], formula_ptr->lastFormulaValues[selRow + 1]);
+            std::swap(formula_ptr->previousFormulaValues[selRow], formula_ptr->previousFormulaValues[selRow + 1]);
             formulaList->SetSelectedRow(selRow + 1);
 			EnableDisableMoveButtons();
 			Refresh();
@@ -185,7 +185,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 		break;
     case MSG_TOGGLE:
         if (src == sampleConvergenceTgl) {
-            formula_ptr->sampleConvValues = sampleConvergenceTgl->GetState();
+            formula_ptr->recordConvergence = sampleConvergenceTgl->GetState();
         }
         break;
 	case MSG_TEXT:
@@ -247,7 +247,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		EnableDisableMoveButtons();
-		formula_ptr->formulasChanged = true;
+		formula_ptr->convergenceDataChanged = true;
 
         formula_ptr->EvaluateFormulas(work->globalStatCache.globalHits.nbDesorbed);
         UpdateValues();
@@ -343,7 +343,7 @@ void FormulaEditor::Refresh() {
 		userFormulaNames[i] = formula_ptr->formulas[i].GetName();
 	}
 	RebuildList();
-    formula_ptr->formulasChanged = true;
+    formula_ptr->convergenceDataChanged = true;
     UpdateValues();
 }
 
@@ -354,7 +354,7 @@ void FormulaEditor::UpdateValues() {
 	for (size_t i = 0; i < formula_ptr->formulas.size(); i++) {
 		// Evaluation
 		if (!formula_ptr->formulas[i].hasEvalError) { //Variables succesfully evaluated
-			double r = formula_ptr->lastFormulaValues[i].second;
+			double r = formula_ptr->previousFormulaValues[i].second;
 			std::stringstream tmp;
 			tmp << r; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
 			formulaList->SetValueAt(2, i, tmp.str());

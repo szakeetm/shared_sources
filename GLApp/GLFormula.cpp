@@ -4,7 +4,7 @@
 //#include <malloc.h>
 #include <math.h>
 #include <errno.h>
-#include "GLParser.h"
+#include "GLFormula.h"
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
 #if defined(MOLFLOW)

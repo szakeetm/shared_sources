@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_FORMULAS_H
-#define MOLFLOW_PROJ_FORMULAS_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -27,23 +26,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FormulaEvaluator.h"
 
 struct ConvergenceData {
-    ConvergenceData() : /*conv_total(0.0), n_samples(0),*/ upper_bound(0.0), lower_bound(0.0), chain_length(0) {};
-    std::vector<std::pair<size_t,double>> conv_vec; //series of nbDes,value pairs 
-    //double conv_total; /* for now unused accumulator, where convegence values are summed up */
-    //size_t n_samples;
-
+    std::vector<std::pair<size_t,double>> valueHistory; //series of nbDes,value pairs 
     // ASCBR values
-    double upper_bound;
-    double lower_bound;
-    size_t chain_length;
+    double upper_bound=0.0;
+    double lower_bound=0.0;
+    size_t chain_length=0.0;
 };
 
-//! Defines a formula object that can be used to retrieve and store a parsed result
+//App storage of GLFormula with helper methods and convergence stuff
 struct Formulas {
 
-    Formulas(std::shared_ptr<FormulaEvaluator> eval) : formulasChanged(true), sampleConvValues(true), epsilon(5), cb_length(51), useAbsEps(true){
+    Formulas(std::shared_ptr<FormulaEvaluator> eval) {
         evaluator=eval;
-        freq_accum.resize(cb_length);
+        //freq_accum.resize(cb_length);
     };
 
     void AddFormula(const std::string& name, const std::string& expression);
@@ -53,26 +48,22 @@ struct Formulas {
     void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& previousFormulaValues);
     void EvaluateFormulas(size_t nbDesorbed);
     bool FetchNewConvValue();
-    double GetConvRate(int formulaId);
-    void RestartASCBR(int formulaId);
-    bool CheckASCBR(int formulaId);
-    double ApproxShapeParameter();
-    double ApproxShapeParameter2();
+    //double GetConvRate(int formulaId);
+    //void RestartASCBR(int formulaId);
+    //bool CheckASCBR(int formulaId);
 
-    void pruneEveryN(size_t everyN, int formulaId, size_t skipLastN);
-    void pruneFirstN(size_t n, int formulaId);
+    void removeEveryNth(size_t everyN, int formulaId, size_t skipLastN);
+    void removeFirstN(size_t n, int formulaId);
 
     std::vector<GLFormula> formulas;
-    std::vector<std::pair<size_t,double>> lastFormulaValues; //nbDesorbed,value
+    std::vector<std::pair<size_t,double>> previousFormulaValues; //nbDesorbed,value
     std::vector<ConvergenceData> convergenceValues; // One per formula
-    std::vector<size_t> freq_accum;
-    bool formulasChanged;
-    bool sampleConvValues;
+    //std::vector<size_t> freq_accum;
+    bool convergenceDataChanged=true;
+    bool recordConvergence=true;
 
-    bool useAbsEps;
-    int epsilon;
-    size_t cb_length;
+    //bool useAbsEps=true;
+    //int epsilon=5;
+    //size_t cb_length=51;
     std::shared_ptr<FormulaEvaluator> evaluator=nullptr;
 };
-
-#endif //MOLFLOW_PROJ_FORMULAS_H

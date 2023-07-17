@@ -23,8 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 
 // convergence constants
-constexpr size_t max_vector_size() { return 65536; };
-constexpr size_t d_precision() { return 5; };
+constexpr size_t max_vector_size = 65536;
 
 //! Add a formula to the formula storage
 void Formulas::AddFormula(const std::string& name, const std::string& expression) {
@@ -71,8 +70,8 @@ void Formulas::UpdateVectorSize() {
     if (convergenceValues.size() != nbFormulas) {
         convergenceValues.resize(nbFormulas);
     }
-    if (lastFormulaValues.size() != nbFormulas) {
-        lastFormulaValues.resize(nbFormulas);
+    if (previousFormulaValues.size() != nbFormulas) {
+        previousFormulaValues.resize(nbFormulas);
     }
 }
 
@@ -90,7 +89,7 @@ void Formulas::EvaluateFormulas(size_t nbDesorbed) {
         EvaluateFormulaVariables(i,previousFormulaValues);
         try {
             double value = formulas[i].Evaluate();       
-            lastFormulaValues[i] = std::make_pair(nbDesorbed, value);
+            previousFormulaValues[i] = std::make_pair(nbDesorbed, value);
             previousFormulaValues.push_back({ formulas[i].GetName(),value });
         }
         catch (...) {
@@ -110,13 +109,13 @@ bool Formulas::FetchNewConvValue() {
 			continue;
 		}
 
-		auto& currentValues = lastFormulaValues[formulaId];
+		auto& currentValues = previousFormulaValues[formulaId];
 		// Check against potential nan values to skip
 		if (std::isnan(currentValues.second))
 			continue;
-		auto& conv_vec = convergenceValues[formulaId].conv_vec;
-		if (conv_vec.size() >= max_vector_size()) {
-			pruneEveryN(4, formulaId, 1000); // delete every 4th element for now
+		auto& conv_vec = convergenceValues[formulaId].valueHistory;
+		if (conv_vec.size() >= max_vector_size) {
+			removeEveryNth(4, formulaId, 1000); // delete every 4th element for now
 			hasChanged = true;
 		}
 		// Insert new value when completely new value pair inserted
@@ -158,8 +157,8 @@ bool Formulas::FetchNewConvValue() {
 * \param formulaId formula whose convergence values shall be pruned
 * \param skipLastN skips last N data points e.g. to retain a sharp view, while freeing other data points
 */
-void Formulas::pruneEveryN(size_t everyN, int formulaId, size_t skipLastN) {
-    auto &conv_vec = convergenceValues[formulaId].conv_vec;
+void Formulas::removeEveryNth(size_t everyN, int formulaId, size_t skipLastN) {
+    auto &conv_vec = convergenceValues[formulaId].valueHistory;
     for (int i = conv_vec.size() - everyN - skipLastN; i > 0; i = i - everyN)
         conv_vec.erase(conv_vec.begin() + i);
 }
@@ -169,18 +168,15 @@ void Formulas::pruneEveryN(size_t everyN, int formulaId, size_t skipLastN) {
  * \param n amount of elements that should be removed from the front
  * \param formulaId formula whose convergence values shall be pruned
 */
-void Formulas::pruneFirstN(size_t n, int formulaId) {
-    auto &conv_vec = convergenceValues[formulaId].conv_vec;
+void Formulas::removeFirstN(size_t n, int formulaId) {
+    auto &conv_vec = convergenceValues[formulaId].valueHistory;
     conv_vec.erase(conv_vec.begin(), conv_vec.begin() + std::min(n, conv_vec.size()));
 }
 
-/**
-* \brief Removes first n elements from the convergence vector
- * \param formulaId formula whose convergence values shall be pruned
-*/
+/*
 double Formulas::GetConvRate(int formulaId) {
 
-    auto &conv_vec = convergenceValues[formulaId].conv_vec;
+    auto &conv_vec = convergenceValues[formulaId].valueHistory;
     if(conv_vec.empty()) return 0.0;
 
     double sumValSquared = 0.0;
@@ -214,10 +210,12 @@ double Formulas::GetConvRate(int formulaId) {
     }
     return convDelta;
 }
+*/
 
 /**
 * \brief Restart values for ASCBR in case method parameters changed
 */
+/*
 void Formulas::RestartASCBR(int formulaId){
     auto& convData = convergenceValues[formulaId];
     convData.chain_length = 0;
@@ -226,16 +224,18 @@ void Formulas::RestartASCBR(int formulaId){
     freq_accum.clear();
     freq_accum.resize(cb_length);
 }
+*/
 
 /**
 * \brief Check stopping criterium based on *acceptable shifting convergence band rule* (ASCBR)
  * \param formulaId formula whose conv values should be checked for
  * \return true = end condition met: run algorithm until (chain length == cb_length)
 */
+/*
 bool Formulas::CheckASCBR(int formulaId) {
     // Initialize
     auto& convData = convergenceValues[formulaId];
-    if(convData.conv_vec.empty()) return false;
+    if(convData.valueHistory.empty()) return false;
 
     const size_t cb_len = cb_length; // convergence band length
 
@@ -247,7 +247,7 @@ bool Formulas::CheckASCBR(int formulaId) {
 
     // & calculate new mean
     //double conv_mean_local = convData.conv_total / convData.n_samples;
-    const double conv_mean_local = convData.conv_vec.back().second;
+    const double conv_mean_local = convData.valueHistory.back().second;
 
     // Step 3: Check if mean still within bounds
     bool withinBounds = (conv_mean_local >= convData.lower_bound && conv_mean_local <= convData.upper_bound) ? true : false;
@@ -271,29 +271,4 @@ bool Formulas::CheckASCBR(int formulaId) {
 
     return convData.chain_length > cb_len;
 }
-
-double Formulas::ApproxShapeParameter() {
-    // Initialize
-    double shape_param = 0.0;
-    double den = 0.0;
-    for(int i = 1; i < cb_length; ++i){
-        den += (double) i * freq_accum[i];
-    }
-    if(den <= 1e-8) den = 1.0;
-    shape_param = 1.0 - freq_accum[1] / den;
-
-    return shape_param;
-}
-
-double Formulas::ApproxShapeParameter2() {
-    // Initialize
-    double shape_param = 0.0;
-    double den = 0.0;
-    for(int i = 1; i < cb_length; ++i){
-        den += (double) i * freq_accum[i];
-    }
-    if(den <= 1e-8) den = 1.0;
-    shape_param = 1.0 - freq_accum[0] / den;
-
-    return shape_param;
-}
+*/

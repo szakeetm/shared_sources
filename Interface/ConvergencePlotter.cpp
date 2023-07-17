@@ -265,7 +265,7 @@ void ConvergencePlotter::Display(Worker *w) {
 * \param appTime current time of the application
 */
 void ConvergencePlotter::Update(float appTime) {
-    if (formula_ptr->formulas.empty() || !formula_ptr->sampleConvValues || !nbView) {
+    if (formula_ptr->formulas.empty() || !formula_ptr->recordConvergence || !nbView) {
         return;
     }
 
@@ -365,7 +365,7 @@ void ConvergencePlotter::refreshViews() {
 
         v->Reset();
         if (worker->globalStatCache.globalHits.nbDesorbed > 0) {
-            auto& conv_vec = formula_ptr->convergenceValues[formId].conv_vec;
+            auto& conv_vec = formula_ptr->convergenceValues[formId].valueHistory;
             for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
                 v->Add(conv_vec[j].first, conv_vec[j].second, false);
         }
@@ -470,12 +470,12 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 SetVisible(false);
             } else if (src == pruneEveryNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas.size(); ++formulaId) {
-                    formula_ptr->pruneEveryN(4, formulaId, 0);
+                    formula_ptr->removeEveryNth(4, formulaId, 0);
                 }
                 refreshViews();
             } else if (src == pruneFirstNButton) {
                 for (int formulaId = 0; formulaId < formula_ptr->formulas.size(); ++formulaId) {
-                    formula_ptr->pruneFirstN(100, formulaId);
+                    formula_ptr->removeFirstN(100, formulaId);
                 }
                 refreshViews();
             } else if (src == addButton) {
