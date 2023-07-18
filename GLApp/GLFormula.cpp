@@ -453,6 +453,7 @@ double GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode>& node) {
 		}
 		else return a / b;
 	case OperandType::POW:
+	case OperandType::POWER:
 		r = pow(a, b);
 		if (errno != 0) {
 			throw Error(strerror(errno));
