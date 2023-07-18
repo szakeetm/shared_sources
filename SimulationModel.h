@@ -131,7 +131,7 @@ public:
         } else if (opacity == 0.0) {
             surface = std::make_shared<TransparentSurface>();
         } else {
-            surface = std::make_shared<AlphaSurface>(opacity);
+            surface = std::make_shared<SemiTransparentSurface>(opacity);
         }
         surfaces.insert(std::make_pair(opacity, surface));
         return surface.get();

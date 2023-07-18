@@ -40,10 +40,10 @@ public:
     };
 };
 
-class AlphaSurface : public Surface{
+class SemiTransparentSurface : public Surface{
     double opacity{1.0};
 public:
-    AlphaSurface(double opacity) : opacity(opacity){};
+    SemiTransparentSurface(double opacity) : opacity(opacity){};
     bool IsHardHit(const Ray &r) override {
         return (r.rng->rnd() < opacity);
     };
