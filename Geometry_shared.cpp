@@ -3589,9 +3589,7 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 		}
 
 		if (!file2) {
-			char errMsg[560];
-			sprintf(errMsg, "Cannot find %s", fName);
-			throw Error(errMsg);
+			throw Error("Cannot find " + fName);
 		}
 		InsertTXTGeom(*file2, n, true);
 	}
