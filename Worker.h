@@ -61,7 +61,6 @@ public:
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
-  void LoadTexturesSYN(FileReader& f, GlobalSimuState &globState, int version);  // Load a textures(throws Error)
   void RebuildTextures();
     void CalculateTextureLimits();
 
@@ -144,6 +143,7 @@ public:
   void SaveRegion(const char* fileName, int position, bool overwrite = false);
   void SetRegionFileLocation(const std::string fileName, int position);
   bool CheckFilenameConflict(const std::string& newPath, const size_t regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+  void LoadTexturesSYN(FileReader& f, GlobalSimuState& globState, int version);  // Load a textures(throws Error)
 
 
 #endif
@@ -153,9 +153,6 @@ public:
   std::shared_ptr<SimulationModel> model; //Worker constructs it, then passes to simcontroller
   FacetHistogramBuffer globalHistogramCache;
 
-  //float  startTime;         // Start time
-  //float  stopTime;          // Stop time
-  //float  simuTime;          // Total simulation time
   Chronometer simuTimer;
 
   std::string fullFileName; // Current loaded file
@@ -166,9 +163,9 @@ public:
 #if defined(MOLFLOW)
   std::vector<Parameter> interfaceParameterCache; //parameter cache for interface, file loading/saving and parameter editor, catalog parameters last
   int displayedMoment;
-  bool needsAngleMapStatusRefresh = false; //Interface helper: if IterfaceGeomToSimModel() constructs angle map, mark that facet adv. paramas update is necessary
+  bool needsAngleMapStatusRefresh = false; //Interface helper: if IterfaceGeomToSimModel() constructs angle map, mark that facet adv. params update is necessary
   
-  std::vector<Moment> moments;             //moments when a time-dependent simulation state is recorded
+  std::vector<Moment> interfaceMomentCache; //cache of model->tdParams.moments as frequently accessed in interface
   std::vector<UserMoment> userMoments;    //user-defined text values for defining time moments (can be time or time series)
 
   #endif
