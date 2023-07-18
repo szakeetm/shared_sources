@@ -72,8 +72,14 @@ void GLFormula::AV(size_t times)
 {
 	for (size_t i = 0; i < times; i++) {
 		do {
-			currentPos++;
-			currentChar = expression[currentPos];
+			++currentPos;
+			if (currentPos >= expression.size()) {
+				currentChar = 0; //imitate C string
+				//throw Error("Formula parser reached end of formula expecting more characters");
+			}
+			else {
+				currentChar = expression[currentPos];
+			}
 		} while (currentChar == ' ' || currentChar == '\t');
 	}
 }
@@ -124,10 +130,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::AddNode(OperandType type, std::variant<
 double GLFormula::ReadDouble()
 {
 	std::string numberStr, exponentStr;
-	int  oriPos;
 	int negativeExponent;
-
-	oriPos = currentPos;
 
 	do {
 		numberStr += currentChar;
@@ -252,9 +255,14 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 		std::string avgExpression;
 		avgExpression += currentChar;
 		while (currentChar != ')') {
-			if (currentPos == expression.length()) SetParseError("\"AVG(\" expression without closing \")\"", currentPos);
-			AV();
-			avgExpression += currentChar;
+			if (currentChar == 0) {
+				SetParseError("AVG( expression without closing )", currentPos);
+				break;
+			}
+			else {
+				AV();
+				avgExpression += currentChar;
+			}
 		};
 		if (!hasParseError) {
 			AV();
@@ -266,9 +274,13 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 		std::string sumExpression;
 		sumExpression += currentChar;
 		while (currentChar != ')') {
-			if (currentPos == expression.length()) SetParseError("\"SUM(\" expression without closing \")\"",currentPos);
-			AV();
-			sumExpression += currentChar;
+			if (currentChar == 0) {
+				SetParseError("SUM( expression without closing )", currentPos);
+				break;
+			} else {
+				AV();
+				sumExpression += currentChar;
+			}
 		};
 		if (!hasParseError) {
 			AV();
@@ -374,19 +386,25 @@ std::string GLFormula::GetParseErrorMsg() {
 bool GLFormula::Parse()
 {
 	if (expression.empty()) {
-		parseErrorMsg = "Empty expression";
+		SetParseError("Empty expression",0);
 		return false;
 	}
 
 	currentPos = 0;
 	currentChar = expression[0];
+	
 	hasParseError = false;
-	parseErrorMsg = "No error";
+	parseErrorMsg = "";
 
 	evalTree.reset();
 	variables.clear();
 
-	evalTree = ReadExpression();
+	try {
+		evalTree = ReadExpression();
+	}
+	catch (std::exception& err) {
+		SetParseError(err.what(), currentPos);
+	}
 
 	if (currentPos != (int)expression.length()) { //couldn't parse till end
 		SetParseError("Syntax error", currentPos);

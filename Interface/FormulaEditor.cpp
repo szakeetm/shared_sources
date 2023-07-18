@@ -352,18 +352,18 @@ void FormulaEditor::UpdateValues() {
 	// This only displays formula values already evaluated in formula_ptr
 	// Therefore formulas should be updated beforehand by calling formula_ptr->EvaluateFormulas
 	for (size_t i = 0; i < formula_ptr->formulas.size(); i++) {
-		// Evaluation
-		if (!formula_ptr->formulas[i].hasEvalError) { //Variables succesfully evaluated
-			double r = formula_ptr->formulaValueCache[i].value;
+		if (formula_ptr->formulas[i].hasParseError) {
+			formulaList->SetValueAt(2, i, formula_ptr->formulas[i].GetParseErrorMsg());
+		}
+		else if (formula_ptr->formulas[i].hasEvalError) {
+			formulaList->SetValueAt(2, i, formula_ptr->formulas[i].GetEvalErrorMsg());
+		} else {
 			std::stringstream tmp;
-			tmp << r; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
+			tmp << formula_ptr->formulaValueCache[i].value; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
 			formulaList->SetValueAt(2, i, tmp.str());
 #if defined(MOLFLOW)
 			formulaList->SetColumnColor(2,work->displayedMoment == 0 ? COLOR_BLACK : COLOR_BLUE);
 #endif
 		}
-		else { //Error while evaluating variables
-            formulaList->SetValueAt(2, i, formula_ptr->formulas[i].GetEvalErrorMsg());
-        }
 	}
 }

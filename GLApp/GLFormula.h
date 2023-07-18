@@ -133,7 +133,7 @@ private:
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
 	std::list<Variable>::iterator FindVar(const std::string& var_name);
 	void   SetParseError(const std::string& errMsg, int pos);
-	void   AV(size_t times = 1); //advance by one (or more) non-whitespace char
+	void   AV(size_t times = 1); //advance by one (or more) non-whitespace char. Throws error
 
 	std::string name;   // Name (optional)
 	
