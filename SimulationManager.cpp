@@ -221,13 +221,6 @@ int SimulationManager::CreateCPUHandle() {
                 /*StartProc(arguments, STARTPROC_NOWIN),*/
                 std::thread(&SimulationController::controlledLoop, &simControllers[0], NULL, nullptr),
                 SimType::simCPU);
-        /*simulations.emplace_back(Simulation{nbThreads});
-        procInformation.emplace_back(SubDProcInfo{});
-        simControllers.emplace_back(SimulationController{"molflow", processId, iProc, nbThreads, &simulations.back(), &procInformation.back()});
-        simHandles.emplace_back(
-                *//*StartProc(arguments, STARTPROC_NOWIN),*//*
-            std::thread(&SimulationController::controlledLoop,&simControllers.back(),NULL,nullptr),
-            SimType::simCPU);*/
         auto myHandle = simHandles.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
