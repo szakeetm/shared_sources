@@ -175,12 +175,12 @@ std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pa
 //An overload of the function above that accepts C-style arrays as data
 int lower_index(double key, const double* data, size_t array_size) {
 	const double* it = std::lower_bound(data, data + array_size, key);
-	return std::distance(data, it)-1; //off by one, see lower_index_universal for explanation
+	return static_cast<int>(std::distance(data, it))-1; //off by one, see lower_index_universal for explanation
 }
 
 int lower_index(const double key, const std::vector<double>& data) {
 	auto it = std::lower_bound(data.begin(), data.end(), key);
-	return std::distance(data.begin(), it) - 1;
+	return static_cast<int>(std::distance(data.begin(), it)) - 1;
 }
 
 int lower_index(const double key, const std::vector<std::pair<double, double>>& data, const bool first) {
@@ -188,7 +188,7 @@ int lower_index(const double key, const std::vector<std::pair<double, double>>& 
 		return first ? pair.first < val : pair.second < val;
 		});
 
-	return std::distance(data.begin(), it)-1;
+	return static_cast<int>(std::distance(data.begin(), it))-1;
 }
 
 int weighed_lower_index_X(const double  key, const double  weigh, double * A, double * B, const size_t  size)

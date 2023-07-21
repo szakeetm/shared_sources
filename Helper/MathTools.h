@@ -101,7 +101,7 @@ template <typename T> int lower_index(const double  key, const std::vector<std::
 		return pair.first < val;
 		});
 
-	return std::distance(data.begin(), it) - 1;
+	return static_cast<int>(std::distance(data.begin(), it)) - 1;
 }
 
 
