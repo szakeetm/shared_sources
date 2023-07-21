@@ -361,7 +361,7 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 		if (Contains({ "","not_set","default" }, tracker.userId)) {
 			//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
 			//It is generated based on the computer's network name and the logged in user name
-			//FOR USER PRIVACY, THESE ARE NOT SENT TO GOOGLE ANALYTICS, JUST AN ANONYMOUS HASH
+			//FOR USER PRIVACY, THESE ARE NOT SENT TO MATOMO ANALYTICS, JUST AN ANONYMOUS HASH
 			//Should get the same hash even in case of subsequent installs
 
 			GenerateUserId();
@@ -979,12 +979,19 @@ void UpdateCheckDialog::ProcessMessage(GLComponent *src, int message) {
 		}
 		else if (src == privacyButton) {
 			std::string privacyMessage =
-				R"(When an update check is performed, the server collects visitor statistics
-through Google Analytics. The same information is collected as when you visit
-any website. To count unique visitors, a client identifier (cookie) is set
-on the first update check. This is an anonymous hash that does not contain
-anything to identify you. The update check happens when you start the app,
-there isn't any network communication later.
+R"(When an update check is performed, the server collects visitor statistics
+through Matomo, an open-source, GDPR compliant web service (similar to Google Analytics).
+The same information is collected as when you visit a website. To count unique visitors,
+a client identifier (cookie) is set on the first update check. This is an anonymous hash
+that does not contain anything to identify you. This anonymous data is stored at CERN.
+The update check happens when you start the app, there isn't any network communication later.
+
+Exact data sent:
+- Your IP address, with the last two groups zeroed out (example 123.250.0.0)
+- The unique identifier (you can see in updater_config.xml) for ex. a16e87f420c04a
+- Your operating system and Molflow/Synrad version (ex. Win64 Molflow 1.2)
+- The window size of Molflow (ex. 1024x800)
+- The updater action (for ex. update check, update start, success or error)
 )";
 
 			GLMessageBox::Display(privacyMessage.c_str(), "About visitor statistics", GLDLG_OK, GLDLG_ICONINFO);
