@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 struct FormulaHistoryDatapoint {
     FormulaHistoryDatapoint() = default; //So that a vector for this can be defined
     FormulaHistoryDatapoint(size_t _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
-    size_t nbDes=0.0;
+    size_t nbDes=0;
     double value=0.0;
 };
 

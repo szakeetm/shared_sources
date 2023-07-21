@@ -400,7 +400,7 @@ bool InterfaceFacet::BuildMesh() {
 
 #pragma omp parallel  //safe to concurrently modify cellPropertiesIds, each thread writes to different index
 	{
-		std::map<int, CellProperties> meshvector_partial;
+		std::map<size_t, CellProperties> meshvector_partial;
 		
 #pragma omp for
 		for (int k = 0; k < sh.texHeight * sh.texWidth; k++) { //collapsed loop for omp

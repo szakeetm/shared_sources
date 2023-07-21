@@ -93,7 +93,7 @@ template <typename T> int lower_index(const double  key, const std::vector<T>& d
 	auto it = std::lower_bound(data.begin(), data.end(), key, [&](const T& obj, double val) {
 		return obj.GetElement(first) < val;
 		});
-	return std::distance(data.begin(), it) - 1;
+	return static_cast<int>(std::distance(data.begin(), it)) - 1;
 }
 template <typename T> int lower_index(const double  key, const std::vector<std::pair<double, T>>& data)
 {

@@ -785,7 +785,7 @@ int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge>
 int GeometryTools::GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // 1. The first step is also to form the pairs of integers (i.e., two arrays of integers)
-    std::vector<std::pair<int, int>> vertex_elements; // pairs of vertex IDs, element IDs
+    std::vector<std::pair<size_t, size_t>> vertex_elements; // pairs of vertex IDs, element IDs
 
     for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);

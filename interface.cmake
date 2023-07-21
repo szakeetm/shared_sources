@@ -128,13 +128,32 @@ ELSE() #not MSVC
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 endif() #NOT MSVC
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
-target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+#External libraries
 
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header only
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal) #header only
+target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
+
+#Suppress warnings for external libraries
+if(MSVC)
+    set(SUPPRESS_WARNINGS_FLAG "/w")
+else()
+    set(SUPPRESS_WARNINGS_FLAG "-w")
+endif()
+target_compile_options(pugixml PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(nativefiledialog PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+#target_compile_options(fmtlib_src PRIVATE ${SUPPRESS_WARNINGS_FLAG}) #header only
+target_compile_options(fmt PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+#target_compile_options(cereal PRIVATE ${SUPPRESS_WARNINGS_FLAG}) #header only
+target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
@@ -142,7 +161,6 @@ target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
 
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
 include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
