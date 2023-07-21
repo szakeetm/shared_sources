@@ -7,10 +7,11 @@ protected:
 	int progress = 0;
 	std::string status;
 public:
-	virtual void SetMessage(const std::string& msg, const bool newLine=true, const bool forceDraw=false);
+	virtual void SetMessage(const std::string& msg, const bool newLine=false, const bool forceDraw=false);
 	virtual void SetProgress(const double prg);
 	virtual double GetProgress();
 	virtual std::string GetMsg();
 	GLProgress_Abstract() = default;
 	GLProgress_Abstract(const std::string msg) : status(msg) {}
+	bool interactiveMode = true; //if false, don't print SetProgress percentage updates
 };
