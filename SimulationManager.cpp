@@ -45,13 +45,7 @@ SimulationManager::SimulationManager(int pid) {
     isRunning = false;
     hasErrorStatus = false;
     allProcsDone = false;
-
-    useCPU = false;
     nbThreads = 0;
-
-    useGPU = false;
-
-    useRemote = false;
 
     if(pid > -1)
         mainProcId = pid;
@@ -72,8 +66,8 @@ SimulationManager::~SimulationManager() {
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
     for(auto proc = simThreads.begin(); proc != simThreads.end() ; ){
-        if(!(*proc).first.joinable()){
-            auto myHandle = (*proc).first.native_handle();
+        if(!(*proc).joinable()){
+            auto myHandle = (*proc).native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
             TerminateThread(myHandle, 1);
 #else
@@ -103,7 +97,7 @@ int SimulationManager::StartSimulation() {
     if(interactiveMode) {
         refreshProcStatus();
         if (simThreads.empty())
-            throw std::logic_error("No active simulation handles!");
+            throw std::logic_error("No active simulation threads.");
 
         if (ExecuteAndWait(COMMAND_RUN, PROCESS_RUN, 0, 0)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
@@ -128,16 +122,14 @@ int SimulationManager::StopSimulation() {
     isRunning = false;
     if(interactiveMode) {
         refreshProcStatus();
-        if (simThreads.empty())
-            return 1;
+        if (simThreads.empty()) {
+            throw std::logic_error("No active simulation threads.");
+        }
 
         if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
     }
     else {
-        /*if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
-            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
-        */
         return 1;
     }
 
@@ -147,7 +139,7 @@ int SimulationManager::StopSimulation() {
 int SimulationManager::LoadSimulation(){
     if(interactiveMode) {
         if (simThreads.empty())
-            throw std::logic_error("No active simulation handles!");
+            throw std::logic_error("No active simulation threads");
 
         if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
             std::string errString = "Failed to send geometry to sub process:\n";

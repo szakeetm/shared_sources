@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
-#define MOLFLOW_PROJ_SIMULATIONCONTROLLER_H
+#pragma once
 
 #include <string>
 #include "SMP.h"
@@ -108,5 +107,3 @@ private:
     bool loadOk;
 
 };
-
-#endif //MOLFLOW_PROJ_SIMULATIONCONTROLLER_H

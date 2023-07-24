@@ -287,14 +287,11 @@ void Worker::ResetStatsAndHits(float appTime) {
 }
 
 void Worker::Stop() {
-	if (simManager.StopSimulation()) {
-		throw std::logic_error("No active simulation to stop!");
-	}
+	simManager.StopSimulation(); //throws error if no success
 }
 
 void Worker::InitSimProc() {
 
-	simManager.useCPU = true;
 	simManager.nbThreads = 0; // set to 0 to init max threads
 
 	// Launch n subprocess
