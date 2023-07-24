@@ -275,28 +275,14 @@ int SimulationManager::InitSimulations() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
-    try { //unti initSimulation will throw error
-        std::lock_guard<std::mutex> lock(model->modelMutex);
-    }
-    catch (...) {
-        return 1;
-    }
+void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
+    
+    std::lock_guard<std::mutex> lock(model->modelMutex); //throws error if unsuccessful
+
     // Prepare simulation unit
     ResetSimulations();
     ForwardSimModel(model);
     ForwardGlobalCounter(globStatePtr, nullptr);
-
-    //bool invalidLoad = LoadSimulation();
-
-    /*if(invalidLoad){
-        std::string errString = "Failed to send geometry to sub process:\n";
-        errString.append(GetErrorDetails());
-        throw std::runtime_error(errString);
-        return 1;
-    }*/
-
-    return 0;
 }
 
 /*!
