@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ProcessControl.h"
 #include "SimulationUnit.h"
 
-class Simulation;
+class Simulation_Abstract;
 
 /**
 * \brief Inidividual simulation states and settings per thread
@@ -33,7 +33,7 @@ class Simulation;
  */
 class SimHandle {
 public:
-    SimHandle(ProcComm* procInfoPtr, Simulation* simPtr, size_t threadNum);
+    SimHandle(ProcComm* procInfoPtr, Simulation_Abstract* simPtr, size_t threadNum);
 
     size_t threadNum;
     double stepsPerSec;
@@ -42,7 +42,7 @@ public:
     double timeLimit;
 
     ProcComm* masterProcInfoPtr;
-    Simulation* simulationPtr;
+    Simulation_Abstract* simulationPtr;
     MFSim::ParticleTracer* particleTracerPtr;
     bool runLoop();
     [[nodiscard]] std::string ConstructThreadStatus() const;
@@ -78,7 +78,7 @@ protected:
     size_t GetThreadStates() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                         Simulation *simulationInstance, ProcComm *pInfo);
+                         Simulation_Abstract *simulationInstance, ProcComm *pInfo);
     //~SimulationController();
     //SimulationController(SimulationController&& o) noexcept ;
     int controlledLoop(int argc = 0, char **argv = nullptr);
@@ -91,7 +91,7 @@ public:
     void EmergencyExit();
 protected:
 
-    Simulation* simulationPtr;
+    Simulation_Abstract* simulationPtr;
     std::vector<SimHandle> simThreadHandles;
 
     ProcComm* procInfoPtr;

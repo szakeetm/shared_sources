@@ -40,7 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define WAITTIME    500  // Answer in STOP mode
 
 
-SimHandle::SimHandle(ProcComm *procInfoPtr, Simulation *simPtr, size_t threadNum) {
+SimHandle::SimHandle(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t threadNum) {
     this->threadNum = threadNum;
     masterProcInfoPtr = procInfoPtr;
     timeLimit = 0.0;
@@ -217,7 +217,7 @@ bool SimHandle::runSimulation1sec(const size_t desorptions) {
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                                           Simulation *simulationInstance, ProcComm *pInfo) {
+                                           Simulation_Abstract *simulationInstance, ProcComm *pInfo) {
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)

@@ -181,7 +181,7 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
-    simulation = std::make_unique<Simulation>();
+    simulation = std::make_unique<Simulation_Abstract>();
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), &procInformation);
     
     if(interactiveMode) {

@@ -127,7 +127,7 @@ public:
 
 private:
     std::unique_ptr<SimulationController> simController;
-    std::unique_ptr<Simulation> simulation;
+    std::unique_ptr<Simulation_Abstract> simulation;
     std::vector<std::thread> simThreads;
 
 public:

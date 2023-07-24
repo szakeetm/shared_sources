@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //#include "../src/Simulation.h" //SubprocessFacet
 
 // AABBTree node
-class Simulation;
+class Simulation_Abstract;
 class SimulationFacet;
 
 class AABBNODE {
