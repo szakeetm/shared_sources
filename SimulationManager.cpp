@@ -66,9 +66,6 @@ SimulationManager::SimulationManager(int pid) {
 
 SimulationManager::~SimulationManager() {
     KillAllSimUnits();
-    for(auto& unit : simulations){
-        delete unit;
-    }
 }
 
 //! Refresh proc status by looking for those that can be safely killed and remove them
@@ -114,9 +111,7 @@ int SimulationManager::StartSimulation() {
     }
     else {
         procInformation.masterCmd  = COMMAND_RUN; // TODO: currently needed to not break the loop
-        for(auto& con : simControllers){
-            con.Start();
-        }
+        simController.Start();
     }
 
     if(allProcsDone){
@@ -162,11 +157,7 @@ int SimulationManager::LoadSimulation(){
         simulationChanged = false;
     }
     else{
-        bool errorOnLoad = false;
-        for(auto& con : simControllers){
-            errorOnLoad |= con.Load();
-        }
-        if(errorOnLoad){
+        if(simController.Load()){
             std::cerr << "Failed to load simulation!" << std::endl;
             return 1;
         }
@@ -195,14 +186,8 @@ int SimulationManager::CreateCPUHandle() {
 #endif // DEBUG
     }
 
-    //Delete existing simulations
-    for(auto& sim : simulations){
-        delete sim;
-    }
-
     size_t nbSimulations = 1; // nbThreads
     try{
-        simulations.resize(nbSimulations);
         procInformation.Resize(nbThreads);
         simControllers.clear();
         simHandles.clear();
@@ -212,11 +197,9 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
-    for(size_t t = 0; t < nbSimulations; ++t){
-        simulations[t] = new Simulation();
-    }
-    simControllers.emplace_back(SimulationController{processId, 0, nbThreads,
-                                                    simulations.back(), &procInformation});
+    simulation = Simulation();
+
+    simController = SimulationController(processId, 0, nbThreads, simulation, &procInformation);
     if(interactiveMode) {
         simHandles.emplace_back(
                 std::thread(&SimulationController::controlledLoop, &simControllers[0], NULL, nullptr),
@@ -254,20 +237,7 @@ int SimulationManager::CreateRemoteHandle() {
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
 int SimulationManager::InitSimulations() {
-
-    if(useCPU){
-        // Launch nbCores subprocesses
-        CreateCPUHandle();
-    }
-    if(useGPU){
-        CreateGPUHandle();
-        //procInformation.push_back(simControllers.back().procInfo);
-    }
-    if(useRemote){
-        CreateRemoteHandle();
-        //procInformation.push_back(simControllers.back().procInfo);
-    }
-
+    CreateCPUHandle();
     return WaitForProcStatus(PROCESS_READY);
 }
 
@@ -381,8 +351,7 @@ int SimulationManager::KillAllSimUnits() {
     if( !simHandles.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
-            for(auto& con : simControllers)
-                con.EmergencyExit();
+            simController.EmergencyExit();
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
                 int i = 0;
                 for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
@@ -457,9 +426,7 @@ int SimulationManager::ResetHits() {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     }
     else {
-        for(auto& con : simControllers){
-            con.Reset();
-        }
+        simController.Reset();
     }
     return 0;
 }
@@ -591,26 +558,20 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 }
 
 void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
-    for(auto& sim : simulations) {
         auto lock = GetHitLock(simStatePtr, 10000);
         if(!lock) return;
-        sim->globStatePtr = simStatePtr;
-        sim->globParticleLogPtr = particleLogPtr;
-    }
+        simulation.globStatePtr = simStatePtr;
+        simulation.globParticleLogPtr = particleLogPtr;
 }
 
 void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
-    for(auto& sim : simulations)
-        sim->model = model;
+    simulation.model = model;
 }
 
 // Create hard copy for local usage and resie particle logger
 void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
-    for(auto& sim : simulations) {
-        sim->model->otfParams = *otfParams;
-        sim->ReinitializeParticleLog();
-    }
-
+    simulation.model->otfParams = *otfParams;
+    simulation.ReinitializeParticleLog();
 }
 
 /**
@@ -618,15 +579,12 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
-    for(auto& simUnit : simulations){
-        if(simUnit->globStatePtr->facetStates.size() != hitCaches.size()) return;
-        if(!simUnit->simuStateMutex.try_lock_for(std::chrono::seconds(10)))
-            return;
+        if(simulation.globStatePtr->facetStates.size() != hitCaches.size()) return;
+        auto lock = GetHitLock(simulation.globStatePtr,10000);
+        if(!lock) return;
         for (size_t i = 0; i < hitCaches.size(); i++) {
-            simUnit->globStatePtr->facetStates[i].momentResults[0].hits = *hitCaches[i];
+            simulation.globStatePtr->facetStates[i].momentResults[0].hits = *hitCaches[i];
         }
-        simUnit->simuStateMutex.unlock();
-    }
 }
 
 /*

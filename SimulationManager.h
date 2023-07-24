@@ -34,6 +34,7 @@ class SimulationController;
 
 struct Dataport;
 
+/*
 enum class SimType : uint8_t {
     simCPU,
     simGPU,
@@ -105,7 +106,7 @@ public:
     int DecreasePriority();
     */
 
-    int RefreshRNGSeed(bool fixed);
+    //int RefreshRNGSeed(bool fixed);
 private:
     // Direct implementation for threads
     ProcComm procInformation; // process control, facilitates round-robin access
@@ -114,10 +115,6 @@ private:
 protected:
     //std::vector<Simulation_Abstract*> simHandles; // for threaded versions
 public:
-    // Flags for which simulation type should be run
-    bool useCPU;
-    bool useGPU;
-    bool useRemote;
 
     size_t nbThreads;
     size_t mainProcId;
@@ -129,8 +126,8 @@ public:
     bool simulationChanged; // sendOnly functionality from Worker::RealReload
 
 private:
-    std::vector<SimulationController> simControllers; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
-    std::vector<Simulation*> simulations; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
+    SimulationController simController;
+    Simulation simulation;
     std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
 
 public:
