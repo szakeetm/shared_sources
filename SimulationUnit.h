@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_SIMULATIONUNIT_H
-#define MOLFLOW_PROJ_SIMULATIONUNIT_H
+#pragma once
 
 #include "SMP.h"
 #include "Buffer_shared.h"
@@ -33,7 +32,7 @@ namespace MFSim {
 }
 
 /**
-* \brief Abstract Simulation unit that is implemented for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation. Old name is "SimulationUnit"
+* \brief Abstract Simulation unit that is implemented as Simulation for the CPU based simulations for Synrad and Molflow. Its implemented child class is Simulation. Old name is "SimulationUnit"
  */
 class Simulation_Abstract {
 public:
@@ -68,5 +67,3 @@ public:
 
     size_t totalDesorbed; // todo: should be a "sim counter"
 };
-
-#endif //MOLFLOW_PROJ_SIMULATIONUNIT_H

@@ -314,7 +314,6 @@ void Worker::SetProcNumber(size_t n) {
 		throw Error("Killing subprocesses failed!");
 	}
 
-	simManager.useCPU = true;
 	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess

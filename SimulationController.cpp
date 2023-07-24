@@ -40,7 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define WAITTIME    500  // Answer in STOP mode
 
 
-SimHandle::SimHandle(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t threadNum) {
+SimHandle::SimHandle(ProcComm *procInfoPtr, Simulation *simPtr, size_t threadNum) {
     this->threadNum = threadNum;
     masterProcInfoPtr = procInfoPtr;
     timeLimit = 0.0;
@@ -217,7 +217,7 @@ bool SimHandle::runSimulation1sec(const size_t desorptions) {
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                                           Simulation_Abstract *simulationInstance, ProcComm *pInfo) {
+                                           Simulation *simulationInstance, ProcComm *pInfo) {
     this->prIdx = procIdx;
     this->parentPID = parentPID;
     if (nbThreads == 0)
@@ -245,8 +245,9 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
     SetReady(false);
 }
 
-SimulationController::~SimulationController() = default;
+//SimulationController::~SimulationController() = default;
 
+/*
 SimulationController::SimulationController(SimulationController &&o) noexcept {
     simulationPtr = o.simulationPtr;
     procInfoPtr = o.procInfoPtr;
@@ -270,6 +271,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
         simThreadHandles.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
     }
 }
+*/
 
 int SimulationController::resetControls() {
     lastHitUpdateOK = true;
@@ -417,7 +419,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 DEBUG_PRINT("[%zd] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 if (UpdateParams()) {
                     SetReady(loadOk);
-                    //SetThreadStates(procInfo->cmdParam2, GetThreadStatuses());
                 } else {
                     SetThreadStates(PROCESS_ERROR, "Could not update parameters");
                 }
@@ -494,7 +495,7 @@ bool SimulationController::Load() {
         if (!loadError) { // loadOk = Load();
             loadOk = true;
 
-            {//if(nbThreads != simThreads.size()) {
+            {
                 simThreadHandles.clear();
                 simThreadHandles.reserve(nbThreads);
                 for (size_t t = 0; t < nbThreads; t++) {
@@ -669,6 +670,6 @@ int SimulationController::Reset() {
 }
 
 void SimulationController::EmergencyExit(){
-    for(auto& t : simThreads)
-        t.particleTracerPtr->allQuit = true;
+    for(auto& thread : simThreadHandles)
+        thread.particleTracerPtr->allQuit = true;
 };

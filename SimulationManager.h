@@ -40,6 +40,7 @@ enum class SimType : uint8_t {
     simGPU,
     simRemote
 };
+*/
 
 enum class LoadType : uint8_t {
     LOADGEOM,
@@ -115,19 +116,18 @@ private:
 protected:
     //std::vector<Simulation_Abstract*> simThreads; // for threaded versions
 public:
-
-    size_t nbThreads;
+    size_t nbThreads=0;
     size_t mainProcId;
 
-    bool interactiveMode; // Looks like enables logging (off for test cases)
-    bool isRunning;
-    bool allProcsDone;
-    bool hasErrorStatus;
-    bool simulationChanged; // sendOnly functionality from Worker::RealReload
+    bool interactiveMode=true;
+    bool isRunning=false;
+    bool allProcsDone=false;
+    bool hasErrorStatus=false;
+    bool simulationChanged = true; // by default, always init simulation process the first time
 
 private:
-    SimulationController simController;
-    Simulation simulation;
+    std::unique_ptr<SimulationController> simController;
+    std::unique_ptr<Simulation> simulation;
     std::vector<std::thread> simThreads;
 
 public:

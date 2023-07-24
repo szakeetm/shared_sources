@@ -86,7 +86,7 @@ struct ProcComm {
     size_t cmdParam;
     size_t cmdParam2;
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
-    std::mutex m;
+    std::mutex procCommMutex;
     std::vector<SubProcInfo> subProcInfos;
 
     ProcComm();

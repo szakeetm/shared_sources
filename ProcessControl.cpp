@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ProcessControl.h"
 #include <cstring>
 
-ProcComm::ProcComm() : m() {
+ProcComm::ProcComm() : procCommMutex() {
     masterCmd = 0;
     cmdParam = 0;
     cmdParam2 = 0;
@@ -54,30 +54,30 @@ ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
 
 //! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
 void ProcComm::NextSubProc() {
-    this->m.lock();
+    this->procCommMutex.lock();
     activeProcs.emplace_back(activeProcs.front());
     activeProcs.pop_front();
-    this->m.unlock();
+    this->procCommMutex.unlock();
 }
 
 //! Removes a process from the active list, in case it is finished
 void ProcComm::RemoveAsActive(size_t id) {
-    this->m.lock();
+    this->procCommMutex.lock();
     for(auto proc = activeProcs.begin(); proc != activeProcs.end(); ++proc){
         if(id == (*proc)) {
             activeProcs.erase(proc);
             break;
         }
     }
-    this->m.unlock();
+    this->procCommMutex.unlock();
 }
 
 //! Init list of active/simulating processes
 void ProcComm::InitActiveProcList() {
-    this->m.lock();
+    this->procCommMutex.lock();
     activeProcs.clear();
     for(size_t id = 0; id < this->subProcInfos.size(); ++id)
         activeProcs.emplace_back(id);
-    this->m.unlock();
+    this->procCommMutex.unlock();
 }
 
