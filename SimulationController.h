@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ProcessControl.h"
 #include "SimulationUnit.h"
 
-class Simulation_Abstract;
+//class Simulation_Abstract;
 
 /**
 * \brief Inidividual simulation states and settings per thread

@@ -101,7 +101,7 @@ public:
     double tMax;     // To keep track of shortest intersection
 
     double time; // Only for td simulations in Molflow
-    int lastIntersected; // id of last intersected entity
+    int lastIntersected=-1; // id of last intersected entity
     int structure; // id of structure in which ray currently interacts
     //const Medium *medium;
     Payload *pay;

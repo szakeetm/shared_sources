@@ -62,8 +62,8 @@ public:
     virtual void ConstructParticleTracers(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
-    GlobalSimuState* globStatePtr;
-    ParticleLog* globParticleLogPtr; //Recorded particle log since last UpdateMCHits
+    GlobalSimuState* globStatePtr=nullptr;
+    ParticleLog* globParticleLogPtr=nullptr; //Recorded particle log since last UpdateMCHits
 
-    size_t totalDesorbed; // todo: should be a "sim counter"
+    size_t totalDesorbed=0; // todo: should be a "sim counter"
 };
