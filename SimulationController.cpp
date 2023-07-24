@@ -21,7 +21,15 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 #include <sstream>
 #include "SimulationController.h"
-#include "../src/Simulation/Simulation.h"
+
+#ifdef MOLFLOW
+#include "../src/Simulation/MolflowSimulation.h"
+#endif
+
+#ifdef SYNRAD
+#include "../src/Simulation/SynradSimulation.h"
+#endif
+
 #include "ProcessControl.h"
 #include <Helper/ConsoleLogger.h>
 #include <Helper/OutputHelper.h>

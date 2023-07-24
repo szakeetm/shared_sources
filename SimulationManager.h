@@ -24,7 +24,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include <string>
 #include <thread>
-#include "../src/Simulation/Simulation.h"
+#ifdef MOLFLOW
+#include "../src/Simulation/MolflowSimulation.h"
+#endif
+
+#ifdef SYNRAD
+#include "../src/Simulation/SynradSimulation.h"
+#endif
 #include "ProcessControl.h"
 
 typedef unsigned char BYTE;

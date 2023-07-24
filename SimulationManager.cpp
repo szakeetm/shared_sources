@@ -36,7 +36,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <fstream>
 #include <iostream>
 #include <cereal/archives/binary.hpp>
-#include <../src/Simulation/Simulation.h>
+#ifdef MOLFLOW
+#include "../src/Simulation/MolflowSimulation.h"
+#endif
+
+#ifdef SYNRAD
+#include "../src/Simulation/SynradSimulation.h"
+#endif
 #include <Helper/ConsoleLogger.h>
 
 SimulationManager::SimulationManager(int pid) {
@@ -181,7 +187,13 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
-    simulation = std::make_unique<Simulation_Abstract>();
+ //Dirty
+#ifdef MOLFLOW
+    simulation = std::make_unique<MolflowSimulation>();
+#endif
+#ifdef SYNRAD
+    simulation = std::make_unique<SynradSimulation>();
+#endif
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), &procInformation);
     
     if(interactiveMode) {
