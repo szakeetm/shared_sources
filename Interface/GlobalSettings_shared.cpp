@@ -225,9 +225,11 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
             if (src == lowFluxToggle) {
                 cutoffText->SetEditable(lowFluxToggle->GetState());
             }
+            /*
             else if (src == prioToggle) {
                 worker->ChangePriority(prioToggle->GetState());
             }
+            */
             break;
     }
     //GLWindow::ProcessMessage(src, message); //Let molflow/synrad child functions Gloablsettings::ProcessMessage call them

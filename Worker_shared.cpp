@@ -170,7 +170,7 @@ bool Worker::ReloadIfNeeded() {
 
 ParticleLog& Worker::GetLog() {
 	try {
-		if (!particleLog.tMutex.try_lock_for(std::chrono::seconds(1)))
+		if (!particleLog.simuStateMutex.try_lock_for(std::chrono::seconds(1)))
 			throw std::runtime_error("Couldn't get log access");
 		ReloadIfNeeded();
 	}
@@ -181,7 +181,7 @@ ParticleLog& Worker::GetLog() {
 }
 
 void Worker::UnlockLog() {
-	particleLog.tMutex.unlock();
+	particleLog.simuStateMutex.unlock();
 }
 
 void Worker::ThrowSubProcError(const char* message) {
@@ -593,12 +593,14 @@ void Worker::GetProcStatus(ProcComm& procInfoList) {
 	simManager.GetProcStatus(procInfoList);
 }
 
+/*
 void Worker::ChangePriority(int prioLevel) {
 	if (prioLevel)
 		simManager.IncreasePriority();
 	else
 		simManager.DecreasePriority();
 }
+*/
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
 	if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;

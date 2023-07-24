@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_PROCESSCONTROL_H
-#define MOLFLOW_PROJ_PROCESSCONTROL_H
+#pragma once
 
 #include <cstddef> //size_t
 #include <vector>
@@ -108,5 +107,3 @@ struct ProcComm {
 
     void InitActiveProcList();
 };
-
-#endif //MOLFLOW_PROJ_PROCESSCONTROL_H

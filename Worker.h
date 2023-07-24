@@ -98,7 +98,7 @@ public:
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
     void GetProcStatus(ProcComm &procInfoList);// Get process status
-    void ChangePriority(int prioLevel);
+    //void ChangePriority(int prioLevel);
 
     bool ReloadIfNeeded(); // Access to dataport (HIT)
     ParticleLog & GetLog();

@@ -100,8 +100,10 @@ public:
 
     bool GetRunningStatus();
 
+    /*
     int IncreasePriority();
     int DecreasePriority();
+    */
 
     int RefreshRNGSeed(bool fixed);
 private:
@@ -127,10 +129,9 @@ public:
     bool simulationChanged; // sendOnly functionality from Worker::RealReload
 
 private:
-    std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
-    //std::vector<std::thread> cpuSim;
     std::vector<SimulationController> simControllers; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
     std::vector<Simulation*> simulations; //A vector, for future combined CPU + GPU + remote calculations. Currently only 1 element
+    std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);

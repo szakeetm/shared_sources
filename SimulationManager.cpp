@@ -128,6 +128,7 @@ int SimulationManager::StartSimulation() {
 }
 
 //! Call simulation controllers to stop running simulations
+//! //interactive mode
 int SimulationManager::StopSimulation() {
     isRunning = false;
     if(interactiveMode) {
@@ -194,11 +195,11 @@ int SimulationManager::CreateCPUHandle() {
 #endif // DEBUG
     }
 
-    if(!simulations.empty()){
-        for(auto& sim : simulations){
-            delete sim;
-        }
+    //Delete existing simulations
+    for(auto& sim : simulations){
+        delete sim;
     }
+
     size_t nbSimulations = 1; // nbThreads
     try{
         simulations.resize(nbSimulations);
@@ -218,7 +219,6 @@ int SimulationManager::CreateCPUHandle() {
                                                     simulations.back(), &procInformation});
     if(interactiveMode) {
         simHandles.emplace_back(
-                /*StartProc(arguments, STARTPROC_NOWIN),*/
                 std::thread(&SimulationController::controlledLoop, &simControllers[0], NULL, nullptr),
                 SimType::simCPU);
         auto myHandle = simHandles.back().first.native_handle();
@@ -239,11 +239,13 @@ int SimulationManager::CreateCPUHandle() {
 
 // return 1=error
 int SimulationManager::CreateGPUHandle() {
+    //not implemented
     return 1;
 }
 
 // return 1=error
 int SimulationManager::CreateRemoteHandle() {
+    //not implemented
     return 1;
 }
 
@@ -632,15 +634,16 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
     for(auto& simUnit : simulations){
         if(simUnit->globStatePtr->facetStates.size() != hitCaches.size()) return;
-        if(!simUnit->tMutex.try_lock_for(std::chrono::seconds(10)))
+        if(!simUnit->simuStateMutex.try_lock_for(std::chrono::seconds(10)))
             return;
         for (size_t i = 0; i < hitCaches.size(); i++) {
             simUnit->globStatePtr->facetStates[i].momentResults[0].hits = *hitCaches[i];
         }
-        simUnit->tMutex.unlock();
+        simUnit->simuStateMutex.unlock();
     }
 }
 
+/*
 int SimulationManager::IncreasePriority() {
 #if defined(_WIN32) && defined(_MSC_VER)
     // https://cpp.hotexamples.com/de/examples/-/-/SetPriorityClass/cpp-setpriorityclass-function-examples.html
@@ -699,3 +702,4 @@ int SimulationManager::RefreshRNGSeed(bool fixed) {
 
     return 0;
 }
+*/
