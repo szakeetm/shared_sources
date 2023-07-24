@@ -692,7 +692,7 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 		}
 
 		prg.SetMessage("Forwarding simulation model...");
-		simManager.ForwardSimModel(model); //set shared pointers simManager::simulations[i].model to worker::model
+		simManager.ForwardSimModel(model); //set shared pointer simManager::simulation.model to worker::model
 		prg.SetMessage("Forwarding global simulation state...");
 		simManager.ForwardGlobalCounter(&globalState, &particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
 	}
