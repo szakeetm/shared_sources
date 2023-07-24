@@ -98,7 +98,7 @@ protected:
     ProcComm* procInfoPtr;
     size_t parentPID;
     size_t nbThreads;
-    int prIdx;
+    size_t prIdx;
 
 private:
     // tmp

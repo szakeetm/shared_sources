@@ -28,12 +28,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <omp.h>
 
-#if not defined(_MSC_VER)
+#if !defined(_MSC_VER)
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
-
-
 
 #ifdef _WIN32
 #include <process.h>
@@ -57,7 +55,7 @@ SimThread::SimThread(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t 
 // todo: fuse with runSimulation1sec()
 // Should allow simulation for N steps opposed to T seconds
 int SimThread::advanceForSteps(size_t desorptions) {
-    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
@@ -81,7 +79,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
 // run until end or until autosaveTime check
 int SimThread::advanceForTime(double simDuration) {
 
-    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : std::ceil(stepsPerSec + 0.5);
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
     double timeStart = omp_get_wtime();
     double timeEnd = timeStart;
@@ -183,7 +181,7 @@ void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's
  */
 bool SimThread::runSimulation1sec(const size_t desorptions) {
     // 1s step
-    size_t nbStep = (stepsPerSec <= 0.0) ? 250.0 : std::ceil(stepsPerSec + 0.5);
+    size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
     setMyStatus(fmt::format("{} [{} hits/s]",ConstructThreadStatus(), nbStep));
 
@@ -416,7 +414,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
             }
             case COMMAND_UPDATEPARAMS: {
                 SetThreadStates(PROCESS_WAIT, GetThreadStatuses());
-                DEBUG_PRINT("[%d] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+                DEBUG_PRINT("[%zd] COMMAND: UPDATEPARAMS (%zd,%zd)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 if (UpdateParams()) {
                     SetReady(loadOk);
                     //SetThreadStates(procInfo->cmdParam2, GetThreadStatuses());
@@ -430,7 +428,7 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_PAUSE: {
-                DEBUG_PRINT("[%d] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+                DEBUG_PRINT("[%zd] COMMAND: PAUSE (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 SetReady(loadOk);
                 break;
             }
@@ -439,12 +437,12 @@ int SimulationController::controlledLoop(int argc, char **argv) {
                 break;
             }
             case COMMAND_EXIT: {
-                DEBUG_PRINT("[%d] COMMAND: EXIT (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+                DEBUG_PRINT("[%zd] COMMAND: EXIT (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 endState = true;
                 break;
             }
             case COMMAND_CLOSE: {
-                DEBUG_PRINT("[%d] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+                DEBUG_PRINT("[%zd] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 auto* sim = simulationPtr;
                 //for (auto &sim : *simulation)
                     sim->ClearSimulation();
@@ -479,7 +477,7 @@ int SimulationController::RebuildAccel() {
  * \return true on error, false when ok
  */
 bool SimulationController::Load() {
-    DEBUG_PRINT("[%d] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+    DEBUG_PRINT("[%zd] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
     SetThreadStates(PROCESS_STARTING, "Loading simulation");
 
     auto sane = simulationPtr->SanityCheckModel(false);
@@ -518,7 +516,7 @@ bool SimulationController::Load() {
 #pragma omp critical
                 randomCounter += local_result;
             }
-            DEBUG_PRINT("[OMP] Init: %zu\n", randomCounter);
+            DEBUG_PRINT("[OMP] Init: %f\n", randomCounter);
             
 
             // Calculate remaining work
@@ -603,7 +601,7 @@ int SimulationController::Start() {
     }
 
     if (GetThreadStates() != PROCESS_RUN) {
-        DEBUG_PRINT("[%d] COMMAND: START (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+        DEBUG_PRINT("[%zd] COMMAND: START (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
         SetThreadStates(PROCESS_RUN, GetThreadStatuses());
     }
 
@@ -626,7 +624,7 @@ int SimulationController::Start() {
         }
 
         bool maxReachedOrDesError_global = false;
-#pragma omp parallel num_threads(nbThreads)
+#pragma omp parallel num_threads((int)nbThreads)
         {
             bool maxReachedOrDesError_private = false;
             bool lastUpdateOk_private = true;
@@ -646,10 +644,10 @@ int SimulationController::Start() {
         ClearCommand();
         if (GetThreadStates() != PROCESS_ERROR) {
             if (maxReachedOrDesError_global) {
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
+                DEBUG_PRINT("[%zd] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
             }
             else {
-                DEBUG_PRINT("[%d] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
+                DEBUG_PRINT("[%zd] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
             }
         }
     } else {
@@ -660,7 +658,7 @@ int SimulationController::Start() {
 }
 
 int SimulationController::Reset() {
-    DEBUG_PRINT("[%d] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+    DEBUG_PRINT("[%zd] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
     SetThreadStates(PROCESS_STARTING, "Resetting local cache...", false, true);
     resetControls();
     auto *sim = simulationPtr;
