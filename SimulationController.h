@@ -23,7 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include "SMP.h"
 #include "ProcessControl.h"
-#include "SimulationUnit.h"
+#include "Simulation.h"
 
 class Simulation;
 
