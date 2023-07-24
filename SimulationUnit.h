@@ -22,6 +22,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "SMP.h"
 #include "Buffer_shared.h"
+#include <vector>
+#include <string>
 
 class SimulationModel;
 class GlobalSimuState;
@@ -49,7 +51,7 @@ public:
     virtual int RebuildAccelStructure() = 0;
 
     virtual int ReinitializeParticleLog() = 0;
-    virtual std::pair<int, std::optional<std::string>> SanityCheckModel(bool strictCheck) = 0;
+    virtual std::vector<std::string> SanityCheckModel(bool strictCheck) = 0;
 
     virtual void ResetSimulation() = 0;
     virtual void ClearSimulation() = 0;

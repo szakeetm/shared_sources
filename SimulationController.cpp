@@ -486,11 +486,11 @@ int SimulationController::RebuildAccel() {
  * \return true on error, false when ok
  */
 bool SimulationController::Load() {
-    DEBUG_PRINT("[%zd] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+    //DEBUG_PRINT("[%zd] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
     SetThreadStates(PROCESS_STARTING, "Loading simulation");
 
-    auto sane = simulationPtr->SanityCheckModel(false);
-    if(!sane.first) {
+    auto errors = simulationPtr->SanityCheckModel(false);
+    if(errors.empty()) {
         SetThreadStates(PROCESS_STARTING, "Loading simulation");
         bool loadError = false;
 
@@ -546,7 +546,7 @@ bool SimulationController::Load() {
     }
     else {
         loadOk = false;
-        SetThreadStates(PROCESS_ERROR, sane.second->c_str());
+        SetThreadStates(PROCESS_ERROR, errors[0]); //First problem with model
     }
     SetReady(loadOk);
 
@@ -575,8 +575,8 @@ bool SimulationController::UpdateParams() {
 int SimulationController::Start() {
 
     // Check simulation model and geometry one last time
-    auto sane = simulationPtr->SanityCheckModel(true);
-    if(sane.first){
+    auto errors = simulationPtr->SanityCheckModel(true);
+    if(!errors.empty()){
         loadOk = false;
     }
 
@@ -588,8 +588,8 @@ int SimulationController::Start() {
     }
 
     if(!loadOk) {
-        if(sane.second)
-            SetThreadStates(PROCESS_ERROR, *sane.second);
+        if(errors.size()>1)
+            SetThreadStates(PROCESS_ERROR, errors[0]); //First problem with model
         else
             SetThreadStates(PROCESS_ERROR, GetThreadStatuses());
         return 1;
