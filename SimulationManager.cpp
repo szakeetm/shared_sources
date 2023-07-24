@@ -71,7 +71,7 @@ SimulationManager::~SimulationManager() {
 //! Refresh proc status by looking for those that can be safely killed and remove them
 int SimulationManager::refreshProcStatus() {
     int nbDead = 0;
-    for(auto proc = simHandles.begin(); proc != simHandles.end() ; ){
+    for(auto proc = simThreads.begin(); proc != simThreads.end() ; ){
         if(!(*proc).first.joinable()){
             auto myHandle = (*proc).first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
@@ -80,7 +80,7 @@ int SimulationManager::refreshProcStatus() {
             //Linux
             pthread_cancel(myHandle);
 #endif
-            proc = this->simHandles.erase(proc);
+            proc = this->simThreads.erase(proc);
             ++nbDead;
         }
         else{
@@ -102,7 +102,7 @@ int SimulationManager::StartSimulation() {
 
     if(interactiveMode) {
         refreshProcStatus();
-        if (simHandles.empty())
+        if (simThreads.empty())
             throw std::logic_error("No active simulation handles!");
 
         if (ExecuteAndWait(COMMAND_RUN, PROCESS_RUN, 0, 0)) {
@@ -128,7 +128,7 @@ int SimulationManager::StopSimulation() {
     isRunning = false;
     if(interactiveMode) {
         refreshProcStatus();
-        if (simHandles.empty())
+        if (simThreads.empty())
             return 1;
 
         if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
@@ -146,7 +146,7 @@ int SimulationManager::StopSimulation() {
 
 int SimulationManager::LoadSimulation(){
     if(interactiveMode) {
-        if (simHandles.empty())
+        if (simThreads.empty())
             throw std::logic_error("No active simulation handles!");
 
         if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
@@ -190,7 +190,7 @@ int SimulationManager::CreateCPUHandle() {
     try{
         procInformation.Resize(nbThreads);
         simControllers.clear();
-        simHandles.clear();
+        simThreads.clear();
     }
     catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
@@ -201,10 +201,10 @@ int SimulationManager::CreateCPUHandle() {
 
     simController = SimulationController(processId, 0, nbThreads, simulation, &procInformation);
     if(interactiveMode) {
-        simHandles.emplace_back(
+        simThreads.emplace_back(
                 std::thread(&SimulationController::controlledLoop, &simControllers[0], NULL, nullptr),
                 SimType::simCPU);
-        auto myHandle = simHandles.back().first.native_handle();
+        auto myHandle = simThreads.back().first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
 #else
@@ -348,15 +348,15 @@ int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatu
 }
 
 int SimulationManager::KillAllSimUnits() {
-    if( !simHandles.empty() ) {
+    if( !simThreads.empty() ) {
         if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)){ // execute
             // Force kill
             simController.EmergencyExit();
             if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED)) {
                 int i = 0;
-                for (auto tIter = simHandles.begin(); tIter != simHandles.end(); ++i) {
+                for (auto tIter = simThreads.begin(); tIter != simThreads.end(); ++i) {
                     if (procInformation.subProcInfos[i].slaveState != PROCESS_KILLED) {
-                        auto nativeHandle = simHandles[i].first.native_handle();
+                        auto nativeHandle = simThreads[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                         //Windows
                         TerminateThread(nativeHandle, 1);
@@ -370,7 +370,7 @@ int SimulationManager::KillAllSimUnits() {
 #endif
                         //assume that the process doesn't exist, so remove it from our management structure
                         try {
-                            tIter = simHandles.erase(tIter);
+                            tIter = simThreads.erase(tIter);
                         }
                         catch (const std::exception &e) {
                             throw std::runtime_error(fmt::format("Could not terminate subprocesses: {}\n",e.what())); // proc couldn't be killed!?
@@ -383,14 +383,14 @@ int SimulationManager::KillAllSimUnits() {
             }
         }
 
-        for(size_t i=0;i<simHandles.size();i++) {
+        for(size_t i=0;i<simThreads.size();i++) {
             if (procInformation.subProcInfos[i].slaveState == PROCESS_KILLED) {
-                simHandles[i].first.join();
+                simThreads[i].first.join();
             }
             else{
                 if(ExecuteAndWait(COMMAND_EXIT, PROCESS_KILLED))
                     exit(1);
-/*                auto nativeHandle = simHandles[i].first.native_handle();
+/*                auto nativeHandle = simThreads[i].first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                 //Windows
                 TerminateThread(nativeHandle, 1);
@@ -400,7 +400,7 @@ int SimulationManager::KillAllSimUnits() {
 #endif*/
             }
         }
-        simHandles.clear();
+        simThreads.clear();
     }
     nbThreads = 0;
     return 0;
@@ -432,7 +432,7 @@ int SimulationManager::ResetHits() {
 }
 
 int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
-    if(simHandles.empty())
+    if(simThreads.empty())
         return 1;
 
     procInfoList.subProcInfos = procInformation.subProcInfos;
@@ -597,7 +597,7 @@ int SimulationManager::IncreasePriority() {
 
 #endif
 
-    for(auto& handle : simHandles) {
+    for(auto& handle : simThreads) {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
@@ -621,7 +621,7 @@ int SimulationManager::DecreasePriority() {
 #else
 
 #endif
-    for(auto& handle : simHandles) {
+    for(auto& handle : simThreads) {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);

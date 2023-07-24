@@ -40,7 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define WAITTIME    500  // Answer in STOP mode
 
 
-SimThread::SimThread(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t threadNum) {
+SimHandle::SimHandle(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t threadNum) {
     this->threadNum = threadNum;
     masterProcInfoPtr = procInfoPtr;
     timeLimit = 0.0;
@@ -54,7 +54,7 @@ SimThread::SimThread(ProcComm *procInfoPtr, Simulation_Abstract *simPtr, size_t 
 
 // todo: fuse with runSimulation1sec()
 // Should allow simulation for N steps opposed to T seconds
-int SimThread::advanceForSteps(size_t desorptions) {
+int SimHandle::advanceForSteps(size_t desorptions) {
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
     double timeStart = omp_get_wtime();
@@ -77,7 +77,7 @@ int SimThread::advanceForSteps(size_t desorptions) {
 }
 
 // run until end or until autosaveTime check
-int SimThread::advanceForTime(double simDuration) {
+int SimHandle::advanceForTime(double simDuration) {
 
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
@@ -104,7 +104,7 @@ int SimThread::advanceForTime(double simDuration) {
  * \return true when simulation end has been reached via desorption limit, false otherwise
  */
 
-bool SimThread::runLoop() {
+bool SimHandle::runLoop() {
     bool finishLoop;
     bool lastUpdateOk = false;
 
@@ -155,11 +155,11 @@ bool SimThread::runLoop() {
     return desLimitReachedOrDesError;
 }
 
-void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
+void SimHandle::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
     masterProcInfoPtr->subProcInfos[threadNum].slaveStatus=msg;
 }
 
-[[nodiscard]] std::string SimThread::ConstructThreadStatus() const {
+[[nodiscard]] std::string SimHandle::ConstructThreadStatus() const {
     size_t count = particleTracerPtr->totalDesorbed + particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;;
 
     size_t max = 0;
@@ -179,7 +179,7 @@ void SimThread::setMyStatus(const std::string& msg) const { //Writes to master's
 * \brief A "single (1sec)" MC step of a simulation run for a given thread
  * \return false when simulation continues, true when desorption limit is reached or des error
  */
-bool SimThread::runSimulation1sec(const size_t desorptions) {
+bool SimHandle::runSimulation1sec(const size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
@@ -266,7 +266,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     simThreads.reserve(nbThreads);
     for (size_t t = 0; t < nbThreads; t++) {
         simThreads.emplace_back(
-                SimThread(procInfoPtr, simulationPtr, t));
+                SimHandle(procInfoPtr, simulationPtr, t));
         simThreads.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
     }
 }
@@ -499,7 +499,7 @@ bool SimulationController::Load() {
                 simThreads.reserve(nbThreads);
                 for (size_t t = 0; t < nbThreads; t++) {
                     simThreads.emplace_back(
-                            SimThread(procInfoPtr, simulationPtr, t));
+                            SimHandle(procInfoPtr, simulationPtr, t));
                     simThreads.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
                 }
             }

@@ -113,7 +113,7 @@ private:
 
 
 protected:
-    //std::vector<Simulation_Abstract*> simHandles; // for threaded versions
+    //std::vector<Simulation_Abstract*> simThreads; // for threaded versions
 public:
 
     size_t nbThreads;
@@ -128,7 +128,7 @@ public:
 private:
     SimulationController simController;
     Simulation simulation;
-    std::vector<std::pair<std::thread, SimType>> simHandles; // Vector of a pair of pid , simulation type
+    std::vector<std::thread> simThreads;
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);

@@ -32,9 +32,9 @@ class Simulation;
 * \brief Inidividual simulation states and settings per thread
  * contains local desorption limits, local simulation state, global thread number, simulation state etc.
  */
-class SimThread {
+class SimHandle {
 public:
-    SimThread(ProcComm* procInfoPtr, Simulation_Abstract* simPtr, size_t threadNum);
+    SimHandle(ProcComm* procInfoPtr, Simulation_Abstract* simPtr, size_t threadNum);
 
     size_t threadNum;
     double stepsPerSec;
@@ -93,7 +93,7 @@ public:
 protected:
 
     Simulation_Abstract* simulationPtr;
-    std::vector<SimThread> simThreads;
+    std::vector<SimHandle> simThreads;
 
     ProcComm* procInfoPtr;
     size_t parentPID;
