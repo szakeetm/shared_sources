@@ -92,7 +92,7 @@ public:
 protected:
 
     Simulation_Abstract* simulationPtr;
-    std::vector<SimHandle> simThreads;
+    std::vector<SimHandle> simHandles;
 
     ProcComm* procInfoPtr;
     size_t parentPID;
