@@ -70,7 +70,7 @@ protected:
     int SetThreadStates(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
     int SetThreadStates(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     std::vector<std::string> GetThreadStatuses();
-    void SetErrorSub(const std::string& message);
+    void SetThreadError(const std::string& message);
     void SetStatus(const std::string &status); //Sets for all
     void SetReady(const bool loadOk);
     int ClearCommand();
@@ -92,7 +92,7 @@ public:
 protected:
 
     Simulation_Abstract* simulationPtr;
-    std::vector<SimHandle> simHandles;
+    std::vector<SimHandle> simThreadHandles;
 
     ProcComm* procInfoPtr;
     size_t parentPID;

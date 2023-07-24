@@ -60,7 +60,7 @@ public:
 
     virtual size_t GetHitsSize() = 0;
     virtual MFSim::ParticleTracer * GetParticleTracerPtr(size_t i) = 0;
-    virtual void SetNParticle(size_t n, bool fixedSeed) = 0;
+    virtual void ConstructParticleTracers(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
     GlobalSimuState* globStatePtr;

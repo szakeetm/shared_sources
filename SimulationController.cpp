@@ -263,11 +263,11 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     nbThreads = o.nbThreads;
     loadOk = o.loadOk;
 
-    simThreads.reserve(nbThreads);
+    simThreadHandles.reserve(nbThreads);
     for (size_t t = 0; t < nbThreads; t++) {
-        simThreads.emplace_back(
+        simThreadHandles.emplace_back(
                 SimHandle(procInfoPtr, simulationPtr, t));
-        simThreads.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
+        simThreadHandles.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
     }
 }
 
@@ -350,26 +350,26 @@ int SimulationController::SetThreadStates(size_t state, const std::vector<std::s
 
 std::vector<std::string> SimulationController::GetThreadStatuses() {
 
-    std::vector<std::string> threadStatuses(nbThreads);
+    std::vector<std::string> tmpThreadStatuses(nbThreads);
     if (!simulationPtr) {
-        threadStatuses.assign(nbThreads, "[NONE]");
+        tmpThreadStatuses.assign(nbThreads, "[NONE]");
     }
     else{
         for(size_t threadId = 0; threadId < nbThreads; ++threadId) {
             auto* particleTracer = simulationPtr->GetParticleTracerPtr(threadId);
             if(particleTracer == nullptr) break;
             if(!particleTracer->tmpState.initialized){
-                threadStatuses[threadId]= "[NONE]";
+                tmpThreadStatuses[threadId]= "[NONE]";
             }
             else {
-                threadStatuses[threadId] = simThreads[threadId].ConstructThreadStatus();
+                tmpThreadStatuses[threadId] = simThreadHandles[threadId].ConstructThreadStatus();
             }
         }
     }
-    return threadStatuses;
+    return tmpThreadStatuses;
 }
 
-void SimulationController::SetErrorSub(const std::string& message) {
+void SimulationController::SetThreadError(const std::string& message) {
     Log::console_error("Error: {}\n", message);
     SetThreadStates(PROCESS_ERROR, message);
 }
@@ -486,7 +486,7 @@ bool SimulationController::Load() {
         bool loadError = false;
 
         // Init particleTracers / threads
-        simulationPtr->SetNParticle(nbThreads, false);
+        simulationPtr->ConstructParticleTracers(nbThreads, false);
         if (simulationPtr->LoadSimulation(procInfoPtr->subProcInfos[0].slaveStatus)) {
             loadError = true;
         }
@@ -495,12 +495,12 @@ bool SimulationController::Load() {
             loadOk = true;
 
             {//if(nbThreads != simThreads.size()) {
-                simThreads.clear();
-                simThreads.reserve(nbThreads);
+                simThreadHandles.clear();
+                simThreadHandles.reserve(nbThreads);
                 for (size_t t = 0; t < nbThreads; t++) {
-                    simThreads.emplace_back(
+                    simThreadHandles.emplace_back(
                             SimHandle(procInfoPtr, simulationPtr, t));
-                    simThreads.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
+                    simThreadHandles.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
                 }
             }
 
@@ -527,7 +527,7 @@ bool SimulationController::Load() {
                 desPerThread = des_global / nbThreads;
                 remainder = des_global % nbThreads;
             }
-            for (auto &thread : simThreads) {
+            for (auto &thread : simThreadHandles) {
                 thread.particleTracerPtr->totalDesorbed = desPerThread;
                 thread.particleTracerPtr->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
             }
@@ -571,7 +571,7 @@ int SimulationController::Start() {
         loadOk = false;
     }
 
-    for(auto& thread : simThreads){
+    for(auto& thread : simThreadHandles){
         if (!thread.particleTracerPtr) {
             loadOk = false;
             break;
@@ -618,7 +618,7 @@ int SimulationController::Start() {
                 remainder = limitDes_global % nbThreads;
             }
         }
-        for(auto& thread : simThreads){
+        for(auto& thread : simThreadHandles){
             size_t localDes = (desPerThread > thread.particleTracerPtr->totalDesorbed) ? desPerThread - thread.particleTracerPtr->totalDesorbed : 0; //remaining
             thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
         }
@@ -633,7 +633,7 @@ int SimulationController::Start() {
 #if defined(_WIN32) && defined(_MSC_VER)
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
-            maxReachedOrDesError_private = simThreads[omp_get_thread_num()].runLoop();
+            maxReachedOrDesError_private = simThreadHandles[omp_get_thread_num()].runLoop();
 
             if(maxReachedOrDesError_private) {
 //#pragma omp atomic
@@ -651,7 +651,7 @@ int SimulationController::Start() {
             }
         }
     } else {
-        SetErrorSub("No geometry loaded");
+        SetThreadError("No geometry loaded");
         ClearCommand();
     }
     return 0;

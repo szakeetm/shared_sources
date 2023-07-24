@@ -633,7 +633,7 @@ int SimulationManager::RefreshRNGSeed(bool fixed) {
     if(simulations.empty() || nbThreads == 0)
         return 1;
     for(auto& sim : simulations){
-        sim->SetNParticle(nbThreads, fixed);
+        sim->ConstructParticleTracers(nbThreads, fixed);
     }
 
     return 0;
