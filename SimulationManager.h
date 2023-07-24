@@ -18,7 +18,8 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#pragma once
+#ifndef MOLFLOW_PROJ_SIMULATIONMANAGER_H
+#define MOLFLOW_PROJ_SIMULATIONMANAGER_H
 
 #include <vector>
 #include <string>
@@ -135,3 +136,6 @@ public:
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 };
+
+
+#endif //MOLFLOW_PROJ_SIMULATIONMANAGER_H
