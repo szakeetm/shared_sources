@@ -103,7 +103,7 @@ int SimulationManager::StartSimulation() {
         }
     }
     else {
-        procInformation.masterCmd  = COMMAND_RUN; // TODO: currently needed to not break the loop
+        //procInformation.masterCmd  = COMMAND_RUN; // TODO: currently needed to not break the loop
         simController->Start();
     }
 

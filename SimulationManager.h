@@ -66,7 +66,7 @@ class SimulationManager {
 
     int CreateRemoteHandle();
 
-    std::string MakeSubProcError(const std::string& message;
+    std::string MakeSubProcError(const std::string& message);
 
     int refreshProcStatus();
 protected:
