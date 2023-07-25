@@ -13,5 +13,5 @@ public:
 	virtual std::string GetMsg();
 	GLProgress_Abstract() = default;
 	GLProgress_Abstract(const std::string msg) : status(msg) {}
-	bool interactiveMode = true; //if false, don't print SetProgress percentage updates
+	bool noProgress = true; //if false, don't print SetProgress percentage updates
 };
