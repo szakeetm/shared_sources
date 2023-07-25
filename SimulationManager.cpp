@@ -93,7 +93,7 @@ int SimulationManager::StartSimulation() {
         LoadSimulation(); //sets simulationChanged to false
     }
 
-    if(interactiveMode) {
+    if(asyncMode) {
         refreshProcStatus();
         if (simThreads.empty())
             throw std::logic_error("No active simulation threads.");
@@ -103,7 +103,7 @@ int SimulationManager::StartSimulation() {
         }
     }
     else {
-        //procInformation.masterCmd  = COMMAND_RUN; // TODO: currently needed to not break the loop
+        procInformation.masterCmd  = COMMAND_RUN; // TODO: currently needed to not break the loop
         simController->Start();
     }
 
@@ -119,7 +119,7 @@ int SimulationManager::StartSimulation() {
 //! //interactive mode
 int SimulationManager::StopSimulation() {
     isRunning = false;
-    if(interactiveMode) {
+    if(asyncMode) {
         refreshProcStatus();
         if (simThreads.empty()) {
             throw std::logic_error("No active simulation threads.");
@@ -136,7 +136,7 @@ int SimulationManager::StopSimulation() {
 }
 
 int SimulationManager::LoadSimulation(){
-    if(interactiveMode) {
+    if(asyncMode) {
         if (simThreads.empty())
             throw std::logic_error("No active simulation threads");
 
@@ -196,7 +196,7 @@ int SimulationManager::CreateCPUHandle() {
 #endif
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), &procInformation);
     
-    if(interactiveMode) {
+    if(asyncMode) {
         simThreads.emplace_back(
                 std::thread(&SimulationController::controlledLoop, simController.get()));
         auto myHandle = simThreads.back().native_handle();
@@ -398,7 +398,7 @@ int SimulationManager::KillAllSimUnits() {
 }
 
 int SimulationManager::ResetSimulations() {
-    if(interactiveMode) {
+    if(asyncMode) {
         if (ExecuteAndWait(COMMAND_CLOSE, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not restart"));
     }
@@ -411,7 +411,7 @@ int SimulationManager::ResetSimulations() {
 
 int SimulationManager::ResetHits() {
     isRunning = false;
-    if(interactiveMode) {
+    if(asyncMode) {
         if (ExecuteAndWait(COMMAND_RESET, PROCESS_READY, 0, 0))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not reset hits"));
     }

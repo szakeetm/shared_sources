@@ -631,10 +631,6 @@ int SimulationController::Start() {
 
         bool maxReachedOrDesError_global = false;
 
-        procInfoPtr->masterCmd = COMMAND_RUN; //Necessary if not called from interactive mode
-        procInfoPtr->cmdParam = 0;
-        procInfoPtr->cmdParam2 = 0;
-
 #pragma omp parallel num_threads((int)nbThreads)
         {
             bool maxReachedOrDesError_private = false;
