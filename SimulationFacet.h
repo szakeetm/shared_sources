@@ -24,10 +24,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FacetData.h"
 
 /*
- * Generalised structure containing Ray Tracing and shared Simulation properties
+ * Generalised structure containing Ray Tracing and shared Simulation properties (mostly caches)
  * Application specific implementations are part of the corresponding code base
  */
-class SimulationFacet : public Facet {
+class SimulationFacet : public RTFacet {
 protected:
     SimulationFacet();
     explicit SimulationFacet(size_t nbIndex);

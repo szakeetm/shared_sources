@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 /**
 * \brief Constructor for cereal initialization
 */
-SimulationFacet::SimulationFacet() : Facet() {
+SimulationFacet::SimulationFacet() : RTFacet() {
     isReady = false;
     globalId = 0;
     isHit = false;
@@ -35,7 +35,7 @@ SimulationFacet::SimulationFacet() : Facet() {
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-SimulationFacet::SimulationFacet(size_t nbIndex) : Facet(nbIndex) {
+SimulationFacet::SimulationFacet(size_t nbIndex) : RTFacet(nbIndex) {
     isReady = false;
     globalId = 0;
     isHit = false;
@@ -43,11 +43,11 @@ SimulationFacet::SimulationFacet(size_t nbIndex) : Facet(nbIndex) {
     vertices2.resize(nbIndex);
 }
 
-SimulationFacet::SimulationFacet(const SimulationFacet& cpy)  : Facet(cpy) {
+SimulationFacet::SimulationFacet(const SimulationFacet& cpy)  : RTFacet(cpy) {
     *this = cpy;
 }
 
-SimulationFacet::SimulationFacet(SimulationFacet&& cpy) noexcept : Facet(cpy){
+SimulationFacet::SimulationFacet(SimulationFacet&& cpy) noexcept : RTFacet(cpy){
     *this = std::move(cpy);
 }
 

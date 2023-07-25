@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <string>
 #include <mutex>
 
-class Facet;
+class RTFacet;
 class AABBNODE;
 class GlobalSimuState;
 
@@ -113,7 +113,7 @@ public:
                             int bvh_width) = 0;
 
     int InitializeFacets();
-    void CalculateFacetParams(Facet *f);
+    void CalculateFacetParams(RTFacet *f);
 
     // Molflow only
     //void CalcTotalOutgassing();

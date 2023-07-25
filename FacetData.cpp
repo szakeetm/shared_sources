@@ -54,7 +54,7 @@ bool MaterialSurface::IsHardHit(const Ray &r) {
 }
 #endif
 
-bool Facet::Intersect(Ray &ray) {
+bool RTFacet::Intersect(Ray &ray) {
     //++iSCount;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
     double det = Dot(this->sh.Nuv, rayDirOpposite);

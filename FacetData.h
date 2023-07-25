@@ -65,18 +65,18 @@ public:
 /**
 * \brief Polygon class (standard facet) that extends the Ray Tracing primitive containing various components for the post-processing features (hit tracking)
  */
-class Facet : public RTPrimitive {
+class RTFacet : public RTPrimitive {
 protected:
-    Facet() : RTPrimitive(), sh(0){ surf = nullptr; };
-    Facet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
-    Facet(const Facet& cpy) {
+    RTFacet() : RTPrimitive(), sh(0){ surf = nullptr; };
+    RTFacet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) { surf = nullptr; };
+    RTFacet(const RTFacet& cpy) {
         globalId = cpy.globalId;
         sh = cpy.sh;
         indices = cpy.indices;
         vertices2 = cpy.vertices2;
         surf = cpy.surf; // Will be deleted tgthr with cpy
     };
-    Facet(Facet&& cpy) noexcept{
+    RTFacet(RTFacet&& cpy) noexcept{
         globalId = std::move(cpy.globalId);
         sh = std::move(cpy.sh);
         indices = std::move(cpy.indices);
@@ -84,7 +84,7 @@ protected:
         surf = cpy.surf;
         cpy.surf = nullptr;
     };
-    ~Facet() override{
+    ~RTFacet() override{
         if (surf) {
             //delete surf;
             // don' t delete, origin is an unreferenced shared ptr

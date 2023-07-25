@@ -84,7 +84,7 @@ int SimulationModel::InitializeFacets() {
  * @brief Calculates various facet parameters without sanity checking @see Geometry::CalculateFacetParams(Facet* f)
  * @param f individual subprocess facet
  */
-void SimulationModel::CalculateFacetParams(Facet* f) {
+void SimulationModel::CalculateFacetParams(RTFacet* f) {
     // Calculate facet normal
     Vector3d p0 = vertices3[f->indices[0]];
     Vector3d v1;

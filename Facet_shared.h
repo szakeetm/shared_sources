@@ -52,13 +52,6 @@ class FacetGroup; //forward declaration as it's the return value of Explode()
 
 class InterfaceFacet { //Interface facet
 
-	typedef struct {
-		size_t u;
-		size_t v;
-		size_t width;
-		size_t height;
-	} TEXTURE_SELECTION;
-
 public:
 
 	// Constructor/Desctructor/Initialisation
@@ -167,15 +160,24 @@ public:
 	size_t texDimW;         // Texture dimension (a power of 2)
     double tRatioU;       // Texture sample per unit
     double tRatioV;       // Texture sample per unit
-    FacetViewSetting viewSettings;
+
 	bool  collinear;      //All vertices are on a line (non-simple)
 	bool    hasMesh;     // Has texture
 	bool textureError;   // Disable rendering if the texture has an error
 
 	// GUI stuff
 	std::vector<bool>  visible;         // Edge visible flag
+	FacetViewSetting viewSettings;
 	bool   selected;        // Selected flag
+
+	typedef struct {
+		size_t u;
+		size_t v;
+		size_t width;
+		size_t height;
+	} TEXTURE_SELECTION;
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
+	//OpenGL
 	GLint  glElem;          // Surface elements boundaries
 	GLint  glSelElem;       // Selected surface elements boundaries
 	GLint  glList;          // Geometry with texture
@@ -194,7 +196,7 @@ public:
 	std::string userSticking;
 	std::string userOpacity;
 #endif
-	void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
+	//void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };
 
 class FacetGroup {
