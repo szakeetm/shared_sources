@@ -78,7 +78,7 @@ protected:
 
 public:
     virtual size_t size();
-
+    /*
     SimulationModel &operator=(const SimulationModel &o) {
         facets = o.facets;
         structures = o.structures;
@@ -108,7 +108,7 @@ public:
 
         return *this;
     };
-
+    */
     virtual void PrepareToRun() = 0; //throws error
 
     // Molflow will use ParameterSurfaces (for parameter outgassing) for particular construction types
