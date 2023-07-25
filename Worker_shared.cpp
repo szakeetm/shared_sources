@@ -341,13 +341,12 @@ void Worker::CalculateTextureLimits() {
 		lim.min.steady_state = lim.min.moments_only = HITMAX;
 	}
 
-	for (const auto& sub : model->facets) {
-		auto& subF = *sub;
-		if (subF.sh.isTextured) {
+	for (const auto& facet : model->facets) {
+		if (facet->sh.isTextured) {
 			for (size_t m = 0; m < (1 + mf_model->tdParams.moments.size()); m++) {
 				{
 					// go on if the facet was never hit before
-					auto& facetHitBuffer = globalState.facetStates[subF.globalId].momentResults[m].hits;
+					auto& facetHitBuffer = globalState.facetStates[facet->globalId].momentResults[m].hits;
 					if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
 				}
 
@@ -357,17 +356,17 @@ void Worker::CalculateTextureLimits() {
 					interfaceMomentCache[m - 1].window;
 				//model->wp.timeWindowSize;
 				//Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
-				const auto& texture = globalState.facetStates[subF.globalId].momentResults[m].texture;
+				const auto& texture = globalState.facetStates[facet->globalId].momentResults[m].texture;
 				const size_t textureSize = texture.size();
 				for (size_t t = 0; t < textureSize; t++) {
 					//Add temporary hit counts
 
-					if (subF.largeEnough[t]) {
+					if (facet->largeEnough[t]) {
 						double val[3];  //pre-calculated autoscaling values (Pressure, imp.rate, density)
 
 						val[0] = texture[t].sum_v_ort_per_area * timeCorrection; //pressure without dCoef_pressure
-						val[1] = texture[t].countEquiv * subF.textureCellIncrements[t] * timeCorrection; //imp.rate without dCoef
-						val[2] = texture[t].sum_1_per_ort_velocity * subF.textureCellIncrements[t] * timeCorrection; //particle density without dCoef
+						val[1] = texture[t].countEquiv * facet->textureCellIncrements[t] * timeCorrection; //imp.rate without dCoef
+						val[2] = texture[t].sum_1_per_ort_velocity * facet->textureCellIncrements[t] * timeCorrection; //particle density without dCoef
 
 						//Global autoscale
 						for (int v = 0; v < 3; v++) {
@@ -425,8 +424,8 @@ void Worker::CalculateTextureLimits() {
 		lim.min = HITMAX;
 	}
 
-	for (const auto& sub : model->facets) {
-		auto& subF = *sub;
+	for (const auto& facet : model->facets) {
+		auto& subF = *facet;
 		if (subF.sh.isTextured) {
 			{
 				// go on if the facet was never hit before

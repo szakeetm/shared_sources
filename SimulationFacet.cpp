@@ -23,26 +23,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/MathTools.h>
 
 /**
-* \brief Constructor for cereal initialization
-*/
-SimulationFacet::SimulationFacet() : RTFacet() {
-    isReady = false;
-    globalId = 0;
-    isHit = false;
-}
-
-/**
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
 SimulationFacet::SimulationFacet(size_t nbIndex) : RTFacet(nbIndex) {
-    isReady = false;
-    globalId = 0;
-    isHit = false;
+
     indices.resize(nbIndex);                    // Ref to Geometry Vector3d
     vertices2.resize(nbIndex);
 }
 
+/*
 SimulationFacet::SimulationFacet(const SimulationFacet& cpy)  : RTFacet(cpy) {
     *this = cpy;
 }
@@ -50,6 +40,7 @@ SimulationFacet::SimulationFacet(const SimulationFacet& cpy)  : RTFacet(cpy) {
 SimulationFacet::SimulationFacet(SimulationFacet&& cpy) noexcept : RTFacet(cpy){
     *this = std::move(cpy);
 }
+*/
 
 SimulationFacet& SimulationFacet::operator=(const SimulationFacet& cpy){
 

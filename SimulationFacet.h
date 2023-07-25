@@ -29,19 +29,21 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 class SimulationFacet : public RTFacet {
 protected:
-    SimulationFacet();
+    SimulationFacet() = default;
     explicit SimulationFacet(size_t nbIndex);
-    SimulationFacet(const SimulationFacet& cpy);
-    SimulationFacet(SimulationFacet&& cpy) noexcept;
+    //SimulationFacet(const SimulationFacet& cpy);
+    //SimulationFacet(SimulationFacet&& cpy) noexcept;
+    
     SimulationFacet& operator=(const SimulationFacet& cpy);
     SimulationFacet& operator=(SimulationFacet&& cpy) noexcept;
 public:
+    ~SimulationFacet() = default;
     std::vector<double>   textureCellIncrements;              // Texure increment
     std::vector<bool>     largeEnough;      // cells that are NOT too small for autoscaling
 
     // Temporary var (used in FillHit for hit recording)
-    bool   isReady{};         // Volatile state
-    bool   isHit;
+    bool   isReady = false;         // Volatile state
+    bool   isHit = false;
 
     void InitializeTexture();
 
