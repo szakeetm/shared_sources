@@ -61,17 +61,20 @@ public:
  */
 class SimulationModel {
 protected:
+    /*
     SimulationModel() = default;
 
     ~SimulationModel() = default;
 
+    
     SimulationModel(SimulationModel &&o) noexcept {
         *this = std::move(o);
     };
-
+    
     SimulationModel(const SimulationModel &o) {
         *this = o;
     };
+    */
 
 public:
     virtual size_t size();
