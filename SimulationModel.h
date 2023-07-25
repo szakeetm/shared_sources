@@ -128,6 +128,7 @@ public:
             if (surf != surfaces.end())
                 return surf->second;
         }
+        //not found, construct new
         std::shared_ptr<Surface> surface;
         if (opacity == 1.0) {
             surface = std::make_shared<Surface>();
@@ -151,7 +152,7 @@ public:
     std::vector<Vector3d> vertices3; // Vertices (3D space)
 
     std::vector<std::shared_ptr<RTPrimitive>> accel;
-    std::multimap<double,std::shared_ptr<Surface>> surfaces;
+    std::map<double,std::shared_ptr<Surface>> surfaces; //Pair of opacity -> facet surface type
 
     // Simulation Properties
     OntheflySimulationParams otfParams;

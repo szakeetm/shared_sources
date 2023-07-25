@@ -415,7 +415,7 @@ Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, 
 	double minLength = 1e100;
 
     IntersectTree(currentParticleTracer, *bvh, rayPos, -1.0 * rayDir,
-                  currentParticleTracer.lastHitFacet.get(),
+                  currentParticleTracer.lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
 

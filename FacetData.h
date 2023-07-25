@@ -30,7 +30,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class Surface {
 public:
     virtual ~Surface() = default;
-    virtual bool IsHardHit(const Ray &r) { return true; };
+    virtual bool IsHardHit(const Ray &r) {
+        return true;
+    };
 };
 
 class TransparentSurface : public Surface{
@@ -41,7 +43,7 @@ public:
 };
 
 class SemiTransparentSurface : public Surface{
-    double opacity{1.0};
+    double opacity = 1.0;
 public:
     SemiTransparentSurface(double opacity) : opacity(opacity){};
     bool IsHardHit(const Ray &r) override {
