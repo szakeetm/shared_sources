@@ -79,8 +79,6 @@ protected:
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm *pInfo);
-    //~SimulationController();
-    //SimulationController(SimulationController&& o) noexcept ;
     void controlledLoop();
 
     int Start();
