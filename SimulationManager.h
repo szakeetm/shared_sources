@@ -125,7 +125,8 @@ public:
     size_t nbThreads=0;
     size_t mainProcId;
 
-    bool interactiveMode=true;
+    bool interactiveMode=true; //Commands issued to threads with possible user break or timeout
+    bool noProgress = false; //Don't print percentage updates for progressbars, useful if output written to log file
     bool isRunning=false;
     bool allProcsDone=false;
     bool hasErrorStatus=false;
