@@ -186,7 +186,6 @@ private:
   // Process management
   SimulationManager simManager;
 
-
   // Methods
   void ResetWorkerStats();
   //void ClearHits();
