@@ -251,11 +251,11 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, G
 }
 
 /*!
- * @brief Wait until all SimulationUnits are in procStatus or reach another endstate (error, done)
- * @param procStatus Process Status that should be waited for
+ * @brief Wait until all SimulationUnits are in successStatus or reach another endstate (error, done)
+ * @param successStatus Process Status that should be waited for
  * @return 0 if wait is successful
  */
-int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
+int SimulationManager::WaitForProcStatus(const uint8_t successStatus) {
     // Wait for completion
     bool finished = false;
     const int waitAmount = 250;
@@ -279,11 +279,11 @@ int SimulationManager::WaitForProcStatus(const uint8_t procStatus) {
 
 		for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
 			auto procState = procInformation.subProcInfos[i].slaveState;
-			if (procStatus == PROCESS_KILLED) {// explicitly ask for killed state
+			if (successStatus == PROCESS_KILLED) {// explicitly ask for killed state
 				finished = finished && (procState == PROCESS_KILLED);
 			}
 			else {
-				finished = finished && (procState == procStatus || procState == PROCESS_ERROR || procState == PROCESS_DONE);
+				finished = finished && (procState == successStatus || procState == PROCESS_ERROR || procState == PROCESS_DONE);
 			}
 			if (procState == PROCESS_ERROR) {
 				hasErrorStatus = true;
@@ -327,14 +327,14 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
 /*!
  * @brief Shortcut function combining ForwardCommand() and WaitForProcStatus() into a single call
  * @param command execution command for every subprocess
- * @param procStatus status that every subprocess has to reach
+ * @param successStatus status that every subprocess has to reach
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const int command, const uint8_t procStatus, const size_t param,
+int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus, const size_t param,
                                       const size_t param2) {
     if(!ForwardCommand(command, param, param2)) { // sets master state to command, param and param2, and sets processes to "starting" if they are ready
-        if (!WaitForProcStatus(procStatus)) { // and wait
+        if (!WaitForProcStatus(successStatus)) { // and wait
             return 0;
         }
         return 1;
@@ -490,9 +490,9 @@ std::string SimulationManager::GetErrorDetails() {
     return err;
 }
 
-std::string SimulationManager::MakeSubProcError(const char *message) {
+std::string SimulationManager::MakeSubProcError(const std::string& message) {
     std::string errString;
-    if (!message){
+    if (message.empty()){
         errString.append("Bad response from sub process(es):\n");
         errString.append(GetErrorDetails());
     }

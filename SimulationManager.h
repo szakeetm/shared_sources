@@ -66,14 +66,14 @@ class SimulationManager {
 
     int CreateRemoteHandle();
 
-    std::string MakeSubProcError(const char *message);
+    std::string MakeSubProcError(const std::string& message;
 
     int refreshProcStatus();
 protected:
 
     int ForwardCommand(int command, size_t param, size_t param2);
 
-    int WaitForProcStatus(uint8_t procStatus);
+    int WaitForProcStatus(uint8_t successStatus);
 
 public:
     SimulationManager(int pid = -1);
@@ -88,7 +88,7 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
-    int ExecuteAndWait(int command, uint8_t procStatus, size_t param = 0, size_t param2 = 0);
+    int ExecuteAndWait(int command, uint8_t successStatus, size_t param = 0, size_t param2 = 0);
 
     int InitSimulations();
 
