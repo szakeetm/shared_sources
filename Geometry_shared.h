@@ -263,8 +263,8 @@ protected:
 	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
-    void InitInterfaceVertices(const std::vector<Vector3d>& vertices);
-    virtual void InitInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, Worker* work);
+    void SetInterfaceVertices(const std::vector<Vector3d>& vertices);
+    virtual void SetInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, Worker* work);
 
     void SelectAll();
 	void UnselectAll();

@@ -104,10 +104,4 @@ public:
     };
 	bool selected=false;
 	void SetLocation(const Vector3d& v);
-	/*template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive(*((Vector3d*)this)); //Write base class
-		archive(selected);
-	}*/
 };

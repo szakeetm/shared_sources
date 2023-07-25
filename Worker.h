@@ -105,7 +105,7 @@ public:
     void UnlockLog();
 
     bool InterfaceGeomToSimModel();
-    bool SimModelToInterfaceGeom();
+    void SimModelToInterfaceGeom();
 
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();

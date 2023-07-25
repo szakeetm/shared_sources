@@ -4447,18 +4447,18 @@ std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
 	return plottedFacets;
 }
 
-void Geometry::InitInterfaceVertices(const std::vector<Vector3d>& vertices) {
+void Geometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
+	//Converts from Vector3d to InterfaceVertex
     vertices3.clear();
     for(auto& vert : vertices) {
         vertices3.emplace_back(vert); // position data
         vertices3.back().selected = false;
     }
-
     sh.nbVertex = vertices.size();
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
+void Geometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
     //Facets
     try{
         facets.resize(sFacets.size(), nullptr);
@@ -4468,16 +4468,14 @@ void Geometry::InitInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, 
     }
 
     size_t index = 0;
-    for(auto& sFac : sFacets) {
-        auto& fac = *sFac;
-        facets[index] = new InterfaceFacet(fac.indices.size());
-        auto& intFacet = facets[index];
-        intFacet->indices = fac.indices;
-        intFacet->vertices2 = fac.vertices2;
-        intFacet->sh = fac.sh;
+    for(const auto& simFacetPtr : sFacets) {
+        facets[index] = new InterfaceFacet(simFacetPtr->indices.size());
+		facets[index]->indices = simFacetPtr->indices;
+		facets[index]->vertices2 = simFacetPtr->vertices2;
+		facets[index]->sh = simFacetPtr->sh;
 
         // Do Molflow or Synrad related things in an overriden function
-        if (intFacet->sh.isTextured) intFacet->hasMesh = true;
+        if (facets[index]->sh.isTextured) facets[index]->hasMesh = true;
         ++index;
     }
 
