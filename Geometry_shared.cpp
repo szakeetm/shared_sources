@@ -183,19 +183,19 @@ void Geometry::InitializeGeometry(int facet_number) {
 
 void Geometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
 	if (facet_number == -1) {
-		vertices_raw.clear();
-		vertices_raw.reserve(3 * vertices3.size());
+		vertices_raw_opengl.clear();
+		vertices_raw_opengl.reserve(3 * vertices3.size());
 		for (const auto& iv : vertices3) {
-			vertices_raw.push_back(iv.x);
-			vertices_raw.push_back(iv.y);
-			vertices_raw.push_back(iv.z);
+			vertices_raw_opengl.push_back(iv.x);
+			vertices_raw_opengl.push_back(iv.y);
+			vertices_raw_opengl.push_back(iv.z);
 		}
 	}
 	else {
 		for (const auto index : facets[facet_number]->indices) {
-			vertices_raw[3 * index] = vertices3[index].x;
-			vertices_raw[3 * index + 1] = vertices3[index].y;
-			vertices_raw[3 * index + 2] = vertices3[index].z;
+			vertices_raw_opengl[3 * index] = vertices3[index].x;
+			vertices_raw_opengl[3 * index + 1] = vertices3[index].y;
+			vertices_raw_opengl[3 * index + 2] = vertices3[index].z;
 		}
 	}
 }

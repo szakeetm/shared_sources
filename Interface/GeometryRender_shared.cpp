@@ -1656,7 +1656,7 @@ void Geometry::BuildSelectList() {
 
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
+	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
 	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
@@ -1812,7 +1812,7 @@ void Geometry::BuildGLList() {
 		glNewList(lineList[s], GL_COMPILE);
 
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw.data());
+		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
 		glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
 		glDisableClientState(GL_VERTEX_ARRAY);
 

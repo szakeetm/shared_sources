@@ -304,7 +304,7 @@ protected:
     // Geometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
-	std::vector<GLdouble> vertices_raw; //simple x,y,z coords for GL vertex array
+	std::vector<GLdouble> vertices_raw_opengl; //simple x,y,z coords for GL vertex array
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	float normeRatio;     // Norme factor (direction field)
 	bool  autoNorme;      // Auto normalize (direction field)
