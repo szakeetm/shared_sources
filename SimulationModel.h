@@ -61,15 +61,15 @@ public:
  */
 class SimulationModel {
 protected:
-    SimulationModel() : otfParams(), wp(), sh(), modelMutex(), initialized(false) {};
+    SimulationModel() = default;
 
     ~SimulationModel() = default;
 
-    SimulationModel(SimulationModel &&o) noexcept: modelMutex(), initialized(false) {
+    SimulationModel(SimulationModel &&o) noexcept {
         *this = std::move(o);
     };
 
-    SimulationModel(const SimulationModel &o) : modelMutex(), initialized(false) {
+    SimulationModel(const SimulationModel &o) {
         *this = o;
     };
 
@@ -142,7 +142,7 @@ public:
     virtual double GetStickingAt(SimulationFacet *f, double time) const {return -1.0;};
 
     // Geometry Description
-    std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry
+    std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry. Using shared pointer makes copying a model efficient
 
     std::vector<SuperStructure> structures;
     std::vector<Vector3d> vertices3; // Vertices (3D space)
@@ -157,7 +157,7 @@ public:
     // Geometry Properties
     GeomProperties sh;
 
-    bool initialized;
+    bool initialized = false;
     std::mutex modelMutex;
 
     virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
