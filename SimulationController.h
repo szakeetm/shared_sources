@@ -81,7 +81,7 @@ public:
                          Simulation_Abstract *simulationInstance, ProcComm *pInfo);
     //~SimulationController();
     //SimulationController(SimulationController&& o) noexcept ;
-    int controlledLoop(int argc = 0, char **argv = nullptr);
+    void controlledLoop();
 
     int Start();
     bool Load();

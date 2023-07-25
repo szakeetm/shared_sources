@@ -198,7 +198,7 @@ int SimulationManager::CreateCPUHandle() {
     
     if(interactiveMode) {
         simThreads.emplace_back(
-                std::thread(&SimulationController::controlledLoop, simController.get(), NULL, nullptr));
+                std::thread(&SimulationController::controlledLoop, simController.get()));
         auto myHandle = simThreads.back().native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
@@ -309,7 +309,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t successStatus) {
 }
 
 //! Forward a command to simulation controllers
-int SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
+void SimulationManager::ForwardCommand(const int command, const size_t param, const size_t param2) {
 
     procInformation.masterCmd = command;
     procInformation.cmdParam = param;
@@ -320,8 +320,6 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
             procState = PROCESS_STARTING;
         }
     }
-
-    return 0;
 }
 
 /*!
@@ -333,13 +331,11 @@ int SimulationManager::ForwardCommand(const int command, const size_t param, con
  */
 int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus, const size_t param,
                                       const size_t param2) {
-    if(!ForwardCommand(command, param, param2)) { // sets master state to command, param and param2, and sets processes to "starting" if they are ready
-        if (!WaitForProcStatus(successStatus)) { // and wait
-            return 0;
-        }
-        return 1;
+    ForwardCommand(command, param, param2); // sets master state to command, param and param2, and sets processes to "starting" if they are ready
+    if (!WaitForProcStatus(successStatus)) { // and wait
+        return 0;
     }
-    return 2;
+    return 1;
 }
 
 int SimulationManager::KillAllSimUnits() {

@@ -71,7 +71,7 @@ class SimulationManager {
     int refreshProcStatus();
 protected:
 
-    int ForwardCommand(int command, size_t param, size_t param2);
+    void ForwardCommand(int command, size_t param, size_t param2);
 
     int WaitForProcStatus(uint8_t successStatus);
 

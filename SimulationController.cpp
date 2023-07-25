@@ -411,7 +411,7 @@ size_t SimulationController::GetThreadStates() const {
 }
 
 // Main loop
-int SimulationController::controlledLoop(int argc, char **argv) {
+void SimulationController::controlledLoop() {
     endState = false;
     loadOk = false;
     while (!endState) {
@@ -466,7 +466,6 @@ int SimulationController::controlledLoop(int argc, char **argv) {
         }
     }
     SetThreadStates(PROCESS_KILLED, "Process terminated peacefully");
-    return 0;
 }
 
 /**
