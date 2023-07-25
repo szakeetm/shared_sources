@@ -390,10 +390,9 @@ struct WorkerParams { //Plain old data
 
 class GeomProperties {  //Formerly SHGEOM
 public:
-	GeomProperties() : nbFacet(0), nbVertex(0), nbSuper(0), name() {};
-	size_t     nbFacet;   // Number of facets (total)
-	size_t     nbVertex;  // Number of 3D vertices
-	size_t     nbSuper;   // Number of superstructures
+	size_t     nbFacet=0;   // Number of facets (total)
+	size_t     nbVertex=0;  // Number of 3D vertices
+	size_t     nbSuper=0;   // Number of superstructures
 	std::string name;  // (Short file name)
 
 	template <class Archive> void serialize(Archive& archive) {
