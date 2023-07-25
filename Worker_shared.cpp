@@ -170,7 +170,7 @@ bool Worker::ReloadIfNeeded() {
 
 ParticleLog& Worker::GetLog() {
 	try {
-		if (!particleLog.simuStateMutex.try_lock_for(std::chrono::seconds(1)))
+		if (!particleLog.particleLogMutex.try_lock_for(std::chrono::seconds(1)))
 			throw std::runtime_error("Couldn't get log access");
 		ReloadIfNeeded();
 	}
@@ -181,7 +181,7 @@ ParticleLog& Worker::GetLog() {
 }
 
 void Worker::UnlockLog() {
-	particleLog.simuStateMutex.unlock();
+	particleLog.particleLogMutex.unlock();
 }
 
 void Worker::ThrowSubProcError(const char* message) {
