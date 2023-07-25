@@ -4461,7 +4461,7 @@ void Geometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
 void Geometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
     //Facets
     try{
-        facets.resize(sFacets.size(), nullptr);
+        facets.resize(sFacets.size(), nullptr); //geom->Clear() called already, facets is empty, no memory leak
     }
     catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
