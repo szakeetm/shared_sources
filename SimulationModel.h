@@ -121,12 +121,12 @@ public:
     // Molflow only
     //void CalcTotalOutgassing();
 
-    virtual Surface *GetSurface(SimulationFacet* facet) {
+    virtual std::shared_ptr<Surface> GetSurface(std::shared_ptr<SimulationFacet> facet) {
         double opacity = facet->sh.opacity;
         if (!surfaces.empty()) {
             auto surf = surfaces.find(opacity);
             if (surf != surfaces.end())
-                return surf->second.get();
+                return surf->second;
         }
         std::shared_ptr<Surface> surface;
         if (opacity == 1.0) {
@@ -137,7 +137,7 @@ public:
             surface = std::make_shared<SemiTransparentSurface>(opacity);
         }
         surfaces.insert(std::make_pair(opacity, surface));
-        return surface.get();
+        return surface;
     };
 
     // Sim functions

@@ -34,8 +34,8 @@ protected:
     //SimulationFacet(const SimulationFacet& cpy);
     //SimulationFacet(SimulationFacet&& cpy) noexcept;
     
-    SimulationFacet& operator=(const SimulationFacet& cpy);
-    SimulationFacet& operator=(SimulationFacet&& cpy) noexcept;
+    //SimulationFacet& operator=(const SimulationFacet& cpy);
+    //SimulationFacet& operator=(SimulationFacet&& cpy) noexcept;
 public:
     ~SimulationFacet() = default;
     std::vector<double>   textureCellIncrements;              // Texure increment

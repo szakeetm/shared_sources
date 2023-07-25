@@ -41,7 +41,7 @@ SimulationFacet::SimulationFacet(SimulationFacet&& cpy) noexcept : RTFacet(cpy){
     *this = std::move(cpy);
 }
 */
-
+/*
 SimulationFacet& SimulationFacet::operator=(const SimulationFacet& cpy){
 
     this->largeEnough = cpy.largeEnough;
@@ -72,7 +72,7 @@ SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
 
     return *this;
 }
-
+*/
 bool SimulationFacet::InitializeLinkAndVolatile(const size_t  id)
 {
     if (sh.superDest || sh.isVolatile) {
