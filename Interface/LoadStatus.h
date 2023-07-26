@@ -49,6 +49,6 @@ private:
   GLButton    *cancelButton;
   Worker      *worker;
 
-  UINT32 lastUpd = 0;
+  Uint32 lastUpd = 0;
   
 };
