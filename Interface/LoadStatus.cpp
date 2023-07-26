@@ -121,20 +121,16 @@ void LoadStatus::Update() {
 	GetProcInfo(currPid, &parentInfo);
 
 	processList->SetValueAt(0, 0, "Interface");
-	processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-	processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
-	processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
-	processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
+	processList->SetValueAt(2, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
 
 	size_t i = 1;
 	for (auto& proc : procStateCache.subProcInfos)
 	{
 		DWORD pid = proc.procId;
 		processList->SetValueAt(0, i, fmt::format("Thread {}", i));
-		processList->SetValueAt(1, i, ""); //placeholder for thread id
-		processList->SetValueAt(2, i, ""); //placeholder for memory
-		processList->SetValueAt(3, i, ""); //placeholder for memory
-		processList->SetValueAt(4, i, fmt::format("[{}] {}", procStateCache.subProcInfos[i - 1].slaveState, procStateCache.subProcInfos[i - 1].slaveStatus));
+		processList->SetValueAt(1, i, prStates[procStateCache.subProcInfos[i - 1].slaveState]);
+		processList->SetValueAt(2, i, procStateCache.subProcInfos[i - 1].slaveStatus);
+
 		++i;
 	}
 }

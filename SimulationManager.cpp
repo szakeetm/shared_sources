@@ -284,12 +284,16 @@ int SimulationManager::WaitForProcStatus(const uint8_t successStatus, LoadStatus
             if (loadStatus) {
                 loadStatus->MakeVisible();
                 loadStatus->procStateCache.procDataMutex.lock();
-                loadStatus->procStateCache = static_cast<ProcCommData>(procInformation);
+                loadStatus->procStateCache = procInformation;
                 loadStatus->procStateCache.procDataMutex.unlock();
                 loadStatus->Update();
             }
+
 			ProcessSleep(waitAmount);
-            abortRequested = loadStatus->abortRequested;
+
+            if (loadStatus) {
+                abortRequested = loadStatus->abortRequested;
+            }
 		}
     } while (!finished || abortRequested);
 

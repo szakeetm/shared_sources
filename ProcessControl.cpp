@@ -21,37 +21,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ProcessControl.h"
 #include <cstring>
 
-ProcComm::ProcComm() : procCommMutex() {
-    masterCmd = 0;
-    cmdParam = 0;
-    cmdParam2 = 0;
-}
-/**
-* \brief Assign operator
-* \param src reference to source object
-* \return address of this
-*/
-ProcComm& ProcComm::operator=(const ProcComm & src) {
-    masterCmd = src.masterCmd;
-    cmdParam = src.cmdParam;
-    cmdParam2 = src.cmdParam2;
-    subProcInfos = src.subProcInfos;
-    return *this;
-}
-
-/**
-* \brief Assign operator
-* \param src reference to source object
-* \return address of this
-*/
-ProcComm& ProcComm::operator=(ProcComm && src) noexcept {
-    masterCmd = src.masterCmd;
-    cmdParam = src.cmdParam;
-    cmdParam2 = src.cmdParam2;
-    subProcInfos = std::move(src.subProcInfos);
-    return *this;
-}
-
 //! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
 void ProcComm::NextSubProc() {
     this->procCommMutex.lock();

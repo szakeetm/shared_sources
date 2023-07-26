@@ -44,7 +44,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 static const char *prStates[] = {
 
-        "Not started",
+        "Executing command",
         "Running",
         "Waiting",
         "Killed",
@@ -73,18 +73,35 @@ struct PROCESS_INFO{
 };
 
 struct SubProcInfo {
-    size_t procId;
-    size_t slaveState;
+    size_t procId=0;
+    size_t slaveState=0;
     std::string slaveStatus;
     PROCESS_INFO runtimeInfo;
 };
 
 struct ProcCommData {
-    size_t masterCmd;
-    size_t cmdParam;
-    size_t cmdParam2;
+    size_t masterCmd = 0;
+    size_t cmdParam = 0;
+    size_t cmdParam2 = 0;
     std::vector<SubProcInfo> subProcInfos;
-    std::mutex procDataMutex; //To avoid writing to it while GUI refreshes LoadStatus window
+    std::mutex procDataMutex; // To avoid writing to it while GUI refreshes LoadStatus window
+
+    // Custom assignment operator
+    ProcCommData& operator=(const ProcCommData& other) {
+        if (this == &other) {
+            return *this; // Check for self-assignment
+        }
+
+        // Copy all members except the mutex
+        masterCmd = other.masterCmd;
+        cmdParam = other.cmdParam;
+        cmdParam2 = other.cmdParam2;
+        subProcInfos = other.subProcInfos;
+
+        // No need to copy the mutex, it's not copyable
+
+        return *this;
+    }
 };
 
 //! Process Communication class for handling inter process/thread communication
@@ -93,19 +110,26 @@ struct ProcComm : ProcCommData {
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
     std::mutex procCommMutex;
 
-    ProcComm();
-    explicit ProcComm(size_t nbProcs) : ProcComm() {
+    // Custom assignment operator
+    ProcComm& operator=(const ProcComm& other) {
+        if (this == &other) {
+            return *this; // Check for self-assignment
+        }
+        ProcCommData::operator=(other); // Call the base class's assignment operator
+        return *this;
+    }
+
+    ProcComm() = default;
+    ProcComm(size_t nbProcs) {
         Resize(nbProcs);
     };
+
     void Resize(size_t nbProcs){
         subProcInfos.resize(nbProcs);
         InitActiveProcList();
     };
 
     void NextSubProc();
-
-    ProcComm& operator=(const ProcComm & src);
-    ProcComm& operator=(ProcComm && src) noexcept ;
 
     void RemoveAsActive(size_t id);
 
