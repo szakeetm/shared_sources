@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLList.h"
+#include "GLApp/GLWindowManager.h"
 #include "SMP.h"
 
 #ifndef _WIN32
@@ -50,8 +51,8 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-static const int   plWidth[] = {60,70,300};
-static const char *plName[] = {"#","Mem Usage","Status"};
+static const int   plWidth[] = {60,170,300};
+static const char *plName[] = {"#","State","Status"};
 static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 
 LoadStatus::LoadStatus(Worker* w):GLWindow() {
@@ -83,7 +84,7 @@ void LoadStatus::EnableStopButton() {
 void LoadStatus::RefreshNbProcess()
 {
 	size_t nbProc = procStateCache.subProcInfos.size();
-	int wD = 450;
+	int wD = 550;
 	int hD = 100 + (int)nbProc * 15;
 	processList->SetSize(3, nbProc + 1);
 	processList->SetColumnWidths((int*)plWidth);
@@ -133,6 +134,12 @@ void LoadStatus::Update() {
 
 		++i;
 	}
+	Uint32 now = SDL_GetTicks();
+	if (IsVisible() && (now - lastUpd) > 500) {
+		mApp->DoEvents();
+		lastUpd = now;
+	}
+
 }
 
 void LoadStatus::MakeVisible()

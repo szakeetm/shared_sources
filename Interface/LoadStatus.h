@@ -48,5 +48,7 @@ private:
   GLLabel     *memInfoLabel;
   GLButton    *cancelButton;
   Worker      *worker;
+
+  UINT32 lastUpd = 0;
   
 };

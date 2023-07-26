@@ -117,7 +117,7 @@ int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 
 //! Call simulation controllers to stop running simulations
 //! //interactive mode
-int SimulationManager::StopSimulation() {
+int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
     isRunning = false;
     if(asyncMode) {
         refreshProcStatus();
@@ -125,7 +125,7 @@ int SimulationManager::StopSimulation() {
             throw std::logic_error("No active simulation threads.");
         }
 
-        if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0))
+        if (ExecuteAndWait(COMMAND_PAUSE, PROCESS_READY, 0, 0, loadStatus))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
     }
     else {
@@ -279,7 +279,7 @@ int SimulationManager::WaitForProcStatus(const uint8_t successStatus, LoadStatus
 			}
 			allProcsDone = allProcsDone && (procState == PROCESS_DONE);
 		}
-
+        //if (loadStatus) finished = false; //debug
 		if (!finished) {
             if (loadStatus) {
                 loadStatus->MakeVisible();
@@ -493,7 +493,7 @@ std::string SimulationManager::MakeSubProcError(const std::string& message) {
 }
 
 
-int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType) {
+int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus) {
     if(loadType < LoadType::NLOADERTYPES){
         /*if(CreateLoaderDP(size))
             return 1;
@@ -504,7 +504,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
-            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0)) {
+            if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, size, 0, loadStatus)) {
                 //CloseLoaderDP();
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -516,7 +516,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         case LoadType::LOADPARAM:{
 
             //if (ExecuteAndWait(COMMAND_UPDATEPARAMS, isRunning ? PROCESS_RUN : PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
-            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY)) {
+            if (ExecuteAndWait(COMMAND_UPDATEPARAMS, PROCESS_READY, size, isRunning ? PROCESS_RUN : PROCESS_READY, loadStatus)) {
                 //CloseLoaderDP();
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
@@ -524,7 +524,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             }
             //CloseLoaderDP();
             if(isRunning) { // restart
-                StartSimulation();
+                StartSimulation(loadStatus);
             }
             break;
         }

@@ -90,11 +90,11 @@ public:
 
     int StartSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    int StopSimulation();
+    int StopSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
     int LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
+    int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
     int ExecuteAndWait(int command, uint8_t successStatus, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 

@@ -287,7 +287,8 @@ void Worker::ResetStatsAndHits(float appTime) {
 }
 
 void Worker::Stop() {
-	simManager.StopSimulation(); //throws error if no success
+	LoadStatus loadWindow(this);
+	simManager.StopSimulation(&loadWindow);
 }
 
 void Worker::InitSimProc() {
