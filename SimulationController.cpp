@@ -159,7 +159,7 @@ bool SimHandle::runLoop() {
         setMyStatus("Final hit update...");
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
                              20000); // Update hit with 20s timeout
-        setMyStatus("Hit update done.");
+        setMyStatus("Finished.");
     }
     return desLimitReachedOrDesError;
 }

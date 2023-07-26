@@ -134,12 +134,7 @@ void LoadStatus::Update() {
 
 		++i;
 	}
-	Uint32 now = SDL_GetTicks();
-	if (IsVisible() && (now - lastUpd) > 500) {
-		mApp->DoEvents();
-		lastUpd = now;
-	}
-
+	mApp->DoEvents(); //draw table and catch stop button press
 }
 
 void LoadStatus::MakeVisible()
