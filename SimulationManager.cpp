@@ -255,24 +255,13 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, G
  * @param successStatus Process Status that should be waited for
  * @return 0 if wait is successful
  */
-int SimulationManager::WaitForProcStatus(const uint8_t successStatus) {
+int SimulationManager::WaitForProcStatus(const uint8_t successStatus, LoadStatus_abstract* loadStatus) {
     // Wait for completion
     bool finished = false;
-    const int waitAmount = 250;
-    int prevIncTime = 0; // save last time a wait increment has been set; allows for a dynamic/reasonable increase
-    int waitTime = 0;
-    int timeOutAt = 10000; // 10 sec; max time for an idle operation to timeout
+    const int waitAmount = 500;
     allProcsDone = true;
     hasErrorStatus = false;
-
-    // struct, because vector of char arrays is forbidden w/ clang
-    std::vector<std::string> prevSlaveStatuses(procInformation.subProcInfos.size());
-    std::vector<std::string> newSlaveStatuses(procInformation.subProcInfos.size());
-
-    for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
-        prevSlaveStatuses[i]=procInformation.subProcInfos[i].slaveStatus;
-    }
-
+    bool abortRequested = false;
 	do {
 
 		finished = true;
@@ -288,24 +277,20 @@ int SimulationManager::WaitForProcStatus(const uint8_t successStatus) {
 			if (procState == PROCESS_ERROR) {
 				hasErrorStatus = true;
 			}
-			else if (procState == PROCESS_STARTING) {
-				newSlaveStatuses[i] = procInformation.subProcInfos[i].slaveStatus;
-				if (prevSlaveStatuses[i] != newSlaveStatuses[i]) { // if strings are different
-					timeOutAt += (waitTime + 10000 < timeOutAt) ? (waitTime - prevIncTime) : (timeOutAt - waitTime +
-						10000); // if task properly started, increase allowed wait time
-					prevIncTime = waitTime;
-				}
-			}
 			allProcsDone = allProcsDone && (procState == PROCESS_DONE);
 		}
 
 		if (!finished) {
+            if (loadStatus) {
+                loadStatus->procStateCache = static_cast<ProcCommData>(procInformation);
+                loadStatus->Update();
+            }
 			ProcessSleep(waitAmount);
-			waitTime += waitAmount;
+            abortRequested = loadStatus->abortRequested;
 		}
-	} while (!finished && waitTime < timeOutAt);
+    } while (!finished || abortRequested);
 
-	return waitTime >= timeOutAt || hasErrorStatus; // 0 = finished, 1 = timeout
+	return (hasErrorStatus || abortRequested); // 0 = finished, 1 = error or aborted
 }
 
 //! Forward a command to simulation controllers
@@ -317,7 +302,7 @@ void SimulationManager::ForwardCommand(const int command, const size_t param, co
     for(auto & spi : procInformation.subProcInfos) {
         auto& procState = spi.slaveState;
         if(procState == PROCESS_READY || procState == PROCESS_RUN || procState==PROCESS_ERROR || procState==PROCESS_DONE) { // check if it'' ready before sending a new command
-            procState = PROCESS_STARTING;
+            procState = PROCESS_EXECUTING_COMMAND;
         }
     }
 }
@@ -329,9 +314,10 @@ void SimulationManager::ForwardCommand(const int command, const size_t param, co
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus, const size_t param, const size_t param2) {
+int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus,
+    const size_t param, const size_t param2, LoadStatus_abstract* loadStatus) {
     ForwardCommand(command, param, param2); // sets master state to command, param and param2, and sets processes to "starting" if they are ready
-    if (!WaitForProcStatus(successStatus)) { // and wait
+    if (!WaitForProcStatus(successStatus, loadStatus)) { // and wait
         return 0;
     }
     return 1;

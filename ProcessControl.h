@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <mutex>
 #include <list>
 
-#define PROCESS_STARTING 0   // Loading state
+#define PROCESS_EXECUTING_COMMAND 0   // Loading state
 #define PROCESS_RUN      1   // Running state
 #define PROCESS_READY    2   // Waiting state
 #define PROCESS_KILLED   3   // Process killed
@@ -72,22 +72,25 @@ struct PROCESS_INFO{
 
 };
 
-//! Process Communication class for handling inter process/thread communication
-struct ProcComm {
+struct SubProcInfo {
+    size_t procId;
+    size_t slaveState;
+    std::string slaveStatus;
+    PROCESS_INFO runtimeInfo;
+};
 
-    struct SubProcInfo {
-        size_t procId;
-        size_t slaveState;
-        std::string slaveStatus;
-        PROCESS_INFO runtimeInfo;
-    };
-
+struct ProcCommData {
     size_t masterCmd;
     size_t cmdParam;
     size_t cmdParam2;
+    std::vector<SubProcInfo> subProcInfos;
+};
+
+//! Process Communication class for handling inter process/thread communication
+struct ProcComm : ProcCommData {
+
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
     std::mutex procCommMutex;
-    std::vector<SubProcInfo> subProcInfos;
 
     ProcComm();
     explicit ProcComm(size_t nbProcs) : ProcComm() {
@@ -107,3 +110,4 @@ struct ProcComm {
 
     void InitActiveProcList();
 };
+

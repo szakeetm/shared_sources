@@ -72,7 +72,7 @@ protected:
 
     void ForwardCommand(int command, size_t param, size_t param2);
 
-    int WaitForProcStatus(uint8_t successStatus);
+    int WaitForProcStatus(uint8_t successStatus, LoadStatus_abstract* loadStatus=nullptr);
 
 public:
     SimulationManager(int pid = -1);
@@ -87,7 +87,7 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
-    int ExecuteAndWait(int command, uint8_t successStatus, size_t param = 0, size_t param2 = 0);
+    int ExecuteAndWait(int command, uint8_t successStatus, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 
     int InitSimulations();
 
@@ -147,6 +147,6 @@ public:
 class LoadStatus_abstract {
 public:
     virtual void Update() = 0; //Notify that the state has changed
-    ProcComm procStateCache; //Updated
-    bool abortSignal = false;
+    ProcCommData procStateCache; //Updated
+    bool abortRequested = false;
 };

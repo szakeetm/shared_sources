@@ -484,11 +484,11 @@ int SimulationController::RebuildAccel() {
  */
 bool SimulationController::Load() {
     //DEBUG_PRINT("[%zd] COMMAND: LOAD (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
-    SetThreadStates(PROCESS_STARTING, "Loading simulation");
+    SetThreadStates(PROCESS_EXECUTING_COMMAND, "Loading simulation");
 
     auto errors = simulationPtr->SanityCheckModel(false);
     if(errors.empty()) {
-        SetThreadStates(PROCESS_STARTING, "Loading simulation");
+        SetThreadStates(PROCESS_EXECUTING_COMMAND, "Loading simulation");
         bool loadError = false;
 
         // Init particleTracers / threads
@@ -666,7 +666,7 @@ int SimulationController::Start() {
 
 int SimulationController::Reset() {
     DEBUG_PRINT("[%zd] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
-    SetThreadStates(PROCESS_STARTING, "Resetting local cache...", false, true);
+    SetThreadStates(PROCESS_EXECUTING_COMMAND, "Resetting local cache...", false, true);
     resetControls();
     auto *sim = simulationPtr;
     sim->ResetSimulation();
