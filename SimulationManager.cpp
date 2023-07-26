@@ -329,8 +329,7 @@ void SimulationManager::ForwardCommand(const int command, const size_t param, co
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus, const size_t param,
-                                      const size_t param2) {
+int SimulationManager::ExecuteAndWait(const int command, const uint8_t successStatus, const size_t param, const size_t param2) {
     ForwardCommand(command, param, param2); // sets master state to command, param and param2, and sets processes to "starting" if they are ready
     if (!WaitForProcStatus(successStatus)) { // and wait
         return 0;
