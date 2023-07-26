@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_SIMULATIONMANAGER_H
-#define MOLFLOW_PROJ_SIMULATIONMANAGER_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -144,5 +143,10 @@ public:
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 };
 
-
-#endif //MOLFLOW_PROJ_SIMULATIONMANAGER_H
+//An abstract class that can display the status of subprocesses and issue an abort command
+class LoadStatus_abstract {
+public:
+    virtual void Update() = 0; //Notify that the state has changed
+    ProcComm procStateCache; //Updated
+    bool abortSignal = false;
+};
