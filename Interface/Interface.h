@@ -63,7 +63,6 @@ class RotateVertex;
 class FacetCoordinates;
 class VertexCoordinates;
 class SmartSelection;
-class LoadStatus;
 class SelectDialog;
 class SelectTextureType;
 class SelectFacetByResult;
@@ -487,7 +486,6 @@ public:
 	RotateVertex	   *rotateVertex = nullptr;
 	AlignFacet         *alignFacet = nullptr;
 	AddVertex		   *addVertex = nullptr;
-	LoadStatus			*loadStatus = nullptr;
 	FacetCoordinates	*facetCoordinates = nullptr;
 	VertexCoordinates	*vertexCoordinates = nullptr;
 	SmartSelection		*smartSelection = nullptr;

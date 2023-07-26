@@ -72,7 +72,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FacetCoordinates.h"
 #include "VertexCoordinates.h"
 #include "SmartSelection.h"
-#include "LoadStatus.h"
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
 #include "SelectFacetByResult.h"
@@ -1006,7 +1005,6 @@ int Interface::RestoreDeviceObjects_shared() {
     RVALIDATE_DLG(rotateVertex);
     RVALIDATE_DLG(alignFacet);
     RVALIDATE_DLG(addVertex);
-    RVALIDATE_DLG(loadStatus);
     RVALIDATE_DLG(facetCoordinates);
     RVALIDATE_DLG(vertexCoordinates);
     RVALIDATE_DLG(particleLogger);
@@ -1050,7 +1048,6 @@ int Interface::InvalidateDeviceObjects_shared() {
     IVALIDATE_DLG(rotateFacet);
     IVALIDATE_DLG(alignFacet);
     IVALIDATE_DLG(addVertex);
-    IVALIDATE_DLG(loadStatus);
     IVALIDATE_DLG(facetCoordinates);
     IVALIDATE_DLG(vertexCoordinates);
     IVALIDATE_DLG(particleLogger);
