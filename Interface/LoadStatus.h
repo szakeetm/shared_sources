@@ -17,10 +17,10 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#ifndef _LOADSTATUSH_
-#define _LOADSTATUSH_
+#pragma once
 
 #include "GLApp/GLWindow.h"
+#include "SimulationManager.h" //loadstatus_abstract
 
 class Worker;
 class GLButton;
@@ -28,16 +28,16 @@ class GLLabel;
 class GLTitledPanel;
 class GLList;
 
-class LoadStatus : public GLWindow {
-
+class LoadStatus : public GLWindow, public LoadStatus_abstract{
+	//Can display subprocess status when Update() called and request abort when Stop pressed
 public:
 
   // Construction
   LoadStatus(Worker *w);
   void EnableStopButton();
   void RefreshNbProcess();
-  ~LoadStatus();
-  void SMPUpdate();
+  void Update() override;
+  void MakeVisible() override;
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -50,5 +50,3 @@ private:
   Worker      *worker;
   
 };
-
-#endif /* _LOADSTATUSH_ */

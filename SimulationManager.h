@@ -54,6 +54,15 @@ enum class LoadType : uint8_t {
     LOADHITS
 };
 
+//An abstract class that can display the status of subprocesses and issue an abort command
+class LoadStatus_abstract {
+public:
+    virtual void Update() = 0; //Notify that the state has changed
+    virtual void MakeVisible() = 0;
+    ProcCommData procStateCache; //Updated
+    bool abortRequested = false;
+};
+
 /*!
  * @brief Controls concrete Simulation instances and manages their I/O needs. Can act as a standalone (CLI mode) or as a middleman (GPU mode).
  * @todo Add logger capability to console OR sdl framework
@@ -79,11 +88,11 @@ public:
 
     ~SimulationManager();
 
-    int StartSimulation();
+    int StartSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
     int StopSimulation();
 
-    int LoadSimulation();
+    int LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType);
 
@@ -143,10 +152,3 @@ public:
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
 };
 
-//An abstract class that can display the status of subprocesses and issue an abort command
-class LoadStatus_abstract {
-public:
-    virtual void Update() = 0; //Notify that the state has changed
-    ProcCommData procStateCache; //Updated
-    bool abortRequested = false;
-};

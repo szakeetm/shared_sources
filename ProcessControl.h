@@ -84,6 +84,7 @@ struct ProcCommData {
     size_t cmdParam;
     size_t cmdParam2;
     std::vector<SubProcInfo> subProcInfos;
+    std::mutex procDataMutex; //To avoid writing to it while GUI refreshes LoadStatus window
 };
 
 //! Process Communication class for handling inter process/thread communication

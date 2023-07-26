@@ -82,9 +82,10 @@ void LoadStatus::EnableStopButton() {
 
 void LoadStatus::RefreshNbProcess()
 {
+	size_t nbProc = procStateCache.subProcInfos.size();
 	int wD = 450;
-	int hD = 100 + (int)worker->GetProcNumber() * 15;
-	processList->SetSize(3, worker->GetProcNumber() + 1);
+	int hD = 100 + (int)nbProc * 15;
+	processList->SetSize(3, nbProc + 1);
 	processList->SetColumnWidths((int*)plWidth);
 	processList->SetColumnLabels(plName);
 	processList->SetColumnAligns((int *)plAligns);
@@ -98,48 +99,49 @@ void LoadStatus::RefreshNbProcess()
 	SetBounds(xD, yD, wD, hD);
 }
 
-LoadStatus::~LoadStatus()
-{
-	//SAFE_DELETE(processList);
+void LoadStatus::Update() {
+	//SimulationManager calls it, after it has updated its procStateCache
+	auto guard = std::lock_guard(procStateCache.procDataMutex);
+	size_t nbProc = procStateCache.subProcInfos.size();
+	if ((processList->GetNbRow() - 1) != nbProc) {
+		RefreshNbProcess();
+	}
+
+	processList->ResetValues(); //Zero out all
+
+	//Interface
+#ifdef _WIN32
+	size_t currPid = GetCurrentProcessId();
+	double memDenominator = (1024.0*1024.0);
+#else
+	size_t currPid = getpid();
+	double memDenominator = (1024.0);
+#endif
+	PROCESS_INFO parentInfo{};
+	GetProcInfo(currPid, &parentInfo);
+
+	processList->SetValueAt(0, 0, "Interface");
+	processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
+	processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
+	processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
+	processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
+
+	size_t i = 1;
+	for (auto& proc : procStateCache.subProcInfos)
+	{
+		DWORD pid = proc.procId;
+		processList->SetValueAt(0, i, fmt::format("Thread {}", i));
+		processList->SetValueAt(1, i, ""); //placeholder for thread id
+		processList->SetValueAt(2, i, ""); //placeholder for memory
+		processList->SetValueAt(3, i, ""); //placeholder for memory
+		processList->SetValueAt(4, i, fmt::format("[{}] {}", procStateCache.subProcInfos[i - 1].slaveState, procStateCache.subProcInfos[i - 1].slaveStatus));
+		++i;
+	}
 }
 
-void LoadStatus::SMPUpdate() {
-		
-	if ((processList->GetNbRow() - 1) != worker->model->otfParams.nbProcess) RefreshNbProcess();
-
-    ProcComm procInfoPtr;
-    worker->GetProcStatus(procInfoPtr);
-
-		processList->ResetValues();
-
-		//Interface
-#ifdef _WIN32
-		size_t currPid = GetCurrentProcessId();
-		double memDenominator = (1024.0*1024.0);
-#else
-		size_t currPid = getpid();
-		double memDenominator = (1024.0);
-#endif
-		PROCESS_INFO parentInfo{};
-		GetProcInfo(currPid, &parentInfo);
-
-		processList->SetValueAt(0, 0, "Interface");
-		processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-		processList->SetValueAt(2, 0, fmt::format("{:.0f}", (double)parentInfo.mem_use / memDenominator));
-		processList->SetValueAt(3, 0, fmt::format("{:.0f}", (double)parentInfo.mem_peak / memDenominator));
-		processList->SetValueAt(4, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
-
-		size_t i = 1;
-		for (auto& proc : procInfoPtr.subProcInfos)
-		{
-			DWORD pid = proc.procId;
-			processList->SetValueAt(0, i, fmt::format("Thread {}", i));
-			processList->SetValueAt(1, i, ""); //placeholder for thread id
-			processList->SetValueAt(2, i, ""); //placeholder for memory
-			processList->SetValueAt(3, i, ""); //placeholder for memory
-			processList->SetValueAt(4, i, fmt::format("[{}] {}", procInfoPtr.subProcInfos[i - 1].slaveState, procInfoPtr.subProcInfos[i - 1].slaveStatus));
-			++i;
-		}
+void LoadStatus::MakeVisible()
+{
+	SetVisible(true);
 }
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {
@@ -148,12 +150,12 @@ void LoadStatus::ProcessMessage(GLComponent *src,int message) {
 		if (src == cancelButton) {
 			cancelButton->SetText("Stopping...");
 			cancelButton->SetEnabled(false);
-			worker->abortRequested = true;
+			abortRequested = true; //SimulationManager will handle it
 		}
 	case MSG_CLOSE:
 			cancelButton->SetText("Stopping...");
 			cancelButton->SetEnabled(false);
-			worker->abortRequested = true;
+			abortRequested = true; //SimulationManager will handle it
 			break;
 	}
 }

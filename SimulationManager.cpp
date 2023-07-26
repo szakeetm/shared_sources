@@ -87,7 +87,7 @@ int SimulationManager::refreshProcStatus() {
  * @brief Starts the simulation on all available simulation units
  * @return 0=start successful, 1=PROCESS_DONE state entered
  */
-int SimulationManager::StartSimulation() {
+int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 
     if (simulationChanged) {
         LoadSimulation(); //sets simulationChanged to false
@@ -98,7 +98,7 @@ int SimulationManager::StartSimulation() {
         if (simThreads.empty())
             throw std::logic_error("No active simulation threads.");
 
-        if (ExecuteAndWait(COMMAND_RUN, PROCESS_RUN, 0, 0)) {
+        if (ExecuteAndWait(COMMAND_RUN, PROCESS_RUN, 0, 0,loadStatus)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
     }
@@ -135,12 +135,12 @@ int SimulationManager::StopSimulation() {
     return 0;
 }
 
-int SimulationManager::LoadSimulation(){
+int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
     if(asyncMode) {
         if (simThreads.empty())
             throw std::logic_error("No active simulation threads");
 
-        if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0)) {
+        if (ExecuteAndWait(COMMAND_LOAD, PROCESS_READY, 0, 0,loadStatus)) {
             std::string errString = "Failed to send geometry to sub process:\n";
             errString.append(GetErrorDetails());
             throw std::runtime_error(errString);
@@ -282,7 +282,10 @@ int SimulationManager::WaitForProcStatus(const uint8_t successStatus, LoadStatus
 
 		if (!finished) {
             if (loadStatus) {
+                loadStatus->MakeVisible();
+                loadStatus->procStateCache.procDataMutex.lock();
                 loadStatus->procStateCache = static_cast<ProcCommData>(procInformation);
+                loadStatus->procStateCache.procDataMutex.unlock();
                 loadStatus->Update();
             }
 			ProcessSleep(waitAmount);
