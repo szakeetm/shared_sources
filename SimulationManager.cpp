@@ -58,29 +58,24 @@ SimulationManager::SimulationManager(int pid) {
 }
 
 SimulationManager::~SimulationManager() {
-    KillAllSimUnits();
+    KillSimulation();
 }
 
 //! Refresh proc status by looking for those that can be safely killed and remove them
 int SimulationManager::refreshProcStatus() {
-    int nbDead = 0;
-    for(auto proc = simThreads.begin(); proc != simThreads.end() ; ){
-        if(!(*proc).joinable()){
-            auto myHandle = (*proc).native_handle();
+    if (!simThread) return 1; //invalid
+    if (!simThread->joinable()) {
+        auto myHandle = simThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-            TerminateThread(myHandle, 1);
+        TerminateThread(myHandle, 1);
 #else
-            //Linux
-            pthread_cancel(myHandle);
+        //Linux
+        pthread_cancel(myHandle);
 #endif
-            proc = this->simThreads.erase(proc);
-            ++nbDead;
-        }
-        else{
-            ++proc;
-        }
+        simThread.reset();
+        return 1; //invalid thread
     }
-    return nbDead;
+    else return 0; //valid thread
 }
 
 /*!
@@ -95,8 +90,8 @@ int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 
     if(asyncMode) {
         refreshProcStatus();
-        if (simThreads.empty())
-            throw std::logic_error("No active simulation threads.");
+        if (!simThread)
+            throw std::logic_error("No active simulation thread.");
 
         if (ExecuteAndWait(SimCommand::Run, SimState::Running, 0, 0,loadStatus)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
@@ -121,8 +116,8 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
     isRunning = false;
     if(asyncMode) {
         refreshProcStatus();
-        if (simThreads.empty()) {
-            throw std::logic_error("No active simulation threads.");
+        if (!simThread) {
+            throw std::logic_error("No active simulation thread.");
         }
 
         if (ExecuteAndWait(SimCommand::Pause, SimState::Ready, 0, 0, loadStatus))
@@ -137,8 +132,8 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
 
 int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
     if(asyncMode) {
-        if (simThreads.empty())
-            throw std::logic_error("No active simulation threads");
+        if (!simThread)
+            throw std::logic_error("No active simulation thread");
 
         if (ExecuteAndWait(SimCommand::Load, SimState::Ready, 0, 0,loadStatus)) {
             std::string errString = "Failed to send geometry to sub process:\n";
@@ -177,18 +172,17 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
 #endif // DEBUG
     }
 
-    size_t nbSimulations = 1; // nbThreads
     try{
         procInformation.Resize(nbThreads);
-        procInformation.UpdateMasterStatus("Deleting old threads...", loadStatus);
-        simThreads.clear();
+        procInformation.UpdateMasterStatus("Deleting old simulation...", loadStatus);
+        simThread.reset();
     }
     catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
         throw std::runtime_error(e.what());
     }
 
-    procInformation.UpdateMasterStatus("Creating new simulation structure...", loadStatus);
+    procInformation.UpdateMasterStatus("Creating new simulation...", loadStatus);
  //Dirty
 #ifdef MOLFLOW
     simulation = std::make_unique<MolflowSimulation>();
@@ -200,9 +194,8 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
-        simThreads.emplace_back(
-                std::thread(&SimulationController::controlledLoop, simController.get()));
-        auto myHandle = simThreads.back().native_handle();
+        simThread = std::make_unique<std::thread>(&SimulationController::controlledLoop, simController.get());
+        auto myHandle = simThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
 #else
@@ -218,23 +211,11 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     return 0;
 }
 
-// return 1=error
-int SimulationManager::CreateGPUHandle() {
-    //not implemented
-    return 1;
-}
-
-// return 1=error
-int SimulationManager::CreateRemoteHandle() {
-    //not implemented
-    return 1;
-}
-
 /*!
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::SetUpSimulations(LoadStatus_abstract* loadStatus) {
+int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
     procInformation.UpdateMasterStatus("Creating worker threads...", loadStatus);
     CreateCPUHandle();
     procInformation.UpdateMasterStatus("Waiting for worker threads to be ready...", loadStatus);
@@ -273,8 +254,8 @@ int SimulationManager::WaitForProcStatus(const SimState successState, LoadStatus
 
 		finished = true;
 
-		for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
-			auto procState = procInformation.subProcInfos[i].slaveState;
+		for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
+			auto procState = procInformation.threadInfos[i].slaveState;
 			if (successState == SimState::Killed) {// explicitly ask for killed state
 				finished = finished && (procState == SimState::Killed);
 			}
@@ -313,7 +294,7 @@ void SimulationManager::ForwardCommand(const SimCommand command, const size_t pa
     procInformation.cmdParam = param;
     procInformation.cmdParam2 = param2;
     
-    for(auto & spi : procInformation.subProcInfos) {
+    for(auto & spi : procInformation.threadInfos) {
         auto& procState = spi.slaveState;
         //if(procState == SimState::Ready || procState == SimState::Running || procState==SimState::InError || procState==SimState::Finished) { // check if ready before sending a new command
             procState = SimState::ExecutingCommand; //Generic, since not every command (ex. pause, reset, load) has its dedicated SimState
@@ -337,52 +318,51 @@ int SimulationManager::ExecuteAndWait(const SimCommand command, const SimState s
     return 1;
 }
 
-int SimulationManager::KillAllSimUnits(LoadStatus_abstract* loadStatus) {
-    if( !simThreads.empty() ) {
+int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
+    if( simThread ) {
         if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)){ // execute
             // Force kill
             simController->EmergencyExit(); //Request particle tracers to not do more MC steps
             if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)) { 
                 int i = 0;
-                for (auto tIter = simThreads.begin(); tIter != simThreads.end(); ++i) {
-                    if (procInformation.subProcInfos[i].slaveState != SimState::Killed) {
-                        auto nativeHandle = simThreads[i].native_handle();
+                if (procInformation.threadInfos[i].slaveState != SimState::Killed) {
+                    auto nativeHandle = simThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
-                        //Windows
-                        TerminateThread(nativeHandle, 1);
+                    //Windows
+                    TerminateThread(nativeHandle, 1);
 #else
-                        //Linux
-                        int s;
-                        s = pthread_cancel(nativeHandle);
-                        if (s != 0)
-                            Log::console_msg(1, "pthread_cancel: {}\n", s);
-                        tIter->detach();
+                    //Linux
+                    int s;
+                    s = pthread_cancel(nativeHandle);
+                    if (s != 0)
+                        Log::console_msg(1, "pthread_cancel: {}\n", s);
+                    tIter->detach();
 #endif
-                        //assume that the process doesn't exist, so remove it from our management structure
-                        try {
-                            tIter = simThreads.erase(tIter);
-                        }
-                        catch (const std::exception &e) {
-                            throw std::runtime_error(fmt::format("Could not terminate subprocesses: {}\n",e.what())); // proc couldn't be killed!?
-                        }
-                        catch (...) {
-                            throw std::runtime_error("Could not terminate subprocesses.\n"); // proc couldn't be killed!?
-                        }
+                    //assume that the process doesn't exist, so remove it from our management structure
+                    try {
+                        simThread.reset();
+                    }
+                    catch (const std::exception &e) {
+                        throw std::runtime_error(fmt::format("Could not terminate simulation thread: {}\n",e.what())); // proc couldn't be killed!?
+                    }
+                    catch (...) {
+                        throw std::runtime_error("Could not terminate simulation thread.\n"); // proc couldn't be killed!?
                     }
                 }
             }
         }
-
-        for(size_t i=0;i<simThreads.size();i++) {
-            if (procInformation.subProcInfos[i].slaveState == SimState::Killed) {
-                simThreads[i].join();
-            }
-            else{
-                if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0, 0, loadStatus))
-                    exit(1);
+        bool allKilled = true;
+        for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
+            allKilled = allKilled && procInformation.threadInfos[i].slaveState == SimState::Killed;
+        }
+        if (allKilled) {
+            simThread->join();
+        } else {
+            if (ExecuteAndWait(SimCommand::Kill, SimState::Killed, 0, 0, loadStatus)) {
+                exit(1);
             }
         }
-        simThreads.clear();
+        simThread.reset();
     }
     nbThreads = 0;
     return 0;
@@ -401,10 +381,10 @@ int SimulationManager::ResetSimulations() {
 }
 
 int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
-    if(simThreads.empty())
+    if(!simThread)
         return 1;
 
-    procInfoList.subProcInfos = procInformation.subProcInfos;
+    procInfoList.threadInfos = procInformation.threadInfos;
 
     return 0;
 }
@@ -416,13 +396,13 @@ std::string SimulationManager::GetMasterStatus()
 
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
-    if(statusStrings.size() < procInformation.subProcInfos.size())
+    if(statusStrings.size() < procInformation.threadInfos.size())
         return 1;
 
-    for (size_t i = 0; i < procInformation.subProcInfos.size(); i++) {
+    for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
-        states[i] = procInformation.subProcInfos[i].slaveState;
-        statusStrings[i] = procInformation.subProcInfos[i].slaveStatus;
+        states[i] = procInformation.threadInfos[i].slaveState;
+        statusStrings[i] = procInformation.threadInfos[i].slaveStatus;
     }
     return 0;
 }
@@ -434,7 +414,7 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
 bool SimulationManager::IsRunning(){
 
     bool done = true;
-    for (auto & i : procInformation.subProcInfos) {
+    for (auto & i : procInformation.threadInfos) {
         auto procState = i.slaveState;
         done = done && (procState==SimState::InError || procState==SimState::Ready);
         if( procState==SimState::InError ) {
@@ -459,10 +439,10 @@ std::string SimulationManager::GetErrorDetails() {
 
     std::string err;
 
-    for (size_t i = 0; i < procInfoPtr.subProcInfos.size(); i++) {
-        auto state = procInfoPtr.subProcInfos[i].slaveState;
+    for (size_t i = 0; i < procInfoPtr.threadInfos.size(); i++) {
+        auto state = procInfoPtr.threadInfos[i].slaveState;
         if (state == SimState::InError) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, simStateStrings.at(state), procInfoPtr.subProcInfos[i].slaveStatus));
+            err.append(fmt::format("[Thread #{}] {}: {}", i, simStateStrings.at(state), procInfoPtr.threadInfos[i].slaveStatus));
         } else {
             err.append(fmt::format("[Thread #{}] {}", i, simStateStrings.at(state)));
         }
@@ -565,7 +545,7 @@ int SimulationManager::IncreasePriority() {
 
 #endif
 
-    for(auto& handle : simThreads) {
+    for(auto& handle : simThread) {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_HIGHEST);
@@ -589,7 +569,7 @@ int SimulationManager::DecreasePriority() {
 #else
 
 #endif
-    for(auto& handle : simThreads) {
+    for(auto& handle : simThread) {
         auto myHandle = handle.first.native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);

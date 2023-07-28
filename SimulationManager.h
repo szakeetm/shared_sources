@@ -61,10 +61,6 @@ enum class LoadType : uint8_t {
 class SimulationManager {
     int CreateCPUHandle(LoadStatus_abstract* loadStatus = nullptr);
 
-    int CreateGPUHandle();
-
-    int CreateRemoteHandle();
-
     std::string MakeSubProcError(const std::string& message);
 
     int refreshProcStatus();
@@ -89,11 +85,11 @@ public:
 
     int ExecuteAndWait(SimCommand command, SimState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 
-    int SetUpSimulations(LoadStatus_abstract* loadStatus=nullptr);
+    int SetUpSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
     void InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr); //throws error
 
-    int KillAllSimUnits(LoadStatus_abstract* loadStatus=nullptr);
+    int KillSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
     int ResetSimulations();
 
@@ -121,7 +117,7 @@ private:
 
 
 protected:
-    //std::vector<Simulation_Abstract*> simThreads; // for threaded versions
+    //std::vector<Simulation_Abstract*> simThread; // for threaded versions
 public:
     size_t nbThreads=0;
     size_t mainProcId;
@@ -136,7 +132,7 @@ public:
 private:
     std::unique_ptr<SimulationController> simController; //One day there can be several parallel simulations, so keep it separated from simulationManager
     std::unique_ptr<Simulation_Abstract> simulation;
-    std::vector<std::thread> simThreads;
+    std::unique_ptr<std::thread> simThread; //pointer so it can have unitialized (nullptr) state (as opposed to std::thread)
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);

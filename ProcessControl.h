@@ -72,8 +72,8 @@ struct PROCESS_INFO{
 
 };
 
-struct SubProcInfo {
-    size_t procId=0;
+struct ThreadInfo {
+    size_t threadId=0;
     SimState slaveState=SimState::Ready;
     std::string slaveStatus;
     PROCESS_INFO runtimeInfo;
@@ -87,7 +87,7 @@ struct ProcCommData {
     size_t cmdParam2 = 0;
     std::string masterStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
 
-    std::vector<SubProcInfo> subProcInfos;
+    std::vector<ThreadInfo> threadInfos;
     std::mutex procDataMutex; // To avoid writing to it while GUI refreshes LoadStatus window
 
     // Custom assignment operator
@@ -101,7 +101,7 @@ struct ProcCommData {
         cmdParam = other.cmdParam;
         cmdParam2 = other.cmdParam2;
         masterStatus = other.masterStatus;
-        subProcInfos = other.subProcInfos;
+        threadInfos = other.threadInfos;
 
         // No need to copy the mutex, it's not copyable
 
@@ -131,8 +131,8 @@ struct ProcComm : ProcCommData {
         Resize(nbProcs);
     };
 
-    void Resize(size_t nbProcs) { //Called by constructor and by simulation manager' 's CreateCPUHandle()
-        subProcInfos.resize(nbProcs);
+    void Resize(size_t nbProcs) { //Called by constructor and by simulation manager's CreateCPUHandle()
+        threadInfos.resize(nbProcs);
         InitActiveProcList();
     };
 

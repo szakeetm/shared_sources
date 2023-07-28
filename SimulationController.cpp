@@ -138,7 +138,7 @@ bool SimHandle::runLoop() {
 
             size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
-                masterProcInfo.subProcInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
@@ -151,13 +151,13 @@ bool SimHandle::runLoop() {
             lastUpdateOk = false;
         }
         finishLoop = desLimitReachedOrDesError || (this->particleTracerPtr->model->otfParams.timeLimit != 0 && ((timeEnd-timeStart) >= this->particleTracerPtr->model->otfParams.timeLimit))
-            || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.subProcInfos[threadNum].slaveState == SimState::InError);
+            || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].slaveState == SimState::InError);
     } while (!finishLoop);
 
     masterProcInfo.RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
-            masterProcInfo.subProcInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
+            masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
         setMyStatus("Thread finished.");
     }
     return desLimitReachedOrDesError;
@@ -165,7 +165,7 @@ bool SimHandle::runLoop() {
 
 void SimHandle::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
     masterProcInfo.procDataMutex.lock();
-    masterProcInfo.subProcInfos[threadNum].slaveStatus=msg;
+    masterProcInfo.threadInfos[threadNum].slaveStatus=msg;
     masterProcInfo.procDataMutex.unlock();
 }
 
@@ -294,8 +294,8 @@ int SimulationController::resetControls() {
 int SimulationController::SetRuntimeInfo() {
 
     // Update runtime information
-    for (auto &pInfo : procInfo.subProcInfos)
-        GetProcInfo(pInfo.procId, &pInfo.runtimeInfo);
+    for (auto &pInfo : procInfo.threadInfos)
+        GetProcInfo(pInfo.threadId, &pInfo.runtimeInfo);
 
     return 0;
 }
@@ -313,12 +313,12 @@ int SimulationController::ClearCommand() {
 int SimulationController::SetThreadStates(SimState state, const std::string &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        for (auto &pInfo : procInfo.subProcInfos) {
+        for (auto &pInfo : procInfo.threadInfos) {
             pInfo.slaveState = state;
         }
     }
     if (changeStatus) {
-        for (auto &pInfo : procInfo.subProcInfos) {
+        for (auto &pInfo : procInfo.threadInfos) {
             pInfo.slaveStatus=status;
         }
     }
@@ -333,19 +333,19 @@ int SimulationController::SetThreadStates(SimState state, const std::vector<std:
 
     if (changeState) {
         //DEBUG_PRINT("setstate %s\n", simStateStrings.at(state).c_str());
-        for (auto &pInfo : procInfo.subProcInfos) {
+        for (auto &pInfo : procInfo.threadInfos) {
             pInfo.slaveState = state;
         }
     }
     if (changeStatus) {
-        if(procInfo.subProcInfos.size() != status.size()){
-            for (auto &pInfo : procInfo.subProcInfos) {
+        if(procInfo.threadInfos.size() != status.size()){
+            for (auto &pInfo : procInfo.threadInfos) {
                pInfo.slaveStatus="invalid state (subprocess number mismatch)";
             }
         }
         else {
             size_t pInd = 0;
-            for (auto &pInfo : procInfo.subProcInfos) {
+            for (auto &pInfo : procInfo.threadInfos) {
                 pInfo.slaveStatus=status[pInd++];
             }
         }
@@ -384,7 +384,7 @@ void SimulationController::SetThreadError(const std::string& message) {
 }
 
 void SimulationController::SetStatus(const std::string& status) {
-    for (auto &pInfo : procInfo.subProcInfos) {
+    for (auto &pInfo : procInfo.threadInfos) {
         pInfo.slaveStatus=status;
     }
 }
@@ -401,8 +401,8 @@ void SimulationController::SetReady(const bool loadOk) {
 
 // Returns the thread state if equal for all, otherwise PROCESS_ERROR
 size_t SimulationController::GetThreadStates() const {
-    size_t locState = procInfo.subProcInfos[0].slaveState;
-    for (auto &pInfo : procInfo.subProcInfos) {
+    size_t locState = procInfo.threadInfos[0].slaveState;
+    for (auto &pInfo : procInfo.threadInfos) {
         if (locState != pInfo.slaveState)
             return SimState::InError;
     }

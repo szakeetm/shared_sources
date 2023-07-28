@@ -45,7 +45,7 @@ void ProcComm::RemoveAsActive(size_t id) {
 void ProcComm::InitActiveProcList() {
     //this->activeProcsMutex.lock();
     activeProcs.clear();
-    for(size_t id = 0; id < this->subProcInfos.size(); ++id)
+    for(size_t id = 0; id < this->threadInfos.size(); ++id)
         activeProcs.emplace_back(id);
     //this->activeProcsMutex.unlock();
 }

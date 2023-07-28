@@ -98,14 +98,14 @@ void GlobalSettingsBase::SMPUpdate() {
         processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
         size_t i = 2;
-        for (auto& proc : procInfoPtr.subProcInfos)
+        for (auto& proc : procInfoPtr.threadInfos)
         {
-            DWORD pid = proc.procId;
+            DWORD pid = proc.threadId;
             processList->SetValueAt(0, i, fmt::format("Thread {}", i));
             processList->SetValueAt(1, i, ""); //placeholder for thread id
             processList->SetValueAt(2, i, ""); //placeholder for memory
             processList->SetValueAt(3, i, ""); //placeholder for memory
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", simStateStrings.at(procInfoPtr.subProcInfos[i - 2].slaveState), procInfoPtr.subProcInfos[i - 2].slaveStatus));
+            processList->SetValueAt(4, i, fmt::format("[{}] {}", simStateStrings.at(procInfoPtr.threadInfos[i - 2].slaveState), procInfoPtr.threadInfos[i - 2].slaveStatus));
             ++i;
         }
         lastUpdate = SDL_GetTicks();

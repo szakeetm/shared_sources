@@ -88,12 +88,12 @@ static void ProcessControlTable(SynRad *mApp) {
         size_t i = 1;
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(procInfoPtr.subProcInfos.size());
+        clipper.Begin(procInfoPtr.threadInfos.size());
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 i = row;
-                auto &proc = procInfoPtr.subProcInfos[i];
-                DWORD pid = proc.procId;
+                auto &proc = procInfoPtr.threadInfos[i];
+                DWORD pid = proc.threadId;
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("Thread %zu", i + 1);

@@ -77,7 +77,7 @@ extern SynRad* mApp;
 #endif
 
 Worker::~Worker() {
-	simManager.KillAllSimUnits(); // kill in case of preemptive Molflow close, prevents updates on already deleted globalsimustate
+	simManager.KillSimulation(); // kill in case of preemptive Molflow close, prevents updates on already deleted globalsimustate
 	delete geom;
 }
 
@@ -297,7 +297,7 @@ void Worker::InitSimProc() {
 
 	// Launch n subprocess
 	LoadStatus loadStatus(this);
-	if (simManager.SetUpSimulations(&loadStatus)) {
+	if (simManager.SetUpSimulation(&loadStatus)) {
 		throw Error("Failed to init simulation.");
 	}
 
@@ -308,19 +308,18 @@ void Worker::InitSimProc() {
 
 void Worker::SetProcNumber(size_t n) {
 	LoadStatus loadStatus(this);
-	// Kill all sub process
 	try {
-		simManager.KillAllSimUnits(&loadStatus);
+		simManager.KillSimulation(&loadStatus);
 	}
 	catch (const std::exception&) {
-		throw Error("Killing subprocesses failed!");
+		throw Error("Killing simulation failed");
 	}
 
 	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess
-	if ((model->otfParams.nbProcess = simManager.SetUpSimulations(&loadStatus))) {
-		throw Error("Starting subprocesses failed!");
+	if ((model->otfParams.nbProcess = simManager.SetUpSimulation(&loadStatus))) {
+		throw Error("Starting subprocesses failed");
 	}
 
 	model->otfParams.nbProcess = simManager.nbThreads;
