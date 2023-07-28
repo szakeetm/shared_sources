@@ -54,15 +54,6 @@ enum class LoadType : uint8_t {
     LOADHITS
 };
 
-//An abstract class that can display the status of subprocesses and issue an abort command
-class LoadStatus_abstract {
-public:
-    virtual void Update() = 0; //Notify that the state has changed
-    virtual void MakeVisible() = 0;
-    ProcCommData procStateCache; //Updated
-    bool abortRequested = false;
-};
-
 /*!
  * @brief Controls concrete Simulation instances and manages their I/O needs. Can act as a standalone (CLI mode) or as a middleman (GPU mode).
  * @todo Add logger capability to console OR sdl framework
@@ -98,7 +89,7 @@ public:
 
     int ExecuteAndWait(SimCommand command, SimState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 
-    int InitSimulations();
+    int SetUpSimulations(LoadStatus_abstract* loadStatus=nullptr);
 
     void InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr); //throws error
 
@@ -111,6 +102,8 @@ public:
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
     int GetProcStatus(ProcComm &procInfoList);
+
+    std::string GetMasterStatus();
 
     std::string GetErrorDetails();
 
@@ -141,7 +134,7 @@ public:
     bool simulationChanged = true; // by default, always init simulation process the first time
 
 private:
-    std::unique_ptr<SimulationController> simController;
+    std::unique_ptr<SimulationController> simController; //One day there can be several parallel simulations, so keep it separated from simulationManager
     std::unique_ptr<Simulation_Abstract> simulation;
     std::vector<std::thread> simThreads;
 

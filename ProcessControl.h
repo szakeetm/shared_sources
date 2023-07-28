@@ -31,7 +31,7 @@ enum SimState {
 	Running,
 	Ready,
 	Killed,
-	Error,
+	InError,
 	Finished
 };
 
@@ -40,7 +40,7 @@ static std::map<SimState, std::string> simStateStrings = {
     {SimState::Running,"Running"},
     {SimState::Ready,"Ready"},
     {SimState::Killed,"Killed"},
-    {SimState::Error,"Error"},
+    {SimState::InError,"Error"},
     {SimState::Finished,"Finished"}
 };
 
@@ -54,7 +54,7 @@ enum SimCommand {
     UpdateParams
 };
 
-static std::map<SimCommand, std::string> simStateStrings = {
+static std::map<SimCommand, std::string> simCommandStrings = {
     {SimCommand::None,"No command"},
     {SimCommand::Load,"Load"},
     {SimCommand::Run,"Run"},
@@ -74,13 +74,15 @@ struct PROCESS_INFO{
 
 struct SubProcInfo {
     size_t procId=0;
-    SimState slaveState=0;
+    SimState slaveState=SimState::Ready;
     std::string slaveStatus;
     PROCESS_INFO runtimeInfo;
 };
 
+class LoadStatus_abstract;
+
 struct ProcCommData {
-    SimCommand masterCmd = 0;
+    SimCommand masterCmd = SimCommand::None;
     size_t cmdParam = 0;
     size_t cmdParam2 = 0;
     std::string masterStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
@@ -105,6 +107,8 @@ struct ProcCommData {
 
         return *this;
     }
+
+    void UpdateMasterStatus(const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 
 //! Process Communication class for handling inter process/thread communication
@@ -137,5 +141,13 @@ struct ProcComm : ProcCommData {
     void RemoveAsActive(size_t id); //Called by simulation controller (SimHandle::runloop) when end condition is met (and exit from loop), before final hit update
 
     void InitActiveProcList(); //Called by constructor and on resize
+    
 };
 
+//An abstract class that can display the status of subprocesses and issue an abort command
+class LoadStatus_abstract {
+public:
+    virtual void Update() = 0; //Notify that the state has changed
+    ProcCommData procStateCache; //Updated
+    bool abortRequested = false;
+};

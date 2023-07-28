@@ -37,7 +37,6 @@ public:
   void EnableStopButton();
   void RefreshNbProcess();
   void Update() override;
-  void MakeVisible() override;
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;

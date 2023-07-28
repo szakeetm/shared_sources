@@ -84,7 +84,6 @@ protected:
     GLToggle* highlightNonplanarToggle;
     GLToggle* useOldXMLFormat;
     GLToggle* prioToggle;
-
 };
 
 #endif /* GLOBALSETTINGS_SHARED_H */

@@ -71,7 +71,7 @@ public:
   void SetSelectedCell(size_t column,size_t row);
   void SetCornerLabel(const std::string& text);
   void Clear(bool keepColumns=false,const std::string& progressStatus="");
-  void ResetValues();
+  void ClearValues();
   size_t  GetNbRow();
   size_t  GetNbColumn();
   void SetRow(size_t row, const char **values);

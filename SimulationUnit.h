@@ -47,14 +47,14 @@ public:
     virtual ~Simulation_Abstract()= default;
 
     /*! Parse input and pre compute/prepare all necessary structures  */
-    virtual size_t LoadSimulation(std::string& loadStatus) = 0;
+    virtual size_t LoadSimulation(ProcCommData& procInfo, LoadStatus_abstract* loadStatus) = 0;
     virtual int RebuildAccelStructure() = 0;
 
     virtual int ReinitializeParticleLog() = 0;
     virtual std::vector<std::string> SanityCheckModel(bool strictCheck) = 0;
 
     virtual void ResetSimulation() = 0;
-    virtual void ClearSimulation() = 0;
+    //virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
     virtual MFSim::ParticleTracer * GetParticleTracerPtr(size_t i) = 0;

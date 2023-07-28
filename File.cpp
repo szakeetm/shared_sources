@@ -100,10 +100,8 @@ const char *FileReader::GetName() { return fileName; }
 
 FileReader::~FileReader() { fclose(file); }
 
-Error FileReader::MakeError(const char *msg) const {
-    static char ret[4096];
-    sprintf(ret, "%s (line %d)", msg, curLine);
-    return Error(ret);
+std::string FileReader::MakeError(const std::string& msg) const {
+    return fmt::format("{} (line {}",msg, curLine);
 }
 
 int FileReader::ReadInt() {

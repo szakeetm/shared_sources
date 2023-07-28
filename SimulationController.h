@@ -33,7 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
  */
 class SimHandle {
 public:
-    SimHandle(ProcComm* procInfoPtr, Simulation_Abstract* simPtr, size_t threadNum);
+    SimHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, size_t threadNum);
 
     size_t threadNum;
     double stepsPerSec;
@@ -41,7 +41,7 @@ public:
     size_t localDesLimit;
     double timeLimit;
 
-    ProcComm* masterProcInfoPtr;
+    ProcComm& masterProcInfo;
     Simulation_Abstract* simulationPtr;
     MFSim::ParticleTracer* particleTracerPtr;
     bool runLoop();
@@ -59,13 +59,13 @@ private:
 * \brief Controller that handles communication between GUI via SimulationManager and the running @Simulation_Abstract
  */
 class SimulationController {
-    bool UpdateParams();
+    bool UpdateParams(LoadStatus_abstract* loadStatus = nullptr);
     int resetControls();
 protected:
 
 
-    virtual int StopSim() {return 0;};
-    virtual int TerminateSim() {return 0;};
+    //virtual int StopSim() {return 0;};
+    //virtual int TerminateSim() {return 0;};
 
     int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
     int SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
@@ -78,13 +78,13 @@ protected:
     size_t GetThreadStates() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
-                         Simulation_Abstract *simulationInstance, ProcComm *pInfo);
+                         Simulation_Abstract *simulationInstance, ProcComm& pInfo);
     void controlledLoop();
 
-    int Start();
-    bool Load();
-    int RebuildAccel();
-    int Reset();
+    int Start(LoadStatus_abstract* loadStatus=nullptr);
+    bool Load(LoadStatus_abstract* loadStatus = nullptr);
+    //int RebuildAccel(LoadStatus_abstract* loadStatus = nullptr);
+    int Reset(LoadStatus_abstract* loadStatus = nullptr);
 
     void EmergencyExit();
 protected:
@@ -92,7 +92,7 @@ protected:
     Simulation_Abstract* simulationPtr;
     std::vector<SimHandle> simThreadHandles;
 
-    ProcComm* procInfoPtr;
+    ProcComm& procInfo;
     size_t parentPID;
     size_t nbThreads;
     size_t prIdx;

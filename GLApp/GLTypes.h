@@ -22,8 +22,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring> // strncpy for Error
 #include <algorithm> // fill
 #include <string>
-// Messages
 
+// Messages
 #define MSG_NULL     0    // No message
 #define MSG_CLOSE    1    // Close window
 #define MSG_ICONIFY  2    // Iconify window

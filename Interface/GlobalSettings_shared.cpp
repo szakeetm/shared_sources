@@ -67,14 +67,14 @@ void GlobalSettingsBase::SMPUpdate() {
 
     if (!IsVisible() || IsIconic()) return;
     size_t nb = worker->GetProcNumber();
-    if (processList->GetNbRow() != (nb + 1)) processList->SetSize(5, nb + 1,true);
+    if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2,true);
 
     if( time-lastUpdate>333 ) {
 
         ProcComm procInfoPtr;
         worker->GetProcStatus(procInfoPtr);
 
-        processList->ResetValues();
+        processList->ClearValues();
 
         //Interface
 #ifdef _WIN32
@@ -93,7 +93,11 @@ void GlobalSettingsBase::SMPUpdate() {
         processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator));
         processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
-        size_t i = 1;
+        processList->SetValueAt(0, 1, "Sim.Manager");
+        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->size() / memDenominator));
+        processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
+
+        size_t i = 2;
         for (auto& proc : procInfoPtr.subProcInfos)
         {
             DWORD pid = proc.procId;
@@ -101,7 +105,7 @@ void GlobalSettingsBase::SMPUpdate() {
             processList->SetValueAt(1, i, ""); //placeholder for thread id
             processList->SetValueAt(2, i, ""); //placeholder for memory
             processList->SetValueAt(3, i, ""); //placeholder for memory
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", prStates[procInfoPtr.subProcInfos[i - 1].slaveState], procInfoPtr.subProcInfos[i - 1].slaveStatus));
+            processList->SetValueAt(4, i, fmt::format("[{}] {}", simStateStrings.at(procInfoPtr.subProcInfos[i - 2].slaveState), procInfoPtr.subProcInfos[i - 2].slaveStatus));
             ++i;
         }
         lastUpdate = SDL_GetTicks();

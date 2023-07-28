@@ -90,7 +90,7 @@ int SimulationManager::refreshProcStatus() {
 int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 
     if (simulationChanged) {
-        LoadSimulation(); //sets simulationChanged to false
+        LoadSimulation(loadStatus); //sets simulationChanged to false
     }
 
     if(asyncMode) {
@@ -194,7 +194,7 @@ int SimulationManager::CreateCPUHandle() {
 #ifdef SYNRAD
     simulation = std::make_unique<SynradSimulation>();
 #endif
-    simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), &procInformation);
+    simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
         simThreads.emplace_back(
@@ -231,31 +231,24 @@ int SimulationManager::CreateRemoteHandle() {
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
-int SimulationManager::InitSimulations() {
-    procInformation.procDataMutex.lock();
-    procInformation.masterStatus = "Creating worker threads...";
-    procInformation.procDataMutex.unlock();
+int SimulationManager::SetUpSimulations(LoadStatus_abstract* loadStatus) {
+    procInformation.UpdateMasterStatus("Creating worker threads...", loadStatus);
     CreateCPUHandle();
-    procInformation.procDataMutex.lock();
-    procInformation.masterStatus = "Waiting for worker threads to be ready...";
-    procInformation.procDataMutex.unlock();
-    return WaitForProcStatus(SimState::Ready);
+    procInformation.UpdateMasterStatus("Waiting for worker threads to be ready...", loadStatus);
+    auto result = WaitForProcStatus(SimState::Ready);
+    procInformation.UpdateMasterStatus("", loadStatus);
+    return result;
 }
 
 /*!
  * @brief Creates Simulation Units and waits for their ready status
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
+//Called from CLI and test suite
 void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
-    procInformation.procDataMutex.lock();
-    procInformation.masterStatus = "Waiting for access to simulation model...";
-    procInformation.procDataMutex.unlock();
     std::lock_guard<std::mutex> lock(model->modelMutex); //throws error if unsuccessful
 
     // Prepare simulation unit
-    procInformation.procDataMutex.lock();
-    procInformation.masterStatus = "Resetting simulations...";
-    procInformation.procDataMutex.unlock();
     ResetSimulations();
     ForwardSimModel(model);
     ForwardGlobalCounter(globStatePtr, nullptr);
@@ -269,7 +262,7 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, G
 int SimulationManager::WaitForProcStatus(const SimState successState, LoadStatus_abstract* loadStatus) {
     // Wait for completion
     bool finished = false;
-    const int waitAmount = 500;
+    const int waitAmount_ms = 500;
     allProcsDone = true;
     hasErrorStatus = false;
     bool abortRequested = false;
@@ -283,9 +276,9 @@ int SimulationManager::WaitForProcStatus(const SimState successState, LoadStatus
 				finished = finished && (procState == SimState::Killed);
 			}
 			else {
-				finished = finished && (procState == successState || procState == SimState::Error || procState == SimState::Ready);
+				finished = finished && (procState == successState || procState == SimState::InError || procState == SimState::Ready);
 			}
-			if (procState == SimState::Ready) {
+			if (procState == SimState::InError) {
 				hasErrorStatus = true;
 			}
 			allProcsDone = allProcsDone && (procState == SimState::Ready);
@@ -293,14 +286,13 @@ int SimulationManager::WaitForProcStatus(const SimState successState, LoadStatus
         //if (loadStatus) finished = false; //debug
 		if (!finished) {
             if (loadStatus) {
-                loadStatus->MakeVisible();
                 loadStatus->procStateCache.procDataMutex.lock();
                 loadStatus->procStateCache = procInformation;
                 loadStatus->procStateCache.procDataMutex.unlock();
                 loadStatus->Update();
             }
 
-			ProcessSleep(waitAmount);
+			ProcessSleep(waitAmount_ms);
 
             if (loadStatus) {
                 abortRequested = loadStatus->abortRequested;
@@ -320,7 +312,7 @@ void SimulationManager::ForwardCommand(const SimCommand command, const size_t pa
     
     for(auto & spi : procInformation.subProcInfos) {
         auto& procState = spi.slaveState;
-        //if(procState == SimState::Ready || procState == SimState::Running || procState==SimState::Error || procState==SimState::Finished) { // check if ready before sending a new command
+        //if(procState == SimState::Ready || procState == SimState::Running || procState==SimState::InError || procState==SimState::Finished) { // check if ready before sending a new command
             procState = SimState::ExecutingCommand; //Generic, since not every command (ex. pause, reset, load) has its dedicated SimState
         //}
     }
@@ -414,6 +406,11 @@ int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     return 0;
 }
 
+std::string SimulationManager::GetMasterStatus()
+{
+    return fmt::format("[{}] {}", simCommandStrings[procInformation.masterCmd], procInformation.masterStatus);
+}
+
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
     if(statusStrings.size() < procInformation.subProcInfos.size())
@@ -436,8 +433,8 @@ bool SimulationManager::IsRunning(){
     bool done = true;
     for (auto & i : procInformation.subProcInfos) {
         auto procState = i.slaveState;
-        done = done && (procState==SimState::Error || procState==SimState::Ready);
-        if( procState==SimState::Error ) {
+        done = done && (procState==SimState::InError || procState==SimState::Ready);
+        if( procState==SimState::InError ) {
             hasErrorStatus = true;
         }
     }
@@ -461,10 +458,10 @@ std::string SimulationManager::GetErrorDetails() {
 
     for (size_t i = 0; i < procInfoPtr.subProcInfos.size(); i++) {
         auto state = procInfoPtr.subProcInfos[i].slaveState;
-        if (state == SimState::Error) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, simStateStrings[state], procInfoPtr.subProcInfos[i].slaveStatus));
+        if (state == SimState::InError) {
+            err.append(fmt::format("[Thread #{}] {}: {}", i, simStateStrings.at(state), procInfoPtr.subProcInfos[i].slaveStatus));
         } else {
-            err.append(fmt::format("[Thread #{}] {}", i, simStateStrings[state]));
+            err.append(fmt::format("[Thread #{}] {}", i, simStateStrings.at(state)));
         }
     }
     return err;

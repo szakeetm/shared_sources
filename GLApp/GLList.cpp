@@ -184,7 +184,7 @@ void GLList::SetGrid(bool visible) {
 	gridVisible = visible;
 }
 
-void GLList::ResetValues() {
+void GLList::ClearValues() {
 
 	for (int i = 0; i < nbCol; i++)
 		for (int j = 0; j < nbRow; j++)

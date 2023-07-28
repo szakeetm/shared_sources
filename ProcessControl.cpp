@@ -50,3 +50,15 @@ void ProcComm::InitActiveProcList() {
     //this->activeProcsMutex.unlock();
 }
 
+void ProcCommData::UpdateMasterStatus(const std::string& status, LoadStatus_abstract* loadStatus)
+{
+    procDataMutex.lock();
+    masterStatus = status;
+    procDataMutex.unlock();
+    if (loadStatus) {
+        loadStatus->procStateCache.procDataMutex.lock();
+        loadStatus->procStateCache.masterStatus = status;
+        loadStatus->procStateCache.procDataMutex.unlock();
+        loadStatus->Update();
+    }
+}

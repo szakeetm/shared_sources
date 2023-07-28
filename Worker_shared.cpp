@@ -296,8 +296,9 @@ void Worker::InitSimProc() {
 	simManager.nbThreads = 0; // set to 0 to init max threads
 
 	// Launch n subprocess
-	if (simManager.InitSimulations()) {
-		throw Error("Initializing simulation unit failed!");
+	LoadStatus loadStatus(this);
+	if (simManager.SetUpSimulations(&loadStatus)) {
+		throw Error("Failed to init simulation.");
 	}
 
 	model->otfParams.nbProcess = simManager.nbThreads;
@@ -318,7 +319,8 @@ void Worker::SetProcNumber(size_t n) {
 	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess
-	if ((model->otfParams.nbProcess = simManager.InitSimulations())) {
+	LoadStatus loadStatus(this);
+	if ((model->otfParams.nbProcess = simManager.SetUpSimulations(&loadStatus))) {
 		throw Error("Starting subprocesses failed!");
 	}
 

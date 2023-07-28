@@ -74,6 +74,7 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	//RefreshNbProcess(); //Determines size, position and processList nbRows, position and cancelButton position
 
 	RestoreDeviceObjects();
+	lastUpd = SDL_GetTicks();
 }
 
 void LoadStatus::EnableStopButton() {
@@ -108,7 +109,7 @@ void LoadStatus::Update() {
 		RefreshNbProcess();
 	}
 
-	processList->ResetValues(); //Zero out all
+	processList->ClearValues(); //Zero out all
 
 	//Interface
 #ifdef _WIN32
@@ -121,25 +122,26 @@ void LoadStatus::Update() {
 	PROCESS_INFO parentInfo{};
 	GetProcInfo(currPid, &parentInfo);
 
-	processList->SetValueAt(0, 0, "Interface");
-	processList->SetValueAt(2, 0, fmt::format("[Geom. {}]", worker->model->sh.name));
+	processList->SetValueAt(0, 0, "Sim.Manager");
+	processList->SetValueAt(1, 0, simCommandStrings.at(procStateCache.masterCmd));
+	processList->SetValueAt(2, 0, procStateCache.masterStatus);
 
 	size_t i = 1;
 	for (auto& proc : procStateCache.subProcInfos)
 	{
 		DWORD pid = proc.procId;
 		processList->SetValueAt(0, i, fmt::format("Thread {}", i));
-		processList->SetValueAt(1, i, prStates[procStateCache.subProcInfos[i - 1].slaveState]);
+		processList->SetValueAt(1, i, simStateStrings.at(procStateCache.subProcInfos[i - 1].slaveState));
 		processList->SetValueAt(2, i, procStateCache.subProcInfos[i - 1].slaveStatus);
 
 		++i;
 	}
-	mApp->DoEvents(); //draw table and catch stop button press
-}
-
-void LoadStatus::MakeVisible()
-{
-	SetVisible(true);
+	Uint32 now = SDL_GetTicks();
+	if ((now - lastUpd) > 500) {
+		SetVisible(true);
+		mApp->DoEvents(); //draw table and catch stop button press
+		lastUpd = SDL_GetTicks();
+	}
 }
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {

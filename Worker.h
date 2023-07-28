@@ -106,6 +106,8 @@ public:
     bool InterfaceGeomToSimModel();
     void SimModelToInterfaceGeom();
 
+    std::string GetSimManagerStatus();
+
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
   void ExportProfiles(const char *fileName);

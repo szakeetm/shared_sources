@@ -18,14 +18,12 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef FILERWH
-#define FILERWH
+#pragma once
 
 #include <cstdio>
 #include <string>
 #include <vector>
 #include <memory>
-#include "GLApp/GLTypes.h"
 
 #define READ_BUFFSIZE 4096
 
@@ -75,7 +73,7 @@ public:
   bool SeekForChar(const char *c);
   bool wasLineEnd;
 
-  Error MakeError(const char *msg) const;
+  std::string MakeError(const std::string& msg) const;
   int GetCurrentLine() const;
 
   void JumpComment();
@@ -125,6 +123,4 @@ private:
   char fileName[2048];
   
 };
-
-#endif /* FILERWH */
 

@@ -164,7 +164,7 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 
     chart->SetBounds(7, 5, w - 15, h - 110);
 
-    size_t lineHeightDiff = 45;
+    int lineHeightDiff = 45;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
     formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
     dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
