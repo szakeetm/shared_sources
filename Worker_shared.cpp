@@ -276,7 +276,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 	try {
 		// First reset local states, then sim handles (to communicate cleared stats)
 		ResetWorkerStats();
-		simManager.ResetHits();
+		simManager.ResetSimulations();
 
 		ReloadIfNeeded();
 		Update(appTime);
@@ -503,7 +503,7 @@ size_t Worker::GetProcNumber() const {
 
 bool Worker::IsRunning() {
 	// In case a simulation ended prematurely escaping the check routines in FrameMove (only executed after at least one second)
-	bool state = simManager.GetRunningStatus();;
+	bool state = simManager.IsRunning();;
 	if (!state && simuTimer.isActive)
 		simuTimer.Stop();
 	return state;

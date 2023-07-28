@@ -303,19 +303,17 @@ int SimulationController::SetRuntimeInfo() {
 
 int SimulationController::ClearCommand() {
 
-    procInfoPtr->masterCmd = COMMAND_NONE;
+    procInfoPtr->masterCmd = SimCommand::NONE;
     procInfoPtr->cmdParam = 0;
     procInfoPtr->cmdParam2 = 0;
-    SetThreadStates(PROCESS_READY,GetThreadStatuses());
+    SetThreadStates(SimState::READY,GetThreadStatuses());
 
     return 0;
 }
 
-int SimulationController::SetThreadStates(size_t state, const std::string &status, bool changeState, bool changeStatus) {
+int SimulationController::SetThreadStates(SimState state, const std::string &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        DEBUG_PRINT("setstate %s\n", prStates[state]);
-        //master->procInformation[prIdx].masterCmd = state;
         for (auto &pInfo : procInfoPtr->subProcInfos) {
             pInfo.slaveState = state;
         }
@@ -326,8 +324,8 @@ int SimulationController::SetThreadStates(size_t state, const std::string &statu
         }
     }
 
-    if(state == PROCESS_ERROR){
-        procInfoPtr->masterCmd = PROCESS_WAIT;
+    if(state == SimState::ERROR){
+        procInfoPtr->masterCmd = SimCommand::NONE;
     }
     return 0;
 }
@@ -450,8 +448,8 @@ void SimulationController::controlledLoop() {
                 endState = true;
                 break;
             }
-            case COMMAND_CLOSE: {
-                DEBUG_PRINT("[%zd] COMMAND: CLOSE (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
+            case COMMAND_CLEAR: {
+                DEBUG_PRINT("[%zd] COMMAND: CLEAR (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
                 auto* sim = simulationPtr;
                 //for (auto &sim : *simulation)
                     sim->ClearSimulation();
@@ -679,5 +677,5 @@ int SimulationController::Reset() {
 
 void SimulationController::EmergencyExit(){
     for(auto& thread : simThreadHandles)
-        thread.particleTracerPtr->allQuit = true;
+        thread.particleTracerPtr->exitRequested = true;
 };

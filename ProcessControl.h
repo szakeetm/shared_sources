@@ -24,44 +24,44 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include <mutex>
 #include <list>
+#include <map>
 
-#define PROCESS_EXECUTING_COMMAND 0   // Loading state
-#define PROCESS_RUN      1   // Running state
-#define PROCESS_READY    2   // Waiting state
-#define PROCESS_KILLED   3   // Process killed
-#define PROCESS_ERROR    4   // Process in error
-#define PROCESS_DONE     5   // Simulation ended
-#define PROCESS_WAIT     6   // Command fully executed
+enum SimState {
+	ExecutingCommand,
+	Running,
+	Ready,
+	Killed,
+	Error,
+	Finished
+};
 
-#define COMMAND_NONE     10  // No change
-#define COMMAND_LOAD     11  // Load geometry
-#define COMMAND_RUN    12  // Run simu
-#define COMMAND_PAUSE    13  // Pause simu
-#define COMMAND_RESET    14  // Reset simu
-#define COMMAND_EXIT     15  // Exit
-#define COMMAND_CLOSE    16  // Release handles
-#define COMMAND_UPDATEPARAMS 17 //Update simulation mode (low flux, fluxwise/powerwise, displayed regions)
+static std::map<SimState, std::string> simStateStrings = {
+    {SimState::ExecutingCommand,"Executing command"},
+    {SimState::Running,"Running"},
+    {SimState::Ready,"Ready"},
+    {SimState::Killed,"Killed"},
+    {SimState::Error,"Error"},
+    {SimState::Finished,"Finished"}
+};
 
-static const char *prStates[] = {
+enum SimCommand {
+    None,
+    Load,
+    Run,
+    Pause,
+    Reset,
+    Kill,
+    UpdateParams
+};
 
-        "Executing command",
-        "Running",
-        "Waiting",
-        "Killed",
-        "Error",
-        "Done",
-        "",
-        "",
-        "",
-        "",
-        "No command",
-        "Load",
-        "Run",
-        "Pause",
-        "Reset",
-        "Exit",
-        "Close",
-        "Update params"
+static std::map<SimCommand, std::string> simStateStrings = {
+    {SimCommand::None,"No command"},
+    {SimCommand::Load,"Load"},
+    {SimCommand::Run,"Run"},
+    {SimCommand::Pause,"Pause"},
+    {SimCommand::Reset,"Reset"},
+    {SimCommand::Kill,"Exit"},
+    {SimCommand::UpdateParams,"Update params"}
 };
 
 struct PROCESS_INFO{
@@ -74,15 +74,17 @@ struct PROCESS_INFO{
 
 struct SubProcInfo {
     size_t procId=0;
-    size_t slaveState=0;
+    SimState slaveState=0;
     std::string slaveStatus;
     PROCESS_INFO runtimeInfo;
 };
 
 struct ProcCommData {
-    size_t masterCmd = 0;
+    SimCommand masterCmd = 0;
     size_t cmdParam = 0;
     size_t cmdParam2 = 0;
+    std::string masterStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
+
     std::vector<SubProcInfo> subProcInfos;
     std::mutex procDataMutex; // To avoid writing to it while GUI refreshes LoadStatus window
 
@@ -96,6 +98,7 @@ struct ProcCommData {
         masterCmd = other.masterCmd;
         cmdParam = other.cmdParam;
         cmdParam2 = other.cmdParam2;
+        masterStatus = other.masterStatus;
         subProcInfos = other.subProcInfos;
 
         // No need to copy the mutex, it's not copyable
@@ -108,7 +111,7 @@ struct ProcCommData {
 struct ProcComm : ProcCommData {
 
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
-    std::mutex activeProcsMutex;
+    //std::mutex activeProcsMutex;
 
     // Custom assignment operator
     ProcComm& operator=(const ProcComm& other) {

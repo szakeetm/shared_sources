@@ -79,9 +79,9 @@ class SimulationManager {
     int refreshProcStatus();
 protected:
 
-    void ForwardCommand(int command, size_t param, size_t param2);
+    void ForwardCommand(SimCommand command, size_t param, size_t param2);
 
-    int WaitForProcStatus(uint8_t successStatus, LoadStatus_abstract* loadStatus=nullptr);
+    int WaitForProcStatus(SimState successStatus, LoadStatus_abstract* loadStatus=nullptr);
 
 public:
     SimulationManager(int pid = -1);
@@ -96,7 +96,7 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
-    int ExecuteAndWait(int command, uint8_t successStatus, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
+    int ExecuteAndWait(SimCommand command, SimState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 
     int InitSimulations();
 
@@ -106,7 +106,7 @@ public:
 
     int ResetSimulations();
 
-    int ResetHits();
+    //int ResetHits();
 
     int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
@@ -114,7 +114,7 @@ public:
 
     std::string GetErrorDetails();
 
-    bool GetRunningStatus();
+    bool IsRunning();
 
     /*
     int IncreasePriority();

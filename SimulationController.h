@@ -67,8 +67,8 @@ protected:
     virtual int StopSim() {return 0;};
     virtual int TerminateSim() {return 0;};
 
-    int SetThreadStates(size_t state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
-    int SetThreadStates(size_t state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
+    int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
+    int SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     std::vector<std::string> GetThreadStatuses();
     void SetThreadError(const std::string& message);
     void SetStatus(const std::string &status); //Sets for all
