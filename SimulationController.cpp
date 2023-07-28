@@ -245,7 +245,7 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
 
     // resetControls()
     stepsPerSec = 0.0;
-    endState = false;
+    exitRequested = false;
     lastHitUpdateOK = true;
 
     SetRuntimeInfo();
@@ -265,7 +265,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
     o.procInfoPtr = nullptr;
 
     stepsPerSec = o.stepsPerSec;
-    endState = o.endState;
+    exitRequested = o.exitRequested;
     lastHitUpdateOK = o.lastHitUpdateOK;
 
     prIdx = o.prIdx;
@@ -284,7 +284,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
 
 int SimulationController::resetControls() {
     lastHitUpdateOK = true;
-    endState = false;
+    exitRequested = false;
 
     stepsPerSec = 0.0;
 
@@ -411,9 +411,9 @@ size_t SimulationController::GetThreadStates() const {
 
 // Main loop
 void SimulationController::controlledLoop() {
-    endState = false;
+    exitRequested = false;
     loadOk = false;
-    while (!endState) {
+    while (!exitRequested) {
         switch (procInfo.masterCmd) {
             case SimCommand::Load: {
                 Load();
@@ -441,7 +441,7 @@ void SimulationController::controlledLoop() {
                 break;
             }
             case SimCommand::Kill: {
-                endState = true;
+                exitRequested = true;
                 break;
             }
             default: {

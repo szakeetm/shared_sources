@@ -63,16 +63,16 @@ SimulationManager::~SimulationManager() {
 
 //! Refresh proc status by looking for those that can be safely killed and remove them
 int SimulationManager::refreshProcStatus() {
-    if (!simThread) return 1; //invalid
-    if (!simThread->joinable()) {
-        auto myHandle = simThread->native_handle();
+    if (!controllerLoopThread) return 1; //invalid
+    if (!controllerLoopThread->joinable()) {
+        auto myHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         TerminateThread(myHandle, 1);
 #else
         //Linux
         pthread_cancel(myHandle);
 #endif
-        simThread.reset();
+        controllerLoopThread.reset();
         return 1; //invalid thread
     }
     else return 0; //valid thread
@@ -90,7 +90,7 @@ int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 
     if(asyncMode) {
         refreshProcStatus();
-        if (!simThread)
+        if (!controllerLoopThread)
             throw std::logic_error("No active simulation thread.");
 
         if (ExecuteAndWait(SimCommand::Run, SimState::Running, 0, 0,loadStatus)) {
@@ -116,7 +116,7 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
     isRunning = false;
     if(asyncMode) {
         refreshProcStatus();
-        if (!simThread) {
+        if (!controllerLoopThread) {
             throw std::logic_error("No active simulation thread.");
         }
 
@@ -132,7 +132,7 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
 
 int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
     if(asyncMode) {
-        if (!simThread)
+        if (!controllerLoopThread)
             throw std::logic_error("No active simulation thread");
 
         if (ExecuteAndWait(SimCommand::Load, SimState::Ready, 0, 0,loadStatus)) {
@@ -175,7 +175,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     try{
         procInformation.Resize(nbThreads);
         procInformation.UpdateMasterStatus("Deleting old simulation...", loadStatus);
-        simThread.reset();
+        controllerLoopThread.reset();
     }
     catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
@@ -194,8 +194,8 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
-        simThread = std::make_unique<std::thread>(&SimulationController::controlledLoop, simController.get());
-        auto myHandle = simThread->native_handle();
+        controllerLoopThread = std::make_unique<std::thread>(&SimulationController::controlledLoop, simController.get());
+        auto myHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
 #else
@@ -319,14 +319,14 @@ int SimulationManager::ExecuteAndWait(const SimCommand command, const SimState s
 }
 
 int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
-    if( simThread ) {
+    if( controllerLoopThread ) {
         if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)){ // execute
             // Force kill
             simController->EmergencyExit(); //Request particle tracers to not do more MC steps
             if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)) { 
                 int i = 0;
                 if (procInformation.threadInfos[i].slaveState != SimState::Killed) {
-                    auto nativeHandle = simThread->native_handle();
+                    auto nativeHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                     //Windows
                     TerminateThread(nativeHandle, 1);
@@ -336,11 +336,11 @@ int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
                     s = pthread_cancel(nativeHandle);
                     if (s != 0)
                         Log::console_msg(1, "pthread_cancel: {}\n", s);
-                    simThread->detach();
+                    controllerLoopThread->detach();
 #endif
                     //assume that the process doesn't exist, so remove it from our management structure
                     try {
-                        simThread.reset();
+                        controllerLoopThread.reset();
                     }
                     catch (const std::exception &e) {
                         throw std::runtime_error(fmt::format("Could not terminate simulation thread: {}\n",e.what())); // proc couldn't be killed!?
@@ -356,13 +356,13 @@ int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
             allKilled = allKilled && procInformation.threadInfos[i].slaveState == SimState::Killed;
         }
         if (allKilled) {
-            simThread->join();
+            controllerLoopThread->join();
         } else {
             if (ExecuteAndWait(SimCommand::Kill, SimState::Killed, 0, 0, loadStatus)) {
                 exit(1);
             }
         }
-        simThread.reset();
+        controllerLoopThread.reset();
     }
     nbThreads = 0;
     return 0;
@@ -381,7 +381,7 @@ int SimulationManager::ResetSimulations() {
 }
 
 int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
-    if(!simThread)
+    if(!controllerLoopThread)
         return 1;
 
     procInfoList.threadInfos = procInformation.threadInfos;

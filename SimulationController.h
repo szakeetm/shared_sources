@@ -100,7 +100,7 @@ protected:
 private:
     // tmp
     double stepsPerSec;
-    bool endState;
+    bool exitRequested;
     bool lastHitUpdateOK;
     bool loadOk;
 

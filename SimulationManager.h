@@ -117,7 +117,7 @@ private:
 
 
 protected:
-    //std::vector<Simulation_Abstract*> simThread; // for threaded versions
+    //std::vector<Simulation_Abstract*> controllerLoopThread; // for threaded versions
 public:
     size_t nbThreads=0;
     size_t mainProcId;
@@ -132,7 +132,7 @@ public:
 private:
     std::unique_ptr<SimulationController> simController; //One day there can be several parallel simulations, so keep it separated from simulationManager
     std::unique_ptr<Simulation_Abstract> simulation;
-    std::unique_ptr<std::thread> simThread; //pointer so it can have unitialized (nullptr) state (as opposed to std::thread)
+    std::unique_ptr<std::thread> controllerLoopThread; //pointer so it can have unitialized (nullptr) state (as opposed to std::thread)
 
 public:
     void ForwardSimModel(std::shared_ptr<SimulationModel> model);
