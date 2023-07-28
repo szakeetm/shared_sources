@@ -122,7 +122,7 @@ void LoadStatus::Update() {
 	PROCESS_INFO parentInfo{};
 	GetProcInfo(currPid, &parentInfo);
 
-	processList->SetValueAt(0, 0, "Sim.Manager");
+	processList->SetValueAt(0, 0, "SimManager");
 	processList->SetValueAt(1, 0, simCommandStrings.at(procStateCache.masterCmd));
 	processList->SetValueAt(2, 0, procStateCache.masterStatus);
 

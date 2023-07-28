@@ -93,7 +93,7 @@ void GlobalSettingsBase::SMPUpdate() {
         processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator));
         processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
-        processList->SetValueAt(0, 1, "Sim.Manager");
+        processList->SetValueAt(0, 1, "SimManager");
         processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->size() / memDenominator));
         processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
