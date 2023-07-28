@@ -23,30 +23,30 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
 void ProcComm::NextSubProc() {
-    this->procCommMutex.lock();
+    this->activeProcsMutex.lock();
     activeProcs.emplace_back(activeProcs.front());
     activeProcs.pop_front();
-    this->procCommMutex.unlock();
+    this->activeProcsMutex.unlock();
 }
 
 //! Removes a process from the active list, in case it is finished
 void ProcComm::RemoveAsActive(size_t id) {
-    this->procCommMutex.lock();
+    this->activeProcsMutex.lock();
     for(auto proc = activeProcs.begin(); proc != activeProcs.end(); ++proc){
         if(id == (*proc)) {
             activeProcs.erase(proc);
             break;
         }
     }
-    this->procCommMutex.unlock();
+    this->activeProcsMutex.unlock();
 }
 
 //! Init list of active/simulating processes
 void ProcComm::InitActiveProcList() {
-    this->procCommMutex.lock();
+    this->activeProcsMutex.lock();
     activeProcs.clear();
     for(size_t id = 0; id < this->subProcInfos.size(); ++id)
         activeProcs.emplace_back(id);
-    this->procCommMutex.unlock();
+    this->activeProcsMutex.unlock();
 }
 

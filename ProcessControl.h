@@ -108,7 +108,7 @@ struct ProcCommData {
 struct ProcComm : ProcCommData {
 
     std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
-    std::mutex procCommMutex;
+    std::mutex activeProcsMutex;
 
     // Custom assignment operator
     ProcComm& operator=(const ProcComm& other) {
