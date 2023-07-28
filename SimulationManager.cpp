@@ -336,7 +336,7 @@ int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
                     s = pthread_cancel(nativeHandle);
                     if (s != 0)
                         Log::console_msg(1, "pthread_cancel: {}\n", s);
-                    tIter->detach();
+                    simThread->detach();
 #endif
                     //assume that the process doesn't exist, so remove it from our management structure
                     try {
