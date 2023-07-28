@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring>
 
 //! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
-void ProcComm::NextSubProc() {
+void ProcComm::PlaceFrontToBack() {
     this->activeProcsMutex.lock();
     activeProcs.emplace_back(activeProcs.front());
     activeProcs.pop_front();

@@ -139,13 +139,13 @@ bool SimHandle::runLoop() {
 
             size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
-                                                timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                masterProcInfoPtr->subProcInfos[threadNum].slaveStatus, masterProcInfoPtr->procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
 
             if(masterProcInfoPtr->activeProcs.front() == threadNum)
-                masterProcInfoPtr->NextSubProc();
+                masterProcInfoPtr->PlaceFrontToBack();
             timeLoopStart = omp_get_wtime();
         }
         else{
@@ -156,16 +156,17 @@ bool SimHandle::runLoop() {
 
     masterProcInfoPtr->RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
-        setMyStatus("Final hit update...");
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
-                             20000); // Update hit with 20s timeout
-        setMyStatus("Finished.");
+            masterProcInfoPtr->subProcInfos[threadNum].slaveStatus, masterProcInfoPtr->procDataMutex, 20000); // Update hit with 20s timeout
+        setMyStatus("Thread finished.");
     }
     return desLimitReachedOrDesError;
 }
 
 void SimHandle::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
+    masterProcInfoPtr->procDataMutex.lock();
     masterProcInfoPtr->subProcInfos[threadNum].slaveStatus=msg;
+    masterProcInfoPtr->procDataMutex.unlock();
 }
 
 [[nodiscard]] std::string SimHandle::ConstructThreadStatus() const {

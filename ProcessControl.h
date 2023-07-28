@@ -124,15 +124,15 @@ struct ProcComm : ProcCommData {
         Resize(nbProcs);
     };
 
-    void Resize(size_t nbProcs){
+    void Resize(size_t nbProcs) { //Called by constructor and by simulation manager' 's CreateCPUHandle()
         subProcInfos.resize(nbProcs);
         InitActiveProcList();
     };
 
-    void NextSubProc();
+    void PlaceFrontToBack(); //Called by simulation controller (SimHandle::runloop) when thread-local hits are added to master hits
 
-    void RemoveAsActive(size_t id);
+    void RemoveAsActive(size_t id); //Called by simulation controller (SimHandle::runloop) when end condition is met (and exit from loop), before final hit update
 
-    void InitActiveProcList();
+    void InitActiveProcList(); //Called by constructor and on resize
 };
 
