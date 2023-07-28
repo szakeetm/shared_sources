@@ -56,11 +56,11 @@ enum SimCommand {
 
 static std::map<SimCommand, std::string> simCommandStrings = {
     {SimCommand::None,"No command"},
-    {SimCommand::Load,"Load"},
-    {SimCommand::Run,"Run"},
-    {SimCommand::Pause,"Pause"},
-    {SimCommand::Reset,"Reset"},
-    {SimCommand::Kill,"Exit"},
+    {SimCommand::Load,"Command: Load"},
+    {SimCommand::Run,"Command: Run"},
+    {SimCommand::Pause,"Command: Pause"},
+    {SimCommand::Reset,"Command: Reset"},
+    {SimCommand::Kill,"Command: Exit"},
     {SimCommand::UpdateParams,"Update params"}
 };
 

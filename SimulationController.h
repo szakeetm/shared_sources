@@ -50,6 +50,7 @@ public:
 private:
     
     void setMyStatus(const std::string& msg) const;
+    void setMyState(const SimState state) const;
     bool runSimulation1sec(const size_t desorptions);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);

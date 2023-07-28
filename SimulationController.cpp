@@ -161,6 +161,7 @@ bool SimHandle::runLoop() {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
             masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
         setMyStatus("Thread finished.");
+        setMyState(SimState::Finished);
     }
     return desLimitReachedOrDesError;
 }
@@ -168,6 +169,11 @@ bool SimHandle::runLoop() {
 void SimHandle::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
     masterProcInfo.procDataMutex.lock();
     masterProcInfo.threadInfos[threadNum].slaveStatus=msg;
+    masterProcInfo.procDataMutex.unlock();
+}
+void SimHandle::setMyState(const SimState state) const { //Writes to master's procInfo
+    masterProcInfo.procDataMutex.lock();
+    masterProcInfo.threadInfos[threadNum].slaveState=state;
     masterProcInfo.procDataMutex.unlock();
 }
 
