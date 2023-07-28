@@ -101,7 +101,7 @@ void GlobalSettingsBase::SMPUpdate() {
         for (auto& proc : procInfoPtr.threadInfos)
         {
             DWORD pid = proc.threadId;
-            processList->SetValueAt(0, i, fmt::format("Thread {}", i));
+            processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
             processList->SetValueAt(1, i, ""); //placeholder for thread id
             processList->SetValueAt(2, i, ""); //placeholder for memory
             processList->SetValueAt(3, i, ""); //placeholder for memory
