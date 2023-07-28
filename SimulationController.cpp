@@ -450,7 +450,7 @@ void SimulationController::controlledLoop() {
             }
         }
     }
-    //SetThreadStates(PROCESS_KILLED, "Process terminated peacefully");
+    SetThreadStates(SimState::Killed, "Process terminated by request from Sim.Manager");
 }
 
 /**

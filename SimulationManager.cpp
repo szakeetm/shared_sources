@@ -159,7 +159,7 @@ int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
 }
 
 //! Create simulation handles for CPU simulations with n Threads
-int SimulationManager::CreateCPUHandle() {
+int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     uint32_t processId = mainProcId;
 
     //Get number of cores
@@ -180,6 +180,7 @@ int SimulationManager::CreateCPUHandle() {
     size_t nbSimulations = 1; // nbThreads
     try{
         procInformation.Resize(nbThreads);
+        procInformation.UpdateMasterStatus("Deleting old threads...", loadStatus);
         simThreads.clear();
     }
     catch (const std::exception &e){
@@ -187,6 +188,7 @@ int SimulationManager::CreateCPUHandle() {
         throw std::runtime_error(e.what());
     }
 
+    procInformation.UpdateMasterStatus("Creating new simulation structure...", loadStatus);
  //Dirty
 #ifdef MOLFLOW
     simulation = std::make_unique<MolflowSimulation>();
@@ -194,6 +196,7 @@ int SimulationManager::CreateCPUHandle() {
 #ifdef SYNRAD
     simulation = std::make_unique<SynradSimulation>();
 #endif
+    procInformation.UpdateMasterStatus("Creating new simulation controller...", loadStatus);
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
@@ -334,12 +337,12 @@ int SimulationManager::ExecuteAndWait(const SimCommand command, const SimState s
     return 1;
 }
 
-int SimulationManager::KillAllSimUnits() {
+int SimulationManager::KillAllSimUnits(LoadStatus_abstract* loadStatus) {
     if( !simThreads.empty() ) {
-        if(ExecuteAndWait(SimCommand::Kill, SimState::Killed)){ // execute
+        if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)){ // execute
             // Force kill
             simController->EmergencyExit(); //Request particle tracers to not do more MC steps
-            if(ExecuteAndWait(SimCommand::Kill, SimState::Killed)) { 
+            if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0,0,loadStatus)) { 
                 int i = 0;
                 for (auto tIter = simThreads.begin(); tIter != simThreads.end(); ++i) {
                     if (procInformation.subProcInfos[i].slaveState != SimState::Killed) {
@@ -375,7 +378,7 @@ int SimulationManager::KillAllSimUnits() {
                 simThreads[i].join();
             }
             else{
-                if(ExecuteAndWait(SimCommand::Kill, SimState::Killed))
+                if(ExecuteAndWait(SimCommand::Kill, SimState::Killed,0, 0, loadStatus))
                     exit(1);
             }
         }

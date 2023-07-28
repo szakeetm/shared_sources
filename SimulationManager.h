@@ -59,7 +59,7 @@ enum class LoadType : uint8_t {
  * @todo Add logger capability to console OR sdl framework
  */
 class SimulationManager {
-    int CreateCPUHandle();
+    int CreateCPUHandle(LoadStatus_abstract* loadStatus = nullptr);
 
     int CreateGPUHandle();
 
@@ -93,7 +93,7 @@ public:
 
     void InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr); //throws error
 
-    int KillAllSimUnits();
+    int KillAllSimUnits(LoadStatus_abstract* loadStatus=nullptr);
 
     int ResetSimulations();
 

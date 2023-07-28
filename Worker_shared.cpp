@@ -307,10 +307,10 @@ void Worker::InitSimProc() {
 }
 
 void Worker::SetProcNumber(size_t n) {
-
+	LoadStatus loadStatus(this);
 	// Kill all sub process
 	try {
-		simManager.KillAllSimUnits();
+		simManager.KillAllSimUnits(&loadStatus);
 	}
 	catch (const std::exception&) {
 		throw Error("Killing subprocesses failed!");
@@ -319,14 +319,11 @@ void Worker::SetProcNumber(size_t n) {
 	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess
-	LoadStatus loadStatus(this);
 	if ((model->otfParams.nbProcess = simManager.SetUpSimulations(&loadStatus))) {
 		throw Error("Starting subprocesses failed!");
 	}
 
 	model->otfParams.nbProcess = simManager.nbThreads;
-
-	//if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
 
 size_t Worker::GetPID(size_t prIdx) {
