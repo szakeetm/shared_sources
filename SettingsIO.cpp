@@ -227,7 +227,7 @@ namespace SettingsIO {
             std::filesystem::path(SettingsIO::outputPath)
                     .parent_path()
                     .compare(std::filesystem::path("tmp"))) {
-            // CLIArgumentSettings::tmpfile_dir
+            // CLIArguments::tmpfile_dir
             Log::console_msg_master(2, "Removing tmp directory...");
             std::filesystem::remove_all("tmp");
             Log::console_msg_master(2, "done.\n");
