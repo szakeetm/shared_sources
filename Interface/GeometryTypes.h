@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_GEOMETRYTYPES_H
-#define MOLFLOW_PROJ_GEOMETRYTYPES_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -31,9 +30,61 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //4: added structureId
 //5: added globalComponents, startS
 
+//Structs used by file loaders/writers
+
 typedef struct {
     std::string    name;       // Selection name
-    std::vector<size_t> selection; // List of facets
+    std::vector<size_t> facetIds; // List of facets
 } SelectionGroup;
 
-#endif //MOLFLOW_PROJ_GEOMETRYTYPES_H
+// Definition of a view. Note: all basis are left handed
+
+typedef struct {
+
+    std::string name;    // View name
+
+    int      projMode;   // Projection type
+    double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
+    double   camAngleOy; // Spheric coordinates Left-hand rotation (in left-hand c.sys)
+
+    double   camAngleOz; // Rotation around third axis
+
+    double   camDist;    // Camera distance (or zoom in orthographic)
+
+    double   lightAngleOx; //Light direction
+    double   lightAngleOy; //Light direction
+
+    Vector3d camOffset;  // Camera target offset
+    int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
+
+    double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vRight;     // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vTop;       // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
+
+} AVIEW;
+
+struct UserFormula {
+    std::string name, expression;
+};
+
+struct PlotterSetting {
+    bool logYscale=false;
+    std::vector<int> viewIds;
+};
+
+struct FacetViewSetting {
+    bool textureVisible=true;
+    bool volumeVisible=true;
+};
+
+struct UserSettings {
+    //user settings such as selections, facet view settings, parameters and moments, that must be persistent even in CLI
+    std::vector<SelectionGroup> selections;
+    std::vector<AVIEW> views;
+    std::vector<UserFormula> userFormulas;
+    std::vector<FacetViewSetting> facetViewSettings;
+    std::vector<UserMoment> userMoments;
+    std::unique_ptr<PlotterSetting> profilePlotterSettings; //nullptr if couldn't be loaded
+    std::unique_ptr<PlotterSetting> convergencePlotterSettings; //nullptr if couldn't be loaded
+};

@@ -3969,9 +3969,9 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 		file.ReadKeyword("views"); file.ReadKeyword("{");
 		for (int i = 0; i < nbV; i++) {
-			char tmpName[256];
 			AVIEW v;
-			strcpy(tmpName, file.ReadString());
+			v.name = file.ReadString();
+
 			v.projMode = file.ReadInt();
 			v.camAngleOx = file.ReadDouble();
 			v.camAngleOy = file.ReadDouble();
@@ -3986,7 +3986,8 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 			v.vRight = file.ReadDouble();
 			v.vTop = file.ReadDouble();
 			v.vBottom = file.ReadDouble();
-			mApp->AddView(tmpName, v);
+
+			mApp->AddView(v);
 		}
 		file.ReadKeyword("}");
 	}
@@ -4001,7 +4002,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 			int nbFS = file.ReadInt();
 
 			for (int j = 0; j < nbFS; j++) {
-				s.selection.push_back((size_t)file.ReadInt() + sh.nbFacet); //offset facet number by current number of facets
+				s.facetIds.push_back((size_t)file.ReadInt() + sh.nbFacet); //offset facet number by current number of facets
 			}
 			mApp->AddSelection(s);
 		}

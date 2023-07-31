@@ -55,7 +55,7 @@ void GLFormula::SetName(const std::string& _name) {
 	this->name = _name;
 }
 
-std::string GLFormula::GetName() {
+std::string GLFormula::GetName() const {
 	return name;
 }
 
@@ -63,7 +63,7 @@ void GLFormula::SetExpression(const std::string& _expression) {
 	this->expression = _expression;
 }
 
-std::string GLFormula::GetExpression() {
+std::string GLFormula::GetExpression() const {
 	return expression;
 }
 

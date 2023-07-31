@@ -153,7 +153,6 @@ Interface::Interface() : GLApplication(){
     lastUpdate = 0.0;
     //nbFormula = 0;
 
-    nbView = 0;
     idSelection = 0;
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -1875,12 +1874,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             }
 
                 // Select view
-            else if (src->GetId() >= MENU_VIEW_VIEWS && src->GetId() < MENU_VIEW_VIEWS + nbView) {
+            else if (src->GetId() >= MENU_VIEW_VIEWS && src->GetId() < MENU_VIEW_VIEWS + views.size()) {
                 SelectView(src->GetId() - MENU_VIEW_VIEWS);
                 return true;
             }
                 // Clear view
-            else if (src->GetId() >= MENU_VIEW_CLEARVIEWS && src->GetId() < MENU_VIEW_CLEARVIEWS + nbView) {
+            else if (src->GetId() >= MENU_VIEW_CLEARVIEWS && src->GetId() < MENU_VIEW_CLEARVIEWS + views.size()) {
                 char tmpname[256];
                 sprintf(tmpname, "Clear %s?", views[src->GetId() - MENU_VIEW_CLEARVIEWS].name.c_str());
                 if (GLMessageBox::Display(tmpname, "Confirmation", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) ==
@@ -1890,7 +1889,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 return true;
             }
                 // Memorize view
-            else if (src->GetId() >= MENU_VIEW_MEMORIZEVIEWS && src->GetId() < MENU_VIEW_MEMORIZEVIEWS + nbView) {
+            else if (src->GetId() >= MENU_VIEW_MEMORIZEVIEWS && src->GetId() < MENU_VIEW_MEMORIZEVIEWS + views.size()) {
                 OverWriteView(src->GetId() - MENU_VIEW_MEMORIZEVIEWS);
                 return true;
             }
@@ -2007,7 +2006,7 @@ void Interface::SelectView(int v) {
 
 void Interface::SelectSelection(size_t v) {
     Geometry *geom = worker.GetGeometry();
-    geom->SetSelection(selections[v].selection, viewer[0]->GetWindow()->IsShiftDown(),
+    geom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
                        viewer[0]->GetWindow()->IsCtrlDown());
     idSelection = v;
 }
@@ -2062,7 +2061,7 @@ void Interface::OverWriteSelection(size_t idOvr) {
                                                "Enter selection name");
     if (!selectionName) return;
 
-    selections[idOvr].selection = geom->GetSelectedFacets();
+    selections[idOvr].facetIds = geom->GetSelectedFacets();
     selections[idOvr].name = selectionName;
     RebuildSelectionMenus();
 }
@@ -2071,7 +2070,7 @@ void Interface::AddSelection(const std::string &selectionName) {
     if (selectionName.empty()) return;
 
     SelectionGroup newSelection;
-    newSelection.selection = worker.GetGeometry()->GetSelectedFacets();
+    newSelection.facetIds = worker.GetGeometry()->GetSelectedFacets();
     newSelection.name = selectionName;
     selections.push_back(newSelection);
     RebuildSelectionMenus();
@@ -2093,7 +2092,7 @@ void Interface::RebuildViewMenus() {
     ClearViewMenus();
     std::vector<int> fKeys = {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F5, SDLK_F6, SDLK_F7, SDLK_F8, SDLK_F9, SDLK_F10,
                               SDLK_F11, SDLK_F12}; //Skip ALT+F4 shortcut :)
-    for (int i = 0; i < nbView; i++) {
+    for (int i = 0; i < views.size(); i++) {
         if (fKeys.empty()) {
             viewsMenu->Add(views[i].name.c_str(), MENU_VIEW_VIEWS + i);
         } else {
@@ -2105,32 +2104,24 @@ void Interface::RebuildViewMenus() {
     }
 }
 
-void Interface::AddView(const char *viewName, AVIEW v) {
+void Interface::AddView(AVIEW v) {
 
-    if (nbView < MAX_VIEW) {
-        views[nbView] = v;
-        views[nbView].name = viewName;
-        nbView++;
+    if (views.size() < MAX_VIEW) {
+        views.push_back(v);
     } else {
-        views[0].name = "";
-        for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
-        views[MAX_VIEW - 1] = v;
-        views[MAX_VIEW - 1].name = viewName;
+        views.erase(views.begin()); //clear first
+        views.push_back(v);
     }
     RebuildViewMenus();
 }
 
 void Interface::ClearView(int idClr) {
-    views[idClr].name = "";
-    for (int i = idClr; i < nbView - 1; i++) views[i] = views[i + 1];
-    nbView--;
+    views.erase(views.begin()+idClr);
     RebuildViewMenus();
 }
 
 void Interface::ClearAllViews() {
-    for (int i = 0; i < nbView; i++)
-        views[i].name = "";
-    nbView = 0;
+    views.clear();
     ClearViewMenus();
 }
 
@@ -2147,20 +2138,11 @@ void Interface::OverWriteView(int idOvr) {
 void Interface::AddView() {
     Geometry *geom = worker.GetGeometry();
     char tmp[32];
-    sprintf(tmp, "View #%d", nbView + 1);
+    sprintf(tmp, "View #%d", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
     if (!viewName) return;
 
-    if (nbView < MAX_VIEW) {
-        views[nbView] = viewer[curViewer]->GetCurrentView();
-        views[nbView].name = viewName;
-        nbView++;
-    } else {
-        views[0].name = "";
-        for (int i = 0; i < MAX_VIEW - 1; i++) views[i] = views[i + 1];
-        views[MAX_VIEW - 1] = viewer[curViewer]->GetCurrentView();
-        views[MAX_VIEW - 1].name = viewName;
-    }
+    AddView(viewer[curViewer]->GetCurrentView());
     RebuildViewMenus();
 }
 
@@ -2262,18 +2244,18 @@ void Interface::DisplayCollapseDialog() {
 
 void Interface::RenumberSelections(const std::vector<int> &newRefs) {
     for (int i = 0; i < selections.size(); i++) {
-        for (int j = 0; i >= 0 && i < selections.size() && j >= 0 && j < selections[i].selection.size(); j++) {
-            if (selections[i].selection[j] >= newRefs.size() ||
-                newRefs[selections[i].selection[j]] == -1) { //remove from selection
-                selections[i].selection.erase(selections[i].selection.begin() + j);
+        for (int j = 0; i >= 0 && i < selections.size() && j >= 0 && j < selections[i].facetIds.size(); j++) {
+            if (selections[i].facetIds[j] >= newRefs.size() ||
+                newRefs[selections[i].facetIds[j]] == -1) { //remove from selection
+                selections[i].facetIds.erase(selections[i].facetIds.begin() + j);
                 j--; //Do again the element as now it's the next
-                if (selections[i].selection.empty()) {
+                if (selections[i].facetIds.empty()) {
                     ClearSelection(i); //last facet removed from selection
                     i--;
                 }
 
             } else { //renumber
-                selections[i].selection[j] = newRefs[selections[i].selection[j]];
+                selections[i].facetIds[j] = newRefs[selections[i].facetIds[j]];
             }
         }
     }

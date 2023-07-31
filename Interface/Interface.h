@@ -423,7 +423,7 @@ public:
 
 	// Views
 	void SelectView(int v);
-	void AddView(const char *selectionName, AVIEW v);
+	void AddView(AVIEW v);
 	void AddView();
 	void ClearViewMenus() const;
 	void ClearAllViews();
@@ -456,8 +456,7 @@ public:
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
 
-	AVIEW   views[MAX_VIEW];
-	int     nbView;
+	std::vector<AVIEW>   views;
 	int     curViewer;
 	int     modeSolo;
 

@@ -92,11 +92,11 @@ public:
 
 	//Optional formula name
 	void SetName(const std::string& name);
-	std::string GetName();
+	std::string GetName() const;
 
 	// Expression management
 	void SetExpression(const std::string& expression);  // Set formula expression
-	std::string GetExpression();     // Get the expression
+	std::string GetExpression() const;     // Get the expression
 	bool Parse();                    // Construct eval tree
 	bool hasParseError = false;       // Error flag
 	std::string parseErrorMsg; // Error message

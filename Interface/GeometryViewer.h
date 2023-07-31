@@ -66,33 +66,6 @@ class GLOverlayLabel;
 
 #define FOV_ANGLE 45.0
 
-// Definition of a view. Note: all basis are left handed
-
-typedef struct {
-
-  std::string name;    // View name
-
-  int      projMode;   // Projection type
-  double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
-  double   camAngleOy; // Spheric coordinates Left-hand rotation (in left-hand c.sys)
-
-  double   camAngleOz; // Rotation around third axis
-
-  double   camDist;    // Camera distance (or zoom in orthographic)
-
-  double   lightAngleOx; //Light direction
-  double   lightAngleOy; //Light direction
-
-  Vector3d camOffset;  // Camera target offset
-  int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
-
-  double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
-  double   vRight;     // Viewport in 2D proj space (used for orthographic autoscaling)
-  double   vTop;       // Viewport in 2D proj space (used for orthographic autoscaling)
-  double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
-
-} AVIEW;
-
 typedef struct {
 	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
 	std::string fileName;

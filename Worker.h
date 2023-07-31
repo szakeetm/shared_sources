@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 class Geometry;
 class GLProgress_Abstract;
-
+class UserSettings;
 
 #if defined(MOLFLOW)
 #include "../src/Parameter.h"
@@ -104,7 +104,9 @@ public:
     void UnlockLog();
 
     bool InterfaceGeomToSimModel();
+    UserSettings InterfaceSettingsToSimModel(std::shared_ptr<SimulationModel> model);
     void SimModelToInterfaceGeom();
+    void SimModelToInterfaceSettings(const UserSettings& userSettings, GLProgress_GUI& prg);
 
     std::string GetSimManagerStatus();
 
