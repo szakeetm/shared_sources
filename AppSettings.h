@@ -22,7 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define MOLFLOW_PROJ_APPSETTINGS_H
 
 
-namespace Settings {
+namespace AppSettings {
     extern int verbosity;
     extern int outputLevel;
 }

@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "FlowMPI.h"
 #include <fmt/core.h>
 
-extern int Settings::verbosity;
+extern int AppSettings::verbosity;
 extern int MFMPI::world_rank;
 
 namespace Log {
@@ -47,8 +47,8 @@ namespace Log {
 
     template<typename... P>
     void console_msg(int level, const char * message, const P&... fmt){
-        if (Settings::verbosity >= level) {
-            if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
+        if (AppSettings::verbosity >= level) {
+            if(AppSettings::outputLevel) printf("%*c", AppSettings::outputLevel, ' ');
             fmt::print(message, fmt...);
             fflush(stdout);
         }
@@ -56,8 +56,8 @@ namespace Log {
 
     template<typename... P>
     void console_msg_master(int level, const char * message, const P&... fmt){
-        if (!MFMPI::world_rank && Settings::verbosity >= level) {
-            if(Settings::outputLevel) printf("%*c", Settings::outputLevel, ' ');
+        if (!MFMPI::world_rank && AppSettings::verbosity >= level) {
+            if(AppSettings::outputLevel) printf("%*c", AppSettings::outputLevel, ' ');
             fmt::print(message, fmt...);
             fflush(stdout);
         }
@@ -67,13 +67,13 @@ namespace Log {
     template<typename... P>
     void console_header(int level, const char * message, const P&... fmt){
         console_msg_master(level, message, fmt...);
-        Settings::outputLevel++;
+        AppSettings::outputLevel++;
     }
 
     // First decrease front spacing, then output message
     template<typename... P>
     void console_footer(int level, const char * message, const P&... fmt){
-        Settings::outputLevel--;
+        AppSettings::outputLevel--;
         console_msg_master(level, message, fmt...);
     }
 }

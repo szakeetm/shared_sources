@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "AppSettings.h"
 
-namespace Settings {
+namespace AppSettings {
     int verbosity{2};    // How much information should be printed
     int outputLevel{0};  // Spacing before output
 }
