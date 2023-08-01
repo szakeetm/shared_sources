@@ -4010,7 +4010,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 	}
 #if defined(MOLFLOW)
 	for (int i = 0; i < nbF; i++) { //parse formulas now that selection groups are loaded
-		mApp->formula_ptr->AddFormula(loadFormulas[i][0], loadFormulas[i][1]);
+		mApp->appFormulas->AddFormula(loadFormulas[i][0], loadFormulas[i][1]);
 	}
 #endif
 	file.ReadKeyword("structures"); file.ReadKeyword("{");

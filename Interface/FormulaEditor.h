@@ -72,5 +72,5 @@ private:
   void EnableDisableMoveButtons();
 
 public:
-    std::shared_ptr<Formulas> formula_ptr;
+    std::shared_ptr<Formulas> appFormulas;
 };

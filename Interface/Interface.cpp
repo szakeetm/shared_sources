@@ -1124,10 +1124,10 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                     if (!formulaEditor || !formulaEditor->IsVisible()) {
                         SAFE_DELETE(formulaEditor);
-                        formulaEditor = new FormulaEditor(&worker, formula_ptr);
+                        formulaEditor = new FormulaEditor(&worker, appFormulas);
                         formulaEditor->Refresh();
                         // Load values on init
-                        formula_ptr->EvaluateFormulas(worker.globalStatCache.globalHits.nbDesorbed);
+                        appFormulas->EvaluateFormulas(worker.globalStatCache.globalHits.nbDesorbed);
                         formulaEditor->UpdateValues();
                         // ---
                         formulaEditor->SetVisible(true);
@@ -1151,7 +1151,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     return true;
                 case MENU_TOOLS_CONVPLOTTER:
                     if (!convergencePlotter)
-                        convergencePlotter = new ConvergencePlotter(&worker, formula_ptr);
+                        convergencePlotter = new ConvergencePlotter(&worker, appFormulas);
                     else{
                         if(!convergencePlotter->IsVisible()) {
                             auto *newConv = new ConvergencePlotter(*convergencePlotter);
@@ -2262,7 +2262,7 @@ void Interface::RenumberSelections(const std::vector<int> &newRefs) {
 }
 
 void Interface::RenumberFormulas(std::vector<int> *newRefs) const {
-    for (auto &f:formula_ptr->formulas) {
+    for (auto &f:appFormulas->formulas) {
         std::string expression = f.GetExpression();
         if (OffsetFormula(expression, 0, -1, newRefs)) { //modify in-place
             f.SetExpression(expression);
@@ -2273,7 +2273,7 @@ void Interface::RenumberFormulas(std::vector<int> *newRefs) const {
 }
 
 void Interface::ClearFormulas() const {
-    formula_ptr->ClearFormulas();
+    appFormulas->ClearFormulas();
     if (formulaEditor) formulaEditor->Refresh();
 }
 
@@ -2550,7 +2550,7 @@ int Interface::FrameMove() {
                     GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
                 }
                 // Simulation monitoring
-                if (formula_ptr->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) formula_ptr->EvaluateFormulas(hitCache.nbDesorbed);
+                if (appFormulas->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) appFormulas->EvaluateFormulas(hitCache.nbDesorbed);
                 UpdatePlotters();
 
                 // Formulas
@@ -2655,9 +2655,9 @@ int Interface::FrameMove() {
         //startSimu->SetFontColor(0, 140, 0);
     }
 
-    if(convergencePlotter && formulaEditor && formula_ptr->convergenceDataChanged) {
+    if(convergencePlotter && formulaEditor && appFormulas->convergenceDataChanged) {
         convergencePlotter->Refresh();
-        formula_ptr->convergenceDataChanged = false;
+        appFormulas->convergenceDataChanged = false;
     }
 
     /*

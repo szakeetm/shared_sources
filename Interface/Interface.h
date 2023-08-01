@@ -343,7 +343,7 @@ public:
 	bool     updateRequested; //Force frame move
 	bool     prevRunningState; //Previous state to react for state change
 
-	std::shared_ptr<Formulas> formula_ptr;
+	std::shared_ptr<Formulas> appFormulas;
 
 #ifdef _WIN32
 	HANDLE compressProcessHandle;
