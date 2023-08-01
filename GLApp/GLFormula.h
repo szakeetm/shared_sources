@@ -146,3 +146,10 @@ private:
 	std::list<Variable> variables;
 
 };
+
+struct FormulaHistoryDatapoint {
+    FormulaHistoryDatapoint() = default; //So that a vector for this can be defined
+    FormulaHistoryDatapoint(size_t _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
+    size_t nbDes=0;
+    double value=0.0;
+};

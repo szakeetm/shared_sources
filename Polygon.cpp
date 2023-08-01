@@ -760,7 +760,7 @@ bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polyg
     // Works with convex and concave polys, orientation independent
     int n_updown = 0;
     int n_found = 0;
-    int n = polygon.size();
+    int n = (int)polygon.size();
 
     for (int j = 0; j < n; ++j) {
         const Vector2d& p1 = polygon[j];

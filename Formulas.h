@@ -23,14 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <memory>
 #include <vector>
 #include "GLApp/GLFormula.h"
-#include "FormulaEvaluator.h"
-
-struct FormulaHistoryDatapoint {
-    FormulaHistoryDatapoint() = default; //So that a vector for this can be defined
-    FormulaHistoryDatapoint(size_t _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
-    size_t nbDes=0;
-    double value=0.0;
-};
+class FormulaEvaluator;
 
 //App storage of GLFormula with helper methods and convergence stuff
 struct Formulas {

@@ -268,7 +268,6 @@ static void ShowSelectionModals() {
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        char *input;
         char tmp[128];
         double largeAreaThreshold = 1.0;
         sprintf(tmp, "%g", largeAreaThreshold);
@@ -298,7 +297,7 @@ static void ShowSelectionModals() {
     if (ImGui::BeginPopupModal("Select non planar facets", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        char *input;
+        
         char tmp[128];
         static double planarityThreshold = 1e-5;
         sprintf(tmp, "%g", planarityThreshold);
@@ -327,7 +326,7 @@ static void ShowSelectionModals() {
     if (ImGui::BeginPopupModal("Enter selection name", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        char *input;
+        
         char selectionName[128];
 
         std::stringstream tmp;

@@ -111,9 +111,9 @@ public:
     void UnlockLog();
 
     bool InterfaceGeomToSimModel();
-    UserSettings InterfaceSettingsToSimModel(std::shared_ptr<SimulationModel> model);
+    MolflowUserSettings InterfaceSettingsToSimModel(std::shared_ptr<SimulationModel> model);
     void SimModelToInterfaceGeom();
-    void SimModelToInterfaceSettings(const UserSettings& userSettings, GLProgress_GUI& prg);
+    void SimModelToInterfaceSettings(const MolflowUserSettings& userSettings, GLProgress_GUI& prg);
 
     std::string GetSimManagerStatus();
 
