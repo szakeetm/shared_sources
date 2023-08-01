@@ -2104,7 +2104,7 @@ void Interface::RebuildViewMenus() {
     }
 }
 
-void Interface::AddView(AVIEW v) {
+void Interface::AddView(CameraView v) {
 
     if (views.size() < MAX_VIEW) {
         views.push_back(v);

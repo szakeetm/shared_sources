@@ -415,7 +415,7 @@ public:
 
 	// Views
 	void SelectView(int v);
-	void AddView(AVIEW v);
+	void AddView(CameraView v);
 	void AddView();
 	void ClearViewMenus() const;
 	void ClearAllViews();
@@ -448,7 +448,7 @@ public:
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
 
-	std::vector<AVIEW>   views;
+	std::vector<CameraView>   views;
 	int     curViewer;
 	int     modeSolo;
 

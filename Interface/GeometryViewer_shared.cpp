@@ -598,11 +598,11 @@ bool GeometryViewer::SelectionChanged() {
 	return ret;
 }
 
-AVIEW GeometryViewer::GetCurrentView() {
+CameraView GeometryViewer::GetCurrentView() {
 	return view;
 }
 
-void GeometryViewer::SetCurrentView(AVIEW v) {
+void GeometryViewer::SetCurrentView(CameraView v) {
 
 	if (!work) return;
 	view = v;

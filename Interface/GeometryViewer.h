@@ -90,8 +90,8 @@ public:
   void ToFrontView();
   bool SelectionChanged();
   bool IsDragging() override;
-  AVIEW GetCurrentView();
-  void  SetCurrentView(AVIEW v);
+  CameraView GetCurrentView();
+  void  SetCurrentView(CameraView v);
   bool IsSelected();
   void SetSelected(bool s);
 
@@ -209,7 +209,7 @@ private:
   bool     selected;
 
   // View parameters
-  AVIEW    view;
+  CameraView    view;
 
   // Camera<->mouse motions
   int      mXOrg;

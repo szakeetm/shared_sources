@@ -3969,7 +3969,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 		file.ReadKeyword("views"); file.ReadKeyword("{");
 		for (int i = 0; i < nbV; i++) {
-			AVIEW v;
+			CameraView v;
 			v.name = file.ReadString();
 
 			v.projMode = file.ReadInt();
