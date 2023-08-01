@@ -83,7 +83,6 @@ struct UserSettings { //extra information (not part of SimulationModel) in XML f
     std::vector<AVIEW> views;
     std::vector<UserFormula> userFormulas;
     std::vector<FacetViewSetting> facetViewSettings;
-    std::vector<UserMoment> userMoments;
     std::unique_ptr<PlotterSetting> profilePlotterSettings; //nullptr if couldn't be loaded
     std::unique_ptr<PlotterSetting> convergencePlotterSettings; //nullptr if couldn't be loaded
 };

@@ -181,7 +181,7 @@ public:
 
 	int    desorbType;     // Desorption type
 	double desorbTypeN;    // Exponent in Cos^N desorption type
-	Reflection reflection;
+	ReflectionParam reflection;
 
 	bool   countDes;       // Count desoprtion (MC texture)
 
@@ -679,7 +679,7 @@ public:
 
 class ParticleLoggerItem {
 public:
-	ParticleLoggerItem() : facetHitPosition() {
+	ParticleLoggerItem() {
 		hitTheta = 0.0;
 		hitPhi = 0.0;
 		oriRatio = 0.0;
