@@ -29,6 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Ray.h"
 #include <cassert>
 #include <Helper/ConsoleLogger.h>
+#include "IntersectAABB_shared.h"
 
 namespace STATS {
     //STAT_MEMORY_COUNTER("Memory/BVH tree", treeBytes);
@@ -563,7 +564,7 @@ bool BVHAccel::Intersect(Ray &ray) {
     while (true) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
-        if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
+        if (IntersectBox(node->bounds,ray, invDir, dirIsNeg)) {
             if (node->nPrimitives > 0) {
                 // Intersect ray with primitives in leaf BVH node
                 for (int i = 0; i < node->nPrimitives; ++i) {

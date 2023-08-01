@@ -18,11 +18,10 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_BOUNDINGBOX_H
-#define MOLFLOW_PROJ_BOUNDINGBOX_H
+#pragma once
 
 #include <cereal/cereal.hpp>
-#include <RayTracing/Ray.h>
+#include <limits>
 #include "Vector.h"
 
 class AxisAlignedBoundingBox{
@@ -47,9 +46,6 @@ public:
 
     static AxisAlignedBoundingBox Union(const AxisAlignedBoundingBox& bb, const Vector3d& p);
 
-    bool IntersectBox(const Ray &ray, const Vector3d &invDir,
-                                                     const int dirIsNeg[3]) const;
-
     template<class Archive>
     void serialize(Archive & archive)
     {
@@ -58,5 +54,11 @@ public:
 
 } ;
 
+//! Epsilon value for error threshold
+constexpr double machEps = std::numeric_limits<double>::epsilon() * 0.5;
 
-#endif //MOLFLOW_PROJ_BOUNDINGBOX_H
+//! Value based on error threshold to define robust intersection bounds
+constexpr double gamma(int n)
+{
+    return (n * machEps) / (1 - n * machEps);
+}

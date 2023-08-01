@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Temporary transparent hit
 //#include "Simulation/SynradSimGeom.h"
-#include <Simulation/Particle.h>
+#include "../src/Simulation/Particle.h" //synrad or molflow
 #include "Vector.h" //AABB
 //#include "../src/Simulation.h" //SubprocessFacet
 
@@ -52,5 +52,7 @@ Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, 
 /*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticleTracer);*/
 bool IsInFacet(const SimulationFacet &f, const double u, const double v);
+bool IntersectBox(const AxisAlignedBoundingBox& targetBox, const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]);
+
 //Vector3d PolarToCartesian(const SubprocessFacet *const collidedFacet, const double theta, const double phi, const bool reverse); //sets sHandle->currentParticleTracer.direction
 //std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);

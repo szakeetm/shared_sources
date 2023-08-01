@@ -21,10 +21,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 #include <vector>
-#include <RayTracing/Primitive.h>
+#include "RayTracing/Primitive.h"
+#include "RayTracing/Ray.h"
 #include "Vector.h"
 #include "Buffer_shared.h"
-#include <Random.h>
+#include "Random.h"
 
 class Surface {
 public:
