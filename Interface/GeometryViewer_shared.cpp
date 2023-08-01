@@ -20,12 +20,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLApp.h"
 #include "GLApp/GLWindowManager.h"
 #include "GeometryViewer.h"
+#include "GeometryTypes.h"
 #include "GLApp/GLToolkit.h"
 #include "Helper/MathTools.h" //
 #include "GLApp/GLMatrix.h"
 #include "GLApp/GLCombo.h"
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLButton.h"
+#include "Vector.h"
 
 #include "Geometry_shared.h"
 #include "SDL_SavePNG/savepng.h"

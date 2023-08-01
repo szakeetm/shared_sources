@@ -243,7 +243,6 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
 * \brief Function to change global settings values (may happen due to change or load of file etc.)
 */
 void GlobalSettingsBase::Update_shared() {
-    char tmp[256];
     chkAntiAliasing->SetState(mApp->antiAliasing);
     chkWhiteBg->SetState(mApp->whiteBg);
     highlightSelectionToggle->SetState(mApp->highlightSelection);

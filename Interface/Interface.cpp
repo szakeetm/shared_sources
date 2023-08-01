@@ -2138,7 +2138,7 @@ void Interface::OverWriteView(int idOvr) {
 void Interface::AddView() {
     Geometry *geom = worker.GetGeometry();
     char tmp[32];
-    sprintf(tmp, "View #%d", views.size() + 1);
+    sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
     if (!viewName) return;
 

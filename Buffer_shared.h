@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <array>
 
+
 #if defined(MOLFLOW)
 #include "../src/MolflowTypes.h" //Texture Min Max of GlobalHitBuffer, anglemapparams
 #endif
@@ -34,6 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #if defined(SYNRAD)
 #include "../src/SynradTypes.h" //Texture Min Max of GlobalHitBuffer
 #endif
+
 
 #define PROFILE_SIZE  (size_t)100 // Size of profile
 #define LEAKCACHESIZE     (size_t)2048  // Leak history max length
@@ -679,37 +681,29 @@ public:
 
 class ParticleLoggerItem {
 public:
-	ParticleLoggerItem() {
-		hitTheta = 0.0;
-		hitPhi = 0.0;
-		oriRatio = 0.0;
+	Vector2d facetHitPosition;
+	double hitTheta = 0.0;
+	double hitPhi = 0.0;
+	double oriRatio = 0.0;
 
 #if defined(MOLFLOW)
-		time = 0.0;
-		particleDecayMoment = 0.0;
-		velocity = 0.0;
+	double time = 0.0;
+	double particleDecayMoment = 0.0;
+	double velocity = 0.0;
 #endif
 #if defined(SYNRAD)
-		energy = 0.0;
-		dF = 0.0;
-		dP = 0.0;
+	double energy = 0.0;
+	double dF = 0.0;
+	double dP = 0.0;
 #endif
-	}
-	Vector2d facetHitPosition;
-	double hitTheta, hitPhi;
-	double oriRatio;
-#if defined(MOLFLOW)
-	double time, particleDecayMoment, velocity;
-#endif
-#if defined(SYNRAD)
-	double energy, dF, dP;
-#endif
+
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(
 			CEREAL_NVP(facetHitPosition),
-			CEREAL_NVP(hitTheta), CEREAL_NVP(hitPhi),
+			CEREAL_NVP(hitTheta),
+			CEREAL_NVP(hitPhi),
 			CEREAL_NVP(oriRatio)
 #if defined(MOLFLOW)
 			, CEREAL_NVP(time), CEREAL_NVP(particleDecayMoment), CEREAL_NVP(velocity)

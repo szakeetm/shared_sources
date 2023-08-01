@@ -170,12 +170,12 @@ public:
 	FacetViewSetting viewSettings;
 	bool   selected;        // Selected flag
 
-	typedef struct {
+	struct TEXTURE_SELECTION{
 		size_t u;
 		size_t v;
 		size_t width;
 		size_t height;
-	} TEXTURE_SELECTION;
+	} ;
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	//OpenGL
 	GLint  glElem;          // Surface elements boundaries

@@ -66,11 +66,11 @@ class GLOverlayLabel;
 
 #define FOV_ANGLE 45.0
 
-typedef struct {
+struct ScreenshotStatus{
 	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
 	std::string fileName;
 	int x, y, w, h; //Screenshotarea
-} ScreenshotStatus;
+} ;
 
 class GeometryViewer : public GLComponent {
 

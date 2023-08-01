@@ -32,14 +32,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 //Structs used by file loaders/writers
 
-typedef struct {
+struct SelectionGroup{
     std::string    name;       // Selection name
     std::vector<size_t> facetIds; // List of facets
-} SelectionGroup;
+};
 
 // Definition of a view. Note: all basis are left handed
 
-typedef struct {
+struct AVIEW{
 
     std::string name;    // View name
 
@@ -62,13 +62,14 @@ typedef struct {
     double   vTop;       // Viewport in 2D proj space (used for orthographic autoscaling)
     double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
-} AVIEW;
+};
 
 struct UserFormula {
     std::string name, expression;
 };
 
 struct PlotterSetting {
+    bool hasData = false; //If has actual data, set to true
     bool logYscale=false;
     std::vector<int> viewIds;
 };
@@ -83,6 +84,6 @@ struct UserSettings { //extra information (not part of SimulationModel) in XML f
     std::vector<AVIEW> views;
     std::vector<UserFormula> userFormulas;
     std::vector<FacetViewSetting> facetViewSettings;
-    std::unique_ptr<PlotterSetting> profilePlotterSettings; //nullptr if couldn't be loaded
-    std::unique_ptr<PlotterSetting> convergencePlotterSettings; //nullptr if couldn't be loaded
+    PlotterSetting profilePlotterSettings;
+    PlotterSetting convergencePlotterSettings;
 };

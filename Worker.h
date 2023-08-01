@@ -26,10 +26,17 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/Chronometer.h>
 #include "Buffer_shared.h" //LEAK, HIT
 #include "SimulationManager.h"
+#include "Buffer_shared.h"
+#include "GLApp/GLProgress_GUI.hpp"
 
+//Molflow/Synrad-specific
 class Geometry;
 class GLProgress_Abstract;
-class UserSettings;
+struct UserSettings;
+struct ParticleLog;
+struct UserMoment;
+class GlobalSimuState;
+
 
 #if defined(MOLFLOW)
 #include "../src/Parameter.h"
@@ -100,7 +107,7 @@ public:
     //void ChangePriority(int prioLevel);
 
     bool ReloadIfNeeded(); // Access to dataport (HIT)
-    ParticleLog & GetLog();
+    ParticleLog& GetLog();
     void UnlockLog();
 
     bool InterfaceGeomToSimModel();

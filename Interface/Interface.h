@@ -79,14 +79,6 @@ class ConvergencePlotter;
 
 class Geometry;
 class ImguiWindow;
-/*
-typedef struct {
-	GLLabel     *name;
-	GLTextField *value;
-	GLButton    *setBtn;
-	GLFormula    *parser;
-} FORMULA;
-*/
 
 #define MAX_VIEWER  4
 //#define MAX_FORMULA 10

@@ -86,7 +86,6 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	if (clear && !unselect) UnselectAll();
 	selectHist.clear();
 	int lastPaintedProgress = -1;
-	char tmp[256];
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
 	std::vector<std::pair<int, int>> screenCoords(vertices3.size());

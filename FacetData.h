@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_FACETDATA_H
-#define MOLFLOW_PROJ_FACETDATA_H
+#pragma once
 
 #include <vector>
 #include <RayTracing/Primitive.h>
@@ -108,6 +107,3 @@ public:
     bool Intersect(Ray &r) override;
 
 };
-
-
-#endif //MOLFLOW_PROJ_FACETDATA_H
