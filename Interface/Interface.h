@@ -236,12 +236,12 @@ typedef struct {
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-constexpr size_t SmoothStatSizeLimit() {return 16;}
+constexpr size_t SmoothStatSizeLimit() { return 16; }
 
 class Interface : public GLApplication {
 protected:
 	Interface();
-    virtual ~Interface();
+	virtual ~Interface();
 	virtual void PlaceComponents() {}
 	virtual void UpdateFacetHits(bool allRows) {}
 	virtual void ClearFacetParams() {}
@@ -250,8 +250,8 @@ protected:
 
 	virtual void BuildPipe(double ratio, int steps) {};
 	virtual void EmptyGeometry() {}
-	virtual void LoadFile(const std::string &fileName) {}
-	virtual void InsertGeometry(bool newStr, const std::string &fileName) {}
+	virtual void LoadFile(const std::string& fileName) {}
+	virtual void InsertGeometry(bool newStr, const std::string& fileName) {}
 	virtual void SaveFile() {}
 	int FrameMove() override;
 
@@ -264,70 +264,70 @@ public:
 	float    lastUpdate;   // Last 'hit update' time
 	template <typename T, bool useDiff = false>
 	struct EventPerSecond {
-	    EventPerSecond(size_t limit = SmoothStatSizeLimit()) : N(limit) {};
+		EventPerSecond(size_t limit = SmoothStatSizeLimit()) : N(limit) {};
 
-	    double avg(){
-	        if(eventsAtTime.empty()) return 0.0;
-	        auto& first = eventsAtTime.front();
-	        auto& last = eventsAtTime.back();
+		double avg() {
+			if (eventsAtTime.empty()) return 0.0;
+			auto& first = eventsAtTime.front();
+			auto& last = eventsAtTime.back();
 
-	        double avg = 0.0;
-	        if(last.second - first.second > 0.0)
-	            avg = static_cast<double>(sum) / (last.second - first.second);
+			double avg = 0.0;
+			if (last.second - first.second > 0.0)
+				avg = static_cast<double>(sum) / (last.second - first.second);
 
-	        if(avg != 0.0)
-	            lastCached = avg;
-	        return lastCached;
-	    }
+			if (avg != 0.0)
+				lastCached = avg;
+			return lastCached;
+		}
 
-	    double last(){
-	        return lastCached;
-	    }
+		double last() {
+			return lastCached;
+		}
 
-	    void push(T event, double time){
-	        if(!eventsAtTime.empty()){
-	            if(time == eventsAtTime.back().second)
-	                return;
-	        }
-	        if(eventsAtTime.size() >= N) {
-	            if(!useDiff)
-	                sum -= eventsAtTime.front().first;
-	            eventsAtTime.pop();
-	        }
-	        eventsAtTime.push({event, time});
-	        if(useDiff)
-	            sum = eventsAtTime.back().first - eventsAtTime.front().first;
-	        else
-	            sum += event;
-	    }
+		void push(T event, double time) {
+			if (!eventsAtTime.empty()) {
+				if (time == eventsAtTime.back().second)
+					return;
+			}
+			if (eventsAtTime.size() >= N) {
+				if (!useDiff)
+					sum -= eventsAtTime.front().first;
+				eventsAtTime.pop();
+			}
+			eventsAtTime.push({ event, time });
+			if (useDiff)
+				sum = eventsAtTime.back().first - eventsAtTime.front().first;
+			else
+				sum += event;
+		}
 
-	    void clear(){
-	        std::queue<std::pair<T,double>>().swap(eventsAtTime);
-	        sum = 0;
-	        lastCached = 0.0;
-	    }
+		void clear() {
+			std::queue<std::pair<T, double>>().swap(eventsAtTime);
+			sum = 0;
+			lastCached = 0.0;
+		}
 
-	    std::queue<std::pair<T,double>> eventsAtTime;
+		std::queue<std::pair<T, double>> eventsAtTime;
 	private:
-	    T sum = 0;
-	    size_t N;
-	    double lastCached = 0.0;
+		T sum = 0;
+		size_t N;
+		double lastCached = 0.0;
 	};
 
 	EventPerSecond<size_t>   hps;          // Hit per second
 	EventPerSecond<size_t>   dps;          // Hit per second
-	EventPerSecond<size_t,true>   hps_runtotal{2};          // Hit per second
-	EventPerSecond<size_t,true>   dps_runtotal{2};          // Hit per second
+	EventPerSecond<size_t, true>   hps_runtotal{2};          // Hit per second
+	EventPerSecond<size_t, true>   dps_runtotal{2};          // Hit per second
 
 	size_t    lastNbHit;    // measurement
 	size_t    lastNbDes;    // measurement
 	size_t    nbDesStart;   // measurement
 	size_t    nbHitStart;   // measurement
-	size_t      nbProc;       // Temporary var (use Worker::GetProcNumber)
-	size_t      numCPU;
+	size_t    nbProc;       // Temporary var (use Worker::GetProcNumber)
+	size_t    numCPU;
 
-    bool useOldXMLFormat = false;
-    bool     antiAliasing;
+	bool useOldXMLFormat = false;
+	bool     antiAliasing;
 	bool     whiteBg;
 	bool highlightSelection;
 	bool highlightNonplanarFacets;
@@ -336,7 +336,7 @@ public:
 	double   coplanarityTolerance; //Select coplanar tolerance
 	double   largeAreaThreshold; //Selection filter
 	double   planarityThreshold; //Planarity threshold
-	
+
 	AppUpdater* appUpdater;
 	int      autoUpdateFormulas;
 	int      compressSavedFiles;
@@ -349,9 +349,9 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
-    bool     prevRunningState; //Previous state to react for state change
+	bool     prevRunningState; //Previous state to react for state change
 
-    std::shared_ptr<Formulas> formula_ptr;
+	std::shared_ptr<Formulas> formula_ptr;
 
 #ifdef _WIN32
 	HANDLE compressProcessHandle;
@@ -361,65 +361,65 @@ public:
 	Worker worker;
 
 	// Components
-	GLMenuBar     *menu;
-	GeometryViewer *viewer[MAX_VIEWER];
-	GLTextField   *geomNumber;
-	GLToggle      *showNormal;
-	GLToggle      *showRule;
-	GLToggle      *showUV;
-	GLToggle      *showLeak;
-	GLToggle      *showHit;
-	GLToggle      *showLine;
-	GLToggle      *showVolume;
-	GLToggle      *showTexture;
-    GLToggle      *showFacetId;
-	GLToggle      *showIndex;
-	GLToggle      *showVertexId;
-	GLButton      *viewerMoreButton;
-    GLCombo       *modeCombo;
+	GLMenuBar* menu;
+	GeometryViewer* viewer[MAX_VIEWER];
+	GLTextField* geomNumber;
+	GLToggle* showNormal;
+	GLToggle* showRule;
+	GLToggle* showUV;
+	GLToggle* showLeak;
+	GLToggle* showHit;
+	GLToggle* showLine;
+	GLToggle* showVolume;
+	GLToggle* showTexture;
+	GLToggle* showFacetId;
+	GLToggle* showIndex;
+	GLToggle* showVertexId;
+	GLButton* viewerMoreButton;
+	GLCombo* modeCombo;
 
-	GLButton      *globalSettingsBtn;
-    GLButton      *startSimu;
-	GLButton      *resetSimu;
+	GLButton* globalSettingsBtn;
+	GLButton* startSimu;
+	GLButton* resetSimu;
 
-	GLTextField   *hitNumber;
-	GLTextField   *desNumber;
-	GLTextField   *leakNumber;
-	GLTextField   *sTime;
+	GLTextField* hitNumber;
+	GLTextField* desNumber;
+	GLTextField* leakNumber;
+	GLTextField* sTime;
 	//GLMenu        *facetMenu;
 
-	GLButton      *facetApplyBtn;
-	GLButton      *facetDetailsBtn;
-	GLButton      *facetCoordBtn;
-	GLButton      *facetAdvParamsBtn; // <<Adv, used by Molflow only
-	GLTitledPanel *facetPanel;
-	GLList        *facetList;
-	GLLabel       *facetSideLabel;
-	GLTitledPanel *togglePanel;
-	GLCombo       *facetSideType;
-	GLLabel       *facetTLabel;
-	GLTextField   *facetOpacity;
-	GLLabel       *facetAreaLabel;
-	GLTextField   *facetArea;
+	GLButton* facetApplyBtn;
+	GLButton* facetDetailsBtn;
+	GLButton* facetCoordBtn;
+	GLButton* facetAdvParamsBtn; // <<Adv, used by Molflow only
+	GLTitledPanel* facetPanel;
+	GLList* facetList;
+	GLLabel* facetSideLabel;
+	GLTitledPanel* togglePanel;
+	GLCombo* facetSideType;
+	GLLabel* facetTLabel;
+	GLTextField* facetOpacity;
+	GLLabel* facetAreaLabel;
+	GLTextField* facetArea;
 
-	GLToggle      *autoFrameMoveToggle;
-	GLButton      *forceFrameMoveButton;
+	GLToggle* autoFrameMoveToggle;
+	GLButton* forceFrameMoveButton;
 
-	GLLabel       *hitLabel;
-	GLLabel       *desLabel;
-	GLLabel       *leakLabel;
-	GLLabel       *sTimeLabel;
+	GLLabel* hitLabel;
+	GLLabel* desLabel;
+	GLLabel* leakLabel;
+	GLLabel* sTimeLabel;
 
-	GLTitledPanel *shortcutPanel;
-	GLTitledPanel *simuPanel;
+	GLTitledPanel* shortcutPanel;
+	GLTitledPanel* simuPanel;
 
-	GLMenu        *structMenu;
-	GLMenu        *viewsMenu;
-	GLMenu        *selectionsMenu;
-	GLMenu        *memorizeSelectionsMenu;
-	GLMenu        *memorizeViewsMenu;
-	GLMenu        *clearSelectionsMenu;
-	GLMenu        *clearViewsMenu;
+	GLMenu* structMenu;
+	GLMenu* viewsMenu;
+	GLMenu* selectionsMenu;
+	GLMenu* memorizeSelectionsMenu;
+	GLMenu* memorizeViewsMenu;
+	GLMenu* clearSelectionsMenu;
+	GLMenu* clearViewsMenu;
 
 	// Views
 	void SelectView(int v);
@@ -434,20 +434,20 @@ public:
 	// Selections
 	void SelectSelection(size_t v);
 	void AddSelection(const SelectionGroup& s);
-	void AddSelection(const std::string &selectionName);
+	void AddSelection(const std::string& selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
 	void OverWriteSelection(size_t idOvr);
 	void ClearSelection(size_t idClr);
 	void RebuildSelectionMenus();
-	
+
 	void UpdateFacetlistSelected();
-	
-	void CreateOfTwoFacets(Clipper2Lib::ClipType type,int reverseOrder=0);
+
+	void CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder = 0);
 	//void UpdateMeasurements();
-    void DropEvent(char *dropped_file);
-    bool AskToSave();
-	bool AskToReset(Worker *work = nullptr);
+	void DropEvent(char* dropped_file);
+	bool AskToSave();
+	bool AskToReset(Worker* work = nullptr);
 	void AddStruct();
 	void DeleteStruct();
 
@@ -464,44 +464,44 @@ public:
 	size_t idSelection; //Allows "select next" / "select previous" commands
 
 	//Dialog
-	CollapseSettings   *collapseSettings = nullptr;
-	HistogramSettings  *histogramSettings = nullptr;
-	HistogramPlotter   *histogramPlotter = nullptr;
-	MoveVertex		   *moveVertex = nullptr;
-	ScaleFacet         *scaleFacet = nullptr;
-	ScaleVertex        *scaleVertex = nullptr;
-	SelectDialog       *selectDialog = nullptr;
-	SelectTextureType  *selectTextureType = nullptr;
-	SelectFacetByResult *selectFacetByResult = nullptr;
-	ExtrudeFacet	   *extrudeFacet = nullptr;
-	MoveFacet	  	   *moveFacet = nullptr;
-	ParticleLogger     *particleLogger = nullptr;
-	MirrorFacet	       *mirrorFacet = nullptr;
-	MirrorVertex       *mirrorVertex = nullptr;
-	CreateShape			*createShape = nullptr;
-	SplitFacet         *splitFacet = nullptr;
-	BuildIntersection  *buildIntersection = nullptr;
-	RotateFacet        *rotateFacet = nullptr;
-	RotateVertex	   *rotateVertex = nullptr;
-	AlignFacet         *alignFacet = nullptr;
-	AddVertex		   *addVertex = nullptr;
-	FacetCoordinates	*facetCoordinates = nullptr;
-	VertexCoordinates	*vertexCoordinates = nullptr;
-	SmartSelection		*smartSelection = nullptr;
-	FormulaEditor		*formulaEditor = nullptr;
-	ConvergencePlotter   *convergencePlotter = nullptr;
+	CollapseSettings* collapseSettings = nullptr;
+	HistogramSettings* histogramSettings = nullptr;
+	HistogramPlotter* histogramPlotter = nullptr;
+	MoveVertex* moveVertex = nullptr;
+	ScaleFacet* scaleFacet = nullptr;
+	ScaleVertex* scaleVertex = nullptr;
+	SelectDialog* selectDialog = nullptr;
+	SelectTextureType* selectTextureType = nullptr;
+	SelectFacetByResult* selectFacetByResult = nullptr;
+	ExtrudeFacet* extrudeFacet = nullptr;
+	MoveFacet* moveFacet = nullptr;
+	ParticleLogger* particleLogger = nullptr;
+	MirrorFacet* mirrorFacet = nullptr;
+	MirrorVertex* mirrorVertex = nullptr;
+	CreateShape* createShape = nullptr;
+	SplitFacet* splitFacet = nullptr;
+	BuildIntersection* buildIntersection = nullptr;
+	RotateFacet* rotateFacet = nullptr;
+	RotateVertex* rotateVertex = nullptr;
+	AlignFacet* alignFacet = nullptr;
+	AddVertex* addVertex = nullptr;
+	FacetCoordinates* facetCoordinates = nullptr;
+	VertexCoordinates* vertexCoordinates = nullptr;
+	SmartSelection* smartSelection = nullptr;
+	FormulaEditor* formulaEditor = nullptr;
+	ConvergencePlotter* convergencePlotter = nullptr;
 
-	UpdateCheckDialog *updateCheckDialog = nullptr;
-	UpdateFoundDialog *updateFoundDialog = nullptr;
-	UpdateLogWindow   *updateLogWindow = nullptr;
-    ManualUpdateCheckDialog* manualUpdate = nullptr;
+	UpdateCheckDialog* updateCheckDialog = nullptr;
+	UpdateFoundDialog* updateFoundDialog = nullptr;
+	UpdateLogWindow* updateLogWindow = nullptr;
+	ManualUpdateCheckDialog* manualUpdate = nullptr;
 
-	void LoadSelection(const char *fName = nullptr);
+	void LoadSelection(const char* fName = nullptr);
 	void SaveSelection();
 	void ExportSelection();
 	void UpdateModelParams();
 	void UpdateViewerFlags();
-	void ResetSimulation(bool askConfirm=true);
+	void ResetSimulation(bool askConfirm = true);
 	void UpdateStructMenu();
 	void UpdateTitle();
 
@@ -512,21 +512,21 @@ public:
 
 	void Place3DViewer();
 	void UpdateViewers();
-	void SetFacetSearchPrg(bool visible, const char *text);
+	void SetFacetSearchPrg(bool visible, const char* text);
 
 	void DisplayCollapseDialog();
-	void RenumberSelections(const std::vector<int> &newRefs);
+	void RenumberSelections(const std::vector<int>& newRefs);
 	int  Resize(size_t width, size_t height, bool forceWindowed) override;
 
 	// Formula management
-	static bool OffsetFormula(std::string& expression, int offset, int filter = -1, std::vector<int> *newRefs = nullptr);
-	void RenumberFormulas(std::vector<int> *newRefs) const;
+	static bool OffsetFormula(std::string& expression, int offset, int filter = -1, std::vector<int>* newRefs = nullptr);
+	void RenumberFormulas(std::vector<int>* newRefs) const;
 	void ClearFormulas() const;
 
 	void ExportTextures(int grouping, int mode);
-	
+
 	// Recent files
-    std::vector<std::string> recentsList; //Last in the vector is latest file (top in menu)
+	std::vector<std::string> recentsList; //Last in the vector is latest file (top in menu)
 	void AddRecent(const std::string& fileName);
 	void RemoveRecent(const std::string& fileName);
 	void UpdateRecentMenu();
@@ -542,6 +542,6 @@ protected:
 	void OneTimeSceneInit_shared_post();
 	int RestoreDeviceObjects_shared();
 	int InvalidateDeviceObjects_shared();
-	bool ProcessMessage_shared(GLComponent *src, int message);
+	bool ProcessMessage_shared(GLComponent* src, int message);
 	void  BeforeExit() override;
 };
