@@ -78,8 +78,7 @@ struct FacetViewSetting {
     bool volumeVisible=true;
 };
 
-struct UserSettings {
-    //user settings such as selections, facet view settings, parameters and moments, that must be persistent even in CLI
+struct UserSettings { //extra information (not part of SimulationModel) in XML file used by XmlLoader and XmlWriter, then passed to/from GUI
     std::vector<SelectionGroup> selections;
     std::vector<AVIEW> views;
     std::vector<UserFormula> userFormulas;
