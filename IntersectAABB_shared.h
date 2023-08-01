@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Temporary transparent hit
 //#include "Simulation/SynradSimGeom.h"
-#include <Simulation/Particle.h> //synrad or molflow
+#include "../src/Simulation/Particle.h" //synrad or molflow
 #include "Vector.h" //AABB
 //#include "../src/Simulation.h" //SubprocessFacet
 
