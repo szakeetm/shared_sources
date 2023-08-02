@@ -34,7 +34,7 @@ namespace MFMPI {
     int world_size{1};
 
 #if defined(USE_MPI)
-    void mpi_initialize() {
+    void mpi_initialize(SettingsIO::CLIArguments& parsedArgs) {
         // Initialize the MPI environment
         MPI_Init(nullptr, nullptr);
 
@@ -61,7 +61,7 @@ namespace MFMPI {
         MPI_Barrier(MPI_COMM_WORLD);
         if(MFMPI::world_rank == 0){
             std::ifstream infile;
-            infile.open(SettingsIO::inputFile, std::ios::binary);
+            infile.open(parsedArgs.inputFile, std::ios::binary);
             //std::string contents;
             contents.assign(std::istreambuf_iterator<char>(infile),
                             std::istreambuf_iterator<char>());
@@ -113,10 +113,10 @@ namespace MFMPI {
                          &status);
 
                 if (!hasFile[0]) {
-                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", SettingsIO::inputFile, i);
+                    Log::console_msg(4, "Attempt to transfer file {} to node {}.\n", parsedArgs.inputFile, i);
 
                     std::ifstream infile;
-                    infile.open(SettingsIO::inputFile, std::ios::binary);
+                    infile.open(parsedArgs.inputFile, std::ios::binary);
                     std::string contents;
                     contents.assign(std::istreambuf_iterator<char>(infile),
                                     std::istreambuf_iterator<char>());
@@ -127,7 +127,7 @@ namespace MFMPI {
                 }
 
             } else if (MFMPI::world_rank == i) {
-                bool hasFile[]{false/*!SettingsIO::inputFile.empty()*/};
+                bool hasFile[]{false/*!parsedArgs.inputFile.empty()*/};
                 MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
@@ -148,22 +148,22 @@ namespace MFMPI {
                              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
                     // use fallback dir
-                    SettingsIO::outputPath = "tmp"+std::to_string(MFMPI::world_rank)+"/";
+                    parsedArgs.outputPath = "tmp"+std::to_string(MFMPI::world_rank)+"/";
                     try {
-                        std::filesystem::create_directory(SettingsIO::outputPath);
+                        std::filesystem::create_directory(parsedArgs.outputPath);
                     }
                     catch (const std::exception &){
-                        SettingsIO::outputPath = "./";
-                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", SettingsIO::outputPath);
+                        parsedArgs.outputPath = "./";
+                        Log::console_error("Couldn't create fallback directory [ {} ], falling back to binary folder instead for output files\n", parsedArgs.outputPath);
                     }
 
-                    auto outputName = SettingsIO::outputPath+"workfile"+std::filesystem::path(SettingsIO::inputFile).extension().string();
+                    auto outputName = parsedArgs.outputPath+"workfile"+std::filesystem::path(parsedArgs.inputFile).extension().string();
                     std::ofstream outfile(outputName);
                     outfile.write(file_buffer, number_bytes);
                     outfile.close();
                     free(file_buffer);
 
-                    SettingsIO::inputFile = outputName;
+                    parsedArgs.inputFile = outputName;
                 }
             }
         }

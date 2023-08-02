@@ -21,6 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_FLOWMPI_H
 #define MOLFLOW_PROJ_FLOWMPI_H
 
+#include "SettingsIO.h"
+
 #if defined(USE_MPI)
 #include <mpi.h>
 #include <cereal/archives/binary.hpp>
@@ -38,7 +40,7 @@ namespace MFMPI {
 
 #if defined(USE_MPI)
     void mpi_initialize();
-    void mpi_transfer_simu();
+    void mpi_transfer_simu(SettingsIO::CLIArguments& parsedArgs);
     void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globStatePtr);
 
     template<class T>
