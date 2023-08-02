@@ -30,7 +30,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <errno.h>
 #include <filesystem>
-#include "Helper/ConsoleLogger.h"
 
 #define ERR_INC_ARG 1
 #define ERR_NO_CMPR 2
@@ -49,7 +48,7 @@ int main(int argc, char* argv[]) {
 	}
 	std::cout << "\n\n";
 	if (argc < 3 || argc>5) {
-		Log::console_error("Incorrect number of arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
+		std::cerr<<"Incorrect number of arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n";
 		return ERR_INC_ARG;
 	}
 	else {
@@ -58,10 +57,10 @@ int main(int argc, char* argv[]) {
 			args.pop_back(); //autoclose arg processed, treat the rest in common code
 		}
 		if (args.size() == 4 && args[3][0] != '@') {
-			Log::console_error("Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n");
+			std::cerr << "Incorrect arguments\nUsage: compress FILE_TO_COMPRESS NEW_NAME_NAME_IN ARCHIVE  [@include_file_list.txt] [autoclose]\n";
 #ifdef _WIN32
 			if (!autoclose) {
-				Log::console_error("Type any letter and press ENTER to quit\n");
+				std::cout << "Type any letter and press ENTER to quit\n";
 				ShowWindow(GetConsoleWindow(), SW_RESTORE);
 				std::cin >> key;
 			}
@@ -95,10 +94,10 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 	if (!FileUtils::Exist(sevenZipName)) {
-		Log::console_error("\n{} not found. Cannot compress.\n", sevenZipName);
+		std::cerr << "\n{} not found. Cannot compress.\n", sevenZipName;
 #ifdef _WIN32
 		if (!autoclose) {
-			Log::console_error("Type any letter and press ENTER to quit\n");
+			std::cout << "Type any letter and press ENTER to quit\n";
 			std::cin >> key;
 		}
 #endif
@@ -151,7 +150,7 @@ int main(int argc, char* argv[]) {
 	size_t found;
 	found = result.find("Everything is Ok");
 	if (found != std::string::npos) {
-		Log::console_error("\nCompression seems legit. Deleting original {} file.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
+		std::cout << "\nCompression seems legit. Deleting original {} file.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str();
 		std::filesystem::remove(fileNameGeometry);
 		return 0;
 	}
@@ -161,10 +160,10 @@ int main(int argc, char* argv[]) {
 	ShowWindow(GetConsoleWindow(), SW_RESTORE); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
-	Log::console_error("\nSomething went wrong during the compression, read above. {} file kept.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
+	std::cerr << "\nSomething went wrong during the compression, read above. {} file kept.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
 #ifdef _WIN32
 	if (!autoclose) {
-		Log::console_error("Type any letter and press Enter to exit\n");
+		std::cout<<"Type any letter and press Enter to exit\n";
 		std::cin >> key;
 	}
 #endif
