@@ -433,7 +433,6 @@ public:
 			CEREAL_NVP(logFacetId),
 			CEREAL_NVP(logLimit),
 			CEREAL_NVP(desorptionLimit),
-			CEREAL_NVP(nbProcess),
 			CEREAL_NVP(timeLimit)
 		);
 	}
