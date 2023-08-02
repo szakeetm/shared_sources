@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <list>
 #include <vector>
 #include <map>
-#include "GeometryTypes.h" // selections
+#include "Interface/GeometryTypes.h" // selections
 
 namespace SettingsIO {
 
