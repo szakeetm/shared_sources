@@ -30,6 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <errno.h>
 #include <filesystem>
+#include <fmt/core.h>
 
 #define ERR_INC_ARG 1
 #define ERR_NO_CMPR 2
@@ -160,7 +161,7 @@ int main(int argc, char* argv[]) {
 	ShowWindow(GetConsoleWindow(), SW_RESTORE); //Make window visible on error
 #endif
 	std::filesystem::rename(fileNameGeometry, fileName);
-	std::cerr << "\nSomething went wrong during the compression, read above. {} file kept.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
+	std::cerr << fmt::format("\nSomething went wrong during the compression, read above. {} file kept.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str());
 #ifdef _WIN32
 	if (!autoclose) {
 		std::cout<<"Type any letter and press Enter to exit\n";
