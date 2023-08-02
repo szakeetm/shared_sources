@@ -37,10 +37,16 @@ public:
     void Stop(); //! stops the timer and save elapsed time
     double Elapsed(); //! return elapsed time in seconds
     double ElapsedMs(); //! return elapsed time in ms
+    double SecondsSinceLastAutosave();
+    void UpdateLastAutoSave();
+    double SecondsSinceLastStatprint();
+    void UpdateLastStatprintTime();
 
 protected:
     std::chrono::time_point<clock_type> startTime;
     std::chrono::time_point<clock_type> stopTime;
+    std::chrono::time_point<clock_type> lastAutoSave;
+    std::chrono::time_point<clock_type> lastStatPrint;
     double elapsedOnStop; // elapsed time in seconds
 public:
     bool isActive;

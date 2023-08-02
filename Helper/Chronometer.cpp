@@ -27,7 +27,7 @@ Chronometer::Chronometer() {
 
 void Chronometer::Start() {
     isActive = true;
-    startTime = clock_type::now();
+    startTime = lastAutoSave = lastStatPrint = clock_type::now();
 }
 
 void Chronometer::Stop() {
@@ -62,7 +62,24 @@ double Chronometer::ElapsedMs() {
 
 void Chronometer::ReInit() {
     isActive = false;
-    startTime = clock_type::now();
+    startTime = lastAutoSave = lastStatPrint = clock_type::now();
     stopTime = startTime;
     elapsedOnStop = 0.0;
+}
+
+double Chronometer::SecondsSinceLastAutosave(){
+    std::chrono::duration<double> duration_seconds = clock_type::now() - lastAutoSave;
+    return duration_seconds.count();
+}
+
+void Chronometer::UpdateLastAutoSave() {
+    lastAutoSave = clock_type::now();
+}
+double Chronometer::SecondsSinceLastStatprint() {
+    std::chrono::duration<double> duration_seconds = clock_type::now() - lastStatPrint;
+    return duration_seconds.count();
+}
+
+void Chronometer::UpdateLastStatprintTime() {
+    lastStatPrint = clock_type::now();
 }

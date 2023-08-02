@@ -192,12 +192,12 @@ namespace SettingsIO {
     }
 
 //! Cleanup tmp files
-    void cleanup_files(CLIArguments& parsedArgs) {
+    void cleanup_files(const std::string& outputPath, const std::string& workPath) {
         // a) tmp folder if it is not our output folder
-        if (std::filesystem::path(parsedArgs.outputPath)
+        if (std::filesystem::path(outputPath)
                     .relative_path()
                     .compare(std::filesystem::path("tmp")) &&
-            std::filesystem::path(parsedArgs.outputPath)
+            std::filesystem::path(outputPath)
                     .parent_path()
                     .compare(std::filesystem::path("tmp"))) {
             // CLIArguments::tmpfile_dir
@@ -206,9 +206,9 @@ namespace SettingsIO {
             Log::console_msg_master(2, "done.\n");
         }
 
-        if(!parsedArgs.workPath.empty() && is_empty(std::filesystem::path(parsedArgs.workPath))){
-            Log::console_msg_master(2, "Removing empty work directory {} ...",parsedArgs.workPath);
-            std::filesystem::remove_all(parsedArgs.workPath);
+        if(!workPath.empty() && is_empty(std::filesystem::path(workPath))){
+            Log::console_msg_master(2, "Removing empty work directory {} ...",workPath);
+            std::filesystem::remove_all(workPath);
             Log::console_msg_master(2, "done.\n");
         }
     }
