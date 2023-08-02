@@ -51,7 +51,7 @@ namespace MFMPI {
         MPI_Barrier(MPI_COMM_WORLD);
     };
 
-    void mpi_transfer_simu() {
+    void mpi_transfer_simu(SettingsIO::CLIArguments& parsedArgs) {
         // Check if all worlds have the inputfile
         // forward if not, maybe change to broadcast
 
