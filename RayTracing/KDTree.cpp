@@ -185,10 +185,10 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
               maxDepth, edges, prims0.get(), prims1.get(), 0, probabilities, -1);
 
     printf("--- KD STATS ---\n");
-    printf(" Total Primitives: {}\n", STATS_KD::totalPrimitives);
-    printf(" Total Leaf Nodes: {}\n", STATS_KD::totalLeafNodes);
-    printf(" Interior Nodes:   {}\n", STATS_KD::interiorNodes);
-    printf(" Leaf Nodes:       {}\n", STATS_KD::leafNodes);
+    printf(" Total Primitives: %d\n", STATS_KD::totalPrimitives);
+    printf(" Total Leaf Nodes: %d\n", STATS_KD::totalLeafNodes);
+    printf(" Interior Nodes:   %d\n", STATS_KD::interiorNodes);
+    printf(" Leaf Nodes:       %d\n", STATS_KD::leafNodes);
 
 }
 

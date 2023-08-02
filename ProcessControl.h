@@ -136,9 +136,9 @@ struct ProcComm : ProcCommData {
         InitActiveProcList();
     };
 
-    void PlaceFrontToBack(); //Called by simulation controller (SimHandle::runloop) when thread-local hits are added to master hits
+    void PlaceFrontToBack(); //Called by simulation controller (SimThreadHandle::runloop) when thread-local hits are added to master hits
 
-    void RemoveAsActive(size_t id); //Called by simulation controller (SimHandle::runloop) when end condition is met (and exit from loop), before final hit update
+    void RemoveAsActive(size_t id); //Called by simulation controller (SimThreadHandle::runloop) when end condition is met (and exit from loop), before final hit update
 
     void InitActiveProcList(); //Called by constructor and on resize
     

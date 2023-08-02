@@ -420,7 +420,6 @@ public:
 	size_t logFacetId, logLimit;
 
 	size_t desorptionLimit;
-	size_t nbProcess; //For desorption limit / log size calculation
 	double	 timeLimit;
 
 	template<class Archive> void serialize(Archive& archive) {

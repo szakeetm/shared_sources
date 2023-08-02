@@ -31,11 +31,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 * \brief Inidividual simulation states and settings per thread
  * contains local desorption limits, local simulation state, global thread number, simulation state etc.
  */
-class SimHandle {
+class SimThreadHandle {
 public:
-    SimHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, size_t threadNum);
+    SimThreadHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, size_t threadNum, size_t nbThreads);
 
-    size_t threadNum;
+    size_t threadNum,nbThreads;
     double stepsPerSec;
     bool desLimitReachedOrDesError;
     size_t localDesLimit;
@@ -91,7 +91,7 @@ public:
 protected:
 
     Simulation_Abstract* simulationPtr;
-    std::vector<SimHandle> simThreadHandles;
+    std::vector<SimThreadHandle> simThreadHandles;
 
     ProcComm& procInfo;
     size_t parentPID;

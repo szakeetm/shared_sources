@@ -267,10 +267,7 @@ void Worker::StartStop(float appTime) {
 void Worker::ResetStatsAndHits(float appTime) {
 
 	simuTimer.ReInit();
-	//stopTime = 0.0f;
-	//startTime = 0.0f;
-	//simuTime = 0.0f;
-	if (model->otfParams.nbProcess == 0)
+	if (simManager.nbThreads == 0)
 		return;
 
 	try {
@@ -301,8 +298,6 @@ void Worker::InitSimProc() {
 		throw Error("Failed to init simulation.");
 	}
 
-	model->otfParams.nbProcess = simManager.nbThreads;
-
 	//if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
 
@@ -318,11 +313,9 @@ void Worker::SetProcNumber(size_t n) {
 	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess
-	if ((model->otfParams.nbProcess = simManager.SetUpSimulation(&loadStatus))) {
+	if (simManager.SetUpSimulation(&loadStatus)) {
 		throw Error("Starting subprocesses failed");
 	}
-
-	model->otfParams.nbProcess = simManager.nbThreads;
 }
 
 size_t Worker::GetPID(size_t prIdx) {
@@ -495,7 +488,6 @@ void Worker::RebuildTextures() {
 }
 
 size_t Worker::GetProcNumber() const {
-	//return model->otfParams.nbProcess;
 	return simManager.nbThreads;
 }
 
@@ -597,7 +589,7 @@ void Worker::ChangePriority(int prioLevel) {
 */
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
-	if (model->otfParams.nbProcess == 0 || !geom->IsLoaded()) return;
+	if (simManager.nbThreads == 0 || !geom->IsLoaded()) return;
 	ReloadIfNeeded(); //Sync (number of) regions
 
 	//auto *prg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
