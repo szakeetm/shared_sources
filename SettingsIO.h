@@ -18,40 +18,41 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_SETTINGSIO_H
-#define MOLFLOW_PROJ_SETTINGSIO_H
+#pragma once
 
 #include <string>
 #include <list>
 #include <vector>
 #include <map>
-#include "GeometryTypes.h" // selecitons
+#include "GeometryTypes.h" // selections
 
-// Settings for the CLI application for IO related things
-// Also adds some functions to handle IO pathes/files
 namespace SettingsIO {
-    extern std::string workFile; //! Uncompressed file that is used for the simulation
-    extern std::string workPath; //! Output path for various simulation files (e.g. autosave), can be different from outputPath e.g. for cluster simulations
-    extern std::string inputFile; //! Uncompressed or compressed file that is used for the simulation
-    //extern std::string inputPath; //! Path to input file
-    extern std::string outputFile; //! Output file name
-    extern std::string outputPath; //! Outputpath for output file
-    //extern std::vector<std::string> extraFiles; //! deprecated
-    //extern std::map<std::string, std::vector<std::string>> cachedLines; //! deprecated
-    //extern std::vector<std::vector<std::string>> formulas; //! cached formula values to keep them for a valid output file
-    //extern std::vector<SelectionGroup> selections; //! cached selection groups to keep them for a valid output file
 
-    extern bool overwrite; //! whether overwriting the inputfile is allowed
-    //extern bool isArchive; //! whether the input file is an archive
-    extern bool outputFacetDetails; //! whether output for all facet details is wanted
-    extern bool outputFacetQuantities; //! whether output for derived facet quantities is wanted
-    //extern bool autogenerateTest; //! whether an automatically generated test case should be used as input
+    struct CLIArguments {
+        size_t nbThreads = 0;
+        uint64_t simDuration = 10;
+        uint64_t outputInterval = 60;
+        uint64_t autoSaveInterval = 600; // default: autosave every 600s=10min
+        bool loadAutosave = false;
+        std::list<uint64_t> desLimit;
+        bool resetOnStart = false;
+        std::string paramFile;
+        std::vector<std::string> paramChanges;
+        bool noProgress = false;  //If true, doesn't print percentage updates for CLI progressbars
 
-    int prepareIO();
-    int initDirectories();
-    int initFromZip();
-    void cleanup_files();
+        bool overwrite = false; //! whether overwriting the input file is allowed
+        bool outputFacetDetails = false; //write facet details at end of simulation
+        bool outputFacetQuantities = false; //write derived facet quantities at end of simulation
+
+        std::string workFile; //! Uncompressed file that is used for the simulation
+        std::string workPath; //! Output path for various simulation files (e.g. autosave), can be different from outputPath e.g. for cluster simulations
+        std::string inputFile; //! Uncompressed or compressed file that is used for the simulation
+        std::string outputFile; //! Output file name, can contain path, in which case it also sets outputPath
+        std::string outputPath; //! Output path for output file
+    };
+
+    void prepareIO(CLIArguments& parsedArgs);
+    int initDirectories(CLIArguments& parsedArgs);
+    int initFromZip(CLIArguments& parsedArgs);
+    void cleanup_files(CLIArguments& parsedArgs);
 }
-
-
-#endif //MOLFLOW_PROJ_SETTINGSIO_H

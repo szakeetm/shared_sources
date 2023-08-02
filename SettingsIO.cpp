@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/ConsoleLogger.h>
 #include <Helper/StringHelper.h>
 #include <filesystem>
+#include "GLApp/GLTypes.h"
 
 // zip
 #include <File.h>
@@ -30,97 +31,85 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Input Output related settings and handy functions for the CLI application
 namespace SettingsIO {
-    // explanation in header
-    bool overwrite = false;
-    bool outputFacetDetails = false;
-    bool outputFacetQuantities = false;
 
-    std::string workFile;
-    std::string workPath;
-    std::string inputFile;
-    std::string outputFile;
-    std::string outputPath;
     const std::string supportedFileFormats[]{".xml", ".zip", ".syn", ".syn7z"};
 
     //! prepares work/output directories and unpacks from archive
-    int prepareIO() {
-        if (initDirectories()) {
-            Log::console_error("Error preparing folders\n");
-            return 1;
+    void prepareIO(CLIArguments& parsedArgs) {
+        if (initDirectories(parsedArgs)) {
+            throw Error("Error preparing folders\n");
         }
 
-        if (initFromZip()) {
-            Log::console_error("Error handling input from zip file\n");
-            return 2;
+        if (initFromZip(parsedArgs)) {
+            throw Error("Error handling input from zip file\n");
         }
-        return 0;
     }
 
 //! Set all directory / output related variables and initialises directories depending on set parameters
-    int initDirectories() {
+    int initDirectories(CLIArguments& parsedArgs) {
 
         int err = 0;
 
         // Overwrite excludes outputpath/filename
-        if (SettingsIO::overwrite) {
-            SettingsIO::outputFile = SettingsIO::inputFile;
+        if (parsedArgs.overwrite) {
+            parsedArgs.outputFile = parsedArgs.inputFile;
             std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
-            SettingsIO::workPath = tmpFolder;
-        } else if(!SettingsIO::outputPath.empty()){
-            SettingsIO::workPath = SettingsIO::outputPath;
+            parsedArgs.workPath = tmpFolder;
+        } else if(!parsedArgs.outputPath.empty()){
+            parsedArgs.workPath = parsedArgs.outputPath;
         }
-        else if (SettingsIO::outputPath.empty() && std::filesystem::path(SettingsIO::outputFile).has_parent_path()) { // Use a default outputpath if unset
-            SettingsIO::workPath = std::filesystem::path(SettingsIO::outputFile).parent_path().string();
-        } else if (SettingsIO::outputPath.empty()) { // Use a default outputpath if unset
-            SettingsIO::outputPath = "Results_" + Util::getTimepointString();
-            SettingsIO::workPath = SettingsIO::outputPath;
+        else if (parsedArgs.outputPath.empty() && std::filesystem::path(parsedArgs.outputFile).has_parent_path()) { // Use a default outputpath if unset
+            parsedArgs.workPath = std::filesystem::path(parsedArgs.outputFile).parent_path().string();
+        } else if (parsedArgs.outputPath.empty()) { // Use a default outputpath if unset
+            parsedArgs.outputPath = "Results_" + Util::getTimepointString();
+            parsedArgs.workPath = parsedArgs.outputPath;
         }
-        else if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
+        else if (std::filesystem::path(parsedArgs.outputFile).has_parent_path()) {
             Log::console_error(
                     "Output path was set to {}, but Output file also contains a parent "
                     "path {}\n"
                     "Output path will be appended!\n",
-                    SettingsIO::outputPath,
-                    std::filesystem::path(SettingsIO::outputFile).parent_path().string());
+                    parsedArgs.outputPath,
+                    std::filesystem::path(parsedArgs.outputFile).parent_path().string());
         }
 
         // Use a default outputfile name if unset
-        if (SettingsIO::outputFile.empty())
-            SettingsIO::outputFile =
+        if (parsedArgs.outputFile.empty())
+            parsedArgs.outputFile =
                     "out_" +
-                    std::filesystem::path(SettingsIO::inputFile).filename().string();
+                    std::filesystem::path(parsedArgs.inputFile).filename().string();
 
         bool formatIsSupported = false;
         for (const auto &format : supportedFileFormats) {
-            if (std::filesystem::path(SettingsIO::outputFile).extension().string() ==
+            if (std::filesystem::path(parsedArgs.outputFile).extension().string() ==
                 format) {
                 formatIsSupported = true;
             }
         }
         if (!formatIsSupported) {
             Log::console_error("File format is not supported: {}\n",
-                               std::filesystem::path(SettingsIO::outputFile).extension().string());
+                               std::filesystem::path(parsedArgs.outputFile).extension().string());
             return 1;
         }
 
         // Try to create directories
         // First for outputpath, with tmp/ and lastly ./ as fallback plans
         try {
-            if (!std::filesystem::exists(SettingsIO::workPath))
-                std::filesystem::create_directory(SettingsIO::workPath);
+            if (!std::filesystem::exists(parsedArgs.workPath))
+                std::filesystem::create_directory(parsedArgs.workPath);
         } catch (const std::exception &) {
             Log::console_error("Couldn't create directory [ {} ], falling back to "
                                "tmp folder for output files\n",
-                               SettingsIO::workPath);
+                               parsedArgs.workPath);
             ++err;
 
             // use fallback dir
-            SettingsIO::workPath = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
+            parsedArgs.workPath = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
             try {
-                if (!std::filesystem::exists(SettingsIO::workPath))
-                    std::filesystem::create_directory(SettingsIO::workPath);
+                if (!std::filesystem::exists(parsedArgs.workPath))
+                    std::filesystem::create_directory(parsedArgs.workPath);
             } catch (const std::exception &) {
-                SettingsIO::workPath = "./";
+                parsedArgs.workPath = "./";
                 Log::console_error("Couldn't create fallback directory [ tmp/ ], falling "
                                    "back to binary folder instead for output files\n");
                 ++err;
@@ -129,15 +118,15 @@ namespace SettingsIO {
 
         // Next check if outputfile name has parent path as name
         // Additional directory in outputpath
-        if (std::filesystem::path(SettingsIO::outputFile).has_parent_path()) {
+        if (std::filesystem::path(parsedArgs.outputFile).has_parent_path()) {
             std::string outputFilePath;
-            if(SettingsIO::outputPath.empty())
+            if(parsedArgs.outputPath.empty())
                 outputFilePath =
-                        std::filesystem::path(SettingsIO::outputFile).parent_path().string();
+                        std::filesystem::path(parsedArgs.outputFile).parent_path().string();
             else
                 outputFilePath =
-                        std::filesystem::path(SettingsIO::outputPath)
-                                .append(std::filesystem::path(SettingsIO::outputFile)
+                        std::filesystem::path(parsedArgs.outputPath)
+                                .append(std::filesystem::path(parsedArgs.outputFile)
                                                 .parent_path()
                                                 .string())
                                 .string();
@@ -157,15 +146,15 @@ namespace SettingsIO {
     }
 
     //! Unzip file and set correct variables (e.g. uncompressed work file)
-    int initFromZip() {
-        if (std::filesystem::path(SettingsIO::inputFile).extension() == ".zip") {
-            //SettingsIO::isArchive = true;
+    int initFromZip(CLIArguments& parsedArgs) {
+        if (std::filesystem::path(parsedArgs.inputFile).extension() == ".zip") {
+            //parsedArgs.isArchive = true;
 
             // decompress file
             std::string parseFileName;
             Log::console_msg_master(2, "Decompressing zip file...\n");
 
-            ZipArchive::Ptr zip = ZipFile::Open(SettingsIO::inputFile);
+            ZipArchive::Ptr zip = ZipFile::Open(parsedArgs.inputFile);
             if (zip == nullptr) {
                 Log::console_error("Can't open ZIP file\n");
                 return 1;
@@ -182,33 +171,33 @@ namespace SettingsIO {
                     notFoundYet = false;
 
                     std::string tmpFolder = MFMPI::world_size > 1 ? fmt::format("tmp{}/",MFMPI::world_rank) : "tmp/";
-                    if (SettingsIO::outputPath != tmpFolder)
+                    if (parsedArgs.outputPath != tmpFolder)
                         FileUtils::CreateDir(tmpFolder); // If doesn't exist yet
 
                     parseFileName = tmpFolder + zipFileName;
-                    ZipFile::ExtractFile(SettingsIO::inputFile, zipFileName, parseFileName);
+                    ZipFile::ExtractFile(parsedArgs.inputFile, zipFileName, parseFileName);
                 }
             }
             if (parseFileName.empty()) {
                 Log::console_error("Zip file does not contain a valid geometry file!\n");
                 return 1;
             }
-            SettingsIO::workFile = parseFileName;
+            parsedArgs.workFile = parseFileName;
             Log::console_msg_master(2, "New input file: {}\n",
-                                    SettingsIO::workFile);
+                                    parsedArgs.workFile);
         } else {
-            SettingsIO::workFile = SettingsIO::inputFile;
+            parsedArgs.workFile = parsedArgs.inputFile;
         }
         return 0;
     }
 
 //! Cleanup tmp files
-    void cleanup_files() {
+    void cleanup_files(CLIArguments& parsedArgs) {
         // a) tmp folder if it is not our output folder
-        if (std::filesystem::path(SettingsIO::outputPath)
+        if (std::filesystem::path(parsedArgs.outputPath)
                     .relative_path()
                     .compare(std::filesystem::path("tmp")) &&
-            std::filesystem::path(SettingsIO::outputPath)
+            std::filesystem::path(parsedArgs.outputPath)
                     .parent_path()
                     .compare(std::filesystem::path("tmp"))) {
             // CLIArguments::tmpfile_dir
@@ -217,9 +206,9 @@ namespace SettingsIO {
             Log::console_msg_master(2, "done.\n");
         }
 
-        if(!SettingsIO::workPath.empty() && is_empty(std::filesystem::path(SettingsIO::workPath))){
-            Log::console_msg_master(2, "Removing empty work directory {} ...",SettingsIO::workPath);
-            std::filesystem::remove_all(SettingsIO::workPath);
+        if(!parsedArgs.workPath.empty() && is_empty(std::filesystem::path(parsedArgs.workPath))){
+            Log::console_msg_master(2, "Removing empty work directory {} ...",parsedArgs.workPath);
+            std::filesystem::remove_all(parsedArgs.workPath);
             Log::console_msg_master(2, "done.\n");
         }
     }
