@@ -160,7 +160,12 @@ public:
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  std::shared_ptr<SimulationModel> model = std::make_shared<SimulationModel>(); //Worker constructs it, then passes to simManager
+  std::shared_ptr<SimulationModel> model = //Worker constructs it, then passes to simManager
+#ifdef MOLFLOW
+      std::make_shared<MolflowSimulationModel>(); 
+#else
+      std::make_shared<SynradSimulationModel>();
+#endif
   std::shared_ptr<ParticleLog> particleLog = std::make_shared<ParticleLog>(); //shared with simManager
   std::shared_ptr<GlobalSimuState> globalState = std::make_shared<GlobalSimuState>(); //shared with simManager
 

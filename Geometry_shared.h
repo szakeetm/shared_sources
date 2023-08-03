@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
-class SimulationModel;
+//class SimulationModel;
 class GlobalSimuState;
 class FacetMomentSnapshot;
 class SimulationFacet;
