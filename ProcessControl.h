@@ -39,12 +39,10 @@ enum ControllerState {
 };
 
 enum ThreadState {
-	Idle, //controller
-	HitUpdate, //thread
-	ThreadError,
-    Exited,
-    Running,
-    Finished
+	Idle, //Not running
+	HitUpdate, //Running + updating hits
+	ThreadError, //Running + error (temporary, will exit -> Idle)
+    Running
 };
 
 static std::map<ControllerState, std::string> controllerStateStrings = {
@@ -62,10 +60,9 @@ static std::map<ControllerState, std::string> controllerStateStrings = {
 static std::map<ThreadState, std::string> threadStateStrings = {
     {ThreadState::HitUpdate,"HitUpdate"},
     {ThreadState::Running,"Running"},
-    {ThreadState::Idle,"Idle"},
+    {ThreadState::Exit,"Idle"},
     {ThreadState::Exited,"Exited"},
-    {ThreadState::ThreadError,"Error"},
-    {ThreadState::Finished,"Finished"}
+    {ThreadState::ThreadError,"Error"}
 };
 
 enum SimCommand {
@@ -98,7 +95,7 @@ struct PROCESS_INFO{
 
 struct ThreadInfo {
     size_t threadId=0;
-    ThreadState threadState=ThreadState::Idle;
+    ThreadState threadState=ThreadState::Exit;
     std::string threadStatus;
     PROCESS_INFO runtimeInfo;
 };

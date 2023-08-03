@@ -121,7 +121,7 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
             throw std::logic_error("No active simulation thread.");
         }
 
-        if (ExecuteAndWait(SimCommand::Pause, ThreadState::Idle, 0, 0, loadStatus))
+        if (ExecuteAndWait(SimCommand::Pause, ThreadState::Exit, 0, 0, loadStatus))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
     }
     else {
@@ -136,7 +136,7 @@ int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
         if (!controllerLoopThread)
             throw std::logic_error("No active simulation thread");
 
-        if (ExecuteAndWait(SimCommand::Load, ThreadState::Idle, 0, 0,loadStatus)) {
+        if (ExecuteAndWait(SimCommand::Load, ThreadState::Exit, 0, 0,loadStatus)) {
             std::string errString = "Failed to send geometry to sub process:\n";
             errString.append(GetErrorDetails());
             throw std::runtime_error(errString);
@@ -221,7 +221,7 @@ int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
     procInformation.UpdateControllerStatus(ControllerState::Initializing,"Creating worker threads...", loadStatus);
     CreateCPUHandle();
     procInformation.UpdateControllerStatus("Waiting for worker threads to be ready...", loadStatus);
-    auto result = WaitForProcStatus(ThreadState::Idle);
+    auto result = WaitForProcStatus(ThreadState::Exit);
     procInformation.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
     return result;
 }
@@ -258,19 +258,15 @@ int SimulationManager::WaitForProcStatus(const ThreadState successState, LoadSta
 
 		for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
 			auto procState = procInformation.threadInfos[i].threadState;
-			if (successState == ThreadState::Exited) {// explicitly ask for killed state
-				finished = finished && (procState == ThreadState::Exited);
-			}
-			else {
-                finished = finished && Contains({ successState, ThreadState::ThreadError, ThreadState::Idle }, procState);
-			}
+			finished = finished && Contains({ successState, ThreadState::ThreadError, ThreadState::Exit }, procState);
+			
 			if (procState == ThreadState::ThreadError) {
 				hasErrorStatus = true;
 			}
-			allProcsDone = allProcsDone && (procState == ThreadState::Idle);
+			allProcsDone = allProcsDone && (procState == ThreadState::Exit);
 		}
 
-        finished = finished && Contains({ ControllerState::Exit,ControllerState::Ready }, procInformation.controllerState);
+        finished = finished && Contains({ ControllerState::Exit,ControllerState::Ready,ControllerState::InError }, procInformation.controllerState);
 
 		if (!finished) {
             if (loadStatus) {
@@ -423,7 +419,7 @@ bool SimulationManager::IsRunning(){
     bool done = true;
     for (auto & i : procInformation.threadInfos) {
         auto procState = i.threadState;
-        done = done && (procState==ThreadState::ThreadError || procState==ThreadState::Idle);
+        done = done && (procState==ThreadState::ThreadError || procState==ThreadState::Exit);
         if( procState==ThreadState::ThreadError ) {
             hasErrorStatus = true;
         }
@@ -483,7 +479,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
-            if (ExecuteAndWait(SimCommand::Load, ThreadState::Idle, size, 0, loadStatus)) {
+            if (ExecuteAndWait(SimCommand::Load, ThreadState::Exit, size, 0, loadStatus)) {
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
@@ -491,7 +487,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADPARAM:{
-            if (ExecuteAndWait(SimCommand::UpdateParams, ThreadState::Idle, size, isRunning ? ThreadState::Running : ThreadState::Idle, loadStatus)) {
+            if (ExecuteAndWait(SimCommand::UpdateParams, ThreadState::Exit, size, isRunning ? ThreadState::Running : ThreadState::Exit, loadStatus)) {
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
