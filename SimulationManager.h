@@ -135,8 +135,8 @@ private:
     std::unique_ptr<std::thread> controllerLoopThread; //pointer so it can have unitialized (nullptr) state (as opposed to std::thread)
 
 public:
-    void SetSimModel(std::shared_ptr<SimulationModel> model);
-    void SetGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
+    void ShareSimModel(std::shared_ptr<SimulationModel> model);
+    void ShareGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr); //Let simManager be aware of externally constructed sim state. TO DO: make simManager actually own it
     void SetOntheflyParams(OntheflySimulationParams* otfParams);
     void SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches); //facet counters part of global counter. Only for moment 0.
 };

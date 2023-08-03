@@ -677,9 +677,9 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 		}
 
 		prg.SetMessage("Forwarding simulation model...");
-		simManager.SetSimModel(model); //set shared pointer simManager::simulation.model to worker::model
+		simManager.ShareSimModel(model); //set shared pointer simManager::simulation.model to worker::model
 		prg.SetMessage("Forwarding global simulation state...");
-		simManager.SetGlobalCounter(&globalState, &particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
+		simManager.ShareGlobalCounter(&globalState, &particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
 	}
 	catch (const std::exception& e) {
 		GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);

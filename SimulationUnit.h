@@ -58,7 +58,7 @@ public:
     virtual MFSim::ParticleTracer * GetParticleTracerPtr(size_t i) = 0;
     virtual void ConstructParticleTracers(size_t n, bool fixedSeed) = 0;
 public:
-    std::shared_ptr<SimulationModel> model;
+    std::shared_ptr<SimulationModel> model; //constructed outside, shared
     GlobalSimuState* globStatePtr=nullptr; //Set by SimManager->SetGlobalCounters(), constructed by Worker or CLI
     ParticleLog* globParticleLogPtr=nullptr; //Recorded particle log since last UpdateMCHits. Set by SimManager->SetGlobalCounters(), constructed by Worker or CLI
 
