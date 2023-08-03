@@ -228,7 +228,7 @@ RotateFacet::RotateFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	RestoreDeviceObjects();
 
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 	axisMode = -1;
 }
@@ -250,7 +250,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			GLWindow::ProcessMessage(NULL,MSG_CLOSE);
 
 		} else if (src==moveButton || src==copyButton) {
-			if (guiGeom->GetNbSelectedFacets()==0) {
+			if (interfGeom->GetNbSelectedFacets()==0) {
 				GLMessageBox::Display("No facets selected","Nothing to mirror",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
@@ -277,38 +277,38 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				AXIS_DIR = Vector3d(0.0, 0.0, 1.0);
 				break;
 			case FACETUMODE:
-				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>guiGeom->GetNbFacet() ) {
+				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>interfGeom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=guiGeom->GetFacet(facetNum-1)->sh.O;
-				AXIS_DIR=guiGeom->GetFacet(facetNum-1)->sh.U;
+				AXIS_P0=interfGeom->GetFacet(facetNum-1)->sh.O;
+				AXIS_DIR=interfGeom->GetFacet(facetNum-1)->sh.U;
 				break;
 			case FACETVMODE:
-				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>guiGeom->GetNbFacet() ) {
+				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>interfGeom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=guiGeom->GetFacet(facetNum-1)->sh.O;
-				AXIS_DIR=guiGeom->GetFacet(facetNum-1)->sh.V;
+				AXIS_P0=interfGeom->GetFacet(facetNum-1)->sh.O;
+				AXIS_DIR=interfGeom->GetFacet(facetNum-1)->sh.V;
 				break;
 			case FACETNMODE:
-				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>guiGeom->GetNbFacet() ) {
+				if( !(facetNumber->GetNumberInt(&facetNum))||facetNum<1||facetNum>interfGeom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				AXIS_P0=guiGeom->GetFacet(facetNum-1)->sh.center;
-				AXIS_DIR=guiGeom->GetFacet(facetNum-1)->sh.N;
+				AXIS_P0=interfGeom->GetFacet(facetNum-1)->sh.center;
+				AXIS_DIR=interfGeom->GetFacet(facetNum-1)->sh.N;
 				break;
 			case TWOVERTEXMODE:
-				if (guiGeom->GetNbSelectedVertex()!=2) {
+				if (interfGeom->GetNbSelectedVertex()!=2) {
 					GLMessageBox::Display("Select exactly 2 vertices","Can't define axis",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
 				selVert1id = selVert2id = -1;
 
-				for(int i=0;selVert2id == -1 && i<guiGeom->GetNbVertex();i++ ) {
-					if( guiGeom->GetVertex(i)->selected ) {
+				for(int i=0;selVert2id == -1 && i<interfGeom->GetNbVertex();i++ ) {
+					if( interfGeom->GetVertex(i)->selected ) {
 						if (selVert1id == -1) {
 							selVert1id = i;
 						}
@@ -318,8 +318,8 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 					}
 				}
 
-				AXIS_DIR = *(guiGeom->GetVertex(selVert2id)) - *(guiGeom->GetVertex(selVert1id));
-				AXIS_P0 = *(guiGeom->GetVertex(selVert1id));
+				AXIS_DIR = *(interfGeom->GetVertex(selVert2id)) - *(interfGeom->GetVertex(selVert1id));
+				AXIS_P0 = *(interfGeom->GetVertex(selVert1id));
 
 				break;
 			case EQMODE:
@@ -361,7 +361,7 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 			if (mApp->AskToReset()) {
-				guiGeom->RotateSelectedFacets(AXIS_P0,AXIS_DIR,rad,src==copyButton,work);
+				interfGeom->RotateSelectedFacets(AXIS_P0,AXIS_DIR,rad,src==copyButton,work);
 				//mApp->UpdateModelParams();
 				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();
@@ -371,37 +371,37 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 		}
 		 else if (src == getSelFacetButton) {
-			 if (guiGeom->GetNbSelectedFacets() != 1) {
+			 if (interfGeom->GetNbSelectedFacets() != 1) {
 				 GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				 return;
 			 }
 			 int selFacetId = -1;
-			 for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
-				 if (guiGeom->GetFacet(i)->selected) {
+			 for (int i = 0; selFacetId == -1 && i < interfGeom->GetNbFacet(); i++) {
+				 if (interfGeom->GetFacet(i)->selected) {
 					 selFacetId = i;
 				 }
 			 }
 			 facetNumber->SetText(selFacetId + 1);
 		 }
 		 else if (src == getBaseVertexButton) {
-			 if (guiGeom->GetNbSelectedVertex()!=1) {
+			 if (interfGeom->GetNbSelectedVertex()!=1) {
 				 GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				 return;
 			 }
 			 UpdateToggle(l8);
 			 int selVertexId = -1;
-			 for (int i = 0; selVertexId == -1 && i < guiGeom->GetNbVertex(); i++) {
-				 if (guiGeom->GetVertex(i)->selected) {
+			 for (int i = 0; selVertexId == -1 && i < interfGeom->GetNbVertex(); i++) {
+				 if (interfGeom->GetVertex(i)->selected) {
 					 selVertexId = i;
 				 }
 			 }
-			 Vector3d *selVertex = guiGeom->GetVertex(selVertexId);
+			 Vector3d *selVertex = interfGeom->GetVertex(selVertexId);
 			 aText->SetText(selVertex->x);
 			 bText->SetText(selVertex->y);
 			 cText->SetText(selVertex->z);
 		}
 		 else if (src == getDirVertexButton) {
-			 if (guiGeom->GetNbSelectedVertex() != 1) {
+			 if (interfGeom->GetNbSelectedVertex() != 1) {
 				 GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				 return;
 			 }
@@ -419,12 +419,12 @@ void RotateFacet::ProcessMessage(GLComponent *src,int message) {
 			 }
 			 UpdateToggle(l8);
 			 int selVertexId = -1;
-			 for (int i = 0; selVertexId == -1 && i < guiGeom->GetNbVertex(); i++) {
-				 if (guiGeom->GetVertex(i)->selected) {
+			 for (int i = 0; selVertexId == -1 && i < interfGeom->GetNbVertex(); i++) {
+				 if (interfGeom->GetVertex(i)->selected) {
 					 selVertexId = i;
 				 }
 			 }
-			 Vector3d *selVertex = guiGeom->GetVertex(selVertexId);
+			 Vector3d *selVertex = interfGeom->GetVertex(selVertexId);
 			 uText->SetText(selVertex->x-a);
 			 vText->SetText(selVertex->y-b);
 			 wText->SetText(selVertex->z-c);

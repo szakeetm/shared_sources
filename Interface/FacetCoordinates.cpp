@@ -165,7 +165,7 @@ void FacetCoordinates::UpdateFromSelection() {
   GetSelected();
   if(!selFacet) return;
 
-  InterfaceGeometry *guiGeom = worker->GetGeometry();
+  InterfaceGeometry *interfGeom = worker->GetGeometry();
 
   size_t nbIndex = selFacet->sh.nbIndex;
 
@@ -173,7 +173,7 @@ void FacetCoordinates::UpdateFromSelection() {
 
   for (size_t i=0;i<nbIndex;i++) {
 	  line newLine;
-	  newLine.coord=*guiGeom->GetVertex(newLine.vertexId=selFacet->indices[i]);
+	  newLine.coord=*interfGeom->GetVertex(newLine.vertexId=selFacet->indices[i]);
 	  lines.push_back(newLine);
   }
 
@@ -200,7 +200,7 @@ void FacetCoordinates::Display(Worker *w) {
 */
 void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 
-  InterfaceGeometry *guiGeom = worker->GetGeometry();
+  InterfaceGeometry *interfGeom = worker->GetGeometry();
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {
@@ -208,7 +208,7 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 	  } else if (src==insertLastButton) {
 		  int vertexId;
 		  size_t rowId=facetListC->GetNbRow();
-		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=guiGeom->GetNbVertex())) {
+		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=interfGeom->GetNbVertex())) {
 			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
 			  break;
 		  }
@@ -216,7 +216,7 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 	  } else if (src==insertBeforeButton) {
 		  int vertexId;
 		  int rowId=facetListC->GetSelectedRow();
-		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=guiGeom->GetNbVertex())) {
+		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=interfGeom->GetNbVertex())) {
 			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
 			  break;
 		  }
@@ -372,7 +372,7 @@ void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 */
 void FacetCoordinates::ApplyChanges(){
 	
-	InterfaceGeometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *interfGeom = worker->GetGeometry();
 	
 	if (facetListC->GetNbRow()<3) {
 		GLMessageBox::Display("A facet must have at least 3 vertices","Not enough vertices",GLDLG_OK,GLDLG_ICONWARNING);
@@ -382,7 +382,7 @@ void FacetCoordinates::ApplyChanges(){
 	//validate user inputs
 	for (int row=0;row<(int)lines.size();row++) {
 		double x,y,z;
-		if (!(lines[row].vertexId >= 0 && lines[row].vertexId<guiGeom->GetNbVertex())) { //wrong coordinates at row
+		if (!(lines[row].vertexId >= 0 && lines[row].vertexId<interfGeom->GetNbVertex())) { //wrong coordinates at row
 			char tmp[128];
 			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %zd doesn't exist.", row + 1, lines[row].vertexId + 1);
 			GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
@@ -415,10 +415,10 @@ void FacetCoordinates::ApplyChanges(){
 			selFacet->visible.resize(selFacet->sh.nbIndex);
 
 			for(size_t i=0;i<lines.size();i++) {
-				guiGeom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);
+				interfGeom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);
 				selFacet->indices[i]=lines[i].vertexId;
 			}
-			guiGeom->Rebuild(); //Will recalculate facet parameters
+			interfGeom->Rebuild(); //Will recalculate facet parameters
 
 			// Send to sub process
 			worker->MarkToReload();

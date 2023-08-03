@@ -41,7 +41,7 @@ class CreateShape : public GLWindow {
 public:
 
   // Construction
-  CreateShape(InterfaceGeometry *guiGeom,Worker *work);
+  CreateShape(InterfaceGeometry *interfGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -50,7 +50,7 @@ private:
 
 	void EnableDisableControls();
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
 	GLTitledPanel	*shapePanel;

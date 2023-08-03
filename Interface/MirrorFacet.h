@@ -41,7 +41,7 @@ class MirrorFacet : public GLWindow {
 
 public:
   // Construction
-  MirrorFacet(InterfaceGeometry *guiGeom,Worker *work);
+  MirrorFacet(InterfaceGeometry *interfGeom,Worker *work);
   void ClearUndoVertices();
   void ProcessMessage(GLComponent *src,int message) override;
 
@@ -75,7 +75,7 @@ private:
   int    planeMode;
   std::vector<UndoPoint> undoPoints;
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
 };

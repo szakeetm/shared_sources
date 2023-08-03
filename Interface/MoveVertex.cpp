@@ -169,7 +169,7 @@ MoveVertex::MoveVertex(InterfaceGeometry *g, Worker *w) :GLWindow() {
 	directionCheckBox->SetState(0);
 	distanceText->SetEditable(false);
 
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 	dirVertexButton->SetEnabled(false);
 	dirFacetCenterButton->SetEnabled(false);
@@ -186,7 +186,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 	case MSG_BUTTON:
 
 		if (src == moveButton || src == copyButton) {
-			if (guiGeom->GetNbSelectedVertex() == 0) {
+			if (interfGeom->GetNbSelectedVertex() == 0) {
 				GLMessageBox::Display("No vertices selected", "Nothing to move", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -214,7 +214,7 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 
 			if (mApp->AskToReset()) {
 
-				guiGeom->MoveSelectedVertex(dX, dY, dZ, towardsDirectionMode, distance, src == copyButton);
+				interfGeom->MoveSelectedVertex(dX, dY, dZ, towardsDirectionMode, distance, src == copyButton);
 				work->MarkToReload();
 				mApp->changedSinceSave = true;
 				mApp->UpdateFacetlistSelected();
@@ -222,12 +222,12 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == facetNormalButton) {
-			auto selFacets = guiGeom->GetSelectedFacets();
+			auto selFacets = interfGeom->GetSelectedFacets();
 			if (selFacets.size() != 1) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d facetNormal = guiGeom->GetFacet(selFacets[0])->sh.N;
+			Vector3d facetNormal = interfGeom->GetFacet(selFacets[0])->sh.N;
 			xText->SetText(facetNormal.x);
 			yText->SetText(facetNormal.y);
 			zText->SetText(facetNormal.z);
@@ -238,36 +238,36 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			distanceText->SetEditable(true);
 		}
 		else if (src == baseVertexButton) {
-			auto selVertices = guiGeom->GetSelectedVertices();
+			auto selVertices = interfGeom->GetSelectedVertices();
 			if (selVertices.size() != 1) {
 				GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			baseLocation = (Vector3d)*(guiGeom->GetVertex(selVertices[0]));
+			baseLocation = (Vector3d)*(interfGeom->GetVertex(selVertices[0]));
 			std::stringstream tmp; tmp << "Vertex " << selVertices[0] + 1;
 			baseStatusLabel->SetText(tmp.str());
 			dirFacetCenterButton->SetEnabled(true);
 			dirVertexButton->SetEnabled(true);
 		}
 		else if (src == baseFacetCenterButton) {
-			auto selFacets = guiGeom->GetSelectedFacets();
+			auto selFacets = interfGeom->GetSelectedFacets();
 			if (selFacets.size() != 1) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			baseLocation = guiGeom->GetFacet(selFacets[0])->sh.center;
+			baseLocation = interfGeom->GetFacet(selFacets[0])->sh.center;
 			std::stringstream tmp; tmp << "Center of facet " << selFacets[0] + 1;
 			baseStatusLabel->SetText(tmp.str());
 			dirFacetCenterButton->SetEnabled(true);
 			dirVertexButton->SetEnabled(true);
 		}
 		else if (src == dirVertexButton) { //only enabled once base is defined
-			auto selVertices = guiGeom->GetSelectedVertices();
+			auto selVertices = interfGeom->GetSelectedVertices();
 			if (selVertices.size() != 1) {
 				GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d translation = *(guiGeom->GetVertex(selVertices[0])) - baseLocation;
+			Vector3d translation = *(interfGeom->GetVertex(selVertices[0])) - baseLocation;
 
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);
@@ -278,12 +278,12 @@ void MoveVertex::ProcessMessage(GLComponent *src, int message) {
 			directionStatusLabel->SetText(tmp.str());
 		}
 		else if (src == dirFacetCenterButton) { //only enabled once base is defined
-			auto selFacets = guiGeom->GetSelectedFacets();
+			auto selFacets = interfGeom->GetSelectedFacets();
 			if (selFacets.size() != 1) {
 				GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			Vector3d translation = guiGeom->GetFacet(selFacets[0])->sh.center - baseLocation;
+			Vector3d translation = interfGeom->GetFacet(selFacets[0])->sh.center - baseLocation;
 
 			xText->SetText(translation.x);
 			yText->SetText(translation.y);

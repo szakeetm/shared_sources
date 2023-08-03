@@ -40,7 +40,7 @@ class ScaleFacet : public GLWindow {
 
 public:
   // Construction
-  ScaleFacet(InterfaceGeometry *guiGeom,Worker *work);
+  ScaleFacet(InterfaceGeometry *interfGeom,Worker *work);
   void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
@@ -71,7 +71,7 @@ private:
 
   int nbFacetS,invariantMode,scaleMode;
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
 };

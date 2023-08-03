@@ -483,8 +483,8 @@ void GeometryViewer::UpdateLight() {
 void GeometryViewer::UpdateMatrix() {
 
 	if (!work) return;
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	if (!guiGeom) return;
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	if (!interfGeom) return;
 	double handedness = mApp->leftHandedView ? -1.0 : 1.0;
 	double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
 	// Model view matrix ---------------------------------------------------
@@ -495,7 +495,7 @@ void GeometryViewer::UpdateMatrix() {
 	view.camAngleOz = RoundAngle(view.camAngleOz);
 
 	// Convert polar coordinates
-	Vector3d org = guiGeom->GetCenter();
+	Vector3d org = interfGeom->GetCenter();
 
 	/*
 	Vector3d X(1.0, 0.0, 0.0);
@@ -638,8 +638,8 @@ void GeometryViewer::SetWorker(Worker *w) {
 	work = w;
 	ToFrontView();
 	// Auto size vector length (consider Front View)
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	AxisAlignedBoundingBox bb = guiGeom->GetBB();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	AxisAlignedBoundingBox bb = interfGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 }
 
@@ -649,16 +649,16 @@ void GeometryViewer::DrawIndex() {
 
 	// Draw index number
 		// Get selected vertex
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	size_t nbVertex = guiGeom->GetNbVertex();
-	auto selectedFacets = guiGeom->GetSelectedFacets();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	size_t nbVertex = interfGeom->GetNbVertex();
+	auto selectedFacets = interfGeom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
 
 	//Mark vertices of selected facets
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
 	std::vector<size_t> vertexId(nbVertex);
 	for (auto& selId:selectedFacets) {
-		InterfaceFacet *f = guiGeom->GetFacet(selId);
+		InterfaceFacet *f = interfGeom->GetFacet(selId);
 			for (size_t i = 0; i < f->sh.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;
 				vertexId[f->indices[i]] = i;
@@ -677,7 +677,7 @@ void GeometryViewer::DrawIndex() {
 	glBegin(GL_POINTS);
 	for (size_t i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
-			Vector3d *v = guiGeom->GetVertex(i);
+			Vector3d *v = interfGeom->GetVertex(i);
 			glVertex3d(v->x, v->y, v->z);
 		}
 	}
@@ -699,7 +699,7 @@ void GeometryViewer::DrawIndex() {
 			else {
 				sprintf(tmp, "%zd ", i + 1);
 			}
-			Vector3d *v = guiGeom->GetVertex(i);
+			Vector3d *v = interfGeom->GetVertex(i);
 			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 		}
 	}
@@ -792,12 +792,12 @@ void GeometryViewer::DrawCoordinateAxes() {
 }
 
 void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
-	InterfaceGeometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
 	std::vector<size_t> selectedVertexIds;
 
 	//Populate selected vertices
-	for (size_t i = 0; i < guiGeom->GetNbVertex(); i++) {
-		if (guiGeom->GetVertex(i)->selected) {
+	for (size_t i = 0; i < interfGeom->GetNbVertex(); i++) {
+		if (interfGeom->GetVertex(i)->selected) {
 			selectedVertexIds.push_back(i);
 		}
 	}
@@ -817,7 +817,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 	glBegin(GL_POINTS);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = guiGeom->GetVertex(i);
+		Vector3d *v = interfGeom->GetVertex(i);
 		glVertex3d(v->x, v->y, v->z);
 	}
 	glEnd();
@@ -830,7 +830,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	// Draw Labels
 	glEnable(GL_BLEND);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = guiGeom->GetVertex(i);
+		Vector3d *v = interfGeom->GetVertex(i);
 		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, std::to_string(i + 1).c_str(), GLToolkit::GetDialogFont(), 2, 2);
 	}
 	glDisable(GL_BLEND);
@@ -855,11 +855,11 @@ void GeometryViewer::DrawNormal() {
 	glPointSize(3.0f);
 	glColor3f(1.0f, 0.0f, 0.0f);
 
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
-		InterfaceFacet *f = guiGeom->GetFacet(i);
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+		InterfaceFacet *f = interfGeom->GetFacet(i);
 		if (f->selected) {
-			Vector3d start = guiGeom->GetFacetCenter(i);
+			Vector3d start = interfGeom->GetFacetCenter(i);
 			Vector3d end = start + f->sh.N * vectorLength; //facet normal is normalized to 1 length
 			GLToolkit::SetMaterial(&blueMaterial);
 			
@@ -878,9 +878,9 @@ void GeometryViewer::DrawNormal() {
 }
 
 void GeometryViewer::DrawUV() {
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
-		InterfaceFacet *f = guiGeom->GetFacet(i);
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+		InterfaceFacet *f = interfGeom->GetFacet(i);
 		if (f->selected) {
 			const Vector3d& O = f->sh.O;
 			const Vector3d& U = f->sh.U;
@@ -923,9 +923,9 @@ void GeometryViewer::DrawFacetId() {
 
     // Draw index number
     // Get selected vertex
-    InterfaceGeometry *guiGeom = work->GetGeometry();
-    size_t nbVertex = guiGeom->GetNbVertex();
-    auto selectedFacets = guiGeom->GetSelectedFacets();
+    InterfaceGeometry *interfGeom = work->GetGeometry();
+    size_t nbVertex = interfGeom->GetNbVertex();
+    auto selectedFacets = interfGeom->GetSelectedFacets();
     if (nbVertex <= 0 || selectedFacets.empty()) return;
 
 	/*
@@ -933,7 +933,7 @@ void GeometryViewer::DrawFacetId() {
     std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
     std::vector<size_t> vertexId(nbVertex);
     for (auto& selId:selectedFacets) {
-        InterfaceFacet *f = guiGeom->GetFacet(selId);
+        InterfaceFacet *f = interfGeom->GetFacet(selId);
         for (size_t i = 0; i < f->sh.nbIndex; i++) {
             vertexOnSelectedFacet[f->indices[i]] = true;
             vertexId[f->indices[i]] = i;
@@ -951,14 +951,14 @@ void GeometryViewer::DrawFacetId() {
 
     // Draw Labels
     for (auto& selId:selectedFacets) {
-        InterfaceFacet *f = guiGeom->GetFacet(selId);
-        Vector3d center = guiGeom->GetFacetCenter(selId);
+        InterfaceFacet *f = interfGeom->GetFacet(selId);
+        Vector3d center = interfGeom->GetFacetCenter(selId);
         /*
-		Vector3d origin = guiGeom->GetFacetCenter(selId);
-        Vector3d labelVec = guiGeom->GetFacetCenter(selId);
+		Vector3d origin = interfGeom->GetFacetCenter(selId);
+        Vector3d labelVec = interfGeom->GetFacetCenter(selId);
         double labelDist = 99999999.0;
         for (size_t i = 1; i < f->sh.nbIndex; i++) {
-            Vector3d *v = guiGeom->GetVertex(f->indices[i]);
+            Vector3d *v = interfGeom->GetVertex(f->indices[i]);
 
             // Look for the closest Vertex between Origin and Center as a label position
             double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
@@ -1017,12 +1017,12 @@ void GeometryViewer::DrawLeak() {
 void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 	if (!work) return;
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	if (!guiGeom) return;
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	if (!interfGeom) return;
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
 	if (aspect == 0.0) aspect = 1.0; //To avoid division by zero
-	Vector3d org = guiGeom->GetCenter();
+	Vector3d org = interfGeom->GetCenter();
 
 	// Reset offset, zoom
 	view.camOffset.x = 0.0;
@@ -1175,8 +1175,8 @@ void GeometryViewer::Paint() {
 	
 
 	if (!work) return;
-	InterfaceGeometry *guiGeom = work->GetGeometry();
-	if (!guiGeom->IsLoaded()) {
+	InterfaceGeometry *interfGeom = work->GetGeometry();
+	if (!interfGeom->IsLoaded()) {
 		PaintCompAndBorder();
 		return;
 	}
@@ -1186,7 +1186,7 @@ void GeometryViewer::Paint() {
 	sideBtn->SetState(false);
 	if (view.performXY) {
 		// Draw coordinates on screen when aligned
-		Vector3d org = guiGeom->GetCenter();
+		Vector3d org = interfGeom->GetCenter();
 		double x, y, z;
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
@@ -1290,13 +1290,13 @@ if( showVolume || showTexture ) {
 		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
 		else cullMode = SHOW_BACK;
 	} else cullMode = showBack;
-	guiGeom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+	interfGeom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
 #if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
-	bool detailsSuppressed = hideLot != -1 && (guiGeom->GetNbSelectedFacets() > hideLot);
+	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
 	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
 	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
@@ -1306,7 +1306,7 @@ if( showVolume || showTexture ) {
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered
     if(mApp->highlightSelection)
-        guiGeom->RenderSemiTransparent((GLfloat *) matView, showVolume, showTexture, cullMode, showFilter, showHidden,
+        interfGeom->RenderSemiTransparent((GLfloat *) matView, showVolume, showTexture, cullMode, showFilter, showHidden,
                                     showMesh, showDir);
 
     // Draw on top of everything
@@ -1378,7 +1378,7 @@ if( showVolume || showTexture ) {
 	bool displaySelectionLabel = displaySelectionRectangle;
 	bool displayPanLabel = draggMode == DRAGG_MOVE;
 	bool displayTabLabel = GetWindow()->IsTabDown();
-	bool displayNonPlanarLabel = guiGeom->hasNonPlanar;
+	bool displayNonPlanarLabel = interfGeom->hasNonPlanar;
 	int offsetCount = 0;
 	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20*offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel;hideLotlabel->SetVisible(displayHideLotLabel);
 	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel;capsLockLabel->SetVisible(displayCapsLockLabel);
@@ -1471,7 +1471,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 {
 
 	if (!work) return;
-	InterfaceGeometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
 	// Key pressed
 	if (evt->type == SDL_KEYDOWN) {
 		int unicode = /*(evt->key.keysym.unicode & 0x7F);
@@ -1726,7 +1726,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					// Simple click, select/unselect facet
 					//SetCursor(CURSOR_BUSY);
 					GLToolkit::SetCursor(CURSOR_BUSY);
-					guiGeom->Select(mX - posX, mY - posY, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), this->width, this->height);
+					interfGeom->Select(mX - posX, mY - posY, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), this->width, this->height);
 					//UpdateMouseCursor(mode);
 				}
 				else {
@@ -1745,7 +1745,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 						screenshotStatus.requested = 2;
 					}
 					else {
-						guiGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 							!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
 					}
 				}
@@ -1759,12 +1759,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				//selectionChange = true;
 				if (std::abs(selX1 - selX2) <= 1 && std::abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
-					guiGeom->SelectVertex(mX - posX, mY - posY, this->width,this->height,GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
+					interfGeom->SelectVertex(mX - posX, mY - posY, this->width,this->height,GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
 				}
 				else {
 					// Select region
-					guiGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
 				}
 			}
@@ -1904,7 +1904,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
-	InterfaceGeometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
 	/*
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -1913,7 +1913,7 @@ void GeometryViewer::SelectCoplanar(double tolerance) {
 	glLoadMatrixf(matView);
 	*/
 	selectionChange = true;
-	guiGeom->SelectCoplanar(this->width, this->height, tolerance);
+	interfGeom->SelectCoplanar(this->width, this->height, tolerance);
 }
 
 void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
@@ -1999,7 +1999,7 @@ glDisable(GL_BLEND);
 glDisable(GL_CULL_FACE);
 glColor3f(1.0f,1.0f,0.0f);
 glBegin(GL_LINES);
-DrawBB(guiGeom->aabbTree);
+DrawBB(interfGeom->aabbTree);
 glEnd();
 }
 }
@@ -2059,7 +2059,7 @@ DrawBB(node->right);
 
 void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
-	InterfaceGeometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *interfGeom = work->GetGeometry();
 
 	GLMatrix mv;
 	float rx, ry, rz, rw;
@@ -2072,7 +2072,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 	zFar = -1e100;
 	mv.LoadGL(matView);
 
-	AxisAlignedBoundingBox bb = guiGeom->GetBB();
+	AxisAlignedBoundingBox bb = interfGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 	headSize = .1 * vectorLength;
 	TRANSFORMVERTEX(bb.min.x, bb.min.y, bb.min.z);

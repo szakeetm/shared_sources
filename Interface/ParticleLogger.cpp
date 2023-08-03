@@ -122,7 +122,7 @@ ParticleLogger::ParticleLogger(InterfaceGeometry *g, Worker *w) :GLWindow() {
 	RestoreDeviceObjects();
 
 	UpdateMemoryEstimate();
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 	isRunning = false;
 
@@ -135,7 +135,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 		if (!isRunning) {
 			if (src == applyButton) {
 				int facetId, nbRec;
-				if (!facetNumberTextbox->GetNumberInt(&facetId) || facetId<1 || facetId>guiGeom->GetNbFacet()) {
+				if (!facetNumberTextbox->GetNumberInt(&facetId) || facetId<1 || facetId>interfGeom->GetNbFacet()) {
 					GLMessageBox::Display("Invalid facet number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -151,7 +151,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 				UpdateStatus();
 			}
 			else if (src == getSelectedFacetButton) {
-				auto selFacets = guiGeom->GetSelectedFacets();
+				auto selFacets = interfGeom->GetSelectedFacets();
 				if (selFacets.size() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;

@@ -38,7 +38,7 @@ class AlignFacet : public GLWindow {
 public:
 
   // Construction
-  AlignFacet(InterfaceGeometry *guiGeom,Worker *work);
+  AlignFacet(InterfaceGeometry *interfGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -46,7 +46,7 @@ public:
 
 private:
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
   std::vector<size_t> memorizedSelection;

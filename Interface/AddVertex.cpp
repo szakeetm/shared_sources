@@ -102,7 +102,7 @@ AddVertex::AddVertex(InterfaceGeometry *g,Worker *w):GLWindow() {
 
   RestoreDeviceObjects();
 
-  guiGeom = g;
+  interfGeom = g;
   work = w;
 
 }
@@ -133,18 +133,18 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 			  GLMessageBox::Display("Invalid Z coordinate", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  guiGeom->AddVertex(X, Y, Z);
-		  guiGeom->AddToSelectedVertexList(guiGeom->GetNbVertex() - 1);
+		  interfGeom->AddVertex(X, Y, Z);
+		  interfGeom->AddToSelectedVertexList(interfGeom->GetNbVertex() - 1);
 		  
 	  }
 	  else if (Contains({ facetCenterButton,facetUButton,facetVButton,facetNormalButton }, src)) {
-		  auto selFacetIds = guiGeom->GetSelectedFacets();
+		  auto selFacetIds = interfGeom->GetSelectedFacets();
 		  if (selFacetIds.size() != 1) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
 		  Vector3d location;
-		  auto sh = guiGeom->GetFacet(selFacetIds[0])->sh;
+		  auto sh = interfGeom->GetFacet(selFacetIds[0])->sh;
 		  if (src == facetCenterButton) {
 			  location = sh.center;
 		  }
@@ -157,8 +157,8 @@ void AddVertex::ProcessMessage(GLComponent *src,int message) {
 		  else if (src == facetNormalButton) {
 			  location = sh.center + sh.N;
 		  }
-		  guiGeom->AddVertex(location);
-      guiGeom->AddToSelectedVertexList(guiGeom->GetNbVertex()-1);
+		  interfGeom->AddVertex(location);
+      interfGeom->AddToSelectedVertexList(interfGeom->GetNbVertex()-1);
 	  }
 	  break;
   }

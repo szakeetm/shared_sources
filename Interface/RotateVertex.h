@@ -39,7 +39,7 @@ class RotateVertex : public GLWindow {
 
 public:
 	// Construction
-	RotateVertex(InterfaceGeometry *guiGeom, Worker *work);
+	RotateVertex(InterfaceGeometry *interfGeom, Worker *work);
 	void ProcessMessage(GLComponent *src, int message);
 
 	// Implementation
@@ -77,7 +77,7 @@ private:
 	int nbFacetS;
 	int    axisMode;
 
-	InterfaceGeometry   *guiGeom;
+	InterfaceGeometry   *interfGeom;
 	Worker	   *work;
 
 };

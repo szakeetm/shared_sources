@@ -84,7 +84,7 @@ SmartSelection::SmartSelection(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	RestoreDeviceObjects();
 
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 	isRunning = false;
 }
@@ -114,7 +114,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 
 		if (src==analyzeButton) {
 			if (!isRunning) {
-				if (!guiGeom->IsLoaded()) {
+				if (!interfGeom->IsLoaded()) {
 					GLMessageBox::Display("InterfaceGeometry not loaded yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -124,7 +124,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				prg.SetClosable(false); //Use stop button
 				prg.SetVisible(true);
 
-				size_t nbAnalyzed = guiGeom->AnalyzeNeigbors(work,prg);
+				size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(work,prg);
 				analyzeButton->SetText("Analyze");
 				isRunning = false;
 				std::stringstream tmp;

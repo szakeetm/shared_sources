@@ -1279,7 +1279,7 @@ void InterfaceGeometry::ShiftVertex() {
 		InterfaceFacet *f = facets[i];
 		if (f->selected) {
 			f->ShiftVertex();
-			InitializeGeometry(i);// Reinitialise guiGeom
+			InitializeGeometry(i);// Reinitialise interfGeom
             InitializeInterfaceGeometry(i);
 			try {
                 SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
@@ -2785,7 +2785,7 @@ void InterfaceGeometry::Collapse(double vT, double fT, double lT, int maxVertex,
 		InitializeGeometry(); //Find collinear facets
         InitializeInterfaceGeometry();
 		if (RemoveCollinear() || RemoveNullFacet()) {
-			InitializeGeometry(); //If  facets were removed, update guiGeom.
+			InitializeGeometry(); //If  facets were removed, update interfGeom.
             InitializeInterfaceGeometry();
             mApp->UpdateModelParams();
 		}
@@ -2920,7 +2920,7 @@ void InterfaceGeometry::Collapse(double vT, double fT, double lT, int maxVertex,
 	for (int i = 0; i < sh.nbSuper; i++)
 		DeleteGLLists(true, true);
 
-	// Reinitialise guiGeom
+	// Reinitialise interfGeom
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 }
@@ -3458,7 +3458,7 @@ void InterfaceGeometry::Rebuild() {
 			// Delete old resources
 	DeleteGLLists(true, true);
 
-	// Reinitialise guiGeom
+	// Reinitialise interfGeom
 	InitializeGeometry();
     InitializeInterfaceGeometry();
 }
@@ -4462,7 +4462,7 @@ void InterfaceGeometry::SetInterfaceVertices(const std::vector<Vector3d>& vertic
 void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
     //Facets
     try{
-        facets.resize(sFacets.size(), nullptr); //guiGeom->Clear() called already, facets is empty, no memory leak
+        facets.resize(sFacets.size(), nullptr); //interfGeom->Clear() called already, facets is empty, no memory leak
     }
     catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");

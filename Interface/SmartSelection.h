@@ -42,7 +42,7 @@ public:
 
 private:
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
   GLButton    *analyzeButton;

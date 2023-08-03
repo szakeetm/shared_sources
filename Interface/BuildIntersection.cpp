@@ -83,7 +83,7 @@ BuildIntersection::BuildIntersection(InterfaceGeometry *g, Worker *w) : GLWindow
 
 	resultLabel->SetText("");
 	undoButton->SetEnabled(false);
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 }
 
@@ -114,17 +114,17 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 
 	if(message == MSG_BUTTON) {
 		if (src == undoButton) {
-			if (nbFacet == guiGeom->GetNbFacet()) { //Assume no change since the split operation
+			if (nbFacet == interfGeom->GetNbFacet()) { //Assume no change since the split operation
 				std::vector<size_t> newlyCreatedList;
-				for (size_t index = (guiGeom->GetNbFacet() - nbCreated);index < guiGeom->GetNbFacet();index++) {
+				for (size_t index = (interfGeom->GetNbFacet() - nbCreated);index < interfGeom->GetNbFacet();index++) {
 					newlyCreatedList.push_back(index);
 				}
-				guiGeom->RemoveFacets(newlyCreatedList);
-				guiGeom->RestoreFacets(deletedFacetList, false); //Restore to original position
+				interfGeom->RemoveFacets(newlyCreatedList);
+				interfGeom->RestoreFacets(deletedFacetList, false); //Restore to original position
 			}
 			else {
 				int answer = GLMessageBox::Display("InterfaceGeometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-				if (answer == GLDLG_OK) guiGeom->RestoreFacets(deletedFacetList, true); //Restore to end
+				if (answer == GLDLG_OK) interfGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 				else return;
 			}
 			deletedFacetList.clear();
@@ -137,15 +137,15 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 			mApp->UpdateViewers();
 		}
 		else if (src == buildButton) {
-			if (guiGeom->GetNbSelectedFacets() < 2) {
+			if (interfGeom->GetNbSelectedFacets() < 2) {
 			GLMessageBox::Display("Select at least 2 facets", "Can't create intersection", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 			}
 			if (mApp->AskToReset()) {
 				ClearUndoFacets();
 				nbCreated = 0;
-				deletedFacetList = guiGeom->BuildIntersection(&nbCreated);
-				nbFacet = guiGeom->GetNbFacet();
+				deletedFacetList = interfGeom->BuildIntersection(&nbCreated);
+				nbFacet = interfGeom->GetNbFacet();
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets intersected, creating " << nbCreated << " new.";
 				resultLabel->SetText(tmp.str().c_str());

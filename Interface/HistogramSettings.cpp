@@ -216,7 +216,7 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 
 	RestoreDeviceObjects();
 	
-	this->guiGeom = g;
+	this->interfGeom = g;
 	this->work = w;
 }
 
@@ -413,9 +413,9 @@ bool HistogramSettings::Apply() {
 		if (doGlobalTimeBinsize) work->model->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
 #endif
 
-		auto selectedFacets = guiGeom->GetSelectedFacets();
+		auto selectedFacets = interfGeom->GetSelectedFacets();
 		for (const auto facetId : selectedFacets) {
-			InterfaceFacet* f = guiGeom->GetFacet(facetId);
+			InterfaceFacet* f = interfGeom->GetFacet(facetId);
 			if (doFacetRecBounce) f->sh.facetHistogramParams.recordBounce = facetRecBounce;
 			if (doFacetHitLimit) f->sh.facetHistogramParams.nbBounceMax = facetHitLimit;
 			if (doFacetHitBinsize) f->sh.facetHistogramParams.nbBounceBinsize = facetHitBinsize;
@@ -485,7 +485,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 #if defined(MOLFLOW)
 		bool recordTimeEqual = true, timeMaxEqual = true, timeBinsizeEqual = true;
 #endif
-		InterfaceFacet* f0 = guiGeom->GetFacet(selectedFacetIds[0]);
+		InterfaceFacet* f0 = interfGeom->GetFacet(selectedFacetIds[0]);
 		bool recBounce = f0->sh.facetHistogramParams.recordBounce;
 		size_t bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
 		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceBinsize;
@@ -499,7 +499,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 #endif
 
 		for (size_t i = 1; i < selectedFacetIds.size();i++) {
-			InterfaceFacet* f = guiGeom->GetFacet(selectedFacetIds[i]);
+			InterfaceFacet* f = interfGeom->GetFacet(selectedFacetIds[i]);
 			recordBounceEqual = recordBounceEqual && (f->sh.facetHistogramParams.recordBounce == recBounce);
 			bounceMaxEqual = bounceMaxEqual && (f->sh.facetHistogramParams.nbBounceMax == bounceMax);
 			bounceBinsizeEqual = bounceBinsizeEqual && (f->sh.facetHistogramParams.nbBounceBinsize== bounceBinsize);

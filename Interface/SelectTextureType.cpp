@@ -150,7 +150,7 @@ SelectTextureType::SelectTextureType(Worker *w) :GLWindow() {
 	RestoreDeviceObjects();
 
 	work = w;
-	guiGeom = w->GetGeometry();
+	interfGeom = w->GetGeometry();
 }
 
 void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
@@ -180,9 +180,9 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 			}
 			minmaxRatio = true;
 		}
-		if (src == selectButton) guiGeom->UnselectAll();
-		for (size_t i = 0; i < guiGeom->GetNbFacet(); i++) {
-			InterfaceFacet* f = guiGeom->GetFacet(i);
+		if (src == selectButton) interfGeom->UnselectAll();
+		for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
+			InterfaceFacet* f = interfGeom->GetFacet(i);
 			bool match = f->sh.isTextured;
 			if (squareToggle->GetState() != 2) match = match && ((squareToggle->GetState()==1) == IsEqual(f->tRatioU,f->tRatioV));
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) || IsEqual(ratio, f->tRatioV);
@@ -197,7 +197,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 
 			if (match) f->selected = (src != remSelectButton);
 		}
-		guiGeom->UpdateSelection();
+		interfGeom->UpdateSelection();
 		mApp->UpdateFacetParams(true);
 		mApp->UpdateFacetlistSelected();
 	}

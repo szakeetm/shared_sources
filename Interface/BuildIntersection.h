@@ -38,7 +38,7 @@ class BuildIntersection : public GLWindow {
 
 public:
   // Construction
-  BuildIntersection(InterfaceGeometry *guiGeom,Worker *work);
+  BuildIntersection(InterfaceGeometry *interfGeom,Worker *work);
   ~BuildIntersection();
   void ProcessMessage(GLComponent *src,int message) override;
   void ClearUndoFacets();
@@ -60,7 +60,7 @@ private:
   std::vector<DeletedFacet> deletedFacetList;
   size_t nbFacet, nbCreated;
 
-  InterfaceGeometry     *guiGeom;
+  InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
 };

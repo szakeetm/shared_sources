@@ -78,11 +78,11 @@ extern SynRad* mApp;
 
 Worker::~Worker() {
 	simManager.KillSimulation(); // kill in case of preemptive Molflow close, prevents updates on already deleted globalsimustate
-	delete guiGeom;
+	delete interfGeom;
 }
 
 InterfaceGeometry* Worker::GetGeometry() {
-	return guiGeom;
+	return interfGeom;
 }
 
 std::string Worker::GetCurrentFileName() const {
@@ -137,10 +137,10 @@ void Worker::ExportTextures(const char* fileName, int grouping, int mode, bool a
 	}
 
 #if defined(MOLFLOW)
-	guiGeom->ExportTextures(f, grouping, mode, globalState, saveSelected);
+	interfGeom->ExportTextures(f, grouping, mode, globalState, saveSelected);
 #endif
 #if defined(SYNRAD)
-	guiGeom->ExportTextures(f, grouping, mode, no_scans, globalState, saveSelected);
+	interfGeom->ExportTextures(f, grouping, mode, no_scans, globalState, saveSelected);
 #endif
 	fclose(f);
 }
@@ -483,7 +483,7 @@ void Worker::RebuildTextures() {
 		auto lock = GetHitLock(globalState.get(), 10000);
 		if (!lock) return;
 		CalculateTextureLimits();
-		guiGeom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
+		interfGeom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
 	}
 }
 
@@ -539,9 +539,9 @@ void Worker::Update(float appTime) {
 	UpdateFacetCaches();
 
 	// Refresh local facet hit cache for the displayed moment
-	size_t nbFacet = guiGeom->GetNbFacet();
+	size_t nbFacet = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
-		InterfaceFacet* f = guiGeom->GetFacet(i);
+		InterfaceFacet* f = interfGeom->GetFacet(i);
 #if defined(SYNRAD)
 		//memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
 #endif
@@ -559,7 +559,7 @@ void Worker::Update(float appTime) {
 	try {
 		if (mApp->needsTexture || mApp->needsDirection) {
 			CalculateTextureLimits();
-			guiGeom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
+			interfGeom->BuildFacetTextures(globalState, mApp->needsTexture, mApp->needsDirection);
 		}
 	}
 	catch (const std::exception& e) {
@@ -570,7 +570,7 @@ void Worker::Update(float appTime) {
 #if defined(MOLFLOW)
 	if (mApp->facetAdvParams && mApp->facetAdvParams->IsVisible() && needsAngleMapStatusRefresh) {
 		needsAngleMapStatusRefresh = false;
-		mApp->facetAdvParams->Refresh(guiGeom->GetSelectedFacets());
+		mApp->facetAdvParams->Refresh(interfGeom->GetSelectedFacets());
 	}
 #endif
 }
@@ -589,7 +589,7 @@ void Worker::ChangePriority(int prioLevel) {
 */
 
 void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses without reloading the whole geometry
-	if (simManager.nbThreads == 0 || !guiGeom->IsLoaded()) return;
+	if (simManager.nbThreads == 0 || !interfGeom->IsLoaded()) return;
 	ReloadIfNeeded(); //Sync (number of) regions
 
 	//auto *prg = new GLProgress_GUI("Creating dataport...", "Passing simulation mode to workers");
@@ -616,10 +616,10 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void Worker::FacetHitCacheToSimModel() {
-	size_t nbFacet = guiGeom->GetNbFacet();
+	size_t nbFacet = interfGeom->GetNbFacet();
 	std::vector<FacetHitBuffer*> facetHitCaches;
 	for (size_t i = 0; i < nbFacet; i++) {
-		InterfaceFacet* f = guiGeom->GetFacet(i);
+		InterfaceFacet* f = interfGeom->GetFacet(i);
 		facetHitCaches.push_back(&f->facetHitCache);
 	}
 	simManager.SetFacetHitCounts(facetHitCaches);
@@ -639,8 +639,8 @@ void Worker::UpdateFacetCaches()
 		globalHistogramCache = globalState->globalHistograms[0];
 #endif
 	//FACET HISTOGRAMS
-	for (size_t i = 0; i < guiGeom->GetNbFacet(); i++) {
-		InterfaceFacet* f = guiGeom->GetFacet(i);
+	for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
+		InterfaceFacet* f = interfGeom->GetFacet(i);
 #if defined(MOLFLOW)
 		f->facetHitCache = globalState->facetStates[i].momentResults[displayedMoment].hits;
 		f->facetHistogramCache = globalState->facetStates[i].momentResults[displayedMoment].histogram;

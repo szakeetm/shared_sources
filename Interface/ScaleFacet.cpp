@@ -191,7 +191,7 @@ ScaleFacet::ScaleFacet(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	RestoreDeviceObjects();
 
-	guiGeom = g;
+	interfGeom = g;
 	work = w;
 
 }
@@ -214,7 +214,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == scaleButton || src == copyButton) {
-			if (guiGeom->GetNbSelectedFacets() == 0) {
+			if (interfGeom->GetNbSelectedFacets() == 0) {
 				GLMessageBox::Display("No facets selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -241,21 +241,21 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 				invariant.z = z;
 				break;
 			case FACETMODE:
-				if (!(facetNumber->GetNumberInt(&facetNum)) || facetNum<1 || facetNum>guiGeom->GetNbFacet()) {
+				if (!(facetNumber->GetNumberInt(&facetNum)) || facetNum<1 || facetNum>interfGeom->GetNbFacet()) {
 					GLMessageBox::Display("Invalid facet number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				invariant = guiGeom->GetFacet(facetNum - 1)->sh.center;
+				invariant = interfGeom->GetFacet(facetNum - 1)->sh.center;
 				break;
 			case VERTEXMODE:
-				if (!(guiGeom->GetNbSelectedVertex() == 1)) {
+				if (!(interfGeom->GetNbSelectedVertex() == 1)) {
 					GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				found = false;
-				for (int i = 0; !found && i < guiGeom->GetNbVertex(); i++) {
-					if (guiGeom->GetVertex(i)->selected)
-						invariant = *(guiGeom->GetVertex(i));
+				for (int i = 0; !found && i < interfGeom->GetNbVertex(); i++) {
+					if (interfGeom->GetVertex(i)->selected)
+						invariant = *(interfGeom->GetVertex(i));
 				}
 				break;
 			default:
@@ -287,7 +287,7 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 			if (mApp->AskToReset()) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
-				guiGeom->ScaleSelectedFacets(invariant, factorX, factorY, factorZ, src == copyButton, work);
+				interfGeom->ScaleSelectedFacets(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
 				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();
@@ -297,13 +297,13 @@ void ScaleFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == getSelFacetButton) {
-			if (guiGeom->GetNbSelectedFacets() != 1) {
+			if (interfGeom->GetNbSelectedFacets() != 1) {
 				GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			int selFacetId = -1;
-			for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
-				if (guiGeom->GetFacet(i)->selected) {
+			for (int i = 0; selFacetId == -1 && i < interfGeom->GetNbFacet(); i++) {
+				if (interfGeom->GetFacet(i)->selected) {
 					selFacetId = i;
 				}
 			}

@@ -277,7 +277,7 @@ CreateShape::CreateShape(InterfaceGeometry *g,Worker *w):GLWindow() {
 
   RestoreDeviceObjects();
 
-  guiGeom = g;
+  interfGeom = g;
   work = w;
   mode = MODE_RECTANGLE;
   EnableDisableControls();
@@ -390,13 +390,13 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 
 		  switch (mode) {
 		  case MODE_RECTANGLE:
-			  guiGeom->CreateRectangle(center, axisDir, normalDir, axis1length, axis2length);
+			  interfGeom->CreateRectangle(center, axisDir, normalDir, axis1length, axis2length);
 			  break;
 		  case MODE_CIRCLE:
-			  guiGeom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (size_t)nbSteps);
+			  interfGeom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (size_t)nbSteps);
 			  break;
 		  case MODE_RACETRACK:
-			  guiGeom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
+			  interfGeom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
 			  break;
 		  }
 		  work->MarkToReload();
@@ -418,12 +418,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  racetrackToplengthText->SetText(axis1length-axis2length);
 	  }
 	  else if (src == facetCenterButton) {
-		  auto selFacets = guiGeom->GetSelectedFacets();
+		  auto selFacets = interfGeom->GetSelectedFacets();
 		  if (selFacets.size() != 1) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetCenter = guiGeom->GetFacet(selFacets[0])->sh.center;
+		  Vector3d facetCenter = interfGeom->GetFacet(selFacets[0])->sh.center;
 		  
 		  centerXtext->SetText(facetCenter.x);
 		  centerYtext->SetText(facetCenter.y);
@@ -433,12 +433,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  centerStatusLabel->SetText(tmp.str());
 	  }
 	  else if (src == centerVertexButton) {
-		  auto selVertices = guiGeom->GetSelectedVertices();
+		  auto selVertices = interfGeom->GetSelectedVertices();
 		  if (selVertices.size() != 1) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d center = *(guiGeom->GetVertex(selVertices[0]));
+		  Vector3d center = *(interfGeom->GetVertex(selVertices[0]));
 
 		  centerXtext->SetText(center.x);
 		  centerYtext->SetText(center.y);
@@ -448,12 +448,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  centerStatusLabel->SetText(tmp.str());
 	  }
 	  else if (src == axisFacetUButton) {
-		  auto selFacets = guiGeom->GetSelectedFacets();
+		  auto selFacets = interfGeom->GetSelectedFacets();
 		  if (selFacets.size() != 1) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetU = guiGeom->GetFacet(selFacets[0])->sh.U;
+		  Vector3d facetU = interfGeom->GetFacet(selFacets[0])->sh.U;
 
 		  axisXtext->SetText(facetU.x);
 		  axisYtext->SetText(facetU.y);
@@ -477,12 +477,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  return;
 		  }
 		  
-		  auto selVertices = guiGeom->GetSelectedVertices();
+		  auto selVertices = interfGeom->GetSelectedVertices();
 		  if (selVertices.size() != 1) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d vertexLocation = *(guiGeom->GetVertex(selVertices[0]));
+		  Vector3d vertexLocation = *(interfGeom->GetVertex(selVertices[0]));
 
 		  Vector3d diff = vertexLocation - center;
 
@@ -494,12 +494,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 		  axisStatusLabel->SetText(tmp.str());
 	  }
 	  else if (src == facetNormalButton) {
-		  auto selFacets = guiGeom->GetSelectedFacets();
+		  auto selFacets = interfGeom->GetSelectedFacets();
 		  if (selFacets.size() != 1) {
 			  GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d facetN = guiGeom->GetFacet(selFacets[0])->sh.N;
+		  Vector3d facetN = interfGeom->GetFacet(selFacets[0])->sh.N;
 
 		  normalXtext->SetText(facetN.x);
 		  normalYtext->SetText(facetN.y);
@@ -523,12 +523,12 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  return;
 		  }
 
-		  auto selVertices = guiGeom->GetSelectedVertices();
+		  auto selVertices = interfGeom->GetSelectedVertices();
 		  if (selVertices.size() != 1) {
 			  GLMessageBox::Display("Select exactly one vertex", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			  return;
 		  }
-		  Vector3d vertexLocation = *(guiGeom->GetVertex(selVertices[0]));
+		  Vector3d vertexLocation = *(interfGeom->GetVertex(selVertices[0]));
 
 		  Vector3d diff = vertexLocation - center;
 
