@@ -442,9 +442,9 @@ std::string SimulationManager::GetErrorDetails() {
     for (size_t i = 0; i < procInfoPtr.threadInfos.size(); i++) {
         auto state = procInfoPtr.threadInfos[i].slaveState;
         if (state == SimState::InError) {
-            err.append(fmt::format("[Thread #{}] {}: {}", i, simStateStrings.at(state), procInfoPtr.threadInfos[i].slaveStatus));
+            err.append(fmt::format("[Thread #{}] {}: {}\n", i, simStateStrings.at(state), procInfoPtr.threadInfos[i].slaveStatus));
         } else {
-            err.append(fmt::format("[Thread #{}] {}", i, simStateStrings.at(state)));
+            err.append(fmt::format("[Thread #{}] {}\n", i, simStateStrings.at(state)));
         }
     }
     return err;
