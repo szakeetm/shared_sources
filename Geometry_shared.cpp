@@ -57,34 +57,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-InterfaceGeometry::InterfaceGeometry() {
-	facets.clear();
-	polyList = 0;
-	selectList = 0;
-	selectList2 = 0;
-	selectList3 = 0;
-    selectHighlightList = 0;
-    arrowList = 0;
-	sphereList = 0;
 
-	autoNorme = true;
-	centerNorme = true;
-	normeRatio = 1.0f;
-	texAutoScale = true;
-	texLogScale = false;
-	texColormap = true;
-
-	sh.nbSuper = 0;
-#if defined(MOLFLOW)
-	textureMode = 0; //PRESSURE
-#endif
-#if defined(SYNRAD)
-	textureMode = 1; //FLUX
-#endif
-	viewStruct = -1;
-
-	structNames.resize(MAX_SUPERSTR);
-}
 
 InterfaceGeometry::~InterfaceGeometry() {
 	Clear();

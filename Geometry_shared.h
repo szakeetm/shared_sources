@@ -109,7 +109,7 @@ protected:
 	float getMaxDistToCamera(InterfaceFacet* f); //unused
 	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs); //unused
 public:
-	InterfaceGeometry();
+	
 	virtual ~InterfaceGeometry();
 
 #if defined(SYNRAD)
@@ -299,17 +299,17 @@ protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;
 	Vector3d  center;                     // Center (3D space)
-	std::vector<std::string> structNames;
+	std::vector<std::string> structNames = std::vector<std::string>(MAX_SUPERSTR);
 
     // Geometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	std::vector<GLdouble> vertices_raw_opengl; //simple x,y,z coords for GL vertex array
 	AxisAlignedBoundingBox bb;              // Global Axis Aligned Bounding Box (AxisAlignedBoundingBox)
-	float normeRatio;     // Norme factor (direction field)
-	bool  autoNorme;      // Auto normalize (direction field)
-	bool  centerNorme;    // Center vector (direction field)
-	bool isLoaded;  // Is loaded flag
+	float normeRatio=1.0f;     // Norme factor (direction field)
+	bool  autoNorme=true;      // Auto normalize (direction field)
+	bool  centerNorme=true;    // Center vector (direction field)
+	bool isLoaded=false;  // Is loaded flag
 
 	// Rendering/Selection stuff
 	std::vector<size_t> selectHist;
@@ -321,25 +321,30 @@ protected:
 	GLMATERIAL whiteMaterial;
 	GLMATERIAL arrowMaterial;
 	GLint lineList[MAX_SUPERSTR]; // Compiled geometry (wire frame)
-	GLint polyList;               // Compiled geometry (polygon)
-	GLint selectList;             // Compiled geometry (selection)
-	GLint selectList2;            // Compiled geometry (selection with offset)
-	GLint selectList3;            // Compiled geometry (no offset,hidden visible)
-	GLint selectHighlightList;            // Compiled geometry (no offset,hidden visible)
-	GLint nonPlanarList;          // Non-planar facets with purple outline
-	GLint selectListVertex;             // Compiled geometry (selection)
-	GLint selectList2Vertex;            // Compiled geometry (selection with offset)
-	GLint selectList3Vertex;            // Compiled geometry (no offset,hidden visible)
-	GLint arrowList;              // Compiled geometry of arrow used for direction field
-	GLint sphereList;             // Compiled geometry of sphere used for direction field
+	GLint polyList=0;               // Compiled geometry (polygon)
+	GLint selectList=0;             // Compiled geometry (selection)
+	GLint selectList2=0;            // Compiled geometry (selection with offset)
+	GLint selectList3=0;            // Compiled geometry (no offset,hidden visible)
+	GLint selectHighlightList=0;            // Compiled geometry (no offset,hidden visible)
+	GLint nonPlanarList=0;          // Non-planar facets with purple outline
+	GLint selectListVertex=0;             // Compiled geometry (selection)
+	GLint selectList2Vertex=0;            // Compiled geometry (selection with offset)
+	GLint selectList3Vertex=0;            // Compiled geometry (no offset,hidden visible)
+	GLint arrowList=0;              // Compiled geometry of arrow used for direction field
+	GLint sphereList=0;             // Compiled geometry of sphere used for direction field
 
 	public:
-		bool  texAutoScale;  // Autoscale flag
-		bool  texColormap;   // Colormap flag
-		bool  texLogScale;   // Texture im log scale
+		bool  texAutoScale=true;  // Autoscale flag
+		bool  texColormap=true;   // Colormap flag
+		bool  texLogScale=true;   // Texture im log scale
 
-		int viewStruct;
-		int textureMode;  //MC hits/flux/power
+		int viewStruct=-1; //all
+		int textureMode
+#ifdef MOLFLOW
+			= 0;	//Pressure
+#else
+			= 1;	//Flux
+#endif
 
 		bool hasNonPlanar = false; //Hint for viewers to display warning label
 
