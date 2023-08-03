@@ -26,7 +26,7 @@ class GLTextField;
 class GLLabel;
 class GLToggle;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class SmartSelection : public GLWindow {
@@ -34,7 +34,7 @@ class SmartSelection : public GLWindow {
 public:
 
   // Construction
-  SmartSelection(Geometry *g,Worker *w);
+  SmartSelection(InterfaceGeometry *g,Worker *w);
   bool IsSmartSelection();
   double GetMaxAngle();
   // Implementation
@@ -42,7 +42,7 @@ public:
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLButton    *analyzeButton;

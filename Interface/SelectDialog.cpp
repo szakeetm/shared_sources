@@ -49,7 +49,7 @@ extern SynRad*mApp;
 #endif
 
 // Construct a message dialog box
-SelectDialog::SelectDialog(Geometry *g):GLWindow() {
+SelectDialog::SelectDialog(InterfaceGeometry *g):GLWindow() {
 
   int /*xD,yD,*/wD,hD;
   wD=400;hD=105;

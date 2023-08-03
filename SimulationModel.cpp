@@ -81,7 +81,7 @@ int SimulationModel::InitializeFacets() {
 }
 
 /*!
- * @brief Calculates various facet parameters without sanity checking @see Geometry::CalculateFacetParams(Facet* f)
+ * @brief Calculates various facet parameters without sanity checking @see InterfaceGeometry::CalculateFacetParams(Facet* f)
  * @param f individual subprocess facet
  */
 void SimulationModel::CalculateFacetParams(RTFacet* f) {

@@ -57,7 +57,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-Geometry::Geometry() {
+InterfaceGeometry::InterfaceGeometry() {
 	facets.clear();
 	polyList = 0;
 	selectList = 0;
@@ -86,11 +86,11 @@ Geometry::Geometry() {
 	structNames.resize(MAX_SUPERSTR);
 }
 
-Geometry::~Geometry() {
+InterfaceGeometry::~InterfaceGeometry() {
 	Clear();
 }
 
-void Geometry::CheckCollinear() {
+void InterfaceGeometry::CheckCollinear() {
 	char tmp[256];
 	// Check collinear polygon
 	int nbCollinear = 0;
@@ -109,7 +109,7 @@ void Geometry::CheckCollinear() {
 }
 
 //Unused
-void Geometry::CheckNonSimple() {
+void InterfaceGeometry::CheckNonSimple() {
 	char tmp[256];
 	// Check non simple polygon
 	int *nonSimpleList = (int *)malloc(GetNbFacet() * sizeof(int));
@@ -129,7 +129,7 @@ void Geometry::CheckNonSimple() {
 	SAFE_FREE(nonSimpleList);
 }
 
-void Geometry::CheckIsolatedVertex() {
+void InterfaceGeometry::CheckIsolatedVertex() {
 	int nbI = GetNbIsolatedVertices();
 	if (nbI) {
 		char tmp[256];
@@ -141,7 +141,7 @@ void Geometry::CheckIsolatedVertex() {
 	}
 }
 
-void Geometry::InitializeGeometry(int facet_number) {
+void InterfaceGeometry::InitializeGeometry(int facet_number) {
 
 	RecalcBoundingBox(facet_number);
 
@@ -181,7 +181,7 @@ void Geometry::InitializeGeometry(int facet_number) {
 	RecalcRawVertices(facet_number);
 }
 
-void Geometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
+void InterfaceGeometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
 	if (facet_number == -1) {
 		vertices_raw_opengl.clear();
 		vertices_raw_opengl.reserve(3 * vertices3.size());
@@ -200,7 +200,7 @@ void Geometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL ve
 	}
 }
 
-void Geometry::InitializeInterfaceGeometry(int facet_number) {
+void InterfaceGeometry::InitializeInterfaceGeometry(int facet_number) {
 
 	if (facet_number == -1) { //all facets
 #pragma omp parallel for
@@ -220,7 +220,7 @@ void Geometry::InitializeInterfaceGeometry(int facet_number) {
 }
 
 /*
-void Geometry::InitializeMesh() {
+void InterfaceGeometry::InitializeMesh() {
     // Update mesh
     for (size_t i = 0; i < sh.nbFacet; i++) {
         InterfaceFacet *f = facets[i];
@@ -230,7 +230,7 @@ void Geometry::InitializeMesh() {
 }
 */
 
-void Geometry::RecalcBoundingBox(int facet_number) {
+void InterfaceGeometry::RecalcBoundingBox(int facet_number) {
 
 	if (facet_number == -1) { //bounding box for all vertices
 		bb.min.x = 1e100;
@@ -278,7 +278,7 @@ void Geometry::RecalcBoundingBox(int facet_number) {
 }
 
 //Unused
-void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
+void InterfaceGeometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 	mApp->changedSinceSave = true;
 	InterfaceFacet *f;
 	for (int i = 0; i < nbNonSimple; i++) {
@@ -297,7 +297,7 @@ void Geometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 	//BuildGLList();
 }
 
-size_t Geometry::AnalyzeNeigbors(Worker *work, GLProgress_Abstract& prg)
+size_t InterfaceGeometry::AnalyzeNeigbors(Worker *work, GLProgress_Abstract& prg)
 {
 	size_t i = 0;
 	work->abortRequested = false;
@@ -324,7 +324,7 @@ size_t Geometry::AnalyzeNeigbors(Worker *work, GLProgress_Abstract& prg)
 	return GetNbFacet();
 }
 
-std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
+std::vector<size_t> InterfaceGeometry::GetConnectedFacets(size_t sourceFacetId, double maxAngleDiff)
 {
 	std::vector<size_t> connectedFacets;
 	std::vector<bool> alreadyConnected(sh.nbFacet, false);
@@ -353,35 +353,35 @@ std::vector<size_t> Geometry::GetConnectedFacets(size_t sourceFacetId, double ma
 	}
 	return connectedFacets;
 }
-size_t Geometry::GetNbVertex() const {
+size_t InterfaceGeometry::GetNbVertex() const {
 	return sh.nbVertex;
 }
 
-Vector3d Geometry::GetFacetCenter(int facet) {
+Vector3d InterfaceGeometry::GetFacetCenter(int facet) {
 
 	return facets[facet]->sh.center;
 
 }
 
-size_t Geometry::GetNbStructure() const {
+size_t InterfaceGeometry::GetNbStructure() const {
 	return sh.nbSuper;
 }
 
-std::string Geometry::GetStructureName(const int idx) {
+std::string InterfaceGeometry::GetStructureName(const int idx) {
 	return structNames[idx];
 }
 
 
-void Geometry::SetStructureName(const int idx, const std::string& name) {
+void InterfaceGeometry::SetStructureName(const int idx, const std::string& name) {
 	structNames[idx] = name;
 }
 
-GeomProperties* Geometry::GetGeomProperties(){
+GeomProperties* InterfaceGeometry::GetGeomProperties(){
     return &sh;
 }
 
 
-void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
+void InterfaceGeometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	//Creates a facet connecting vertexIds in order
 	//Recalculates geometry after execution, so shouldn't be used repetitively
 
@@ -404,7 +404,7 @@ void Geometry::AddFacet(const std::vector<size_t>& vertexIds) {
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
-void Geometry::CreatePolyFromVertices_Convex() {
+void InterfaceGeometry::CreatePolyFromVertices_Convex() {
 	//creates facet from selected vertices
 
 	auto selectedVertices = GetSelectedVertices();
@@ -456,7 +456,7 @@ void Geometry::CreatePolyFromVertices_Convex() {
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreatePolyFromVertices_Order() {
+void InterfaceGeometry::CreatePolyFromVertices_Order() {
 	//creates facet from selected vertices
 	if (selectedVertexList_ordered.size() < 3) {
 		char errMsg[512];
@@ -469,7 +469,7 @@ void Geometry::CreatePolyFromVertices_Order() {
 	AddFacet(selectedVertexList_ordered);
 }
 
-void Geometry::CreateDifference() {
+void InterfaceGeometry::CreateDifference() {
 	//creates facet from selected vertices
 
 	mApp->changedSinceSave = true;
@@ -519,7 +519,7 @@ void Geometry::CreateDifference() {
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
-void Geometry::ClipSelectedPolygons(Clipper2Lib::ClipType type, int reverseOrder) {
+void InterfaceGeometry::ClipSelectedPolygons(Clipper2Lib::ClipType type, int reverseOrder) {
 	auto selFacetIds = GetSelectedFacets();
 	if (selFacetIds.size() != 2) {
 		char errMsg[512];
@@ -552,7 +552,7 @@ void Geometry::ClipSelectedPolygons(Clipper2Lib::ClipType type, int reverseOrder
 	}
 }
 
-void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, Clipper2Lib::ClipType type) {
+void InterfaceGeometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, Clipper2Lib::ClipType type) {
 	mApp->changedSinceSave = true;
 	Clipper2Lib::PolyTreeD solution;
 	std::vector<ProjectedPoint> projectedPoints;
@@ -631,7 +631,7 @@ void Geometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clipping
 	UpdateSelection();
 }
 
-size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, Clipper2Lib::PolyTreeD& solution, Clipper2Lib::ClipType& type) {
+size_t InterfaceGeometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, Clipper2Lib::PolyTreeD& solution, Clipper2Lib::ClipType& type) {
 	
 	Clipper2Lib::PathsD subj(1), clip(clippingPaths.size());
 
@@ -663,11 +663,11 @@ size_t Geometry::ExecuteClip(size_t& id1, std::vector<std::vector<size_t>>& clip
 	return solution.Count();
 }
 
-void Geometry::ClipPolygon(size_t id1, size_t id2, Clipper2Lib::ClipType type) {
+void InterfaceGeometry::ClipPolygon(size_t id1, size_t id2, Clipper2Lib::ClipType type) {
 	ClipPolygon(id1, { facets[id2]->indices }, type);
 }
 
-void Geometry::RegisterVertex(InterfaceFacet *f, const Clipper2Lib::PointD& p, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
+void InterfaceGeometry::RegisterVertex(InterfaceFacet *f, const Clipper2Lib::PointD& p, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation) {
 	
 	//Old routine that identified vertex by location
 	/*
@@ -693,7 +693,7 @@ void Geometry::RegisterVertex(InterfaceFacet *f, const Clipper2Lib::PointD& p, s
 	}
 }
 
-void Geometry::SelectCoplanar(int width, int height, double tolerance) {
+void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance) {
 
 	auto selectedVertices = GetSelectedVertices();
 	if (selectedVertices.size() < 3) {
@@ -746,14 +746,14 @@ void Geometry::SelectCoplanar(int width, int height, double tolerance) {
 	}
 }
 
-InterfaceVertex* Geometry::GetVertex(size_t idx) {
+InterfaceVertex* InterfaceGeometry::GetVertex(size_t idx) {
 	return &(vertices3[idx]);
 }
 
-InterfaceFacet *Geometry::GetFacet(size_t facet) {
+InterfaceFacet *InterfaceGeometry::GetFacet(size_t facet) {
 	if (facet >= facets.size() || facet < 0) {
 		char errMsg[512];
-		sprintf(errMsg, "Geometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
+		sprintf(errMsg, "InterfaceGeometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		mApp->AutoSave(true);
 		throw Error(errMsg);
@@ -761,11 +761,11 @@ InterfaceFacet *Geometry::GetFacet(size_t facet) {
 	return facets[facet];
 }
 
-size_t Geometry::GetNbFacet() const {
+size_t InterfaceGeometry::GetNbFacet() const {
 	return sh.nbFacet;
 }
 
-AxisAlignedBoundingBox Geometry::GetBB() {
+AxisAlignedBoundingBox InterfaceGeometry::GetBB() {
 
 	/*if (viewStruct < 0) {
 
@@ -840,7 +840,7 @@ AxisAlignedBoundingBox Geometry::GetBB() {
 
 }
 
-Vector3d Geometry::GetCenter() {
+Vector3d InterfaceGeometry::GetCenter() {
 
 	/*if (viewStruct < 0) {
 
@@ -861,7 +861,7 @@ Vector3d Geometry::GetCenter() {
 	//}
 }
 
-int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT) {
+int InterfaceGeometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int *nbRef, double vT) {
 
 	bool found = false;
 	int i = 0;
@@ -893,7 +893,7 @@ int Geometry::AddRefVertex(const InterfaceVertex& p, InterfaceVertex *refs, int 
 
 }
 
-int Geometry::AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex> &refs, double vT) {
+int InterfaceGeometry::AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex> &refs, double vT) {
 
     indices.resize(refs.size());
     bool found = false;
@@ -1011,7 +1011,7 @@ int Geometry::AddRefVertex(std::vector<int> &indices, std::list<InterfaceVertex>
 
 }
 
-void Geometry::CollapseVertex(Worker *work, GLProgress_Abstract& prg, double totalWork, double vT) {
+void InterfaceGeometry::CollapseVertex(Worker *work, GLProgress_Abstract& prg, double totalWork, double vT) {
 	mApp->changedSinceSave = true;
 	if (!isLoaded) return;
 	// Collapse neighbor vertices
@@ -1062,7 +1062,7 @@ void Geometry::CollapseVertex(Worker *work, GLProgress_Abstract& prg, double tot
 
 }
 
-bool Geometry::GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength) {
+bool InterfaceGeometry::GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c1, size_t * c2, size_t * chainLength) {
 
 	// Detect common edge between facet
 	size_t p11, p12, p21, p22, lgth, si, sj;
@@ -1122,19 +1122,19 @@ bool Geometry::GetCommonEdges(InterfaceFacet *f1, InterfaceFacet *f2, size_t * c
 
 }
 
-void Geometry::MoveVertexTo(size_t idx, double x, double y, double z) {
+void InterfaceGeometry::MoveVertexTo(size_t idx, double x, double y, double z) {
 	vertices3[idx].x = x;
 	vertices3[idx].y = y;
 	vertices3[idx].z = z;
 
 }
 
-void Geometry::SwapNormal() {
+void InterfaceGeometry::SwapNormal() {
 	//Default: sweap selected facets
 	SwapNormal(GetSelectedFacets());
 }
 
-void Geometry::RevertFlippedNormals() {
+void InterfaceGeometry::RevertFlippedNormals() {
 	std::vector<size_t> flippedFacetList;
 	auto selectedFacetList = GetSelectedFacets();
 	for (auto i : selectedFacetList) {
@@ -1145,7 +1145,7 @@ void Geometry::RevertFlippedNormals() {
 	SwapNormal(flippedFacetList);
 }
 
-void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the normal for a list of facets
+void InterfaceGeometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the normal for a list of facets
 
 	if (!IsLoaded()) {
 		GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -1170,7 +1170,7 @@ void Geometry::SwapNormal(const std::vector < size_t>& facetList) { //Swap the n
 
 }
 
-void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps) {
+void InterfaceGeometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps) {
 
 	//creates facet from selected vertices
 
@@ -1266,7 +1266,7 @@ void Geometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
 }
 
-void Geometry::ShiftVertex() {
+void InterfaceGeometry::ShiftVertex() {
 
 	if (!IsLoaded()) {
 		GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
@@ -1294,7 +1294,7 @@ void Geometry::ShiftVertex() {
 	BuildGLList();
 }
 
-void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) {
+void InterfaceGeometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) {
 	mApp->changedSinceSave = true;
 	// Merge the current geometry with the specified one
 	if (!nbV || !nbF) return;
@@ -1332,7 +1332,7 @@ void Geometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFacet **nF) 
 
 }
 
-int Geometry::GetNbIsolatedVertices() {
+int InterfaceGeometry::GetNbIsolatedVertices() {
 	// Check if there are unused vertices
 
 	std::vector<bool> used(sh.nbVertex,false);
@@ -1348,7 +1348,7 @@ int Geometry::GetNbIsolatedVertices() {
 	return nbUnused;
 }
 
-void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
+void  InterfaceGeometry::DeleteIsolatedVertices(bool selectedOnly) {
 	
 	// Remove unused vertices
 	std::vector<bool> isUsed(sh.nbVertex);
@@ -1401,7 +1401,7 @@ void  Geometry::DeleteIsolatedVertices(bool selectedOnly) {
 	}
 }
 
-void Geometry::Clear() {
+void InterfaceGeometry::Clear() {
 	viewStruct = -1; //otherwise a nonexistent structure could stay selected
 					 // Free memory
 	if (!facets.empty()) {
@@ -1461,7 +1461,7 @@ void Geometry::Clear() {
 	selectHist.clear();    // Selection history
 }
 
-void  Geometry::SelectIsolatedVertices() {
+void  InterfaceGeometry::SelectIsolatedVertices() {
 	
 	std::vector<bool> isolated(sh.nbVertex, true);
 
@@ -1476,7 +1476,7 @@ void  Geometry::SelectIsolatedVertices() {
 	}
 }
 
-bool Geometry::RemoveCollinear() {
+bool InterfaceGeometry::RemoveCollinear() {
 	std::vector<size_t> facetsToDelete;
 	for (int i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->collinear) facetsToDelete.push_back(i);
@@ -1484,7 +1484,7 @@ bool Geometry::RemoveCollinear() {
 	return (!facetsToDelete.empty());
 }
 
-void Geometry::RemoveSelectedVertex() {
+void InterfaceGeometry::RemoveSelectedVertex() {
 
 	mApp->changedSinceSave = true;
 
@@ -1523,7 +1523,7 @@ void Geometry::RemoveSelectedVertex() {
 	DeleteIsolatedVertices(true);
 }
 
-void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy) {
+void InterfaceGeometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDestroy) {
 	//Think of calling UpdateModelParams() after executed to refresh facet hit list
 
 	if (facetIdList.empty()) return;
@@ -1563,7 +1563,7 @@ void Geometry::RemoveFacets(const std::vector<size_t> &facetIdList, bool doNotDe
 	BuildGLList();
 }
 
-void Geometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
+void InterfaceGeometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
 	//Adds to end
 	std::vector<DeletedFacet> toRestore(facetList.size());
 	for (size_t i = 0;i < facetList.size();i++) {
@@ -1576,7 +1576,7 @@ void Geometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
 	RestoreFacets(toRestore, true);
 }
 
-void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, bool toEnd) {
+void InterfaceGeometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, bool toEnd) {
 	//size_t nbNew = 0;
 	std::vector<int> newRefs(sh.nbFacet, -1);
 	/*for (auto& restoreFacet : deletedFacetList)
@@ -1629,7 +1629,7 @@ void Geometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFacetList, 
     InitializeInterfaceGeometry();
 }
 
-bool Geometry::RemoveNullFacet() {
+bool InterfaceGeometry::RemoveNullFacet() {
 
 	// Remove degenerated facet (area~0.0)
 	std::vector<size_t> facetsToDelete;
@@ -1642,7 +1642,7 @@ bool Geometry::RemoveNullFacet() {
 	return (!facetsToDelete.empty());
 }
 
-void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId,
+void InterfaceGeometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t sourceFacetId, size_t destFacetId, size_t anchorSourceVertexId, size_t anchorDestVertexId,
 	size_t alignerSourceVertexId, size_t alignerDestVertexId, bool invertNormal, bool invertDir1, bool invertDir2, bool copy, Worker *worker) {
 
 	double counter = 0.0;
@@ -1775,7 +1775,7 @@ void Geometry::AlignFacets(const std::vector<size_t>& memorizedSelection, size_t
 	}*/
 }
 
-void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
+void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
 	auto prgMove = GLProgress_GUI("Moving selected facets...", "Please wait");
 	prgMove.SetVisible(true);
@@ -1811,7 +1811,7 @@ void Geometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsD
 	}
 }
 
-std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker) {
+std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker) {
 	std::vector<UndoPoint> undoPoints;
 	double counter = 0.0;
 	auto selectedFacets = GetSelectedFacets();
@@ -1870,7 +1870,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedFacets(Vector3d P0, Vector
 	return undoPoints;
 }
 
-std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, bool project, bool copy, Worker *worker) {
+std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, bool project, bool copy, Worker *worker) {
 	std::vector<UndoPoint> undoPoints;
 	size_t nbVertexOri = sh.nbVertex;
 	for (size_t i = 0; i < nbVertexOri; i++) {
@@ -1901,7 +1901,7 @@ std::vector<UndoPoint> Geometry::MirrorProjectSelectedVertices(const Vector3d &A
 	return undoPoints;
 }
 
-void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
+void InterfaceGeometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
 
 	auto selectedFacets = GetSelectedFacets();
 	double counter = 0.0;
@@ -1946,7 +1946,7 @@ void Geometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vector3d &AXI
 	}
 }
 
-void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
+void InterfaceGeometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &AXIS_DIR, double theta, bool copy, Worker *worker) {
 
 	if (!copy) { //move
 		for (int i = 0; i < sh.nbVertex; i++) {
@@ -1969,7 +1969,7 @@ void Geometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Vector3d &A
 	}
 }
 
-int Geometry::CloneSelectedFacets() { //create clone of selected facets
+int InterfaceGeometry::CloneSelectedFacets() { //create clone of selected facets
 	auto selectedFacetIds = GetSelectedFacets();
 	std::vector<bool> isCopied(sh.nbVertex, false); //we keep log of what has been copied to prevent creating duplicates
 	std::vector<size_t> newVertices;		//vertices that we create
@@ -2034,7 +2034,7 @@ int Geometry::CloneSelectedFacets() { //create clone of selected facets
 	return 0;
 }
 
-void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
+void InterfaceGeometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy) {
 
 	auto prg = GLProgress_GUI("Moving selected vertices...", "Please wait");
 	prg.SetVisible(true);
@@ -2060,13 +2060,13 @@ void Geometry::MoveSelectedVertex(double dX, double dY, double dZ, bool towardsD
 			}
 		}
 		if (!copy) {
-            InitializeGeometry(); //Geometry changed
+            InitializeGeometry(); //InterfaceGeometry changed
             InitializeInterfaceGeometry();
 		}
 	}
 }
 
-void Geometry::AddVertex(const Vector3d& location, bool selected) {
+void InterfaceGeometry::AddVertex(const Vector3d& location, bool selected) {
 	mApp->changedSinceSave = true;
 
 	//a new vertex
@@ -2077,11 +2077,11 @@ void Geometry::AddVertex(const Vector3d& location, bool selected) {
 	vertices3.push_back(newVertex);
 }
 
-void Geometry::AddVertex(double X, double Y, double Z, bool selected) {
+void InterfaceGeometry::AddVertex(double X, double Y, double Z, bool selected) {
 	AddVertex(Vector3d(X, Y, Z), selected);
 }
 
-std::vector<size_t> Geometry::GetSelectedFacets() {
+std::vector<size_t> InterfaceGeometry::GetSelectedFacets() {
 	std::vector<size_t> result; result.reserve(facets.size());
 	for (size_t i = 0; i < facets.size(); i++) {
 		if (facets[i]->selected) result.push_back(i);
@@ -2089,14 +2089,14 @@ std::vector<size_t> Geometry::GetSelectedFacets() {
 	return result;
 }
 
-std::vector<size_t> Geometry::GetNonPlanarFacetIds(const double tolerance) {
+std::vector<size_t> InterfaceGeometry::GetNonPlanarFacetIds(const double tolerance) {
 	std::vector<size_t> nonPlanar;
 	for (size_t i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->nonSimple || std::abs(facets[i]->planarityError)>=tolerance) nonPlanar.push_back(i);
 	return nonPlanar;
 }
 
-size_t Geometry::GetNbSelectedFacets()
+size_t InterfaceGeometry::GetNbSelectedFacets()
 {
 	size_t nb = 0;
     for(auto& fac : facets)
@@ -2104,7 +2104,7 @@ size_t Geometry::GetNbSelectedFacets()
 	return nb;
 }
 
-void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown) {
+void InterfaceGeometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown, bool isCtrlDown) {
 	if (!isShiftDown && !isCtrlDown) UnselectAll(); //Set selection
 	for (auto& sel : selectedFacets) {
 		if (sel < sh.nbFacet) facets[sel]->selected = !isCtrlDown;
@@ -2114,12 +2114,12 @@ void Geometry::SetSelection(std::vector<size_t> selectedFacets, bool isShiftDown
 	mApp->UpdateFacetParams(true);
 }
 
-void Geometry::AddStruct(const std::string& name, bool deferDrawing) {
+void InterfaceGeometry::AddStruct(const std::string& name, bool deferDrawing) {
 	structNames[sh.nbSuper++] = name;
 	if (!deferDrawing) BuildGLList();
 }
 
-void Geometry::DelStruct(int numToDel) {
+void InterfaceGeometry::DelStruct(int numToDel) {
 	if (viewStruct >= 0 && viewStruct >= numToDel) viewStruct--;
 	RemoveFromStruct(numToDel);
 	CheckIsolatedVertex();
@@ -2137,7 +2137,7 @@ void Geometry::DelStruct(int numToDel) {
 	BuildGLList();
 }
 
-void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
+void InterfaceGeometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
 	if (!mApp->AskToReset(worker)) return;
 	mApp->changedSinceSave = true;
@@ -2163,7 +2163,7 @@ void Geometry::ScaleSelectedVertices(Vector3d invariant, double factorX, double 
     InitializeInterfaceGeometry();
 }
 
-void Geometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
+void InterfaceGeometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
 
 	auto prgMove = GLProgress_GUI("Scaling selected facets...", "Please wait");
 	prgMove.SetVisible(true);
@@ -2206,7 +2206,7 @@ bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<Cli
 	return (a->distance < b->distance);
 }
 
-bool Geometry::IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection) {
+bool InterfaceGeometry::IntersectingPlaneWithLine(const Vector3d &P0, const Vector3d &u, const Vector3d &V0, const Vector3d &n, Vector3d *intersectPoint, bool withinSection) {
 	//Notations from http://geomalgorithms.com/a05-_intersect-1.html
 	//At this point, intersecting ray is L=P0+s*u
 	if (IsZero(Dot(n, u))) return false; //Check for parallelness
@@ -2243,7 +2243,7 @@ struct EdgePoint {
 	bool visited;
 };
 
-std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
+std::vector<DeletedFacet> InterfaceGeometry::BuildIntersection(size_t *nbCreated) {
 	mApp->changedSinceSave = true;
 	//UnselectAllVertex();
 	//std::vector<size_t> result;
@@ -2521,7 +2521,7 @@ std::vector<DeletedFacet> Geometry::BuildIntersection(size_t *nbCreated) {
 	return deletedFacetList;
 }
 
-std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress_Abstract& prg) {
+std::vector<DeletedFacet> InterfaceGeometry::SplitSelectedFacets(const Vector3d &base, const Vector3d &normal, size_t *nbCreated,GLProgress_Abstract& prg) {
 	mApp->changedSinceSave = true;
 	std::vector<DeletedFacet> deletedFacetList;
 	size_t oldNbFacets = sh.nbFacet;
@@ -2718,7 +2718,7 @@ std::vector<DeletedFacet> Geometry::SplitSelectedFacets(const Vector3d &base, co
 	return deletedFacetList;
 }
 
-InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
+InterfaceFacet *InterfaceGeometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 	mApp->changedSinceSave = true;
 	// Merge 2 facets into 1 when possible and create a new facet
 	// otherwise return NULL.
@@ -2772,7 +2772,7 @@ InterfaceFacet *Geometry::MergeFacet(InterfaceFacet *f1, InterfaceFacet *f2) {
 
 }
 
-void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_Abstract& prg) {
+void InterfaceGeometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doSelectedOnly, Worker *work, GLProgress_Abstract& prg) {
 	mApp->changedSinceSave = true;
 	work->abortRequested = false;
 	InterfaceFacet *fi, *fj;
@@ -2925,7 +2925,7 @@ void Geometry::Collapse(double vT, double fT, double lT, int maxVertex, bool doS
     InitializeInterfaceGeometry();
 }
 
-void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
+void InterfaceGeometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
 		for (int j = 0; j < f->neighbors.size(); j++) {
@@ -2941,7 +2941,7 @@ void Geometry::RenumberNeighbors(const std::vector<int> &newRefs) {
 	}
 }
 
-void Geometry::RenumberTeleports(const std::vector<int> &newRefs) {
+void InterfaceGeometry::RenumberTeleports(const std::vector<int> &newRefs) {
 	for (size_t i = 0; i < sh.nbFacet; i++) {
 		InterfaceFacet *f = facets[i];
 		
@@ -2951,7 +2951,7 @@ void Geometry::RenumberTeleports(const std::vector<int> &newRefs) {
 	}
 }
 
-void Geometry::MergecollinearSides(InterfaceFacet *f, double lT) {
+void InterfaceGeometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 	mApp->changedSinceSave = true;
 	bool collinear;
 	double linTreshold = cos(lT*PI / 180);
@@ -2977,7 +2977,7 @@ void Geometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 	}
 }
 
-void Geometry::CalculateFacetParams(InterfaceFacet* f) {
+void InterfaceGeometry::CalculateFacetParams(InterfaceFacet* f) {
 	// Calculate facet normal
 	Vector3d p0 = vertices3[f->indices[0]];
 	bool consecutive = true;
@@ -3138,14 +3138,14 @@ void Geometry::CalculateFacetParams(InterfaceFacet* f) {
 #endif
 }
 
-void Geometry::RemoveFromStruct(int numToDel) {
+void InterfaceGeometry::RemoveFromStruct(int numToDel) {
 	std::vector<size_t> facetsToDelete;
 	for (int i = 0; i < sh.nbFacet; i++)
 		if (facets[i]->sh.superIdx == numToDel) facetsToDelete.push_back(i); //Ignore universal (id==-1) facets
 	RemoveFacets(facetsToDelete);
 }
 
-void Geometry::CreateLoft() {
+void InterfaceGeometry::CreateLoft() {
 	//Creates transition between two facets
 	struct loftIndex {
 		size_t index;
@@ -3429,31 +3429,31 @@ void Geometry::CreateLoft() {
     InitializeInterfaceGeometry();
 }
 
-void Geometry::SetAutoNorme(bool enable) {
+void InterfaceGeometry::SetAutoNorme(bool enable) {
 	autoNorme = enable;
 }
 
-bool Geometry::GetAutoNorme() const {
+bool InterfaceGeometry::GetAutoNorme() const {
 	return autoNorme;
 }
 
-void Geometry::SetCenterNorme(bool enable) {
+void InterfaceGeometry::SetCenterNorme(bool enable) {
 	centerNorme = enable;
 }
 
-bool Geometry::GetCenterNorme() const {
+bool InterfaceGeometry::GetCenterNorme() const {
 	return centerNorme;
 }
 
-void Geometry::SetNormeRatio(float r) {
+void InterfaceGeometry::SetNormeRatio(float r) {
 	normeRatio = r;
 }
 
-float Geometry::GetNormeRatio() const {
+float InterfaceGeometry::GetNormeRatio() const {
 	return normeRatio;
 }
 
-void Geometry::Rebuild() {
+void InterfaceGeometry::Rebuild() {
 
 			// Delete old resources
 	DeleteGLLists(true, true);
@@ -3464,14 +3464,14 @@ void Geometry::Rebuild() {
 }
 
 /*
-void Geometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
+void InterfaceGeometry::SetFacetTexture(size_t facetId, double ratio, bool mesh) {
 
 	SetFacetTexture(facetId, ratio, ratio, mesh);
 
 }
 */
 
-void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
+void InterfaceGeometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, bool mesh) {
 
 	InterfaceFacet *f = facets[facetId];
 	double nU = f->sh.U.Norme();
@@ -3496,20 +3496,20 @@ void Geometry::SetFacetTexture(size_t facetId, double ratioU, double ratioV, boo
 
 // File handling
 
-void Geometry::UpdateName(FileReader& file) {
+void InterfaceGeometry::UpdateName(FileReader& file) {
 	UpdateName(file.GetName());
 }
 
-std::string Geometry::GetName() const {
+std::string InterfaceGeometry::GetName() const {
 	return sh.name;
 }
 
 
-void Geometry::UpdateName(const char *fileName) {
+void InterfaceGeometry::UpdateName(const char *fileName) {
 	sh.name = FileUtils::GetFilename(fileName);
 }
 
-void Geometry::AdjustProfile() {
+void InterfaceGeometry::AdjustProfile() {
 
 	// Backward compatibily with TXT profile (To be improved)
 	for (int i = 0; i < sh.nbFacet; i++) {
@@ -3525,7 +3525,7 @@ void Geometry::AdjustProfile() {
 
 }
 
-void Geometry::ResetTextureLimits() {
+void InterfaceGeometry::ResetTextureLimits() {
 #if defined(MOLFLOW)
     texture_limits[0].autoscale.min.steady_state = texture_limits[0].autoscale.min.moments_only =
     texture_limits[1].autoscale.min.steady_state = texture_limits[1].autoscale.min.moments_only =
@@ -3555,7 +3555,7 @@ void Geometry::ResetTextureLimits() {
 	textureMax_manual.power = 0.0;
 #endif
 }
-void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
+void InterfaceGeometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 	Clear();
 	// Load multiple structure file
@@ -3600,7 +3600,7 @@ void Geometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 	AdjustProfile();
 }
 
-void Geometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
+void InterfaceGeometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, double scaleFactor, bool insert, bool newStruct, size_t targetStructId) {
 
 	prg.SetMessage("Loading STL file...");
 	RawSTLfile rawGeom = LoadRawSTL(filePath, prg);
@@ -3690,7 +3690,7 @@ void Geometry::LoadSTL(const std::string& filePath, GLProgress_Abstract& prg, do
     InitializeInterfaceGeometry();
 }
 
-void Geometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker) {
+void InterfaceGeometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker) {
 
 	//mApp->ClearAllSelections();
 	//mApp->ClearAllViews();
@@ -3706,7 +3706,7 @@ void Geometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worke
 
 }
 
-void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
+void InterfaceGeometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -3720,7 +3720,7 @@ void Geometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bool newStr
 }
 
 /*
-void Geometry::InsertSTL(std::ifstream& file, bool binarySTL, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
+void InterfaceGeometry::InsertSTL(std::ifstream& file, bool binarySTL, GLProgress_Abstract& prg, double scaleFactor, bool newStr) {
 	UnselectAll(); //Highlight inserted facets
 	int structId = viewStruct;
 	if (structId == -1) structId = 0;
@@ -3732,7 +3732,7 @@ void Geometry::InsertSTL(std::ifstream& file, bool binarySTL, GLProgress_Abstrac
 }
 */
 
-void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
+void InterfaceGeometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr) {
 
 	//Clear();
 	int structId = viewStruct;
@@ -3743,7 +3743,7 @@ void Geometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bool newStr
 
 }
 
-void Geometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
+void InterfaceGeometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
 
 	file.ReadInt(); // Unused
 	worker->globalState->globalStats.globalHits.nbMCHit = file.ReadSizeT();
@@ -3797,7 +3797,7 @@ void Geometry::LoadTXTGeom(FileReader& file, Worker* worker, size_t strIdx) {
 
 }
 
-void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
+void InterfaceGeometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
@@ -3866,7 +3866,7 @@ void Geometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 }
 
-void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
+void InterfaceGeometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 	UnselectAll();
 
@@ -4117,7 +4117,7 @@ void Geometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newStruct) {
 
 }
 
-void Geometry::SaveSTR(bool saveSelected) {
+void InterfaceGeometry::SaveSTR(bool saveSelected) {
 
 	if (!IsLoaded()) throw Error("Nothing to save !");
 	if (sh.nbSuper < 1) throw Error("Cannot save single structure in STR format");
@@ -4128,14 +4128,14 @@ void Geometry::SaveSTR(bool saveSelected) {
 		SaveStrStructure(i);
 }
 
-std::vector<size_t> Geometry::GetAllFacetIndices() const {
+std::vector<size_t> InterfaceGeometry::GetAllFacetIndices() const {
 	//All facets
     std::vector<size_t> facetIndices(GetNbFacet());
     std::iota(std::begin(facetIndices), std::end(facetIndices), 0); // Fill with 0, 1, ..., GetNbFacet()
 	return facetIndices;
 }
 
-void Geometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
+void InterfaceGeometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
     prg.SetMessage("Triangulating geometry...");
 	
     auto triangulatedGeometry = GeometryTools::GetTriangulatedGeometry(this,GetAllFacetIndices(),prg);
@@ -4163,7 +4163,7 @@ void Geometry::SaveSTL(FileWriter& file, GLProgress_Abstract& prg) {
     }
 }
 
-void Geometry::SaveStrStructure(int s) {
+void InterfaceGeometry::SaveStrStructure(int s) {
 
 	std::string fName = structNames[s] + ".str";
 	auto file = FileWriter(fName);
@@ -4239,17 +4239,17 @@ void Geometry::SaveStrStructure(int s) {
 
 }
 
-void Geometry::SaveProfileTXT(FileWriter& file) {
+void InterfaceGeometry::SaveProfileTXT(FileWriter& file) {
 	// Profiles
 	for (int j = 0; j < PROFILE_SIZE; j++)
 		file.Write("\n");
 }
 
-bool Geometry::IsLoaded() const {
+bool InterfaceGeometry::IsLoaded() const {
 	return isLoaded;
 }
 
-void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double axis1Length, const double axis2Length) {
+void InterfaceGeometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1Dir, const Vector3d& normalDir, const double axis1Length, const double axis2Length) {
 	
 	std::vector<size_t> vertexIds;
 	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
@@ -4267,7 +4267,7 @@ void Geometry::CreateRectangle(const Vector3d& rec_center, const Vector3d& axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const size_t  nbSteps)
+void InterfaceGeometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const size_t  nbSteps)
 {	
 	std::vector<size_t> vertexIds;
 	Vector3d axis1half = axis1Dir.Normalized()*0.5*axis1Length;
@@ -4284,7 +4284,7 @@ void Geometry::CreateCircle(const Vector3d & circ_center, const Vector3d & axis1
 	AddFacet(vertexIds);
 }
 
-void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const double  topLength, const size_t  nbSteps)
+void InterfaceGeometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length, const double  topLength, const size_t  nbSteps)
 {
 	//Set of 3 equations:
 	// r: radius of racetrack arc
@@ -4321,7 +4321,7 @@ void Geometry::CreateRacetrack(const Vector3d & race_center, const Vector3d & ax
 	AddFacet(vertexIds);
 }
 
-int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, const double* values){
+int  InterfaceGeometry::ExplodeSelected(bool toMap, int desType, double exponent, const double* values){
 
 	auto selectedFacets = GetSelectedFacets();
 	if (selectedFacets.empty()) return -1;
@@ -4429,7 +4429,7 @@ int  Geometry::ExplodeSelected(bool toMap, int desType, double exponent, const d
 
 }
 
-void  Geometry::EmptyGeometry() {
+void  InterfaceGeometry::EmptyGeometry() {
 	Clear(); //Clear everything first
 
 	//Initialize a default structure:
@@ -4440,15 +4440,15 @@ void  Geometry::EmptyGeometry() {
     InitializeInterfaceGeometry();
 }
 
-void Geometry::SetPlottedFacets(std::map<int,GLColor> setMap) {
+void InterfaceGeometry::SetPlottedFacets(std::map<int,GLColor> setMap) {
 	plottedFacets = std::move(setMap);
 }
 
-std::map<int,GLColor> Geometry::GetPlottedFacets( ) const {
+std::map<int,GLColor> InterfaceGeometry::GetPlottedFacets( ) const {
 	return plottedFacets;
 }
 
-void Geometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
+void InterfaceGeometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
 	//Converts from Vector3d to InterfaceVertex
     vertices3.clear();
     for(auto& vert : vertices) {
@@ -4459,7 +4459,7 @@ void Geometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void Geometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
+void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
     //Facets
     try{
         facets.resize(sFacets.size(), nullptr); //guiGeom->Clear() called already, facets is empty, no memory leak

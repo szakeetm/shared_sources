@@ -142,7 +142,7 @@ void FacetCoordinates::GetSelected() {
 
   selFacet = NULL;
   size_t i = 0;
-  Geometry *g = worker->GetGeometry();
+  InterfaceGeometry *g = worker->GetGeometry();
   size_t nb = g->GetNbFacet();
   while(!selFacet && i<nb) {
     if( g->GetFacet(i)->selected ) selFacet = g->GetFacet(i);
@@ -165,7 +165,7 @@ void FacetCoordinates::UpdateFromSelection() {
   GetSelected();
   if(!selFacet) return;
 
-  Geometry *guiGeom = worker->GetGeometry();
+  InterfaceGeometry *guiGeom = worker->GetGeometry();
 
   size_t nbIndex = selFacet->sh.nbIndex;
 
@@ -200,7 +200,7 @@ void FacetCoordinates::Display(Worker *w) {
 */
 void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
 
-  Geometry *guiGeom = worker->GetGeometry();
+  InterfaceGeometry *guiGeom = worker->GetGeometry();
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {
@@ -372,7 +372,7 @@ void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 */
 void FacetCoordinates::ApplyChanges(){
 	
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 	
 	if (facetListC->GetNbRow()<3) {
 		GLMessageBox::Display("A facet must have at least 3 vertices","Not enough vertices",GLDLG_OK,GLDLG_ICONWARNING);

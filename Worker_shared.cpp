@@ -81,7 +81,7 @@ Worker::~Worker() {
 	delete guiGeom;
 }
 
-Geometry* Worker::GetGeometry() {
+InterfaceGeometry* Worker::GetGeometry() {
 	return guiGeom;
 }
 

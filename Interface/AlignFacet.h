@@ -30,7 +30,7 @@ class Vector3d;
 
 #include <vector> //Std vectors
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class AlignFacet : public GLWindow {
@@ -38,7 +38,7 @@ class AlignFacet : public GLWindow {
 public:
 
   // Construction
-  AlignFacet(Geometry *guiGeom,Worker *work);
+  AlignFacet(InterfaceGeometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -46,7 +46,7 @@ public:
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   std::vector<size_t> memorizedSelection;

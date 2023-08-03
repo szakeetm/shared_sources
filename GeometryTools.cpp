@@ -25,7 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 
-std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg)
+std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg)
 {
     std::vector<InterfaceFacet*> triangleFacets;
     for (size_t i = 0; i < facetIndices.size(); i++) {
@@ -162,7 +162,7 @@ std::optional<double> AngleBetween2Vertices(Vector3d& v1, Vector3d& v2){
 template <template <typename, typename> class Container,
         typename CommonEdge,
         typename Allocator=std::allocator<CommonEdge> >
-void CalculateNeighborAngles(Container<CommonEdge, Allocator>& edges, Geometry* geometry){
+void CalculateNeighborAngles(Container<CommonEdge, Allocator>& edges, InterfaceGeometry* geometry){
     for(auto iter_o = edges.begin(); iter_o != edges.end(); ){
         auto f = geometry->GetFacet(iter_o->facetId[0]);
         auto g = geometry->GetFacet(iter_o->facetId[1]);
@@ -219,7 +219,7 @@ int HandleLoneEdge(std::vector<CommonEdge>& edge_v){
     return nRemoved;
 }
 
-int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
+int HandleTransparent(std::vector<CommonEdge>& edge_v, InterfaceGeometry* geometry){
     int nRemoved = 0;
     for(auto iter_o = edge_v.begin(); iter_o != edge_v.end(); ){
         auto f = geometry->GetFacet((*iter_o).facetId[0]);
@@ -227,7 +227,7 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
 
         if(f->sh.is2sided || g->sh.is2sided) {
             size_t c1, c2, l;
-            if (!Geometry::GetCommonEdges(f, g, &c1, &c2, &l)) {
+            if (!InterfaceGeometry::GetCommonEdges(f, g, &c1, &c2, &l)) {
                 iter_o = edge_v.erase(iter_o);
                 ++nRemoved;
                 continue;
@@ -241,7 +241,7 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, Geometry* geometry){
 
 static std::vector<std::vector<CommonEdge>> edges_algo(6); // first index = facet id, second index = neighbor id
 
-void GeometryTools::AnalyzeGeometry(Geometry* geometry) {
+void GeometryTools::AnalyzeGeometry(InterfaceGeometry* geometry) {
     edges_algo.resize(6);
     Chronometer stop;
     int dupli = 0, lone = 0, trans = 0;
@@ -310,7 +310,7 @@ void GeometryTools::AnalyzeGeometry(Geometry* geometry) {
     CompareAlgorithm(geometry, 4);
 }
 
-void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
+void GeometryTools::CompareAlgorithm(InterfaceGeometry* geometry, size_t index) {
     // Put in order for comparism
     auto& compEdge = edges_algo[index];
 
@@ -352,14 +352,14 @@ void GeometryTools::CompareAlgorithm(Geometry* geometry, size_t index) {
 }
 
 // Update facet list of geometry by removing polygon facets and replacing them with triangular facets with the same properties
-void GeometryTools::PolygonsToTriangles(Geometry* geometry, GLProgress_Abstract& prg) {
+void GeometryTools::PolygonsToTriangles(InterfaceGeometry* geometry, GLProgress_Abstract& prg) {
     auto allIndices = geometry->GetAllFacetIndices();
     std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry , allIndices, prg);
     geometry->RemoveFacets(allIndices);
     geometry->AddFacets(triangleFacets);
 }
 
-void GeometryTools::PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg) {
+void GeometryTools::PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg) {
     std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices, prg);
     geometry->RemoveFacets(selectedIndices);
     geometry->AddFacets(triangleFacets);
@@ -534,13 +534,13 @@ void CombineEdges(Container<CommonEdge, Allocator>& edges){
 }
 
 // TODO: Could return a list of neighbors directly tuple{id1, id2, angle}
-int GeometryTools::GetAnalyzedCommonEdges(Geometry *geometry, std::vector<CommonEdge> &commonEdges){
+int GeometryTools::GetAnalyzedCommonEdges(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges){
     int res = GetCommonEdgesList(geometry, commonEdges);
     CalculateNeighborAngles(commonEdges, geometry);
     return res;
 }
 /*
-std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Geometry* geometry){
+std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(InterfaceGeometry* geometry){
 
     // 1. First find neighbors
     // search for common edges
@@ -553,7 +553,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Geometry
         for (int j = i+1; j < geometry->GetNbFacet(); j++) {
             InterfaceFacet *g = geometry->GetFacet(j);
             size_t  c1,c2,l;
-            if(Geometry::GetCommonEdges(f,g, &c1,&c2,&l)){
+            if(InterfaceGeometry::GetCommonEdges(f,g, &c1,&c2,&l)){
                 auto angle_opt = AngleBetween2Vertices(f->sh.N, g->sh.N);
                 if(!angle_opt.has_value()) {
                     Log::console_error("[NeighborAnalysis] Neighbors found with invalid angle: {} , {}\n", i, j);
@@ -587,7 +587,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Geometry
     return neighbors;
 }
 */
-int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesVec(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
     size_t p11, p12;
@@ -633,7 +633,7 @@ int GeometryTools::GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge>
     return edges.size();
 }
 
-int GeometryTools::GetCommonEdgesList(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesList(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
     size_t p11, p12;
@@ -684,7 +684,7 @@ int GeometryTools::GetCommonEdgesList(Geometry *geometry, std::vector<CommonEdge
 
 }
 
-int GeometryTools::GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesHash(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
     size_t p11, p12;
@@ -733,7 +733,7 @@ int GeometryTools::GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge
 
 }
 
-int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
     size_t p11, p12;
@@ -782,7 +782,7 @@ int GeometryTools::GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge>
 
 }
 
-int GeometryTools::GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<CommonEdge> &commonEdges) {
+int GeometryTools::GetCommonEdgesSingleVertex(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // 1. The first step is also to form the pairs of integers (i.e., two arrays of integers)
     std::vector<std::pair<size_t, size_t>> vertex_elements; // pairs of vertex IDs, element IDs

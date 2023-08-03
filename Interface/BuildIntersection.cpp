@@ -42,10 +42,10 @@ extern SynRad*mApp;
 
 /**
 * \brief Constructor with initialisation for the BuildIntersection window (Facet/Build intersection)
-* \param g pointer to the Geometry
+* \param g pointer to the InterfaceGeometry
 * \param w Worker handle
 */
-BuildIntersection::BuildIntersection(Geometry *g, Worker *w) : GLWindow() {
+BuildIntersection::BuildIntersection(InterfaceGeometry *g, Worker *w) : GLWindow() {
 
 	int wD = 330;
 	int hD = 130;
@@ -123,7 +123,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				guiGeom->RestoreFacets(deletedFacetList, false); //Restore to original position
 			}
 			else {
-				int answer = GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
+				int answer = GLMessageBox::Display("InterfaceGeometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 				if (answer == GLDLG_OK) guiGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 				else return;
 			}

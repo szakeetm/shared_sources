@@ -33,7 +33,7 @@ class GLTitledPanel;
 
 //#include "Geometry_shared.h"
 //#include "Worker.h"
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class ExtrudeFacet : public GLWindow {
@@ -41,14 +41,14 @@ class ExtrudeFacet : public GLWindow {
 public:
 
   // Construction
-  ExtrudeFacet(Geometry *guiGeom,Worker *work);
+  ExtrudeFacet(InterfaceGeometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLToggle	*offsetCheckbox;

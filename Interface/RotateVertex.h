@@ -32,14 +32,14 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class RotateVertex : public GLWindow {
 
 public:
 	// Construction
-	RotateVertex(Geometry *guiGeom, Worker *work);
+	RotateVertex(InterfaceGeometry *guiGeom, Worker *work);
 	void ProcessMessage(GLComponent *src, int message);
 
 	// Implementation
@@ -77,7 +77,7 @@ private:
 	int nbFacetS;
 	int    axisMode;
 
-	Geometry   *guiGeom;
+	InterfaceGeometry   *guiGeom;
 	Worker	   *work;
 
 };

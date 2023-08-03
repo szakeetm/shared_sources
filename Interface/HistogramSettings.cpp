@@ -48,7 +48,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-HistogramSettings::HistogramSettings(Geometry *g, Worker *w):GLWindow() {
+HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow() {
 
 	int wD = 270;
 	int panelHeight = 215;

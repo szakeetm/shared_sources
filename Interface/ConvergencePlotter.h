@@ -36,7 +36,7 @@ class GLToggle;
 class GLTextField;
 class GLTitledPanel;
 class Worker;
-class Geometry;
+class InterfaceGeometry;
 struct Formulas;
 
 class ConvergencePlotter : public GLWindow {

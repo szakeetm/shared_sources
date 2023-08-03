@@ -143,11 +143,11 @@ public:
 	bool   isTextured;   // texture
 	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
-						 // Geometry
+						 // InterfaceGeometry
 	size_t nbIndex;   // Number of index/vertex
 	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
-					  // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+					  // Plane basis (O,U,V) (See InterfaceGeometry::InitializeGeometry() for info)
 	Vector3d   O;  // Origin
 	Vector3d   U;  // U vector
 	Vector3d   V;  // V vector
@@ -245,11 +245,11 @@ public:
 			CEREAL_NVP(isTextured),   // texture
 			CEREAL_NVP(isVolatile),   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
-							  // Geometry
+							  // InterfaceGeometry
 			CEREAL_NVP(nbIndex),   // Number of index/vertex
 			//CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
 
-							 // Plane basis (O,U,V) (See Geometry::InitializeGeometry() for info)
+							 // Plane basis (O,U,V) (See InterfaceGeometry::InitializeGeometry() for info)
 			CEREAL_NVP(O),  // Origin
 			CEREAL_NVP(U),  // U vector
 			CEREAL_NVP(V),  // V vector

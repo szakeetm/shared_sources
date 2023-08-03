@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Geometry_shared.h" //UndoPoint
 #include <vector>
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 class GLButton;
 class GLTextField;
@@ -41,7 +41,7 @@ class MirrorFacet : public GLWindow {
 
 public:
   // Construction
-  MirrorFacet(Geometry *guiGeom,Worker *work);
+  MirrorFacet(InterfaceGeometry *guiGeom,Worker *work);
   void ClearUndoVertices();
   void ProcessMessage(GLComponent *src,int message) override;
 
@@ -75,7 +75,7 @@ private:
   int    planeMode;
   std::vector<UndoPoint> undoPoints;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 };

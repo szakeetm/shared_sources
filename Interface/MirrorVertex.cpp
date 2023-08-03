@@ -54,7 +54,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-MirrorVertex::MirrorVertex(Geometry *g,Worker *w):GLWindow() {
+MirrorVertex::MirrorVertex(InterfaceGeometry *g,Worker *w):GLWindow() {
 	
   int wD = 300;
   int hD = 250;

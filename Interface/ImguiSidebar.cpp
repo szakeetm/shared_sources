@@ -109,9 +109,9 @@ namespace {
 
 // Sidebar containing 3d viewer settings, facet settings and simulation data
 #if defined(MOLFLOW)
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *guiGeom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *guiGeom, bool *show_global, bool *newViewer) {
 #else
-void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *guiGeom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *guiGeom, bool *show_global, bool *newViewer) {
 #endif
     const float PAD = 10.0f;
     static int corner = 0;

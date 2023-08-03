@@ -49,10 +49,10 @@ extern SynRad*mApp;
 
 /**
 * \brief Constructor with initialisation for the CreateShape window (Facet/Create shape)
-* \param g pointer to the Geometry
+* \param g pointer to the InterfaceGeometry
 * \param w Worker handle
 */
-CreateShape::CreateShape(Geometry *g,Worker *w):GLWindow() {
+CreateShape::CreateShape(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 713;
 	int hD = 478;

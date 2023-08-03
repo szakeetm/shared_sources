@@ -29,7 +29,7 @@ class GLTitledPanel;
 class GLLabel;
 class GLToggle;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class HistogramSettings : public GLWindow {
@@ -37,7 +37,7 @@ class HistogramSettings : public GLWindow {
 public:
 
   // Construction
-  HistogramSettings(Geometry *s,Worker *w);
+  HistogramSettings(InterfaceGeometry *s,Worker *w);
 
   // Component methods
   void Refresh(const std::vector<size_t>& selectedFacetIds);
@@ -49,7 +49,7 @@ public:
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLTitledPanel *globalSettingsPanel, *facetSettingsPanel;

@@ -77,7 +77,7 @@ class ManualUpdateCheckDialog;
 class ParticleLogger;
 class ConvergencePlotter;
 
-class Geometry;
+class InterfaceGeometry;
 class ImguiWindow;
 
 #define MAX_VIEWER  4

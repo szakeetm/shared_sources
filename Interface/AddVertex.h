@@ -27,7 +27,7 @@ class GLLabel;
 
 //#include "Geometry_shared.h"
 //#include "Worker.h"
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class AddVertex : public GLWindow {
@@ -35,14 +35,14 @@ class AddVertex : public GLWindow {
 public:
 
   // Construction
-  AddVertex(Geometry *guiGeom,Worker *work);
+  AddVertex(InterfaceGeometry *geom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLButton    *addButton;

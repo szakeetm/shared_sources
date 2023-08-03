@@ -58,7 +58,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-RotateVertex::RotateVertex(Geometry *g, Worker *w) :GLWindow() {
+RotateVertex::RotateVertex(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	
 	int wD = 350;

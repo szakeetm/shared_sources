@@ -26,7 +26,7 @@ class GLButton;
 class GLTextField;
 class GLLabel;
 class GLToggle;
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 class GLTitledPanel;
 
@@ -35,14 +35,14 @@ class MoveVertex : public GLWindow {
 public:
 
 	// Construction
-	MoveVertex(Geometry *guiGeom, Worker *work);
+	MoveVertex(InterfaceGeometry *guiGeom, Worker *work);
 
 	// Implementation
 	void ProcessMessage(GLComponent *src, int message);
 
 private:
 
-	Geometry     *guiGeom;
+	InterfaceGeometry     *guiGeom;
 	Worker	   *work;
 
 	GLToggle	*offsetCheckbox;

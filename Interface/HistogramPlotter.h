@@ -30,7 +30,7 @@ class GLDataView;
 class GLToggle;
 class GLTextField;
 class Worker;
-class Geometry;
+class InterfaceGeometry;
 
 #define HISTOGRAM_MODE_BOUNCES 0
 #define HISTOGRAM_MODE_DISTANCE 1

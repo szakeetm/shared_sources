@@ -52,7 +52,7 @@ extern SynRad*mApp;
 * \param nbIndex number of indices/facets
 */
 InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
-	indices.resize(nbIndex);                    // Ref to Geometry Vector3d
+	indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
 	vertices2.resize(nbIndex);
 	visible.resize(nbIndex);
 

@@ -160,7 +160,7 @@ static void ShowMenuFile(int& openedMenu, bool &askToSave) {
 static void ShowFileModals(int& openedMenu) {
 
     Worker &worker = mApp->worker;
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     if(openedMenu & IMENU_FILE_NEW){
         if (worker.IsRunning())
@@ -263,7 +263,7 @@ static void ShowFileModals(int& openedMenu) {
 static void ShowSelectionModals() {
 
     Worker &worker = mApp->worker;
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -392,7 +392,7 @@ static void ShowMenuSelection(std::string& openModalName) {
 
 
     Worker &worker = mApp->worker;
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
         if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
@@ -773,7 +773,7 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {}
 
     ImGui::Separator();
-    if (ImGui::MenuItem("Triangulate Geometry")) {}
+    if (ImGui::MenuItem("Triangulate InterfaceGeometry")) {}
 }
 
 // TODO: Only in Molflow

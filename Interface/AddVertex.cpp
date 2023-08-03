@@ -39,10 +39,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 /**
 * \brief Constructor with initialisation for the AddVertex window (Vertex/Add new)
-* \param g pointer to the Geometry
+* \param g pointer to the InterfaceGeometry
 * \param w Worker handle
 */
-AddVertex::AddVertex(Geometry *g,Worker *w):GLWindow() {
+AddVertex::AddVertex(InterfaceGeometry *g,Worker *w):GLWindow() {
 
   int wD = 335;
   int hD = 120;

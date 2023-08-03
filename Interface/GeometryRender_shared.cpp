@@ -54,7 +54,7 @@ extern MolFlow* mApp;
 extern SynRad* mApp;
 #endif
 
-void Geometry::SelectFacet(size_t facetId) {
+void InterfaceGeometry::SelectFacet(size_t facetId) {
 	if (!isLoaded) return;
 	InterfaceFacet* f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
@@ -62,7 +62,7 @@ void Geometry::SelectFacet(size_t facetId) {
 	selectHist = { facetId }; //reset with only this facet id
 }
 
-void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
+void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -155,7 +155,7 @@ void Geometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unsel
 	UpdateSelection();
 }
 
-void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
+void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
 
 
 	if (!isLoaded) return;
@@ -348,7 +348,7 @@ void Geometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound,
 
 }
 
-void Geometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
+void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
 	if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
 		facets[lastFound]->selected = !unselect;
@@ -365,7 +365,7 @@ void Geometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid
 	if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
 }
 
-void Geometry::SelectVertex(int vertexId) {
+void InterfaceGeometry::SelectVertex(int vertexId) {
 	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->wp.superIdx);
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
@@ -373,7 +373,7 @@ void Geometry::SelectVertex(int vertexId) {
 	vertices3[vertexId].selected = true;
 }
 
-void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound) {
+void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound) {
 
 	// Select a set of vertices according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -448,7 +448,7 @@ void Geometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
+void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
 
 	if (!isLoaded) return;
 
@@ -533,52 +533,52 @@ void Geometry::SelectVertex(int x, int y, int width, int height, bool shiftDown,
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void Geometry::AddToSelectionHist(size_t f) {
+void InterfaceGeometry::AddToSelectionHist(size_t f) {
 	selectHist.push_back(f);
 }
 
-bool Geometry::AlreadySelected(size_t f) {
+bool InterfaceGeometry::AlreadySelected(size_t f) {
 	return std::find(selectHist.begin(), selectHist.end(), f) != selectHist.end();
 }
 
-std::optional<size_t> Geometry::GetLastSelected()
+std::optional<size_t> InterfaceGeometry::GetLastSelected()
 {
 	if (selectHist.empty()) return false;
 	else return selectHist.back();
 }
 
-std::optional<size_t> Geometry::GetFirstSelected()
+std::optional<size_t> InterfaceGeometry::GetFirstSelected()
 {
 	if (selectHist.empty()) return false;
 	else return selectHist.front();
 }
 
-void Geometry::SelectAll() {
+void InterfaceGeometry::SelectAll() {
 	for (int i = 0; i < sh.nbFacet; i++)
 		SelectFacet(i);
 	UpdateSelection();
 }
 
-void Geometry::EmptySelectedVertexList() {
+void InterfaceGeometry::EmptySelectedVertexList() {
 	selectedVertexList_ordered.clear();
 }
 
-void Geometry::RemoveFromSelectedVertexList(size_t vertexId) {
+void InterfaceGeometry::RemoveFromSelectedVertexList(size_t vertexId) {
 	selectedVertexList_ordered.erase(std::remove(selectedVertexList_ordered.begin(), selectedVertexList_ordered.end(), vertexId), selectedVertexList_ordered.end());
 }
 
-void Geometry::AddToSelectedVertexList(size_t vertexId) {
+void InterfaceGeometry::AddToSelectedVertexList(size_t vertexId) {
 	selectedVertexList_ordered.push_back(vertexId);
 }
 
-void Geometry::SelectAllVertex() {
+void InterfaceGeometry::SelectAllVertex() {
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++)
 		SelectVertex(i);
 	//UpdateSelectionVertex();
 }
 
-size_t Geometry::GetNbSelectedVertex() {
+size_t InterfaceGeometry::GetNbSelectedVertex() {
 	size_t nbSelectedVertex = 0;
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (vertices3[i].selected) nbSelectedVertex++;
@@ -586,7 +586,7 @@ size_t Geometry::GetNbSelectedVertex() {
 	return nbSelectedVertex;
 }
 
-void Geometry::UnselectAll() {
+void InterfaceGeometry::UnselectAll() {
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbFacet; i++) {
 		facets[i]->selected = false;
@@ -595,7 +595,7 @@ void Geometry::UnselectAll() {
 	UpdateSelection();
 }
 
-void Geometry::UnselectAllVertex() {
+void InterfaceGeometry::UnselectAllVertex() {
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		vertices3[i].selected = false;
@@ -604,7 +604,7 @@ void Geometry::UnselectAllVertex() {
 	//UpdateSelectionVertex();
 }
 
-std::vector<size_t> Geometry::GetSelectedVertices()
+std::vector<size_t> InterfaceGeometry::GetSelectedVertices()
 {
 	std::vector<size_t> sel;
 	for (size_t i = 0; i < sh.nbVertex; i++)
@@ -612,7 +612,7 @@ std::vector<size_t> Geometry::GetSelectedVertices()
 	return sel;
 }
 
-void Geometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
+void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -676,7 +676,7 @@ void Geometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool sho
 
 }
 
-void Geometry::DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vector<GLuint>& lines) {
+void InterfaceGeometry::DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vector<GLuint>& lines) {
 
 	// Render a facet (wireframe)
 	int nb = f->sh.nbIndex;
@@ -689,7 +689,7 @@ void Geometry::DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vect
 }
 
 
-void Geometry::DrawPolys() {
+void InterfaceGeometry::DrawPolys() {
 
 	std::vector<int> f3; f3.reserve(sh.nbFacet);
 	std::vector<int> fp; fp.reserve(sh.nbFacet);
@@ -767,7 +767,7 @@ void Geometry::DrawPolys() {
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
-float Geometry::getMaxDistToCamera(InterfaceFacet* f) {
+float InterfaceGeometry::getMaxDistToCamera(InterfaceFacet* f) {
 
 	float rx, ry, rz, rw;
 
@@ -794,7 +794,7 @@ float Geometry::getMaxDistToCamera(InterfaceFacet* f) {
 }
 
 // returns 1 if lhs is greater, -1 otherwise. unused
-int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs) {
+int InterfaceGeometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs) {
 
 	if (getMaxDistToCamera(lhs) > getMaxDistToCamera(rhs)) {
 		return 1;
@@ -802,7 +802,7 @@ int Geometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs) {
 	else return 0;
 
 }
-void Geometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacets) {
+void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacets) {
 
 	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 	// Draw
@@ -898,7 +898,7 @@ void Geometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacet
 	//---end transparent
 }
 
-void Geometry::SetCullMode(int mode) {
+void InterfaceGeometry::SetCullMode(int mode) {
 
 	switch (mode) {
 	case 1: // SHOW_FRONT
@@ -915,7 +915,7 @@ void Geometry::SetCullMode(int mode) {
 
 }
 
-void Geometry::ClearFacetTextures()
+void InterfaceGeometry::ClearFacetTextures()
 {
 	GLProgress_GUI prg = GLProgress_GUI("Clearing texture", "Frame update");
 	prg.SetBounds(5, 28, 300, 90);
@@ -930,7 +930,7 @@ void Geometry::ClearFacetTextures()
 	}
 }
 
-void Geometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float px, float py, float pz, float d) {
+void InterfaceGeometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float px, float py, float pz, float d) {
 
 	if (!arrowList) BuildDirectionList();
 
@@ -1042,7 +1042,7 @@ void Geometry::RenderArrow(GLfloat* matView, float dx, float dy, float dz, float
 
 // Triangulation stuff
 
-void Geometry::AddTextureCoord(const InterfaceFacet* f, const Vector2d& p, std::vector<float>& textureCoords) {
+void InterfaceGeometry::AddTextureCoord(const InterfaceFacet* f, const Vector2d& p, std::vector<float>& textureCoords) {
 
 	// Add texture coord with a 1 texel border (for bilinear filtering)
 	double uStep = 1.0 / (double)f->texDimW;
@@ -1063,7 +1063,7 @@ void Geometry::AddTextureCoord(const InterfaceFacet* f, const Vector2d& p, std::
 
 }
 
-void Geometry::FillFacet(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void InterfaceGeometry::FillFacet(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	for (size_t i = 0; i < f->sh.nbIndex; i++) {
 		size_t idx = f->indices[i];
@@ -1081,7 +1081,7 @@ void Geometry::FillFacet(const InterfaceFacet* f, std::vector<double>& vertexCoo
 	}
 }
 
-void Geometry::DrawEar(const InterfaceFacet* f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void InterfaceGeometry::DrawEar(const InterfaceFacet* f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	//Commented out sections: theoretically in a right-handed system the vertex order is inverse
 	//However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
@@ -1106,7 +1106,7 @@ void Geometry::DrawEar(const InterfaceFacet* f, const GLAppPolygon& p, int ear, 
 	}
 }
 
-void Geometry::TriangulateForRender(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
+void InterfaceGeometry::TriangulateForRender(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
 	// Triangulate a facet (rendering purpose)
 	// The facet must have at least 3 points
@@ -1136,7 +1136,7 @@ void Geometry::TriangulateForRender(const InterfaceFacet* f, std::vector<double>
 
 }
 
-void Geometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 
 	if (!isLoaded) return;
 
@@ -1342,7 +1342,7 @@ void Geometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, i
 
 }
 
-void Geometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
+void InterfaceGeometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 	if (mApp->antiAliasing) {
 		glEnable(GL_BLEND);
 		glEnable(GL_LINE_SMOOTH);
@@ -1356,7 +1356,7 @@ void Geometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool r
 	}
 }
 
-void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
+void InterfaceGeometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deleteLine) {
 		for (int i = 0; i < sh.nbSuper; i++)
 			DELETE_LIST(lineList[i]);
@@ -1368,7 +1368,7 @@ void Geometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	DELETE_LIST(selectHighlightList);
 }
 
-std::unordered_set<int> Geometry::GetVertexBelongsToSelectedFacet() {
+std::unordered_set<int> InterfaceGeometry::GetVertexBelongsToSelectedFacet() {
 	std::unordered_set<int> result;
 	auto selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
@@ -1379,7 +1379,7 @@ std::unordered_set<int> Geometry::GetVertexBelongsToSelectedFacet() {
 	return result;
 }
 
-void Geometry::BuildDirectionList() {
+void InterfaceGeometry::BuildDirectionList() {
 
 	// Shapes used for direction field rendering
 
@@ -1518,7 +1518,7 @@ void Geometry::BuildDirectionList() {
 
 }
 
-void Geometry::BuildSelectList() {
+void InterfaceGeometry::BuildSelectList() {
 
 	selectList = glGenLists(1);
 	glNewList(selectList, GL_COMPILE);
@@ -1717,14 +1717,14 @@ void Geometry::BuildSelectList() {
 	}
 }
 
-void Geometry::BuildVolumeFacetList() {
+void InterfaceGeometry::BuildVolumeFacetList() {
 	polyList = glGenLists(1);
 	glNewList(polyList, GL_COMPILE);
 	DrawPolys();
 	glEndList();
 }
 
-void Geometry::BuildNonPlanarList() {
+void InterfaceGeometry::BuildNonPlanarList() {
 
 
 	nonPlanarList = glGenLists(1);
@@ -1758,14 +1758,14 @@ void Geometry::BuildNonPlanarList() {
 }
 
 
-void Geometry::UpdateSelection() {
+void InterfaceGeometry::UpdateSelection() {
 
 	DeleteGLLists();
 	BuildSelectList();
 
 }
 
-void Geometry::BuildGLList() {
+void InterfaceGeometry::BuildGLList() {
 
 	// Compile geometry for OpenGL
 	for (int s = 0; s < sh.nbSuper; s++) {
@@ -1824,7 +1824,7 @@ void Geometry::BuildGLList() {
 
 }
 
-int Geometry::InvalidateDeviceObjects() {
+int InterfaceGeometry::InvalidateDeviceObjects() {
 
 	DeleteGLLists(true, true);
 	DELETE_LIST(arrowList);
@@ -1836,7 +1836,7 @@ int Geometry::InvalidateDeviceObjects() {
 
 }
 
-int Geometry::RestoreDeviceObjects() {
+int InterfaceGeometry::RestoreDeviceObjects() {
 
 	if (!IsLoaded()) return GL_OK;
 
@@ -1852,7 +1852,7 @@ int Geometry::RestoreDeviceObjects() {
 
 }
 
-void Geometry::BuildFacetList(InterfaceFacet* f) {
+void InterfaceGeometry::BuildFacetList(InterfaceFacet* f) {
 
 	// Rebuild OpenGL geometry with texture
 

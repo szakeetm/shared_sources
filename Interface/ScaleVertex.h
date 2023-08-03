@@ -34,14 +34,14 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class ScaleVertex : public GLWindow {
 
 public:
   // Construction
-  ScaleVertex(Geometry *guiGeom,Worker *work);
+  ScaleVertex(InterfaceGeometry *guiGeom,Worker *work);
   void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
@@ -72,7 +72,7 @@ private:
 
   int nbFacetS, invariantMode, scaleMode;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 };
 

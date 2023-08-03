@@ -32,14 +32,14 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class RotateFacet : public GLWindow {
 
 public:
   // Construction
-  RotateFacet(Geometry *guiGeom,Worker *work);
+  RotateFacet(InterfaceGeometry *guiGeom,Worker *work);
   void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
@@ -77,7 +77,7 @@ private:
   int nbFacetS;
   int    axisMode;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 };

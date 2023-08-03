@@ -31,14 +31,14 @@ class GLLabel;
 
 //#include "Geometry_shared.h"
 //#include "Worker.h"
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class BuildIntersection : public GLWindow {
 
 public:
   // Construction
-  BuildIntersection(Geometry *guiGeom,Worker *work);
+  BuildIntersection(InterfaceGeometry *guiGeom,Worker *work);
   ~BuildIntersection();
   void ProcessMessage(GLComponent *src,int message) override;
   void ClearUndoFacets();
@@ -60,7 +60,7 @@ private:
   std::vector<DeletedFacet> deletedFacetList;
   size_t nbFacet, nbCreated;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 };

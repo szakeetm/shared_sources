@@ -30,7 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLProgress_GUI.hpp"
 
 //Molflow/Synrad-specific
-class Geometry;
+class InterfaceGeometry;
 class GLProgress_Abstract;
 struct UserSettings;
 struct ParticleLog;
@@ -63,7 +63,7 @@ public:
   ~Worker();
 
   // Return a handle to the currently loaded geometry
-  Geometry *GetGeometry();
+  InterfaceGeometry *GetGeometry();
 
   
   void LoadGeometry(const std::string& fileName, bool insert=false, bool newStr=false);// Loads or inserts a geometry (throws Error)
@@ -214,7 +214,7 @@ private:
   void Stop();
   void InnerStop(float appTime);
 
-  // Geometry handle
+  // InterfaceGeometry handle
 #if defined(MOLFLOW)
   MolflowGeometry *guiGeom;
 

@@ -33,14 +33,14 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class ScaleFacet : public GLWindow {
 
 public:
   // Construction
-  ScaleFacet(Geometry *guiGeom,Worker *work);
+  ScaleFacet(InterfaceGeometry *guiGeom,Worker *work);
   void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
@@ -71,7 +71,7 @@ private:
 
   int nbFacetS,invariantMode,scaleMode;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 };

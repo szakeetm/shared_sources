@@ -128,7 +128,7 @@ void VertexCoordinates::GetSelected() {
 
   selFacet = NULL;
   int i = 0;
-  Geometry *g = worker->GetGeometry();
+  InterfaceGeometry *g = worker->GetGeometry();
   int nb = g->GetNbFacet();
   while(!selFacet && i<nb) {
     if( g->GetFacet(i)->selected ) selFacet = g->GetFacet(i);
@@ -151,7 +151,7 @@ void VertexCoordinates::Update() {
   if(!selFacet) return;
   */
 
-  Geometry *s = worker->GetGeometry();
+  InterfaceGeometry *s = worker->GetGeometry();
   int count=0;
   vertexListC->SetSize(4,s->GetNbSelectedVertex());
   vertexListC->SetColumnWidths((int*)flWidth);
@@ -187,7 +187,7 @@ void VertexCoordinates::Display(Worker *w) {
 
 void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 
-  Geometry *guiGeom = worker->GetGeometry();
+  InterfaceGeometry *guiGeom = worker->GetGeometry();
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {

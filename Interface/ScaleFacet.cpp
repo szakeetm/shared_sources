@@ -55,7 +55,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-ScaleFacet::ScaleFacet(Geometry *g, Worker *w) :GLWindow() {
+ScaleFacet::ScaleFacet(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	int wD = 290;
 	int hD = 220;

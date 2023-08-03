@@ -55,7 +55,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
+ScaleVertex::ScaleVertex(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 290;
 	int hD = 220;

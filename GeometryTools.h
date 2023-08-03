@@ -66,28 +66,28 @@ class GeometryTools {
     static InterfaceFacet* GetTriangleFromEar(InterfaceFacet *f, const GLAppPolygon& p, int ear);
 public:
     static int  FindEar(const GLAppPolygon& p);
-    //static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(Geometry* geometry);
-    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(Geometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg);
-    static void PolygonsToTriangles(Geometry* geometry, GLProgress_Abstract& prg);
-    static void PolygonsToTriangles(Geometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg);
+    //static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(InterfaceGeometry* geometry);
+    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg);
+    static void PolygonsToTriangles(InterfaceGeometry* geometry, GLProgress_Abstract& prg);
+    static void PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg);
 
-    static int GetAnalyzedCommonEdges(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetAnalyzedCommonEdges(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesVec(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesVec(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesList(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesList(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesHash(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesHash(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesMap(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static void AnalyzeGeometry(Geometry *geometry);
+    static void AnalyzeGeometry(InterfaceGeometry *geometry);
 
-    static void CompareAlgorithm(Geometry *geometry, size_t index);
+    static void CompareAlgorithm(InterfaceGeometry *geometry, size_t index);
 
-    //static int GetNeighbors(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    //static int GetNeighbors(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
-    static int GetCommonEdgesSingleVertex(Geometry *geometry, std::vector<CommonEdge> &commonEdges);
+    static int GetCommonEdgesSingleVertex(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 };
 
 

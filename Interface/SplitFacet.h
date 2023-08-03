@@ -34,14 +34,14 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class SplitFacet : public GLWindow {
 
 public:
   // Construction
-  SplitFacet(Geometry *guiGeom,Worker *work);
+  SplitFacet(InterfaceGeometry *guiGeom,Worker *work);
   ~SplitFacet();
   void ProcessMessage(GLComponent *src,int message) override;
   void ClearUndoFacets();
@@ -77,7 +77,7 @@ private:
   std::vector<DeletedFacet> deletedFacetList;
   size_t nbFacet, nbCreated;
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 };

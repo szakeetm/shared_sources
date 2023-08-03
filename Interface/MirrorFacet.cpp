@@ -55,7 +55,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
+MirrorFacet::MirrorFacet(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	int wD = 300;
 	int hD = 275;

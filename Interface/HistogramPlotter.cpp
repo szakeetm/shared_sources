@@ -175,7 +175,7 @@ void HistogramPlotter::SetBounds(int x, int y, int w, int h) {
 void HistogramPlotter::Refresh() {
 	//Rebuilds combo and calls refreshviews
 
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 
 	//Collect histogram facets for currently displayed mode
 	size_t modeId = GetSelectedTabIndex();
@@ -236,7 +236,7 @@ void HistogramPlotter::refreshChart() {
     if (modes[modeId].views.empty()) return;
 
 	int yScaleMode = yScaleCombo->GetSelectedIndex();
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 	for (auto& v : modes[modeId].views) {
 
 		if (v->userData1 >= -1 && v->userData1 < (int)guiGeom->GetNbFacet()) {
@@ -278,7 +278,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	//modeId: bounce/distance/time (0/1/2)
 	//returns pointer to values, max X value, X bin size, number of values (which can't be derived from the vector size when nothing's recorded yet)
 
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 	double xMax;
 	double xSpacing;
 	size_t nbBins;
@@ -335,7 +335,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 
 void HistogramPlotter::addView(int facetId) {
 	int modeId = GetSelectedTabIndex();
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 
 	// Check that view is not already added
 	{
@@ -376,7 +376,7 @@ void HistogramPlotter::addView(int facetId) {
 
 void HistogramPlotter::remView(int facetId) {
 	size_t modeId = GetSelectedTabIndex();
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 
 	bool found = false;
 	size_t i = 0;
@@ -404,7 +404,7 @@ void HistogramPlotter::Reset() {
 
 void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
 	size_t modeId = GetSelectedTabIndex();
-	Geometry *guiGeom = worker->GetGeometry();
+	InterfaceGeometry *guiGeom = worker->GetGeometry();
 	switch (message) {
 	case MSG_BUTTON:
 		if (src == selButton) {

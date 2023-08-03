@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 SimulationFacet::SimulationFacet(size_t nbIndex) : RTFacet(nbIndex) {
 
-    indices.resize(nbIndex);                    // Ref to Geometry Vector3d
+    indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
     vertices2.resize(nbIndex);
 }
 
@@ -50,7 +50,7 @@ SimulationFacet& SimulationFacet::operator=(const SimulationFacet& cpy){
 
     isReady = cpy.isReady;
     globalId = cpy.globalId;
-    indices = cpy.indices;                    // Ref to Geometry Vector3d
+    indices = cpy.indices;                    // Ref to InterfaceGeometry Vector3d
     vertices2 = cpy.vertices2;
     if(cpy.surf) surf = cpy.surf;
     else surf = nullptr;
@@ -65,7 +65,7 @@ SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
 
     isReady = cpy.isReady;
     globalId = cpy.globalId;
-    indices = std::move(cpy.indices);                    // Ref to Geometry Vector3d
+    indices = std::move(cpy.indices);                    // Ref to InterfaceGeometry Vector3d
     vertices2 = std::move(cpy.vertices2);
     surf = cpy.surf;
     cpy.surf = nullptr;

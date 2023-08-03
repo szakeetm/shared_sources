@@ -180,7 +180,7 @@ public:
 	//OpenGL
 	GLint  glElem;          // Surface elements boundaries
 	GLint  glSelElem;       // Selected surface elements boundaries
-	GLint  glList;          // Geometry with texture
+	GLint  glList;          // InterfaceGeometry with texture
 	GLuint glTex;           // Handle to OpenGL texture
 	
 	//Smart selection

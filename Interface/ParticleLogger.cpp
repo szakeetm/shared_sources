@@ -53,7 +53,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-ParticleLogger::ParticleLogger(Geometry *g, Worker *w) :GLWindow() {
+ParticleLogger::ParticleLogger(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	int wD = 367;
 	int hD = 345;

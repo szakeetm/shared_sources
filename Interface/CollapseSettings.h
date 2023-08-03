@@ -29,7 +29,7 @@ class GLToggle;
 
 //#include "Geometry_shared.h"
 //#include "Worker.h"
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 
 class CollapseSettings : public GLWindow {
@@ -40,14 +40,14 @@ public:
   CollapseSettings();
 
   // Component methods
-  void SetGeometry(Geometry *s,Worker *w);
+  void SetGeometry(InterfaceGeometry *s,Worker *w);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLButton    *goButton;

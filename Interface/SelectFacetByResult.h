@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLWindow.h"
 
 class Worker;
-class Geometry;
+class InterfaceGeometry;
 class GLTextField;
 class GLToggle;
 class GLTitledPanel;
@@ -51,7 +51,7 @@ public:
 	SelectFacetByResult(Worker *w);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
   GLButton
 	  *selectButton,

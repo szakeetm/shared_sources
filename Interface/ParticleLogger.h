@@ -26,7 +26,7 @@ class GLButton;
 class GLTextField;
 class GLLabel;
 class GLToggle;
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 class GLTitledPanel;
 class ParticleLoggerItem;
@@ -36,7 +36,7 @@ class ParticleLogger : public GLWindow {
 public:
 
   // Construction
-  ParticleLogger(Geometry *guiGeom,Worker *work);
+  ParticleLogger(InterfaceGeometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -47,7 +47,7 @@ public:
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
 	GLLabel	*descriptionLabel;

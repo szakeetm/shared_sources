@@ -58,7 +58,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-RotateFacet::RotateFacet(Geometry *g,Worker *w):GLWindow() {
+RotateFacet::RotateFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 350;
 	int hD = 375;

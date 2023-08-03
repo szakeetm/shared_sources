@@ -92,7 +92,7 @@ public:
 	size_t oriId;
 };
 
-class Geometry {
+class InterfaceGeometry {
 protected:
 	void ResetTextureLimits(); //Different Molflow vs. Synrad
 	void CalculateFacetParams(InterfaceFacet *f);
@@ -109,8 +109,8 @@ protected:
 	float getMaxDistToCamera(InterfaceFacet* f); //unused
 	int compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rhs); //unused
 public:
-	Geometry();
-	virtual ~Geometry();
+	InterfaceGeometry();
+	virtual ~InterfaceGeometry();
 
 #if defined(SYNRAD)
 	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState globalState, bool saveSelected) {}
@@ -301,7 +301,7 @@ protected:
 	Vector3d  center;                     // Center (3D space)
 	std::vector<std::string> structNames;
 
-    // Geometry
+    // InterfaceGeometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
 	std::vector<InterfaceVertex> vertices3; // Vertices (3D space), can be selected
 	std::vector<GLdouble> vertices_raw_opengl; //simple x,y,z coords for GL vertex array

@@ -140,7 +140,7 @@ CollapseSettings::CollapseSettings():GLWindow() {
 * \param guiGeom geometry used for the settings
 * \brief w Worker handle
 */
-void CollapseSettings::SetGeometry(Geometry *guiGeom,Worker *w) {
+void CollapseSettings::SetGeometry(InterfaceGeometry *guiGeom,Worker *w) {
 
 	char tmp[512];
 

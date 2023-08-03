@@ -51,7 +51,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
+SplitFacet::SplitFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 	
 	int wD = 353;
 	int hD = 260;
@@ -226,7 +226,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			guiGeom->RemoveFacets(newlyCreatedList);
 			guiGeom->RestoreFacets(deletedFacetList,false); //Restore to original position
 		} else {
-			int answer = GLMessageBox::Display("Geometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
+			int answer = GLMessageBox::Display("InterfaceGeometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 			guiGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 		}
 		deletedFacetList.clear();

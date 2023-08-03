@@ -48,10 +48,10 @@ extern SynRad*mApp;
 
 /**
 * \brief Constructor with initialisation for the AlignFacet window (Facet/Align to)
-* \param g pointer to the Geometry
+* \param g pointer to the InterfaceGeometry
 * \param w Worker handle
 */
-AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
+AlignFacet::AlignFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 290;
 	int hD = 355;

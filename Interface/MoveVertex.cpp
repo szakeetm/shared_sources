@@ -47,7 +47,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-MoveVertex::MoveVertex(Geometry *g, Worker *w) :GLWindow() {
+MoveVertex::MoveVertex(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	int wD = 228;
 	int hD = 365;

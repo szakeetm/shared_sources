@@ -26,7 +26,7 @@ class GLButton;
 class GLTextField;
 class GLLabel;
 class GLToggle;
-class Geometry;
+class InterfaceGeometry;
 class Worker;
 class GLTitledPanel;
 
@@ -35,14 +35,14 @@ class MoveFacet : public GLWindow {
 public:
 
   // Construction
-  MoveFacet(Geometry *guiGeom,Worker *work);
+  MoveFacet(InterfaceGeometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *guiGeom;
+  InterfaceGeometry     *guiGeom;
   Worker	   *work;
 
   GLToggle	*offsetCheckbox;

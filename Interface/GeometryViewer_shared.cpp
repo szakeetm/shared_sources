@@ -483,7 +483,7 @@ void GeometryViewer::UpdateLight() {
 void GeometryViewer::UpdateMatrix() {
 
 	if (!work) return;
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	if (!guiGeom) return;
 	double handedness = mApp->leftHandedView ? -1.0 : 1.0;
 	double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
@@ -638,7 +638,7 @@ void GeometryViewer::SetWorker(Worker *w) {
 	work = w;
 	ToFrontView();
 	// Auto size vector length (consider Front View)
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = guiGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 }
@@ -649,7 +649,7 @@ void GeometryViewer::DrawIndex() {
 
 	// Draw index number
 		// Get selected vertex
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	size_t nbVertex = guiGeom->GetNbVertex();
 	auto selectedFacets = guiGeom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
@@ -792,7 +792,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 }
 
 void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	std::vector<size_t> selectedVertexIds;
 
 	//Populate selected vertices
@@ -855,7 +855,7 @@ void GeometryViewer::DrawNormal() {
 	glPointSize(3.0f);
 	glColor3f(1.0f, 0.0f, 0.0f);
 
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
 		InterfaceFacet *f = guiGeom->GetFacet(i);
 		if (f->selected) {
@@ -878,7 +878,7 @@ void GeometryViewer::DrawNormal() {
 }
 
 void GeometryViewer::DrawUV() {
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
 		InterfaceFacet *f = guiGeom->GetFacet(i);
 		if (f->selected) {
@@ -923,7 +923,7 @@ void GeometryViewer::DrawFacetId() {
 
     // Draw index number
     // Get selected vertex
-    Geometry *guiGeom = work->GetGeometry();
+    InterfaceGeometry *guiGeom = work->GetGeometry();
     size_t nbVertex = guiGeom->GetNbVertex();
     auto selectedFacets = guiGeom->GetSelectedFacets();
     if (nbVertex <= 0 || selectedFacets.empty()) return;
@@ -1017,7 +1017,7 @@ void GeometryViewer::DrawLeak() {
 void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 	if (!work) return;
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	if (!guiGeom) return;
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
@@ -1175,7 +1175,7 @@ void GeometryViewer::Paint() {
 	
 
 	if (!work) return;
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	if (!guiGeom->IsLoaded()) {
 		PaintCompAndBorder();
 		return;
@@ -1471,7 +1471,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 {
 
 	if (!work) return;
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	// Key pressed
 	if (evt->type == SDL_KEYDOWN) {
 		int unicode = /*(evt->key.keysym.unicode & 0x7F);
@@ -1904,7 +1904,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 	/*
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -2059,7 +2059,7 @@ DrawBB(node->right);
 
 void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
-	Geometry *guiGeom = work->GetGeometry();
+	InterfaceGeometry *guiGeom = work->GetGeometry();
 
 	GLMatrix mv;
 	float rx, ry, rz, rw;
@@ -2085,7 +2085,7 @@ void GeometryViewer::ComputeBB(/*bool getAll*/) {
 	TRANSFORMVERTEX(bb.max.x, bb.max.y, bb.max.z);
 }
 
-void Geometry::ClearFacetMeshLists()
+void InterfaceGeometry::ClearFacetMeshLists()
 {
 	GLProgress_GUI prg("Please wait...", "Clearing facet meshes...");
 	prg.SetVisible(true);
@@ -2096,7 +2096,7 @@ void Geometry::ClearFacetMeshLists()
 	}
 }
 
-void Geometry::BuildFacetMeshLists()
+void InterfaceGeometry::BuildFacetMeshLists()
 {
 	GLProgress_GUI prg = GLProgress_GUI("Please wait...", "Building facet meshes...");
 	prg.SetVisible(true);

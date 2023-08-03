@@ -248,7 +248,7 @@ void Interface::ResetSimulation(bool askConfirm) {
 
 void Interface::UpdateStructMenu() {
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     structMenu->Clear();
     structMenu->Add("New structure...", MENU_VIEW_NEWSTRUCT);
@@ -276,7 +276,7 @@ void Interface::UpdateTitle() {
 
     std::string title;
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     if (!guiGeom->IsLoaded()) {
         title = appTitle;
@@ -304,7 +304,7 @@ void Interface::LoadSelection(const char *fName) {
 
     try {
 
-        Geometry *guiGeom = worker.GetGeometry();
+        InterfaceGeometry *guiGeom = worker.GetGeometry();
         guiGeom->UnselectAll();
         size_t nbFacet = guiGeom->GetNbFacet();
 
@@ -331,7 +331,7 @@ void Interface::LoadSelection(const char *fName) {
 
 void Interface::SaveSelection() {
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (guiGeom->GetNbSelectedFacets() == 0) return;
     auto prg = GLProgress_GUI("Saving file", "Please wait");
     prg.SetVisible(true);
@@ -366,7 +366,7 @@ void Interface::SaveSelection() {
 
 void Interface::ExportSelection() {
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (guiGeom->GetNbSelectedFacets() == 0) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
@@ -400,7 +400,7 @@ void Interface::ExportSelection() {
 
 void Interface::UpdateModelParams() {
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char tmp[256];
     double sumArea = 0;
     facetList->SetSize(cSize, guiGeom->GetNbFacet(), false, "Clearing facet hit list...");
@@ -809,8 +809,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Quick Pipe", MENU_QUICKPIPE, SDLK_q, ALT_MODIFIER);
 
     menu->GetSubMenu("Test")->Add(nullptr);
-    menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
-    menu->GetSubMenu("Test")->Add("Analyze Geometry", MENU_ANALYZE);
+    menu->GetSubMenu("Test")->Add("Triangulate InterfaceGeometry", MENU_TRIANGULATE);
+    menu->GetSubMenu("Test")->Add("Analyze InterfaceGeometry", MENU_ANALYZE);
     menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     menu->GetSubMenu("Test")->Add(nullptr);
@@ -977,7 +977,7 @@ void Interface::OneTimeSceneInit_shared_post() {
 }
 
 int Interface::RestoreDeviceObjects_shared() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     guiGeom->RestoreDeviceObjects();
     //worker.Update(0.0f);
 
@@ -1020,7 +1020,7 @@ int Interface::RestoreDeviceObjects_shared() {
 }
 
 int Interface::InvalidateDeviceObjects_shared() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     guiGeom->InvalidateDeviceObjects();
     //worker.Update(0.0f);
 
@@ -1063,7 +1063,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 }
 
 bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char tmp[128];
 
     switch (message) {
@@ -1565,7 +1565,7 @@ guiGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_TRIANGULATE: {
                     auto selectedFacets = guiGeom->GetSelectedFacets();
                     if (selectedFacets.empty()) return true;
-                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change",
+                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "InterfaceGeometry change",
                                                     GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
                     if (rep == GLDLG_OK) {
                         if (AskToReset()) {
@@ -2005,7 +2005,7 @@ void Interface::SelectView(int v) {
 }
 
 void Interface::SelectSelection(size_t v) {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     guiGeom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
                        viewer[0]->GetWindow()->IsCtrlDown());
     idSelection = v;
@@ -2056,7 +2056,7 @@ void Interface::ClearAllSelections() {
 }
 
 void Interface::OverWriteSelection(size_t idOvr) {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char *selectionName = GLInputBox::GetInput(selections[idOvr].name.c_str(), "Selection name",
                                                "Enter selection name");
     if (!selectionName) return;
@@ -2126,7 +2126,7 @@ void Interface::ClearAllViews() {
 }
 
 void Interface::OverWriteView(int idOvr) {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char *viewName = GLInputBox::GetInput(views[idOvr].name.c_str(), "View name", "Enter view name");
     if (!viewName) return;
 
@@ -2136,7 +2136,7 @@ void Interface::OverWriteView(int idOvr) {
 }
 
 void Interface::AddView() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char tmp[32];
     sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
@@ -2193,7 +2193,7 @@ void Interface::UpdateRecentMenu() {
 }
 
 void Interface::AddStruct() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     char tmp[32];
     sprintf(tmp, "Structure #%zd", guiGeom->GetNbStructure() + 1);
     char *structName = GLInputBox::GetInput(tmp, "Structure name", "Enter name of new structure");
@@ -2204,7 +2204,7 @@ void Interface::AddStruct() {
 }
 
 void Interface::DeleteStruct() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (guiGeom->GetNbStructure() <= 1) {
         GLMessageBox::Display("At least one structure needs to remain.");
         return;
@@ -2236,7 +2236,7 @@ void Interface::DeleteStruct() {
 }
 
 void Interface::DisplayCollapseDialog() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (!collapseSettings) collapseSettings = new CollapseSettings();
     collapseSettings->SetGeometry(guiGeom, &worker);
     collapseSettings->SetVisible(true);
@@ -2348,7 +2348,7 @@ int Interface::Resize(size_t width, size_t height, bool forceWindowed) {
 }
 
 void Interface::UpdateFacetlistSelected() {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     auto selectedFacets = guiGeom->GetSelectedFacets();
     //facetList->SetSelectedRows(selection,nbSelected,true);
     if (selectedFacets.size() > 1000) {
@@ -2398,7 +2398,7 @@ bool Interface::AskToSave() {
 }
 
 void Interface::CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder) {
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (guiGeom->IsLoaded()) {
         try {
             if (AskToReset()) {
@@ -2443,7 +2443,7 @@ void Interface::SaveFileAs() {
 
 void Interface::ExportTextures(int grouping, int mode) {
 
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
     if (guiGeom->GetNbSelectedFacets() == 0) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
@@ -2491,7 +2491,7 @@ void Interface::DoEvents(bool forced) {
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
     if (work->globalStatCache.globalHits.nbMCHit > 0 || work->IsRunning()) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
-        int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
+        int rep = GLMessageBox::Display("This will reset simulation data.", "InterfaceGeometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
             ResetSimulation(false);
@@ -2502,7 +2502,7 @@ bool Interface::AskToReset(Worker *work) {
 
 int Interface::FrameMove() {
     char tmp[256];
-    Geometry *guiGeom = worker.GetGeometry();
+    InterfaceGeometry *guiGeom = worker.GetGeometry();
 
     bool runningState = worker.IsRunning();
 

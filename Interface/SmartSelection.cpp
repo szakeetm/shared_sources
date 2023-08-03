@@ -51,7 +51,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-SmartSelection::SmartSelection(Geometry *g,Worker *w):GLWindow() {
+SmartSelection::SmartSelection(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 270;
 	int hD = 125;
@@ -115,7 +115,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 		if (src==analyzeButton) {
 			if (!isRunning) {
 				if (!guiGeom->IsLoaded()) {
-					GLMessageBox::Display("Geometry not loaded yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display("InterfaceGeometry not loaded yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				analyzeButton->SetText("Stop analyzing");

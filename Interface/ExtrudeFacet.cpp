@@ -49,10 +49,10 @@ extern SynRad*mApp;
 
 /**
 * \brief Constructor with initialisation for the ExtrudeFacet window (Facet/Extrude)
-* \param g pointer to the Geometry
+* \param g pointer to the InterfaceGeometry
 * \param w Worker handle
 */
-ExtrudeFacet::ExtrudeFacet(Geometry *g, Worker *w) :GLWindow() {
+ExtrudeFacet::ExtrudeFacet(InterfaceGeometry *g, Worker *w) :GLWindow() {
 
 	int wD = 315;
 	int hD = 595;
