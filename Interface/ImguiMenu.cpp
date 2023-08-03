@@ -773,7 +773,7 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {}
 
     ImGui::Separator();
-    if (ImGui::MenuItem("Triangulate InterfaceGeometry")) {}
+    if (ImGui::MenuItem("Triangulate Geometry")) {}
 }
 
 // TODO: Only in Molflow

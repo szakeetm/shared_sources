@@ -2060,7 +2060,7 @@ void InterfaceGeometry::MoveSelectedVertex(double dX, double dY, double dZ, bool
 			}
 		}
 		if (!copy) {
-            InitializeGeometry(); //InterfaceGeometry changed
+            InitializeGeometry(); //Geometry changed
             InitializeInterfaceGeometry();
 		}
 	}

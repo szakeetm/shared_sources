@@ -115,7 +115,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 		if (src==analyzeButton) {
 			if (!isRunning) {
 				if (!interfGeom->IsLoaded()) {
-					GLMessageBox::Display("InterfaceGeometry not loaded yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
+					GLMessageBox::Display("Geometry not loaded yet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				analyzeButton->SetText("Stop analyzing");

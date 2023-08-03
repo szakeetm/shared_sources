@@ -226,7 +226,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			interfGeom->RemoveFacets(newlyCreatedList);
 			interfGeom->RestoreFacets(deletedFacetList,false); //Restore to original position
 		} else {
-			int answer = GLMessageBox::Display("InterfaceGeometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
+			int answer = GLMessageBox::Display("Geometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 			interfGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 		}
 		deletedFacetList.clear();

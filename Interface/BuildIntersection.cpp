@@ -123,7 +123,7 @@ void BuildIntersection::ProcessMessage(GLComponent *src, int message) {
 				interfGeom->RestoreFacets(deletedFacetList, false); //Restore to original position
 			}
 			else {
-				int answer = GLMessageBox::Display("InterfaceGeometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
+				int answer = GLMessageBox::Display("Geometry changed since intersecting, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 				if (answer == GLDLG_OK) interfGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 				else return;
 			}

@@ -214,7 +214,7 @@ private:
   void Stop();
   void InnerStop(float appTime);
 
-  // InterfaceGeometry handle
+  // Geometry handle
 #if defined(MOLFLOW)
   MolflowGeometry* interfGeom;
 

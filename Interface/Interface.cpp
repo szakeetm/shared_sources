@@ -809,8 +809,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Quick Pipe", MENU_QUICKPIPE, SDLK_q, ALT_MODIFIER);
 
     menu->GetSubMenu("Test")->Add(nullptr);
-    menu->GetSubMenu("Test")->Add("Triangulate InterfaceGeometry", MENU_TRIANGULATE);
-    menu->GetSubMenu("Test")->Add("Analyze InterfaceGeometry", MENU_ANALYZE);
+    menu->GetSubMenu("Test")->Add("Triangulate Geometry", MENU_TRIANGULATE);
+    menu->GetSubMenu("Test")->Add("Analyze Geometry", MENU_ANALYZE);
     menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     menu->GetSubMenu("Test")->Add(nullptr);
@@ -1565,7 +1565,7 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_TRIANGULATE: {
                     auto selectedFacets = interfGeom->GetSelectedFacets();
                     if (selectedFacets.empty()) return true;
-                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "InterfaceGeometry change",
+                    int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change",
                                                     GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
                     if (rep == GLDLG_OK) {
                         if (AskToReset()) {
@@ -2491,7 +2491,7 @@ void Interface::DoEvents(bool forced) {
 bool Interface::AskToReset(Worker *work) {
     if (work == nullptr) work = &worker;
     if (work->globalStatCache.globalHits.nbMCHit > 0 || work->IsRunning()) { //If running, maybe scene auto-update is disabled, so nbMCHit stays 0.
-        int rep = GLMessageBox::Display("This will reset simulation data.", "InterfaceGeometry change", GLDLG_OK | GLDLG_CANCEL,
+        int rep = GLMessageBox::Display("This will reset simulation data.", "Geometry change", GLDLG_OK | GLDLG_CANCEL,
                                         GLDLG_ICONWARNING);
         if (rep == GLDLG_OK) {
             ResetSimulation(false);

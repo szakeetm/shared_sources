@@ -145,7 +145,7 @@ public:
     virtual double GetOpacityAt(SimulationFacet *f, double time) const {return -1.0;};
     virtual double GetStickingAt(SimulationFacet *f, double time) const {return -1.0;};
 
-    // InterfaceGeometry Description
+    // Geometry Description
     std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry. Using shared pointer makes copying a model efficient
 
     std::vector<SuperStructure> structures;
@@ -158,7 +158,7 @@ public:
     OntheflySimulationParams otfParams;
     WorkerParams wp;
 
-    // InterfaceGeometry Properties
+    // Geometry Properties
     GeomProperties sh;
 
     bool initialized = false;

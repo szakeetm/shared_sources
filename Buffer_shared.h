@@ -143,7 +143,7 @@ public:
 	bool   isTextured;   // texture
 	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
-						 // InterfaceGeometry
+						 // Geometry
 	size_t nbIndex;   // Number of index/vertex
 	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
@@ -245,7 +245,7 @@ public:
 			CEREAL_NVP(isTextured),   // texture
 			CEREAL_NVP(isVolatile),   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
-							  // InterfaceGeometry
+							  // Geometry
 			CEREAL_NVP(nbIndex),   // Number of index/vertex
 			//CEREAL_NVP(sign),      // Facet vertex rotation (see Facet::DetectOrientation())
 
