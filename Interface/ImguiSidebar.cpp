@@ -109,9 +109,9 @@ namespace {
 
 // Sidebar containing 3d viewer settings, facet settings and simulation data
 #if defined(MOLFLOW)
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, MolFlow *mApp, Geometry *guiGeom, bool *show_global, bool *newViewer) {
 #else
-void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *guiGeom, bool *show_global, bool *newViewer) {
 #endif
     const float PAD = 10.0f;
     static int corner = 0;
@@ -219,11 +219,11 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
         }
 
         std::string title;
-        if(geom->GetNbSelectedFacets() > 1) {
-            title = fmt::format("Selected Facet ({} selected)", geom->GetNbSelectedFacets());
+        if(guiGeom->GetNbSelectedFacets() > 1) {
+            title = fmt::format("Selected Facet ({} selected)", guiGeom->GetNbSelectedFacets());
         }
-        else if(geom->GetNbSelectedFacets() == 1){
-            title = fmt::format("Selected Facet (#{})", geom->GetSelectedFacets().front());
+        else if(guiGeom->GetNbSelectedFacets() == 1){
+            title = fmt::format("Selected Facet (#{})", guiGeom->GetSelectedFacets().front());
         }
         else {
             title = fmt::format("Selected Facet (none)");
@@ -231,8 +231,8 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
         if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
-            size_t selected_facet_id = geom->GetNbSelectedFacets() ? geom->GetSelectedFacets().front() : 0;
-            auto sel = geom->GetNbSelectedFacets() ? geom->GetFacet(selected_facet_id) : nullptr;
+            size_t selected_facet_id = guiGeom->GetNbSelectedFacets() ? guiGeom->GetSelectedFacets().front() : 0;
+            auto sel = guiGeom->GetNbSelectedFacets() ? guiGeom->GetFacet(selected_facet_id) : nullptr;
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
                 static int des_idx = 0;
@@ -463,15 +463,15 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
 
         try {
             // Facet list
-            if (geom->IsLoaded()) {
+            if (guiGeom->IsLoaded()) {
                 // TODO: Colors for moment highlighting
 
                 // Create item list that is sortable etc.
                 static ImVector<FacetData> items;
-                if (items.Size != geom->GetNbFacet()) {
-                    items.resize(geom->GetNbFacet(), FacetData());
+                if (items.Size != guiGeom->GetNbFacet()) {
+                    items.resize(guiGeom->GetNbFacet(), FacetData());
                     for (int n = 0; n < items.Size; n++) {
-                        InterfaceFacet *f = geom->GetFacet(n);
+                        InterfaceFacet *f = guiGeom->GetFacet(n);
                         FacetData &item = items[n];
                         item.ID = n;
                         item.hits = f->facetHitCache.nbMCHit;
@@ -481,7 +481,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, Geometry *geom, bool *show_globa
                 }
                 else if (mApp->worker.IsRunning()){
                     for (int n = 0; n < items.Size; n++) {
-                        InterfaceFacet *f = geom->GetFacet(n);
+                        InterfaceFacet *f = guiGeom->GetFacet(n);
                         FacetData &item = items[n];
                         item.hits = f->facetHitCache.nbMCHit;
                         item.des = f->facetHitCache.nbDesorbed;

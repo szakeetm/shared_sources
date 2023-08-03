@@ -49,7 +49,7 @@ public:
 
 private:
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
   GLTitledPanel *globalSettingsPanel, *facetSettingsPanel;

@@ -173,7 +173,7 @@ SelectFacetByResult::SelectFacetByResult(Worker *w) :GLWindow() {
 	RestoreDeviceObjects();
 
 	work = w;
-	geom = w->GetGeometry();
+	guiGeom = w->GetGeometry();
 }
 
 void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
@@ -288,11 +288,11 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 		}
 		#endif
 
-		if (src==selectButton) geom->UnselectAll();
+		if (src==selectButton) guiGeom->UnselectAll();
 		//Form valid, let's do the work
-		size_t nbFacet = geom->GetNbFacet();
+		size_t nbFacet = guiGeom->GetNbFacet();
 		for (size_t i=0;i<nbFacet;i++) {
-			InterfaceFacet* f=geom->GetFacet(i);
+			InterfaceFacet* f=guiGeom->GetFacet(i);
 			bool match=true;
 			if (do_hitLess) match = match && (f->facetHitCache.nbMCHit<hitLess);
 			if (do_hitMore) match = match && (f->facetHitCache.nbMCHit>hitMore);
@@ -310,7 +310,7 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 			#endif
 			if (match) f->selected = (src!=remSelectButton);
 		}
-		geom->UpdateSelection();
+		guiGeom->UpdateSelection();
 		mApp->UpdateFacetParams(true);
 		mApp->UpdateFacetlistSelected();
 	}

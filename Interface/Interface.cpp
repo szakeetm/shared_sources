@@ -248,7 +248,7 @@ void Interface::ResetSimulation(bool askConfirm) {
 
 void Interface::UpdateStructMenu() {
 
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
     structMenu->Clear();
     structMenu->Add("New structure...", MENU_VIEW_NEWSTRUCT);
@@ -259,15 +259,15 @@ void Interface::UpdateStructMenu() {
     structMenu->Add("Show next", MENU_VIEW_NEXTSTRUCT, SDLK_F12, CTRL_MODIFIER);
     structMenu->Add(nullptr); //Separator
 
-    for (int i = 0; i < geom->GetNbStructure(); i++) {
-        std::string label = fmt::format("Show #{} ({})", i + 1, geom->GetStructureName(i));
+    for (int i = 0; i < guiGeom->GetNbStructure(); i++) {
+        std::string label = fmt::format("Show #{} ({})", i + 1, guiGeom->GetStructureName(i));
         if (i < 10)
             structMenu->Add(label, MENU_VIEW_STRUCTURE + (i + 1), SDLK_F1 + i + 1, CTRL_MODIFIER);
         else
             structMenu->Add(label, MENU_VIEW_STRUCTURE + (i + 1));
     }
 
-    structMenu->SetCheck(MENU_VIEW_STRUCTURE + geom->viewStruct + 1, true);
+    structMenu->SetCheck(MENU_VIEW_STRUCTURE + guiGeom->viewStruct + 1, true);
 
     UpdateTitle();
 }
@@ -276,16 +276,16 @@ void Interface::UpdateTitle() {
 
     std::string title;
 
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
-    if (!geom->IsLoaded()) {
+    if (!guiGeom->IsLoaded()) {
         title = appTitle;
     } else {
-        if (geom->viewStruct < 0) {
+        if (guiGeom->viewStruct < 0) {
             title = appTitle + " [" + worker.GetCurrentShortFileName() + "]";
         } else {
             title = appTitle + " [" + worker.GetCurrentShortFileName() + ": Struct #" +
-                    std::to_string(geom->viewStruct + 1) + " " + geom->GetStructureName(geom->viewStruct) + "]";
+                    std::to_string(guiGeom->viewStruct + 1) + " " + guiGeom->GetStructureName(guiGeom->viewStruct) + "]";
         }
     }
 
@@ -304,18 +304,18 @@ void Interface::LoadSelection(const char *fName) {
 
     try {
 
-        Geometry *geom = worker.GetGeometry();
-        geom->UnselectAll();
-        size_t nbFacet = geom->GetNbFacet();
+        Geometry *guiGeom = worker.GetGeometry();
+        guiGeom->UnselectAll();
+        size_t nbFacet = guiGeom->GetNbFacet();
 
         {
             auto file = FileReader(fileName);
             while (!file.IsEof()) {
                 int s = file.ReadInt();
-                if (s >= 0 && s < nbFacet) geom->SelectFacet(s);
+                if (s >= 0 && s < nbFacet) guiGeom->SelectFacet(s);
             }
         }
-        geom->UpdateSelection();
+        guiGeom->UpdateSelection();
 
         UpdateFacetParams(true);
     }
@@ -331,8 +331,8 @@ void Interface::LoadSelection(const char *fName) {
 
 void Interface::SaveSelection() {
 
-    Geometry *geom = worker.GetGeometry();
-    if (geom->GetNbSelectedFacets() == 0) return;
+    Geometry *guiGeom = worker.GetGeometry();
+    if (guiGeom->GetNbSelectedFacets() == 0) return;
     auto prg = GLProgress_GUI("Saving file", "Please wait");
     prg.SetVisible(true);
     //GLWindowManager::Repaint();
@@ -347,10 +347,10 @@ void Interface::SaveSelection() {
             if (FileUtils::GetExtension(fileName).empty()) fileName = fileName + ".sel";
 
             auto file = FileWriter(fileName);
-            //int nbSelected = geom->GetNbSelectedFacets();
-            size_t nbFacet = geom->GetNbFacet();
+            //int nbSelected = guiGeom->GetNbSelectedFacets();
+            size_t nbFacet = guiGeom->GetNbFacet();
             for (size_t i = 0; i < nbFacet; i++) {
-                if (geom->GetFacet(i)->selected) file.Write(i, "\n");
+                if (guiGeom->GetFacet(i)->selected) file.Write(i, "\n");
             }
 
         }
@@ -366,8 +366,8 @@ void Interface::SaveSelection() {
 
 void Interface::ExportSelection() {
 
-    Geometry *geom = worker.GetGeometry();
-    if (geom->GetNbSelectedFacets() == 0) {
+    Geometry *guiGeom = worker.GetGeometry();
+    if (guiGeom->GetNbSelectedFacets() == 0) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -400,22 +400,22 @@ void Interface::ExportSelection() {
 
 void Interface::UpdateModelParams() {
 
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char tmp[256];
     double sumArea = 0;
-    facetList->SetSize(cSize, geom->GetNbFacet(), false, "Clearing facet hit list...");
+    facetList->SetSize(cSize, guiGeom->GetNbFacet(), false, "Clearing facet hit list...");
     facetList->SetColumnWidths((int *) cWidth);
     facetList->SetColumnLabels((const char **) cName);
     UpdateFacetHits(true);
     UpdateFacetlistSelected();
-    AxisAlignedBoundingBox bb = geom->GetBB();
+    AxisAlignedBoundingBox bb = guiGeom->GetBB();
 
-    for (int i = 0; i < geom->GetNbFacet(); i++) {
-        InterfaceFacet *f = geom->GetFacet(i);
+    for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
+        InterfaceFacet *f = guiGeom->GetFacet(i);
         if (f->sh.area > 0) sumArea += f->GetArea();
     }
 
-    sprintf(tmp, "V:%zd F:%zd Dim:(%g,%g,%g) Area:%g", geom->GetNbVertex(), geom->GetNbFacet(),
+    sprintf(tmp, "V:%zd F:%zd Dim:(%g,%g,%g) Area:%g", guiGeom->GetNbVertex(), guiGeom->GetNbFacet(),
             (bb.max.x - bb.min.x), (bb.max.y - bb.min.y), (bb.max.z - bb.min.z), sumArea);
     geomNumber->SetText(tmp);
 
@@ -977,8 +977,8 @@ void Interface::OneTimeSceneInit_shared_post() {
 }
 
 int Interface::RestoreDeviceObjects_shared() {
-    Geometry *geom = worker.GetGeometry();
-    geom->RestoreDeviceObjects();
+    Geometry *guiGeom = worker.GetGeometry();
+    guiGeom->RestoreDeviceObjects();
     //worker.Update(0.0f);
 
     // Restore dialog which are not displayed
@@ -1020,8 +1020,8 @@ int Interface::RestoreDeviceObjects_shared() {
 }
 
 int Interface::InvalidateDeviceObjects_shared() {
-    Geometry *geom = worker.GetGeometry();
-    geom->InvalidateDeviceObjects();
+    Geometry *guiGeom = worker.GetGeometry();
+    guiGeom->InvalidateDeviceObjects();
     //worker.Update(0.0f);
 
     // Restore dialog which are not displayed
@@ -1063,7 +1063,7 @@ int Interface::InvalidateDeviceObjects_shared() {
 }
 
 bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char tmp[128];
 
     switch (message) {
@@ -1084,19 +1084,19 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                     return true;
                 case MENU_FILE_INSERTGEO:
-                    if (geom->IsLoaded()) {
+                    if (guiGeom->IsLoaded()) {
                         if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(false,"");
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_INSERTGEO_NEWSTR:
-                    if (geom->IsLoaded()) {
+                    if (guiGeom->IsLoaded()) {
                         if (worker.IsRunning()) worker.Stop_Public();
                         InsertGeometry(true, "");
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_SAVEAS:
-                    if (geom->IsLoaded()) {
+                    if (guiGeom->IsLoaded()) {
                         SaveFileAs();
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
@@ -1104,7 +1104,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     ExportSelection();
                     return true;
                 case MENU_FILE_SAVE:
-                    if (geom->IsLoaded()) SaveFile();
+                    if (guiGeom->IsLoaded()) SaveFile();
                     else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FILE_EXIT:
@@ -1118,7 +1118,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         return true;*/
 
                 case MENU_TOOLS_FORMULAEDITOR:
-                    if (!geom->IsLoaded()) {
+                    if (!guiGeom->IsLoaded()) {
                         GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                         return true;
                     }
@@ -1136,9 +1136,9 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                 case MENU_TOOLS_HISTOGRAMSETTINGS:
                     if (!histogramSettings || !histogramSettings->IsVisible()) {
                         SAFE_DELETE(histogramSettings);
-                        histogramSettings = new HistogramSettings(geom, &worker);
+                        histogramSettings = new HistogramSettings(guiGeom, &worker);
                     }
-                    histogramSettings->Refresh(geom->GetSelectedFacets());
+                    histogramSettings->Refresh(guiGeom->GetSelectedFacets());
                     histogramSettings->SetVisible(true);
                     return true;
                 case MENU_TOOLS_HISTOGRAMPLOTTER:
@@ -1165,7 +1165,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                 case MENU_TOOLS_PARTICLELOGGER:
                     if (!particleLogger || !particleLogger->IsVisible()) {
                         SAFE_DELETE(particleLogger);
-                        particleLogger = new ParticleLogger(geom, &worker);
+                        particleLogger = new ParticleLogger(guiGeom, &worker);
                     }
                     particleLogger->UpdateStatus();
                     particleLogger->SetVisible(true);
@@ -1212,20 +1212,20 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     return true;
                 }
                 case MENU_FACET_COLLAPSE:
-                    if (geom->IsLoaded()) {
+                    if (guiGeom->IsLoaded()) {
                         DisplayCollapseDialog();
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FACET_SWAPNORMAL:
                     if (AskToReset()) {
-                        geom->SwapNormal();
+                        guiGeom->SwapNormal();
                         // Send to sub process
                         worker.MarkToReload();
                     }
                     return true;
                 case MENU_FACET_REVERTFLIP:
                     if (AskToReset()) {
-                        geom->RevertFlippedNormals();
+                        guiGeom->RevertFlippedNormals();
                         // Send to sub process
                         worker.MarkToReload();
                     }
@@ -1233,14 +1233,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                 case MENU_FACET_EXTRUDE:
                     if (!extrudeFacet || !extrudeFacet->IsVisible()) {
                         SAFE_DELETE(extrudeFacet);
-                        extrudeFacet = new ExtrudeFacet(geom, &worker);
+                        extrudeFacet = new ExtrudeFacet(guiGeom, &worker);
                     }
                     extrudeFacet->SetVisible(true);
                     return true;
 
                 case MENU_FACET_SHIFTVERTEX:
                     if (AskToReset()) {
-                        geom->ShiftVertex();
+                        guiGeom->ShiftVertex();
                         // Send to sub process
                         worker.MarkToReload();
                     }
@@ -1253,35 +1253,35 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                 case MENU_FACET_MOVE:
                     if (!moveFacet || !moveFacet->IsVisible()) {
                         SAFE_DELETE(moveFacet);
-                        moveFacet = new MoveFacet(geom, &worker);
+                        moveFacet = new MoveFacet(guiGeom, &worker);
                     }
                     moveFacet->SetVisible(true);
                     return true;
                 case MENU_FACET_SCALE:
-                    if (geom->IsLoaded()) {
-                        if (!scaleFacet) scaleFacet = new ScaleFacet(geom, &worker);
+                    if (guiGeom->IsLoaded()) {
+                        if (!scaleFacet) scaleFacet = new ScaleFacet(guiGeom, &worker);
 
                         scaleFacet->SetVisible(true);
 
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_FACET_MIRROR:
-                    if (!mirrorFacet) mirrorFacet = new MirrorFacet(geom, &worker);
+                    if (!mirrorFacet) mirrorFacet = new MirrorFacet(guiGeom, &worker);
                     mirrorFacet->SetVisible(true);
                     return true;
                 case MENU_FACET_SPLIT:
                     if (!splitFacet || !splitFacet->IsVisible()) {
                         SAFE_DELETE(splitFacet);
-                        splitFacet = new SplitFacet(geom, &worker);
+                        splitFacet = new SplitFacet(guiGeom, &worker);
                         splitFacet->SetVisible(true);
                     }
                     return true;
                 case MENU_FACET_ROTATE:
-                    if (!rotateFacet) rotateFacet = new RotateFacet(geom, &worker);
+                    if (!rotateFacet) rotateFacet = new RotateFacet(guiGeom, &worker);
                     rotateFacet->SetVisible(true);
                     return true;
                 case MENU_FACET_ALIGN:
-                    if (!alignFacet) alignFacet = new AlignFacet(geom, &worker);
+                    if (!alignFacet) alignFacet = new AlignFacet(guiGeom, &worker);
                     alignFacet->MemorizeSelection();
                     alignFacet->SetVisible(true);
                     return true;
@@ -1292,7 +1292,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                         if (AskToReset()) {
                             int err;
                             try {
-                                err = geom->ExplodeSelected();
+                                err = guiGeom->ExplodeSelected();
                             }
                             catch (const std::exception &e) {
                                 GLMessageBox::Display(e.what(), "Error exploding", GLDLG_OK, GLDLG_ICONERROR);
@@ -1314,7 +1314,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                     return true;
                 case MENU_FACET_CREATESHAPE:
-                    if (!createShape) createShape = new CreateShape(geom, &worker);
+                    if (!createShape) createShape = new CreateShape(guiGeom, &worker);
                     createShape->SetVisible(true);
                     return true;
                 case MENU_SELECTION_SMARTSELECTION:
@@ -1322,43 +1322,43 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     smartSelection->SetVisible(true);
                     return true;
                 case MENU_FACET_SELECTALL:
-                    geom->SelectAll();
+                    guiGeom->SelectAll();
                     UpdateFacetParams(true);
                     return true;
                 case MENU_FACET_SELECTTRANS:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
                         if (
 #if defined(MOLFLOW)
-geom->GetFacet(i)->sh.opacity_paramId != -1 ||
+guiGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
 #endif
-(geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+(guiGeom->GetFacet(i)->sh.opacity != 1.0 && guiGeom->GetFacet(i)->sh.opacity != 2.0))
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 case MENU_FACET_SELECT2SIDE:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->sh.is2sided)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        if (guiGeom->GetFacet(i)->sh.is2sided)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 case MENU_FACET_SELECTTEXT:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->sh.isTextured)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        if (guiGeom->GetFacet(i)->sh.isTextured)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 case MENU_FACET_SELECTPROF:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->sh.isProfile)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        if (guiGeom->GetFacet(i)->sh.isProfile)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
@@ -1371,60 +1371,60 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         return true;
                     }
-                    geom->UnselectAll();
-                    std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacetIds(planarityThreshold);
+                    guiGeom->UnselectAll();
+                    std::vector<size_t> nonPlanarFacetids = guiGeom->GetNonPlanarFacetIds(planarityThreshold);
                     for (const auto &i : nonPlanarFacetids)
-                        geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                        guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 }
                 case MENU_FACET_SELECTERR:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-                        if (geom->GetFacet(i)->nonSimple)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                        if (guiGeom->GetFacet(i)->nonSimple)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
                 case MENU_FACET_SELECTDEST:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-                        if (geom->GetFacet(i)->sh.superDest != 0)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                        if (guiGeom->GetFacet(i)->sh.superDest != 0)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
                 case MENU_FACET_SELECTTELEPORT:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-                        if (geom->GetFacet(i)->sh.teleportDest != 0)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                        if (guiGeom->GetFacet(i)->sh.teleportDest != 0)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
                 case MENU_FACET_SELECTABS:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++) {
-                        if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
-                            geom->SelectFacet(i);
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
+                        if (guiGeom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
+                            guiGeom->SelectFacet(i);
                     }
-                    geom->UpdateSelection();
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
                 case MENU_FACET_SELECTHITS:
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        if (guiGeom->GetFacet(i)->facetHitCache.nbMCHit > 0)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
 
@@ -1437,12 +1437,12 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         return true;
                     }
-                    geom->UnselectAll();
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                            geom->GetFacet(i)->sh.area >= largeAreaThreshold)
-                            geom->SelectFacet(i);
-                    geom->UpdateSelection();
+                    guiGeom->UnselectAll();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        if (guiGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
+                            guiGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                            guiGeom->SelectFacet(i);
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 }
@@ -1451,9 +1451,9 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     selectFacetByResult->SetVisible(true);
                     return true;
                 case MENU_FACET_INVERTSEL:
-                    for (int i = 0; i < geom->GetNbFacet(); i++)
-                        geom->GetFacet(i)->selected = !geom->GetFacet(i)->selected;
-                    geom->UpdateSelection();
+                    for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                        guiGeom->GetFacet(i)->selected = !guiGeom->GetFacet(i)->selected;
+                    guiGeom->UpdateSelection();
                     UpdateFacetParams(true);
                     return true;
                 case MENU_SELECTION_SELECTFACETNUMBER:
@@ -1486,25 +1486,25 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     }
                     return true;
                 case MENU_VERTEX_UNSELECTALL:
-                    geom->UnselectAllVertex();
+                    guiGeom->UnselectAllVertex();
                     return true;
                 case MENU_VERTEX_SELECTALL:
-                    geom->SelectAllVertex();
+                    guiGeom->SelectAllVertex();
                     return true;
                 case MENU_VERTEX_SELECT_ISOLATED:
-                    geom->SelectIsolatedVertices();
+                    guiGeom->SelectIsolatedVertices();
                     return true;
                 case MENU_VERTEX_CLEAR_ISOLATED:
-                    geom->DeleteIsolatedVertices(false);
+                    guiGeom->DeleteIsolatedVertices(false);
                     UpdateModelParams();
                     if (facetCoordinates) facetCoordinates->UpdateFromSelection();
                     if (vertexCoordinates) vertexCoordinates->Update();
-                    geom->BuildGLList();
+                    guiGeom->BuildGLList();
                     return true;
                 case MENU_VERTEX_CREATE_POLY_CONVEX:
                     if (AskToReset()) {
                         try {
-                            geom->CreatePolyFromVertices_Convex();
+                            guiGeom->CreatePolyFromVertices_Convex();
                         }
                         catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
@@ -1515,7 +1515,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_VERTEX_CREATE_POLY_ORDER:
                     if (AskToReset()) {
                         try {
-                            geom->CreatePolyFromVertices_Order();
+                            guiGeom->CreatePolyFromVertices_Order();
                         }
                         catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error creating polygon", GLDLG_OK, GLDLG_ICONERROR);
@@ -1542,13 +1542,13 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     CreateOfTwoFacets(Clipper2Lib::ClipType::Xor);
                     return true;
                 case MENU_FACET_LOFT:
-                    if (geom->GetNbSelectedFacets() != 2) {
+                    if (guiGeom->GetNbSelectedFacets() != 2) {
                         GLMessageBox::Display("Select exactly 2 facets", "Can't create loft", GLDLG_OK,
                                               GLDLG_ICONERROR);
                         return true;
                     }
                     if (AskToReset()) {
-                        geom->CreateLoft();
+                        guiGeom->CreateLoft();
                     }
                     worker.MarkToReload();
                     UpdateModelParams();
@@ -1558,12 +1558,12 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 case MENU_FACET_INTERSECT:
                     if (!buildIntersection || !buildIntersection->IsVisible()) {
                         SAFE_DELETE(buildIntersection);
-                        buildIntersection = new BuildIntersection(geom, &worker);
+                        buildIntersection = new BuildIntersection(guiGeom, &worker);
                         buildIntersection->SetVisible(true);
                     }
                     return true;
                 case MENU_FACET_TRIANGULATE: {
-                    auto selectedFacets = geom->GetSelectedFacets();
+                    auto selectedFacets = guiGeom->GetSelectedFacets();
                     if (selectedFacets.empty()) return true;
                     int rep = GLMessageBox::Display("Triangulation can't be undone. Are you sure?", "Geometry change",
                                                     GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
@@ -1571,7 +1571,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         if (AskToReset()) {
                             auto prg = GLProgress_GUI("Triangulating", "Triangulating");
                             prg.SetVisible(true);
-                            GeometryTools::PolygonsToTriangles(geom, selectedFacets, prg);
+                            GeometryTools::PolygonsToTriangles(guiGeom, selectedFacets, prg);
                         }
                     }
                     worker.MarkToReload();
@@ -1582,8 +1582,8 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                 }
                 case MENU_VERTEX_SELECT_COPLANAR:
                     char *input;
-                    if (geom->IsLoaded()) {
-                        if (geom->GetNbSelectedVertex() != 3) {
+                    if (guiGeom->IsLoaded()) {
+                        if (guiGeom->GetNbSelectedVertex() != 3) {
                             GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK,
                                                   GLDLG_ICONERROR);
                             return true;
@@ -1604,25 +1604,25 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_MOVE:
-                    if (geom->IsLoaded()) {
-                        if (!moveVertex) moveVertex = new MoveVertex(geom, &worker);
+                    if (guiGeom->IsLoaded()) {
+                        if (!moveVertex) moveVertex = new MoveVertex(guiGeom, &worker);
 
                         moveVertex->SetVisible(true);
 
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_SCALE:
-                    if (geom->IsLoaded()) {
-                        if (!scaleVertex) scaleVertex = new ScaleVertex(geom, &worker);
+                    if (guiGeom->IsLoaded()) {
+                        if (!scaleVertex) scaleVertex = new ScaleVertex(guiGeom, &worker);
                         scaleVertex->SetVisible(true);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
                 case MENU_VERTEX_MIRROR:
-                    if (!mirrorVertex) mirrorVertex = new MirrorVertex(geom, &worker);
+                    if (!mirrorVertex) mirrorVertex = new MirrorVertex(guiGeom, &worker);
                     mirrorVertex->SetVisible(true);
                     return true;
                 case MENU_VERTEX_ROTATE:
-                    if (!rotateVertex) rotateVertex = new RotateVertex(geom, &worker);
+                    if (!rotateVertex) rotateVertex = new RotateVertex(guiGeom, &worker);
                     rotateVertex->SetVisible(true);
                     return true;
 
@@ -1633,8 +1633,8 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
                     return true;
 
                 case MENU_VERTEX_ADD:
-                    if (geom->IsLoaded()) {
-                        if (!addVertex) addVertex = new AddVertex(geom, &worker);
+                    if (guiGeom->IsLoaded()) {
+                        if (!addVertex) addVertex = new AddVertex(guiGeom, &worker);
                         addVertex->SetVisible(true);
                     } else GLMessageBox::Display("No geometry loaded.", "No geometry", GLDLG_OK, GLDLG_ICONERROR);
                     return true;
@@ -1807,9 +1807,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
                 // Show structure menu
             else if (src->GetId() >= MENU_VIEW_STRUCTURE &&
-                     src->GetId() <= MENU_VIEW_STRUCTURE + geom->GetNbStructure()) {
-                geom->viewStruct = src->GetId() - MENU_VIEW_STRUCTURE - 1;
-                if (src->GetId() > MENU_VIEW_STRUCTURE) geom->UnselectAll();
+                     src->GetId() <= MENU_VIEW_STRUCTURE + guiGeom->GetNbStructure()) {
+                guiGeom->viewStruct = src->GetId() - MENU_VIEW_STRUCTURE - 1;
+                if (src->GetId() > MENU_VIEW_STRUCTURE) guiGeom->UnselectAll();
                 UpdateStructMenu();
                 return true;
             } else if (src->GetId() == MENU_VIEW_NEWSTRUCT) {
@@ -1827,16 +1827,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 return true;
             }
             else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {
-                if (geom->viewStruct == -1) geom->viewStruct = geom->GetNbStructure() - 1;
+                if (guiGeom->viewStruct == -1) guiGeom->viewStruct = guiGeom->GetNbStructure() - 1;
                 else
-                    geom->viewStruct = (int)Previous(geom->viewStruct, geom->GetNbStructure());
-                geom->UnselectAll();
+                    guiGeom->viewStruct = (int)Previous(guiGeom->viewStruct, guiGeom->GetNbStructure());
+                guiGeom->UnselectAll();
                 UpdateStructMenu();
                 return true;
             }
             else if (src->GetId() == MENU_VIEW_NEXTSTRUCT) {
-                geom->viewStruct = (int) Next(geom->viewStruct, geom->GetNbStructure());
-                geom->UnselectAll();
+                guiGeom->viewStruct = (int) Next(guiGeom->viewStruct, guiGeom->GetNbStructure());
+                guiGeom->UnselectAll();
                 UpdateStructMenu();
                 return true;
             }
@@ -1897,12 +1897,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
             //LIST --------------------------------------------------------------------
         case MSG_LIST:
-            if (src == facetList && geom->IsLoaded()) {
+            if (src == facetList && guiGeom->IsLoaded()) {
                 auto selRows = facetList->GetSelectedRows(true);
-                geom->UnselectAll();
+                guiGeom->UnselectAll();
                 for (auto &sel:selRows)
-                    geom->SelectFacet(sel);
-                geom->UpdateSelection();
+                    guiGeom->SelectFacet(sel);
+                guiGeom->UpdateSelection();
                 UpdateFacetParams(false);
                 return true;
             }
@@ -1933,9 +1933,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             }
 
             if (!needsMesh && neededMesh) { //We just disabled mesh
-                geom->ClearFacetMeshLists();
+                guiGeom->ClearFacetMeshLists();
             } else if (needsMesh && !neededMesh) { //We just enabled mesh
-                geom->BuildFacetMeshLists();
+                guiGeom->BuildFacetMeshLists();
             }
 
             return true;
@@ -2005,8 +2005,8 @@ void Interface::SelectView(int v) {
 }
 
 void Interface::SelectSelection(size_t v) {
-    Geometry *geom = worker.GetGeometry();
-    geom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
+    Geometry *guiGeom = worker.GetGeometry();
+    guiGeom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
                        viewer[0]->GetWindow()->IsCtrlDown());
     idSelection = v;
 }
@@ -2056,12 +2056,12 @@ void Interface::ClearAllSelections() {
 }
 
 void Interface::OverWriteSelection(size_t idOvr) {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char *selectionName = GLInputBox::GetInput(selections[idOvr].name.c_str(), "Selection name",
                                                "Enter selection name");
     if (!selectionName) return;
 
-    selections[idOvr].facetIds = geom->GetSelectedFacets();
+    selections[idOvr].facetIds = guiGeom->GetSelectedFacets();
     selections[idOvr].name = selectionName;
     RebuildSelectionMenus();
 }
@@ -2126,7 +2126,7 @@ void Interface::ClearAllViews() {
 }
 
 void Interface::OverWriteView(int idOvr) {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char *viewName = GLInputBox::GetInput(views[idOvr].name.c_str(), "View name", "Enter view name");
     if (!viewName) return;
 
@@ -2136,7 +2136,7 @@ void Interface::OverWriteView(int idOvr) {
 }
 
 void Interface::AddView() {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char tmp[32];
     sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
@@ -2193,19 +2193,19 @@ void Interface::UpdateRecentMenu() {
 }
 
 void Interface::AddStruct() {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     char tmp[32];
-    sprintf(tmp, "Structure #%zd", geom->GetNbStructure() + 1);
+    sprintf(tmp, "Structure #%zd", guiGeom->GetNbStructure() + 1);
     char *structName = GLInputBox::GetInput(tmp, "Structure name", "Enter name of new structure");
     if (!structName) return;
-    geom->AddStruct(structName);
+    guiGeom->AddStruct(structName);
     // Send to sub process
     worker.MarkToReload();
 }
 
 void Interface::DeleteStruct() {
-    Geometry *geom = worker.GetGeometry();
-    if (geom->GetNbStructure() <= 1) {
+    Geometry *guiGeom = worker.GetGeometry();
+    if (guiGeom->GetNbStructure() <= 1) {
         GLMessageBox::Display("At least one structure needs to remain.");
         return;
     }
@@ -2216,13 +2216,13 @@ void Interface::DeleteStruct() {
         GLMessageBox::Display("Invalid structure number. Can't parse");
         return;
     }
-    if (structNumInt < 1 || structNumInt > geom->GetNbStructure()) {
+    if (structNumInt < 1 || structNumInt > guiGeom->GetNbStructure()) {
         GLMessageBox::Display("This structure doesn't exist.");
         return;
     }
     bool hasFacets = false;
-    for (int i = 0; i < geom->GetNbFacet() && !hasFacets; i++) {
-        if (geom->GetFacet(i)->sh.superIdx == (structNumInt - 1)) hasFacets = true;
+    for (int i = 0; i < guiGeom->GetNbFacet() && !hasFacets; i++) {
+        if (guiGeom->GetFacet(i)->sh.superIdx == (structNumInt - 1)) hasFacets = true;
     }
     if (hasFacets) {
         int rep = GLMessageBox::Display("This structure has facets. They will be deleted with the structure.",
@@ -2230,15 +2230,15 @@ void Interface::DeleteStruct() {
         if (rep != GLDLG_OK) return;
     }
     if (!AskToReset()) return;
-    geom->DelStruct(structNumInt - 1);
+    guiGeom->DelStruct(structNumInt - 1);
     // Send to sub process
     worker.MarkToReload();
 }
 
 void Interface::DisplayCollapseDialog() {
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
     if (!collapseSettings) collapseSettings = new CollapseSettings();
-    collapseSettings->SetGeometry(geom, &worker);
+    collapseSettings->SetGeometry(guiGeom, &worker);
     collapseSettings->SetVisible(true);
 }
 
@@ -2348,8 +2348,8 @@ int Interface::Resize(size_t width, size_t height, bool forceWindowed) {
 }
 
 void Interface::UpdateFacetlistSelected() {
-    Geometry *geom = worker.GetGeometry();
-    auto selectedFacets = geom->GetSelectedFacets();
+    Geometry *guiGeom = worker.GetGeometry();
+    auto selectedFacets = guiGeom->GetSelectedFacets();
     //facetList->SetSelectedRows(selection,nbSelected,true);
     if (selectedFacets.size() > 1000) {
         facetList->ReOrder();
@@ -2398,12 +2398,12 @@ bool Interface::AskToSave() {
 }
 
 void Interface::CreateOfTwoFacets(Clipper2Lib::ClipType type, int reverseOrder) {
-    Geometry *geom = worker.GetGeometry();
-    if (geom->IsLoaded()) {
+    Geometry *guiGeom = worker.GetGeometry();
+    if (guiGeom->IsLoaded()) {
         try {
             if (AskToReset()) {
-                //geom->CreateDifference();
-                geom->ClipSelectedPolygons(type, reverseOrder);
+                //guiGeom->CreateDifference();
+                guiGeom->ClipSelectedPolygons(type, reverseOrder);
             }
         }
         catch (const std::exception &e) {
@@ -2443,8 +2443,8 @@ void Interface::SaveFileAs() {
 
 void Interface::ExportTextures(int grouping, int mode) {
 
-    Geometry *geom = worker.GetGeometry();
-    if (geom->GetNbSelectedFacets() == 0) {
+    Geometry *guiGeom = worker.GetGeometry();
+    if (guiGeom->GetNbSelectedFacets() == 0) {
         GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
         return;
     }
@@ -2502,13 +2502,13 @@ bool Interface::AskToReset(Worker *work) {
 
 int Interface::FrameMove() {
     char tmp[256];
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
     bool runningState = worker.IsRunning();
 
     //Autosave routines
     bool timeForAutoSave = false;
-    if (geom->IsLoaded()) {
+    if (guiGeom->IsLoaded()) {
         if (autoSaveSimuOnly) {
             if (runningState) {
                 if (((worker.simuTimer.Elapsed()) - lastSaveTimeSimu) >=

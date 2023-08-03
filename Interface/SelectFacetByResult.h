@@ -51,7 +51,7 @@ public:
 	SelectFacetByResult(Worker *w);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
   GLButton
 	  *selectButton,

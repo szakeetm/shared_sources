@@ -131,28 +131,28 @@ CollapseSettings::CollapseSettings():GLWindow() {
 	RestoreDeviceObjects();
 
 	isRunning = false;
-	geom = NULL;
+	guiGeom = NULL;
 
 }
 
 /**
 * \brief Constructor with initialisation for the CollapseSettings window (Facet/Collapse)
-* \param geom geometry used for the settings
+* \param guiGeom geometry used for the settings
 * \brief w Worker handle
 */
-void CollapseSettings::SetGeometry(Geometry *geom,Worker *w) {
+void CollapseSettings::SetGeometry(Geometry *guiGeom,Worker *w) {
 
 	char tmp[512];
 
-	this->geom = geom;
+	this->guiGeom = guiGeom;
 	work = w;
 
-	nbVertexS = geom->GetNbVertex();
-	nbFacetS = geom->GetNbFacet();
-	nbFacetSS = geom->GetNbSelectedFacets();
+	nbVertexS = guiGeom->GetNbVertex();
+	nbFacetS = guiGeom->GetNbFacet();
+	nbFacetSS = guiGeom->GetNbSelectedFacets();
 
 	sprintf(tmp,"Selected: %zd\nVertex:    %zd\nFacet:     %zd",
-		geom->GetNbSelectedFacets(),geom->GetNbVertex(),geom->GetNbFacet());
+		guiGeom->GetNbSelectedFacets(),guiGeom->GetNbVertex(),guiGeom->GetNbFacet());
 	resultLabel->SetText(tmp);
 
 }
@@ -203,15 +203,15 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				((GLButton*)src)->SetText("Stop collapse");
 				isRunning = true;
 
-				geom->Collapse(vT, fT, lT, maxVertex, (src == goSelectedButton), work,prg);
+				guiGeom->Collapse(vT, fT, lT, maxVertex, (src == goSelectedButton), work,prg);
 
 				if (src == goButton) goButton->SetText("Collapse");
 				else if (src == goSelectedButton) goSelectedButton->SetText("Collapse selected");
 				isRunning = false;
 
-				geom->CheckCollinear();
-				//geom->CheckNonSimple();
-				geom->CheckIsolatedVertex();
+				guiGeom->CheckCollinear();
+				//guiGeom->CheckNonSimple();
+				guiGeom->CheckIsolatedVertex();
 
 				mApp->UpdateModelParams();
 				if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
@@ -231,7 +231,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 				// Update result
 				char tmp[512];
 				sprintf(tmp, "Selected: %zd\nVertex:    %zd/%zd\nFacet:    %zd/%zd\n\nLast action: Collapse all",
-					geom->GetNbSelectedFacets(), geom->GetNbVertex(), nbVertexS, geom->GetNbFacet(), nbFacetS);
+					guiGeom->GetNbSelectedFacets(), guiGeom->GetNbVertex(), nbVertexS, guiGeom->GetNbFacet(), nbFacetS);
 				resultLabel->SetText(tmp);
 
 				GLWindowManager::FullRepaint();

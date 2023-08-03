@@ -120,7 +120,7 @@ AlignFacet::AlignFacet(Geometry *g,Worker *w):GLWindow() {
 
 	RestoreDeviceObjects();
 
-	geom = g;
+	guiGeom = g;
 	work = w;
 
 }
@@ -144,7 +144,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				GLMessageBox::Display("No facets memorized","Nothing to align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
-			auto appSelectedFacets = geom->GetSelectedFacets();
+			auto appSelectedFacets = guiGeom->GetSelectedFacets();
 			if (appSelectedFacets.size()!=2) {
 				GLMessageBox::Display("Two facets (source and destination) must be selected","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
@@ -180,7 +180,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 
-			if (geom->GetNbSelectedVertex()!=4) {
+			if (guiGeom->GetNbSelectedVertex()!=4) {
 				GLMessageBox::Display("4 vertices must be selected: two on source and two on destination facets","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 				return;
 			}
@@ -189,12 +189,12 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			anchorSourceVertexId=anchorDestVertexId=dirSourceVertexId=dirDestVertexId=-1;
 
 			//find source anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(sourceFacetId)->sh.nbIndex;j++) {
-				if (geom->GetVertex(geom->GetFacet(sourceFacetId)->indices[j])->selected) {
+			for (int j=0;j<guiGeom->GetFacet(sourceFacetId)->sh.nbIndex;j++) {
+				if (guiGeom->GetVertex(guiGeom->GetFacet(sourceFacetId)->indices[j])->selected) {
 					if (anchorSourceVertexId==-1 && dirSourceVertexId==-1) {
-						anchorSourceVertexId=(int)geom->GetFacet(sourceFacetId)->indices[j];
+						anchorSourceVertexId=(int)guiGeom->GetFacet(sourceFacetId)->indices[j];
 					} else if (dirSourceVertexId==-1) {
-						dirSourceVertexId=(int)geom->GetFacet(sourceFacetId)->indices[j];
+						dirSourceVertexId=(int)guiGeom->GetFacet(sourceFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the source facet. Two must be on the destination.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
@@ -208,12 +208,12 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 
 			//find destination anchor and dir vertex
-			for (int j=0;j<geom->GetFacet(destFacetId)->sh.nbIndex;j++) {
-				if (geom->GetVertex(geom->GetFacet(destFacetId)->indices[j])->selected) {
+			for (int j=0;j<guiGeom->GetFacet(destFacetId)->sh.nbIndex;j++) {
+				if (guiGeom->GetVertex(guiGeom->GetFacet(destFacetId)->indices[j])->selected) {
 					if (anchorDestVertexId==-1 && dirDestVertexId==-1) {
-						anchorDestVertexId=(int)geom->GetFacet(destFacetId)->indices[j];
+						anchorDestVertexId=(int)guiGeom->GetFacet(destFacetId)->indices[j];
 					} else if (dirDestVertexId==-1) {
-						dirDestVertexId=(int)geom->GetFacet(destFacetId)->indices[j];
+						dirDestVertexId=(int)guiGeom->GetFacet(destFacetId)->indices[j];
 					} else {
 						GLMessageBox::Display("More than two selected vertices are on the destination facet. Two must be on the source.","Can't align",GLDLG_OK,GLDLG_ICONERROR);
 						return;
@@ -227,7 +227,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 
 			if (mApp->AskToReset()){
-				geom->AlignFacets(memorizedSelection,sourceFacetId, destFacetId,anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,
+				guiGeom->AlignFacets(memorizedSelection,sourceFacetId, destFacetId,anchorSourceVertexId,anchorDestVertexId,dirSourceVertexId,
 dirDestVertexId,
 					invertNormal->GetState(),invertDir1->GetState(),invertDir2->GetState(),src==copyButton,work);
 				#if defined(MOLFLOW)
@@ -244,13 +244,13 @@ dirDestVertexId,
 		} else if (src==undoButton) {
 			if (!mApp->AskToReset(work)) return;
 			for (size_t i=0;i<memorizedSelection.size();i++) {
-				InterfaceFacet *f=geom->GetFacet(memorizedSelection[i]);
+				InterfaceFacet *f=guiGeom->GetFacet(memorizedSelection[i]);
 				for (size_t j=0;j<f->sh.nbIndex;j++) {
-					geom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
+					guiGeom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
 				}
 			}
-			geom->InitializeGeometry();
-            geom->InitializeInterfaceGeometry();
+			guiGeom->InitializeGeometry();
+            guiGeom->InitializeInterfaceGeometry();
 			work->MarkToReload();			 
 			mApp->UpdateFacetlistSelected();	
 			mApp->UpdateViewers();
@@ -265,12 +265,12 @@ dirDestVertexId,
 * \brief Memorises current facet selection for the align process
 */
 void AlignFacet::MemorizeSelection() {
-	memorizedSelection = geom->GetSelectedFacets();
+	memorizedSelection = guiGeom->GetSelectedFacets();
 	oriPositions.clear();
 	for (auto& sel : memorizedSelection) {
 		std::vector<Vector3d> op;
-		for (size_t ind = 0; ind < geom->GetFacet(sel)->sh.nbIndex; ind++)
-			op.push_back(*geom->GetVertex(geom->GetFacet(sel)->indices[ind]));
+		for (size_t ind = 0; ind < guiGeom->GetFacet(sel)->sh.nbIndex; ind++)
+			op.push_back(*guiGeom->GetVertex(guiGeom->GetFacet(sel)->indices[ind]));
 		oriPositions.push_back(op);
 	}
 	std::stringstream msg;

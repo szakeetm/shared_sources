@@ -215,7 +215,7 @@ RotateVertex::RotateVertex(Geometry *g, Worker *w) :GLWindow() {
 
 	RestoreDeviceObjects();
 
-	geom = g;
+	guiGeom = g;
 	work = w;
 	axisMode = -1;
 }
@@ -237,7 +237,7 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == moveButton || src == copyButton) {
-			if (geom->GetNbSelectedVertex() == 0) {
+			if (guiGeom->GetNbSelectedVertex() == 0) {
 				GLMessageBox::Display("No vertices selected", "Nothing to rotate", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -264,53 +264,53 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 				break;
 			case FACETUMODE:
 			{
-				if (geom->GetNbSelectedFacets() != 1) {
+				if (guiGeom->GetNbSelectedFacets() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				int selFacetId = -1;
-				for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-					if (geom->GetFacet(i)->selected) {
+				for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
+					if (guiGeom->GetFacet(i)->selected) {
 						selFacetId = i;
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->sh.O;
-				AXIS_DIR = geom->GetFacet(selFacetId)->sh.U;
+				AXIS_P0 = guiGeom->GetFacet(selFacetId)->sh.O;
+				AXIS_DIR = guiGeom->GetFacet(selFacetId)->sh.U;
 				break;
 			}
 			case FACETVMODE:
 			{
-				if (geom->GetNbSelectedFacets() != 1) {
+				if (guiGeom->GetNbSelectedFacets() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				int selFacetId = -1;
-				for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-					if (geom->GetFacet(i)->selected) {
+				for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
+					if (guiGeom->GetFacet(i)->selected) {
 						selFacetId = i;
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->sh.O;
-				AXIS_DIR = geom->GetFacet(selFacetId)->sh.V;
+				AXIS_P0 = guiGeom->GetFacet(selFacetId)->sh.O;
+				AXIS_DIR = guiGeom->GetFacet(selFacetId)->sh.V;
 				break;
 			}
 			case FACETNMODE:
 			{
-				if (geom->GetNbSelectedFacets() != 1) {
+				if (guiGeom->GetNbSelectedFacets() != 1) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				int selFacetId = -1;
-				for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-					if (geom->GetFacet(i)->selected) {
+				for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
+					if (guiGeom->GetFacet(i)->selected) {
 						selFacetId = i;
 					}
 				}
 
-				AXIS_P0 = geom->GetFacet(selFacetId)->sh.center;
-				AXIS_DIR = geom->GetFacet(selFacetId)->sh.N;
+				AXIS_P0 = guiGeom->GetFacet(selFacetId)->sh.center;
+				AXIS_DIR = guiGeom->GetFacet(selFacetId)->sh.N;
 				break;
 			}
 			case EQMODE:
@@ -354,30 +354,30 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			if (mApp->AskToReset()) {
 				if (work->IsRunning()) work->Stop_Public();
 
-				geom->RotateSelectedVertices(AXIS_P0, AXIS_DIR, rad, src == copyButton, work);
+				guiGeom->RotateSelectedVertices(AXIS_P0, AXIS_DIR, rad, src == copyButton, work);
 				work->MarkToReload();
 				mApp->changedSinceSave = true;
 			}
 		}
 		else if (src == getBaseVertexButton) {
-			if (geom->GetNbSelectedVertex() != 1) {
+			if (guiGeom->GetNbSelectedVertex() != 1) {
 				GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			UpdateToggle(l8);
 			int selVertexId = -1;
-			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->GetVertex(i)->selected) {
+			for (int i = 0; selVertexId == -1 && i < guiGeom->GetNbVertex(); i++) {
+				if (guiGeom->GetVertex(i)->selected) {
 					selVertexId = i;
 				}
 			}
-			Vector3d *selVertex = geom->GetVertex(selVertexId);
+			Vector3d *selVertex = guiGeom->GetVertex(selVertexId);
 			aText->SetText(selVertex->x);
 			bText->SetText(selVertex->y);
 			cText->SetText(selVertex->z);
 		}
 		else if (src == getDirVertexButton) {
-			if (geom->GetNbSelectedVertex() != 1) {
+			if (guiGeom->GetNbSelectedVertex() != 1) {
 				GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -395,12 +395,12 @@ void RotateVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 			UpdateToggle(l8);
 			int selVertexId = -1;
-			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->GetVertex(i)->selected) {
+			for (int i = 0; selVertexId == -1 && i < guiGeom->GetNbVertex(); i++) {
+				if (guiGeom->GetVertex(i)->selected) {
 					selVertexId = i;
 				}
 			}
-			Vector3d *selVertex = geom->GetVertex(selVertexId);
+			Vector3d *selVertex = guiGeom->GetVertex(selVertexId);
 			uText->SetText(selVertex->x - a);
 			vText->SetText(selVertex->y - b);
 			wText->SetText(selVertex->z - c);

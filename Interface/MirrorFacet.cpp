@@ -169,7 +169,7 @@ MirrorFacet::MirrorFacet(Geometry *g, Worker *w) :GLWindow() {
 
 	RestoreDeviceObjects();
 
-	geom = g;
+	guiGeom = g;
 	work = w;
 	planeMode = -1;
 }
@@ -197,7 +197,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == mirrorButton || src == mirrorCopyButton || src == projectButton || src == projectCopyButton) {
-			if (geom->GetNbSelectedFacets() == 0) {
+			if (guiGeom->GetNbSelectedFacets() == 0) {
 				GLMessageBox::Display("No facets selected", "Nothing to mirror", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -219,16 +219,16 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 				N.x = 1.0; N.y = 0.0; N.z = 0.0;
 				break;
 			case FACETNMODE:
-				if (!(facetNumber->GetNumberInt(&facetNum)) || facetNum<1 || facetNum>geom->GetNbFacet()) {
+				if (!(facetNumber->GetNumberInt(&facetNum)) || facetNum<1 || facetNum>guiGeom->GetNbFacet()) {
 					GLMessageBox::Display("Invalid facet number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				P0 = *geom->GetVertex(geom->GetFacet(facetNum - 1)->indices[0]);
-				N = geom->GetFacet(facetNum - 1)->sh.N;
+				P0 = *guiGeom->GetVertex(guiGeom->GetFacet(facetNum - 1)->indices[0]);
+				N = guiGeom->GetFacet(facetNum - 1)->sh.N;
 				break;
 			case THREEVERTEXMODE:
 			{
-				if (geom->GetNbSelectedVertex() != 3) {
+				if (guiGeom->GetNbSelectedVertex() != 3) {
 					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
@@ -236,8 +236,8 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 				int v2Id = -1;
 				int v3Id = -1;
 
-				for (int i = 0; v3Id == -1 && i < geom->GetNbVertex(); i++) {
-					if (geom->GetVertex(i)->selected) {
+				for (int i = 0; v3Id == -1 && i < guiGeom->GetNbVertex(); i++) {
+					if (guiGeom->GetVertex(i)->selected) {
 						if (v1Id == -1) v1Id = i;
 						else if (v2Id == -1) v2Id = i;
 						else v3Id = i;
@@ -245,8 +245,8 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 				}
 
 				Vector3d U2, V2, N2;
-				U2 = (*geom->GetVertex(v1Id) - *geom->GetVertex(v2Id)).Normalized();
-				V2 = (*geom->GetVertex(v1Id) - *geom->GetVertex(v3Id)).Normalized();
+				U2 = (*guiGeom->GetVertex(v1Id) - *guiGeom->GetVertex(v2Id)).Normalized();
+				V2 = (*guiGeom->GetVertex(v1Id) - *guiGeom->GetVertex(v3Id)).Normalized();
 				N2 = CrossProduct(V2, U2);
 				nN2 = N2.Norme();
 				if (nN2 < 1e-8) {
@@ -255,7 +255,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 				}
 				N2 = 1.0 / nN2 * N2; // Normalize N2
 				N = N2;
-				P0 = *geom->GetVertex(v1Id);
+				P0 = *guiGeom->GetVertex(v1Id);
 				break;
 			}
 			case ABCDMODE:
@@ -291,7 +291,7 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 			
 			if (mApp->AskToReset()) {
-				undoPoints = geom->MirrorProjectSelectedFacets(P0, N,
+				undoPoints = guiGeom->MirrorProjectSelectedFacets(P0, N,
 					(src == projectButton) || (src == projectCopyButton),
 					(src == mirrorCopyButton) || (src == projectCopyButton), work);
 				undoProjectButton->SetEnabled(src == projectButton);
@@ -303,13 +303,13 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 		}
 		else if (src == getSelFacetButton) {
-			if (geom->GetNbSelectedFacets() != 1) {
+			if (guiGeom->GetNbSelectedFacets() != 1) {
 				GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			int selFacetId = -1;
-			for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-				if (geom->GetFacet(i)->selected) {
+			for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
+				if (guiGeom->GetFacet(i)->selected) {
 					selFacetId = i;
 				}
 			}
@@ -319,13 +319,13 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == undoProjectButton) {
 			if (!mApp->AskToReset(work)) return;
 			for (UndoPoint oriPoint : undoPoints) {
-				if (oriPoint.oriId < geom->GetNbVertex()) geom->GetVertex(oriPoint.oriId)->SetLocation(oriPoint.oriPos);
+				if (oriPoint.oriId < guiGeom->GetNbVertex()) guiGeom->GetVertex(oriPoint.oriId)->SetLocation(oriPoint.oriPos);
 			}
 			undoProjectButton->SetEnabled(false);
-			geom->InitializeGeometry();
-            geom->InitializeInterfaceGeometry();
+			guiGeom->InitializeGeometry();
+            guiGeom->InitializeInterfaceGeometry();
             //for(int i=0;i<nbSelected;i++)
-			//	geom->SetFacetTexture(selection[i],geom->GetFacet(selection[i])->tRatio,geom->GetFacet(selection[i])->hasMesh);	
+			//	guiGeom->SetFacetTexture(selection[i],guiGeom->GetFacet(selection[i])->tRatio,guiGeom->GetFacet(selection[i])->hasMesh);	
 			work->MarkToReload();
 			mApp->UpdateFacetlistSelected();
 			mApp->UpdateViewers();

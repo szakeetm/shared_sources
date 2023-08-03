@@ -211,11 +211,11 @@ private:
 
   // Geometry handle
 #if defined(MOLFLOW)
-  MolflowGeometry *geom;
+  MolflowGeometry *guiGeom;
 
 #endif
 #if defined(SYNRAD)
-  SynradGeometry *geom;
+  SynradGeometry *guiGeom;
   Dataport *dpMat;
 #endif
 

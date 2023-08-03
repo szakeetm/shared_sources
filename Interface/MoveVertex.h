@@ -35,14 +35,14 @@ class MoveVertex : public GLWindow {
 public:
 
 	// Construction
-	MoveVertex(Geometry *geom, Worker *work);
+	MoveVertex(Geometry *guiGeom, Worker *work);
 
 	// Implementation
 	void ProcessMessage(GLComponent *src, int message);
 
 private:
 
-	Geometry     *geom;
+	Geometry     *guiGeom;
 	Worker	   *work;
 
 	GLToggle	*offsetCheckbox;

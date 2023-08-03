@@ -35,14 +35,14 @@ class AddVertex : public GLWindow {
 public:
 
   // Construction
-  AddVertex(Geometry *geom,Worker *work);
+  AddVertex(Geometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
   GLButton    *addButton;

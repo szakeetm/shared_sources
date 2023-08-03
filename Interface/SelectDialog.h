@@ -38,7 +38,7 @@ public:
 private:
  
 	GLButton * selButton, *addButton, *remButton;
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
   GLTextField *numText;
 };

@@ -35,14 +35,14 @@ class MoveFacet : public GLWindow {
 public:
 
   // Construction
-  MoveFacet(Geometry *geom,Worker *work);
+  MoveFacet(Geometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
   GLToggle	*offsetCheckbox;

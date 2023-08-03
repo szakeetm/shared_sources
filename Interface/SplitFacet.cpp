@@ -146,7 +146,7 @@ SplitFacet::SplitFacet(Geometry *g,Worker *w):GLWindow() {
   resultLabel->SetText("");
   undoButton->SetEnabled(false);
   planeMode = -1;
-  geom = g;
+  guiGeom = g;
   work = w;
 
 }
@@ -204,13 +204,13 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		EnableDisableControls(planeMode);
 	}
 	else if (src == getSelectedFacetButton) {
-		if (geom->GetNbSelectedFacets() != 1) {
+		if (guiGeom->GetNbSelectedFacets() != 1) {
 			GLMessageBox::Display("Select exactly one facet.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 			return;
 		}
 		int selFacetId = -1;
-		for (int i = 0; selFacetId == -1 && i < geom->GetNbFacet(); i++) {
-			if (geom->GetFacet(i)->selected) {
+		for (int i = 0; selFacetId == -1 && i < guiGeom->GetNbFacet(); i++) {
+			if (guiGeom->GetFacet(i)->selected) {
 				selFacetId = i;
 			}
 		}
@@ -218,16 +218,16 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		EnableDisableControls(planeMode = FACET_MODE);
 	}
     else if(src==undoButton) {
-		if (nbFacet == geom->GetNbFacet()) { //Assume no change since the split operation
+		if (nbFacet == guiGeom->GetNbFacet()) { //Assume no change since the split operation
 			std::vector<size_t> newlyCreatedList;
-			for (size_t index = (geom->GetNbFacet() - nbCreated);index < geom->GetNbFacet();index++) {
+			for (size_t index = (guiGeom->GetNbFacet() - nbCreated);index < guiGeom->GetNbFacet();index++) {
 				newlyCreatedList.push_back(index);
 			}
-			geom->RemoveFacets(newlyCreatedList);
-			geom->RestoreFacets(deletedFacetList,false); //Restore to original position
+			guiGeom->RemoveFacets(newlyCreatedList);
+			guiGeom->RestoreFacets(deletedFacetList,false); //Restore to original position
 		} else {
 			int answer = GLMessageBox::Display("Geometry changed since split, restore to end without deleting the newly created facets?", "Split undo", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
-			geom->RestoreFacets(deletedFacetList, true); //Restore to end
+			guiGeom->RestoreFacets(deletedFacetList, true); //Restore to end
 		}
 		deletedFacetList.clear();
 		undoButton->SetEnabled(false);
@@ -238,7 +238,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		mApp->UpdateFacetlistSelected();
 		mApp->UpdateViewers();
     } else if (src==splitButton) {
-		if (geom->GetNbSelectedFacets()==0) {
+		if (guiGeom->GetNbSelectedFacets()==0) {
 			GLMessageBox::Display("No facets selected","Nothing to split",GLDLG_OK,GLDLG_ICONERROR);
 			return;
 		}
@@ -248,23 +248,23 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 
 			switch (planeMode) {
 			case FACET_MODE:
-				if( !(facetIdTextbox->GetNumberInt(&facetNum))||facetNum<1||facetNum>geom->GetNbFacet() ) {
+				if( !(facetIdTextbox->GetNumberInt(&facetNum))||facetNum<1||facetNum>guiGeom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
 				}
-				P0=*geom->GetVertex(geom->GetFacet(facetNum-1)->indices[0]);
-				N=geom->GetFacet(facetNum-1)->sh.N;
+				P0=*guiGeom->GetVertex(guiGeom->GetFacet(facetNum-1)->indices[0]);
+				N=guiGeom->GetFacet(facetNum-1)->sh.N;
 				break;
 			case VERTEX_MODE:
 			{
-				auto selectedVertexIds = geom->GetSelectedVertices();
+				auto selectedVertexIds = guiGeom->GetSelectedVertices();
 				if (selectedVertexIds.size() != 3) {
 					GLMessageBox::Display("Select exactly 3 vertices", "Can't define plane", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 
-				Vector3d U2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[1])).Normalized();
-				Vector3d V2 = (*geom->GetVertex(selectedVertexIds[0]) - *geom->GetVertex(selectedVertexIds[2])).Normalized();
+				Vector3d U2 = (*guiGeom->GetVertex(selectedVertexIds[0]) - *guiGeom->GetVertex(selectedVertexIds[1])).Normalized();
+				Vector3d V2 = (*guiGeom->GetVertex(selectedVertexIds[0]) - *guiGeom->GetVertex(selectedVertexIds[2])).Normalized();
 				Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
 				nN2 = N2.Norme();
 				if (nN2 < 1e-8) {
@@ -273,7 +273,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				}
 				; // Normalize N2
 				N = N2*(1.0 / nN2);
-				P0 = *(geom->GetVertex(selectedVertexIds[0]));
+				P0 = *(guiGeom->GetVertex(selectedVertexIds[0]));
 				break;
 			}
 			case PLANEEQ_MODE:
@@ -312,8 +312,8 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				
 				ClearUndoFacets();
 				nbCreated = 0;
-				deletedFacetList=geom->SplitSelectedFacets(P0, N, &nbCreated,prg);
-				nbFacet = geom->GetNbFacet();
+				deletedFacetList=guiGeom->SplitSelectedFacets(P0, N, &nbCreated,prg);
+				nbFacet = guiGeom->GetNbFacet();
 				std::stringstream tmp;
 				tmp << deletedFacetList.size() << " facets split, creating " << nbCreated <<" new.";
 				resultLabel->SetText(tmp.str().c_str());

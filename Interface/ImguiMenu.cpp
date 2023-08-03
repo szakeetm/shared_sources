@@ -160,7 +160,7 @@ static void ShowMenuFile(int& openedMenu, bool &askToSave) {
 static void ShowFileModals(int& openedMenu) {
 
     Worker &worker = mApp->worker;
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
     if(openedMenu & IMENU_FILE_NEW){
         if (worker.IsRunning())
@@ -177,7 +177,7 @@ static void ShowFileModals(int& openedMenu) {
     }
     else if(openedMenu & IMENU_FILE_INSERTGEO){
         static bool openWarning = false;
-        if (geom->IsLoaded()) {
+        if (guiGeom->IsLoaded()) {
             if (worker.IsRunning())
                 worker.Stop_Public();
             mApp->InsertGeometry(false,"");
@@ -198,7 +198,7 @@ static void ShowFileModals(int& openedMenu) {
     }
     else if(openedMenu & IMENU_FILE_INSERTGEO_NEWSTR){
         static bool openWarning = false;
-        if (geom->IsLoaded()) {
+        if (guiGeom->IsLoaded()) {
             if (worker.IsRunning())
                 worker.Stop_Public();
             mApp->InsertGeometry(true,"");
@@ -219,7 +219,7 @@ static void ShowFileModals(int& openedMenu) {
     }
     else if(openedMenu & IMENU_FILE_SAVE){
         static bool openWarning = false;
-        if (geom->IsLoaded()) {
+        if (guiGeom->IsLoaded()) {
             mApp->SaveFile();
         }
         else {
@@ -238,7 +238,7 @@ static void ShowFileModals(int& openedMenu) {
     }
     else if(openedMenu & IMENU_FILE_SAVEAS){
         static bool openWarning = false;
-        if (geom->IsLoaded()) {
+        if (guiGeom->IsLoaded()) {
             mApp->SaveFileAs();
         }
         else {
@@ -263,7 +263,7 @@ static void ShowFileModals(int& openedMenu) {
 static void ShowSelectionModals() {
 
     Worker &worker = mApp->worker;
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -277,12 +277,12 @@ static void ShowSelectionModals() {
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
-            geom->UnselectAll();
-            for (int i = 0; i < geom->GetNbFacet(); i++)
-                if (geom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                    geom->GetFacet(i)->sh.area >= largeAreaThreshold)
-                    geom->SelectFacet(i);
-            geom->UpdateSelection();
+            guiGeom->UnselectAll();
+            for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+                if (guiGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
+                    guiGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                    guiGeom->SelectFacet(i);
+            guiGeom->UpdateSelection();
             mApp->UpdateFacetParams(true);
             ImGui::CloseCurrentPopup();
         }
@@ -307,11 +307,11 @@ static void ShowSelectionModals() {
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
-            geom->UnselectAll();
-            std::vector<size_t> nonPlanarFacetids = geom->GetNonPlanarFacetIds(planarityThreshold);
+            guiGeom->UnselectAll();
+            std::vector<size_t> nonPlanarFacetids = guiGeom->GetNonPlanarFacetIds(planarityThreshold);
             for (const auto &i : nonPlanarFacetids)
-                geom->SelectFacet(i);
-            geom->UpdateSelection();
+                guiGeom->SelectFacet(i);
+            guiGeom->UpdateSelection();
             mApp->UpdateFacetParams(true);
             ImGui::CloseCurrentPopup();
         }
@@ -392,7 +392,7 @@ static void ShowMenuSelection(std::string& openModalName) {
 
 
     Worker &worker = mApp->worker;
-    Geometry *geom = worker.GetGeometry();
+    Geometry *guiGeom = worker.GetGeometry();
 
     if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
         if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
@@ -400,7 +400,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select All Facets", "CTRL+A")) {
-        geom->SelectAll();
+        guiGeom->SelectAll();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select by Facet Number...", "ALT+N")) {
@@ -411,43 +411,43 @@ static void ShowMenuSelection(std::string& openModalName) {
 #if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Sticking", "")) {
         // TODO: Different for Synrad?
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.sticking_paramId != -1 ||
-                (geom->GetFacet(i)->sh.sticking != 0.0 && !geom->GetFacet(i)->IsTXTLinkFacet()))
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.sticking_paramId != -1 ||
+                (guiGeom->GetFacet(i)->sh.sticking != 0.0 && !guiGeom->GetFacet(i)->IsTXTLinkFacet()))
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
 #endif
 
     if (ImGui::MenuItem("Select Transparent", "")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
             if (
 #if defined(MOLFLOW)
-geom->GetFacet(i)->sh.opacity_paramId != -1 ||
+guiGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
 #endif
-(geom->GetFacet(i)->sh.opacity != 1.0 && geom->GetFacet(i)->sh.opacity != 2.0))
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+(guiGeom->GetFacet(i)->sh.opacity != 1.0 && guiGeom->GetFacet(i)->sh.opacity != 2.0))
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
 
     if (ImGui::MenuItem("Select 2 sided")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.is2sided)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.is2sided)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select Texture")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.isTextured)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.isTextured)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select by Texture type...")) {
@@ -455,30 +455,30 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
         selectTextureType->SetVisible(true);
     }
     if (ImGui::MenuItem("Select Profile")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.isProfile)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.isProfile)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
 
     ImGui::Separator();
     if (ImGui::MenuItem("Select Abs > 0")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++) {
-            if (geom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
-                geom->SelectFacet(i);
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
+            if (guiGeom->GetFacet(i)->facetHitCache.nbAbsEquiv > 0)
+                guiGeom->SelectFacet(i);
         }
-        geom->UpdateSelection();
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select Hit > 0")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->facetHitCache.nbMCHit > 0)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->facetHitCache.nbMCHit > 0)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select large with no hits...")) {
@@ -490,42 +490,42 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select link facets")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-            if (geom->GetFacet(i)->sh.superDest != 0)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+            if (guiGeom->GetFacet(i)->sh.superDest != 0)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select teleport facets")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-            if (geom->GetFacet(i)->sh.teleportDest != 0)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+            if (guiGeom->GetFacet(i)->sh.teleportDest != 0)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select non planar facets")) {
         openModalName="Select non planar facets";
     }
     if (ImGui::MenuItem("Select non simple facets")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
 
-            if (geom->GetFacet(i)->nonSimple)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+            if (guiGeom->GetFacet(i)->nonSimple)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     //if(ImGui::MenuItem(nullptr) {} // Separator
     //if(ImGui::MenuItem("Load selection",MENU_FACET_LOADSEL) {}
     //if(ImGui::MenuItem("Save selection",MENU_FACET_SAVESEL) {}
     if (ImGui::MenuItem("Invert selection", "CTRL+I")) {
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            geom->GetFacet(i)->selected = !geom->GetFacet(i)->selected;
-        geom->UpdateSelection();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            guiGeom->GetFacet(i)->selected = !guiGeom->GetFacet(i)->selected;
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     ImGui::Separator();
@@ -547,7 +547,7 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
 
                     if (strcmp(selectionName, "") != 0) return;
                     if (ImGui::Button("OK", ImVec2(120, 0))) {
-                        mApp->selections[i].selection = geom->GetSelectedFacets();
+                        mApp->selections[i].selection = guiGeom->GetSelectedFacets();
                         mApp->selections[i].name = selectionName;
                         ImGui::CloseCurrentPopup();
                     }
@@ -618,39 +618,39 @@ geom->GetFacet(i)->sh.opacity_paramId != -1 ||
     // TODO: Extract Molflow only entries
 #if defined(MOLFLOW)
     if (ImGui::MenuItem("Select Desorption")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.desorbType != DES_NONE)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.desorbType != DES_NONE)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select Outgassing Map")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->hasOutgassingFile)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->hasOutgassingFile)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select Reflective")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++) {
-            InterfaceFacet *f = geom->GetFacet(i);
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++) {
+            InterfaceFacet *f = guiGeom->GetFacet(i);
             if (f->sh.desorbType == DES_NONE && f->sh.sticking == 0.0 && f->sh.opacity > 0.0)
-                geom->SelectFacet(i);
+                guiGeom->SelectFacet(i);
         }
-        geom->UpdateSelection();
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
 #endif
 
     if (ImGui::MenuItem("Select volatile facets")) {
-        geom->UnselectAll();
-        for (int i = 0; i < geom->GetNbFacet(); i++)
-            if (geom->GetFacet(i)->sh.isVolatile)
-                geom->SelectFacet(i);
-        geom->UpdateSelection();
+        guiGeom->UnselectAll();
+        for (int i = 0; i < guiGeom->GetNbFacet(); i++)
+            if (guiGeom->GetFacet(i)->sh.isVolatile)
+                guiGeom->SelectFacet(i);
+        guiGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
 

@@ -191,7 +191,7 @@ ScaleVertex::ScaleVertex(Geometry *g,Worker *w):GLWindow() {
 
 	RestoreDeviceObjects();
 
-	geom = g;
+	guiGeom = g;
 	work = w;
 
 }
@@ -214,21 +214,21 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 
 		}
 		else if (src == getSelVertexButton) {
-			if (geom->GetNbSelectedVertex() != 1) {
+			if (guiGeom->GetNbSelectedVertex() != 1) {
 				GLMessageBox::Display("Select exactly one vertex.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			UpdateToggle(l2);
 			int selVertexId = -1;
-			for (int i = 0; selVertexId == -1 && i < geom->GetNbVertex(); i++) {
-				if (geom->GetVertex(i)->selected) {
+			for (int i = 0; selVertexId == -1 && i < guiGeom->GetNbVertex(); i++) {
+				if (guiGeom->GetVertex(i)->selected) {
 					selVertexId = i;
 				}
 			}
 			vertexNumber->SetText(selVertexId + 1);
 		}
 		else if (src == scaleButton || src == copyButton) {
-			if (geom->GetNbSelectedVertex() == 0) {
+			if (guiGeom->GetNbSelectedVertex() == 0) {
 				GLMessageBox::Display("No vertices selected", "Nothing to scale", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
@@ -255,25 +255,25 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 				invariant.z = z;
 				break;
 			case FACETMODE:
-				if (!(geom->GetNbSelectedFacets() == 1)) {
+				if (!(guiGeom->GetNbSelectedFacets() == 1)) {
 					GLMessageBox::Display("Select exactly one facet", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				found = false;
-				for (int i = 0; !found && i<geom->GetNbFacet(); i++) {
-					if (geom->GetFacet(i)->selected) {
-						invariant = geom->GetFacet(i)->sh.center;
+				for (int i = 0; !found && i<guiGeom->GetNbFacet(); i++) {
+					if (guiGeom->GetFacet(i)->selected) {
+						invariant = guiGeom->GetFacet(i)->sh.center;
 						found = true;
 					}
 				}
 				break;
 			case VERTEXMODE:
 				
-				if (!(vertexNumber->GetNumberInt(&vertexNum)) || vertexNum<1 || vertexNum>geom->GetNbVertex()) {
+				if (!(vertexNumber->GetNumberInt(&vertexNum)) || vertexNum<1 || vertexNum>guiGeom->GetNbVertex()) {
 					GLMessageBox::Display("Invalid vertex number", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				invariant = *(geom->GetVertex(vertexNum - 1));
+				invariant = *(guiGeom->GetVertex(vertexNum - 1));
 				break;
 			default:
 				GLMessageBox::Display("Select an invariant definition mode.", "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -304,7 +304,7 @@ void ScaleVertex::ProcessMessage(GLComponent *src, int message) {
 			}
 			if (mApp->AskToReset()) {
 				if (scaleMode == UNIFORMMODE) factorX = factorY = factorZ = factor;
-				geom->ScaleSelectedVertices(invariant, factorX, factorY, factorZ, src == copyButton, work);
+				guiGeom->ScaleSelectedVertices(invariant, factorX, factorY, factorZ, src == copyButton, work);
 				mApp->UpdateModelParams();
 				work->MarkToReload();
 				mApp->UpdateFacetlistSelected();

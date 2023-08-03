@@ -39,7 +39,7 @@ class RotateFacet : public GLWindow {
 
 public:
   // Construction
-  RotateFacet(Geometry *geom,Worker *work);
+  RotateFacet(Geometry *guiGeom,Worker *work);
   void ProcessMessage(GLComponent *src,int message) override;
 
   // Implementation
@@ -77,7 +77,7 @@ private:
   int nbFacetS;
   int    axisMode;
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
 };

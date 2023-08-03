@@ -41,7 +41,7 @@ class SplitFacet : public GLWindow {
 
 public:
   // Construction
-  SplitFacet(Geometry *geom,Worker *work);
+  SplitFacet(Geometry *guiGeom,Worker *work);
   ~SplitFacet();
   void ProcessMessage(GLComponent *src,int message) override;
   void ClearUndoFacets();
@@ -77,7 +77,7 @@ private:
   std::vector<DeletedFacet> deletedFacetList;
   size_t nbFacet, nbCreated;
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
 };

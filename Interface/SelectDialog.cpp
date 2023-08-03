@@ -100,14 +100,14 @@ SelectDialog::SelectDialog(Geometry *g):GLWindow() {
 
   rCode = GLDLG_CANCEL;
 
-  geom = g;
+  guiGeom = g;
 }
 
 void SelectDialog::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
       std::vector<size_t> facetIds;
       try{
-          splitFacetList(facetIds, numText->GetText(), geom->GetNbFacet());
+          splitFacetList(facetIds, numText->GetText(), guiGeom->GetNbFacet());
       }
       catch (const std::exception &e) {
           GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -115,12 +115,12 @@ void SelectDialog::ProcessMessage(GLComponent *src,int message) {
       }
 
       if (src == selButton)
-          geom->UnselectAll();
+          guiGeom->UnselectAll();
 
       for (const auto facetId : facetIds) {
-          geom->GetFacet(facetId)->selected = Contains({ selButton,addButton },src);
+          guiGeom->GetFacet(facetId)->selected = Contains({ selButton,addButton },src);
       }
-      geom->UpdateSelection();
+      guiGeom->UpdateSelection();
       mApp->UpdateFacetParams(true);
       mApp->UpdateFacetlistSelected();
       mApp->facetList->ScrollToVisible(facetIds.back(),1,true);

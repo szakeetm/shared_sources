@@ -47,7 +47,7 @@ public:
 
 private:
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
   GLButton    *goButton;

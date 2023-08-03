@@ -187,7 +187,7 @@ void VertexCoordinates::Display(Worker *w) {
 
 void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 
-  Geometry *geom = worker->GetGeometry();
+  Geometry *guiGeom = worker->GetGeometry();
   switch(message) {
     case MSG_BUTTON:
       if(src==dismissButton) {
@@ -239,7 +239,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 				double x,y,z;
 				size_t id;
 				id=vertexListC->GetValueInt(i,0)-1;
-				if (!(id>=0 && id<geom->GetNbVertex())) { //wrong coordinates at row
+				if (!(id>=0 && id<guiGeom->GetNbVertex())) { //wrong coordinates at row
 					char tmp[128];
 					sprintf(tmp, "Invalid vertex id in row %zd\n Vertex %zd doesn't exist.", i + 1, id+1);
 					GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
@@ -254,9 +254,9 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 					GLMessageBox::Display(tmp,"Incorrect vertex",GLDLG_OK,GLDLG_ICONWARNING);
 				return;	
 				}
-				geom->MoveVertexTo(id,x,y,z);
+				guiGeom->MoveVertexTo(id,x,y,z);
 			}
-			geom->Rebuild();
+			guiGeom->Rebuild();
           // Send to sub process
           worker->MarkToReload();
           //GLWindowManager::FullRepaint();

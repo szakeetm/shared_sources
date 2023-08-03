@@ -41,14 +41,14 @@ class ExtrudeFacet : public GLWindow {
 public:
 
   // Construction
-  ExtrudeFacet(Geometry *geom,Worker *work);
+  ExtrudeFacet(Geometry *guiGeom,Worker *work);
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
 
-  Geometry     *geom;
+  Geometry     *guiGeom;
   Worker	   *work;
 
   GLToggle	*offsetCheckbox;

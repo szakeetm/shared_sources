@@ -175,7 +175,7 @@ void HistogramPlotter::SetBounds(int x, int y, int w, int h) {
 void HistogramPlotter::Refresh() {
 	//Rebuilds combo and calls refreshviews
 
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 
 	//Collect histogram facets for currently displayed mode
 	size_t modeId = GetSelectedTabIndex();
@@ -189,12 +189,12 @@ void HistogramPlotter::Refresh() {
 		);
 	if (recordGlobal) histogramFacetIds.push_back(-1); // -1 == Global histogram
 
-	for (size_t i = 0; i < geom->GetNbFacet(); i++) {
+	for (size_t i = 0; i < guiGeom->GetNbFacet(); i++) {
 		if (
-			(modeId == HISTOGRAM_MODE_BOUNCES && geom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
-			|| (modeId == HISTOGRAM_MODE_DISTANCE && geom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
+			(modeId == HISTOGRAM_MODE_BOUNCES && guiGeom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
+			|| (modeId == HISTOGRAM_MODE_DISTANCE && guiGeom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
 #if defined(MOLFLOW)
-			|| (modeId == HISTOGRAM_MODE_TIME && geom->GetFacet(i)->sh.facetHistogramParams.recordTime)
+			|| (modeId == HISTOGRAM_MODE_TIME && guiGeom->GetFacet(i)->sh.facetHistogramParams.recordTime)
 #endif
 			) {
 			histogramFacetIds.push_back((int)i);
@@ -236,10 +236,10 @@ void HistogramPlotter::refreshChart() {
     if (modes[modeId].views.empty()) return;
 
 	int yScaleMode = yScaleCombo->GetSelectedIndex();
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 	for (auto& v : modes[modeId].views) {
 
-		if (v->userData1 >= -1 && v->userData1 < (int)geom->GetNbFacet()) {
+		if (v->userData1 >= -1 && v->userData1 < (int)guiGeom->GetNbFacet()) {
 			v->Reset();
 
 			auto [histogramValues, xMax, xSpacing,nbBins] = GetHistogramValues(v->userData1, modeId);
@@ -278,7 +278,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	//modeId: bounce/distance/time (0/1/2)
 	//returns pointer to values, max X value, X bin size, number of values (which can't be derived from the vector size when nothing's recorded yet)
 
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 	double xMax;
 	double xSpacing;
 	size_t nbBins;
@@ -309,23 +309,23 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	}
 	else { //Facet histogram
 		if (modeId == HISTOGRAM_MODE_BOUNCES) {
-			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram);
-			//(double)geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
-			xSpacing = (double)(geom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
-			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
+			histogramValues = &(guiGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram);
+			//(double)guiGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
+			xSpacing = (double)(guiGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
+			nbBins = guiGeom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 		}
 		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
-			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.distanceHistogram);
-			//geom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
-			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
-			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
+			histogramValues = &(guiGeom->GetFacet(facetId)->facetHistogramCache.distanceHistogram);
+			//guiGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
+			xSpacing = guiGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
+			nbBins = guiGeom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 		}
 #if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
-			histogramValues = &(geom->GetFacet(facetId)->facetHistogramCache.timeHistogram);
-			geom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
-			xSpacing = geom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
-			nbBins = geom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
+			histogramValues = &(guiGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram);
+			guiGeom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
+			xSpacing = guiGeom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
+			nbBins = guiGeom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
 		}
 #endif
 
@@ -335,7 +335,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 
 void HistogramPlotter::addView(int facetId) {
 	int modeId = GetSelectedTabIndex();
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 
 	// Check that view is not already added
 	{
@@ -376,7 +376,7 @@ void HistogramPlotter::addView(int facetId) {
 
 void HistogramPlotter::remView(int facetId) {
 	size_t modeId = GetSelectedTabIndex();
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 
 	bool found = false;
 	size_t i = 0;
@@ -404,7 +404,7 @@ void HistogramPlotter::Reset() {
 
 void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
 	size_t modeId = GetSelectedTabIndex();
-	Geometry *geom = worker->GetGeometry();
+	Geometry *guiGeom = worker->GetGeometry();
 	switch (message) {
 	case MSG_BUTTON:
 		if (src == selButton) {
@@ -412,10 +412,10 @@ void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
 			int idx = histCombo->GetSelectedIndex();
 			if (idx >= 0) {
 				int facetId = histCombo->GetUserValueAt(idx);
-				if (facetId >= 0 && facetId <geom->GetNbFacet()) { //Not global histogram
-					geom->UnselectAll();
-					geom->GetFacet(histCombo->GetUserValueAt(idx))->selected = true;
-					geom->UpdateSelection();
+				if (facetId >= 0 && facetId <guiGeom->GetNbFacet()) { //Not global histogram
+					guiGeom->UnselectAll();
+					guiGeom->GetFacet(histCombo->GetUserValueAt(idx))->selected = true;
+					guiGeom->UpdateSelection();
 
 					mApp->UpdateFacetParams(true);
 
@@ -448,8 +448,8 @@ void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
 			if (!mApp->histogramSettings || !mApp->histogramSettings->IsVisible())
 			{
 				SAFE_DELETE(mApp->histogramSettings);
-				mApp->histogramSettings = new HistogramSettings(geom, worker);
-				mApp->histogramSettings->Refresh(geom->GetSelectedFacets());
+				mApp->histogramSettings = new HistogramSettings(guiGeom, worker);
+				mApp->histogramSettings->Refresh(guiGeom->GetSelectedFacets());
 				mApp->histogramSettings->SetVisible(true);
 			} else {
 				mApp->histogramSettings->SetVisible(false);				
