@@ -40,8 +40,6 @@ class Simulation_Abstract {
 public:
     Simulation_Abstract() = default;
     Simulation_Abstract(const Simulation_Abstract& o) : model(o.model)/* , modelMutex()*/ {
-        globStatePtr = nullptr;
-        globParticleLogPtr = nullptr;
         totalDesorbed = o.totalDesorbed;
     };
     virtual ~Simulation_Abstract()= default;
@@ -61,8 +59,8 @@ public:
     virtual void ConstructParticleTracers(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model;
-    GlobalSimuState* globStatePtr=nullptr;
-    ParticleLog* globParticleLogPtr=nullptr; //Recorded particle log since last UpdateMCHits
+    GlobalSimuState* globStatePtr=nullptr; //Set by SimManager->SetGlobalCounters(), constructed by Worker or CLI
+    ParticleLog* globParticleLogPtr=nullptr; //Recorded particle log since last UpdateMCHits. Set by SimManager->SetGlobalCounters(), constructed by Worker or CLI
 
     size_t totalDesorbed=0; // todo: should be a "sim counter"
 };

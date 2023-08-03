@@ -522,7 +522,7 @@ void Worker::Update(float appTime) {
 	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
 	auto lock = GetHitLock(&globalState,waitTime);
 	if (!lock) return;
-	globalStatCache = globalState.globalStats; //Make a copy for quick GUI access
+	globalStatCache = globalState.globalStats; //Make a copy for quick GUI access (nbDesorbed, etc. can't always wait for lock)
 
 #if defined(SYNRAD)
 
@@ -627,8 +627,7 @@ void Worker::FacetHitCacheToSimModel() {
 
 void Worker::UpdateFacetCaches()
 {
-	//Copy histograms from hit dataport to local cache
-	//The hit dataport contains histograms for all moments, the cache only for the displayed
+	//Gets facet hits and histograms for currently displayed moments
 
 	//GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data

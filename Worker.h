@@ -217,8 +217,8 @@ private:
 #endif
 
 public:
-    ParticleLog particleLog; //replaces dpLog
-    GlobalSimuState globalState;
-    GlobalHitBuffer globalStatCache; //A cache is copied of global counters at every Worker::Update(), so that we don't have to lock the globState mutax every time we use nbDes, etc.
+    ParticleLog particleLog; //shared with simManager
+    GlobalSimuState globalState; //shared with simManager
+    GlobalHitBuffer globalStatCache; //A cache is copied of global counters at every Worker::Update(), so that we don't have to lock the globState mutex every time we use nbDes, etc.
     
 };
