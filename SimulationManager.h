@@ -136,8 +136,8 @@ private:
 
 public:
     void SetSimModel(std::shared_ptr<SimulationModel> model);
-    void ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
-    void ForwardOtfParams(OntheflySimulationParams* otfParams);
-    void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
+    void SetGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
+    void SetOntheflyParams(OntheflySimulationParams* otfParams);
+    void SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches); //facet counters part of global counter. Only for moment 0.
 };
 

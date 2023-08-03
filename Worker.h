@@ -130,7 +130,7 @@ public:
   void LoadTexturesGEO(FileReader& f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string&); //Get ID of parameter name
-  void SendFacetHitCounts();
+  void FacetHitCacheToSimModel();
   int SendAngleMaps();
   void ResetMoments();
 
@@ -145,7 +145,7 @@ public:
   void ClearRegions();
   void WriteHitBuffer();
     //Different signature:
-    void SendFacetHitCounts();
+    void FacetHitCacheToSimModel();
 
   void RemoveRegion(int index);
   void AddRegion(const char* fileName, int position = -1); //load region (position==-1: add as new region)

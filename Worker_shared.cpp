@@ -604,7 +604,7 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 	//prg.SetMessage("Assembling parameters to pass...");
 
 	std::string loaderString = SerializeParamsForLoader().str();
-		simManager.ForwardOtfParams(&model->otfParams);
+		simManager.SetOntheflyParams(&model->otfParams);
 		if (simManager.ShareWithSimUnits((BYTE*)loaderString.c_str(), loaderString.size(), LoadType::LOADPARAM)) {
 			auto errString = fmt::format("Failed to send params to sub process:\n");
 			return;
@@ -615,14 +615,14 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 * \brief Saves current facet hit counter from cache to results, only to const. flow (moment 0)
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
-void Worker::SendFacetHitCounts() {
+void Worker::FacetHitCacheToSimModel() {
 	size_t nbFacet = geom->GetNbFacet();
 	std::vector<FacetHitBuffer*> facetHitCaches;
 	for (size_t i = 0; i < nbFacet; i++) {
 		InterfaceFacet* f = geom->GetFacet(i);
 		facetHitCaches.push_back(&f->facetHitCache);
 	}
-	simManager.ForwardFacetHitCounts(facetHitCaches);
+	simManager.SetFacetHitCounts(facetHitCaches);
 }
 
 void Worker::RetrieveHistogramCacheAndFacetHitCache()
@@ -680,7 +680,7 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 		prg.SetMessage("Forwarding simulation model...");
 		simManager.SetSimModel(model); //set shared pointer simManager::simulation.model to worker::model
 		prg.SetMessage("Forwarding global simulation state...");
-		simManager.ForwardGlobalCounter(&globalState, &particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
+		simManager.SetGlobalCounter(&globalState, &particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
 	}
 	catch (const std::exception& e) {
 		GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);

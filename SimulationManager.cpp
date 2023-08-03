@@ -235,7 +235,7 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, G
     // Prepare simulation unit
     ResetSimulations();
     SetSimModel(model);
-    ForwardGlobalCounter(globStatePtr, nullptr);
+    SetGlobalCounter(globStatePtr, nullptr);
 }
 
 /*!
@@ -505,7 +505,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     return 0;
 }
 
-void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
+void SimulationManager::SetGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
         auto lock = GetHitLock(simStatePtr, 10000);
         if(!lock) return;
         simulation->globStatePtr = simStatePtr;
@@ -517,7 +517,7 @@ void SimulationManager::SetSimModel(std::shared_ptr<SimulationModel> model) { //
 }
 
 // Create hard copy for local usage and resie particle logger
-void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
+void SimulationManager::SetOntheflyParams(OntheflySimulationParams *otfParams) {
     simulation->model->otfParams = *otfParams;
     simulation->ReinitializeParticleLog();
 }
@@ -526,7 +526,7 @@ void SimulationManager::ForwardOtfParams(OntheflySimulationParams *otfParams) {
 * \brief Saves current facet hit counter from cache to results, only for constant flow (moment 0)
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
-void SimulationManager::ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
+void SimulationManager::SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
         if(simulation->globStatePtr->facetStates.size() != hitCaches.size()) return;
         auto lock = GetHitLock(simulation->globStatePtr,10000);
         if(!lock) return;
