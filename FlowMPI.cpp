@@ -169,10 +169,10 @@ namespace MFMPI {
         }
     }
 
-    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globalState) {
+    void mpi_receive_states(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState) {
         // First prepare receive structure
         MPI_Status status;
-        GlobalSimuState tmpState{};
+        GlobalSimuState tmpState = std::make_shared<GlobalSimuState>();
         tmpState.Resize(model);
 
         // Retrieve global simu state from other ranks
@@ -191,10 +191,10 @@ namespace MFMPI {
                         if (MFMPI::world_rank == i) {
                             //printf("..Receive simu state loop %d from %d (.. %d).\n", i, i + (int) std::pow(2, k),(int) std::ceil(std::log2(world_size)));
                             MPI_Recv_serialized(tmpState,(int) (i + std::pow(2, k)), 0, MPI_COMM_WORLD, &status);
-                            globalState += tmpState;
+                            *globalState += tmpState;
                         } else if (MFMPI::world_rank == i + std::pow(2, k)) {
                             //printf("..Send simu state loop %d to %d (.. %d).\n", i + (int)std::pow(2,k), i,(int)std::ceil(std::log2(world_size)));
-                            MPI_Send_serialized(globalState, i,0, MPI_COMM_WORLD);
+                            MPI_Send_serialized(*globalState, i,0, MPI_COMM_WORLD);
                         }
                     }
                 }

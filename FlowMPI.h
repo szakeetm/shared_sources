@@ -28,6 +28,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include <bitset>
+
+#ifndef MPI_CXX_BOOL
+#define MPI_CXX_BOOL MPI_CHAR
+#endif
+
 #endif
 
 class SimulationModel;
@@ -41,7 +46,7 @@ namespace MFMPI {
 #if defined(USE_MPI)
     void mpi_initialize();
     void mpi_transfer_simu(SettingsIO::CLIArguments& parsedArgs);
-    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globalState);
+    void mpi_receive_states(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState);
 
     template<class T>
     int MPI_Send_serialized(const T &data, int dest, int tag, MPI_Comm comm) {
