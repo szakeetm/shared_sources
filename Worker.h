@@ -100,7 +100,7 @@ public:
     //void Exit(); // Free all allocated resource
   //void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
-  void RetrieveHistogramCacheAndFacetHitCache();
+  void UpdateFacetCaches();
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
     void GetProcStatus(ProcComm &procInfoList);// Get process status
@@ -130,7 +130,7 @@ public:
   void LoadTexturesGEO(FileReader& f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
   int GetParamId(const std::string&); //Get ID of parameter name
-  void FacetHitCacheToSimModel();
+  void FacetHitCacheToSimModel(); //only .geo and .txt with no time-dep moment state loading
   int SendAngleMaps();
   void ResetMoments();
 

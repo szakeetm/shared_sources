@@ -536,7 +536,7 @@ void Worker::Update(float appTime) {
 
 
 	//Copy global histogram
-	RetrieveHistogramCacheAndFacetHitCache();
+	UpdateFacetCaches();
 
 	// Refresh local facet hit cache for the displayed moment
 	size_t nbFacet = geom->GetNbFacet();
@@ -625,7 +625,7 @@ void Worker::FacetHitCacheToSimModel() {
 	simManager.SetFacetHitCounts(facetHitCaches);
 }
 
-void Worker::RetrieveHistogramCacheAndFacetHitCache()
+void Worker::UpdateFacetCaches()
 {
 	//Copy histograms from hit dataport to local cache
 	//The hit dataport contains histograms for all moments, the cache only for the displayed
@@ -633,7 +633,7 @@ void Worker::RetrieveHistogramCacheAndFacetHitCache()
 	//GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
 #if defined(MOLFLOW)
-	globalHistogramCache = globalState.globalHistograms[displayedMoment];
+	//globalHistogramCache = globalState.globalHistograms[displayedMoment];
 #endif
 #if defined(SYNRAD)
 	if (!globalState.globalHistograms.empty())
