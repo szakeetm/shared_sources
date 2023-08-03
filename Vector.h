@@ -50,11 +50,10 @@ bool VertexEqual(const Vector2d& p1, const Vector2d& p2);
 
 class Vector3d {
 public:
-	double x;
-	double y;
-	double z;
-	Vector3d();
-    Vector3d(const double val);
+	double x=0.0;
+	double y=0.0;
+	double z=0.0;
+	Vector3d() = default;
 	Vector3d(const double x, const double y, const double z);
 	double Norme() const;
 	Vector3d Normalized() const;
@@ -71,9 +70,9 @@ public:
 
 class Vector2d {
 public:
-	double u;
-	double v;
-	Vector2d();
+	double u=0.0;
+	double v=0.0;
+	Vector2d() = default;
 	Vector2d(const double u, const double v);
 	double Norme() const;
 	Vector2d Normalized() const;

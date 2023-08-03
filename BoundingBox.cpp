@@ -21,9 +21,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "BoundingBox.h"
 
 //! Init bounds with invalid values from numeric limits
-AxisAlignedBoundingBox::AxisAlignedBoundingBox() : min(std::numeric_limits<double>::max()),
-                           max(std::numeric_limits<double>::lowest())
-{};
+AxisAlignedBoundingBox::AxisAlignedBoundingBox() {
+    auto maxValue = std::numeric_limits<double>::max();
+    auto minValue = std::numeric_limits<double>::lowest();
+    min = Vector3d(maxValue, maxValue, maxValue);
+    max = Vector3d(minValue, minValue, minValue);
+};
 
 //! Get offset value by point p from AABB centroid
 Vector3d AxisAlignedBoundingBox::Offset(const Vector3d &p) const {

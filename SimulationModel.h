@@ -112,7 +112,7 @@ public:
     virtual void PrepareToRun() = 0; //throws error
 
     // Molflow will use ParameterSurfaces (for parameter outgassing) for particular construction types
-    virtual int BuildAccelStructure(GlobalSimuState *globState, AccelType accel_type, BVHAccel::SplitMethod split,
+    virtual int BuildAccelStructure(const std::shared_ptr<GlobalSimuState> globalState, AccelType accel_type, BVHAccel::SplitMethod split,
                             int bvh_width) = 0;
 
     int InitializeFacets();

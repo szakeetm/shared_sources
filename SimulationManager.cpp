@@ -229,13 +229,13 @@ int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
 //Called from CLI and test suite
-void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
+void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState) {
     //std::lock_guard<std::mutex> lock(model->modelMutex); //throws error if unsuccessful
 
     // Prepare simulation unit
     ResetSimulations();
     ShareSimModel(model);
-    ShareGlobalCounter(globStatePtr, nullptr);
+    ShareGlobalCounter(globalState, nullptr);
 }
 
 /*!
@@ -505,11 +505,11 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     return 0;
 }
 
-void SimulationManager::ShareGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
-        auto lock = GetHitLock(simStatePtr, 10000);
+void SimulationManager::ShareGlobalCounter(const std::shared_ptr<GlobalSimuState> globalState, const std::shared_ptr<ParticleLog> particleLog) {
+        auto lock = GetHitLock(globalState.get(), 10000);
         if(!lock) return;
-        simulation->globStatePtr = simStatePtr;
-        simulation->globParticleLogPtr = particleLogPtr;
+        simulation->globalState = globalState;
+        simulation->globParticleLog = particleLog;
 }
 
 void SimulationManager::ShareSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
@@ -528,11 +528,11 @@ void SimulationManager::SetOntheflyParams(OntheflySimulationParams *otfParams) {
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void SimulationManager::SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches) {
-        if(simulation->globStatePtr->facetStates.size() != hitCaches.size()) return;
-        auto lock = GetHitLock(simulation->globStatePtr,10000);
+        if(simulation->globalState->facetStates.size() != hitCaches.size()) return;
+        auto lock = GetHitLock(simulation->globalState.get(),10000);
         if(!lock) return;
         for (size_t i = 0; i < hitCaches.size(); i++) {
-            simulation->globStatePtr->facetStates[i].momentResults[0].hits = *hitCaches[i];
+            simulation->globalState->facetStates[i].momentResults[0].hits = *hitCaches[i];
         }
 }
 

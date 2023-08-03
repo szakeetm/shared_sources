@@ -531,28 +531,16 @@ FacetHistogramBuffer operator+(const FacetHistogramBuffer& lhs, const FacetHisto
 #if defined(MOLFLOW)
 struct FacetHitBuffer {
 
-	FacetHitBuffer() {
-		nbDesorbed = 0;
-		nbMCHit = 0;
-		nbHitEquiv = 0.0;
-		nbAbsEquiv = 0.0;
-		sum_1_per_ort_velocity = 0.0;
-		sum_1_per_velocity = 0.0;
-		sum_v_ort = 0.0;
-		impulse = Vector3d(0.0, 0.0, 0.0);
-		impulse_square = Vector3d(0.0, 0.0, 0.0);
-		impulse_momentum = Vector3d(0.0, 0.0, 0.0);
-	}
 	FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
-
+	FacetHitBuffer()=default; //required for default constructor of GlobalHitBuffer
 	// Counts
-	size_t nbDesorbed;          // Number of desorbed molec
-	size_t nbMCHit;               // Number of hits
-	double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-	double nbAbsEquiv;          // Equivalent number of absorbed molecules
-	double sum_1_per_ort_velocity;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
-	double sum_1_per_velocity;          //For average molecule speed calculation
-	double sum_v_ort;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
+	size_t nbDesorbed=0;          // Number of desorbed molec
+	size_t nbMCHit=0;               // Number of hits
+	double nbHitEquiv=0.0;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+	double nbAbsEquiv=0.0;          // Equivalent number of absorbed molecules
+	double sum_1_per_ort_velocity=0.0;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
+	double sum_1_per_velocity=0.0;          //For average molecule speed calculation
+	double sum_v_ort=0.0;          // sum of orthogonal speeds of incident velocities, used to determine the pressure
 	Vector3d impulse;		//sum of impulse changes exerted to the facet by inbound and outbound molecules, for force calculation. It needs to be multiplied by gas mass for physical quantity
 	Vector3d impulse_square; //sum of impulse change squares exerted to the facet by inbound and outbound molecules, for noise estimation. It needs to be multiplied by gas mass squared for physical quantity
 	Vector3d impulse_momentum; //sum of impulse momentum changes exerted to the facet by inbound and outbound molecules relative to user-defined axis, for torque calculation. It needs to be multiplied by gas mass for physical quantity, and by 0.01 to change from N*cm to Nm
@@ -584,12 +572,12 @@ public:
 	void ResetBuffer();
 
 	// Counts
-	size_t nbMCHit;               // Number of hits
-	size_t nbDesorbed;          // Number of desorbed molec
-	double nbHitEquiv;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
-	double nbAbsEquiv;          // Equivalent number of absorbed molecules
-	double fluxAbs;         // Total desorbed Flux
-	double powerAbs;        // Total desorbed power
+	size_t nbMCHit=0;               // Number of hits
+	size_t nbDesorbed=0;          // Number of desorbed molec
+	double nbHitEquiv=0.0;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
+	double nbAbsEquiv=0.0;          // Equivalent number of absorbed molecules
+	double fluxAbs=0.0;         // Total desorbed Flux
+	double powerAbs=0.0;        // Total desorbed power
 
 	template<class Archive>
 	void serialize(Archive& archive)
@@ -611,32 +599,23 @@ public:
 
 class GlobalHitBuffer { //Should be plain old data, memset applied
 public:
-	GlobalHitBuffer() : globalHits() {
-		hitCacheSize = 0;
-		lastHitIndex = 0;
-		lastLeakIndex = 0;
-		leakCacheSize = 0;
-		nbLeakTotal = 0;
-		distTraveled_total = 0.0;
-#if defined(MOLFLOW)
-		distTraveledTotal_fullHitsOnly = 0.0;
-#endif
-	};
+
 	GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
+	GlobalHitBuffer()=default; //required for move constructor of globalsimustate
 
 	FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
-	size_t hitCacheSize;              // Number of valid hits in cache
-	size_t lastHitIndex;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-	size_t  lastLeakIndex;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
-	size_t  leakCacheSize;        //Number of valid leaks in the cache
-	size_t  nbLeakTotal;         // Total leaks
+	size_t hitCacheSize=0;              // Number of valid hits in cache
+	size_t lastHitIndex=0;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
+	size_t  lastLeakIndex=0;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
+	size_t  leakCacheSize=0;        //Number of valid leaks in the cache
+	size_t  nbLeakTotal=0;         // Total leaks
 	HIT hitCache[HITCACHESIZE];       // Hit history
 	LEAK leakCache[LEAKCACHESIZE];      // Leak history
 
-	double distTraveled_total;
+	double distTraveled_total=0.0;
 
 #if defined(MOLFLOW)
-	double distTraveledTotal_fullHitsOnly;
+	double distTraveledTotal_fullHitsOnly = 0.0;
 #ifdef _WIN32
 	//TODO: Remove at some point when smarter memory padding is introduced
 	TEXTURE_MIN_MAX texture_limits[3]{}; //Min-max on texture

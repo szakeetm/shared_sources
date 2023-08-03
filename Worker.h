@@ -107,7 +107,7 @@ public:
     //void ChangePriority(int prioLevel);
 
     bool ReloadIfNeeded(); // Access to dataport (HIT)
-    ParticleLog& GetLog();
+    std::shared_ptr<ParticleLog> GetLog();
     void UnlockLog();
 
     bool InterfaceGeomToSimModel();
@@ -153,26 +153,29 @@ public:
   void SaveRegion(const char* fileName, int position, bool overwrite = false);
   void SetRegionFileLocation(const std::string fileName, int position);
   bool CheckFilenameConflict(const std::string& newPath, const size_t regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
-  void LoadTexturesSYN(FileReader& f, GlobalSimuState& globState, int version);  // Load a textures(throws Error)
+  void LoadTexturesSYN(FileReader& f, const std::shared_ptr<GlobalSimuState> globalState, int version);  // Load a textures(throws Error)
 
 
 #endif
     bool   IsRunning();           // Started/Stopped state
 
   // Global simulation parameters
-  std::shared_ptr<SimulationModel> model; //Worker constructs it, then passes to simcontroller
+  std::shared_ptr<SimulationModel> model = std::make_shared<SimulationModel>(); //Worker constructs it, then passes to simManager
+  std::shared_ptr<ParticleLog> particleLog = std::make_shared<ParticleLog>(); //shared with simManager
+  std::shared_ptr<GlobalSimuState> globalState = std::make_shared<GlobalSimuState>(); //shared with simManager
+
   FacetHistogramBuffer globalHistogramCache;
 
   Chronometer simuTimer;
 
   std::string fullFileName; // Current loaded file
 
-  bool needsReload;
-  bool abortRequested;
+  bool needsReload=true;   //When main and subprocess have different geometries, needs to reload (synchronize)
+  bool abortRequested=false;
 
 #if defined(MOLFLOW)
   std::vector<Parameter> interfaceParameterCache; //parameter cache for interface, file loading/saving and parameter editor, catalog parameters last
-  int displayedMoment;
+  int displayedMoment = 0; //By default, steady-state is displayed
   bool needsAngleMapStatusRefresh = false; //Interface helper: if IterfaceGeomToSimModel() constructs angle map, mark that facet adv. params update is necessary
   
   std::vector<Moment> interfaceMomentCache; //cache of model->tdParams.moments as frequently accessed in interface
@@ -217,8 +220,5 @@ private:
 #endif
 
 public:
-    ParticleLog particleLog; //shared with simManager
-    GlobalSimuState globalState; //shared with simManager
-    GlobalHitBuffer globalStatCache; //A cache is copied of global counters at every Worker::Update(), so that we don't have to lock the globState mutex every time we use nbDes, etc.
-    
+    GlobalHitBuffer globalStatCache; //A cache is copied of global counters at every Worker::Update(), so that we don't have to lock the globalState mutex every time we use nbDes, etc.
 };

@@ -162,7 +162,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			else if (src == exportButton) {
 				//Export to CSV
 
-                auto& log = work->GetLog();
+                auto log = work->GetLog();
                 //FILENAME *fn = GLFileBox::SaveFile(NULL, NULL, "Save log", "All files\0*.*\0", NULL);
 				std::string fn = NFD_SaveFile_Cpp("csv", "");
 				if (!fn.empty()) {
@@ -184,7 +184,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 						std::ofstream file(formattedFileName);
 						exportButton->SetText("Abort");
 						isRunning = true;
-                        ConvertLogToText(log.pLog, ",", &file);
+                        ConvertLogToText(log->pLog, ",", &file);
 						isRunning = false;
 						exportButton->SetText("Export to CSV");
 						file.close();
@@ -194,10 +194,10 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (src == copyButton) {
 				//Copy to clipboard
-				auto& log = work->GetLog();
+				auto log = work->GetLog();
 				copyButton->SetText("Abort");
 				isRunning = true;
-				std::string clipBoardText = ConvertLogToText(log.pLog, "\t", nullptr);
+				std::string clipBoardText = ConvertLogToText(log->pLog, "\t", nullptr);
 				isRunning = false;
 				copyButton->SetText("Copy to clipboard");
                 work->UnlockLog();
@@ -236,14 +236,14 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
-	auto& log = work->GetLog();
+	auto log = work->GetLog();
     work->UnlockLog(); // don't need write access
-    if (log.pLog.empty()) {
+    if (log->pLog.empty()) {
         statusLabel->SetText("No recording.");
     }
     else {
         std::ostringstream tmp;
-        tmp << log.pLog.size() << " particles logged";
+        tmp << log->pLog.size() << " particles logged";
         statusLabel->SetText(tmp.str());
     }
 }

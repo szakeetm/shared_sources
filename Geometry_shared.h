@@ -113,7 +113,7 @@ public:
 	virtual ~Geometry();
 
 #if defined(SYNRAD)
-	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState &globStatePtr, bool saveSelected) {}
+	virtual void ExportTextures(FILE *file, int grouping, int mode, double no_scans, GlobalSimuState globalState, bool saveSelected) {}
 #endif
 	virtual void BuildFacetTextures(BYTE *texture) {}
 

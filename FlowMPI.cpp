@@ -169,7 +169,7 @@ namespace MFMPI {
         }
     }
 
-    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globStatePtr) {
+    void mpi_receive_states(std::shared_ptr<SimulationModel> model, GlobalSimuState& globalState) {
         // First prepare receive structure
         MPI_Status status;
         GlobalSimuState tmpState{};
@@ -191,10 +191,10 @@ namespace MFMPI {
                         if (MFMPI::world_rank == i) {
                             //printf("..Receive simu state loop %d from %d (.. %d).\n", i, i + (int) std::pow(2, k),(int) std::ceil(std::log2(world_size)));
                             MPI_Recv_serialized(tmpState,(int) (i + std::pow(2, k)), 0, MPI_COMM_WORLD, &status);
-                            globStatePtr += tmpState;
+                            globalState += tmpState;
                         } else if (MFMPI::world_rank == i + std::pow(2, k)) {
                             //printf("..Send simu state loop %d to %d (.. %d).\n", i + (int)std::pow(2,k), i,(int)std::ceil(std::log2(world_size)));
-                            MPI_Send_serialized(globStatePtr, i,0, MPI_COMM_WORLD);
+                            MPI_Send_serialized(globalState, i,0, MPI_COMM_WORLD);
                         }
                     }
                 }
@@ -222,10 +222,10 @@ namespace MFMPI {
                 tmpState.Resize(model);
                 MPI_Recv_serialized(tmpState, i, 0, MPI_COMM_WORLD, &status);
 
-                printf("Adding tmpState from %d with %zu hits to %zu hits.\n", i, tmpState.globalStats.globalStats.nbMCHit, globStatePtr.globalStats.globalStats.nbMCHit);
-                globStatePtr += tmpState;
+                printf("Adding tmpState from %d with %zu hits to %zu hits.\n", i, tmpState.globalStats.globalStats.nbMCHit, globalState->globalStats.globalStats.nbMCHit);
+                globalState += tmpState;
             } else if(world_rank == i){
-                MPI_Send_serialized(globStatePtr, 0, 0, MPI_COMM_WORLD);
+                MPI_Send_serialized(globalState, 0, 0, MPI_COMM_WORLD);
             }
         }
         }*/

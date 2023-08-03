@@ -21,23 +21,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h" //PI
 #include <math.h> //sqrt
 
-Vector2d::Vector2d() {}
-
 Vector2d::Vector2d(const double u, const double v) {
 		this->u = u;
 		this->v = v;
-}
-
-Vector3d::Vector3d() {
-    this->x = 0.0;
-    this->y = 0.0;
-    this->z = 0.0;
-}
-
-Vector3d::Vector3d(const double val) {
-    this->x = val;
-    this->y = val;
-    this->z = val;
 }
 
 Vector3d::Vector3d(const double x, const double y,const double z) {

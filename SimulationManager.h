@@ -87,7 +87,7 @@ public:
 
     int SetUpSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
-    void InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr); //throws error
+    void InitSimulation(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState); //throws error
 
     int KillSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
@@ -136,7 +136,7 @@ private:
 
 public:
     void ShareSimModel(std::shared_ptr<SimulationModel> model);
-    void ShareGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr); //Let simManager be aware of externally constructed sim state. TO DO: make simManager actually own it
+    void ShareGlobalCounter(const std::shared_ptr<GlobalSimuState> globalState, const std::shared_ptr<ParticleLog> particleLog); //Let simManager be aware of externally constructed sim state
     void SetOntheflyParams(OntheflySimulationParams* otfParams);
     void SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches); //facet counters part of global counter. Only for moment 0.
 };

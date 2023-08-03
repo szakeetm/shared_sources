@@ -138,7 +138,7 @@ bool SimThreadHandle::runLoop() {
             }
 
             size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
-            lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
+            lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
                 masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
 
              setMyStatus(ConstructThreadStatus());
@@ -159,7 +159,7 @@ bool SimThreadHandle::runLoop() {
 
     masterProcInfo.RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
-        particleTracerPtr->UpdateHitsAndLog(simulationPtr->globStatePtr, simulationPtr->globParticleLogPtr,
+        particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
             masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
         setMyStatus("Thread finished.");
         setMyState(SimState::Finished);
@@ -529,7 +529,7 @@ bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
             // Calculate remaining work
             size_t desPerThread = 0;
             size_t remainder = 0;
-            size_t des_global = simulationPtr->globStatePtr->globalStats.globalHits.nbDesorbed;
+            size_t des_global = simulationPtr->globalState->globalStats.globalHits.nbDesorbed;
             if (des_global > 0) {
                 desPerThread = des_global / nbThreads;
                 remainder = des_global % nbThreads;
@@ -624,7 +624,7 @@ int SimulationController::Start(LoadStatus_abstract* loadStatus) {
         size_t desPerThread = 0;
         size_t remainder = 0;
         if(simulationPtr->model->otfParams.desorptionLimit > 0){
-            if(simulationPtr->model->otfParams.desorptionLimit > (simulationPtr->globStatePtr->globalStats.globalHits.nbDesorbed)) {
+            if(simulationPtr->model->otfParams.desorptionLimit > (simulationPtr->globalState->globalStats.globalHits.nbDesorbed)) {
                 size_t limitDes_global = simulationPtr->model->otfParams.desorptionLimit;
                 desPerThread = limitDes_global / nbThreads;
                 remainder = limitDes_global % nbThreads;
