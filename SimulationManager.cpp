@@ -234,7 +234,7 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, G
 
     // Prepare simulation unit
     ResetSimulations();
-    ForwardSimModel(model);
+    SetSimModel(model);
     ForwardGlobalCounter(globStatePtr, nullptr);
 }
 
@@ -512,7 +512,7 @@ void SimulationManager::ForwardGlobalCounter(GlobalSimuState *simStatePtr, Parti
         simulation->globParticleLogPtr = particleLogPtr;
 }
 
-void SimulationManager::ForwardSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
+void SimulationManager::SetSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
     simulation->model = model;
 }
 

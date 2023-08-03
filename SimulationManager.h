@@ -135,7 +135,7 @@ private:
     std::unique_ptr<std::thread> controllerLoopThread; //pointer so it can have unitialized (nullptr) state (as opposed to std::thread)
 
 public:
-    void ForwardSimModel(std::shared_ptr<SimulationModel> model);
+    void SetSimModel(std::shared_ptr<SimulationModel> model);
     void ForwardGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr);
     void ForwardOtfParams(OntheflySimulationParams* otfParams);
     void ForwardFacetHitCounts(std::vector<FacetHitBuffer*>& hitCaches);
