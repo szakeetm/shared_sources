@@ -68,7 +68,7 @@ protected:
 
     void ForwardCommand(SimCommand command, size_t param, size_t param2);
 
-    int WaitForProcStatus(SimState successStatus, LoadStatus_abstract* loadStatus=nullptr);
+    int WaitForProcStatus(const ThreadState successStatus, LoadStatus_abstract* loadStatus=nullptr);
 
 public:
     SimulationManager(int pid = -1);
@@ -83,7 +83,7 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
-    int ExecuteAndWait(SimCommand command, SimState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
+    int ExecuteAndWait(SimCommand command, const ThreadState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
 
     int SetUpSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
@@ -99,7 +99,7 @@ public:
 
     int GetProcStatus(ProcComm &procInfoList);
 
-    std::string GetMasterStatus();
+    std::string GetControllerStatus();
 
     std::string GetErrorDetails();
 

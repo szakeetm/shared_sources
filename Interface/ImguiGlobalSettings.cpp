@@ -111,7 +111,7 @@ static void ProcessControlTable(SynRad *mApp) {
                 // State/Status
                 std::stringstream tmp_ss;
                 // tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
-                tmp_ss << "[" << simStateStrings.at(proc.slaveState) << "] " << proc.slaveStatus;
+                tmp_ss << "[" << threadStateStrings.at(proc.threadState) << "] " << proc.threadStatus;
 
                 ImGui::TableSetColumnIndex(4);
                 ImGui::Text("%s", tmp_ss.str().c_str());

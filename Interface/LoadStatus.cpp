@@ -124,15 +124,15 @@ void LoadStatus::Update() {
 
 	processList->SetValueAt(0, 0, "SimManager");
 	processList->SetValueAt(1, 0, simCommandStrings.at(procStateCache.masterCmd));
-	processList->SetValueAt(2, 0, procStateCache.masterStatus);
+	processList->SetValueAt(2, 0, fmt::format("[{}] {}", controllerStateStrings[procStateCache.controllerState], procStateCache.controllerStatus));
 
 	size_t i = 1;
 	for (auto& proc : procStateCache.threadInfos)
 	{
 		DWORD pid = proc.threadId;
 		processList->SetValueAt(0, i, fmt::format("Thread {}", i));
-		processList->SetValueAt(1, i, simStateStrings.at(procStateCache.threadInfos[i - 1].slaveState));
-		processList->SetValueAt(2, i, procStateCache.threadInfos[i - 1].slaveStatus);
+		processList->SetValueAt(1, i, threadStateStrings[procStateCache.threadInfos[i - 1].threadState]);
+		processList->SetValueAt(2, i, procStateCache.threadInfos[i - 1].threadStatus);
 
 		++i;
 	}

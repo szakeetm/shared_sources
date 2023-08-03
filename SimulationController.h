@@ -35,22 +35,24 @@ class SimThreadHandle {
 public:
     SimThreadHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, size_t threadNum, size_t nbThreads);
 
-    size_t threadNum,nbThreads;
-    double stepsPerSec;
-    bool desLimitReachedOrDesError;
-    size_t localDesLimit;
-    double timeLimit;
+    
+    double stepsPerSec=1.0;
+    bool desLimitReachedOrDesError=false;
+    size_t localDesLimit=0;
+    double timeLimit=0.0;
 
     ProcComm& masterProcInfo;
     Simulation_Abstract* simulationPtr;
-    MFSim::ParticleTracer* particleTracerPtr;
+    size_t threadNum,nbThreads;
+
+    MFSim::ParticleTracer* particleTracerPtr=nullptr;
     bool runLoop();
-    [[nodiscard]] std::string ConstructThreadStatus() const;
+    [[nodiscard]] std::string ConstructMyThreadStatus() const;
 
 private:
     
-    void setMyStatus(const std::string& msg) const;
-    void setMyState(const SimState state) const;
+    void SetMyStatus(const std::string& msg) const;
+    void SetMyState(const ThreadState state) const;
     bool runSimulation1sec(const size_t desorptions);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
@@ -64,25 +66,21 @@ class SimulationController {
     int resetControls();
 protected:
 
-
-    //virtual int StopSim() {return 0;};
-    //virtual int TerminateSim() {return 0;};
-
-    int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
-    int SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
+    //int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
+    //int SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
     std::vector<std::string> GetThreadStatuses();
-    void SetThreadError(const std::string& message);
-    void SetStatus(const std::string &status); //Sets for all
-    void SetReady(const bool loadOk);
-    int ClearCommand();
+    //void SetThreadError(const std::string& message);
+    //void SetStatus(const std::string &status); //Sets for all
+    //void SetReady(/*const bool loadOk*/);
+    void ClearCommand();
     int SetRuntimeInfo();
-    size_t GetThreadStates() const;
+    //size_t GetThreadStates() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm& pInfo);
     void controlledLoop();
 
-    int Start(LoadStatus_abstract* loadStatus=nullptr);
+    void Start(LoadStatus_abstract* loadStatus=nullptr);
     bool Load(LoadStatus_abstract* loadStatus = nullptr);
     //int RebuildAccel(LoadStatus_abstract* loadStatus = nullptr);
     int Reset(LoadStatus_abstract* loadStatus = nullptr);
@@ -100,9 +98,9 @@ protected:
 
 private:
     // tmp
-    double stepsPerSec;
-    bool exitRequested;
-    bool lastHitUpdateOK;
-    bool loadOk;
+    double stepsPerSec=0.0;
+    bool exitRequested=false;
+    bool lastHitUpdateOK=true;
+    bool loadOk=false;
 
 };

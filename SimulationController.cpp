@@ -51,12 +51,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 SimThreadHandle::SimThreadHandle(ProcComm& procInfo, Simulation_Abstract *simPtr, size_t threadNum, size_t nbThreads) : masterProcInfo(procInfo) {
     this->threadNum = threadNum;
     this->nbThreads = nbThreads;
-    timeLimit = 0.0;
-    simulationPtr = simPtr;
-    stepsPerSec = 1.0;
-    particleTracerPtr = nullptr;
-    desLimitReachedOrDesError = false;
-    localDesLimit = 0;
+    this->simulationPtr = simPtr;
 }
 
 
@@ -119,8 +114,10 @@ bool SimThreadHandle::runLoop() {
     double timeStart = omp_get_wtime();
     double timeLoopStart = timeStart;
     double timeEnd;
+
+    SetMyState(ThreadState::Running);
     do {
-        setMyStatus(ConstructThreadStatus());
+        SetMyStatus(ConstructMyThreadStatus());
         size_t desorptions = localDesLimit;
         desLimitReachedOrDesError = runSimulation1sec(desorptions); // Run for 1 sec
         
@@ -139,9 +136,10 @@ bool SimThreadHandle::runLoop() {
 
             size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
-                masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-
-             setMyStatus(ConstructThreadStatus());
+                masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+                
+            SetMyState(ThreadState::Running);
+            SetMyStatus(ConstructMyThreadStatus());
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
@@ -154,32 +152,34 @@ bool SimThreadHandle::runLoop() {
             lastUpdateOk = false;
         }
         finishLoop = desLimitReachedOrDesError || (this->particleTracerPtr->model->otfParams.timeLimit != 0 && ((timeEnd-timeStart) >= this->particleTracerPtr->model->otfParams.timeLimit))
-            || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].slaveState == SimState::InError);
+            || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].threadState == ThreadState::ThreadError);
     } while (!finishLoop);
 
     masterProcInfo.RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
-            masterProcInfo.threadInfos[threadNum].slaveStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
-        setMyStatus("Thread finished.");
-        setMyState(SimState::Finished);
+            masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
+        SetMyStatus("Thread finished.");
     }
+    SetMyState(ThreadState::Finished);
     return desLimitReachedOrDesError;
 }
 
-void SimThreadHandle::setMyStatus(const std::string& msg) const { //Writes to master's procInfo
+void SimThreadHandle::SetMyStatus(const std::string& msg) const { //Writes to master's procInfo
     masterProcInfo.procDataMutex.lock();
-    masterProcInfo.threadInfos[threadNum].slaveStatus=msg;
+    masterProcInfo.threadInfos[threadNum].threadStatus=msg;
     masterProcInfo.procDataMutex.unlock();
 }
-void SimThreadHandle::setMyState(const SimState state) const { //Writes to master's procInfo
+void SimThreadHandle::SetMyState(const ThreadState state) const { //Writes to master's procInfo
     masterProcInfo.procDataMutex.lock();
-    masterProcInfo.threadInfos[threadNum].slaveState=state;
+    masterProcInfo.threadInfos[threadNum].threadState=state;
     masterProcInfo.procDataMutex.unlock();
 }
 
-[[nodiscard]] std::string SimThreadHandle::ConstructThreadStatus() const {
-    size_t count = particleTracerPtr->totalDesorbed + particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;;
+[[nodiscard]] std::string SimThreadHandle::ConstructMyThreadStatus() const {
+    if (!particleTracerPtr) return "[No particle tracer constructed.]";
+
+    size_t count = particleTracerPtr->totalDesorbed + particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
 
     size_t max = 0;
     if (nbThreads)
@@ -202,7 +202,7 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptions) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
-    setMyStatus(fmt::format("{} [{} hits/s]",ConstructThreadStatus(), nbStep));
+    SetMyStatus(fmt::format("{} [{} hits/s]",ConstructMyThreadStatus(), nbStep));
 
     // Check end of simulation
     bool limitReachedOrDesError = false;
@@ -250,17 +250,8 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
 
     simulationPtr = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
 
-    loadOk = false;
-
-    // resetControls()
-    stepsPerSec = 0.0;
-    exitRequested = false;
-    lastHitUpdateOK = true;
-
     SetRuntimeInfo();
-
-    //DEBUG_PRINT("Controller created (%zd bytes)\n", sizeof(SHCONTROL));
-    SetReady(false);
+    procInfo.controllerState = ControllerState::Ready;
 }
 
 //SimulationController::~SimulationController() = default;
@@ -294,9 +285,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
 int SimulationController::resetControls() {
     lastHitUpdateOK = true;
     exitRequested = false;
-
     stepsPerSec = 0.0;
-
     return 0;
 }
 
@@ -309,26 +298,23 @@ int SimulationController::SetRuntimeInfo() {
     return 0;
 }
 
-int SimulationController::ClearCommand() {
-
+void SimulationController::ClearCommand() {
     procInfo.masterCmd = SimCommand::None;
     procInfo.cmdParam = 0;
     procInfo.cmdParam2 = 0;
-    SetThreadStates(SimState::Ready,GetThreadStatuses());
-
-    return 0;
 }
 
+/*
 int SimulationController::SetThreadStates(SimState state, const std::string &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
         for (auto &pInfo : procInfo.threadInfos) {
-            pInfo.slaveState = state;
+            pInfo.threadState = state;
         }
     }
     if (changeStatus) {
         for (auto &pInfo : procInfo.threadInfos) {
-            pInfo.slaveStatus=status;
+            pInfo.threadStatus=status;
         }
     }
 
@@ -337,25 +323,27 @@ int SimulationController::SetThreadStates(SimState state, const std::string &sta
     }
     return 0;
 }
+*/
 
+/*
 int SimulationController::SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState, bool changeStatus) {
 
     if (changeState) {
-        //DEBUG_PRINT("setstate %s\n", simStateStrings.at(state).c_str());
+        //DEBUG_PRINT("setstate %s\n", threadStateStrings.at(state).c_str());
         for (auto &pInfo : procInfo.threadInfos) {
-            pInfo.slaveState = state;
+            pInfo.threadState = state;
         }
     }
     if (changeStatus) {
         if(procInfo.threadInfos.size() != status.size()){
             for (auto &pInfo : procInfo.threadInfos) {
-               pInfo.slaveStatus="invalid state (subprocess number mismatch)";
+               pInfo.threadStatus="invalid state (subprocess number mismatch)";
             }
         }
         else {
             size_t pInd = 0;
             for (auto &pInfo : procInfo.threadInfos) {
-                pInfo.slaveStatus=status[pInd++];
+                pInfo.threadStatus=status[pInd++];
             }
         }
     }
@@ -365,59 +353,56 @@ int SimulationController::SetThreadStates(SimState state, const std::vector<std:
     }
     return 0;
 }
+*/
 
 std::vector<std::string> SimulationController::GetThreadStatuses() {
 
     std::vector<std::string> tmpThreadStatuses(nbThreads);
     if (!simulationPtr) {
-        tmpThreadStatuses.assign(nbThreads, "[NONE]");
+        tmpThreadStatuses.assign(nbThreads, "[No simulation loaded]");
     }
     else{
         for(size_t threadId = 0; threadId < nbThreads; ++threadId) {
             auto* particleTracer = simulationPtr->GetParticleTracerPtr(threadId);
-            if(particleTracer == nullptr) break;
-            if(!particleTracer->tmpState.initialized){
-                tmpThreadStatuses[threadId]= "[NONE]";
+            if (particleTracer == nullptr) {
+                tmpThreadStatuses[threadId] = "[No particle tracer constructed]";
+            }
+            else if(!particleTracer->tmpState.initialized){
+                tmpThreadStatuses[threadId]= "[Local counters not initialized]";
             }
             else {
-                tmpThreadStatuses[threadId] = simThreadHandles[threadId].ConstructThreadStatus();
+                tmpThreadStatuses[threadId] = simThreadHandles[threadId].ConstructMyThreadStatus();
             }
         }
     }
     return tmpThreadStatuses;
 }
 
+/*
 void SimulationController::SetThreadError(const std::string& message) {
     Log::console_error("Error: {}\n", message);
     SetThreadStates(SimState::InError, message);
 }
+*/
 
+/*
 void SimulationController::SetStatus(const std::string& status) {
     for (auto &pInfo : procInfo.threadInfos) {
-        pInfo.slaveStatus=status;
+        pInfo.threadStatus=status;
     }
 }
-
-void SimulationController::SetReady(const bool loadOk) {
-
-    if (loadOk)
-        SetThreadStates(SimState::Ready, this->GetThreadStatuses());
-    else
-        SetThreadStates(SimState::Ready, "(No geometry)");
-
-    ClearCommand();
-}
-
+*/
+/*
 // Returns the thread state if equal for all, otherwise PROCESS_ERROR
 size_t SimulationController::GetThreadStates() const {
-    size_t locState = procInfo.threadInfos[0].slaveState;
+    size_t locState = procInfo.threadInfos[0].threadState;
     for (auto &pInfo : procInfo.threadInfos) {
-        if (locState != pInfo.slaveState)
+        if (locState != pInfo.threadState)
             return SimState::InError;
     }
     return locState; // All were equal to this
 }
-
+*/
 // Main loop
 void SimulationController::controlledLoop() {
     exitRequested = false;
@@ -429,12 +414,7 @@ void SimulationController::controlledLoop() {
                 break;
             }
             case SimCommand::UpdateParams: {
-                //SetThreadStates(PROCESS_WAIT, GetThreadStatuses());
-                if (UpdateParams()) {
-                    SetReady(loadOk);
-                } else {
-                    SetThreadStates(SimState::InError, "Could not update parameters");
-                }
+                UpdateParams();
                 break;
             }
             case SimCommand::Run: {
@@ -442,7 +422,7 @@ void SimulationController::controlledLoop() {
                 break;
             }
             case SimCommand::Pause: {
-                SetReady(loadOk);
+                ClearCommand(); //threads will stop when command!=run
                 break;
             }
             case SimCommand::Reset: {
@@ -459,7 +439,7 @@ void SimulationController::controlledLoop() {
             }
         }
     }
-    SetThreadStates(SimState::Killed, "Process terminated by request from Sim.Manager");
+    procInfo.UpdateControllerStatus(ControllerState::Exit,"Exited on request");
 }
 
 /**
@@ -481,16 +461,16 @@ int SimulationController::RebuildAccel(LoadStatus_abstract* loadStatus) {
  * \return true on error, false when ok
  */
 bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
-    procInfo.UpdateMasterStatus("Checking if model is valid...", loadStatus);
+    procInfo.UpdateControllerStatus(ControllerState::Loading,"Checking if model is valid...", loadStatus);
     auto errors = simulationPtr->SanityCheckModel(false);
-    procInfo.UpdateMasterStatus("", loadStatus);
+    procInfo.UpdateControllerStatus("", loadStatus);
 
     if(errors.empty()) {
        // SetThreadStates(PROCESS_EXECUTING_COMMAND, "Loading simulation");
         bool loadError = false;
 
         // Init particleTracers / threads
-        procInfo.UpdateMasterStatus("Constructing particle tracers...", loadStatus);
+        procInfo.UpdateControllerStatus("Constructing particle tracers...", loadStatus);
         simulationPtr->ConstructParticleTracers(nbThreads, false);
 
         //master status set inside LoadSimulation() itself
@@ -541,12 +521,13 @@ bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
 
             SetRuntimeInfo();
         }
+        procInfo.UpdateControllerStatus(ControllerState::Ready, "", loadStatus);
     }
     else { //errors
         loadOk = false;
-        SetThreadStates(SimState::InError, errors[0]); //First problem with model
+        procInfo.UpdateControllerStatus(ControllerState::InError, fmt::format("Geometry error: {}", errors[0]), loadStatus);
     }
-    SetReady(loadOk);
+    ClearCommand();
     return !loadOk;
 }
 
@@ -562,9 +543,10 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
                sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
 
-    procInfo.UpdateMasterStatus("Reinitializing particle log...", loadStatus);
+    procInfo.UpdateControllerStatus(ControllerState::ParamUpdating,"Reinitializing particle log...", loadStatus);
     sim->ReinitializeParticleLog();
-    procInfo.UpdateMasterStatus("", loadStatus);
+    procInfo.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
+    ClearCommand();
     return true;
 }
 
@@ -572,116 +554,91 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
 * \brief Start the simulation after previous sanity checks
  * \return 0> error code, 0 when ok
  */
-int SimulationController::Start(LoadStatus_abstract* loadStatus) {
+void SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
     // Check simulation model and geometry one last time
-    procInfo.UpdateMasterStatus("Checking if model is valid...", loadStatus);
+    procInfo.UpdateControllerStatus(ControllerState::Starting, "Checking if model is valid...", loadStatus);
     auto errors = simulationPtr->SanityCheckModel(true);
-    procInfo.UpdateMasterStatus("", loadStatus);
 
     if(!errors.empty()){
         loadOk = false;
+        procInfo.UpdateControllerStatus(ControllerState::InError,errors[0],loadStatus); //First problem with model
+        ClearCommand(); 
+        return;
     }
 
-    for(auto& thread : simThreadHandles){
-        if (!thread.particleTracerPtr) {
+    for (int i = 0; i < simThreadHandles.size();i++) {
+        if (!simThreadHandles[i].particleTracerPtr) {
             loadOk = false;
-            break;
+            procInfo.UpdateControllerStatus(ControllerState::InError,fmt::format("Thread {} has no particle tracer constructed.",i+1),loadStatus);
+            ClearCommand(); 
+            return;
         }
-    }
-
-    if(!loadOk) {
-        if(errors.size()>1)
-            SetThreadStates(SimState::InError, errors[0]); //First problem with model
-        else
-            SetThreadStates(SimState::InError, GetThreadStatuses());
-        return 1;
     }
 
 	if (simulationPtr->model->accel.empty()) {
 		loadOk = false;
-		SetThreadStates(SimState::InError, "Failed building acceleration structure");
-		return 1;
+        procInfo.UpdateControllerStatus(ControllerState::InError,"Failed building acceleration structure",loadStatus);
+        ClearCommand();
+        return;
 	}
 
     if (simulationPtr->model->otfParams.desorptionLimit > 0) {
         if (simulationPtr->totalDesorbed >=
             simulationPtr->model->otfParams.desorptionLimit /
-            nbThreads) {
+            nbThreads) { //des. limit reached
             ClearCommand();
+            procInfo.UpdateControllerStatus(ControllerState::Ready, "Des. limit reached", loadStatus);
+            return;
         }
     }
 
-    if (GetThreadStates() != SimState::Running) {
-        //DEBUG_PRINT("[%zd] COMMAND: START (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
-        SetThreadStates(SimState::Running, GetThreadStatuses());
+    procInfo.InitActiveProcList();
+
+    // Calculate remaining work
+    size_t desPerThread = 0;
+    size_t remainder = 0;
+    if(simulationPtr->model->otfParams.desorptionLimit > 0){
+        if(simulationPtr->model->otfParams.desorptionLimit > (simulationPtr->globalState->globalStats.globalHits.nbDesorbed)) {
+            size_t limitDes_global = simulationPtr->model->otfParams.desorptionLimit;
+            desPerThread = limitDes_global / nbThreads;
+            remainder = limitDes_global % nbThreads;
+        }
+    }
+    for(auto& thread : simThreadHandles){
+        size_t localDes = (desPerThread > thread.particleTracerPtr->totalDesorbed) ? desPerThread - thread.particleTracerPtr->totalDesorbed : 0; //remaining
+        thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
     }
 
-    if (loadOk) {
-        procInfo.InitActiveProcList();
-
-        // Calculate remaining work
-        size_t desPerThread = 0;
-        size_t remainder = 0;
-        if(simulationPtr->model->otfParams.desorptionLimit > 0){
-            if(simulationPtr->model->otfParams.desorptionLimit > (simulationPtr->globalState->globalStats.globalHits.nbDesorbed)) {
-                size_t limitDes_global = simulationPtr->model->otfParams.desorptionLimit;
-                desPerThread = limitDes_global / nbThreads;
-                remainder = limitDes_global % nbThreads;
-            }
-        }
-        for(auto& thread : simThreadHandles){
-            size_t localDes = (desPerThread > thread.particleTracerPtr->totalDesorbed) ? desPerThread - thread.particleTracerPtr->totalDesorbed : 0; //remaining
-            thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
-        }
-
-        bool maxReachedOrDesError_global = false;
+    bool maxReachedOrDesError_global = false;
 
 #pragma omp parallel num_threads((int)nbThreads)
-        {
-            bool maxReachedOrDesError_private = false;
-            bool lastUpdateOk_private = true;
+    {
+        bool maxReachedOrDesError_private = false;
+        bool lastUpdateOk_private = true;
 
-            // Set OpenMP thread priority on Windows whenever we start a simulation run
+        // Set OpenMP thread priority on Windows whenever we start a simulation run
 #if defined(_WIN32) && defined(_MSC_VER)
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
-            maxReachedOrDesError_private = simThreadHandles[omp_get_thread_num()].runLoop();
+        maxReachedOrDesError_private = simThreadHandles[omp_get_thread_num()].runLoop();
 
-            if(maxReachedOrDesError_private) {
+        if(maxReachedOrDesError_private) {
 //#pragma omp atomic
-                maxReachedOrDesError_global = true; //Race condition ok, maxReachedOrDesError_global means "at least one thread finished"
-            }
+            maxReachedOrDesError_global = true; //Race condition ok, maxReachedOrDesError_global means "at least one thread finished"
         }
-
-        ClearCommand();
-        /*
-        if (GetThreadStates() != SimState::InError) {
-            if (maxReachedOrDesError_global) {
-                DEBUG_PRINT("[%zd] COMMAND: PROCESS_DONE (Max reached)\n", prIdx);
-            }
-            else {
-                DEBUG_PRINT("[%zd] COMMAND: PROCESS_DONE (Stopped)\n", prIdx);
-            }
-        }
-        */
-    } else {
-        SetThreadError("No geometry loaded");
-        ClearCommand();
     }
-    return 0;
+
+    ClearCommand();
+    procInfo.UpdateControllerStatus(ControllerState::Ready, "", loadStatus);
 }
 
 int SimulationController::Reset(LoadStatus_abstract* loadStatus) {
-    //DEBUG_PRINT("[%zd] COMMAND: RESET (%zd,%zu)\n", prIdx, procInfoPtr->cmdParam, procInfoPtr->cmdParam2);
-    //SetThreadStates(SimState::ExecutingCommand, "Resetting local cache...", true, true);
+    procInfo.UpdateControllerStatus(ControllerState::Resetting,"Resetting simulation...", loadStatus);
     resetControls();
-    auto *sim = simulationPtr;
-    procInfo.UpdateMasterStatus("Resetting simulation...", loadStatus);
-    sim->ResetSimulation();
-     procInfo.UpdateMasterStatus("", loadStatus);
-    SetReady(loadOk);
-
+    simulationPtr->ResetSimulation();
+    procInfo.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
+    ClearCommand();
     return 0;
 }
 

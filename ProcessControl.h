@@ -26,22 +26,46 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <list>
 #include <map>
 
-enum SimState {
-	ExecutingCommand,
-	Running,
-	Ready,
-	Killed,
-	InError,
-	Finished
+enum ControllerState {
+    Loading,
+    Resetting,
+    Pausing,
+    ParamUpdating,
+    Ready,
+    InError,
+    Exit,
+    Starting,
+    Initializing
 };
 
-static std::map<SimState, std::string> simStateStrings = {
-    {SimState::ExecutingCommand,"Executing command"},
-    {SimState::Running,"Running"},
-    {SimState::Ready,"Ready"},
-    {SimState::Killed,"Killed"},
-    {SimState::InError,"Error"},
-    {SimState::Finished,"Finished"}
+enum ThreadState {
+	Idle, //controller
+	HitUpdate, //thread
+	ThreadError,
+    Exited,
+    Running,
+    Finished
+};
+
+static std::map<ControllerState, std::string> controllerStateStrings = {
+	{ControllerState::Loading,"Loading simu"},
+	{ControllerState::Resetting,"Resetting simu"},
+	{ControllerState::Pausing,"Pausing"},
+	{ControllerState::ParamUpdating,"Updating params"},
+	{ControllerState::InError,"Error"},
+    {ControllerState::Ready,"Ready"},
+    {ControllerState::Exit,"Exited"},
+    {ControllerState::Starting,"Starting"},
+    {ControllerState::Initializing,"Initializing"}
+};
+
+static std::map<ThreadState, std::string> threadStateStrings = {
+    {ThreadState::HitUpdate,"HitUpdate"},
+    {ThreadState::Running,"Running"},
+    {ThreadState::Idle,"Idle"},
+    {ThreadState::Exited,"Exited"},
+    {ThreadState::ThreadError,"Error"},
+    {ThreadState::Finished,"Finished"}
 };
 
 enum SimCommand {
@@ -74,8 +98,8 @@ struct PROCESS_INFO{
 
 struct ThreadInfo {
     size_t threadId=0;
-    SimState slaveState=SimState::Ready;
-    std::string slaveStatus;
+    ThreadState threadState=ThreadState::Idle;
+    std::string threadStatus;
     PROCESS_INFO runtimeInfo;
 };
 
@@ -85,7 +109,8 @@ struct ProcCommData {
     SimCommand masterCmd = SimCommand::None;
     size_t cmdParam = 0;
     size_t cmdParam2 = 0;
-    std::string masterStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
+    std::string controllerStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
+    ControllerState controllerState = ControllerState::Initializing;
 
     std::vector<ThreadInfo> threadInfos;
     std::mutex procDataMutex; // To avoid writing to it while GUI refreshes LoadStatus window
@@ -100,7 +125,7 @@ struct ProcCommData {
         masterCmd = other.masterCmd;
         cmdParam = other.cmdParam;
         cmdParam2 = other.cmdParam2;
-        masterStatus = other.masterStatus;
+        controllerStatus = other.controllerStatus;
         threadInfos = other.threadInfos;
 
         // No need to copy the mutex, it's not copyable
@@ -108,7 +133,8 @@ struct ProcCommData {
         return *this;
     }
 
-    void UpdateMasterStatus(const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
+    void UpdateControllerStatus(const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
+    void UpdateControllerStatus(const ControllerState state, const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 
 //! Process Communication class for handling inter process/thread communication
