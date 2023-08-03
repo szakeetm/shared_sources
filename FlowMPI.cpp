@@ -34,7 +34,7 @@ namespace MFMPI {
     int world_size{1};
 
 #if defined(USE_MPI)
-    void mpi_initialize(SettingsIO::CLIArguments& parsedArgs) {
+    void mpi_initialize() {
         // Initialize the MPI environment
         MPI_Init(nullptr, nullptr);
 
