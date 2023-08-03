@@ -230,12 +230,12 @@ int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
  */
 //Called from CLI and test suite
 void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, GlobalSimuState *globStatePtr) {
-    std::lock_guard<std::mutex> lock(model->modelMutex); //throws error if unsuccessful
+    //std::lock_guard<std::mutex> lock(model->modelMutex); //throws error if unsuccessful
 
     // Prepare simulation unit
     ResetSimulations();
-    SetSimModel(model);
-    SetGlobalCounter(globStatePtr, nullptr);
+    ShareSimModel(model);
+    ShareGlobalCounter(globStatePtr, nullptr);
 }
 
 /*!
@@ -505,14 +505,14 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
     return 0;
 }
 
-void SimulationManager::SetGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
+void SimulationManager::ShareGlobalCounter(GlobalSimuState *simStatePtr, ParticleLog *particleLogPtr) {
         auto lock = GetHitLock(simStatePtr, 10000);
         if(!lock) return;
         simulation->globStatePtr = simStatePtr;
         simulation->globParticleLogPtr = particleLogPtr;
 }
 
-void SimulationManager::SetSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
+void SimulationManager::ShareSimModel(std::shared_ptr<SimulationModel> model) { //also shares ownership
     simulation->model = model;
 }
 
