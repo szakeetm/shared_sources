@@ -48,11 +48,11 @@ enum ThreadState {
 static std::map<ControllerState, std::string> controllerStateStrings = {
 	{ControllerState::Loading,"Loading simu"},
 	{ControllerState::Resetting,"Resetting simu"},
-	{ControllerState::Pausing,"Pausing"},
-	{ControllerState::ParamUpdating,"Updating params"},
+	{ControllerState::Pausing,"Stopping"},
+	{ControllerState::ParamUpdating,"Updating otf.params"},
 	{ControllerState::InError,"Error"},
     {ControllerState::Ready,"Ready"},
-    {ControllerState::Exit,"Exited"},
+    {ControllerState::Exit,"Finished"},
     {ControllerState::Starting,"Starting"},
     {ControllerState::Initializing,"Initializing"}
 };
@@ -60,8 +60,7 @@ static std::map<ControllerState, std::string> controllerStateStrings = {
 static std::map<ThreadState, std::string> threadStateStrings = {
     {ThreadState::HitUpdate,"HitUpdate"},
     {ThreadState::Running,"Running"},
-    {ThreadState::Exit,"Idle"},
-    {ThreadState::Exited,"Exited"},
+    {ThreadState::Idle,"Idle"},
     {ThreadState::ThreadError,"Error"}
 };
 
@@ -95,7 +94,7 @@ struct PROCESS_INFO{
 
 struct ThreadInfo {
     size_t threadId=0;
-    ThreadState threadState=ThreadState::Exit;
+    ThreadState threadState=ThreadState::Idle;
     std::string threadStatus;
     PROCESS_INFO runtimeInfo;
 };

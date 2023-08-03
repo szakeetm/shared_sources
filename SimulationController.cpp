@@ -161,7 +161,7 @@ bool SimThreadHandle::runLoop() {
             masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
         SetMyStatus("Thread finished.");
     }
-    SetMyState(ThreadState::Exited);
+    SetMyState(ThreadState::Idle);
     return desLimitReachedOrDesError;
 }
 

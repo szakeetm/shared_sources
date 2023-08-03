@@ -121,7 +121,7 @@ int SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
             throw std::logic_error("No active simulation thread.");
         }
 
-        if (ExecuteAndWait(SimCommand::Pause, ThreadState::Exit, 0, 0, loadStatus))
+        if (ExecuteAndWait(SimCommand::Pause, ThreadState::Idle, 0, 0, loadStatus))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
     }
     else {
@@ -136,7 +136,7 @@ int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
         if (!controllerLoopThread)
             throw std::logic_error("No active simulation thread");
 
-        if (ExecuteAndWait(SimCommand::Load, ThreadState::Exit, 0, 0,loadStatus)) {
+        if (ExecuteAndWait(SimCommand::Load, ThreadState::Idle, 0, 0,loadStatus)) {
             std::string errString = "Failed to send geometry to sub process:\n";
             errString.append(GetErrorDetails());
             throw std::runtime_error(errString);
@@ -221,7 +221,7 @@ int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
     procInformation.UpdateControllerStatus(ControllerState::Initializing,"Creating worker threads...", loadStatus);
     CreateCPUHandle();
     procInformation.UpdateControllerStatus("Waiting for worker threads to be ready...", loadStatus);
-    auto result = WaitForProcStatus(ThreadState::Exit);
+    auto result = WaitForProcStatus(ThreadState::Idle);
     procInformation.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
     return result;
 }
@@ -258,12 +258,12 @@ int SimulationManager::WaitForProcStatus(const ThreadState successState, LoadSta
 
 		for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
 			auto procState = procInformation.threadInfos[i].threadState;
-			finished = finished && Contains({ successState, ThreadState::ThreadError, ThreadState::Exit }, procState);
+			finished = finished && Contains({ successState, ThreadState::ThreadError, ThreadState::Idle }, procState);
 			
 			if (procState == ThreadState::ThreadError) {
 				hasErrorStatus = true;
 			}
-			allProcsDone = allProcsDone && (procState == ThreadState::Exit);
+			allProcsDone = allProcsDone && (procState == ThreadState::Idle);
 		}
 
         finished = finished && Contains({ ControllerState::Exit,ControllerState::Ready,ControllerState::InError }, procInformation.controllerState);
@@ -322,12 +322,12 @@ int SimulationManager::ExecuteAndWait(const SimCommand command, const ThreadStat
 
 int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
     if( controllerLoopThread ) {
-        if(ExecuteAndWait(SimCommand::Kill, ThreadState::Exited,0,0,loadStatus)){ // execute
+        if(ExecuteAndWait(SimCommand::Kill, ThreadState::Idle,0,0,loadStatus)){ // execute
             // Force kill
             simController->EmergencyExit(); //Request particle tracers to not do more MC steps
-            if(ExecuteAndWait(SimCommand::Kill, ThreadState::Exited,0,0,loadStatus)) {
+            if(ExecuteAndWait(SimCommand::Kill, ThreadState::Idle,0,0,loadStatus)) {
                 int i = 0;
-                if (procInformation.threadInfos[i].threadState != ThreadState::Exited) {
+                if (procInformation.threadInfos[i].threadState != ThreadState::Idle) {
                     auto nativeHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
                     //Windows
@@ -355,12 +355,12 @@ int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
         }
         bool allKilled = true;
         for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
-            allKilled = allKilled && procInformation.threadInfos[i].threadState == ThreadState::Exited;
+            allKilled = allKilled && procInformation.threadInfos[i].threadState == ThreadState::Idle;
         }
         if (allKilled) {
             controllerLoopThread->join();
         } else {
-            if (ExecuteAndWait(SimCommand::Kill, ThreadState::Exited, 0, 0, loadStatus)) {
+            if (ExecuteAndWait(SimCommand::Kill, ThreadState::Idle, 0, 0, loadStatus)) {
                 exit(1);
             }
         }
@@ -419,7 +419,7 @@ bool SimulationManager::IsRunning(){
     bool done = true;
     for (auto & i : procInformation.threadInfos) {
         auto procState = i.threadState;
-        done = done && (procState==ThreadState::ThreadError || procState==ThreadState::Exit);
+        done = done && (procState==ThreadState::ThreadError || procState==ThreadState::Idle);
         if( procState==ThreadState::ThreadError ) {
             hasErrorStatus = true;
         }
@@ -479,7 +479,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
-            if (ExecuteAndWait(SimCommand::Load, ThreadState::Exit, size, 0, loadStatus)) {
+            if (ExecuteAndWait(SimCommand::Load, ThreadState::Idle, size, 0, loadStatus)) {
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
@@ -487,7 +487,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADPARAM:{
-            if (ExecuteAndWait(SimCommand::UpdateParams, ThreadState::Exit, size, isRunning ? ThreadState::Running : ThreadState::Exit, loadStatus)) {
+            if (ExecuteAndWait(SimCommand::UpdateParams, ThreadState::Idle, size, isRunning ? ThreadState::Running : ThreadState::Idle, loadStatus)) {
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
                 throw std::runtime_error(errString);
