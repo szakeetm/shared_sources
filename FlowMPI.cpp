@@ -102,6 +102,7 @@ namespace MFMPI {
         MPI_Barrier(MPI_COMM_WORLD);
         return;
 
+        /*
         for (int i = 1; i < MFMPI::world_size; i++) {
             MPI_Barrier(MPI_COMM_WORLD);
             Log::console_msg_master(5,"File transfer loop {} / {}.\n", i, MFMPI::world_size);
@@ -127,7 +128,7 @@ namespace MFMPI {
                 }
 
             } else if (MFMPI::world_rank == i) {
-                bool hasFile[]{false/*!parsedArgs.inputFile.empty()*/};
+                bool hasFile[]{false};
                 MPI_Send(hasFile, 1, MPI_CXX_BOOL, 0, 0, MPI_COMM_WORLD);
 
                 if (!hasFile[0]) {
@@ -167,12 +168,13 @@ namespace MFMPI {
                 }
             }
         }
+        */
     }
 
     void mpi_receive_states(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState) {
         // First prepare receive structure
         MPI_Status status;
-        GlobalSimuState tmpState = std::make_shared<GlobalSimuState>();
+        GlobalSimuState tmpState;
         tmpState.Resize(model);
 
         // Retrieve global simu state from other ranks
