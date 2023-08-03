@@ -258,15 +258,16 @@ int SimulationManager::WaitForProcStatus(const ThreadState successState, LoadSta
 
 		for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
 			auto procState = procInformation.threadInfos[i].threadState;
-			finished = finished && Contains({ successState, ThreadState::ThreadError, ThreadState::Idle }, procState);
+			finished = finished && Contains({ successState, ThreadState::ThreadError }, procState);
 			
 			if (procState == ThreadState::ThreadError) {
 				hasErrorStatus = true;
 			}
 			allProcsDone = allProcsDone && (procState == ThreadState::Idle);
 		}
-
-        finished = finished && Contains({ ControllerState::Exit,ControllerState::Ready,ControllerState::InError }, procInformation.controllerState);
+        bool controllerFinished = Contains({ ControllerState::Exit,ControllerState::Ready,ControllerState::InError }, procInformation.controllerState);
+        allProcsDone = allProcsDone && controllerFinished;
+        finished = finished && controllerFinished;
 
 		if (!finished) {
             if (loadStatus) {
