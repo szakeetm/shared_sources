@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <sstream>
 #include "SimulationController.h"
 #include "Helper/StringHelper.h"
+#include "../../src/Simulation/Particle.h" //Synrad or Molflow
 
 #ifdef MOLFLOW
 #include "../src/Simulation/MolflowSimulation.h"
@@ -73,7 +74,7 @@ int SimThreadHandle::advanceForSteps(size_t desorptions) {
         else
             stepsPerSec = (100.0 * nbStep); // in case of fast initial run
 
-        desorptions -= particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
+        desorptions -= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
     } while (desorptions);
 
 
@@ -128,9 +129,9 @@ bool SimThreadHandle::runLoop() {
         if (masterProcInfo.activeProcs.front() == threadNum || forceQueue) {
             size_t readdOnFail = 0;
             if(simulationPtr->model->otfParams.desorptionLimit > 0){
-                if(localDesLimit > particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed) {
-                    localDesLimit -= particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
-                    readdOnFail = particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
+                if(localDesLimit > particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed) {
+                    localDesLimit -= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
+                    readdOnFail = particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
                 }
                 else localDesLimit = 0;
             }
@@ -181,7 +182,7 @@ void SimThreadHandle::SetMyState(const ThreadState state) const { //Writes to ma
 [[nodiscard]] std::string SimThreadHandle::ConstructMyThreadStatus() const {
     if (!particleTracerPtr) return "[No particle tracer constructed.]";
 
-    size_t count = particleTracerPtr->totalDesorbed + particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
+    size_t count = particleTracerPtr->totalDesorbed + particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
 
     size_t max = 0;
     if (nbThreads)
@@ -211,11 +212,11 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
     size_t remainingDes = 0;
 
     if (particleTracerPtr->model->otfParams.desorptionLimit > 0) {
-        if (desorptionLimit <= particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed){
+        if (desorptionLimit <= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed){
             limitReachedOrDesError = true;
         }
         else {
-            remainingDes = desorptionLimit - particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
+            remainingDes = desorptionLimit - particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
         }
     }
 
@@ -368,7 +369,7 @@ std::vector<std::string> SimulationController::GetThreadStatuses() {
             if (particleTracer == nullptr) {
                 tmpThreadStatuses[threadId] = "[No particle tracer constructed]";
             }
-            else if(!particleTracer->tmpState.initialized){
+            else if(!particleTracer->tmpState->initialized){
                 tmpThreadStatuses[threadId]= "[Local counters not initialized]";
             }
             else {
