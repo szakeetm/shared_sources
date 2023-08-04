@@ -140,6 +140,7 @@ int SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
         if (!controllerLoopThread)
             throw std::logic_error("No active simulation thread");
 
+        procInformation.UpdateControllerStatus({ ControllerState::Loading }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
         if (ExecuteAndWait(SimCommand::Load, 0, 0,
             { ControllerState::Ready }, { ThreadState::Idle },
             loadStatus)) {
@@ -181,7 +182,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
 
     try{
         procInformation.Resize(nbThreads);
-        procInformation.UpdateControllerStatus("Deleting old simulation...", loadStatus);
+        procInformation.UpdateControllerStatus(std::nullopt, { "Deleting old simulation..." }, loadStatus);
         controllerLoopThread.reset();
     }
     catch (const std::exception &e){
@@ -190,7 +191,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
         throw std::runtime_error(e.what());
     }
 
-    procInformation.UpdateControllerStatus("Creating new simulation...", loadStatus);
+    procInformation.UpdateControllerStatus(std::nullopt, { "Creating new simulation..." }, loadStatus);
  //Dirty
 #ifdef MOLFLOW
     simulation = std::make_unique<MolflowSimulation>();
@@ -198,7 +199,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
 #ifdef SYNRAD
     simulation = std::make_unique<SynradSimulation>();
 #endif
-    procInformation.UpdateControllerStatus("Creating new simulation controller...", loadStatus);
+    procInformation.UpdateControllerStatus(std::nullopt, { "Creating new simulation controller..." }, loadStatus);
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
@@ -224,11 +225,11 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
  * @return 0=all SimUnits are ready, else = ret Units are active, but not all could be launched
  */
 int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
-    procInformation.UpdateControllerStatus(ControllerState::Initializing,"Creating worker threads...", loadStatus);
+    procInformation.UpdateControllerStatus({ ControllerState::Initializing }, { "Creating worker threads..." }, loadStatus);
     CreateCPUHandle();
-    procInformation.UpdateControllerStatus("Waiting for worker threads to be ready...", loadStatus);
+    procInformation.UpdateControllerStatus(std::nullopt, { "Waiting for worker threads to be ready..." }, loadStatus);
     auto result = WaitForControllerAndThreadState({ ControllerState::Ready }, { ThreadState::Idle });
-    procInformation.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
+    procInformation.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     return result;
 }
 
@@ -266,20 +267,22 @@ int SimulationManager::WaitForControllerAndThreadState(const std::optional<Contr
         if (successThreadState.has_value()) {
             for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
                 auto procState = procInformation.threadInfos[i].threadState;
-                finished = finished && Contains({ *successThreadState, ThreadState::ThreadError }, procState);
+                finished = finished && (procState==*successThreadState);
 
                 if (procState == ThreadState::ThreadError) {
                     hasErrorStatus = true;
+                    finished = true;
+                    break;
                 }
                 allProcsFinished = allProcsFinished && (procState == ThreadState::Idle);
             }
         }
 
         if (successControllerState.has_value()) {
-            bool controllerFinished = Contains({ *successControllerState, ControllerState::Exit,ControllerState::InError }, procInformation.controllerState);
-            finished = finished && controllerFinished;
+            finished = finished && (*successControllerState == procInformation.controllerState);
             if (procInformation.controllerState == ControllerState::InError) {
                 hasErrorStatus = true;
+                finished = true;
             }
         }
 

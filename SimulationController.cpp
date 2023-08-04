@@ -439,7 +439,7 @@ void SimulationController::controlledLoop() {
             }
         }
     }
-    procInfo.UpdateControllerStatus(ControllerState::Exit,"Exited on request");
+    procInfo.UpdateControllerStatus({ ControllerState::Exit }, { "Exited on request" });
 }
 
 /**
@@ -461,16 +461,16 @@ int SimulationController::RebuildAccel(LoadStatus_abstract* loadStatus) {
  * \return true on error, false when ok
  */
 bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
-    procInfo.UpdateControllerStatus(ControllerState::Loading,"Checking if model is valid...", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Loading }, { "Checking if model is valid..." }, loadStatus);
     auto errors = simulationPtr->SanityCheckModel(false);
-    procInfo.UpdateControllerStatus("", loadStatus);
+    procInfo.UpdateControllerStatus(std::nullopt, { "" }, loadStatus);
 
     if(errors.empty()) {
        // SetThreadStates(PROCESS_EXECUTING_COMMAND, "Loading simulation");
         bool loadError = false;
 
         // Init particleTracers / threads
-        procInfo.UpdateControllerStatus("Constructing particle tracers...", loadStatus);
+        procInfo.UpdateControllerStatus(std::nullopt, { "Constructing particle tracers..." }, loadStatus);
         simulationPtr->ConstructParticleTracers(nbThreads, false);
 
         //master status set inside LoadSimulation() itself
@@ -521,11 +521,11 @@ bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
 
             SetRuntimeInfo();
         }
-        procInfo.UpdateControllerStatus(ControllerState::Ready, "", loadStatus);
+        procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     }
     else { //errors
         loadOk = false;
-        procInfo.UpdateControllerStatus(ControllerState::InError, fmt::format("Geometry error: {}", errors[0]), loadStatus);
+        procInfo.UpdateControllerStatus({ ControllerState::InError }, { fmt::format("Geometry error: {}", errors[0]) }, loadStatus);
     }
     ClearCommand();
     return !loadOk;
@@ -543,9 +543,9 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
                sizeof(size_t) + sim->model->otfParams.logLimit * sizeof(ParticleLoggerItem));
     }
 
-    procInfo.UpdateControllerStatus(ControllerState::ParamUpdating,"Reinitializing particle log...", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::ParamUpdating }, { "Reinitializing particle log..." }, loadStatus);
     sim->ReinitializeParticleLog();
-    procInfo.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     ClearCommand();
     return true;
 }
@@ -557,12 +557,12 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
 void SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
     // Check simulation model and geometry one last time
-    procInfo.UpdateControllerStatus(ControllerState::Starting, "Checking if model is valid...", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Starting }, { "Checking if model is valid..." }, loadStatus);
     auto errors = simulationPtr->SanityCheckModel(true);
 
     if(!errors.empty()){
         loadOk = false;
-        procInfo.UpdateControllerStatus(ControllerState::InError,errors[0],loadStatus); //First problem with model
+        procInfo.UpdateControllerStatus({ ControllerState::InError }, { errors[0] }, loadStatus); //First problem with model
         ClearCommand(); 
         return;
     }
@@ -570,7 +570,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
     for (int i = 0; i < simThreadHandles.size();i++) {
         if (!simThreadHandles[i].particleTracerPtr) {
             loadOk = false;
-            procInfo.UpdateControllerStatus(ControllerState::InError,fmt::format("Thread {} has no particle tracer constructed.",i+1),loadStatus);
+            procInfo.UpdateControllerStatus({ ControllerState::InError }, { fmt::format("Thread {} has no particle tracer constructed.", i + 1) }, loadStatus);
             ClearCommand(); 
             return;
         }
@@ -578,7 +578,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
 	if (simulationPtr->model->accel.empty()) {
 		loadOk = false;
-        procInfo.UpdateControllerStatus(ControllerState::InError,"Failed building acceleration structure",loadStatus);
+        procInfo.UpdateControllerStatus({ ControllerState::InError }, { "Failed building acceleration structure" }, loadStatus);
         ClearCommand();
         return;
 	}
@@ -588,7 +588,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
             simulationPtr->model->otfParams.desorptionLimit /
             nbThreads) { //des. limit reached
             ClearCommand();
-            procInfo.UpdateControllerStatus(ControllerState::Ready, "Des. limit reached", loadStatus);
+            procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "Des. limit reached" }, loadStatus);
             return;
         }
     }
@@ -630,14 +630,14 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
     }
 
     ClearCommand();
-    procInfo.UpdateControllerStatus(ControllerState::Ready, "", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
 }
 
 int SimulationController::Reset(LoadStatus_abstract* loadStatus) {
-    procInfo.UpdateControllerStatus(ControllerState::Resetting,"Resetting simulation...", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Resetting }, { "Resetting simulation..." }, loadStatus);
     resetControls();
     simulationPtr->ResetSimulation();
-    procInfo.UpdateControllerStatus(ControllerState::Ready,"", loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     ClearCommand();
     return 0;
 }

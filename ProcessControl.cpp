@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "ProcessControl.h"
 #include <cstring>
+#include <optional>
 
 //! Moves first sub process to the back of the "active", for round robin fashion of communication for updates
 void ProcComm::PlaceFrontToBack() {
@@ -50,28 +51,15 @@ void ProcComm::InitActiveProcList() {
     //this->activeProcsMutex.unlock();
 }
 
-void ProcCommData::UpdateControllerStatus(const std::string& status, LoadStatus_abstract* loadStatus)
-{
+void ProcCommData::UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus) {
     procDataMutex.lock();
-    controllerStatus = status;
+    if (status.has_value()) controllerStatus = *status;
+    if (state.has_value()) controllerState = *state;
     procDataMutex.unlock();
     if (loadStatus) {
         loadStatus->procStateCache.procDataMutex.lock();
-        loadStatus->procStateCache.controllerStatus = status;
-        loadStatus->procStateCache.procDataMutex.unlock();
-        loadStatus->Update();
-    }
-}
-
-void ProcCommData::UpdateControllerStatus(const ControllerState state, const std::string& status, LoadStatus_abstract* loadStatus) {
-    procDataMutex.lock();
-    controllerStatus = status;
-    controllerState = state;
-    procDataMutex.unlock();
-    if (loadStatus) {
-        loadStatus->procStateCache.procDataMutex.lock();
-        loadStatus->procStateCache.controllerStatus = status;
-        loadStatus->procStateCache.controllerState = state;
+        if (status.has_value()) loadStatus->procStateCache.controllerStatus = *status;
+        if (state.has_value()) loadStatus->procStateCache.controllerState = *state;
         loadStatus->procStateCache.procDataMutex.unlock();
         loadStatus->Update();
     }

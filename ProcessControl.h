@@ -25,6 +25,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <mutex>
 #include <list>
 #include <map>
+#include <optional>
 
 enum ControllerState {
     Loading,
@@ -122,6 +123,7 @@ struct ProcCommData {
         cmdParam = other.cmdParam;
         cmdParam2 = other.cmdParam2;
         controllerStatus = other.controllerStatus;
+        controllerState = other.controllerState;
         threadInfos = other.threadInfos;
 
         // No need to copy the mutex, it's not copyable
@@ -129,8 +131,7 @@ struct ProcCommData {
         return *this;
     }
 
-    void UpdateControllerStatus(const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
-    void UpdateControllerStatus(const ControllerState state, const std::string& status, LoadStatus_abstract* loadStatus = nullptr);
+    void UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 
 //! Process Communication class for handling inter process/thread communication
