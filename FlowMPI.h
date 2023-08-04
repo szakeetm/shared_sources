@@ -85,5 +85,5 @@ namespace MFMPI {
     }
 
 #endif // USE_MPI
-};
+}
 #endif //MOLFLOW_PROJ_FLOWMPI_H
