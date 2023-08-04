@@ -622,8 +622,6 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
     bool maxReachedOrDesError_global = false;
 
-    Log::console_msg_master(1, "[{}] Started simulation.\n", Util::getTimepointString());
-
 #pragma omp parallel num_threads((int)nbThreads)
     {
         bool maxReachedOrDesError_private = false;

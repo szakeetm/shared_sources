@@ -41,7 +41,6 @@ enum ControllerState {
 
 enum ThreadState {
 	Idle, //Not running
-	HitUpdate, //Running + updating hits
 	ThreadError, //Running + error (temporary, will exit -> Idle)
     Running
 };
@@ -59,7 +58,6 @@ static std::map<ControllerState, std::string> controllerStateStrings = {
 };
 
 static std::map<ThreadState, std::string> threadStateStrings = {
-    {ThreadState::HitUpdate,"HitUpdate"},
     {ThreadState::Running,"Running"},
     {ThreadState::Idle,"Idle"},
     {ThreadState::ThreadError,"Error"}
