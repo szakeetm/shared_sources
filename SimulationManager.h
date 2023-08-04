@@ -125,7 +125,7 @@ public:
     size_t nbThreads=0;
     size_t mainProcId;
 
-    bool asyncMode=true; //Commands issued to threads with non-blocking mode. Defaultfor both GUI (user stop) and for CLI (autosave). Currently only some test cases that don't run simulations disable it
+    bool asyncMode=false; //Commands issued to threads with non-blocking mode. Default for GUI, disabled for CLI and test suite
     bool noProgress = false; //Don't print percentage updates for progressbars, useful if output written to log file
     bool isRunning=false;
     bool allProcsFinished=false;

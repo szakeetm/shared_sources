@@ -138,7 +138,7 @@ bool SimThreadHandle::runLoop() {
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
                 masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
                 
-            SetMyState(ThreadState::Running);
+            SetMyState(ThreadState::Running); //from HitUpdate
             SetMyStatus(ConstructMyThreadStatus());
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
@@ -198,7 +198,7 @@ void SimThreadHandle::SetMyState(const ThreadState state) const { //Writes to ma
 * \brief A "single (1sec)" MC step of a simulation run for a given thread
  * \return false when simulation continues, true when desorption limit is reached or des error
  */
-bool SimThreadHandle::runSimulation1sec(const size_t desorptions) {
+bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
@@ -209,11 +209,11 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptions) {
     size_t remainingDes = 0;
 
     if (particleTracerPtr->model->otfParams.desorptionLimit > 0) {
-        if (desorptions <= particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed){
+        if (desorptionLimit <= particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed){
             limitReachedOrDesError = true;
         }
         else {
-            remainingDes = desorptions - particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
+            remainingDes = desorptionLimit - particleTracerPtr->tmpState.globalStats.globalHits.nbDesorbed;
         }
     }
 

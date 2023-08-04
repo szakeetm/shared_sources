@@ -53,7 +53,7 @@ private:
     
     void SetMyStatus(const std::string& msg) const;
     void SetMyState(const ThreadState state) const;
-    bool runSimulation1sec(const size_t desorptions);
+    bool runSimulation1sec(const size_t desorptionLimit);
     int advanceForTime(double simDuration);
     int advanceForSteps(size_t desorptions);
 };

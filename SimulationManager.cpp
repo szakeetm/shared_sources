@@ -95,7 +95,7 @@ int SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
             throw std::logic_error("No active simulation thread.");
 
         if (ExecuteAndWait(SimCommand::Run, 0,0,
-            { ControllerState::Starting }, { ThreadState::Running },
+            std::nullopt, { ThreadState::Running },
             loadStatus)) {
             throw std::runtime_error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
@@ -495,6 +495,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
+            procInformation.UpdateControllerStatus({ ControllerState::Loading }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
             if (ExecuteAndWait(SimCommand::Load, size, 0,
                 { ControllerState::Ready }, { ThreadState::Idle },
                 loadStatus)) {
@@ -505,6 +506,7 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
             break;
         }
         case LoadType::LOADPARAM:{
+            procInformation.UpdateControllerStatus({ ControllerState::ParamUpdating }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
             if (ExecuteAndWait(SimCommand::UpdateParams, size, 0,
                 { ControllerState::Ready }, isRunning ? std::make_optional<ThreadState>( ThreadState::Running) : std::make_optional<ThreadState>(ThreadState::Idle),
                 loadStatus)) {
