@@ -75,26 +75,26 @@ void GlobalSettingsBase::SMPUpdate() {
         worker->GetProcStatus(procInfo);
 
         processList->ClearValues();
-
+        double byte_to_mbyte = 1.0/(1024.0*1024.0);
         //Interface
 #ifdef _WIN32
         size_t currPid = GetCurrentProcessId();
-        double memDenominator = (1024.0 * 1024.0);
+        double memDenominator_sys = (1024.0 * 1024.0);
 #else
         size_t currPid = getpid();
-        double memDenominator = (1024.0);
+        double memDenominator_sys = (1024.0);
 #endif
         PROCESS_INFO parentInfo{};
         GetProcInfo(currPid, &parentInfo);
 
         processList->SetValueAt(0, 0, "Interface");
         processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-        processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator));
-        processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator));
+        processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator_sys));
+        processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator_sys));
         processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
         processList->SetValueAt(0, 1, "SimManager");
-        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache / memDenominator));
+        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
         processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
         size_t i = 2;
@@ -103,7 +103,7 @@ void GlobalSettingsBase::SMPUpdate() {
             DWORD pid = proc.threadId;
             processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
             processList->SetValueAt(1, i, fmt::format("{}",procInfo.threadInfos[i-2].threadId)); //placeholder for thread id
-            processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)procInfo.threadInfos[i-2].runtimeInfo.counterSize/memDenominator));
+            processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)procInfo.threadInfos[i-2].runtimeInfo.counterSize * byte_to_mbyte));
             processList->SetValueAt(3, i, ""); //mem peak placeholder
             processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[procInfo.threadInfos[i - 2].threadState], procInfo.threadInfos[i - 2].threadStatus));
             ++i;
