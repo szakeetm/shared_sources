@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 #include <sstream>
 #include "SimulationController.h"
+#include "Helper/StringHelper.h"
 
 #ifdef MOLFLOW
 #include "../src/Simulation/MolflowSimulation.h"
@@ -282,20 +283,18 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
 }
 */
 
-int SimulationController::resetControls() {
+void SimulationController::resetControls() {
     lastHitUpdateOK = true;
     exitRequested = false;
     stepsPerSec = 0.0;
-    return 0;
 }
 
-int SimulationController::SetRuntimeInfo() {
+void SimulationController::SetRuntimeInfo() {
 
     // Update runtime information
-    for (auto &pInfo : procInfo.threadInfos)
+    for (auto& pInfo : procInfo.threadInfos) {
         GetProcInfo(pInfo.threadId, &pInfo.runtimeInfo);
-
-    return 0;
+    }
 }
 
 void SimulationController::ClearCommand() {
@@ -355,6 +354,7 @@ int SimulationController::SetThreadStates(SimState state, const std::vector<std:
 }
 */
 
+/*
 std::vector<std::string> SimulationController::GetThreadStatuses() {
 
     std::vector<std::string> tmpThreadStatuses(nbThreads);
@@ -377,6 +377,7 @@ std::vector<std::string> SimulationController::GetThreadStatuses() {
     }
     return tmpThreadStatuses;
 }
+*/
 
 /*
 void SimulationController::SetThreadError(const std::string& message) {
@@ -403,8 +404,9 @@ size_t SimulationController::GetThreadStates() const {
     return locState; // All were equal to this
 }
 */
-// Main loop
-void SimulationController::controlledLoop() {
+
+// Main loop, listens to commands from Simulation Manager and executes blocking
+void SimulationController::controllerLoop() {
     exitRequested = false;
     loadOk = false;
     while (!exitRequested) {
@@ -422,7 +424,7 @@ void SimulationController::controlledLoop() {
                 break;
             }
             case SimCommand::Pause: {
-                ClearCommand(); //threads will stop when command!=run
+                ClearCommand(); //threads will self-stop when command!=run
                 break;
             }
             case SimCommand::Reset: {
@@ -611,6 +613,8 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
     }
 
     bool maxReachedOrDesError_global = false;
+
+    Log::console_msg_master(1, "[{}] Started simulation.\n", Util::getTimepointString());
 
 #pragma omp parallel num_threads((int)nbThreads)
     {

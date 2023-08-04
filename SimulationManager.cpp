@@ -203,7 +203,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
-        controllerLoopThread = std::make_unique<std::thread>(&SimulationController::controlledLoop, simController.get());
+        controllerLoopThread = std::make_unique<std::thread>(&SimulationController::controllerLoop, simController.get());
         auto myHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
@@ -396,16 +396,18 @@ int SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
     return 0;
 }
 
-int SimulationManager::ResetSimulations() {
-    /*
+int SimulationManager::ResetSimulations(LoadStatus_abstract* loadStatus) {
+    
     if(asyncMode) {
-        if (ExecuteAndWait(SimCommand::Reset, SimState::Ready, 0, 0))
+        procInformation.controllerState = ControllerState::Resetting; //Otherwise Executeandwait would immediately succeed
+        if (ExecuteAndWait(SimCommand::Reset, 0, 0,
+            { ControllerState::Ready }, std::nullopt,
+            loadStatus))
             throw std::runtime_error(MakeSubProcError("Subprocesses could not reset"));
     }
-    else {*/
+    else {
         simController->Reset();
-    //}
-    
+    }    
     return 0;
 }
 

@@ -59,26 +59,26 @@ private:
 };
 
 /**
-* \brief Controller that handles communication between GUI via SimulationManager and the running @Simulation_Abstract
+* \brief Listens to commands from SimulationManager and does the thread jobs, blocking.
  */
 class SimulationController {
     bool UpdateParams(LoadStatus_abstract* loadStatus = nullptr);
-    int resetControls();
+    void resetControls();
 protected:
 
     //int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
     //int SetThreadStates(SimState state, const std::vector<std::string> &status, bool changeState = true, bool changeStatus = true);
-    std::vector<std::string> GetThreadStatuses();
+    //std::vector<std::string> GetThreadStatuses();
     //void SetThreadError(const std::string& message);
     //void SetStatus(const std::string &status); //Sets for all
     //void SetReady(/*const bool loadOk*/);
     void ClearCommand();
-    int SetRuntimeInfo();
+    void SetRuntimeInfo();
     //size_t GetThreadStates() const;
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm& pInfo);
-    void controlledLoop();
+    void controllerLoop();
 
     void Start(LoadStatus_abstract* loadStatus=nullptr);
     bool Load(LoadStatus_abstract* loadStatus = nullptr);
