@@ -39,7 +39,7 @@ enum ControllerState {
     Initializing
 };
 
-enum ThreadState {
+enum ThreadState : int { //type specified to allow forward declare
 	Idle, //Not running
 	ThreadError, //Running + error (temporary, will exit -> Idle)
     Running
