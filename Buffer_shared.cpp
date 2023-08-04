@@ -58,6 +58,35 @@ FacetHitBuffer operator+(const FacetHitBuffer& lhs, const FacetHitBuffer& rhs) {
 	return result;
 }
 
+void FacetHistogramBuffer::Resize(const HistogramParams& params) {
+	this->nbHitsHistogram.resize(params.recordBounce ? params.GetBounceHistogramSize() : 0);
+	this->nbHitsHistogram.shrink_to_fit();
+	this->distanceHistogram.resize(params.recordDistance ? params.GetDistanceHistogramSize() : 0);
+	this->distanceHistogram.shrink_to_fit();
+#if defined(MOLFLOW)
+	this->timeHistogram.resize(params.recordTime ? params.GetTimeHistogramSize() : 0);
+	this->timeHistogram.shrink_to_fit();
+#endif
+}
+
+void FacetHistogramBuffer::Reset() {
+	ZEROVECTOR(nbHitsHistogram);
+	ZEROVECTOR(distanceHistogram);
+#if defined(MOLFLOW)
+	ZEROVECTOR(timeHistogram);
+#endif
+}
+
+size_t FacetHistogramBuffer::GetMemSize() const {
+	size_t sum = 0;
+	sum += nbHitsHistogram.capacity() * sizeof(double);
+	sum += distanceHistogram.capacity() * sizeof(double);
+#ifdef MOLFLOW
+	sum += timeHistogram.capacity() * sizeof(double);
+#endif
+	return sum;
+}
+
 #endif
 #if defined(SYNRAD)
 FacetHitBuffer::FacetHitBuffer() {
@@ -82,19 +111,7 @@ FacetHitBuffer& FacetHitBuffer::operator+=(const FacetHitBuffer& rhs) {
 	this->powerAbs += rhs.powerAbs;
 	return *this;
 }
-void FacetHistogramBuffer::Resize(const HistogramParams& params) {
-	this->nbHitsHistogram.resize(params.recordBounce ? params.GetBounceHistogramSize() : 0);
-	this->nbHitsHistogram.shrink_to_fit();
-	this->distanceHistogram.resize(params.recordDistance ? params.GetDistanceHistogramSize() : 0);
-	this->distanceHistogram.shrink_to_fit();
-}
 
-void FacetHistogramBuffer::Reset() {
-	ZEROVECTOR(nbHitsHistogram);
-	ZEROVECTOR(distanceHistogram);
-#if defined(MOLFLOW)
-	ZEROVECTOR(timeHistogram);
-#endif
 }
 #endif
 

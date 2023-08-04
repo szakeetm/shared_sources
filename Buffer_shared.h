@@ -507,6 +507,7 @@ class FacetHistogramBuffer { //raw data containing histogram result
 public:
 	void Resize(const HistogramParams& params);
 	void Reset();
+	size_t GetMemSize() const;
 
 	FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
@@ -529,7 +530,7 @@ public:
 FacetHistogramBuffer operator+(const FacetHistogramBuffer& lhs, const FacetHistogramBuffer& rhs);
 
 #if defined(MOLFLOW)
-struct FacetHitBuffer {
+struct FacetHitBuffer { //plain old data
 
 	FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
 	FacetHitBuffer()=default; //required for default constructor of GlobalHitBuffer
@@ -603,14 +604,14 @@ public:
 	GlobalHitBuffer& operator+=(const GlobalHitBuffer& src);
 	GlobalHitBuffer()=default; //required for move constructor of globalsimustate
 
-	FacetHitBuffer globalHits;               // Global counts (as if the whole geometry was one extra facet)
-	size_t hitCacheSize=0;              // Number of valid hits in cache
-	size_t lastHitIndex=0;					//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-	size_t  lastLeakIndex=0;		  //Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
-	size_t  leakCacheSize=0;        //Number of valid leaks in the cache
-	size_t  nbLeakTotal=0;         // Total leaks
-	HIT hitCache[HITCACHESIZE];       // Hit history
-	LEAK leakCache[LEAKCACHESIZE];      // Leak history
+	FacetHitBuffer globalHits;		//Global counts (as if the whole geometry was one extra facet)
+	size_t hitCacheSize=0;			//Number of valid hits in cache
+	size_t lastHitIndex=0;			//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
+	size_t lastLeakIndex=0;			//Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
+	size_t leakCacheSize=0;			//Number of valid leaks in the cache
+	size_t nbLeakTotal=0;			//Total leaks
+	HIT hitCache[HITCACHESIZE];		//Hit history
+	LEAK leakCache[LEAKCACHESIZE];	//Leak history
 
 	double distTraveled_total=0.0;
 

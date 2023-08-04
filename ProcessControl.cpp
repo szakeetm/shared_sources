@@ -51,6 +51,14 @@ void ProcComm::InitActiveProcList() {
     //this->activeProcsMutex.unlock();
 }
 
+void ProcCommData::UpdateCounterSizes(const std::vector<size_t>& counterSizes) {
+    procDataMutex.lock();
+    for (int i = 0; i < std::min(counterSizes.size(), threadInfos.size()); i++) {
+        threadInfos[i].runtimeInfo.counterSize = counterSizes[i];
+    }
+    procDataMutex.unlock();
+}
+
 void ProcCommData::UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus) {
     procDataMutex.lock();
     if (status.has_value()) controllerStatus = *status;

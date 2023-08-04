@@ -23,6 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "RayTracing/BVH.h"
 #include "SimulationFacet.h"
+#include "IntersectAABB_shared.h"
 
 #include <map>
 #include <string>
@@ -45,11 +46,10 @@ public:
     std::string name;
 
     size_t GetMemSize(){
-        size_t sum = 0;
-        /*sum += sizeof (facets);
-        for(auto& fac : facets)
-            sum += fac.GetMemSize();*/
-        sum += sizeof (aabbTree);
+        size_t sum = sizeof(name);
+        if (aabbTree) {
+            sum += aabbTree->GetMemSize();
+        }
         return sum;
     }
 };
@@ -77,7 +77,7 @@ protected:
     */
 
 public:
-    virtual size_t size();
+    virtual size_t GetMemSize();
     /*
     SimulationModel &operator=(const SimulationModel &o) {
         facets = o.facets;
@@ -144,6 +144,8 @@ public:
     // Sim functions
     virtual double GetOpacityAt(SimulationFacet *f, double time) const {return -1.0;};
     virtual double GetStickingAt(SimulationFacet *f, double time) const {return -1.0;};
+
+    size_t memSizeCache=0;
 
     // Geometry Description
     std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry. Using shared pointer makes copying a model efficient

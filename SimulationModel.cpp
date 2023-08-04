@@ -24,16 +24,14 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <cmath>
 
-size_t SimulationModel::size() {
+size_t SimulationModel::GetMemSize() {
     size_t modelSize = 0;
-    modelSize += facets.capacity();
     for (auto &fac : facets)
         modelSize += fac->GetMemSize();
-    modelSize += structures.capacity();
     for (auto &struc : structures)
         modelSize += struc.GetMemSize();
-    modelSize += sizeof(std::vector<Vector3d>) + sizeof(Vector3d) * vertices3.capacity();
-    //modelSize += tdParams.GetMemSize();
+    modelSize += sizeof(Vector3d) * vertices3.capacity();
+    
     modelSize += sizeof(otfParams);
     modelSize += sizeof(wp);
     modelSize += sizeof(sh);

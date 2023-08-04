@@ -100,6 +100,19 @@ void AABBNODE::ComputeBB() {
 
 }
 
+size_t AABBNODE::GetMemSize() {
+	size_t sum = 0;
+	if (left) {
+		sum += left->GetMemSize();
+	}
+	else sum += sizeof(left);
+	if (right) {
+		sum += right->GetMemSize();
+	}
+	else sum += sizeof(right);
+	return sum;
+}
+
 AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth) {
 
 	size_t    nbl = 0, nbr = 0;

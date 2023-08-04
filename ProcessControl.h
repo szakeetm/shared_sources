@@ -88,7 +88,7 @@ struct PROCESS_INFO{
     double cpu_time; // CPU time         (in second)
     size_t  mem_use;  // Memory usage     (in byte)
     size_t  mem_peak; // MAx Memory usage (in byte)
-
+    size_t counterSize; //GlobalSimuState size
 };
 
 struct ThreadInfo {
@@ -129,6 +129,7 @@ struct ProcCommData {
         return *this;
     }
 
+    void UpdateCounterSizes(const std::vector<size_t>& counterSizes);
     void UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 

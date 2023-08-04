@@ -424,6 +424,14 @@ std::string SimulationManager::GetControllerStatus()
     return fmt::format("[{}] [{}] {}", simCommandStrings[procInformation.masterCmd], controllerStateStrings[procInformation.controllerState], procInformation.controllerStatus);
 }
 
+std::vector<std::pair<size_t,size_t>> SimulationManager::GetThreadSizes()
+{
+    std::vector<std::pair<size_t,size_t>> memSizes;
+    for (const auto& ti : procInformation.threadInfos)
+        memSizes.push_back({ ti.runtimeInfo.mem_use,ti.runtimeInfo.counterSize });
+    return memSizes;
+}
+
 int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
     if(statusStrings.size() < procInformation.threadInfos.size())

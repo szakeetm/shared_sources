@@ -103,7 +103,7 @@ public:
     int GetProcStatus(ProcComm &procInfoList);
 
     std::string GetControllerStatus();
-
+    std::vector<size_t> GetThreadSizes();
     std::string GetErrorDetails();
 
     bool IsRunning();

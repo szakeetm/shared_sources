@@ -39,6 +39,7 @@ public:
 	AABBNODE *left;
 	AABBNODE *right;
 	std::vector<SimulationFacet*> facets;
+	size_t GetMemSize();
 };
 
 AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth);

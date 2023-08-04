@@ -116,6 +116,7 @@ public:
     void SimModelToInterfaceSettings(const MolflowUserSettings& userSettings, GLProgress_GUI& prg);
 
     std::string GetSimManagerStatus();
+    std::vector<size_t> GetSimManagerThreadSizes();
 
 #if defined(MOLFLOW)
   MolflowGeometry* GetMolflowGeometry();
