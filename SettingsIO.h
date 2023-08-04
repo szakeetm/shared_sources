@@ -30,7 +30,7 @@ namespace SettingsIO {
 
     struct CLIArguments {
         size_t nbThreads = 0;
-        uint64_t simDuration = 10;
+        uint64_t simDuration = 0;
         uint64_t statprintInterval = 60;
         uint64_t autoSaveInterval = 600; // default: autosave every 600s=10min
         bool loadAutosave = false;
