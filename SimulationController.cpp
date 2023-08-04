@@ -120,8 +120,7 @@ bool SimThreadHandle::runLoop() {
     SetMyState(ThreadState::Running);
     do {
         SetMyStatus(ConstructMyThreadStatus());
-        size_t desorptions = localDesLimit;
-        desLimitReachedOrDesError = runSimulation1sec(desorptions); // Run for 1 sec
+        desLimitReachedOrDesError = runSimulation1sec(localDesLimit); // Run for 1 sec
         
         timeEnd = omp_get_wtime();
 
@@ -211,31 +210,31 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
     bool limitReachedOrDesError = false;
     size_t remainingDes = 0;
 
-    if (particleTracerPtr->model->otfParams.desorptionLimit > 0) {
-        if (desorptionLimit <= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed){
-            limitReachedOrDesError = true;
-        }
-        else {
-            remainingDes = desorptionLimit - particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
-        }
+    if (particleTracerPtr->model->otfParams.desorptionLimit == 0) return false; //don't run
+    
+    if (desorptionLimit <= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed){
+        //limit reached or error
+        return true;
+    }
+    
+    remainingDes = desorptionLimit - particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
+    double start_time = omp_get_wtime();
+    if(particleTracerPtr->SimulationMCStep(nbStep, threadNum, remainingDes)) {
+        //limit reached or error
+        return true;
     }
 
-    if(!limitReachedOrDesError) {
-        double start_time = omp_get_wtime();
-        limitReachedOrDesError = particleTracerPtr->SimulationMCStep(nbStep, threadNum, remainingDes);
-        double end_time = omp_get_wtime();
+    double end_time = omp_get_wtime();
 
-
-        if (!limitReachedOrDesError) // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
-        {
-            const double elapsedTimeMs = (end_time - start_time);
-            if (elapsedTimeMs != 0.0)
-                stepsPerSec = static_cast<double>(nbStep) / elapsedTimeMs; // every 1.0 second
-            else
-                stepsPerSec = (100.0 * static_cast<double>(nbStep)); // in case of fast initial run
-        }
-    }
-    return limitReachedOrDesError;
+    
+    // don't update on end, this will give a false ratio (SimMCStep could return actual steps instead of plain "false"
+    const double elapsedTimeMs = (end_time - start_time);
+    if (elapsedTimeMs != 0.0)
+        stepsPerSec = static_cast<double>(nbStep) / elapsedTimeMs; // every 1.0 second
+    else
+        stepsPerSec = (100.0 * static_cast<double>(nbStep)); // in case of fast initial run
+    
+    return false; //limit not reached
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
