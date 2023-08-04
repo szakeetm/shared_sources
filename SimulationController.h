@@ -24,7 +24,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SMP.h"
 #include "ProcessControl.h"
 #include "SimulationUnit.h"
-class ParticleTracer;
+namespace MFSim {
+    class ParticleTracer;
+}
 
 //class Simulation_Abstract;
 
@@ -46,7 +48,7 @@ public:
     Simulation_Abstract* simulationPtr;
     size_t threadNum,nbThreads;
 
-    ParticleTracer* particleTracerPtr=nullptr;
+    MFSim::ParticleTracer* particleTracerPtr=nullptr;
     bool runLoop();
     [[nodiscard]] std::string ConstructMyThreadStatus() const;
 
