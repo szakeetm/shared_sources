@@ -275,7 +275,7 @@ void Worker::ResetStatsAndHits(float appTime) {
 		ResetWorkerStats();
 		{
 			LoadStatus loadStatus(this);
-			simManager.ResetSimulations(&LoadStatus);
+			simManager.ResetSimulations(&loadStatus);
 		}
 		ReloadIfNeeded();
 		Update(appTime);
