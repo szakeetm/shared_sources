@@ -56,7 +56,7 @@ SimThreadHandle::SimThreadHandle(ProcComm& procInfo, Simulation_Abstract *simPtr
     this->simulationPtr = simPtr;
 }
 
-
+/*
 // todo: fuse with runSimulation1sec()
 // Should allow simulation for N steps opposed to T seconds
 int SimThreadHandle::advanceForSteps(size_t desorptions) {
@@ -80,7 +80,9 @@ int SimThreadHandle::advanceForSteps(size_t desorptions) {
 
     return 0;
 }
+*/
 
+/*
 // run until end or until autosaveTime check
 int SimThreadHandle::advanceForTime(double simDuration) {
 
@@ -103,6 +105,7 @@ int SimThreadHandle::advanceForTime(double simDuration) {
 
     return 0;
 }
+*/
 
 /**
 * \brief Simulation loop for an individual thread
