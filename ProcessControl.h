@@ -170,6 +170,7 @@ struct ProcComm : ProcCommData {
 class LoadStatus_abstract {
 public:
     virtual void Update() = 0; //Notify that the state has changed
+    virtual void EnableStopButton() = 0;
     ProcCommData procStateCache; //Updated
     bool abortRequested = false;
 };

@@ -68,7 +68,9 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 	processList->SetColumnLabelVisible(true);
 	Add(processList);
 
-	cancelButton = new GLButton(0,"Stop waiting");
+	cancelButton = new GLButton(0,"Stop waiting (keep clicking to capture)");
+	cancelButton->SetEnabled(false); //Have to be explicitly enabled by cancellable process
+	cancelButton->SetVisible(false);
 	Add(cancelButton);
 
 	//RefreshNbProcess(); //Determines size, position and processList nbRows, position and cancelButton position
@@ -78,7 +80,7 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 }
 
 void LoadStatus::EnableStopButton() {
-	cancelButton->SetText("Stop waiting");
+	cancelButton->SetVisible(true);
 	cancelButton->SetEnabled(true);
 }
 
@@ -92,7 +94,7 @@ void LoadStatus::RefreshNbProcess()
 	processList->SetColumnLabels(plName);
 	processList->SetColumnAligns((int *)plAligns);
 	processList->SetBounds(7, 8, wD - 17, hD - 55);
-	cancelButton->SetBounds(wD / 2 - 45, hD - 43, 90, 19);
+	cancelButton->SetBounds(wD / 2 - 100, hD - 43, 200, 19);
 	// Place dialog lower right
 	int wS, hS;
 	GLToolkit::GetScreenSize(&wS, &hS);
@@ -137,7 +139,7 @@ void LoadStatus::Update() {
 		++i;
 	}
 	Uint32 now = SDL_GetTicks();
-	if ((now - lastUpd) > 500) {
+	if ((now - lastUpd) > 250) {
 		SetVisible(true);
 		mApp->DoEvents(); //draw table and catch stop button press
 		lastUpd = SDL_GetTicks();

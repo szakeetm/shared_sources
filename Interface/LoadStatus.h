@@ -34,7 +34,7 @@ public:
 
   // Construction
   LoadStatus(Worker *w);
-  void EnableStopButton();
+  void EnableStopButton() override;
   void RefreshNbProcess();
   void Update() override;
 

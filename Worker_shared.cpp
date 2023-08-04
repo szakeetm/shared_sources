@@ -256,7 +256,7 @@ void Worker::StartStop(float appTime) {
 		}
 
 		// Particular case when simulation ends before getting RUN state
-		if (simManager.allProcsDone) {
+		if (simManager.allProcsFinished) {
 			Update(appTime);
 			GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
 		}
@@ -509,7 +509,7 @@ void Worker::Update(float appTime) {
 	if (needsReload) RealReload();
 
 	// End of simulation reached (Stop GUI)
-	if ((simManager.allProcsDone || simManager.hasErrorStatus) && (IsRunning() || (!IsRunning() && simuTimer.isActive)) && (appTime != 0.0f)) {
+	if ((simManager.allProcsFinished || simManager.hasErrorStatus) && (IsRunning() || (!IsRunning() && simuTimer.isActive)) && (appTime != 0.0f)) {
 		InnerStop(appTime);
 		if (simManager.hasErrorStatus) ThrowSubProcError();
 	}

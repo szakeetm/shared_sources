@@ -68,7 +68,8 @@ protected:
 
     void ForwardCommand(SimCommand command, size_t param, size_t param2);
 
-    int WaitForProcStatus(const ThreadState successStatus, LoadStatus_abstract* loadStatus=nullptr);
+    int WaitForControllerAndThreadState(const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
+        LoadStatus_abstract* loadStatus =nullptr);
 
 public:
     SimulationManager(int pid = -1);
@@ -83,7 +84,9 @@ public:
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
-    int ExecuteAndWait(SimCommand command, const ThreadState successState, size_t param = 0, size_t param2 = 0, LoadStatus_abstract* loadStatus = nullptr);
+    int ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
+        const std::optional<ControllerState>& successControllerStateconst, const std::optional<ThreadState>& successThreadState,
+        LoadStatus_abstract* loadStatus);
 
     int SetUpSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
@@ -125,7 +128,7 @@ public:
     bool asyncMode=true; //Commands issued to threads with non-blocking mode. Defaultfor both GUI (user stop) and for CLI (autosave). Currently only some test cases that don't run simulations disable it
     bool noProgress = false; //Don't print percentage updates for progressbars, useful if output written to log file
     bool isRunning=false;
-    bool allProcsDone=false;
+    bool allProcsFinished=false;
     bool hasErrorStatus=false;
     bool simulationChanged = true; // by default, always init simulation process the first time
 
