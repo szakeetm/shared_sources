@@ -53,7 +53,7 @@ static std::map<ControllerState, std::string> controllerStateStrings = {
 	{ControllerState::ParamUpdating,"Updating otf.params"},
 	{ControllerState::InError,"Error"},
     {ControllerState::Ready,"Ready"},
-    {ControllerState::Exit,"Finished"},
+    {ControllerState::Exit,"Exited"},
     {ControllerState::Starting,"Starting"},
     {ControllerState::Initializing,"Initializing"}
 };

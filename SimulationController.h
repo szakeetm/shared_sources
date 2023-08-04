@@ -81,7 +81,7 @@ public:
     void controllerLoop();
 
     void Start(LoadStatus_abstract* loadStatus=nullptr);
-    bool Load(LoadStatus_abstract* loadStatus = nullptr);
+    void Load(LoadStatus_abstract* loadStatus = nullptr);
     //int RebuildAccel(LoadStatus_abstract* loadStatus = nullptr);
     int Reset(LoadStatus_abstract* loadStatus = nullptr);
 

@@ -138,8 +138,9 @@ bool SimThreadHandle::runLoop() {
             size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
             lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
                 masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-                
-            SetMyState(ThreadState::Running); //from HitUpdate
+            
+            //set back from HitUpdate state
+            SetMyState(ThreadState::Running); 
             SetMyStatus(ConstructMyThreadStatus());
 
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
@@ -160,8 +161,8 @@ bool SimThreadHandle::runLoop() {
     if (!lastUpdateOk) {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
             masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
-        SetMyStatus("Thread finished.");
     }
+    SetMyStatus(ConstructMyThreadStatus());
     SetMyState(ThreadState::Idle);
     return desLimitReachedOrDesError;
 }
@@ -252,7 +253,7 @@ SimulationController::SimulationController(size_t parentPID, size_t procIdx, siz
     simulationPtr = simulationInstance; // TODO: Find a nicer way to manager derived simulationunit for Molflow and Synrad
 
     SetRuntimeInfo();
-    procInfo.controllerState = ControllerState::Ready;
+    //procInfo.controllerState = ControllerState::Ready;
 }
 
 //SimulationController::~SimulationController() = default;
@@ -407,12 +408,18 @@ size_t SimulationController::GetThreadStates() const {
 
 // Main loop, listens to commands from Simulation Manager and executes blocking
 void SimulationController::controllerLoop() {
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt);
     exitRequested = false;
     loadOk = false;
     while (!exitRequested) {
         switch (procInfo.masterCmd) {
             case SimCommand::Load: {
-                Load();
+                try {
+                    Load();
+                }
+                catch (Error& err) {
+                    //nothing, as Load already set controller state to error
+                }
                 break;
             }
             case SimCommand::UpdateParams: {
@@ -425,6 +432,7 @@ void SimulationController::controllerLoop() {
             }
             case SimCommand::Pause: {
                 ClearCommand(); //threads will self-stop when command!=run
+                procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt);
                 break;
             }
             case SimCommand::Reset: {
@@ -460,9 +468,8 @@ int SimulationController::RebuildAccel(LoadStatus_abstract* loadStatus) {
 /**
 * \brief Load and init simulation geometry and initialize threads after previous sanity check
  * Setup inidividual particleTracers per thread and local desorption limits
- * \return true on error, false when ok
  */
-bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
+void SimulationController::Load(LoadStatus_abstract* loadStatus) {
     procInfo.UpdateControllerStatus({ ControllerState::Loading }, { "Checking if model is valid..." }, loadStatus);
     auto errors = simulationPtr->SanityCheckModel(false);
     procInfo.UpdateControllerStatus(std::nullopt, { "" }, loadStatus);
@@ -480,49 +487,49 @@ bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
             loadError = true;
         }
 
-        if (!loadError) { // loadOk = Load();
-            loadOk = true;
-
-            {
-                simThreadHandles.clear();
-                simThreadHandles.reserve(nbThreads);
-                for (size_t t = 0; t < nbThreads; t++) {
-                    simThreadHandles.emplace_back(
-                            SimThreadHandle(procInfo, simulationPtr, t, nbThreads));
-                    simThreadHandles.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
-                }
-            }
-
-            // "Warm up" threads, to remove overhead for performance benchmarks
-            double randomCounter = 0;
-#pragma omp parallel default(none) shared(randomCounter)
-            {
-                double local_result = 0;
-#pragma omp for
-                for (int i=0; i < 1000; i++) {
-                    local_result += 1;
-                }
-#pragma omp critical
-                randomCounter += local_result;
-            }
-            DEBUG_PRINT("[OMP] Init: %f\n", randomCounter);
-            
-
-            // Calculate remaining work
-            size_t desPerThread = 0;
-            size_t remainder = 0;
-            size_t des_global = simulationPtr->globalState->globalStats.globalHits.nbDesorbed;
-            if (des_global > 0) {
-                desPerThread = des_global / nbThreads;
-                remainder = des_global % nbThreads;
-            }
-            for (auto &thread : simThreadHandles) {
-                thread.particleTracerPtr->totalDesorbed = desPerThread;
-                thread.particleTracerPtr->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
-            }
-
-            SetRuntimeInfo();
+        if (loadError) {
+            ClearCommand();
+            return; //error
         }
+
+        loadOk = true;
+
+        simThreadHandles.clear();
+        simThreadHandles.reserve(nbThreads);
+        for (size_t t = 0; t < nbThreads; t++) {
+            simThreadHandles.emplace_back(
+                    SimThreadHandle(procInfo, simulationPtr, t, nbThreads));
+            simThreadHandles.back().particleTracerPtr = simulationPtr->GetParticleTracerPtr(t);
+        }
+        
+        // "Warm up" threads, to remove overhead for performance benchmarks
+        double randomCounter = 0;
+#pragma omp parallel default(none) shared(randomCounter)
+        {
+            double local_result = 0;
+#pragma omp for
+            for (int i=0; i < 1000; i++) {
+                local_result += 1;
+            }
+#pragma omp critical
+            randomCounter += local_result;
+        }
+        //DEBUG_PRINT("[OMP] Init: %f\n", randomCounter);
+            
+        // Calculate remaining work
+        size_t desPerThread = 0;
+        size_t remainder = 0;
+        size_t des_global = simulationPtr->globalState->globalStats.globalHits.nbDesorbed;
+        if (des_global > 0) {
+            desPerThread = des_global / nbThreads;
+            remainder = des_global % nbThreads;
+        }
+        for (auto &thread : simThreadHandles) {
+            thread.particleTracerPtr->totalDesorbed = desPerThread;
+            thread.particleTracerPtr->totalDesorbed += (thread.threadNum < remainder) ? 1 : 0;
+        }
+
+        SetRuntimeInfo();        
         procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     }
     else { //errors
@@ -530,7 +537,6 @@ bool SimulationController::Load(LoadStatus_abstract* loadStatus) {
         procInfo.UpdateControllerStatus({ ControllerState::InError }, { fmt::format("Geometry error: {}", errors[0]) }, loadStatus);
     }
     ClearCommand();
-    return !loadOk;
 }
 
 /**
@@ -558,6 +564,7 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
  */
 void SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
+    /* //already checked on load
     // Check simulation model and geometry one last time
     procInfo.UpdateControllerStatus({ ControllerState::Starting }, { "Checking if model is valid..." }, loadStatus);
     auto errors = simulationPtr->SanityCheckModel(true);
@@ -577,6 +584,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
             return;
         }
     }
+    */
 
 	if (simulationPtr->model->accel.empty()) {
 		loadOk = false;

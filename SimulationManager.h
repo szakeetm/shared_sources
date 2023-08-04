@@ -76,11 +76,11 @@ public:
 
     ~SimulationManager();
 
-    int StartSimulation(LoadStatus_abstract* loadStatus = nullptr);
+    void StartSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    int StopSimulation(LoadStatus_abstract* loadStatus = nullptr);
+    void StopSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    int LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
+    void LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
     int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
@@ -92,7 +92,7 @@ public:
 
     void InitSimulation(std::shared_ptr<SimulationModel> model, const std::shared_ptr<GlobalSimuState> globalState); //throws error
 
-    int KillSimulation(LoadStatus_abstract* loadStatus=nullptr);
+    void KillSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
     int ResetSimulations(LoadStatus_abstract* loadStatus=nullptr);
 
