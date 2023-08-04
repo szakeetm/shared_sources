@@ -94,17 +94,17 @@ void GlobalSettingsBase::SMPUpdate() {
         processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
         processList->SetValueAt(0, 1, "SimManager");
-        processList->SetValueAt(2, 1, fmt::format("{} MB", worker->model->memSizeCache));
+        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache / memDenominator));
         processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
         size_t i = 2;
         for (auto& proc : procInfo.threadInfos)
         {
             DWORD pid = proc.threadId;
-            processList->SetValueAt(0, i, fmt::format("Thread {}", i-2));
+            processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
             processList->SetValueAt(1, i, fmt::format("{}",procInfo.threadInfos[i-2].threadId)); //placeholder for thread id
-            processList->SetValueAt(2, i, fmt::format("{} MB", procInfo.threadInfos[i-2].runtimeInfo.mem_use/memDenominator));
-            processList->SetValueAt(3, i, fmt::format("{} MB", procInfo.threadInfos[i-2].runtimeInfo.counterSize/memDenominator));
+            processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)procInfo.threadInfos[i-2].runtimeInfo.counterSize/memDenominator));
+            processList->SetValueAt(3, i, ""); //mem peak placeholder
             processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[procInfo.threadInfos[i - 2].threadState], procInfo.threadInfos[i - 2].threadStatus));
             ++i;
         }
