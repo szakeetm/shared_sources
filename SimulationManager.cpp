@@ -98,17 +98,16 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
             loadStatus)) {
             throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
         }
+        if(allProcsFinished){
+            isRunning = false;
+            throw Error("All threads already reached des. limit");
+        }
+        isRunning = true;
     }
     else {
         procInformation.masterCmd  = SimCommand::Run; // TODO: currently needed to not break the loop
-        simController->Start();
+        simController->Start(); //Also contains run
     }
-
-    if(allProcsFinished){
-        isRunning = false;
-        throw Error("All threads already reached des. limit");
-    }
-    isRunning = true;
 }
 
 //! Call simulation controllers to stop running simulations
