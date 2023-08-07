@@ -153,7 +153,7 @@ public:
     std::vector<SuperStructure> structures;
     std::vector<Vector3d> vertices3; // Vertices (3D space)
 
-    std::vector<std::shared_ptr<RTPrimitive>> rayTracingStructures; //One raytracing rayTracingStructures. model per superstructure
+    std::vector<std::unique_ptr<RTPrimitive>> rayTracingStructures; //One raytracing rayTracingStructures. model per superstructure
     std::map<double,std::shared_ptr<Surface>> surfaces; //Pair of opacity -> facet surface type
 
     // Simulation Properties
