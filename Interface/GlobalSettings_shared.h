@@ -51,6 +51,9 @@ protected:
     void RestartProc();
     Worker      *worker;
     GLList      *processList;
+    GLTitledPanel* processPanel;
+    GLLabel* coreLabel;
+    GLLabel* subProcLabel;
     GLButton    *restartButton;
     GLButton    *maxButton;
     GLTextField *nbProcText;

@@ -521,7 +521,7 @@ void SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType load
         }
         default:{
             // Unspecified load type
-            throw Error("ShareWithSimUnits() called with wring load type.");
+            throw Error("ShareWithSimUnits() called with wrong load type.");
         }
     }
 }
