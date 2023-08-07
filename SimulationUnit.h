@@ -55,7 +55,7 @@ public:
     //virtual void ClearSimulation() = 0;
 
     virtual size_t GetHitsSize() = 0;
-    virtual MFSim::ParticleTracer * GetParticleTracerPtr(size_t i) = 0;
+    virtual std::shared_ptr<MFSim::ParticleTracer> GetParticleTracerPtr(size_t i) = 0;
     virtual void ConstructParticleTracers(size_t n, bool fixedSeed) = 0;
 public:
     std::shared_ptr<SimulationModel> model; //constructed outside, shared

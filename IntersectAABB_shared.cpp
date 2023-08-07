@@ -31,6 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <tuple>
 #include "RayTracing/Ray.h"
 #include "BoundingBox.h"
+#include "Simulation/Particle.h"
 
 // AABB tree stuff
 
@@ -290,7 +291,7 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 
 /*std::tuple<bool,SubprocessFacet*,double>*/ void
-IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
+IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
               const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,
               const bool nullRy, const bool nullRz, const Vector3d &inverseRayDir, bool &found,
               SimulationFacet *&collidedFacet, double &minLength) {
@@ -348,18 +349,18 @@ IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node
 								if (IsInFacet(*f, u, v)) {
 									bool hardHit;
 #if defined(MOLFLOW)
-									double time = currentParticleTracer.ray.time + d / 100.0 / currentParticleTracer.velocity;
-									double currentOpacity = currentParticleTracer.model->GetOpacityAt(f, time);
-									hardHit = ((currentOpacity == 1.0) || (currentParticleTracer.randomGenerator.rnd()<currentOpacity));
+									double time = currentParticleTracer->ray.time + d / 100.0 / currentParticleTracer->velocity;
+									double currentOpacity = currentParticleTracer->model->GetOpacityAt(f, time);
+									hardHit = ((currentOpacity == 1.0) || (currentParticleTracer->randomGenerator.rnd()<currentOpacity));
 #endif
 
 #if defined(SYNRAD)
                                     hardHit = !((f->sh.opacity < 0.999999 //Partially transparent facet
-										&& currentParticleTracer.randomGenerator.rnd()>f->sh.opacity)
+										&& currentParticleTracer->randomGenerator.rnd()>f->sh.opacity)
 										|| (f->sh.reflectType > 10 //Material reflection
-										&& currentParticleTracer.model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
-										&& currentParticleTracer.model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticleTracer.energy,
-										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticleTracer.randomGenerator.rnd()) == REFL_TRANS));
+										&& currentParticleTracer->model->materials[f->sh.reflectType - 10].hasBackscattering //Has complex scattering
+										&& currentParticleTracer->model->materials[f->sh.reflectType - 10].GetReflectionType(currentParticleTracer->energy,
+										acos(Dot(-1.0 * rayDirOpposite, f->sh.N)) - PI / 2, currentParticleTracer->randomGenerator.rnd()) == REFL_TRANS));
 #endif
 									if (hardHit) {
 
@@ -368,15 +369,15 @@ IntersectTree(MFSim::ParticleTracer &currentParticleTracer, const AABBNODE &node
 											minLength = d;
 											collidedFacet = f;
 											found = true;
-                                            currentParticleTracer.tmpFacetVars[collidedFacet->globalId].colU = u;
-                                            currentParticleTracer.tmpFacetVars[collidedFacet->globalId].colV = v;
+                                            currentParticleTracer->tmpFacetVars[collidedFacet->globalId].colU = u;
+                                            currentParticleTracer->tmpFacetVars[collidedFacet->globalId].colV = v;
 										}
 									}
 									else {
-                                        currentParticleTracer.tmpFacetVars[f->globalId].colDistTranspPass = d;
-                                        currentParticleTracer.tmpFacetVars[f->globalId].colU = u;
-                                        currentParticleTracer.tmpFacetVars[f->globalId].colV = v;
-                                        currentParticleTracer.transparentHitBuffer.push_back(f);
+                                        currentParticleTracer->tmpFacetVars[f->globalId].colDistTranspPass = d;
+                                        currentParticleTracer->tmpFacetVars[f->globalId].colU = u;
+                                        currentParticleTracer->tmpFacetVars[f->globalId].colV = v;
+                                        currentParticleTracer->transparentHitBuffer.push_back(f);
 									}
 								} // IsInFacet
 							} // d range
@@ -408,7 +409,7 @@ bool IsInFacet(const SimulationFacet &f, const double u, const double v) {
 }
 
 std::tuple<bool, SimulationFacet *, double>
-Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
+Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
 	// lastHit is to avoid detecting twice the same collision
 	// returns bool found (is there a collision), pointer to collided facet, double d (distance to collision)
@@ -426,27 +427,27 @@ Intersect(MFSim::ParticleTracer &currentParticleTracer, const Vector3d &rayPos, 
 	//Output values
 	bool found = false;
 	SimulationFacet *collidedFacet = nullptr;
-	currentParticleTracer.transparentHitBuffer.clear();
+	currentParticleTracer->transparentHitBuffer.clear();
 	double minLength = 1e100;
 
     IntersectTree(currentParticleTracer, *bvh, rayPos, -1.0 * rayDir,
-                  currentParticleTracer.lastHitFacet,
+                  currentParticleTracer->lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
             /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
 
 	if (found) {
 
-        currentParticleTracer.tmpFacetVars[collidedFacet->globalId].isHit = true;
+        currentParticleTracer->tmpFacetVars[collidedFacet->globalId].isHit = true;
 
 		// Second pass for transparent hits
-		/*for (const auto& tpFacet : currentParticleTracer.transparentHitBuffer){
+		/*for (const auto& tpFacet : currentParticleTracer->transparentHitBuffer){
 			if (tpFacet->colDist < minLength) {
                 model->RegisterTransparentPass(tpFacet, currentParticleTracer);
 			}
 		}*/
         // Second pass for transparent hits
-        for (auto& tpFacet : currentParticleTracer.transparentHitBuffer){
-            if (currentParticleTracer.tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
+        for (auto& tpFacet : currentParticleTracer->transparentHitBuffer){
+            if (currentParticleTracer->tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
                 tpFacet = nullptr;
             }
         }
@@ -509,7 +510,7 @@ bool IntersectBox(const AxisAlignedBoundingBox& targetBox, const Ray& ray, const
 	double minLength;
 
 	//std::vector<SubprocessFacet*> transparentHitFacetPointers;
-	currentParticleTracer.transparentHitBuffer.clear();
+	currentParticleTracer->transparentHitBuffer.clear();
 
     IntersectTree(model, *sHandle->model.structures[0].aabbTree, rayPos, -1.0 * rayDir,
                   f1, nullRx, nullRy, nullRz, inverseRayDir, *//*transparentHitFacetPointers,*//* found, collidedFacet,

@@ -48,7 +48,7 @@ public:
     Simulation_Abstract* simulationPtr;
     size_t threadNum,nbThreads;
 
-    MFSim::ParticleTracer* particleTracerPtr=nullptr;
+    std::shared_ptr<MFSim::ParticleTracer> particleTracerPtr;
     bool runLoop();
     [[nodiscard]] std::string ConstructMyThreadStatus() const;
 
