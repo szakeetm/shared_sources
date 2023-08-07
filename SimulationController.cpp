@@ -591,7 +591,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
     }
     */
 
-	if (simulationPtr->model->accel.empty()) {
+	if (simulationPtr->model->rayTracingStructures.empty()) {
 		loadOk = false;
         procInfo.UpdateControllerStatus({ ControllerState::InError }, { "Failed building acceleration structure" }, loadStatus);
         ClearCommand();
