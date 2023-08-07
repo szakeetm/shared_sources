@@ -117,18 +117,19 @@ bool SimThreadHandle::runLoop() {
     bool lastUpdateOk = false;
 
     double timeStart = omp_get_wtime();
-    double timeLoopStart = timeStart;
+    //double timeLoopStart = timeStart;
     double timeEnd;
 
     SetMyState(ThreadState::Running);
     do {
         SetMyStatus(ConstructMyThreadStatus());
         desLimitReachedOrDesError = runSimulation1sec(localDesLimit); // Run for 1 sec
-        
+        masterProcInfo.stepsSinceUpdate[threadNum]++;
         timeEnd = omp_get_wtime();
-
+        /*
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
-        if (masterProcInfo.activeProcs.front() == threadNum || forceQueue) {
+        if (masterProcInfo.activeProcs.front() == threadNum || forceQueue) {*/
+            /*
             size_t readdOnFail = 0;
             if(simulationPtr->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed) {
@@ -137,30 +138,43 @@ bool SimThreadHandle::runLoop() {
                 }
                 else localDesLimit = 0;
             }
+            */
 
-            size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
-            lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
-                masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, timeOut_ms); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
-            
+            //size_t timeOut_ms = lastUpdateOk ? 0 : 100; //ms
+            auto localDesorptions = particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed;
+            if (threadNum == 0 || masterProcInfo.stepsSinceUpdate[threadNum] > masterProcInfo.threadInfos.size()) {
+                //The idea is if there are N processes, each should update every N seconds (avg. 1 update per sec)
+                //Otherwise the mutex is always locked and the GUI can't update, plus there are N updates per sec
+                //Thread 0 gets priority as it refreshes the particle trajectory (lines) cache
+                lastUpdateOk = particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
+                    masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20); // Update hit with 100ms timeout. If fails, probably an other subprocess is updating, so we'll keep calculating and try it later (latest when the simulation is stopped).
+            }
+            else lastUpdateOk = false;
             //set back from HitUpdate state
             SetMyState(ThreadState::Running); 
             SetMyStatus(ConstructMyThreadStatus());
-
+            /*
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
+            */
 
+            if (lastUpdateOk) {
+                localDesLimit = localDesLimit > localDesorptions ? localDesLimit - localDesorptions : 0; //avoid unsigned underflow
+                masterProcInfo.stepsSinceUpdate[threadNum]=0;
+            }
+            /*
             if(masterProcInfo.activeProcs.front() == threadNum)
                 masterProcInfo.PlaceFrontToBack();
-            timeLoopStart = omp_get_wtime();
-        }
-        else{
-            lastUpdateOk = false;
-        }
+            timeLoopStart = omp_get_wtime();*/
+        //}
+        //else{
+        //    lastUpdateOk = false;
+       // }
         finishLoop = desLimitReachedOrDesError || (this->particleTracerPtr->model->otfParams.timeLimit != 0 && ((timeEnd-timeStart) >= this->particleTracerPtr->model->otfParams.timeLimit))
             || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].threadState == ThreadState::ThreadError);
     } while (!finishLoop);
 
-    masterProcInfo.RemoveAsActive(threadNum);
+    //masterProcInfo.RemoveAsActive(threadNum);
     if (!lastUpdateOk) {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
             masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout

@@ -108,26 +108,11 @@ struct ProcCommData {
     ControllerState controllerState = ControllerState::Initializing;
 
     std::vector<ThreadInfo> threadInfos;
+    std::vector<size_t> stepsSinceUpdate; //Counts how many hit updates happened per process
     std::mutex procDataMutex; // To avoid writing to it while GUI refreshes LoadStatus window
 
     // Custom assignment operator
-    ProcCommData& operator=(const ProcCommData& other) {
-        if (this == &other) {
-            return *this; // Check for self-assignment
-        }
-
-        // Copy all members except the mutex
-        masterCmd = other.masterCmd;
-        cmdParam = other.cmdParam;
-        cmdParam2 = other.cmdParam2;
-        controllerStatus = other.controllerStatus;
-        controllerState = other.controllerState;
-        threadInfos = other.threadInfos;
-
-        // No need to copy the mutex, it's not copyable
-
-        return *this;
-    }
+    ProcCommData& operator=(const ProcCommData& other);
 
     void UpdateCounterSizes(const std::vector<size_t>& counterSizes);
     void UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus = nullptr);
@@ -140,6 +125,7 @@ struct ProcComm : ProcCommData {
     //std::mutex activeProcsMutex;
 
     // Custom assignment operator
+    /*
     ProcComm& operator=(const ProcComm& other) {
         if (this == &other) {
             return *this; // Check for self-assignment
@@ -147,6 +133,7 @@ struct ProcComm : ProcCommData {
         ProcCommData::operator=(other); // Call the base class's assignment operator
         return *this;
     }
+    */
 
     ProcComm() = default;
     ProcComm(size_t nbProcs) {

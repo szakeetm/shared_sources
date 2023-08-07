@@ -45,10 +45,31 @@ void ProcComm::RemoveAsActive(size_t id) {
 //! Init list of active/simulating processes
 void ProcComm::InitActiveProcList() {
     //this->activeProcsMutex.lock();
-    activeProcs.clear();
-    for(size_t id = 0; id < this->threadInfos.size(); ++id)
+    activeProcs.resize(threadInfos.size());
+    stepsSinceUpdate.resize(threadInfos.size());
+    for (size_t id = 0; id < this->threadInfos.size(); ++id) {
         activeProcs.emplace_back(id);
-    //this->activeProcsMutex.unlock();
+        stepsSinceUpdate[id] = id;
+    }
+}
+
+ProcCommData& ProcCommData::operator=(const ProcCommData& other) {
+    if (this == &other) {
+        return *this; // Check for self-assignment
+    }
+
+    // Copy all members except the mutex
+    masterCmd = other.masterCmd;
+    cmdParam = other.cmdParam;
+    cmdParam2 = other.cmdParam2;
+    controllerStatus = other.controllerStatus;
+    controllerState = other.controllerState;
+    threadInfos = other.threadInfos;
+    stepsSinceUpdate = other.stepsSinceUpdate;
+
+    // No need to copy the mutex, it's not copyable
+
+    return *this;
 }
 
 void ProcCommData::UpdateCounterSizes(const std::vector<size_t>& counterSizes) {
