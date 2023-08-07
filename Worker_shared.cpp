@@ -522,9 +522,10 @@ void Worker::Update(float appTime) {
 	mApp->changedSinceSave = true;
 
 	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
-	auto lock = GetHitLock(globalState.get(), waitTime);
+	auto lock = GetHitLock(globalState.get(),waitTime);
 	if (!lock) return;
 	globalStatCache = globalState->globalStats; //Make a copy for quick GUI access (nbDesorbed, etc. can't always wait for lock)
+
 #if defined(SYNRAD)
 
 	if (globalStatCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {

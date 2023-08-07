@@ -411,7 +411,10 @@ int SimulationManager::GetProcStatus(ProcComm &procInfoList) {
     if(!controllerLoopThread)
         return 1;
 
-    procInfoList = procInformation;
+    procInfoList.controllerState = procInformation.controllerState;
+    procInfoList.controllerStatus = procInformation.controllerStatus;
+    procInfoList.threadInfos = procInformation.threadInfos;
+
     return 0;
 }
 
