@@ -7,7 +7,7 @@
 #include "Helper/MathTools.h" //Min max
 
 // Construct a message dialog box
-GLMessageBox::GLMessageBox(const std::string & message, const std::string & title, const std::vector<std::string> & buttonList, int icon) :GLWindow() {
+GLMessageBox::GLMessageBox(const std::string& message, const std::string& title, const std::vector<std::string>& buttonList, int icon) :GLWindow() {
 
 	int xD, yD, wD, hD, iconWidth, txtWidth, txtHeight;
 

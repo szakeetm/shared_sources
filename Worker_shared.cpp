@@ -606,11 +606,14 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 	//prg.SetMessage("Assembling parameters to pass...");
 
 	std::string loaderString = SerializeParamsForLoader().str();
-		simManager.SetOntheflyParams(&model->otfParams);
-		if (simManager.ShareWithSimUnits((BYTE*)loaderString.c_str(), loaderString.size(), LoadType::LOADPARAM)) {
-			auto errString = fmt::format("Failed to send params to sub process:\n");
-			return;
-		}
+	simManager.SetOntheflyParams(&model->otfParams);
+	try {
+		LoadStatus loadStatus(this);
+		simManager.ShareWithSimUnits((BYTE*)loaderString.c_str(), loaderString.size(), LoadType::LOADPARAM, &loadStatus);
+	}
+	catch (Error& err) {
+		auto dlg = GLMessageBox::Display(err.what(), "Couldn't change simulation parameters", GLDLG_OK, GLDLG_ICONERROR);
+	}
 }
 
 /**

@@ -82,7 +82,7 @@ public:
 
     void LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    int ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
+    void ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
     int ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
         const std::optional<ControllerState>& successControllerStateconst, const std::optional<ThreadState>& successThreadState,

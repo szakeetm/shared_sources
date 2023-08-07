@@ -213,7 +213,7 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
     bool limitReachedOrDesError = false;
     size_t remainingDes = 0;
 
-    if (particleTracerPtr->model->otfParams.desorptionLimit > 0) { //there is a des. limit
+    if (particleTracerPtr->model->otfParams.desorptionLimit > 0) {
         if (desorptionLimit <= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed){
             return true; //there is a des. limit and it was reached
         }

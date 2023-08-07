@@ -489,7 +489,7 @@ std::string SimulationManager::MakeSubProcError(const std::string& message) {
 }
 
 
-int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus) {
+void SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus) {
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
@@ -499,20 +499,20 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
                 loadStatus)) {
                 std::string errString = "Failed to send geometry to sub process:\n";
                 errString.append(GetErrorDetails());
-                throw std::runtime_error(errString);
+                throw Error(errString);
             }
             break;
         }
         case LoadType::LOADPARAM:{
             procInformation.UpdateControllerStatus({ ControllerState::ParamUpdating }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
             if (ExecuteAndWait(SimCommand::UpdateParams, size, 0,
-                { ControllerState::Ready }, isRunning ? std::make_optional<ThreadState>( ThreadState::Running) : std::make_optional<ThreadState>(ThreadState::Idle),
+                { ControllerState::Ready }, { ThreadState::Idle }, //With the current design param change always stops the simulation
                 loadStatus)) {
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());
-                throw std::runtime_error(errString);
+                throw Error(errString);
             }
-            if(isRunning) { // restart
+            if(isRunning) { // continue by starting again
                 StartSimulation(loadStatus);
             }
             break;
@@ -521,11 +521,9 @@ int SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadT
         }
         default:{
             // Unspecified load type
-            return 1;
+            throw Error("ShareWithSimUnits() called with wring load type.");
         }
     }
-
-    return 0;
 }
 
 void SimulationManager::ShareGlobalCounter(const std::shared_ptr<GlobalSimuState> globalState, const std::shared_ptr<ParticleLog> particleLog) {
