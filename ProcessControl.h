@@ -86,8 +86,8 @@ static std::map<SimCommand, std::string> simCommandStrings = {
 struct PROCESS_INFO{
 
     double cpu_time; // CPU time         (in second)
-    size_t  mem_use;  // Memory usage     (in byte)
-    size_t  mem_peak; // MAx Memory usage (in byte)
+    size_t  mem_use;  // Memory usage     in byte (Windows) or kByte (Unix)
+    size_t  mem_peak; // Max Memory usage (in byte)
     size_t counterSize; //GlobalSimuState size
 };
 

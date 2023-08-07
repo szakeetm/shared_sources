@@ -245,7 +245,6 @@ int GLApplication::Resize( size_t nWidth, size_t nHeight, bool forceWindowed ) {
   } else {
     return GL_FAIL;
   }
-  
   return GL_OK;
 }
 
@@ -277,11 +276,11 @@ void GLApplication::Exit() {
       delete imWnd;
       imWnd = nullptr;
   }
-
+  
   GLToolkit::InvalidateDeviceObjects();
   wnd->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
-
+  
   AfterExit(); //After GUI destroyed
 
   SDL_GL_DeleteContext(mainContext);
