@@ -148,7 +148,7 @@ public:
     size_t memSizeCache=0;
 
     // Geometry Description
-    std::vector<std::shared_ptr<SimulationFacet>> facets;    // All facets of this geometry. Using shared pointer makes copying a model efficient
+    std::vector<std::shared_ptr<SimulationFacet>> facets; // All facets of this sim model. Shared pointer as these facets are referred to in the ray tracing accel structure
 
     std::vector<SuperStructure> structures;
     std::vector<Vector3d> vertices3; // Vertices (3D space)
