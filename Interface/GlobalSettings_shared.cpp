@@ -102,7 +102,7 @@ void GlobalSettingsBase::SMPUpdate() {
         {
             DWORD pid = proc.threadId;
             processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
-            processList->SetValueAt(1, i, fmt::format(""); //placeholder for thread id
+            processList->SetValueAt(1, i, fmt::format("")); //placeholder for thread id
             processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)procInfo.threadInfos[i-2].runtimeInfo.counterSize * byte_to_mbyte));
             processList->SetValueAt(3, i, ""); //mem peak placeholder
             processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[procInfo.threadInfos[i - 2].threadState], procInfo.threadInfos[i - 2].threadStatus));
