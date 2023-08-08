@@ -136,7 +136,7 @@ struct ProcCommData {
 //! Process Communication class for handling inter process/thread communication
 struct ProcComm : ProcCommData {
 
-    std::list<size_t> activeProcs; //For round-robin access. When a process in front is "processed", it's moved to back
+    std::list<size_t> hitUpdateQueue; //For round-robin access. When a process in front is "processed", it's moved to back
     //std::mutex activeProcsMutex;
 
     // Custom assignment operator
@@ -155,14 +155,14 @@ struct ProcComm : ProcCommData {
 
     void Resize(size_t nbProcs) { //Called by constructor and by simulation manager's CreateCPUHandle()
         threadInfos.resize(nbProcs);
-        InitActiveProcList();
+        InitHitUpdateQueue();
     };
 
     void PlaceFrontToBack(); //Called by simulation controller (SimThreadHandle::runloop) when thread-local hits are added to master hits
 
-    void RemoveAsActive(size_t id); //Called by simulation controller (SimThreadHandle::runloop) when end condition is met (and exit from loop), before final hit update
+    void RemoveFromHitUpdateQueue(size_t id); //Called by simulation controller (SimThreadHandle::runloop) when end condition is met (and exit from loop), before final hit update
 
-    void InitActiveProcList(); //Called by constructor and on resize
+    void InitHitUpdateQueue(); //Called by constructor and on resize
     
 };
 

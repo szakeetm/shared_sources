@@ -128,7 +128,7 @@ bool SimThreadHandle::runLoop() {
         timeEnd = omp_get_wtime();
 
         bool forceQueue = timeEnd-timeLoopStart > 60 || threadNum == 0; // update after 60s of no update or when thread 0 is called
-        if (masterProcInfo.activeProcs.front() == threadNum || forceQueue) {
+        if (masterProcInfo.hitUpdateQueue.front() == threadNum || forceQueue) {
             size_t readdOnFail = 0;
             if(simulationPtr->model->otfParams.desorptionLimit > 0){
                 if(localDesLimit > particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed) {
@@ -149,7 +149,7 @@ bool SimThreadHandle::runLoop() {
             if(!lastUpdateOk) // if update failed, the desorption limit is invalid and has to be reverted
                 localDesLimit += readdOnFail;
 
-            if(masterProcInfo.activeProcs.front() == threadNum)
+            if(masterProcInfo.hitUpdateQueue.front() == threadNum)
                 masterProcInfo.PlaceFrontToBack();
             timeLoopStart = omp_get_wtime();
         }
@@ -160,7 +160,7 @@ bool SimThreadHandle::runLoop() {
             || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].threadState == ThreadState::ThreadError);
     } while (!finishLoop);
 
-    masterProcInfo.RemoveAsActive(threadNum);
+    masterProcInfo.RemoveFromHitUpdateQueue(threadNum);
     if (!lastUpdateOk) {
         particleTracerPtr->UpdateHitsAndLog(simulationPtr->globalState, simulationPtr->globParticleLog,
             masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
@@ -608,7 +608,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
         }
     }
 
-    procInfo.InitActiveProcList();
+    procInfo.InitHitUpdateQueue();
 
     // Calculate remaining work
     size_t desPerThread = 0;
