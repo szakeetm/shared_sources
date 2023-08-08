@@ -457,13 +457,14 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
 }
 
 //! Ray-AABB intersection, given in the inverse direction of the ray and a handy array dirIsNeg that gives a factor for negative directions (dir < 0)
+//Performance critical! 35% of ray-tracing CPU usage
 bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]) {
 	
 	// Check for ray intersection against $x$ and $y$ slabs
-	double tMin = (bounds[dirIsNeg[0]].x - ray.origin.x) * invDir.x;
-	double tMax = (bounds[1 - dirIsNeg[0]].x - ray.origin.x) * invDir.x;
-	double tyMin = (bounds[dirIsNeg[1]].y - ray.origin.y) * invDir.y;
-	double tyMax = (bounds[1 - dirIsNeg[1]].y - ray.origin.y) * invDir.y;
+	double tMin = (dirIsNeg[0] ? bounds.max.x : bounds.min.x - ray.origin.x) * invDir.x;
+	double tMax = (dirIsNeg[0] ? bounds.min.x : bounds.max.x - ray.origin.x) * invDir.x;
+	double tyMin = (dirIsNeg[1] ? bounds.max.y : bounds.min.y - ray.origin.y) * invDir.y;
+	double tyMax = (dirIsNeg[1] ? bounds.min.y : bounds.max.y - ray.origin.y) * invDir.y;
 
 	constexpr double precalc_1_2_gamma3 = 1 + 2 * gamma(3);
 
@@ -475,8 +476,8 @@ bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Ve
 	if (tyMax < tMax) tMax = tyMax;
 
 	// Check for ray intersection against $z$ slab
-	double tzMin = (bounds[dirIsNeg[2]].z - ray.origin.z) * invDir.z;
-	double tzMax = (bounds[1 - dirIsNeg[2]].z - ray.origin.z) * invDir.z;
+	double tzMin = (dirIsNeg[2] ? bounds.max.z : bounds.min.z - ray.origin.z) * invDir.z;
+	double tzMax = (dirIsNeg[2] ? bounds.min.z : bounds.max.z - ray.origin.z) * invDir.z;
 
 	// Update _tzMax_ to ensure robust bounds intersection
 	tzMax *= precalc_1_2_gamma3;

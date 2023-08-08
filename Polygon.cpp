@@ -755,6 +755,7 @@ bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon) {
     return IsInPoly(point.u, point.v, polygon);
 }
 
+//Performance critical! 15% of ray-tracing CPU usage
 bool IsInPoly(const double u, const double v, const std::vector<Vector2d>& polygon) {
     // Fast method to check if a point is inside a polygon or not.
     // Works with convex and concave polys, orientation independent
