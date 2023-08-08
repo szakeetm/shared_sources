@@ -564,7 +564,7 @@ bool BVHAccel::Intersect(Ray &ray) {
     while (true) {
         const LinearBVHNode *node = &nodes[currentNodeIndex];
         // Check ray against BVH node
-        if (IntersectBox(node->bounds,ray, invDir, dirIsNeg)) {
+        if (node->bounds.IntersectBox(ray, invDir, dirIsNeg)) {
             if (node->nPrimitives > 0) {
                 // Intersect ray with primitives in leaf BVH node
                 for (int i = 0; i < node->nPrimitives; ++i) {

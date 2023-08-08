@@ -24,6 +24,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <limits>
 #include "Vector.h"
 
+class Ray;
+
 class AxisAlignedBoundingBox{
 public:
     AxisAlignedBoundingBox();
@@ -45,6 +47,8 @@ public:
     static AxisAlignedBoundingBox Union(const AxisAlignedBoundingBox& bb1, const AxisAlignedBoundingBox& bb2);
 
     static AxisAlignedBoundingBox Union(const AxisAlignedBoundingBox& bb, const Vector3d& p);
+
+    bool IntersectBox(const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]) const;
 
     template<class Archive>
     void serialize(Archive & archive)
