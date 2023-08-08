@@ -358,7 +358,6 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadFactor()
 		AV();
 		auto right = ReadPower();
 		left = AddNode(opType, std::monostate{}, std::move(left), std::move(right));
-		break;
 	}
 	return left;
 }
