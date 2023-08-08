@@ -457,6 +457,7 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
 }
 
 //! Ray-AABB intersection, given in the inverse direction of the ray and a handy array dirIsNeg that gives a factor for negative directions (dir < 0)
+//Performance critical! 35% of ray-tracing CPU usage
 bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]) {
 	
 	// Check for ray intersection against $x$ and $y$ slabs
