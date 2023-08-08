@@ -54,7 +54,6 @@ bool MaterialSurface::IsHardHit(const Ray &r) {
 }
 #endif
 
-//Performance critical! 5% of ray-tracing CPU usage
 bool RTFacet::Intersect(Ray &ray) {
     //++iSCount;
     Vector3d rayDirOpposite(-1.0 * ray.direction);
