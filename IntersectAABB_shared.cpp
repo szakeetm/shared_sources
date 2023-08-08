@@ -461,10 +461,13 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
 bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]) {
 	
 	// Check for ray intersection against $x$ and $y$ slabs
-	double tMin = (dirIsNeg[0] ? bounds.max.x : bounds.min.x - ray.origin.x) * invDir.x;
-	double tMax = (dirIsNeg[0] ? bounds.min.x : bounds.max.x - ray.origin.x) * invDir.x;
-	double tyMin = (dirIsNeg[1] ? bounds.max.y : bounds.min.y - ray.origin.y) * invDir.y;
-	double tyMax = (dirIsNeg[1] ? bounds.min.y : bounds.max.y - ray.origin.y) * invDir.y;
+	double tMin = ((dirIsNeg[0] ? bounds.max.x : bounds.min.x) - ray.origin.x) * invDir.x;
+	double tMax = ((dirIsNeg[0] ? bounds.min.x : bounds.max.x) - ray.origin.x) * invDir.x;
+
+	if (tMin > ray.tMax) return false; // Fast-exit
+
+	double tyMin = ((dirIsNeg[1] ? bounds.max.y : bounds.min.y) - ray.origin.y) * invDir.y;
+	double tyMax = ((dirIsNeg[1] ? bounds.min.y : bounds.max.y) - ray.origin.y) * invDir.y;
 
 	constexpr double precalc_1_2_gamma3 = 1 + 2 * gamma(3);
 
@@ -475,15 +478,19 @@ bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Ve
 	if (tyMin > tMin) tMin = tyMin;
 	if (tyMax < tMax) tMax = tyMax;
 
+	// Fast-exit again, after potentially updating tMin
+	if (tMin > ray.tMax) return false;
+
 	// Check for ray intersection against $z$ slab
-	double tzMin = (dirIsNeg[2] ? bounds.max.z : bounds.min.z - ray.origin.z) * invDir.z;
-	double tzMax = (dirIsNeg[2] ? bounds.min.z : bounds.max.z - ray.origin.z) * invDir.z;
+	double tzMin = ((dirIsNeg[2] ? bounds.max.z : bounds.min.z) - ray.origin.z) * invDir.z;
+	double tzMax = ((dirIsNeg[2] ? bounds.min.z : bounds.max.z) - ray.origin.z) * invDir.z;
 
 	// Update _tzMax_ to ensure robust bounds intersection
 	tzMax *= precalc_1_2_gamma3;
 	if (tMin > tzMax || tzMin > tMax) return false;
 	if (tzMin > tMin) tMin = tzMin;
 	if (tzMax < tMax) tMax = tzMax;
+
 	return (tMin < ray.tMax) && (tMax > 0);
 }
 

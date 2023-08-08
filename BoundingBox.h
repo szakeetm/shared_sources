@@ -31,8 +31,10 @@ public:
     Vector3d min;
     Vector3d max;
 
+    /*
     Vector3d& operator[] (int);
     const Vector3d& operator[] (int) const;
+    */
 
     Vector3d Offset(const Vector3d &p) const;
 
