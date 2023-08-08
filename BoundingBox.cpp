@@ -83,7 +83,6 @@ AxisAlignedBoundingBox AxisAlignedBoundingBox::Union(const AxisAlignedBoundingBo
     return unionbox;
 }
 
-/*
 //! Quick access for minima [0] or maxima [1]
 Vector3d &AxisAlignedBoundingBox::operator[](int ext) {
     if(ext == 0) return min;
@@ -95,4 +94,3 @@ const Vector3d &AxisAlignedBoundingBox::operator[](int ext) const {
     if(ext == 0) return min;
     else return max;
 }
-*/
