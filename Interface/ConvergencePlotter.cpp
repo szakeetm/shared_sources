@@ -360,11 +360,13 @@ void ConvergencePlotter::refreshViews() {
             ++formId;
             if (formId >= appFormulas->formulas.size())
                 return;
+            if (formId >= appFormulas->convergenceData.size())
+                return;
         }
 
         v->Reset();
         if (worker->globalStatCache.globalHits.nbDesorbed > 0) {
-            auto& conv_vec = appFormulas->convergenceData[formId];
+            const auto& conv_vec = appFormulas->convergenceData[formId];
             for (int j = std::max(0,(int)conv_vec.size()-1000); j < conv_vec.size(); j++) // limit data points to last 1000
                 v->Add(conv_vec[j].nbDes, conv_vec[j].value, false);
         }
@@ -403,6 +405,7 @@ int ConvergencePlotter::addView(int formulaHash) {
             }
         }
         if (!found) return 0;
+        if (i >= appFormulas->convergenceData.size()) return 0; //No data for this formula
         GLDataView *v = new GLDataView();
         v->SetName(formula->GetExpression().c_str());
         //Look for first available color
