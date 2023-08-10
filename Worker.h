@@ -206,6 +206,7 @@ private:
 
   // Methods
   void ResetWorkerStats();
+  void ResetConvergenceData();
   //void ClearHits();
   std::string GetErrorDetails();
   //void ThrowSubProcError(std::string message);

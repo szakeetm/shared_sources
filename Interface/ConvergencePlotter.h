@@ -62,7 +62,6 @@ public:
   bool IsLogScaled();
   void SetLogScaled(bool logScale);
   void SetWorker(Worker *w);
-    void ResetData();
 
 private:  
   int remView(int formulaHash);

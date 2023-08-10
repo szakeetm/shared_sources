@@ -34,7 +34,7 @@ struct Formulas {
 
     void AddFormula(const std::string& name, const std::string& expression);
     void ClearFormulas();
-
+    void ResetConvergenceData();
     void UpdateVectorSize();
     void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues);
     void EvaluateFormulas(size_t nbDesorbed);

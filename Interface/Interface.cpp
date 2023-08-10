@@ -237,7 +237,6 @@ void Interface::ResetSimulation(bool askConfirm) {
         nbDesStart = 0;
         nbHitStart = 0;
         if (convergencePlotter) {
-            convergencePlotter->ResetData();
             convergencePlotter->Refresh();
         }
         if(formulaEditor) formulaEditor->UpdateValues();

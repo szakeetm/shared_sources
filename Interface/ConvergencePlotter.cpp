@@ -189,15 +189,6 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 }
 
 /**
-* \brief Resets convergence data e.g. when simulation resets
-*/
-void ConvergencePlotter::ResetData() {
-    for (auto &convVec : appFormulas->convergenceData) {
-        convVec.clear();
-    }
-}
-
-/**
 * \brief Refreshes all window components (combo, chart, values)
 */
 void ConvergencePlotter::Refresh() {
@@ -405,7 +396,7 @@ int ConvergencePlotter::addView(int formulaHash) {
             }
         }
         if (!found) return 0;
-        if (i >= appFormulas->convergenceData.size()) return 0; //No data for this formula
+        //if (i > appFormulas->convergenceData.size()) return 0; //No data for this formula
         GLDataView *v = new GLDataView();
         v->SetName(formula->GetExpression().c_str());
         //Look for first available color

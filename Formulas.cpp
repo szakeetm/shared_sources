@@ -43,6 +43,16 @@ void Formulas::ClearFormulas() {
     UpdateVectorSize();
 }
 
+/**
+* \brief Resets convergence data e.g. when simulation resets
+*/
+void Formulas::ResetConvergenceData() {
+    for (auto& convVec : convergenceData) {
+        convVec.clear();
+    }
+}
+
+
 //! Initialize formulas by parsing string to values
 void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues){
     auto& formula = formulas[formulaIndex];
