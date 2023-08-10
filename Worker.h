@@ -23,6 +23,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include <set>
 #include <list>
+
+#include "Worker.h"
 #include <Helper/Chronometer.h>
 #include "Buffer_shared.h" //LEAK, HIT
 #include "SimulationManager.h"
