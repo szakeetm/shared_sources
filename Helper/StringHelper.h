@@ -49,6 +49,8 @@ std::string lowercase(const std::string& s);
 std::string uppercase(const std::string& s);
 bool iContains(const std::vector<std::string>& vec, const std::string& value);
 std::string FlattenLines(const std::vector<std::string>& lines);
+size_t countLines(const std::string& str);
+size_t countLines(const std::stringstream& ss);
 
 namespace Util {
     std::string getTimepointString();

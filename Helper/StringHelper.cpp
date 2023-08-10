@@ -314,3 +314,26 @@ namespace Util {
     }
 }
 
+size_t countLines(const std::string& str) {
+    std::istringstream stream(str);
+    std::string line;
+    size_t count = 0;
+
+    while (std::getline(stream, line)) {
+        ++count;
+    }
+
+    return count;
+}
+
+size_t countLines(const std::stringstream& ss) {
+    std::string line;
+    std::stringstream copyStream(ss.str()); // Make a copy because getline will modify the stream.
+    size_t count = 0;
+
+    while (std::getline(copyStream, line)) {
+        ++count;
+    }
+
+    return count;
+}
