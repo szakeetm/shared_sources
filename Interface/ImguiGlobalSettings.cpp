@@ -96,7 +96,7 @@ static void ProcessControlTable(SynRad *mApp) {
                 DWORD pid = proc.threadId;
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
-                ImGui::Text("Thread %zu", i + 1);
+                ImGui::Text("Thread %d", i + 1);
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("%u", pid);
 
