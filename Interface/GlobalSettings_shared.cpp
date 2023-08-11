@@ -153,7 +153,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
             else if (src==maxButton) {
                 if( worker->GetGeometry()->IsLoaded() ) {
                     char tmp[128];
-                    sprintf(tmp,"%d",worker->model->otfParams.desorptionLimit);
+                    sprintf(tmp,"%zd",worker->model->otfParams.desorptionLimit);
                     char *val = GLInputBox::GetInput(tmp,"Desorption max (0=>endless)","Edit MAX");
                     if (val) {
                         char* endptr;

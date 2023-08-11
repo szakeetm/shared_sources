@@ -374,7 +374,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			}
 			else if (interfGeom->GetNbSelectedFacets() > 1) {
 				char warningMsg[512];
-				sprintf(warningMsg, "Extrude %d facets at once?", interfGeom->GetNbSelectedFacets());
+				sprintf(warningMsg, "Extrude %zd facets at once?", interfGeom->GetNbSelectedFacets());
 				int rep = GLMessageBox::Display(warningMsg, "Extrusion of more than one facet", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO);
 				if (rep != GLDLG_OK) {
 					return;
@@ -509,7 +509,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 
 				baseId = *foundId;
 				char tmp[32];
-				sprintf(tmp, "Vertex %d", baseId + 1);
+				sprintf(tmp, "Vertex %zd", baseId + 1);
 				baseLabel->SetText(tmp);
 				if (dirId > 0 && dirId < interfGeom->GetNbVertex()) {
 					dxText->SetText(interfGeom->GetVertex(dirId)->x - interfGeom->GetVertex(baseId)->x);
@@ -526,7 +526,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 
 				dirId = *foundId;
 				char tmp[32];
-				sprintf(tmp, "Vertex %d", dirId + 1);
+				sprintf(tmp, "Vertex %zd", dirId + 1);
 				dirLabel->SetText(tmp);
 				if (baseId>0 && baseId < interfGeom->GetNbVertex()) {
 					dxText->SetText(interfGeom->GetVertex(dirId)->x - interfGeom->GetVertex(baseId)->x);
@@ -537,7 +537,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		} else if (src==curveFacetCenterButton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d center", *foundId + 1);
+				sprintf(tmp, "Facet %zd center", *foundId + 1);
 				curveBaseLabel->SetText(tmp);
 				Vector3d center3d = interfGeom->GetFacet(*foundId)->sh.center;
 				curveX0Text->SetText(center3d.x);
@@ -549,7 +549,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				int vertexId = interfGeom->GetFacet(*foundId)->indices[0];
 				char tmp[32];
-				sprintf(tmp, "Facet %d index1: Vertex %d", *foundId + 1, vertexId+1);
+				sprintf(tmp, "Facet %zd index1: Vertex %zd", *foundId + 1, vertexId+1);
 				curveBaseLabel->SetText(tmp);
 				curveX0Text->SetText(interfGeom->GetVertex(vertexId)->x);
 				curveY0Text->SetText(interfGeom->GetVertex(vertexId)->y);
@@ -559,7 +559,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == curveGetBaseButton) {
 			if (auto foundId = AssertOneVertexSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Vertex %d", *foundId + 1);
+				sprintf(tmp, "Vertex %zd", *foundId + 1);
 				curveBaseLabel->SetText(tmp);
 				curveX0Text->SetText(interfGeom->GetVertex(*foundId)->x);
 				curveY0Text->SetText(interfGeom->GetVertex(*foundId)->y);
@@ -569,7 +569,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == curveFacetUButton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d \201", *foundId + 1);
+				sprintf(tmp, "Facet %zd \201", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(interfGeom->GetFacet(*foundId)->sh.U.x);
 				curvedYText->SetText(interfGeom->GetFacet(*foundId)->sh.U.y);
@@ -579,7 +579,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == curveFacetVButton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d \202", *foundId + 1);
+				sprintf(tmp, "Facet %zd \202", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(interfGeom->GetFacet(*foundId)->sh.V.x);
 				curvedYText->SetText(interfGeom->GetFacet(*foundId)->sh.V.y);
@@ -591,7 +591,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 				double x0, y0, z0;
 				if (curveX0Text->GetNumber(&x0) && curveY0Text->GetNumber(&y0) && curveZ0Text->GetNumber(&z0)) {
 					char tmp[32];
-					sprintf(tmp, "Vertex %d", *foundId + 1);
+					sprintf(tmp, "Vertex %zd", *foundId + 1);
 					curveDirLabel->SetText(tmp);
 					curvedXText->SetText(interfGeom->GetVertex(*foundId)->x-x0);
 					curvedYText->SetText(interfGeom->GetVertex(*foundId)->y-y0);
@@ -602,7 +602,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == facetNXbutton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x X", *foundId + 1);
+				sprintf(tmp, "Facet %zd N x X", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(0);
 				curvedYText->SetText(interfGeom->GetFacet(*foundId)->sh.N.z);
@@ -612,7 +612,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == facetNYbutton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x Y", *foundId + 1);
+				sprintf(tmp, "Facet %zd N x Y", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(-interfGeom->GetFacet(*foundId)->sh.N.z);
 				curvedYText->SetText(0);
@@ -622,7 +622,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		else if (src == facetNZbutton) {
 			if (auto foundId = AssertOneFacetSelected()) {
 				char tmp[32];
-				sprintf(tmp, "Facet %d N x Z", *foundId + 1);
+				sprintf(tmp, "Facet %zd N x Z", *foundId + 1);
 				curveDirLabel->SetText(tmp);
 				curvedXText->SetText(interfGeom->GetFacet(*foundId)->sh.N.y);
 				curvedYText->SetText(-interfGeom->GetFacet(*foundId)->sh.N.x);

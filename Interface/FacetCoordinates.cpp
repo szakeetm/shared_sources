@@ -150,7 +150,7 @@ void FacetCoordinates::GetSelected() {
   }
 
   char tmp[32];
-  sprintf(tmp,"Facets coordinates #%d",i+1);
+  sprintf(tmp,"Facets coordinates #%zd",i+1);
   SetTitle(tmp);
 
 }
@@ -308,10 +308,10 @@ void FacetCoordinates::RebuildList() {
 
 	for(int i=0;i<lines.size();i++) {
 		
-		sprintf(tmp,"%d",i+1);
+		sprintf(tmp,"%zd",i+1);
 		facetListC->SetValueAt(0,i,tmp);
 		
-		sprintf(tmp,"%d",lines[i].vertexId+1);
+		sprintf(tmp,"%zd",lines[i].vertexId+1);
 		facetListC->SetValueAt(1,i,tmp);
     
 		sprintf(tmp,"%.10g",lines[i].coord.x);
@@ -384,7 +384,7 @@ void FacetCoordinates::ApplyChanges(){
 		double x,y,z;
 		if (!(lines[row].vertexId >= 0 && lines[row].vertexId<interfGeom->GetNbVertex())) { //wrong coordinates at row
 			char tmp[128];
-			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", row + 1, lines[row].vertexId + 1);
+			sprintf(tmp, "Invalid vertex id in row %d\n Vertex %zd doesn't exist.", row + 1, lines[row].vertexId + 1);
 			GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
 			return;
 		}

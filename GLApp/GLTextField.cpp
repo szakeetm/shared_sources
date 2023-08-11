@@ -125,7 +125,7 @@ bool GLTextField::GetNumberInt(int *num) {
 
 bool GLTextField::GetNumberSizeT(int *num) {
 
-	int conv = sscanf(m_Text, "%d", num);
+	int conv = sscanf(m_Text, "%zd", num);
 	return (conv == 1);
 
 }

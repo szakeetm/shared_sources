@@ -527,9 +527,9 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                             ImGui::TableSetColumnIndex(0);
                             ImGui::Text("%d", item->ID);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%d", item->hits);
+                            ImGui::Text("%zd", item->hits);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%d", item->des);
+                            ImGui::Text("%zd", item->des);
                             ImGui::TableNextColumn();
                             ImGui::Text("%g", item->abs);
                             //ImGui::PopID();

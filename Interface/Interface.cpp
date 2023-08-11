@@ -414,7 +414,7 @@ void Interface::UpdateModelParams() {
         if (f->sh.area > 0) sumArea += f->GetArea();
     }
 
-    sprintf(tmp, "V:%d F:%d Dim:(%g,%g,%g) Area:%g", interfGeom->GetNbVertex(), interfGeom->GetNbFacet(),
+    sprintf(tmp, "V:%zd F:%zd Dim:(%g,%g,%g) Area:%g", interfGeom->GetNbVertex(), interfGeom->GetNbFacet(),
             (bb.max.x - bb.min.x), (bb.max.y - bb.min.y), (bb.max.z - bb.min.z), sumArea);
     geomNumber->SetText(tmp);
 
@@ -2137,7 +2137,7 @@ void Interface::OverWriteView(int idOvr) {
 void Interface::AddView() {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
     char tmp[32];
-    sprintf(tmp, "View #%d", views.size() + 1);
+    sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
     if (!viewName) return;
 
@@ -2194,7 +2194,7 @@ void Interface::UpdateRecentMenu() {
 void Interface::AddStruct() {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
     char tmp[32];
-    sprintf(tmp, "Structure #%d", interfGeom->GetNbStructure() + 1);
+    sprintf(tmp, "Structure #%zd", interfGeom->GetNbStructure() + 1);
     char *structName = GLInputBox::GetInput(tmp, "Structure name", "Enter name of new structure");
     if (!structName) return;
     interfGeom->AddStruct(structName);

@@ -160,7 +160,7 @@ void VertexCoordinates::Update() {
   vertexListC->SetColumnEditable((int *)fEdits);
   for(int i=0;i<s->GetNbVertex();i++) {
 	  if(s->GetVertex(i)->selected) {
-		  sprintf(tmp,"%d",i+1);
+		  sprintf(tmp,"%zd",i+1);
 		  vertexListC->SetValueAt(0,count,tmp);
 		  //sprintf(tmp,"%d",idx+1);
 		  //vertexListC->SetValueAt(1,i,tmp);
@@ -241,7 +241,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 				id=vertexListC->GetValueInt(i,0)-1;
 				if (!(id>=0 && id<interfGeom->GetNbVertex())) { //wrong coordinates at row
 					char tmp[128];
-					sprintf(tmp, "Invalid vertex id in row %d\n Vertex %d doesn't exist.", i + 1, id+1);
+					sprintf(tmp, "Invalid vertex id in row %zd\n Vertex %zd doesn't exist.", i + 1, id+1);
 					GLMessageBox::Display(tmp, "Incorrect vertex id", GLDLG_OK, GLDLG_ICONWARNING);
 					return;
 				}
@@ -250,7 +250,7 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 				success = success && (1==sscanf(vertexListC->GetValueAt(3,i),"%lf",&z));
 				if (!success) { //wrong coordinates at row
 					char tmp[128];
-					sprintf(tmp,"Invalid coordinates in row %d",i+1);
+					sprintf(tmp,"Invalid coordinates in row %zd",i+1);
 					GLMessageBox::Display(tmp,"Incorrect vertex",GLDLG_OK,GLDLG_ICONWARNING);
 				return;	
 				}

@@ -726,7 +726,7 @@ InterfaceVertex* InterfaceGeometry::GetVertex(int idx) {
 InterfaceFacet *InterfaceGeometry::GetFacet(int facet) {
 	if (facet >= facets.size() || facet < 0) {
 		char errMsg[512];
-		sprintf(errMsg, "InterfaceGeometry::GetFacet()\nA process tried to access facet #%d that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
+		sprintf(errMsg, "InterfaceGeometry::GetFacet()\nA process tried to access facet #%zd that doesn't exist.\nAutoSaving and probably crashing...", facet + 1);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		mApp->AutoSave(true);
 		throw Error(errMsg);
@@ -3457,7 +3457,7 @@ void InterfaceGeometry::SetFacetTexture(int facetId, double ratioU, double ratio
 
 	if (!f->SetTexture(texWidth, texHeight, mesh)) {
 		char errMsg[512];
-		sprintf(errMsg, "Not enough memory to build mesh on Facet %d. ", facetId + 1);
+		sprintf(errMsg, "Not enough memory to build mesh on Facet %zd. ", facetId + 1);
 		throw Error(errMsg);
 	}
     f->tRatioU = ratioU;
@@ -4062,7 +4062,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, int strIdx, bool newStru
 
 		if (nb < 3) {
 			char errMsg[512];
-			sprintf(errMsg, "Facet %d has only %d vertices. ", i+1, nb);
+			sprintf(errMsg, "Facet %zd has only %zd vertices. ", i+1, nb);
 			throw Error(errMsg);
 		}
 
