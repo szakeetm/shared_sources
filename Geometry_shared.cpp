@@ -3719,11 +3719,11 @@ void InterfaceGeometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bo
 void InterfaceGeometry::LoadTXTGeom(FileReader& file, Worker* worker, int strIdx) {
 
 	file.ReadInt(); // Unused
-	worker->globalState->globalStats.globalHits.nbMCHit = file.ReadInt();
+	worker->globalState->globalStats.globalHits.nbMCHit = file.ReadSizeT();
 	worker->globalState->globalStats.globalHits.nbHitEquiv = (double)worker->globalState->globalStats.globalHits.nbMCHit; //Backward comp
-	worker->globalState->globalStats.nbLeakTotal = file.ReadInt();
-	worker->globalState->globalStats.globalHits.nbDesorbed = file.ReadInt();
-	worker->model->otfParams.desorptionLimit = file.ReadInt();
+	worker->globalState->globalStats.nbLeakTotal = file.ReadSizeT();
+	worker->globalState->globalStats.globalHits.nbDesorbed = file.ReadSizeT();
+	worker->model->otfParams.desorptionLimit = file.ReadSizeT();
 
 	sh.nbVertex = file.ReadInt();
 	sh.nbFacet = file.ReadInt();
@@ -3774,10 +3774,10 @@ void InterfaceGeometry::InsertTXTGeom(FileReader& file, int strIdx, bool newStru
 
 	UnselectAll();
 
-	//loaded_nbMCHit = file.ReadInt();
+	//loaded_nbMCHit = file.ReadSizeT();
 	//loaded_nbLeak = file.ReadInt();
-	//loaded_nbDesorption = file.ReadInt();
-	//loaded_desorptionLimit = file.ReadInt(); 
+	//loaded_nbDesorption = file.ReadSizeT();
+	//loaded_desorptionLimit = file.ReadSizeT(); 
 	for (int i = 0; i < 5; i++) file.ReadInt(); //leading lines
 
 	int nbNewVertex = file.ReadInt();
@@ -3811,11 +3811,11 @@ void InterfaceGeometry::InsertTXTGeom(FileReader& file, int strIdx, bool newStru
 
 	// Read geometry facets (indexed from 1)
 	for (int i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
-		int nb = file.ReadInt();
+		int nb = file.ReadSizeT();
 		facets[i] = new InterfaceFacet(nb);
 		(facets)[i]->selected = true;
 		for (int j = 0; j < nb; j++)
-			(facets)[i]->indices[j] = file.ReadInt() - 1 + sh.nbVertex;
+			(facets)[i]->indices[j] = file.ReadSizeT() - 1 + sh.nbVertex;
 	}
 
 	// Read facets params
@@ -3853,14 +3853,14 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, int strIdx, bool newStru
 	}
 
 	file.ReadKeyword("totalHit"); file.ReadKeyword(":");
-	file.ReadInt();
+	file.ReadSizeT();
 	file.ReadKeyword("totalDes"); file.ReadKeyword(":");
-	file.ReadInt();
+	file.ReadSizeT();
 	file.ReadKeyword("totalLeak"); file.ReadKeyword(":");
-	file.ReadInt();
+	file.ReadSizeT();
 	if (version2 >= 12) {
 		file.ReadKeyword("totalAbs"); file.ReadKeyword(":");
-		file.ReadInt();
+		file.ReadSizeT();
 		if (version2 >= 15) {
 			file.ReadKeyword("totalDist_total");
 		}
@@ -3875,7 +3875,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, int strIdx, bool newStru
 		}
 	}
 	file.ReadKeyword("maxDes"); file.ReadKeyword(":");
-	file.ReadInt();
+	file.ReadSizeT();
 	file.ReadKeyword("nbVertex"); file.ReadKeyword(":");
 	int nbNewVertex = file.ReadInt();
 	file.ReadKeyword("nbFacet"); file.ReadKeyword(":");
@@ -4006,7 +4006,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, int strIdx, bool newStru
 	file.ReadKeyword("vertices"); file.ReadKeyword("{");
 	for (int i = sh.nbVertex; i < (sh.nbVertex + nbNewVertex); i++) {
 		// Check idx
-		int idx = file.ReadInt();
+		int idx = file.ReadSizeT();
 		if (idx != i - sh.nbVertex + 1) throw Error(file.MakeError("Wrong vertex index !"));
 		vertices3[i].x = file.ReadDouble();
 		vertices3[i].y = file.ReadDouble();
@@ -4053,12 +4053,12 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, int strIdx, bool newStru
 	for (int i = sh.nbFacet; i < (sh.nbFacet + nbNewFacets); i++) {
 		file.ReadKeyword("facet");
 		// Check idx
-		int idx = file.ReadInt();
+		int idx = file.ReadSizeT();
 		if (idx != i + 1 - sh.nbFacet) throw Error(file.MakeError("Wrong facet index !"));
 		file.ReadKeyword("{");
 		file.ReadKeyword("nbIndex");
 		file.ReadKeyword(":");
-		int nb = file.ReadInt();
+		int nb = file.ReadSizeT();
 
 		if (nb < 3) {
 			char errMsg[512];
