@@ -100,6 +100,12 @@ void GLTextField::SetText(const int val) {
 	SetText(tmp);
 }
 
+void GLTextField::SetText(const int val) {
+	char tmp[256];
+	sprintf(tmp, "%zd", val);
+	SetText(tmp);
+}
+
 void GLTextField::UpdateText(const char *text) {
   if(text) {
     strncpy(m_Text,text,MAX_TEXT_SIZE);

@@ -81,6 +81,7 @@ public:
 	void  ShiftVertex(const int offset = 1);
 	void  InitVisibleEdge();
 	int   GetIndex(int idx);
+	int   GetIndex(int idx);
 	double GetMeshArea(int index, bool correct2sides = false);
 	int GetMeshNbPoint(int index);
 	Vector2d GetMeshPoint(int index, int pointId);

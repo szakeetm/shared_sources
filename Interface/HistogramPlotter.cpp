@@ -239,7 +239,7 @@ void HistogramPlotter::refreshChart() {
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 	for (auto& v : modes[modeId].views) {
 
-		if (v->userData1 >= -1 && v->userData1 < interfGeom->GetNbFacet()) {
+		if (v->userData1 >= -1 && v->userData1 < (int)interfGeom->GetNbFacet()) {
 			v->Reset();
 
 			auto [histogramValues, xMax, xSpacing,nbBins] = GetHistogramValues(v->userData1, modeId);
@@ -248,7 +248,7 @@ void HistogramPlotter::refreshChart() {
 			
 			switch (yScaleMode) {
 				case 0: { //Absolute
-					int plotLimit = std::min((int)histogramValues->size(), 1000);
+					int plotLimit = std::min(histogramValues->size(), (int)1000);
 					for (int i = 0; i < plotLimit;i++) {
 						v->Add((double)i*xSpacing, (*histogramValues)[i]);
 					}
@@ -256,7 +256,7 @@ void HistogramPlotter::refreshChart() {
 				}
 				case 1: { //Normalized
 					double yMax = 0.0;
-					int plotLimit = std::min((int)histogramValues->size(), 1000);
+					int plotLimit = std::min(histogramValues->size(), (int)1000);
 					for (int i = 0; i < plotLimit; i++) {
 						yMax = std::max(yMax, (*histogramValues)[i]);
 					}
