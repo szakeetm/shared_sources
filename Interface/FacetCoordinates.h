@@ -50,8 +50,8 @@ public:
 private:
 
   void GetSelected();
-  void InsertVertex(int rowId,int vertexId);
-  void RemoveRow(int rowId);
+  void InsertVertex(size_t rowId,size_t vertexId);
+  void RemoveRow(size_t rowId);
   void RebuildList();
   void ApplyChanges();
   

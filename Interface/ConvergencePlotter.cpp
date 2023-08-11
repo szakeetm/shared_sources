@@ -46,7 +46,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/SynRad.h"
 #endif
 
-constexpr int max_vector_size() { return 16384; };
+constexpr size_t max_vector_size() { return 16384; };
 
 /**
 * \brief Constructor with initialisation for Convergence plotter window (Tools/Convergence Plotter)
@@ -194,11 +194,11 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 void ConvergencePlotter::Refresh() {
 
     //Rebuild selection combo box
-    int nbFormulas = appFormulas->formulas.size(); // minimum 1 for custom input
+    size_t nbFormulas = appFormulas->formulas.size(); // minimum 1 for custom input
     profCombo->Clear();
     if (nbFormulas) {
         profCombo->SetSize(nbFormulas);
-        for (int i = 0; i < nbFormulas; i++) {
+        for (size_t i = 0; i < nbFormulas; i++) {
             profCombo->SetValueAt(i, fmt::format("[{}] {}",i + 1, appFormulas->formulas[i].GetExpression()), (int) i);
         }
         profCombo->SetEditable(true);
@@ -214,7 +214,7 @@ void ConvergencePlotter::Refresh() {
         if (appFormulas->formulas.empty()) {
             chart->GetY1Axis()->RemoveDataView(views[v]);
             SAFE_DELETE(views[v]);
-            for (int j = v; j < nbView - 1; j++) views[j] = views[j + 1];
+            for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
             nbView--;
             continue;
         }
@@ -225,7 +225,7 @@ void ConvergencePlotter::Refresh() {
             if (formId >= appFormulas->formulas.size()) {
                 chart->GetY1Axis()->RemoveDataView(views[v]);
                 SAFE_DELETE(views[v]);
-                for (int j = v; j < nbView - 1; j++) views[j] = views[j + 1];
+                for (size_t j = v; j < nbView - 1; j++) views[j] = views[j + 1];
                 nbView--;
                 break;
             }
@@ -560,7 +560,7 @@ void ConvergencePlotter::SetViews(const std::vector<int> &updatedViews) {
 std::vector<int> ConvergencePlotter::GetViews() const {
     std::vector<int> v;
     v.reserve(nbView);
-    for (int i = 0; i < nbView; i++)
+    for (size_t i = 0; i < nbView; i++)
         v.push_back(views[i]->userData1);
     return v;
 }

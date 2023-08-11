@@ -28,7 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
-int    GetPower2(int n);
+size_t    GetPower2(size_t n);
 double Pow10(const double a);
 /*
 int isinf(double x);
@@ -36,12 +36,12 @@ int isnan(double x);
 */
 
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
-int IDX(const int i, const int nb);
-int IDX(const int i, const int nb);
-int Next(const int i, const int nb, const bool inverseDir=false);
-int Next(const int i, const int nb, const bool inverseDir=false);
-int Previous(const int i, const int nb, const bool inverseDir=false);
-int Previous(const int i, const int nb, const bool inverseDir=false);
+size_t IDX(const int i, const size_t nb);
+size_t IDX(const size_t i, const size_t nb);
+size_t Next(const int i, const size_t nb, const bool inverseDir=false);
+size_t Next(const size_t i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const int i, const size_t nb, const bool inverseDir=false);
+size_t Previous(const size_t i, const size_t nb, const bool inverseDir=false);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }
 template <typename TYPE> TYPE Square(const TYPE& a) { return a*a; }
@@ -63,7 +63,7 @@ inline double DET33(double _11, double _12, double _13,
 #define VERY_SMALL 1.0E-30
 #define MY_INFINITY 1.e100
 
-char  *FormatMemory(int size);
+char  *FormatMemory(size_t size);
 char  *FormatMemoryLL(long long size);
 
 //[[maybe_unused]] double my_erf(double x);
@@ -73,11 +73,11 @@ template <typename TYPE> bool Contains(const std::vector<TYPE>& vec, const TYPE&
 	return (std::find(vec.begin(), vec.end(), value) != vec.end());
 }
 
-template <typename TYPE> int FirstIndex(const std::vector<TYPE>& vec, const TYPE& value) {
+template <typename TYPE> size_t FirstIndex(const std::vector<TYPE>& vec, const TYPE& value) {
 	return (std::find(vec.begin(), vec.end(), value) - vec.begin());
 }
 
-int weighed_lower_index_X(const double key, const double weigh, double* A, double* B, const int size);
+int weighed_lower_index_X(const double key, const double weigh, double* A, double* B, const size_t size);
 
 //Lower index functions
 //input: double lookup key, a vector of any type of data, and a getElement function that returns the a double value of T type
@@ -85,7 +85,7 @@ int weighed_lower_index_X(const double key, const double weigh, double* A, doubl
 //			if key is between discrete data points, it returns the index of the last element that's lower
 //			consequently, if smaller than all elements, returns the previous
 //warning:	off by one compared to std::lower_bound -> returns the index of an element LOWER than key
-int lower_index(const double key, const double* data,const int size); //c-style array of double
+int lower_index(const double key, const double* data,const size_t size); //c-style array of double
 int lower_index(const double key, const std::vector<double>& data);
 int lower_index(const double key, const std::vector<std::pair<double, double>>& data, const bool first); //pairs, search in first or second element
 template <typename T> int lower_index(const double  key, const std::vector<T>& data, const bool first)
@@ -106,7 +106,7 @@ template <typename T> int lower_index(const double  key, const std::vector<std::
 
 
 std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pair<double, std::vector<double>>>& table, const bool logX = false, const bool logY = false, const bool allowExtrapolate = false);
-//double InterpolateVectorX(const double y, const std::vector<std::pair<double, std::vector<double>>>& table, const int elementIndex, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
+//double InterpolateVectorX(const double y, const std::vector<std::pair<double, std::vector<double>>>& table, const size_t elementIndex, const bool logX=false, const bool logY=false, const bool allowExtrapolate = false);
 
 template <typename T, typename Func>
 double InterpolateXY_universal(const double lookupValue, //X or Y depending on searchFirst

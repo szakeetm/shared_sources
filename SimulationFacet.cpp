@@ -26,7 +26,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-SimulationFacet::SimulationFacet(int nbIndex) : RTFacet(nbIndex) {
+SimulationFacet::SimulationFacet(size_t nbIndex) : RTFacet(nbIndex) {
 
     indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
     vertices2.resize(nbIndex);
@@ -73,7 +73,7 @@ SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
     return *this;
 }
 */
-bool SimulationFacet::InitializeLinkAndVolatile(const int  id)
+bool SimulationFacet::InitializeLinkAndVolatile(const size_t  id)
 {
     if (sh.superDest || sh.isVolatile) {
         // Link or volatile facet, overides facet settings
@@ -171,11 +171,11 @@ std::vector<double> SimulationFacet::InitTextureMesh()
 void SimulationFacet::InitializeTexture(){
     //Textures
     if (sh.isTextured) {
-        int nbE = sh.texWidth*sh.texHeight;
+        size_t nbE = sh.texWidth*sh.texHeight;
         largeEnough.resize(nbE);
         // Texture increment of a full texture element
         double fullSizeInc = (sh.texWidth_precise * sh.texHeight_precise) / (sh.U.Norme() * sh.V.Norme());
-        for (int j = 0; j < nbE; j++) { //second pass, filter out very small cells
+        for (size_t j = 0; j < nbE; j++) { //second pass, filter out very small cells
             largeEnough[j] = textureCellIncrements[j] < (5.0*fullSizeInc);
         }
     }
@@ -186,7 +186,7 @@ void SimulationFacet::InitializeTexture(){
 * \param nbMoments amount of moments
 * \return calculated size of the facet hits
 */
-int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
+size_t SimulationFacet::GetHitsSize(size_t nbMoments) const { //for hits dataport
     return   (1 + nbMoments)*(
             sizeof(FacetHitBuffer) +
             +(sh.isTextured ? (sh.texWidth*sh.texHeight * sizeof(TextureCell)) : 0)
@@ -201,10 +201,10 @@ int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
 * \param nbMoments amount of moments
 * \return calculated size of the facet hits
 */
-int SimulationFacet::GetMemSize() const {
-    int sum = 0;
+size_t SimulationFacet::GetMemSize() const {
+    size_t sum = 0;
     sum += sizeof (SimulationFacet);
-    sum += sizeof (int) * indices.capacity();
+    sum += sizeof (size_t) * indices.capacity();
     sum += sizeof (Vector2d) * vertices2.capacity();
     sum += sizeof (double) * textureCellIncrements.capacity();
     sum += sizeof (bool) * largeEnough.capacity();

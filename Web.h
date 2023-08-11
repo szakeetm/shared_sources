@@ -4,7 +4,7 @@
 #include <vector>
 #include "GLApp/GLToolkit.h" //ScreenSize
 
-int AppendDataToStringCurlCallback(void *ptr, int size, int nmemb, void *vstring);
+size_t AppendDataToStringCurlCallback(void *ptr, size_t size, size_t nmemb, void *vstring);
 
 std::tuple<CURLcode,std::string> DownloadString(const std::string& url);
 CURLcode SendHTTPPostRequest(const std::string& hostname, const std::string& payload);

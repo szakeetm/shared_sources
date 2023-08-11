@@ -181,7 +181,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 			minmaxRatio = true;
 		}
 		if (src == selectButton) interfGeom->UnselectAll();
-		for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+		for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
 			InterfaceFacet* f = interfGeom->GetFacet(i);
 			bool match = f->sh.isTextured;
 			if (squareToggle->GetState() != 2) match = match && ((squareToggle->GetState()==1) == IsEqual(f->tRatioU,f->tRatioV));

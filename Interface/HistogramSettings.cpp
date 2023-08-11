@@ -224,8 +224,8 @@ bool HistogramSettings::Apply() {
 	//Check input, return false if error, otherwise apply and return true
 	
 	bool globalRecBounce;
-	int globalHitLimit; bool doGlobalHitLimit=false;
-	int globalHitBinsize; bool doGlobalHitBinsize=false;
+	size_t globalHitLimit; bool doGlobalHitLimit=false;
+	size_t globalHitBinsize; bool doGlobalHitBinsize=false;
 	bool globalRecDistance;
 	double globalDistanceLimit; bool doGlobalDistanceLimit=false;
 	double globalDistanceBinsize; bool doGlobalDistanceBinsize=false;
@@ -236,8 +236,8 @@ bool HistogramSettings::Apply() {
 #endif
 
 	bool facetRecBounce; bool doFacetRecBounce = false;
-	int facetHitLimit; bool doFacetHitLimit = false;
-	int facetHitBinsize; bool doFacetHitBinsize = false;
+	size_t facetHitLimit; bool doFacetHitLimit = false;
+	size_t facetHitBinsize; bool doFacetHitBinsize = false;
 	bool facetRecDistance; bool doFacetRecDistance = false;
 	double facetDistanceLimit; bool doFacetDistanceLimit = false;
 	double facetDistanceBinsize; bool doFacetDistanceBinsize = false;
@@ -444,7 +444,7 @@ bool HistogramSettings::Apply() {
 	return true;
 }
 
-void HistogramSettings::Refresh(const std::vector<int>& selectedFacetIds) {
+void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	//Update displayed info based on selected facets
 	globalRecordBounceToggle->SetState(work->model->wp.globalHistogramParams.recordBounce);
 	globalHitLimitText->SetText(work->model->wp.globalHistogramParams.nbBounceMax);
@@ -487,8 +487,8 @@ void HistogramSettings::Refresh(const std::vector<int>& selectedFacetIds) {
 #endif
 		InterfaceFacet* f0 = interfGeom->GetFacet(selectedFacetIds[0]);
 		bool recBounce = f0->sh.facetHistogramParams.recordBounce;
-		int bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
-		int bounceBinsize = f0->sh.facetHistogramParams.nbBounceBinsize;
+		size_t bounceMax = f0->sh.facetHistogramParams.nbBounceMax;
+		size_t bounceBinsize = f0->sh.facetHistogramParams.nbBounceBinsize;
 		bool recDist = f0->sh.facetHistogramParams.recordDistance;
 		double distMax = f0->sh.facetHistogramParams.distanceMax;
 		double distBinsize = f0->sh.facetHistogramParams.distanceBinsize;
@@ -498,7 +498,7 @@ void HistogramSettings::Refresh(const std::vector<int>& selectedFacetIds) {
 		double timeBinsize = f0->sh.facetHistogramParams.timeBinsize;
 #endif
 
-		for (int i = 1; i < selectedFacetIds.size();i++) {
+		for (size_t i = 1; i < selectedFacetIds.size();i++) {
 			InterfaceFacet* f = interfGeom->GetFacet(selectedFacetIds[i]);
 			recordBounceEqual = recordBounceEqual && (f->sh.facetHistogramParams.recordBounce == recBounce);
 			bounceMaxEqual = bounceMaxEqual && (f->sh.facetHistogramParams.nbBounceMax == bounceMax);

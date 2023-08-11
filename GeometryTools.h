@@ -30,7 +30,7 @@ struct CommonEdge {
         angle = 0.0;
         swapped = false;
     };
-    CommonEdge(int id, int v1, int v2) : facetId(), v1(v1), v2(v2){
+    CommonEdge(size_t id, size_t v1, size_t v2) : facetId(), v1(v1), v2(v2){
         facetId.emplace_back(static_cast<int>(id));
         angle = 0.0;
         swapped = false;
@@ -67,9 +67,9 @@ class GeometryTools {
 public:
     static int  FindEar(const GLAppPolygon& p);
     //static std::vector<std::vector<NeighborFacet>> AnalyzeNeighbors(InterfaceGeometry* geometry);
-    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<int> facetIndices, GLProgress_Abstract& prg);
+    static std::vector<InterfaceFacet*> GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg);
     static void PolygonsToTriangles(InterfaceGeometry* geometry, GLProgress_Abstract& prg);
-    static void PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<int> selectedIndices, GLProgress_Abstract& prg);
+    static void PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg);
 
     static int GetAnalyzedCommonEdges(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 
@@ -83,7 +83,7 @@ public:
 
     static void AnalyzeGeometry(InterfaceGeometry *geometry);
 
-    static void CompareAlgorithm(InterfaceGeometry *geometry, int index);
+    static void CompareAlgorithm(InterfaceGeometry *geometry, size_t index);
 
     //static int GetNeighbors(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges);
 

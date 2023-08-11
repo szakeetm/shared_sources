@@ -291,7 +291,7 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 	//Lines
 	GLProgress_GUI prg = GLProgress_GUI("Assembling text", "Particle logger");
 	prg.SetVisible(true);
-    for (int i = 0; !work->abortRequested && i < log.size(); i++) {
+    for (size_t i = 0; !work->abortRequested && i < log.size(); i++) {
         prg.SetProgress((double)i / (double)log.size());
 		mApp->DoEvents(); //To catch eventual abort button click
 		InterfaceFacet* f = work->GetGeometry()->GetFacet(work->model->otfParams.logFacetId);

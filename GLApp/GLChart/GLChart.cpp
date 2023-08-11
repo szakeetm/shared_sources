@@ -71,7 +71,7 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	dvOptions = nullptr;
 
 	// Load NaN constant
-	int iNaN = 0x7ff0000bad0000ffL;
+	size_t iNaN = 0x7ff0000bad0000ffL;
 	memcpy(&NaN,&iNaN,8);
 	//bool test = isnan(NaN);
 }
@@ -350,19 +350,19 @@ void GLChart::RestoreDeviceObjects() {
 }
 
 GLColor GLChart::GetFirstAvailableColor() {
-		std::vector<int> colorCount(colors.size(), 0);
+		std::vector<size_t> colorCount(colors.size(), 0);
 		int nbViews = GetY1Axis()->GetViewNumber();
 		for (int i = 0; i < nbViews; i++) {
 			GLColor c = GetY1Axis()->GetDataView(i)->GetColor();
-			for (int ii = 0; ii < colors.size(); ii++) {
+			for (size_t ii = 0; ii < colors.size(); ii++) {
 				if (c == colors[ii]) {
 					colorCount[ii]++;
 				}
 			}
 		}
 		//Pick first available color
-		int min = 1000; int minIndex = 0;
-		for (int i = 0; i < colorCount.size(); i++) {
+		size_t min = 1000; size_t minIndex = 0;
+		for (size_t i = 0; i < colorCount.size(); i++) {
 			if (colorCount[i] < min) {
 				min = colorCount[i];
 				minIndex = i;
@@ -1081,7 +1081,7 @@ void GLChart::CopyAllToClipboard() {
 	/*
 
 	// Compute data length
-	//int totalLength = 0;
+	//size_t totalLength = 0;
 
 	char tmp[128];
 

@@ -53,8 +53,8 @@ namespace {
 
     struct FacetData {
         int ID;
-        int hits;
-        int des;
+        size_t hits;
+        size_t des;
         double abs;
 
         // We have a problem which is affecting _only this demo_ and should not affect your code:
@@ -231,7 +231,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
         if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
-            int selected_facet_id = interfGeom->GetNbSelectedFacets() ? interfGeom->GetSelectedFacets().front() : 0;
+            size_t selected_facet_id = interfGeom->GetNbSelectedFacets() ? interfGeom->GetSelectedFacets().front() : 0;
             auto sel = interfGeom->GetNbSelectedFacets() ? interfGeom->GetFacet(selected_facet_id) : nullptr;
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -510,7 +510,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                         if (sorts_specs->SpecsDirty) {
                             FacetData::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
                             if (items.Size > 1)
-                                qsort(&items[0], (int) items.Size, sizeof(items[0]),
+                                qsort(&items[0], (size_t) items.Size, sizeof(items[0]),
                                       FacetData::CompareWithSortSpecs);
                             FacetData::s_current_sort_specs = nullptr;
                             sorts_specs->SpecsDirty = false;

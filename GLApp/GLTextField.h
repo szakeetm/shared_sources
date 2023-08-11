@@ -19,7 +19,7 @@ public:
   void SetText(std::string string);
   void SetText(const double val);
   void SetText(const int val);
-  void SetText(const int val);
+  void SetText(const size_t val);
   std::string GetText();
   void ScrollToVisible();
   void SetCursorPos(int pos);
@@ -34,7 +34,7 @@ public:
 
   bool GetNumber(double *num);
   bool GetNumberInt(int *num);
-  bool GetNumberSizeT(int *num);
+  bool GetNumberSizeT(size_t *num);
   void SelectAll();
   bool IsCaptured();
 

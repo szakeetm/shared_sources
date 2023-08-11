@@ -32,7 +32,7 @@ using namespace pugi;
 #endif
 
 struct NeighborFacet {
-	int id;
+	size_t id;
 	double angleDiff;
 };
 
@@ -40,7 +40,7 @@ class CellProperties {
 public:
 	//Old C-style array to save memory
 	std::vector<Vector2d> points;
-	int nbPoints;
+	size_t nbPoints;
 	double   area;     // Area of element
 	float   uCenter;  // Center coordinates
 	float   vCenter;  // Center coordinates
@@ -55,7 +55,7 @@ class InterfaceFacet { //Interface facet
 public:
 
 	// Constructor/Desctructor/Initialisation
-	explicit InterfaceFacet(int nbIndex);
+	explicit InterfaceFacet(size_t nbIndex);
 	~InterfaceFacet();
 
 	//void  DetectOrientation();
@@ -69,23 +69,23 @@ public:
 	void  BuildMeshGLList();
 	void  BuildSelElemList();
 	void  UnselectElem();
-	void  SelectElem(int u, int v, int width, int height);
+	void  SelectElem(size_t u, size_t v, size_t width, size_t height);
 	void  RenderSelectedElem();
 	void  FillVertexArray(InterfaceVertex *v);
-	int GetTexSwapSize(bool useColormap);
-	int GetTexSwapSizeForRatio(double ratio, bool useColor);
-	std::pair<int, int> GetNbCell();
-	int GetNbCellForRatio(double ratio);
-    std::pair<int, int> GetNbCellForRatio(double ratioU, double ratioV);
+	size_t GetTexSwapSize(bool useColormap);
+	size_t GetTexSwapSizeForRatio(double ratio, bool useColor);
+	std::pair<size_t, size_t> GetNbCell();
+	size_t GetNbCellForRatio(double ratio);
+    std::pair<size_t, size_t> GetNbCellForRatio(double ratioU, double ratioV);
     void  SwapNormal();
 	void  ShiftVertex(const int offset = 1);
 	void  InitVisibleEdge();
-	int   GetIndex(int idx);
-	int   GetIndex(int idx);
-	double GetMeshArea(int index, bool correct2sides = false);
-	int GetMeshNbPoint(int index);
-	Vector2d GetMeshPoint(int index, int pointId);
-	Vector2d GetMeshCenter(int index);
+	size_t   GetIndex(int idx);
+	size_t   GetIndex(size_t idx);
+	double GetMeshArea(size_t index, bool correct2sides = false);
+	size_t GetMeshNbPoint(size_t index);
+	Vector2d GetMeshPoint(size_t index, size_t pointId);
+	Vector2d GetMeshCenter(size_t index);
 	double GetArea();
 	bool  IsTXTLinkFacet();
 	Vector3d GetRealCenter();
@@ -93,54 +93,54 @@ public:
 	FacetGroup Explode();
 
 	//Different implementation within Molflow/Synrad
-	int GetGeometrySize();
+	size_t GetGeometrySize();
 	void  LoadTXT(FileReader& file);
 	void  SaveTXT(FileWriter& file);
-	void  LoadGEO(FileReader& file, int version, int nbVertex);
+	void  LoadGEO(FileReader& file, int version, size_t nbVertex);
 	bool  IsCoplanarAndEqual(InterfaceFacet *f, double threshold);
 	void  CopyFacetProperties(InterfaceFacet *f, bool copyMesh = false);
 
 	//Different signature (and implementation)
 #if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
 	void  ConvertOldDesorbType();
-	void  LoadSYN_facet(FileReader& file, int version, int nbVertex);
-	void  LoadXML(pugi::xml_node f, int nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, int vertexOffset = 0);
+	void  LoadSYN_facet(FileReader& file, int version, size_t nbVertex);
+	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
 	void  SaveGEO(FileWriter& file, int idx);
 	void  SaveXML_geom(pugi::xml_node f);
-	int GetHitsSize(int nbMoments);
-	int GetTexRamSize(int nbMoments);
-    int GetTexRamSizeForCellNumber(int width, int height, bool useMesh, bool countDir, int nbMoments);
-    int GetTexRamSizeForRatio(double ratio, int nbMoments);
-    int GetTexRamSizeForRatio(double ratioU, double ratioV, int nbMoments);
-    void  BuildTexture(const std::vector<TextureCell> &texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, int m);
+	size_t GetHitsSize(size_t nbMoments);
+	size_t GetTexRamSize(size_t nbMoments);
+    size_t GetTexRamSizeForCellNumber(int width, int height, bool useMesh, bool countDir, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratio, size_t nbMoments);
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV, size_t nbMoments);
+    void  BuildTexture(const std::vector<TextureCell> &texBuffer, int textureMode, double min, double max, bool useColorMap, double dCoeff1, double dCoeff2, double dCoeff3, bool doLog, size_t m);
 	double GetSmooth(int i, int j, TextureCell *texBuffer, int textureMode, double scaleF);
 	void Sum_Neighbor(const int i, const int j, const double weight, TextureCell *texBuffer, const int textureMode, const double scaleF, double *sum, double *totalWeight);
-	std::string GetAngleMap(int formatId); //formatId: 1=CSV 2=TAB-separated
+	std::string GetAngleMap(size_t formatId); //formatId: 1=CSV 2=TAB-separated
 	void ImportAngleMap(const std::vector<std::vector<std::string>>& table);
 	double DensityCorrection();
 #endif
 #if defined(SYNRAD) //Implementations in SynradFacet.cpp
-	void LoadSYN(FileReader& file, const std::vector<Material> &materials, int version, int nbVertex);
+	void LoadSYN(FileReader& file, const std::vector<Material> &materials, int version, size_t nbVertex);
     void LoadSYNResults(FileReader& file, int version, FacetHitBuffer &facetCounter);
-	void  LoadXML(pugi::xml_node f, int nbVertex, bool isMolflowFile, int vertexOffset);
+	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, int vertexOffset);
 	void  SaveSYN(FileWriter& file, const std::vector<Material> &materials, int idx, bool crashSave = false);
-	int GetHitsSize();
-	int GetTexRamSize();
-	int GetTexRamSizeForRatio(double ratio) const;
-    int GetTexRamSizeForRatio(double ratioU, double ratioV) const;
-    void  BuildTexture(const std::vector<TextureCell> &texture, const int textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double no_scans, const bool useColorMap, bool doLog, const bool normalize = true);
-	void Weigh_Neighbor(const int i, const int j, const double weight, const std::vector<TextureCell> &texture, const int textureMode, const float scaleF, double& weighedSum, double& totalWeigh);
-	double GetSmooth(const int i, const int j, const std::vector<TextureCell> &texture, const int textureMode, const float scaleF);
+	size_t GetHitsSize();
+	size_t GetTexRamSize();
+	size_t GetTexRamSizeForRatio(double ratio) const;
+    size_t GetTexRamSizeForRatio(double ratioU, double ratioV) const;
+    void  BuildTexture(const std::vector<TextureCell> &texture, const size_t textureMode, const TextureCell& minVal, const TextureCell& maxVal, const double no_scans, const bool useColorMap, bool doLog, const bool normalize = true);
+	void Weigh_Neighbor(const size_t i, const size_t j, const double weight, const std::vector<TextureCell> &texture, const size_t textureMode, const float scaleF, double& weighedSum, double& totalWeigh);
+	double GetSmooth(const int i, const int j, const std::vector<TextureCell> &texture, const size_t textureMode, const float scaleF);
 #endif
 
 
-	std::vector<int>   indices;      // Indices (Reference to geometry vertex)
+	std::vector<size_t>   indices;      // Indices (Reference to geometry vertex)
 	std::vector<Vector2d> vertices2;    // Vertices (2D plane space, UV coordinates)
 
 	//C-style arrays to save memory (textures can be huge):
     std::vector<int> cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
     std::vector<CellProperties> meshvector;
-	int meshvectorsize;
+	size_t meshvectorsize;
 
 	FacetProperties sh;
 	FacetHitBuffer facetHitCache;
@@ -156,8 +156,8 @@ public:
 	bool nonSimple = false; // A non simple polygon has crossing sides
 	bool normalFlipped = false; // A flag that is true for concave facets where the normal has been flipped to obey the left-hand rule. We set it so the flip can be reverted
 	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
-	int texDimH;         // Texture dimension (a power of 2)
-	int texDimW;         // Texture dimension (a power of 2)
+	size_t texDimH;         // Texture dimension (a power of 2)
+	size_t texDimW;         // Texture dimension (a power of 2)
     double tRatioU;       // Texture sample per unit
     double tRatioV;       // Texture sample per unit
 
@@ -171,10 +171,10 @@ public:
 	bool   selected;        // Selected flag
 
 	struct TEXTURE_SELECTION{
-		int u;
-		int v;
-		int width;
-		int height;
+		size_t u;
+		size_t v;
+		size_t width;
+		size_t height;
 	} ;
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	//OpenGL
@@ -188,7 +188,7 @@ public:
 
 #if defined(MOLFLOW)
 	OutgassingMap ogMap;
-    std::vector<int> angleMapCache; //Reading while loading then passing to dpHit
+    std::vector<size_t> angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
 
 	//Parametric stuff
@@ -201,7 +201,7 @@ public:
 
 class FacetGroup {
 public:
-	int nbV;
+	size_t nbV;
 	std::vector<InterfaceFacet*> facets;
 	double originalPerAreaOutgassing; //Per-area outgassing of the exploded facet
 };
@@ -209,6 +209,6 @@ public:
 class DeletedFacet {
 public:
 	InterfaceFacet *f;
-	int ori_pos;
+	size_t ori_pos;
 	bool replaceOri;
 };

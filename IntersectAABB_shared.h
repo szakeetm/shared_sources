@@ -40,15 +40,15 @@ public:
 	AABBNODE();
 	~AABBNODE();
 	void ComputeBB();
-	std::tuple<int, int, int> FindBestCuttingPlane();
+	std::tuple<size_t, size_t, size_t> FindBestCuttingPlane();
 	AxisAlignedBoundingBox bb;
 	AABBNODE *left;
 	AABBNODE *right;
 	std::vector<SimulationFacet*> facets;
-	int GetMemSize();
+	size_t GetMemSize();
 };
 
-AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const int depth, int& maxDepth);
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth);
 
 void IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
                    const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,

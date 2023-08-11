@@ -25,12 +25,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Facet_shared.h"
 
 
-std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<int> facetIndices, GLProgress_Abstract& prg)
+std::vector<InterfaceFacet*> GeometryTools::GetTriangulatedGeometry(InterfaceGeometry* geometry, std::vector<size_t> facetIndices, GLProgress_Abstract& prg)
 {
     std::vector<InterfaceFacet*> triangleFacets;
-    for (int i = 0; i < facetIndices.size(); i++) {
+    for (size_t i = 0; i < facetIndices.size(); i++) {
         prg.SetProgress((double)i/(double(facetIndices.size())));
-        int nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
+        size_t nb = geometry->GetFacet(facetIndices[i])->sh.nbIndex;
         if (nb > 3) {
             // Create new triangle facets (does not invalidate old ones, you have to manually delete them)
             std::vector<InterfaceFacet*> newTriangles = Triangulate(geometry->GetFacet(facetIndices[i]));
@@ -116,7 +116,7 @@ InterfaceFacet* GeometryTools::GetTriangleFromEar(InterfaceFacet *f, const GLApp
     //Commented out sections: theoretically in a right-handed system the vertex order is inverse
     //However we'll solve it simpler by inverting the geometry viewer Front/back culling mode setting
 
-    int* indices = new int[3];
+    size_t* indices = new size_t[3];
 
     indices[0] = f->indices[Previous(ear, p.pts.size())];
     indices[1] = f->indices[IDX(ear, p.pts.size())];
@@ -125,7 +125,7 @@ InterfaceFacet* GeometryTools::GetTriangleFromEar(InterfaceFacet *f, const GLApp
     // Create new triangle facet and copy polygon parameters, but change indices
     InterfaceFacet* triangle = new InterfaceFacet(3);
     triangle->CopyFacetProperties(f,0);
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; i++) {
         triangle->indices[i] = indices[i];
     }
     f->indices.erase(f->indices.begin()+IDX(ear, p.pts.size()));
@@ -226,7 +226,7 @@ int HandleTransparent(std::vector<CommonEdge>& edge_v, InterfaceGeometry* geomet
         auto g = geometry->GetFacet((*iter_o).facetId[1]);
 
         if(f->sh.is2sided || g->sh.is2sided) {
-            int c1, c2, l;
+            size_t c1, c2, l;
             if (!InterfaceGeometry::GetCommonEdges(f, g, &c1, &c2, &l)) {
                 iter_o = edge_v.erase(iter_o);
                 ++nRemoved;
@@ -310,14 +310,14 @@ void GeometryTools::AnalyzeGeometry(InterfaceGeometry* geometry) {
     CompareAlgorithm(geometry, 4);
 }
 
-void GeometryTools::CompareAlgorithm(InterfaceGeometry* geometry, int index) {
+void GeometryTools::CompareAlgorithm(InterfaceGeometry* geometry, size_t index) {
     // Put in order for comparism
     auto& compEdge = edges_algo[index];
 
     Log::console_msg(2, "[T1 vs. T{}] Neighbors found: {} - {}\n", index+1, edges_algo[0].size(), compEdge.size());
 
     int j = 0;
-    int minCompSize = compEdge.size();
+    size_t minCompSize = compEdge.size();
     for(int i = 0; i < edges_algo[0].size() && j < minCompSize; i++){
         bool diffSize = edges_algo[0][i].facetId.size() != compEdge[j].facetId.size() || edges_algo[0][i].facetId.size() != compEdge[j].facetId.size();
         bool diffVert = edges_algo[0][i].v1 != compEdge[j].v1 || edges_algo[0][i].v2 != compEdge[j].v2;
@@ -359,7 +359,7 @@ void GeometryTools::PolygonsToTriangles(InterfaceGeometry* geometry, GLProgress_
     geometry->AddFacets(triangleFacets);
 }
 
-void GeometryTools::PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<int> selectedIndices, GLProgress_Abstract& prg) {
+void GeometryTools::PolygonsToTriangles(InterfaceGeometry* geometry, std::vector<size_t> selectedIndices, GLProgress_Abstract& prg) {
     std::vector<InterfaceFacet*> triangleFacets = GetTriangulatedGeometry(geometry, selectedIndices, prg);
     geometry->RemoveFacets(selectedIndices);
     geometry->AddFacets(triangleFacets);
@@ -544,7 +544,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Interfac
 
     // 1. First find neighbors
     // search for common edges
-    int count = 0;
+    size_t count = 0;
     std::vector<std::vector<NeighborFacet>> neighbors(geometry->GetNbFacet()); // first index = facet id, second index = neighbor id
 
     std::vector<CommonEdge> edges; // first index = facet id, second index = neighbor id
@@ -552,7 +552,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Interfac
         InterfaceFacet *f = geometry->GetFacet(i);
         for (int j = i+1; j < geometry->GetNbFacet(); j++) {
             InterfaceFacet *g = geometry->GetFacet(j);
-            int  c1,c2,l;
+            size_t  c1,c2,l;
             if(InterfaceGeometry::GetCommonEdges(f,g, &c1,&c2,&l)){
                 auto angle_opt = AngleBetween2Vertices(f->sh.N, g->sh.N);
                 if(!angle_opt.has_value()) {
@@ -573,7 +573,7 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Interfac
                 neighbors[j].push_back(n2);
                 count++;
 
-                CommonEdge e((int)i, f->GetIndex(c1), g->GetIndex(c2));
+                CommonEdge e((size_t)i, f->GetIndex(c1), g->GetIndex(c2));
                 e.facetId.emplace_back(j);
                 if(e.v1 > e.v2)
                     std::swap(e.v1, e.v2);
@@ -590,15 +590,15 @@ std::vector<std::vector<NeighborFacet>> GeometryTools::AnalyzeNeighbors(Interfac
 int GeometryTools::GetCommonEdgesVec(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
-    int p11, p12;
+    size_t p11, p12;
 
     // 1. Create list of edges
     commonEdges.clear();
     std::vector<CommonEdge>& edges = commonEdges;
 
-    for (int facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
-        for (int i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
 
             p11 = facet->GetIndex(i);
             p12 = facet->GetIndex(i + 1);
@@ -636,14 +636,14 @@ int GeometryTools::GetCommonEdgesVec(InterfaceGeometry *geometry, std::vector<Co
 int GeometryTools::GetCommonEdgesList(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
-    int p11, p12;
+    size_t p11, p12;
 
     // 1. Create list of edges
     std::list<CommonEdge> edges;
 
-    for (int facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
-        for (int i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
 
             p11 = facet->GetIndex(i);
             p12 = facet->GetIndex(i + 1);
@@ -687,21 +687,21 @@ int GeometryTools::GetCommonEdgesList(InterfaceGeometry *geometry, std::vector<C
 int GeometryTools::GetCommonEdgesHash(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
-    int p11, p12;
+    size_t p11, p12;
 
     // 1. Create list of edges
     commonEdges.clear();
     std::vector<CommonEdge>& edges = commonEdges;
-    std::unordered_map<int,std::vector<int>> hashMap;
+    std::unordered_map<size_t,std::vector<int>> hashMap;
 
-    for (int facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
-        for (int i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
 
             p11 = facet->GetIndex(i);
             p12 = facet->GetIndex(i + 1);
 
-            int hash = ((p11 << 16) | (p12));
+            size_t hash = ((p11 << 16) | (p12));
             auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));
             if(!edge.second) {// edge already exists, append facetid
                 edge.first->second.push_back(facetId);
@@ -736,21 +736,21 @@ int GeometryTools::GetCommonEdgesHash(InterfaceGeometry *geometry, std::vector<C
 int GeometryTools::GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // Detect common edge between facet
-    int p11, p12;
+    size_t p11, p12;
 
     // 1. Create list of edges
     commonEdges.clear();
     std::vector<CommonEdge>& edges = commonEdges;
-    std::map<int,std::vector<int>> hashMap;
+    std::map<size_t,std::vector<int>> hashMap;
 
-    for (int facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
-        for (int i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
 
             p11 = facet->GetIndex(i);
             p12 = facet->GetIndex(i + 1);
 
-            int hash = ((p11 << 16) | (p12));
+            size_t hash = ((p11 << 16) | (p12));
             auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));
             if(!edge.second) {// edge already exists, append facetid
                 edge.first->second.push_back(facetId);
@@ -785,11 +785,11 @@ int GeometryTools::GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<Co
 int GeometryTools::GetCommonEdgesSingleVertex(InterfaceGeometry *geometry, std::vector<CommonEdge> &commonEdges) {
 
     // 1. The first step is also to form the pairs of integers (i.e., two arrays of integers)
-    std::vector<std::pair<int, int>> vertex_elements; // pairs of vertex IDs, element IDs
+    std::vector<std::pair<size_t, size_t>> vertex_elements; // pairs of vertex IDs, element IDs
 
-    for (int facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
+    for (size_t facetId = 0; facetId < geometry->GetNbFacet(); facetId++) {
         auto facet = geometry->GetFacet(facetId);
-        for (int i = 0; i < facet->sh.nbIndex; i++) {
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) {
             vertex_elements.emplace_back(std::make_pair(facet->GetIndex(i), facetId));
         }
     }
@@ -841,12 +841,12 @@ int NeighborScan::GetOverlappingEdges(std::vector<Facet *> facets, const std::ve
     std::list<FacetVectors> vectors_xsort;
 
     // Detect overlapping edges to find geometric neighbors
-    int p11, p12;
+    size_t p11, p12;
     Vector3d v1, v2;
     // 1. Define edge/line by direction + starting point
-    for (int facetId = 0; facetId < facets.size(); facetId++) {
+    for (size_t facetId = 0; facetId < facets.size(); facetId++) {
         auto facet = facets[facetId];
-        for (int i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
+        for (size_t i = 0; i < facet->sh.nbIndex; i++) { // GetIndex will turn last (i+1) to 0
             p11 = facet->indices[i];
             p12 = (i+1 >= facet->sh.nbIndex) ? facet->indices[0] : facet->indices[i + 1];
             v1 = vectors[p11];

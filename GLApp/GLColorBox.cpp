@@ -14,7 +14,7 @@
 #include <CImg/CImg.h>
 using namespace cimg_library;
 
-const int sColors[] = {
+const size_t sColors[] = {
   0xFFFFFF,0xCCFFFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xCCCCFF,0xFFCCFF,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFCCCC,0xFFFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,0xCCFFCC,
   0xCCCCCC,0x99FFFF,0x99CCFF,0x9999FF,0x9999FF,0x9999FF,0x9999FF,0x9999FF,0x9999FF,0x9999FF,0xCC99FF,0xFF99FF,0xFF99CC,0xFF9999,0xFF9999,0xFF9999,0xFF9999,0xFF9999,0xFF9999,0xFF9999,0xFFCC99,0xFFFF99,0xCCFF99,0x99FF99,0x99FF99,0x99FF99,0x99FF99,0x99FF99,0x99FF99,0x99FF99,0x99FFCC,
   0xCCCCCC,0x66FFFF,0x66CCFF,0x6699FF,0x6666FF,0x6666FF,0x6666FF,0x6666FF,0x6666FF,0x9966FF,0xCC66FF,0xFF66FF,0xFF66CC,0xFF6699,0xFF6666,0xFF6666,0xFF6666,0xFF6666,0xFF6666,0xFF9966,0xFFCC66,0xFFFF66,0xCCFF66,0x99FF66,0x66FF66,0x66FF66,0x66FF66,0x66FF66,0x66FF66,0x66FF99,0x66FFCC,
@@ -151,7 +151,7 @@ void GLColorBox::RestoreDeviceObjects() {
 
   // HSV texture
   
-  int *buff32 = (int *)malloc( 128*128*sizeof(int) );
+  size_t *buff32 = (size_t *)malloc( 128*128*sizeof(size_t) );
   for(int i=0;i<128;i++) {
     for(int j=0;j<128;j++) {
       float h = ((float)i / 128.0f) * 360.0f;
@@ -266,7 +266,7 @@ void GLColorBox::Paint() {
 
   vBox->GetBounds(&x,&y,&w,&h);
   for(int i=0;i<128;i++) {
-    int c = hsv_to_rgb(curH,curS,(float)i/128.0f);
+    size_t c = hsv_to_rgb(curH,curS,(float)i/128.0f);
     glColor3f(get_red(c),get_green(c),get_blue(c));
     glBegin(GL_LINES);
     _glVertex2i(x,y+i);
@@ -354,37 +354,37 @@ void GLColorBox::paintBox(int x,int y,int w,int h) {
 
 }
 
-int GLColorBox::get_redi( int c ) {
+int GLColorBox::get_redi( size_t c ) {
   int ret = (c & 0x00FF0000);
   ret = ret >> 16;
   return ret;
 }
 
-int GLColorBox::get_greeni( int c ) {
+int GLColorBox::get_greeni( size_t c ) {
   int ret = (c & 0x0000FF00);
   ret = ret >> 8;
   return ret;
 }
 
-int GLColorBox::get_bluei( int c ) {
+int GLColorBox::get_bluei( size_t c ) {
   int ret = (c & 0x000000FF);
   return ret;
 }
 
-float GLColorBox::get_red( int c ) {
+float GLColorBox::get_red( size_t c ) {
   return (float)get_redi(c)/255.0f;
 }
 
-float GLColorBox::get_green( int c ) {
+float GLColorBox::get_green( size_t c ) {
   return (float)get_greeni(c)/255.0f;
 }
 
-float GLColorBox::get_blue( int c ) {
+float GLColorBox::get_blue( size_t c ) {
   return (float)get_bluei(c)/255.0f;
 }
 
 // h in [0,360], s in [0,1], v in [0,1]
-int GLColorBox::hsv_to_rgb( float h,float s,float v,bool swap ) {
+size_t GLColorBox::hsv_to_rgb( float h,float s,float v,bool swap ) {
 
 	float r,g,b;
 	int   ir,ig,ib;
@@ -429,10 +429,10 @@ int GLColorBox::hsv_to_rgb( float h,float s,float v,bool swap ) {
   ig  = (int)( g*255.0 );
   ib  = (int)( b*255.0 );
   if(!swap) {
-	  int ret = ir << 16 | ig << 8 | ib;
+	  size_t ret = ir << 16 | ig << 8 | ib;
 	  return ret;
   } else {
-	  int ret = ib << 16 | ig << 8 | ir;
+	  size_t ret = ib << 16 | ig << 8 | ir;
 	  return ret;
   }
 }
@@ -513,19 +513,19 @@ void GLColorBox::ManageEvent(SDL_Event *evt) {
     if( IsInComp(swBox,evt->button.x,evt->button.y) ) {
       int x = GetX(swBox,evt)/11;
       int y = GetY(swBox,evt)/11;
-      int newC = sColors[x+y*31];
+      size_t newC = sColors[x+y*31];
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
     }
     if( IsInComp(hsBox,evt->button.x,evt->button.y) ) {
       float h = GetX(hsBox,evt)/128.0f * 360.0f;
       float s = GetY(hsBox,evt)/128.0f;
       if( curV<=0.0001 ) curV = 0.8f;
-      int newC = hsv_to_rgb(h,s,curV);
+      size_t newC = hsv_to_rgb(h,s,curV);
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
     }
     if( IsInComp(vBox,evt->button.x,evt->button.y) ) {
       float v = GetY(vBox,evt)/128.0f;
-      int newC = hsv_to_rgb(curH,curS,v);
+      size_t newC = hsv_to_rgb(curH,curS,v);
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
       draggV = true;
     }
@@ -535,7 +535,7 @@ void GLColorBox::ManageEvent(SDL_Event *evt) {
     if( draggV ) {
       float v = GetY(vBox,evt)/128.0f;
       Saturate(v,0.0f,1.0f);
-      int newC = hsv_to_rgb(curH,curS,v);
+      size_t newC = hsv_to_rgb(curH,curS,v);
       updateColor(get_redi(newC),get_greeni(newC),get_bluei(newC));
     }
   }

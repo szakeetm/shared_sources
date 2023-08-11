@@ -86,7 +86,7 @@ void LoadStatus::EnableStopButton() {
 
 void LoadStatus::RefreshNbProcess()
 {
-	int nbProc = procStateCache.threadInfos.size();
+	size_t nbProc = procStateCache.threadInfos.size();
 	int wD = 550;
 	int hD = 100 + (int)nbProc * 15;
 	processList->SetSize(3, nbProc + 1);
@@ -106,7 +106,7 @@ void LoadStatus::RefreshNbProcess()
 void LoadStatus::Update() {
 	//SimulationManager calls it, after it has updated its procStateCache
 	auto guard = std::lock_guard(procStateCache.procDataMutex);
-	int nbProc = procStateCache.threadInfos.size();
+	size_t nbProc = procStateCache.threadInfos.size();
 	if ((processList->GetNbRow() - 1) != nbProc) {
 		RefreshNbProcess();
 	}
@@ -115,10 +115,10 @@ void LoadStatus::Update() {
 
 	//Interface
 #ifdef _WIN32
-	int currPid = GetCurrentProcessId();
+	size_t currPid = GetCurrentProcessId();
 	double memDenominator = (1024.0*1024.0);
 #else
-	int currPid = getpid();
+	size_t currPid = getpid();
 	double memDenominator = (1024.0);
 #endif
 	PROCESS_INFO parentInfo{};
@@ -128,7 +128,7 @@ void LoadStatus::Update() {
 	processList->SetValueAt(1, 0, simCommandStrings[procStateCache.masterCmd]);
 	processList->SetValueAt(2, 0, fmt::format("[{}] {}", controllerStateStrings[procStateCache.controllerState], procStateCache.controllerStatus));
 
-	int i = 1;
+	size_t i = 1;
 	for (auto& proc : procStateCache.threadInfos)
 	{
 		DWORD pid = proc.threadId;

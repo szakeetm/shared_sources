@@ -121,9 +121,9 @@ private:
   GLLabel	*label29;
   GLTextField	*curveTotalLengthText;
 	
-  int baseId, dirId;
+  size_t baseId, dirId;
   void EnableDisableControls();
   void ClearToggles(GLToggle* leaveChecked=NULL);
-  std::optional<int> AssertOneVertexSelected();
-  std::optional<int> AssertOneFacetSelected();
+  std::optional<size_t> AssertOneVertexSelected();
+  std::optional<size_t> AssertOneFacetSelected();
 };

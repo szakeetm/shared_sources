@@ -57,7 +57,7 @@ static const int   flAligns[] = { ALIGN_CENTER,ALIGN_CENTER,ALIGN_LEFT,ALIGN_LEF
 static const int   fEdits[] = { 0,0,EDIT_NUMBER,EDIT_NUMBER,EDIT_NUMBER };
 
 struct line {
-	int vertexId;
+	size_t vertexId;
 	Vector3d coord;
 };
 
@@ -141,9 +141,9 @@ FacetCoordinates::FacetCoordinates():GLWindow() {
 void FacetCoordinates::GetSelected() {
 
   selFacet = NULL;
-  int i = 0;
+  size_t i = 0;
   InterfaceGeometry *g = worker->GetGeometry();
-  int nb = g->GetNbFacet();
+  size_t nb = g->GetNbFacet();
   while(!selFacet && i<nb) {
     if( g->GetFacet(i)->selected ) selFacet = g->GetFacet(i);
     if(!selFacet) i++;
@@ -167,11 +167,11 @@ void FacetCoordinates::UpdateFromSelection() {
 
   InterfaceGeometry *interfGeom = worker->GetGeometry();
 
-  int nbIndex = selFacet->sh.nbIndex;
+  size_t nbIndex = selFacet->sh.nbIndex;
 
   lines=std::vector<line>();
 
-  for (int i=0;i<nbIndex;i++) {
+  for (size_t i=0;i<nbIndex;i++) {
 	  line newLine;
 	  newLine.coord=*interfGeom->GetVertex(newLine.vertexId=selFacet->indices[i]);
 	  lines.push_back(newLine);
@@ -207,7 +207,7 @@ void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
         SetVisible(false);
 	  } else if (src==insertLastButton) {
 		  int vertexId;
-		  int rowId=facetListC->GetNbRow();
+		  size_t rowId=facetListC->GetNbRow();
 		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=interfGeom->GetNbVertex())) {
 			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
 			  break;
@@ -306,7 +306,7 @@ void FacetCoordinates::RebuildList() {
 	
 	char tmp[128];
 
-	for(int i=0;i<lines.size();i++) {
+	for(size_t i=0;i<lines.size();i++) {
 		
 		sprintf(tmp,"%zd",i+1);
 		facetListC->SetValueAt(0,i,tmp);
@@ -332,7 +332,7 @@ void FacetCoordinates::RebuildList() {
 * \brief Remove row from table with ID rowId
 * \param rowId ID of the row to be removed
 */
-void FacetCoordinates::RemoveRow(int rowId){
+void FacetCoordinates::RemoveRow(size_t rowId){
 	if (rowId < lines.size()) {
 		lines.erase(lines.begin() + rowId);
 		RebuildList();
@@ -353,7 +353,7 @@ void FacetCoordinates::RemoveRow(int rowId){
 * \param rowId ID of the row where new vertex should be added
 * \param vertexId ID of the vertex to be added
 */
-void FacetCoordinates::InsertVertex(int rowId,int vertexId){
+void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 	line newLine;
 	newLine.vertexId=vertexId;
 	newLine.coord=*(worker->GetGeometry()->GetVertex(vertexId));
@@ -414,7 +414,7 @@ void FacetCoordinates::ApplyChanges(){
 			selFacet->vertices2.resize(selFacet->sh.nbIndex);
 			selFacet->visible.resize(selFacet->sh.nbIndex);
 
-			for(int i=0;i<lines.size();i++) {
+			for(size_t i=0;i<lines.size();i++) {
 				interfGeom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);
 				selFacet->indices[i]=lines[i].vertexId;
 			}

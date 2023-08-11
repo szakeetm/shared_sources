@@ -104,5 +104,5 @@ private:
 	GLButton	*createButton;
 
 	GLIcon *rectangleIcon, *circleIcon, *racetrackIcon;
-	int mode;
+	size_t mode;
 };

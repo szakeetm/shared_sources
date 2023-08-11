@@ -202,7 +202,7 @@ void Worker::MarkToReload() {
 }
 
 /*
-void Worker::SetMaxDesorption(int max) {
+void Worker::SetMaxDesorption(size_t max) {
 
 	try {
 		ResetStatsAndHits(0.0);
@@ -303,7 +303,7 @@ void Worker::InitSimProc() {
 	//if (!mApp->loadStatus) mApp->loadStatus = new LoadStatus(this);
 }
 
-void Worker::SetProcNumber(int n) {
+void Worker::SetProcNumber(size_t n) {
 	LoadStatus loadStatus(this);
 	try {
 		simManager.KillSimulation(&loadStatus);
@@ -312,7 +312,7 @@ void Worker::SetProcNumber(int n) {
 		throw Error("Killing simulation failed");
 	}
 
-	simManager.nbThreads = std::clamp((int)n, (int)0, MAX_PROCESS);
+	simManager.nbThreads = std::clamp((size_t)n, (size_t)0, MAX_PROCESS);
 
 	// Launch n subprocess
 	if (simManager.SetUpSimulation(&loadStatus)) {
@@ -320,7 +320,7 @@ void Worker::SetProcNumber(int n) {
 	}
 }
 
-int Worker::GetPID(int prIdx) {
+size_t Worker::GetPID(size_t prIdx) {
 	return 0;
 }
 
@@ -337,7 +337,7 @@ void Worker::CalculateTextureLimits() {
 
 	for (const auto& facet : model->facets) {
 		if (facet->sh.isTextured) {
-			for (int m = 0; m < (1 + mf_model->tdParams.moments.size()); m++) {
+			for (size_t m = 0; m < (1 + mf_model->tdParams.moments.size()); m++) {
 				{
 					// go on if the facet was never hit before
 					auto& facetHitBuffer = globalState->facetStates[facet->globalId].momentResults[m].hits;
@@ -351,8 +351,8 @@ void Worker::CalculateTextureLimits() {
 				//model->wp.timeWindowSize;
 				//Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
 				const auto& texture = globalState->facetStates[facet->globalId].momentResults[m].texture;
-				const int textureSize = texture.size();
-				for (int t = 0; t < textureSize; t++) {
+				const size_t textureSize = texture.size();
+				for (size_t t = 0; t < textureSize; t++) {
 					//Add temporary hit counts
 
 					if (facet->largeEnough[t]) {
@@ -428,8 +428,8 @@ void Worker::CalculateTextureLimits() {
 			}
 
 			const auto& texture = globalState->facetStates[subF.globalId].momentResults[0].texture;
-			const int textureSize = texture.size();
-			for (int t = 0; t < textureSize; t++) {
+			const size_t textureSize = texture.size();
+			for (size_t t = 0; t < textureSize; t++) {
 				//Add temporary hit counts
 
 				if (subF.largeEnough[t]) { // TODO: For count it wasn't applied in Synrad so far
@@ -489,7 +489,7 @@ void Worker::RebuildTextures() {
 	}
 }
 
-int Worker::GetProcNumber() const {
+size_t Worker::GetProcNumber() const {
 	return simManager.nbThreads;
 }
 
@@ -521,7 +521,7 @@ void Worker::Update(float appTime) {
 	if (!globalState->initialized || !simManager.nbThreads) return;
 	mApp->changedSinceSave = true;
 
-	int waitTime = (this->simManager.isRunning) ? 100 : 10000;
+	size_t waitTime = (this->simManager.isRunning) ? 100 : 10000;
 	auto lock = GetHitLock(globalState.get(),waitTime);
 	if (!lock) return;
 	globalStatCache = globalState->globalStats; //Make a copy for quick GUI access (nbDesorbed, etc. can't always wait for lock)
@@ -541,8 +541,8 @@ void Worker::Update(float appTime) {
 	UpdateFacetCaches();
 
 	// Refresh local facet hit cache for the displayed moment
-	int nbFacet = interfGeom->GetNbFacet();
-	for (int i = 0; i < nbFacet; i++) {
+	size_t nbFacet = interfGeom->GetNbFacet();
+	for (size_t i = 0; i < nbFacet; i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 #if defined(SYNRAD)
 		//memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
@@ -621,9 +621,9 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
 * Sufficient for .geo and .txt formats, for .xml moment results are written during the loading
 */
 void Worker::FacetHitCacheToSimModel() {
-	int nbFacet = interfGeom->GetNbFacet();
+	size_t nbFacet = interfGeom->GetNbFacet();
 	std::vector<FacetHitBuffer*> facetHitCaches;
-	for (int i = 0; i < nbFacet; i++) {
+	for (size_t i = 0; i < nbFacet; i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 		facetHitCaches.push_back(&f->facetHitCache);
 	}
@@ -644,7 +644,7 @@ void Worker::UpdateFacetCaches()
 		globalHistogramCache = globalState->globalHistograms[0];
 #endif
 	//FACET HISTOGRAMS
-	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+	for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 #if defined(MOLFLOW)
 		f->facetHitCache = globalState->facetStates[i].momentResults[displayedMoment].hits;

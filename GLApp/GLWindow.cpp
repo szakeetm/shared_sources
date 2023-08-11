@@ -752,7 +752,7 @@ void GLWindow::ManageEvent(SDL_Event *evt) {
                     } else {
 
                         if (evt->type == SDL_MOUSEBUTTONDOWN) {
-                            int t = SDL_GetTicks();
+                            size_t t = SDL_GetTicks();
                             if ((t - lastClick) < 250) {
 
                                 // Maximize/Minimize (iconify non resizable window) on double click

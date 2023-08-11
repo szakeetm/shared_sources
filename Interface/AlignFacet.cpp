@@ -150,7 +150,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 			bool foundSource = false;
-			int sourceFacetId;
+			size_t sourceFacetId;
 			for (auto& mem:memorizedSelection) { //find source facet
 				if ( Contains(appSelectedFacets,mem)) {
 					if (!foundSource) {
@@ -168,7 +168,7 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 				return;
 			}
 			bool foundDest = false;
-			int destFacetId;
+			size_t destFacetId;
 			for (int i=0;i<appSelectedFacets.size()&&(!foundDest);i++) { //find destination facet
 				if (appSelectedFacets[i] != sourceFacetId) {
 					destFacetId = appSelectedFacets[i];
@@ -243,9 +243,9 @@ dirDestVertexId,
 			}
 		} else if (src==undoButton) {
 			if (!mApp->AskToReset(work)) return;
-			for (int i=0;i<memorizedSelection.size();i++) {
+			for (size_t i=0;i<memorizedSelection.size();i++) {
 				InterfaceFacet *f=interfGeom->GetFacet(memorizedSelection[i]);
-				for (int j=0;j<f->sh.nbIndex;j++) {
+				for (size_t j=0;j<f->sh.nbIndex;j++) {
 					interfGeom->GetVertex(f->indices[j])->SetLocation(this->oriPositions[i][j]);
 				}
 			}
@@ -269,7 +269,7 @@ void AlignFacet::MemorizeSelection() {
 	oriPositions.clear();
 	for (auto& sel : memorizedSelection) {
 		std::vector<Vector3d> op;
-		for (int ind = 0; ind < interfGeom->GetFacet(sel)->sh.nbIndex; ind++)
+		for (size_t ind = 0; ind < interfGeom->GetFacet(sel)->sh.nbIndex; ind++)
 			op.push_back(*interfGeom->GetVertex(interfGeom->GetFacet(sel)->indices[ind]));
 		oriPositions.push_back(op);
 	}

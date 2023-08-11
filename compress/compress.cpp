@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
 		std::filesystem::remove(listFile);
 	}
 
-	int found;
+	size_t found;
 	found = result.find("Everything is Ok");
 	if (found != std::string::npos) {
 		std::cout << "\nCompression seems legit. Deleting original {} file.\n", std::filesystem::path(fileNameGeometry).extension().string().c_str();

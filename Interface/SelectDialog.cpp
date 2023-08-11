@@ -105,7 +105,7 @@ SelectDialog::SelectDialog(InterfaceGeometry *g):GLWindow() {
 
 void SelectDialog::ProcessMessage(GLComponent *src,int message) {
   if(message==MSG_BUTTON) {
-      std::vector<int> facetIds;
+      std::vector<size_t> facetIds;
       try{
           splitFacetList(facetIds, numText->GetText(), interfGeom->GetNbFacet());
       }

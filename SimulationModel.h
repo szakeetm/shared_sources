@@ -45,8 +45,8 @@ public:
     std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
     std::string name;
 
-    int GetMemSize(){
-        int sum = sizeof(name);
+    size_t GetMemSize(){
+        size_t sum = sizeof(name);
         if (aabbTree) {
             sum += aabbTree->GetMemSize();
         }
@@ -77,7 +77,7 @@ protected:
     */
 
 public:
-    virtual int GetMemSize();
+    virtual size_t GetMemSize();
     /*
     SimulationModel &operator=(const SimulationModel &o) {
         facets = o.facets;
@@ -145,7 +145,7 @@ public:
     virtual double GetOpacityAt(SimulationFacet *f, double time) const {return -1.0;};
     virtual double GetStickingAt(SimulationFacet *f, double time) const {return -1.0;};
 
-    int memSizeCache=0;
+    size_t memSizeCache=0;
 
     // Geometry Description
     std::vector<std::shared_ptr<SimulationFacet>> facets; // All facets of this sim model. Shared pointer as these facets are referred to in the ray tracing accel structure

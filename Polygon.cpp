@@ -22,13 +22,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <math.h>
 #include <algorithm> //min max
 
-bool IsConvex(const GLAppPolygon &p,const int idx) {
+bool IsConvex(const GLAppPolygon &p,const size_t idx) {
 
   // Check if p.pts[idx] is a convex vertex (calculate the sign of the oriented angle)
 
-  int i1 = Previous(idx,p.pts.size());
-  int i2 = IDX(idx, p.pts.size());
-  int i3 = Next(idx, p.pts.size());
+  size_t i1 = Previous(idx,p.pts.size());
+  size_t i2 = IDX(idx, p.pts.size());
+  size_t i3 = Next(idx, p.pts.size());
 
   double d = DET22(p.pts[i1].u - p.pts[i2].u,p.pts[i3].u - p.pts[i2].u,
                    p.pts[i1].v - p.pts[i2].v,p.pts[i3].v - p.pts[i2].v);
@@ -41,9 +41,9 @@ bool ContainsConcave(const GLAppPolygon &p,const int i1,const int i2,const int i
 {
 
   // Determine if the specified triangle contains or not a concave point
-  int _i1 = IDX(i1, p.pts.size());
-  int _i2 = IDX(i2, p.pts.size());
-  int _i3 = IDX(i3, p.pts.size());
+  size_t _i1 = IDX(i1, p.pts.size());
+  size_t _i2 = IDX(i2, p.pts.size());
+  size_t _i3 = IDX(i3, p.pts.size());
 
   const Vector2d& p1 = p.pts[_i1];
   const Vector2d& p2 = p.pts[_i2];
@@ -67,16 +67,16 @@ std::tuple<bool,Vector2d> EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int 
 {
 
   // Determine if the specified triangle contains or not an other point of the poly
-	int _i1 = IDX(i1, p.pts.size());
-	int _i2 = IDX(i2, p.pts.size());
-	int _i3 = IDX(i3, p.pts.size());
+	size_t _i1 = IDX(i1, p.pts.size());
+	size_t _i2 = IDX(i2, p.pts.size());
+	size_t _i3 = IDX(i3, p.pts.size());
 
     const Vector2d& p1 = p.pts[_i1];
     const Vector2d& p2 = p.pts[_i2];
     const Vector2d& p3 = p.pts[_i3];
 
   bool found = false;
-  int i = 0;
+  size_t i = 0;
   while(!found && i<p.pts.size()) {
     if( i!=_i1 && i!=_i2 && i!=_i3 ) { 
 	  found = Point_in_triangle(p.pts[i], p1,p2,p3 );
@@ -138,14 +138,14 @@ bool IsOnEdge(const Vector2d& p1,const Vector2d& p2,const Vector2d& p)
 }
 
 /*
-std::optional<int> GetNode(const PolyGraph& g, const Vector2d& p)
+std::optional<size_t> GetNode(const PolyGraph& g, const Vector2d& p)
 {
 
   // Search a node in the polygraph and returns its id (-1 not found)
 
   int found = 0;
   int i = 0;
-  int nb = g.nodes.size();
+  size_t nb = g.nodes.size();
 
   while(i<nb && !found) {
     found = VertexEqual(g.nodes[i].p,p);
@@ -173,7 +173,7 @@ int SearchFirst(const PolyGraph& g)
   return -1;
 }
 
-int AddNode(PolyGraph& g,const Vector2d& p)
+size_t AddNode(PolyGraph& g,const Vector2d& p)
 {
   
   // Add a node to the polygraph and returns its id
@@ -194,12 +194,12 @@ int AddNode(PolyGraph& g,const Vector2d& p)
 
 }
 
-int AddArc(PolyGraph& g,const int i1,const int i2,const int source)
+size_t AddArc(PolyGraph& g,const size_t i1,const size_t i2,const size_t source)
 {
 
   // Add an arc to the polygraph and returns its id
 
-	for (int i = 0; i < g.arcs.size();i++) {
+	for (size_t i = 0; i < g.arcs.size();i++) {
 		if (g.arcs[i].i1==i1 && g.arcs[i].i2==i2) return i;
 	  }
 
@@ -213,12 +213,12 @@ int AddArc(PolyGraph& g,const int i1,const int i2,const int source)
 
 }
 
-void CutArc(PolyGraph& g, int idx, int ni)
+void CutArc(PolyGraph& g, size_t idx, size_t ni)
 {
 
   // Cut the arc idx by inserting ni
   if( g.arcs[idx].i1!=ni && g.arcs[idx].i2!=ni ) {
-	  int tmp = g.arcs[idx].i2;
+	  size_t tmp = g.arcs[idx].i2;
     g.arcs[idx].i2 = ni;
     AddArc(g,ni,tmp,1);
   }
@@ -236,8 +236,8 @@ void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int a0)
     return;
 
   // Insert nodes
-  int n1 = AddNode(g,p1);
-  int n2 = AddNode(g,p2);
+  size_t n1 = AddNode(g,p1);
+  size_t n2 = AddNode(g,p2);
 
   // Check intersection of the new arc with the arcs of the first polygon.
   bool itFound = false;
@@ -251,7 +251,7 @@ void InsertEdge(PolyGraph& g,const Vector2d& p1,const Vector2d& p2,const int a0)
       Vector2d I;
 
       if( auto intersectPoint = Intersect2D(p1,p2,e1,e2) ) {
-		int ni = AddNode(g,*intersectPoint);
+		size_t ni = AddNode(g,*intersectPoint);
         InsertEdge(g,p1, *intersectPoint,i+1);
         InsertEdge(g, *intersectPoint,p2,i+1);
         CutArc(g,i,ni);
@@ -275,7 +275,7 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   // Create the polygraph which represent the 2 intersected polygons
   // with their oriented edges.
 
-	int MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
+	size_t MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
 
 	PolyGraph g; //result
 	g.nodes.resize(inP1.pts.size());
@@ -283,7 +283,7 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
 	
   // Fill up the graph with the 1st polygon
 
-  for(int i=0;i<inP1.pts.size();i++) {
+  for(size_t i=0;i<inP1.pts.size();i++) {
     g.nodes[i].p = inP1.pts[i];
     g.nodes[i].VI[0] = -1;
     g.nodes[i].VI[1] = -1;
@@ -295,8 +295,8 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   }
 
   // Intersect with 2nd polygon
-  for(int i=0;i<inP2.pts.size();i++)  {
-	  int i2 = Next(i,inP2.pts.size());
+  for(size_t i=0;i<inP2.pts.size();i++)  {
+	  size_t i2 = Next(i,inP2.pts.size());
     if( visible2[i] ) {
       //if( inP2.sign < 0 ) {
       //  InsertEdge(g,inP2.pts[i2],inP2.pts[i],0);
@@ -307,9 +307,9 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   }
 
   // Remove tangent edge
-  for(int i=0;i<g.arcs.size();i++) {
+  for(size_t i=0;i<g.arcs.size();i++) {
     if( (g.arcs[i].s>0) ) {
-		int j = i+1;
+		size_t j = i+1;
       bool found = false;
       while(j<g.arcs.size() && !found) {
         if( (g.arcs[j].s>0) &&
@@ -328,10 +328,10 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
   // Fill up successor in the polyvertex array to speed up search
   // of next vertices
 
-  for(int i=0;i<g.arcs.size();i++) {
+  for(size_t i=0;i<g.arcs.size();i++) {
     if(g.arcs[i].s>0) {
-		int idxO = g.arcs[i].i1;
-		int idxI = g.arcs[i].i2;
+		size_t idxO = g.arcs[i].i1;
+		size_t idxI = g.arcs[i].i2;
       if( g.nodes[idxI].nbIn<2 ) {
         g.nodes[idxI].VI[ g.arcs[i].s-1 ]=(int)g.arcs[i].i1;
         g.nodes[idxI].nbIn++;
@@ -345,7 +345,7 @@ PolyGraph CreateGraph(const GLAppPolygon& inP1, const GLAppPolygon& inP2,const s
 
   // Mark starting points (2 outgoing arcs)
 
-  for(int i=0;i<g.nodes.size();i++) {
+  for(size_t i=0;i<g.nodes.size();i++) {
     if( g.nodes[i].nbOut>=2 ) {
       if( g.nodes[i].nbIn>=2 ) {
         
@@ -386,7 +386,7 @@ bool CheckLoop(const PolyGraph& g)
 
   const PolyVertex* s = &g.nodes[0];
   const PolyVertex* s0 = s;
-  int nbVisited=0;
+  size_t nbVisited=0;
   bool ok = s->nbOut == 1;
 
   do {
@@ -417,7 +417,7 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 	// must be marked non visible in visible2)
 	// Return the number of polygon created (0 on null intersection, -1 on failure)
 
-	int MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
+	size_t MAXEDGE = inP1.pts.size() * inP2.pts.size() + 1;
 
 	// Create polygraph
 	PolyGraph g = CreateGraph(inP1, inP2, visible2);
@@ -576,14 +576,14 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 	Clipper2Lib::PointD centerP(0.0, 0.0);
 	auto pts = solRect[0];
 	for (int j = 0; j < pts.size(); j++) {
-		int j1 = Next(j, pts.size());
+		size_t j1 = Next(j, pts.size());
 		double d = pts[j].x * pts[j1].y - pts[j1].x * pts[j].y;
 		centerP = centerP + (pts[j] + pts[j1]) * d;
 	}
 	Vector2d center(centerP.x, centerP.y); //PointD to Vector2d
 
 	// Count number of pts
-	int nbV = 0;
+	size_t nbV = 0;
 	for (int i = 0; i < solRect.size(); i++) {
 		const auto& pts = solRect[i];
 		nbV += pts.size();
@@ -591,7 +591,7 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 	std::vector<Vector2d> pointList(nbV);
 	
 	//Points to list
-	int nbE = 0;
+	size_t nbE = 0;
 	for (int i = 0; i < solRect.size(); i++) {
 		const auto& pts = solRect[i];
 		for (const auto& p:pts) {
@@ -632,16 +632,16 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPoly
 	if (!(polys)) return { 0.0,Vector2d(0.0,0.0),{} };
 
 	// Count number of pts
-	int nbV = 0;
+	size_t nbV = 0;
 	for (const auto& p : *polys)
 		nbV += p.pts.size();
 	std::vector<Vector2d> pointList(nbV);
 
 	//Points to list
-	int nbE = 0;
-	for (int i = 0; i < (*polys).size(); i++) {
+	size_t nbE = 0;
+	for (size_t i = 0; i < (*polys).size(); i++) {
 		const auto& polyPts = (*polys)[i].pts;
-		for (int j = 0; j < polyPts.size(); j++) {
+		for (size_t j = 0; j < polyPts.size(); j++) {
 			pointList[nbE++] = polyPts[j];
 		}
 	}
@@ -649,7 +649,7 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPoly
 	// Area
 	double sum = 0.0;
 	double A0; //first polygon area
-	for (int i = 0; i < (*polys).size(); i++) {
+	for (size_t i = 0; i < (*polys).size(); i++) {
 		double A = (*polys)[i].GetArea();
 		if (i == 0) A0 = std::fabs(0.5 * A);
 		sum += std::fabs(0.5 * A);
@@ -663,8 +663,8 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea(const GLAppPoly
 
 double GLAppPolygon::GetArea() {
 	double A = 0.0;
-	for (int j = 0; j < pts.size(); j++) {
-		int j1 = Next(j, pts.size());
+	for (size_t j = 0; j < pts.size(); j++) {
+		size_t j1 = Next(j, pts.size());
 		A += (pts[j].u * pts[j1].v - pts[j1].u * pts[j].v);
 	}
 	return A;
@@ -803,7 +803,7 @@ Vector2d GLAppPolygon::GetCenter()
 	Vector2d center(0.0, 0.0);
 	// Centroid (polygon 0)
 	for (int j = 0; j < pts.size(); j++) {
-		int j1 = Next(j, pts.size());
+		size_t j1 = Next(j, pts.size());
 		double d = pts[j].u * pts[j1].v - pts[j1].u * pts[j].v;
 		center = center + (pts[j] + pts[j1]) * d;
 	}

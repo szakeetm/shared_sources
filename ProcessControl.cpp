@@ -31,7 +31,7 @@ void ProcComm::PlaceFrontToBack() {
 }
 
 //! Removes a process from the active list, in case it is finished
-void ProcComm::RemoveFromHitUpdateQueue(int id) {
+void ProcComm::RemoveFromHitUpdateQueue(size_t id) {
     //this->activeProcsMutex.lock();
     for(auto proc = hitUpdateQueue.begin(); proc != hitUpdateQueue.end(); ++proc){
         if(id == (*proc)) {
@@ -46,12 +46,12 @@ void ProcComm::RemoveFromHitUpdateQueue(int id) {
 void ProcComm::InitHitUpdateQueue() {
     //this->activeProcsMutex.lock();
     hitUpdateQueue.clear();
-    for(int id = 0; id < this->threadInfos.size(); ++id)
+    for(size_t id = 0; id < this->threadInfos.size(); ++id)
         hitUpdateQueue.emplace_back(id);
     //this->activeProcsMutex.unlock();
 }
 
-void ProcCommData::UpdateCounterSizes(const std::vector<int>& counterSizes) {
+void ProcCommData::UpdateCounterSizes(const std::vector<size_t>& counterSizes) {
     procDataMutex.lock();
     for (int i = 0; i < std::min(counterSizes.size(), threadInfos.size()); i++) {
         threadInfos[i].runtimeInfo.counterSize = counterSizes[i];

@@ -23,11 +23,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <cstddef>
 namespace Util {
-    char *formatInt(int v, const char *unit);
+    char *formatInt(size_t v, const char *unit);
 
     char *formatPs(double v, const char *unit);
 
-    char *formatSize(int size);
+    char *formatSize(size_t size);
 
     char *formatTime(float t);
     char *formatTime(double t);

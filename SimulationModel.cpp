@@ -24,8 +24,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <cmath>
 
-int SimulationModel::GetMemSize() {
-    int modelSize = 0;
+size_t SimulationModel::GetMemSize() {
+    size_t modelSize = 0;
     for (auto &fac : facets)
         modelSize += fac->GetMemSize();
     for (auto &struc : structures)
@@ -88,13 +88,13 @@ void SimulationModel::CalculateFacetParams(RTFacet* f) {
     Vector3d v1;
     Vector3d v2;
     bool consecutive = true;
-    int ind = 2;
+    size_t ind = 2;
 
     // TODO: Handle possible collinear consequtive vectors
-    int i0 = f->indices[0];
-    int i1 = f->indices[1];
+    size_t i0 = f->indices[0];
+    size_t i1 = f->indices[1];
     while (ind < f->sh.nbIndex && consecutive) {
-        int i2 = f->indices[ind++];
+        size_t i2 = f->indices[ind++];
 
         v1 = vertices3[i1] - vertices3[i0]; // v1 = P0P1
         v2 = vertices3[i2] - vertices3[i1]; // v2 = P1P2
@@ -141,7 +141,7 @@ void SimulationModel::CalculateFacetParams(RTFacet* f) {
     Vector2d BBmin; BBmin.u = 0.0; BBmin.v = 0.0;
     Vector2d BBmax; BBmax.u = 0.0; BBmax.v = 0.0;
 
-    for (int j = 1; j < f->sh.nbIndex; j++) {
+    for (size_t j = 1; j < f->sh.nbIndex; j++) {
         Vector3d p = vertices3[f->indices[j]];
         Vector3d v = p - p0;
         f->vertices2[j].u = Dot(U, v);  // Project p on U along the V direction
@@ -156,8 +156,8 @@ void SimulationModel::CalculateFacetParams(RTFacet* f) {
 
     // Calculate facet area (Meister/Gauss formula)
     double area = 0.0;
-    for (int j = 0; j < f->sh.nbIndex; j++) {
-        int j_next = Next(j,f->sh.nbIndex);
+    for (size_t j = 0; j < f->sh.nbIndex; j++) {
+        size_t j_next = Next(j,f->sh.nbIndex);
         area += f->vertices2[j].u*f->vertices2[j_next].v - f->vertices2[j_next].u*f->vertices2[j].v; //Equal to Z-component of vectorial product
     }
     if (area > 0.0) {

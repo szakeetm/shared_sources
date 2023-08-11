@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #pragma once
 
-#include <cstddef> //int
+#include <cstddef> //size_t
 #include <vector>
 #include <mutex>
 #include <list>
@@ -86,13 +86,13 @@ static std::map<SimCommand, std::string> simCommandStrings = {
 struct PROCESS_INFO{
 
     double cpu_time; // CPU time         (in second)
-    int  mem_use;  // Memory usage     in byte (Windows) or kByte (Unix)
-    int  mem_peak; // Max Memory usage (in byte)
-    int counterSize; //GlobalSimuState size
+    size_t  mem_use;  // Memory usage     in byte (Windows) or kByte (Unix)
+    size_t  mem_peak; // Max Memory usage (in byte)
+    size_t counterSize; //GlobalSimuState size
 };
 
 struct ThreadInfo {
-    int threadId=0;
+    size_t threadId=0;
     ThreadState threadState=ThreadState::Idle;
     std::string threadStatus;
     PROCESS_INFO runtimeInfo;
@@ -102,8 +102,8 @@ class LoadStatus_abstract;
 
 struct ProcCommData {
     SimCommand masterCmd = SimCommand::None;
-    int cmdParam = 0;
-    int cmdParam2 = 0;
+    size_t cmdParam = 0;
+    size_t cmdParam2 = 0;
     std::string controllerStatus; //Allows to display fine-grained status in LoadStatus/Global Settings
     ControllerState controllerState = ControllerState::Initializing;
 
@@ -129,14 +129,14 @@ struct ProcCommData {
         return *this;
     }
 
-    void UpdateCounterSizes(const std::vector<int>& counterSizes);
+    void UpdateCounterSizes(const std::vector<size_t>& counterSizes);
     void UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 
 //! Process Communication class for handling inter process/thread communication
 struct ProcComm : ProcCommData {
 
-    std::list<int> hitUpdateQueue; //For round-robin access. When a process in front is "processed", it's moved to back
+    std::list<size_t> hitUpdateQueue; //For round-robin access. When a process in front is "processed", it's moved to back
     //std::mutex activeProcsMutex;
 
     // Custom assignment operator
@@ -149,18 +149,18 @@ struct ProcComm : ProcCommData {
     }
 
     ProcComm() = default;
-    ProcComm(int nbProcs) {
+    ProcComm(size_t nbProcs) {
         Resize(nbProcs);
     };
 
-    void Resize(int nbProcs) { //Called by constructor and by simulation manager's CreateCPUHandle()
+    void Resize(size_t nbProcs) { //Called by constructor and by simulation manager's CreateCPUHandle()
         threadInfos.resize(nbProcs);
         InitHitUpdateQueue();
     };
 
     void PlaceFrontToBack(); //Called by simulation controller (SimThreadHandle::runloop) when thread-local hits are added to master hits
 
-    void RemoveFromHitUpdateQueue(int id); //Called by simulation controller (SimThreadHandle::runloop) when end condition is met (and exit from loop), before final hit update
+    void RemoveFromHitUpdateQueue(size_t id); //Called by simulation controller (SimThreadHandle::runloop) when end condition is met (and exit from loop), before final hit update
 
     void InitHitUpdateQueue(); //Called by constructor and on resize
     

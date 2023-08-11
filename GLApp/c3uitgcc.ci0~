@@ -608,9 +608,9 @@ bool GLParser::Parse()
 double fact(double x) {
 
   int f = (int)(x+0.5);
-  int r = 1;
+  size_t r = 1;
   for(int i=1;i<=f;i++) {
-    r = (int)i * r;
+    r = (size_t)i * r;
   }
   return (double)r;
 

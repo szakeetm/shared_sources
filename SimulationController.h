@@ -36,17 +36,17 @@ namespace MFSim {
  */
 class SimThreadHandle {
 public:
-    SimThreadHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, int threadNum, int nbThreads);
+    SimThreadHandle(ProcComm& procInfo, Simulation_Abstract* simPtr, size_t threadNum, size_t nbThreads);
 
     
     double stepsPerSec=1.0;
     bool desLimitReachedOrDesError=false;
-    int localDesLimit=0;
+    size_t localDesLimit=0;
     double timeLimit=0.0;
 
     ProcComm& masterProcInfo;
     Simulation_Abstract* simulationPtr;
-    int threadNum,nbThreads;
+    size_t threadNum,nbThreads;
 
     std::shared_ptr<MFSim::ParticleTracer> particleTracerPtr;
     bool runLoop();
@@ -56,9 +56,9 @@ private:
     
     void SetMyStatus(const std::string& msg) const;
     void SetMyState(const ThreadState state) const;
-    bool runSimulation1sec(const int desorptionLimit);
+    bool runSimulation1sec(const size_t desorptionLimit);
     //int advanceForTime(double simDuration);
-    //int advanceForSteps(int desorptions);
+    //int advanceForSteps(size_t desorptions);
 };
 
 /**
@@ -77,9 +77,9 @@ protected:
     //void SetReady(/*const bool loadOk*/);
     void ClearCommand();
     void SetRuntimeInfo();
-    //int GetThreadStates() const;
+    //size_t GetThreadStates() const;
 public:
-    SimulationController(int parentPID, int procIdx, int nbThreads,
+    SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm& pInfo);
     void controllerLoop();
 
@@ -95,9 +95,9 @@ protected:
     std::vector<SimThreadHandle> simThreadHandles;
 
     ProcComm& procInfo;
-    int parentPID;
-    int nbThreads;
-    int prIdx;
+    size_t parentPID;
+    size_t nbThreads;
+    size_t prIdx;
 
 private:
     // tmp

@@ -393,10 +393,10 @@ void CreateShape::ProcessMessage(GLComponent *src,int message) {
 			  interfGeom->CreateRectangle(center, axisDir, normalDir, axis1length, axis2length);
 			  break;
 		  case MODE_CIRCLE:
-			  interfGeom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (int)nbSteps);
+			  interfGeom->CreateCircle(center, axisDir, normalDir, axis1length, axis2length, (size_t)nbSteps);
 			  break;
 		  case MODE_RACETRACK:
-			  interfGeom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (int)nbSteps);
+			  interfGeom->CreateRacetrack(center, axisDir, normalDir, axis1length, axis2length, racetrackTopLength, (size_t)nbSteps);
 			  break;
 		  }
 		  work->MarkToReload();

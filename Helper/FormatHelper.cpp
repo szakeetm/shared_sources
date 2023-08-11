@@ -25,7 +25,7 @@ namespace Util {
 
 // Name: formatInt()
 // Desc: Format an integer in K,M,G,..
-    char *formatInt(int v, const char *unit) {
+    char *formatInt(size_t v, const char *unit) {
 
         double x = (double) v;
 
@@ -65,7 +65,7 @@ namespace Util {
 
 // Name: formatSize()
 // Desc: Format a double in K,M,G,.. per sec
-    char *formatSize(int size) {
+    char *formatSize(size_t size) {
 
         static char ret[64];
         if (size < 1024UL) {

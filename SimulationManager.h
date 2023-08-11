@@ -66,7 +66,7 @@ class SimulationManager {
     int refreshProcStatus();
 protected:
 
-    void ForwardCommand(SimCommand command, int param, int param2);
+    void ForwardCommand(SimCommand command, size_t param, size_t param2);
 
     int WaitForControllerAndThreadState(const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
         LoadStatus_abstract* loadStatus =nullptr);
@@ -82,9 +82,9 @@ public:
 
     void LoadSimulation(LoadStatus_abstract* loadStatus = nullptr);
 
-    void ShareWithSimUnits(void *data, int size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
+    void ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
-    int ExecuteAndWait(const SimCommand command, const int param, const int param2,
+    int ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
         const std::optional<ControllerState>& successControllerStateconst, const std::optional<ThreadState>& successThreadState,
         LoadStatus_abstract* loadStatus);
 
@@ -98,7 +98,7 @@ public:
 
     //int ResetHits();
 
-    int GetProcStatus(int *states, std::vector<std::string> &statusStrings);
+    int GetProcStatus(size_t *states, std::vector<std::string> &statusStrings);
 
     int GetProcStatus(ProcComm &procInfoList);
 
@@ -121,8 +121,8 @@ private:
 protected:
     //std::vector<Simulation_Abstract*> controllerLoopThread; // for threaded versions
 public:
-    int nbThreads=0;
-    int mainProcId;
+    size_t nbThreads=0;
+    size_t mainProcId;
 
     bool asyncMode=false; //Commands issued to threads with non-blocking mode. Default for GUI, disabled for CLI and test suite
     bool noProgress = false; //Don't print percentage updates for progressbars, useful if output written to log file

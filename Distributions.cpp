@@ -28,7 +28,7 @@ std::vector<double> DistributionND::InterpY(const double  x, const bool  allowEx
 }
 
 /*
-double DistributionND::InterpolateX(const double  y, const int  elementIndex, const bool  allowExtrapolate)
+double DistributionND::InterpolateX(const double  y, const size_t  elementIndex, const bool  allowExtrapolate)
 {
 	return InterpolateVectorX(y, values, elementIndex, logXinterp, logYinterp, allowExtrapolate);
 }

@@ -68,9 +68,9 @@ std::string GLFormula::GetExpression() const {
 }
 
 // Return fisrt significative char in the string to analyze, repeat 'times' times 
-void GLFormula::AV(int times)
+void GLFormula::AV(size_t times)
 {
-	for (int i = 0; i < times; i++) {
+	for (size_t i = 0; i < times; i++) {
 		do {
 			++currentPos;
 			if (currentPos >= expression.size()) {
@@ -420,9 +420,9 @@ bool GLFormula::Parse()
 double factorial(double x) {
 
 	int f = (int)(x + 0.5);
-	int r = 1;
+	size_t r = 1;
 	for (int i = 1; i <= f; i++) {
-		r = (int)i * r;
+		r = (size_t)i * r;
 	}
 	return (double)r;
 
@@ -562,11 +562,11 @@ double GLFormula::EvaluateNode(const std::unique_ptr<EvalTreeNode>& node) {
 	throw Error("Unknown operand type");
 }
 
-int GLFormula::GetNbVariable() {
+size_t GLFormula::GetNbVariable() {
 	return variables.size();
 }
 
-std::list<Variable>::iterator GLFormula::GetVariableAt(int n) {
+std::list<Variable>::iterator GLFormula::GetVariableAt(size_t n) {
 	auto it = variables.begin();
 	std::advance(it, std::min(n, variables.size() - 1));
 	return it;

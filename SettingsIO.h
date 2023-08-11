@@ -29,7 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 namespace SettingsIO {
 
     struct CLIArguments {
-        int nbThreads = 0;
+        size_t nbThreads = 0;
         uint64_t simDuration = 0;
         uint64_t statprintInterval = 60;
         uint64_t autoSaveInterval = 600; // default: autosave every 600s=10min

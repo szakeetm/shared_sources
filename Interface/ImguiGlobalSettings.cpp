@@ -66,10 +66,10 @@ static void ProcessControlTable(SynRad *mApp) {
 
         // Interface
 #ifdef _WIN32
-        int currPid = GetCurrentProcessId();
+        size_t currPid = GetCurrentProcessId();
         double memDenom = (1024.0 * 1024.0);
 #else
-        int currPid = getpid();
+        size_t currPid = getpid();
         double memDenom = (1024.0);
 #endif
         PROCESS_INFO parentInfo{};
@@ -85,7 +85,7 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetColumnIndex(4);
         ImGui::Text("");
 
-        int i = 1;
+        size_t i = 1;
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
         clipper.Begin(procInfoPtr.threadInfos.size());

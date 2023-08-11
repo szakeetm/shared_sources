@@ -30,7 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class SimulationFacet : public RTFacet {
 protected:
     SimulationFacet() = default;
-    explicit SimulationFacet(int nbIndex);
+    explicit SimulationFacet(size_t nbIndex);
     //SimulationFacet(const SimulationFacet& cpy);
     //SimulationFacet(SimulationFacet&& cpy) noexcept;
     
@@ -47,10 +47,10 @@ public:
 
     void InitializeTexture();
 
-    virtual bool InitializeLinkAndVolatile(const int  id);
+    virtual bool InitializeLinkAndVolatile(const size_t  id);
 
-    [[nodiscard]] virtual int GetHitsSize(int nbMoments) const;
-    [[nodiscard]] virtual int GetMemSize() const;
+    [[nodiscard]] virtual size_t GetHitsSize(size_t nbMoments) const;
+    [[nodiscard]] virtual size_t GetMemSize() const;
 
     std::vector<double> InitTextureMesh();
 };

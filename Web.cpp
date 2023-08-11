@@ -21,15 +21,15 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <fmt/core.h>
 #include <string>
 
-int AppendDataToStringCurlCallback(void *ptr, int size, int nmemb, void *vstring)
+size_t AppendDataToStringCurlCallback(void *ptr, size_t size, size_t nmemb, void *vstring)
 {
 	std::string * pstring = (std::string*)vstring;
 	pstring->append((char*)ptr, size * nmemb);
 	return size * nmemb;
 }
 
-int write_data(void *ptr, int size, int nmemb, FILE *stream) {
-    int written = fwrite(ptr, size, nmemb, stream);
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
 
@@ -114,7 +114,7 @@ std::string FormatHttpString(std::string str) {
     std::string replaceStr = "%20";
     std::string space = " ";
 
-    int pos = 0;
+    size_t pos = 0;
     while ((pos = str.find(space, pos)) != std::string::npos) {
         str.replace(pos, space.length(), replaceStr);
         pos += replaceStr.length();

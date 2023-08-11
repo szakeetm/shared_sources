@@ -37,9 +37,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 
-#define PROFILE_SIZE  (int)100 // Size of profile
-#define LEAKCACHESIZE     (int)2048  // Leak history max length
-#define HITCACHESIZE      (int)2048  // Max. displayed number of lines and hits.
+#define PROFILE_SIZE  (size_t)100 // Size of profile
+#define LEAKCACHESIZE     (size_t)2048  // Leak history max length
+#define HITCACHESIZE      (size_t)2048  // Max. displayed number of lines and hits.
 //#define MAX_STRUCT 64
 
 enum AccelType : int {
@@ -50,8 +50,8 @@ enum AccelType : int {
 class HistogramParams {
 public:
 	bool recordBounce = false;
-	int nbBounceMax = 10000;
-	int nbBounceBinsize = 1;
+	size_t nbBounceMax = 10000;
+	size_t nbBounceBinsize = 1;
 	bool recordDistance = false;
 	double distanceMax = 10.0;
 	double distanceBinsize = 0.001;
@@ -79,19 +79,19 @@ public:
 		);
 	}
 
-	int GetBounceHistogramSize() const {
+	size_t GetBounceHistogramSize() const {
 		return nbBounceMax / nbBounceBinsize + 1 + 1; //+1: overrun
 	}
-	int GetDistanceHistogramSize() const {
-		return (int)(distanceMax / distanceBinsize) + 1; //+1: overrun
+	size_t GetDistanceHistogramSize() const {
+		return (size_t)(distanceMax / distanceBinsize) + 1; //+1: overrun
 	}
 #if defined(MOLFLOW)
-	int GetTimeHistogramSize() const {
-		return (int)(timeMax / timeBinsize) + 1; //+1: overrun
+	size_t GetTimeHistogramSize() const {
+		return (size_t)(timeMax / timeBinsize) + 1; //+1: overrun
 	}
 #endif
-	int GetDataSize() const {
-		int size = 0;
+	size_t GetDataSize() const {
+		size_t size = 0;
 		if (recordBounce) size += sizeof(double) * GetBounceHistogramSize();
 		if (recordDistance) size += sizeof(double) * GetDistanceHistogramSize();
 #if defined(MOLFLOW)
@@ -100,16 +100,16 @@ public:
 		return size;
 
 	}
-	int GetBouncesDataSize() const {
+	size_t GetBouncesDataSize() const {
 		if (!recordBounce) return 0;
 		else return sizeof(double) * GetBounceHistogramSize();
 	}
-	int GetDistanceDataSize() const {
+	size_t GetDistanceDataSize() const {
 		if (!recordDistance) return 0;
 		else return sizeof(double) * GetDistanceHistogramSize();
 	}
 #if defined(MOLFLOW)
-	int GetTimeDataSize() const {
+	size_t GetTimeDataSize() const {
 		if (!recordTime) return 0;
 		else return sizeof(double) * GetTimeHistogramSize();
 	}
@@ -119,7 +119,7 @@ public:
 class FacetProperties { //Formerly SHFACET
 public:
 	FacetProperties() = default;
-	explicit FacetProperties(int nbIndices);
+	explicit FacetProperties(size_t nbIndices);
 	//For sync between interface and subprocess
 	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
 	double opacity;        // opacity  (0=>transparent , 1=>opaque)
@@ -127,7 +127,7 @@ public:
 
 	int    profileType;    // Profile type, possible choices are defined in profileTypes vector in Molflow.cpp/Synrad.cpp
 	int    superIdx;       // Super structure index (Indexed from 0) -1: facet belongs to all structures (typically counter facets)
-	int    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
+	size_t    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
 	int	 teleportDest;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
 
 	bool   countAbs;       // Count absorption (MC texture)
@@ -144,7 +144,7 @@ public:
 	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
 						 // Geometry
-	int nbIndex;   // Number of index/vertex
+	size_t nbIndex;   // Number of index/vertex
 	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
 					  // Plane basis (O,U,V) (See InterfaceGeometry::InitializeGeometry() for info)
@@ -164,8 +164,8 @@ public:
 	bool isConvex; //intersections can be sped up
 
 	// Hit/Abs/Des/Density recording on 2D texture map
-	int    texWidth;    // Rounded texture resolution (U)
-	int    texHeight;   // Rounded texture resolution (V)
+	size_t    texWidth;    // Rounded texture resolution (U)
+	size_t    texHeight;   // Rounded texture resolution (V)
 	double texWidth_precise;   // Actual texture resolution (U)
 	double texHeight_precise;  // Actual texture resolution (V)
 
@@ -203,8 +203,8 @@ public:
 	bool   useOutgassingFile;   //has desorption file for cell elements
 	//double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
 	//double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
-	//int   outgassingMapWidth; //rounded up outgassing file map width
-	//int   outgassingMapHeight; //rounded up outgassing file map height
+	//size_t   outgassingMapWidth; //rounded up outgassing file map width
+	//size_t   outgassingMapHeight; //rounded up outgassing file map height
 	double totalOutgassing; //total outgassing for the given facet
 
 	AnglemapParams anglemapParams;//Incident angle map
@@ -352,9 +352,9 @@ struct WorkerParams { //Plain old data
 
 #endif
 #if defined(SYNRAD)
-	int        nbRegion;  //number of magnetic regions
-	int        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
-	int        sourceArea;
+	size_t        nbRegion;  //number of magnetic regions
+	size_t        nbTrajPoints; //total number of trajectory points (calculated at CopyGeometryBuffer)
+	size_t        sourceArea;
 	bool       newReflectionModel;
 #endif
 
@@ -392,9 +392,9 @@ struct WorkerParams { //Plain old data
 
 class GeomProperties {  //Formerly SHGEOM
 public:
-	int     nbFacet=0;   // Number of facets (total)
-	int     nbVertex=0;  // Number of 3D vertices
-	int     nbSuper=0;   // Number of superstructures
+	size_t     nbFacet=0;   // Number of facets (total)
+	size_t     nbVertex=0;  // Number of 3D vertices
+	size_t     nbSuper=0;   // Number of superstructures
 	std::string name;  // (Short file name)
 
 	template <class Archive> void serialize(Archive& archive) {
@@ -417,9 +417,9 @@ public:
 	double	 lowFluxCutoff;
 
 	bool enableLogging;
-	int logFacetId, logLimit;
+	size_t logFacetId, logLimit;
 
-	int desorptionLimit;
+	size_t desorptionLimit;
 	double	 timeLimit;
 
 	template<class Archive> void serialize(Archive& archive) {
@@ -477,7 +477,7 @@ public:
 		return *this;
 	}
 	Vector3d dir = Vector3d(0.0, 0.0, 0.0);
-	int count = 0;
+	size_t count = 0;
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
@@ -507,7 +507,7 @@ class FacetHistogramBuffer { //raw data containing histogram result
 public:
 	void Resize(const HistogramParams& params);
 	void Reset();
-	int GetMemSize() const;
+	size_t GetMemSize() const;
 
 	FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
@@ -535,8 +535,8 @@ struct FacetHitBuffer { //plain old data
 	FacetHitBuffer& operator+=(const FacetHitBuffer& rhs);
 	FacetHitBuffer()=default; //required for default constructor of GlobalHitBuffer
 	// Counts
-	int nbDesorbed=0;          // Number of desorbed molec
-	int nbMCHit=0;               // Number of hits
+	size_t nbDesorbed=0;          // Number of desorbed molec
+	size_t nbMCHit=0;               // Number of hits
 	double nbHitEquiv=0.0;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 	double nbAbsEquiv=0.0;          // Equivalent number of absorbed molecules
 	double sum_1_per_ort_velocity=0.0;    // sum of reciprocials of orthogonal velocity components, used to determine the density, regardless of facet orientation
@@ -573,8 +573,8 @@ public:
 	void ResetBuffer();
 
 	// Counts
-	int nbMCHit=0;               // Number of hits
-	int nbDesorbed=0;          // Number of desorbed molec
+	size_t nbMCHit=0;               // Number of hits
+	size_t nbDesorbed=0;          // Number of desorbed molec
 	double nbHitEquiv=0.0;			//Equivalent number of hits, used for low-flux impingement rate and density calculation
 	double nbAbsEquiv=0.0;          // Equivalent number of absorbed molecules
 	double fluxAbs=0.0;         // Total desorbed Flux
@@ -605,11 +605,11 @@ public:
 	GlobalHitBuffer()=default; //required for move constructor of globalsimustate
 
 	FacetHitBuffer globalHits;		//Global counts (as if the whole geometry was one extra facet)
-	int hitCacheSize=0;			//Number of valid hits in cache
-	int lastHitIndex=0;			//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
-	int lastLeakIndex=0;			//Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
-	int leakCacheSize=0;			//Number of valid leaks in the cache
-	int nbLeakTotal=0;			//Total leaks
+	size_t hitCacheSize=0;			//Number of valid hits in cache
+	size_t lastHitIndex=0;			//Index of last recorded hit in gHits (turns over when reaches HITCACHESIZE)
+	size_t lastLeakIndex=0;			//Index of last recorded leak in gHits (turns over when reaches LEAKCACHESIZE)
+	size_t leakCacheSize=0;			//Number of valid leaks in the cache
+	size_t nbLeakTotal=0;			//Total leaks
 	HIT hitCache[HITCACHESIZE];		//Hit history
 	LEAK leakCache[LEAKCACHESIZE];	//Leak history
 
@@ -695,7 +695,7 @@ public:
 
 struct FormulaHistoryDatapoint {
 	FormulaHistoryDatapoint() = default; //So that a vector for this can be defined
-	FormulaHistoryDatapoint(int _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
-	int nbDes = 0;
+	FormulaHistoryDatapoint(size_t _nbDes, double _value) : nbDes(_nbDes), value(_value) {};
+	size_t nbDes = 0;
 	double value = 0.0;
 };

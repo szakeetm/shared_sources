@@ -169,7 +169,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
 #ifdef _WIN32
         SYSTEM_INFO sysinfo;
         GetSystemInfo(&sysinfo);
-        nbThreads = (int) sysinfo.dwNumberOfProcessors;
+        nbThreads = (size_t) sysinfo.dwNumberOfProcessors;
 #else
         nbThreads = (unsigned int) sysconf(_SC_NPROCESSORS_ONLN);
 #endif // WIN
@@ -196,7 +196,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     simulation = std::make_unique<SynradSimulation>();
 #endif
     procInformation.UpdateControllerStatus(std::nullopt, { "Creating new simulation controller..." }, loadStatus);
-    simController = std::make_unique<SimulationController>((int)processId, (int)0, nbThreads, simulation.get(), procInformation);
+    simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
         controllerLoopThread = std::make_unique<std::thread>(&SimulationController::controllerLoop, simController.get());
@@ -261,7 +261,7 @@ int SimulationManager::WaitForControllerAndThreadState(const std::optional<Contr
 		finished = true;
         //Check thread success
         if (successThreadState.has_value()) {
-            for (int i = 0; i < procInformation.threadInfos.size(); i++) {
+            for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
                 auto procState = procInformation.threadInfos[i].threadState;
                 finished = finished && (procState==*successThreadState);
 
@@ -303,7 +303,7 @@ int SimulationManager::WaitForControllerAndThreadState(const std::optional<Contr
 }
 
 //! Forward a command to simulation controllers
-void SimulationManager::ForwardCommand(const SimCommand command, const int param, const int param2) {
+void SimulationManager::ForwardCommand(const SimCommand command, const size_t param, const size_t param2) {
 
     procInformation.masterCmd = command;
     procInformation.cmdParam = param;
@@ -326,7 +326,7 @@ void SimulationManager::ForwardCommand(const SimCommand command, const int param
  * @param param additional command parameter
  * @return 0=success, 1=fail
  */
-int SimulationManager::ExecuteAndWait(const SimCommand command, const int param, const int param2,
+int SimulationManager::ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
      const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
     LoadStatus_abstract* loadStatus) {
     ForwardCommand(command, param, param2); // sets master state to command, param and param2
@@ -374,7 +374,7 @@ void SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
             }
         }
         bool allKilled = true;
-        for (int i = 0; i < procInformation.threadInfos.size(); i++) {
+        for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
             allKilled = allKilled && procInformation.threadInfos[i].threadState == ThreadState::Idle;
         }
         if (allKilled) {
@@ -423,12 +423,12 @@ std::string SimulationManager::GetControllerStatus()
     return fmt::format("[{}] [{}] {}", simCommandStrings[procInformation.masterCmd], controllerStateStrings[procInformation.controllerState], procInformation.controllerStatus);
 }
 
-int SimulationManager::GetProcStatus(int *states, std::vector<std::string>& statusStrings) {
+int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& statusStrings) {
 
     if(statusStrings.size() < procInformation.threadInfos.size())
         return 1;
 
-    for (int i = 0; i < procInformation.threadInfos.size(); i++) {
+    for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
         //states[i] = shMaster->procInformation[i].masterCmd;
         states[i] = procInformation.threadInfos[i].threadState;
         statusStrings[i] = procInformation.threadInfos[i].threadStatus;
@@ -468,7 +468,7 @@ std::string SimulationManager::GetErrorDetails() {
 
     std::string err;
     err.append(fmt::format("Controller: [{}] {}\n", controllerStateStrings[procInfoPtr.controllerState], procInfoPtr.controllerStatus));
-    for (int i = 0; i < procInfoPtr.threadInfos.size(); i++) {
+    for (size_t i = 0; i < procInfoPtr.threadInfos.size(); i++) {
         err.append(fmt::format("Thread #{}: [{}] {}\n", i+1, threadStateStrings[procInfoPtr.threadInfos[i].threadState], procInfoPtr.threadInfos[i].threadStatus));
     }
     return err;
@@ -489,7 +489,7 @@ std::string SimulationManager::MakeSubProcError(const std::string& message) {
 }
 
 
-void SimulationManager::ShareWithSimUnits(void *data, int size, LoadType loadType, LoadStatus_abstract* loadStatus) {
+void SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus) {
 
     switch (loadType) {
         case LoadType::LOADGEOM:{
@@ -552,7 +552,7 @@ void SimulationManager::SetFacetHitCounts(std::vector<FacetHitBuffer*>& hitCache
         if(simulation->globalState->facetStates.size() != hitCaches.size()) return;
         auto lock = GetHitLock(simulation->globalState.get(),10000);
         if(!lock) return;
-        for (int i = 0; i < hitCaches.size(); i++) {
+        for (size_t i = 0; i < hitCaches.size(); i++) {
             simulation->globalState->facetStates[i].momentResults[0].hits = *hitCaches[i];
         }
 }
