@@ -54,7 +54,7 @@ public:
     virtual void ResetSimulation() = 0;
     //virtual void ClearSimulation() = 0;
 
-    virtual int GetHitsSize() = 0;
+    //virtual int GetHitsSize() = 0;
     virtual std::shared_ptr<MFSim::ParticleTracer> GetParticleTracerPtr(int i) = 0;
     virtual void ConstructParticleTracers(int n, bool fixedSeed) = 0;
 public:

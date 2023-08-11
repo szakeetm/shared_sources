@@ -49,8 +49,8 @@ public:
 
     virtual bool InitializeLinkAndVolatile(const int  id);
 
-    [[nodiscard]] virtual int GetHitsSize(int nbMoments) const;
-    [[nodiscard]] virtual int GetMemSize() const;
+    //[[nodiscard]] virtual size_t GetHitsSize(int nbMoments) const;
+    [[nodiscard]] virtual size_t GetMemSize() const;
 
     std::vector<double> InitTextureMesh();
 };

@@ -102,7 +102,7 @@ void AABBNODE::ComputeBB() {
 }
 
 size_t AABBNODE::GetMemSize() {
-	int sum = 0;
+	size_t sum = 0;
 	if (left) {
 		sum += left->GetMemSize();
 	}

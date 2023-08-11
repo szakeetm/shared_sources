@@ -51,7 +51,7 @@ void ProcComm::InitHitUpdateQueue() {
     //this->activeProcsMutex.unlock();
 }
 
-void ProcCommData::UpdateCounterSizes(const std::vector<int>& counterSizes) {
+void ProcCommData::UpdateCounterSizes(const std::vector<size_t>& counterSizes) {
     procDataMutex.lock();
     for (int i = 0; i < std::min(counterSizes.size(), threadInfos.size()); i++) {
         threadInfos[i].runtimeInfo.counterSize = counterSizes[i];
