@@ -568,7 +568,7 @@ int GLFormula::GetNbVariable() {
 
 std::list<Variable>::iterator GLFormula::GetVariableAt(int n) {
 	auto it = variables.begin();
-	std::advance(it, std::min(n, variables.size() - 1));
+	std::advance(it, std::min(n, (int)variables.size() - 1));
 	return it;
 }
 

@@ -19,7 +19,6 @@ public:
   void SetText(std::string string);
   void SetText(const double val);
   void SetText(const int val);
-  void SetText(const int val);
   std::string GetText();
   void ScrollToVisible();
   void SetCursorPos(int pos);

@@ -532,7 +532,7 @@ std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
 	int max_updates = 3; //display only last 3 updates
-	for (int i = 0; i < std::min(max_updates, updates.size());i++) {
+	for (int i = 0; i < std::min(max_updates, (int)updates.size());i++) {
 		const auto& update = updates[i];
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}

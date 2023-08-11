@@ -180,7 +180,7 @@ void Formulas::removeEveryNth(int everyN, int formulaId, int skipLastN) {
 */
 void Formulas::removeFirstN(int n, int formulaId) {
     auto &conv_vec = convergenceData[formulaId];
-    conv_vec.erase(conv_vec.begin(), conv_vec.begin() + std::min(n, conv_vec.size()));
+    conv_vec.erase(conv_vec.begin(), conv_vec.begin() + std::min(n, (int)conv_vec.size()));
 }
 
 /*

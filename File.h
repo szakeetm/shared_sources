@@ -111,11 +111,10 @@ public:
 
   // Write function
   void Write(const int v, const char *sep = NULL);
-  void Write(const int v, const char *sep=NULL);
+  void Write(const size_t v, const char *sep = NULL);
   void Write(const double v, const char *sep=NULL);
   void Write(const char *s);
-  void Write(const std::string& str);
-  
+  void Write(const std::string& str);  
 
 private:
 

@@ -867,15 +867,6 @@ int InterfaceFacet::GetIndex(int idx) {
 }
 
 /**
-* \brief Get vertex index from buffer for an idx
-* \param idx index
-* \return vertex index
-*/
-int InterfaceFacet::GetIndex(int idx) {
-		return indices[idx % sh.nbIndex];
-}
-
-/**
 * \brief Calculate mesh area and consider the usage of 2 sided meshes
 * \param index cell index
 * \param correct2sides if correction for 2 sided meshes should be applied (use factor 2)

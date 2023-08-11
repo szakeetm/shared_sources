@@ -457,15 +457,8 @@ void FileWriter::Write(const int v, const char *sep) {
         fprintf(file, "%s", sep);
 }
 
-void FileWriter::Write(const int v, const char *sep) {
-    //#ifdef _WIN32
-    if (!fprintf(file, "%zd", v))
-        throw Error("Error while writing to file");
-    //#else
-    //	throw Error("FileWriter::Write() not implemented"); //commented out:
-    //fprintf works just as well on Linux #endif
-    if (sep)
-        fprintf(file, "%s", sep);
+void FileWriter::Write(const size_t v, const char *sep) {
+    Write(static_cast<int>(v), sep);
 }
 
 void FileWriter::Write(const double v, const char *sep) {
