@@ -37,10 +37,7 @@ int isnan(double x);
 
 template <typename T1, typename T2, typename T3> void Saturate(T1& x, const T2& min, const T3& max) { if (x<min) x = min; if (x>max) x = max; }
 int IDX(const int i, const int nb);
-int IDX(const int i, const int nb);
 int Next(const int i, const int nb, const bool inverseDir=false);
-int Next(const int i, const int nb, const bool inverseDir=false);
-int Previous(const int i, const int nb, const bool inverseDir=false);
 int Previous(const int i, const int nb, const bool inverseDir=false);
 
 template <typename TYPE> bool IsZero(const TYPE& x) { return std::abs(x)<1E-10; }

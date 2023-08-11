@@ -36,18 +36,6 @@ int IDX(const int i, const int nb) {
     return (ret>=0)?(ret):(ret+nb);
 }
 
-int IDX(const int i, const int nb) {
-	//Return circular index restrained within [0..nb[
-	return i%nb;
-}
-
-
-int Next(const int i, const int nb, const bool inverseDir) {
-	//Returns the next element of a circular index (next of last is first)
-	//inverseDir is a helper: when true, returns the previous
-	return Next((int)i,nb,inverseDir);
-}
-
 int Next(const int i, const int nb, const bool inverseDir) {
 	//Returns the next element of a circular index (next of last is first)
 	//inverseDir is a helper: when true, returns the previous
@@ -66,13 +54,6 @@ int Previous(const int i, const int nb, const bool inverseDir) {
 		else return i-1;
 	} else return Next(i,nb,false);
 }
-
-int Previous(const int i, const int nb, const bool inverseDir) {
-	return Previous((int)i,nb,inverseDir);
-}
-
-
-
 int GetPower2(int n) {
 // Return a power of 2 which is greater or equal than n
   if((n & (n-1))==0) {
