@@ -45,7 +45,7 @@ public:
     std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
     std::string name;
 
-    int GetMemSize(){
+    size_t GetMemSize(){
         int sum = sizeof(name);
         if (aabbTree) {
             sum += aabbTree->GetMemSize();
@@ -77,7 +77,7 @@ protected:
     */
 
 public:
-    virtual int GetMemSize();
+    virtual size_t GetMemSize();
     /*
     SimulationModel &operator=(const SimulationModel &o) {
         facets = o.facets;

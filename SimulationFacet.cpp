@@ -201,7 +201,7 @@ int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
 * \param nbMoments amount of moments
 * \return calculated size of the facet hits
 */
-int SimulationFacet::GetMemSize() const {
+size_t SimulationFacet::GetMemSize() const {
     int sum = 0;
     sum += sizeof (SimulationFacet);
     sum += sizeof (int) * indices.capacity();
