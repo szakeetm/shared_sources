@@ -77,7 +77,7 @@ void FacetHistogramBuffer::Reset() {
 #endif
 }
 
-size_t FacetHistogramBuffer::GetMemSize() const {
+int FacetHistogramBuffer::GetMemSize() const {
 	int sum = 0;
 	sum += nbHitsHistogram.capacity() * sizeof(double);
 	sum += distanceHistogram.capacity() * sizeof(double);

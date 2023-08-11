@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/MathTools.h"
 #include <cmath>
 
-size_t SimulationModel::GetMemSize() {
+int SimulationModel::GetMemSize() {
     int modelSize = 0;
     for (auto &fac : facets)
         modelSize += fac->GetMemSize();

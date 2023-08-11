@@ -507,7 +507,7 @@ class FacetHistogramBuffer { //raw data containing histogram result
 public:
 	void Resize(const HistogramParams& params);
 	void Reset();
-	size_t GetMemSize() const;
+	int GetMemSize() const;
 
 	FacetHistogramBuffer& operator+=(const FacetHistogramBuffer& rhs);
 	std::vector<double> nbHitsHistogram;
