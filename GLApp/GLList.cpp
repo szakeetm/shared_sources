@@ -1043,7 +1043,7 @@ int GLList::GetValueInt(int row, int column) {
 	}
 	catch (const std::exception &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
+		sprintf(errMsg, "%s\nWhile finding:%d", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 		return -1;
 	}
@@ -1058,7 +1058,7 @@ double GLList::GetValueDouble(int row, int column) {
 	}
 	catch (const std::exception &e) {
 		char errMsg[512];
-		sprintf(errMsg, "%s\nWhile finding:%zd", e.what(), row);
+		sprintf(errMsg, "%s\nWhile finding:%d", e.what(), row);
 		GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);
 	}
 }
@@ -1278,10 +1278,10 @@ void GLList::UpdateCell() {
 		double val;
 		if (!edit->GetNumber(&val)) {
 			if (cNames) {
-				sprintf(tmp, "Wrong number format at line %zd (%s)", selectedRows[0] + 1, cNames[selectedCol]);
+				sprintf(tmp, "Wrong number format at line %d (%s)", selectedRows[0] + 1, cNames[selectedCol]);
 			}
 			else {
-				sprintf(tmp, "Wrong number format at line %zd (%d)", selectedRows[0] + 1, selectedCol + 1);
+				sprintf(tmp, "Wrong number format at line %d (%d)", selectedRows[0] + 1, selectedCol + 1);
 			}
 			GLMessageBox::Display(tmp, "Error", GLDLG_OK, GLDLG_ICONWARNING);
 		}

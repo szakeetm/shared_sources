@@ -691,13 +691,13 @@ void GeometryViewer::DrawIndex() {
 	for (int i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
 			if (showIndex && showVertexId) {
-				sprintf(tmp, "%zd,%zd ", vertexId[i] + 1, i + 1);
+				sprintf(tmp, "%d,%d ", vertexId[i] + 1, i + 1);
 			}
 			else if (showIndex && !showVertexId) {
-				sprintf(tmp, "%zd ", vertexId[i] + 1);
+				sprintf(tmp, "%d ", vertexId[i] + 1);
 			}
 			else {
-				sprintf(tmp, "%zd ", i + 1);
+				sprintf(tmp, "%d ", i + 1);
 			}
 			Vector3d *v = interfGeom->GetVertex(i);
 			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
@@ -971,7 +971,7 @@ void GeometryViewer::DrawFacetId() {
         }
         labelVec = center;
 		*/
-        //sprintf(tmp, " F#%zd ", selId+1);
+        //sprintf(tmp, " F#%d ", selId+1);
 		std::string labelText = fmt::format(" F#{} ", selId + 1);
 		int labelLength = labelText.length()*5;
 		int labelHeight = 16;

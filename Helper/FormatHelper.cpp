@@ -69,7 +69,7 @@ namespace Util {
 
         static char ret[64];
         if (size < 1024UL) {
-            sprintf(ret, "%zd Bytes", size);
+            sprintf(ret, "%d Bytes", size);
         } else if (size < 1048576UL) {
             sprintf(ret, "%.1f KB", (double) size / 1024.0);
         } else if (size < 1073741824UL) {

@@ -77,7 +77,7 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("Interface");
         ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%zd", currPid);
+        ImGui::Text("%d", currPid);
         ImGui::TableSetColumnIndex(2);
         ImGui::Text("%.0f MB", (double) parentInfo.mem_use / memDenom);
         ImGui::TableSetColumnIndex(3);
@@ -302,7 +302,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
     ProcessControlTable(mApp);
 
-    ImGui::Text("Number of CPU cores:     %zd", mApp->numCPU);
+    ImGui::Text("Number of CPU cores:     %d", mApp->numCPU);
     ImGui::Text("Number of subprocesses:  ");
     ImGui::SameLine();
     /*bool nbProcChanged = false;

@@ -151,7 +151,7 @@ void CollapseSettings::SetGeometry(InterfaceGeometry *interfGeom,Worker *w) {
 	nbFacetS = interfGeom->GetNbFacet();
 	nbFacetSS = interfGeom->GetNbSelectedFacets();
 
-	sprintf(tmp,"Selected: %zd\nVertex:    %zd\nFacet:     %zd",
+	sprintf(tmp,"Selected: %d\nVertex:    %d\nFacet:     %d",
 		interfGeom->GetNbSelectedFacets(),interfGeom->GetNbVertex(),interfGeom->GetNbFacet());
 	resultLabel->SetText(tmp);
 
@@ -230,7 +230,7 @@ void CollapseSettings::ProcessMessage(GLComponent *src,int message) {
 
 				// Update result
 				char tmp[512];
-				sprintf(tmp, "Selected: %zd\nVertex:    %zd/%zd\nFacet:    %zd/%zd\n\nLast action: Collapse all",
+				sprintf(tmp, "Selected: %d\nVertex:    %d/%d\nFacet:    %d/%d\n\nLast action: Collapse all",
 					interfGeom->GetNbSelectedFacets(), interfGeom->GetNbVertex(), nbVertexS, interfGeom->GetNbFacet(), nbFacetS);
 				resultLabel->SetText(tmp);
 
