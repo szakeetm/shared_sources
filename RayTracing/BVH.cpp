@@ -51,17 +51,17 @@ struct BVHPrimitiveInfo {
     BVHPrimitiveInfo() : primitiveNumber(0), bounds(),
                          centroid(), probability(0.0) {}
 
-    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds)
+    BVHPrimitiveInfo(int primitiveNumber, const AxisAlignedBoundingBox &bounds)
             : primitiveNumber(primitiveNumber), bounds(bounds),
               centroid(.5f * bounds.min + .5f * bounds.max),
               probability(0.0) {}
 
-    BVHPrimitiveInfo(size_t primitiveNumber, const AxisAlignedBoundingBox &bounds, double probability)
+    BVHPrimitiveInfo(int primitiveNumber, const AxisAlignedBoundingBox &bounds, double probability)
             : primitiveNumber(primitiveNumber), bounds(bounds),
               centroid(.5f * bounds.min + .5f * bounds.max),
               probability(probability) {}
 
-    size_t primitiveNumber;
+    int primitiveNumber;
     AxisAlignedBoundingBox bounds;
     Vector3d centroid;
     double probability; // For MCHitSplit
@@ -378,10 +378,10 @@ BVHAccel::BVHAccel(std::vector<std::shared_ptr<Primitive>> p,
     if (splitMethod == SplitMethod::ProbSplit) {
         if (primitives.size() > probabilities.size())
             return;
-        for (size_t i = 0; i < primitives.size(); ++i)
+        for (int i = 0; i < primitives.size(); ++i)
             primitiveInfo[i] = {i, primitives[i]->sh.bb, probabilities[primitives[i]->globalId]};
     } else {
-        for (size_t i = 0; i < primitives.size(); ++i)
+        for (int i = 0; i < primitives.size(); ++i)
             primitiveInfo[i] = {i, primitives[i]->sh.bb};
     }
     //<<Build BVH tree for primitives using primitiveInfo>>

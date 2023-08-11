@@ -66,7 +66,7 @@ void GlobalSettingsBase::SMPUpdate() {
     int time = SDL_GetTicks();
 
     if (!IsVisible() || IsIconic()) return;
-    size_t nb = worker->GetProcNumber();
+    int nb = worker->GetProcNumber();
     if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2,true);
 
     if( time-lastUpdate>333 ) {
@@ -78,10 +78,10 @@ void GlobalSettingsBase::SMPUpdate() {
         double byte_to_mbyte = 1.0/(1024.0*1024.0);
         //Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
+        int currPid = GetCurrentProcessId();
         double memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
+        int currPid = getpid();
         double memDenominator_sys = (1024.0);
 #endif
         PROCESS_INFO parentInfo{};
@@ -97,7 +97,7 @@ void GlobalSettingsBase::SMPUpdate() {
         processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
         processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
-        size_t i = 2;
+        int i = 2;
         for (auto& proc : procInfo.threadInfos)
         {
             DWORD pid = proc.threadId;
@@ -157,7 +157,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                     char *val = GLInputBox::GetInput(tmp,"Desorption max (0=>endless)","Edit MAX");
                     if (val) {
                         char* endptr;
-                        size_t maxDes = strtold(val,&endptr); // use double function to allow exponential format
+                        int maxDes = strtold(val,&endptr); // use double function to allow exponential format
                         if (val==endptr) {
                             GLMessageBox::Display("Invalid 'maximum desorption' number", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }

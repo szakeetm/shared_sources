@@ -30,7 +30,7 @@ class MersenneTwister;
 //! Deprecated as replaced by HitLink
 /*
 struct HitChain {
-    size_t hitId;
+    int hitId;
     SimulationFacetTempVar *hit;
     HitChain *next;
 };
@@ -39,7 +39,7 @@ struct HitChain {
 //! Keep track of temporary/transparent hits; correspomds to an individual hit
 struct HitLink {
     HitLink() : hitId(9999999999), hit(SimulationFacetTempVar()) {};
-    HitLink(size_t id, SimulationFacetTempVar h) : hitId(id), hit(h) {};
+    HitLink(int id, SimulationFacetTempVar h) : hitId(id), hit(h) {};
 
     // Move constructor called on resize, prevent from deleting SimulationFacetTempVar
     HitLink(const HitLink &rhs) = default;
@@ -62,7 +62,7 @@ struct HitLink {
 
     ~HitLink();
 
-    size_t hitId; //! id of the hit entity
+    int hitId; //! id of the hit entity
     SimulationFacetTempVar hit; //! Hit statistic
 };
 

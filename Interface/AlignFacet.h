@@ -49,7 +49,7 @@ private:
   InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
-  std::vector<size_t> memorizedSelection;
+  std::vector<int> memorizedSelection;
   std::vector<std::vector<Vector3d>> oriPositions;
 
   GLButton    *memoSel;

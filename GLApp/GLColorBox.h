@@ -47,13 +47,13 @@ private:
   void ManageEvent(SDL_Event *evt);
 
   void rgb_to_hsv( int ri,int gi,int bi, float *h,float *s,float *v);
-  size_t hsv_to_rgb( float h,float s,float v,bool swap=false );
-  float get_red( size_t c );
-  float get_green( size_t c );
-  float get_blue( size_t c );
-  int   get_redi( size_t c );
-  int   get_greeni( size_t c );
-  int   get_bluei( size_t c );
+  int hsv_to_rgb( float h,float s,float v,bool swap=false );
+  float get_red( int c );
+  float get_green( int c );
+  float get_blue( int c );
+  int   get_redi( int c );
+  int   get_greeni( int c );
+  int   get_bluei( int c );
   void  paintBox(int x,int y,int w,int h);
   void  updateColor(int r,int g,int b);
 

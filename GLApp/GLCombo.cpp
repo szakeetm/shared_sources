@@ -73,27 +73,27 @@ GLList *GLCombo::GetList() {
   return list;
 }
 
-void GLCombo::SetSize(size_t nbRow) {
+void GLCombo::SetSize(int nbRow) {
   if( nbRow==0 )
     list->Clear();
   else
     list->SetSize(1,nbRow);
 }
 
-void GLCombo::SetValueAt(size_t row, const std::string& value, int userValue) {
+void GLCombo::SetValueAt(int row, const std::string& value, int userValue) {
     list->SetValueAt(0, row, value, userValue);
     if (row == GetSelectedIndex()) text->SetText(value);
 }
 
-int GLCombo::GetUserValueAt(size_t row) {
+int GLCombo::GetUserValueAt(int row) {
   return list->GetUserValueAt(0,row);
 }
 
-std::string GLCombo::GetValueAt(size_t row) {
+std::string GLCombo::GetValueAt(int row) {
   return list->GetValueAt(0,row);
 }
 
-size_t GLCombo::GetNbRow() {
+int GLCombo::GetNbRow() {
   return list->GetNbRow();
 }
 
@@ -225,7 +225,7 @@ void GLCombo::ManageEvent(SDL_Event *evt) {
   int my = GetWindow()->GetY(this,evt);
 
   if( mx>=width-16 || !m_Editable ) {
-    size_t nbRow = list->GetNbRow();
+    int nbRow = list->GetNbRow();
 	if( evt->type == SDL_MOUSEBUTTONDOWN ) {
       
       

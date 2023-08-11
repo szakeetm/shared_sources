@@ -65,8 +65,8 @@ private:
 
   bool isRunning;
 
-  size_t nbVertexS;
-  size_t nbFacetS;
-  size_t nbFacetSS;
+  int nbVertexS;
+  int nbFacetS;
+  int nbFacetSS;
 
 };

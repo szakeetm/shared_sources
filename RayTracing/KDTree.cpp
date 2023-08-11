@@ -178,7 +178,7 @@ KdTreeAccel::KdTreeAccel(std::vector<std::shared_ptr<Primitive>> p, const std::v
 
     // Initialize _primNums_ for kd-tree construction
     std::unique_ptr<int[]> primNums(new int[primitives.size()]);
-    for (size_t i = 0; i < primitives.size(); ++i) primNums[i] = (int)i;
+    for (int i = 0; i < primitives.size(); ++i) primNums[i] = (int)i;
 
     // Start recursive construction of kd-tree
     buildTree(0, bounds, primBounds, primNums.get(), primitives.size(),

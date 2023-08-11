@@ -188,7 +188,7 @@ int LinkSemaphore(Dataport *dp) {
 }
 
 // CreateDataport: Create a block of shared memory
-Dataport *CreateDataport(char *name, size_t size) {
+Dataport *CreateDataport(char *name, int size) {
     Dataport *dp;
 
     /* ------------------- Allocate new Dataport Handle ------------------- */
@@ -314,7 +314,7 @@ Dataport *CreateDataport(char *name, size_t size) {
 
 // OpenDataport: Connect to an existing block
 
-Dataport *OpenDataport(char *name, size_t size) {
+Dataport *OpenDataport(char *name, int size) {
     Dataport *dp;
     /* ------------------- Allocate new Dataport Handle ------------------- */
 

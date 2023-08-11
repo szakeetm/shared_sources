@@ -105,8 +105,8 @@ public:
 	int   GetCurrentPos();           // Current parsing cursor position
 
 	// Variables
-	size_t    GetNbVariable();          // Return num of variables created during parsing
-	std::list<Variable>::iterator GetVariableAt(size_t n);   // Return iterator to nth variable
+	int    GetNbVariable();          // Return num of variables created during parsing
+	std::list<Variable>::iterator GetVariableAt(int n);   // Return iterator to nth variable
 	void   SetVariableValue(const std::string&, double value); // Set the variable value
 
 	std::string GetEvalErrorMsg();
@@ -133,7 +133,7 @@ private:
 	std::list<Variable>::iterator AddVar(const std::string& var_name);
 	std::list<Variable>::iterator FindVar(const std::string& var_name);
 	void   SetParseError(const std::string& errMsg, int pos);
-	void   AV(size_t times = 1); //advance by one (or more) non-whitespace char. Throws error
+	void   AV(int times = 1); //advance by one (or more) non-whitespace char. Throws error
 
 	std::string name;   // Name (optional)
 	

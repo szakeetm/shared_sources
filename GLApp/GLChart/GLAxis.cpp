@@ -1018,13 +1018,13 @@ GLuint GLAxis::initMarker(const char *name) {
 
 	  std::string truncated = n; //Local converted copy
 
-	  size_t decimalPos = truncated.find('.');
+	  int decimalPos = truncated.find('.');
 	  if (decimalPos != std::string::npos) { //There is a decimal point
 
-		  size_t exponentPos = truncated.find('e');
+		  int exponentPos = truncated.find('e');
 		  if (exponentPos == std::string::npos) exponentPos = truncated.find('E');
 
-		  size_t i;
+		  int i;
 		  if (exponentPos == std::string::npos) i = truncated.length() - 1; //Look from end
 		  else i = exponentPos - 1; //Look from last character before exponent
 
@@ -1772,7 +1772,7 @@ GLuint GLAxis::initMarker(const char *name) {
     double prec;
     double precDelta = sz / length;
     time_t timeval;
-    size_t round;
+    int round;
 
     clearLabel();
 
@@ -1786,7 +1786,7 @@ GLuint GLAxis::initMarker(const char *name) {
         computeDateformat(10);
 
         // round to multiple of prec
-        round = (size_t) (min / desiredPrec);
+        round = (int) (min / desiredPrec);
         startx = (round + 1) * desiredPrec;
 
         if (inverted)
@@ -1953,7 +1953,7 @@ GLuint GLAxis::initMarker(const char *name) {
 
           // round to multiple of prec (last not visible label)
 
-          round = (size_t)floor(min / prec);
+          round = (int)floor(min / prec);
           startx = (double)round * prec;
 
           // Compute real number of label

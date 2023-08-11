@@ -124,7 +124,7 @@ void SmartSelection::ProcessMessage(GLComponent *src,int message) {
 				prg.SetClosable(false); //Use stop button
 				prg.SetVisible(true);
 
-				size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(work,prg);
+				int nbAnalyzed = interfGeom->AnalyzeNeigbors(work,prg);
 				analyzeButton->SetText("Analyze");
 				isRunning = false;
 				std::stringstream tmp;

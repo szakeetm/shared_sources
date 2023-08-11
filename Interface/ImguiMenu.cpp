@@ -308,7 +308,7 @@ static void ShowSelectionModals() {
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             interfGeom->UnselectAll();
-            std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+            std::vector<int> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
             for (const auto &i : nonPlanarFacetids)
                 interfGeom->SelectFacet(i);
             interfGeom->UpdateSelection();
@@ -534,7 +534,7 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
             openModalName="Enter selection name";
         }
         ImGui::Separator();
-        for (size_t i = 0; i < mApp->selections.size(); i++) {
+        for (int i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 /*if (ImGui::BeginPopupModal("Enter selection name", NULL,
                                            ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -563,7 +563,7 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Select memorized", !mApp->selections.empty())) {
-        for (size_t i = 0; i < mApp->selections.size(); i++) {
+        for (int i = 0; i < mApp->selections.size(); i++) {
             if (i <= 8) {
                 char shortcut[32];
                 sprintf(shortcut, "ALT+%llu", 1 + i);
@@ -592,7 +592,7 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
             openModalName="Clear all selections ?";
         }
         ImGui::Separator();
-        for (size_t i = 0; i < mApp->selections.size(); i++) {
+        for (int i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 /*char tmpname[256];
                 sprintf(tmpname, "Clear %s?", mApp->selections[i].name.c_str());

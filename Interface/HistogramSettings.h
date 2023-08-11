@@ -40,7 +40,7 @@ public:
   HistogramSettings(InterfaceGeometry *s,Worker *w);
 
   // Component methods
-  void Refresh(const std::vector<size_t>& selectedFacetIds);
+  void Refresh(const std::vector<int>& selectedFacetIds);
   void EnableDisableControls();
   bool Apply();
 

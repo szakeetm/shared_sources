@@ -135,7 +135,7 @@ private:
   int  posYSave;
   int  widthSave;
   int  heightSave;
-  size_t lastClick;
+  int lastClick;
 
 };
 

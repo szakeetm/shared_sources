@@ -65,7 +65,7 @@ void GLProgress_GUI::ProcessMessage(GLComponent *src,int message) {
 void GLProgress_GUI::SetProgress(const double value) {
 	double myVal = value;
   Saturate(myVal,0.0,1.0);
-  size_t p = (size_t)(myVal *100.0 + 0.5 );
+  int p = (int)(myVal *100.0 + 0.5 );
   if( progress != p ) {
     progress = p;
 

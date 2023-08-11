@@ -159,7 +159,7 @@ namespace SettingsIO {
                 Log::console_error("Can't open ZIP file\n");
                 return 1;
             }
-            size_t numItems = zip->GetEntriesCount();
+            int numItems = zip->GetEntriesCount();
             bool notFoundYet = true;
             for (int i = 0; i < numItems && notFoundYet;
                  i++) { // extract first xml file found in ZIP archive

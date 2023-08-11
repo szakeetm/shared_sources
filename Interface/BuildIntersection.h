@@ -58,7 +58,7 @@ private:
   GLButton	*undoButton;
 
   std::vector<DeletedFacet> deletedFacetList;
-  size_t nbFacet, nbCreated;
+  int nbFacet, nbCreated;
 
   InterfaceGeometry     *interfGeom;
   Worker	   *work;

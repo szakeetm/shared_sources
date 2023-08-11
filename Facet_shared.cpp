@@ -51,7 +51,7 @@ extern SynRad*mApp;
 * \brief Constructor with initialisation based on the number of indices/facets
 * \param nbIndex number of indices/facets
 */
-InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
+InterfaceFacet::InterfaceFacet(int nbIndex) : sh(0) {
 	indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
 	vertices2.resize(nbIndex);
 	visible.resize(nbIndex);
@@ -150,7 +150,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
 	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
 
-	angleMapCache = std::vector<size_t>(); //SAFE_DELETE called on it, must initialize
+	angleMapCache = std::vector<int>(); //SAFE_DELETE called on it, must initialize
 
 	//sh.facetHistogramParams.record = false;
 
@@ -181,7 +181,7 @@ InterfaceFacet::~InterfaceFacet() {
 	  DELETE_LIST(glList);
 	  DELETE_LIST(glElem);
 	  DELETE_LIST(glSelElem);
-	  /*for (size_t i = 0; i < meshvectorsize; i++)
+	  /*for (int i = 0; i < meshvectorsize; i++)
           SAFE_DELETE(meshvector[i].points);*/
 	  //SAFE_DELETE(meshvector);
 #if defined(MOLFLOW)
@@ -203,14 +203,14 @@ void Facet::DetectOrientation() {
 	p.sign = 1.0;
 
 	bool convexFound = false;
-	size_t i = 0;
+	int i = 0;
 	while (i < p.pts.size() && !convexFound) {
 		
 		auto [empty,center] = EmptyTriangle(p, (int)i - 1, (int)i, (int)i + 1);
 		if (empty || sh.nbIndex == 3) {
-			size_t _i1 = Previous(i, p.pts.size());
-			size_t _i2 = IDX(i, p.pts.size());
-			size_t _i3 = Next(i, p.pts.size());
+			int _i1 = Previous(i, p.pts.size());
+			int _i2 = IDX(i, p.pts.size());
+			int _i3 = Next(i, p.pts.size());
 			if (IsInPoly(center, p.pts)) {
 				convexFound = true;
 				// Orientation
@@ -400,7 +400,7 @@ bool InterfaceFacet::BuildMesh() {
 
 #pragma omp parallel  //safe to concurrently modify cellPropertiesIds, each thread writes to different index
 	{
-		std::map<size_t, CellProperties> meshvector_partial;
+		std::map<int, CellProperties> meshvector_partial;
 		
 #pragma omp for
 		for (int k = 0; k < sh.texHeight * sh.texWidth; k++) { //collapsed loop for omp
@@ -560,9 +560,9 @@ void InterfaceFacet::BuildSelElemList() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1.0f, -1.0f);
-		for (size_t i = 0; i < selectedElem.width; i++) {
-			for (size_t j = 0; j < selectedElem.height; j++) {
-				size_t add = (selectedElem.u + i) + (selectedElem.v + j)*sh.texWidth;
+		for (int i = 0; i < selectedElem.width; i++) {
+			for (int j = 0; j < selectedElem.height; j++) {
+				int add = (selectedElem.u + i) + (selectedElem.v + j)*sh.texWidth;
 				//int elId = mesh[add].elemId;
 
 				//if (cellPropertiesIds[add]!=-1 && meshvector[cellPropertiesIds[add]].elemId>=0) {
@@ -573,7 +573,7 @@ void InterfaceFacet::BuildSelElemList() {
 						glEdgeFlag(true);
 						glVertex2u(meshPts[elId].pts[n].u, meshPts[elId].pts[n].v);
 					}*/
-					for (size_t p = 0;p < GetMeshNbPoint(add);p++) {
+					for (int p = 0;p < GetMeshNbPoint(add);p++) {
 						Vector2d point = GetMeshPoint(add, p);
 						glEdgeFlag(true);
 						glVertex2u(point.u, point.v);
@@ -613,14 +613,14 @@ void InterfaceFacet::UnselectElem() {
 * \param width width of element
 * \param height height of element
 */
-void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height) {
+void InterfaceFacet::SelectElem(int u, int v, int width, int height) {
 
 	UnselectElem();
 
 	if (!cellPropertiesIds.empty() && u >= 0 && u < sh.texWidth && v >= 0 && v < sh.texHeight) {
 
-		size_t maxW = sh.texWidth - u;
-		size_t maxH = sh.texHeight - v;
+		int maxW = sh.texWidth - u;
+		int maxH = sh.texHeight - v;
 		selectedElem.u = u;
 		selectedElem.v = v;
 		selectedElem.width = std::min(maxW, width);
@@ -645,9 +645,9 @@ void InterfaceFacet::RenderSelectedElem() {
 void InterfaceFacet::FillVertexArray(InterfaceVertex *v) {
 
 	int nb = 0;
-	for (size_t i = 0;i < sh.texHeight*sh.texWidth;i++) {
+	for (int i = 0;i < sh.texHeight*sh.texWidth;i++) {
 		if (cellPropertiesIds[i] != -2) {
-			for (size_t j = 0; j < GetMeshNbPoint(i); j++) {
+			for (int j = 0; j < GetMeshNbPoint(i); j++) {
 				Vector2d p = GetMeshPoint(i, j);
 				v[nb].x = sh.O.x + sh.U.x*p.u + sh.V.x*p.v;
 				v[nb].y = sh.O.y + sh.U.y*p.u + sh.V.y*p.v;
@@ -664,9 +664,9 @@ void InterfaceFacet::FillVertexArray(InterfaceVertex *v) {
 * \param useColormap if a colormap is used or not
 * \return texture swap size
 */
-size_t InterfaceFacet::GetTexSwapSize(bool useColormap) {
+int InterfaceFacet::GetTexSwapSize(bool useColormap) {
 
-	size_t tSize = texDimW*texDimH;
+	int tSize = texDimW*texDimH;
 	if (useColormap) tSize = tSize * 4;
 	return tSize;
 
@@ -678,7 +678,7 @@ size_t InterfaceFacet::GetTexSwapSize(bool useColormap) {
 * \param useColor if a colormap is used or not
 * \return texture swap size
 */
-size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
+int InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -692,9 +692,9 @@ size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 		int iwidth = (int)ceil(width);
 		int iheight = (int)ceil(height);
 		int m = std::max(iwidth, iheight);
-		size_t tDim = GetPower2(m);
+		int tDim = GetPower2(m);
 		if (tDim < 16) tDim = 16;
-		size_t tSize = tDim*tDim;
+		int tSize = tDim*tDim;
 		if (useColor) tSize *= 4;
 		return tSize;
 
@@ -708,7 +708,7 @@ size_t InterfaceFacet::GetTexSwapSizeForRatio(double ratio, bool useColor) {
 * \brief Get number of texture cells
 * \return pair of number of texture cells in both directions
 */
-std::pair<size_t, size_t> InterfaceFacet::GetNbCell() {
+std::pair<int, int> InterfaceFacet::GetNbCell() {
 	return std::make_pair(sh.texHeight, sh.texWidth);
 }
 
@@ -717,7 +717,7 @@ std::pair<size_t, size_t> InterfaceFacet::GetNbCell() {
 * \param ratio ratio used for size conversion
 * \return number of texture cells
 */
-size_t InterfaceFacet::GetNbCellForRatio(double ratio) {
+int InterfaceFacet::GetNbCellForRatio(double ratio) {
 
 	double nU = sh.U.Norme();
 	double nV = sh.V.Norme();
@@ -740,7 +740,7 @@ size_t InterfaceFacet::GetNbCellForRatio(double ratio) {
 * \param ratioV ratio in V direction used for size conversion
 * \return number of texture cells
 */
-std::pair<size_t, size_t> InterfaceFacet::GetNbCellForRatio(double ratioU, double ratioV) {
+std::pair<int, int> InterfaceFacet::GetNbCellForRatio(double ratioU, double ratioV) {
 
     double nU = sh.U.Norme();
     double nV = sh.V.Norme();
@@ -767,8 +767,8 @@ void InterfaceFacet::SwapNormal() {
 	// Revert vertex order (around the second point)
 
 	/*
-	size_t* tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
-	for (size_t i = sh.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
+	int* tmp = (int *)malloc(sh.nbIndex * sizeof(int));
+	for (int i = sh.nbIndex, j = 0; i > 0; i--, j++) //Underrun-safe
 		tmp[(i + 1) % sh.nbIndex] = GetIndex((int)j + 1);
 	free(indices);
 	indices = tmp;
@@ -791,8 +791,8 @@ void InterfaceFacet::SwapNormal() {
 void InterfaceFacet::ShiftVertex(const int offset) {
 	// Shift vertex
 	/*
-	size_t *tmp = (size_t *)malloc(sh.nbIndex * sizeof(size_t));
-	for (size_t i = 0; i < sh.nbIndex; i++)
+	int *tmp = (int *)malloc(sh.nbIndex * sizeof(int));
+	for (int i = 0; i < sh.nbIndex; i++)
 		tmp[i] = GetIndex((int)i + offset);
 	free(indices);
 	indices = tmp;
@@ -810,15 +810,15 @@ void InterfaceFacet::InitVisibleEdge() {
 	std::fill(visible.begin(), visible.end(), true);
 
 	/* //O(n^2)
-	for (size_t i = 0;i < sh.nbIndex;++i) {
+	for (int i = 0;i < sh.nbIndex;++i) {
 
-		size_t p11 = GetIndex(i);
-		size_t p12 = GetIndex(i + 1);
+		int p11 = GetIndex(i);
+		int p12 = GetIndex(i + 1);
 
-		for (size_t j = i + 1;j < sh.nbIndex;j++) {
+		for (int j = i + 1;j < sh.nbIndex;j++) {
 
-			size_t p21 = GetIndex(j);
-			size_t p22 = GetIndex(j + 1);
+			int p21 = GetIndex(j);
+			int p22 = GetIndex(j + 1);
 
 			if ((p11 == p22 && p12 == p21) || (p11 == p21 && p12 == p22)) {
 				// Invisible edge found
@@ -830,14 +830,14 @@ void InterfaceFacet::InitVisibleEdge() {
 	*/
 
 	//O(n)
-	std::map<std::pair<size_t, size_t>, size_t> edge_to_index;
+	std::map<std::pair<int, int>, int> edge_to_index;
 
-	for (size_t i = 0; i < sh.nbIndex; ++i) {
-		size_t p1 = GetIndex(i);
-		size_t p2 = GetIndex(i + 1);
+	for (int i = 0; i < sh.nbIndex; ++i) {
+		int p1 = GetIndex(i);
+		int p2 = GetIndex(i + 1);
 
 		// Make the pair ordered, so that it doesn't matter which way round the edge is
-		std::pair<size_t, size_t> edge = std::minmax(p1, p2);
+		std::pair<int, int> edge = std::minmax(p1, p2);
 
 		// Try to insert this edge into the map. If it's already there, this will fail, and it will
 		// return an iterator to the existing element
@@ -845,7 +845,7 @@ void InterfaceFacet::InitVisibleEdge() {
 
 		if (!inserted.second) {
 			// The edge was already in the map, so it must be a non-visible edge
-			size_t other_index = inserted.first->second;
+			int other_index = inserted.first->second;
 			visible[i] = false;
 			visible[other_index] = false;
 		}
@@ -857,7 +857,7 @@ void InterfaceFacet::InitVisibleEdge() {
 * \param idx index
 * \return vertex index
 */
-size_t InterfaceFacet::GetIndex(int idx) {
+int InterfaceFacet::GetIndex(int idx) {
 	if (idx < 0) {
 		return indices[(sh.nbIndex + idx) % sh.nbIndex];
 	}
@@ -871,7 +871,7 @@ size_t InterfaceFacet::GetIndex(int idx) {
 * \param idx index
 * \return vertex index
 */
-size_t InterfaceFacet::GetIndex(size_t idx) {
+int InterfaceFacet::GetIndex(int idx) {
 		return indices[idx % sh.nbIndex];
 }
 
@@ -881,7 +881,7 @@ size_t InterfaceFacet::GetIndex(size_t idx) {
 * \param correct2sides if correction for 2 sided meshes should be applied (use factor 2)
 * \return mesh area
 */
-double InterfaceFacet::GetMeshArea(size_t index, bool correct2sides) {
+double InterfaceFacet::GetMeshArea(int index, bool correct2sides) {
 	if (cellPropertiesIds.empty()) return -1.0f;
 	if (cellPropertiesIds[index] == -1) {
 		return ((correct2sides && sh.is2sided) ? 2.0 : 1.0) / (tRatioU*tRatioV);
@@ -899,8 +899,8 @@ double InterfaceFacet::GetMeshArea(size_t index, bool correct2sides) {
 * \param index of mesh
 * \return number of mesh points
 */
-size_t InterfaceFacet::GetMeshNbPoint(size_t index) {
-	size_t nbPts;
+int InterfaceFacet::GetMeshNbPoint(int index) {
+	int nbPts;
 	if (cellPropertiesIds[index] == -1) nbPts = 4;
 	else if (cellPropertiesIds[index] == -2) nbPts = 0;
 	else nbPts = meshvector[cellPropertiesIds[index]].nbPoints;
@@ -913,7 +913,7 @@ size_t InterfaceFacet::GetMeshNbPoint(size_t index) {
 * \param pointId id of the point in the mesh
 * \return Vector for mesh point
 */
-Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
+Vector2d InterfaceFacet::GetMeshPoint(int index, int pointId) {
 	Vector2d result;
 	if (cellPropertiesIds.empty()) {
 		result.u = 0.0;
@@ -985,7 +985,7 @@ Vector2d InterfaceFacet::GetMeshPoint(size_t index, size_t pointId) {
 * \param index of mesh
 * \return Vector for point in the center of a mesh
 */
-Vector2d InterfaceFacet::GetMeshCenter(size_t index) {
+Vector2d InterfaceFacet::GetMeshCenter(int index) {
 	Vector2d result;
 	if (cellPropertiesIds.empty()) {
 		result.u = 0.0;
@@ -1169,18 +1169,18 @@ FacetGroup InterfaceFacet::Explode() {
 result.originalPerAreaOutgassing = (sh.area > 0.0) ? sh.outgassing / sh.area : 0.0;
 #endif // MOLFLOW
 
-	size_t nonZeroElems = 0, nb = 0;
-	for (size_t i = 0; i < sh.texHeight*sh.texWidth; i++) {
+	int nonZeroElems = 0, nb = 0;
+	for (int i = 0; i < sh.texHeight*sh.texWidth; i++) {
 		if (cellPropertiesIds[i] != -2) {
 			try {
-				size_t nbPoints = GetMeshNbPoint(i);
+				int nbPoints = GetMeshNbPoint(i);
 				result.nbV += nbPoints;
 				InterfaceFacet *f = new InterfaceFacet(nbPoints);
 				f->CopyFacetProperties(this); //Copies absolute outgassing
 				result.facets.push_back(f);
 			}
 			catch (...) {
-				for (size_t d = 0; d < i; d++)
+				for (int d = 0; d < i; d++)
 					SAFE_DELETE(result.facets[d]);
 				throw Error("Cannot reserve memory for new facet(s)");
 			}

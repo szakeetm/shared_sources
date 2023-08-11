@@ -45,7 +45,7 @@ extern "C" {
      HANDLE            sema; //Mutex handle (CreateMutex return value)
 	 HANDLE            mem; //File mapping handle (CreateFileMapping return value)
 	 HANDLE file;			//Physical file handle (if persistent)
-	 size_t size;		//keep track of mapped size
+	 int size;		//keep track of mapped size
 	 void              *buff; //View handle (MapViewOfFile return value, pointer to data)
  };
 
@@ -72,13 +72,13 @@ struct Dataport {
     int            sema; //Mutex handle (CreateMutex return value)
     int            shmFd; //File mapping handle (CreateFileMapping return value)
     int file;			//Physical file handle (if persistent)
-    size_t size;		//keep track of mapped size
+    int size;		//keep track of mapped size
     void              *buff; //View handle (MapViewOfFile return value, pointer to data)
  };
 
 #endif
 
-#define MAX_PROCESS (size_t)64    // Maximum number of process
+#define MAX_PROCESS (int)64    // Maximum number of process
 
 struct SHCONTROL {
     // Process control
@@ -88,8 +88,8 @@ struct SHCONTROL {
 
 
 // Shared memory
-Dataport *CreateDataport(char *name, size_t size);
-Dataport *OpenDataport(char *name, size_t size);
+Dataport *CreateDataport(char *name, int size);
+Dataport *OpenDataport(char *name, int size);
 bool AccessDataport(Dataport *dp);
 bool AccessDataportTimed(Dataport *dp, DWORD timeout);
 bool ReleaseDataport(Dataport *dp);

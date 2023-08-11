@@ -384,8 +384,8 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 */
 UpdateManifest AppUpdater::GetLatest(const std::vector<UpdateManifest>& updates) {
 	int maxVersion = 0;
-	size_t maxIndex = 0;
-	for (size_t i = 0; i < updates.size(); i++) {
+	int maxIndex = 0;
+	for (int i = 0; i < updates.size(); i++) {
 		if (updates[i].versionId > maxVersion) {
 			maxVersion = updates[i].versionId;
 			maxIndex = i;
@@ -531,14 +531,14 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdatesOldScheme(const
 std::string AppUpdater::GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates) {
 	//No sorting: for a nice cumulative changelog, updates should be in chronological order (newest first)
 	std::stringstream cumulativeChangeLog;
-	size_t max_updates = 3; //display only last 3 updates
+	int max_updates = 3; //display only last 3 updates
 	for (int i = 0; i < std::min(max_updates, updates.size());i++) {
 		const auto& update = updates[i];
 		cumulativeChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	}
 
 	//Truncate
-	size_t max_lines = 40;
+	int max_lines = 40;
 	auto lines = SplitString(cumulativeChangeLog.str(), '\n');
 	if (lines.size() > max_lines) {
 		lines.resize(max_lines);
@@ -562,7 +562,7 @@ std::string AppUpdater::GetLatestChangeLog(const std::vector<UpdateManifest>& up
     latestChangeLog << "Changes in version " << update.name << " (released " << update.date << "):\n" << update.changeLog << "\n";
 	
 	//Truncate
-	size_t max_lines = 40;
+	int max_lines = 40;
 	auto lines = SplitString(latestChangeLog.str(), '\n');
 	if (lines.size() > max_lines) {
 		lines.resize(max_lines);
@@ -583,7 +583,7 @@ void AppUpdater::GenerateUserId() {
 	GetComputerName(computerName, &size);
 	GetUserName(userName, &size);
 #else
-	size_t size = 1024;
+	int size = 1024;
 	gethostname(computerName, size);
 	getlogin_r(userName, size);
 #endif
@@ -594,9 +594,9 @@ void AppUpdater::GenerateUserId() {
 
 	//Create hash code from computer and user name
 	//Hash algorithm source: http://www.cse.yorku.ca/~oz/hash.html
-	size_t hashCode = 5381;
+	int hashCode = 5381;
 	int c;
-	size_t index = 0;
+	int index = 0;
 	while ((c = id.c_str()[index++])) {
 		hashCode = ((hashCode << 5) + hashCode) + c; /* hash * 33 + c */
 	}
@@ -605,8 +605,8 @@ void AppUpdater::GenerateUserId() {
 
 	tracker.userId = "";
 	while (hashCode > 0) {
-		size_t dividend = (size_t)(hashCode / hexa.length());
-		size_t remainder = hashCode - dividend * hexa.length();
+		int dividend = (int)(hashCode / hexa.length());
+		int remainder = hashCode - dividend * hexa.length();
 		hashCode = dividend;
 		tracker.userId = hexa[remainder] + tracker.userId;
 	}
@@ -648,7 +648,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 
 		{
 			//Extract it to LOCAL directory (no way to directly extract to parent)
-			size_t numitems;
+			int numitems;
 			std::shared_ptr<ZipArchive> zip;
 			try {
 				zip = ZipFile::Open(zipDest.str());
@@ -1321,7 +1321,7 @@ void UpdateLogWindow::RebuildList() {
 	int oldColumnWidth = logList->GetColWidth(0);
 	logList->SetSize(1, lines.size());
 	logList->SetColumnWidth(0, oldColumnWidth); //Restore after SetSize reset it to default
-	for (size_t i = 0; i < lines.size(); i++) {
+	for (int i = 0; i < lines.size(); i++) {
 		logList->SetValueAt(0, i, lines[i].c_str());
 	}
 }

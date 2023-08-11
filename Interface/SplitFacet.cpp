@@ -219,8 +219,8 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 	}
     else if(src==undoButton) {
 		if (nbFacet == interfGeom->GetNbFacet()) { //Assume no change since the split operation
-			std::vector<size_t> newlyCreatedList;
-			for (size_t index = (interfGeom->GetNbFacet() - nbCreated);index < interfGeom->GetNbFacet();index++) {
+			std::vector<int> newlyCreatedList;
+			for (int index = (interfGeom->GetNbFacet() - nbCreated);index < interfGeom->GetNbFacet();index++) {
 				newlyCreatedList.push_back(index);
 			}
 			interfGeom->RemoveFacets(newlyCreatedList);

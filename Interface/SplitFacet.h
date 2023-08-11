@@ -75,7 +75,7 @@ private:
 
   int planeMode;
   std::vector<DeletedFacet> deletedFacetList;
-  size_t nbFacet, nbCreated;
+  int nbFacet, nbCreated;
 
   InterfaceGeometry     *interfGeom;
   Worker	   *work;

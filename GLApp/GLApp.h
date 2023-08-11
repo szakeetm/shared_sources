@@ -50,7 +50,7 @@ public:
     // Functions to create, run, pause, and clean up the application
     virtual int  Create(int width, int height, bool bFullScreen);
     virtual void Pause(bool bPause);
-    virtual int  Resize(size_t width, size_t height, bool forceWindowed=false);
+    virtual int  Resize(int width, int height, bool forceWindowed=false);
     void  Run();
     void  RequestExit();
     void  Exit();

@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GrahamScan.h"
 
 GRpoint* GRfirstPoint; //GLOBAL POINTER TO Min GRpoint IN DOUBLELY LINKED LIST
-size_t pubNbPoints;
+int pubNbPoints;
 int *pubReturnList;
 Vector2d *pubProjectedPoints;
 
@@ -35,7 +35,7 @@ public:
     double angle; //INTERMEDIATE ANGLE VALUE STORAGE
 };
 
-void grahamMain(Vector2d *projectedPoints,size_t nbPoints,int *returnList)
+void grahamMain(Vector2d *projectedPoints,int nbPoints,int *returnList)
 {
 	pubNbPoints = nbPoints;
 	pubProjectedPoints = projectedPoints;

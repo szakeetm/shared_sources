@@ -38,8 +38,8 @@ public:
   int       mark=0;    // Cycle detection (0=>not processed, 1=>processed)
   int       isStart=0; // Possible starting point
 
-  size_t       nbOut=0;  // Number of outgoing arc
-  size_t       nbIn=0;   // Number of incoming arc
+  int       nbOut=0;  // Number of outgoing arc
+  int       nbIn=0;   // Number of incoming arc
   int       VI[2];  // Tangent point detection, can be -1
   int       VO[2];  // Tangent point detection, can be -1
 };
@@ -47,9 +47,9 @@ public:
 class PolyArc {
 public:
 
-	size_t i1=0;  // Node 1 index
-	size_t i2=0;  // Node 2 index
-	size_t s=0;   // Source polygon (tangent point detection)
+	int i1=0;  // Node 1 index
+	int i2=0;  // Node 2 index
+	int s=0;   // Source polygon (tangent point detection)
 
 } ;
 
@@ -61,7 +61,7 @@ public:
 };
 */
 
-bool   IsConvex(const GLAppPolygon& p,const size_t idx);
+bool   IsConvex(const GLAppPolygon& p,const int idx);
 bool   ContainsConcave(const GLAppPolygon& p,const int i1,const int i2,const int i3);
 //std::tuple<bool,Vector2d>  EmptyTriangle(const GLAppPolygon& p,int i1,int i2,int i3);
 bool IsInPoly(const Vector2d& point, const std::vector<Vector2d>& polygon);

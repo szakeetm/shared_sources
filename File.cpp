@@ -113,9 +113,9 @@ int FileReader::ReadInt() {
     return ret;
 }
 
-size_t FileReader::ReadSizeT() {
+int FileReader::ReadSizeT() {
 
-    size_t ret;
+    int ret;
     char *w = ReadWord();
     if (sscanf(w, "%zd", &ret) <= 0) {
         throw Error(MakeError("Wrong integer64 format"));
@@ -359,8 +359,8 @@ std::vector<std::vector<std::string>> FileReader::ImportCSV_string() {
         std::vector<std::string> row;
         std::string line = this->ReadLine();
         std::stringstream token;
-        size_t cursor = 0;
-        size_t length = line.length();
+        int cursor = 0;
+        int length = line.length();
         while (cursor < length) {
             char c = line[cursor];
             if (c == ',') {
@@ -457,7 +457,7 @@ void FileWriter::Write(const int v, const char *sep) {
         fprintf(file, "%s", sep);
 }
 
-void FileWriter::Write(const size_t v, const char *sep) {
+void FileWriter::Write(const int v, const char *sep) {
     //#ifdef _WIN32
     if (!fprintf(file, "%zd", v))
         throw Error("Error while writing to file");
@@ -490,7 +490,7 @@ void FileWriter::Write(const char *s) {
 
 std::string FileUtils::GetFilename(const std::string &str) {
     /*
-    size_t found = str.find_last_of("/\\");
+    int found = str.find_last_of("/\\");
     if (found == std::string::npos)
         return str; // not found
     return str.substr(found + 1);
@@ -501,7 +501,7 @@ std::string FileUtils::GetFilename(const std::string &str) {
 
 std::string FileUtils::StripExtension(const std::string &str) {
     //Removes last period and part after. If no period found, original string returned
-    size_t lastdot = str.find_last_of('.');
+    int lastdot = str.find_last_of('.');
     if (lastdot == std::string::npos)
         return str;
     return str.substr(0, lastdot);
@@ -510,7 +510,7 @@ std::string FileUtils::StripExtension(const std::string &str) {
 
 std::string FileUtils::GetPath(const std::string &str) {
 
-    size_t found = str.find_last_of("/\\");
+    int found = str.find_last_of("/\\");
     if (found == std::string::npos)
         return ""; // not found, return empty string
     else
@@ -522,7 +522,7 @@ std::string FileUtils::GetExtension(const std::string &str) {
     //Returns file extension (without starting dot) or empty string if none
     /*
     //Old code, gives wrong extension on "C:\folder.name\file"
-    size_t found = str.find_last_of('.');
+    int found = str.find_last_of('.');
     if (found == std::string::npos)
         return ""; // not found
     else

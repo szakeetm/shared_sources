@@ -178,7 +178,7 @@ void HistogramPlotter::Refresh() {
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 
 	//Collect histogram facets for currently displayed mode
-	size_t modeId = GetSelectedTabIndex();
+	int modeId = GetSelectedTabIndex();
 	std::vector<int> histogramFacetIds;
 
 	bool recordGlobal = ((modeId == HISTOGRAM_MODE_BOUNCES && worker->model->wp.globalHistogramParams.recordBounce)
@@ -189,7 +189,7 @@ void HistogramPlotter::Refresh() {
 		);
 	if (recordGlobal) histogramFacetIds.push_back(-1); // -1 == Global histogram
 
-	for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
+	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
 		if (
 			(modeId == HISTOGRAM_MODE_BOUNCES && interfGeom->GetFacet(i)->sh.facetHistogramParams.recordBounce)
 			|| (modeId == HISTOGRAM_MODE_DISTANCE && interfGeom->GetFacet(i)->sh.facetHistogramParams.recordDistance)
@@ -203,7 +203,7 @@ void HistogramPlotter::Refresh() {
 	
 	//Construct combo
 	histCombo->SetSize(histogramFacetIds.size());
-	size_t nbProf = 0;
+	int nbProf = 0;
 	for (const int id : histogramFacetIds) {
 		std::ostringstream name;
 		if (id == -1)
@@ -232,7 +232,7 @@ void HistogramPlotter::Update(float appTime, bool force) {
 
 void HistogramPlotter::refreshChart() {
 	//refreshes chart values
-	size_t modeId = GetSelectedTabIndex();
+	int modeId = GetSelectedTabIndex();
     if (modes[modeId].views.empty()) return;
 
 	int yScaleMode = yScaleCombo->GetSelectedIndex();
@@ -248,20 +248,20 @@ void HistogramPlotter::refreshChart() {
 			
 			switch (yScaleMode) {
 				case 0: { //Absolute
-					size_t plotLimit = std::min(histogramValues->size(), (size_t)1000);
-					for (size_t i = 0; i < plotLimit;i++) {
+					int plotLimit = std::min(histogramValues->size(), (int)1000);
+					for (int i = 0; i < plotLimit;i++) {
 						v->Add((double)i*xSpacing, (*histogramValues)[i]);
 					}
 					break;
 				}
 				case 1: { //Normalized
 					double yMax = 0.0;
-					size_t plotLimit = std::min(histogramValues->size(), (size_t)1000);
-					for (size_t i = 0; i < plotLimit; i++) {
+					int plotLimit = std::min(histogramValues->size(), (int)1000);
+					for (int i = 0; i < plotLimit; i++) {
 						yMax = std::max(yMax, (*histogramValues)[i]);
 					}
 					double scaleY = 1.0 / yMax; //Multiplication is faster than division (unless compiler optimizes this away)
-					for (size_t i = 0; i < plotLimit; i++) {
+					for (int i = 0; i < plotLimit; i++) {
 						v->Add((double)i*xSpacing, (*histogramValues)[i]*scaleY);
 					}
 					break;
@@ -272,7 +272,7 @@ void HistogramPlotter::refreshChart() {
 	}
 }
 
-std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHistogramValues(int facetId,size_t modeId)
+std::tuple<std::vector<double>*,double,double,int> HistogramPlotter::GetHistogramValues(int facetId,int modeId)
 {
 	//facetId: -1 if global, otherwise facet id
 	//modeId: bounce/distance/time (0/1/2)
@@ -281,7 +281,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 	double xMax;
 	double xSpacing;
-	size_t nbBins;
+	int nbBins;
 
 	std::vector<double>* histogramValues;
 
@@ -375,11 +375,11 @@ void HistogramPlotter::addView(int facetId) {
 }
 
 void HistogramPlotter::remView(int facetId) {
-	size_t modeId = GetSelectedTabIndex();
+	int modeId = GetSelectedTabIndex();
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 
 	bool found = false;
-	size_t i = 0;
+	int i = 0;
 	for (;!found && i<modes[modeId].views.size();i++) {
 		found = (modes[modeId].views[i]->userData1 == facetId);
 	}
@@ -403,7 +403,7 @@ void HistogramPlotter::Reset() {
 }
 
 void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
-	size_t modeId = GetSelectedTabIndex();
+	int modeId = GetSelectedTabIndex();
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 	switch (message) {
 	case MSG_BUTTON:
@@ -466,7 +466,7 @@ void HistogramPlotter::ProcessMessage(GLComponent *src, int message) {
 	//Hide/show charts already managed by GLTabWindow
 
 			modeId = GetSelectedTabIndex();
-			for (size_t i = 0; i < modes.size(); i++) {
+			for (int i = 0; i < modes.size(); i++) {
 				modes[i].chart->SetVisible(i == modeId);
 			}
 	*/

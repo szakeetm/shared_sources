@@ -85,10 +85,10 @@ public:
   void  SetCurrentFileName(const char *fileName);
 
   void InitSimProc(); // Init default CPU proc with max threads
-  void SetProcNumber(size_t n);// Set number of processes [1..32] (throws Error)
-  size_t GetProcNumber() const;  // Get number of processes
- // void SetMaxDesorption(size_t max);// Set the number of maximum desorption
- static size_t GetPID(size_t prIdx);// Get PID
+  void SetProcNumber(int n);// Set number of processes [1..32] (throws Error)
+  int GetProcNumber() const;  // Get number of processes
+ // void SetMaxDesorption(int max);// Set the number of maximum desorption
+ static int GetPID(int prIdx);// Get PID
   void ResetStatsAndHits(float appTime);
   void MarkToReload();    // Reload simulation (throws Error)
   int ReloadSim(bool sendOnly, GLProgress_Abstract& prg);
@@ -124,9 +124,9 @@ public:
   void ExportProfiles(const char *fileName);
   std::optional<std::vector<std::string>> ExportAngleMaps(const std::string& fileName, bool saveAll=false);
 
-  void AnalyzeSYNfile(const char *fileName, size_t *nbFacet, size_t *nbTextured, size_t *nbDifferent);
-  void ImportDesorption_SYN(const char *fileName, const size_t source, const double time,
-	  const size_t mode, const double eta0, const double alpha, const double cutoffdose,
+  void AnalyzeSYNfile(const char *fileName, int *nbFacet, int *nbTextured, int *nbDifferent);
+  void ImportDesorption_SYN(const char *fileName, const int source, const double time,
+	  const int mode, const double eta0, const double alpha, const double cutoffdose,
 	  const std::vector<std::pair<double, double>> &convDistr,
 	  GLProgress_Abstract& prg);
   void LoadTexturesGEO(FileReader& f, int version);
@@ -136,7 +136,7 @@ public:
   int SendAngleMaps();
   void ResetMoments();
 
-  double GetMoleculesPerTP(size_t moment) const;
+  double GetMoleculesPerTP(int moment) const;
   void CalcTotalOutgassing();
   //Different signature:
   #endif
@@ -154,7 +154,7 @@ public:
   void RecalcRegion(int regionId);
   void SaveRegion(const char* fileName, int position, bool overwrite = false);
   void SetRegionFileLocation(const std::string fileName, int position);
-  bool CheckFilenameConflict(const std::string& newPath, const size_t regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<size_t>& regionIds);
+  bool CheckFilenameConflict(const std::string& newPath, const int regionId, std::vector<std::string>& paths, std::vector<std::string>& fileNames, std::vector<int>& regionIds);
   void LoadTexturesSYN(FileReader& f, const std::shared_ptr<GlobalSimuState> globalState, int version);  // Load a textures(throws Error)
 
 

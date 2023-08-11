@@ -100,7 +100,7 @@ void GLTextField::SetText(const int val) {
 	SetText(tmp);
 }
 
-void GLTextField::SetText(const size_t val) {
+void GLTextField::SetText(const int val) {
 	char tmp[256];
 	sprintf(tmp, "%zd", val);
 	SetText(tmp);
@@ -129,7 +129,7 @@ bool GLTextField::GetNumberInt(int *num) {
 
 }
 
-bool GLTextField::GetNumberSizeT(size_t *num) {
+bool GLTextField::GetNumberSizeT(int *num) {
 
 	int conv = sscanf(m_Text, "%zd", num);
 	return (conv == 1);

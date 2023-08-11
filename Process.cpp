@@ -254,20 +254,20 @@ bool GetProcInfo(DWORD processID, PROCESS_INFO *pInfo) {
 #if defined(__MACOSX__) || defined(__APPLE__)
 
     if(processID!=getpid()){
-        vm_size = (size_t)0L;      /* Can't access? */
-        resident_set =  (size_t)0L;      /* Can't access? */
+        vm_size = (int)0L;      /* Can't access? */
+        resident_set =  (int)0L;      /* Can't access? */
     }
     else{
         struct rusage rusage;
         getrusage( RUSAGE_SELF, &rusage );
-        vm_size = (size_t)rusage.ru_maxrss / 1024.0;
+        vm_size = (int)rusage.ru_maxrss / 1024.0;
 
         struct mach_task_basic_info info;
         mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
         if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO,(task_info_t)&info, &infoCount ) != KERN_SUCCESS )
-            resident_set =  (size_t)0L;      /* Can't access? */
+            resident_set =  (int)0L;      /* Can't access? */
         else
-            resident_set =  (size_t)info.resident_size / 1024.0;
+            resident_set =  (int)info.resident_size / 1024.0;
     }
 
 

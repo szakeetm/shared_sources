@@ -48,7 +48,7 @@ extern SynRad*mApp;
 extern char formulaSyntax[];
 extern int formulaSyntaxHeight;
 
-static const size_t nbCol = 3;
+static const int nbCol = 3;
 static const char *flName[] = { "Expression","Name (optional)","Value" };
 static const int   flAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
@@ -191,7 +191,7 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 	case MSG_TEXT:
 	case MSG_LIST:
 	{
-		for (size_t row = 0; row < (formulaList->GetNbRow() - 1); row++) { //regular lines
+		for (int row = 0; row < (formulaList->GetNbRow() - 1); row++) { //regular lines
 
 			if (strcmp(formulaList->GetValueAt(0, row), userExpressions[row].c_str()) != 0) { //Expression changed
 				if (row >= appFormulas->formulas.size()) {
@@ -259,10 +259,10 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
         GetBounds(&x, &y, &w, &h);
         auto sum = (double) (w - 45);
         std::vector<double> colWidths(nbCol);
-        for (size_t i = 0; i < nbCol; i++) {
+        for (int i = 0; i < nbCol; i++) {
             colWidths[i] = (double) formulaList->GetColWidth(i);
         }
-        for (size_t i = 0; i < nbCol; i++) {
+        for (int i = 0; i < nbCol; i++) {
             columnRatios[i] = colWidths[i] / sum;
         }
         break;
@@ -278,7 +278,7 @@ void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
 	panel1->SetBounds(5, 5, w - 10, h - 120 - formulaHeight);
 	formulaList->SetBounds(10, 22, w - 20, h - 145 - formulaHeight);
-	for (size_t i=0;i<nbCol;i++)
+	for (int i=0;i<nbCol;i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
 	recalcButton->SetBounds(10, h - 110 - formulaHeight, 95, 20);
 
@@ -321,13 +321,13 @@ void FormulaEditor::RebuildList() {
 	int x, y, w, h;
 	GetBounds(&x, &y, &w, &h);
 	formulaList->SetSize(nbCol, userExpressions.size() + 1);
-	for (size_t i = 0; i<nbCol; i++)
+	for (int i = 0; i<nbCol; i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
 	formulaList->SetColumnLabels(flName);
 	formulaList->SetColumnAligns((int *)flAligns);
 	formulaList->SetColumnEditable((int *)fEdits);
 
-	for (size_t u = 0; u < userExpressions.size(); u++) {
+	for (int u = 0; u < userExpressions.size(); u++) {
 		formulaList->SetValueAt(0, u, userExpressions[u].c_str());
 		formulaList->SetValueAt(1, u, userFormulaNames[u].c_str());
 	}
@@ -335,10 +335,10 @@ void FormulaEditor::RebuildList() {
 
 void FormulaEditor::Refresh() {
 	//Load contents of window from global (interface/app) formulas
-	size_t nbFormula = appFormulas->formulas.size();
+	int nbFormula = appFormulas->formulas.size();
 	userExpressions.resize(nbFormula);
 	userFormulaNames.resize(nbFormula);
-	for (size_t i = 0; i < nbFormula; i++) {
+	for (int i = 0; i < nbFormula; i++) {
 		userExpressions[i] = appFormulas->formulas[i].GetExpression();
 		userFormulaNames[i] = appFormulas->formulas[i].GetName();
 	}
@@ -351,7 +351,7 @@ void FormulaEditor::UpdateValues() {
 
 	// This only displays formula values already evaluated in appFormulas
 	// Therefore formulas should be updated beforehand by calling appFormulas->EvaluateFormulas
-	for (size_t i = 0; i < appFormulas->formulas.size(); i++) {
+	for (int i = 0; i < appFormulas->formulas.size(); i++) {
 		if (appFormulas->formulas[i].hasParseError) {
 			formulaList->SetValueAt(2, i, appFormulas->formulas[i].GetParseErrorMsg());
 		}

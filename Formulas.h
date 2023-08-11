@@ -36,12 +36,12 @@ struct Formulas {
     void ClearFormulas();
     void ResetConvergenceData();
     void UpdateVectorSize();
-    void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues);
-    void EvaluateFormulas(size_t nbDesorbed);
+    void EvaluateFormulaVariables(int formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues);
+    void EvaluateFormulas(int nbDesorbed);
     bool RecordNewConvergenceDataPoint();
 
-    void removeEveryNth(size_t everyN, int formulaId, size_t skipLastN);
-    void removeFirstN(size_t n, int formulaId);
+    void removeEveryNth(int everyN, int formulaId, int skipLastN);
+    void removeFirstN(int n, int formulaId);
 
     std::vector<GLFormula> formulas;
     std::vector<FormulaHistoryDatapoint> formulaValueCache; //One per formula. Keeps Evaluate() results (From EvaluateFormulas()) in memory so convergenc values can be recorded

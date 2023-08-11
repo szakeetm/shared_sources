@@ -547,7 +547,7 @@ void ExtrudeFacet::ProcessMessage(GLComponent *src, int message) {
 		}
 		else if (src == curveFacetIndex1Button) {
 			if (auto foundId = AssertOneFacetSelected()) {
-				size_t vertexId = interfGeom->GetFacet(*foundId)->indices[0];
+				int vertexId = interfGeom->GetFacet(*foundId)->indices[0];
 				char tmp[32];
 				sprintf(tmp, "Facet %zd index1: Vertex %zd", *foundId + 1, vertexId+1);
 				curveBaseLabel->SetText(tmp);
@@ -715,7 +715,7 @@ void ExtrudeFacet::EnableDisableControls() {
 * \brief Checks if there is exactly one Vertex selected
 * \return return only selected vertex if it's the only selected
 */
-std::optional<size_t> ExtrudeFacet::AssertOneVertexSelected() {
+std::optional<int> ExtrudeFacet::AssertOneVertexSelected() {
 	auto selectedVertices = interfGeom->GetSelectedVertices();
 	if (selectedVertices.size()==0) {
 		GLMessageBox::Display("No vertex selected", "Can't define direction", GLDLG_OK, GLDLG_ICONINFO);
@@ -732,7 +732,7 @@ std::optional<size_t> ExtrudeFacet::AssertOneVertexSelected() {
 * \brief Checks if there is exactly one Facet selected
 * \return return only selected facet if it's the only selected
 */
-std::optional<size_t> ExtrudeFacet::AssertOneFacetSelected() {
+std::optional<int> ExtrudeFacet::AssertOneFacetSelected() {
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	if (selectedFacets.size() == 0) {
 		GLMessageBox::Display("No facet selected", "Can't define source", GLDLG_OK, GLDLG_ICONINFO);

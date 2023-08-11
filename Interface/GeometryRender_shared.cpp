@@ -54,7 +54,7 @@ extern MolFlow* mApp;
 extern SynRad* mApp;
 #endif
 
-void InterfaceGeometry::SelectFacet(size_t facetId) {
+void InterfaceGeometry::SelectFacet(int facetId) {
 	if (!isLoaded) return;
 	InterfaceFacet* f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
@@ -100,22 +100,22 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 	}
 
 	//Check facets if all vertices inside
-	std::vector<size_t> facetIds_vect;
+	std::vector<int> facetIds_vect;
 	{
-		std::unordered_set<size_t> facetIds; //vertices of facets in current struct
+		std::unordered_set<int> facetIds; //vertices of facets in current struct
 #pragma omp parallel
 		{
-			std::unordered_set<size_t> facetIds_local;
+			std::unordered_set<int> facetIds_local;
 #pragma omp for
 			for (int i = 0; i < sh.nbFacet; i++) {
 
 				InterfaceFacet* f = facets[i];
-				size_t nb = f->sh.nbIndex;
+				int nb = f->sh.nbIndex;
 				bool isInside = true;
-				size_t j = 0;
+				int j = 0;
 				bool hasSelectedVertex = false;
 				while (j < nb && isInside) {
-					size_t idx = f->indices[j];
+					int idx = f->indices[j];
 					int xe = screenCoords[idx].first;
 					int ye = screenCoords[idx].second;
 					if (!circularSelection) {
@@ -143,7 +143,7 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 	//Process found facets
 #pragma omp parallel for
 	for (int id = 0; id < facetIds_vect.size();id++) {
-		size_t i = facetIds_vect[id];
+		int i = facetIds_vect[id];
 		if (!unselect) {
 			facets[i]->selected = !unselect;
 		}
@@ -201,7 +201,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	int lastFound = -1;
 	int lastPaintedProgress = -1;
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
-	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
+	std::set<int> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
 	bool assigned=false;
 #pragma omp parallel
 	{
@@ -229,7 +229,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 				std::vector<Vector2d> v(facets[i]->indices.size());
 
 				for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
-					size_t idx = facets[i]->indices[j];
+					int idx = facets[i]->indices[j];
 					if (ok[idx]) {
 						v[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
 						if (onScreen[idx]) hasVertexOnScreen = true;
@@ -239,8 +239,8 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					}
 				}
 				if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
-					for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
-						size_t idx = facets[i]->indices[j];
+					for (int j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
+						int idx = facets[i]->indices[j];
 						if (vertices3[idx].selected) hasSelectedVertex = true;
 					}
 				}
@@ -257,7 +257,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 							}
 							else { //Smart selection
 								double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-								std::vector<size_t> connectedFacets;
+								std::vector<int> connectedFacets;
 								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
 								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
 								for (auto& ind : connectedFacets)
@@ -310,7 +310,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	if (clear && !unselect) UnselectAll();
 
 	if (!found && foundInSelectionHistory.size()>0) { //found one that was already selected previously
-		size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
+		int lastIndex; //selection: oldest in the history. Unselection: newest in the history
 		if (!unselect) { //select
 			for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
 				if (foundInSelectionHistory.count(selectHist[s])) {
@@ -318,7 +318,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					break;
 				}
 			}
-			selectHist = { (size_t)lastIndex }; //reset
+			selectHist = { (int)lastIndex }; //reset
 			TreatNewSelection(lastIndex, unselect);
 		}
 		/*
@@ -355,7 +355,7 @@ void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper
 	}
 	else { //Smart selection
 		double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-		std::vector<size_t> connectedFacets;
+		std::vector<int> connectedFacets;
 		mApp->SetFacetSearchPrg(true, "Smart selecting...");
 		if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(lastFound, maxAngleDiff);
 		for (auto& ind : connectedFacets)
@@ -533,21 +533,21 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
-void InterfaceGeometry::AddToSelectionHist(size_t f) {
+void InterfaceGeometry::AddToSelectionHist(int f) {
 	selectHist.push_back(f);
 }
 
-bool InterfaceGeometry::AlreadySelected(size_t f) {
+bool InterfaceGeometry::AlreadySelected(int f) {
 	return std::find(selectHist.begin(), selectHist.end(), f) != selectHist.end();
 }
 
-std::optional<size_t> InterfaceGeometry::GetLastSelected()
+std::optional<int> InterfaceGeometry::GetLastSelected()
 {
 	if (selectHist.empty()) return false;
 	else return selectHist.back();
 }
 
-std::optional<size_t> InterfaceGeometry::GetFirstSelected()
+std::optional<int> InterfaceGeometry::GetFirstSelected()
 {
 	if (selectHist.empty()) return false;
 	else return selectHist.front();
@@ -563,11 +563,11 @@ void InterfaceGeometry::EmptySelectedVertexList() {
 	selectedVertexList_ordered.clear();
 }
 
-void InterfaceGeometry::RemoveFromSelectedVertexList(size_t vertexId) {
+void InterfaceGeometry::RemoveFromSelectedVertexList(int vertexId) {
 	selectedVertexList_ordered.erase(std::remove(selectedVertexList_ordered.begin(), selectedVertexList_ordered.end(), vertexId), selectedVertexList_ordered.end());
 }
 
-void InterfaceGeometry::AddToSelectedVertexList(size_t vertexId) {
+void InterfaceGeometry::AddToSelectedVertexList(int vertexId) {
 	selectedVertexList_ordered.push_back(vertexId);
 }
 
@@ -578,8 +578,8 @@ void InterfaceGeometry::SelectAllVertex() {
 	//UpdateSelectionVertex();
 }
 
-size_t InterfaceGeometry::GetNbSelectedVertex() {
-	size_t nbSelectedVertex = 0;
+int InterfaceGeometry::GetNbSelectedVertex() {
+	int nbSelectedVertex = 0;
 	for (int i = 0; i < sh.nbVertex; i++) {
 		if (vertices3[i].selected) nbSelectedVertex++;
 	}
@@ -604,10 +604,10 @@ void InterfaceGeometry::UnselectAllVertex() {
 	//UpdateSelectionVertex();
 }
 
-std::vector<size_t> InterfaceGeometry::GetSelectedVertices()
+std::vector<int> InterfaceGeometry::GetSelectedVertices()
 {
-	std::vector<size_t> sel;
-	for (size_t i = 0; i < sh.nbVertex; i++)
+	std::vector<int> sel;
+	for (int i = 0; i < sh.nbVertex; i++)
 		if (vertices3[i].selected) sel.push_back(i);
 	return sel;
 }
@@ -615,8 +615,8 @@ std::vector<size_t> InterfaceGeometry::GetSelectedVertices()
 void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
 
 	// Render a facet (wireframe)
-	size_t nb = f->sh.nbIndex;
-	size_t i1;
+	int nb = f->sh.nbIndex;
+	int i1;
 
 	if (offset) {
 
@@ -630,7 +630,7 @@ void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset,
 			glPolygonOffset(0.0f, 5.0f);
 		}
 		glBegin(GL_POLYGON);
-		for (size_t j = 0; j < nb; j++) {
+		for (int j = 0; j < nb; j++) {
 			i1 = f->indices[j];
 			glEdgeFlag(f->visible[j] || showHidden);
 			glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
@@ -645,7 +645,7 @@ void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset,
 		if (nb < 8) {
 			// No hole possible
 			glBegin(GL_LINE_LOOP);
-			for (size_t j = 0; j < nb; j++) {
+			for (int j = 0; j < nb; j++) {
 				i1 = f->indices[j];
 				glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
 			}
@@ -654,7 +654,7 @@ void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset,
 		else {
 
 			glBegin(GL_LINES);
-			size_t i1, i2, j;
+			int i1, i2, j;
 			for (j = 0; j < nb - 1; j++) {
 				if (f->visible[j] || showHidden) {
 					i1 = f->indices[j];
@@ -785,7 +785,7 @@ float InterfaceGeometry::getMaxDistToCamera(InterfaceFacet* f) {
 	float distToCamera = -99999.99f;
 
 	for (int i = 0; i < f->sh.nbIndex; ++i) {
-		size_t idx = f->indices[i];
+		int idx = f->indices[i];
 		m.TransformVec((float)vertices3[idx].x, (float)vertices3[idx].y, (float)vertices3[idx].z, 1.0f,
 			&rx, &ry, &rz, &rw);
 		distToCamera = std::max(rz, distToCamera);
@@ -802,7 +802,7 @@ int InterfaceGeometry::compareFacetDepth(InterfaceFacet* lhs, InterfaceFacet* rh
 	else return 0;
 
 }
-void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& selectedFacets) {
+void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<int>& selectedFacets) {
 
 	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
 	// Draw
@@ -861,7 +861,7 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 			newColor.a = 0.15f;
 			currentColor = newColor; //metro red   
 		}
-		size_t nb = facets[sel]->sh.nbIndex;
+		int nb = facets[sel]->sh.nbIndex;
 		if (nb == 3) {
 			FillFacet(facets[sel], vertexCoords, normalCoords, textureCoords, colorValues, currentColor, false);
 		}
@@ -1065,8 +1065,8 @@ void InterfaceGeometry::AddTextureCoord(const InterfaceFacet* f, const Vector2d&
 
 void InterfaceGeometry::FillFacet(const InterfaceFacet* f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord) {
 
-	for (size_t i = 0; i < f->sh.nbIndex; i++) {
-		size_t idx = f->indices[i];
+	for (int i = 0; i < f->sh.nbIndex; i++) {
+		int idx = f->indices[i];
 		if (addTextureCoord) AddTextureCoord(f, f->vertices2[i], textureCoords);
 		vertexCoords.push_back(vertices3[idx].x);
 		vertexCoords.push_back(vertices3[idx].y);
@@ -1218,7 +1218,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glBlendFunc(GL_ONE, GL_ZERO);
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0f, 3.0f);
-		for (size_t i = 0; i < sh.nbFacet && renderTexture; i++) {
+		for (int i = 0; i < sh.nbFacet && renderTexture; i++) {
 			InterfaceFacet* f = facets[i];
 			bool paintRegularTexture = f->sh.isTextured && f->viewSettings.textureVisible && (f->sh.countAbs || f->sh.countRefl || f->sh.countTrans);
 #if defined(MOLFLOW)
@@ -1283,7 +1283,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 				double rw = f->sh.U.Norme() * iw;
 				for (int x = 0; x < f->sh.texWidth; x++) {
 					for (int y = 0; y < f->sh.texHeight; y++) {
-						size_t add = x + y * f->sh.texWidth;
+						int add = x + y * f->sh.texWidth;
 						if (f->GetMeshArea(add) > 0.0) {
 							double uC = ((double)x + 0.5) * iw;
 							double vC = ((double)y + 0.5) * ih;
@@ -1373,7 +1373,7 @@ std::unordered_set<int> InterfaceGeometry::GetVertexBelongsToSelectedFacet() {
 	auto selFacetIds = GetSelectedFacets();
 	for (auto& facetId : selFacetIds) {
 		InterfaceFacet* f = facets[facetId];
-		for (size_t i = 0; i < f->sh.nbIndex; i++)
+		for (int i = 0; i < f->sh.nbIndex; i++)
 			result.insert(f->indices[i]);
 	}
 	return result;
@@ -1603,7 +1603,7 @@ void InterfaceGeometry::BuildSelectList() {
 
 
 
-	typedef std::pair<size_t, size_t> Edge;
+	typedef std::pair<int, int> Edge;
 	typedef std::set<Edge> EdgeSet;
 
 	EdgeSet edgeSet;
@@ -1629,9 +1629,9 @@ void InterfaceGeometry::BuildSelectList() {
 				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
 			}
 			else { //regular selected facet, will be drawn later
-				for (size_t j = 0; j < f->indices.size(); ++j) {
-					size_t v1 = f->indices[j];
-					size_t v2 = f->indices[(j + 1) % f->indices.size()];
+				for (int j = 0; j < f->indices.size(); ++j) {
+					int v1 = f->indices[j];
+					int v2 = f->indices[(j + 1) % f->indices.size()];
 
 					// Ensure canonical order for edge vertices
 					if (v1 > v2) {
@@ -1770,7 +1770,7 @@ void InterfaceGeometry::BuildGLList() {
 	// Compile geometry for OpenGL
 	for (int s = 0; s < sh.nbSuper; s++) {
 
-		typedef std::pair<size_t, size_t> Edge;
+		typedef std::pair<int, int> Edge;
 		typedef std::set<Edge> EdgeSet;
 
 		EdgeSet edgeSet;
@@ -1783,9 +1783,9 @@ void InterfaceGeometry::BuildGLList() {
 			for (int i = 0; i < facets.size(); ++i) {
 				const auto& f = facets[i];
 				if (f->sh.superIdx == s || f->sh.superIdx == -1) {
-					for (size_t j = 0; j < f->indices.size(); ++j) {
-						size_t v1 = f->indices[j];
-						size_t v2 = f->indices[(j + 1) % f->indices.size()];
+					for (int j = 0; j < f->indices.size(); ++j) {
+						int v1 = f->indices[j];
+						int v2 = f->indices[(j + 1) % f->indices.size()];
 
 						// Ensure canonical order for edge vertices
 						if (v1 > v2) {

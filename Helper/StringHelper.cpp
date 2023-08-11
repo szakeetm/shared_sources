@@ -46,10 +46,10 @@ T stringToNumber(const std::string& s, bool returnDefValOnErr) {
 }
 
 template int stringToNumber<int>(const std::string& s, bool returnDefValOnErr);
-template size_t stringToNumber<size_t>(const std::string& s, bool returnDefValOnErr);
+template int stringToNumber<int>(const std::string& s, bool returnDefValOnErr);
 template double stringToNumber<double>(const std::string& s, bool returnDefValOnErr);
 
-void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit) {
+void splitList(std::vector<int>& outputIds, std::string inputString, int upperLimit) {
     auto ranges = SplitString(inputString, ',');
     if (ranges.size() == 0) {
         throw std::logic_error("Can't parse input");
@@ -94,7 +94,7 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
                     tmp << "Invalid range " << id1 << "-" << id2;
                     throw std::invalid_argument(tmp.str());
                 }
-                size_t oldSize = outputIds.size();
+                int oldSize = outputIds.size();
                 outputIds.resize(oldSize + id2 - id1 + 1);
                 std::iota(outputIds.begin() + oldSize, outputIds.end(), id1 - 1);
             }
@@ -112,7 +112,7 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
     return;
 }
 
-void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
+void splitFacetList(std::vector<int>& outputFacetIds, std::string inputString, int nbFacets) {
     auto ranges = SplitString(inputString, ',');
     if (ranges.size() == 0) {
         throw std::logic_error("Can't parse input");
@@ -157,7 +157,7 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                     tmp << "Invalid range " << facetId1 << "-" << facetId2;
                     throw std::invalid_argument(tmp.str());
                 }
-                size_t oldSize = outputFacetIds.size();
+                int oldSize = outputFacetIds.size();
                 outputFacetIds.resize(oldSize + facetId2 - facetId1 + 1);
                 std::iota(outputFacetIds.begin() + oldSize, outputFacetIds.end(), facetId1 - 1);
             }
@@ -181,12 +181,12 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
 /// <param name="input">The string to abbreviate</param>
 /// <param name="maxLength">The maximal returned string length</param>
 /// <returns>Returns the original string if its length is smaller than maxLength, otherwise a maxLength long abbreviated string</returns>
-std::string AbbreviateString(const std::string& input, size_t maxLength)
+std::string AbbreviateString(const std::string& input, int maxLength)
 {
     if (maxLength>=input.length()) return std::string(input); //return a copy, not a reference to the input
     if (maxLength <= 5) return "...";
-    size_t fromBeginning = (maxLength - 3) / 2;
-    size_t fromEnd = (maxLength - 2) / 2;
+    int fromBeginning = (maxLength - 3) / 2;
+    int fromEnd = (maxLength - 2) / 2;
     std::string result = input.substr(0, fromBeginning) + "..." + input.substr(input.length() - fromEnd);
     return result;
 }
@@ -223,13 +223,13 @@ bool endsWith(const std::string& fullString, const std::string& ending) {
 }
 
 bool iBeginsWith(const std::string& fullString, const std::string& beginning) {
-    size_t bl = beginning.length();
+    int bl = beginning.length();
     if (bl > fullString.length()) return false;
     return lowercase(fullString.substr(0,bl))==lowercase(beginning);
 }
 
 bool iEndsWith(const std::string& fullString, const std::string& ending) {
-    size_t el = ending.length();
+    int el = ending.length();
     if (el > fullString.length()) return false;
     return lowercase(fullString.substr(fullString.length() - el)) == lowercase(ending);
 }
@@ -314,10 +314,10 @@ namespace Util {
     }
 }
 
-size_t countLines(const std::string& str, bool countEmpty) {
+int countLines(const std::string& str, bool countEmpty) {
     std::istringstream stream(str);
     std::string line;
-    size_t count = 0;
+    int count = 0;
 
     while (std::getline(stream, line)) {
         if (countEmpty || !line.empty()) {
@@ -328,10 +328,10 @@ size_t countLines(const std::string& str, bool countEmpty) {
     return count;
 }
 
-size_t countLines(const std::stringstream& ss, bool countEmpty) {
+int countLines(const std::stringstream& ss, bool countEmpty) {
     std::string line;
     std::stringstream copyStream(ss.str()); // Make a copy because getline will modify the stream.
-    size_t count = 0;
+    int count = 0;
 
     while (std::getline(copyStream, line)) {
         if (countEmpty || !line.empty()) {

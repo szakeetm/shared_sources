@@ -158,7 +158,7 @@ void VertexCoordinates::Update() {
   vertexListC->SetColumnLabels(flName);
   vertexListC->SetColumnAligns((int *)flAligns);
   vertexListC->SetColumnEditable((int *)fEdits);
-  for(size_t i=0;i<s->GetNbVertex();i++) {
+  for(int i=0;i<s->GetNbVertex();i++) {
 	  if(s->GetVertex(i)->selected) {
 		  sprintf(tmp,"%zd",i+1);
 		  vertexListC->SetValueAt(0,count,tmp);
@@ -235,9 +235,9 @@ void VertexCoordinates::ProcessMessage(GLComponent *src,int message) {
 			if (mApp->AskToReset(worker)) {
 			//if (worker->IsRunning()) worker->Stop_Public();
 			mApp->changedSinceSave=true;
-			for(size_t i=0;i<vertexListC->GetNbRow();i++) {
+			for(int i=0;i<vertexListC->GetNbRow();i++) {
 				double x,y,z;
-				size_t id;
+				int id;
 				id=vertexListC->GetValueInt(i,0)-1;
 				if (!(id>=0 && id<interfGeom->GetNbVertex())) { //wrong coordinates at row
 					char tmp[128];

@@ -650,16 +650,16 @@ void GeometryViewer::DrawIndex() {
 	// Draw index number
 		// Get selected vertex
 	InterfaceGeometry *interfGeom = work->GetGeometry();
-	size_t nbVertex = interfGeom->GetNbVertex();
+	int nbVertex = interfGeom->GetNbVertex();
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
 
 	//Mark vertices of selected facets
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
-	std::vector<size_t> vertexId(nbVertex);
+	std::vector<int> vertexId(nbVertex);
 	for (auto& selId:selectedFacets) {
 		InterfaceFacet *f = interfGeom->GetFacet(selId);
-			for (size_t i = 0; i < f->sh.nbIndex; i++) {
+			for (int i = 0; i < f->sh.nbIndex; i++) {
 				vertexOnSelectedFacet[f->indices[i]] = true;
 				vertexId[f->indices[i]] = i;
 			}
@@ -675,7 +675,7 @@ void GeometryViewer::DrawIndex() {
 	glColor3f(1.0f, 0.2f, 0.2f);
 
 	glBegin(GL_POINTS);
-	for (size_t i = 0; i < nbVertex; i++) {
+	for (int i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
 			Vector3d *v = interfGeom->GetVertex(i);
 			glVertex3d(v->x, v->y, v->z);
@@ -688,7 +688,7 @@ void GeometryViewer::DrawIndex() {
 	GLToolkit::GetDialogFont()->SetTextColor(0.5f, 0.9f, 0.9f);
 
 	// Draw Labels
-	for (size_t i = 0; i < nbVertex; i++) {
+	for (int i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
 			if (showIndex && showVertexId) {
 				sprintf(tmp, "%zd,%zd ", vertexId[i] + 1, i + 1);
@@ -793,10 +793,10 @@ void GeometryViewer::DrawCoordinateAxes() {
 
 void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	InterfaceGeometry *interfGeom = work->GetGeometry();
-	std::vector<size_t> selectedVertexIds;
+	std::vector<int> selectedVertexIds;
 
 	//Populate selected vertices
-	for (size_t i = 0; i < interfGeom->GetNbVertex(); i++) {
+	for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
 		if (interfGeom->GetVertex(i)->selected) {
 			selectedVertexIds.push_back(i);
 		}
@@ -816,7 +816,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	else glColor3f(1.0f, 0.5f, 0.2f);
 
 	glBegin(GL_POINTS);
-	for (size_t i : selectedVertexIds) {
+	for (int i : selectedVertexIds) {
 		Vector3d *v = interfGeom->GetVertex(i);
 		glVertex3d(v->x, v->y, v->z);
 	}
@@ -829,7 +829,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 	// Draw Labels
 	glEnable(GL_BLEND);
-	for (size_t i : selectedVertexIds) {
+	for (int i : selectedVertexIds) {
 		Vector3d *v = interfGeom->GetVertex(i);
 		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, std::to_string(i + 1).c_str(), GLToolkit::GetDialogFont(), 2, 2);
 	}
@@ -924,17 +924,17 @@ void GeometryViewer::DrawFacetId() {
     // Draw index number
     // Get selected vertex
     InterfaceGeometry *interfGeom = work->GetGeometry();
-    size_t nbVertex = interfGeom->GetNbVertex();
+    int nbVertex = interfGeom->GetNbVertex();
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (nbVertex <= 0 || selectedFacets.empty()) return;
 
 	/*
     //Mark vertices of selected facets
     std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
-    std::vector<size_t> vertexId(nbVertex);
+    std::vector<int> vertexId(nbVertex);
     for (auto& selId:selectedFacets) {
         InterfaceFacet *f = interfGeom->GetFacet(selId);
-        for (size_t i = 0; i < f->sh.nbIndex; i++) {
+        for (int i = 0; i < f->sh.nbIndex; i++) {
             vertexOnSelectedFacet[f->indices[i]] = true;
             vertexId[f->indices[i]] = i;
         }
@@ -957,7 +957,7 @@ void GeometryViewer::DrawFacetId() {
 		Vector3d origin = interfGeom->GetFacetCenter(selId);
         Vector3d labelVec = interfGeom->GetFacetCenter(selId);
         double labelDist = 99999999.0;
-        for (size_t i = 1; i < f->sh.nbIndex; i++) {
+        for (int i = 1; i < f->sh.nbIndex; i++) {
             Vector3d *v = interfGeom->GetVertex(f->indices[i]);
 
             // Look for the closest Vertex between Origin and Center as a label position
@@ -995,7 +995,7 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
         auto& hitCache = mApp->worker.globalStatCache;
-        for (size_t i = 0; i < std::min(dispNumLeaks,hitCache.leakCacheSize); i++) {
+        for (int i = 0; i < std::min(dispNumLeaks,hitCache.leakCacheSize); i++) {
 
 			Vector3d p = hitCache.leakCache[i].pos;
 			Vector3d d = hitCache.leakCache[i].dir;
@@ -1292,7 +1292,7 @@ if( showVolume || showTexture ) {
 	} else cullMode = showBack;
 	interfGeom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
 #if defined(SYNRAD)
-	for (size_t i = 0; i < work->regions.size(); i++)
+	for (int i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
@@ -1775,7 +1775,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				glLoadMatrixf(matProj);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadMatrixf(matView);
-				for (size_t i = 0; i < work->regions.size(); i++)
+				for (int i = 0; i < work->regions.size(); i++)
 					work->regions[i].SelectTrajPoint(mX - posX, mY - posY, i);
 			}
 #endif
@@ -2089,8 +2089,8 @@ void InterfaceGeometry::ClearFacetMeshLists()
 {
 	GLProgress_GUI prg("Please wait...", "Clearing facet meshes...");
 	prg.SetVisible(true);
-	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (size_t i = 0; i < nbFacet; i++) {
+	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
+	for (int i = 0; i < nbFacet; i++) {
 		prg.SetProgress((double)i / (double)nbFacet);
 		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
 	}
@@ -2100,8 +2100,8 @@ void InterfaceGeometry::BuildFacetMeshLists()
 {
 	GLProgress_GUI prg = GLProgress_GUI("Please wait...", "Building facet meshes...");
 	prg.SetVisible(true);
-	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
-	for (size_t i = 0; i < nbFacet; i++) {
+	int nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
+	for (int i = 0; i < nbFacet; i++) {
 		prg.SetProgress((double)i / (double)nbFacet);
 		mApp->worker.GetGeometry()->GetFacet(i)->BuildMeshGLList();
 

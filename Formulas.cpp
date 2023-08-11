@@ -24,7 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 
 // convergence constants
-constexpr size_t max_vector_size = 65536;
+constexpr int max_vector_size = 65536;
 
 //! Add a formula to the formula storage
 void Formulas::AddFormula(const std::string& name, const std::string& expression) {
@@ -54,12 +54,12 @@ void Formulas::ResetConvergenceData() {
 
 
 //! Initialize formulas by parsing string to values
-void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues){
+void Formulas::EvaluateFormulaVariables(int formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues){
     auto& formula = formulas[formulaIndex];
 	
-	size_t nbVar = formula.GetNbVariable();
+	int nbVar = formula.GetNbVariable();
 	bool ok = true; //for each formula, stop at first variable that can't be evaluated
-	for (size_t j = 0; j < nbVar && ok; j++) {
+	for (int j = 0; j < nbVar && ok; j++) {
 		auto varIterator = formula.GetVariableAt(j);
         formula.evalErrorMsg = "";
         try {
@@ -82,7 +82,7 @@ void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <
 */
 void Formulas::UpdateVectorSize() {
     //Rebuild vector size
-    size_t nbFormulas = formulas.size();
+    int nbFormulas = formulas.size();
     if (convergenceData.size() != nbFormulas) {
         convergenceData.resize(nbFormulas);
     }
@@ -92,13 +92,13 @@ void Formulas::UpdateVectorSize() {
 }
 
 //Calculate formula values for later usage in corresponding windows
-void Formulas::EvaluateFormulas(size_t nbDesorbed) {
+void Formulas::EvaluateFormulas(int nbDesorbed) {
 
     std::vector <std::pair<std::string, std::optional<double>>> aboveFormulaValues; //Formulas can refer to previous formulas (above) by number or by name. If evaluation was successful, they can see their value
 
 	// Evaluate each formula and cache values for later usage
 	// in FormulaEditor, ConvergencePlotter
-	for (size_t i = 0; i < formulas.size(); ++i) {
+	for (int i = 0; i < formulas.size(); ++i) {
         // First evaluate variable values
         EvaluateFormulaVariables(i,aboveFormulaValues);
         try {
@@ -167,7 +167,7 @@ bool Formulas::RecordNewConvergenceDataPoint() {
 * \param formulaId formula whose convergence values shall be pruned
 * \param skipLastN skips last N data points e.g. to retain a sharp view, while freeing other data points
 */
-void Formulas::removeEveryNth(size_t everyN, int formulaId, size_t skipLastN) {
+void Formulas::removeEveryNth(int everyN, int formulaId, int skipLastN) {
     auto &conv_vec = convergenceData[formulaId];
     for (int i = conv_vec.size() - everyN - skipLastN; i > 0; i = i - everyN)
         conv_vec.erase(conv_vec.begin() + i);
@@ -178,7 +178,7 @@ void Formulas::removeEveryNth(size_t everyN, int formulaId, size_t skipLastN) {
  * \param n amount of elements that should be removed from the front
  * \param formulaId formula whose convergence values shall be pruned
 */
-void Formulas::removeFirstN(size_t n, int formulaId) {
+void Formulas::removeFirstN(int n, int formulaId) {
     auto &conv_vec = convergenceData[formulaId];
     conv_vec.erase(conv_vec.begin(), conv_vec.begin() + std::min(n, conv_vec.size()));
 }
@@ -247,7 +247,7 @@ bool Formulas::CheckASCBR(int formulaId) {
     auto& convData = convergenceValues[formulaId];
     if(convData.valueHistory.empty()) return false;
 
-    const size_t cb_len = cb_length; // convergence band length
+    const int cb_len = cb_length; // convergence band length
 
     // Step 1: increment step, +1 MC event
     // done outside

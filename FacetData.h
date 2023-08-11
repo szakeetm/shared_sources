@@ -70,7 +70,7 @@ public:
 class RTFacet : public RTPrimitive {
 protected:
     RTFacet() : RTPrimitive(), sh(0){};
-    RTFacet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) {};
+    RTFacet(int nbIndex) : RTPrimitive(), sh(nbIndex) {};
     /*
     RTFacet(const RTFacet& cpy) {
         globalId = cpy.globalId;
@@ -97,12 +97,12 @@ protected:
     */
 public:
     FacetProperties sh;
-    std::vector<size_t> indices;          // Indices (Reference to geometry vertex)
+    std::vector<int> indices;          // Indices (Reference to geometry vertex)
     std::vector<Vector2d> vertices2;        // Vertices (2D plane space, UV coordinates)
     std::shared_ptr<Surface> surf;
 
-    size_t globalId=0; //Global index (to identify when superstructures are present)
-    //size_t iSCount{0};
+    int globalId=0; //Global index (to identify when superstructures are present)
+    //int iSCount{0};
 
     void ComputeBB() { bb = sh.bb;};
     bool Intersect(Ray &r) override;

@@ -68,7 +68,7 @@ private:
   void remView(int facetId);
   void refreshChart(); //refreshes chart values
 
-  std::tuple<std::vector<double>*, double, double,size_t> GetHistogramValues(int facetId, size_t modeId);
+  std::tuple<std::vector<double>*, double, double,int> GetHistogramValues(int facetId, int modeId);
 
   Worker      *worker;
 

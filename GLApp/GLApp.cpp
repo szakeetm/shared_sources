@@ -223,7 +223,7 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
 void GLApplication::Pause(bool bPause) {
 }
 
-int GLApplication::Resize( size_t nWidth, size_t nHeight, bool forceWindowed ) {
+int GLApplication::Resize( int nWidth, int nHeight, bool forceWindowed ) {
 
   int width  = std::max((int)nWidth,m_minScreenWidth);
   int height = std::max((int)nHeight,m_minScreenHeight);

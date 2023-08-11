@@ -35,7 +35,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 struct SelectionGroup{
     std::string    name;       // Selection name
-    std::vector<size_t> facetIds; // List of facets
+    std::vector<int> facetIds; // List of facets
 };
 
 // Definition of a view. Note: all basis are left handed

@@ -37,7 +37,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma warning(disable : 4146)
 #endif
 
-unsigned long GenerateSeed(size_t offsetIndex);
+unsigned long GenerateSeed(int offsetIndex);
 
 class MersenneTwister {
 

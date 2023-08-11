@@ -39,19 +39,19 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #define MINBB    1
 #define MAXDEPTH 50
 
-std::tuple<size_t,size_t,size_t> AABBNODE::FindBestCuttingPlane() {
+std::tuple<int,int,int> AABBNODE::FindBestCuttingPlane() {
 
 	// AABB tree balancing
 
 	double centerX = (bb.min.x + bb.max.x) / 2.0;
 	double centerY = (bb.min.y + bb.max.y) / 2.0;
 	double centerZ = (bb.min.z + bb.max.z) / 2.0;
-	size_t rightFromCenterX = 0;
-	size_t rightFromCenterY = 0;
-	size_t rightFromCenterZ = 0;
-	size_t planeType; //1: YZ, 2: XZ, 3: XY
+	int rightFromCenterX = 0;
+	int rightFromCenterY = 0;
+	int rightFromCenterZ = 0;
+	int planeType; //1: YZ, 2: XZ, 3: XY
 	double best = 1e100;
-	size_t nbLeft, nbRight;
+	int nbLeft, nbRight;
 
 	for (const auto& f : facets) {
 		if (f->sh.center.x > centerX) rightFromCenterZ++;
@@ -101,8 +101,8 @@ void AABBNODE::ComputeBB() {
 
 }
 
-size_t AABBNODE::GetMemSize() {
-	size_t sum = 0;
+int AABBNODE::GetMemSize() {
+	int sum = 0;
 	if (left) {
 		sum += left->GetMemSize();
 	}
@@ -114,9 +114,9 @@ size_t AABBNODE::GetMemSize() {
 	return sum;
 }
 
-AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth) {
+AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const int depth, int& maxDepth) {
 
-	size_t    nbl = 0, nbr = 0;
+	int    nbl = 0, nbr = 0;
 	double m;
 	
 	maxDepth = std::max(depth, maxDepth); //debug
@@ -503,7 +503,7 @@ bool IntersectBox(const AxisAlignedBoundingBox& bounds, const Ray& ray, const Ve
 	if (!nullRz) inverseRayDir.z = 1.0 / rayDir.z;
 
 	//Global variables, easier for recursion:
-	size_t intNbTHits = 0;
+	int intNbTHits = 0;
 
 	//Output values
 	bool found;

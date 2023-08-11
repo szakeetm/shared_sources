@@ -122,7 +122,7 @@ Interface::Interface() : GLApplication(){
     compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
-    numCPU = (size_t) sysinfo.dwNumberOfProcessors;
+    numCPU = (int) sysinfo.dwNumberOfProcessors;
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
@@ -159,7 +159,7 @@ Interface::Interface() : GLApplication(){
     nbProc = 1;
 #else
     nbProc = numCPU; //numCPU also displayed in Global Settings
-    Saturate(nbProc, 1, (size_t)16); //don't start with more than 16 processes, but the user can increase
+    Saturate(nbProc, 1, (int)16); //don't start with more than 16 processes, but the user can increase
 #endif
 
     curViewer = 0;
@@ -305,7 +305,7 @@ void Interface::LoadSelection(const char *fName) {
 
         InterfaceGeometry *interfGeom = worker.GetGeometry();
         interfGeom->UnselectAll();
-        size_t nbFacet = interfGeom->GetNbFacet();
+        int nbFacet = interfGeom->GetNbFacet();
 
         {
             auto file = FileReader(fileName);
@@ -347,8 +347,8 @@ void Interface::SaveSelection() {
 
             auto file = FileWriter(fileName);
             //int nbSelected = interfGeom->GetNbSelectedFacets();
-            size_t nbFacet = interfGeom->GetNbFacet();
-            for (size_t i = 0; i < nbFacet; i++) {
+            int nbFacet = interfGeom->GetNbFacet();
+            for (int i = 0; i < nbFacet; i++) {
                 if (interfGeom->GetFacet(i)->selected) file.Write(i, "\n");
             }
 
@@ -1371,7 +1371,7 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
                         return true;
                     }
                     interfGeom->UnselectAll();
-                    std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+                    std::vector<int> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
                     for (const auto &i : nonPlanarFacetids)
                         interfGeom->SelectFacet(i);
                     interfGeom->UpdateSelection();
@@ -2003,7 +2003,7 @@ void Interface::SelectView(int v) {
     viewer[curViewer]->SetCurrentView(views[v]);
 }
 
-void Interface::SelectSelection(size_t v) {
+void Interface::SelectSelection(int v) {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
     interfGeom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
                        viewer[0]->GetWindow()->IsCtrlDown());
@@ -2022,7 +2022,7 @@ void Interface::ClearSelectionMenus() const {
 
 void Interface::RebuildSelectionMenus() {
     ClearSelectionMenus();
-    size_t i;
+    int i;
     for (i = 0; i < selections.size(); i++) {
         if (i <= 8) {
             selectionsMenu->Add(selections[i].name.c_str(), MENU_SELECTION_SELECTIONS + (int) i, SDLK_1 + (int) i,
@@ -2044,7 +2044,7 @@ void Interface::AddSelection(const SelectionGroup& s) {
     RebuildSelectionMenus();
 }
 
-void Interface::ClearSelection(size_t idClr) {
+void Interface::ClearSelection(int idClr) {
     selections.erase(selections.begin() + idClr);
     RebuildSelectionMenus();
 }
@@ -2054,7 +2054,7 @@ void Interface::ClearAllSelections() {
     ClearSelectionMenus();
 }
 
-void Interface::OverWriteSelection(size_t idOvr) {
+void Interface::OverWriteSelection(int idOvr) {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
     char *selectionName = GLInputBox::GetInput(selections[idOvr].name.c_str(), "Selection name",
                                                "Enter selection name");
@@ -2284,19 +2284,19 @@ bool Interface::OffsetFormula(std::string& expression, int offset, int filter, s
 
     std::string newExpr = expression; //convert char* to string
 
-    size_t pos = 0; //analyzed until this position
+    int pos = 0; //analyzed until this position
     while (pos < newExpr.size()) { //while not end of expression
 
-        std::vector<size_t> location; //for each prefix, we store where it was found
+        std::vector<int> location; //for each prefix, we store where it was found
 
         for (auto & formulaPrefix : formulaPrefixes) { //try all expressions
             location.push_back(newExpr.find(formulaPrefix, pos));
         }
-        size_t minPos = std::string::npos;
-        size_t maxLength = 0;
-        for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
+        int minPos = std::string::npos;
+        int maxLength = 0;
+        for (int j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find first prefix location
             if (location[j] < minPos) minPos = location[j];
-        for (size_t j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
+        for (int j = 0; j < formulaPrefixes.size(); j++)  //try all expressions, find longest prefix at location
             if (location[j] == minPos && formulaPrefixes[j].size() > maxLength) maxLength = formulaPrefixes[j].size();
         int digitsLength = 0;
         if (minPos != std::string::npos) { //found expression, let's find tailing facet number digits
@@ -2339,7 +2339,7 @@ bool Interface::OffsetFormula(std::string& expression, int offset, int filter, s
     return changed;
 }
 
-int Interface::Resize(size_t width, size_t height, bool forceWindowed) {
+int Interface::Resize(int width, int height, bool forceWindowed) {
     int r = GLApplication::Resize(width, height, forceWindowed);
     PlaceComponents();
     worker.RebuildTextures();

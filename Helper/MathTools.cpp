@@ -30,35 +30,35 @@ bool IsEqual(const double a, const double b, double toleranceRatio) {
 	return std::abs(a - b) < std::max(1E-99, std::max(std::abs(a),std::abs(b))*toleranceRatio);
 }
 
-size_t IDX(const int i, const size_t nb) {
+int IDX(const int i, const int nb) {
 	//Return circular index restrained within [0..nb[, allows negative index (Python logics: -1=last)
     int ret = i%(int)nb;
     return (ret>=0)?(ret):(ret+nb);
 }
 
-size_t IDX(const size_t i, const size_t nb) {
+int IDX(const int i, const int nb) {
 	//Return circular index restrained within [0..nb[
 	return i%nb;
 }
 
 
-size_t Next(const int i, const size_t nb, const bool inverseDir) {
+int Next(const int i, const int nb, const bool inverseDir) {
 	//Returns the next element of a circular index (next of last is first)
 	//inverseDir is a helper: when true, returns the previous
-	return Next((size_t)i,nb,inverseDir);
+	return Next((int)i,nb,inverseDir);
 }
 
-size_t Next(const size_t i, const size_t nb, const bool inverseDir) {
+int Next(const int i, const int nb, const bool inverseDir) {
 	//Returns the next element of a circular index (next of last is first)
 	//inverseDir is a helper: when true, returns the previous
 	if (!inverseDir) {
-		size_t next=i+1;
+		int next=i+1;
 		if (next==nb) next = 0;
 		return next;
 	} else return Previous(i,nb,false);
 }
 
-size_t Previous(const size_t i, const size_t nb, const bool inverseDir) {
+int Previous(const int i, const int nb, const bool inverseDir) {
 	//Returns the previous element of a circular index (previous of first is last)
 	//inverseDir is a helper: when true, returns the next
 	if (!inverseDir) {
@@ -67,13 +67,13 @@ size_t Previous(const size_t i, const size_t nb, const bool inverseDir) {
 	} else return Next(i,nb,false);
 }
 
-size_t Previous(const int i, const size_t nb, const bool inverseDir) {
-	return Previous((size_t)i,nb,inverseDir);
+int Previous(const int i, const int nb, const bool inverseDir) {
+	return Previous((int)i,nb,inverseDir);
 }
 
 
 
-size_t GetPower2(size_t n) {
+int GetPower2(int n) {
 // Return a power of 2 which is greater or equal than n
   if((n & (n-1))==0) {
     // already a power of 2
@@ -82,7 +82,7 @@ size_t GetPower2(size_t n) {
     // Get the power of 2 above
     int p = 0;
     while(n!=0) { n = n >> 1; p++; }
-    return (size_t)1 << p;
+    return (int)1 << p;
   }
 
 }
@@ -96,7 +96,7 @@ double RoundAngle(double a) {
 
 }
 
-char* FormatMemory(size_t size) {
+char* FormatMemory(int size) {
 	return FormatMemoryLL((long long)size);
 }
 
@@ -158,9 +158,9 @@ std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pa
 	double delta = lowerFirstNext - lowerFirst;
 	double overshoot = xValue - lowerFirst;
 
-	size_t distrYsize = table[0].second.size();
+	int distrYsize = table[0].second.size();
 	std::vector<double> result(distrYsize);
-	for (size_t e = 0; e < distrYsize; e++)
+	for (int e = 0; e < distrYsize; e++)
 	{
 		double lowerSecond = (logY) ? log10(table[lowerIndex].second[e]) : table[lowerIndex].second[e];
 		double lowerSecondNext = (logY) ? log10(table[lowerIndex + 1].second[e]) : table[lowerIndex + 1].second[e];
@@ -173,7 +173,7 @@ std::vector<double> InterpolateVectorY(const double x, const std::vector<std::pa
 
 
 //An overload of the function above that accepts C-style arrays as data
-int lower_index(double key, const double* data, size_t array_size) {
+int lower_index(double key, const double* data, int array_size) {
 	const double* it = std::lower_bound(data, data + array_size, key);
 	return static_cast<int>(std::distance(data, it))-1; //off by one, see lower_index_universal for explanation
 }
@@ -191,7 +191,7 @@ int lower_index(const double key, const std::vector<std::pair<double, double>>& 
 	return static_cast<int>(std::distance(data.begin(), it))-1;
 }
 
-int weighed_lower_index_X(const double  key, const double  weigh, double * A, double * B, const size_t  size)
+int weighed_lower_index_X(const double  key, const double  weigh, double * A, double * B, const int  size)
 {
 	//interpolates among two lines of a cumulative distribution
 	//all elements of line 1 and line 2 must be monotonously increasing (except equal consecutive values)

@@ -228,7 +228,7 @@ class ImguiWindow;
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1
 static const GLfloat positionI[] = { 1.0f,-0.5f,  -0.2f, 0.0f }; //light2
 
-constexpr size_t SmoothStatSizeLimit() { return 16; }
+constexpr int SmoothStatSizeLimit() { return 16; }
 
 class Interface : public GLApplication {
 protected:
@@ -256,7 +256,7 @@ public:
 	float    lastUpdate;   // Last 'hit update' time
 	template <typename T, bool useDiff = false>
 	struct EventPerSecond {
-		EventPerSecond(size_t limit = SmoothStatSizeLimit()) : N(limit) {};
+		EventPerSecond(int limit = SmoothStatSizeLimit()) : N(limit) {};
 
 		double avg() {
 			if (eventsAtTime.empty()) return 0.0;
@@ -302,21 +302,21 @@ public:
 		std::queue<std::pair<T, double>> eventsAtTime;
 	private:
 		T sum = 0;
-		size_t N;
+		int N;
 		double lastCached = 0.0;
 	};
 
-	EventPerSecond<size_t>   hps;          // Hit per second
-	EventPerSecond<size_t>   dps;          // Hit per second
-	EventPerSecond<size_t, true>   hps_runtotal{2};          // Hit per second
-	EventPerSecond<size_t, true>   dps_runtotal{2};          // Hit per second
+	EventPerSecond<int>   hps;          // Hit per second
+	EventPerSecond<int>   dps;          // Hit per second
+	EventPerSecond<int, true>   hps_runtotal{2};          // Hit per second
+	EventPerSecond<int, true>   dps_runtotal{2};          // Hit per second
 
-	size_t    lastNbHit;    // measurement
-	size_t    lastNbDes;    // measurement
-	size_t    nbDesStart;   // measurement
-	size_t    nbHitStart;   // measurement
-	size_t    nbProc;       // Temporary var (use Worker::GetProcNumber)
-	size_t    numCPU;
+	int    lastNbHit;    // measurement
+	int    lastNbDes;    // measurement
+	int    nbDesStart;   // measurement
+	int    nbHitStart;   // measurement
+	int    nbProc;       // Temporary var (use Worker::GetProcNumber)
+	int    numCPU;
 
 	bool useOldXMLFormat = false;
 	bool     antiAliasing;
@@ -424,13 +424,13 @@ public:
 	void RebuildViewMenus();
 
 	// Selections
-	void SelectSelection(size_t v);
+	void SelectSelection(int v);
 	void AddSelection(const SelectionGroup& s);
 	void AddSelection(const std::string& selectionName);
 	void ClearSelectionMenus() const;
 	void ClearAllSelections();
-	void OverWriteSelection(size_t idOvr);
-	void ClearSelection(size_t idClr);
+	void OverWriteSelection(int idOvr);
+	void ClearSelection(int idClr);
 	void RebuildSelectionMenus();
 
 	void UpdateFacetlistSelected();
@@ -453,7 +453,7 @@ public:
 	int     modeSolo;
 
 	std::vector<SelectionGroup> selections;
-	size_t idSelection; //Allows "select next" / "select previous" commands
+	int idSelection; //Allows "select next" / "select previous" commands
 
 	//Dialog
 	CollapseSettings* collapseSettings = nullptr;
@@ -508,7 +508,7 @@ public:
 
 	void DisplayCollapseDialog();
 	void RenumberSelections(const std::vector<int>& newRefs);
-	int  Resize(size_t width, size_t height, bool forceWindowed) override;
+	int  Resize(int width, int height, bool forceWindowed) override;
 
 	// Formula management
 	static bool OffsetFormula(std::string& expression, int offset, int filter = -1, std::vector<int>* newRefs = nullptr);

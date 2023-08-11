@@ -290,8 +290,8 @@ void SelectFacetByResult::ProcessMessage(GLComponent *src, int message) {
 
 		if (src==selectButton) interfGeom->UnselectAll();
 		//Form valid, let's do the work
-		size_t nbFacet = interfGeom->GetNbFacet();
-		for (size_t i=0;i<nbFacet;i++) {
+		int nbFacet = interfGeom->GetNbFacet();
+		for (int i=0;i<nbFacet;i++) {
 			InterfaceFacet* f=interfGeom->GetFacet(i);
 			bool match=true;
 			if (do_hitLess) match = match && (f->facetHitCache.nbMCHit<hitLess);

@@ -80,9 +80,9 @@ unsigned long MersenneTwister::GetSeed() {
     return seed;
 }
 
-unsigned long GenerateSeed(size_t offsetIndex) {
+unsigned long GenerateSeed(int offsetIndex) {
     double time = omp_get_wtime();
-    size_t ms = *(reinterpret_cast<size_t *>(&time)); // just use the bits for hashing
+    int ms = *(reinterpret_cast<int *>(&time)); // just use the bits for hashing
     int processId;
 #ifdef _WIN32
     processId = _getpid();
