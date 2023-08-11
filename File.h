@@ -60,7 +60,6 @@ public:
   int IsEol() const;
   char *ReadLine();
   char *ReadString();
-  int ReadSizeT();
   int ReadInt();
   double ReadDouble();
   void ReadKeyword(const char *keyword);

@@ -113,16 +113,6 @@ int FileReader::ReadInt() {
     return ret;
 }
 
-int FileReader::ReadSizeT() {
-
-    int ret;
-    char *w = ReadWord();
-    if (sscanf(w, "%zd", &ret) <= 0) {
-        throw Error(MakeError("Wrong integer64 format"));
-    }
-    return ret;
-}
-
 double FileReader::ReadDouble() {
 
     double ret;
