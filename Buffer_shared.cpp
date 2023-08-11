@@ -78,7 +78,7 @@ void FacetHistogramBuffer::Reset() {
 }
 
 size_t FacetHistogramBuffer::GetMemSize() const {
-	size_t sum = 0;
+	int sum = 0;
 	sum += nbHitsHistogram.capacity() * sizeof(double);
 	sum += distanceHistogram.capacity() * sizeof(double);
 #ifdef MOLFLOW

@@ -186,7 +186,6 @@ void SimulationFacet::InitializeTexture(){
 * \param nbMoments amount of moments
 * \return calculated size of the facet hits
 */
-/*
 int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
     return   (1 + nbMoments)*(
             sizeof(FacetHitBuffer) +
@@ -196,7 +195,6 @@ int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
             + sh.facetHistogramParams.GetDataSize()
     );
 }
-*/
 
 /**
 * \brief Calculates the memory size for a single facet
@@ -204,7 +202,7 @@ int SimulationFacet::GetHitsSize(int nbMoments) const { //for hits dataport
 * \return calculated size of the facet hits
 */
 size_t SimulationFacet::GetMemSize() const {
-    size_t sum = 0;
+    int sum = 0;
     sum += sizeof (SimulationFacet);
     sum += sizeof (int) * indices.capacity();
     sum += sizeof (Vector2d) * vertices2.capacity();

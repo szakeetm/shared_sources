@@ -129,7 +129,7 @@ struct ProcCommData {
         return *this;
     }
 
-    void UpdateCounterSizes(const std::vector<size_t>& counterSizes);
+    void UpdateCounterSizes(const std::vector<int>& counterSizes);
     void UpdateControllerStatus(const std::optional<ControllerState>& state, const std::optional<std::string>& status, LoadStatus_abstract* loadStatus = nullptr);
 };
 
