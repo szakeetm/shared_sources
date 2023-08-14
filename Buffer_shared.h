@@ -116,7 +116,7 @@ public:
 #endif
 };
 
-class FacetProperties { //Formerly SHFACET
+class FacetProperties { //Formerly SHFACET, shared properties between SimulationFacet and InterfaceFacet
 public:
 	FacetProperties() = default;
 	explicit FacetProperties(size_t nbIndices);
@@ -174,9 +174,14 @@ public:
 	double temperature;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
 	double outgassing;           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
 
+	//These helper IDs are used for simulation (fast lookup), and for saving backwards-compatible XML
+	//The parameter reference should be name-based in the interface and XML loading
+	//Until versions 2.9.14, saving/loading was ID based, which is prone to error, especially for catalog parameters
+	//On the long term, migrate these IDs to MolflowSimFacet, and use only for simulation
 	int sticking_paramId;    // -1 if use constant value, 0 or more if referencing time-dependent parameter
 	int opacity_paramId;     // -1 if use constant value, 0 or more if referencing time-dependent parameter
 	int outgassing_paramId;  // -1 if use constant value, 0 or more if referencing time-dependent parameter
+	
 
 	int CDFid; //Which probability distribution it belongs to (one CDF per temperature)
 	int IDid;  //If time-dependent desorption, which is its ID
@@ -278,7 +283,7 @@ public:
 			CEREAL_NVP(sticking_paramId),    // -1 if use constant value, 0 or more if referencing time-dependent parameter
 			CEREAL_NVP(opacity_paramId),     // -1 if use constant value, 0 or more if referencing time-dependent parameter
 			CEREAL_NVP(outgassing_paramId),  // -1 if use constant value, 0 or more if referencing time-dependent parameter
-
+			
 			CEREAL_NVP(CDFid), //Which probability distribution it belongs to (one CDF per temperature)
 			CEREAL_NVP(IDid),  //If time-dependent desorption, which is its ID
 
