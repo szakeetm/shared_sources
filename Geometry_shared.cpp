@@ -152,6 +152,11 @@ void InterfaceGeometry::InitializeGeometry(int facet_number) {
 		}
 	}
 	RecalcRawVertices(facet_number);
+	if (facet_number == -1) {
+		BuildGLList();
+		mApp->UpdateModelParams();
+		mApp->UpdateFacetParams(false);
+	}
 	isLoaded = true;
 }
 
