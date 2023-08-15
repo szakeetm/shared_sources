@@ -2034,7 +2034,7 @@ void InterfaceGeometry::ClearFacetMeshLists()
 	size_t nbFacet = mApp->worker.GetGeometry()->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
 		prg.SetProgress((double)i / (double)nbFacet);
-		DELETE_LIST(mApp->worker.GetGeometry()->GetFacet(i)->glElem);
+		mApp->worker.GetGeometry()->GetFacet(i)->glElem.reset();
 	}
 }
 

@@ -25,8 +25,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/SynRad.h"
 #endif
 #include "Facet_shared.h"
+#include "Geometry_shared.h"
 #include "Polygon.h"
-//#include <malloc.h>
 
 #include <string.h>
 #include <math.h>
@@ -101,10 +101,6 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	dirCache = nullptr;
 	textureError = false;
 
-	glTex = 0;
-	glList = 0;
-	glElem = 0;
-	glSelElem = 0;
 	selected = false;
 
 #if defined(MOLFLOW)
@@ -119,19 +115,7 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 * \brief Destructor for safe deletion
 */
 InterfaceFacet::~InterfaceFacet() {
-	  //SAFE_DELETE(cellPropertiesIds);
 	  SAFE_FREE(dirCache);
-	  DELETE_TEX(glTex);
-	  DELETE_LIST(glList);
-	  DELETE_LIST(glElem);
-	  DELETE_LIST(glSelElem);
-	  /*for (size_t i = 0; i < meshvectorsize; i++)
-          SAFE_DELETE(meshvector[i].points);*/
-	  //SAFE_DELETE(meshvector);
-#if defined(MOLFLOW)
-	  //SAFE_FREE(outgassingMapWindow);
-	  //SAFE_FREE(angleMapCache);
-#endif
 }
 
 /*
@@ -183,8 +167,8 @@ int InterfaceFacet::RestoreDeviceObjects() {
 
 	// Initialize scene objects (OpenGL)
 	if (sh.isTextured) {
-		glGenTextures(1, &glTex);
-		glList = glGenLists(1);
+		glTex = std::make_unique<GLTextureWrapper>();
+		glList = std::make_unique<GLListWrapper>();
 	}
 
 	//BuildMeshGLList();
@@ -201,10 +185,10 @@ int InterfaceFacet::RestoreDeviceObjects() {
 int InterfaceFacet::InvalidateDeviceObjects() {
 
 	// Free all alocated resource (OpenGL)
-	DELETE_TEX(glTex);
-	DELETE_LIST(glList);
-	DELETE_LIST(glElem);
-	DELETE_LIST(glSelElem);
+	glTex.reset();
+	glList.reset();
+	glElem.reset();
+	glSelElem.reset();
 	return GL_OK;
 
 }
@@ -255,9 +239,9 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	hasMesh = false;
 	meshvectorsize = 0;
 	SAFE_FREE(dirCache);
-	DELETE_TEX(glTex);
-	DELETE_LIST(glList);
-	DELETE_LIST(glElem);
+	glTex.reset();
+	glList.reset();
+	glElem.reset();
 	UnselectElem();
 
 	if (dimOK) {
@@ -267,20 +251,18 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 		texDimH = GetPower2(sh.texHeight + 2);
 		if (texDimW < 4) texDimW = 4;
 		if (texDimH < 4) texDimH = 4;
-		glGenTextures(1, &glTex);
-		glList = glGenLists(1);
+		glTex = std::make_unique<GLTextureWrapper>();
+		glList = std::make_unique<GLListWrapper>();
 		if (useMesh)
 			if (!BuildMesh()) return false;
 		if (sh.countDirection) {
 			dirCache = (DirectionCell *)calloc(sh.texWidth*sh.texHeight, sizeof(DirectionCell));
 			if (!dirCache) return false;
 		}
-
 	}
 
     UpdateFlags(); //set sh.isTextured to true if everything was OK
     return true;
-
 }
 
 /**
@@ -433,9 +415,6 @@ void InterfaceFacet::BuildMeshGLList() {
 
 	if (cellPropertiesIds.empty())
 		return;
-
-	DELETE_LIST(glElem);
-
 	
 	std::vector<Vector2d> intersectPoints;
 	
@@ -476,8 +455,8 @@ void InterfaceFacet::BuildMeshGLList() {
 		);
 	}
 
-	glElem = glGenLists(1);
-	glNewList(glElem, GL_COMPILE);
+	glElem = std::make_unique<GLListWrapper>();
+	glNewList(glElem->listId, GL_COMPILE);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3,GL_DOUBLE,0, points3d.data());
 	glDrawElements(GL_LINES, lines.size(),GL_UNSIGNED_INT,lines.data());
@@ -491,13 +470,13 @@ void InterfaceFacet::BuildMeshGLList() {
 */
 void InterfaceFacet::BuildSelElemList() {
 
-	DELETE_LIST(glSelElem);
+	glSelElem.reset();
 	int nbSel = 0;
 
 	if (!cellPropertiesIds.empty() && selectedElem.width != 0 && selectedElem.height != 0) {
 
-		glSelElem = glGenLists(1);
-		glNewList(glSelElem, GL_COMPILE);
+		glSelElem = std::make_unique<GLListWrapper>();
+		glNewList(glSelElem->listId, GL_COMPILE);
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glLineWidth(1.0f);
 		glEnable(GL_LINE_SMOOTH);
@@ -543,11 +522,9 @@ void InterfaceFacet::BuildSelElemList() {
 * \brief Clear elements from selected List
 */
 void InterfaceFacet::UnselectElem() {
-
-	DELETE_LIST(glSelElem);
+	glSelElem.reset();
 	selectedElem.width = 0;
 	selectedElem.height = 0;
-
 }
 
 /**
@@ -579,7 +556,7 @@ void InterfaceFacet::SelectElem(size_t u, size_t v, size_t width, size_t height)
 * \brief For specific rendering a selected element
 */
 void InterfaceFacet::RenderSelectedElem() {
-	if (glSelElem) glCallList(glSelElem);
+	if (glSelElem) glCallList(glSelElem->listId);
 }
 
 /**

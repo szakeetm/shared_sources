@@ -914,8 +914,7 @@ void InterfaceGeometry::ClearFacetTextures()
 			prg.SetVisible(true);
 		}
 		prg.SetProgress((double)i / (double)sh.nbFacet);
-		DELETE_TEX(facets[i]->glTex);
-		glGenTextures(1, &facets[i]->glTex);
+		facets[i]->glTex = std::make_unique<GLTextureWrapper>();
 	}
 }
 
@@ -950,7 +949,7 @@ void InterfaceGeometry::RenderArrow(GLfloat* matView, float dx, float dy, float 
 
 		glMatrixMode(GL_MODELVIEW);
 		glLoadMatrixf(aView.GetGL());
-		glCallList(sphereList);
+		glCallList(sphereList->listId);
 		return;
 
 	}
@@ -1025,7 +1024,7 @@ void InterfaceGeometry::RenderArrow(GLfloat* matView, float dx, float dy, float 
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(aView.GetGL());
-	glCallList(arrowList);
+	glCallList(arrowList->listId);
 
 }
 
@@ -1144,7 +1143,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glEnable(GL_LIGHTING);
 		GLToolkit::SetMaterial(&fillMaterial);
 		glEnable(GL_POLYGON_OFFSET_FILL);
-		glCallList(polyList);
+		glCallList(polyList->listId);
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		GLToolkit::SetMaterial(&whiteMaterial);
 		glDisable(GL_LIGHTING);
@@ -1168,8 +1167,8 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			glPolygonOffset(1.0f, 5.0f);
 			glEnable(GL_POLYGON_OFFSET_LINE);
 
-			for (int i = 0; i < sh.nbSuper; i++) {
-				glCallList(lineList[i]);
+			for (auto lineList : lineLists) {
+				glCallList(lineList.listId);
 			}
 
 			glDisable(GL_POLYGON_OFFSET_LINE);
@@ -1187,12 +1186,12 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			}
 			for (int i = 0; i < sh.nbSuper; i++)
 				if (viewStruct != i)
-					glCallList(lineList[i]);
+					glCallList(lineLists[i].listId);
 			// Selectable in white
 			glColor3f(color, color, color);
 			glPolygonOffset(1.0f, 5.0f);
 			glEnable(GL_POLYGON_OFFSET_LINE);
-			glCallList(lineList[viewStruct]);
+			glCallList(lineLists[viewStruct].listId);
 			glDisable(GL_POLYGON_OFFSET_LINE);
 			if (mApp->antiAliasing) {
 				glDisable(GL_BLEND);
@@ -1217,7 +1216,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			if (paintRegularTexture) {
 				if (f->sh.is2sided)   glDisable(GL_CULL_FACE);
 				else                   SetCullMode(showMode);
-				glBindTexture(GL_TEXTURE_2D, f->glTex);
+				glBindTexture(GL_TEXTURE_2D, f->glTex->textureId);
 				if (filter) {
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1228,7 +1227,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				}
 
-				glCallList(f->glList);
+				glCallList(f->glList->listId);
 			}
 		}
 		glDisable(GL_POLYGON_OFFSET_FILL);
@@ -1252,7 +1251,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			if (!f->cellPropertiesIds.empty() && f->viewSettings.textureVisible) {
 				if (!f->glElem) f->BuildMeshGLList();
 
-				glCallList(f->glElem);
+				glCallList(f->glElem->listId);
 			}
 		}
 		if (mApp->antiAliasing) {
@@ -1305,16 +1304,16 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 	glBlendFunc(GL_ONE, GL_ZERO);
 	if (mApp->highlightNonplanarFacets) {
 		glColor3f(1.0f, 0.0f, 1.0f);    //purple
-		glCallList(nonPlanarList);
+		glCallList(nonPlanarList->listId);
 	}
 	glColor3f(1.0f, 0.0f, 0.0f);    //red
 	if (showHidden) {
 		glDisable(GL_DEPTH_TEST);
-		glCallList(selectList3);
+		glCallList(selectList3->listId);
 		glEnable(GL_DEPTH_TEST);
 	}
 	else {
-		glCallList(selectList3);
+		glCallList(selectList3->listId);
 	}
 	if (mApp->antiAliasing) {
 		glDisable(GL_LINE_SMOOTH);
@@ -1336,7 +1335,7 @@ void InterfaceGeometry::RenderSemiTransparent(GLfloat* matView, bool renderVolum
 		glEnable(GL_LINE_SMOOTH);
 	}
 
-	glCallList(selectHighlightList);
+	glCallList(selectHighlightList->listId);
 
 	if (mApp->antiAliasing) {
 		glDisable(GL_LINE_SMOOTH);
@@ -1346,14 +1345,15 @@ void InterfaceGeometry::RenderSemiTransparent(GLfloat* matView, bool renderVolum
 
 void InterfaceGeometry::DeleteGLLists(bool deletePoly, bool deleteLine) {
 	if (deleteLine) {
-		for (int i = 0; i < sh.nbSuper; i++)
-			DELETE_LIST(lineList[i]);
+		lineLists.clear();
 	}
-	if (deletePoly) DELETE_LIST(polyList);
-	DELETE_LIST(selectList);
-	DELETE_LIST(selectList2);
-	DELETE_LIST(selectList3);
-	DELETE_LIST(selectHighlightList);
+	if (deletePoly) {
+		polyList.reset();
+	}
+	//selectList.reset();
+	//selectList2.reset();
+	selectList3.reset();
+	selectHighlightList.reset();
 }
 
 std::unordered_set<int> InterfaceGeometry::GetVertexBelongsToSelectedFacet() {
@@ -1413,8 +1413,8 @@ void InterfaceGeometry::BuildDirectionList() {
 		*vertPtr++ = 0.0f;
 	}
 
-	arrowList = glGenLists(1);
-	glNewList(arrowList, GL_COMPILE);
+	arrowList = std::make_unique<GLListWrapper>();
+	glNewList(arrowList->listId, GL_COMPILE);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -1480,8 +1480,8 @@ void InterfaceGeometry::BuildDirectionList() {
 		}
 	}
 
-	sphereList = glGenLists(1);
-	glNewList(sphereList, GL_COMPILE);
+	sphereList = std::make_unique<GLListWrapper>();
+	glNewList(sphereList->listId, GL_COMPILE);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -1507,72 +1507,20 @@ void InterfaceGeometry::BuildDirectionList() {
 }
 
 void InterfaceGeometry::BuildSelectList() {
-
-	selectList = glGenLists(1);
-	glNewList(selectList, GL_COMPILE);
 	/*
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-
-	if (antiAliasing){
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-	//glBlendFunc(GL_ONE,GL_ZERO);
-	}
-	glLineWidth(2.0f);
-
-	for(int i=0;i<wp.nbFacet;i++ ) {
-	Facet *f = facets[i];
-	if( f->selected ) {
-	//DrawFacetWireframe(f,false);
-	DrawFacetWireframe(f,1,1,1);
-	nbSelected++;
-	}
-	}
-	glLineWidth(1.0f);
-	if (antiAliasing) {
-	glDisable(GL_BLEND);
-	glDisable(GL_LINE_SMOOTH);
-	}*/
+	selectList = std::make_unique<GLListWrapper>();
+	glNewList(selectList->listId, GL_COMPILE);
 	glEndList();
 
 	// Second list for usage with POLYGON_OFFSET
-	selectList2 = glGenLists(1);
-	glNewList(selectList2, GL_COMPILE);
-	/*
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-
-	if (antiAliasing){
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-	}
-	glLineWidth(2.0f);
-
-	for(int i=0;i<wp.nbFacet;i++ ) {
-	Facet *f = facets[i];
-	if( f->selected )
-	{
-	//DrawFacetWireframe(f,true,false,true);
-	DrawFacetWireframe(f,1,1,1);
-	}
-	}
-	glLineWidth(1.0f);
-	if (antiAliasing) {
-	glDisable(GL_BLEND);
-	glDisable(GL_LINE_SMOOTH);
-	}*/
+	selectList2 = std::make_unique<GLListWrapper>();
+	glNewList(selectList2->listId, GL_COMPILE);
 	glEndList();
+	*/
 
 	// Third list with hidden (hole join) edge visible
-	selectList3 = glGenLists(1);
-	glNewList(selectList3, GL_COMPILE);
+	selectList3 = std::make_unique<GLListWrapper>();
+	glNewList(selectList3->listId, GL_COMPILE);
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_LIGHTING);
@@ -1587,9 +1535,6 @@ void InterfaceGeometry::BuildSelectList() {
 
 	const auto selectedFacets = GetSelectedFacets();
 	const auto colorHighlighting = mApp->worker.GetGeometry()->GetPlottedFacets(); // For colors
-
-
-
 
 	typedef std::pair<size_t, size_t> Edge;
 	typedef std::set<Edge> EdgeSet;
@@ -1677,8 +1622,8 @@ void InterfaceGeometry::BuildSelectList() {
 
 	if (mApp->highlightSelection) { //Above 500 selected facets rendering can be slow
 		// Fourth list with transparent highlighting for selected facets
-		selectHighlightList = glGenLists(1);
-		glNewList(selectHighlightList, GL_COMPILE);
+		selectHighlightList = std::make_unique<GLListWrapper>();
+		glNewList(selectHighlightList->listId, GL_COMPILE);
 		if (GetNbSelectedFacets() < 500) {  //Above 500 selected facets rendering can be slow
 			glDepthMask(GL_FALSE);
 			/*glDisable(GL_CULL_FACE);
@@ -1706,8 +1651,8 @@ void InterfaceGeometry::BuildSelectList() {
 }
 
 void InterfaceGeometry::BuildVolumeFacetList() {
-	polyList = glGenLists(1);
-	glNewList(polyList, GL_COMPILE);
+	polyList = std::make_unique<GLListWrapper>();
+	glNewList(polyList->listId, GL_COMPILE);
 	DrawPolys();
 	glEndList();
 }
@@ -1715,8 +1660,8 @@ void InterfaceGeometry::BuildVolumeFacetList() {
 void InterfaceGeometry::BuildNonPlanarList() {
 
 
-	nonPlanarList = glGenLists(1);
-	glNewList(nonPlanarList, GL_COMPILE);
+	nonPlanarList = std::make_unique<GLListWrapper>();
+	glNewList(nonPlanarList->listId, GL_COMPILE);
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_LIGHTING);
@@ -1747,13 +1692,13 @@ void InterfaceGeometry::BuildNonPlanarList() {
 
 
 void InterfaceGeometry::UpdateSelection() {
-
 	DeleteGLLists();
 	BuildSelectList();
-
 }
 
 void InterfaceGeometry::BuildGLList() {
+	lineLists.clear();
+	lineLists.resize(sh.nbSuper);
 
 	// Compile geometry for OpenGL
 	for (int s = 0; s < sh.nbSuper; s++) {
@@ -1795,8 +1740,7 @@ void InterfaceGeometry::BuildGLList() {
 			lines.push_back((GLuint)it.second);
 		}
 
-		lineList[s] = glGenLists(1);
-		glNewList(lineList[s], GL_COMPILE);
+		glNewList(lineLists[s].listId, GL_COMPILE);
 
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
@@ -1815,8 +1759,8 @@ void InterfaceGeometry::BuildGLList() {
 int InterfaceGeometry::InvalidateDeviceObjects() {
 
 	DeleteGLLists(true, true);
-	DELETE_LIST(arrowList);
-	DELETE_LIST(sphereList);
+	arrowList.reset();
+	sphereList.reset();
 	for (int i = 0; i < sh.nbFacet; i++)
 		facets[i]->InvalidateDeviceObjects();
 
@@ -1855,7 +1799,7 @@ void InterfaceGeometry::BuildFacetList(InterfaceFacet* f) {
 		currentColor.a = 0.0f;
 
 		// Facet geometry
-		glNewList(f->glList, GL_COMPILE);
+		glNewList(f->glList->listId, GL_COMPILE);
 		if (f->sh.nbIndex == 3) {
 			FillFacet(f, vertexCoords, normalCoords, textureCoords, colorValues, currentColor, true);
 		}

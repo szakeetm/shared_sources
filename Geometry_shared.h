@@ -31,8 +31,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Vector.h"
 #include "GLApp/GLTypes.h" //glolor, glmaterial, ...
 
-//#define SEL_HISTORY  100
-#define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
 class GlobalSimuState;
@@ -90,6 +88,20 @@ class UndoPoint {
 public:
 	Vector3d oriPos;
 	size_t oriId;
+};
+
+class GLListWrapper {
+public:
+	GLListWrapper();
+	~GLListWrapper();
+	GLint listId;
+};
+
+class GLTextureWrapper {
+public:
+	GLTextureWrapper();
+	~GLTextureWrapper();
+	GLuint textureId;
 };
 
 class InterfaceGeometry {
@@ -299,7 +311,7 @@ protected:
 	// Structure viewing (-1 => all)
 	GeomProperties sh;
 	Vector3d  center;                     // Center (3D space)
-	std::vector<std::string> structNames = std::vector<std::string>(MAX_SUPERSTR);
+	std::vector<std::string> structNames;
 
     // Geometry
 	std::vector<InterfaceFacet*> facets;    // All facets of this geometry
@@ -320,18 +332,18 @@ protected:
 	GLMATERIAL fillMaterial;
 	GLMATERIAL whiteMaterial;
 	GLMATERIAL arrowMaterial;
-	GLint lineList[MAX_SUPERSTR]; // Compiled geometry (wire frame)
-	GLint polyList=0;               // Compiled geometry (polygon)
-	GLint selectList=0;             // Compiled geometry (selection)
-	GLint selectList2=0;            // Compiled geometry (selection with offset)
-	GLint selectList3=0;            // Compiled geometry (no offset,hidden visible)
-	GLint selectHighlightList=0;            // Compiled geometry (no offset,hidden visible)
-	GLint nonPlanarList=0;          // Non-planar facets with purple outline
-	GLint selectListVertex=0;             // Compiled geometry (selection)
-	GLint selectList2Vertex=0;            // Compiled geometry (selection with offset)
-	GLint selectList3Vertex=0;            // Compiled geometry (no offset,hidden visible)
-	GLint arrowList=0;              // Compiled geometry of arrow used for direction field
-	GLint sphereList=0;             // Compiled geometry of sphere used for direction field
+	std::vector<GLListWrapper> lineLists; // Compiled geometry (wire frame), one per structure
+	std::unique_ptr<GLListWrapper> polyList;               // Compiled geometry (polygon)
+	std::unique_ptr<GLListWrapper> selectList;             // Compiled geometry (selection)
+	std::unique_ptr<GLListWrapper> selectList2;            // Compiled geometry (selection with offset)
+	std::unique_ptr<GLListWrapper> selectList3;            // Compiled geometry (no offset,hidden visible)
+	std::unique_ptr<GLListWrapper> selectHighlightList;            // Compiled geometry (no offset,hidden visible)
+	std::unique_ptr<GLListWrapper> nonPlanarList;          // Non-planar facets with purple outline
+	std::unique_ptr<GLListWrapper> selectListVertex;             // Compiled geometry (selection)
+	std::unique_ptr<GLListWrapper> selectList2Vertex;            // Compiled geometry (selection with offset)
+	std::unique_ptr<GLListWrapper> selectList3Vertex;            // Compiled geometry (no offset,hidden visible)
+	std::unique_ptr<GLListWrapper> arrowList;              // Compiled geometry of arrow used for direction field
+	std::unique_ptr<GLListWrapper> sphereList;             // Compiled geometry of sphere used for direction field
 
 	public:
 		bool  texAutoScale=true;  // Autoscale flag
@@ -387,3 +399,4 @@ struct RawSTLfile {
 };
 
 RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg);
+

@@ -31,6 +31,9 @@ using namespace pugi;
 #include "../src/SynradDistributions.h" //material, for Save, etc.
 #endif
 
+class GLListWrapper;
+class GLTextureWrapper;
+
 struct NeighborFacet {
 	size_t id;
 	double angleDiff;
@@ -177,10 +180,10 @@ public:
 	} ;
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	//OpenGL
-	GLint  glElem;          // Surface elements boundaries
-	GLint  glSelElem;       // Selected surface elements boundaries
-	GLint  glList;          // Geometry with texture
-	GLuint glTex;           // Handle to OpenGL texture
+	std::unique_ptr<GLListWrapper>  glElem;          // Surface elements boundaries
+	std::unique_ptr<GLListWrapper>  glSelElem;       // Selected surface elements boundaries
+	std::unique_ptr<GLListWrapper>  glList;          // Geometry with texture
+	std::unique_ptr<GLTextureWrapper> glTex;           // Handle to OpenGL texture
 	
 	//Smart selection
 	std::vector<NeighborFacet> neighbors;

@@ -1369,7 +1369,7 @@ void InterfaceGeometry::Clear() {
 	}
 	//if (vertices3) free(vertices3);
 	vertices3.clear(); vertices3.shrink_to_fit();
-	structNames = std::vector<std::string>(MAX_SUPERSTR);
+	structNames.clear();
 	DeleteGLLists(true, true);
 
 	if (mApp && mApp->splitFacet) mApp->splitFacet->ClearUndoFacets();
@@ -1386,9 +1386,7 @@ void InterfaceGeometry::Clear() {
 	ResetTextureLimits();
 	EmptySelectedVertexList();
 
-	memset(lineList, 0, sizeof(lineList));
-	//memset(strName, 0, sizeof(strName));
-	//memset(strFileName, 0, sizeof(strFileName));
+	lineLists.clear();
 
 	// Init OpenGL material
 	memset(&whiteMaterial, 0, sizeof(GLMATERIAL));
@@ -2072,7 +2070,8 @@ void InterfaceGeometry::SetSelection(std::vector<size_t> selectedFacets, bool is
 }
 
 void InterfaceGeometry::AddStruct(const std::string& name, bool deferDrawing) {
-	structNames[sh.nbSuper++] = name;
+	structNames.push_back(name);
+	sh.nbSuper++;
 	if (!deferDrawing) BuildGLList();
 }
 
@@ -2086,10 +2085,7 @@ void InterfaceGeometry::DelStruct(int numToDel) {
 		if (facets[i]->sh.superIdx > numToDel) facets[i]->sh.superIdx--;
 		if (facets[i]->sh.superDest > numToDel) facets[i]->sh.superDest--;
 	}
-	for (int j = numToDel; j < (sh.nbSuper - 1); j++)
-	{
-		structNames[j] = structNames[j + 1];
-	}
+	structNames.erase(structNames.begin() + numToDel);
 	sh.nbSuper--;
 	BuildGLList();
 }
@@ -3527,7 +3523,7 @@ void InterfaceGeometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 		file.ReadInt();
 		file.ReadInt();
 		std::string sName = file.ReadWord();
-		structNames[n] = FileUtils::StripExtension(sName);
+		structNames.push_back(FileUtils::StripExtension(sName));
 
 		std::string fName = nPath + sName;
 		if (FileUtils::Exist(fName)) {
@@ -3638,7 +3634,7 @@ void InterfaceGeometry::LoadSTL(const std::string& filePath, GLProgress_Abstract
 
 	if (!insert) {
 		UpdateName(filePath.c_str());
-		structNames[0] = FileUtils::StripExtension(sh.name);
+		structNames.push_back(FileUtils::StripExtension(sh.name));
 	}
 	
 	prg.SetMessage("Initializing geometry...");
@@ -3654,7 +3650,7 @@ void InterfaceGeometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Work
 	LoadTXTGeom(file, worker);
 	UpdateName(file);
 	sh.nbSuper = 1;
-	structNames[0] = FileUtils::StripExtension(sh.name);
+	structNames.push_back(FileUtils::StripExtension(sh.name));
 
 	InitializeGeometry();
     
@@ -3971,7 +3967,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newS
 #endif
 	file.ReadKeyword("structures"); file.ReadKeyword("{");
 	for (int i = 0; i < nbNewSuper; i++) {
-		structNames[sh.nbSuper + i] = file.ReadString();
+		structNames.push_back(file.ReadString());
 	}
 	file.ReadKeyword("}");
 
@@ -4390,7 +4386,7 @@ void  InterfaceGeometry::EmptyGeometry() {
 
 	//Initialize a default structure:
 	sh.nbSuper = 1;
-	structNames[0] = "";
+	structNames.push_back("");
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
     
@@ -4641,4 +4637,20 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 		}
 	}
 	return result;
+}
+
+GLListWrapper::GLListWrapper() {
+	listId = glGenLists(1);
+}
+
+GLListWrapper::~GLListWrapper() {
+	glDeleteLists(listId,1);
+}
+
+GLTextureWrapper::GLTextureWrapper() {
+	glGenTextures(1, &textureId);
+}
+
+GLTextureWrapper::~GLTextureWrapper() {
+	glDeleteTextures(1, &textureId);
 }
