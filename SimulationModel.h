@@ -18,9 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_SIMULATIONMODEL_H
-#define MOLFLOW_PROJ_SIMULATIONMODEL_H
-
+#pragma once
 #include "RayTracing/BVH.h"
 #include "SimulationFacet.h"
 #include "IntersectAABB_shared.h"
@@ -34,15 +32,8 @@ class RTFacet;
 class AABBNODE;
 class GlobalSimuState;
 
-/*
- * Deprecated data structure containing a single AABB tree for an individual ray tracing structure inside the geometry
- * and its properties
- */
 class SuperStructure {
 public:
-    SuperStructure() = default;
-    ~SuperStructure() = default;
-    //std::vector<SubprocessFacet>  facets;   // Facet handles
     std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
     std::string name;
 
@@ -169,6 +160,3 @@ public:
 
     //virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
 };
-
-
-#endif //MOLFLOW_PROJ_SIMULATIONMODEL_H

@@ -63,3 +63,4 @@ bool IntersectBox(const AxisAlignedBoundingBox& targetBox, const Ray& ray, const
 
 //Vector3d PolarToCartesian(const SubprocessFacet *const collidedFacet, const double theta, const double phi, const bool reverse); //sets sHandle->currentParticleTracer.direction
 //std::tuple<double, double> CartesianToPolar(const Vector3d& incidentDir, const Vector3d& normU, const Vector3d& normV, const Vector3d& normN);
+
