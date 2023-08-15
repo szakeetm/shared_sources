@@ -270,7 +270,7 @@ std::unique_ptr<EvalTreeNode> GLFormula::ReadTerm() //read mathematical term at 
 			resultNode = AddNode(OperandType::TVARIABLE, varIterator, nullptr, nullptr);
 		}
 	}
-	else if (iBeginsWith(expression,"SUM(")) {
+	else if (iBeginsWith(expression.substr(currentPos),"SUM(")) {
 		std::string sumExpression;
 		sumExpression += currentChar;
 		while (currentChar != ')') {
