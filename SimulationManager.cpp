@@ -393,19 +393,19 @@ void SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
     ForwardCommand(SimCommand::None, 0, 0); //Clear kill command
 }
 
-int SimulationManager::ResetSimulations(LoadStatus_abstract* loadStatus) {
-    
-    if(asyncMode) {
-        procInformation.UpdateControllerStatus({ ControllerState::Resetting }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
-        if (ExecuteAndWait(SimCommand::Reset, 0, 0,
-            { ControllerState::Ready }, std::nullopt,
-            loadStatus))
-            throw Error(MakeSubProcError("Subprocesses could not reset"));
-    }
-    else {
-        simController->Reset();
-    }    
-    return 0;
+void SimulationManager::ResetSimulations(LoadStatus_abstract* loadStatus) {
+
+	if (asyncMode) {
+		procInformation.UpdateControllerStatus({ ControllerState::Resetting }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
+		if (ExecuteAndWait(SimCommand::Reset, 0, 0,
+			{ ControllerState::Ready }, std::nullopt,
+			loadStatus)) {
+			throw Error(MakeSubProcError("Subprocesses could not reset"));
+		}
+	}
+	else {
+		simController->Reset();
+	}
 }
 
 int SimulationManager::GetProcStatus(ProcComm &procInfoList) {

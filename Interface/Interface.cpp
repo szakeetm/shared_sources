@@ -228,7 +228,6 @@ void Interface::ResetSimulation(bool askConfirm) {
             }
         }
         worker.ResetStatsAndHits(m_fTime);
-
         hps.clear();
         dps.clear();
         hps_runtotal.clear();

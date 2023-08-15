@@ -265,7 +265,6 @@ void Worker::StartStop(float appTime) {
 }
 
 void Worker::ResetStatsAndHits(float appTime) {
-
 	simuTimer.ReInit();
 	if (simManager.nbThreads == 0)
 		return;
@@ -658,7 +657,7 @@ void Worker::UpdateFacetCaches()
 }
 
 // returns -1 on error, 0 on success
-int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
+void Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 	// Send and Load geometry
 	prg.SetMessage("Converting geometry to simulation model...");
 	try {
@@ -686,6 +685,4 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 		GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
 		throw;
 	}
-
-	return 0;
 }

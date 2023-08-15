@@ -1134,7 +1134,8 @@ void GeometryViewer::Zoom() {
 }
 
 void GeometryViewer::Paint() {
-	
+
+	GLToolkit::CheckGLErrors("");
 	char tmp[256];
 
 	if (!parent) return;
@@ -1174,6 +1175,7 @@ void GeometryViewer::Paint() {
 		glEnd();
 	
 
+		GLToolkit::CheckGLErrors("");
 	if (!work) return;
 	InterfaceGeometry *interfGeom = work->GetGeometry();
 	if (!interfGeom->IsLoaded()) {
@@ -1212,6 +1214,7 @@ void GeometryViewer::Paint() {
 	}
 	coordLab->SetText(tmp);
 
+	GLToolkit::CheckGLErrors("");
 	// Clipping and projection matrix
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -1221,6 +1224,7 @@ void GeometryViewer::Paint() {
 	glLoadMatrixf(matView);
 	glDisable(GL_BLEND);
 
+	GLToolkit::CheckGLErrors("");
 	// Draw geometry
 	if (showVolume || showTexture) glEnable(GL_DEPTH_TEST);
 			glClearDepth(1.0);
@@ -1281,6 +1285,7 @@ if( showVolume || showTexture ) {
 
 }*/
 
+			GLToolkit::CheckGLErrors("");
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
@@ -1290,12 +1295,17 @@ if( showVolume || showTexture ) {
 		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
 		else cullMode = SHOW_BACK;
 	} else cullMode = showBack;
+
+	GLToolkit::CheckGLErrors("");
 	interfGeom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+
+	GLToolkit::CheckGLErrors("");
 #if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
+	GLToolkit::CheckGLErrors("");
 	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
 	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
 	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();

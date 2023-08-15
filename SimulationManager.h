@@ -94,7 +94,7 @@ public:
 
     void KillSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
-    int ResetSimulations(LoadStatus_abstract* loadStatus=nullptr);
+    void ResetSimulations(LoadStatus_abstract* loadStatus=nullptr);
 
     //int ResetHits();
 

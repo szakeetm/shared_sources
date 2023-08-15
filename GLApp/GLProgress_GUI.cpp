@@ -11,6 +11,7 @@
 // Construct a message dialog box
 GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &title) : GLProgress_Abstract(message)  {
 
+	GLToolkit::CheckGLErrors("");
   lastUpd = 0;
 
   if(!title.empty()) SetTitle(title);
@@ -54,6 +55,7 @@ GLProgress_GUI::GLProgress_GUI(const std::string &message,const std::string &tit
   // Create objects
   RestoreDeviceObjects();
 
+  GLToolkit::CheckGLErrors("");
 }
 
 void GLProgress_GUI::ProcessMessage(GLComponent *src,int message) {
@@ -63,6 +65,8 @@ void GLProgress_GUI::ProcessMessage(GLComponent *src,int message) {
 }
 
 void GLProgress_GUI::SetProgress(const double value) {
+
+	GLToolkit::CheckGLErrors("");
 	double myVal = value;
   Saturate(myVal,0.0,1.0);
   size_t p = (size_t)(myVal *100.0 + 0.5 );
@@ -80,9 +84,12 @@ void GLProgress_GUI::SetProgress(const double value) {
 	}
   }
 
+  GLToolkit::CheckGLErrors("");
 }
 
 void GLProgress_GUI::SetMessage(const std::string& msg, const bool newLine, const bool forceDraw) {
+
+	GLToolkit::CheckGLErrors("");
 	//The newLine is unused in GUI, required to override abstract progress bar
 	status = msg;
 	progressStatus->SetText(msg);
@@ -92,10 +99,14 @@ void GLProgress_GUI::SetMessage(const std::string& msg, const bool newLine, cons
 		GLWindowManager::Repaint();
 		lastUpd = now;
 	}
+
+	GLToolkit::CheckGLErrors("");
 }
 
 void GLProgress_GUI::PositionComponents()
 {
+
+	GLToolkit::CheckGLErrors("");
 	int txtWidth, txtHeight;
 	progressStatus->GetTextBounds(&txtWidth, &txtHeight);
 	txtWidth = std::max(txtWidth, 250); //For short status, minimum 250
@@ -119,4 +130,6 @@ void GLProgress_GUI::PositionComponents()
 	int windowX = (screenWidth - windowWidth) / 2 - 30;
 	int windowY = (screenHeight - windowHeight) / 2;
 	SetBounds(windowX, windowY, windowWidth, windowHeight);
+
+	GLToolkit::CheckGLErrors("");
 }
