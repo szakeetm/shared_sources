@@ -152,6 +152,7 @@ void InterfaceGeometry::InitializeGeometry(int facet_number) {
 		}
 	}
 	RecalcRawVertices(facet_number);
+	isLoaded = true;
 }
 
 void InterfaceGeometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
@@ -171,25 +172,6 @@ void InterfaceGeometry::RecalcRawVertices(const int facet_number) { //Cache for 
 			vertices_raw_opengl[3 * index + 2] = vertices3[index].z;
 		}
 	}
-}
-
-void InterfaceGeometry::InitializeInterfaceGeometry(int facet_number) {
-
-	if (facet_number == -1) { //all facets
-#pragma omp parallel for
-		for (int i = 0; i < sh.nbFacet; i++) {
-			facets[i]->InitVisibleEdge();
-		}
-	}
-	else facets[facet_number]->InitVisibleEdge();
-
-
-    isLoaded = true;
-    if (facet_number == -1) {
-        BuildGLList();
-        mApp->UpdateModelParams();
-        mApp->UpdateFacetParams(false);
-    }
 }
 
 /*
@@ -261,13 +243,14 @@ void InterfaceGeometry::CorrectNonSimple(int *nonSimpleList, int nbNonSimple) {
 			while ((j < f->sh.nbIndex) && (f->nonSimple)) {
 				f->ShiftVertex();
 				InitializeGeometry(nonSimpleList[i]);
-                InitializeInterfaceGeometry(nonSimpleList[i]);
                 //f->DetectOrientation();
 				j++;
 			}
 		}
 	}
-	//BuildGLList();
+	BuildGLList();
+	mApp->UpdateModelParams();
+	mApp->UpdateFacetParams(false);
 }
 
 size_t InterfaceGeometry::AnalyzeNeigbors(Worker *work, GLProgress_Abstract& prg)
@@ -371,7 +354,7 @@ void InterfaceGeometry::AddFacet(const std::vector<size_t>& vertexIds) {
 
 	mApp->changedSinceSave = true;
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
     UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
 	mApp->facetList->ScrollToVisible(sh.nbFacet - 1, 1, false);
@@ -485,7 +468,7 @@ void InterfaceGeometry::CreateDifference() {
 	facets[sh.nbFacet - 1]->indices[counter++] = facets[secondFacet]->indices[0];
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
     mApp->UpdateFacetParams(true);
 	UpdateSelection();
 	mApp->facetList->SetSelectedRow((int)sh.nbFacet - 1);
@@ -599,7 +582,7 @@ void InterfaceGeometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>>
 		vertices3[sh.nbVertex++] = newVert;
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
     mApp->UpdateFacetParams(true);
 	UpdateSelection();
 }
@@ -1129,7 +1112,7 @@ void InterfaceGeometry::SwapNormal(const std::vector < size_t>& facetList) { //S
 		InterfaceFacet *f = facets[i];
 		f->SwapNormal();
 		InitializeGeometry((int)i);
-        InitializeInterfaceGeometry((int)i);
+	
 		try {
             SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
 		}
@@ -1137,10 +1120,8 @@ void InterfaceGeometry::SwapNormal(const std::vector < size_t>& facetList) { //S
 			GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}	
 	}
-
 	DeleteGLLists(true, true);
 	BuildGLList();
-
 }
 
 void InterfaceGeometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetORradiusdir, bool againstNormal, double distanceORradius, double totalAngle, size_t steps) {
@@ -1231,7 +1212,7 @@ void InterfaceGeometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetOR
 			sh.nbFacet += nbNewFacets;
 	}
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 
 	mApp->UpdateFacetParams(true);
 	UpdateSelection();
@@ -1253,7 +1234,6 @@ void InterfaceGeometry::ShiftVertex() {
 		if (f->selected) {
 			f->ShiftVertex();
 			InitializeGeometry(i);// Reinitialise interfGeom
-            InitializeInterfaceGeometry(i);
 			try {
                 SetFacetTexture(i, f->tRatioU, f->tRatioV, f->hasMesh);
             }
@@ -1489,7 +1469,6 @@ void InterfaceGeometry::RemoveSelectedVertex() {
 		f->indices = newIndices;
 		f->sh.nbIndex -= nbRemove;
 		f->vertices2.resize(f->sh.nbIndex);
-		f->visible.resize(f->sh.nbIndex);
 	}
 
 	RemoveFacets(facetsToRemove);
@@ -1599,7 +1578,7 @@ void InterfaceGeometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFa
 	facets.clear();
 	facets = { tempFacets.begin(),tempFacets.begin() + sh.nbFacet }; //Since we allocated for maimum size case
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 bool InterfaceGeometry::RemoveNullFacet() {
@@ -1736,7 +1715,7 @@ void InterfaceGeometry::AlignFacets(const std::vector<size_t>& memorizedSelectio
 	}
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
     //update textures
 	/*try {
 		for (int i = 0; i < nbSelected; i++)
@@ -1780,7 +1759,7 @@ void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool
 			vertices3[ind].SetLocation(vertices3[ind] + translation);
 
 		InitializeGeometry();
-        InitializeInterfaceGeometry();
+        
 	}
 }
 
@@ -1830,7 +1809,7 @@ std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P
 	if (nbSelFacet == 0) return undoPoints;
 	if (!project) SwapNormal();
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	//update textures
 	/*try {
 		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
@@ -1870,7 +1849,7 @@ std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedVertices(const Ve
 		}
 	}
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	return undoPoints;
 }
 
@@ -1905,7 +1884,7 @@ void InterfaceGeometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vect
 		}
 	
 		InitializeGeometry();
-        InitializeInterfaceGeometry();
+        
 		//update textures
 		/*try {
 			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
@@ -1928,7 +1907,7 @@ void InterfaceGeometry::RotateSelectedVertices(const Vector3d &AXIS_P0, const Ve
 			}
 		}
 		InitializeGeometry();
-        InitializeInterfaceGeometry();
+        
 	}
 
 	else { //copy
@@ -2034,7 +2013,7 @@ void InterfaceGeometry::MoveSelectedVertex(double dX, double dY, double dZ, bool
 		}
 		if (!copy) {
             InitializeGeometry(); //Geometry changed
-            InitializeInterfaceGeometry();
+            
 		}
 	}
 }
@@ -2133,7 +2112,7 @@ void InterfaceGeometry::ScaleSelectedVertices(Vector3d invariant, double factorX
 	}
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 void InterfaceGeometry::ScaleSelectedFacets(Vector3d invariant, double factorX, double factorY, double factorZ, bool copy, Worker *worker) {
@@ -2167,7 +2146,7 @@ void InterfaceGeometry::ScaleSelectedFacets(Vector3d invariant, double factorX, 
 	}
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 ClippingVertex::ClippingVertex() {
@@ -2687,7 +2666,7 @@ std::vector<DeletedFacet> InterfaceGeometry::SplitSelectedFacets(const Vector3d 
 	// Delete old resources
 	DeleteGLLists(true, true);
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	return deletedFacetList;
 }
 
@@ -2756,10 +2735,10 @@ void InterfaceGeometry::Collapse(double vT, double fT, double lT, int maxVertex,
 	if (vT > 0.0) {
 		CollapseVertex(work, prg, totalWork, vT);
 		InitializeGeometry(); //Find collinear facets
-        InitializeInterfaceGeometry();
+        
 		if (RemoveCollinear() || RemoveNullFacet()) {
 			InitializeGeometry(); //If  facets were removed, update interfGeom.
-            InitializeInterfaceGeometry();
+            
             mApp->UpdateModelParams();
 		}
 	}
@@ -2895,7 +2874,7 @@ void InterfaceGeometry::Collapse(double vT, double fT, double lT, int maxVertex,
 
 	// Reinitialise interfGeom
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 void InterfaceGeometry::RenumberNeighbors(const std::vector<int> &newRefs) {
@@ -2942,7 +2921,6 @@ void InterfaceGeometry::MergecollinearSides(InterfaceFacet *f, double lT) {
 				size_t l = (k + 1) % f->sh.nbIndex;
 				f->indices.erase(f->indices.begin() + l);
 				f->vertices2.erase(f->vertices2.begin() + l);
-				f->visible.erase(f->visible.begin() + l);
 				if (l <= k) k--;
 				f->sh.nbIndex--;
 			}
@@ -3399,7 +3377,7 @@ void InterfaceGeometry::CreateLoft() {
 
 	sh.nbFacet += newFacets.size();
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 void InterfaceGeometry::SetAutoNorme(bool enable) {
@@ -3433,7 +3411,7 @@ void InterfaceGeometry::Rebuild() {
 
 	// Reinitialise interfGeom
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 /*
@@ -3569,7 +3547,7 @@ void InterfaceGeometry::LoadSTR(FileReader& file, GLProgress_Abstract& prg) {
 
 	UpdateName(file);
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	AdjustProfile();
 }
 
@@ -3660,7 +3638,7 @@ void InterfaceGeometry::LoadSTL(const std::string& filePath, GLProgress_Abstract
 	
 	prg.SetMessage("Initializing geometry...");
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 
 void InterfaceGeometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Worker* worker) {
@@ -3674,7 +3652,7 @@ void InterfaceGeometry::LoadTXT(FileReader& file, GLProgress_Abstract& prg, Work
 	structNames[0] = FileUtils::StripExtension(sh.name);
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	AdjustProfile();
 
 }
@@ -3686,7 +3664,7 @@ void InterfaceGeometry::InsertTXT(FileReader& file, GLProgress_Abstract& prg, bo
 	if (structId == -1) structId = 0;
 	InsertTXTGeom(file, structId, newStr);
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 	AdjustProfile();
 	//isLoaded = true; //InitializeGeometry() sets to true
 
@@ -3701,7 +3679,7 @@ void InterfaceGeometry::InsertSTL(std::ifstream& file, bool binarySTL, GLProgres
 	char *e = strrchr(strName[0], '.');
 	if (e) *e = 0;
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 }
 */
 
@@ -3712,7 +3690,7 @@ void InterfaceGeometry::InsertGEO(FileReader& file, GLProgress_Abstract& prg, bo
 	if (structId == -1) structId = 0;
 	InsertGEOGeom(file, structId, newStr);
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 
 }
 
@@ -4396,7 +4374,7 @@ int  InterfaceGeometry::ExplodeSelected(bool toMap, int desType, double exponent
 	DeleteGLLists(true, true);
 
 	InitializeGeometry();
-    InitializeInterfaceGeometry();
+    
 
 	return 0;
 
@@ -4410,7 +4388,7 @@ void  InterfaceGeometry::EmptyGeometry() {
 	structNames[0] = "";
 	//Do rest of init:
 	InitializeGeometry(); //sets isLoaded to true
-    InitializeInterfaceGeometry();
+    
 }
 
 void InterfaceGeometry::SetPlottedFacets(std::map<int,GLColor> setMap) {
@@ -4421,39 +4399,66 @@ std::map<int,GLColor> InterfaceGeometry::GetPlottedFacets( ) const {
 	return plottedFacets;
 }
 
-void InterfaceGeometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices) {
+void InterfaceGeometry::SetInterfaceVertices(const std::vector<Vector3d>& vertices, bool insert) {
 	//Converts from Vector3d to InterfaceVertex
-    vertices3.clear();
+	if (!insert) {
+		vertices3.clear();
+		vertices3.reserve(vertices.size());
+	}
+	else {
+		vertices3.reserve(vertices3.size() + vertices.size());
+	}
     for(auto& vert : vertices) {
-        vertices3.emplace_back(vert); // position data
-        vertices3.back().selected = false;
+        vertices3.emplace_back(vert);
     }
-    sh.nbVertex = vertices.size();
+    sh.nbVertex = vertices3.size();
+}
+
+void InterfaceGeometry::SetInterfaceStructures(const std::vector<SuperStructure>& structures, bool insert, bool newStr, int targetStructId) {
+	if (!insert) {
+		structNames.clear();
+		structNames.reserve(structures.size());
+	}
+	else {
+		structNames.reserve(structNames.size() + structures.size());
+	}
+	for (const auto& structure : structures) {
+		structNames.push_back(structure.name);
+	}
+	sh.nbSuper = structNames.size();
+
+	if (newStr) sh.nbSuper += structures.size();
+	else if (sh.nbSuper < targetStructId + structures.size()) sh.nbSuper = targetStructId + structures.size();
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, Worker* work) {
-    //Facets
-    try{
-        facets.resize(sFacets.size(), nullptr); //interfGeom->Clear() called already, facets is empty, no memory leak
-    }
-    catch(const std::exception &) {
-        throw Error("Couldn't allocate memory for facets");
-    }
+void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, bool insert, bool newStr, int targetStructId) {
 
-    size_t index = 0;
+	if (!insert) {
+		facets.clear();
+		facets.reserve(sFacets.size());
+	}
+	else {
+		facets.reserve(facets.size() + sFacets.size());
+	}
+
     for(const auto& simFacetPtr : sFacets) {
-        facets[index] = new InterfaceFacet(simFacetPtr->indices.size());
-		facets[index]->indices = simFacetPtr->indices;
-		facets[index]->vertices2 = simFacetPtr->vertices2;
-		facets[index]->sh = simFacetPtr->sh;
-
-        // Do Molflow or Synrad related things in an overriden function
-        if (facets[index]->sh.isTextured) facets[index]->hasMesh = true;
-        ++index;
+		auto newFacet = new InterfaceFacet(simFacetPtr->indices.size());
+		newFacet->indices = simFacetPtr->indices;
+		newFacet->vertices2 = simFacetPtr->vertices2;
+		newFacet->sh = simFacetPtr->sh;
+		if (insert) {
+			newFacet->selected = true;
+			if (newFacet->sh.superIdx != -1) //-1 = facet member of all structures
+				newFacet->sh.superIdx += newStr ? static_cast<int>(sh.nbSuper) : targetStructId; //offset structure
+			if (newFacet->sh.superDest > 0) newFacet->sh.superDest += newStr ? sh.nbSuper : targetStructId;
+			if (newFacet->sh.teleportDest > 0) newFacet->sh.teleportDest += sh.nbFacet; //Offset teleport target
+        }
+		// Do Molflow or Synrad related things in an overriden function
+        if (newFacet->sh.isTextured) newFacet->hasMesh = true;
+		facets.push_back(newFacet);
     }
-
-    sh.nbFacet = sFacets.size();
+    sh.nbFacet = facets.size();
 }
 
 RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
@@ -4462,7 +4467,7 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 	bool isBinary = FileUtils::isBinarySTL(filePath);
 	std::ifstream file(filePath, isBinary ? std::ios::binary : std::ios::in);
 	if (!file) {
-		throw Error(fmt::format("Failed to open file:\n{}", filePath));
+		throw Error(("Failed to open file:\n{}", filePath));
 	}
 
 	RawSTLfile result;

@@ -41,13 +41,11 @@ public:
     std::vector<double>   textureCellIncrements;              // Texure increment
     std::vector<bool>     largeEnough;      // cells that are NOT too small for autoscaling
 
-    // Temporary var (used in FillHit for hit recording)
-    bool   isReady = false;         // Volatile state
     bool   isHit = false;
 
     void InitializeTexture();
 
-    virtual bool InitializeLinkAndVolatile(const size_t  id);
+    virtual void InitializeLinkFacet();
 
     [[nodiscard]] virtual size_t GetHitsSize(size_t nbMoments) const;
     [[nodiscard]] virtual size_t GetMemSize() const;

@@ -119,32 +119,31 @@ public:
 class FacetProperties { //Formerly SHFACET, shared properties between SimulationFacet and InterfaceFacet
 public:
 	FacetProperties() = default;
-	explicit FacetProperties(size_t nbIndices);
+	explicit FacetProperties(size_t nbIndices) :nbIndex(nbIndices) {};
 	//For sync between interface and subprocess
-	double sticking;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
-	double opacity;        // opacity  (0=>transparent , 1=>opaque)
-	double area;           // Facet area (m^2)
+	double sticking=0.0;       // Sticking (0=>reflection  , 1=>absorption)   - can be overridden by time-dependent parameter
+	double opacity=1.0;        // opacity  (0=>transparent , 1=>opaque)
+	double area=0.0;           // Facet area (m^2)
 
-	int    profileType;    // Profile type, possible choices are defined in profileTypes vector in Molflow.cpp/Synrad.cpp
-	int    superIdx;       // Super structure index (Indexed from 0) -1: facet belongs to all structures (typically counter facets)
-	size_t    superDest;      // Super structure destination index (Indexed from 1, 0=>current)
-	int	 teleportDest;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
+	int    profileType=PROFILE_NONE;    // Profile type, possible choices are defined in profileTypes vector in Molflow.cpp/Synrad.cpp
+	int    superIdx=0;       // Super structure index (Indexed from 0) -1: facet belongs to all structures (typically counter facets)
+	size_t    superDest=0;      // Super structure destination index (Indexed from 1, 0=>current)
+	int	 teleportDest=0;   // Teleport destination facet id (for periodic boundary condition) (Indexed from 1, 0=>none, -1=>teleport to where it came from)
 
-	bool   countAbs;       // Count absorption (MC texture)
-	bool   countRefl;      // Count reflection (MC texture)
-	bool   countTrans;     // Count transparent (MC texture)
-	bool   countDirection;
+	bool   countAbs = false;       // Count absorption (MC texture)
+	bool   countRefl = false;      // Count reflection (MC texture)
+	bool   countTrans = false;     // Count transparent (MC texture)
+	bool   countDirection = false;
 
 	HistogramParams facetHistogramParams;
 
 	// Flags
-	bool   is2sided;     // 2 sided
-	bool   isProfile;    // Profile facet
-	bool   isTextured;   // texture
-	bool   isVolatile;   // Volatile facet (absorbtion facet which does not affect particule trajectory)
+	bool   is2sided = false;     // 2 sided
+	bool   isProfile = false;    // Profile facet
+	bool   isTextured = false;   // texture
 
 						 // Geometry
-	size_t nbIndex;   // Number of index/vertex
+	size_t nbIndex=0;   // Number of index/vertex
 	//double sign;      // Facet vertex rotation (see Facet::DetectOrientation())
 
 					  // Plane basis (O,U,V) (See InterfaceGeometry::InitializeGeometry() for info)
@@ -161,66 +160,55 @@ public:
 					  // Axis Aligned Bounding Box (AxisAlignedBoundingBox)
 	AxisAlignedBoundingBox       bb;
 	Vector3d   center;
-	bool isConvex; //intersections can be sped up
+	bool isConvex = false; //intersections can be sped up
 
 	// Hit/Abs/Des/Density recording on 2D texture map
-	size_t    texWidth;    // Rounded texture resolution (U)
-	size_t    texHeight;   // Rounded texture resolution (V)
-	double texWidth_precise;   // Actual texture resolution (U)
-	double texHeight_precise;  // Actual texture resolution (V)
+	size_t    texWidth=0;    // Rounded texture resolution (U)
+	size_t    texHeight=0;   // Rounded texture resolution (V)
+	double texWidth_precise=0.0;   // Actual texture resolution (U)
+	double texHeight_precise=0.0;  // Actual texture resolution (V)
 
 #if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
-	double temperature;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
-	double outgassing;           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
-
-	//These helper IDs are used for simulation (fast lookup), and for saving backwards-compatible XML
-	//The parameter reference should be name-based in the interface and XML loading
-	//Until versions 2.9.14, saving/loading was ID based, which is prone to error, especially for catalog parameters
-	//On the long term, migrate these IDs to MolflowSimFacet, and use only for simulation
-	int sticking_paramId;    // -1 if use constant value, 0 or more if referencing time-dependent parameter
-	int opacity_paramId;     // -1 if use constant value, 0 or more if referencing time-dependent parameter
-	int outgassing_paramId;  // -1 if use constant value, 0 or more if referencing time-dependent parameter
-	
+	double temperature=293.15;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
+	double outgassing=0.0;           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
 
 	int CDFid; //Which probability distribution it belongs to (one CDF per temperature)
 	int IDid;  //If time-dependent desorption, which is its ID
 
-	int    desorbType;     // Desorption type
-	double desorbTypeN;    // Exponent in Cos^N desorption type
+	std::string outgassingParam;
+	std::string stickingParam;
+	std::string opacityParam;
+
+	int    desorbType=DES_NONE;     // Desorption type
+	double desorbTypeN=0.0;    // Exponent in Cos^N desorption type
 	ReflectionParam reflection;
 
-	bool   countDes;       // Count desoprtion (MC texture)
+	bool   countDes = false;       // Count desoprtion (MC texture)
 
-	bool   countACD;       // Angular coefficient (AC texture)
+	bool   countACD = false;       // Angular coefficient (AC texture)
 	double maxSpeed;       // Max expected particle velocity (for velocity histogram)
-	double accomodationFactor; // Thermal accomodation factor [0..1]
-	bool   enableSojournTime;
-	double sojournFreq, sojournE;
-
-	// Facet hit counters
-	// FacetHitBuffer tmpCounter; - removed as now it's time-dependent and part of the hits buffer
+	double accomodationFactor=1.0; // Thermal accomodation factor [0..1]
+	bool   enableSojournTime = false;
+	double sojournFreq = 1E13;
+	double sojournE = 100;
 
 	// Moving facets
-	bool isMoving;
+	bool isMoving=false;
 
 	//Outgassing map
-	bool   useOutgassingFile;   //has desorption file for cell elements
-	//double outgassingFileRatioU; //desorption file's sample/unit ratio in U direction
-	//double outgassingFileRatioV; //desorption file's sample/unit ratio in V direction
-	//size_t   outgassingMapWidth; //rounded up outgassing file map width
-	//size_t   outgassingMapHeight; //rounded up outgassing file map height
-	double totalOutgassing; //total outgassing for the given facet
+	bool   useOutgassingFile=false;   //has desorption file for cell elements
+	double totalOutgassing=0.0; //total outgassing for the given facet
 
 	AnglemapParams anglemapParams;//Incident angle map
 #endif
 
 #if defined(SYNRAD)
-	int    doScattering;   // Do rough surface scattering
-	double rmsRoughness;   // RMS height roughness, in meters
-	double autoCorrLength; // Autocorrelation length, in meters
-	int    reflectType;    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
-	bool   recordSpectrum;    // Calculate energy spectrum (histogram)
+	bool    doScattering=false;   // Do rough surface scattering
+	double rmsRoughness=100.0E-9;   // RMS height roughness, in meters (default 100nm)
+	double autoCorrLength= 100.0 * 100.0E-9; // Autocorrelation length, in meters, //tau=autoCorr/RMS=100
+	int    reflectType = REFLECTION_SPECULAR;    // Reflection type. 0=Diffuse, 1=Mirror, 10,11,12... : Material 0, Material 1, Material 2...., 9:invalid 
+	bool   recordSpectrum = false;    // Calculate energy spectrum (histogram)
 #endif
 
 
@@ -248,7 +236,6 @@ public:
 			CEREAL_NVP(is2sided),     // 2 sided
 			CEREAL_NVP(isProfile),    // Profile facet
 			CEREAL_NVP(isTextured),   // texture
-			CEREAL_NVP(isVolatile),   // Volatile facet (absorbtion facet which does not affect particule trajectory)
 
 							  // Geometry
 			CEREAL_NVP(nbIndex),   // Number of index/vertex
@@ -280,10 +267,6 @@ public:
 			, CEREAL_NVP(temperature),    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
 			CEREAL_NVP(outgassing),           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
 
-			CEREAL_NVP(sticking_paramId),    // -1 if use constant value, 0 or more if referencing time-dependent parameter
-			CEREAL_NVP(opacity_paramId),     // -1 if use constant value, 0 or more if referencing time-dependent parameter
-			CEREAL_NVP(outgassing_paramId),  // -1 if use constant value, 0 or more if referencing time-dependent parameter
-			
 			CEREAL_NVP(CDFid), //Which probability distribution it belongs to (one CDF per temperature)
 			CEREAL_NVP(IDid),  //If time-dependent desorption, which is its ID
 
@@ -332,27 +315,26 @@ CEREAL_NVP(recordSpectrum)    // Calculate energy spectrum (histogram)
 };
 
 struct WorkerParams { //Plain old data
-	WorkerParams();
 	HistogramParams globalHistogramParams;
 
-    AccelType accel_type;
+    AccelType accel_type = AccelType::BVH;
 #if defined(MOLFLOW)
-	double latestMoment;
-	double totalDesorbedMolecules; //Number of molecules desorbed between t=0 and latest_moment
-	double finalOutgassingRate; //Number of outgassing molecules / second at latest_moment (constant flow)
-	double finalOutgassingRate_Pa_m3_sec;
-	double gasMass;
-	bool enableDecay;
-	double halfLife;
-	double timeWindowSize;
-	bool useMaxwellDistribution; //true: Maxwell-Boltzmann distribution, false: All molecules have the same (V_avg) speed
-	bool calcConstantFlow;
+	double latestMoment=1E-10;
+	double timeWindowSize = 1E-10;
+	double totalDesorbedMolecules=0.0; //Number of molecules desorbed between t=0 and latest_moment
+	double finalOutgassingRate=0.0; //Number of outgassing molecules / second at latest_moment (constant flow)
+	double finalOutgassingRate_Pa_m3_sec=0.0;
+	double gasMass=28.0;
+	bool enableDecay = false;
+	double halfLife = 1;
+	bool useMaxwellDistribution = true; //true: Maxwell-Boltzmann distribution, false: All molecules have the same (V_avg) speed
+	bool calcConstantFlow = true;
 
-	int motionType;
+	int motionType = 0;
 	Vector3d motionVector1; //base point for rotation
 	Vector3d motionVector2; //rotation vector or velocity vector
 
-	bool enableForceMeasurement;		//if enabled, spend compute time with force and torque calculation
+	bool enableForceMeasurement = false;		//if enabled, spend compute time with force and torque calculation
 	Vector3d torqueRefPoint; //point about which the torque is being measured
 
 #endif
@@ -414,18 +396,18 @@ public:
 
 class OntheflySimulationParams {
 public:
-	OntheflySimulationParams();
 #if defined(SYNRAD)
 	int      generation_mode; // Fluxwise/powerwise
 #endif
-	bool	 lowFluxMode;
-	double	 lowFluxCutoff;
+	bool	 lowFluxMode = false;
+	double	 lowFluxCutoff = 1.0E-7;
 
-	bool enableLogging;
-	size_t logFacetId, logLimit;
+	bool enableLogging = false;
+	size_t logFacetId = std::numeric_limits<size_t>::max();
+	size_t logLimit = 0;
 
-	size_t desorptionLimit;
-	double	 timeLimit;
+	size_t desorptionLimit = 0;
+	double	 timeLimit = 0.0;
 
 	template<class Archive> void serialize(Archive& archive) {
 		archive(

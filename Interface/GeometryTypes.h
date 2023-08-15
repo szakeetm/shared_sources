@@ -75,16 +75,16 @@ struct PlotterSetting {
     std::vector<int> viewIds;
 };
 
-struct FacetViewSetting {
+struct FacetInterfaceSetting { //Extra information that can't be stored in a SimulationFacet class. Used for loading/writing facets
     bool textureVisible=true;
     bool volumeVisible=true;
 };
 
-struct UserSettings { //extra information (not part of SimulationModel) in XML file used by XmlLoader and XmlWriter, then passed to/from GUI
+struct InterfaceSettings { //extra information (not part of SimulationModel) in XML file used by XmlLoader and XmlWriter, then passed to/from GUI
     std::vector<SelectionGroup> selections;
     std::vector<CameraView> views;
     std::vector<UserFormula> userFormulas;
-    std::vector<FacetViewSetting> facetViewSettings;
+    std::vector<FacetInterfaceSetting> facetSettings;
     PlotterSetting profilePlotterSettings;
     PlotterSetting convergencePlotterSettings;
 };

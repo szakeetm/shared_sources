@@ -10,6 +10,7 @@ set(PROJECT_NAME compress)
 set(CPP_DIR_1 ../../src_shared/compress)
 set(CPP_DIR_2 ../../src_shared)
 set(HEADER_DIR_1 ../../src_shared)
+set(HEADER_DIR_2 ../../src_shared/external)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -34,8 +35,6 @@ add_definitions(
 
 set(SRC_FILES ${CPP_DIR_1}/compress.cpp
         ${CPP_DIR_2}/File.cpp
-        ${HEADER_DIR_1}/File.h
-        ${CPP_DIR_2}/Helper/ConsoleLogger.h
         )
 
 
@@ -48,10 +47,12 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
+        ${HEADER_DIR_2}
         )
 
 target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
+        ${HEADER_DIR_2}
         )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include

@@ -413,7 +413,7 @@ static void ShowMenuSelection(std::string& openModalName) {
         // TODO: Different for Synrad?
         interfGeom->UnselectAll();
         for (int i = 0; i < interfGeom->GetNbFacet(); i++)
-            if (interfGeom->GetFacet(i)->sh.sticking_paramId != -1 ||
+            if (!interfGeom->GetFacet(i)->sh.stickingParam.empty() ||
                 (interfGeom->GetFacet(i)->sh.sticking != 0.0 && !interfGeom->GetFacet(i)->IsTXTLinkFacet()))
                 interfGeom->SelectFacet(i);
         interfGeom->UpdateSelection();
@@ -426,7 +426,7 @@ static void ShowMenuSelection(std::string& openModalName) {
         for (int i = 0; i < interfGeom->GetNbFacet(); i++)
             if (
 #if defined(MOLFLOW)
-interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
+!interfGeom->GetFacet(i)->sh.opacityParam.empty() ||
 #endif
 (interfGeom->GetFacet(i)->sh.opacity != 1.0 && interfGeom->GetFacet(i)->sh.opacity != 2.0))
                 interfGeom->SelectFacet(i);
@@ -644,15 +644,6 @@ interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
         mApp->UpdateFacetParams(true);
     }
 #endif
-
-    if (ImGui::MenuItem("Select volatile facets")) {
-        interfGeom->UnselectAll();
-        for (int i = 0; i < interfGeom->GetNbFacet(); i++)
-            if (interfGeom->GetFacet(i)->sh.isVolatile)
-                interfGeom->SelectFacet(i);
-        interfGeom->UpdateSelection();
-        mApp->UpdateFacetParams(true);
-    }
 
     if (ImGui::MenuItem("Shortcut test", "CTRL+Q")) {
         openModalName="testmod";

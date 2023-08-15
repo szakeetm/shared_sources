@@ -54,7 +54,6 @@ extern SynRad*mApp;
 InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
 	vertices2.resize(nbIndex);
-	visible.resize(nbIndex);
 
 	memset(&facetHitCache, 0, sizeof(FacetHitBuffer));
 
@@ -75,7 +74,6 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 
 	sh.is2sided = false;
 	sh.isProfile = false;
-	//wp.isOpaque = true;
 	sh.isTextured = false;
 	sh.countAbs = false;
 	sh.countRefl = false;
@@ -85,7 +83,6 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	sh.superIdx = 0;
 	sh.superDest = 0;
 	sh.teleportDest = 0;
-	sh.isVolatile = false;
 
 	viewSettings.textureVisible = true;
 	viewSettings.volumeVisible = true;
@@ -95,13 +92,8 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
     tRatioU = 0.0;
     tRatioV = 0.0;
 
-	//mesh = NULL;
-	//meshPts = NULL;
-	cellPropertiesIds.clear();
-	meshvector.clear();
 	meshvectorsize = 0;
 	hasMesh = false;
-	//nbElem = 0;
 	selectedElem.u = 0;
 	selectedElem.v = 0;
 	selectedElem.width = 0;
@@ -116,58 +108,10 @@ InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	selected = false;
 
 #if defined(MOLFLOW)
-	
-
-	sh.temperature = 293.15; // 20degC
-	sh.outgassing = 0.0;           // 1 unit*l/s //will be outgasssing
-	sh.desorbType = DES_NONE;
-	sh.desorbTypeN = 0.0;
-
-	sh.reflection.diffusePart = 1.0; //totally diffuse reflection
-	sh.reflection.specularPart = 0.0;
-	sh.reflection.cosineExponent = 0.0; //Cos^0 = uniform
-
-	sh.countDes = false;
-	sh.countACD = false;
-	sh.useOutgassingFile = false;
-	sh.accomodationFactor = 1.0;
-
-	sh.enableSojournTime = false;
-	sh.sojournFreq = 1E13;
-	sh.sojournE = 100;
-
-	sh.outgassing_paramId = -1;
-	sh.opacity_paramId = -1;
-	sh.sticking_paramId = -1;
-
-	sh.isMoving = false;
-
-	hasOutgassingFile = false;
-	//outgassingMapWindow = NULL;
-
-	sh.anglemapParams.record = false;
-
-	sh.anglemapParams.phiWidth = sh.anglemapParams.thetaLowerRes = sh.anglemapParams.thetaHigherRes = 0;
-	sh.anglemapParams.thetaLimit = 1.570796326; //slightly lower than PI/2
-
-	angleMapCache = std::vector<size_t>(); //SAFE_DELETE called on it, must initialize
-
-	//sh.facetHistogramParams.record = false;
-
     ogMap.totalFlux = sh.totalOutgassing = ogMap.totalDose = 0.0;
-
-	userOutgassing = "";
-	userOpacity = "";
-	userSticking = "";
 #endif
 
 #if defined(SYNRAD)
-	sh.doScattering = false;
-	sh.rmsRoughness = 100.0E-9; //100nm
-	sh.autoCorrLength = 100 * 100E-9; //tau=autoCorr/RMS=100
-
-	sh.reflectType = REFLECTION_SPECULAR;
-	sh.recordSpectrum = false;
 #endif
 }
 
@@ -804,30 +748,11 @@ void InterfaceFacet::ShiftVertex(const int offset) {
 /**
 * \brief Detect non visible edge (for polygon which contains holes)
 */
+/*
 void InterfaceFacet::InitVisibleEdge() {
 
 	// Detect non visible edge (for polygon which contains holes)
 	std::fill(visible.begin(), visible.end(), true);
-
-	/* //O(n^2)
-	for (size_t i = 0;i < sh.nbIndex;++i) {
-
-		size_t p11 = GetIndex(i);
-		size_t p12 = GetIndex(i + 1);
-
-		for (size_t j = i + 1;j < sh.nbIndex;j++) {
-
-			size_t p21 = GetIndex(j);
-			size_t p22 = GetIndex(j + 1);
-
-			if ((p11 == p22 && p12 == p21) || (p11 == p21 && p12 == p22)) {
-				// Invisible edge found
-				visible[i] = false;
-				visible[j] = false;
-			}
-		}
-	}
-	*/
 
 	//O(n)
 	std::map<std::pair<size_t, size_t>, size_t> edge_to_index;
@@ -850,7 +775,7 @@ void InterfaceFacet::InitVisibleEdge() {
 			visible[other_index] = false;
 		}
 	}
-}
+}*/
 
 /**
 * \brief Get vertex index from buffer for an idx

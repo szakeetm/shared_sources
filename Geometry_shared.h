@@ -29,13 +29,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <map>
 #include <GLApp/GLChart/GLChartConst.h>
 #include "Buffer_shared.h"
-//#include "Simulation/GeometrySimu.h"
+#include "Vector.h"
+#include "GLApp/GLTypes.h" //glolor, glmaterial, ...
 
 //#define SEL_HISTORY  100
 #define MAX_SUPERSTR 128
 #define GEOVERSION   16
 
-//class SimulationModel;
 class GlobalSimuState;
 class FacetMomentSnapshot;
 class SimulationFacet;
@@ -45,6 +45,7 @@ class DeletedFacet;
 class Worker;
 class FileReader;
 class FileWriter;
+
 union PhysicalValue{
 	//Unified return value that can return size_t, double or vector
 	size_t count;
@@ -120,7 +121,6 @@ public:
 	static PhysicalValue GetPhysicalValue(InterfaceFacet* f, const PhysicalMode& mode, const double moleculesPerTP, const double densityCorrection, const double gasMass, const int index, const FacetMomentSnapshot &facetSnap); //Returns the physical value of either a facet or a texture cell
 	void Clear();
 	void BuildGLList();
-	void InitializeInterfaceGeometry(int facet_number = -1);
     void InitializeGeometry(int facet_number = -1);           // Initialiaze all geometry related variables
     //void InitializeMesh();
 	void RecalcBoundingBox(int facet_number = -1);
@@ -251,7 +251,7 @@ protected:
 	bool AlreadySelected(size_t f);
 	std::optional<size_t> GetLastSelected();
 	std::optional<size_t> GetFirstSelected();
-	void DrawFacetWireframe(const InterfaceFacet *f, bool offset = false, bool showHidden = false, bool selOffset = false);
+	void DrawFacetWireframe(const InterfaceFacet *f, bool offset = false, bool selOffset = false);
 	void DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, std::vector<GLuint>& lines);
 	void FillFacet(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void AddTextureCoord(const InterfaceFacet *f, const Vector2d &p, std::vector<float>& textureCoords);
@@ -263,8 +263,9 @@ protected:
 	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
-    void SetInterfaceVertices(const std::vector<Vector3d>& vertices);
-    virtual void SetInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, Worker* work);
+    void SetInterfaceVertices(const std::vector<Vector3d>& vertices, bool insert);
+    virtual void SetInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, bool insert, bool newStr, int targetStructId);
+	void SetInterfaceStructures(const std::vector<SuperStructure>& structures,bool insert,bool newStr,int targetStructId);
 
     void SelectAll();
 	void UnselectAll();

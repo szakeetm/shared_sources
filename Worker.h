@@ -34,7 +34,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 //Molflow/Synrad-specific
 class InterfaceGeometry;
 class GLProgress_Abstract;
-struct UserSettings;
+struct InterfaceSettings;
 struct ParticleLog;
 struct UserMoment;
 class GlobalSimuState;
@@ -112,10 +112,10 @@ public:
     std::shared_ptr<ParticleLog> GetLog();
     void UnlockLog();
 
-    bool InterfaceGeomToSimModel();
-    MolflowUserSettings InterfaceSettingsToSimModel(std::shared_ptr<SimulationModel> model);
+    void InterfaceGeomToSimModel();
+    std::unique_ptr<MolflowInterfaceSettings> InterfaceSettingsToSimModel(std::shared_ptr<SimulationModel> model);
     void SimModelToInterfaceGeom();
-    void SimModelToInterfaceSettings(const MolflowUserSettings& userSettings, GLProgress_GUI& prg);
+    void SimModelToInterfaceSettings(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings, GLProgress_GUI& prg);
 
     std::string GetSimManagerStatus();
 
@@ -131,7 +131,6 @@ public:
 	  GLProgress_Abstract& prg);
   void LoadTexturesGEO(FileReader& f, int version);
   void PrepareToRun(); //Do calculations necessary before launching simulation
-  int GetParamId(const std::string&); //Get ID of parameter name
   void FacetHitCacheToSimModel(); //only .geo and .txt with no time-dep moment state loading
   int SendAngleMaps();
   void ResetMoments();

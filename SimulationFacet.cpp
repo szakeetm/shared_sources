@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SimulationFacet.h"
 #include <Polygon.h>
 #include <Helper/MathTools.h>
+#include "GLApp/GLTypes.h"
 
 /**
 * \brief Constructor with initialisation based on the number of indices/facets
@@ -48,7 +49,6 @@ SimulationFacet& SimulationFacet::operator=(const SimulationFacet& cpy){
     this->textureCellIncrements = cpy.textureCellIncrements;
     this->sh = cpy.sh;
 
-    isReady = cpy.isReady;
     globalId = cpy.globalId;
     indices = cpy.indices;                    // Ref to InterfaceGeometry Vector3d
     vertices2 = cpy.vertices2;
@@ -62,8 +62,6 @@ SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
     this->largeEnough = std::move(cpy.largeEnough);
     this->textureCellIncrements = std::move(cpy.textureCellIncrements);
     this->sh = cpy.sh;
-
-    isReady = cpy.isReady;
     globalId = cpy.globalId;
     indices = std::move(cpy.indices);                    // Ref to InterfaceGeometry Vector3d
     vertices2 = std::move(cpy.vertices2);
@@ -73,17 +71,16 @@ SimulationFacet& SimulationFacet::operator=(SimulationFacet&& cpy) noexcept {
     return *this;
 }
 */
-bool SimulationFacet::InitializeLinkAndVolatile(const size_t  id)
+void SimulationFacet::InitializeLinkFacet()
 {
-    if (sh.superDest || sh.isVolatile) {
-        // Link or volatile facet, overides facet settings
+    if (sh.superDest) {
+        // Link facet, overides facet settings
         // Must be full opaque and 0 sticking
         // (see SimulationMC.c::PerformBounce)
         //sh.isOpaque = true;
         sh.opacity = 1.0;
         sh.sticking = 0.0;
     }
-    return true;
 }
 
 

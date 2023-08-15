@@ -612,7 +612,7 @@ std::vector<size_t> InterfaceGeometry::GetSelectedVertices()
 	return sel;
 }
 
-void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool showHidden, bool selOffset) {
+void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset, bool selOffset) {
 
 	// Render a facet (wireframe)
 	size_t nb = f->sh.nbIndex;
@@ -632,7 +632,7 @@ void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset,
 		glBegin(GL_POLYGON);
 		for (size_t j = 0; j < nb; j++) {
 			i1 = f->indices[j];
-			glEdgeFlag(f->visible[j] || showHidden);
+			glEdgeFlag(true);
 			glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
 		}
 		glEnd();
@@ -655,21 +655,12 @@ void InterfaceGeometry::DrawFacetWireframe(const InterfaceFacet* f, bool offset,
 
 			glBegin(GL_LINES);
 			size_t i1, i2, j;
-			for (j = 0; j < nb - 1; j++) {
-				if (f->visible[j] || showHidden) {
+			for (j = 0; j < nb; j++) {
 					i1 = f->indices[j];
-					i2 = f->indices[j + 1];
+					i2 = f->indices[Next(j,nb)];
 					glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
 					glVertex3d(vertices3[i2].x, vertices3[i2].y, vertices3[i2].z);
-				}
-			}
-			// Last segment
-			if (f->visible[j] || showHidden) {
-				i1 = f->indices[j];
-				i2 = f->indices[0];
-				glVertex3d(vertices3[i1].x, vertices3[i1].y, vertices3[i1].z);
-				glVertex3d(vertices3[i2].x, vertices3[i2].y, vertices3[i2].z);
-			}
+			}			
 			glEnd();
 		}
 	}
@@ -681,10 +672,8 @@ void InterfaceGeometry::DrawFacetWireframe_Vertexarray(const InterfaceFacet* f, 
 	// Render a facet (wireframe)
 	int nb = f->sh.nbIndex;
 	for (int j = 0; j < nb; j++) {
-		if (f->visible[j]) {
-			lines.emplace_back((GLuint)f->indices[j]);
-			lines.emplace_back((GLuint)f->indices[(j + 1) % nb]);
-		}
+		lines.emplace_back((GLuint)f->indices[j]);
+		lines.emplace_back((GLuint)f->indices[(j + 1) % nb]);
 	}
 }
 
@@ -1626,7 +1615,7 @@ void InterfaceGeometry::BuildSelectList() {
 					glColor3f(0.937f, 0.957f, 1.0f);    //metro light blue
 				}
 #pragma omp critical
-				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
+				DrawFacetWireframe(f, false, false); //Faster than true true true, without noticeable glitches
 			}
 			else { //regular selected facet, will be drawn later
 				for (size_t j = 0; j < f->indices.size(); ++j) {
@@ -1675,7 +1664,7 @@ void InterfaceGeometry::BuildSelectList() {
 
 				glColor3f(r, g, b);
 				InterfaceFacet* f = facets[sel];
-				DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
+				DrawFacetWireframe(f, false, false); //Faster than true true true, without noticeable glitches
 				glLineWidth(2.0f);
 			}
 		}
@@ -1746,7 +1735,7 @@ void InterfaceGeometry::BuildNonPlanarList() {
 	for (const auto& np : nonPlanarFacetIds) {
 		InterfaceFacet* f = facets[np];
 		//DrawFacetWireframe(f,false,true,true);
-		DrawFacetWireframe(f, false, true, false); //Faster than true true true, without noticeable glitches
+		DrawFacetWireframe(f, false, false); //Faster than true true true, without noticeable glitches
 	}
 	glLineWidth(1.0f);
 	if (mApp->antiAliasing) {

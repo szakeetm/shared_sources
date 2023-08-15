@@ -104,7 +104,7 @@ public:
 #if defined(MOLFLOW) //Implementations in MolflowFacet.cpp
 	void  ConvertOldDesorbType();
 	void  LoadSYN_facet(FileReader& file, int version, size_t nbVertex);
-	void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
+	//void  LoadXML(pugi::xml_node f, size_t nbVertex, bool isMolflowFile, bool& ignoreSumMismatch, size_t vertexOffset = 0);
 	void  SaveGEO(FileWriter& file, int idx);
 	//void  SaveXML_geom(pugi::xml_node f);
 	size_t GetHitsSize(size_t nbMoments);
@@ -166,8 +166,7 @@ public:
 	bool textureError;   // Disable rendering if the texture has an error
 
 	// GUI stuff
-	std::vector<bool>  visible;         // Edge visible flag
-	FacetViewSetting viewSettings;
+	FacetInterfaceSetting viewSettings;
 	bool   selected;        // Selected flag
 
 	struct TEXTURE_SELECTION{
@@ -190,11 +189,6 @@ public:
 	OutgassingMap ogMap;
     std::vector<size_t> angleMapCache; //Reading while loading then passing to dpHit
 	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
-
-	//Parametric stuff
-	std::string userOutgassing;
-	std::string userSticking;
-	std::string userOpacity;
 #endif
 	//void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };

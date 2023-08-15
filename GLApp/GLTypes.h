@@ -83,7 +83,9 @@ constexpr void ZEROVECTOR(T& _vector){ std::fill(_vector.begin(),_vector.end(),0
 typedef unsigned char BYTE;
 
 struct Error : public std::runtime_error {
-    explicit Error( const std::string & what_ ) : std::runtime_error(what_) {}
+    explicit Error( const std::string& what_ ) : std::runtime_error(what_) {}
+    template<typename... P>
+    explicit Error(const std::string& fmtstring, const P&... fmtargs) : std::runtime_error(fmt::format(fmtstring, fmtargs...)) {}
     explicit Error( const char * what_ ) : std::runtime_error(what_) {}
 };
 

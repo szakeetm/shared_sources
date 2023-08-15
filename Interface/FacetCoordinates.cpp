@@ -412,7 +412,6 @@ void FacetCoordinates::ApplyChanges(){
 			selFacet->sh.nbIndex = (int)lines.size();
 			selFacet->indices.resize(selFacet->sh.nbIndex);
 			selFacet->vertices2.resize(selFacet->sh.nbIndex);
-			selFacet->visible.resize(selFacet->sh.nbIndex);
 
 			for(size_t i=0;i<lines.size();i++) {
 				interfGeom->MoveVertexTo(lines[i].vertexId,lines[i].coord.x,lines[i].coord.y,lines[i].coord.z);

@@ -171,7 +171,7 @@ bool Worker::ReloadIfNeeded() {
 std::shared_ptr<ParticleLog> Worker::GetLog() {
 	try {
 		if (!particleLog->particleLogMutex.try_lock_for(std::chrono::seconds(1)))
-			throw std::runtime_error("Couldn't get log access");
+			throw Error("Couldn't get log access");
 		ReloadIfNeeded();
 	}
 	catch (const std::exception& e) {
@@ -191,7 +191,7 @@ void Worker::ThrowSubProcError(const char* message) {
 		sprintf(errMsg, "Bad response from sub process(es):\n%s", GetErrorDetails().c_str());
 	else
 		sprintf(errMsg, "%s\n%s", message, GetErrorDetails().c_str());
-	throw std::runtime_error(errMsg);
+	throw Error(errMsg);
 
 }
 
@@ -662,18 +662,14 @@ int Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 	// Send and Load geometry
 	prg.SetMessage("Converting geometry to simulation model...");
 	try {
-		if (!InterfaceGeomToSimModel()) {
-			std::string errString = "Failed to convert interface geometry to simulation model.\n";
-			//GLMessageBox::Display(errString.c_str(), "Warning (LoadGeom)", GLDLG_OK, GLDLG_ICONWARNING);
-			throw std::runtime_error(errString.c_str());
-		}
+		InterfaceGeomToSimModel();
 
 		prg.SetMessage("Initializing physics...");
 		try {
 			model->PrepareToRun();
 		}
 		catch (std::exception& err) {
-			throw Error(fmt::format("Error in model->PrepareToRun():\n{}", err.what()));
+			throw Error(("Error in model->PrepareToRun():\n{}", err.what()));
 		}
 
 		prg.SetMessage("Constructing memory structure to store results...");

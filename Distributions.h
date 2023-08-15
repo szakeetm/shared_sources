@@ -43,10 +43,10 @@ public:
 	void SetX(const size_t index, const double x);
 	void SetY(const size_t index, const Datatype& y);
 	void Resize(const size_t N); //Clear, resize and shrink.
-	size_t GetSize();
-	size_t GetMemSize();
-	double GetX(const size_t index);
-	Datatype GetY(const size_t index); //GetYValue seems reserved
+	size_t GetSize() const;
+	size_t GetMemSize() const;
+	double GetX(const size_t index) const;
+	Datatype GetY(const size_t index) const ; //GetYValue seems reserved
 	[[nodiscard]] const std::vector<std::pair<double,Datatype>>& GetValues() const {
 	    return values;
 	}
@@ -98,21 +98,21 @@ template <class Datatype> void Distribution<Datatype>::Resize(const size_t N) {
 	values.resize(N,std::pair<double, Datatype>());
 }
 
-template <class Datatype> size_t Distribution<Datatype>::GetSize() {
+template <class Datatype> size_t Distribution<Datatype>::GetSize() const {
 	return values.size();
 }
 
-template <class Datatype> size_t Distribution<Datatype>::GetMemSize() {
+template <class Datatype> size_t Distribution<Datatype>::GetMemSize() const {
     return sizeof(std::vector<std::pair<double,Datatype>>)
     + (sizeof(std::pair<double,Datatype>) * values.capacity());
 }
 
-template <class Datatype> double Distribution<Datatype>::GetX(const size_t index) {
+template <class Datatype> double Distribution<Datatype>::GetX(const size_t index) const {
 	assert(index < values.size());
 	return values[index].first;
 }
 
-template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t index) {
+template <class Datatype> Datatype Distribution<Datatype>::GetY(const size_t index) const {
 	assert(index < values.size());
 	return values[index].second;
 }

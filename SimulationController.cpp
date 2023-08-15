@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include <cmath>
 #include <sstream>
+#include "GLApp/GLTypes.h" //Error
 #include "SimulationController.h"
 #include "Helper/StringHelper.h"
 #include "../../src/Simulation/Particle.h" //Synrad or Molflow

@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "RayTracing/BVH.h"
 #include "SimulationFacet.h"
 #include "IntersectAABB_shared.h"
+#include "Buffer_shared.h"
 
 #include <map>
 #include <string>
@@ -166,7 +167,7 @@ public:
     bool initialized = false;
     std::mutex modelMutex;
 
-    virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
+    //virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
 };
 
 

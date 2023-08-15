@@ -40,7 +40,7 @@ T stringToNumber(const std::string& s, bool returnDefValOnErr) {
         if(returnDefValOnErr)
             return T();
         else
-            throw std::logic_error("stringToNumber(\"" + s + "\")");
+            throw Error("stringToNumber(\"" + s + "\")");
     }
     return x;
 }
@@ -52,14 +52,14 @@ template double stringToNumber<double>(const std::string& s, bool returnDefValOn
 void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t upperLimit) {
     auto ranges = SplitString(inputString, ',');
     if (ranges.size() == 0) {
-        throw std::logic_error("Can't parse input");
+        throw Error("Can't parse input");
     }
     for (const auto& range : ranges) {
         auto tokens = SplitString(range, '-');
         if (!Contains({ 1,2 },tokens.size())) {
             std::ostringstream tmp;
             tmp << "Can't parse \"" << range << "\". Input should be a number or a range.";
-            throw std::invalid_argument(tmp.str());
+            throw Error(tmp.str());
         }
         else if (tokens.size() == 1) {
             //One facet
@@ -67,13 +67,13 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
                 int splitId = std::stoi(tokens[0]);
                 std::ostringstream tmp;
                 tmp << "Wrong id " << tokens[0];
-                if (splitId <= 0 || splitId > upperLimit) throw std::invalid_argument(tmp.str());
+                if (splitId <= 0 || splitId > upperLimit) throw Error(tmp.str());
                 outputIds.push_back(splitId - 1);
             }
             catch (std::invalid_argument arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid number " << tokens[0] <<"\n" << arg.what();
-                throw std::invalid_argument(tmp.str());
+                throw Error(tmp.str());
             }
         }
         else if (tokens.size() == 2) {
@@ -83,16 +83,16 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
                 int id1 = std::stoi(tokens[0]);
                 if (id1 <= 0 || id1 > upperLimit) {
                     tmp << "Wrong id " << tokens[0];
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 int id2 = std::stoi(tokens[1]);
                 if (id2 <= 0 || id2 > upperLimit) {
                     tmp << "Wrong id " << tokens[1];
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 if (id2 <= id1) {
                     tmp << "Invalid range " << id1 << "-" << id2;
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 size_t oldSize = outputIds.size();
                 outputIds.resize(oldSize + id2 - id1 + 1);
@@ -101,10 +101,10 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
             catch (std::invalid_argument arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid input number " << tokens[0] << "\n" << arg.what();
-                throw std::invalid_argument(tmp.str());
+                throw Error(tmp.str());
             }
             catch (const std::exception &e) {
-                throw std::runtime_error(e.what());
+                throw Error(e.what());
             }
         }
     }
@@ -115,14 +115,14 @@ void splitList(std::vector<size_t>& outputIds, std::string inputString, size_t u
 void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString, size_t nbFacets) {
     auto ranges = SplitString(inputString, ',');
     if (ranges.size() == 0) {
-        throw std::logic_error("Can't parse input");
+        throw Error("Can't parse input");
     }
     for (const auto& range : ranges) {
         auto tokens = SplitString(range, '-');
         if (!Contains({ 1,2 },tokens.size())) {
             std::ostringstream tmp;
             tmp << "Can't parse \"" << range << "\". Should be a facet number or a range.";
-            throw std::invalid_argument(tmp.str());
+            throw Error(tmp.str());
         }
         else if (tokens.size() == 1) {
             //One facet
@@ -130,13 +130,13 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 int facetId = std::stoi(tokens[0]);
                 std::ostringstream tmp;
                 tmp << "Wrong facet id " << tokens[0];
-                if (facetId <= 0 || facetId > nbFacets) throw std::invalid_argument(tmp.str());
+                if (facetId <= 0 || facetId > nbFacets) throw Error(tmp.str());
                 outputFacetIds.push_back(facetId - 1);
             }
             catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] <<"\n" << arg.what();
-                throw std::invalid_argument(tmp.str());
+                throw Error(tmp.str());
             }
         }
         else if (tokens.size() == 2) {
@@ -146,16 +146,16 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
                 int facetId1 = std::stoi(tokens[0]);
                 if (facetId1 <= 0 || facetId1 > nbFacets) {
                     tmp << "Wrong facet id " << tokens[0];
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 int facetId2 = std::stoi(tokens[1]);
                 if (facetId2 <= 0 || facetId2 > nbFacets) {
                     tmp << "Wrong facet id " << tokens[1];
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 if (facetId2 <= facetId1) {
                     tmp << "Invalid range " << facetId1 << "-" << facetId2;
-                    throw std::invalid_argument(tmp.str());
+                    throw Error(tmp.str());
                 }
                 size_t oldSize = outputFacetIds.size();
                 outputFacetIds.resize(oldSize + facetId2 - facetId1 + 1);
@@ -164,10 +164,10 @@ void splitFacetList(std::vector<size_t>& outputFacetIds, std::string inputString
             catch (std::invalid_argument& arg) {
                 std::ostringstream tmp;
                 tmp << "Invalid facet number " << tokens[0] << "\n" << arg.what();
-                throw std::invalid_argument(tmp.str());
+                throw Error(tmp.str());
             }
             catch (const std::exception &e) {
-                throw std::runtime_error(e.what());
+                throw Error(e.what());
             }
         }
     }

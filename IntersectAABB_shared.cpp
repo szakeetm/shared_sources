@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "RayTracing/Ray.h"
 #include "BoundingBox.h"
 #include "Simulation/Particle.h"
+#include "GLApp/GLTypes.h"
 
 // AABB tree stuff
 
@@ -350,7 +351,7 @@ IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, cons
 									bool hardHit;
 #if defined(MOLFLOW)
 									double time = currentParticleTracer->ray.time + d / 100.0 / currentParticleTracer->velocity;
-									double currentOpacity = currentParticleTracer->model->GetOpacityAt(f, time);
+									double currentOpacity = currentParticleTracer->model->GetOpacityAt((MolflowSimFacet*)f, time);
 									hardHit = ((currentOpacity == 1.0) || (currentParticleTracer->randomGenerator.rnd()<currentOpacity));
 #endif
 

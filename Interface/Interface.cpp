@@ -1329,7 +1329,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     for (int i = 0; i < interfGeom->GetNbFacet(); i++)
                         if (
 #if defined(MOLFLOW)
-interfGeom->GetFacet(i)->sh.opacity_paramId != -1 ||
+!interfGeom->GetFacet(i)->sh.opacityParam.empty() ||
 #endif
 (interfGeom->GetFacet(i)->sh.opacity != 1.0 && interfGeom->GetFacet(i)->sh.opacity != 2.0))
                             interfGeom->SelectFacet(i);

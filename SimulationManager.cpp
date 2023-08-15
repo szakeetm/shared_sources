@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #include "SimulationManager.h"
+#include "GLApp/GLTypes.h" //error
 //#include "Buffer_shared.h" // TODO: Move SHCONTROL to seperate file or SMP.h
 #include "SMP.h"
 #include "ProcessControl.h"
@@ -117,14 +118,14 @@ void SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
     if(asyncMode) {
         refreshProcStatus();
         if (!controllerLoopThread) {
-            throw std::logic_error("No active simulation thread.");
+            throw Error("No active simulation thread.");
         }
 
         procInformation.UpdateControllerStatus({ ControllerState::Pausing }, std::nullopt, loadStatus);
         if (ExecuteAndWait(SimCommand::Pause, 0, 0, 
             { ControllerState::Ready }, { ThreadState::Idle },
             loadStatus))
-            throw std::runtime_error(MakeSubProcError("Subprocesses could not stop the simulation"));
+            throw Error(MakeSubProcError("Subprocesses could not stop the simulation"));
     }
     else {
         //Nothing, in blocking mode program is blocked while sim. is running
@@ -134,7 +135,7 @@ void SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
 void SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
     if(asyncMode) {
         if (!controllerLoopThread)
-            throw std::logic_error("No active simulation thread");
+            throw Error("No active simulation thread");
 
         procInformation.UpdateControllerStatus({ ControllerState::Loading }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
         if (ExecuteAndWait(SimCommand::Load, 0, 0,
@@ -142,7 +143,7 @@ void SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
             loadStatus)) {
             std::string errString = "Failed to send geometry to sub process:\n";
             errString.append(GetErrorDetails());
-            throw std::runtime_error(errString);
+            throw Error(errString);
         }
         simulationChanged = false;
     }
@@ -184,7 +185,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     catch (const std::exception &e){
         std::cerr << "[SimManager] Invalid resize/clear " << nbThreads<< std::endl;
         procInformation.UpdateControllerStatus(ControllerState::InError,"Invalid resize/clear", loadStatus);
-        throw std::runtime_error(e.what());
+        throw Error(e.what());
     }
 
     procInformation.UpdateControllerStatus(std::nullopt, { "Creating new simulation..." }, loadStatus);
@@ -365,10 +366,10 @@ void SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
                         controllerLoopThread.reset();
                     }
                     catch (const std::exception &e) {
-                        throw std::runtime_error(fmt::format("Could not terminate simulation thread: {}\n",e.what())); // proc couldn't be killed!?
+                        throw Error(fmt::format("Could not terminate simulation thread: {}\n",e.what())); // proc couldn't be killed!?
                     }
                     catch (...) {
-                        throw std::runtime_error("Could not terminate simulation thread.\n"); // proc couldn't be killed!?
+                        throw Error("Could not terminate simulation thread.\n"); // proc couldn't be killed!?
                     }
                 }
             }
@@ -399,7 +400,7 @@ int SimulationManager::ResetSimulations(LoadStatus_abstract* loadStatus) {
         if (ExecuteAndWait(SimCommand::Reset, 0, 0,
             { ControllerState::Ready }, std::nullopt,
             loadStatus))
-            throw std::runtime_error(MakeSubProcError("Subprocesses could not reset"));
+            throw Error(MakeSubProcError("Subprocesses could not reset"));
     }
     else {
         simController->Reset();

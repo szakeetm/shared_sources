@@ -578,7 +578,7 @@ bool FileUtils::isBinarySTL(const std::string& filePath) {
     std::ifstream file(filePath); //file closed when goes out of scope
 
     if (!file) {
-        throw Error(fmt::format("Failed to open file\n{}", filePath));
+        throw Error(("Failed to open file\n{}", filePath));
     }
 
     std::string firstLine;
