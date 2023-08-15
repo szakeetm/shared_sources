@@ -45,11 +45,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #if defined(MOLFLOW)
-extern MolFlow *mApp;
+extern MolFlow* mApp;
 #endif
 
 #if defined(SYNRAD)
-extern SynRad*mApp;
+extern SynRad* mApp;
 #endif
 
 GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
@@ -105,8 +105,8 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	showLine = false;
 	showVolume = false;
 	showTexture = false;
-    showFacetId = false;
-    showHidden = false;
+	showFacetId = false;
+	showHidden = false;
 	showHiddenVertex = true;
 	showMesh = false;
 	showDir = true;
@@ -134,7 +134,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	selX2 = 0;
 	selY2 = 0;
 	selectionChange = false;
-	vectorLength = 5.0; 
+	vectorLength = 5.0;
 	headSize = .1 * vectorLength; //default: 10% arrow head length
 	dispNumHits = 2048;
 	dispNumLeaks = 2048;
@@ -213,7 +213,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	autoBtn->SetIcon("images/icon_autoscale.png");
 	autoBtn->SetToggle(true);
 	Add(autoBtn);
-		
+
 	capsLockLabel = new GLLabel("CAPS LOCK On: select facets only with selected vertex");
 	Add(capsLockLabel);
 
@@ -239,7 +239,7 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 
 	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
 	Add(tabLabel);
-	
+
 	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
 	Add(nonPlanarLabel);
 
@@ -321,7 +321,8 @@ void GeometryViewer::UpdateMouseCursor(int mode) { //Sets mouse cursor to action
 
 	if (draggMode == DRAGG_MOVE) {
 		SetCursor(CURSOR_HAND);
-	} else if (draggMode == DRAGG_ROTATE) {
+	}
+	else if (draggMode == DRAGG_ROTATE) {
 		SetCursor(CURSOR_ROTATE);
 	}
 	else {
@@ -483,7 +484,7 @@ void GeometryViewer::UpdateLight() {
 void GeometryViewer::UpdateMatrix() {
 
 	if (!work) return;
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	if (!interfGeom) return;
 	double handedness = mApp->leftHandedView ? -1.0 : 1.0;
 	double projection = (view.projMode == ORTHOGRAPHIC_PROJ) ? 1.0 : -1.0;
@@ -519,15 +520,15 @@ void GeometryViewer::UpdateMatrix() {
 	camUp = Rotate(camUp, org, Z, -view.camAngleOz);
 	*/
 
-	
+
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
 	double z = cos(view.camAngleOx) * cos(view.camAngleOy);
 
 	//Rotation of cam direction around Z
-	camDir.x = x*cos(view.camAngleOz) - y*sin(view.camAngleOz);
-	camDir.y = x*sin(view.camAngleOz) + y*cos(view.camAngleOz);
+	camDir.x = x * cos(view.camAngleOz) - y * sin(view.camAngleOz);
+	camDir.y = x * sin(view.camAngleOz) + y * cos(view.camAngleOz);
 	camDir.z = z;
 
 	//Camleft doesn't take into account camAngleOz...
@@ -578,9 +579,9 @@ void GeometryViewer::UpdateMatrix() {
 	else {
 
 		// 30% margin for extra geometry
-		double l = std::max(zFar - zNear,1.0);
+		double l = std::max(zFar - zNear, 1.0);
 		if ((view.vRight - view.vLeft) > 1e-3 && (view.vBottom - view.vTop) > 1e-3)
-			glOrtho(view.vLeft, view.vRight, view.vBottom, view.vTop, -zFar - l*0.3, -zNear + l*0.3);
+			glOrtho(view.vLeft, view.vRight, view.vBottom, view.vTop, -zFar - l * 0.3, -zNear + l * 0.3);
 
 	}
 
@@ -589,7 +590,7 @@ void GeometryViewer::UpdateMatrix() {
 }
 
 double GeometryViewer::ToDeg(double radians) {
-	return (radians / PI)*180.0f;
+	return (radians / PI) * 180.0f;
 }
 
 bool GeometryViewer::SelectionChanged() {
@@ -634,11 +635,11 @@ void GeometryViewer::SetProjection(int mode) {
 	ToFrontView();
 }
 
-void GeometryViewer::SetWorker(Worker *w) {
+void GeometryViewer::SetWorker(Worker* w) {
 	work = w;
 	ToFrontView();
 	// Auto size vector length (consider Front View)
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = interfGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
 }
@@ -649,7 +650,7 @@ void GeometryViewer::DrawIndex() {
 
 	// Draw index number
 		// Get selected vertex
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	size_t nbVertex = interfGeom->GetNbVertex();
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	if (nbVertex <= 0) return;
@@ -657,12 +658,12 @@ void GeometryViewer::DrawIndex() {
 	//Mark vertices of selected facets
 	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
 	std::vector<size_t> vertexId(nbVertex);
-	for (auto& selId:selectedFacets) {
-		InterfaceFacet *f = interfGeom->GetFacet(selId);
-			for (size_t i = 0; i < f->sh.nbIndex; i++) {
-				vertexOnSelectedFacet[f->indices[i]] = true;
-				vertexId[f->indices[i]] = i;
-			}
+	for (auto& selId : selectedFacets) {
+		InterfaceFacet* f = interfGeom->GetFacet(selId);
+		for (size_t i = 0; i < f->sh.nbIndex; i++) {
+			vertexOnSelectedFacet[f->indices[i]] = true;
+			vertexId[f->indices[i]] = i;
+		}
 	}
 
 	// Draw dot
@@ -677,7 +678,7 @@ void GeometryViewer::DrawIndex() {
 	glBegin(GL_POINTS);
 	for (size_t i = 0; i < nbVertex; i++) {
 		if (vertexOnSelectedFacet[i]) {
-			Vector3d *v = interfGeom->GetVertex(i);
+			Vector3d* v = interfGeom->GetVertex(i);
 			glVertex3d(v->x, v->y, v->z);
 		}
 	}
@@ -699,7 +700,7 @@ void GeometryViewer::DrawIndex() {
 			else {
 				sprintf(tmp, "%zd ", i + 1);
 			}
-			Vector3d *v = interfGeom->GetVertex(i);
+			Vector3d* v = interfGeom->GetVertex(i);
 			GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, tmp, GLToolkit::GetDialogFont(), 2, 2);
 		}
 	}
@@ -751,7 +752,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 			glScaled(-handedness, 1.0, 1.0);
 			glTranslatef(-handedness * 50, 50, 0);
 		}
-		
+
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -767,11 +768,11 @@ void GeometryViewer::DrawCoordinateAxes() {
 
 		GLToolkit::DrawStringInit();
 		GLToolkit::GetDialogFontBold()->SetTextColor(1.0f, 0.0f, 0.0f);
-		GLToolkit::DrawString(43, 0.0f, 0.0f, "X", GLToolkit::GetDialogFontBold(), -2, -7,false);
+		GLToolkit::DrawString(43, 0.0f, 0.0f, "X", GLToolkit::GetDialogFontBold(), -2, -7, false);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.0f, 1.0f, 0.0f);
-		GLToolkit::DrawString(0.0f, 43, 0.0f, "Y", GLToolkit::GetDialogFontBold(), -2, -7,false);
+		GLToolkit::DrawString(0.0f, 43, 0.0f, "Y", GLToolkit::GetDialogFontBold(), -2, -7, false);
 		GLToolkit::GetDialogFontBold()->SetTextColor(0.6f, 0.6f, 1.0f);
-		GLToolkit::DrawString(0.0f, 0.0f, 43, "Z", GLToolkit::GetDialogFontBold(), -2, -7,false);
+		GLToolkit::DrawString(0.0f, 0.0f, 43, "Z", GLToolkit::GetDialogFontBold(), -2, -7, false);
 		GLToolkit::DrawStringRestore();
 
 		glPopMatrix();
@@ -787,12 +788,12 @@ void GeometryViewer::DrawCoordinateAxes() {
 
 	}
 
-	
+
 
 }
 
 void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	std::vector<size_t> selectedVertexIds;
 
 	//Populate selected vertices
@@ -817,7 +818,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 	glBegin(GL_POINTS);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = interfGeom->GetVertex(i);
+		Vector3d* v = interfGeom->GetVertex(i);
 		glVertex3d(v->x, v->y, v->z);
 	}
 	glEnd();
@@ -830,7 +831,7 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 	// Draw Labels
 	glEnable(GL_BLEND);
 	for (size_t i : selectedVertexIds) {
-		Vector3d *v = interfGeom->GetVertex(i);
+		Vector3d* v = interfGeom->GetVertex(i);
 		GLToolkit::DrawString((float)v->x, (float)v->y, (float)v->z, std::to_string(i + 1).c_str(), GLToolkit::GetDialogFont(), 2, 2);
 	}
 	glDisable(GL_BLEND);
@@ -842,53 +843,53 @@ void GeometryViewer::PaintSelectedVertices(bool hiddenVertex) {
 
 void GeometryViewer::DrawNormal() {
 
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_CULL_FACE);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_LIGHTING);
+	glEnable(GL_CULL_FACE);
 
-    if (mApp->antiAliasing) {
-        glEnable(GL_BLEND);
-        glEnable(GL_LINE_SMOOTH);
-    }
+	if (mApp->antiAliasing) {
+		glEnable(GL_BLEND);
+		glEnable(GL_LINE_SMOOTH);
+	}
 
 	glLineWidth(2.0f);
 	glPointSize(3.0f);
 	glColor3f(1.0f, 0.0f, 0.0f);
 
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
-		InterfaceFacet *f = interfGeom->GetFacet(i);
+		InterfaceFacet* f = interfGeom->GetFacet(i);
 		if (f->selected) {
 			Vector3d start = interfGeom->GetFacetCenter(i);
 			Vector3d end = start + f->sh.N * vectorLength; //facet normal is normalized to 1 length
 			GLToolkit::SetMaterial(&blueMaterial);
-			
-			GLToolkit::DrawVector(start,end,f->sh.nU,headSize);
-			
+
+			GLToolkit::DrawVector(start, end, f->sh.nU, headSize);
+
 			glBegin(GL_POINTS);
-			glVertex3d(start.x,start.y,start.z);
+			glVertex3d(start.x, start.y, start.z);
 			glEnd();
 		}
 	}
-    if (mApp->antiAliasing) {
-        glDisable(GL_LINE_SMOOTH);
-        glDisable(GL_BLEND);
-    }
+	if (mApp->antiAliasing) {
+		glDisable(GL_LINE_SMOOTH);
+		glDisable(GL_BLEND);
+	}
 	glLineWidth(1.0f);
 }
 
 void GeometryViewer::DrawUV() {
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
-		InterfaceFacet *f = interfGeom->GetFacet(i);
+		InterfaceFacet* f = interfGeom->GetFacet(i);
 		if (f->selected) {
 			const Vector3d& O = f->sh.O;
 			const Vector3d& U = f->sh.U;
 			const Vector3d& V = f->sh.V;
 			Vector3d U_endpoint = O + U;
 			Vector3d V_endpoint = O + V;
-			Vector3d U_stringAnchor = U_endpoint + f->sh.nU * .5*headSize;
-			Vector3d V_stringAnchor = V_endpoint + f->sh.nV * .5*headSize;
+			Vector3d U_stringAnchor = U_endpoint + f->sh.nU * .5 * headSize;
+			Vector3d V_stringAnchor = V_endpoint + f->sh.nV * .5 * headSize;
 			GLToolkit::SetMaterial(&blueMaterial);
 			if (mApp->antiAliasing) {
 				glEnable(GL_LINE_SMOOTH);
@@ -919,68 +920,68 @@ void GeometryViewer::DrawUV() {
 
 void GeometryViewer::DrawFacetId() {
 
-    
 
-    // Draw index number
-    // Get selected vertex
-    InterfaceGeometry *interfGeom = work->GetGeometry();
-    size_t nbVertex = interfGeom->GetNbVertex();
-    auto selectedFacets = interfGeom->GetSelectedFacets();
-    if (nbVertex <= 0 || selectedFacets.empty()) return;
+
+	// Draw index number
+	// Get selected vertex
+	InterfaceGeometry* interfGeom = work->GetGeometry();
+	size_t nbVertex = interfGeom->GetNbVertex();
+	auto selectedFacets = interfGeom->GetSelectedFacets();
+	if (nbVertex <= 0 || selectedFacets.empty()) return;
 
 	/*
-    //Mark vertices of selected facets
-    std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
-    std::vector<size_t> vertexId(nbVertex);
-    for (auto& selId:selectedFacets) {
-        InterfaceFacet *f = interfGeom->GetFacet(selId);
-        for (size_t i = 0; i < f->sh.nbIndex; i++) {
-            vertexOnSelectedFacet[f->indices[i]] = true;
-            vertexId[f->indices[i]] = i;
-        }
-    }
+	//Mark vertices of selected facets
+	std::vector<bool> vertexOnSelectedFacet(nbVertex, false);
+	std::vector<size_t> vertexId(nbVertex);
+	for (auto& selId:selectedFacets) {
+		InterfaceFacet *f = interfGeom->GetFacet(selId);
+		for (size_t i = 0; i < f->sh.nbIndex; i++) {
+			vertexOnSelectedFacet[f->indices[i]] = true;
+			vertexId[f->indices[i]] = i;
+		}
+	}
 	*/
 
 
-    // Save context
-    GLToolkit::DrawStringInit();
-    GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.0f, 0.0f);
+	// Save context
+	GLToolkit::DrawStringInit();
+	GLToolkit::GetDialogFont()->SetTextColor(1.0f, 0.0f, 0.0f);
 
-    //glDisable(GL_DEPTH_TEST);
-    //glDisable(GL_BLEND);
+	//glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_BLEND);
 
-    // Draw Labels
-    for (auto& selId:selectedFacets) {
-        InterfaceFacet *f = interfGeom->GetFacet(selId);
-        Vector3d center = interfGeom->GetFacetCenter(selId);
-        /*
+	// Draw Labels
+	for (auto& selId : selectedFacets) {
+		InterfaceFacet* f = interfGeom->GetFacet(selId);
+		Vector3d center = interfGeom->GetFacetCenter(selId);
+		/*
 		Vector3d origin = interfGeom->GetFacetCenter(selId);
-        Vector3d labelVec = interfGeom->GetFacetCenter(selId);
-        double labelDist = 99999999.0;
-        for (size_t i = 1; i < f->sh.nbIndex; i++) {
-            Vector3d *v = interfGeom->GetVertex(f->indices[i]);
+		Vector3d labelVec = interfGeom->GetFacetCenter(selId);
+		double labelDist = 99999999.0;
+		for (size_t i = 1; i < f->sh.nbIndex; i++) {
+			Vector3d *v = interfGeom->GetVertex(f->indices[i]);
 
-            // Look for the closest Vertex between Origin and Center as a label position
-            double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
-            if(distance < labelDist){
-                labelVec = *v;
-                labelDist = distance;
-            }
-		
+			// Look for the closest Vertex between Origin and Center as a label position
+			double distance = std::abs((origin-*v).Norme() + (center-*v).Norme());
+			if(distance < labelDist){
+				labelVec = *v;
+				labelDist = distance;
+			}
 
-        }
-        labelVec = center;
+
+		}
+		labelVec = center;
 		*/
-        //sprintf(tmp, " F#%zd ", selId+1);
+		//sprintf(tmp, " F#%zd ", selId+1);
 		std::string labelText = fmt::format(" F#{} ", selId + 1);
-		int labelLength = labelText.length()*5;
+		int labelLength = labelText.length() * 5;
 		int labelHeight = 16;
-        //GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10,true);
-		GLToolkit::DrawString(center.x, center.y, center.z, labelText.c_str(), GLToolkit::GetDialogFont(), -labelLength/2, -labelHeight/2, true);
-    }
+		//GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10,true);
+		GLToolkit::DrawString(center.x, center.y, center.z, labelText.c_str(), GLToolkit::GetDialogFont(), -labelLength / 2, -labelHeight / 2, true);
+	}
 
-    //Restore
-    GLToolkit::DrawStringRestore();
+	//Restore
+	GLToolkit::DrawStringRestore();
 }
 
 void GeometryViewer::DrawLeak() {
@@ -994,8 +995,8 @@ void GeometryViewer::DrawLeak() {
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_LINE_SMOOTH);
-        auto& hitCache = mApp->worker.globalStatCache;
-        for (size_t i = 0; i < std::min(dispNumLeaks,hitCache.leakCacheSize); i++) {
+		auto& hitCache = mApp->worker.globalStatCache;
+		for (size_t i = 0; i < std::min(dispNumLeaks, hitCache.leakCacheSize); i++) {
 
 			Vector3d p = hitCache.leakCache[i].pos;
 			Vector3d d = hitCache.leakCache[i].dir;
@@ -1006,7 +1007,7 @@ void GeometryViewer::DrawLeak() {
 			glEnd();
 
 			GLToolkit::DrawVector(p.x, p.y, p.z,
-				p.x + d.x*vectorLength, p.y + d.y*vectorLength, p.z + d.z*vectorLength, headSize);
+				p.x + d.x * vectorLength, p.y + d.y * vectorLength, p.z + d.z * vectorLength, headSize);
 
 		}
 		glDisable(GL_LINE_SMOOTH);
@@ -1017,7 +1018,7 @@ void GeometryViewer::DrawLeak() {
 void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 
 	if (!work) return;
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	if (!interfGeom) return;
 
 	double aspect = (double)width / (double)(height - DOWN_MARGIN);
@@ -1045,7 +1046,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	if (view.projMode == PERSPECTIVE_PROJ) {
 
 		// Autoscale dist, at least try to ;) .stub.
-		double a = 0.5 / tan((FOV_ANGLE / 360.0)*PI);
+		double a = 0.5 / tan((FOV_ANGLE / 360.0) * PI);
 		view.camDist = std::max((xMax - xMin) / aspect,
 			(yMax - yMin)) * a
 			+ (zFar - zNear) / 1.9;
@@ -1056,14 +1057,14 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 		// Scale
 		view.camDist = 1.0;
 
-		double mDist = std::max((xMax - xMin), (yMax - yMin)*aspect);
-		mDist = mDist*1.1+.1; // 10% margin and small extra for 0-width geometries
+		double mDist = std::max((xMax - xMin), (yMax - yMin) * aspect);
+		mDist = mDist * 1.1 + .1; // 10% margin and small extra for 0-width geometries
 		double dx = (xMax + xMin) / 2.0;
 		double dy = (yMax + yMin) / 2.0;
 		view.vLeft = dx - mDist / 2.0;
 		view.vRight = dx + mDist / 2.0;
-		view.vTop = dy - mDist / (2.0*aspect);
-		view.vBottom = dy + mDist / (2.0*aspect);
+		view.vTop = dy - mDist / (2.0 * aspect);
+		view.vBottom = dy + mDist / (2.0 * aspect);
 
 	}
 
@@ -1088,7 +1089,7 @@ void GeometryViewer::Zoom() {
 		double z;
 
 		if (hS > wS) {
-			w0 = (double)hS*aspect;
+			w0 = (double)hS * aspect;
 			h0 = (double)hS;
 			x0 = ((double)wS - w0) / 2.0f + (double)std::min(selX1, selX2) + w0 / 2.0;
 			y0 = (double)std::min(selY1, selY2) + h0 / 2.0;
@@ -1104,20 +1105,20 @@ void GeometryViewer::Zoom() {
 
 		x0 -= (double)posX;
 		y0 -= (double)posY;
-		
+
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
-			
+
 		case XYZ_TOP: // TopView
-			dx = -handedness*(0.5 - x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = -handedness * (0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
 			dz = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_SIDE: // Side View
-			dz = -handedness*(0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
+			dz = -handedness * (0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		case XYZ_FRONT: // Front View
-			dx = handedness*(-0.5 + x0 / (double)width)  * (view.vRight - view.vLeft);
+			dx = handedness * (-0.5 + x0 / (double)width) * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
 		}
@@ -1134,8 +1135,6 @@ void GeometryViewer::Zoom() {
 }
 
 void GeometryViewer::Paint() {
-
-	GLToolkit::CheckGLErrors("");
 	char tmp[256];
 
 	if (!parent) return;
@@ -1144,40 +1143,38 @@ void GeometryViewer::Paint() {
 	//Background gradient
 	int x, y, width, height;
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
-	
-		glBegin(GL_QUADS);
-		if (mApp->whiteBg) {
-			glColor3f(1.0f, 1.0f, 1.0f);
-		}
-		else {
+
+	glBegin(GL_QUADS);
+	if (mApp->whiteBg) {
+		glColor3f(1.0f, 1.0f, 1.0f);
+	}
+	else {
 #if defined(MOLFLOW)
-			glColor3f(0.3f, 0.5f, 0.7f); //blue top
+		glColor3f(0.3f, 0.5f, 0.7f); //blue top
 #endif
 
 #if defined(SYNRAD)
-			glColor3ub(255, 200, 145); //red top
+		glColor3ub(255, 200, 145); //red top
 #endif
-		}
-		glVertex2i(x, y);
-		glVertex2i(x + width, y);
+	}
+	glVertex2i(x, y);
+	glVertex2i(x + width, y);
 
-		if (!mApp->whiteBg) {
+	if (!mApp->whiteBg) {
 #if defined(MOLFLOW)
-			glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
+		glColor3f(0.05f, 0.05f, 0.05f); //grey bottom
 #endif
 #if defined(SYNRAD)
-			glColor3f(0.2f, 0.2f, 0.2f); //light grey bottom
+		glColor3f(0.2f, 0.2f, 0.2f); //light grey bottom
 #endif
-		}
-		glVertex2i(x + width, y + height);
-		glVertex2i(x, y + height);
+	}
+	glVertex2i(x + width, y + height);
+	glVertex2i(x, y + height);
 
-		glEnd();
-	
+	glEnd();
 
-		GLToolkit::CheckGLErrors("");
 	if (!work) return;
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	if (!interfGeom->IsLoaded()) {
 		PaintCompAndBorder();
 		return;
@@ -1193,20 +1190,20 @@ void GeometryViewer::Paint() {
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
 		case XYZ_TOP: // TopView
-			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x + view.camOffset.x)*view.camDist);
-			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z)*view.camDist;
+			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x + view.camOffset.x) * view.camDist);
+			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z) * view.camDist;
 			sprintf(tmp, "X=%g, Z=%g", -x / view.camDist, z / view.camDist);
 			topBtn->SetState(true);
 			break;
 		case XYZ_SIDE: // Side View
-			z = view.vLeft + ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z)*view.camDist;
-			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
+			z = view.vLeft + ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z) * view.camDist;
+			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y) * view.camDist;
 			sprintf(tmp, "Z=%g, Y=%g", z / view.camDist, y / view.camDist);
 			sideBtn->SetState(true);
 			break;
 		case XYZ_FRONT: // Front View
-			x =  handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x)*view.camDist);
-			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y)*view.camDist;
+			x = handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x) * view.camDist);
+			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y) * view.camDist;
 			sprintf(tmp, "X=%g, Y=%g", x / view.camDist, y / view.camDist);
 			frontBtn->SetState(true);
 			break;
@@ -1214,7 +1211,6 @@ void GeometryViewer::Paint() {
 	}
 	coordLab->SetText(tmp);
 
-	GLToolkit::CheckGLErrors("");
 	// Clipping and projection matrix
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -1224,68 +1220,12 @@ void GeometryViewer::Paint() {
 	glLoadMatrixf(matView);
 	glDisable(GL_BLEND);
 
-	GLToolkit::CheckGLErrors("");
 	// Draw geometry
 	if (showVolume || showTexture) glEnable(GL_DEPTH_TEST);
-			glClearDepth(1.0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			glDepthFunc(GL_LEQUAL);
-	
-	/*if (view.projMode == ORTHOGRAPHIC_PROJ) {
-		if (mApp->leftHandedView) {
-			//Ortho + left-handed
-			
-			//glDepthRange(0, 1); //chg recently
-		}
-		else {
-			//Ortho + right-handed
-			glClearDepth(1.0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			//glDepthRange(0, 1);
-			glDepthFunc(GL_LEQUAL);
-		}
-	}
-	else {
-		if (mApp->leftHandedView) {
-			//Persp + left-handed
-			glClearDepth(1.0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			glDepthFunc(GL_LEQUAL);
-			//glDepthRange(1, 0);
-		}
-		else {
-			//Persp + right-handed
-			glClearDepth(1.0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			glDepthFunc(GL_LEQUAL);
-		}
-	}*/
-	
-	/*
-	// Draw geometry
-if( showVolume || showTexture ) {
-
-  glEnable(GL_DEPTH_TEST);
-
-  if(view.projMode==PERSPECTIVE_PROJ) {
 	glClearDepth(1.0);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
-	//glPolygonOffset( -0.5f, -0.002f );
-  } else {
-	glClearDepth(0.0);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	//glDepthFunc(GL_GEQUAL);
-	//glPolygonOffset( 0.5f, 0.002f );
-  }
 
-} else {
-
-  glDisable(GL_DEPTH_TEST);
-
-}*/
-
-			GLToolkit::CheckGLErrors("");
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
@@ -1294,37 +1234,32 @@ if( showVolume || showTexture ) {
 		//Right-handed coord system: front and back inverse
 		if (showBack == SHOW_BACK) cullMode = SHOW_FRONT;
 		else cullMode = SHOW_BACK;
-	} else cullMode = showBack;
+	}
+	else cullMode = showBack;
 
-	GLToolkit::CheckGLErrors("");
-	interfGeom->Render((GLfloat *)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
+	interfGeom->Render((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHidden, showMesh, showDir);
 
-	GLToolkit::CheckGLErrors("");
 #if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
-	GLToolkit::CheckGLErrors("");
 	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
 	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
 	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
 	if (showNormal && (!detailsSuppressed)) DrawNormal();
 	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
-	GLToolkit::CheckGLErrors("GLLabel::Paint()");
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered
-    if(mApp->highlightSelection)
-        interfGeom->RenderSemiTransparent((GLfloat *) matView, showVolume, showTexture, cullMode, showFilter, showHidden,
-                                    showMesh, showDir);
+	if (mApp->highlightSelection)
+		interfGeom->RenderSemiTransparent((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHidden,
+			showMesh, showDir);
 
-    // Draw on top of everything
-    if (showFacetId && !detailsSuppressed) DrawFacetId();
+	// Draw on top of everything
+	if (showFacetId && !detailsSuppressed) DrawFacetId();
 
-    DrawCoordinateAxes();
-
-    GLToolkit::CheckGLErrors("GLLabel::Paint()");
+	DrawCoordinateAxes();
 	PaintSelectedVertices(showHiddenVertex);
 	//DrawBB();
 	// Restore old transformation/viewport
@@ -1370,13 +1305,11 @@ if( showVolume || showTexture ) {
 
 			for (int i = 0; i <= 360; i += 2) {
 				float degInRad = i * DEG2RAD;
-				glVertex2f(selX1 + cos(degInRad)*radius, selY1 + sin(degInRad)*radius);
+				glVertex2f(selX1 + cos(degInRad) * radius, selY1 + sin(degInRad) * radius);
 			}
 			glEnd();
 		}
-
 		glDisable(GL_LINE_STIPPLE);
-
 	}
 
 	//Status labels
@@ -1390,14 +1323,14 @@ if( showVolume || showTexture ) {
 	bool displayTabLabel = GetWindow()->IsTabDown();
 	bool displayNonPlanarLabel = interfGeom->hasNonPlanar;
 	int offsetCount = 0;
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20*offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel;hideLotlabel->SetVisible(displayHideLotLabel);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel;capsLockLabel->SetVisible(displayCapsLockLabel);
-	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel;rotateLabel->SetVisible(displayRotateLabel);
-	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel;screenshotLabel->SetVisible(displayScreenshotLabel);
-	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel;selectLabel->SetVisible(displaySelectionLabel);
-	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel;panLabel->SetVisible(displayPanLabel);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel;tabLabel->SetVisible(displayTabLabel);
-	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel;nonPlanarLabel->SetVisible(displayNonPlanarLabel);
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel; hideLotlabel->SetVisible(displayHideLotLabel);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel; capsLockLabel->SetVisible(displayCapsLockLabel);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel; rotateLabel->SetVisible(displayRotateLabel);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel; screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel; selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel; panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel; tabLabel->SetVisible(displayTabLabel);
+	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel; nonPlanarLabel->SetVisible(displayNonPlanarLabel);
 
 #if defined(MOLFLOW)
 	if (work->displayedMoment)
@@ -1407,12 +1340,11 @@ if( showVolume || showTexture ) {
 	timeLabel->SetText(tmp);
 	timeLabel->SetVisible(showTime);
 #endif
-	
+
 	if (screenshotStatus.requested >= 2) {
 		Screenshot();
 	}
 	PaintCompAndBorder();
-	
 }
 
 void GeometryViewer::PaintCompAndBorder() {
@@ -1477,16 +1409,16 @@ void GeometryViewer::TranslateScale(double diff) {
 
 }
 
-void GeometryViewer::ManageEvent(SDL_Event *evt)
+void GeometryViewer::ManageEvent(SDL_Event* evt)
 {
 
 	if (!work) return;
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	// Key pressed
 	if (evt->type == SDL_KEYDOWN) {
 		int unicode = /*(evt->key.keysym.unicode & 0x7F);
 		if (!unicode) unicode =*/ evt->key.keysym.sym;
-		
+
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		if (unicode == SDLK_UP) {
 			if (GetWindow()->IsShiftDown()) {
@@ -1508,7 +1440,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				}
 				else {
 					// Up
-					
+
 					view.camOffset.x += transStep * camUp.x;
 					view.camOffset.y += transStep * camUp.y;
 					view.camOffset.z += handedness * transStep * camUp.z;
@@ -1649,7 +1581,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 	// Handle mouse events
 	if (evt->type == SDL_MOUSEBUTTONDOWN || evt->type == SDL_MOUSEBUTTONDBLCLICK) {
-        mXOrg = mX;
+		mXOrg = mX;
 		mYOrg = mY;
 
 		if (evt->button.button == SDL_BUTTON_LEFT) {
@@ -1691,7 +1623,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 #else
 		int appleInversionFactor = 1;
 #endif
-		if (evt->wheel.y !=0) { //Vertical scroll
+		if (evt->wheel.y != 0) { //Vertical scroll
 			if (GetWindow()->IsShiftDown()) {
 				TranslateScale(-2.0 * evt->wheel.y * appleInversionFactor); //Zoom slower when SHIFT is pressed
 			}
@@ -1702,7 +1634,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 			autoBtn->SetState(false);
 		}
 #if defined(__MACOSX__) || defined(__APPLE__)
-		if (evt->wheel.x !=0) { //Shift+wheel on an external mouse is horizontal scroll on MacOS
+		if (evt->wheel.x != 0) { //Shift+wheel on an external mouse is horizontal scroll on MacOS
 			TranslateScale(-2.0 * evt->wheel.x); //As if SHIFT was down and appleInversionFactor==-1
 			autoScaleOn = false;
 			autoBtn->SetState(false);
@@ -1758,8 +1690,8 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 							!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
 					}
+					}
 				}
-			}
 			else if ((mode == MODE_SELECTVERTEX && !GetWindow()->IsTabDown()) || (mode == MODE_SELECT && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
@@ -1769,14 +1701,14 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				//selectionChange = true;
 				if (std::abs(selX1 - selX2) <= 1 && std::abs(selY1 - selY2) <= 1) {
 					// Simple click, select/unselect vertex
-					interfGeom->SelectVertex(mX - posX, mY - posY, this->width,this->height,GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
+					interfGeom->SelectVertex(mX - posX, mY - posY, this->width, this->height, GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//select closest vertex
 				}
 				else {
 					// Select region
 					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
-				}
+			}
 			}
 #if defined(SYNRAD)
 			else if (mode == MODE_SELECTTRAJ) {
@@ -1824,7 +1756,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		case DRAGG_SELECT:
 		{
 
-			
+
 			if (GetWindow()->IsSpaceDown()) { //Move origin
 				selX1 += diffX;
 				selX2 += diffX;
@@ -1836,22 +1768,22 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				selY2 = mY;
 			}
 		}
-			break;
+		break;
 
 		case DRAGG_MOVE:
 
 			if (view.projMode == PERSPECTIVE_PROJ) {
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
-				double tv = factor*diffX / (double)width * view.camDist * 0.75;
-				double tu = factor*diffY / (double)(height - DOWN_MARGIN) * view.camDist * 0.75;
+				double tv = factor * diffX / (double)width * view.camDist * 0.75;
+				double tu = factor * diffY / (double)(height - DOWN_MARGIN) * view.camDist * 0.75;
 				view.camOffset.x += tu * camUp.x - tv * camLeft.x;
 				view.camOffset.y += tu * camUp.y - tv * camLeft.y;
 				view.camOffset.z += tu * camUp.z - tv * camLeft.z;
 			}
 			else {
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
-				double tv = factor*(diffX / (double)width)  * (view.vRight - view.vLeft) / view.camDist;
-				double tu = factor*(diffY / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) / view.camDist;
+				double tv = factor * (diffX / (double)width) * (view.vRight - view.vLeft) / view.camDist;
+				double tu = factor * (diffY / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) / view.camDist;
 				view.camOffset.x += tu * camUp.x + tv * camLeft.x;
 				view.camOffset.y += tu * camUp.y + tv * camLeft.y;
 				view.camOffset.z += tu * camUp.z + tv * camLeft.z;
@@ -1870,7 +1802,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 				if (GetWindow()->IsCtrlDown()) {
 					//Z axis rotation
 					//TranslateScale(diffY);
-					view.camAngleOz += diffX*angleStep*factor;
+					view.camAngleOz += diffX * angleStep * factor;
 				}
 				else {
 					// Rotate view
@@ -1881,12 +1813,12 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 					}
 					else {                                  //Camera angle rotation
 						if (view.projMode == PERSPECTIVE_PROJ) {
-							view.camAngleOx += diffY * angleStep*factor;
-							view.camAngleOy -= diffX * angleStep*factor*handedness;
+							view.camAngleOx += diffY * angleStep * factor;
+							view.camAngleOy -= diffX * angleStep * factor * handedness;
 						}
 						else {
-							view.camAngleOx -= diffY * angleStep*factor;
-							view.camAngleOy -= diffX * angleStep*factor*handedness;
+							view.camAngleOx -= diffY * angleStep * factor;
+							view.camAngleOy -= diffX * angleStep * factor * handedness;
 						}
 					}
 				}
@@ -1904,7 +1836,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 		case DRAGG_ZOOM:
 			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
-				TranslateScale(diffY*factor);
+				TranslateScale(diffY * factor);
 			}
 			break;
 		}
@@ -1914,7 +1846,7 @@ void GeometryViewer::ManageEvent(SDL_Event *evt)
 
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 	/*
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 	glMatrixMode(GL_PROJECTION);
@@ -1926,7 +1858,7 @@ void GeometryViewer::SelectCoplanar(double tolerance) {
 	interfGeom->SelectCoplanar(this->width, this->height, tolerance);
 }
 
-void GeometryViewer::ProcessMessage(GLComponent *src, int message) {
+void GeometryViewer::ProcessMessage(GLComponent* src, int message) {
 
 	switch (message) {
 	case MSG_BUTTON:
@@ -2069,7 +2001,7 @@ DrawBB(node->right);
 
 void GeometryViewer::ComputeBB(/*bool getAll*/) {
 
-	InterfaceGeometry *interfGeom = work->GetGeometry();
+	InterfaceGeometry* interfGeom = work->GetGeometry();
 
 	GLMatrix mv;
 	float rx, ry, rz, rw;
@@ -2123,16 +2055,16 @@ void GeometryViewer::Screenshot() {
 
 	screenshotStatus.requested = 0;
 
-	SDL_Surface * image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenshotStatus.w, screenshotStatus.h, 24, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
+	SDL_Surface* image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenshotStatus.w, screenshotStatus.h, 24, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
 
-	glReadPixels(screenshotStatus.x, this->GetHeight() - screenshotStatus.y - screenshotStatus.h , screenshotStatus.w, screenshotStatus.h, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	glReadPixels(screenshotStatus.x, this->GetHeight() - screenshotStatus.y - screenshotStatus.h, screenshotStatus.w, screenshotStatus.h, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
 	//Vertical flip
 	int index;
 	void* temp_row;
 	int height_div_2;
 
-	temp_row = (void *)malloc(image->pitch);
+	temp_row = (void*)malloc(image->pitch);
 	if (NULL == temp_row)
 	{
 		throw Error("Not enough memory for image inversion");
@@ -2140,9 +2072,9 @@ void GeometryViewer::Screenshot() {
 	height_div_2 = (int)(image->h * .5);
 	for (index = 0; index < height_div_2; index++)
 	{
-		memcpy((Uint8 *)temp_row, (Uint8 *)(image->pixels) + image->pitch * index, image->pitch);
-		memcpy((Uint8 *)(image->pixels) + image->pitch * index, (Uint8 *)(image->pixels) + image->pitch * (image->h - index - 1), image->pitch);
-		memcpy((Uint8 *)(image->pixels) + image->pitch * (image->h - index - 1), temp_row, image->pitch);
+		memcpy((Uint8*)temp_row, (Uint8*)(image->pixels) + image->pitch * index, image->pitch);
+		memcpy((Uint8*)(image->pixels) + image->pitch * index, (Uint8*)(image->pixels) + image->pitch * (image->h - index - 1), image->pitch);
+		memcpy((Uint8*)(image->pixels) + image->pitch * (image->h - index - 1), temp_row, image->pitch);
 	}
 	free(temp_row);
 	SDL_SavePNG_RW(image, SDL_RWFromFile(screenshotStatus.fileName.c_str(), "wb"), 1);
@@ -2158,5 +2090,5 @@ void GeometryViewer::RequestScreenshot(std::string fileName, int x, int y, int w
 	screenshotStatus.w = w;
 	screenshotStatus.h = h;
 	screenshotStatus.fileName = fileName;
-	if (screenshotStatus.requested<2) screenshotStatus.requested++;
+	if (screenshotStatus.requested < 2) screenshotStatus.requested++;
 }

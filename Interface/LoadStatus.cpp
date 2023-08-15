@@ -56,8 +56,6 @@ static const char *plName[] = {"#","State","Status"};
 static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT };
 
 LoadStatus::LoadStatus(Worker* w):GLWindow() {
-
-	GLToolkit::CheckGLErrors("");
 	worker = w;
 
 	SetTitle("Waiting for subprocesses...");
@@ -78,8 +76,6 @@ LoadStatus::LoadStatus(Worker* w):GLWindow() {
 
 	RestoreDeviceObjects();
 	lastUpd = SDL_GetTicks();
-
-	GLToolkit::CheckGLErrors("");
 }
 
 void LoadStatus::EnableStopButton() {
@@ -89,8 +85,6 @@ void LoadStatus::EnableStopButton() {
 
 void LoadStatus::RefreshNbProcess()
 {
-
-	GLToolkit::CheckGLErrors("");
 	size_t nbProc = procStateCache.threadInfos.size();
 	int wD = 550;
 	int hD = 100 + (int)nbProc * 15;
@@ -106,13 +100,9 @@ void LoadStatus::RefreshNbProcess()
 	int xD = wS - wD - 215;
 	int yD = hS - hD - 30;
 	SetBounds(xD, yD, wD, hD);
-
-	GLToolkit::CheckGLErrors("");
 }
 
 void LoadStatus::Update() {
-
-	GLToolkit::CheckGLErrors("");
 	//SimulationManager calls it, after it has updated its procStateCache
 	auto guard = std::lock_guard(procStateCache.procDataMutex);
 	size_t nbProc = procStateCache.threadInfos.size();
@@ -153,8 +143,6 @@ void LoadStatus::Update() {
 		mApp->DoEvents(); //draw table and catch stop button press
 		lastUpd = SDL_GetTicks();
 	}
-
-	GLToolkit::CheckGLErrors("");
 }
 
 void LoadStatus::ProcessMessage(GLComponent *src,int message) {

@@ -1133,11 +1133,8 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
 
-	GLToolkit::CheckGLErrors("");
 	// Render Volume
 	if (renderVolume) {
-
-		GLToolkit::CheckGLErrors("");
 		glPolygonOffset(1.0f, 4.0f);
 		SetCullMode(showMode);
 		GLfloat global_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -1151,12 +1148,8 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		GLToolkit::SetMaterial(&whiteMaterial);
 		glDisable(GL_LIGHTING);
-
-		GLToolkit::CheckGLErrors("");
 	}
 	else {
-
-		GLToolkit::CheckGLErrors("");
 		// Default material
 		GLToolkit::SetMaterial(&whiteMaterial);
 
@@ -1164,7 +1157,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_LIGHTING);
 
-		GLToolkit::CheckGLErrors("");
 		float color = (mApp->whiteBg) ? 0.0f : 1.0f; //whitebg here
 		if (viewStruct == -1) {
 			glColor4f(color, color, color, .8f);
@@ -1176,21 +1168,16 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			glPolygonOffset(1.0f, 5.0f);
 			glEnable(GL_POLYGON_OFFSET_LINE);
 
-			GLToolkit::CheckGLErrors("");
-			for (int i = 0; i < sh.nbSuper; i++)
+			for (int i = 0; i < sh.nbSuper; i++) {
 				glCallList(lineList[i]);
+			}
 
-			GLToolkit::CheckGLErrors("");
 			glDisable(GL_POLYGON_OFFSET_LINE);
 			glDisable(GL_BLEND);
 			glDisable(GL_LINE_SMOOTH);
 			glColor3f(1.0f, 1.0f, 1.0f);
-
-			GLToolkit::CheckGLErrors("");
 		}
 		else {
-
-			GLToolkit::CheckGLErrors("");
 			// Draw non selectable facet in dark grey
 			glColor3f(0.2f, 0.2f, 0.2f);
 			if (mApp->antiAliasing) {
@@ -1211,12 +1198,9 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 				glDisable(GL_BLEND);
 				glDisable(GL_LINE_SMOOTH);
 			}
-
-			GLToolkit::CheckGLErrors("");
 		}
 	}
 
-	GLToolkit::CheckGLErrors("");
 	// Paint texture
 	if (renderTexture) {
 		glEnable(GL_TEXTURE_2D);
@@ -1253,7 +1237,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glDisable(GL_TEXTURE_2D);
 	}
 
-	GLToolkit::CheckGLErrors("");
 	// Paint mesh
 	if (showMesh) {
 		glColor4f(0.7f, 0.7f, 0.7f, 0.3f);
@@ -1278,7 +1261,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		}
 	}
 
-	GLToolkit::CheckGLErrors("");
 	// Paint direction fields
 	if (showDir) {
 
@@ -1314,8 +1296,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glLoadMatrixf(matView);
 	}
 
-	GLToolkit::CheckGLErrors("");
-
 	// Paint non-planar and selected facets
 	//if (GetNbSelectedFacets()>0) {
 	if (mApp->antiAliasing) {
@@ -1341,7 +1321,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glDisable(GL_BLEND);
 	}
 
-	GLToolkit::CheckGLErrors("");
 	//}
 
 	// Paint selected cell on mesh
@@ -1349,8 +1328,6 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		InterfaceFacet* f = facets[i];
 		f->RenderSelectedElem();
 	}
-
-	GLToolkit::CheckGLErrors("");
 }
 
 void InterfaceGeometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
