@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cmath>
 #include <set>
 #include <cassert>
+#include <cstring>
 
 #include "KDTree.h"
 #include "Ray.h"
