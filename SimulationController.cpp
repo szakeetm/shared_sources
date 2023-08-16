@@ -566,37 +566,15 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
 
 /**
 * \brief Start the simulation after previous sanity checks
- * \return 0> error code, 0 when ok
+ * return true if started, false if desorption error or max reached
  */
-void SimulationController::Start(LoadStatus_abstract* loadStatus) {
-
-    /* //already checked on load
-    // Check simulation model and geometry one last time
-    procInfo.UpdateControllerStatus({ ControllerState::Starting }, { "Checking if model is valid..." }, loadStatus);
-    auto errors = simulationPtr->SanityCheckModel(true);
-
-    if(!errors.empty()){
-        loadOk = false;
-        procInfo.UpdateControllerStatus({ ControllerState::InError }, { errors[0] }, loadStatus); //First problem with model
-        ClearCommand(); 
-        return;
-    }
-
-    for (int i = 0; i < simThreadHandles.size();i++) {
-        if (!simThreadHandles[i].particleTracerPtr) {
-            loadOk = false;
-            procInfo.UpdateControllerStatus({ ControllerState::InError }, { fmt::format("Thread {} has no particle tracer constructed.", i + 1) }, loadStatus);
-            ClearCommand(); 
-            return;
-        }
-    }
-    */
+bool SimulationController::Start(LoadStatus_abstract* loadStatus) {
 
 	if (simulationPtr->model->rayTracingStructures.empty()) {
 		loadOk = false;
         procInfo.UpdateControllerStatus({ ControllerState::InError }, { "Failed building acceleration structure" }, loadStatus);
         ClearCommand();
-        return;
+        return false;
 	}
 
     if (simulationPtr->model->otfParams.desorptionLimit > 0) {
@@ -605,7 +583,7 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
             nbThreads) { //des. limit reached
             ClearCommand();
             procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "Des. limit reached" }, loadStatus);
-            return;
+            return false;
         }
     }
 
@@ -646,16 +624,16 @@ void SimulationController::Start(LoadStatus_abstract* loadStatus) {
     }
 
     ClearCommand();
-    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "Couldn't start simulation" }, loadStatus);
+    return maxReachedOrDesError_global;
 }
 
-int SimulationController::Reset(LoadStatus_abstract* loadStatus) {
+void SimulationController::Reset(LoadStatus_abstract* loadStatus) {
     procInfo.UpdateControllerStatus({ ControllerState::Resetting }, { "Resetting simulation..." }, loadStatus);
     resetControls();
     simulationPtr->ResetSimulation();
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     ClearCommand();
-    return 0;
 }
 
 void SimulationController::EmergencyExit(){

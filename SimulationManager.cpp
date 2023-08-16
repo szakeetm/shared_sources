@@ -107,7 +107,9 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
     }
     else {
         procInformation.masterCmd  = SimCommand::Run; // TODO: currently needed to not break the loop
-        simController->Start(); //Also contains run
+        if (!simController->Start()) { //Also contains run
+            throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
+        }
     }
 }
 

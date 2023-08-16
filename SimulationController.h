@@ -83,10 +83,9 @@ public:
                          Simulation_Abstract *simulationInstance, ProcComm& pInfo);
     void controllerLoop();
 
-    void Start(LoadStatus_abstract* loadStatus=nullptr);
+    bool Start(LoadStatus_abstract* loadStatus=nullptr);
     void Load(LoadStatus_abstract* loadStatus = nullptr);
-    //int RebuildAccel(LoadStatus_abstract* loadStatus = nullptr);
-    int Reset(LoadStatus_abstract* loadStatus = nullptr);
+    void Reset(LoadStatus_abstract* loadStatus = nullptr);
 
     void EmergencyExit();
 protected:
