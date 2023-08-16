@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <cstring> // strncpy for Error
 #include <algorithm> // fill
 #include <string>
+#include <fmt/core.h>
 
 // Messages
 #define MSG_NULL     0    // No message
