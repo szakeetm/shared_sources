@@ -275,7 +275,7 @@ protected:
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
     void SetInterfaceVertices(const std::vector<Vector3d>& vertices, bool insert);
-    virtual void SetInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, bool insert, bool newStr, int targetStructId);
+    virtual void SetInterfaceFacets(std::vector<std::shared_ptr<SimulationFacet>> sFacets, bool insert, size_t vertexOffset, int structOffset);
 	void SetInterfaceStructures(const std::vector<SuperStructure>& structures,bool insert,bool newStr,int targetStructId);
 
     void SelectAll();

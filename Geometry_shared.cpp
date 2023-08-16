@@ -4415,25 +4415,30 @@ void InterfaceGeometry::SetInterfaceVertices(const std::vector<Vector3d>& vertic
     sh.nbVertex = vertices3.size();
 }
 
-void InterfaceGeometry::SetInterfaceStructures(const std::vector<SuperStructure>& structures, bool insert, bool newStr, int targetStructId) {
+void InterfaceGeometry::SetInterfaceStructures(const std::vector<SuperStructure>& newStructures, bool insert, bool newStr, int targetStructId) {
 	if (!insert) {
 		structNames.clear();
-		structNames.reserve(structures.size());
+		structNames.reserve(newStructures.size());
 	}
 	else {
-		structNames.reserve(structNames.size() + structures.size());
+		structNames.reserve(structNames.size() + newStructures.size());
 	}
-	for (const auto& structure : structures) {
-		structNames.push_back(structure.name);
+	if (newStr) { //Insert loaded newStructures in addition to existing ones
+		for (const auto& structure : newStructures) {
+			structNames.push_back(structure.name);
+		}
+	}
+	else { //insert to positions starting with targetStructId. For ex. if there are 3 new structs, insert to {target,target+1,target+2}
+		int insertStart = structNames.size() - targetStructId; //Example: there are already 4 structures, target id is 2, and we loaded 3 structs. They go to pos {2,3,4}: insert only one, newStructures[2], as the fifth
+		for (int i = insertStart; i < newStructures.size(); i++) {
+			structNames.push_back(newStructures[i].name);
+		}
 	}
 	sh.nbSuper = structNames.size();
-
-	if (newStr) sh.nbSuper += structures.size();
-	else if (sh.nbSuper < targetStructId + structures.size()) sh.nbSuper = targetStructId + structures.size();
 }
 
 // In case geometry has been generated via modern "Model" based functions, create interface facets as a copy from them
-void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, bool insert, bool newStr, int targetStructId) {
+void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> sFacets, bool insert, size_t vertexOffset, int structOffset) {
 
 	if (!insert) {
 		facets.clear();
@@ -4446,13 +4451,19 @@ void InterfaceGeometry::SetInterfaceFacets(vector<shared_ptr<SimulationFacet>> s
     for(const auto& simFacetPtr : sFacets) {
 		auto newFacet = new InterfaceFacet(simFacetPtr->indices.size());
 		newFacet->indices = simFacetPtr->indices;
+		if (insert) {
+			for (auto& i : newFacet->indices) {
+				i += vertexOffset;
+			}
+		}
 		newFacet->vertices2 = simFacetPtr->vertices2;
 		newFacet->sh = simFacetPtr->sh;
 		if (insert) {
 			newFacet->selected = true;
-			if (newFacet->sh.superIdx != -1) //-1 = facet member of all structures
-				newFacet->sh.superIdx += newStr ? static_cast<int>(sh.nbSuper) : targetStructId; //offset structure
-			if (newFacet->sh.superDest > 0) newFacet->sh.superDest += newStr ? sh.nbSuper : targetStructId;
+			if (newFacet->sh.superIdx != -1) {//-1 = facet member of all structures
+				newFacet->sh.superIdx += structOffset;
+			}
+			if (newFacet->sh.superDest > 0) newFacet->sh.superDest += structOffset;
 			if (newFacet->sh.teleportDest > 0) newFacet->sh.teleportDest += sh.nbFacet; //Offset teleport target
         }
 		// Do Molflow or Synrad related things in an overriden function
