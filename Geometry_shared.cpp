@@ -152,12 +152,12 @@ void InterfaceGeometry::InitializeGeometry(int facet_number) {
 		}
 	}
 	RecalcRawVertices(facet_number);
+	isLoaded = true;
 	if (facet_number == -1) {
 		BuildGLList();
 		mApp->UpdateModelParams();
 		mApp->UpdateFacetParams(false);
 	}
-	isLoaded = true;
 }
 
 void InterfaceGeometry::RecalcRawVertices(const int facet_number) { //Cache for OpenGL vertex array
@@ -4423,7 +4423,7 @@ void InterfaceGeometry::SetInterfaceStructures(const std::vector<SuperStructure>
 	else {
 		structNames.reserve(structNames.size() + newStructures.size());
 	}
-	if (newStr) { //Insert loaded newStructures in addition to existing ones
+	if (!insert || (insert && newStr)) { //Insert loaded newStructures in addition to existing ones
 		for (const auto& structure : newStructures) {
 			structNames.push_back(structure.name);
 		}
