@@ -623,7 +623,7 @@ bool SimulationController::Start(LoadStatus_abstract* loadStatus) {
         }
     }
 
-    ClearCommand();
+    //ClearCommand();
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "Couldn't start simulation" }, loadStatus);
     return maxReachedOrDesError_global;
 }
