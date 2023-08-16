@@ -1167,7 +1167,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 			glPolygonOffset(1.0f, 5.0f);
 			glEnable(GL_POLYGON_OFFSET_LINE);
 
-			for (auto lineList : lineLists) {
+			for (auto& lineList : lineLists) {
 				glCallList(lineList.listId);
 			}
 
