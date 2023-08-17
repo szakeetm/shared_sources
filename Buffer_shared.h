@@ -179,6 +179,7 @@ public:
 	std::string outgassingParam;
 	std::string stickingParam;
 	std::string opacityParam;
+	std::string temperatureParam;
 
 	int    desorbType=DES_NONE;     // Desorption type
 	double desorbTypeN=0.0;    // Exponent in Cos^N desorption type
