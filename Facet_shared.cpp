@@ -54,68 +54,7 @@ extern SynRad*mApp;
 InterfaceFacet::InterfaceFacet(size_t nbIndex) : sh(0) {
 	indices.resize(nbIndex);                    // Ref to InterfaceGeometry Vector3d
 	vertices2.resize(nbIndex);
-
-	memset(&facetHitCache, 0, sizeof(FacetHitBuffer));
-
 	sh.nbIndex = nbIndex;
-
-	sh.sticking = 0.0;
-	sh.opacity = 1.0;
-
-	sh.profileType = PROFILE_NONE;
-	
-	sh.texWidth = 0;
-	sh.texHeight = 0;
-	sh.texWidth_precise = 0.0;
-	sh.texHeight_precise = 0.0;
-	sh.center.x = 0.0;
-	sh.center.y = 0.0;
-	sh.center.z = 0.0;
-
-	sh.is2sided = false;
-	sh.isProfile = false;
-	sh.isTextured = false;
-	sh.countAbs = false;
-	sh.countRefl = false;
-	sh.countTrans = false;
-	sh.countDirection = false;
-
-	sh.superIdx = 0;
-	sh.superDest = 0;
-	sh.teleportDest = 0;
-
-	viewSettings.textureVisible = true;
-	viewSettings.volumeVisible = true;
-
-	texDimW = 0;
-	texDimH = 0;
-    tRatioU = 0.0;
-    tRatioV = 0.0;
-
-	meshvectorsize = 0;
-	hasMesh = false;
-	selectedElem.u = 0;
-	selectedElem.v = 0;
-	selectedElem.width = 0;
-	selectedElem.height = 0;
-	dirCache = nullptr;
-	textureError = false;
-
-	selected = false;
-
-#if defined(MOLFLOW)
-    ogMap.totalFlux = sh.totalOutgassing = ogMap.totalDose = 0.0;
-#endif
-
-#if defined(SYNRAD)
-#endif
-}
-
-/**
-* \brief Destructor for safe deletion
-*/
-InterfaceFacet::~InterfaceFacet() {
-	  SAFE_FREE(dirCache);
 }
 
 /*
@@ -238,7 +177,7 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 	texDimH = 0;
 	hasMesh = false;
 	meshvectorsize = 0;
-	SAFE_FREE(dirCache);
+	dirCache.clear();
 	glTex.reset();
 	glList.reset();
 	glElem.reset();
@@ -253,11 +192,11 @@ bool InterfaceFacet::SetTexture(double width, double height, bool useMesh) {
 		if (texDimH < 4) texDimH = 4;
 		glTex = std::make_unique<GLTextureWrapper>();
 		glList = std::make_unique<GLListWrapper>();
-		if (useMesh)
+		if (useMesh) {
 			if (!BuildMesh()) return false;
+		}
 		if (sh.countDirection) {
-			dirCache = (DirectionCell *)calloc(sh.texWidth*sh.texHeight, sizeof(DirectionCell));
-			if (!dirCache) return false;
+			dirCache.resize(sh.texWidth*sh.texHeight);
 		}
 	}
 

@@ -1266,7 +1266,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		GLToolkit::SetMaterial(&arrowMaterial);
 		for (int i = 0; i < sh.nbFacet; i++) {
 			InterfaceFacet* f = facets[i];
-			if (f->sh.countDirection && f->dirCache) {
+			if (f->sh.countDirection && !f->dirCache.empty()) {
 				double iw = 1.0 / (double)f->sh.texWidth_precise;
 				double ih = 1.0 / (double)f->sh.texHeight_precise;
 				double rw = f->sh.U.Norme() * iw;

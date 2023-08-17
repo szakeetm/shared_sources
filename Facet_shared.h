@@ -44,7 +44,7 @@ public:
 	//Old C-style array to save memory
 	std::vector<Vector2d> points;
 	size_t nbPoints;
-	double   area;     // Area of element
+	double  area;     // Area of element
 	float   uCenter;  // Center coordinates
 	float   vCenter;  // Center coordinates
 					  //int     elemId;   // Element index (MESH array)
@@ -59,7 +59,6 @@ public:
 
 	// Constructor/Desctructor/Initialisation
 	explicit InterfaceFacet(size_t nbIndex);
-	~InterfaceFacet();
 
 	//void  DetectOrientation();
 	int   RestoreDeviceObjects();
@@ -82,7 +81,6 @@ public:
     std::pair<size_t, size_t> GetNbCellForRatio(double ratioU, double ratioV);
     void  SwapNormal();
 	void  ShiftVertex(const int offset = 1);
-	void  InitVisibleEdge();
 	size_t   GetIndex(int idx);
 	size_t   GetIndex(size_t idx);
 	double GetMeshArea(size_t index, bool correct2sides = false);
@@ -143,12 +141,12 @@ public:
 	//C-style arrays to save memory (textures can be huge):
     std::vector<int> cellPropertiesIds;      // -1 if full element, -2 if outside polygon, otherwise index in meshvector
     std::vector<CellProperties> meshvector;
-	size_t meshvectorsize;
+	size_t meshvectorsize=0;
 
 	FacetProperties sh;
 	FacetHitBuffer facetHitCache;
 	FacetHistogramBuffer facetHistogramCache; //contains empty vectors when facet doesn't have it
-	DirectionCell   *dirCache;    // Direction field cache
+	std::vector<DirectionCell>   dirCache;    // Direction field cache
 
 	// Normalized plane equation (ax + by + cz + d = 0)
 	double a;
@@ -159,24 +157,24 @@ public:
 	bool nonSimple = false; // A non simple polygon has crossing sides
 	bool normalFlipped = false; // A flag that is true for concave facets where the normal has been flipped to obey the left-hand rule. We set it so the flip can be reverted
 	//int sign; // +1: convex second vertex, -1: concave second vertex, 0: nin simple or null
-	size_t texDimH;         // Texture dimension (a power of 2)
-	size_t texDimW;         // Texture dimension (a power of 2)
-    double tRatioU;       // Texture sample per unit
-    double tRatioV;       // Texture sample per unit
+	size_t texDimH=0;         // Texture dimension (a power of 2)
+	size_t texDimW=0;         // Texture dimension (a power of 2)
+    double tRatioU=0.0;       // Texture sample per unit
+    double tRatioV=0.0;       // Texture sample per unit
 
-	bool  collinear;      //All vertices are on a line (non-simple)
-	bool    hasMesh;     // Has texture
-	bool textureError;   // Disable rendering if the texture has an error
+	bool  collinear=true;      //All vertices are on a line (non-simple)
+	bool    hasMesh=false;     // Has texture
+	bool textureError=false;   // Disable rendering if the texture has an error
 
 	// GUI stuff
 	FacetInterfaceSetting viewSettings;
-	bool   selected;        // Selected flag
+	bool   selected=false;        // Selected flag
 
 	struct TEXTURE_SELECTION{
-		size_t u;
-		size_t v;
-		size_t width;
-		size_t height;
+		size_t u=0;
+		size_t v=0;
+		size_t width=0;
+		size_t height=0;
 	} ;
 	TEXTURE_SELECTION    selectedElem;    // Selected mesh element
 	//OpenGL
@@ -191,7 +189,7 @@ public:
 #if defined(MOLFLOW)
 	OutgassingMap ogMap;
     std::vector<size_t> angleMapCache; //Reading while loading then passing to dpHit
-	bool hasOutgassingFile; //true if a desorption file was loaded and had info about this facet
+	bool hasOutgassingFile=false; //true if a desorption file was loaded and had info about this facet
 #endif
 	//void SerializeForLoader(cereal::BinaryOutputArchive& outputarchive);
 };

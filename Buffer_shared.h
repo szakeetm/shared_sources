@@ -171,7 +171,7 @@ public:
 #if defined(MOLFLOW)
 							 // Molflow-specific facet parameters
 	double temperature=293.15;    // Facet temperature (Kelvin)                  - can be overridden by time-dependent parameter
-	double outgassing=0.0;           // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
+	double outgassing=0.0;        // (in unit *m^3/s)                      - can be overridden by time-dependent parameter
 
 	int CDFid; //Which probability distribution it belongs to (one CDF per temperature)
 	int IDid;  //If time-dependent desorption, which is its ID
@@ -463,7 +463,7 @@ public:
 		this->count += rhs.count;
 		return *this;
 	}
-	Vector3d dir = Vector3d(0.0, 0.0, 0.0);
+	Vector3d dir;
 	size_t count = 0;
 	template<class Archive>
 	void serialize(Archive& archive)
