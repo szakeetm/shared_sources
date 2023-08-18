@@ -44,6 +44,7 @@ public:
   void SetWorker(Worker *w);
   void SetSize(size_t nbColumn, size_t nbRow, bool keepData = false, const std::string& progressStatus = "");
   void SetColumnLabels(const char ** names);
+  void SetColumnLabels(const std::vector<std::string>& names);
   void SetColumnLabel(size_t colId, const char *name);
   void SetAutoColumnLabel(bool enable);
   void SetColumnLabelVisible(bool visible);

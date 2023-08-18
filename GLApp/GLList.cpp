@@ -418,6 +418,15 @@ void GLList::SetColumnLabels(const char ** names) {
 	}
 }
 
+void GLList::SetColumnLabels(const std::vector<std::string>& names) {
+	if (cNames) {
+		for (int i = 0; i < std::min(names.size(),nbCol); i++) {
+			SAFE_FREE(cNames[i]);
+			cNames[i] = strdup(names[i].c_str());
+		}
+	}
+}
+
 void GLList::SetRowLabels(const char **names) {
 
 	if (rNames) {
