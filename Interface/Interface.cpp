@@ -926,8 +926,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     facetAreaLabel = new GLLabel("Area (cm\262):");
     facetPanel->Add(facetAreaLabel);
-    facetArea = new GLTextField(0, nullptr);
-    facetPanel->Add(facetArea);
+    facetAreaText = new GLTextField(0, nullptr);
+    facetPanel->Add(facetAreaText);
 
     facetDetailsBtn = new GLButton(0, "Details...");
     facetPanel->Add(facetDetailsBtn);

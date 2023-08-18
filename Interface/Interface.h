@@ -392,7 +392,7 @@ public:
 	GLLabel* facetTLabel;
 	GLTextField* facetOpacity;
 	GLLabel* facetAreaLabel;
-	GLTextField* facetArea;
+	GLTextField* facetAreaText;
 
 	GLToggle* autoFrameMoveToggle;
 	GLButton* forceFrameMoveButton;
