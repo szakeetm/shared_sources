@@ -199,9 +199,9 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         /* --- Simu settings ---*/
         static bool simChanged = false;
 #if defined(MOLFLOW)
-        static double gasMass = mApp->worker.model->wp.gasMass;
-        static bool enableDecay = mApp->worker.model->wp.enableDecay;
-        static double halfLife = mApp->worker.model->wp.halfLife;
+        static double gasMass = mApp->worker.model->sp.gasMass;
+        static bool enableDecay = mApp->worker.model->sp.enableDecay;
+        static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff =
                 mApp->worker.model->otfParams.lowFluxCutoff;
@@ -223,18 +223,18 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
         // Use tmp var to multiply by 10
         double outgRate10 =
-                mApp->worker.model->wp.finalOutgassingRate_Pa_m3_sec * 10.00;
+                mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * 10.00;
         ImGui::InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
                        "%.4g"); // 10: conversion Pa*m3/sec -> mbar*l/s
         ImGui::InputRightSide("Final outgassing rate (1/sec)",
-                       &mApp->worker.model->wp.finalOutgassingRate,
+                       &mApp->worker.model->sp.finalOutgassingRate,
                        "%.4g"); // In molecules/sec
 
         {
             char tmp[64];
             sprintf(tmp, "Tot.des. molecules [0 to %g s]",
-                    mApp->worker.model->wp.latestMoment);
-            ImGui::InputRightSide(tmp, &mApp->worker.model->wp.totalDesorbedMolecules,
+                    mApp->worker.model->sp.latestMoment);
+            ImGui::InputRightSide(tmp, &mApp->worker.model->sp.totalDesorbedMolecules,
                            "%.4g");
         }
 
@@ -284,9 +284,9 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
             ImGui::PlaceAtRegionCenter("Apply above settings");
             if (ImGui::Button("Apply above settings")) {
                 simChanged = false;
-                mApp->worker.model->wp.gasMass = gasMass;
-                mApp->worker.model->wp.enableDecay = enableDecay;
-                mApp->worker.model->wp.halfLife = halfLife;
+                mApp->worker.model->sp.gasMass = gasMass;
+                mApp->worker.model->sp.enableDecay = enableDecay;
+                mApp->worker.model->sp.halfLife = halfLife;
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
             }

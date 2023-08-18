@@ -135,7 +135,7 @@ Interface::Interface() : GLApplication(){
     leftHandedView = false;
     autoUpdateFormulas = true;
     compressSavedFiles = true;
-    /*double wp.gasMass=28;
+    /*double sp.gasMass=28;
     double totalOutgassing=0.0; //total outgassing in Pa*m3/sec (internally everything is in SI units)
     double totalInFlux = 0.0; //total incoming molecules per second. For anisothermal system, it is (totalOutgassing / Kb / T)*/
     autoSaveFrequency = 10.0; //in minutes
@@ -1817,11 +1817,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
             } else if (src->GetId() == MENU_VIEW_DELSTRUCT) {
                 DeleteStruct();
                 UpdateStructMenu();
-
+/*
 #if defined(MOLFLOW)
-                worker.CalcTotalOutgassing();
+                //worker.CalcTotalOutgassing();
 #endif
-
+*/
                 return true;
             }
             else if (src->GetId() == MENU_VIEW_PREVSTRUCT) {

@@ -122,7 +122,7 @@ void InterfaceGeometry::InitializeGeometry(int facet_number) {
 	// improved. stub). The algorithm chooses the longest vedge for the U vector.
 	// then it computes V (orthogonal to U and N). Afterwards, U and V are rescaled 
 	// so each facet vertex are included in the rectangle defined by uU + vV (0<=u<=1 
-	// and 0<=v<=1) of origin f->wp.O, U and V are always orthogonal and (U,V,N) 
+	// and 0<=v<=1) of origin f->sp.O, U and V are always orthogonal and (U,V,N) 
 	// form a 3D left handed orthogonal basis (not necessary orthonormal).
 	// This coordinates system allows to prevent from possible "almost degenerated"
 	// basis on fine geometry. It also greatly eases the facet/ray instersection routine 
@@ -131,7 +131,7 @@ void InterfaceGeometry::InitializeGeometry(int facet_number) {
 	// The local coordinates of facet vertex are stored in (U,V) coordinates (vertices2).
 
 	for (int i = 0; i < sh.nbFacet; i++) {
-		//initGeoPrg.SetProgress((double)i/(double)wp.nbFacet);
+		//initGeoPrg.SetProgress((double)i/(double)sp.nbFacet);
 		if ((facet_number == -1) || (i == facet_number)) { //permits to initialize only one facet
 														   // Main facet params
 			// Current facet
@@ -581,7 +581,7 @@ void InterfaceGeometry::ClipPolygon(size_t id1, std::vector<std::vector<size_t>>
 		facets[sh.nbFacet + i] = f;
 	}
 	sh.nbFacet += nbNewFacets;
-	//vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(wp.nbVertex + newVertices.size()));
+	//vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(sp.nbVertex + newVertices.size()));
 	vertices3.resize(sh.nbVertex + newVertices.size());
 	for (InterfaceVertex newVert : newVertices)
 		vertices3[sh.nbVertex++] = newVert;
@@ -746,10 +746,10 @@ AxisAlignedBoundingBox InterfaceGeometry::GetBB() {
 
 		// Axis Aligned Bounding Box
 		/*
-		for (int i = 0; i < wp.nbFacet; i++) {
+		for (int i = 0; i < sp.nbFacet; i++) {
 			Facet *f = facets[i];
-			if (f->wp.superIdx == viewStruct) {
-				for (int j = 0; j < f->wp.nbIndex; j++) {
+			if (f->sp.superIdx == viewStruct) {
+				for (int j = 0; j < f->sp.nbIndex; j++) {
 					Vector3d p = vertices3[f->indices[j]];
 					if (p.x < sbb.min.x) sbb.min.x = p.x;
 					if (p.y < sbb.min.y) sbb.min.y = p.y;
@@ -1159,7 +1159,7 @@ void InterfaceGeometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetOR
 			//Resize vertex and facet arrays
 			size_t nbNewVertices = facets[sourceFacetId]->sh.nbIndex;
 			if (mode == 3) nbNewVertices *= (steps);
-			//vertices3 = (InterfaceVertex*)realloc(vertices3, (wp.nbVertex + nbNewVertices) * sizeof(InterfaceVertex));
+			//vertices3 = (InterfaceVertex*)realloc(vertices3, (sp.nbVertex + nbNewVertices) * sizeof(InterfaceVertex));
 			vertices3.resize(sh.nbVertex + nbNewVertices);
 
 			size_t nbNewFacets = facets[sourceFacetId]->sh.nbIndex;
@@ -1201,7 +1201,7 @@ void InterfaceGeometry::Extrude(int mode, Vector3d radiusBase, Vector3d offsetOR
 
 			//Construct sides
 			//int direction = 1;
-			//if (Dot(&dir2, &facets[sourceFacetId]->wp.N) * distanceORradius < 0.0) direction *= -1; //extrusion towards normal or opposite?
+			//if (Dot(&dir2, &facets[sourceFacetId]->sp.N) * distanceORradius < 0.0) direction *= -1; //extrusion towards normal or opposite?
 			for (size_t step = 0; step < ((mode == 3) ? steps : 1); step++) {
 				for (size_t j = 0; j < facets[sourceFacetId]->sh.nbIndex; j++) {
 					facets[sh.nbFacet + step*facets[sourceFacetId]->sh.nbIndex + j] = new InterfaceFacet(4);
@@ -1259,7 +1259,7 @@ void InterfaceGeometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFac
 
 	// Reallocate mem
     std::vector<InterfaceFacet*> nFacets(sh.nbFacet + nbF, nullptr);
-    //InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((wp.nbVertex + nbV) * sizeof(InterfaceVertex));
+    //InterfaceVertex *nVertices3 = (InterfaceVertex *)malloc((sp.nbVertex + nbV) * sizeof(InterfaceVertex));
 
 	if (sh.nbFacet) nFacets.insert(std::begin(nFacets), std::begin(facets), std::end(facets));
 
@@ -1269,7 +1269,7 @@ void InterfaceGeometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFac
     }
     nFacets.insert(std::end(nFacets), std::begin(newFac), std::end(newFac));
 
-	//if (wp.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertex) * wp.nbVertex);
+	//if (sp.nbVertex) memcpy(nVertices3, vertices3, sizeof(InterfaceVertex) * sp.nbVertex);
 	vertices3.resize(sh.nbVertex + nbV);
 	memcpy(&vertices3[sh.nbVertex], nV, sizeof(InterfaceVertex) * nbV);
 
@@ -1535,7 +1535,7 @@ void InterfaceGeometry::RestoreFacets(const std::vector<DeletedFacet>& deletedFa
 	//size_t nbNew = 0;
 	std::vector<int> newRefs(sh.nbFacet, -1);
 	/*for (auto& restoreFacet : deletedFacetList)
-		if (restoreFacet.ori_pos >= wp.nbFacet || toEnd) nbNew++;*/
+		if (restoreFacet.ori_pos >= sp.nbFacet || toEnd) nbNew++;*/
     std::vector<InterfaceFacet*> tempFacets(sh.nbFacet + /*nbNew*/ deletedFacetList.size(), nullptr);
 
     size_t pos = 0;
@@ -1815,7 +1815,7 @@ std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P
     
 	//update textures
 	/*try {
-		for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
+		for (int i = 0; i < sp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 	}
 	catch (const std::exception &e) {
 		GLMessageBox::Display(e.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
@@ -1890,7 +1890,7 @@ void InterfaceGeometry::RotateSelectedFacets(const Vector3d &AXIS_P0, const Vect
         
 		//update textures
 		/*try {
-			for (int i = 0; i < wp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
+			for (int i = 0; i < sp.nbFacet; i++) if (facets[i]->selected) SetFacetTexture(i, facets[i]->tRatio, facets[i]->hasMesh);
 
 		}
 		catch (const std::exception &e) {
@@ -1955,13 +1955,13 @@ int InterfaceGeometry::CloneSelectedFacets() { //create clone of selected facets
         ++startInd;
     }
 	/*
-	vertices3 = (InterfaceVertex*)realloc(vertices3, (wp.nbVertex + newVertices.size()) * sizeof(InterfaceVertex)); //Increase vertices3 array
+	vertices3 = (InterfaceVertex*)realloc(vertices3, (sp.nbVertex + newVertices.size()) * sizeof(InterfaceVertex)); //Increase vertices3 array
 
 	//fill the new vertices with references to the old ones
 	for (size_t newVertexId = 0; newVertexId < newVertices.size(); newVertexId++) {
-		vertices3[wp.nbVertex + newVertexId] = newVertices[newVertexId];
+		vertices3[sp.nbVertex + newVertexId] = newVertices[newVertexId];
 	}
-	wp.nbVertex += newVertices.size(); //update number of vertices
+	sp.nbVertex += newVertices.size(); //update number of vertices
 	*/
 	//vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
 	sh.nbVertex = vertices3.size();
@@ -2211,7 +2211,7 @@ std::vector<DeletedFacet> InterfaceGeometry::BuildIntersection(size_t *nbCreated
 			IntersectFacet facet;
 			facet.id = i;
 			facet.f = facets[i];
-			//facet.visitedFromThisIndice.resize(facet.f->wp.nbIndex);
+			//facet.visitedFromThisIndice.resize(facet.f->sp.nbIndex);
 			facet.intersectionPointId.resize(facet.f->sh.nbIndex);
 			selectedFacets.push_back(facet);
 		}
@@ -2233,7 +2233,7 @@ std::vector<DeletedFacet> InterfaceGeometry::BuildIntersection(size_t *nbCreated
 						bool found = false;
 						for (size_t f_other = 0;found == false && f_other < selectedFacets.size();f_other++) { //Compare with all facets
 							if (i != f_other) {
-								for (size_t v_other = 0;found == false && v_other < selectedFacets[f_other].f->wp.nbIndex;v_other++) { //Compare with all other facets' all other vertices
+								for (size_t v_other = 0;found == false && v_other < selectedFacets[f_other].f->sp.nbIndex;v_other++) { //Compare with all other facets' all other vertices
 									for (size_t visited_v_other = 0;found == false && visited_v_other < selectedFacets[f_other].visitedFromThisIndice[v_other].size();visited_v_other++) //Check if we visited ourselves from an other vertex
 										if (selectedFacets[f_other].visitedFromThisIndice[v_other][visited_v_other] == f1->indices[index]) //Found a common point
 											found = selectedFacets[f_other].f->indices[v_other] == f1->GetIndex(index + 1);
@@ -2277,11 +2277,11 @@ std::vector<DeletedFacet> InterfaceGeometry::BuildIntersection(size_t *nbCreated
 		}
 	}
 	/*
-	vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(wp.nbVertex + newVertices.size()));
+	vertices3 = (InterfaceVertex*)realloc(vertices3, sizeof(InterfaceVertex)*(sp.nbVertex + newVertices.size()));
 	for (InterfaceVertex vertex : newVertices) {
-		vertices3[wp.nbVertex] = vertex;
-		//result.push_back(wp.nbVertex);
-		wp.nbVertex++;
+		vertices3[sp.nbVertex] = vertex;
+		//result.push_back(sp.nbVertex);
+		sp.nbVertex++;
 	}*/
 	vertices3.insert(vertices3.end(), newVertices.begin(), newVertices.end());
 	sh.nbVertex += newVertices.size();
@@ -2457,7 +2457,7 @@ std::vector<DeletedFacet> InterfaceGeometry::BuildIntersection(size_t *nbCreated
 
 	//Rebuild facet
 	/*
-	f->wp.nbIndex = (int)testPath.size();
+	f->sp.nbIndex = (int)testPath.size();
 	f->indices = (int*)realloc(f->indices, sizeof(int)*testPath.size());
 	f->vertices2 = (Vector2d*)realloc(f->vertices2, sizeof(Vector2d)*testPath.size());
 	f->visible = (bool*)realloc(f->visible, sizeof(bool)*testPath.size());
@@ -2640,7 +2640,7 @@ std::vector<DeletedFacet> InterfaceGeometry::SplitSelectedFacets(const Vector3d 
 						newFacet->sh.outgassing = newFacet->sh.area / f->sh.area * f->sh.outgassing; //Scale outgassing with facet area
 					}
 #endif //MOLFLOW
-					/*if (f->wp.area > 0.0) {*/
+					/*if (f->sp.area > 0.0) {*/
 					if (Dot(f->sh.N, newFacet->sh.N) < 0) {
 						newFacet->SwapNormal();
 					}
@@ -3086,7 +3086,7 @@ void InterfaceGeometry::CalculateFacetParams(InterfaceFacet* f) {
 	}
 
 #if defined(MOLFLOW)
-	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model->wp.gasMass);
+	f->sh.maxSpeed = 4.0 * sqrt(2.0*8.31*f->sh.temperature / 0.001 / mApp->worker.model->sp.gasMass);
 #endif
 }
 
@@ -3769,12 +3769,12 @@ void InterfaceGeometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newS
     catch(const std::exception &) {
         throw Error("Couldn't allocate memory for facets");
     }
-	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+wp.nbVertex) * sizeof(Vector3d));
+	//vertices3 = (Vector3d*)realloc(vertices3,(nbNewVertex+sp.nbVertex) * sizeof(Vector3d));
 	
 	/*
-	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + wp.nbVertex) * sizeof(InterfaceVertex));
-	memmove(tmp_vertices3, vertices3, (wp.nbVertex) * sizeof(InterfaceVertex));
-	memset(tmp_vertices3 + wp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
+	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + sp.nbVertex) * sizeof(InterfaceVertex));
+	memmove(tmp_vertices3, vertices3, (sp.nbVertex) * sizeof(InterfaceVertex));
+	memset(tmp_vertices3 + sp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
 	SAFE_FREE(vertices3);
 	vertices3 = tmp_vertices3;
 	*/
@@ -3876,7 +3876,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newS
 	}
 	if (version2 >= 7) {
 		file.ReadKeyword("gasMass"); file.ReadKeyword(":");
-		/*wp.gasMass = */file.ReadDouble();
+		/*sp.gasMass = */file.ReadDouble();
 	}
 	if (version2 >= 10) { //time-dependent version
 		file.ReadKeyword("userMoments"); file.ReadKeyword("{");
@@ -4307,8 +4307,8 @@ int  InterfaceGeometry::ExplodeSelected(bool toMap, int desType, double exponent
 	InterfaceVertex *ptrVert;
 	size_t       vIdx;
 	/*
-	InterfaceVertex *nVert = (InterfaceVertex *)malloc((wp.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
-	memcpy(nVert, vertices3, wp.nbVertex * sizeof(InterfaceVertex));*/
+	InterfaceVertex *nVert = (InterfaceVertex *)malloc((sp.nbVertex + VtoAdd) * sizeof(InterfaceVertex));
+	memcpy(nVert, vertices3, sp.nbVertex * sizeof(InterfaceVertex));*/
 	vertices3.resize(sh.nbVertex + VtoAdd);
 
 	ptrVert = &(vertices3[sh.nbVertex]);

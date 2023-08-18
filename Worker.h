@@ -135,8 +135,7 @@ public:
   int SendAngleMaps();
   void ResetMoments();
 
-  double GetMoleculesPerTP(size_t moment) const;
-  void CalcTotalOutgassing();
+  double GetMoleculesPerTP(size_t moment) const;;
   //Different signature:
   #endif
 

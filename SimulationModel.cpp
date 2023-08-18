@@ -33,7 +33,7 @@ size_t SimulationModel::GetMemSize() {
     modelSize += sizeof(Vector3d) * vertices3.capacity();
     
     modelSize += sizeof(otfParams);
-    modelSize += sizeof(wp);
+    modelSize += sizeof(sp);
     modelSize += sizeof(sh);
     modelSize += sizeof(modelMutex);
     modelSize += sizeof(initialized);
@@ -203,6 +203,6 @@ void SimulationModel::CalculateFacetParams(RTFacet* f) {
     }
 
 #if defined(MOLFLOW)
-    f->sh.maxSpeed = 4.0 * std::sqrt(2.0*8.31*f->sh.temperature / 0.001 / wp.gasMass);
+    f->sh.maxSpeed = 4.0 * std::sqrt(2.0*8.31*f->sh.temperature / 0.001 / sp.gasMass);
 #endif
 }

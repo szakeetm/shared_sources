@@ -638,9 +638,9 @@ void InterfaceFacet::SwapNormal() {
 
 	/* normal recalculated at reinitialize
 	// Invert normal
-	wp.N.x = -wp.N.x;
-	wp.N.y = -wp.N.y;
-	wp.N.z = -wp.N.z;*/
+	sp.N.x = -sp.N.x;
+	sp.N.y = -sp.N.y;
+	sp.N.z = -sp.N.z;*/
 
 }
 
@@ -890,7 +890,7 @@ Vector3d InterfaceFacet::GetRealCenter() {
 void InterfaceFacet::UpdateFlags() {
 
 	sh.isProfile = (sh.profileType != PROFILE_NONE);
-	//wp.isOpaque = (wp.opacity != 0.0);
+	//sp.isOpaque = (sp.opacity != 0.0);
 	//sh.isTextured = ((texDimW*texDimH) > 0);
     sh.isTextured = ((sh.texWidth_precise*sh.texHeight_precise) > 0);
 }
@@ -993,7 +993,7 @@ void InterfaceFacet::CopyFacetProperties(InterfaceFacet *f, bool copyMesh) {
 	c = f->c;
 	d = f->d;
 	
-	//wp.area = f->wp.area;
+	//sp.area = f->sp.area;
 	//planarityError = f->planarityError;
 	sh.N = f->sh.N;
 	

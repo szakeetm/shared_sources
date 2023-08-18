@@ -231,7 +231,8 @@ void AlignFacet::ProcessMessage(GLComponent *src,int message) {
 dirDestVertexId,
 					invertNormal->GetState(),invertDir1->GetState(),invertDir2->GetState(),src==copyButton,work);
 				#if defined(MOLFLOW)
-				if (src == copyButton) mApp->worker.GetGeometry(); mApp->worker.CalcTotalOutgassing();
+				if (src == copyButton) mApp->worker.GetGeometry();
+				//mApp->worker.CalcTotalOutgassing();
 				#endif
 				//mApp->UpdateModelParams();
 				work->MarkToReload();

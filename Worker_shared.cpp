@@ -49,6 +49,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../src/MolFlow.h"
 #include "../src/MolflowGeometry.h"
 #include "../src/Interface/FacetAdvParams.h"
+#include "../src/Interface/GlobalSettings.h"
 #endif
 
 #if defined(SYNRAD)
@@ -162,7 +163,7 @@ bool Worker::ReloadIfNeeded() {
 		if (needsReload) RealReload();
 	}
 	catch (const std::exception& e) {
-		GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+		GLMessageBox::Display(e.what(), "Error (RealReload)", GLDLG_OK, GLDLG_ICONERROR);
 		return false;
 	}
 	return true;
@@ -199,6 +200,9 @@ void Worker::MarkToReload() {
 	//Schedules a reload
 	//Actual reloading is done by RealReload() method
 	needsReload = true;
+#ifdef MOLFLOW
+	if (mApp->globalSettings) mApp->globalSettings->UpdateOutgassing();
+#endif
 }
 
 /*
@@ -343,11 +347,11 @@ void Worker::CalculateTextureLimits() {
 					if (facetHitBuffer.nbMCHit == 0 && facetHitBuffer.nbDesorbed == 0) continue;
 				}
 
-				//double dCoef = globalState->globalStats.globalStats.hit.nbDesorbed * 1E4 * model->wp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
+				//double dCoef = globalState->globalStats.globalStats.hit.nbDesorbed * 1E4 * model->sp.gasMass / 1000 / 6E23 * MAGIC_CORRECTION_FACTOR;  //1E4 is conversion from m2 to cm2
 				const double timeCorrection =
-					m == 0 ? model->wp.finalOutgassingRate : (model->wp.totalDesorbedMolecules) /
+					m == 0 ? model->sp.finalOutgassingRate : (model->sp.totalDesorbedMolecules) /
 					interfaceMomentCache[m - 1].window;
-				//model->wp.timeWindowSize;
+				//model->sp.timeWindowSize;
 				//Timecorrection is required to compare constant flow texture values with moment values (for autoscaling)
 				const auto& texture = globalState->facetStates[facet->globalId].momentResults[m].texture;
 				const size_t textureSize = texture.size();
@@ -387,7 +391,7 @@ void Worker::CalculateTextureLimits() {
 	double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
 	//Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
 	//Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-	dCoef_custom[0] = 1E4 / (double)globalState->globalStats.globalHits.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23 * 0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+	dCoef_custom[0] = 1E4 / (double)globalState->globalStats.globalHits.nbDesorbed * mApp->worker.model->sp.gasMass / 1000 / 6E23 * 0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
 	dCoef_custom[1] = 1E4 / (double)globalState->globalStats.globalHits.nbDesorbed;
 	dCoef_custom[2] = 1E4 / (double)globalState->globalStats.globalHits.nbDesorbed;
 
@@ -454,7 +458,7 @@ void Worker::CalculateTextureLimits() {
 	/*double dCoef_custom[] = { 1.0, 1.0, 1.0 };  //Three coefficients for pressure, imp.rate, density
 	//Autoscaling limits come from the subprocess corrected by "time factor", which makes constant flow and moment values comparable
 	//Time correction factor in subprocess: MoleculesPerTP * nbDesorbed
-	dCoef_custom[0] = 1E4 / (double)globalState->globalStats.globalStats.nbDesorbed * mApp->worker.model->wp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
+	dCoef_custom[0] = 1E4 / (double)globalState->globalStats.globalStats.nbDesorbed * mApp->worker.model->sp.gasMass / 1000 / 6E23*0.0100; //multiplied by timecorr*sum_v_ort_per_area: pressure
 	dCoef_custom[1] = 1E4 / (double)globalState->globalStats.globalStats.nbDesorbed;
 	dCoef_custom[2] = 1E4 / (double)globalState->globalStats.globalStats.nbDesorbed;
 
@@ -527,8 +531,8 @@ void Worker::Update(float appTime) {
 
 #if defined(SYNRAD)
 
-	if (globalStatCache.globalHits.nbDesorbed && model->wp.nbTrajPoints) {
-		no_scans = (double)globalStatCache.globalHits.nbDesorbed / (double)model->wp.nbTrajPoints;
+	if (globalStatCache.globalHits.nbDesorbed && model->sp.nbTrajPoints) {
+		no_scans = (double)globalStatCache.globalHits.nbDesorbed / (double)model->sp.nbTrajPoints;
 	}
 	else {
 		no_scans = 1.0;

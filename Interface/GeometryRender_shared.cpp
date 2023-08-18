@@ -366,7 +366,7 @@ void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper
 }
 
 void InterfaceGeometry::SelectVertex(int vertexId) {
-	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->wp.superIdx);
+	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->sp.superIdx);
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
 	if (!isLoaded) return;
@@ -409,7 +409,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			Vector3d* v = GetVertex(i);
-			//if(viewStruct==-1 || f->wp.superIdx==viewStruct) {
+			//if(viewStruct==-1 || f->sp.superIdx==viewStruct) {
 			if (true) {
 
 				bool isInside = false;

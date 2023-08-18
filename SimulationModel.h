@@ -79,7 +79,7 @@ public:
         vertices3 = o.vertices3;
         otfParams = o.otfParams;
         //tdParams = o.tdParams;
-        wp = o.wp;
+        sp = o.sp;
         sh = o.sh;
         initialized = o.initialized;
 
@@ -94,7 +94,7 @@ public:
         vertices3 = std::move(o.vertices3);
         //tdParams = std::move(o.tdParams);
         otfParams = o.otfParams;
-        wp = o.wp;
+        sp = o.sp;
         sh = o.sh;
         initialized = o.initialized;
 
@@ -150,7 +150,7 @@ public:
 
     // Simulation Properties
     OntheflySimulationParams otfParams;
-    WorkerParams wp;
+    SimuParams sp;
 
     // Geometry Properties
     GeomProperties sh;

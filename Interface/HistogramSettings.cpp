@@ -401,16 +401,16 @@ bool HistogramSettings::Apply() {
 
 	if (mApp->AskToReset()) {
 		//Apply
-		work->model->wp.globalHistogramParams.recordBounce = globalRecBounce;
-		if (doGlobalHitLimit) work->model->wp.globalHistogramParams.nbBounceMax = globalHitLimit;
-		if (doGlobalHitBinsize) work->model->wp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
-		work->model->wp.globalHistogramParams.recordDistance = globalRecDistance;
-		if (doGlobalDistanceLimit) work->model->wp.globalHistogramParams.distanceMax = globalDistanceLimit;
-		if (doGlobalDistanceBinsize) work->model->wp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
+		work->model->sp.globalHistogramParams.recordBounce = globalRecBounce;
+		if (doGlobalHitLimit) work->model->sp.globalHistogramParams.nbBounceMax = globalHitLimit;
+		if (doGlobalHitBinsize) work->model->sp.globalHistogramParams.nbBounceBinsize = globalHitBinsize;
+		work->model->sp.globalHistogramParams.recordDistance = globalRecDistance;
+		if (doGlobalDistanceLimit) work->model->sp.globalHistogramParams.distanceMax = globalDistanceLimit;
+		if (doGlobalDistanceBinsize) work->model->sp.globalHistogramParams.distanceBinsize = globalDistanceBinsize;
 #if defined(MOLFLOW)
-		work->model->wp.globalHistogramParams.recordTime = globalRecTime;
-		if (doGlobalTimeLimit) work->model->wp.globalHistogramParams.timeMax = globalTimeLimit;
-		if (doGlobalTimeBinsize) work->model->wp.globalHistogramParams.timeBinsize = globalTimeBinsize;
+		work->model->sp.globalHistogramParams.recordTime = globalRecTime;
+		if (doGlobalTimeLimit) work->model->sp.globalHistogramParams.timeMax = globalTimeLimit;
+		if (doGlobalTimeBinsize) work->model->sp.globalHistogramParams.timeBinsize = globalTimeBinsize;
 #endif
 
 		auto selectedFacets = interfGeom->GetSelectedFacets();
@@ -446,16 +446,16 @@ bool HistogramSettings::Apply() {
 
 void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	//Update displayed info based on selected facets
-	globalRecordBounceToggle->SetState(work->model->wp.globalHistogramParams.recordBounce);
-	globalHitLimitText->SetText(work->model->wp.globalHistogramParams.nbBounceMax);
-	globalHitBinsizeText->SetText(work->model->wp.globalHistogramParams.nbBounceBinsize);
-	globalRecordDistanceToggle->SetState(work->model->wp.globalHistogramParams.recordDistance);
-	globalDistanceLimitText->SetText(work->model->wp.globalHistogramParams.distanceMax);
-	globalDistanceBinsizeText->SetText(work->model->wp.globalHistogramParams.distanceBinsize);
+	globalRecordBounceToggle->SetState(work->model->sp.globalHistogramParams.recordBounce);
+	globalHitLimitText->SetText(work->model->sp.globalHistogramParams.nbBounceMax);
+	globalHitBinsizeText->SetText(work->model->sp.globalHistogramParams.nbBounceBinsize);
+	globalRecordDistanceToggle->SetState(work->model->sp.globalHistogramParams.recordDistance);
+	globalDistanceLimitText->SetText(work->model->sp.globalHistogramParams.distanceMax);
+	globalDistanceBinsizeText->SetText(work->model->sp.globalHistogramParams.distanceBinsize);
 #if defined(MOLFLOW)
-	globalRecordTimeToggle->SetState(work->model->wp.globalHistogramParams.recordTime);
-	globalTimeLimitText->SetText(work->model->wp.globalHistogramParams.timeMax);
-	globalTimeBinsizeText->SetText(work->model->wp.globalHistogramParams.timeBinsize);
+	globalRecordTimeToggle->SetState(work->model->sp.globalHistogramParams.recordTime);
+	globalTimeLimitText->SetText(work->model->sp.globalHistogramParams.timeMax);
+	globalTimeBinsizeText->SetText(work->model->sp.globalHistogramParams.timeBinsize);
 #endif
 
 	bool hasFacetSelected = selectedFacetIds.size() > 0;

@@ -315,7 +315,7 @@ CEREAL_NVP(recordSpectrum)    // Calculate energy spectrum (histogram)
 	}
 };
 
-struct WorkerParams { //Plain old data
+struct SimuParams { //Plain old data
 	HistogramParams globalHistogramParams;
 
     AccelType accel_type = AccelType::BVH;
