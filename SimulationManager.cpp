@@ -540,7 +540,7 @@ void SimulationManager::ShareSimModel(std::shared_ptr<SimulationModel> model) { 
     simulation->model = model;
 }
 
-// Create hard copy for local usage and resie particle logger
+// Create hard copy for local usage and resize particle logger
 void SimulationManager::SetOntheflyParams(OntheflySimulationParams *otfParams) {
     simulation->model->otfParams = *otfParams;
     simulation->ReinitializeParticleLog();

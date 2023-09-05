@@ -146,7 +146,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
     float gasMass = 2.4;
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
         ImGui::TableSetupColumn("Global settings");
-        ImGui::TableSetupColumn("Simulation settings");
+        ImGui::TableSetupColumn("Simulation settings (current file)");
         ImGui::TableHeadersRow();
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
