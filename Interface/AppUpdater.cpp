@@ -39,12 +39,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <unistd.h> //Get user name
 #endif
 
-enum class FetchStatus : int
-{
-    NONE = 0,
-    DOWNLOAD_ERROR = 1,
-    OTHER_ERROR = 2, OKAY, PARSE_ERROR
-};
 /**
 * \brief Constructor with initialisation for the App Updater
 * \param appName hardcoded name of the app (@see versionId.h)
@@ -54,7 +48,6 @@ enum class FetchStatus : int
 AppUpdater::AppUpdater(const std::string& appName, const int versionId, const std::string& configFile) {
 	applicationName = appName;
 	currentVersionId = versionId;
-    lastFetchStatus = 0;
 	configFileName = configFile;
     updateWarning = nullptr;
 	os = GLToolkit::GetOSName();
@@ -216,17 +209,18 @@ int AppUpdater::RequestUpdateCheck() {
 	}
 }
 
-int AppUpdater::NotifyServerWarning() {
+void AppUpdater::NotifyServerWarning() {
+	if (lastFetchStatus == FetchStatus::NONE) return; //didn't perform an update check yet
     if (nbUpdateFailsInRow >= askAfterNbUpdateFails) {
         // Issue the warning in a new window
         if(!updateWarning) {
             nbUpdateFailsInRow = askAfterNbUpdateFails - 1; // temporarily reset, so that warning is not constantly accessed
             updateWarning = new UpdateWarningDialog(this);
         }
-        else
-            updateWarning->SetVisible(true);
+		else {
+			updateWarning->SetVisible(true);
+		}
     }
-    return 0;
 }
 
 void AppUpdater::AllowFurtherWarnings(bool allow){
@@ -333,20 +327,20 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
                 //availableUpdates.insert(availableUpdates.end(), availableUpdates_old.begin(), availableUpdates_old.end());
                 resultCategory = "updateCheck";
 				resultDetail << "updateCheck_" << applicationName << "_" << currentVersionId;
-                lastFetchStatus = (int)FetchStatus::OKAY;
+                lastFetchStatus = FetchStatus::OKAY;
             }
 			else { //parse error
                 errorState = true;
 				resultCategory = "parseError";
 				resultDetail << "parseError_" << parseResult.status << "_" << applicationName << "_" << currentVersionId;
-                lastFetchStatus = (int)FetchStatus::PARSE_ERROR;
+                lastFetchStatus = FetchStatus::PARSE_ERROR;
             }
 		}
 		else { //download error
             errorState = true;
 			resultCategory = "stringDownloadError";
 			resultDetail << "stringDownloadError_" << downloadResult << "_" << applicationName << "_" << currentVersionId;
-		    lastFetchStatus = (int)FetchStatus::DOWNLOAD_ERROR;
+		    lastFetchStatus = FetchStatus::DOWNLOAD_ERROR;
 		}
 		//Send result for analytics
 
@@ -356,7 +350,12 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
                 nbUpdateFailsInRow++;
                 SaveConfig();
             }
-        }
+		}
+		else {
+			if (nbUpdateFailsInRow >= 0) {
+				nbUpdateFailsInRow = 0; //reset counter, successful check
+			}
+		}
 
 		if (Contains({ "","not_set","default" }, tracker.userId)) {
 			//First update check: generate random install identifier, like a browser cookie (4 alphanumerical characters)
@@ -1066,22 +1065,16 @@ void ManualUpdateCheckDialog::Refresh() {
         if (updater->IsUpdateAvailable()) {
             updateAvailable = true;
         }
-        else { // no updates found
-            // Try again
+        else { // no updates found at startup, try again now
             updater->PerformImmediateCheck();
+			if(updater->GetStatus() != (int)FetchStatus::OKAY){
+        	    updateError = true;
+        	}
 			if (updater->IsUpdateAvailable()) {
 				updateAvailable = true;
 			}
-			else {
-				aboutText << "This is already the latest version." << std::endl;
-                aboutText << updater->GetLatestChangeLog();
-			}
-            if(updater->GetStatus() != (int)FetchStatus::OKAY){
-                updateError = true;
-            }
         }
     }
-
 
     if(updateAvailable){
         aboutText.clear();
@@ -1094,8 +1087,11 @@ void ManualUpdateCheckDialog::Refresh() {
     if(updateError){ // app updater error
         aboutText << "Could not check for updates." << std::endl;
         aboutText << "Please try again after restarting the application or check for a new update at" << std::endl;
-        aboutText << "    https://molflow.web.cern.ch/" << std::endl;
+        aboutText << PUBLIC_WEBSITE << std::endl;
     }
+	if (!updateAvailable && !updateError) {
+		aboutText << appVersionName << " is already the latest version." << std::endl;
+	}
 
     questionLabel->SetText(aboutText.str().c_str());
 

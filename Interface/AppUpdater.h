@@ -214,6 +214,13 @@ private:
     UpdateFoundDialog* foundWnd;
 };
 
+enum FetchStatus
+{
+	NONE = 0,
+	DOWNLOAD_ERROR = 1,
+	OTHER_ERROR = 2, OKAY, PARSE_ERROR
+};
+
 class AppUpdater {
 private:
     void MakeDefaultConfig();
@@ -233,7 +240,7 @@ public:
     std::string GetLatestChangeLog();
 
 	int RequestUpdateCheck(); //Host app requesting update check, and is prepared to treat a possible "ask user if I can check for updates" dialog. Usually called on app startup. If we already have user permission, launches async updatecheck process
-    int NotifyServerWarning();
+    void NotifyServerWarning();
     void AllowFurtherWarnings(bool allow);
 
     void PerformImmediateCheck();
@@ -242,13 +249,13 @@ public:
 	void SkipAvailableUpdates();
 	void InstallLatestUpdate(UpdateLogWindow* logWindow);
 	void IncreaseSessionCount();
-	int GetStatus(){return lastFetchStatus;};
+	FetchStatus GetStatus(){return lastFetchStatus;};
 	std::string GetPublicWebsiteAddress() { return publicWebsite; };
 private:
 
 	//Initialized by constructor:
 	int currentVersionId;
-	int lastFetchStatus;
+	FetchStatus lastFetchStatus = FetchStatus::NONE;
 	std::string applicationName;
 	std::string configFileName;
 

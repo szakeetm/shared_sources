@@ -2625,11 +2625,7 @@ int Interface::FrameMove() {
                 wereEvents = true;
             }
         }
-        else{
-            if(appUpdater->NotifyServerWarning()){
-
-            }
-        }
+        appUpdater->NotifyServerWarning();
     }
 
     if (worker.globalStatCache.nbLeakTotal) {
