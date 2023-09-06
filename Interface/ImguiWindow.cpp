@@ -251,7 +251,7 @@ void ImguiWindow::renderSingle() {
 
         if (show_facet_move)
         {
-            ShowAppFacetMove(); // does not see function
+            ShowAppFacetMove();
         }
 
         // 2. Show Molflow x ImGui Hub window
