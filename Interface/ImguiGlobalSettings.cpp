@@ -24,6 +24,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <imgui/imgui_internal.h>
 #include <sstream>
 
+#include "Interface/AppUpdater.h"
+#include "../../src/Interface/GlobalSettings.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 extern MolFlow *mApp;
@@ -139,6 +142,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
     ImGui::PopStyleVar(1);
 
     float gasMass = 2.4;
+    bool appSettingsChanged = false; //To sync old global settings window
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
         ImGui::TableSetupColumn("Global settings");
         ImGui::TableSetupColumn("Simulation settings (current file)");
@@ -146,46 +150,56 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::PushItemWidth(100);
-        ImGui::InputDouble("Autosave frequency (minutes)",
+        appSettingsChanged |= ImGui::InputDouble("Autosave frequency (minutes)",
                            &mApp->autoSaveFrequency, 0.00f, 0.0f, "%.1f");
         ImGui::PopItemWidth();
-        ImGui::Checkbox(
+        appSettingsChanged |= ImGui::Checkbox(
                 "Autosave only when simulation is running",
                 reinterpret_cast<bool *>(
                         &mApp->autoSaveSimuOnly)); // Edit bools storing our window
         // open/close state
-        ImGui::Checkbox(
+        appSettingsChanged |= ImGui::Checkbox(
                 "Use .zip as default extension (otherwise .xml)",
                 reinterpret_cast<bool *>(
                         &mApp->compressSavedFiles)); // Edit bools storing our window
         // open/close state
-        ImGui::Checkbox(
-                "Check for updates at startup",
-                reinterpret_cast<bool *>(
-                        &mApp->updateRequested)); // Edit bools storing our window
+        if (!mApp->appUpdater) ImGui::BeginDisabled();
+        static bool updateCheckPreference;
+        if (mApp->appUpdater) { //Updater initialized
+            updateCheckPreference = mApp->appUpdater->IsUpdateCheckAllowed();
+        }
+        else {
+            updateCheckPreference = false;
+        }
+		if (appSettingsChanged |= ImGui::Checkbox(
+			"Check for updates at startup",
+			&updateCheckPreference)) {
+			mApp->appUpdater->SetUserUpdatePreference(updateCheckPreference);
+		};
+        if (!mApp->appUpdater) ImGui::EndDisabled();
         // open/close state
-        ImGui::Checkbox(
+        appSettingsChanged |= ImGui::Checkbox(
                 "Auto refresh formulas",
                 reinterpret_cast<bool *>(
                         &mApp->autoUpdateFormulas)); // Edit bools storing our window
         // open/close state
-        ImGui::Checkbox("Anti-Aliasing",
+        appSettingsChanged |= ImGui::Checkbox("Anti-Aliasing",
                         &mApp->antiAliasing); // Edit bools storing our window
         // open/close state
-        ImGui::Checkbox(
+        appSettingsChanged |= ImGui::Checkbox(
                 "White Background",
                 &mApp->whiteBg); // Edit bools storing our window open/close state
-        ImGui::Checkbox("Left-handed coord. system",
+        appSettingsChanged |= ImGui::Checkbox("Left-handed coord. system",
                         &mApp->leftHandedView); // Edit bools storing our
         // window open/close state
         ImGui::Checkbox(
                 "Highlight non-planar facets",
                 &mApp->highlightNonplanarFacets); // Edit bools storing our window
         // open/close state
-        ImGui::Checkbox("Highlight selected facets",
+        appSettingsChanged |= ImGui::Checkbox("Highlight selected facets",
                         &mApp->highlightSelection); // Edit bools storing our
         // window open/close state
-        ImGui::Checkbox("Use old XML format",
+        appSettingsChanged |= ImGui::Checkbox("Use old XML format",
                         &mApp->useOldXMLFormat); // Edit bools storing our
         // window open/close state
         ImGui::TableNextColumn();
@@ -200,13 +214,13 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
 
-        simChanged = ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
-        simChanged = ImGui::Checkbox("", &enableDecay);
+        simChanged |= ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+        simChanged |= ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
             ImGui::BeginDisabled();
         }
         ImGui::SameLine();
-        simChanged = ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
+        simChanged |= ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
             ImGui::EndDisabled();
@@ -238,7 +252,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         if (ImGui::Button("Recalc. outgassing")) // Edit bools storing our
             // window open/close state
             recalcOutg = true;
-        simChanged = ImGui::Checkbox(
+        simChanged |= ImGui::Checkbox(
                 "Enable low flux mode",
                 &lowFluxMode); // Edit bools storing our window open/close state
         ImGui::SameLine();
@@ -262,7 +276,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         if (!lowFluxMode) {
             ImGui::BeginDisabled();
         }
-        simChanged = ImGui::InputDoubleRightSide(
+        simChanged |= ImGui::InputDoubleRightSide(
                 "Cutoff ratio", &lowFluxCutoff,
                 "%.2e"); // Edit bools storing our window open/close state
         if (!lowFluxMode) {
@@ -272,13 +286,20 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         {
             ImGui::PlaceAtRegionCenter("Apply above settings");
             if (ImGui::Button("Apply above settings")) {
-                simChanged = false;
+                simChanged |= false;
                 mApp->worker.model->sp.gasMass = gasMass;
                 mApp->worker.model->sp.enableDecay = enableDecay;
                 mApp->worker.model->sp.halfLife = halfLife;
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
+                
             }
+        }
+
+        if (appSettingsChanged) {
+            if (mApp->globalSettings) {
+                    mApp->globalSettings->Update(); //backwards compatibility: sync old Global Settings window
+             }
         }
 
 #else
