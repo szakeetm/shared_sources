@@ -379,7 +379,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
             }
             if(ImGui::Button("Update")){
                 mApp->updateRequested = true;
-                mApp->FrameMove();
+                //mApp->FrameMove();
             }
             if(mApp->autoFrameMove){
                 ImGui::EndDisabled();

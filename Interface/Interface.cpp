@@ -1951,7 +1951,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 return true;
             } else if (src == forceFrameMoveButton) {
                 updateRequested = true;
-                FrameMove();
+                //FrameMove();
                 return true;
             } else if (src == facetCoordBtn) {
                 if (!facetCoordinates) facetCoordinates = new FacetCoordinates();
