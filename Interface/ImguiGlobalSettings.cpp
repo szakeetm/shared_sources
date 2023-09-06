@@ -59,18 +59,19 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        ProcComm procInfoPtr;
-        mApp->worker.GetProcStatus(procInfoPtr);
+        ProcComm procInfo;
+        mApp->worker.GetProcStatus(procInfo);
 
         ImGui::TableNextRow();
 
-        // Interface
+        double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+        //Interface
 #ifdef _WIN32
         size_t currPid = GetCurrentProcessId();
-        double memDenom = (1024.0 * 1024.0);
+        double memDenominator_sys = (1024.0 * 1024.0);
 #else
         size_t currPid = getpid();
-        double memDenom = (1024.0);
+        double memDenominator_sys = (1024.0);
 #endif
         PROCESS_INFO parentInfo{};
         GetProcInfo(currPid, &parentInfo);
@@ -79,43 +80,37 @@ static void ProcessControlTable(SynRad *mApp) {
         ImGui::TableSetColumnIndex(1);
         ImGui::Text("%zd", currPid);
         ImGui::TableSetColumnIndex(2);
-        ImGui::Text("%.0f MB", (double) parentInfo.mem_use / memDenom);
+        ImGui::Text("%.0f MB", (double) parentInfo.mem_use / memDenominator_sys);
         ImGui::TableSetColumnIndex(3);
-        ImGui::Text("%.0f MB", (double) parentInfo.mem_peak / memDenom);
+        ImGui::Text("%.0f MB", (double) parentInfo.mem_peak / memDenominator_sys);
         ImGui::TableSetColumnIndex(4);
-        ImGui::Text("");
+        ImGui::Text("[Geom: %s]", mApp->worker.model->sh.name.c_str());
 
-        size_t i = 1;
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text("SimManager");
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text("%.0f MB", (double)mApp->worker.model->memSizeCache * byte_to_mbyte);
+        ImGui::TableSetColumnIndex(4);
+        ImGui::Text(mApp->worker.GetSimManagerStatus().c_str());
+
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(procInfoPtr.threadInfos.size());
+        clipper.Begin(procInfo.threadInfos.size());
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
-                i = row;
-                auto &proc = procInfoPtr.threadInfos[i];
-                DWORD pid = proc.threadId;
+                size_t i = row + 2;
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
-                ImGui::Text("Thread %zu", i + 1);
-                ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%u", pid);
+                ImGui::Text("Thread %zu", i - 1);
 
-                PROCESS_INFO pInfo = proc.runtimeInfo;
-                // GetProcInfo(pid, &pInfo);
+                auto& proc = procInfo.threadInfos[i - 2];
 
                 ImGui::TableSetColumnIndex(2);
-                ImGui::Text("%.0f MB", (double) pInfo.mem_use / memDenom);
-                ImGui::TableSetColumnIndex(3);
-                ImGui::Text("%.0f MB", (double) pInfo.mem_peak / memDenom);
-
-                // State/Status
-                std::stringstream tmp_ss;
-                // tmp_ss << "[" << prStates[states[i-1]] << "] " << statusStrings[i-1];
-                tmp_ss << "[" << threadStateStrings.at(proc.threadState) << "] " << proc.threadStatus;
+                ImGui::Text("%.0f MB", (double)proc.runtimeInfo.counterSize * byte_to_mbyte);
 
                 ImGui::TableSetColumnIndex(4);
-                ImGui::Text("%s", tmp_ss.str().c_str());
-                ++i;
+                ImGui::Text("[%s] %s", threadStateStrings[proc.threadState].c_str(), proc.threadStatus.c_str());
             }
         }
         ImGui::EndTable();
@@ -203,17 +198,15 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         static bool enableDecay = mApp->worker.model->sp.enableDecay;
         static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
-        static double lowFluxCutoff =
-                mApp->worker.model->otfParams.lowFluxCutoff;
+        static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
 
-        simChanged =
-                ImGui::InputRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+        simChanged = ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
         simChanged = ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
             ImGui::BeginDisabled();
         }
         ImGui::SameLine();
-        simChanged = ImGui::InputRightSide("Gas half life (s)", &halfLife, "%g");
+        simChanged = ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
             ImGui::EndDisabled();
@@ -221,21 +214,17 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
         ImGui::BeginDisabled();
 
-        // Use tmp var to multiply by 10
-        double outgRate10 =
-                mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * 10.00;
-        ImGui::InputRightSide("Final outgassing rate (mbar*l/sec)", &outgRate10,
-                       "%.4g"); // 10: conversion Pa*m3/sec -> mbar*l/s
-        ImGui::InputRightSide("Final outgassing rate (1/sec)",
-                       &mApp->worker.model->sp.finalOutgassingRate,
-                       "%.4g"); // In molecules/sec
+        static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
 
+        if (!mApp->worker.needsReload) sprintf(inputText,"%g",mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
+        ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)",inputText);
+        if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
+        ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText); // In molecules/sec
         {
-            char tmp[64];
-            sprintf(tmp, "Tot.des. molecules [0 to %g s]",
-                    mApp->worker.model->sp.latestMoment);
-            ImGui::InputRightSide(tmp, &mApp->worker.model->sp.totalDesorbedMolecules,
-                           "%.4g");
+            char tmpLabel[64];
+            sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
+            if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
+            ImGui::InputTextRightSide(tmpLabel,inputText);
         }
 
         ImGui::EndDisabled();
@@ -273,7 +262,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         if (!lowFluxMode) {
             ImGui::BeginDisabled();
         }
-        simChanged = ImGui::InputRightSide(
+        simChanged = ImGui::InputDoubleRightSide(
                 "Cutoff ratio", &lowFluxCutoff,
                 "%.2e"); // Edit bools storing our window open/close state
         if (!lowFluxMode) {
@@ -315,8 +304,8 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
     if (ImGui::Button("Apply and restart processes"))
         nbProcChanged = true;
     {
-        ImGui::PlaceAtRegionRight("Change MAX desorbed molecules", true);
-        if (ImGui::Button("Change MAX desorbed molecules"))
+        ImGui::PlaceAtRegionRight("Change desorption limit", true);
+        if (ImGui::Button("Change desorption limit"))
             ImGui::OpenPopup("Edit MAX");
     }
     // Always center this window when appearing

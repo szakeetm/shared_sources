@@ -279,8 +279,8 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                 static double sf = 1.0;
                 static double ps = 1.0;
                 if(sel) sf = sel->sh.sticking;
-                ImGui::InputRightSide("Sticking factor", &sf);
-                ImGui::InputRightSide("Pumping speed [l/s]", &ps);
+                ImGui::InputDoubleRightSide("Sticking factor", &sf);
+                ImGui::InputDoubleRightSide("Pumping speed [l/s]", &ps);
                 ImGui::TreePop();
             }
             ImGui::PopItemWidth();
@@ -300,17 +300,17 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
 
                 static double opacity = 1.0;
                 if(sel) opacity = sel->sh.opacity;
-                ImGui::InputRightSide("Opacity", &opacity);
+                ImGui::InputDoubleRightSide("Opacity", &opacity);
 
 #if defined(MOLFLOW)
                 static double temp = 1.0;
                 if(sel) temp = sel->sh.temperature;
-                ImGui::InputRightSide("Temperature [\u00b0\u212a]", &temp);
+                ImGui::InputDoubleRightSide("Temperature [\u00b0\u212a]", &temp);
 #endif
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;
-                ImGui::InputRightSide("Area [cm\u00b2]", &area);
+                ImGui::InputDoubleRightSide("Area [cm\u00b2]", &area);
 
                 static int prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;

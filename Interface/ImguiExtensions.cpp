@@ -76,7 +76,7 @@ namespace ImGui {
                         (font_size + ImGui::GetStyle().FramePadding.x * 2));
     }
 
-    bool InputRightSide(const char *desc, double *val, const char *format) {
+    bool InputDoubleRightSide(const char *desc, double *val, const char *format) {
         double tmp = *val;
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
@@ -91,6 +91,25 @@ namespace ImGui {
         }
 
         return *val != tmp; // true if changed
+    }
+
+    bool InputTextRightSide(const char* desc, const char* text) {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("%s:", desc);
+
+        char buf[128];
+        strncpy(buf, text, sizeof(buf)-1);
+        {
+            // Move to right side
+            ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
+            ImGui::PushItemWidth(100.0f);
+            ImGui::PushID(desc);
+            ImGui::InputText("", buf, IM_ARRAYSIZE(buf));
+            ImGui::PopID();
+            ImGui::PopItemWidth();
+        }
+
+        return strcmp(buf,text); // true if changed
     }
 
 // Add spacing of checkbox width

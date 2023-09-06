@@ -291,7 +291,7 @@ void ImguiWindow::renderSingle() {
         } else if (recalcOutg) {
             if (mApp->AskToReset()) {
                 try {
-                    mApp->worker.RealReload();
+                    mApp->worker.ReloadIfNeeded();
                 } catch (std::exception &e) {
                     if (ImGui::BeginPopupModal("Error", nullptr,
                                                ImGuiWindowFlags_AlwaysAutoResize)) {
