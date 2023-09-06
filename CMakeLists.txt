@@ -117,6 +117,7 @@ set(INTERFACE_FILES
         Interface/ImguiPerformancePlot.cpp
         Interface/ImguiSidebar.cpp
         Interface/ImguiExtensions.cpp
+        Interface/ImguiFacetMove.cpp
         Facet_shared.cpp
 
         File.cpp

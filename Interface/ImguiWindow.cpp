@@ -36,6 +36,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
+#include "ImguiFacetMove.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -63,6 +64,11 @@ bool ImguiWindow::ToggleDemoWindow(){
 bool ImguiWindow::ToggleGlobalSettings(){
     show_global_settings = !show_global_settings;
     return show_global_settings;
+}
+bool ImguiWindow::ToggleFacetMove()
+{
+    show_facet_move = !show_facet_move;
+    return false;
 }
 // --- Toggle functions ---
 
@@ -141,6 +147,7 @@ void ImguiWindow::init() {
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
+    show_facet_move = false;
 
     start_time = ImGui::GetTime();
 }
@@ -242,6 +249,11 @@ void ImguiWindow::renderSingle() {
             ImPlot::ShowDemoWindow(&show_demo_window);
         }
 
+        if (show_facet_move)
+        {
+            ShowAppFacetMove(); // does not see function
+        }
+
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
             ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
@@ -258,6 +270,7 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+            ImGui::Checkbox("Facet Move", &show_facet_move);
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

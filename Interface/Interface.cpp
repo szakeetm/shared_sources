@@ -1793,6 +1793,15 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
                     return true;
                 }
+                case MENU_IMGUI_FACETMOVE: {
+                    if (!imWnd) {
+                        imWnd = new ImguiWindow(this);
+                        imWnd->init();
+                    }
+                    imWnd->ToggleMainMenu();
+
+                    return true;
+                }
             }
             // Load recent menu
             if (src->GetId() >= MENU_FILE_LOADRECENT && src->GetId() < MENU_FILE_LOADRECENT + recentsList.size()) {

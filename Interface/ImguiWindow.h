@@ -48,6 +48,7 @@ public:
     bool ToggleSimSidebar();
     bool ToggleDemoWindow();
     bool ToggleGlobalSettings();
+    bool ToggleFacetMove();
 protected:
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows
@@ -56,6 +57,7 @@ protected:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
+    bool show_facet_move{false}; //Shows Facet-Move window
 
     double start_time; // to keep track how long the ImGui GUI is running
 #if defined(MOLFLOW)
