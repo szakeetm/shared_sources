@@ -46,7 +46,7 @@ extern MolFlow *mApp;
 #if defined(SYNRAD)
 extern SynRad*mApp;
 #endif
-
+ 
 MoveFacet::MoveFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 
 	int wD = 228;
