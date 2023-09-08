@@ -41,7 +41,8 @@ public:
   void ProcessMessage(GLComponent *src,int message) override;
 
 private:
-
+  
+  
   InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
