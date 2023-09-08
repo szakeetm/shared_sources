@@ -1,16 +1,17 @@
 #include "ImguiFacetMove.h"
 #include "imgui.h"
 #include "ImguiExtensions.h"
+#include <imgui/imgui_internal.h>
+#include "imgui_stdlib/imgui_stdlib.h"
 #include <string>
 
+bool baseVertexSelect(InterfaceGeometry* interfGeom);
 
-void ShowAppFacetMove()
+void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom)
 {
-    enum movementMode { absolute_offset, direction_and_distance };
-    static int mode = absolute_offset;
-    static std::string prefix;
-    // flags
-    ImGui::Begin("Facet Move", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+    mode = absolute_offset;
+    ImGui::Begin("Facet Move", p_open, ImGuiWindowFlags_AlwaysAutoResize);
+
     ImGui::RadioButton("Absolute Offset", &mode, absolute_offset); ImGui::SameLine();
     ImGui::RadioButton("Direction and Distance", &mode, direction_and_distance);
 
@@ -22,13 +23,18 @@ void ShowAppFacetMove()
     {
         prefix = "dir";
     }
+    
+    if (!base_selected)
+    {
+        selection = "Nothing selected";
+    }
 
-    ImGui::Text((prefix + (std::string)"X").c_str()); ImGui::SameLine();
-    ImGui::InputFloat("cm##X", &axis_X, 0.01f, 1.0f, "%.3f", 0); //can accept either scientific (%e) or regular float %.3f but not both
-    ImGui::Text((prefix + (std::string)"Y").c_str()); ImGui::SameLine();
-    ImGui::InputFloat("cm##Y", &axis_Y, 0.01f, 1.0f, "%.3f", 0);
-    ImGui::Text((prefix + (std::string)"Z").c_str()); ImGui::SameLine();
-    ImGui::InputFloat("cm##Z", &axis_Z, 0.01f, 1.0f, "%.3f", 0);
+    ImGui::Text(prefix+"X"); ImGui::SameLine();
+    ImGui::InputText("cm##X", &axis_X);
+    ImGui::Text(prefix+"Y"); ImGui::SameLine();
+    ImGui::InputText("cm##Y", &axis_Y);
+    ImGui::Text(prefix+"Z"); ImGui::SameLine();
+    ImGui::InputText("cm##Z", &axis_Z);
 
     ImGui::BeginGroup();
     {
@@ -39,54 +45,63 @@ void ShowAppFacetMove()
 
         {
             ImGui::Text("Distance"); ImGui::SameLine();
-            ImGui::InputFloat("cm##D", &distance, 0.01f, 1.0f, "%.3f", 0);
+            ImGui::InputText("cm##D", &distance);
         }
 
         if (mode == absolute_offset) ImGui::EndDisabled();
-        int width = ImGui::GetWindowWidth();
-        //ImGui::Spacing(width*0.5); ImGui::SameLine();
+        ImGui::PlaceAtRegionCenter("Facet normal");
         if (ImGui::Button("Facet normal"))
         {
             //TODO Facet normal function call
         }
-
-        ImGui::BeginTable("##0", 2);
+        ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders;
+        ImGui::BeginTable("options", 2, table_flags);
         {
             ImGui::TableNextColumn();
-            ImGui::Separator(); ImGui::SameLine();
-            ImGui::Text("Base");
-            ImGui::TableSetColumnIndex(0);
+            ImGui::BeginGroup();
             {
+                ImGui::PlaceAtRegionCenter("Base");
+                ImGui::Text("Base");
+                ImGui::PlaceAtRegionCenter(selection);
+                ImGui::Text(selection);
+                ImGui::PlaceAtRegionCenter("Selected Vertex");
                 if (ImGui::Button("Selected Vertex"))
                 {
-                    //TODO Selected Vertex function call
+                    base_selected = baseVertexSelect(interfGeom);
                 }
+                ImGui::PlaceAtRegionCenter("Facet center");
                 if (ImGui::Button("Facet center"))
                 {
                     //TODO Facet center function call
                 }
-            }
+            } ImGui::EndGroup();
 
 
             if (!base_selected) ImGui::BeginDisabled();
 
             ImGui::TableNextColumn();
-            ImGui::Separator(); ImGui::SameLine();
-            ImGui::Text("Direction");
-            ImGui::TableSetColumnIndex(1);
+            ImGui::BeginGroup();
             {
+                ImGui::PlaceAtRegionCenter("Direction");
+                ImGui::Text("Direction");
                 if (!base_selected) {
+                    ImGui::PlaceAtRegionCenter("Choose base first");
                     ImGui::Text("Choose base first");
                 }
+                else { // fill the line when message is not to be shown
+                    ImGui::Text(" ");
+                }
+                ImGui::PlaceAtRegionCenter("Selected Vertex");
                 if (ImGui::Button("Selected Vertex"))
                 {
                     //TODO Selected Vertex function call
                 }
+                ImGui::PlaceAtRegionCenter("Facet center");
                 if (ImGui::Button("Facet center"))
                 {
                     //TODO Facet center function call
                 }
-            }
+            }ImGui::EndGroup();
 
             if (!base_selected) ImGui::EndDisabled();
         }
@@ -95,6 +110,7 @@ void ShowAppFacetMove()
     }
     ImGui::EndGroup();
     ImGui::Separator();
+    ImGui::PlaceAtRegionCenter("Move facets   Copy facets");
     if (ImGui::Button("Move facets"))
     {
         //TODO move facets function call
@@ -105,4 +121,17 @@ void ShowAppFacetMove()
     }
 
     ImGui::End();
+}
+
+bool baseVertexSelect(InterfaceGeometry* interfGeom)
+{
+    auto selVertices = interfGeom->GetSelectedVertices();
+    if (selVertices.size() != 1) { // if condition is not met the porgram crashes with vector subscript out of range, try catch does not catch
+        //popup
+        base_selected = false;
+        return false;
+    }
+    baseLocation = (Vector3d) * (interfGeom->GetVertex(selVertices[0]));
+    selection = fmt::format("Vertex {}", selVertices[0] + 1);
+    return true;
 }

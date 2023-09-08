@@ -66,6 +66,9 @@ namespace ImGui {
         ImGui::NewLine();
         ImGui::SameLine((ImGui::GetContentRegionAvail().x * 0.5f) - (font_size / 2));
     }
+    void PlaceAtRegionCenter(std::string str) {
+        PlaceAtRegionCenter(str.c_str());
+    }
 
     void PlaceAtRegionRight(const char *str, bool sameLine) {
         // float font_size = ImGui::GetFontSize() * btnText.size() / 2;

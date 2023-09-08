@@ -247,6 +247,8 @@ void MoveFacet::ProcessMessage(GLComponent* src, int message) {
 			baseLocation = (Vector3d)*(interfGeom->GetVertex(selVertices[0]));
 			std::stringstream tmp; tmp << "Vertex " << selVertices[0] + 1;
 			baseStatusLabel->SetText(tmp.str());
+
+			baseStatusLabel->SetText(fmt::format("Vertex {}", selVertices[0] + 1));
 			dirFacetCenterButton->SetEnabled(true);
 			dirVertexButton->SetEnabled(true);
 		}
