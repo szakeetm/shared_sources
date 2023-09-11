@@ -30,7 +30,7 @@ private:
 	GLMessageBox(const std::string & message, const std::string & title, const std::vector<std::string>& buttonList, int icon);
 	//GLMessageBox(const char *message,char *title,int mode,int icon);
   void ProcessMessage(GLComponent *src,int message) override;
-
+  void ManageEvent(SDL_Event* evt) override;
 };
 
 #endif /* _GLMESSAGEBOXH_ */

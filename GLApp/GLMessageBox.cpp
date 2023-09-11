@@ -163,6 +163,24 @@ void GLMessageBox::ProcessMessage(GLComponent *src,int message) {
   GLWindow::ProcessMessage(src,message);
 }
 
+void GLMessageBox::ManageEvent(SDL_Event* evt)
+{
+	if (evt->type == SDL_KEYDOWN) {
+		if (evt->key.keysym.sym == SDLK_RETURN || evt->key.keysym.sym == SDLK_KP_ENTER) {
+			rCode = 0; //Interpreted as first button pressed
+			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+			return;
+		}
+		else if (evt->key.keysym.sym == SDLK_ESCAPE) {
+			rCode = GLDLG_CANCEL;
+			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
+			return;
+		}
+		return;
+	}
+	GLWindow::ManageEvent(evt);
+}
+
 int GLMessageBox::Display(const char *message, const char *title,int mode,int icon) {
 	std::vector<std::string> list;
 	if (mode & GLDLG_OK) {
