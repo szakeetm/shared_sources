@@ -67,18 +67,15 @@ void GLInputBox::ManageEvent(SDL_Event *evt) {
 			rValue = ret;
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 			return;
-		} else if (evt->key.keysym.sym == SDLK_ESCAPE) {
+		}
+		else if (evt->key.keysym.sym == SDLK_ESCAPE) {
 			rValue = NULL;
 			GLWindow::ProcessMessage(NULL, MSG_CLOSE);
 			return;
 		}
-		else { //Not Enter or ESC, pass event to window (which will relay to textbox)
-			GLWindow::ManageEvent(evt);
-		}
 	}
-	else {
-		GLWindow::ManageEvent(evt);
-	}
+	//Any other case
+	GLWindow::ManageEvent(evt);
 }
 
 
