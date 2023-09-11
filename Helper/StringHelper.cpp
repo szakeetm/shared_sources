@@ -341,3 +341,15 @@ size_t countLines(const std::stringstream& ss, bool countEmpty) {
 
     return count;
 }
+
+bool Util::getNumber(double* num, const std::string str)
+{
+    try {
+        *num = std::stod(str);
+        return true;
+    }
+    catch (std::exception e)
+    {
+        return false;
+    }
+}

@@ -1752,7 +1752,7 @@ void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool
 
 		for (const auto sel : selectedFacets) {
 			counter += 1.0;
-			prgMove.SetProgress(counter / (double)selectedFacets.size());
+			prgMove.SetProgress(counter / (double)selectedFacets.size()); //this line was causing ImGui to crash, for this reason an alternate fucntion is written below which performs the same actions, but without the OpenGL
 			for (const auto ind : facets[sel]->indices) {
 				toMoveIds.insert(ind);
 			}
@@ -1763,6 +1763,38 @@ void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool
 
 		InitializeGeometry();
         
+	}
+}
+//second version which does not cause ImGui to crash, definition overloaded to allow simoultanious operation of both versions of the GUI, the version above should be deprecated when ImGUI becomes main
+void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy, bool imGui)
+{
+	if (!imGui) return InterfaceGeometry::MoveSelectedFacets(dX, dY, dZ, towardsDirectionMode, distance, copy);
+	
+	auto selectedFacets = GetSelectedFacets();
+
+	Vector3d delta = Vector3d(dX, dY, dZ);
+	Vector3d translation = towardsDirectionMode ? distance * delta.Normalized() : delta;
+
+	if (translation.Norme() > 0.0) {
+		if (copy)
+			if (CloneSelectedFacets()) { //move
+				return;
+			}
+		mApp->changedSinceSave = true;
+		selectedFacets = GetSelectedFacets(); //Update selection to cloned
+
+		std::set<int> toMoveIds;
+
+		for (const auto sel : selectedFacets) {
+			for (const auto ind : facets[sel]->indices) {
+				toMoveIds.insert(ind);
+			}
+		}
+
+		for (auto ind : toMoveIds)
+			vertices3[ind].SetLocation(vertices3[ind] + translation);
+
+		InitializeGeometry();
 	}
 }
 

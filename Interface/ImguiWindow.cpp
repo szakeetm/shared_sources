@@ -68,7 +68,7 @@ bool ImguiWindow::ToggleGlobalSettings(){
 bool ImguiWindow::ToggleFacetMove()
 {
     show_facet_move = !show_facet_move;
-    return false;
+    return show_facet_move;
 }
 // --- Toggle functions ---
 
