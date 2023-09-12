@@ -77,7 +77,7 @@ public:
 	Chronometer       m_Timer;
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
-	bool wereEvents;
+	bool wereEvents; //Repaint in next cycle (instead of immediately by calling GLWindowManager::Repaint() )
 	int wereEvents_imgui{2};
 
 //#if defined(_DEBUG)
