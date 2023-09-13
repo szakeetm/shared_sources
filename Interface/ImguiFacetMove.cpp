@@ -3,10 +3,14 @@
 
 void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom)
 {
-    ImGui::Begin("Facet Move", p_open, ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::RadioButton("Absolute Offset", &mode, absolute_offset); ImGui::SameLine();
+    ImGui::PushStyleCompact();
+    ImGui::SetNextWindowSize(ImVec2(250,0));
+    ImGui::Begin("Facet Move", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::SetWindowFontScale(0.9);
+    
+    ImGui::RadioButton("Absolute Offset", &mode, absolute_offset);
     ImGui::RadioButton("Direction and Distance", &mode, direction_and_distance);
+
 
     if (mode == absolute_offset) // Compute labels of input fields based on selected mode
     {
@@ -29,15 +33,14 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     ImGui::InputText("cm##Y", &axis_Y);
     ImGui::Text(prefix+"Z"); ImGui::SameLine();
     ImGui::InputText("cm##Z", &axis_Z);
-
-    ImGui::BeginGroup();
+    
+    ImGui::BeginChild("In direction", ImVec2(0,140), true, 0);
     {
-        ImGui::Separator(); ImGui::SameLine();
         ImGui::Text("In direction");
-
         if (mode == absolute_offset) ImGui::BeginDisabled();
         {
             ImGui::Text("Distance"); ImGui::SameLine();
+            ImGui::SetNextItemWidth(130);
             ImGui::InputText("cm##D", &distance);
         }
 
@@ -97,8 +100,7 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
         ImGui::EndTable();
 
     }
-    ImGui::EndGroup();
-    ImGui::Separator();
+    ImGui::EndChild();
     ImGui::PlaceAtRegionCenter("Move facets   Copy facets");
     if (ImGui::Button("Move facets"))
     {
@@ -112,8 +114,9 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     if (popup) //popup for any errors
     {
         ImGui::OpenPopup("Error");
-        ImGui::SetNextWindowSize(ImVec2(200, 100));
-        ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x / 2 - 100, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y / 2 - 50));
+        float nextX = 200, nextY = 75;
+        ImGui::SetNextWindowSize(ImVec2(nextX, nextY));
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x / 2 - nextX /2, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y / 2 - nextY /2));
         if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))
         {
             ImGui::PlaceAtRegionCenter(message);
@@ -128,7 +131,9 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
         }
     }
 
+    ImGui::SetWindowFontScale(1.0);
     ImGui::End();
+    ImGui::PopStyleCompact();
 }
 
 bool baseVertexSelect(InterfaceGeometry* interfGeom)
@@ -206,7 +211,7 @@ void executeMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy)
     //execute
     if (mApp->AskToReset()) {
         bool imGui = true;
-        interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy, imGui); //make D optional to avoid errors in debug mode
+        interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy); //make D optional to avoid errors in debug mode
         mApp->worker.MarkToReload();
         mApp->changedSinceSave = true;
         mApp->UpdateFacetlistSelected();

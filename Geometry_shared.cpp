@@ -1765,38 +1765,6 @@ void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool
         
 	}
 }
-//second version which does not cause ImGui to crash, definition overloaded to allow simoultanious operation of both versions of the GUI, the version above should be deprecated when ImGUI becomes main
-void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool towardsDirectionMode, double distance, bool copy, bool imGui)
-{
-	if (!imGui) return InterfaceGeometry::MoveSelectedFacets(dX, dY, dZ, towardsDirectionMode, distance, copy);
-	
-	auto selectedFacets = GetSelectedFacets();
-
-	Vector3d delta = Vector3d(dX, dY, dZ);
-	Vector3d translation = towardsDirectionMode ? distance * delta.Normalized() : delta;
-
-	if (translation.Norme() > 0.0) {
-		if (copy)
-			if (CloneSelectedFacets()) { //move
-				return;
-			}
-		mApp->changedSinceSave = true;
-		selectedFacets = GetSelectedFacets(); //Update selection to cloned
-
-		std::set<int> toMoveIds;
-
-		for (const auto sel : selectedFacets) {
-			for (const auto ind : facets[sel]->indices) {
-				toMoveIds.insert(ind);
-			}
-		}
-
-		for (auto ind : toMoveIds)
-			vertices3[ind].SetLocation(vertices3[ind] + translation);
-
-		InitializeGeometry();
-	}
-}
 
 std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P0, Vector3d N, bool project, bool copy, Worker *worker) {
 	std::vector<UndoPoint> undoPoints;
