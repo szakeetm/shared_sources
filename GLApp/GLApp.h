@@ -14,6 +14,7 @@ class GLComponent;
 class GLWindow;
 #include <string>
 #include <fmt/core.h>
+#include <mutex>
 
 class ImguiWindow;
 class GLApplication {
@@ -77,9 +78,9 @@ public:
 	Chronometer       m_Timer;
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
-	bool wereEvents;
-	int wereEvents_imgui{2};
-
+	bool wereEvents; // flag if there were events which require repainting
+	int wereEvents_imgui{2}; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
+    std::mutex imgui_renderLock;
 //#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;

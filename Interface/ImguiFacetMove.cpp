@@ -20,7 +20,7 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     if (!base_selected)
     {
         selection = "Nothing selected";
-        dirMessage = "Select base first";
+        dirMessage = "Choose base first";
     }
 
     ImGui::Text(prefix+"X"); ImGui::SameLine();
@@ -112,8 +112,11 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     if (popup) //popup for any errors
     {
         ImGui::OpenPopup("Error");
+        ImGui::SetNextWindowSize(ImVec2(200, 100));
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x / 2 - 100, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y / 2 - 50));
         if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))
         {
+            ImGui::PlaceAtRegionCenter(message);
             ImGui::Text(message);
             ImGui::PlaceAtRegionCenter("OK");
             if (ImGui::Button("OK"))
@@ -167,7 +170,8 @@ void popupToggle()
 
 void executeMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy)
 {
-    double X, Y, Z, D;
+    double X, Y, Z, D{0};
+    //handle input errors
     if (interfGeom->GetNbSelectedFacets() == 0) {
         message = "No facets selected";
         popupToggle();
@@ -199,10 +203,10 @@ void executeMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy)
         popupToggle();
         return;
     }
-
+    //execute
     if (mApp->AskToReset()) {
         bool imGui = true;
-        interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy, imGui);
+        interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy, imGui); //make D optional to avoid errors in debug mode
         mApp->worker.MarkToReload();
         mApp->changedSinceSave = true;
         mApp->UpdateFacetlistSelected();

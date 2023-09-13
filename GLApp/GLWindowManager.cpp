@@ -406,8 +406,11 @@ void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
 
-  if(theApp->imWnd)
+  if(theApp->imWnd && theApp->imgui_renderLock.try_lock())
+  {
       theApp->imWnd->renderSingle();
+      theApp->imgui_renderLock.unlock();
+  }
   SDL_GL_SwapWindow(theApp->mainScreen);
 }
 
