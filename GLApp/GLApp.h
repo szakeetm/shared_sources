@@ -78,9 +78,10 @@ public:
 	Chronometer       m_Timer;
     double            GetTick();           // Number of millisecond since app startup (WIN32 only)
 
-	bool wereEvents; // flag if there were events which require repainting
-	int wereEvents_imgui{2}; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
+    bool wereEvents; //Repaint in next cycle (instead of immediately by calling GLWindowManager::Repaint() )
+    int wereEvents_imgui{ 2 }; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
     std::mutex imgui_renderLock;
+
 //#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;
