@@ -1,4 +1,3 @@
-#pragma once
 #include "ImguiFacetMove.h"
 
 void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom)
@@ -33,14 +32,14 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     ImGui::InputText("cm##Y", &axis_Y);
     ImGui::Text(prefix+"Z"); ImGui::SameLine();
     ImGui::InputText("cm##Z", &axis_Z);
-    
-    ImGui::BeginChild("In direction", ImVec2(0,140), true, 0);
+    int nextX = 0, nextY = 10 * ImGui::CalcTextSize(" ").y;
+    ImGui::BeginChild("In direction", ImVec2(0, nextY), true, 0);
     {
         ImGui::Text("In direction");
         if (mode == absolute_offset) ImGui::BeginDisabled();
         {
             ImGui::Text("Distance"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(130);
+            ImGui::SetNextItemWidth(30 * ImGui::CalcTextSize(" ").x);
             ImGui::InputText("cm##D", &distance);
         }
 
@@ -114,7 +113,7 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     if (popup) //popup for any errors
     {
         ImGui::OpenPopup("Error");
-        float nextX = 200, nextY = 75;
+        float nextX = 100 * ImGui::CalcTextSize(" ").x, nextY = 10 * ImGui::CalcTextSize(" ").y;
         ImGui::SetNextWindowSize(ImVec2(nextX, nextY));
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x / 2 - nextX /2, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y / 2 - nextY /2));
         if (ImGui::BeginPopupModal("Error", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))

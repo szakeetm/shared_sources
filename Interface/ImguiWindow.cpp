@@ -80,9 +80,14 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
+
+
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
+
+    //---!!! must be after all other io.ConfigFlags changes !!!---
+    ImguiWindow::storedConfigFlags = io.ConfigFlags; //save flags setup to allow restoring it (used to control mouse pointer drawing)
 
     // Setup Dear ImGui style
     //ImGui::StyleColorsDark();
@@ -217,9 +222,7 @@ void ImguiWindow::renderSingle() {
 #else
     SynRad *mApp = (SynRad *) app;
 #endif
-
-    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-
+    
     if (mApp) {
         bool nbProcChanged = false;
         bool recalcOutg = false;
@@ -335,6 +338,18 @@ void ImguiWindow::renderSingle() {
             auto curViewer = mApp->curViewer;
             auto viewer = mApp->viewer[curViewer];
             mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
+        }
+
+        // This allows for ImGui to render its cursor only if an ImGui element is focused, otherwise it allows the default cursor
+        // Produces unpredictable behaviour when changing focus between ImGui and Legacy interfaces
+        // Has issiues related to ImGui rendering being paused after inactivity
+        if (ImGui::IsAnyItemHovered())
+        {
+            io.ConfigFlags = ImguiWindow::storedConfigFlags;
+        }
+        else
+        {
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         }
     }
 }
