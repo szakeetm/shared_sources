@@ -217,6 +217,9 @@ void ImguiWindow::renderSingle() {
 #else
     SynRad *mApp = (SynRad *) app;
 #endif
+
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+
     if (mApp) {
         bool nbProcChanged = false;
         bool recalcOutg = false;
