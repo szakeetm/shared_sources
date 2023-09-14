@@ -63,7 +63,7 @@ class SimulationManager {
 
     std::string MakeSubProcError(const std::string& message);
 
-    int refreshProcStatus();
+    int RefreshProcStatus();
 protected:
 
     void ForwardCommand(SimCommand command, size_t param, size_t param2);

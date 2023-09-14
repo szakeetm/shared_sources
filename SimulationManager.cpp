@@ -64,7 +64,7 @@ SimulationManager::~SimulationManager() {
 }
 
 //! Refresh proc status by looking for those that can be safely killed and remove them
-int SimulationManager::refreshProcStatus() {
+int SimulationManager::RefreshProcStatus() {
     if (!controllerLoopThread) return 1; //invalid
     if (!controllerLoopThread->joinable()) {
         auto myHandle = controllerLoopThread->native_handle();
@@ -90,7 +90,7 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
     }
 
     if(asyncMode) {
-        refreshProcStatus();
+        RefreshProcStatus();
         if (!controllerLoopThread)
             throw Error("No active simulation thread.");
 
@@ -105,11 +105,13 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
         }
         isRunning = true;
     }
-    else {
+    else { //immediate mode
         procInformation.masterCmd  = SimCommand::Run; // TODO: currently needed to not break the loop
+        simController->Start(); //Also contains run
+        /*
         if (!simController->Start()) { //Also contains run
             throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
-        }
+        }*/
     }
 }
 
@@ -118,7 +120,7 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
 void SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
     isRunning = false;
     if(asyncMode) {
-        refreshProcStatus();
+        RefreshProcStatus();
         if (!controllerLoopThread) {
             throw Error("No active simulation thread.");
         }
