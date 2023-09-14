@@ -222,11 +222,8 @@ void ImguiWindow::renderSingle() {
 #else
     SynRad *mApp = (SynRad *) app;
 #endif
-    
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     if (mApp) {
-        bool nbProcChanged = false;
-        bool recalcOutg = false;
-        bool changeDesLimit = false;
         bool redrawAabb = false;
         bool rebuildAabb = false;
         static int nbProc = mApp->worker.GetProcNumber();
@@ -293,7 +290,7 @@ void ImguiWindow::renderSingle() {
 
         // 3. Show global settings
         if (show_global_settings) {
-            ShowGlobalSettings(mApp, &show_global_settings, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
+            ShowGlobalSettings(mApp, &show_global_settings, nbProc);
             ImGui::End();
         }
 
@@ -303,33 +300,7 @@ void ImguiWindow::renderSingle() {
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         // SDL_GL_SwapWindow(app->mainScreen);
 
-        // Handle button events at the end, because some functions call GL Repaint,
-        // which doesnt work well with ImGui if frame is not finalized
-        if (nbProcChanged) {
-            restartProc(nbProc, mApp);
-        } else if (recalcOutg) {
-            if (mApp->AskToReset()) {
-                try {
-                    mApp->worker.RealReload();
-                } catch (std::exception &e) {
-                    if (ImGui::BeginPopupModal("Error", nullptr,
-                                               ImGuiWindowFlags_AlwaysAutoResize)) {
-                        ImGui::Text("Recalculation failed: Couldn't reload Worker:\n%s",
-                                    e.what());
-                        ImGui::Separator();
-
-                        if (ImGui::Button("OK", ImVec2(120, 0))) {
-                            ImGui::CloseCurrentPopup();
-                        }
-                        ImGui::SetItemDefaultFocus();
-                        ImGui::EndPopup();
-                    }
-                }
-            }
-        } else if (changeDesLimit) {
-            mApp->worker.ChangeSimuParams(); // Sync with subprocesses
-        }
-        if(open_viewer_window){
+        if(open_viewer_window){ //can 
             open_viewer_window = false;
             if (!mApp->viewer3DSettings)
                 mApp->viewer3DSettings = new Viewer3DSettings();
@@ -343,41 +314,13 @@ void ImguiWindow::renderSingle() {
         // This allows for ImGui to render its cursor only if an ImGui element is focused, otherwise it allows the default cursor
         // Produces unpredictable behaviour when changing focus between ImGui and Legacy interfaces
         // Has issiues related to ImGui rendering being paused after inactivity
-        if (ImGui::IsAnyItemHovered())
+        /*if (ImGui::IsAnyItemHovered())
         {
             io.ConfigFlags = ImguiWindow::storedConfigFlags;
         }
         else
         {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-        }
-    }
-}
-
-/**
- * \brief Function to apply changes to the number of processes.
- */
-#if defined(MOLFLOW)
-void ImguiWindow::restartProc(int nbProc, MolFlow *mApp) {
-#else
-void ImguiWindow::restartProc(int nbProc, SynRad *mApp) {
-#endif
-    try {
-        mApp->worker.Stop_Public();
-        mApp->worker.SetProcNumber(nbProc);
-        mApp->worker.RealReload(true);
-        mApp->SaveConfig();
-    } catch (Error &e) {
-        if (ImGui::BeginPopupModal("Error", nullptr,
-                                   ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", e.what());
-            ImGui::Separator();
-
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SetItemDefaultFocus();
-            ImGui::EndPopup();
-        }
+        }*/
     }
 }

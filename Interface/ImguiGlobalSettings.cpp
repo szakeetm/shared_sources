@@ -51,7 +51,7 @@ static void ProcessControlTable(SynRad *mApp) {
     // like a BeginChild() call.
 
 
-    ImVec2 outer_size = ImVec2(0.0f, ImGui::GetFrameHeight() - (TEXT_BASE_HEIGHT * 3));
+    ImVec2 outer_size = ImVec2(0.0f, ImGui::GetFrameHeight() - (TEXT_BASE_HEIGHT * 3.5f));
     if (ImGui::BeginTable("procTable", 5, flags, outer_size)) {
 
         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
@@ -126,22 +126,19 @@ static void ProcessControlTable(SynRad *mApp) {
 }
 
 #if defined(MOLFLOW)
-void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) {
+void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, int &nbProc) {
 #else
-void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) {
+void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, int &nbProc) {
 #endif
-
+    int txtW = ImGui::CalcTextSize(" ").x;
+    int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(165 * ImGui::CalcTextSize(" ").x, 30 * ImGui::CalcTextSize(" ").y )); // Lift normal size constraint, however the presence of
+            ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
-    ImGui::PushStyleCompact();
     ImGui::Begin(
             "Global settings", show_global_settings,
             ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool
-    ImGui::SetWindowFontScale(0.9);
     // variable (the window will have
     // a closing button that will
     // clear the bool when clicked)
@@ -252,7 +249,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
         if (ImGui::Button("Recalc. outgassing")) // Edit bools storing our
             // window open/close state
-            recalcOutg = true;
+            RecalculateOutgassing(mApp);
         simChanged = ImGui::Checkbox(
                 "Enable low flux mode",
                 &lowFluxMode); // Edit bools storing our window open/close state
@@ -319,7 +316,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
     ImGui::SameLine();
     if (ImGui::Button("Apply and restart processes"))
-        nbProcChanged = true;
+        RestartProc(nbProc, mApp);
     {
         ImGui::PlaceAtRegionRight("Change MAX desorbed molecules", true);
         if (ImGui::Button("Change MAX desorbed molecules"))
@@ -353,7 +350,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             mApp->worker.model->otfParams.desorptionLimit = maxDes;
             // initMax = false;
-            changeDesLimit = true;
+            mApp->worker.ChangeSimuParams();
             ImGui::CloseCurrentPopup();
         }
         ImGui::SetItemDefaultFocus();
@@ -363,6 +360,55 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         }
         ImGui::EndPopup();
     }
-    ImGui::SetWindowFontScale(1.0);
-    ImGui::PopStyleCompact();
+}
+
+/**
+ * \brief Function to apply changes to the number of processes.
+ */
+#if defined(MOLFLOW)
+void RestartProc(int nbProc, MolFlow* mApp) {
+#else
+void RestartProc(int nbProc, SynRad * mApp) {
+#endif
+    try {
+        mApp->worker.Stop_Public();
+        mApp->worker.SetProcNumber(nbProc);
+        mApp->worker.RealReload(true);
+        mApp->SaveConfig();
+    }
+    catch (Error& e) {
+        if (ImGui::BeginPopupModal("Error", nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", e.what());
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SetItemDefaultFocus();
+            ImGui::EndPopup();
+        }
+    }
+}
+
+void RecalculateOutgassing(MolFlow* mApp) {
+    if (mApp->AskToReset()) {
+        try {
+            mApp->worker.RealReload();
+        }
+        catch (std::exception& e) {
+            if (ImGui::BeginPopupModal("Error", nullptr,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Recalculation failed: Couldn't reload Worker:\n%s",
+                    e.what());
+                ImGui::Separator();
+
+                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndPopup();
+            }
+        }
+    }
 }

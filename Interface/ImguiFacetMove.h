@@ -33,12 +33,12 @@ static std::string selection;
 enum movementMode { absolute_offset, direction_and_distance };
 
 //internal function declarations
-void popupToggle();
-void executeMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy);
-void facetNormalButton(InterfaceGeometry* interfGeom);
-void dirVertex(InterfaceGeometry* interfGeom);
-void dirFacetCenter(InterfaceGeometry* interfGeom);
-bool baseVertexSelect(InterfaceGeometry* interfGeom);
-bool baseFacetSelect(InterfaceGeometry* interfGeom);
+void Popup(std::string str);
+void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy);
+void FacetNormalButton(InterfaceGeometry* interfGeom);
+void VertexDirectionButton(InterfaceGeometry* interfGeom);
+void FacetCenterButton(InterfaceGeometry* interfGeom);
+bool BaseVertexSelectButton(InterfaceGeometry* interfGeom);
+bool BaseFacetSelectButton(InterfaceGeometry* interfGeom);
 
 void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom);

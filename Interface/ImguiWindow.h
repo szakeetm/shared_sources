@@ -62,11 +62,6 @@ protected:
     ImGuiConfigFlags storedConfigFlags;
 
     double start_time; // to keep track how long the ImGui GUI is running
-#if defined(MOLFLOW)
-    static void restartProc(int nbProc, MolFlow *mApp);
-#else
-    static void restartProc(int nbProc, SynRad *mApp);
-#endif
 };
 
 
