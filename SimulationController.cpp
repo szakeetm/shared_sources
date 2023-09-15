@@ -323,9 +323,11 @@ void SimulationController::SetRuntimeInfo() {
 }
 
 void SimulationController::ClearCommand() {
+    procInfo.procDataMutex.lock();
     procInfo.masterCmd = SimCommand::None;
     procInfo.cmdParam = 0;
     procInfo.cmdParam2 = 0;
+    procInfo.procDataMutex.unlock();
 }
 
 /*
@@ -452,12 +454,10 @@ void SimulationController::ControllerLoop() {
             }
             case SimCommand::Run: {
                 StartAndRun();
-                //Run finished (max reached, couldn't desorb, paused...)
-                ClearCommand();
                 break;
             }
             case SimCommand::Pause: {
-                ClearCommand(); //threads will self-stop when command!=run
+                //ClearCommand(); //threads will self-stop when command!=run and StartAndRun() will clear command
                 procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt);
                 break;
             }
@@ -643,7 +643,10 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
         }
     }
 
-    //ClearCommand();
+    //Run finished
+    if (procInfo.masterCmd != SimCommand::Kill) {
+        ClearCommand();
+    }
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt, loadStatus);
     return !desError_global;
 }
