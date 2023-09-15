@@ -30,6 +30,21 @@ namespace MFSim {
 
 //class Simulation_Abstract;
 
+enum RunResult {
+    MaxReached,
+    DesError,
+    Success
+};
+
+enum LoopResult {
+    Continue,
+    AbortCommand,
+    DesLimitReached,
+    TimeLimitReached,
+    DesorptionError,
+    HasThreadError
+};
+
 /**
 * \brief Inidividual simulation states and settings per thread
  * contains local desorption limits, local simulation state, global thread number, simulation state etc.
@@ -40,7 +55,6 @@ public:
 
     
     double stepsPerSec=1.0;
-    bool desLimitReachedOrDesError=false;
     size_t localDesLimit=0;
     double timeLimit=0.0;
 
@@ -49,14 +63,14 @@ public:
     size_t threadNum,nbThreads;
 
     std::shared_ptr<MFSim::ParticleTracer> particleTracerPtr;
-    bool runLoop();
+    LoopResult RunLoop();
     [[nodiscard]] std::string ConstructMyThreadStatus() const;
 
 private:
     
     void SetMyStatus(const std::string& msg) const;
     void SetMyState(const ThreadState state) const;
-    bool runSimulation1sec(const size_t desorptionLimit);
+    RunResult RunSimulation1sec(const size_t desorptionLimit);
     //int advanceForTime(double simDuration);
     //int advanceForSteps(size_t desorptions);
 };
@@ -66,7 +80,7 @@ private:
  */
 class SimulationController {
     bool UpdateParams(LoadStatus_abstract* loadStatus = nullptr);
-    void resetControls();
+    void ResetControls();
 protected:
 
     //int SetThreadStates(SimState state, const std::string &status, bool changeState = true, bool changeStatus = true); //Sets for all threads the same state and status
@@ -81,9 +95,9 @@ protected:
 public:
     SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
                          Simulation_Abstract *simulationInstance, ProcComm& pInfo);
-    void controllerLoop();
+    void ControllerLoop();
 
-    bool Start(LoadStatus_abstract* loadStatus=nullptr);
+    bool StartAndRun(LoadStatus_abstract* loadStatus=nullptr);
     void Load(LoadStatus_abstract* loadStatus = nullptr);
     void Reset(LoadStatus_abstract* loadStatus = nullptr);
 

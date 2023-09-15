@@ -58,7 +58,7 @@ SimThreadHandle::SimThreadHandle(ProcComm& procInfo, Simulation_Abstract *simPtr
 }
 
 /*
-// todo: fuse with runSimulation1sec()
+// todo: fuse with RunSimulation1sec()
 // Should allow simulation for N steps opposed to T seconds
 int SimThreadHandle::advanceForSteps(size_t desorptions) {
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
@@ -113,10 +113,10 @@ int SimThreadHandle::advanceForTime(double simDuration) {
  * \return true when simulation end has been reached via desorption limit, false otherwise
  */
 
-bool SimThreadHandle::runLoop() {
-    bool finishLoop;
+LoopResult SimThreadHandle::RunLoop() {
+    bool finishLoop = false;
     bool lastUpdateOk = false;
-
+    LoopResult loopResult = LoopResult::Continue;
     double timeStart = omp_get_wtime();
     double timeLoopStart = timeStart;
     double timeEnd;
@@ -124,7 +124,7 @@ bool SimThreadHandle::runLoop() {
     SetMyState(ThreadState::Running);
     do {
         SetMyStatus(ConstructMyThreadStatus());
-        desLimitReachedOrDesError = runSimulation1sec(localDesLimit); // Run for 1 sec
+        RunResult runResult = RunSimulation1sec(localDesLimit); // Run for 1 sec
         
         timeEnd = omp_get_wtime();
 
@@ -157,9 +157,23 @@ bool SimThreadHandle::runLoop() {
         else{
             lastUpdateOk = false;
         }
-        finishLoop = desLimitReachedOrDesError || (this->particleTracerPtr->model->otfParams.timeLimit != 0 && ((timeEnd-timeStart) >= this->particleTracerPtr->model->otfParams.timeLimit))
-            || (masterProcInfo.masterCmd != SimCommand::Run) || (masterProcInfo.threadInfos[threadNum].threadState == ThreadState::ThreadError);
-    } while (!finishLoop);
+
+        if (runResult == RunResult::DesError) {
+            loopResult = LoopResult::DesorptionError;
+        }
+        else if (runResult == RunResult::MaxReached) {
+            loopResult = LoopResult::DesLimitReached;
+        }
+        else if (this->particleTracerPtr->model->otfParams.timeLimit != 0 && ((timeEnd - timeStart) >= this->particleTracerPtr->model->otfParams.timeLimit)) {
+            loopResult = LoopResult::TimeLimitReached;
+        }
+        else if (masterProcInfo.masterCmd != SimCommand::Run) {
+            loopResult = LoopResult::AbortCommand;
+        }
+        else if (masterProcInfo.threadInfos[threadNum].threadState == ThreadState::ThreadError) {
+            loopResult = LoopResult::HasThreadError;
+        }
+    } while (loopResult == LoopResult::Continue);
 
     masterProcInfo.RemoveFromHitUpdateQueue(threadNum);
     if (!lastUpdateOk) {
@@ -168,7 +182,7 @@ bool SimThreadHandle::runLoop() {
     }
     SetMyStatus(ConstructMyThreadStatus());
     SetMyState(ThreadState::Idle);
-    return desLimitReachedOrDesError;
+    return loopResult;
 }
 
 void SimThreadHandle::SetMyStatus(const std::string& msg) const { //Writes to master's procInfo
@@ -204,7 +218,7 @@ void SimThreadHandle::SetMyState(const ThreadState state) const { //Writes to ma
 * \brief A "single (1sec)" MC step of a simulation run for a given thread
  * \return false when simulation continues, true when desorption limit is reached or des error
  */
-bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
+RunResult SimThreadHandle::RunSimulation1sec(const size_t desorptionLimit) {
     // 1s step
     size_t nbStep = (stepsPerSec <= 0.0) ? 250 : (size_t)std::ceil(stepsPerSec + 0.5);
 
@@ -216,7 +230,7 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
 
     if (particleTracerPtr->model->otfParams.desorptionLimit > 0) {
         if (desorptionLimit <= particleTracerPtr->tmpState->globalStats.globalHits.nbDesorbed){
-            return true; //there is a des. limit and it was reached
+            return RunResult::MaxReached; //there is a des. limit and it was reached
         }
         else {
             //there is a des. limit and remainingDes is left
@@ -226,8 +240,12 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
 
     
     double start_time = omp_get_wtime();
-    if (particleTracerPtr->SimulationMCStep(nbStep, threadNum, remainingDes)) { //run 1 sec
-        return true; //limit reached or error after ran 1 sec
+    MFSim::MCStepResult runResult = particleTracerPtr->SimulationMCStep(nbStep, threadNum, remainingDes); //run 1 sec
+    if (runResult==MFSim::MCStepResult::MaxReached) {
+        return RunResult::MaxReached;
+    }
+    else if (runResult == MFSim::MCStepResult::DesorptionError) {
+        return RunResult::DesError;
     }
     double end_time = omp_get_wtime();
 
@@ -240,7 +258,7 @@ bool SimThreadHandle::runSimulation1sec(const size_t desorptionLimit) {
     else {
         stepsPerSec = (100.0 * static_cast<double>(nbStep)); // in case of fast initial run
     }    
-    return false; //continue
+    return RunResult::Success; //continue
 }
 
 SimulationController::SimulationController(size_t parentPID, size_t procIdx, size_t nbThreads,
@@ -290,7 +308,7 @@ SimulationController::SimulationController(SimulationController &&o) noexcept {
 }
 */
 
-void SimulationController::resetControls() {
+void SimulationController::ResetControls() {
     lastHitUpdateOK = true;
     exitRequested = false;
     stepsPerSec = 0.0;
@@ -413,7 +431,7 @@ size_t SimulationController::GetThreadStates() const {
 */
 
 // Main loop, listens to commands from Simulation Manager and executes blocking
-void SimulationController::controllerLoop() {
+void SimulationController::ControllerLoop() {
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt);
     exitRequested = false;
     loadOk = false;
@@ -433,7 +451,9 @@ void SimulationController::controllerLoop() {
                 break;
             }
             case SimCommand::Run: {
-                Start();
+                StartAndRun();
+                //Run finished (max reached, couldn't desorb, paused...)
+                ClearCommand();
                 break;
             }
             case SimCommand::Pause: {
@@ -566,9 +586,9 @@ bool SimulationController::UpdateParams(LoadStatus_abstract* loadStatus) {
 
 /**
 * \brief Start the simulation after previous sanity checks
- * return true if started, false if desorption error or max reached
+ * return true if started and ran, false if can't find starting point (des. error)
  */
-bool SimulationController::Start(LoadStatus_abstract* loadStatus) {
+bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
 
 	if (simulationPtr->model->rayTracingStructures.empty()) {
 		loadOk = false;
@@ -604,33 +624,33 @@ bool SimulationController::Start(LoadStatus_abstract* loadStatus) {
         thread.localDesLimit = (thread.threadNum < remainder) ? localDes + 1 : localDes;
     }
 
-    bool maxReachedOrDesError_global = false;
+    bool desError_global = false;
 
 #pragma omp parallel num_threads((int)nbThreads)
     {
-        bool maxReachedOrDesError_private = false;
-        bool lastUpdateOk_private = true;
+        bool desError_private = false;
 
         // Set OpenMP thread priority on Windows whenever we start a simulation run
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #endif
-        maxReachedOrDesError_private = simThreadHandles[omp_get_thread_num()].runLoop();
+        //Actually run the simulation:
+        desError_private = simThreadHandles[omp_get_thread_num()].RunLoop() == LoopResult::DesorptionError;
 
-        if(maxReachedOrDesError_private) {
+        if(desError_private) {
 //#pragma omp atomic
-            maxReachedOrDesError_global = true; //Race condition ok, maxReachedOrDesError_global means "at least one thread finished"
+            desError_global = true; //Race condition ok, desError_global means "at least one thread finished"
         }
     }
 
     //ClearCommand();
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt, loadStatus);
-    return !maxReachedOrDesError_global;
+    return !desError_global;
 }
 
 void SimulationController::Reset(LoadStatus_abstract* loadStatus) {
     procInfo.UpdateControllerStatus({ ControllerState::Resetting }, { "Resetting simulation..." }, loadStatus);
-    resetControls();
+    ResetControls();
     simulationPtr->ResetSimulation();
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     ClearCommand();

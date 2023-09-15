@@ -107,11 +107,10 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
     }
     else { //immediate mode
         procInformation.masterCmd  = SimCommand::Run; // TODO: currently needed to not break the loop
-        simController->Start(); //Also contains run
-        /*
-        if (!simController->Start()) { //Also contains run
+
+        if (!simController->StartAndRun()) {
             throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
-        }*/
+        }
     }
 }
 
@@ -204,7 +203,7 @@ int SimulationManager::CreateCPUHandle(LoadStatus_abstract* loadStatus) {
     simController = std::make_unique<SimulationController>((size_t)processId, (size_t)0, nbThreads, simulation.get(), procInformation);
     
     if(asyncMode) {
-        controllerLoopThread = std::make_unique<std::thread>(&SimulationController::controllerLoop, simController.get());
+        controllerLoopThread = std::make_unique<std::thread>(&SimulationController::ControllerLoop, simController.get());
         auto myHandle = controllerLoopThread->native_handle();
 #if defined(_WIN32) && defined(_MSC_VER)
         SetThreadPriority(myHandle, THREAD_PRIORITY_IDLE);
