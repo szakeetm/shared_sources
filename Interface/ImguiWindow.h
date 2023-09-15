@@ -49,6 +49,7 @@ public:
     bool ToggleDemoWindow();
     bool ToggleGlobalSettings();
     bool ToggleFacetMove();
+    bool TogglePopup();
 protected:
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows

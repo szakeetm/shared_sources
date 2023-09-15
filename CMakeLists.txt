@@ -119,6 +119,7 @@ set(INTERFACE_FILES
         Interface/ImguiExtensions.cpp
         Interface/ImguiFacetMove.cpp
         Interface/imgui_stdlib/imgui_stdlib.cpp
+        Interface/ImguiPopup.cpp
         Facet_shared.cpp
 
 

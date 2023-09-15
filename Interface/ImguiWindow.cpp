@@ -37,6 +37,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 #include "ImguiFacetMove.h"
+#include "ImguiPopup.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -70,6 +71,7 @@ bool ImguiWindow::ToggleFacetMove()
     show_facet_move = !show_facet_move;
     return show_facet_move;
 }
+
 // --- Toggle functions ---
 
 // Setup Dear ImGui context and various default values (font, colors etc.)
@@ -293,6 +295,10 @@ void ImguiWindow::renderSingle() {
             ShowGlobalSettings(mApp, &show_global_settings, nbProc);
             ImGui::End();
         }
+
+
+        ImguiPopup::ShowPopup();
+
 
         // Rendering
         ImGui::Render();

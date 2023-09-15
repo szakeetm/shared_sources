@@ -4,12 +4,12 @@
 #include "../Helper/StringHelper.h"
 #include "Facet_shared.h"
 #include "imgui.h"
+#include "ImguiWindow.h"
 #include "ImguiExtensions.h"
 #include <imgui/imgui_internal.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "../../src/MolFlow.h"
-#include <optional>
-
+#include "ImguiPopup.h"
 
 //forward declarations of classes used in the implementation
 class InterfaceGeometry;
@@ -33,7 +33,6 @@ static std::string selection;
 enum movementMode { absolute_offset, direction_and_distance };
 
 //internal function declarations
-void Popup(std::string str);
 void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy);
 void FacetNormalButton(InterfaceGeometry* interfGeom);
 void VertexDirectionButton(InterfaceGeometry* interfGeom);
