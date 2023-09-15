@@ -645,6 +645,9 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
 
     //Run finished
     if (procInfo.masterCmd != SimCommand::Kill) {
+        //command is 'Run' if exited because des. reached
+        //otherwise 'Pause'
+        //exact reason is RunLoop() return value
         ClearCommand();
     }
     procInfo.UpdateControllerStatus({ ControllerState::Ready }, std::nullopt, loadStatus);
