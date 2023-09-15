@@ -405,11 +405,10 @@ void GLWindowManager::Resize() {
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
-
-  if(theApp->imWnd && theApp->imgui_renderLock.try_lock())
+  if(theApp->imWnd && theApp->imguiRenderLock.try_lock())
   {
       theApp->imWnd->renderSingle();
-      theApp->imgui_renderLock.unlock();
+      theApp->imguiRenderLock.unlock();
   }
   SDL_GL_SwapWindow(theApp->mainScreen);
 }

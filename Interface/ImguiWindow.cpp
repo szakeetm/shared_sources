@@ -239,10 +239,8 @@ void ImguiWindow::renderSingle() {
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
 
-        static bool open_viewer_window = false;
         if (show_app_sidebar)
-            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings,
-                           &open_viewer_window);
+            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -305,17 +303,6 @@ void ImguiWindow::renderSingle() {
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         // SDL_GL_SwapWindow(app->mainScreen);
-
-        if(open_viewer_window){ //can 
-            open_viewer_window = false;
-            if (!mApp->viewer3DSettings)
-                mApp->viewer3DSettings = new Viewer3DSettings();
-            mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
-            mApp->viewer3DSettings->Reposition();
-            auto curViewer = mApp->curViewer;
-            auto viewer = mApp->viewer[curViewer];
-            mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
-        }
 
         // This allows for ImGui to render its cursor only if an ImGui element is focused, otherwise it allows the default cursor
         // Produces unpredictable behaviour when changing focus between ImGui and Legacy interfaces

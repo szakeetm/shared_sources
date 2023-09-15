@@ -24,10 +24,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class InterfaceGeometry;
 #if defined(MOLFLOW)
 class MolFlow;
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global, bool *newViewer);
+void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global);
 #else
 class SynRad;
-void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global, bool *newViewer);
+void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global);
 #endif
 
 #endif //MOLFLOW_PROJ_IMGUISIDEBAR_H

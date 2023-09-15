@@ -297,7 +297,6 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, int &nbProc) {
 //SYNRAD
 #endif
         ImGui::PopItemWidth();
-        // PopStyleCompact();
         ImGui::EndTable();
     }
 
@@ -309,9 +308,13 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, int &nbProc) {
     /*bool nbProcChanged = false;
     int nbProc = mApp->worker.GetProcNumber();*/
     ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
-    if (ImGui::InputInt("##0", &nbProc, 1, 8))
-    {
-        if (nbProc > MAX_PROCESS) nbProc = MAX_PROCESS;
+    ImGui::InputInt("##nbProc", &nbProc, 1, 8);
+
+    if (nbProc > MAX_PROCESS) {
+        nbProc = MAX_PROCESS;
+    }
+    if (nbProc < 1) {
+        nbProc = 1;
     }
 
     ImGui::SameLine();

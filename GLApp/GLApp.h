@@ -80,7 +80,7 @@ public:
 
     bool wereEvents; //Repaint in next cycle (instead of immediately by calling GLWindowManager::Repaint() )
     int wereEvents_imgui{ 2 }; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
-    std::mutex imgui_renderLock;
+    std::mutex imguiRenderLock;
 
 //#if defined(_DEBUG)
     // Debugging stuff
