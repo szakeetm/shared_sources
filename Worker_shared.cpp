@@ -498,9 +498,10 @@ size_t Worker::GetProcNumber() const {
 
 bool Worker::IsRunning() {
 	// In case a simulation ended prematurely escaping the check routines in FrameMove (only executed after at least one second)
-	bool state = simManager.IsRunning();;
-	if (!state && simuTimer.isActive)
+	bool state = simManager.IsRunning();
+	if (!state && simuTimer.isActive) {
 		simuTimer.Stop();
+	}
 	return state;
 }
 
