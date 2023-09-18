@@ -384,7 +384,8 @@ void RestartProc(int nbProc, Interface* mApp) {
     }
 }
 
-void RecalculateOutgassing(MolFlow* mApp) {
+void RecalculateOutgassing(Interface* mApp) {
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {
             mApp->worker.RealReload();

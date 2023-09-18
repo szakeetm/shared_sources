@@ -80,7 +80,7 @@ public:
 
     bool wereEvents; //Repaint in next cycle (instead of immediately by calling GLWindowManager::Repaint() )
     int wereEvents_imgui{ 2 }; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
-    std::mutex imguiRenderLock;
+    bool imguiRenderLock = false;
 
 //#if defined(_DEBUG)
     // Debugging stuff
@@ -119,6 +119,21 @@ private:
    int  firstTick;
 
    bool quit;
+};
+
+class LockWrapper {
+public:
+    LockWrapper(bool& _flag) : flag(_flag) {
+        flag = true;
+    };
+    ~LockWrapper() {
+        flag = false;
+    };
+    bool IsLocked() {
+        return flag;
+    }
+private:
+    bool& flag;
 };
 
 #endif /* _GLAPPH_ */

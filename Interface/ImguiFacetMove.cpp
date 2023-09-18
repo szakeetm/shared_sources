@@ -169,13 +169,17 @@ void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy) {
         return;
     }
     //execute
-    if (mApp->AskToReset()) {
-        bool imGui = true;
-        interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy); //make D optional to avoid errors in debug mode
-        mApp->worker.MarkToReload();
-        mApp->changedSinceSave = true;
-        mApp->UpdateFacetlistSelected();
-        mApp->UpdateViewers();
+
+    {
+        LockWrapper myLock(mApp->imguiRenderLock);
+        if (mApp->AskToReset()) {
+            bool imGui = true;
+            interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy); //make D optional to avoid errors in debug mode
+            mApp->worker.MarkToReload();
+            mApp->changedSinceSave = true;
+            mApp->UpdateFacetlistSelected();
+            mApp->UpdateViewers();
+        }
     }
 }
 
