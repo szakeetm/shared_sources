@@ -259,15 +259,15 @@ void ImguiWindow::renderSingle() {
 
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub); // Create a window called "Hello, world!"
             // and append into it.
 
-#if defined(DEBUG)
-// only show in debug mode
+            #if defined(DEBUG)
+            // only show in debug mode
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-#endif
+            #endif
             ImGui::Checkbox("Global settings", &show_global_settings);
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
@@ -281,6 +281,8 @@ void ImguiWindow::renderSingle() {
             ImGui::Text("Application time %.3f s [%.3f s]",
                         ImGui::GetTime(), difftime(now_time, start_time));
             ImGui::End();
+        } else {
+            show_app_main_menu_bar = false; // close main menu if closing test suite (otherwise no way to close the main menu)
         }
 
         // 3. Show window plotting the simulation performance

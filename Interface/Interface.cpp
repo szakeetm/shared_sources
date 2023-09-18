@@ -1754,15 +1754,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     return true;
                 }
                 case MENU_IMGUI: {
-                    if(!imWnd) {
+                    if (!imWnd) {
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
-                        imWnd->ToggleMainHub(); // active on start
                     }
-                    else{
-                        imWnd->destruct();
-                        delete imWnd;
-                        imWnd = nullptr;
+                    if (!imWnd->show_main_hub) {
+                        imWnd->ToggleMainHub(); 
                     }
                     return true;
                 }
@@ -1771,8 +1768,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    imWnd->ToggleGlobalSettings();
-
+                    if (!imWnd->show_global_settings) {
+                        imWnd->ToggleGlobalSettings();
+                    }
                     return true;
                 }
                 case MENU_IMGUI_SIDE: {
@@ -1780,8 +1778,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    imWnd->ToggleSimSidebar();
-
+                    if (!imWnd->show_app_sidebar) {
+                        imWnd->ToggleSimSidebar();
+                    }
                     return true;
                 }
                 case MENU_IMGUI_MENU: {
@@ -1789,17 +1788,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    imWnd->ToggleMainMenu();
-
-                    return true;
-                }
-                case MENU_IMGUI_FACETMOVE: {
-                    if (!imWnd) {
-                        imWnd = new ImguiWindow(this);
-                        imWnd->init();
+                    if (!imWnd->show_app_main_menu_bar) {
+                        imWnd->ToggleMainMenu();
                     }
-                    imWnd->ToggleMainMenu();
-
                     return true;
                 }
             }

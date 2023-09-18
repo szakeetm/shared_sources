@@ -49,8 +49,6 @@ public:
     bool ToggleDemoWindow();
     bool ToggleGlobalSettings();
     bool ToggleFacetMove();
-    bool TogglePopup();
-protected:
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows
     bool show_app_main_menu_bar{false}; //!< Window main menu bar at the top
@@ -60,6 +58,7 @@ protected:
     bool show_perfo{false}; //!< Plot showing history of simulation performance
     bool show_facet_move{false}; //Shows Facet-Move window
 
+protected:
     ImGuiConfigFlags storedConfigFlags;
 
     double start_time; // to keep track how long the ImGui GUI is running
