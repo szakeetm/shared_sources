@@ -76,6 +76,12 @@ class UpdateLogWindow;
 class ManualUpdateCheckDialog;
 class ParticleLogger;
 class ConvergencePlotter;
+class FacetDetails;
+class Viewer3DSettings;
+class TextureScaling;
+class GlobalSettings;
+class ProfilePlotter;
+class TexturePlotter;
 
 class InterfaceGeometry;
 class ImguiWindow;
@@ -412,6 +418,14 @@ public:
 	GLMenu* memorizeViewsMenu;
 	GLMenu* clearSelectionsMenu;
 	GLMenu* clearViewsMenu;
+
+	//Shared windows (implementation might be Molflow/Synrad-specific)
+	FacetDetails* facetDetails = nullptr;
+	Viewer3DSettings* viewer3DSettings = nullptr;
+	TextureScaling* textureScaling = nullptr;
+	GlobalSettings* globalSettings = nullptr;
+	ProfilePlotter* profilePlotter = nullptr;
+	TexturePlotter* texturePlotter = nullptr;
 
 	// Views
 	void SelectView(int v);
