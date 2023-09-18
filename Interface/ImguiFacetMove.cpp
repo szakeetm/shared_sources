@@ -1,9 +1,10 @@
 #include "ImguiFacetMove.h"
 
-void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom)
+void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom)
 {
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
+    float width, cursorY;
     ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
     ImGui::Begin("Facet Move", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
     
@@ -29,15 +30,17 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
     ImGui::InputText("cm##Y", &axis_Y);
     ImGui::Text(prefix+"Z"); ImGui::SameLine();
     ImGui::InputText("cm##Z", &axis_Z);
-    ImGui::BeginChild("In direction", ImVec2(0, 9.5f*txtH), true, 0);
+    ImGui::BeginChild("In direction", ImVec2(0, 9.0f*txtH), true, 0);
     {
         ImGui::Text("In direction"); {
-            if (mode == absolute_offset) ImGui::BeginDisabled();
+            if (mode == absolute_offset) {
+                ImGui::BeginDisabled();
+            }
         }
 
         {
-            ImGui::Text("Distance"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(40 * txtW);
+            ImGui::Text("         Distance"); ImGui::SameLine();
+            ImGui::SetNextItemWidth(23 * txtW);
             ImGui::InputText("cm##D", &distance);
         }
 
@@ -47,72 +50,101 @@ void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom
 
         ImGui::PlaceAtRegionCenter("Facet normal");
         if (ImGui::Button("Facet normal")) {
-            FacetNormalButton(interfGeom);
+            FacetNormalButtonPress(interfGeom);
         }
-        ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders;
+        ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH;
         if (ImGui::BeginTable("options", 2, table_flags)) {
-            ImGui::TableNextColumn();
+            ImGui::TableNextRow(); //Set up top row
+            ImGui::TableSetColumnIndex(0);
             ImGui::BeginGroup();
-            {
-                ImGui::PlaceAtRegionCenter("Base");
-                ImGui::Text("Base");
-                ImGui::PlaceAtRegionCenter(selection);
-                ImGui::Text(selection);
-                ImGui::PlaceAtRegionCenter("Selected Vertex");
-                if (ImGui::Button("Selected Vertex##0")) {
-                    base_selected = BaseVertexSelectButton(interfGeom);
-                }
-                ImGui::PlaceAtRegionCenter("Facet center");
-                if (ImGui::Button("Facet center##0")) {
-                    base_selected = BaseFacetSelectButton(interfGeom);
-                }
-            } ImGui::EndGroup();
-
-
+            ImGui::PlaceAtRegionCenter("Base");
+            ImGui::Text("Base");
+            ImGui::EndGroup();
+            ImGui::TableSetColumnIndex(1);
             if (!base_selected) {
                 ImGui::BeginDisabled();
             }
-
-            ImGui::TableNextColumn();
             ImGui::BeginGroup();
-            {
-                ImGui::PlaceAtRegionCenter("Direction");
-                ImGui::Text("Direction");
-                ImGui::PlaceAtRegionCenter(dirMessage);
-                ImGui::Text(dirMessage);
-                ImGui::PlaceAtRegionCenter("Selected Vertex");
-
-                if (ImGui::Button("Selected Vertex##1"))
-                {
-                    VertexDirectionButton(interfGeom);
-                }
-                ImGui::PlaceAtRegionCenter("Facet center");
-                if (ImGui::Button("Facet center##1"))
-                {
-                    FacetCenterButton(interfGeom);
-                }
-            }ImGui::EndGroup();
-
+            ImGui::PlaceAtRegionCenter("Direction");
+            ImGui::Text("Direction"); 
+            ImGui::EndGroup();
             if (!base_selected) {
                 ImGui::EndDisabled();
             }
+
+            ImGui::TableNextRow(); //Set up message row
+            ImGui::TableSetColumnIndex(0);
+            ImGui::BeginGroup();
+            ImGui::PlaceAtRegionCenter(selection);
+            ImGui::Text(selection);
+            ImGui::EndGroup();
+            ImGui::TableSetColumnIndex(1);
+            if (!base_selected) {
+                ImGui::BeginDisabled();
+            }
+            ImGui::BeginGroup();
+            ImGui::PlaceAtRegionCenter(dirMessage);
+            ImGui::Text(dirMessage);
+            if (!base_selected) {
+                ImGui::EndDisabled();
+            }
+            ImGui::EndGroup();
+            ImGui::TableNextRow(); //Set up buttons row
+            ImGui::TableSetColumnIndex(0);
+            ImGui::BeginGroup();
+            {                
+                ImGui::PlaceAtRegionCenter(" Selected Vertex ");
+                width = ImGui::CalcTextSize(" Selected Vertex ").x;
+                if (ImGui::Button("Selected Vertex##0")) {
+                    base_selected = BaseVertexSelectButtonPress(interfGeom);
+                }
+                ImGui::PlaceAtRegionCenter(" Selected Vertex ");
+                if (ImGui::Button("Facet center##0", ImVec2(width, 0))) {
+                    base_selected = BaseFacetSelectButtonPress(interfGeom);
+                }
+            } ImGui::EndGroup();
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::BeginGroup();
+            {
+                if (!base_selected) {
+                    ImGui::BeginDisabled();
+                }
+
+                ImGui::PlaceAtRegionCenter(" Selected Vertex ");
+                if (ImGui::Button("Selected Vertex##1"))
+                {
+                    VertexDirectionButtonPress(interfGeom);
+                }
+                ImGui::PlaceAtRegionCenter(" Selected Vertex ");
+                if (ImGui::Button("Facet center##1",ImVec2(width,0)))
+                {
+                    FacetCenterButtonPress(interfGeom);
+                }
+                if (!base_selected) {
+                    ImGui::EndDisabled();
+                }
+            }ImGui::EndGroup();
             ImGui::EndTable();
         }
 
     }
     ImGui::EndChild();
-    ImGui::PlaceAtRegionCenter("Move facets   Copy facets");
-    if (ImGui::Button("Move facets")) {
+    ImGui::PlaceAtRegionCenter("Move facets                        Copy facets"); //This is very ugly TODO:Find a better way
+    if (ImGui::Button("Move facets", ImVec2(width, 0))) {
         ExecuteFacetMove(mApp, interfGeom, false);
-    } ImGui::SameLine();
-    if (ImGui::Button("Copy facets")) {
+    }
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(6 * txtW,txtH));
+    ImGui::SameLine();
+    if (ImGui::Button("Copy facets", ImVec2(width, 0))) {
         ExecuteFacetMove(mApp, interfGeom, true);
     }
 
     ImGui::End();
 }
 
-bool BaseVertexSelectButton(InterfaceGeometry* interfGeom) {
+bool BaseVertexSelectButtonPress(InterfaceGeometry* interfGeom) {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1)
     {
@@ -128,7 +160,7 @@ bool BaseVertexSelectButton(InterfaceGeometry* interfGeom) {
     }
 }
 
-bool BaseFacetSelectButton(InterfaceGeometry* interfGeom) {
+bool BaseFacetSelectButtonPress(InterfaceGeometry* interfGeom) {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
         ImguiPopup::Popup("Select exactly one facet", "Error");
@@ -140,7 +172,7 @@ bool BaseFacetSelectButton(InterfaceGeometry* interfGeom) {
     return true;
 }
 
-void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy) {
+void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy) {
     double X, Y, Z, D{0};
     //handle input errors
     if (interfGeom->GetNbSelectedFacets() == 0) {
@@ -173,7 +205,6 @@ void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy) {
     {
         LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->AskToReset()) {
-            bool imGui = true;
             interfGeom->MoveSelectedFacets(X, Y, Z, towardsDirectionMode, D, copy); //make D optional to avoid errors in debug mode
             mApp->worker.MarkToReload();
             mApp->changedSinceSave = true;
@@ -183,7 +214,7 @@ void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy) {
     }
 }
 
-void FacetNormalButton(InterfaceGeometry* interfGeom)
+void FacetNormalButtonPress(InterfaceGeometry* interfGeom)
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
@@ -199,7 +230,7 @@ void FacetNormalButton(InterfaceGeometry* interfGeom)
     mode = direction_and_distance;
 }
 
-void VertexDirectionButton(InterfaceGeometry* interfGeom)
+void VertexDirectionButtonPress(InterfaceGeometry* interfGeom)
 {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1) {
@@ -216,7 +247,7 @@ void VertexDirectionButton(InterfaceGeometry* interfGeom)
     dirMessage = fmt::format("Vertex {}", selVertices[0] + 1);
 }
 
-void FacetCenterButton(InterfaceGeometry* interfGeom)
+void FacetCenterButtonPress(InterfaceGeometry* interfGeom)
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {

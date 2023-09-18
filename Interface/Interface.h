@@ -223,7 +223,6 @@ class ImguiWindow;
 #define MENU_IMGUI_GLOB           1101
 #define MENU_IMGUI_SIDE           1102
 #define MENU_IMGUI_MENU           1103
-#define MENU_IMGUI_FACETMOVE	  1104
 
 
 static const GLfloat position[] = { -0.3f, 0.3f, -1.0f, 0.0f }; //light1

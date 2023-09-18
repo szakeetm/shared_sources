@@ -15,7 +15,7 @@
 class InterfaceGeometry;
 class InterfaceFacet;
 class Worker; 
-class MolFlow;
+class Interface;
 
 //Facet Move window implemented in ImGui
 
@@ -33,11 +33,11 @@ static std::string selection;
 enum movementMode { absolute_offset, direction_and_distance };
 
 //internal function declarations
-void ExecuteFacetMove(MolFlow* mApp, InterfaceGeometry* interfGeom, bool copy);
-void FacetNormalButton(InterfaceGeometry* interfGeom);
-void VertexDirectionButton(InterfaceGeometry* interfGeom);
-void FacetCenterButton(InterfaceGeometry* interfGeom);
-bool BaseVertexSelectButton(InterfaceGeometry* interfGeom);
-bool BaseFacetSelectButton(InterfaceGeometry* interfGeom);
+void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
+void FacetNormalButtonPress(InterfaceGeometry* interfGeom);
+void VertexDirectionButtonPress(InterfaceGeometry* interfGeom);
+void FacetCenterButtonPress(InterfaceGeometry* interfGeom);
+bool BaseVertexSelectButtonPress(InterfaceGeometry* interfGeom);
+bool BaseFacetSelectButtonPress(InterfaceGeometry* interfGeom);
 
-void ShowAppFacetMove(bool* p_open, MolFlow* mApp, InterfaceGeometry* interfGeom);
+void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
