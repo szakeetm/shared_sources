@@ -33,6 +33,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Worker.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
+#include "ImguiWindow.h"
 
 #if defined(MOLFLOW)
 
@@ -679,7 +680,9 @@ static void ShowMenuFacet() {
     if (ImGui::MenuItem("Swap normal", "CTRL+N")) {}
     if (ImGui::MenuItem("Shift indices", "CTRL+H")) {}
     if (ImGui::MenuItem("Facet coordinates ...")) {}
-    if (ImGui::MenuItem("Move ...")) {}
+    if (ImGui::MenuItem("Move ...")) {
+        mApp->imWnd->show_facet_move = true;
+    }
     if (ImGui::MenuItem("Scale ...")) {}
     if (ImGui::MenuItem("Mirror / Project ...")) {}
     if (ImGui::MenuItem("Rotate ...")) {}

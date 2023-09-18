@@ -36,6 +36,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
+#include "ImguiFacetMove.h"
+#include "ImguiPopup.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -64,6 +66,12 @@ bool ImguiWindow::ToggleGlobalSettings(){
     show_global_settings = !show_global_settings;
     return show_global_settings;
 }
+bool ImguiWindow::ToggleFacetMove()
+{
+    show_facet_move = !show_facet_move;
+    return show_facet_move;
+}
+
 // --- Toggle functions ---
 
 // Setup Dear ImGui context and various default values (font, colors etc.)
@@ -74,9 +82,14 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
+
+
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
+
+    //---!!! must be after all other io.ConfigFlags changes !!!---
+    ImguiWindow::storedConfigFlags = io.ConfigFlags; //save flags setup to allow restoring it (used to control mouse pointer drawing)
 
     // Setup Dear ImGui style
     //ImGui::StyleColorsDark();
@@ -141,6 +154,7 @@ void ImguiWindow::init() {
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
+    show_facet_move = false;
 
     start_time = ImGui::GetTime();
 }
@@ -210,10 +224,8 @@ void ImguiWindow::renderSingle() {
 #else
     SynRad *mApp = (SynRad *) app;
 #endif
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     if (mApp) {
-        bool nbProcChanged = false;
-        bool recalcOutg = false;
-        bool changeDesLimit = false;
         bool redrawAabb = false;
         bool rebuildAabb = false;
         static int nbProc = mApp->worker.GetProcNumber();
@@ -227,10 +239,8 @@ void ImguiWindow::renderSingle() {
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
 
-        static bool open_viewer_window = false;
         if (show_app_sidebar)
-            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings,
-                           &open_viewer_window);
+            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -242,22 +252,28 @@ void ImguiWindow::renderSingle() {
             ImPlot::ShowDemoWindow(&show_demo_window);
         }
 
+        if (show_facet_move)
+        {
+            ShowAppFacetMove(&show_facet_move, mApp, mApp->worker.GetGeometry());
+        }
+
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_"); // Create a window called "Hello, world!"
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub); // Create a window called "Hello, world!"
             // and append into it.
 
-#if defined(DEBUG)
-// only show in debug mode
+            #if defined(DEBUG)
+            // only show in debug mode
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-#endif
+            #endif
             ImGui::Checkbox("Global settings", &show_global_settings);
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+            ImGui::Checkbox("Facet Move", &show_facet_move);
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -265,6 +281,8 @@ void ImguiWindow::renderSingle() {
             ImGui::Text("Application time %.3f s [%.3f s]",
                         ImGui::GetTime(), difftime(now_time, start_time));
             ImGui::End();
+        } else {
+            show_app_main_menu_bar = false; // close main menu if closing test suite (otherwise no way to close the main menu)
         }
 
         // 3. Show window plotting the simulation performance
@@ -274,9 +292,13 @@ void ImguiWindow::renderSingle() {
 
         // 3. Show global settings
         if (show_global_settings) {
-            ShowGlobalSettings(mApp, &show_global_settings, nbProcChanged, recalcOutg, changeDesLimit, nbProc);
+            ShowGlobalSettings(mApp, &show_global_settings, nbProc);
             ImGui::End();
         }
+
+
+        ImguiPopup::ShowPopup();
+
 
         // Rendering
         ImGui::Render();
@@ -284,69 +306,16 @@ void ImguiWindow::renderSingle() {
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         // SDL_GL_SwapWindow(app->mainScreen);
 
-        // Handle button events at the end, because some functions call GL Repaint,
-        // which doesnt work well with ImGui if frame is not finalized
-        if (nbProcChanged) {
-            restartProc(nbProc, mApp);
-        } else if (recalcOutg) {
-            if (mApp->AskToReset()) {
-                try {
-                    mApp->worker.ReloadIfNeeded();
-                } catch (std::exception &e) {
-                    if (ImGui::BeginPopupModal("Error", nullptr,
-                                               ImGuiWindowFlags_AlwaysAutoResize)) {
-                        ImGui::Text("Recalculation failed: Couldn't reload Worker:\n%s",
-                                    e.what());
-                        ImGui::Separator();
-
-                        if (ImGui::Button("OK", ImVec2(120, 0))) {
-                            ImGui::CloseCurrentPopup();
-                        }
-                        ImGui::SetItemDefaultFocus();
-                        ImGui::EndPopup();
-                    }
-                }
-            }
-        } else if (changeDesLimit) {
-            mApp->worker.ChangeSimuParams(); // Sync with subprocesses
+        // This allows for ImGui to render its cursor only if an ImGui element is focused, otherwise it allows the default cursor
+        // Produces unpredictable behaviour when changing focus between ImGui and Legacy interfaces
+        // Has issiues related to ImGui rendering being paused after inactivity
+        /*if (ImGui::IsAnyItemHovered())
+        {
+            io.ConfigFlags = ImguiWindow::storedConfigFlags;
         }
-        if(open_viewer_window){
-            open_viewer_window = false;
-            if (!mApp->viewer3DSettings)
-                mApp->viewer3DSettings = new Viewer3DSettings();
-            mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
-            mApp->viewer3DSettings->Reposition();
-            auto curViewer = mApp->curViewer;
-            auto viewer = mApp->viewer[curViewer];
-            mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
-        }
-    }
-}
-
-/**
- * \brief Function to apply changes to the number of processes.
- */
-#if defined(MOLFLOW)
-void ImguiWindow::restartProc(int nbProc, MolFlow *mApp) {
-#else
-void ImguiWindow::restartProc(int nbProc, SynRad *mApp) {
-#endif
-    try {
-        mApp->worker.Stop_Public();
-        mApp->worker.SetProcNumber(nbProc);
-        mApp->worker.RealReload(true);
-        mApp->SaveConfig();
-    } catch (Error &e) {
-        if (ImGui::BeginPopupModal("Error", nullptr,
-                                   ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", e.what());
-            ImGui::Separator();
-
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SetItemDefaultFocus();
-            ImGui::EndPopup();
-        }
+        else
+        {
+            io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+        }*/
     }
 }

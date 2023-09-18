@@ -109,9 +109,9 @@ namespace {
 
 // Sidebar containing 3d viewer settings, facet settings and simulation data
 #if defined(MOLFLOW)
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
 #else
-void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global, bool *newViewer) {
+void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
 #endif
     const float PAD = 10.0f;
     static int corner = 0;
@@ -205,7 +205,13 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     if(ImGui::Button("<< View")){
-                        *newViewer = true;
+                        if (!mApp->viewer3DSettings)
+                            mApp->viewer3DSettings = new Viewer3DSettings();
+                        mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
+                        mApp->viewer3DSettings->Reposition();
+                        auto curViewer = mApp->curViewer;
+                        auto viewer = mApp->viewer[curViewer];
+                        mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
                     }
                     ImGui::TableNextColumn();
                     ImGui::Checkbox("Indices", &viewer->showIndex);

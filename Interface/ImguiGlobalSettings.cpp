@@ -35,11 +35,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-#if defined(MOLFLOW)
-static void ProcessControlTable(MolFlow *mApp) {
-#else
-static void ProcessControlTable(SynRad *mApp) {
-#endif
+static void ProcessControlTable(Interface *mApp) {
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -52,8 +48,11 @@ static void ProcessControlTable(SynRad *mApp) {
     // When using ScrollX or ScrollY we need to specify a size for our table
     // container! Otherwise by default the table will fit all available space,
     // like a BeginChild() call.
-    ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
+
+
+    ImVec2 outer_size = ImVec2(0.0f, ImGui::GetFrameHeight() - (TEXT_BASE_HEIGHT * 3.5f));
     if (ImGui::BeginTable("procTable", 5, flags, outer_size)) {
+
         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
         ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 10.f);
         ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed);
@@ -120,19 +119,14 @@ static void ProcessControlTable(SynRad *mApp) {
     }
 }
 
-#if defined(MOLFLOW)
-void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) {
-#else
-void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) {
-#endif
 
+void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc) {
+    int txtW = ImGui::CalcTextSize(" ").x;
+    int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(800.f, 0)); // Lift normal size constraint, however the presence of
+            ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
-
     ImGui::Begin(
             "Global settings", show_global_settings,
             ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool
@@ -149,7 +143,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         ImGui::TableHeadersRow();
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        ImGui::PushItemWidth(100);
+        ImGui::PushItemWidth(ImGui::CalcTextSize("0").y * 3);
         appSettingsChanged |= ImGui::InputDouble("Autosave frequency (minutes)",
                            &mApp->autoSaveFrequency, 0.00f, 0.0f, "%.1f");
         ImGui::PopItemWidth();
@@ -251,7 +245,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 
         if (ImGui::Button("Recalc. outgassing")) // Edit bools storing our
             // window open/close state
-            recalcOutg = true;
+            RecalculateOutgassing(mApp);
         simChanged |= ImGui::Checkbox(
                 "Enable low flux mode",
                 &lowFluxMode); // Edit bools storing our window open/close state
@@ -306,7 +300,6 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
 //SYNRAD
 #endif
         ImGui::PopItemWidth();
-        // PopStyleCompact();
         ImGui::EndTable();
     }
 
@@ -317,13 +310,19 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
     ImGui::SameLine();
     /*bool nbProcChanged = false;
     int nbProc = mApp->worker.GetProcNumber();*/
-    ImGui::SetNextItemWidth(50.0f);
-    ImGui::DragInt("", &nbProc, 1, 0, MAX_PROCESS, "%d",
-                   ImGuiSliderFlags_AlwaysClamp);
+    ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
+    ImGui::InputInt("##nbProc", &nbProc, 1, 8);
+
+    if (nbProc > MAX_PROCESS) {
+        nbProc = MAX_PROCESS;
+    }
+    if (nbProc < 1) {
+        nbProc = 1;
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Apply and restart processes"))
-        nbProcChanged = true;
+        RestartProc(nbProc, mApp);
     {
         ImGui::PlaceAtRegionRight("Change desorption limit", true);
         if (ImGui::Button("Change desorption limit"))
@@ -357,7 +356,7 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             mApp->worker.model->otfParams.desorptionLimit = maxDes;
             // initMax = false;
-            changeDesLimit = true;
+            mApp->worker.ChangeSimuParams();
             ImGui::CloseCurrentPopup();
         }
         ImGui::SetItemDefaultFocus();
@@ -367,5 +366,53 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcCh
         }
         ImGui::EndPopup();
     }
+}
 
+/**
+ * \brief Function to apply changes to the number of processes.
+ */
+void RestartProc(int nbProc, Interface* mApp) {
+    try {
+        LockWrapper myLock(mApp->imguiRenderLock);
+        mApp->worker.Stop_Public();
+        mApp->worker.SetProcNumber(nbProc);
+        mApp->worker.RealReload(true);
+        mApp->SaveConfig();
+    }
+    catch (Error& e) {
+        if (ImGui::BeginPopupModal("Error", nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", e.what());
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SetItemDefaultFocus();
+            ImGui::EndPopup();
+        }
+    }
+}
+
+void RecalculateOutgassing(Interface* mApp) {
+    LockWrapper myLock(mApp->imguiRenderLock);
+    if (mApp->AskToReset()) {
+        try {
+            mApp->worker.RealReload();
+        }
+        catch (std::exception& e) {
+            if (ImGui::BeginPopupModal("Error", nullptr,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Recalculation failed: Couldn't reload Worker:\n%s",
+                    e.what());
+                ImGui::Separator();
+
+                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndPopup();
+            }
+        }
+    }
 }

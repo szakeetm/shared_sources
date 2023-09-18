@@ -21,14 +21,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H
 #define MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H
 
-#if defined(MOLFLOW)
-class MolFlow;
-void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) ;
-#else
-class SynRad;
-void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, bool &nbProcChanged, bool &recalcOutg,
-                        bool &changeDesLimit, int &nbProc) ;
-#endif
+class Interface;
+void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc);
+void RecalculateOutgassing(Interface* mApp);
+void RestartProc(int nbProc, Interface* mApp);
 
 #endif //MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H

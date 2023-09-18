@@ -1752,7 +1752,7 @@ void InterfaceGeometry::MoveSelectedFacets(double dX, double dY, double dZ, bool
 
 		for (const auto sel : selectedFacets) {
 			counter += 1.0;
-			prgMove.SetProgress(counter / (double)selectedFacets.size());
+			prgMove.SetProgress(counter / (double)selectedFacets.size()); //this line was causing ImGui to crash, for this reason an alternate fucntion is written below which performs the same actions, but without the OpenGL
 			for (const auto ind : facets[sel]->indices) {
 				toMoveIds.insert(ind);
 			}

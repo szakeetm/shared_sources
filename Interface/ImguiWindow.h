@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_IMGUIWINDOW_H
 #define MOLFLOW_PROJ_IMGUIWINDOW_H
 
-
+#pragma once
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
 #include "AppUpdater.h"
@@ -48,7 +48,7 @@ public:
     bool ToggleSimSidebar();
     bool ToggleDemoWindow();
     bool ToggleGlobalSettings();
-protected:
+    bool ToggleFacetMove();
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows
     bool show_app_main_menu_bar{false}; //!< Window main menu bar at the top
@@ -56,13 +56,12 @@ protected:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
+    bool show_facet_move{false}; //Shows Facet-Move window
+
+protected:
+    ImGuiConfigFlags storedConfigFlags;
 
     double start_time; // to keep track how long the ImGui GUI is running
-#if defined(MOLFLOW)
-    static void restartProc(int nbProc, MolFlow *mApp);
-#else
-    static void restartProc(int nbProc, SynRad *mApp);
-#endif
 };
 
 
