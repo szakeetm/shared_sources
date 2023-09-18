@@ -32,11 +32,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-#if defined(MOLFLOW)
-static void ProcessControlTable(MolFlow *mApp) {
-#else
-static void ProcessControlTable(SynRad *mApp) {
-#endif
+static void ProcessControlTable(Interface *mApp) {
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -125,11 +121,8 @@ static void ProcessControlTable(SynRad *mApp) {
     }
 }
 
-#if defined(MOLFLOW)
-void ShowGlobalSettings(MolFlow *mApp, bool *show_global_settings, int &nbProc) {
-#else
-void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, int &nbProc) {
-#endif
+
+void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc) {
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
@@ -368,12 +361,9 @@ void ShowGlobalSettings(SynRad *mApp, bool *show_global_settings, int &nbProc) {
 /**
  * \brief Function to apply changes to the number of processes.
  */
-#if defined(MOLFLOW)
-void RestartProc(int nbProc, MolFlow* mApp) {
-#else
-void RestartProc(int nbProc, SynRad * mApp) {
-#endif
+void RestartProc(int nbProc, Interface* mApp) {
     try {
+        LockWrapper myLock(mApp->imguiRenderLock);
         mApp->worker.Stop_Public();
         mApp->worker.SetProcNumber(nbProc);
         mApp->worker.RealReload(true);
