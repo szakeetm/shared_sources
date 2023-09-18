@@ -21,7 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_IMGUIWINDOW_H
 #define MOLFLOW_PROJ_IMGUIWINDOW_H
 
-
+#pragma once
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
 #include "AppUpdater.h"

@@ -21,6 +21,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef MOLFLOW_PROJ_IMGUIMENU_H
 #define MOLFLOW_PROJ_IMGUIMENU_H
 
+class ImguiWindow;
 
 void ShowAppMainMenuBar();
 
