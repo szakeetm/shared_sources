@@ -212,6 +212,7 @@ set(GL_FILES
         GLApp/GLUnitDialog.cpp
         GLApp/GLWindow.cpp
         GLApp/GLWindowManager.cpp
+        GLApp/GLTypes.cpp
         GLApp/GLChart/AxisPanel.cpp
         GLApp/GLChart/GLAxis.cpp
         GLApp/GLChart/GLChart.cpp

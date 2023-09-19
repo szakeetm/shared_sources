@@ -121,20 +121,5 @@ private:
    bool quit;
 };
 
-class LockWrapper {
-public:
-    LockWrapper(bool& _flag) : flag(_flag) {
-        flag = true;
-    };
-    ~LockWrapper() {
-        flag = false;
-    };
-    bool IsLocked() {
-        return flag;
-    }
-private:
-    bool& flag;
-};
-
 #endif /* _GLAPPH_ */
 
