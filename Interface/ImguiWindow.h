@@ -18,9 +18,6 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_IMGUIWINDOW_H
-#define MOLFLOW_PROJ_IMGUIWINDOW_H
-
 #pragma once
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
@@ -63,6 +60,3 @@ protected:
 
     double start_time; // to keep track how long the ImGui GUI is running
 };
-
-
-#endif //MOLFLOW_PROJ_IMGUIWINDOW_H
