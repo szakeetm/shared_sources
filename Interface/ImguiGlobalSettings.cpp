@@ -138,24 +138,24 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
     float gasMass = 2.4;
     bool appSettingsChanged = false; //To sync old global settings window
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
-        ImGui::TableSetupColumn("Global settings");
+        ImGui::TableSetupColumn("App settings (applied immediately)");
         ImGui::TableSetupColumn("Simulation settings (current file)");
         ImGui::TableHeadersRow();
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::PushItemWidth(ImGui::CalcTextSize("0").y * 3);
         appSettingsChanged |= ImGui::InputDouble("Autosave frequency (minutes)",
-                           &mApp->autoSaveFrequency, 0.00f, 0.0f, "%.1f");
+            &mApp->autoSaveFrequency, 0.00f, 0.0f, "%.1f");
         ImGui::PopItemWidth();
         appSettingsChanged |= ImGui::Checkbox(
-                "Autosave only when simulation is running",
-                reinterpret_cast<bool *>(
-                        &mApp->autoSaveSimuOnly)); // Edit bools storing our window
+            "Autosave only when simulation is running",
+            reinterpret_cast<bool*>(
+                &mApp->autoSaveSimuOnly)); // Edit bools storing our window
         // open/close state
         appSettingsChanged |= ImGui::Checkbox(
-                "Use .zip as default extension (otherwise .xml)",
-                reinterpret_cast<bool *>(
-                        &mApp->compressSavedFiles)); // Edit bools storing our window
+            "Use .zip as default extension (otherwise .xml)",
+            reinterpret_cast<bool*>(
+                &mApp->compressSavedFiles)); // Edit bools storing our window
         // open/close state
         if (!mApp->appUpdater) ImGui::BeginDisabled();
         static bool updateCheckPreference;
@@ -165,36 +165,36 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         else {
             updateCheckPreference = false;
         }
-		if (appSettingsChanged |= ImGui::Checkbox(
-			"Check for updates at startup",
-			&updateCheckPreference)) {
-			mApp->appUpdater->SetUserUpdatePreference(updateCheckPreference);
-		};
+        if (appSettingsChanged |= ImGui::Checkbox(
+            "Check for updates at startup",
+            &updateCheckPreference)) {
+            mApp->appUpdater->SetUserUpdatePreference(updateCheckPreference);
+        };
         if (!mApp->appUpdater) ImGui::EndDisabled();
         // open/close state
         appSettingsChanged |= ImGui::Checkbox(
-                "Auto refresh formulas",
-                reinterpret_cast<bool *>(
-                        &mApp->autoUpdateFormulas)); // Edit bools storing our window
+            "Auto refresh formulas",
+            reinterpret_cast<bool*>(
+                &mApp->autoUpdateFormulas)); // Edit bools storing our window
         // open/close state
         appSettingsChanged |= ImGui::Checkbox("Anti-Aliasing",
-                        &mApp->antiAliasing); // Edit bools storing our window
+            &mApp->antiAliasing); // Edit bools storing our window
         // open/close state
         appSettingsChanged |= ImGui::Checkbox(
-                "White Background",
-                &mApp->whiteBg); // Edit bools storing our window open/close state
+            "White Background",
+            &mApp->whiteBg); // Edit bools storing our window open/close state
         appSettingsChanged |= ImGui::Checkbox("Left-handed coord. system",
-                        &mApp->leftHandedView); // Edit bools storing our
+            &mApp->leftHandedView); // Edit bools storing our
         // window open/close state
         ImGui::Checkbox(
-                "Highlight non-planar facets",
-                &mApp->highlightNonplanarFacets); // Edit bools storing our window
+            "Highlight non-planar facets",
+            &mApp->highlightNonplanarFacets); // Edit bools storing our window
         // open/close state
         appSettingsChanged |= ImGui::Checkbox("Highlight selected facets",
-                        &mApp->highlightSelection); // Edit bools storing our
+            &mApp->highlightSelection); // Edit bools storing our
         // window open/close state
         appSettingsChanged |= ImGui::Checkbox("Use old XML format",
-                        &mApp->useOldXMLFormat); // Edit bools storing our
+            &mApp->useOldXMLFormat); // Edit bools storing our
         // window open/close state
         ImGui::TableNextColumn();
         ImGui::PushItemWidth(100);
@@ -207,7 +207,6 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
-
         simChanged |= ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
         simChanged |= ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
@@ -220,35 +219,9 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
             ImGui::EndDisabled();
         }
 
-        ImGui::BeginDisabled();
-
-        static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
-
-        if (!mApp->worker.needsReload) sprintf(inputText,"%g",mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
-        ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)",inputText);
-        if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
-        ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText); // In molecules/sec
-        {
-            char tmpLabel[64];
-            sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
-            if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
-            ImGui::InputTextRightSide(tmpLabel,inputText);
-        }
-
-        ImGui::EndDisabled();
-        //***********************
-
-        {
-            const std::string btnText = "Recalc. outgassing";
-            ImGui::PlaceAtRegionRight(btnText.c_str(), false);
-        }
-
-        if (ImGui::Button("Recalc. outgassing")) // Edit bools storing our
-            // window open/close state
-            RecalculateOutgassing(mApp);
         simChanged |= ImGui::Checkbox(
                 "Enable low flux mode",
-                &lowFluxMode); // Edit bools storing our window open/close state
+                &lowFluxMode);
         ImGui::SameLine();
         ImGui::HelpMarker(
                 "Low flux mode helps to gain more statistics on low pressure "
@@ -272,21 +245,57 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         }
         simChanged |= ImGui::InputDoubleRightSide(
                 "Cutoff ratio", &lowFluxCutoff,
-                "%.2e"); // Edit bools storing our window open/close state
+                "%.2e");
         if (!lowFluxMode) {
             ImGui::EndDisabled();
         }
 
         {
+            bool wasDisabled = !simChanged;
             ImGui::PlaceAtRegionCenter("Apply above settings");
+            if (wasDisabled) {
+                ImGui::BeginDisabled();
+            }
             if (ImGui::Button("Apply above settings")) {
-                simChanged |= false;
+                simChanged = false;
                 mApp->worker.model->sp.gasMass = gasMass;
                 mApp->worker.model->sp.enableDecay = enableDecay;
                 mApp->worker.model->sp.halfLife = halfLife;
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
                 
+            }
+            if (wasDisabled) {
+                ImGui::EndDisabled();
+            }
+        }
+        ImGui::NewLine();
+        {
+            ImGui::BeginDisabled();
+
+            static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
+
+            if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
+            ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText);
+            if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
+            ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText); // In molecules/sec
+            {
+                char tmpLabel[64];
+                sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
+                if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
+                ImGui::InputTextRightSide(tmpLabel, inputText);
+            }
+
+            ImGui::EndDisabled();
+            //***********************
+
+            {
+                const std::string btnText = "Recalc. outgassing";
+                ImGui::PlaceAtRegionRight(btnText.c_str(), false);
+            }
+
+            if (ImGui::Button("Recalc. outgassing")) {
+                RecalculateOutgassing(mApp);
             }
         }
 
