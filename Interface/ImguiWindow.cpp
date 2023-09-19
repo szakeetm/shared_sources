@@ -281,8 +281,6 @@ void ImguiWindow::renderSingle() {
             ImGui::Text("Application time %.3f s [%.3f s]",
                         ImGui::GetTime(), difftime(now_time, start_time));
             ImGui::End();
-        } else {
-            show_app_main_menu_bar = false; // close main menu if closing test suite (otherwise no way to close the main menu)
         }
 
         // 3. Show window plotting the simulation performance

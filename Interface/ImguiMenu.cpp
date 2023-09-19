@@ -665,7 +665,9 @@ static void ShowMenuTools() {
     if (ImGui::MenuItem("Texture scaling...", "CTRL+D")) {}
     if (ImGui::MenuItem("Particle logger...")) {}
     //if (ImGui::MenuItem("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER)){}
-    if (ImGui::MenuItem("Global Settings ...")) {}
+    if (ImGui::MenuItem("Global Settings ...")) {
+        mApp->imWnd->show_global_settings = true;
+    }
     ImGui::Separator();
     if (ImGui::MenuItem("Take screenshot", "CTRL+R")) {}
 
@@ -768,6 +770,13 @@ static void ShowMenuTest() {
 
     ImGui::Separator();
     if (ImGui::MenuItem("Triangulate Geometry")) {}
+    ImGui::Separator();
+    if (ImGui::MenuItem("ImGui Menu")) {
+        mApp->imWnd->ToggleMainMenu();
+    }
+    if (ImGui::MenuItem("ImGui Test Suite")) {
+        mApp->imWnd->ToggleMainHub();
+    }
 }
 
 // TODO: Only in Molflow
