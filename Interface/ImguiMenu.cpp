@@ -37,6 +37,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiExtensions.h"
 #include "ImguiPopup.h"
 
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
+
 #if defined(MOLFLOW)
 
 #include "../../src/MolFlow.h"
@@ -55,9 +57,7 @@ extern MolFlow *mApp;
 extern SynRad*mApp;
 #endif
 
-#define RET_NONE 0x0000
-#define RET_SAVE 0x0001
-#define RET_CLOSE 0x0002
+extern char fileSaveFilters[];
 
 enum Menu_Event
 {
@@ -78,24 +78,52 @@ enum Menu_Event
 
 static bool showPopup = false;
 
-short AskToSave(bool *saveModal) {
+bool AskToSave() {
+    if (!mApp->changedSinceSave)
+        return true;
+    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    return mApp->AskToSave();
+}/*
     ImGuiIO& io = ImGui::GetIO();
     // Always center this window when appearing
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-    int ret_val = RET_NONE;
+    bool returnVal = false;
     if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
         ImGui::Text("Save current geometry first?");
 
         if (ImGui::Button("Yes") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             *saveModal = false;
-            ret_val = RET_SAVE;
+            std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+            if (!fn.empty()) {
+                auto prg = GLProgress_GUI("Saving file...", "Please wait"); //replace with ImGui progress
+                prg.SetVisible(true);
+                //GLWindowManager::Repaint();
+                try {
+                    mApp->worker.SaveGeometry(fn, prg);
+                    mApp->changedSinceSave = false;
+                    mApp->UpdateTitle();
+                    mApp->AddRecent(fn);
+                }
+                catch (const std::exception& e) {
+                    std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
+                    ImguiPopup::Popup(errMsg, "Error");
+                    mApp->RemoveRecent(fn.c_str());
+                }
+                returnVal = true;
+            }
+            else
+                returnVal = false;
         }
         ImGui::SameLine();
-        if (ImGui::Button("No") || io.KeysDown[ImGui::keyEsc]) {
+        if (ImGui::Button("No")) {
             *saveModal = false;
-            ret_val = RET_CLOSE;
+            returnVal = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel") || io.KeysDown[ImGui::keyEsc]) {
+            *saveModal = false;
+            returnVal = false;
         }
 
         if(!saveModal) {
@@ -105,11 +133,24 @@ short AskToSave(bool *saveModal) {
         ImGui::EndPopup();
     }
 
-    return ret_val;
+    return false;
+}*/
+
+void NewEmptyGeometryButtonPress() {
+    //ImGui::OpenPopup("File not saved");
+    if (AskToSave()) {
+        if (mApp->worker.IsRunning())
+            mApp->worker.Stop_Public();
+        {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->EmptyGeometry();
+        }
+    }
 }
 
 static void ShowMenuFile(int& openedMenu, bool &askToSave) {
     if(ImGui::MenuItem(ICON_FA_MEH_BLANK "  New, empty geometry")){
+        NewEmptyGeometryButtonPress();
         askToSave = true;
         openedMenu |= IMENU_FILE_NEW;
     }
@@ -835,16 +876,6 @@ void ShowAppMainMenuBar() {
         }
 
         ImGui::EndMainMenuBar();
-    }
-
-
-    if(askForSave) {
-        ImGui::OpenPopup("File not saved");
-        if(AskToSave(&askForSave) == RET_SAVE){
-            if (mApp->worker.IsRunning())
-                mApp->worker.Stop_Public();
-            mApp->EmptyGeometry();
-        }
     }
 
     if(!openmodalName.empty()){
