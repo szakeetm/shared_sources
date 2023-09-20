@@ -96,7 +96,7 @@ namespace ImGui {
         return *val != tmp; // true if changed
     }
 
-    bool InputTextRightSide(const char* desc, const char* text) {
+    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags=0) {
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
 
@@ -107,7 +107,7 @@ namespace ImGui {
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
             ImGui::PushID(desc);
-            ImGui::InputText("", buf, IM_ARRAYSIZE(buf));
+            ImGui::InputText("", buf, IM_ARRAYSIZE(buf), flags);
             ImGui::PopID();
             ImGui::PopItemWidth();
         }

@@ -43,7 +43,7 @@ namespace ImGui {
     void PlaceAtRegionRight(const char *str, bool sameLine);
 
     bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f");
-    bool InputTextRightSide(const char* desc, const char* text);
+    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
 
 // Add spacing of checkbox width
     void AddCheckboxWidthSpacing();

@@ -271,22 +271,22 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         }
         ImGui::NewLine();
         {
-            ImGui::BeginDisabled();
+            //ImGui::BeginDisabled();
 
             static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
 
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
-            ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText);
+            ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText, ImGuiInputTextFlags_ReadOnly);
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
-            ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText); // In molecules/sec
+            ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText, ImGuiInputTextFlags_ReadOnly); // In molecules/sec
             {
                 char tmpLabel[64];
                 sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
                 if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
-                ImGui::InputTextRightSide(tmpLabel, inputText);
+                ImGui::InputTextRightSide(tmpLabel, inputText, ImGuiInputTextFlags_ReadOnly);
             }
 
-            ImGui::EndDisabled();
+            //ImGui::EndDisabled();
             //***********************
 
             {
