@@ -34,6 +34,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
 #include "ImguiWindow.h"
+#include "ImguiExtensions.h"
+#include "ImguiPopup.h"
 
 #if defined(MOLFLOW)
 
@@ -74,8 +76,10 @@ enum Menu_Event
     IMENU_EDIT_GLOBALSETTINGS = 1 << 12
 };
 
+static bool showPopup = false;
 
 short AskToSave(bool *saveModal) {
+    ImGuiIO& io = ImGui::GetIO();
     // Always center this window when appearing
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -84,19 +88,20 @@ short AskToSave(bool *saveModal) {
     if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
         ImGui::Text("Save current geometry first?");
 
-        if (ImGui::Button("Yes")) {
+        if (ImGui::Button("Yes") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             *saveModal = false;
             ret_val = RET_SAVE;
         }
         ImGui::SameLine();
-        if (ImGui::Button("No")) {
+        if (ImGui::Button("No") || io.KeysDown[ImGui::keyEsc]) {
             *saveModal = false;
             ret_val = RET_CLOSE;
         }
 
-        if(!saveModal)
+        if(!saveModal) {
             ImGui::CloseCurrentPopup();
-
+            showPopup = false;
+        }
         ImGui::EndPopup();
     }
 
@@ -184,17 +189,7 @@ static void ShowFileModals(int& openedMenu) {
             mApp->InsertGeometry(false,"");
         }
         else {
-            openWarning = true;
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            ImGui::Button("OK");
-        }
-        if(openWarning){
-            ImGui::OpenPopup("No geometry");
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            if(ImGui::Button("OK"))
-                openWarning = false;
+            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
         }
     }
     else if(openedMenu & IMENU_FILE_INSERTGEO_NEWSTR){
@@ -205,17 +200,7 @@ static void ShowFileModals(int& openedMenu) {
             mApp->InsertGeometry(true,"");
         }
         else {
-            openWarning = true;
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            ImGui::Button("OK");
-        }
-        if(openWarning){
-            ImGui::OpenPopup("No geometry");
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            if(ImGui::Button("OK"))
-                openWarning = false;
+            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
         }
     }
     else if(openedMenu & IMENU_FILE_SAVE){
@@ -224,17 +209,7 @@ static void ShowFileModals(int& openedMenu) {
             mApp->SaveFile();
         }
         else {
-            openWarning = true;
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            ImGui::Button("OK");
-        }
-        if(openWarning){
-            ImGui::OpenPopup("No geometry");
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            if(ImGui::Button("OK"))
-                openWarning = false;
+            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
         }
     }
     else if(openedMenu & IMENU_FILE_SAVEAS){
@@ -243,17 +218,7 @@ static void ShowFileModals(int& openedMenu) {
             mApp->SaveFileAs();
         }
         else {
-            openWarning = true;
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            ImGui::Button("OK");
-        }
-        if(openWarning){
-            ImGui::OpenPopup("No geometry");
-            ImGui::BeginPopup("No geometry");
-            ImGui::Text("No geometry loaded.");
-            if(ImGui::Button("OK"))
-                openWarning = false;
+            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
         }
     }
     else if(openedMenu & IMENU_FILE_SAVE){
@@ -262,13 +227,13 @@ static void ShowFileModals(int& openedMenu) {
 }
 
 static void ShowSelectionModals() {
-
+    ImGuiIO& io = ImGui::GetIO();
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
 
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
-
+        ImGui::CaptureKeyboardFromApp(true);
         char tmp[128];
         double largeAreaThreshold = 1.0;
         sprintf(tmp, "%g", largeAreaThreshold);
@@ -277,7 +242,7 @@ static void ShowSelectionModals() {
                            "%lf");
         ImGui::Separator();
 
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
+        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             interfGeom->UnselectAll();
             for (int i = 0; i < interfGeom->GetNbFacet(); i++)
                 if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
@@ -286,19 +251,20 @@ static void ShowSelectionModals() {
             interfGeom->UpdateSelection();
             mApp->UpdateFacetParams(true);
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::EndPopup();
     }
 
-    if (ImGui::BeginPopupModal("Select non planar facets", NULL,
+    else if (ImGui::BeginPopupModal("Select non planar facets", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        
+        ImGui::CaptureKeyboardFromApp(true);
         char tmp[128];
         static double planarityThreshold = 1e-5;
         sprintf(tmp, "%g", planarityThreshold);
@@ -307,7 +273,7 @@ static void ShowSelectionModals() {
                            "%lf");
         ImGui::Separator();
 
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
+        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             interfGeom->UnselectAll();
             std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
             for (const auto &i : nonPlanarFacetids)
@@ -315,19 +281,20 @@ static void ShowSelectionModals() {
             interfGeom->UpdateSelection();
             mApp->UpdateFacetParams(true);
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::EndPopup();
     }
 
-    if (ImGui::BeginPopupModal("Enter selection name", NULL,
+    else if (ImGui::BeginPopupModal("Enter selection name", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
-
-        
+        ImGui::CaptureKeyboardFromApp(true);
         char selectionName[128];
 
         std::stringstream tmp;
@@ -336,31 +303,35 @@ static void ShowSelectionModals() {
         ImGui::InputText("Selection name", selectionName, 128);
         ImGui::Separator();
 
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
+        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             if (strcmp(selectionName, "") != 0)
                 mApp->AddSelection(selectionName);
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::EndPopup();
     }
 
     // TODO: with sel id
 
-    if (ImGui::BeginPopupModal("Clear all selections ?", NULL,
+    else if (ImGui::BeginPopupModal("Clear all selections ?", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
+
+        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             mApp->ClearAllSelections();
             ImGui::CloseCurrentPopup();
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
+            showPopup = false;
         }
         ImGui::EndPopup();
     }
@@ -484,6 +455,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     }
     if (ImGui::MenuItem("Select large with no hits...")) {
         openModalName="Select large facets without hits";
+        showPopup = true;
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);
@@ -510,6 +482,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     }
     if (ImGui::MenuItem("Select non planar facets")) {
         openModalName="Select non planar facets";
+        showPopup = true;
     }
     if (ImGui::MenuItem("Select non simple facets")) {
         interfGeom->UnselectAll();
@@ -533,6 +506,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     if (ImGui::BeginMenu("Memorize selection to")) {
         if (ImGui::MenuItem("Add new...", "CTRL+W")) {
             openModalName="Enter selection name";
+            showPopup = true;
         }
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
@@ -591,6 +565,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     if (ImGui::BeginMenu("Clear memorized")) {
         if (ImGui::MenuItem("Clear All")) {
             openModalName="Clear all selections ?";
+            showPopup = true;
         }
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
@@ -648,6 +623,7 @@ static void ShowMenuSelection(std::string& openModalName) {
 
     if (ImGui::MenuItem("Shortcut test", "CTRL+Q")) {
         openModalName="testmod";
+        showPopup = true;
     }
 }
 
@@ -875,8 +851,11 @@ void ShowAppMainMenuBar() {
         ImGui::OpenPopup(openmodalName.c_str());
         openmodalName = "";
     }
-    ShowFileModals(openedMenu);
-    ShowSelectionModals();
+    if (showPopup) {
+        ImGui::CaptureKeyboardFromApp(showPopup);
+        ShowFileModals(openedMenu);
+        ShowSelectionModals();
+    }
 
     ImGui::PopStyleVar(2);
 }
