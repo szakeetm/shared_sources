@@ -148,42 +148,76 @@ void NewEmptyGeometryButtonPress() {
     }
 }
 
-static void ShowMenuFile(int& openedMenu, bool &askToSave) {
+void LoadFileButtonPress() {
+    if (AskToSave()) {
+        if (mApp->worker.IsRunning())
+            mApp->worker.Stop_Public();
+        {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->LoadFile("");
+        }
+    }
+}
+
+void InsertGeometryButtonPress(bool newStr) {
+    InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+    if (interfGeom->IsLoaded()) {
+        if (mApp->worker.IsRunning())
+            mApp->worker.Stop_Public();
+        {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->InsertGeometry(newStr, "");
+        }
+    }
+    else ImguiPopup::Popup("No geometry loaded.","No geometry");
+}
+
+void SaveButtonPress() {
+    InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+    if (interfGeom->IsLoaded()) {
+        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        mApp->SaveFile();
+    }
+    else ImguiPopup::Popup("No geometry loaded.", "No geometry");
+}
+
+void SaveAsButtonPress() {
+    InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+    if (interfGeom->IsLoaded()) {
+        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        mApp->SaveFileAs();
+    }
+    else ImguiPopup::Popup("No geometry loaded.", "No geometry");
+}
+
+static void ShowMenuFile(bool &askToSave) {
     if(ImGui::MenuItem(ICON_FA_MEH_BLANK "  New, empty geometry")){
         NewEmptyGeometryButtonPress();
-        askToSave = true;
-        openedMenu |= IMENU_FILE_NEW;
     }
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
-        askToSave = true;
-        openedMenu |= IMENU_FILE_LOAD;
+        LoadFileButtonPress();
     }
     if(ImGui::MenuItem(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
-        askToSave = true;
-        openedMenu |= IMENU_FILE_LOADRECENT;
+        // TODO: Create a proceduraly expanding submenu
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Insert geometry")) {
         if(ImGui::MenuItem("To current structure")){
-            askToSave = true;
-            openedMenu |= IMENU_FILE_INSERTGEO;
+            InsertGeometryButtonPress(false);
         }
         if(ImGui::MenuItem("To new structure")){
-            askToSave = true;
-            openedMenu |= IMENU_FILE_INSERTGEO_NEWSTR;
+            InsertGeometryButtonPress(true);
         }
         ImGui::EndMenu();
     }
     ImGui::Separator();
     if(ImGui::MenuItem(ICON_FA_SAVE "  Save", "Ctrl+S")){
-        if(mApp->worker.GetGeometry()->IsLoaded())
-            askToSave = true;
-        openedMenu |= IMENU_FILE_SAVE;
+        if (mApp->worker.GetGeometry()->IsLoaded())
+            SaveButtonPress();
     }
     if(ImGui::MenuItem(ICON_FA_SAVE "  Save as")){
-        if(mApp->worker.GetGeometry()->IsLoaded())
-            askToSave = true;
-        openedMenu |= IMENU_FILE_SAVEAS;
+        if (mApp->worker.GetGeometry()->IsLoaded())
+            SaveAsButtonPress();
     }
     ImGui::Separator();
 
@@ -201,69 +235,6 @@ static void ShowMenuFile(int& openedMenu, bool &askToSave) {
     ImGui::Separator();
     if (ImGui::MenuItem(ICON_FA_CROSS "  Quit", "Alt+F4")) {
         exit(0);
-    }
-}
-
-static void ShowFileModals(int& openedMenu) {
-
-    Worker &worker = mApp->worker;
-    InterfaceGeometry *interfGeom = worker.GetGeometry();
-
-    if(openedMenu & IMENU_FILE_NEW){
-        if (worker.IsRunning())
-            worker.Stop_Public();
-        mApp->EmptyGeometry();
-    }
-    else if(openedMenu & IMENU_FILE_LOAD){
-        if (worker.IsRunning())
-            worker.Stop_Public();
-        mApp->LoadFile("");
-    }
-    else if(openedMenu & IMENU_FILE_LOADRECENT){
-
-    }
-    else if(openedMenu & IMENU_FILE_INSERTGEO){
-        static bool openWarning = false;
-        if (interfGeom->IsLoaded()) {
-            if (worker.IsRunning())
-                worker.Stop_Public();
-            mApp->InsertGeometry(false,"");
-        }
-        else {
-            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
-        }
-    }
-    else if(openedMenu & IMENU_FILE_INSERTGEO_NEWSTR){
-        static bool openWarning = false;
-        if (interfGeom->IsLoaded()) {
-            if (worker.IsRunning())
-                worker.Stop_Public();
-            mApp->InsertGeometry(true,"");
-        }
-        else {
-            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
-        }
-    }
-    else if(openedMenu & IMENU_FILE_SAVE){
-        static bool openWarning = false;
-        if (interfGeom->IsLoaded()) {
-            mApp->SaveFile();
-        }
-        else {
-            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
-        }
-    }
-    else if(openedMenu & IMENU_FILE_SAVEAS){
-        static bool openWarning = false;
-        if (interfGeom->IsLoaded()) {
-            mApp->SaveFileAs();
-        }
-        else {
-            ImguiPopup::Popup("No Geometry loaded.", "No geometry");
-        }
-    }
-    else if(openedMenu & IMENU_FILE_SAVE){
-
     }
 }
 
@@ -834,12 +805,11 @@ void ShowAppMainMenuBar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 8.f));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 8.0f));
     static std::string openmodalName = "";
-    static int openedMenu = false;
     static bool askForSave = false;
     if (ImGui::BeginMainMenuBar()) {
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
-            ShowMenuFile(openedMenu, askForSave);
+            ShowMenuFile(askForSave);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
@@ -884,7 +854,6 @@ void ShowAppMainMenuBar() {
     }
     if (showPopup) {
         ImGui::CaptureKeyboardFromApp(showPopup);
-        ShowFileModals(openedMenu);
         ShowSelectionModals();
     }
 
