@@ -8,8 +8,7 @@ namespace ImguiPopup {
 	void Popup(std::string msg);
 	void Popup(std::string msg, std::string title);
 	void ShowPopup();
-	
-	static bool showPopup{ false };
+
 	static std::string message{" "};
 	static std::string title{" "};
 	static struct {

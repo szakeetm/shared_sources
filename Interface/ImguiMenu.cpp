@@ -36,6 +36,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiWindow.h"
 #include "ImguiExtensions.h"
 #include "ImguiPopup.h"
+#include "../Helper/StringHelper.h"
 
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 
@@ -190,8 +191,36 @@ void SaveAsButtonPress() {
     else ImguiPopup::Popup("No geometry loaded.", "No geometry");
 }
 
+void ExportSelectedFacetsButtonPress() {
+    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    mApp->ExportSelection();
+}
+
+void ExportSelectedProfilesButtonPress() {
+    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    mApp->ExportProfiles();
+}
+
+#ifdef MOLFLOW
+void ShowSubmenuExportTextures(bool coord=false) {
+    if(ImGui::MenuItem("Cell Area (cm^2)")) {} // imgui does not support superscript
+    if(ImGui::MenuItem("# of MC Hits")) {}
+    if(ImGui::MenuItem("Impingement rate (1/s/m^2)")) {}
+    if(ImGui::MenuItem("Particle density (1/m^3)")) {}
+    if(ImGui::MenuItem("Gas density (kg/m^3)")) {}
+    if(ImGui::MenuItem("Pressure (mbar)")) {}
+    if(ImGui::MenuItem("Avg. Velocity (m/s)")) {}
+    if(ImGui::MenuItem("Velocity vector (m/s)")) {}
+    if(ImGui::MenuItem("# of velocity vectors")) {}
+}
+
+void ImportDesorptionFromSYNFileButtonPress() {
+    // TODO
+}
+#endif // MOLFLOW
+
 static void ShowMenuFile(bool &askToSave) {
-    if(ImGui::MenuItem(ICON_FA_MEH_BLANK "  New, empty geometry")){
+    if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
         NewEmptyGeometryButtonPress();
     }
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
@@ -221,51 +250,78 @@ static void ShowMenuFile(bool &askToSave) {
     }
     ImGui::Separator();
 
-    ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected facets");
+    if (ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected facets")) {
+        ExportSelectedFacetsButtonPress();
+    }
 
-    ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected profiles");
-
-    //ImGui::MenuItem("File")->SetIcon(MENU_FILE_SAVE, 83, 24);
-    //ImGui::MenuItem("File")->SetIcon(MENU_FILE_SAVEAS, 101, 24);
-    //ImGui::MenuItem("File")->SetIcon(MENU_FILE_LOAD, 65, 24);//65,24
-    //ImGui::MenuItem("File")->SetIcon(MENU_FILE_LOADRECENT,83,24);//83,24
+    if (ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected profiles")) {
+        ExportSelectedProfilesButtonPress();
+    }
 
     // TODO: Molflow only entries
+    #ifdef MOLFLOW // TODO: Polimorph instead of macro
+    if (ImGui::BeginMenu(ICON_FA_FILE_EXPORT "  Export selected textures")) {
+        if (ImGui::BeginMenu("Facet By Facet")) {
+            ShowSubmenuExportTextures(false);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("By X, Y, Z coordinates")) {
+            ShowSubmenuExportTextures(true);
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
 
+    if (ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Import desorption from SYN file")) {
+        ImportDesorptionFromSYNFileButtonPress();
+    }
+    #endif //MOLFLOW
     ImGui::Separator();
-    if (ImGui::MenuItem(ICON_FA_CROSS "  Quit", "Alt+F4")) {
+    if (ImGui::MenuItem(ICON_FA_TIMES "  Quit", "Alt+F4")) {
         exit(0);
     }
 }
 
+static std::string inputValue = "1.0";
 static void ShowSelectionModals() {
     ImGuiIO& io = ImGui::GetIO();
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
 
+    
+
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::CaptureKeyboardFromApp(true);
-        char tmp[128];
-        double largeAreaThreshold = 1.0;
-        sprintf(tmp, "%g", largeAreaThreshold);
+        double largeAreaThreshold;
 
-        ImGui::InputDouble("Min.area (cm\262)", &largeAreaThreshold, 0.0f, 0.0f,
-                           "%lf");
-        ImGui::Separator();
+        ImGui::InputText("Min.area (cm\262)", &inputValue);
 
         if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            interfGeom->UnselectAll();
-            for (int i = 0; i < interfGeom->GetNbFacet(); i++)
-                if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                    interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
-                    interfGeom->SelectFacet(i);
-            interfGeom->UpdateSelection();
-            mApp->UpdateFacetParams(true);
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
+            if (!Util::getNumber(&largeAreaThreshold, inputValue)) {
+                ImGui::OpenPopup("Incorrect Value");
+            }
+            else {
+                interfGeom->UnselectAll();
+                for (int i = 0; i < interfGeom->GetNbFacet(); i++)
+                    if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
+                        interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                        interfGeom->SelectFacet(i);
+                interfGeom->UpdateSelection();
+                mApp->UpdateFacetParams(true);
+                ImGui::CloseCurrentPopup();
+                showPopup = false;
+            }
         }
-        ImGui::SetItemDefaultFocus();
+        if (ImGui::BeginPopupModal("Incorrect Value", NULL,
+            ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Incorrect value");
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        //ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
@@ -347,7 +403,6 @@ static void ShowSelectionModals() {
         }
         ImGui::EndPopup();
     }
-
     // TODO: for clear id
     /*char tmpname[256];
     sprintf(tmpname, "Clear %s?", mApp->selections[i].name.c_str());
