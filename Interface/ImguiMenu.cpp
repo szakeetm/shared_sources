@@ -28,7 +28,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
 #include "SelectFacetByResult.h"
-
+#include "FormulaEditor.h"
+#include "ConvergencePlotter.h"
+#include "../../molflow/src/Interface/TexturePlotter.h"
 
 #include "Worker.h"
 #include "Geometry_shared.h"
@@ -664,12 +666,58 @@ static void ShowMenuSelection(std::string& openModalName) {
     }
 }
 
+void FormulaEditorButtonPress() {
+    InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+    if (!interfGeom->IsLoaded()) {
+        ImguiPopup::Popup("No geometry loaded.", "No geometry");
+    }
+    else if (!mApp->formulaEditor || !mApp->formulaEditor->IsVisible()) {
+        SAFE_DELETE(mApp->formulaEditor);
+        mApp->formulaEditor = new FormulaEditor(&mApp->worker, mApp->appFormulas);
+        mApp->formulaEditor->Refresh();
+        // Load values on init
+        mApp->appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+        mApp->formulaEditor->UpdateValues();
+        // ---
+        mApp->formulaEditor->SetVisible(true);
+    }
+}
+void ConvergencePlotterButtonPress() {
+    if (!mApp->convergencePlotter)
+        mApp->convergencePlotter = new ConvergencePlotter(&mApp->worker, mApp->appFormulas);
+    else {
+        if (!mApp->convergencePlotter->IsVisible()) {
+            auto* newConv = new ConvergencePlotter(*mApp->convergencePlotter);
+            //newConv->SetViews(convergencePlotter->GetViews());
+            SAFE_DELETE(mApp->convergencePlotter);
+            mApp->convergencePlotter = newConv;
+        }
+    }
+    mApp->convergencePlotter->Display(&mApp->worker);
+}
+void TexturePlotterButtonPress() {
+    if (!mApp->texturePlotter) mApp->texturePlotter = new TexturePlotter();
+    mApp->texturePlotter->Display(&mApp->worker);
+}
+void ProfilePlotterButtonPress() {}
+void HistogramPlotterButtonPress() {}
+void TextureScalingButtonPress() {}
+void ParticleLoggerButtonPress() {}
+
+void TakeScreenshotButtonPress() {}
+void MovingPartsButtonPress() {}
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem("Formula editor", "ALT+F")) {}
-    if (ImGui::MenuItem("Convergence Plotter ...", "ALT+C")) {}
+    if (ImGui::MenuItem("Formula editor", "ALT+F")) {
+        FormulaEditorButtonPress(); // TODO: replace with Toggle ImGui Formula Editor
+    }
+    if (ImGui::MenuItem("Convergence Plotter ...", "ALT+C")) {
+        ConvergencePlotterButtonPress();  // TODO: replace with Toggle ImGui Convergence Plotter
+    }
     ImGui::Separator();
-    if (ImGui::MenuItem("Texture Plotter ...", "ALT+T")) {}
+    if (ImGui::MenuItem("Texture Plotter ...", "ALT+T")) {
+        TexturePlotterButtonPress();
+    }
     if (ImGui::MenuItem("Profile Plotter ...", "ALT+P")) {}
 #if defined(MOLFLOW)
     if (ImGui::MenuItem("Histogram Plotter...")) {}
@@ -684,12 +732,24 @@ static void ShowMenuTools() {
     ImGui::Separator();
     if (ImGui::MenuItem("Take screenshot", "CTRL+R")) {}
 
-
     // TODO: Extract Molflow only entries
     ImGui::Separator();
     if (ImGui::MenuItem("Moving parts...")) {}
 }
 
+void DeleteButtonPress() {}
+void SwapNormalButtonPress() {}
+void ShiftIndicesButtonPress() {}
+void FacetCoordinatesButtonPress() {}
+
+void ScaleButtonPress() {}
+void MirrorProjectButtonPress() {}
+void RotateButtonPress() {}
+void AlignToButtonPress() {}
+void ExtrudeButtonPress() {}
+void SplitButtonPress() {}
+void CreateShapeButtonPress() {}
+// Create two facets
 static void ShowMenuFacet() {
     if (ImGui::MenuItem("Delete", "CTRL+DEL")) {}
     if (ImGui::MenuItem("Swap normal", "CTRL+N")) {}
