@@ -78,6 +78,9 @@ enum Menu_Event
 };
 
 static bool showPopup = false;
+static std::string modalMsg = "";
+static std::string modalTitle = "";
+static size_t selectionId = -1;
 
 bool AskToSave() {
     if (!mApp->changedSinceSave)
@@ -227,7 +230,7 @@ static void ShowMenuFile(bool &askToSave) {
         LoadFileButtonPress();
     }
     if(ImGui::MenuItem(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
-        // TODO: Create a proceduraly expanding submenu
+        // TODO
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Insert geometry")) {
@@ -288,8 +291,6 @@ static void ShowSelectionModals() {
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
 
-    
-
     if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::CaptureKeyboardFromApp(true);
@@ -333,23 +334,24 @@ static void ShowSelectionModals() {
     else if (ImGui::BeginPopupModal("Select non planar facets", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::CaptureKeyboardFromApp(true);
-        char tmp[128];
-        static double planarityThreshold = 1e-5;
-        sprintf(tmp, "%g", planarityThreshold);
+        double planarityThreshold = 1e-5;
 
-        ImGui::InputDouble("Planarity larger than:", &planarityThreshold, 0.0f, 0.0f,
-                           "%lf");
+        ImGui::InputText("Planarity larger than:", &inputValue);
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            interfGeom->UnselectAll();
-            std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
-            for (const auto &i : nonPlanarFacetids)
-                interfGeom->SelectFacet(i);
-            interfGeom->UpdateSelection();
-            mApp->UpdateFacetParams(true);
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
+            if (!Util::getNumber(&planarityThreshold, inputValue)) {
+                ImGui::OpenPopup("Incorrect Value");
+            } else {
+                interfGeom->UnselectAll();
+                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+                for (const auto& i : nonPlanarFacetids)
+                    interfGeom->SelectFacet(i);
+                interfGeom->UpdateSelection();
+                mApp->UpdateFacetParams(true);
+                ImGui::CloseCurrentPopup();
+                showPopup = false;
+            }
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
@@ -386,8 +388,6 @@ static void ShowSelectionModals() {
         ImGui::EndPopup();
     }
 
-    // TODO: with sel id
-
     else if (ImGui::BeginPopupModal("Clear all selections ?", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -403,14 +403,19 @@ static void ShowSelectionModals() {
         }
         ImGui::EndPopup();
     }
-    // TODO: for clear id
-    /*char tmpname[256];
-    sprintf(tmpname, "Clear %s?", mApp->selections[i].name.c_str());
-    if (ImGui::BeginPopupModal(tmpname, NULL,
+
+    else if (ImGui::BeginPopupModal("Clear memorized selection?", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text(modalMsg);
         if (ImGui::Button("OK", ImVec2(120, 0))) {
-            mApp->ClearSelection(i);
-            ImGui::CloseCurrentPopup();
+            try {
+                mApp->selections.erase(mApp->selections.begin() + (selectionId ));
+                ImGui::CloseCurrentPopup();
+            }
+            catch (std::exception e) {
+                ImGui::EndPopup();
+                throw e;
+            }
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
@@ -418,7 +423,7 @@ static void ShowSelectionModals() {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
-    }*/
+    }
 }
 
 static void ShowMenuSelection(std::string& openModalName) {
@@ -426,9 +431,6 @@ static void ShowMenuSelection(std::string& openModalName) {
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
     static SelectFacetByResult *selectFacetByResult = nullptr;
-
-    //std::string openmodalName = "";
-
 
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
@@ -578,28 +580,7 @@ static void ShowMenuSelection(std::string& openModalName) {
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
-                /*if (ImGui::BeginPopupModal("Enter selection name", NULL,
-                                           ImGuiWindowFlags_AlwaysAutoResize)) {
-
-                    char *input;
-                    char selectionName[128];
-
-                    ImGui::InputText("Selection name", selectionName, 128);
-                    ImGui::Separator();
-
-                    if (strcmp(selectionName, "") != 0) return;
-                    if (ImGui::Button("OK", ImVec2(120, 0))) {
-                        mApp->selections[i].selection = interfGeom->GetSelectedFacets();
-                        mApp->selections[i].name = selectionName;
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SetItemDefaultFocus();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }*/
+                mApp->selections[i].facetIds = interfGeom->GetSelectedFacets(); // TODO: Modal to ask for confirmation
             }
         }
         ImGui::EndMenu();
@@ -637,21 +618,10 @@ static void ShowMenuSelection(std::string& openModalName) {
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
-                /*char tmpname[256];
-                sprintf(tmpname, "Clear %s?", mApp->selections[i].name.c_str());
-                if (ImGui::BeginPopupModal(tmpname, NULL,
-                                           ImGuiWindowFlags_AlwaysAutoResize)) {
-                    if (ImGui::Button("OK", ImVec2(120, 0))) {
-                        mApp->ClearSelection(i);
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SetItemDefaultFocus();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }*/
+                openModalName = "Clear memorized selection?";
+                modalMsg = "Are you sure you wish to forget selection %s", mApp->selections[i].name;
+                selectionId = i;
+                showPopup = true;
             }
         }
         ImGui::EndMenu();
