@@ -85,6 +85,11 @@ void ImGui::Text(std::string str)
     Text(str.c_str());
 }
 
+void ImGui::TextWrapped(std::string str)
+{
+    ImGui::TextWrapped(str.c_str());
+}
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
