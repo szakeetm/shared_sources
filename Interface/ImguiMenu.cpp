@@ -24,10 +24,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <imgui/IconsMaterialDesign.h>
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiExtensions.h"
+#include "ImguiPopup.h"
+#include "ImguiWindow.h"
 
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-
 #include "SmartSelection.h"
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
@@ -50,13 +52,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "RotateVertex.h"
 #include "AddVertex.h"
 
-#include "Worker.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-#include "ImguiWindow.h"
-#include "ImguiExtensions.h"
-#include "ImguiPopup.h"
 #include "../Helper/StringHelper.h"
+#include "Worker.h"
 
 #include "GeometryTools.h"
 
@@ -73,6 +72,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../molflow/src/Interface/OutgassingMapWindow.h"
 #include "../../molflow/src/Interface/PressureEvolution.h"
 #include "../../molflow/src/Interface/TimewisePlotter.h"
+#include "../../molflow/src/Interface/TimeSettings.h"
+#include "../../molflow/src/Interface/MomentsEditor.h"
+#include "../../molflow/src/Interface/ParameterEditor.h"
+#include "../../molflow/src/versionid.h"
 
 #endif
 
@@ -144,7 +147,7 @@ bool AskToSave() {
                 }
                 catch (const std::exception& e) {
                     std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
-                    ImguiPopup::Popup(errMsg, "Error");
+                    Popup(errMsg, "Error");
                     mApp->RemoveRecent(fn.c_str());
                 }
                 returnVal = true;
@@ -195,6 +198,36 @@ void LoadFileButtonPress() {
     }
 }
 
+void Popup(std::string msg, std::string title) {
+    showPopup = true;
+    modalTitle = title;
+    modalMsg = msg;
+}
+
+void Popup(std::string msg) {
+    Popup(msg, "Popup");
+}
+
+void ShowPopup() {
+    ImGuiIO& io = ImGui::GetIO();
+    float txtW = ImGui::CalcTextSize(" ").x;
+    float msgW = ImGui::CalcTextSize(" ").x;
+    ImGui::CaptureKeyboardFromApp(true);
+    ImGui::SetNextWindowSize(ImVec2(70*txtW,0));
+    if (ImGui::BeginPopupModal(modalTitle.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize || ImGuiWindowFlags_NoResize))
+    {
+        ImGui::PlaceAtRegionCenter(modalMsg);
+        ImGui::TextWrapped(modalMsg);
+        ImGui::PlaceAtRegionCenter("OK");
+        if (ImGui::Button("OK", ImVec2(12*txtW,0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyEsc] || io.KeysDown[ImGui::keyNumEnter])
+        {
+            ImGui::CloseCurrentPopup();
+            modalTitle = "";
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void InsertGeometryButtonPress(bool newStr) {
     
     if (interfGeom->IsLoaded()) {
@@ -205,7 +238,7 @@ void InsertGeometryButtonPress(bool newStr) {
             mApp->InsertGeometry(newStr, "");
         }
     }
-    else ImguiPopup::Popup("No geometry loaded.","No geometry");
+    else Popup("No geometry loaded.","No geometry");
 }
 
 void SaveButtonPress() {
@@ -214,7 +247,7 @@ void SaveButtonPress() {
         LockWrapper LockWrapper(mApp->imguiRenderLock);
         mApp->SaveFile();
     }
-    else ImguiPopup::Popup("No geometry loaded.", "No geometry");
+    else Popup("No geometry loaded.", "No geometry");
 }
 
 void SaveAsButtonPress() {
@@ -223,7 +256,7 @@ void SaveAsButtonPress() {
         LockWrapper LockWrapper(mApp->imguiRenderLock);
         mApp->SaveFileAs();
     }
-    else ImguiPopup::Popup("No geometry loaded.", "No geometry");
+    else Popup("No geometry loaded.", "No geometry");
 }
 
 void ExportSelectedFacetsButtonPress() {
@@ -699,7 +732,7 @@ static void ShowMenuSelection(std::string& openModalName) {
 void FormulaEditorButtonPress() {
     
     if (!interfGeom->IsLoaded()) {
-        ImguiPopup::Popup("No geometry loaded.", "No geometry");
+        Popup("No geometry loaded.", "No geometry");
     }
     else if (!mApp->formulaEditor || !mApp->formulaEditor->IsVisible()) {
         SAFE_DELETE(mApp->formulaEditor);
@@ -903,7 +936,7 @@ void FacetScaleButtonPress() {
 
     }
     else {
-        ImguiPopup::Popup("No geometry");
+        Popup("No geometry");
     }
 }
 void FacetMirrorProjectButtonPress() {
@@ -947,7 +980,8 @@ void CreateShapeButtonPress() {
 void TransitionBetween2ButtonPress() {
     
     if (interfGeom->GetNbSelectedFacets() != 2) {
-        ImguiPopup::Popup("Select exactly 2 facets");
+        Popup("Select exactly 2 facets");
+        return;
     }
     LockWrapper LockWrapper(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
@@ -971,7 +1005,7 @@ void CollapseButtonPress() {
     if (interfGeom->IsLoaded()) {
         mApp->DisplayCollapseDialog();
     }
-    else ImguiPopup::Popup("No geometry");
+    else Popup("No geometry");
 }
 
 void ExplodeButtonPress(std::string &openpopupName) {
@@ -1434,40 +1468,152 @@ static void ShowMenuVertex(std::string& openmodalName) {
     }
 }
 
-static void ShowMenuView() {
+static void ShowMenuView(std::string& openmodalName) {
     if (ImGui::BeginMenu("Structure")) {
-        //UpdateStructMenu();
+        if (ImGui::MenuItem("New structure...")) {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->AddStruct();
+        }
+        if (ImGui::MenuItem("Delete structure...")) {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->DeleteStruct();
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Show All", "Ctrl+F1")) {
+            interfGeom->viewStruct = -1; // -1 will show all, number of structures is interfGeom->GetNbStructure()
+        }
+        if (ImGui::MenuItem("Show Previous", "Ctrl+F11")) {
+            if (interfGeom->viewStruct == -1) interfGeom->viewStruct = interfGeom->GetNbStructure() - 1;
+            else
+                interfGeom->viewStruct = (int)Previous(interfGeom->viewStruct, interfGeom->GetNbStructure());
+            interfGeom->UnselectAll();
+        }
+        if (ImGui::MenuItem("Show Next", "Ctrl+F12")) {
+            interfGeom->viewStruct = (int)Next(interfGeom->viewStruct, interfGeom->GetNbStructure());
+            interfGeom->UnselectAll();
+        }
+        ImGui::Separator();
+        // Procedural list of memorized structures
+        for (int i = 0; i < interfGeom->GetNbStructure(); i++) {
+            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", "Ctrl + F" + std::to_string(i + 2))) {
+                interfGeom->viewStruct = i;
+            }
+        }
         ImGui::EndMenu();
     }
-    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {}
+    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {
+        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        if (mApp->Get_m_bWindowed()) {
+            mApp->ToggleFullscreen(); // incorrect behaviour even in legacy GUI
+            mApp->PlaceComponents();
+        }
+        else {
+            mApp->Resize(1024, 800, true);
+        }
+    }
     ImGui::Separator();
 
     if (ImGui::BeginMenu("Memorize view to")) {
-        if (ImGui::MenuItem("Add new...", "CTLR+Q")) {}
+        if (ImGui::MenuItem("Add new...", "CTLR+Q")) {
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->AddView();
+        }
+        std::string shortcuts[11] = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" };
+        for (int i = 0; i < mApp->views.size(); i++) {
+            if (ImGui::MenuItem(mApp->views[i].name, i < 11 ? "Alt + "+shortcuts[i] : "")) { //mApp->views[i].names - names are empty, also in legacy GUI
+                mApp->OverWriteView(i);
+            }
+        }
         ImGui::EndMenu();
     }
     ImGui::Separator();
 
-    if (ImGui::MenuItem("Select memorized")) {}
+    if (mApp->views.size() == 0) { // disable if no views are memorized
+        ImGui::BeginDisabled();
+        ImGui::MenuItem("Select memorized");
+        ImGui::EndDisabled();
+    }
+    else if (ImGui::BeginMenu("Select memorized")) {
+        // Procedural list of memorized views
+        for (int i = 0; i < mApp->views.size(); i++) {
+            if (ImGui::MenuItem(mApp->views[i].name)) {
+                mApp->SelectView(i);
+            }
+        }
+        ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Clear memorized")) {
-        if (ImGui::MenuItem("Clear All")) {}
+        if (ImGui::MenuItem("Clear All")) {
+            openmodalName = "Clear all views?";
+                showPopup = true;
+        }
+        for (int i = 0; i < mApp->views.size(); i++) {
+            if (ImGui::MenuItem(mApp->views[i].name)) {
+                mApp->ClearView(i);
+            }
+        }
+        // Procedural list of memorized views
         ImGui::EndMenu();
     }
 }
 
-static void ShowMenuTest() {
-    if (ImGui::MenuItem("Pipe (L/R=0.0001)")) {}
-    if (ImGui::MenuItem("Pipe (L/R=1)")) {}
-    if (ImGui::MenuItem("Pipe (L/R=10)")) {}
-    if (ImGui::MenuItem("Pipe (L/R=100)")) {}
-    if (ImGui::MenuItem("Pipe (L/R=1000)")) {}
-    if (ImGui::MenuItem("Pipe (L/R=10000)")) {}
+void ClearAllViewsPopup() {
+    float txtW = ImGui::CalcTextSize(" ").x;
+    auto io = ImGui::GetIO();
+    ImGui::SetNextWindowSize(ImVec2(txtW * 50, 0));
+    if (ImGui::BeginPopupModal("Clear all views?")) {
+        ImGui::Text("Are you sure you want to clear all remembered views?");
+        if (ImGui::Button("Yes", ImVec2(txtW * 12, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
+            ImGui::CloseCurrentPopup();
+            showPopup = false;
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            mApp->ClearAllViews();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(txtW * 12, 0)) || io.KeysDown[ImGui::keyEsc]) {
+            ImGui::CloseCurrentPopup();
+            showPopup = false;
+        }
+        ImGui::EndPopup();
+    }
+}
+
+static void ShowMenuTest(std::string& openmodalName) {
+    if (ImGui::MenuItem("Pipe (L/R=0.0001)")) {
+        if (AskToSave())
+            mApp->BuildPipe(0.0001, 0);
+    }
+    if (ImGui::MenuItem("Pipe (L/R=1)")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(1.0, 0);
+    }
+    if (ImGui::MenuItem("Pipe (L/R=10)")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(10.0, 0);
+    }
+    if (ImGui::MenuItem("Pipe (L/R=100)")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(100.0, 0);
+    }
+    if (ImGui::MenuItem("Pipe (L/R=1000)")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(1000.0, 0);
+    }
+    if (ImGui::MenuItem("Pipe (L/R=10000)")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(10000.0, 0);
+    }
     //Quick test pipe
     ImGui::Separator();
-    if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {}
+    if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {
+        if (AskToSave()) 
+            mApp->BuildPipe(5.0, 5);
+    }
 
     ImGui::Separator();
-    if (ImGui::MenuItem("Triangulate Geometry")) {}
+    if (ImGui::MenuItem("Triangulate Geometry")) {
+        TriangulateButtonPress(openmodalName);
+    }
     ImGui::Separator();
     if (ImGui::MenuItem("ImGui Menu")) {
         mApp->imWnd->ToggleMainMenu();
@@ -1479,18 +1625,53 @@ static void ShowMenuTest() {
 
 // TODO: Only in Molflow
 static void ShowMenuTime() {
-    if (ImGui::MenuItem("Time settings...", "ALT+I")) {}
-    if (ImGui::MenuItem("Edit moments...")) {}
-    if (ImGui::MenuItem("Edit parameters...")) {}
+    if (ImGui::MenuItem("Time settings...", "ALT+I")) {
+        if (!mApp->timeSettings) mApp->timeSettings = new TimeSettings(&mApp->worker);
+        mApp->timeSettings->SetVisible(true);
+    }
+    if (ImGui::MenuItem("Edit moments...")) {
+        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        if (!mApp->momentsEditor || !mApp->momentsEditor->IsVisible()) {
+            SAFE_DELETE(mApp->momentsEditor);
+            mApp->momentsEditor = new MomentsEditor(&mApp->worker);
+            mApp->momentsEditor->Refresh();
+            mApp->momentsEditor->SetVisible(true);
+        }
+    }
+    if (ImGui::MenuItem("Edit parameters...")) {
+        if (!mApp->parameterEditor) mApp->parameterEditor = new ParameterEditor(&mApp->worker);
+        mApp->parameterEditor->SetVisible(true);
+    }
     ImGui::Separator();
-    if (ImGui::MenuItem("Timewise plotter")) {}
-    if (ImGui::MenuItem("Pressure evolution")) {}
+    if (ImGui::MenuItem("Timewise plotter")) {
+        if (!mApp->timewisePlotter) mApp->timewisePlotter = new TimewisePlotter();
+        mApp->timewisePlotter->Display(&mApp->worker);
+    }
+    if (ImGui::MenuItem("Pressure evolution")) {
+        if (!mApp->pressureEvolution) mApp->pressureEvolution = new PressureEvolution(&mApp->worker);
+        mApp->pressureEvolution->SetVisible(true);
+    }
 }
 
 static void ShowMenuAbout() {
-    if (ImGui::MenuItem("License")) {}
-    if (ImGui::MenuItem("Check for updates...")) {}
-    if (ImGui::MenuItem("ImGUI")) {}
+    if (ImGui::MenuItem("License")) {
+        mApp->imWnd->show_window_license = true;
+    } //TODO
+    if (ImGui::MenuItem("Check for updates...")) {
+        if (!mApp->manualUpdate) {
+            if (!mApp->updateLogWindow) {
+                mApp->updateLogWindow = new UpdateLogWindow(mApp);
+            }
+            mApp->manualUpdate = new ManualUpdateCheckDialog(appName, appVersionName, mApp->appUpdater, mApp->updateLogWindow, mApp->updateFoundDialog);
+        }
+        mApp->manualUpdate->Refresh();
+        mApp->manualUpdate->SetVisible(true);
+    }
+    if (ImGui::MenuItem("ImGUI")) {
+        if (!mApp->imWnd->show_main_hub) {
+            mApp->imWnd->ToggleMainHub();
+        }
+    }
 }
 
 void DeleteFacetPopup() {
@@ -1576,11 +1757,11 @@ void ShowAppMainMenuBar() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
-            ShowMenuView();
+            ShowMenuView(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Test")) {
-            ShowMenuTest();
+            ShowMenuTest(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Time")) {
@@ -1595,6 +1776,9 @@ void ShowAppMainMenuBar() {
         ImGui::EndMainMenuBar();
     }
 
+    if (!modalTitle.empty()) {
+        openmodalName = modalTitle;
+    }
     if(!openmodalName.empty()){
         ImGui::OpenPopup(openmodalName.c_str());
         openmodalName = "";
@@ -1608,6 +1792,8 @@ void ShowAppMainMenuBar() {
         ErrorPopup();
         RemoveVertexPopup();
         SelectCoplanarVerticesPopup(openmodalName);
+        ClearAllViewsPopup();
+        ShowPopup();
     }
 
 

@@ -90,6 +90,15 @@ void ImGui::TextWrapped(std::string str)
     ImGui::TextWrapped(str.c_str());
 }
 
+bool  ImGui::MenuItem(std::string label, std::string shortcut)
+{
+    return ImGui::MenuItem(label.c_str(), shortcut.c_str());
+}
+
+bool  ImGui::MenuItem(std::string label)
+{
+    return ImGui::MenuItem(label.c_str());
+}
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

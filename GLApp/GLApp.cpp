@@ -583,3 +583,7 @@ void GLApplication::RequestExit()
 {
     quit = true; //will be executed in next Run loop
 }
+
+bool GLApplication::Get_m_bWindowed() {
+    return m_bWindowed;
+}

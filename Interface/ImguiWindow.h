@@ -54,6 +54,9 @@ public:
     bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
     bool show_facet_move{false}; //Shows Facet-Move window
+    bool show_window_license{false};
+
+    void ShowWindowLicense();
 
 protected:
     ImGuiConfigFlags storedConfigFlags;

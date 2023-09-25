@@ -23,6 +23,7 @@ class Interface;
 static std::string axis_X{"0"}, axis_Y{ "0" }, axis_Z{ "0" }, distance;
 static bool base_selected;
 static bool popup;
+static std::string title;
 static int mode;
 static Vector3d baseLocation;
 static std::string prefix;
@@ -41,3 +42,7 @@ bool BaseVertexSelectButtonPress(InterfaceGeometry* interfGeom);
 bool BaseFacetSelectButtonPress(InterfaceGeometry* interfGeom);
 
 void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
+
+static struct {
+	float posX, posY, sizeX, sizeY;
+} window;

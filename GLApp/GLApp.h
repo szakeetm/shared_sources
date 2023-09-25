@@ -33,9 +33,6 @@ protected:
     bool      m_bResizable;
     GLWindow  *wnd;
 
-    // Top level window methods
-    int ToggleFullscreen();
-    void SetTitle(std::string title);
 
     // Overridable variables for the app
 
@@ -47,6 +44,9 @@ protected:
     virtual void BeforeExit() {} //GUI still present
 
 public:
+    // Top level window methods
+    int ToggleFullscreen();
+    void SetTitle(std::string title);
 	virtual int EventProc(SDL_Event *event)                { return GL_OK; }
     // Functions to create, run, pause, and clean up the application
     virtual int  Create(int width, int height, bool bFullScreen);
@@ -81,6 +81,10 @@ public:
     bool wereEvents; //Repaint in next cycle (instead of immediately by calling GLWindowManager::Repaint() )
     int wereEvents_imgui{ 2 }; // tracks the number of passes for ImGui rendering (deafult allows queue of 2, some events increase to 3)
     bool imguiRenderLock = false;
+
+    //getters
+
+    bool Get_m_bWindowed();
 
 //#if defined(_DEBUG)
     // Debugging stuff
