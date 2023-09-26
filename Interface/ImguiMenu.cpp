@@ -25,7 +25,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
-#include "ImguiPopup.h"
 #include "ImguiWindow.h"
 
 #include "VertexCoordinates.h"
@@ -75,7 +74,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../molflow/src/Interface/TimeSettings.h"
 #include "../../molflow/src/Interface/MomentsEditor.h"
 #include "../../molflow/src/Interface/ParameterEditor.h"
-#include "../../molflow/src/versionid.h"
+#include "../../molflow/src/Interface/ImportDesorption.h"
+
+#include "../../molflow/src/versionId.h"
 
 #endif
 
@@ -114,31 +115,59 @@ static bool showPopup = false;
 static std::string modalMsg = "";
 static std::string modalTitle = "";
 static size_t selectionId = -1;
+static bool askSave = false;
 InterfaceGeometry* interfGeom;
+
+static std::string saveResponse = "None";
+
+void Popup(std::string msg, std::string title) {
+    showPopup = true;
+    modalTitle = title;
+    modalMsg = msg;
+}
+
+void Popup(std::string msg) {
+    Popup(msg, "Popup");
+}
 
 bool AskToSave() {
     if (!mApp->changedSinceSave)
         return true;
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
-    return mApp->AskToSave();
+
+    if (!showPopup)
+    {
+        askSave = true;
+    }
+    if (saveResponse == "Yes") {
+        saveResponse = "None";
+        return true;
+    }
+    if (saveResponse == "Cancel") {
+        saveResponse = "None";
+        return false;
+    }
+    if (saveResponse == "Discard") {
+        saveResponse = "None";
+        return true;
+    }
+    return false;
 }
-// TODO: Imgui File Not Saved popup
-/*
-    ImGuiIO& io = ImGui::GetIO();
+
+void ShowFileNotSavedPopup() {
     // Always center this window when appearing
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    bool returnVal = false;
-    if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+    if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("Save current geometry first?");
 
-        if (ImGui::Button("Yes") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            *saveModal = false;
+        if (ImGui::Button("  Yes  ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
+            ImGui::CloseCurrentPopup();
+            askSave = false;
+            LockWrapper LockWrapper(mApp->imguiRenderLock);
             std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
             if (!fn.empty()) {
-                auto prg = GLProgress_GUI("Saving file...", "Please wait"); //replace with ImGui progress
-                prg.SetVisible(true);
-                //GLWindowManager::Repaint();
+                GLProgress_Abstract prg = GLProgress_Abstract("Saving"); // placeholder
                 try {
                     mApp->worker.SaveGeometry(fn, prg);
                     mApp->changedSinceSave = false;
@@ -150,31 +179,25 @@ bool AskToSave() {
                     Popup(errMsg, "Error");
                     mApp->RemoveRecent(fn.c_str());
                 }
-                returnVal = true;
+                saveResponse = "Yes";
             }
-            else
-                returnVal = false;
+            else saveResponse = "No";
         }
         ImGui::SameLine();
-        if (ImGui::Button("No")) {
-            *saveModal = false;
-            returnVal = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel") || io.KeysDown[ImGui::keyEsc]) {
-            *saveModal = false;
-            returnVal = false;
-        }
-
-        if(!saveModal) {
+        if (ImGui::Button("  No  ")) {
             ImGui::CloseCurrentPopup();
-            showPopup = false;
+            askSave = false;
+            saveResponse = "Discard";
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("  Cancel  ") || io.KeysDown[ImGui::keyEsc]) {
+            ImGui::CloseCurrentPopup();
+            askSave = false;
+            saveResponse = "Cancel";
         }
         ImGui::EndPopup();
     }
-
-    return false;
-}*/
+}
 
 void NewEmptyGeometryButtonPress() {
     if (AskToSave()) {
@@ -196,16 +219,6 @@ void LoadFileButtonPress() {
             mApp->LoadFile("");
         }
     }
-}
-
-void Popup(std::string msg, std::string title) {
-    showPopup = true;
-    modalTitle = title;
-    modalMsg = msg;
-}
-
-void Popup(std::string msg) {
-    Popup(msg, "Popup");
 }
 
 void ShowPopup() {
@@ -269,33 +282,75 @@ void ExportSelectedProfilesButtonPress() {
     mApp->ExportProfiles();
 }
 
+void ExportTextures(int a, int b) {
+    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    mApp->ExportTextures(a, b);
+}
+
 #ifdef MOLFLOW //TODO replace with polimorphism
 void ShowSubmenuExportTextures(bool coord=false) {
-    if(ImGui::MenuItem("Cell Area (cm^2)")) {} // imgui does not support superscript
-    if(ImGui::MenuItem("# of MC Hits")) {}
-    if(ImGui::MenuItem("Impingement rate (1/s/m^2)")) {}
-    if(ImGui::MenuItem("Particle density (1/m^3)")) {}
-    if(ImGui::MenuItem("Gas density (kg/m^3)")) {}
-    if(ImGui::MenuItem("Pressure (mbar)")) {}
-    if(ImGui::MenuItem("Avg. Velocity (m/s)")) {}
-    if(ImGui::MenuItem("Velocity vector (m/s)")) {}
-    if(ImGui::MenuItem("# of velocity vectors")) {}
+    if(ImGui::MenuItem("Cell Area (cm^2)")) {
+        ExportTextures(coord, 0);
+    } // imgui does not support superscript
+    if(ImGui::MenuItem("# of MC Hits")) {
+        ExportTextures(coord, 1);
+    }
+    if(ImGui::MenuItem("Impingement rate (1/s/m^2)")) {
+        ExportTextures(coord, 2);
+    }
+    if(ImGui::MenuItem("Particle density (1/m^3)")) {
+        ExportTextures(coord, 3);
+    }
+    if(ImGui::MenuItem("Gas density (kg/m^3)")) {
+        ExportTextures(coord, 4);
+    }
+    if(ImGui::MenuItem("Pressure (mbar)")) {
+        ExportTextures(coord, 5);
+    }
+    if(ImGui::MenuItem("Avg. Velocity (m/s)")) {
+        ExportTextures(coord, 6);
+    }
+    if(ImGui::MenuItem("Velocity vector (m/s)")) {
+        ExportTextures(coord, 7);
+    }
+    if(ImGui::MenuItem("# of velocity vectors")) {
+        ExportTextures(coord, 8);
+    }
 }
 
 void ImportDesorptionFromSYNFileButtonPress() {
-    // TODO
+    if (interfGeom->IsLoaded()) {
+        if (!mApp->importDesorption) mApp->importDesorption = new ImportDesorption();
+        mApp->importDesorption->SetGeometry(interfGeom, &mApp->worker);
+        mApp->importDesorption->SetVisible(true);
+    }
+    else Popup("No geometry loaded.", "No geometry");
+
 }
 #endif // MOLFLOW
 
-static void ShowMenuFile(bool &askToSave) {
+static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
         NewEmptyGeometryButtonPress();
     }
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
         LoadFileButtonPress();
     }
-    if(ImGui::MenuItem(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
-        // TODO
+    if (mApp->recentsList.empty()) {
+        ImGui::BeginDisabled();
+        ImGui::MenuItem("Load recent");
+        ImGui::EndDisabled();
+    }
+    if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
+        for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
+            if (ImGui::MenuItem(mApp->recentsList[i])) {
+                if (AskToSave()) {
+                    LockWrapper LockWrapper(mApp->imguiRenderLock);
+                    mApp->LoadFile(mApp->recentsList[i]);
+                }
+            }
+        }
+        ImGui::EndMenu();
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Insert geometry")) {
@@ -326,7 +381,6 @@ static void ShowMenuFile(bool &askToSave) {
         ExportSelectedProfilesButtonPress();
     }
 
-    // TODO: Molflow only entries
     #ifdef MOLFLOW // TODO: Polimorph instead of macro
     if (ImGui::BeginMenu(ICON_FA_FILE_EXPORT "  Export selected textures")) {
         if (ImGui::BeginMenu("Facet By Facet")) {
@@ -387,7 +441,6 @@ static void ShowSelectionModals() {
             }
             ImGui::EndPopup();
         }
-        //ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
             ImGui::CloseCurrentPopup();
@@ -514,9 +567,9 @@ static void ShowMenuSelection(std::string& openModalName) {
         selectDialog->SetVisible(true);
     }
 
-#if defined(MOLFLOW)
-    if (ImGui::MenuItem("Select Sticking", "")) {
+#ifdef MOLFLOW
         // TODO: Different for Synrad?
+    if (ImGui::MenuItem("Select Sticking", "")) {
         interfGeom->UnselectAll();
         for (int i = 0; i < interfGeom->GetNbFacet(); i++)
             if (!interfGeom->GetFacet(i)->sh.stickingParam.empty() ||
@@ -525,17 +578,19 @@ static void ShowMenuSelection(std::string& openModalName) {
         interfGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
-#endif
+#endif // MOLFLOW
 
     if (ImGui::MenuItem("Select Transparent", "")) {
         interfGeom->UnselectAll();
         for (int i = 0; i < interfGeom->GetNbFacet(); i++)
             if (
-#if defined(MOLFLOW)
-!interfGeom->GetFacet(i)->sh.opacityParam.empty() ||
-#endif
-(interfGeom->GetFacet(i)->sh.opacity != 1.0 && interfGeom->GetFacet(i)->sh.opacity != 2.0))
+            #if defined(MOLFLOW)
+            !interfGeom->GetFacet(i)->sh.opacityParam.empty() ||
+            #endif
+            (interfGeom->GetFacet(i)->sh.opacity != 1.0 && interfGeom->GetFacet(i)->sh.opacity != 2.0))
+            {
                 interfGeom->SelectFacet(i);
+            }
         interfGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
@@ -627,9 +682,7 @@ static void ShowMenuSelection(std::string& openModalName) {
         interfGeom->UpdateSelection();
         mApp->UpdateFacetParams(true);
     }
-    //if(ImGui::MenuItem(nullptr) {} // Separator
-    //if(ImGui::MenuItem("Load selection",MENU_FACET_LOADSEL) {}
-    //if(ImGui::MenuItem("Save selection",MENU_FACET_SAVESEL) {}
+
     if (ImGui::MenuItem("Invert selection", "CTRL+I")) {
         for (int i = 0; i < interfGeom->GetNbFacet(); i++)
             interfGeom->GetFacet(i)->selected = !interfGeom->GetFacet(i)->selected;
@@ -769,6 +822,7 @@ void ProfilePlotterButtonPress() {
     mApp->profilePlotter->Display(&mApp->worker);
 }
 #endif //MOLFLOW
+
 void HistogramPlotterButtonPress() {
     if (!mApp->histogramPlotter || !mApp->histogramPlotter->IsVisible()) {
         SAFE_DELETE(mApp->histogramPlotter);
@@ -832,6 +886,7 @@ void TakeScreenshotButtonPress() {
         width - leftMargin - rightMargin,
         height - topMargin - bottomMargin);
 }
+
 #ifdef MOLFLOW //TODO replace with polimorphism
 void MovingPartsButtonPress() {
     
@@ -883,7 +938,6 @@ static void ShowMenuTools() {
         TakeScreenshotButtonPress();
     }
 
-    // TODO: Extract Molflow only entries
     ImGui::Separator();
 #ifdef MOLFLOW //TODO replace with polimorphism
     if (ImGui::MenuItem("Moving parts...")) {
@@ -1547,12 +1601,12 @@ static void ShowMenuView(std::string& openmodalName) {
             openmodalName = "Clear all views?";
                 showPopup = true;
         }
+        // Procedural list of memorized views
         for (int i = 0; i < mApp->views.size(); i++) {
             if (ImGui::MenuItem(mApp->views[i].name)) {
                 mApp->ClearView(i);
             }
         }
-        // Procedural list of memorized views
         ImGui::EndMenu();
     }
 }
@@ -1623,7 +1677,7 @@ static void ShowMenuTest(std::string& openmodalName) {
     }
 }
 
-// TODO: Only in Molflow
+#ifdef MOLFLOW // TODO polyporphysm
 static void ShowMenuTime() {
     if (ImGui::MenuItem("Time settings...", "ALT+I")) {
         if (!mApp->timeSettings) mApp->timeSettings = new TimeSettings(&mApp->worker);
@@ -1652,6 +1706,8 @@ static void ShowMenuTime() {
         mApp->pressureEvolution->SetVisible(true);
     }
 }
+
+#endif // MOLFLOW
 
 static void ShowMenuAbout() {
     if (ImGui::MenuItem("License")) {
@@ -1708,6 +1764,12 @@ void DeleteFacetPopup() {
     }
 }
 
+void ShowFacetPopups(std::string& openmodalName) {
+    DeleteFacetPopup();
+    TriangulatePopup();
+    ExplodePupup(openmodalName);
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] Example App: Main Menu Bar / ShowAppMainMenuBar()
 //-----------------------------------------------------------------------------
@@ -1737,7 +1799,7 @@ void ShowAppMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
-            ShowMenuFile(askForSave);
+            ShowMenuFile();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
@@ -1764,10 +1826,12 @@ void ShowAppMainMenuBar() {
             ShowMenuTest(openmodalName);
             ImGui::EndMenu();
         }
+        #ifdef MOLFLOW // TODO Polymorphism
         if (ImGui::BeginMenu("Time")) {
             ShowMenuTime();
             ImGui::EndMenu();
         }
+        #endif //MOLFLOW
         if (ImGui::BeginMenu("About")) {
             ShowMenuAbout();
             ImGui::EndMenu();
@@ -1786,16 +1850,18 @@ void ShowAppMainMenuBar() {
     if (showPopup) {
         ImGui::CaptureKeyboardFromApp(showPopup); // TODO: consolidate popup definitions
         ShowSelectionModals();
-        DeleteFacetPopup();
-        TriangulatePopup();
-        ExplodePupup(openmodalName);
-        ErrorPopup();
+        ShowFacetPopups(openmodalName);
         RemoveVertexPopup();
         SelectCoplanarVerticesPopup(openmodalName);
         ClearAllViewsPopup();
+        ErrorPopup();
         ShowPopup();
     }
-
+    if (askSave)
+    {
+        ImGui::OpenPopup("File not saved");
+        ShowFileNotSavedPopup();
+    }
 
     ImGui::PopStyleVar(2);
 }

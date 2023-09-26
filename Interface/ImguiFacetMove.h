@@ -9,7 +9,6 @@
 #include <imgui/imgui_internal.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "../../src/MolFlow.h"
-#include "ImguiPopup.h"
 
 //forward declarations of classes used in the implementation
 class InterfaceGeometry;
