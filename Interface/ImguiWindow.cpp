@@ -73,6 +73,8 @@ bool ImguiWindow::ToggleFacetMove()
 }
 
 void ImguiWindow::ShowWindowLicense() {
+    float txtW = ImGui::CalcTextSize(" ").x;
+    ImGui::SetNextWindowSize(ImVec2(txtW*120,0));
     if (ImGui::Begin("License", &show_window_license, ImGuiWindowFlags_AlwaysAutoResize)) {
         std::ostringstream aboutText;
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
@@ -268,7 +270,7 @@ void ImguiWindow::renderSingle() {
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
-            ShowAppMainMenuBar();
+            ImMenu::ShowAppMainMenuBar();
 
         if (show_app_sidebar)
             ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);

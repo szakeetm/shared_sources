@@ -94,6 +94,8 @@ extern SynRad*mApp;
 
 extern char fileSaveFilters[];
 
+namespace ImMenu {
+
 enum Menu_Event
 {
     IMENU_FILE_NEW = 1 << 0, // binary 0001
@@ -114,7 +116,7 @@ enum Menu_Event
 static bool showPopup = false;
 static std::string modalMsg = "";
 static std::string modalTitle = "";
-static size_t selectionId = -1;
+static size_t selectionToBeRemovedId = -1;
 static bool askSave = false;
 InterfaceGeometry* interfGeom;
 
@@ -164,7 +166,7 @@ void ShowFileNotSavedPopup() {
         if (ImGui::Button("  Yes  ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             ImGui::CloseCurrentPopup();
             askSave = false;
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
             if (!fn.empty()) {
                 GLProgress_Abstract prg = GLProgress_Abstract("Saving"); // placeholder
@@ -204,7 +206,7 @@ void NewEmptyGeometryButtonPress() {
         if (mApp->worker.IsRunning())
             mApp->worker.Stop_Public();
         {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->EmptyGeometry();
         }
     }
@@ -215,7 +217,7 @@ void LoadFileButtonPress() {
         if (mApp->worker.IsRunning())
             mApp->worker.Stop_Public();
         {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->LoadFile("");
         }
     }
@@ -247,7 +249,7 @@ void InsertGeometryButtonPress(bool newStr) {
         if (mApp->worker.IsRunning())
             mApp->worker.Stop_Public();
         {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->InsertGeometry(newStr, "");
         }
     }
@@ -257,7 +259,7 @@ void InsertGeometryButtonPress(bool newStr) {
 void SaveButtonPress() {
     
     if (interfGeom->IsLoaded()) {
-        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         mApp->SaveFile();
     }
     else Popup("No geometry loaded.", "No geometry");
@@ -266,24 +268,24 @@ void SaveButtonPress() {
 void SaveAsButtonPress() {
     
     if (interfGeom->IsLoaded()) {
-        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         mApp->SaveFileAs();
     }
     else Popup("No geometry loaded.", "No geometry");
 }
 
 void ExportSelectedFacetsButtonPress() {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportSelection();
 }
 
 void ExportSelectedProfilesButtonPress() {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportProfiles();
 }
 
 void ExportTextures(int a, int b) {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportTextures(a, b);
 }
 
@@ -345,7 +347,7 @@ static void ShowMenuFile() {
         for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
             if (ImGui::MenuItem(mApp->recentsList[i])) {
                 if (AskToSave()) {
-                    LockWrapper LockWrapper(mApp->imguiRenderLock);
+                    LockWrapper myLock(mApp->imguiRenderLock);
                     mApp->LoadFile(mApp->recentsList[i]);
                 }
             }
@@ -483,18 +485,14 @@ static void ShowSelectionModals() {
     else if (ImGui::BeginPopupModal("Enter selection name", NULL,
                                ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::CaptureKeyboardFromApp(true);
-        char selectionName[128];
-
-        std::stringstream tmp;
-        tmp << "Selection #" << (mApp->selections.size() + 1);
-        strcpy(selectionName, tmp.str().c_str());
-        ImGui::InputText("Selection name", selectionName, 128);
+        static std::string selectionName = "Selection #" + std::to_string(mApp->selections.size()+1);
+        ImGui::InputText("Selection name", &selectionName, 128);
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            if (strcmp(selectionName, "") != 0)
-                mApp->AddSelection(selectionName);
+            mApp->AddSelection(selectionName);
             ImGui::CloseCurrentPopup();
+            selectionName = "Selection #" + std::to_string(mApp->selections.size() + 1);
             showPopup = false;
         }
         ImGui::SetItemDefaultFocus();
@@ -527,7 +525,7 @@ static void ShowSelectionModals() {
         ImGui::TextWrapped(modalMsg);
         if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             try {
-                mApp->selections.erase(mApp->selections.begin() + (selectionId ));
+                mApp->selections.erase(mApp->selections.begin() + (selectionToBeRemovedId ));
                 ImGui::CloseCurrentPopup();
             }
             catch (std::exception e) {
@@ -738,7 +736,7 @@ static void ShowMenuSelection(std::string& openModalName) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 openModalName = "Clear memorized selection?";
                 modalMsg = "Are you sure you wish to forget selection %s", mApp->selections[i].name;
-                selectionId = i;
+                selectionToBeRemovedId = i;
                 showPopup = true;
             }
         }
@@ -958,7 +956,7 @@ void FacetDeleteButtonPress(std::string& openmodalName) {
     showPopup = true;
 }
 void SwapNormalButtonPress() {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
         interfGeom->SwapNormal();
@@ -967,7 +965,7 @@ void SwapNormalButtonPress() {
     }
 }
 void ShiftIndicesButtonPress() {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
         interfGeom->ShiftVertex();
@@ -1037,7 +1035,7 @@ void TransitionBetween2ButtonPress() {
         Popup("Select exactly 2 facets");
         return;
     }
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         interfGeom->CreateLoft();
     }
@@ -1069,7 +1067,7 @@ void ExplodeButtonPress(std::string &openpopupName) {
 
 void RevertButtonPress() {
     
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         interfGeom->RevertFlippedNormals();
         // Send to sub process
@@ -1098,7 +1096,7 @@ void ExplodePupup(std::string& openmodalName) {
         ImGui::Text("Are you sure you want to explode selected facets?");
         if (ImGui::Button("OK", ImVec2(12*txtW, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter])
         {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             if (mApp->AskToReset()) {
                 
                 int err;
@@ -1160,7 +1158,7 @@ void TriangulatePopup() {
         if (ImGui::Button("   OK   ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             ImGui::CloseCurrentPopup();
             showPopup = false;
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             if (mApp->AskToReset()) {
                 
                 auto selectedFacets = interfGeom->GetSelectedFacets();
@@ -1224,29 +1222,29 @@ static void ShowMenuFacet(std::string& openmodalName) {
     if (ImGui::BeginMenu("Create two facets' ...")) {
         if (ImGui::BeginMenu("Difference")) {
             if (ImGui::MenuItem("Auto (non-zero)")) {
-                LockWrapper LockWrapper(mApp->imguiRenderLock);
+                LockWrapper myLock(mApp->imguiRenderLock);
                 mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 2);
             }
             if (ImGui::MenuItem("First - Second")) {
-                LockWrapper LockWrapper(mApp->imguiRenderLock);
+                LockWrapper myLock(mApp->imguiRenderLock);
                 mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 0);
             }
             if (ImGui::MenuItem("Second - First")) {
-                LockWrapper LockWrapper(mApp->imguiRenderLock);
+                LockWrapper myLock(mApp->imguiRenderLock);
                 mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Difference, 1);
             }
             ImGui::EndMenu();
         }
         if (ImGui::MenuItem("Union")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Union);
         }
         if (ImGui::MenuItem("Intersection")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Intersection);
         }
         if (ImGui::MenuItem("XOR")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->CreateOfTwoFacets(Clipper2Lib::ClipType::Xor);
         }
         ImGui::EndMenu();
@@ -1278,10 +1276,23 @@ static void ShowMenuFacet(std::string& openmodalName) {
 }
 
 void ConvexHullButtonPress(std::string& openmodalName) {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
+    if (interfGeom->IsLoaded()) {
+        if (interfGeom->GetNbSelectedVertex() != 3) {
+            openmodalName = "Error";
+            showPopup = true;
+            modalMsg = "Select exactly 3 vertices";
+            return;
+        }
+    }
+    else {
+        openmodalName = "Error";
+        showPopup = true;
+        modalMsg = "No geometry loaded";
+    }
+
     if (mApp->AskToReset()) {
         try {
-            
             interfGeom->CreatePolyFromVertices_Convex();
         }
         catch (const std::exception& e) {
@@ -1293,7 +1304,7 @@ void ConvexHullButtonPress(std::string& openmodalName) {
     }
 }
 void SelectionOrderButtonPress(std::string& openmodalName) {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {
             
@@ -1308,7 +1319,7 @@ void SelectionOrderButtonPress(std::string& openmodalName) {
     }
 }
 void ClearIsolatedButtonPress() {
-    LockWrapper LockWrapper(mApp->imguiRenderLock);
+    LockWrapper myLock(mApp->imguiRenderLock);
     
     interfGeom->DeleteIsolatedVertices(false);
     mApp->UpdateModelParams();
@@ -1443,7 +1454,7 @@ void RemoveVertexPopup() {
         if (ImGui::Button("   OK   ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             ImGui::CloseCurrentPopup();
             showPopup = false;
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             if (mApp->AskToReset()) {
                 
                 if (mApp->worker.IsRunning()) mApp->worker.Stop_Public();
@@ -1525,11 +1536,11 @@ static void ShowMenuVertex(std::string& openmodalName) {
 static void ShowMenuView(std::string& openmodalName) {
     if (ImGui::BeginMenu("Structure")) {
         if (ImGui::MenuItem("New structure...")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->AddStruct();
         }
         if (ImGui::MenuItem("Delete structure...")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->DeleteStruct();
         }
         ImGui::Separator();
@@ -1549,14 +1560,14 @@ static void ShowMenuView(std::string& openmodalName) {
         ImGui::Separator();
         // Procedural list of memorized structures
         for (int i = 0; i < interfGeom->GetNbStructure(); i++) {
-            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", "Ctrl + F" + std::to_string(i + 2))) {
+            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=12 ? "Ctrl + F" + std::to_string(i + 2) : "")) {
                 interfGeom->viewStruct = i;
             }
         }
         ImGui::EndMenu();
     }
     if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {
-        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->Get_m_bWindowed()) {
             mApp->ToggleFullscreen(); // incorrect behaviour even in legacy GUI
             mApp->PlaceComponents();
@@ -1569,7 +1580,7 @@ static void ShowMenuView(std::string& openmodalName) {
 
     if (ImGui::BeginMenu("Memorize view to")) {
         if (ImGui::MenuItem("Add new...", "CTLR+Q")) {
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->AddView();
         }
         std::string shortcuts[11] = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" };
@@ -1620,7 +1631,7 @@ void ClearAllViewsPopup() {
         if (ImGui::Button("Yes", ImVec2(txtW * 12, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             ImGui::CloseCurrentPopup();
             showPopup = false;
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->ClearAllViews();
         }
         ImGui::SameLine();
@@ -1660,13 +1671,20 @@ static void ShowMenuTest(std::string& openmodalName) {
     //Quick test pipe
     ImGui::Separator();
     if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {
+        LockWrapper myLock(mApp->imguiRenderLock);
         if (AskToSave()) 
             mApp->BuildPipe(5.0, 5);
     }
 
     ImGui::Separator();
     if (ImGui::MenuItem("Triangulate Geometry")) {
-        TriangulateButtonPress(openmodalName);
+        LockWrapper myLock(mApp->imguiRenderLock);
+        if (AskToSave()) {
+            auto prg = GLProgress_GUI("Triangulating", "Triangulating");
+            prg.SetVisible(true);
+            GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
+            mApp->worker.MarkToReload();
+        }
     }
     ImGui::Separator();
     if (ImGui::MenuItem("ImGui Menu")) {
@@ -1684,7 +1702,7 @@ static void ShowMenuTime() {
         mApp->timeSettings->SetVisible(true);
     }
     if (ImGui::MenuItem("Edit moments...")) {
-        LockWrapper LockWrapper(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         if (!mApp->momentsEditor || !mApp->momentsEditor->IsVisible()) {
             SAFE_DELETE(mApp->momentsEditor);
             mApp->momentsEditor = new MomentsEditor(&mApp->worker);
@@ -1738,7 +1756,7 @@ void DeleteFacetPopup() {
         if (ImGui::Button("Yes", ImVec2(txtW*12,0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
             ImGui::CloseCurrentPopup();
             showPopup = false;
-            LockWrapper LockWrapper(mApp->imguiRenderLock);
+            LockWrapper myLock(mApp->imguiRenderLock);
             if (mApp->AskToReset()) {
                 
                 auto selectedFacets = interfGeom->GetSelectedFacets();
@@ -1864,4 +1882,5 @@ void ShowAppMainMenuBar() {
     }
 
     ImGui::PopStyleVar(2);
+}
 }
