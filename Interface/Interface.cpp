@@ -2102,14 +2102,12 @@ void Interface::RebuildViewMenus() {
     }
 }
 
-void Interface::AddView(CameraView v) {
+void Interface::AddView(const CameraView& v) {
 
-    if (views.size() < MAX_VIEW) {
-        views.push_back(v);
-    } else {
+    if (views.size() >= MAX_VIEW) {
         views.erase(views.begin()); //clear first
-        views.push_back(v);
     }
+    views.push_back(v);
     RebuildViewMenus();
 }
 
@@ -2139,8 +2137,9 @@ void Interface::AddView() {
     sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
     if (!viewName) return;
-
-    AddView(viewer[curViewer]->GetCurrentView());
+    CameraView newView = viewer[curViewer]->GetCurrentView(); //Copy current view
+    newView.name = viewName; //Apply user-defined name
+    AddView(newView);
     RebuildViewMenus();
 }
 
