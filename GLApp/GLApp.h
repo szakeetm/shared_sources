@@ -28,8 +28,10 @@ protected:
     int       m_minScreenHeight;
     int       m_screenWidth;
     int       m_screenHeight;
-    int       m_fscreenWidth;
-    int       m_fscreenHeight;
+    int       m_windowedScreenWidth;
+    int       m_windowedScreenHeight;
+    int       m_fullScreenWidth;
+    int       m_fullScreenHeight;
     bool      m_bResizable;
     GLWindow  *wnd;
 
