@@ -270,7 +270,7 @@ void ImguiWindow::renderSingle() {
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
-            ImMenu::ShowAppMainMenuBar();
+            ShowAppMainMenuBar();
 
         if (show_app_sidebar)
             ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);

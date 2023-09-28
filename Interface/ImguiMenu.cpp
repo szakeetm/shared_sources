@@ -94,6 +94,8 @@ extern SynRad*mApp;
 
 extern char fileSaveFilters[];
 
+InterfaceGeometry* interfGeom;
+
 namespace ImMenu {
 
 enum Menu_Event
@@ -118,7 +120,6 @@ static std::string modalMsg = "";
 static std::string modalTitle = "";
 static size_t selectionToBeRemovedId = -1;
 static bool askSave = false;
-InterfaceGeometry* interfGeom;
 
 static std::string saveResponse = "None";
 
@@ -201,7 +202,7 @@ void ShowFileNotSavedPopup() {
     }
 }
 
-void NewEmptyGeometryButtonPress() {
+void NewEmptyGeometryMenuPress() {
     if (AskToSave()) {
         if (mApp->worker.IsRunning())
             mApp->worker.Stop_Public();
@@ -212,7 +213,7 @@ void NewEmptyGeometryButtonPress() {
     }
 }
 
-void LoadFileButtonPress() {
+void LoadFileMenuPress() {
     if (AskToSave()) {
         if (mApp->worker.IsRunning())
             mApp->worker.Stop_Public();
@@ -243,7 +244,7 @@ void ShowPopup() {
     }
 }
 
-void InsertGeometryButtonPress(bool newStr) {
+void InsertGeometryMenuPress(bool newStr) {
     
     if (interfGeom->IsLoaded()) {
         if (mApp->worker.IsRunning())
@@ -256,7 +257,7 @@ void InsertGeometryButtonPress(bool newStr) {
     else Popup("No geometry loaded.","No geometry");
 }
 
-void SaveButtonPress() {
+void SaveMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         LockWrapper myLock(mApp->imguiRenderLock);
@@ -265,7 +266,7 @@ void SaveButtonPress() {
     else Popup("No geometry loaded.", "No geometry");
 }
 
-void SaveAsButtonPress() {
+void SaveAsMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         LockWrapper myLock(mApp->imguiRenderLock);
@@ -274,12 +275,12 @@ void SaveAsButtonPress() {
     else Popup("No geometry loaded.", "No geometry");
 }
 
-void ExportSelectedFacetsButtonPress() {
+void ExportSelectedFacetsMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportSelection();
 }
 
-void ExportSelectedProfilesButtonPress() {
+void ExportSelectedProfilesMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportProfiles();
 }
@@ -320,7 +321,7 @@ void ShowSubmenuExportTextures(bool coord=false) {
     }
 }
 
-void ImportDesorptionFromSYNFileButtonPress() {
+void ImportDesorptionFromSYNFileMenuPress() {
     if (interfGeom->IsLoaded()) {
         if (!mApp->importDesorption) mApp->importDesorption = new ImportDesorption();
         mApp->importDesorption->SetGeometry(interfGeom, &mApp->worker);
@@ -333,10 +334,10 @@ void ImportDesorptionFromSYNFileButtonPress() {
 
 static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
-        NewEmptyGeometryButtonPress();
+        NewEmptyGeometryMenuPress();
     }
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
-        LoadFileButtonPress();
+        LoadFileMenuPress();
     }
     if (mApp->recentsList.empty()) {
         ImGui::BeginDisabled();
@@ -357,30 +358,30 @@ static void ShowMenuFile() {
     ImGui::Separator();
     if (ImGui::BeginMenu("Insert geometry")) {
         if(ImGui::MenuItem("To current structure")){
-            InsertGeometryButtonPress(false);
+            InsertGeometryMenuPress(false);
         }
         if(ImGui::MenuItem("To new structure")){
-            InsertGeometryButtonPress(true);
+            InsertGeometryMenuPress(true);
         }
         ImGui::EndMenu();
     }
     ImGui::Separator();
     if(ImGui::MenuItem(ICON_FA_SAVE "  Save", "Ctrl+S")){
         if (mApp->worker.GetGeometry()->IsLoaded())
-            SaveButtonPress();
+            SaveMenuPress();
     }
     if(ImGui::MenuItem(ICON_FA_SAVE "  Save as")){
         if (mApp->worker.GetGeometry()->IsLoaded())
-            SaveAsButtonPress();
+            SaveAsMenuPress();
     }
     ImGui::Separator();
 
     if (ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected facets")) {
-        ExportSelectedFacetsButtonPress();
+        ExportSelectedFacetsMenuPress();
     }
 
     if (ImGui::MenuItem(ICON_FA_FILE_EXPORT "  Export selected profiles")) {
-        ExportSelectedProfilesButtonPress();
+        ExportSelectedProfilesMenuPress();
     }
 
     #ifdef MOLFLOW // TODO: Polimorph instead of macro
@@ -397,7 +398,7 @@ static void ShowMenuFile() {
     }
 
     if (ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Import desorption from SYN file")) {
-        ImportDesorptionFromSYNFileButtonPress();
+        ImportDesorptionFromSYNFileMenuPress();
     }
     #endif //MOLFLOW
     ImGui::Separator();
@@ -780,7 +781,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     }
 }
 
-void FormulaEditorButtonPress() {
+void FormulaEditorMenuPress() {
     
     if (!interfGeom->IsLoaded()) {
         Popup("No geometry loaded.", "No geometry");
@@ -796,7 +797,7 @@ void FormulaEditorButtonPress() {
         mApp->formulaEditor->SetVisible(true);
     }
 }
-void ConvergencePlotterButtonPress() {
+void ConvergencePlotterMenuPress() {
     if (!mApp->convergencePlotter)
         mApp->convergencePlotter = new ConvergencePlotter(&mApp->worker, mApp->appFormulas);
     else {
@@ -810,32 +811,32 @@ void ConvergencePlotterButtonPress() {
     mApp->convergencePlotter->Display(&mApp->worker);
 }
 #ifdef MOLFLOW //TODO replace with polimorphism
-void TexturePlotterButtonPress() {
+void TexturePlotterMenuPress() {
     if (!mApp->texturePlotter) mApp->texturePlotter = new TexturePlotter();
     mApp->texturePlotter->Display(&mApp->worker);
 }
 
-void ProfilePlotterButtonPress() {
+void ProfilePlotterMenuPress() {
     if (!mApp->profilePlotter) mApp->profilePlotter = new ProfilePlotter(&mApp->worker);
     mApp->profilePlotter->Display(&mApp->worker);
 }
 #endif //MOLFLOW
 
-void HistogramPlotterButtonPress() {
+void HistogramPlotterMenuPress() {
     if (!mApp->histogramPlotter || !mApp->histogramPlotter->IsVisible()) {
         SAFE_DELETE(mApp->histogramPlotter);
         mApp->histogramPlotter = new HistogramPlotter(&mApp->worker);
     }
     mApp->histogramPlotter->SetVisible(true);
 }
-void TextureScalingButtonPress() {
+void TextureScalingMenuPress() {
     if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {
         SAFE_DELETE(mApp->textureScaling);
         mApp->textureScaling = new TextureScaling();
         mApp->textureScaling->Display(&mApp->worker, mApp->viewer);
     }
 }
-void ParticleLoggerButtonPress() {
+void ParticleLoggerMenuPress() {
     if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {
         SAFE_DELETE(mApp->particleLogger);
         
@@ -845,7 +846,7 @@ void ParticleLoggerButtonPress() {
     mApp->particleLogger->SetVisible(true);
 }
 
-void TakeScreenshotButtonPress() {
+void TakeScreenshotMenuPress() {
     std::ostringstream tmp_ss;
 
     char buf[80];
@@ -886,13 +887,13 @@ void TakeScreenshotButtonPress() {
 }
 
 #ifdef MOLFLOW //TODO replace with polimorphism
-void MovingPartsButtonPress() {
+void MovingPartsMenuPress() {
     
     if (!mApp->movement) mApp->movement = new Movement(interfGeom, &mApp->worker);
     mApp->movement->Update();
     mApp->movement->SetVisible(true);
 }
-void MeasureForcesButtonPress() {
+void MeasureForcesMenuPress() {
     
     if (!mApp->measureForces) mApp->measureForces = new MeasureForce(interfGeom, &mApp->worker);
     mApp->measureForces->Update();
@@ -902,30 +903,30 @@ void MeasureForcesButtonPress() {
 
 static void ShowMenuTools() {
     if (ImGui::MenuItem("Formula editor", "ALT+F")) {
-        FormulaEditorButtonPress(); // TODO: replace with Toggle ImGui Formula Editor
+        FormulaEditorMenuPress(); // TODO: replace with Toggle ImGui Formula Editor
     }
     if (ImGui::MenuItem("Convergence Plotter ...", "ALT+C")) {
-        ConvergencePlotterButtonPress();  // TODO: replace with Toggle ImGui Convergence Plotter
+        ConvergencePlotterMenuPress();  // TODO: replace with Toggle ImGui Convergence Plotter
     }
     ImGui::Separator();
 
 #if defined(MOLFLOW)
     if (ImGui::MenuItem("Texture Plotter ...", "ALT+T")) {
-        TexturePlotterButtonPress();
+        TexturePlotterMenuPress();
     }
     if (ImGui::MenuItem("Profile Plotter ...", "ALT+P")) {
-        ProfilePlotterButtonPress();
+        ProfilePlotterMenuPress();
     }
 #endif
     ImGui::Separator();
     if (ImGui::MenuItem("Histogram Plotter...")) {
-        HistogramPlotterButtonPress();
+        HistogramPlotterMenuPress();
     }
     if (ImGui::MenuItem("Texture scaling...", "CTRL+D")) {
-        TextureScalingButtonPress();
+        TextureScalingMenuPress();
     }
     if (ImGui::MenuItem("Particle logger...")) {
-        ParticleLoggerButtonPress();
+        ParticleLoggerMenuPress();
     }
     //if (ImGui::MenuItem("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER)){}
     if (ImGui::MenuItem("Global Settings ...")) {
@@ -933,21 +934,21 @@ static void ShowMenuTools() {
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Take screenshot", "CTRL+R")) {
-        TakeScreenshotButtonPress();
+        TakeScreenshotMenuPress();
     }
 
     ImGui::Separator();
 #ifdef MOLFLOW //TODO replace with polimorphism
     if (ImGui::MenuItem("Moving parts...")) {
-        MovingPartsButtonPress();
+        MovingPartsMenuPress();
     }
     if (ImGui::MenuItem("Measure forces...")) {
-        MeasureForcesButtonPress();
+        MeasureForcesMenuPress();
     }
 #endif
 }
 
-void FacetDeleteButtonPress(std::string& openmodalName) {
+void FacetDeleteMenuPress(std::string& openmodalName) {
     
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (selectedFacets.empty()) return; //Nothing selected
@@ -955,7 +956,7 @@ void FacetDeleteButtonPress(std::string& openmodalName) {
     openmodalName = "Delete selected facets?";
     showPopup = true;
 }
-void SwapNormalButtonPress() {
+void SwapNormalMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
@@ -964,7 +965,7 @@ void SwapNormalButtonPress() {
         mApp->worker.MarkToReload();
     }
 }
-void ShiftIndicesButtonPress() {
+void ShiftIndicesMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
@@ -973,13 +974,13 @@ void ShiftIndicesButtonPress() {
         mApp->worker.MarkToReload();
     }
 }
-void FacetCoordinatesButtonPress() {
+void FacetCoordinatesMenuPress() {
     if (!mApp->facetCoordinates) mApp->facetCoordinates = new FacetCoordinates();
     mApp->facetCoordinates->Display(&mApp->worker);
     mApp->facetCoordinates->SetVisible(true);
 }
 
-void FacetScaleButtonPress() {
+void FacetScaleMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->scaleFacet) mApp->scaleFacet = new ScaleFacet(interfGeom, &mApp->worker);
@@ -991,23 +992,23 @@ void FacetScaleButtonPress() {
         Popup("No geometry");
     }
 }
-void FacetMirrorProjectButtonPress() {
+void FacetMirrorProjectMenuPress() {
     
     if (!mApp->mirrorFacet) mApp->mirrorFacet = new MirrorFacet(interfGeom, &mApp->worker);
     mApp->mirrorFacet->SetVisible(true);
 }
-void FacetRotateButtonPress() {
+void FacetRotateMenuPress() {
     
     if (!mApp->rotateFacet) mApp->rotateFacet = new RotateFacet(interfGeom, &mApp->worker);
     mApp->rotateFacet->SetVisible(true);
 }
-void AlignToButtonPress() {
+void AlignToMenuPress() {
     
     if (!mApp->alignFacet) mApp->alignFacet = new AlignFacet(interfGeom, &mApp->worker);
     mApp->alignFacet->MemorizeSelection();
     mApp->alignFacet->SetVisible(true);
 }
-void ExtrudeButtonPress() {
+void ExtrudeMenuPress() {
     
     if (!mApp->extrudeFacet || !mApp->extrudeFacet->IsVisible()) {
         SAFE_DELETE(mApp->extrudeFacet);
@@ -1015,7 +1016,7 @@ void ExtrudeButtonPress() {
     }
     mApp->extrudeFacet->SetVisible(true);
 }
-void SplitButtonPress() {
+void SplitMenuPress() {
     
     if (!mApp->splitFacet || !mApp->splitFacet->IsVisible()) {
         SAFE_DELETE(mApp->splitFacet);
@@ -1023,13 +1024,13 @@ void SplitButtonPress() {
         mApp->splitFacet->SetVisible(true);
     }
 }
-void CreateShapeButtonPress() {
+void CreateShapeMenuPress() {
     
     if (!mApp->createShape) mApp->createShape = new CreateShape(interfGeom, &mApp->worker);
     mApp->createShape->SetVisible(true);
 }
 
-void TransitionBetween2ButtonPress() {
+void TransitionBetween2MenuPress() {
     
     if (interfGeom->GetNbSelectedFacets() != 2) {
         Popup("Select exactly 2 facets");
@@ -1044,7 +1045,7 @@ void TransitionBetween2ButtonPress() {
     mApp->UpdateFacetlistSelected();
     mApp->UpdateViewers();
 }
-void BuildIntersectionButtonPress() {
+void BuildIntersectionMenuPress() {
     
     if (!mApp->buildIntersection || !mApp->buildIntersection->IsVisible()) {
         SAFE_DELETE(mApp->buildIntersection);
@@ -1052,7 +1053,7 @@ void BuildIntersectionButtonPress() {
         mApp->buildIntersection->SetVisible(true);
     }
 }
-void CollapseButtonPress() {
+void CollapseMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         mApp->DisplayCollapseDialog();
@@ -1060,12 +1061,12 @@ void CollapseButtonPress() {
     else Popup("No geometry");
 }
 
-void ExplodeButtonPress(std::string &openpopupName) {
+void ExplodeMenuPress(std::string &openpopupName) {
     openpopupName = "Explode?";
     showPopup = true;
 }
 
-void RevertButtonPress() {
+void RevertMenuPress() {
     
     LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
@@ -1075,7 +1076,7 @@ void RevertButtonPress() {
     }
 }
 
-void TriangulateButtonPress(std::string& openmodalName) {
+void TriangulateMenuPress(std::string& openmodalName) {
     
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (selectedFacets.empty()) return;
@@ -1084,7 +1085,7 @@ void TriangulateButtonPress(std::string& openmodalName) {
 }
 
 #ifdef MOLFLOW // TODO switch to polimorphism
-void ConvertToOutgassingMapButtonPress() {
+void ConvertToOutgassingMapMenuPress() {
     if (!mApp->outgassingMapWindow) mApp->outgassingMapWindow = new OutgassingMapWindow();
     mApp->outgassingMapWindow->Display(&mApp->worker);
 }
@@ -1182,41 +1183,41 @@ void TriangulatePopup() {
 
 static void ShowMenuFacet(std::string& openmodalName) {
     if (ImGui::MenuItem("Delete", "CTRL+DEL")) {
-        FacetDeleteButtonPress(openmodalName);
+        FacetDeleteMenuPress(openmodalName);
     }
     if (ImGui::MenuItem("Swap normal", "CTRL+N")) {
-        SwapNormalButtonPress();
+        SwapNormalMenuPress();
     }
     if (ImGui::MenuItem("Shift indices", "CTRL+H")) {
-        ShiftIndicesButtonPress();
+        ShiftIndicesMenuPress();
     }
     if (ImGui::MenuItem("Facet coordinates ...")) {
-        FacetCoordinatesButtonPress();
+        FacetCoordinatesMenuPress();
     }
     if (ImGui::MenuItem("Move ...")) {
         mApp->imWnd->show_facet_move = true;
     }
     if (ImGui::MenuItem("Scale ...")) {
-        FacetScaleButtonPress();
+        FacetScaleMenuPress();
     }
     if (ImGui::MenuItem("Mirror / Project ...")) {
-        FacetMirrorProjectButtonPress();
+        FacetMirrorProjectMenuPress();
     }
     if (ImGui::MenuItem("Rotate ...")) {
-        FacetRotateButtonPress();
+        FacetRotateMenuPress();
     }
     if (ImGui::MenuItem("Align to ...")) {
-        AlignToButtonPress();
+        AlignToMenuPress();
     }
     if (ImGui::MenuItem("Extrude ...")) {
-        ExtrudeButtonPress();
+        ExtrudeMenuPress();
     }
     if (ImGui::MenuItem("Split ...")) {
-        SplitButtonPress();
+        SplitMenuPress();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Create shape...")) {
-        CreateShapeButtonPress();
+        CreateShapeMenuPress();
     }
 
     if (ImGui::BeginMenu("Create two facets' ...")) {
@@ -1250,32 +1251,32 @@ static void ShowMenuFacet(std::string& openmodalName) {
         ImGui::EndMenu();
     }
     if (ImGui::MenuItem("Transition between 2")) {
-        TransitionBetween2ButtonPress();
+        TransitionBetween2MenuPress();
     }
     if (ImGui::MenuItem("Build intersection...")) {
-        BuildIntersectionButtonPress();
+        BuildIntersectionMenuPress();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Collapse ...")) {
-        CollapseButtonPress();
+        CollapseMenuPress();
     }
     if (ImGui::MenuItem("Explode")) {
-        ExplodeButtonPress(openmodalName);
+        ExplodeMenuPress(openmodalName);
     }
     if (ImGui::MenuItem("Revert flipped normals (old geometries)")) {
-        RevertButtonPress();
+        RevertMenuPress();
     }
     if (ImGui::MenuItem("Triangulate")) {
-        TriangulateButtonPress(openmodalName);
+        TriangulateMenuPress(openmodalName);
     }
 #ifdef MOLFLOW //convert to polimophism
     if (ImGui::MenuItem("Convert to outgassing map...")) {
-        ConvertToOutgassingMapButtonPress();
+        ConvertToOutgassingMapMenuPress();
     }
 #endif
 }
 
-void ConvexHullButtonPress(std::string& openmodalName) {
+void ConvexHullMenuPress(std::string& openmodalName) {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (interfGeom->IsLoaded()) {
         if (interfGeom->GetNbSelectedVertex() != 3) {
@@ -1303,7 +1304,7 @@ void ConvexHullButtonPress(std::string& openmodalName) {
         mApp->worker.MarkToReload();
     }
 }
-void SelectionOrderButtonPress(std::string& openmodalName) {
+void SelectionOrderMenuPress(std::string& openmodalName) {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {
@@ -1318,7 +1319,7 @@ void SelectionOrderButtonPress(std::string& openmodalName) {
         mApp->worker.MarkToReload();
     }
 }
-void ClearIsolatedButtonPress() {
+void ClearIsolatedMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     
     interfGeom->DeleteIsolatedVertices(false);
@@ -1327,7 +1328,7 @@ void ClearIsolatedButtonPress() {
     if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
     interfGeom->BuildGLList();
 }
-void RemoveSelectedButtonPress(std::string& openmodalName) {
+void RemoveSelectedMenuPress(std::string& openmodalName) {
     
     if (interfGeom->IsLoaded()) {
         openmodalName = "Remove Vertices";
@@ -1339,12 +1340,12 @@ void RemoveSelectedButtonPress(std::string& openmodalName) {
         modalMsg = "No geometry loaded";
     }
 }
-void VertexCoordinatesButtonPress() {
+void VertexCoordinatesMenuPress() {
     if (!mApp->vertexCoordinates) mApp->vertexCoordinates = new VertexCoordinates();
     mApp->vertexCoordinates->Display(&mApp->worker);
     mApp->vertexCoordinates->SetVisible(true);
 }
-void VertexMoveButtonPress(std::string& openmodalName) {
+void VertexMoveMenuPress(std::string& openmodalName) {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->moveVertex) mApp->moveVertex = new MoveVertex(interfGeom, &mApp->worker);
@@ -1356,7 +1357,7 @@ void VertexMoveButtonPress(std::string& openmodalName) {
         modalMsg = "No geometry loaded";
     }
 }
-void VertexScaleButtonPress(std::string& openmodalName) {
+void VertexScaleMenuPress(std::string& openmodalName) {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->scaleVertex) mApp->scaleVertex = new ScaleVertex(interfGeom, &mApp->worker);
@@ -1368,17 +1369,17 @@ void VertexScaleButtonPress(std::string& openmodalName) {
         modalMsg = "No geometry loaded";
     }
 }
-void VertexMirrorProjectButtonPress() {
+void VertexMirrorProjectMenuPress() {
     
     if (!mApp->mirrorVertex) mApp->mirrorVertex = new MirrorVertex(interfGeom, &mApp->worker);
     mApp->mirrorVertex->SetVisible(true);
 }
-void VertexRotateButtonPress() {
+void VertexRotateMenuPress() {
     
     if (!mApp->rotateVertex) mApp->rotateVertex = new RotateVertex(interfGeom, &mApp->worker);
     mApp->rotateVertex->SetVisible(true);
 }
-void VertexAddNewButtonPress(std::string& openmodalName) {
+void VertexAddNewMenuPress(std::string& openmodalName) {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->addVertex) mApp->addVertex = new AddVertex(interfGeom, &mApp->worker);
@@ -1391,7 +1392,7 @@ void VertexAddNewButtonPress(std::string& openmodalName) {
     }
 }
 
-void VertexCoplanarButtonPress(std::string& openmodalName) {
+void VertexCoplanarMenuPress(std::string& openmodalName) {
     char* input;
     if (interfGeom->IsLoaded()) {
         if (interfGeom->GetNbSelectedVertex() != 3) {
@@ -1484,39 +1485,39 @@ void RemoveVertexPopup() {
 static void ShowMenuVertex(std::string& openmodalName) {
     if (ImGui::BeginMenu("Create Facet from Selected")) {
         if (ImGui::MenuItem("Convex Hull", "ALT+V")) {
-            ConvexHullButtonPress(openmodalName);
+            ConvexHullMenuPress(openmodalName);
         }
         if (ImGui::MenuItem("Keep selection order")) {
-            SelectionOrderButtonPress(openmodalName);
+            SelectionOrderMenuPress(openmodalName);
         }
         ImGui::EndMenu();
     }
 
     if (ImGui::MenuItem("Clear isolated")) {
-        ClearIsolatedButtonPress();
+        ClearIsolatedMenuPress();
     }
 #ifdef MOLFLOW
     if (ImGui::MenuItem("Remove selected")) {
-        RemoveSelectedButtonPress(openmodalName);
+        RemoveSelectedMenuPress(openmodalName);
     }
 #endif
     if (ImGui::MenuItem("Vertex coordinates...")) {
-        VertexCoordinatesButtonPress();
+        VertexCoordinatesMenuPress();
     }
     if (ImGui::MenuItem("Move...")) {
-        VertexMoveButtonPress(openmodalName);
+        VertexMoveMenuPress(openmodalName);
     }
     if (ImGui::MenuItem("Scale...")) {
-        VertexScaleButtonPress(openmodalName);
+        VertexScaleMenuPress(openmodalName);
     }
     if (ImGui::MenuItem("Mirror / Project ...")) {
-        VertexMirrorProjectButtonPress();
+        VertexMirrorProjectMenuPress();
     }
     if (ImGui::MenuItem("Rotate...")) {
-        VertexRotateButtonPress();
+        VertexRotateMenuPress();
     }
     if (ImGui::MenuItem("Add new...")) {
-        VertexAddNewButtonPress(openmodalName);
+        VertexAddNewMenuPress(openmodalName);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select all vertex")) {
@@ -1526,7 +1527,7 @@ static void ShowMenuVertex(std::string& openmodalName) {
         interfGeom->UnselectAllVertex();
     }
     if (ImGui::MenuItem("Select coplanar vertex (visible on screen)")) {
-        VertexCoplanarButtonPress(openmodalName);
+        VertexCoplanarMenuPress(openmodalName);
     }
     if (ImGui::MenuItem("Select isolated vertex")) {
         interfGeom->SelectIsolatedVertices();
@@ -1583,9 +1584,9 @@ static void ShowMenuView(std::string& openmodalName) {
             LockWrapper myLock(mApp->imguiRenderLock);
             mApp->AddView();
         }
-        std::string shortcuts[11] = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" };
+        std::vector<std::string> shortcuts = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" };
         for (int i = 0; i < mApp->views.size(); i++) {
-            if (ImGui::MenuItem(mApp->views[i].name, i < 11 ? "Alt + "+shortcuts[i] : "")) { //mApp->views[i].names - names are empty, also in legacy GUI
+            if (ImGui::MenuItem(mApp->views[i].name, i < shortcuts.size() ? "Alt + " + shortcuts[i] : "")) { //mApp->views[i].names - names are empty, also in legacy GUI
                 mApp->OverWriteView(i);
             }
         }
@@ -1787,6 +1788,7 @@ void ShowFacetPopups(std::string& openmodalName) {
     TriangulatePopup();
     ExplodePupup(openmodalName);
 }
+}
 
 //-----------------------------------------------------------------------------
 // [SECTION] Example App: Main Menu Bar / ShowAppMainMenuBar()
@@ -1817,70 +1819,69 @@ void ShowAppMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
-            ShowMenuFile();
+            ImMenu::ShowMenuFile();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
-            ShowMenuSelection(openmodalName);
+            ImMenu::ShowMenuSelection(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
-            ShowMenuTools();
+            ImMenu::ShowMenuTools();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Facet")) {
-            ShowMenuFacet(openmodalName);
+            ImMenu::ShowMenuFacet(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Vertex")) {
-            ShowMenuVertex(openmodalName);
+            ImMenu::ShowMenuVertex(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
-            ShowMenuView(openmodalName);
+            ImMenu::ShowMenuView(openmodalName);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Test")) {
-            ShowMenuTest(openmodalName);
+            ImMenu::ShowMenuTest(openmodalName);
             ImGui::EndMenu();
         }
         #ifdef MOLFLOW // TODO Polymorphism
         if (ImGui::BeginMenu("Time")) {
-            ShowMenuTime();
+            ImMenu::ShowMenuTime();
             ImGui::EndMenu();
         }
         #endif //MOLFLOW
         if (ImGui::BeginMenu("About")) {
-            ShowMenuAbout();
+            ImMenu::ShowMenuAbout();
             ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
     }
 
-    if (!modalTitle.empty()) {
-        openmodalName = modalTitle;
+    if (!ImMenu::modalTitle.empty()) {
+        openmodalName = ImMenu::modalTitle;
     }
     if(!openmodalName.empty()){
         ImGui::OpenPopup(openmodalName.c_str());
         openmodalName = "";
     }
-    if (showPopup) {
-        ImGui::CaptureKeyboardFromApp(showPopup); // TODO: consolidate popup definitions
-        ShowSelectionModals();
-        ShowFacetPopups(openmodalName);
-        RemoveVertexPopup();
-        SelectCoplanarVerticesPopup(openmodalName);
-        ClearAllViewsPopup();
-        ErrorPopup();
-        ShowPopup();
+    if (ImMenu::showPopup) {
+        ImGui::CaptureKeyboardFromApp(ImMenu::showPopup); // TODO: consolidate popup definitions
+        ImMenu::ShowSelectionModals();
+        ImMenu::ShowFacetPopups(openmodalName);
+        ImMenu::RemoveVertexPopup();
+        ImMenu::SelectCoplanarVerticesPopup(openmodalName);
+        ImMenu::ClearAllViewsPopup();
+        ImMenu::ErrorPopup();
+        ImMenu::ShowPopup();
     }
-    if (askSave)
+    if (ImMenu::askSave)
     {
         ImGui::OpenPopup("File not saved");
-        ShowFileNotSavedPopup();
+        ImMenu::ShowFileNotSavedPopup();
     }
 
     ImGui::PopStyleVar(2);
-}
 }
