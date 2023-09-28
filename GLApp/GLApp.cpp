@@ -51,10 +51,12 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
   wnd->SetVisible(true); // Make top level shell
 
   // start ImGui
+  /*
   if (!imWnd) {
       imWnd = new ImguiWindow(this);
       imWnd->init();
   }
+  */
 
 #if defined(_DEBUG)
   nbRestore = 0;
