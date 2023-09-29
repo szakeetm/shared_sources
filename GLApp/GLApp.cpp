@@ -50,13 +50,6 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
   wnd->SetVisible(true); // Make top level shell
 
-  // start ImGui
-  /*
-  if (!imWnd) {
-      imWnd = new ImguiWindow(this);
-      imWnd->init();
-  }
-  */
 
 #if defined(_DEBUG)
   nbRestore = 0;
@@ -137,6 +130,11 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
 
         SDL_EnableScreenSaver();
+        // start ImGui
+        if (!imWnd) {
+            imWnd = new ImguiWindow(this);
+            imWnd->init();
+        }
 	}
 
 	errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth, m_screenHeight);

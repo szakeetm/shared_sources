@@ -294,7 +294,7 @@ void ImguiWindow::renderSingle() {
 
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub); // Create a window called "Hello, world!"
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize); // Create a window called "Hello, world!"
             // and append into it.
 
             #if defined(DEBUG)
@@ -309,15 +309,20 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
             ImGui::Checkbox("Facet Move", &show_facet_move);
-            if (ImGui::Button("Test Popup Wrapper")) {
-                popup.ImMsgBox("Title", "Message", { {"OK", buttonOk} });
+
+
+            if (ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 4), ImGuiWindowFlags_NoSavedSettings)) {
+                if (ImGui::Button("Test Popup Wrapper")) {
+                    popup.OpenImMsgBox("Title", "Message", { {"OK", buttonOk}, {"Cancel", buttonCancel}}); // Open wrapped popup
+                }
+                static int response;
+                if (popup.GetResponse() > DrawnNoResponse) { // if there is a response
+                    response = popup.GetResponse(); // do something
+                }
+                ImGui::Text("Popup current state: "+std::to_string(popup.GetResponse()));
+                ImGui::Text("Popup response: "+std::to_string(response));
+                ImGui::EndChild();
             }
-            static int response;
-            if (popup.GetResponse() > DrawnNoResponse) {
-                response = popup.GetResponse();
-            }
-            ImGui::Text("Popup current state: "+std::to_string(popup.GetResponse()));
-            ImGui::Text("Popup response: "+std::to_string(response));
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

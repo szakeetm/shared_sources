@@ -16,7 +16,7 @@ public:
 		std::string name;
 		int retVal;
 	} button;
-	int ImMsgBox(std::string title, std::string message, std::vector<button> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+	int OpenImMsgBox(std::string title, std::string message, std::vector<button> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
 	void Draw();
 	MyPopup();
 	int GetResponse();
