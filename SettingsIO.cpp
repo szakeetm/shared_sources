@@ -152,7 +152,7 @@ namespace SettingsIO {
 
             // decompress file
             std::string parseFileName;
-            Log::console_msg_master(2, "Decompressing zip file...\n");
+            Log::console_msg_master(2, "Decompressing {} ...\n", parsedArgs.inputFile);
 
             ZipArchive::Ptr zip = ZipFile::Open(parsedArgs.inputFile);
             if (zip == nullptr) {
@@ -183,8 +183,7 @@ namespace SettingsIO {
                 return 1;
             }
             parsedArgs.workFile = parseFileName;
-            Log::console_msg_master(2, "New input file: {}\n",
-                                    parsedArgs.workFile);
+            //Log::console_msg_master(2, "New input file: {}\n", parsedArgs.workFile); //Will be printed a line later
         } else {
             parsedArgs.workFile = parsedArgs.inputFile;
         }
