@@ -189,6 +189,8 @@ void ImguiWindow::init() {
     show_facet_move = false;
     show_window_license = false;
 
+    popup = MyPopup();
+
     start_time = ImGui::GetTime();
 }
 
@@ -307,6 +309,15 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
             ImGui::Checkbox("Facet Move", &show_facet_move);
+            if (ImGui::Button("Test Popup Wrapper")) {
+                popup.ImMsgBox("Title", "Message", { {"OK", buttonOk} });
+            }
+            static int response;
+            if (popup.GetResponse() > DrawnNoResponse) {
+                response = popup.GetResponse();
+            }
+            ImGui::Text("Popup current state: "+std::to_string(popup.GetResponse()));
+            ImGui::Text("Popup response: "+std::to_string(response));
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -328,6 +339,8 @@ void ImguiWindow::renderSingle() {
         }
         if (show_window_license)
             ShowWindowLicense();
+
+        popup.Draw();
 
         // Rendering
         ImGui::Render();

@@ -1594,12 +1594,7 @@ static void ShowMenuView(std::string& openmodalName) {
     }
     ImGui::Separator();
 
-    if (mApp->views.size() == 0) { // disable if no views are memorized
-        ImGui::BeginDisabled();
-        ImGui::MenuItem("Select memorized");
-        ImGui::EndDisabled();
-    }
-    else if (ImGui::BeginMenu("Select memorized")) {
+    if (ImGui::BeginMenu("Select memorized", mApp->views.size()==0)) {
         // Procedural list of memorized views
         for (int i = 0; i < mApp->views.size(); i++) {
             if (ImGui::MenuItem(mApp->views[i].name)) {
@@ -1812,8 +1807,8 @@ void ShowAppMainMenuBar() {
     }
 
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 3.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 3.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 0.0f));
     static std::string openmodalName = "";
     static bool askForSave = false;
     if (ImGui::BeginMainMenuBar()) {
