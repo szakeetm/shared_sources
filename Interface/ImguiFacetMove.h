@@ -34,11 +34,11 @@ enum movementMode { absolute_offset, direction_and_distance };
 
 //internal function declarations
 void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
-void FacetNormalButtonPress(InterfaceGeometry* interfGeom);
-void VertexDirectionButtonPress(InterfaceGeometry* interfGeom);
-void FacetCenterButtonPress(InterfaceGeometry* interfGeom);
-bool BaseVertexSelectButtonPress(InterfaceGeometry* interfGeom);
-bool BaseFacetSelectButtonPress(InterfaceGeometry* interfGeom);
+void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+void FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
 
 void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
 

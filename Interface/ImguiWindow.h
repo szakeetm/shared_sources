@@ -58,10 +58,9 @@ public:
     bool show_window_license{false};
 
     void ShowWindowLicense();
-
+    MyPopup popup;
 protected:
     ImGuiConfigFlags storedConfigFlags;
-    MyPopup popup;
 
     double start_time; // to keep track how long the ImGui GUI is running
 };

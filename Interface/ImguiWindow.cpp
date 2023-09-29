@@ -310,16 +310,14 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Demo window",&show_demo_window);
             ImGui::Checkbox("Facet Move", &show_facet_move);
 
-
-            if (ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 4), ImGuiWindowFlags_NoSavedSettings)) {
+            static int response;
+            if (ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings)) {
                 if (ImGui::Button("Test Popup Wrapper")) {
                     popup.OpenImMsgBox("Title", "Message", { {"OK", buttonOk}, {"Cancel", buttonCancel}}); // Open wrapped popup
                 }
-                static int response;
-                if (popup.GetResponse() > DrawnNoResponse) { // if there is a response
+                if (popup.WasResponse()) { // if there was a response
                     response = popup.GetResponse(); // do something
                 }
-                ImGui::Text("Popup current state: "+std::to_string(popup.GetResponse()));
                 ImGui::Text("Popup response: "+std::to_string(response));
                 ImGui::EndChild();
             }
