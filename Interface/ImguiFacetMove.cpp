@@ -157,7 +157,7 @@ bool ImFacetMove::BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1)
     {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one vertex", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one vertex", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return false;
     }
     else
@@ -172,7 +172,7 @@ bool ImFacetMove::BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry
 bool ImFacetMove::BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return false;
     }
     baseLocation = interfGeom->GetFacet(selFacets[0])->sh.center;
@@ -185,28 +185,28 @@ void ImFacetMove::ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeo
     double X, Y, Z, D{0};
     //handle input errors
     if (interfGeom->GetNbSelectedFacets() == 0) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No facets selected", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "No facets selected", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     if (!Util::getNumber(&X,axis_X)){
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid X offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid X offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     if (!Util::getNumber(&Y, axis_Y)) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid Y offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid Y offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     if (!Util::getNumber(&Z, axis_Z)) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid Z offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid Z offset/direction", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     bool towardsDirectionMode = mode == direction_and_distance;
     if (towardsDirectionMode && !Util::getNumber(&D, distance)) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid offset distance", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid offset distance", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     if (towardsDirectionMode && X == 0.0 && Y == 0.0 && Z == 0.0) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Direction can't be null-vector", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Direction can't be null-vector", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     //execute
@@ -227,7 +227,7 @@ void ImFacetMove::FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* int
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     Vector3d facetNormal = interfGeom->GetFacet(selFacets[0])->sh.N;
@@ -243,7 +243,7 @@ void ImFacetMove::VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry*
 {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one vertex", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one vertex", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     Vector3d translation = *(interfGeom->GetVertex(selVertices[0])) - baseLocation;
@@ -260,7 +260,7 @@ void ImFacetMove::FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* int
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         return;
     }
     Vector3d translation = interfGeom->GetFacet(selFacets[0])->sh.center - baseLocation;
