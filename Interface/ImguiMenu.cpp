@@ -119,7 +119,6 @@ static bool showPopup = false;
 static std::string modalMsg = "";
 static std::string modalTitle = "";
 static size_t selectionToBeRemovedId = -1;
-static bool askSave = false;
 
 static std::string saveResponse = "None";
 
@@ -133,94 +132,12 @@ void Popup(std::string msg) {
     Popup(msg, "Popup");
 }
 
-bool AskToSave() {
-    if (!mApp->changedSinceSave)
-        return true;
-
-    if (!showPopup)
+void DoLoadFile() {
+    if (mApp->worker.IsRunning())
+        mApp->worker.Stop_Public();
     {
-        askSave = true;
-    }
-    if (saveResponse == "Yes") {
-        saveResponse = "None";
-        return true;
-    }
-    if (saveResponse == "Cancel") {
-        saveResponse = "None";
-        return false;
-    }
-    if (saveResponse == "Discard") {
-        saveResponse = "None";
-        return true;
-    }
-    return false;
-}
-
-void ShowFileNotSavedPopup() {
-    // Always center this window when appearing
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("File not saved", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("Save current geometry first?");
-
-        if (ImGui::Button("  Yes  ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            ImGui::CloseCurrentPopup();
-            askSave = false;
-            LockWrapper myLock(mApp->imguiRenderLock);
-            std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
-            if (!fn.empty()) {
-                GLProgress_Abstract prg = GLProgress_Abstract("Saving"); // placeholder
-                try {
-                    mApp->worker.SaveGeometry(fn, prg);
-                    mApp->changedSinceSave = false;
-                    mApp->UpdateTitle();
-                    mApp->AddRecent(fn);
-                }
-                catch (const std::exception& e) {
-                    std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
-                    Popup(errMsg, "Error");
-                    mApp->RemoveRecent(fn.c_str());
-                }
-                saveResponse = "Yes";
-            }
-            else saveResponse = "No";
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("  No  ")) {
-            ImGui::CloseCurrentPopup();
-            askSave = false;
-            saveResponse = "Discard";
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("  Cancel  ") || io.KeysDown[ImGui::keyEsc]) {
-            ImGui::CloseCurrentPopup();
-            askSave = false;
-            saveResponse = "Cancel";
-        }
-        ImGui::EndPopup();
-    }
-}
-
-void NewEmptyGeometryMenuPress() {
-    if (AskToSave()) {
-        if (mApp->worker.IsRunning())
-            mApp->worker.Stop_Public();
-        {
-            LockWrapper myLock(mApp->imguiRenderLock);
-            mApp->EmptyGeometry();
-        }
-    }
-}
-
-void LoadFileMenuPress() {
-    if (AskToSave()) {
-        if (mApp->worker.IsRunning())
-            mApp->worker.Stop_Public();
-        {
-            LockWrapper myLock(mApp->imguiRenderLock);
-            mApp->LoadFile("");
-        }
+        LockWrapper myLock(mApp->imguiRenderLock);
+        mApp->LoadFile("");
     }
 }
 
@@ -332,24 +249,74 @@ void ImportDesorptionFromSYNFileMenuPress() {
 }
 #endif // MOLFLOW
 
+void NewGeometry() {
+    if (mApp->worker.IsRunning())
+        mApp->worker.Stop_Public();
+    LockWrapper myLock(mApp->imguiRenderLock);
+    mApp->EmptyGeometry();
+}
+
+void DoSave() {
+    LockWrapper myLock(mApp->imguiRenderLock);
+    std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+    if (!fn.empty()) {
+        GLProgress_Abstract prg = GLProgress_Abstract("Saving"); // placeholder
+        try {
+            mApp->worker.SaveGeometry(fn, prg);
+            mApp->changedSinceSave = false;
+            mApp->UpdateTitle();
+            mApp->AddRecent(fn);
+        }
+        catch (const std::exception& e) {
+            std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
+            mApp->imWnd->popup.OpenImMsgBox("Error", errMsg, { std::make_shared<MyButtonInt>("OK", buttonOk) });
+            mApp->RemoveRecent(fn.c_str());
+        }
+    }
+}
+
+void DoLoadSelected(std::string file) {
+    LockWrapper myLock(mApp->imguiRenderLock);
+    mApp->LoadFile(file);
+}
+
 static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
-        NewEmptyGeometryMenuPress();
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); NewGeometry(); };
+            static auto N = []() -> void { NewGeometry(); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            NewGeometry();
+        }
     }
+
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
-        LoadFileMenuPress();
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); DoLoadFile(); };
+            static auto N = []() -> void { DoLoadFile(); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            DoLoadFile();
+        }
     }
     if (mApp->recentsList.empty()) {
         ImGui::BeginDisabled();
         ImGui::MenuItem("Load recent");
         ImGui::EndDisabled();
     }
-    if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
+    else if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
         for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
             if (ImGui::MenuItem(mApp->recentsList[i])) {
-                if (AskToSave()) {
-                    LockWrapper myLock(mApp->imguiRenderLock);
-                    mApp->LoadFile(mApp->recentsList[i]);
+                if (mApp->changedSinceSave) {
+                    static auto Y = [](std::string selection) -> void { DoSave(); DoLoadSelected(selection); };
+                    static auto N = [](std::string selection) -> void { DoLoadSelected(selection); };
+                    mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFuncStr>("Yes", Y, mApp->recentsList[i]) ,std::make_shared<MyButtonFuncStr>("No", N,mApp->recentsList[i]), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+                }
+                else {
+                    DoLoadSelected(mApp->recentsList[i]);
                 }
             }
         }
@@ -1641,46 +1608,112 @@ void ClearAllViewsPopup() {
 
 static void ShowMenuTest(std::string& openmodalName) {
     if (ImGui::MenuItem("Pipe (L/R=0.0001)")) {
-        if (AskToSave())
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(0.0001, 0); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(0.0001, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(0.0001, 0);
+        }
     }
     if (ImGui::MenuItem("Pipe (L/R=1)")) {
-        if (AskToSave()) 
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1.0, 0); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1.0, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(1.0, 0);
+        }
     }
     if (ImGui::MenuItem("Pipe (L/R=10)")) {
-        if (AskToSave()) 
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10.0, 0); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10.0, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else
+        {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(10.0, 0);
+        }
     }
     if (ImGui::MenuItem("Pipe (L/R=100)")) {
-        if (AskToSave()) 
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(100.0, 0); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(100.0, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else
+        {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(100.0, 0);
+        }
     }
     if (ImGui::MenuItem("Pipe (L/R=1000)")) {
-        if (AskToSave()) 
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1000.0, 0); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1000.0, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(1000.0, 0);
+        }
     }
     if (ImGui::MenuItem("Pipe (L/R=10000)")) {
-        if (AskToSave()) 
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10000.0, 0); };
+            static auto N = []() -> void {  LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10000.0, 0); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            LockWrapper myLock(mApp->imguiRenderLock);
             mApp->BuildPipe(10000.0, 0);
+        }
     }
     //Quick test pipe
     ImGui::Separator();
     if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {
-        LockWrapper myLock(mApp->imguiRenderLock);
-        if (AskToSave()) 
-            mApp->BuildPipe(5.0, 5);
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(5, 5); };
+            static auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(5, 5); };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else {
+            LockWrapper myLock(mApp->imguiRenderLock);
+            mApp->BuildPipe(5,5);
+        }
     }
 
     ImGui::Separator();
     if (ImGui::MenuItem("Triangulate Geometry")) {
-        LockWrapper myLock(mApp->imguiRenderLock);
-        if (AskToSave()) {
+        if (mApp->changedSinceSave) {
+            static auto Y = []() -> void { DoSave();
+                LockWrapper myLock(mApp->imguiRenderLock);
+                auto prg = GLProgress_GUI("Triangulating", "Triangulating");
+                prg.SetVisible(true);
+                GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
+                mApp->worker.MarkToReload();
+            };
+            static auto N = []() -> void {
+                LockWrapper myLock(mApp->imguiRenderLock);
+                auto prg = GLProgress_GUI("Triangulating", "Triangulating");
+                prg.SetVisible(true);
+                GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
+                mApp->worker.MarkToReload();
+            };
+            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+        }
+        else
+            LockWrapper myLock(mApp->imguiRenderLock);
             auto prg = GLProgress_GUI("Triangulating", "Triangulating");
             prg.SetVisible(true);
             GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
             mApp->worker.MarkToReload();
-        }
     }
     ImGui::Separator();
     if (ImGui::MenuItem("ImGui Menu")) {
@@ -1871,11 +1904,6 @@ void ShowAppMainMenuBar() {
         ImMenu::ClearAllViewsPopup();
         ImMenu::ErrorPopup();
         ImMenu::ShowPopup();
-    }
-    if (ImMenu::askSave)
-    {
-        ImGui::OpenPopup("File not saved");
-        ImMenu::ShowFileNotSavedPopup();
     }
 
     ImGui::PopStyleVar(2);

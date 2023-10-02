@@ -311,16 +311,16 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Facet Move", &show_facet_move);
 
             static int response;
-            if (ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings)) {
-                if (ImGui::Button("Test Popup Wrapper")) {
-                    popup.OpenImMsgBox("Title", "Message", { {"OK", buttonOk}, {"Cancel", buttonCancel}}); // Open wrapped popup
-                }
-                if (popup.WasResponse()) { // if there was a response
-                    response = popup.GetResponse(); // do something
-                }
-                ImGui::Text("Popup response: "+std::to_string(response));
-                ImGui::EndChild();
+            ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
+            if (ImGui::Button("Test Popup Wrapper")) {
+                popup.OpenImMsgBox("Title", "Message", { std::make_shared<MyButtonInt>("OK", buttonOk), std::make_shared<MyButtonInt>("Cancel", buttonCancel) }); // Open wrapped popup
             }
+            if (popup.WasResponse()) { // if there was a response
+                response = popup.GetResponse(); // do something
+            }
+            ImGui::Text("Popup response: "+std::to_string(response));
+            ImGui::EndChild();
+            
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
