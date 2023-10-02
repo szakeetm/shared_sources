@@ -313,7 +313,7 @@ void ImguiWindow::renderSingle() {
             static int response;
             ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
             if (ImGui::Button("Test Popup Wrapper")) {
-                popup.OpenImMsgBox("Title", "Message", { std::make_shared<MyButtonInt>("OK", buttonOk), std::make_shared<MyButtonInt>("Cancel", buttonCancel) }); // Open wrapped popup
+                popup.OpenImMsgBox("Title", "Message", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) }); // Open wrapped popup
             }
             if (popup.WasResponse()) { // if there was a response
                 response = popup.GetResponse(); // do something

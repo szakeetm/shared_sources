@@ -104,3 +104,15 @@ MyButtonFuncStr::MyButtonFuncStr(std::string name, void (*func)(std::string), st
 void MyButtonFuncStr::DoCall() {
 	return this->function(argument);
 }
+
+MyButtonFuncInt::MyButtonFuncInt(std::string name, void (*func)(int), int arg, int key) {
+	this->name = name;
+	this->retVal = buttonFunction;
+	this->function = func;
+	this->argument = arg;
+	this->key = key;
+}
+
+void MyButtonFuncInt::DoCall() {
+	return this->function(argument);
+}

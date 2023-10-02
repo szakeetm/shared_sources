@@ -40,6 +40,15 @@ protected:
 	std::string argument;
 };
 
+class MyButtonFuncInt : public MyButton {
+public:
+	MyButtonFuncInt(std::string name, void (*func)(int), int arg, int key = -1);
+	void DoCall() override;
+protected:
+	void (*function)(int);
+	int argument;
+};
+
 class MyButtonInt : public MyButton {
 public:
 	MyButtonInt(std::string name, int retVal, int key = -1);
