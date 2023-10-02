@@ -1,6 +1,16 @@
 #include "ImguiFacetMove.h"
 
-void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom)
+//internal function declarations
+namespace ImFacetMove {
+    void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
+    void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+    void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+    void FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+    bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+    bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
+}
+
+void ImFacetMove::ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom)
 {
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
@@ -141,23 +151,9 @@ void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGe
         ExecuteFacetMove(mApp, interfGeom, true);
     }
     ImGui::End();
-
-    
-    if (popup) {
-        ImGui::OpenPopup("Facet Move##1");
-        popup = false;
-    }
-
-    if (ImGui::BeginPopupModal("Facet Move##1")) {
-        ImGui::Text(message);
-        if (ImGui::Button("OK")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
 }
 
-bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
+bool ImFacetMove::BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1)
     {
@@ -173,7 +169,7 @@ bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
     }
 }
 
-bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
+bool ImFacetMove::BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
         mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly one facet", { std::make_shared<MyButtonInt>("OK", buttonOk) });
@@ -185,7 +181,7 @@ bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) 
     return true;
 }
 
-void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy) {
+void ImFacetMove::ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy) {
     double X, Y, Z, D{0};
     //handle input errors
     if (interfGeom->GetNbSelectedFacets() == 0) {
@@ -227,7 +223,7 @@ void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy)
     }
 }
 
-void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
+void ImFacetMove::FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
@@ -243,7 +239,7 @@ void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
     mode = direction_and_distance;
 }
 
-void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
+void ImFacetMove::VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
 {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1) {
@@ -260,7 +256,7 @@ void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
     dirMessage = fmt::format("Vertex {}", selVertices[0] + 1);
 }
 
-void FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
+void ImFacetMove::FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom)
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {

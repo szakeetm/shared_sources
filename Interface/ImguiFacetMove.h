@@ -17,31 +17,22 @@ class Worker;
 class Interface;
 
 //Facet Move window implemented in ImGui
+namespace ImFacetMove {
+	// Internal use variables
+	static std::string axis_X{"0"}, axis_Y{ "0" }, axis_Z{ "0" }, distance;
+	static bool base_selected;
+	static std::string title;
+	static int mode;
+	static Vector3d baseLocation;
+	static std::string prefix;
+	static std::string dirMessage;
+	static std::string selection;
+	//enumeratior for movement modes
+	enum movementMode { absolute_offset, direction_and_distance };
 
-// Internal use variables
-static std::string axis_X{"0"}, axis_Y{ "0" }, axis_Z{ "0" }, distance;
-static bool base_selected;
-static bool popup;
-static std::string title;
-static int mode;
-static Vector3d baseLocation;
-static std::string prefix;
-static std::string dirMessage;
-static std::string message;
-static std::string selection;
-//enumeratior for movement modes
-enum movementMode { absolute_offset, direction_and_distance };
+	void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
 
-//internal function declarations
-void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
-void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-void FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-
-void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
-
-static struct {
-	float posX, posY, sizeX, sizeY;
-} window;
+	static struct {
+		float posX, posY, sizeX, sizeY;
+	} window;
+}

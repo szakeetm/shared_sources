@@ -289,7 +289,7 @@ void ImguiWindow::renderSingle() {
 
         if (show_facet_move)
         {
-            ShowAppFacetMove(&show_facet_move, mApp, mApp->worker.GetGeometry());
+            ImFacetMove::ShowAppFacetMove(&show_facet_move, mApp, mApp->worker.GetGeometry());
         }
 
         // 2. Show Molflow x ImGui Hub window

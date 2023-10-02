@@ -12,19 +12,20 @@ enum PopupCode: int { // most common responses and buttons
 	buttonOk		=  2,
 	buttonYes		=  3,
 	buttonNo		=  4,
-	buttonFunction  =  100
+	buttonFunction  =  100 // use this to indicate the button is not meant to return a value but execute a function call instead
 };
 
 class MyButton {
 public:
 	std::string name;
 	int retVal; // PopupCode enum contains reserved values
+	int key;
 	virtual void DoCall() = 0;
 };
 
 class MyButtonFunc : public MyButton {
 public:
-	MyButtonFunc(std::string name, void (*func)());
+	MyButtonFunc(std::string name, void (*func)(), int key = -1);
 	void DoCall() override;
 protected:
 	void (*function)();
@@ -32,7 +33,7 @@ protected:
 
 class MyButtonFuncStr : public MyButton {
 public:
-	MyButtonFuncStr(std::string name, void (*func)(std::string), std::string arg);
+	MyButtonFuncStr(std::string name, void (*func)(std::string), std::string arg, int key = -1);
 	void DoCall() override;
 protected:
 	void (*function)(std::string);
@@ -41,7 +42,7 @@ protected:
 
 class MyButtonInt : public MyButton {
 public:
-	MyButtonInt(std::string name, int retVal);
+	MyButtonInt(std::string name, int retVal, int key = -1);
 	void DoCall() {};
 };
 

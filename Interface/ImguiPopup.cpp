@@ -46,20 +46,20 @@ void MyPopup::Draw()
 		returnValue = notDrawn;
 		return;
 	}
+	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
 	if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-		//this->returnValue = DrawnNoResponse; // make sure MessageBox returns DrawnNoRsponseCode by deafult
 		ImGui::TextWrapped(message);
 		for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
-			if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str())) { // draw them
-				if (buttons.at(i)->retVal == buttonFunction) {
-					buttons.at(i)->DoCall(); // calls superclass, should call child class
+			if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str()) || io.KeysDown[buttons.at(i)->key]) { // draw them
+				if (buttons.at(i)->retVal == buttonFunction) { // if the button is the  function type
+					buttons.at(i)->DoCall(); // call the function
 				}
 				
 				returnValue = (buttons.at(i))->retVal; // if pressed change the return value
 			} ImGui::SameLine();
 		}
-		if (returnValue != drawnNoResponse) { // if a button was pressed
+		if (returnValue != drawnNoResponse) { // if any button was pressed
 			ImGui::CloseCurrentPopup(); // close popup in ImGui
 			drawn = false; // and inside the object
 		}
@@ -71,31 +71,36 @@ void MyPopup::Draw()
 	}
 }
 
-MyButtonInt::MyButtonInt(std::string name, int retVal)
+// MyButton methods
+
+MyButtonInt::MyButtonInt(std::string name, int retVal, int key)
 {
 	this->name = name;
 	this->retVal = retVal;
+	this->key = key;
 }
 
-MyButtonFunc::MyButtonFunc(std::string name, void (*func)())
+MyButtonFunc::MyButtonFunc(std::string name, void (*func)(), int key)
 {
 	this->name = name;
 	this->retVal = buttonFunction;
 	this->function = func;
+	this->key = key;
 }
 
-MyButtonFuncStr::MyButtonFuncStr(std::string name, void (*func)(std::string), std::string arg)
+void MyButtonFunc::DoCall() {
+	return this->function();
+}
+
+MyButtonFuncStr::MyButtonFuncStr(std::string name, void (*func)(std::string), std::string arg, int key)
 {
 	this->name = name;
 	this->retVal = buttonFunction;
 	this->function = func;
 	this->argument = arg;
+	this->key = key;
 }
 
 void MyButtonFuncStr::DoCall() {
 	return this->function(argument);
-}
-
-void MyButtonFunc::DoCall() {
-	return this->function();
 }
