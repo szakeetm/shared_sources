@@ -59,6 +59,7 @@ public:
 
     void ShowWindowLicense();
     MyPopup popup;
+    MyInput input;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

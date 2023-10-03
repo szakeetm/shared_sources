@@ -59,7 +59,7 @@ class MyPopup {
 public:
 	MyPopup();
 	void Close();
-	void OpenImMsgBox(std::string title, std::string message, std::vector<std::shared_ptr< MyButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+	void Open(std::string title, std::string message, std::vector<std::shared_ptr< MyButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
 	void Draw(); // call this every ImGui Render
 	bool WasResponse();
 	int GetResponse(); // returns the recorded value from a button press
@@ -67,7 +67,16 @@ protected:
 	int returnValue;
 	std::string message;
 	std::string title;
-	bool wasClicked;
 	bool drawn;
 	std::vector<std::shared_ptr< MyButton >> buttons;
+};
+
+class MyInput : public MyPopup {
+public:
+	MyInput();
+	void Open(std::string title, std::string message, void (*func)(std::string), std::string deafultArg="");
+	void Draw();
+protected:
+	void (*function)(std::string);
+	std::string value;
 };

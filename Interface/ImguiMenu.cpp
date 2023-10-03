@@ -115,9 +115,6 @@ enum Menu_Event
     IMENU_EDIT_GLOBALSETTINGS = 1 << 12
 };
 
-static bool showPopup = false;
-static std::string saveResponse = "None";
-
 void DoLoadFile() {
     if (mApp->worker.IsRunning())
         mApp->worker.Stop_Public();
@@ -138,7 +135,7 @@ void InsertGeometryMenuPress(bool newStr) {
         }
     }
     else 
-        mApp->imWnd->popup.OpenImMsgBox("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
 }
 
 void SaveMenuPress() {
@@ -148,7 +145,7 @@ void SaveMenuPress() {
         mApp->SaveFile();
     }
     else
-        mApp->imWnd->popup.OpenImMsgBox("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
 }
 
 void SaveAsMenuPress() {
@@ -158,7 +155,7 @@ void SaveAsMenuPress() {
         mApp->SaveFileAs();
     }
     else 
-        mApp->imWnd->popup.OpenImMsgBox("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
 }
 
 void ExportSelectedFacetsMenuPress() {
@@ -214,7 +211,7 @@ void ImportDesorptionFromSYNFileMenuPress() {
         mApp->importDesorption->SetVisible(true);
     }
     else
-        mApp->imWnd->popup.OpenImMsgBox("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
 
 }
 #endif // MOLFLOW
@@ -239,7 +236,7 @@ void DoSave() {
         }
         catch (const std::exception& e) {
             std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
-            mApp->imWnd->popup.OpenImMsgBox("Error", errMsg, { std::make_shared<MyButtonInt>("OK", buttonOk) });
+            mApp->imWnd->popup.Open("Error", errMsg, { std::make_shared<MyButtonInt>("OK", buttonOk) });
             mApp->RemoveRecent(fn.c_str());
         }
     }
@@ -255,7 +252,7 @@ static void ShowMenuFile() {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); NewGeometry(); };
             auto N = []() -> void { NewGeometry(); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
         }
         else {
             NewGeometry();
@@ -266,7 +263,7 @@ static void ShowMenuFile() {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); DoLoadFile(); };
             auto N = []() -> void { DoLoadFile(); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
         }
         else {
             DoLoadFile();
@@ -283,7 +280,7 @@ static void ShowMenuFile() {
                 if (mApp->changedSinceSave) {
                     auto Y = [](std::string selection) -> void { DoSave(); DoLoadSelected(selection); };
                     auto N = [](std::string selection) -> void { DoLoadSelected(selection); };
-                    mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFuncStr>("Yes", Y, mApp->recentsList[i]) ,std::make_shared<MyButtonFuncStr>("No", N,mApp->recentsList[i]), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
+                    mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFuncStr>("Yes", Y, mApp->recentsList[i]) ,std::make_shared<MyButtonFuncStr>("No", N,mApp->recentsList[i]), std::make_shared<MyButtonInt>("Cancel", buttonCancel) });
                 }
                 else {
                     DoLoadSelected(mApp->recentsList[i]);
@@ -344,106 +341,7 @@ static void ShowMenuFile() {
     }
 }
 
-static std::string inputValue = "1.0";
-static void ShowSelectionModals() {
-    ImGuiIO& io = ImGui::GetIO();
-    Worker &worker = mApp->worker;
-    InterfaceGeometry *interfGeom = worker.GetGeometry();
-
-    if (ImGui::BeginPopupModal("Select large facets without hits", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::CaptureKeyboardFromApp(true);
-        double largeAreaThreshold;
-
-        ImGui::InputText("Min.area (cm\262)", &inputValue);
-
-        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            if (!Util::getNumber(&largeAreaThreshold, inputValue)) {
-                ImGui::OpenPopup("Incorrect Value");
-            }
-            else {
-                interfGeom->UnselectAll();
-                for (int i = 0; i < interfGeom->GetNbFacet(); i++)
-                    if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                        interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
-                        interfGeom->SelectFacet(i);
-                interfGeom->UpdateSelection();
-                mApp->UpdateFacetParams(true);
-                ImGui::CloseCurrentPopup();
-                showPopup = false;
-            }
-        }
-        if (ImGui::BeginPopupModal("Incorrect Value", NULL,
-            ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("Incorrect value");
-            if (ImGui::Button("OK") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
-        }
-        ImGui::EndPopup();
-    }
-
-    else if (ImGui::BeginPopupModal("Select non planar facets", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::CaptureKeyboardFromApp(true);
-        double planarityThreshold = 1e-5;
-
-        ImGui::InputText("Planarity larger than:", &inputValue);
-        ImGui::Separator();
-
-        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            if (!Util::getNumber(&planarityThreshold, inputValue)) {
-                ImGui::OpenPopup("Incorrect Value");
-            } else {
-                interfGeom->UnselectAll();
-                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
-                for (const auto& i : nonPlanarFacetids)
-                    interfGeom->SelectFacet(i);
-                interfGeom->UpdateSelection();
-                mApp->UpdateFacetParams(true);
-                ImGui::CloseCurrentPopup();
-                showPopup = false;
-            }
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
-        }
-        ImGui::EndPopup();
-    }
-
-    else if (ImGui::BeginPopupModal("Enter selection name", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::CaptureKeyboardFromApp(true);
-        static std::string selectionName = "Selection #" + std::to_string(mApp->selections.size()+1);
-        ImGui::InputText("Selection name", &selectionName, 128);
-        ImGui::Separator();
-
-        if (ImGui::Button("OK", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            mApp->AddSelection(selectionName);
-            ImGui::CloseCurrentPopup();
-            selectionName = "Selection #" + std::to_string(mApp->selections.size() + 1);
-            showPopup = false;
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)) || io.KeysDown[ImGui::keyEsc]) {
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
-        }
-        ImGui::EndPopup();
-    }
-}
-
-static void ShowMenuSelection(std::string& openModalName) {
+static void ShowMenuSelection() {
     static SmartSelection *smartSelection = nullptr;
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
@@ -542,8 +440,22 @@ static void ShowMenuSelection(std::string& openModalName) {
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select large with no hits...")) {
-        openModalName="Select large facets without hits";
-        showPopup = true;
+        auto F = [](std::string arg) {
+            double largeAreaThreshold;
+            if (!Util::getNumber(&largeAreaThreshold, arg)) {
+                mApp->imWnd->popup.Open("Error", "Incorrect value", {std::make_shared<MyButtonInt>("Ok",buttonOk,ImGui::keyEnter)});
+            } else {
+                InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+                interfGeom->UnselectAll();
+                for (int i = 0; i < interfGeom->GetNbFacet(); i++)
+                    if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
+                        interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                        interfGeom->SelectFacet(i);
+                interfGeom->UpdateSelection();
+                mApp->UpdateFacetParams(true);
+            }
+        };
+        mApp->imWnd->input.Open("Select large facets without hits", "Min.area (cm\262)", F);
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);
@@ -569,8 +481,22 @@ static void ShowMenuSelection(std::string& openModalName) {
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select non planar facets")) {
-        openModalName="Select non planar facets";
-        showPopup = true;
+        auto F = [](std::string arg) {
+            double planarityThreshold = 1e-5;
+            if (!Util::getNumber(&planarityThreshold, arg)) {
+                mApp->imWnd->popup.Open("Error", "Incorrect value", { std::make_shared<MyButtonInt>("Ok",buttonOk,ImGui::keyEnter) });
+            }
+            else {
+                InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+                interfGeom->UnselectAll();
+                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+                for (const auto& i : nonPlanarFacetids)
+                    interfGeom->SelectFacet(i);
+                interfGeom->UpdateSelection();
+                mApp->UpdateFacetParams(true);
+            }
+        };
+        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F);
     }
     if (ImGui::MenuItem("Select non simple facets")) {
         interfGeom->UnselectAll();
@@ -591,8 +517,10 @@ static void ShowMenuSelection(std::string& openModalName) {
     ImGui::Separator();
     if (ImGui::BeginMenu("Memorize selection to")) {
         if (ImGui::MenuItem("Add new...", "CTRL+W")) {
-            openModalName="Enter selection name";
-            showPopup = true;
+            auto F = [](std::string arg) {
+                mApp->AddSelection(arg);
+            };
+            mApp->imWnd->input.Open("Enter selection name", "Selection name", F, "Selection #" + std::to_string(mApp->selections.size() + 1));
         }
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
@@ -630,7 +558,7 @@ static void ShowMenuSelection(std::string& openModalName) {
     if (ImGui::BeginMenu("Clear memorized")) {
         if (ImGui::MenuItem("Clear All")) {
             auto Y = []() -> void { mApp->ClearAllSelections(); };
-            mApp->imWnd->popup.OpenImMsgBox("Clear All?", "Clear all memorized selections?.",
+            mApp->imWnd->popup.Open("Clear All?", "Clear all memorized selections?.",
                                         { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter),
                                           std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
@@ -638,7 +566,7 @@ static void ShowMenuSelection(std::string& openModalName) {
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 auto Y = [](int i) -> void { mApp->selections.erase(mApp->selections.begin() + (i)); };
-                mApp->imWnd->popup.OpenImMsgBox("Clear memorized selection?", ("Are you sure you wish to forget selection " + mApp->selections[i].name),
+                mApp->imWnd->popup.Open("Clear memorized selection?", ("Are you sure you wish to forget selection " + mApp->selections[i].name),
                     { std::make_shared<MyButtonFuncInt>("Yes", Y, i, ImGui::keyEnter),
                       std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
             }
@@ -676,17 +604,12 @@ static void ShowMenuSelection(std::string& openModalName) {
         mApp->UpdateFacetParams(true);
     }
 #endif
-
-    if (ImGui::MenuItem("Shortcut test", "CTRL+Q")) {
-        openModalName="testmod";
-        showPopup = true;
-    }
 }
 
 void FormulaEditorMenuPress() {
     
     if (!interfGeom->IsLoaded()) {
-        mApp->imWnd->popup.OpenImMsgBox("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
+        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", { std::make_shared<MyButtonInt>("OK", buttonOk) });
     }
     else if (!mApp->formulaEditor || !mApp->formulaEditor->IsVisible()) {
         SAFE_DELETE(mApp->formulaEditor);
@@ -850,7 +773,7 @@ static void ShowMenuTools() {
 #endif
 }
 
-void FacetDeleteMenuPress(std::string& openmodalName) {
+void FacetDeleteMenuPress() {
     
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (selectedFacets.empty()) return; //Nothing selected
@@ -871,7 +794,7 @@ void FacetDeleteMenuPress(std::string& openmodalName) {
             mApp->worker.MarkToReload();
         }
      };
-    mApp->imWnd->popup.OpenImMsgBox("Delete selected facets?", "Delete all selected facets?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+    mApp->imWnd->popup.Open("Delete selected facets?", "Delete all selected facets?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
 
 }
 void SwapNormalMenuPress() {
@@ -907,7 +830,7 @@ void FacetScaleMenuPress() {
 
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("No Geometry", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("No Geometry", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
     }
 }
 void FacetMirrorProjectMenuPress() {
@@ -951,7 +874,7 @@ void CreateShapeMenuPress() {
 void TransitionBetween2MenuPress() {
     
     if (interfGeom->GetNbSelectedFacets() != 2) {
-        mApp->imWnd->popup.OpenImMsgBox("Select Exactly 2 facets", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Select Exactly 2 facets", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
         return;
     }
     LockWrapper myLock(mApp->imguiRenderLock);
@@ -976,7 +899,7 @@ void CollapseMenuPress() {
     if (interfGeom->IsLoaded()) {
         mApp->DisplayCollapseDialog();
     }
-    else mApp->imWnd->popup.OpenImMsgBox("No Geometry", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
+    else mApp->imWnd->popup.Open("No Geometry", "", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
 }
 
 void ExplodeMenuPress() {
@@ -989,15 +912,15 @@ void ExplodeMenuPress() {
             }
             catch (const std::exception& e) {
                 mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.OpenImMsgBox("Error", "Error Exploding", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
+                mApp->imWnd->popup.Open("Error", "Error Exploding", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
             }
             if (err == -1) {
                 mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.OpenImMsgBox("Error", "Empty Selection", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
+                mApp->imWnd->popup.Open("Error", "Empty Selection", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
             }
             else if (err == -2) {
                 mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.OpenImMsgBox("Error", "All selected facets must have a mesh with boudary correction enabled", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
+                mApp->imWnd->popup.Open("Error", "All selected facets must have a mesh with boudary correction enabled", { std::make_shared<MyButtonInt>("Ok",buttonOk, ImGui::keyEnter) });
             }
             else if (err == 0) {
                 mApp->UpdateModelParams();
@@ -1007,7 +930,7 @@ void ExplodeMenuPress() {
             }
         }
     };
-    mApp->imWnd->popup.OpenImMsgBox("Explode?","Are you sure you want to explode selected facets?",{std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc)});
+    mApp->imWnd->popup.Open("Explode?","Are you sure you want to explode selected facets?",{std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc)});
 }
 
 void RevertMenuPress() {
@@ -1038,7 +961,7 @@ void TriangulateMenuPress() {
         mApp->UpdateFacetlistSelected();
         mApp->UpdateViewers();
     };
-    mApp->imWnd->popup.OpenImMsgBox("Triangulate entire geometry?", "This operation cannot be undone!", { std::make_shared<MyButtonFunc>("Yes",Y,ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel",buttonCancel,ImGui::keyEsc) });
+    mApp->imWnd->popup.Open("Triangulate entire geometry?", "This operation cannot be undone!", { std::make_shared<MyButtonFunc>("Yes",Y,ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel",buttonCancel,ImGui::keyEsc) });
 }
 
 #ifdef MOLFLOW // TODO switch to polimorphism
@@ -1048,9 +971,9 @@ void ConvertToOutgassingMapMenuPress() {
 }
 #endif
 
-static void ShowMenuFacet(std::string& openmodalName) {
+static void ShowMenuFacet() {
     if (ImGui::MenuItem("Delete", "CTRL+DEL")) {
-        FacetDeleteMenuPress(openmodalName);
+        FacetDeleteMenuPress();
     }
     if (ImGui::MenuItem("Swap normal", "CTRL+N")) {
         SwapNormalMenuPress();
@@ -1143,16 +1066,16 @@ static void ShowMenuFacet(std::string& openmodalName) {
 #endif
 }
 
-void ConvexHullMenuPress(std::string& openmodalName) {
+void ConvexHullMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (interfGeom->IsLoaded()) {
         if (interfGeom->GetNbSelectedVertex() != 3) {
-            mApp->imWnd->popup.OpenImMsgBox("Error", "Select exactly 3 vertices", {std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter)});
+            mApp->imWnd->popup.Open("Error", "Select exactly 3 vertices", {std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter)});
             return;
         }
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 
     if (mApp->AskToReset()) {
@@ -1160,12 +1083,12 @@ void ConvexHullMenuPress(std::string& openmodalName) {
             interfGeom->CreatePolyFromVertices_Convex();
         }
         catch (const std::exception& e) {
-            mApp->imWnd->popup.OpenImMsgBox("Error", "Error creating polygon", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+            mApp->imWnd->popup.Open("Error", "Error creating polygon", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         }
         mApp->worker.MarkToReload();
     }
 }
-void SelectionOrderMenuPress(std::string& openmodalName) {
+void SelectionOrderMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {
@@ -1173,7 +1096,7 @@ void SelectionOrderMenuPress(std::string& openmodalName) {
             interfGeom->CreatePolyFromVertices_Order();
         }
         catch (const std::exception& e) {
-            mApp->imWnd->popup.OpenImMsgBox("Error", "Error creating polygon", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+            mApp->imWnd->popup.Open("Error", "Error creating polygon", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         }
         mApp->worker.MarkToReload();
     }
@@ -1187,7 +1110,7 @@ void ClearIsolatedMenuPress() {
     if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
     interfGeom->BuildGLList();
 }
-void RemoveSelectedMenuPress(std::string& openmodalName) {
+void RemoveSelectedMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         auto Y = []() {
@@ -1209,11 +1132,11 @@ void RemoveSelectedMenuPress(std::string& openmodalName) {
                 mApp->worker.MarkToReload();
             }
         };
-        mApp->imWnd->popup.OpenImMsgBox("Remove verices", "Remove Selected vertices?\nThis will also removed the facets containing them!",
+        mApp->imWnd->popup.Open("Remove verices", "Remove Selected vertices?\nThis will also removed the facets containing them!",
             { std::make_shared<MyButtonFunc>("OK", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc)});
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 }
 void VertexCoordinatesMenuPress() {
@@ -1221,24 +1144,24 @@ void VertexCoordinatesMenuPress() {
     mApp->vertexCoordinates->Display(&mApp->worker);
     mApp->vertexCoordinates->SetVisible(true);
 }
-void VertexMoveMenuPress(std::string& openmodalName) {
+void VertexMoveMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->moveVertex) mApp->moveVertex = new MoveVertex(interfGeom, &mApp->worker);
         mApp->moveVertex->SetVisible(true);
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 }
-void VertexScaleMenuPress(std::string& openmodalName) {
+void VertexScaleMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->scaleVertex) mApp->scaleVertex = new ScaleVertex(interfGeom, &mApp->worker);
         mApp->scaleVertex->SetVisible(true);
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 }
 void VertexMirrorProjectMenuPress() {
@@ -1251,70 +1174,49 @@ void VertexRotateMenuPress() {
     if (!mApp->rotateVertex) mApp->rotateVertex = new RotateVertex(interfGeom, &mApp->worker);
     mApp->rotateVertex->SetVisible(true);
 }
-void VertexAddNewMenuPress(std::string& openmodalName) {
+void VertexAddNewMenuPress() {
     
     if (interfGeom->IsLoaded()) {
         if (!mApp->addVertex) mApp->addVertex = new AddVertex(interfGeom, &mApp->worker);
         mApp->addVertex->SetVisible(true);
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 }
 
-void VertexCoplanarMenuPress(std::string& openmodalName) {
+void VertexCoplanarMenuPress() {
     char* input;
     if (interfGeom->IsLoaded()) {
         if (interfGeom->GetNbSelectedVertex() != 3) {
-            mApp->imWnd->popup.OpenImMsgBox("Error", "Can't define plane, Select exactly 3 vertices", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+            mApp->imWnd->popup.Open("Error", "Can't define plane, Select exactly 3 vertices", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
         }
         else {
-            openmodalName = "Select Coplanar Vertices"; // TODO rewrite as MyPopup
-            showPopup = true;
+            auto F = [](std::string arg) {
+                if (!Util::getNumber(&mApp->coplanarityTolerance, arg)) {
+                    mApp->imWnd->popup.Open("Error", "Invalid Number", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+                } else {
+                    try { mApp->viewer[mApp->curViewer]->SelectCoplanar(mApp->coplanarityTolerance); }
+                    catch (const std::exception& e) {
+                        mApp->imWnd->popup.Open("Error", "Error selecting coplanar vertices", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+                    }
+                }
+            };
+            mApp->imWnd->input.Open("Select Coplanar Vertices", "Tolerance(cm)", F, "1.0");
         }
     }
     else {
-        mApp->imWnd->popup.OpenImMsgBox("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
+        mApp->imWnd->popup.Open("Error", "No geometry loaded", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
     }
 }
 
-void SelectCoplanarVerticesPopup(std::string& openmodalName) {
-    float txtW = ImGui::CalcTextSize(" ").x;
-    ImGui::SetNextWindowSize(ImVec2(75 * txtW,0));
-    if (ImGui::BeginPopupModal("Select Coplanar Vertices")) {
-        ImGuiIO& io = ImGui::GetIO();
-        std::string input = "1.0";
-        ImGui::InputText("Tolerance(cm)", &input);
-        if (ImGui::Button("   OK   ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
-            if (!Util::getNumber(&mApp->coplanarityTolerance, input)) {
-                mApp->imWnd->popup.OpenImMsgBox("Error", "Invalid Number", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
-                ImGui::CloseCurrentPopup();
-            }
-            else {
-                try { mApp->viewer[mApp->curViewer]->SelectCoplanar(mApp->coplanarityTolerance); }
-                catch (const std::exception& e) {
-                    mApp->imWnd->popup.OpenImMsgBox("Error", "Error selecting coplanar vertices", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter) });
-                }
-                ImGui::CloseCurrentPopup();
-                showPopup = false;
-            }
-        } ImGui::SameLine();
-        if (ImGui::Button("   Cancel   ") || io.KeysDown[ImGui::keyEsc]) {
-            ImGui::CloseCurrentPopup();
-            showPopup = false;
-        }
-        ImGui::EndPopup();
-    }
-
-}
-
-static void ShowMenuVertex(std::string& openmodalName) {
+static void ShowMenuVertex() {
     if (ImGui::BeginMenu("Create Facet from Selected")) {
         if (ImGui::MenuItem("Convex Hull", "ALT+V")) {
-            ConvexHullMenuPress(openmodalName);
+            ConvexHullMenuPress();
         }
         if (ImGui::MenuItem("Keep selection order")) {
-            SelectionOrderMenuPress(openmodalName);
+            SelectionOrderMenuPress();
         }
         ImGui::EndMenu();
     }
@@ -1324,17 +1226,17 @@ static void ShowMenuVertex(std::string& openmodalName) {
     }
 #ifdef MOLFLOW
     if (ImGui::MenuItem("Remove selected")) {
-        RemoveSelectedMenuPress(openmodalName);
+        RemoveSelectedMenuPress();
     }
 #endif
     if (ImGui::MenuItem("Vertex coordinates...")) {
         VertexCoordinatesMenuPress();
     }
     if (ImGui::MenuItem("Move...")) {
-        VertexMoveMenuPress(openmodalName);
+        VertexMoveMenuPress();
     }
     if (ImGui::MenuItem("Scale...")) {
-        VertexScaleMenuPress(openmodalName);
+        VertexScaleMenuPress();
     }
     if (ImGui::MenuItem("Mirror / Project ...")) {
         VertexMirrorProjectMenuPress();
@@ -1343,7 +1245,7 @@ static void ShowMenuVertex(std::string& openmodalName) {
         VertexRotateMenuPress();
     }
     if (ImGui::MenuItem("Add new...")) {
-        VertexAddNewMenuPress(openmodalName);
+        VertexAddNewMenuPress();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select all vertex")) {
@@ -1353,14 +1255,14 @@ static void ShowMenuVertex(std::string& openmodalName) {
         interfGeom->UnselectAllVertex();
     }
     if (ImGui::MenuItem("Select coplanar vertex (visible on screen)")) {
-        VertexCoplanarMenuPress(openmodalName);
+        VertexCoplanarMenuPress();
     }
     if (ImGui::MenuItem("Select isolated vertex")) {
         interfGeom->SelectIsolatedVertices();
     }
 }
 
-static void ShowMenuView(std::string& openmodalName) {
+static void ShowMenuView() {
     if (ImGui::BeginMenu("Structure")) {
         if (ImGui::MenuItem("New structure...")) {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1432,7 +1334,7 @@ static void ShowMenuView(std::string& openmodalName) {
     if (ImGui::BeginMenu("Clear memorized")) {
         if (ImGui::MenuItem("Clear All")) {
             auto Y = []() {LockWrapper myLock(mApp->imguiRenderLock); mApp->ClearAllViews(); };
-            mApp->imWnd->popup.OpenImMsgBox("Clear all views?", "Are you sure you want to clear(forget) all remembered views?", {std::make_shared<MyButtonFunc>("Ok", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc)});
+            mApp->imWnd->popup.Open("Clear all views?", "Are you sure you want to clear(forget) all remembered views?", {std::make_shared<MyButtonFunc>("Ok", Y, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc)});
         }
         // Procedural list of memorized views
         for (int i = 0; i < mApp->views.size(); i++) {
@@ -1444,12 +1346,12 @@ static void ShowMenuView(std::string& openmodalName) {
     }
 }
 
-static void ShowMenuTest(std::string& openmodalName) {
+static void ShowMenuTest() {
     if (ImGui::MenuItem("Pipe (L/R=0.0001)")) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(0.0001, 0); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(0.0001, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1460,7 +1362,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1.0, 0); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1.0, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1471,7 +1373,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10.0, 0); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10.0, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else
         {
@@ -1483,7 +1385,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(100.0, 0); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(100.0, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else
         {
@@ -1495,7 +1397,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1000.0, 0); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1000.0, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1506,7 +1408,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10000.0, 0); };
             auto N = []() -> void {  LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10000.0, 0); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1519,7 +1421,7 @@ static void ShowMenuTest(std::string& openmodalName) {
         if (mApp->changedSinceSave) {
             auto Y = []() -> void { DoSave(); LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(5, 5); };
             auto N = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(5, 5); };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else {
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1544,7 +1446,7 @@ static void ShowMenuTest(std::string& openmodalName) {
                 GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
                 mApp->worker.MarkToReload();
             };
-            mApp->imWnd->popup.OpenImMsgBox("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
+            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
         else
             LockWrapper myLock(mApp->imguiRenderLock);
@@ -1640,8 +1542,6 @@ void ShowAppMainMenuBar() {
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 0.0f));
-    static std::string openmodalName = "";
-    static bool askForSave = false;
     if (ImGui::BeginMainMenuBar()) {
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
@@ -1649,7 +1549,7 @@ void ShowAppMainMenuBar() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
-            ImMenu::ShowMenuSelection(openmodalName);
+            ImMenu::ShowMenuSelection();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
@@ -1657,19 +1557,19 @@ void ShowAppMainMenuBar() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Facet")) {
-            ImMenu::ShowMenuFacet(openmodalName);
+            ImMenu::ShowMenuFacet();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Vertex")) {
-            ImMenu::ShowMenuVertex(openmodalName);
+            ImMenu::ShowMenuVertex();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
-            ImMenu::ShowMenuView(openmodalName);
+            ImMenu::ShowMenuView();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Test")) {
-            ImMenu::ShowMenuTest(openmodalName);
+            ImMenu::ShowMenuTest();
             ImGui::EndMenu();
         }
         #ifdef MOLFLOW // TODO Polymorphism
@@ -1684,15 +1584,6 @@ void ShowAppMainMenuBar() {
         }
 
         ImGui::EndMainMenuBar();
-    }
-
-    if(!openmodalName.empty()){
-        ImGui::OpenPopup(openmodalName.c_str());
-        openmodalName = "";
-    }
-    if (ImMenu::showPopup) { // remaining popups contain input fields TODO popup wrapper with input field
-        ImMenu::ShowSelectionModals();
-        ImMenu::SelectCoplanarVerticesPopup(openmodalName);
     }
 
     ImGui::PopStyleVar(2);
