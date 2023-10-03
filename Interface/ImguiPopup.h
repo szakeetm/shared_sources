@@ -58,7 +58,7 @@ public:
 class MyPopup {
 public:
 	MyPopup();
-
+	void Close();
 	void OpenImMsgBox(std::string title, std::string message, std::vector<std::shared_ptr< MyButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
 	void Draw(); // call this every ImGui Render
 	bool WasResponse();

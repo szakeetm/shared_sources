@@ -54,6 +54,7 @@ void MyPopup::Draw()
 			if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str()) || io.KeysDown[buttons.at(i)->key]) { // draw them
 				if (buttons.at(i)->retVal == buttonFunction) { // if the button is the  function type
 					buttons.at(i)->DoCall(); // call the function
+					break;
 				}
 				
 				returnValue = (buttons.at(i))->retVal; // if pressed change the return value
@@ -69,6 +70,14 @@ void MyPopup::Draw()
 		// this must be here because ImGui::OpenPopup does not work when called between any ::Begin and ::End statements
 		ImGui::OpenPopup(title.c_str());
 	}
+}
+
+void MyPopup::Close() {
+	this->returnValue = notDrawn;
+	this->title = "";
+	this->message = "";
+	this->drawn = false;
+	this->buttons = std::vector<std::shared_ptr< MyButton >>();
 }
 
 // MyButton methods
