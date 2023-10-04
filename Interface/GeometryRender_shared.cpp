@@ -46,6 +46,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/VertexCoordinates.h"
 #include "Facet_shared.h"
 
+#include "ImguiWindow.h"
+
 #if defined(MOLFLOW)
 extern MolFlow* mApp;
 #endif
@@ -251,12 +253,16 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					if (found_local) {
 						
 						if (unselect) {
-							if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsToggled())) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
-								double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+								double maxAngleDiff;
+								if (mApp->imWnd->smartSelect.IsToggled() && mApp->imWnd->smartSelect.IsVisible()) {
+									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+								} else 
+									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 								std::vector<size_t> connectedFacets;
 								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
 								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
@@ -350,11 +356,16 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsToggled())) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
-		double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+		double maxAngleDiff;
+		if (mApp->imWnd->smartSelect.IsToggled() && mApp->imWnd->smartSelect.IsVisible()) {
+			maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+		}
+		else
+			maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 		std::vector<size_t> connectedFacets;
 		mApp->SetFacetSearchPrg(true, "Smart selecting...");
 		if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(lastFound, maxAngleDiff);

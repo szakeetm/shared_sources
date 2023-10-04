@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "imgui/imgui.h"
 #include <string>
 #include <imgui/imgui_internal.h>
+#include "imgui_stdlib/imgui_stdlib.h"
 
 namespace ImGui {
 // Make the UI compact because there are so many fields

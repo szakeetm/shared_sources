@@ -193,6 +193,7 @@ void ImguiWindow::init() {
     input = MyInput();
     progress = MyProgress();
     progress.Hide();
+    smartSelect = ImSmartSelection();
 
     start_time = ImGui::GetTime();
 }
@@ -327,6 +328,8 @@ void ImguiWindow::renderSingle() {
             if (ImGui::SliderFloat("Progress", &prog, 0, 1))
                 progress.SetProgress(prog);
             if (ImGui::Button("Toggle progress bar")) {
+                progress.SetMessage("Message");
+                progress.SetTitle("Title");
                 progress.Toggle();
             }
             
@@ -355,6 +358,7 @@ void ImguiWindow::renderSingle() {
         popup.Draw();
         input.Draw();
         progress.Draw();
+        smartSelect.Draw();
 
         // Rendering
         ImGui::Render();

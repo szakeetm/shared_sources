@@ -343,7 +343,7 @@ static void ShowMenuFile() {
 }
 
 static void ShowMenuSelection() {
-    static SmartSelection *smartSelection = nullptr;
+    //static SmartSelection *smartSelection = nullptr;
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
     static SelectFacetByResult *selectFacetByResult = nullptr;
@@ -352,8 +352,9 @@ static void ShowMenuSelection() {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
 
     if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
-        if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
-        smartSelection->SetVisible(true);
+        mApp->imWnd->smartSelect.Show();
+        //if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
+        //smartSelection->SetVisible(true);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select All Facets", "CTRL+A")) {
@@ -1449,12 +1450,13 @@ static void ShowMenuTest() {
             };
             mApp->imWnd->popup.Open("File not saved", "Save current geometry?", { std::make_shared<MyButtonFunc>("Yes", Y, ImGui::keyEnter) ,std::make_shared<MyButtonFunc>("No", N), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) });
         }
-        else
+        else {
             LockWrapper myLock(mApp->imguiRenderLock);
             auto prg = GLProgress_GUI("Triangulating", "Triangulating");
             prg.SetVisible(true);
             GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
             mApp->worker.MarkToReload();
+        }
     }
     ImGui::Separator();
     if (ImGui::MenuItem("ImGui Menu")) {
@@ -1540,10 +1542,11 @@ void ShowAppMainMenuBar() {
         ImGui::OpenPopup("testmod");
     }
 
-
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, 0.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + 0.0f));
+    static float verticalMainMenuBarSize = 5.f;
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, verticalMainMenuBarSize));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + verticalMainMenuBarSize));
     if (ImGui::BeginMainMenuBar()) {
+    ImGui::PopStyleVar(2);
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
             ImMenu::ShowMenuFile();
@@ -1586,6 +1589,4 @@ void ShowAppMainMenuBar() {
 
         ImGui::EndMainMenuBar();
     }
-
-    ImGui::PopStyleVar(2);
 }

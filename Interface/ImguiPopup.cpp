@@ -24,7 +24,6 @@ void MyPopup::Open(std::string title, std::string message, std::vector <std::sha
 		this->buttons = buttons;
 		this->drawn = true;
 		this->returnValue = drawnNoResponse;
-		this->Draw();
 		return;
 	}
 	else { // there was a response

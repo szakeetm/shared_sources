@@ -120,6 +120,7 @@ set(INTERFACE_FILES
         Interface/ImguiFacetMove.cpp
         Interface/imgui_stdlib/imgui_stdlib.cpp
         Interface/ImguiPopup.cpp
+        Interface/ImguiSmartSelection.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
