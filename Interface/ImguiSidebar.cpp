@@ -121,16 +121,19 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
     ImGuiIO &io = ImGui::GetIO();
 
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
-    static bool use_work_area = false; // experiment with work area vs normal area
+    static bool use_work_area = true; // experiment with work area vs normal area
+
+    static float widthPercent = 0.20f;
+
     ImGui::SetNextWindowPos(use_work_area ?
-                            ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.25f, viewport->WorkPos.y)
+                            ImVec2(viewport->Size.x - viewport->WorkSize.x * widthPercent, viewport->WorkPos.y)
                                           : viewport->Pos);
     // Set size initially (to be able for resize) to take the full height on the right side
     ImGui::SetNextWindowSize(
-            use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y) : ImVec2(0, viewport->Size.y), ImGuiCond_FirstUseEver);
+            use_work_area ? ImVec2(viewport->WorkSize.x * widthPercent, viewport->WorkSize.y) : ImVec2(0, viewport->Size.y));
 
     static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize;
     /*ImGuiWindowFlags_NoDecoration | *//*ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove *//*| ImGuiWindowFlags_NoResize *//*|
             ImGuiWindowFlags_NoSavedSettings;*/
 
@@ -150,7 +153,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
         ImGui::SetNextWindowViewport(viewport->ID);
         flags |= ImGuiWindowFlags_NoMove;
     }
-
+    //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
     if (ImGui::Begin("[BETA] Molflow Sidebar", p_open, flags)) {
 #if defined(DEBUG)
         if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
@@ -205,6 +208,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     if(ImGui::Button("<< View")){
+                        LockWrapper myLock(mApp->imguiRenderLock);
                         if (!mApp->viewer3DSettings)
                             mApp->viewer3DSettings = new Viewer3DSettings();
                         mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
