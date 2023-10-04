@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include <string>
 #include <vector>
-#include "GLApp.h"
+#include <memory>
 
 enum PopupCode: int { // most common responses and buttons
 	notDrawn		= -3, // the popup is inactive

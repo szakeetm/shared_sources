@@ -224,12 +224,13 @@ void NewGeometry() {
 }
 
 void DoSave() {
-    LockWrapper myLock(mApp->imguiRenderLock);
     std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
     if (!fn.empty()) {
-        GLProgress_Abstract prg = GLProgress_Abstract("Saving"); // placeholder
         try {
-            mApp->worker.SaveGeometry(fn, prg);
+            mApp->imWnd->progress.Show();
+            LockWrapper myLock(mApp->imguiRenderLock);
+            mApp->worker.SaveGeometry(fn, mApp->imWnd->progress);
+            mApp->imWnd->progress.Hide();
             mApp->changedSinceSave = false;
             mApp->UpdateTitle();
             mApp->AddRecent(fn);

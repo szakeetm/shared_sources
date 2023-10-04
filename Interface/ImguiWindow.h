@@ -23,6 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <imgui/imgui.h>
 #include "AppUpdater.h"
 #include "ImguiPopup.h"
+#include "Helper/GLProgress_ImGui.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -60,6 +61,7 @@ public:
     void ShowWindowLicense();
     MyPopup popup;
     MyInput input;
+    MyProgress progress;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

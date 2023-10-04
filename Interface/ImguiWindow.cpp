@@ -191,6 +191,8 @@ void ImguiWindow::init() {
 
     popup = MyPopup();
     input = MyInput();
+    progress = MyProgress();
+    progress.Hide();
 
     start_time = ImGui::GetTime();
 }
@@ -321,6 +323,12 @@ void ImguiWindow::renderSingle() {
             }
             ImGui::Text("Popup response: "+std::to_string(response));
             ImGui::EndChild();
+            static float prog;
+            if (ImGui::SliderFloat("Progress", &prog, 0, 1))
+                progress.SetProgress(prog);
+            if (ImGui::Button("Toggle progress bar")) {
+                progress.Toggle();
+            }
             
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
@@ -346,6 +354,7 @@ void ImguiWindow::renderSingle() {
 
         popup.Draw();
         input.Draw();
+        progress.Draw();
 
         // Rendering
         ImGui::Render();
