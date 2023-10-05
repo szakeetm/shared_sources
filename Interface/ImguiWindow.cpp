@@ -195,6 +195,7 @@ void ImguiWindow::init() {
     progress.Hide();
     smartSelect = ImSmartSelection();
     selByNum = ImSelectDialog();
+    selByTex = ImSelectTextureType();
 
     start_time = ImGui::GetTime();
 }
@@ -363,6 +364,7 @@ void ImguiWindow::renderSingle() {
 
         smartSelect.Draw();
         selByNum.Draw();
+        selByTex.Draw();
 
         // Rendering
         ImGui::Render();

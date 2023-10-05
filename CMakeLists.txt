@@ -122,6 +122,7 @@ set(INTERFACE_FILES
         Interface/ImguiPopup.cpp
         Interface/ImguiSmartSelection.cpp
         Interface/ImguiSelectDialog.cpp
+        Interface/ImguiSelectTextureType.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

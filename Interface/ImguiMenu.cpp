@@ -343,7 +343,6 @@ static void ShowMenuFile() {
 }
 
 static void ShowMenuSelection() {
-    //static SmartSelection *smartSelection = nullptr;
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
     static SelectFacetByResult *selectFacetByResult = nullptr;
@@ -353,8 +352,6 @@ static void ShowMenuSelection() {
 
     if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
         mApp->imWnd->smartSelect.Show();
-        //if (!smartSelection) smartSelection = new SmartSelection(worker.GetGeometry(), &worker);
-        //smartSelection->SetVisible(true);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select All Facets", "CTRL+A")) {
@@ -363,8 +360,6 @@ static void ShowMenuSelection() {
     }
     if (ImGui::MenuItem("Select by Facet Number...", "ALT+N")) {
         mApp->imWnd->selByNum.Show();
-        //if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
-        //selectDialog->SetVisible(true);
     }
 
 #ifdef MOLFLOW
@@ -412,8 +407,9 @@ static void ShowMenuSelection() {
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select by Texture type...")) {
-        if (!selectTextureType) selectTextureType = new SelectTextureType(&worker);
-        selectTextureType->SetVisible(true);
+        mApp->imWnd->selByTex.Show();
+        //if (!selectTextureType) selectTextureType = new SelectTextureType(&worker);
+        //selectTextureType->SetVisible(true);
     }
     if (ImGui::MenuItem("Select Profile")) {
         interfGeom->UnselectAll();
