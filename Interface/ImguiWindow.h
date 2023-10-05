@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "AppUpdater.h"
 #include "ImguiPopup.h"
 #include "ImguiSmartSelection.h"
+#include "ImguiSelectDialog.h"
 #include "Helper/GLProgress_ImGui.h"
 
 #if defined(MOLFLOW)
@@ -64,6 +65,7 @@ public:
     MyInput input;
     MyProgress progress;
     ImSmartSelection smartSelect;
+    ImSelectDialog selByNum;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

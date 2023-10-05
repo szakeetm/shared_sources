@@ -362,8 +362,9 @@ static void ShowMenuSelection() {
         mApp->UpdateFacetParams(true);
     }
     if (ImGui::MenuItem("Select by Facet Number...", "ALT+N")) {
-        if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
-        selectDialog->SetVisible(true);
+        mApp->imWnd->selByNum.Show();
+        //if (!selectDialog) selectDialog = new SelectDialog(worker.GetGeometry());
+        //selectDialog->SetVisible(true);
     }
 
 #ifdef MOLFLOW

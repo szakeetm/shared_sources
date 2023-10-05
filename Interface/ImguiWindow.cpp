@@ -194,6 +194,7 @@ void ImguiWindow::init() {
     progress = MyProgress();
     progress.Hide();
     smartSelect = ImSmartSelection();
+    selByNum = ImSelectDialog();
 
     start_time = ImGui::GetTime();
 }
@@ -355,10 +356,13 @@ void ImguiWindow::renderSingle() {
         if (show_window_license)
             ShowWindowLicense();
 
+        // reusable windows for I/O
         popup.Draw();
         input.Draw();
         progress.Draw();
+
         smartSelect.Draw();
+        selByNum.Draw();
 
         // Rendering
         ImGui::Render();
