@@ -2,9 +2,13 @@
 #include <string>
 class ImSelectTextureType {
 public:
-	enum mode: size_t {
+	enum modes : size_t {
 		exactly,
-		between
+		between,
+		none,
+		btnSelect,
+		addSelect,
+		rmvSelect
 	};
 	ImSelectTextureType();
 	void Show();
@@ -20,12 +24,12 @@ public:
 	double exactlyValue;
 	double minValue;
 	double maxValue;
+	bool exactlyCheck;
+	bool betweenCheck;
 protected:
 	std::string exactlyInput;
 	std::string minInput;
 	std::string maxInput;
-	void (*select)();
-	void (*addSelect)();
-	void (*rmvSelect)();
+	void (*select)(int src);
 	void Preprocess();
 };
