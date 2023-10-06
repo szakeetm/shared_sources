@@ -19,13 +19,13 @@ extern SynRad* mApp;
 ImSelectTextureType::ImSelectTextureType()
 {
 	drawn = false;
-	squareTextrueCheck = true;
+	squareTextrueCheck = 1;
 	mode = exactly;
-	desorbtionCheck = true;
-	absorbtionCheck = true;
-	reflectionCheck = true;
-	transpPassCheck = true;
-	directionCheck = true;
+	desorbtionCheck = 1;
+	absorbtionCheck = 1;
+	reflectionCheck = 1;
+	transpPassCheck = 1;
+	directionCheck = 1;
 	exactlyInput = "";
 	minInput = "";
 	maxInput = "";
@@ -68,10 +68,10 @@ void ImSelectTextureType::Draw()
 	if (ImGui::Begin("Select facets by texture properties [BETA - WIP]", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (ImGui::BeginChild("Texture resolution", ImVec2(0, txtH * 7.5), true, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::TextDisabled("Texture resolution");
-			ImGui::Checkbox("Square texture", &squareTextrueCheck);
+			ImGui::TriState("Square texture", &squareTextrueCheck);
 			ImGui::TextWrapped("For non-square textures, condition applies to either of the two dimensions:");
 			if (ImGui::BeginTable("##SFBTPtable", 2, ImGuiTableFlags_SizingFixedFit)) {
-				// TODO this window needs a 3 state checkbox
+				// TODO this window needs a 3 state checkbox where 0 = not checked, 1 = full checked, 2 = half checked
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				ImGui::RadioButton("Exactly", &mode, exactly);
@@ -103,19 +103,19 @@ void ImSelectTextureType::Draw()
 				ImGui::PushItemFlag(ImGuiItemFlags_MixedValue, true);
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Checkbox("Count desorbtion", &desorbtionCheck);
+				ImGui::TriState("Count desorbtion", &desorbtionCheck);
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Checkbox("Count reflection", &reflectionCheck);
+				ImGui::TriState("Count reflection", &reflectionCheck);
 
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				ImGui::Checkbox("Count absorbtion", &absorbtionCheck);
+				ImGui::TriState("Count absorbtion", &absorbtionCheck);
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Checkbox("Count transp. pass", &transpPassCheck);
+				ImGui::TriState("Count transp. pass", &transpPassCheck);
 
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(1);
-				ImGui::Checkbox("Count direction", &directionCheck);
+				ImGui::TriState("Count direction", &directionCheck);
 				ImGui::PopItemFlag();
 				ImGui::EndTable();
 			}
