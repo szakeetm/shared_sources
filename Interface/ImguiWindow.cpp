@@ -75,6 +75,7 @@ bool ImguiWindow::ToggleFacetMove()
 void ImguiWindow::ShowWindowLicense() {
     float txtW = ImGui::CalcTextSize(" ").x;
     ImGui::SetNextWindowSize(ImVec2(txtW*120,0));
+    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("License", &show_window_license, ImGuiWindowFlags_AlwaysAutoResize)) {
         std::ostringstream aboutText;
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
@@ -189,13 +190,16 @@ void ImguiWindow::init() {
     show_facet_move = false;
     show_window_license = false;
 
-    popup = MyPopup();
-    input = MyInput();
+    popup = WrappersIO::MyPopup();
+    input = WrappersIO::MyInput();
     progress = MyProgress();
     progress.Hide();
     smartSelect = ImSmartSelection();
+    smartSelect.Init();
     selByNum = ImSelectDialog();
+    selByNum.Init();
     selByTex = ImSelectTextureType();
+    selByTex.Init();
 
     start_time = ImGui::GetTime();
 }
@@ -300,7 +304,8 @@ void ImguiWindow::renderSingle() {
 
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize); // Create a window called "Hello, world!"
+            ImGui::SetNextWindowPos(ImVec2(20,20), ImGuiCond_FirstUseEver);
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings); // Create a window called "Hello, world!"
             // and append into it.
 
             #if defined(DEBUG)
@@ -319,7 +324,10 @@ void ImguiWindow::renderSingle() {
             static int response;
             ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
             if (ImGui::Button("Test Popup Wrapper")) {
-                popup.Open("Title", "Message", { std::make_shared<MyButtonInt>("OK", buttonOk, ImGui::keyEnter), std::make_shared<MyButtonInt>("Cancel", buttonCancel, ImGui::keyEsc) }); // Open wrapped popup
+                popup.Open("Title##0", "Message", { 
+                    std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk, ImGui::keyEnter),
+                    std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, ImGui::keyEsc)
+                    }); // Open wrapped popup
             }
             if (popup.WasResponse()) { // if there was a response
                 response = popup.GetResponse(); // do something
@@ -331,7 +339,7 @@ void ImguiWindow::renderSingle() {
                 progress.SetProgress(prog);
             if (ImGui::Button("Toggle progress bar")) {
                 progress.SetMessage("Message");
-                progress.SetTitle("Title");
+                progress.SetTitle("Title##1");
                 progress.Toggle();
             }
             

@@ -19,21 +19,8 @@ extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
-ImSelectTextureType::ImSelectTextureType()
+void ImSelectTextureType::Init()
 {
-	drawn = false;
-	squareTextrueCheck = 2;
-	mode = none;
-	exactlyCheck = 0;
-	betweenCheck = 0;
-	desorbtionCheck = 2;
-	absorbtionCheck = 2;
-	reflectionCheck = 2;
-	transpPassCheck = 2;
-	directionCheck = 2;
-	exactlyInput = "";
-	minInput = "";
-	maxInput = "";
 	select = [](int src) {
 		mApp->imWnd->selByTex.Preprocess();
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
@@ -72,17 +59,23 @@ void ImSelectTextureType::Preprocess() {
 	if (betweenCheck) mode = between;
 	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { std::make_shared<MyButtonInt>("Ok",buttonOk,ImGui::keyEnter) });
+			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				});
 			return;
 		}
 	}
 	else if (mode == between) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { std::make_shared<MyButtonInt>("Ok",buttonOk,ImGui::keyEnter) });
+			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				});
 			return;
 		}
 		if (minValue > maxValue) {
-			mApp->imWnd->popup.Open("Error", "Minimum cannot be greater than maximum", { std::make_shared<MyButtonInt>("Ok",buttonOk,ImGui::keyEnter) });
+			mApp->imWnd->popup.Open("Error", "Minimum cannot be greater than maximum", { 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				});
 			return;
 		}
 	}
@@ -92,6 +85,7 @@ void ImSelectTextureType::Draw()
 	if (!drawn) return;
 	float txtW = ImGui::CalcTextSize(" ").x;
 	float txtH = ImGui::GetTextLineHeightWithSpacing();
+	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("Select facets by texture properties", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (ImGui::BeginChild("Texture resolution", ImVec2(0, txtH * 7.5), true, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::TextDisabled("Texture resolution");
@@ -107,6 +101,8 @@ void ImSelectTextureType::Draw()
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##3", &exactlyInput)) {
 					mode = exactly;
+					exactlyCheck = true;
+					betweenCheck = false;
 				}
 				ImGui::SameLine();
 				ImGui::Text("/cm");
@@ -119,6 +115,8 @@ void ImSelectTextureType::Draw()
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##4", &minInput)) {
 					mode = between;
+					betweenCheck = true;
+					exactlyCheck = false;
 				}
 				ImGui::SameLine();
 				ImGui::Text("and");
@@ -126,6 +124,8 @@ void ImSelectTextureType::Draw()
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##5", &maxInput)) {
 					mode = between;
+					betweenCheck = true;
+					exactlyCheck = false;
 				}
 				ImGui::SameLine();
 				ImGui::Text("/cm");

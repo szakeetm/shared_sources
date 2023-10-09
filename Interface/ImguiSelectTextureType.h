@@ -10,26 +10,26 @@ public:
 		addSelect,
 		rmvSelect
 	};
-	ImSelectTextureType();
+	void Init();
 	void Show();
 	void Draw();
-	bool drawn;
-	size_t squareTextrueCheck;
-	int mode;
-	size_t desorbtionCheck;
-	size_t absorbtionCheck;
-	size_t reflectionCheck;
-	size_t transpPassCheck;
-	size_t directionCheck;
+	bool drawn = false;
+	size_t squareTextrueCheck = 2;
+	int mode = none;
+	size_t desorbtionCheck = 2;
+	size_t absorbtionCheck = 2;
+	size_t reflectionCheck = 2;
+	size_t transpPassCheck = 2;
+	size_t directionCheck = 2;
 	double exactlyValue;
 	double minValue;
 	double maxValue;
-	bool exactlyCheck;
-	bool betweenCheck;
+	bool exactlyCheck = false;
+	bool betweenCheck = false;
 protected:
-	std::string exactlyInput;
-	std::string minInput;
-	std::string maxInput;
+	std::string exactlyInput = "";
+	std::string minInput = "";
+	std::string maxInput = "";
 	void (*select)(int src);
 	void Preprocess();
 };

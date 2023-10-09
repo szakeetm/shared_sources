@@ -127,6 +127,7 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
             ImGuiStyleVar_WindowMinSize,
             ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
+    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
     ImGui::Begin(
             "Global settings", show_global_settings,
             ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool

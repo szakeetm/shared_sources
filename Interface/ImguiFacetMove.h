@@ -31,8 +31,4 @@ namespace ImFacetMove {
 	enum movementMode { absolute_offset, direction_and_distance };
 
 	void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom);
-
-	static struct {
-		float posX, posY, sizeX, sizeY;
-	} window;
 }

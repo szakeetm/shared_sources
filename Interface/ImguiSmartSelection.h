@@ -3,8 +3,7 @@
 
 class ImSmartSelection {
 public:
-	ImSmartSelection();
-	
+	void Init();
 	void Draw();
 	void Show();
 	void Hide();
@@ -14,12 +13,12 @@ public:
 	bool IsToggled();
 	double GetMaxAngle();
 protected:
-	std::string planeDiffInput;
-	double planeDiff;
-	bool isRunning;
-	bool toggle;
-	bool isAnalyzed;
-	bool drawn;
-	std::string result;
+	std::string planeDiffInput = "30";
+	double planeDiff = 30;
+	bool isRunning = false;
+	bool toggle = false;
+	bool isAnalyzed = false;
+	bool drawn = false;
+	std::string result = "No neighborhood analysis yet.";
 	void (*func)();
 };

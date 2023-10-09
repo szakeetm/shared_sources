@@ -11,8 +11,13 @@ void MyProgress::Draw() {
 		ImGui::End();
 	}
 }
+void MyProgress::Show() {
+	drawn = true;
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	Draw();
+};
 
-void MyProgress::Show() { drawn = true; Draw(); };
 void MyProgress::Hide() { drawn = false; };
 
 void MyProgress::SetProgress(const double prg) {
@@ -26,11 +31,10 @@ void MyProgress::SetTitle(std::string title)
 }
 
 void MyProgress::Toggle() {
-	drawn = !drawn;
-	Draw();
+	if (drawn) Hide();
+	else Show();
 };
 
 void MyProgress::SetVisible(bool value) {
-	drawn = value;
-	Draw();
+	Show();
 }

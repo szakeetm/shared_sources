@@ -123,17 +123,18 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     static bool use_work_area = true; // experiment with work area vs normal area
 
-    static float widthPercent = 0.20f;
+    static int width = TEXT_BASE_WIDTH * 30;
 
     ImGui::SetNextWindowPos(use_work_area ?
-                            ImVec2(viewport->Size.x - viewport->WorkSize.x * widthPercent, viewport->WorkPos.y)
+                            ImVec2(viewport->Size.x - width, viewport->WorkPos.y)
                                           : viewport->Pos);
     // Set size initially (to be able for resize) to take the full height on the right side
     ImGui::SetNextWindowSize(
-            use_work_area ? ImVec2(viewport->WorkSize.x * widthPercent, viewport->WorkSize.y) : ImVec2(0, viewport->Size.y));
+            use_work_area ? ImVec2(width, viewport->WorkSize.y) : ImVec2(width, viewport->Size.y));
 
     static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize;
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | 
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar;
     /*ImGuiWindowFlags_NoDecoration | *//*ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove *//*| ImGuiWindowFlags_NoResize *//*|
             ImGuiWindowFlags_NoSavedSettings;*/
 

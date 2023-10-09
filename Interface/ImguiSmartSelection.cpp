@@ -19,19 +19,14 @@ extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
-ImSmartSelection::ImSmartSelection() {
-	planeDiffInput = "30";
-	planeDiff = 30.0;
-	isRunning = false;
-	drawn = false;
-	toggle = false;
-	isAnalyzed = false;
-	result = "No neighborhood analysis yet.";
+void ImSmartSelection::Init() {
 	func = []() {
 		if (!mApp->imWnd->smartSelect.isRunning) {
 			InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 			if (!interfGeom->IsLoaded()) {
-				mApp->imWnd->popup.Open("Error", "No geometry", { std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter) });
+				mApp->imWnd->popup.Open("Error", "No geometry", { 
+					std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, ImGui::keyEnter) 
+					});
 				return;
 			}
 			mApp->imWnd->smartSelect.isRunning = true;
@@ -52,6 +47,7 @@ ImSmartSelection::ImSmartSelection() {
 void ImSmartSelection::Draw()
 {
 	if (drawn) {
+		ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Smart Selection", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 		ImGui::PlaceAtRegionCenter(!isRunning ? "  Analyze  " : "  Stop Analyzing  ");
 		if (ImGui::Button(!isRunning ? "  Analyze  " : "  Stop Analyzing  ")) {
@@ -102,6 +98,8 @@ double ImSmartSelection::GetMaxAngle()
 	if (Util::getNumber(&this->planeDiff, this->planeDiffInput)) {
 		return this->planeDiff / 180.0 * 3.14159;
 	}
-	mApp->imWnd->popup.Open("Smart Select Error", "Invalid angle threshold in Smart Selection dialog\nMust be a non-negative number.", {std::make_shared<MyButtonInt>("Ok", buttonOk, ImGui::keyEnter)});
+	mApp->imWnd->popup.Open("Smart Select Error", "Invalid angle threshold in Smart Selection dialog\nMust be a non-negative number.", {
+		std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, ImGui::keyEnter)
+		});
 	return -1.0;
 }
