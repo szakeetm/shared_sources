@@ -31,35 +31,31 @@ class GLLabel;
 class GLCombo;
 class GLOverlayLabel;
 
-#define DRAGG_NONE   0
-#define DRAGG_SELECT 1
-#define DRAGG_ROTATE 2
-#define DRAGG_ZOOM   3
-#define DRAGG_MOVE   4
-#define DRAGG_SELECTVERTEX 5
+enum DragMode : int {
+	None,
+	SelectFacet,
+	Rotate,
+	Zoom,
+	Pan,
+	SelectVertex
 #ifdef  SYNRAD
-#define DRAGG_SELECTTRAJ 6
+	, SelectTrajectory
 #endif
+};
 
-#define MODE_SELECT  0
-#define MODE_ZOOM    1
-#define MODE_MOVE    2
-#define MODE_SELECTVERTEX 3
-#ifdef  SYNRAD
-#define MODE_SELECTTRAJ 4
-#endif
+enum CursorMode : int {
+	SelectFacet,
+	Zoom,
+	Pan,
+	SelectVertex,
+	#ifdef  SYNRAD
+	,SelectTrajectory
+	#endif
+};
 
-#define SHOW_FRONTANDBACK 0
-#define SHOW_FRONT        1
-#define SHOW_BACK         2
 
-#define PERSPECTIVE_PROJ  0
-#define ORTHOGRAPHIC_PROJ 1
 
-#define XYZ_NONE          0
-#define XYZ_TOP           1
-#define XYZ_SIDE          2
-#define XYZ_FRONT         3
+
 
 #define MSG_GEOMVIEWER_MAXIMISE MSG_USER + 1
 #define MSG_GEOMVIEWER_SELECT   MSG_USER + 2
@@ -67,7 +63,7 @@ class GLOverlayLabel;
 #define FOV_ANGLE 45.0
 
 struct ScreenshotStatus{
-	int requested; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
+	int requested=0; //0=no request, 1=waiting for area selection, 2=take screenshot on next viewer paint
 	std::string fileName;
 	int x, y, w, h; //Screenshotarea
 } ;
@@ -107,42 +103,42 @@ public:
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   // Flag view
-  bool showIndex;
-  bool showNormal;
-  bool showRule;
-  bool showUV;
-  bool showLeak;
-  bool showHit;
-  bool showLine;
-  bool showVolume;
-  bool showTexture;
-  bool showFacetId;
-  bool showVertexId;
-  int  showBack;
-  bool showFilter;
- // bool showColormap;
-  bool showTP;
-  bool showHidden;
-  bool showHiddenVertex;
-  bool showMesh;
-  bool bigDots;
-  bool showDir;
-  bool autoScaleOn;
-  int  hideLot;
+  bool showIndex = false;
+  bool showNormal = false;
+  bool showRule = true;
+  bool showUV = false;
+  bool showLeak = false;
+  bool showHit = false;
+  bool showLine = false;
+  bool showVolume = false;
+  bool showTexture = false;
+  bool showFacetId = false;
+  bool showVertexId = false;
+  VolumeRenderMode  volumeRenderMode = VolumeRenderMode :: FrontAndBack;
+  bool showFilter = false;
+  // bool showColormap;
+  bool showTP = true;
+  bool showHiddenFacet = false;
+  bool showHiddenVertex = true;
+  bool showMesh = false;
+  bool bigDots = true;
+  bool showDir = true;
+  bool autoScaleOn = false;
+  int  hideLot = 500;
 
   #ifdef  MOLFLOW
-  bool showTime;
+  bool showTime = false;
   #endif
 
   #ifdef  SYNRAD
-  bool shadeLines;
-  size_t dispNumTraj;  // displayed number of trajectory points
+  bool shadeLines = true;
+  size_t dispNumTraj = 1000;  // displayed number of trajectory points
   #endif
   
-  size_t dispNumHits; // displayed number of lines and hits
-  size_t dispNumLeaks; // displayed number of leaks
-  double transStep;  // translation step
-  double angleStep;  // angle step
+  size_t dispNumHits=2048; // displayed number of lines and hits
+  size_t dispNumLeaks=2048; // displayed number of leaks
+  double transStep=1.0;  // translation step
+  double angleStep=0.005;  // angle step
   
   GLLabel       *facetSearchState;
 
@@ -169,7 +165,7 @@ private:
   //void DrawBB();
   //void DrawBB(AABBNODE *node);
 
-  Worker *work;
+  Worker *work = nullptr;
 
   // Toolbar
   GLLabel       *toolBack;
@@ -204,9 +200,9 @@ private:
   #endif
   
   // Viewer mode
-  int      draggMode;
-  int      mode;
-  bool     selected;
+  DragMode      dragMode = DragMode::None;
+  CursorMode      cursorMode = CursorMode::SelectFacet;
+  bool     selected=false;
 
   // View parameters
   CameraView    view;
@@ -214,7 +210,7 @@ private:
   // Camera<->mouse motions
   int      mXOrg;
   int      mYOrg;    
-  double   camDistInc;
+  double   camDistInc = 1.0; //zoom speed
 
   // Transformed BB
   double   xMin;
@@ -224,21 +220,21 @@ private:
   double   zNear;
   double   zFar;
 
-  Vector3d camDir;     // Camera basis (PERSPECTIVE_PROJ)
-  Vector3d camLeft;    // Camera basis (PERSPECTIVE_PROJ)
-  Vector3d camUp;      // Camera basis (PERSPECTIVE_PROJ)
+  Vector3d camDir;     // Camera basis (ProjectionMode::Perspective)
+  Vector3d camLeft;    // Camera basis (ProjectionMode::Perspective)
+  Vector3d camUp;      // Camera basis (ProjectionMode::Perspective)
 
-  double   vectorLength; //Coordinate axis default vector length
-  double   headSize; //Default vectorhead size, one global value to match N,U,V,axis vector heads
+  double   vectorLength = 5.0; //Coordinate axis default vector length
+  double   headSize = .1 * vectorLength; //Default vectorhead size (10% arrow head length), one global value to match N,U,V,axis vector heads
 
   // Rectangle selection
-  int      selX1;
-  int      selY1;
-  int      selX2;
-  int      selY2;
+  int      selX1=0;
+  int      selY1=0;
+  int      selX2=0;
+  int      selY2=0;
 
   // Selection change
-  bool selectionChange;
+  bool selectionChange = false;
   ScreenshotStatus screenshotStatus;
 
   // SDL/OpenGL stuff
@@ -246,7 +242,4 @@ private:
   GLfloat matProj[16];
   GLMATERIAL greenMaterial;
   GLMATERIAL blueMaterial;
-
-  //Debug
-  //GLLabel* debugLabel;
 };
