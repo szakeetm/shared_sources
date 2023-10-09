@@ -245,20 +245,20 @@ void GeometryViewer::SetFocus(bool focus) {
 	GLComponent::SetFocus(focus);
 }
 
-void GeometryViewer::UpdateMouseCursor(int cursorMode) { //Sets mouse cursor to action
+void GeometryViewer::UpdateMouseCursor(CursorMode cursorMode) { //Sets mouse cursor to action
 
 	this->cursorMode = cursorMode;
 
 	if (!parent) return;
 
-	if (dragMode == DragMode::Pan) {
+	if (dragMode == DragMode::DragPan) {
 		SetCursor(CURSOR_HAND);
 	}
-	else if (dragMode == DragMode::Rotate) {
+	else if (dragMode == DragMode::DragRotate) {
 		SetCursor(CURSOR_ROTATE);
 	}
 	else {
-		if ((cursorMode == CursorMode::SelectFacet && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CSelectVertex && GetWindow()->IsTabDown())) {
+		if ((cursorMode == CursorMode::CursorSelectFacet && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CursorSelectVertex && GetWindow()->IsTabDown())) {
 			if (GetWindow()->IsCtrlDown()) {
 				SetCursor(CURSOR_SELDEL);
 			}
@@ -274,7 +274,7 @@ void GeometryViewer::UpdateMouseCursor(int cursorMode) { //Sets mouse cursor to 
 
 		}
 
-		else if ((cursorMode == CursorMode::CSelectVertex && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::SelectFacet && GetWindow()->IsTabDown())) {
+		else if ((cursorMode == CursorMode::CursorSelectVertex && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CursorSelectFacet && GetWindow()->IsTabDown())) {
 			if (GetWindow()->IsCtrlDown()) {
 				SetCursor(CURSOR_VERTEX_CLR);
 			}
@@ -302,17 +302,17 @@ void GeometryViewer::UpdateMouseCursor(int cursorMode) { //Sets mouse cursor to 
 		}
 #endif
 
-		else if (cursorMode == CursorMode::Zoom) {
+		else if (cursorMode == CursorMode::CursorZoom) {
 			SetCursor(CURSOR_ZOOM);
 		}
-		else if (cursorMode == CursorMode::Pan) {
+		else if (cursorMode == CursorMode::CursorPan) {
 			SetCursor(CURSOR_HAND);
 		}
 	}
 }
 
 bool GeometryViewer::IsDragging() {
-	return dragMode != DragMode::None;
+	return dragMode != DragMode::DragNone;
 }
 
 void GeometryViewer::ToTopView() {
@@ -322,13 +322,13 @@ void GeometryViewer::ToTopView() {
 		view.camAngleOx = -.5 * PI;
 		view.camAngleOy = /*mApp->leftHandedView ? PI :*/ 0.0;
 		view.camAngleOz = 0.0;
-		view.performXY = CameraPlaneMode::Top;
+		view.performXY = CameraPlaneMode::CamTop;
 	}
 	else { //Perspective
 		view.camAngleOx = .5 * PI;
 		view.camAngleOy = PI;
 		view.camAngleOz = 0.0;
-		view.performXY = CameraPlaneMode::None;
+		view.performXY = CameraPlaneMode::CamNone;
 	}
 	AutoScale();
 
@@ -343,7 +343,7 @@ void GeometryViewer::ToSideView() {
 
 	view.camAngleOz = 0.0;
 
-	view.performXY = (view.projMode == ProjectionMode::Perspective) ? CameraPlaneMode::None : CameraPlaneMode::Side;
+	view.performXY = (view.projMode == ProjectionMode::Perspective) ? CameraPlaneMode::CamNone : CameraPlaneMode::CamSide;
 	AutoScale();
 
 }
@@ -353,7 +353,7 @@ void GeometryViewer::ToFrontView() {
 	if (!work) return;
 	//view.camAngleOx = 0.0;
 	//view.camAngleOy = 0.0;
-	view.performXY = (view.projMode == ProjectionMode::Perspective) ? CameraPlaneMode::None : CameraPlaneMode::Front;
+	view.performXY = (view.projMode == ProjectionMode::Perspective) ? CameraPlaneMode::CamNone : CameraPlaneMode::CamFront;
 	AutoScale();
 
 }
@@ -556,14 +556,14 @@ void GeometryViewer::SetCurrentView(CameraView v) {
 	UpdateMatrix();
 	projCombo->SetSelectedIndex(view.projMode);
 	zoomBtn->SetEnabled(view.performXY != 0);
-	//UpdateMouseCursor(CursorMode::SelectFacet);
+	//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 	UpdateMouseCursor(cursorMode);
 
 }
 
-void GeometryViewer::SetProjection(int cursorMode) {
-	view.projMode = cursorMode;
-	projCombo->SetSelectedIndex(cursorMode);
+void GeometryViewer::SetProjection(ProjectionMode projMode) {
+	view.projMode = projMode;
+	projCombo->SetSelectedIndex(projMode);
 	ToFrontView();
 }
 
@@ -1001,8 +1001,8 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	}
 
 	UpdateMatrix();
-	zoomBtn->SetEnabled(view.performXY != CameraPlaneMode::None);
-	//if(reUpdateMouseCursor) UpdateMouseCursor(CursorMode::SelectFacet);
+	zoomBtn->SetEnabled(view.performXY != CameraPlaneMode::CamNone);
+	//if(reUpdateMouseCursor) UpdateMouseCursor(CursorMode::CursorSelectFacet);
 	if (reUpdateMouseCursor) UpdateMouseCursor(cursorMode);
 
 }
@@ -1041,15 +1041,15 @@ void GeometryViewer::Zoom() {
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
 
-		case CameraPlaneMode::Top: // TopView
+		case CameraPlaneMode::CamTop: // TopView
 			dx = -handedness * (0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
 			dz = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
-		case CameraPlaneMode::Side: // Side View
+		case CameraPlaneMode::CamSide: // Side View
 			dz = -handedness * (0.5 - x0 / (double)width) * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
-		case CameraPlaneMode::Front: // Front View
+		case CameraPlaneMode::CamFront: // Front View
 			dx = handedness * (-0.5 + x0 / (double)width) * (view.vRight - view.vLeft);
 			dy = (0.5 - y0 / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop);
 			break;
@@ -1121,19 +1121,19 @@ void GeometryViewer::Paint() {
 		double x, y, z;
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (view.performXY) {
-		case CameraPlaneMode::Top: // TopView
+		case CameraPlaneMode::CamTop: // TopView
 			x = -handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (handedness * org.x + view.camOffset.x) * view.camDist);
 			z = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.z + view.camOffset.z) * view.camDist;
 			sprintf(tmp, "X=%g, Z=%g", -x / view.camDist, z / view.camDist);
 			topBtn->SetState(true);
 			break;
-		case CameraPlaneMode::Side: // Side View
+		case CameraPlaneMode::CamSide: // Side View
 			z = view.vLeft + ((double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.z + view.camOffset.z) * view.camDist;
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y) * view.camDist;
 			sprintf(tmp, "Z=%g, Y=%g", z / view.camDist, y / view.camDist);
 			sideBtn->SetState(true);
 			break;
-		case CameraPlaneMode::Front: // Front View
+		case CameraPlaneMode::CamFront: // Front View
 			x = handedness * (-view.vLeft - (1.0 - (double)mXOrg / (double)width) * (view.vRight - view.vLeft) + (org.x + view.camOffset.x) * view.camDist);
 			y = -view.vTop - ((double)mYOrg / (double)(height - DOWN_MARGIN)) * (view.vBottom - view.vTop) + (org.y + view.camOffset.y) * view.camDist;
 			sprintf(tmp, "X=%g, Y=%g", x / view.camDist, y / view.camDist);
@@ -1161,7 +1161,7 @@ void GeometryViewer::Paint() {
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
 	DrawLinesAndHits();
-	int cullMode;
+	VolumeRenderMode cullMode;
 	if (volumeRenderMode != VolumeRenderMode::FrontAndBack && !mApp->leftHandedView) {
 		//Right-handed coord system: front and back inverse
 		if (volumeRenderMode == VolumeRenderMode::BackOnly) cullMode = VolumeRenderMode::FrontOnly;
@@ -1200,8 +1200,8 @@ void GeometryViewer::Paint() {
 	glLoadIdentity();
 	GLWindowManager::SetDefault();
 	// Draw selection rectangle or circle
-	bool displaySelectionRectangle = (dragMode == DragMode::SelectFacet || dragMode == DragMode::SelectVertex)
-		&& (cursorMode == CursorMode::SelectFacet || cursorMode == CursorMode::CSelectVertex || cursorMode == CursorMode::Zoom)
+	bool displaySelectionRectangle = (dragMode == DragMode::DragSelectFacet || dragMode == DragMode::DragSelectVertex)
+		&& (cursorMode == CursorMode::CursorSelectFacet || cursorMode == CursorMode::CursorSelectVertex || cursorMode == CursorMode::CursorZoom)
 		&& (selX1 != selX2) && (selY1 != selY2);
 	if (displaySelectionRectangle) {
 		bool circleMode = GetWindow()->IsAltDown();
@@ -1248,10 +1248,10 @@ void GeometryViewer::Paint() {
 	//From bottom to up
 	bool displayHideLotLabel = displayWarning;
 	bool displayCapsLockLabel = GetWindow()->IsCapsLockOn();
-	bool displayRotateLabel = dragMode == DragMode::Rotate;
+	bool displayRotateLabel = dragMode == DragMode::DragRotate;
 	bool displayScreenshotLabel = screenshotStatus.requested > 0;
 	bool displaySelectionLabel = displaySelectionRectangle;
-	bool displayPanLabel = dragMode == DragMode::Pan;
+	bool displayPanLabel = dragMode == DragMode::DragPan;
 	bool displayTabLabel = GetWindow()->IsTabDown();
 	bool displayNonPlanarLabel = interfGeom->hasNonPlanar;
 	int offsetCount = 0;
@@ -1355,7 +1355,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		if (unicode == SDLK_UP) {
 			if (GetWindow()->IsShiftDown()) {
 				view.camAngleOx += angleStep;
-				view.performXY = CameraPlaneMode::None;
+				view.performXY = CameraPlaneMode::CamNone;
 			}
 			else if (GetWindow()->IsCtrlDown()) {
 				// Up
@@ -1386,7 +1386,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		if (unicode == SDLK_DOWN) {
 			if (GetWindow()->IsShiftDown()) {
 				view.camAngleOx -= angleStep;
-				view.performXY = CameraPlaneMode::None;
+				view.performXY = CameraPlaneMode::CamNone;
 			}
 			else if (GetWindow()->IsCtrlDown()) {
 				// Down
@@ -1418,7 +1418,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 			double projection = (view.projMode == ProjectionMode::Orthographic) ? 1.0 : -1.0;
 			if (GetWindow()->IsShiftDown()) {
 				view.camAngleOy += angleStep * handedness * projection;
-				view.performXY = CameraPlaneMode::None;
+				view.performXY = CameraPlaneMode::CamNone;
 			}
 			else {
 				// Strafe left
@@ -1434,7 +1434,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 			double projection = (view.projMode == ProjectionMode::Orthographic) ? 1.0 : -1.0;
 			if (GetWindow()->IsShiftDown()) {
 				view.camAngleOy -= angleStep * handedness * projection;
-				view.performXY = CameraPlaneMode::None;
+				view.performXY = CameraPlaneMode::CamNone;
 			}
 			else {
 				// Strafe right
@@ -1448,16 +1448,16 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		}
 
 		if (unicode == SDLK_LCTRL || unicode == SDLK_RCTRL) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 
 		else if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 		else if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 		else if (unicode == SDLK_TAB) {
@@ -1475,15 +1475,15 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		int unicode = evt->key.keysym.sym;
 
 		if (unicode == SDLK_LCTRL || unicode == SDLK_RCTRL) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 		else if (unicode == SDLK_LSHIFT || unicode == SDLK_RSHIFT) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 		else if (unicode == SDLK_LALT || unicode == SDLK_RALT) {
-			//UpdateMouseCursor(CursorMode::SelectFacet);
+			//UpdateMouseCursor(CursorMode::CursorSelectFacet);
 			UpdateMouseCursor(cursorMode);
 		}
 		else if (unicode == SDLK_TAB) {
@@ -1520,30 +1520,30 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 			// Selection dragging
 			selX1 = selX2 = mX;
 			selY1 = selY2 = mY;
-			if (GetWindow()->IsDkeyDown() || cursorMode == CursorMode::Pan) dragMode = DragMode::Pan;
-			else if (GetWindow()->IsZkeyDown()) dragMode = DragMode::Zoom;
-			else if (cursorMode == CursorMode::Zoom) dragMode = DragMode::SelectFacet;
-			else if (cursorMode == CursorMode::SelectFacet) {
-				if (!GetWindow()->IsTabDown()) dragMode = DragMode::SelectFacet;
-				else dragMode = DragMode::SelectVertex;
+			if (GetWindow()->IsDkeyDown() || cursorMode == CursorMode::CursorPan) dragMode = DragMode::DragPan;
+			else if (GetWindow()->IsZkeyDown()) dragMode = DragMode::DragZoom;
+			else if (cursorMode == CursorMode::CursorZoom) dragMode = DragMode::DragSelectFacet;
+			else if (cursorMode == CursorMode::CursorSelectFacet) {
+				if (!GetWindow()->IsTabDown()) dragMode = DragMode::DragSelectFacet;
+				else dragMode = DragMode::DragSelectVertex;
 			}
-			else if (cursorMode == CursorMode::SelectVertex) {
-				if (!GetWindow()->IsTabDown()) dragMode = DragMode::SelectVertex;
-				else dragMode = DragMode::SelectFacet;
+			else if (cursorMode == CursorMode::CursorSelectVertex) {
+				if (!GetWindow()->IsTabDown()) dragMode = DragMode::DragSelectVertex;
+				else dragMode = DragMode::DragSelectFacet;
 			}
 #if defined(SYNRAD)
-			else if (cursorMode == CursorMode::CSelectTrajectory) dragMode = DragMode::SelectTrajectory;
+			else if (cursorMode == CursorMode::CSelectTrajectory) dragMode = DragMode::DragSelectTrajectory;
 #endif
 		}
 		if (evt->button.button == SDL_BUTTON_MIDDLE) {
 			// Camera translational dragging
-			dragMode = DragMode::Pan;
-			//UpdateMouseCursor(CursorMode::Pan);
+			dragMode = DragMode::DragPan;
+			//UpdateMouseCursor(CursorMode::CursorPan);
 		}
 		if (evt->button.button == SDL_BUTTON_RIGHT) {
 			// Camera rotating
-			dragMode = DragMode::Rotate;
-			//UpdateMouseCursor(CursorMode::Pan);
+			dragMode = DragMode::DragRotate;
+			//UpdateMouseCursor(CursorMode::CursorPan);
 		}
 
 		UpdateMouseCursor(cursorMode);
@@ -1578,18 +1578,18 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 
 		switch (dragMode) {
 
-		case DragMode::SelectFacet:
-		case DragMode::SelectVertex:
+		case DragMode::DragSelectFacet:
+		case DragMode::DragSelectVertex:
 #if defined(SYNRAD)
-		case DragMode::SelectTrajectory:
+		case DragMode::DragSelectTrajectory:
 #endif
 
-			if (cursorMode == CursorMode::Zoom) {
+			if (cursorMode == CursorMode::CursorZoom) {
 				Zoom();
 				autoScaleOn = false;
 				autoBtn->SetState(false);
 			}
-			else if ((cursorMode == CursorMode::SelectFacet && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CSelectVertex && GetWindow()->IsTabDown())) {
+			else if ((cursorMode == CursorMode::CursorSelectFacet && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CursorSelectVertex && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
@@ -1624,7 +1624,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 					}
 					}
 				}
-			else if ((cursorMode == CursorMode::CSelectVertex && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::SelectFacet && GetWindow()->IsTabDown())) {
+			else if ((cursorMode == CursorMode::CursorSelectVertex && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CursorSelectFacet && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
 				glLoadMatrixf(matProj);
@@ -1655,7 +1655,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 #endif
 
 		}
-		dragMode = DragMode::None;
+		dragMode = DragMode::DragNone;
 		UpdateMouseCursor(cursorMode); //Sets cursor
 	}
 
@@ -1678,14 +1678,14 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		switch (dragMode) {
 
-		case DragMode::None:
+		case DragMode::DragNone:
 			// performXY
 			mXOrg = GetWindow()->GetX(this, evt);
 			mYOrg = GetWindow()->GetY(this, evt);
 			break;
 
-		case DragMode::SelectVertex:
-		case DragMode::SelectFacet:
+		case DragMode::DragSelectVertex:
+		case DragMode::DragSelectFacet:
 		{
 
 
@@ -1702,7 +1702,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 		}
 		break;
 
-		case DragMode::Pan:
+		case DragMode::DragPan:
 
 			if (view.projMode == ProjectionMode::Perspective) {
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
@@ -1726,7 +1726,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 			autoBtn->SetState(false);
 			break;
 
-		case DragMode::Rotate:
+		case DragMode::DragRotate:
 
 			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
@@ -1754,9 +1754,9 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 						}
 					}
 				}
-				view.performXY = CameraPlaneMode::None;
+				view.performXY = CameraPlaneMode::CamNone;
 				zoomBtn->SetEnabled(false);
-				if (cursorMode == CursorMode::Zoom) UpdateMouseCursor(CursorMode::SelectFacet);
+				if (cursorMode == CursorMode::CursorZoom) UpdateMouseCursor(CursorMode::CursorSelectFacet);
 				UpdateMatrix();
 				if (autoScaleOn) (AutoScale(false));
 
@@ -1765,7 +1765,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 			//UpdateMatrix();
 			break;
 
-		case DragMode::Zoom:
+		case DragMode::DragZoom:
 			if ((fabs(diffX) > 1.0 || fabs(diffY) > 1.0) && (fabs(diffX) < 200.0 && fabs(diffY) < 200.0)) { // prevent some unwanted rotations
 				double factor = GetWindow()->IsShiftDown() ? 0.05 : 1.0;
 				TranslateScale(diffY * factor);
@@ -1804,16 +1804,16 @@ void GeometryViewer::ProcessMessage(GLComponent* src, int message) {
 			ToFrontView();
 		}
 		else if (src == zoomBtn) {
-			UpdateMouseCursor(CursorMode::Zoom);
+			UpdateMouseCursor(CursorMode::CursorZoom);
 		}
 		else if (src == sysBtn) {
 			GetParent()->ProcessMessage(this, MSG_GEOMVIEWER_MAXIMISE);
 		}
 		else if (src == selBtn) {
-			UpdateMouseCursor(CursorMode::SelectFacet);
+			UpdateMouseCursor(CursorMode::CursorSelectFacet);
 		}
 		else if (src == selVxBtn) {
-			UpdateMouseCursor(CursorMode::CSelectVertex);
+			UpdateMouseCursor(CursorMode::CursorSelectVertex);
 		}
 #if defined(SYNRAD)
 		else if (src == selTrajBtn) {
@@ -1826,12 +1826,12 @@ void GeometryViewer::ProcessMessage(GLComponent* src, int message) {
 			if (autoScaleOn) AutoScale(false);
 		}
 		else if (src == handBtn) {
-			UpdateMouseCursor(CursorMode::Pan);
+			UpdateMouseCursor(CursorMode::CursorPan);
 		}
 		break;
 	case MSG_COMBO:
 		if (src == projCombo) {
-			view.projMode = projCombo->GetSelectedIndex();
+			view.projMode = static_cast<ProjectionMode>(projCombo->GetSelectedIndex());
 			ToFrontView();
 		}
 		break;
