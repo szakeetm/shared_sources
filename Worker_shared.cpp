@@ -544,24 +544,6 @@ void Worker::Update(float appTime) {
 	//Copy global histogram
 	UpdateInterfaceCaches();
 
-	// Refresh local facet hit cache for the displayed moment
-	size_t nbFacet = interfGeom->GetNbFacet();
-	for (size_t i = 0; i < nbFacet; i++) {
-		InterfaceFacet* f = interfGeom->GetFacet(i);
-#if defined(SYNRAD)
-		//memcpy(&(f->facetHitCache), buffer + f->sh.hitOffset, sizeof(FacetHitBuffer));
-#endif
-#if defined(MOLFLOW)
-		if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
-			//Retrieve angle map from hits dp
-			if (f->sh.desorbType != DES_ANGLEMAP) {
-				if (f->selected && f->angleMapCache.empty() && !globalState->facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
-				f->angleMapCache = globalState->facetStates[i].recordedAngleMapPdf;
-			}
-		}
-#endif
-	}
-
 	try {
 		if (mApp->needsTexture || mApp->needsDirection) {
 			CalculateTextureLimits();
@@ -636,9 +618,9 @@ void Worker::FacetHitCacheToSimModel() {
 
 void Worker::UpdateInterfaceCaches()
 {
-	//Gets hits and histograms for currently displayed moment
+	//Gets hits, histograms and angle maps for currently displayed moment
 	//Global: histograms
-	//Facets: hits and histograms
+	//Facets: hits, histograms and angle maps
 
 	//GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
@@ -656,6 +638,12 @@ void Worker::UpdateInterfaceCaches()
 #if defined(MOLFLOW)
 		f->facetHitCache = globalState->facetStates[i].momentResults[displayedMoment].hits;
 		f->facetHistogramCache = globalState->facetStates[i].momentResults[displayedMoment].histogram;
+		if (f->sh.anglemapParams.record) { //Recording, so needs to be updated
+			if (f->sh.desorbType != DES_ANGLEMAP) { //safeguard that not desorbing and recordig at same time, should not happen
+				if (f->selected && f->angleMapCache.empty() && !globalState->facetStates[i].recordedAngleMapPdf.empty()) needsAngleMapStatusRefresh = true; //angleMapCache copied during an update
+				f->angleMapCache = globalState->facetStates[i].recordedAngleMapPdf;
+			}
+		}
 #endif
 #if defined(SYNRAD)
 		f->facetHitCache = globalState->facetStates[i].momentResults[0].hits;
