@@ -123,6 +123,7 @@ set(INTERFACE_FILES
         Interface/ImguiSmartSelection.cpp
         Interface/ImguiSelectDialog.cpp
         Interface/ImguiSelectTextureType.cpp
+        Interface/ImguiSelectFacetByResult.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

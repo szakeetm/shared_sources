@@ -92,14 +92,12 @@ void ImSelectTextureType::Draw()
 	if (!drawn) return;
 	float txtW = ImGui::CalcTextSize(" ").x;
 	float txtH = ImGui::GetTextLineHeightWithSpacing();
-	//ImGui::SetNextWindowSize(ImVec2(txtW*85, txtH*20));
-	if (ImGui::Begin("Select facets by texture properties [BETA - WIP]", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (ImGui::Begin("Select facets by texture properties", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (ImGui::BeginChild("Texture resolution", ImVec2(0, txtH * 7.5), true, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::TextDisabled("Texture resolution");
 			ImGui::TriState("Square texture", &squareTextrueCheck);
 			ImGui::TextWrapped("For non-square textures, condition applies to either of the two dimensions:");
 			if (ImGui::BeginTable("##SFBTPtable", 2, ImGuiTableFlags_SizingFixedFit)) {
-				// TODO this window needs a 3 state checkbox where 0 = not checked, 1 = full checked, 2 = half checked
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				if (ImGui::Checkbox("Exactly", &exactlyCheck)) {
