@@ -542,7 +542,7 @@ void Worker::Update(float appTime) {
 
 
 	//Copy global histogram
-	UpdateFacetCaches();
+	UpdateInterfaceCaches();
 
 	// Refresh local facet hit cache for the displayed moment
 	size_t nbFacet = interfGeom->GetNbFacet();
@@ -634,18 +634,21 @@ void Worker::FacetHitCacheToSimModel() {
 	simManager.SetFacetHitCounts(facetHitCaches);
 }
 
-void Worker::UpdateFacetCaches()
+void Worker::UpdateInterfaceCaches()
 {
-	//Gets facet hits and histograms for currently displayed moments
+	//Gets hits and histograms for currently displayed moment
+	//Global: histograms
+	//Facets: hits and histograms
 
 	//GLOBAL HISTOGRAMS
 	//Prepare vectors to receive data
 #if defined(MOLFLOW)
-	//globalHistogramCache = globalState->globalHistograms[displayedMoment];
+	globalHistogramCache = globalState->globalHistograms[displayedMoment];
 #endif
 #if defined(SYNRAD)
-	if (!globalState->globalHistograms.empty())
+	if (!globalState->globalHistograms.empty()) {
 		globalHistogramCache = globalState->globalHistograms[0];
+	}
 #endif
 	//FACET HISTOGRAMS
 	for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {

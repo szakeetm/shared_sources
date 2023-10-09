@@ -102,7 +102,7 @@ public:
     //void Exit(); // Free all allocated resource
   //void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
-  void UpdateFacetCaches();
+  void UpdateInterfaceCaches();
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
     void GetProcStatus(ProcComm &procInfoList);// Get process status
