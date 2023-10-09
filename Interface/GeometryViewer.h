@@ -32,24 +32,24 @@ class GLCombo;
 class GLOverlayLabel;
 
 enum DragMode : int {
-	None,
-	SelectFacet,
-	Rotate,
-	Zoom,
-	Pan,
-	SelectVertex
+	DragNone,
+	DragSelectFacet,
+	DragRotate,
+	DragZoom,
+	DragPan,
+	DragSelectVertex
 #ifdef  SYNRAD
-	, SelectTrajectory
+	, DragSelectTrajectory
 #endif
 };
 
 enum CursorMode : int {
-	SelectFacet,
-	Zoom,
-	Pan,
-	SelectVertex,
+	CursorSelectFacet,
+	CursorZoom,
+	CursorPan,
+	CursorSelectVertex,
 	#ifdef  SYNRAD
-	,SelectTrajectory
+	,CursorSelectTrajectory
 	#endif
 };
 
@@ -80,7 +80,7 @@ public:
   // Component method
   void ToOrigo();
   void SetWorker(Worker *s);
-  void SetProjection(int mode);
+  void SetProjection(ProjectionMode projMode);
   void ToTopView();
   void ToSideView();
   void ToFrontView();
@@ -153,7 +153,7 @@ private:
   void DrawLeak();
   void DrawLinesAndHits();
   void Zoom();
-  void UpdateMouseCursor(int mode);
+  void UpdateMouseCursor(CursorMode mode);
   void TranslateScale(double diff);
   void PaintCompAndBorder();
   void PaintSelectedVertices(bool hiddenVertex);
@@ -200,8 +200,8 @@ private:
   #endif
   
   // Viewer mode
-  DragMode      dragMode = DragMode::None;
-  CursorMode      cursorMode = CursorMode::SelectFacet;
+  DragMode      dragMode = DragMode::DragNone;
+  CursorMode      cursorMode = CursorMode::CursorSelectFacet;
   bool     selected=false;
 
   // View parameters

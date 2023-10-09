@@ -38,16 +38,17 @@ struct SelectionGroup{
     std::vector<size_t> facetIds; // List of facets
 };
 
+//Don't change enum order! Must be backward compatible with int (file save, combobox index)
 enum ProjectionMode : int {
     Perspective,
     Orthographic
 };
 
 enum CameraPlaneMode : int {
-    None,
-    Top,
-    Side,
-    Front
+    CamNone,
+    CamTop,
+    CamSide,
+    CamFront
 };
 
 enum VolumeRenderMode : int {
@@ -73,7 +74,7 @@ struct CameraView{
     double   lightAngleOy=0.0; //Light direction
 
     Vector3d camOffset;  // Camera target offset
-    CameraPlaneMode      performXY= CameraPlaneMode::None;  // Draw x,y,z coordinates when aligned with axis and orthographic
+    CameraPlaneMode      performXY= CameraPlaneMode::CamNone;  // Draw x,y,z coordinates when aligned with axis and orthographic
 
     double   vLeft=0.0;      // Viewport in 2D proj space (used for orthographic autoscaling)
     double   vRight = 0.0;     // Viewport in 2D proj space (used for orthographic autoscaling)
