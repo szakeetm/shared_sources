@@ -38,31 +38,49 @@ struct SelectionGroup{
     std::vector<size_t> facetIds; // List of facets
 };
 
+enum ProjectionMode : int {
+    Perspective,
+    Orthographic
+};
+
+enum CameraPlaneMode : int {
+    None,
+    Top,
+    Side,
+    Front
+};
+
+enum VolumeRenderMode : int {
+    FrontAndBack,
+    FrontOnly,
+    BackOnly
+};
+
 // Definition of a view. Note: all basis are left handed
 
 struct CameraView{
 
     std::string name;    // View name
 
-    int      projMode;   // Projection type
-    double   camAngleOx; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
-    double   camAngleOy; // Spheric coordinates Left-hand rotation (in left-hand c.sys)
+    ProjectionMode      projMode = ProjectionMode::Orthographic;   // Projection type
+    double   camAngleOx=0.0; // Spheric coordinates. Right-hand rotation (in left-hand coord.sys)
+    double   camAngleOy=0.0; // Spheric coordinates Left-hand rotation (in left-hand coord.sys)
+    double   camAngleOz=0.0; // Rotation around third axis
 
-    double   camAngleOz; // Rotation around third axis
+    double   camDist=100.0;    // Camera distance (or zoom in orthographic)
 
-    double   camDist;    // Camera distance (or zoom in orthographic)
-
-    double   lightAngleOx; //Light direction
-    double   lightAngleOy; //Light direction
+    double   lightAngleOx=0.0; //Light direction
+    double   lightAngleOy=0.0; //Light direction
 
     Vector3d camOffset;  // Camera target offset
-    int      performXY;  // Draw x,y,z coordinates when aligned with axis and orthographic
+    CameraPlaneMode      performXY= CameraPlaneMode::None;  // Draw x,y,z coordinates when aligned with axis and orthographic
 
-    double   vLeft;      // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vRight;     // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vTop;       // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vBottom;    // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vLeft=0.0;      // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vRight = 0.0;     // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vTop = 0.0;       // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vBottom = 0.0;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
+    double cutFactor = 0.0;
 };
 
 struct UserFormula {
