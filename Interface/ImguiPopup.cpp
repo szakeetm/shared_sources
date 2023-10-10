@@ -65,7 +65,7 @@ namespace WrappersIO {
 			}
 			ImGui::TextWrapped(message);
 			for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
-				if (buttons.at(i)->key == ImGui::keyEnter && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = ImGui::keyNumEnter;
+				if (buttons.at(i)->key == SDL_SCANCODE_RETURN && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
 				if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str()) || io.KeysDown[buttons.at(i)->key] || io.KeysDown[buttons.at(i)->key2]) { // draw them
 					if (buttons.at(i)->retVal == buttonFunction) { // if the button is the  function type
 						buttons.at(i)->DoCall(); // call the function
@@ -102,7 +102,7 @@ namespace WrappersIO {
 		this->retVal = retVal;
 		this->key = key;
 		this->key2 = key2;
-		if (this->key == ImGui::keyEnter && this->key2 == -1) this->key2 = ImGui::keyNumEnter;
+		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	MyButtonFunc::MyButtonFunc(std::string name, std::function<void()> func, int key, int key2) {
@@ -110,7 +110,7 @@ namespace WrappersIO {
 		this->function = func;
 		this->key = key;
 		this->key2 = key2;
-		if (this->key == ImGui::keyEnter && this->key2 == -1) this->key2 = ImGui::keyNumEnter;
+		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void MyButtonFunc::DoCall() {
@@ -135,7 +135,7 @@ namespace WrappersIO {
 		this->argument = arg;
 		this->key = key;
 		this->key2 = key2;
-		if (this->key == ImGui::keyEnter && this->key2 == -1) this->key2 = ImGui::keyNumEnter;
+		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void MyButtonFuncInt::DoCall() {
@@ -172,13 +172,13 @@ namespace WrappersIO {
 		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize(message.c_str()).x);
 			ImGui::InputText(this->message.c_str(), &this->value);
-			if (ImGui::Button("  OK  ") || io.KeysDown[ImGui::keyEnter] || io.KeysDown[ImGui::keyNumEnter]) {
+			if (ImGui::Button("  OK  ") || io.KeysDown[SDL_SCANCODE_RETURN] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 				this->returnValue = buttonFunction;
 				function(this->value);
 			} ImGui::SameLine();
-			if (ImGui::Button("  Cancel  ") || io.KeysDown[ImGui::keyEsc]) {
+			if (ImGui::Button("  Cancel  ") || io.KeysDown[SDL_SCANCODE_ESCAPE]) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 			}
@@ -192,6 +192,6 @@ namespace WrappersIO {
 		}
 	}
 	void InfoPopup(std::string title, std::string msg) {
-		mApp->imWnd->popup.Open(title, msg, { std::make_shared<MyButtonInt>("Ok", buttonOk,ImGui::keyEnter, ImGui::keyNumEnter) });
+		mApp->imWnd->popup.Open(title, msg, { std::make_shared<MyButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
 	}
 }

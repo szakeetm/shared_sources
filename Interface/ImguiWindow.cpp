@@ -200,6 +200,7 @@ void ImguiWindow::init() {
     selByNum.Init();
     selByTex = ImSelectTextureType();
     selByTex.Init();
+    shortcutMan = ShortcutManager();
 
     start_time = ImGui::GetTime();
 }
@@ -322,25 +323,38 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Facet Move", &show_facet_move);
 
             static int response;
-            ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
-            if (ImGui::Button("Test Popup Wrapper")) {
-                popup.Open("Title##0", "Message", { 
-                    std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk, ImGui::keyEnter),
-                    std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, ImGui::keyEsc)
-                    }); // Open wrapped popup
+            if (ImGui::CollapsingHeader("Popups")) {
+                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
+                if (ImGui::Button("Test Popup Wrapper")) {
+                    popup.Open("Title##0", "Message", { 
+                        std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk, SDL_SCANCODE_RETURN),
+                        std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
+                        }); // Open wrapped popup
+                }
+                if (popup.WasResponse()) { // if there was a response
+                    response = popup.GetResponse(); // do something
+                }
+                ImGui::Text("Popup response: "+std::to_string(response));
+                ImGui::EndChild();
+                static float prog;
+                if (ImGui::SliderFloat("Progress", &prog, 0, 1))
+                    progress.SetProgress(prog);
+                if (ImGui::Button("Toggle progress bar")) {
+                    progress.SetMessage("Message");
+                    progress.SetTitle("Title##1");
+                    progress.Toggle();
+                }
             }
-            if (popup.WasResponse()) { // if there was a response
-                response = popup.GetResponse(); // do something
-            }
-            ImGui::Text("Popup response: "+std::to_string(response));
-            ImGui::EndChild();
-            static float prog;
-            if (ImGui::SliderFloat("Progress", &prog, 0, 1))
-                progress.SetProgress(prog);
-            if (ImGui::Button("Toggle progress bar")) {
-                progress.SetMessage("Message");
-                progress.SetTitle("Title##1");
-                progress.Toggle();
+            if (ImGui::CollapsingHeader("Shortcuts")) {
+                ImGui::Text("Register ctrl+shit+t");
+                if (ImGui::Button("Register")) {
+                    auto F = []() { WrappersIO::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
+                    shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL,SDL_SCANCODE_LSHIFT,SDL_SCANCODE_T }, F, 100);
+                }
+                ImGui::Text("unegister ctrl+shit+t");
+                if (ImGui::Button("Unregister")) {
+                    shortcutMan.UnregisterShortcut(100);
+                }
             }
             
 
@@ -373,6 +387,8 @@ void ImguiWindow::renderSingle() {
         smartSelect.Draw();
         selByNum.Draw();
         selByTex.Draw();
+
+        shortcutMan.DoShortcuts();
 
         // Rendering
         ImGui::Render();

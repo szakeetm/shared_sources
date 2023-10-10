@@ -60,7 +60,7 @@ void ImSelectTextureType::Preprocess() {
 	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
-				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,SDL_SCANCODE_RETURN) 
 				});
 			return;
 		}
@@ -68,13 +68,13 @@ void ImSelectTextureType::Preprocess() {
 	else if (mode == between) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
-				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,SDL_SCANCODE_RETURN) 
 				});
 			return;
 		}
 		if (minValue > maxValue) {
 			mApp->imWnd->popup.Open("Error", "Minimum cannot be greater than maximum", { 
-				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,ImGui::keyEnter) 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk,SDL_SCANCODE_RETURN) 
 				});
 			return;
 		}

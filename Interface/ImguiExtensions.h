@@ -56,11 +56,5 @@ namespace ImGui {
     Spinner(const char *label, float radius, int thickness, const ImU32 &color);
 
     void Loader(float& progress, float& time);
-    
-    enum Keys {
-        keyEnter = 40,
-        keyEsc = 41,
-        keyNumEnter = 88,
-    };
 }
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

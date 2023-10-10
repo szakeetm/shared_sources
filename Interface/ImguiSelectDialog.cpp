@@ -56,7 +56,7 @@ void ImSelectDialog::Preprocess() {
 	}
 	catch (const std::exception& e) {
 		mApp->imWnd->popup.Open("Error", e.what(), { 
-			std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk, ImGui::keyEnter) 
+			std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk, SDL_SCANCODE_RETURN) 
 			});
 		return;
 	}

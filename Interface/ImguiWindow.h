@@ -27,6 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiSelectDialog.h"
 #include "ImguiSelectTextureType.h"
 #include "Helper/GLProgress_ImGui.h"
+#include "ImguiShortcutManager.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -68,6 +69,7 @@ public:
     ImSmartSelection smartSelect;
     ImSelectDialog selByNum;
     ImSelectTextureType selByTex;
+    ShortcutManager shortcutMan;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 
