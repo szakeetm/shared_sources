@@ -202,6 +202,8 @@ void ImguiWindow::init() {
     selByTex.Init();
     shortcutMan = ShortcutManager();
 
+    RegisterShortcuts();
+
     start_time = ImGui::GetTime();
 }
 

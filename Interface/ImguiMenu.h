@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class ImguiWindow;
 namespace ImMenu {};
 void ShowAppMainMenuBar();
+void RegisterShortcuts();
 
 
 #endif //MOLFLOW_PROJ_IMGUIMENU_H

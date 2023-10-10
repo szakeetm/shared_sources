@@ -240,6 +240,21 @@ void DoLoadSelected(std::string file) {
     mApp->LoadFile(file);
 }
 
+void LoadMenuButtonPress() {
+    auto common = []() { DoLoadFile(); };
+    if (mApp->changedSinceSave) {
+        auto Y = [common]() -> void { if (DoSave()) common(); };
+        mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
+            std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y),
+            std::make_shared<WrappersIO::MyButtonFunc>("No", common),
+            std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel)
+            });
+    }
+    else {
+        common();
+    }
+}
+
 static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
         auto common = []() { NewGeometry(); };
@@ -257,18 +272,7 @@ static void ShowMenuFile() {
     }
 
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
-        auto common = []() { DoLoadFile(); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel)
-                });
-        }
-        else {
-            common();
-        }
+        LoadMenuButtonPress();
     }
     if (mApp->recentsList.empty()) {
         ImGui::BeginDisabled();
@@ -1612,6 +1616,11 @@ static void ShowMenuAbout() {
 }
 }
 
+void RegisterShortcuts() {
+    auto F = []() { ImMenu::LoadMenuButtonPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, F);
+}
+
 //-----------------------------------------------------------------------------
 // [SECTION] Example App: Main Menu Bar / ShowAppMainMenuBar()
 //-----------------------------------------------------------------------------
@@ -1626,14 +1635,14 @@ static void ShowMenuAbout() {
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of
 // the main viewport + call BeginMenuBar() into it.
 void ShowAppMainMenuBar() {
-    if(!interfGeom)
+    if (!interfGeom)
         interfGeom = mApp->worker.GetGeometry();
 
     static float verticalMainMenuBarSize = 5.f;
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.f, verticalMainMenuBarSize));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().ItemSpacing.y + verticalMainMenuBarSize));
     if (ImGui::BeginMainMenuBar()) {
-    ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(2);
         ImGui::AlignTextToFramePadding();
         if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
             ImMenu::ShowMenuFile();
@@ -1663,12 +1672,12 @@ void ShowAppMainMenuBar() {
             ImMenu::ShowMenuTest();
             ImGui::EndMenu();
         }
-        #ifdef MOLFLOW // TODO Polymorphism
+#ifdef MOLFLOW // TODO Polymorphism
         if (ImGui::BeginMenu("Time")) {
             ImMenu::ShowMenuTime();
             ImGui::EndMenu();
         }
-        #endif //MOLFLOW
+#endif //MOLFLOW
         if (ImGui::BeginMenu("About")) {
             ImMenu::ShowMenuAbout();
             ImGui::EndMenu();

@@ -24,9 +24,9 @@ namespace WrappersIO {
 	class MyButton {
 	public:
 		std::string name;
-		int retVal = notDrawn; // PopupCode enum contains reserved values
-		int key = -1;
-		int key2 = -1;
+		int retVal;
+		int key;
+		int key2;
 		virtual void DoCall() = 0;
 	};
 
@@ -61,7 +61,7 @@ namespace WrappersIO {
 
 	class MyButtonInt : public MyButton {
 	public:
-		MyButtonInt(std::string name, int retVal, int key = -1, int key2 = -1);
+		MyButtonInt(std::string name, int retVal=0, int key = -1, int key2 = -1);
 		void DoCall() {};
 	};
 

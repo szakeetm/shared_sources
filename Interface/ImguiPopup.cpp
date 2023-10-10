@@ -67,9 +67,7 @@ namespace WrappersIO {
 			for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
 				if (buttons.at(i)->key == SDL_SCANCODE_RETURN && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
 				if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str()) || io.KeysDown[buttons.at(i)->key] || io.KeysDown[buttons.at(i)->key2]) { // draw them
-					if (buttons.at(i)->retVal == buttonFunction) { // if the button is the  function type
-						buttons.at(i)->DoCall(); // call the function
-					}
+					buttons.at(i)->DoCall(); // call the function
 					returnValue = (buttons.at(i))->retVal; // if pressed change the return value
 				} ImGui::SameLine();
 			}
@@ -110,6 +108,7 @@ namespace WrappersIO {
 		this->function = func;
 		this->key = key;
 		this->key2 = key2;
+		this->retVal = buttonFunction;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
@@ -123,6 +122,8 @@ namespace WrappersIO {
 		this->argument = arg;
 		this->key = key;
 		this->key2 = key2;
+		this->retVal = buttonFunction;
+		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void MyButtonFuncStr::DoCall() {
@@ -135,6 +136,7 @@ namespace WrappersIO {
 		this->argument = arg;
 		this->key = key;
 		this->key2 = key2;
+		this->retVal = buttonFunction;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
