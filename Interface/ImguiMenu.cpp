@@ -255,6 +255,21 @@ void LoadMenuButtonPress() {
     }
 }
 
+void QuitMenuPress() {
+    auto common = []() { exit(0); };
+    if (mApp->changedSinceSave) {
+        auto Y = [common]() { if (DoSave()) common(); };
+        mApp->imWnd->popup.Open("Save current geometry?", "Save current geometry before quitting?", {
+                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
+                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
+                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
+            });
+    }
+    else {
+        common();
+    }
+}
+
 static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
         auto common = []() { NewGeometry(); };
@@ -346,19 +361,32 @@ static void ShowMenuFile() {
     #endif //MOLFLOW
     ImGui::Separator();
     if (ImGui::MenuItem(ICON_FA_TIMES "  Quit", "Alt+F4")) {
-        auto common = []() { exit(0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() { if (DoSave()) common(); };
-            mApp->imWnd->popup.Open("Save current geometry?", "Save current geometry before quitting?", {
-                    std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                    std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                    std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else {
-            common();
-        }
+        QuitMenuPress();
     }
+}
+
+void InvertSelectionMenuPress() {
+    InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+    for (int i = 0; i < interfGeom->GetNbFacet(); i++)
+        interfGeom->GetFacet(i)->selected = !interfGeom->GetFacet(i)->selected;
+    interfGeom->UpdateSelection();
+    mApp->UpdateFacetParams(true);
+}
+
+void UpdateSelectionShortcuts() {
+    mApp->imWnd->shortcutMan.UnregisterShortcut(5);
+    for (int i = 0; i < mApp->selections.size() && i+1<=9; i++) {
+        auto F = [i]() { mApp->SelectSelection(i); };
+        mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_1 + i }, F, 5);
+    }
+}
+
+void NewSelectionMemoryMenuPress() {
+    auto F = [](std::string arg) {
+        mApp->AddSelection(arg);
+        UpdateSelectionShortcuts();
+        };
+    mApp->imWnd->input.Open("Enter selection name", "Selection name", F, "Selection #" + std::to_string(mApp->selections.size() + 1));
 }
 
 static void ShowMenuSelection() {
@@ -529,23 +557,21 @@ static void ShowMenuSelection() {
     }
 
     if (ImGui::MenuItem("Invert selection", "CTRL+I")) {
-        for (int i = 0; i < interfGeom->GetNbFacet(); i++)
-            interfGeom->GetFacet(i)->selected = !interfGeom->GetFacet(i)->selected;
-        interfGeom->UpdateSelection();
-        mApp->UpdateFacetParams(true);
+        InvertSelectionMenuPress();
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Memorize selection to")) {
         if (ImGui::MenuItem("Add new...", "CTRL+W")) {
-            auto F = [](std::string arg) {
-                mApp->AddSelection(arg);
-            };
-            mApp->imWnd->input.Open("Enter selection name", "Selection name", F, "Selection #" + std::to_string(mApp->selections.size() + 1));
+            NewSelectionMemoryMenuPress();
         }
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
-                mApp->selections[i].facetIds = interfGeom->GetSelectedFacets(); // TODO: Modal to ask for confirmation
+                auto F = [i, interfGeom]() {mApp->selections[i].facetIds = interfGeom->GetSelectedFacets(); };
+                mApp->imWnd->popup.Open("Overwrite?", "Are you sure you want to overwrite" + mApp->selections[i].name + "?", {
+                    std::make_shared<WrappersIO::MyButtonFunc>("Yes", F, SDL_SCANCODE_RETURN),
+                    std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
+                    });
             }
         }
         ImGui::EndMenu();
@@ -577,7 +603,7 @@ static void ShowMenuSelection() {
 
     if (ImGui::BeginMenu("Clear memorized")) {
         if (ImGui::MenuItem("Clear All")) {
-            auto Y = []() -> void { mApp->ClearAllSelections(); };
+            auto Y = []() -> void { mApp->ClearAllSelections(); UpdateSelectionShortcuts(); };
             mApp->imWnd->popup.Open("Clear All?", "Clear all memorized selections?.", {
                 std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
                 std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE) 
@@ -586,7 +612,7 @@ static void ShowMenuSelection() {
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
-                auto Y = [](int i) -> void { mApp->selections.erase(mApp->selections.begin() + (i)); };
+                auto Y = [](int i) -> void { mApp->selections.erase(mApp->selections.begin() + (i)); UpdateSelectionShortcuts(); };
                 mApp->imWnd->popup.Open("Clear memorized selection?", ("Are you sure you wish to forget selection " + mApp->selections[i].name), {
                     std::make_shared<WrappersIO::MyButtonFuncInt>("Yes", Y, i, SDL_SCANCODE_RETURN),
                     std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE) 
@@ -1332,6 +1358,23 @@ static void ShowMenuVertex() {
     }
 }
 
+void ShowPreviousStructureMenuPress() {
+    if (interfGeom->viewStruct == -1) interfGeom->viewStruct = interfGeom->GetNbStructure() - 1;
+    else
+        interfGeom->viewStruct = (int)Previous(interfGeom->viewStruct, interfGeom->GetNbStructure());
+    interfGeom->UnselectAll();
+}
+
+void ShowNextStructureMenuPress() {
+    interfGeom->viewStruct = (int)Next(interfGeom->viewStruct, interfGeom->GetNbStructure());
+    interfGeom->UnselectAll();
+}
+
+void AddNewViewMenuPress() {
+    LockWrapper myLock(mApp->imguiRenderLock);
+    mApp->AddView();
+}
+
 static void ShowMenuView() {
     if (ImGui::BeginMenu("Structure")) {
         if (ImGui::MenuItem("New structure...")) {
@@ -1347,19 +1390,16 @@ static void ShowMenuView() {
             interfGeom->viewStruct = -1; // -1 will show all, number of structures is interfGeom->GetNbStructure()
         }
         if (ImGui::MenuItem("Show Previous", "Ctrl+F11")) {
-            if (interfGeom->viewStruct == -1) interfGeom->viewStruct = interfGeom->GetNbStructure() - 1;
-            else
-                interfGeom->viewStruct = (int)Previous(interfGeom->viewStruct, interfGeom->GetNbStructure());
-            interfGeom->UnselectAll();
+            ShowPreviousStructureMenuPress();
         }
-        if (ImGui::MenuItem("Show Next", "Ctrl+F12")) {
-            interfGeom->viewStruct = (int)Next(interfGeom->viewStruct, interfGeom->GetNbStructure());
-            interfGeom->UnselectAll();
+        if (ImGui::MenuItem("Show Next", "Ctrl+F12")) { 
+            ShowNextStructureMenuPress();
         }
         ImGui::Separator();
         // Procedural list of memorized structures
         for (int i = 0; i < interfGeom->GetNbStructure(); i++) {
-            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=12 ? "Ctrl + F" + std::to_string(i + 2) : "")) {
+            // TODO: procedural shortcuts, perhaps at New Structure
+            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=10 ? "Ctrl + F" + std::to_string(i + 2) : "")) {
                 interfGeom->viewStruct = i;
             }
         }
@@ -1378,13 +1418,13 @@ static void ShowMenuView() {
     ImGui::Separator();
 
     if (ImGui::BeginMenu("Memorize view to")) {
-        if (ImGui::MenuItem("Add new...", "CTLR+Q")) {
-            LockWrapper myLock(mApp->imguiRenderLock);
-            mApp->AddView();
+        if (ImGui::MenuItem("Add new...", "CTRL+Q")) {
+            AddNewViewMenuPress();
         }
-        std::vector<std::string> shortcuts = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" };
+        std::vector<std::string> shortcuts = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10" };
         for (int i = 0; i < mApp->views.size(); i++) {
-            if (ImGui::MenuItem(mApp->views[i].name, i < shortcuts.size() ? "Alt + " + shortcuts[i] : "")) { //mApp->views[i].names - names are empty, also in legacy GUI
+            // TODO: shortcuts at Add new view
+            if (ImGui::MenuItem(mApp->views[i].name, i < shortcuts.size() ? "Alt + " + shortcuts[i] : "")) {
                 mApp->OverWriteView(i);
             }
         }
@@ -1615,10 +1655,79 @@ static void ShowMenuAbout() {
     }
 }
 }
-
+// static (not changing at runtime) shortcuts
 void RegisterShortcuts() {
-    auto F = []() { ImMenu::LoadMenuButtonPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, F);
+    auto ControlO = []() { ImMenu::LoadMenuButtonPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, ControlO);
+
+    auto ControlS = []() {if (mApp->worker.GetGeometry()->IsLoaded()) ImMenu::DoSave(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_S }, ControlS);
+    
+    auto Altf4 = []() { ImMenu::QuitMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F4 }, Altf4);
+
+    auto AltS = []() { mApp->imWnd->smartSelect.Show(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_S }, AltS);
+
+    auto ControlA = []() { interfGeom->SelectAll(); mApp->UpdateFacetParams(true); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_A }, ControlA);
+
+    auto AltN = []() { mApp->imWnd->selByNum.Show(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_N }, AltN);
+
+    auto ControlI = []() { ImMenu::InvertSelectionMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_I }, ControlI);
+    
+    auto ControlW = []() { ImMenu::NewSelectionMemoryMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_W }, ControlW);
+
+    auto Altf11 = []() { mApp->SelectSelection(Previous(mApp->idSelection, mApp->selections.size())); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F11 }, Altf11);
+
+    auto Altf12 = []() { mApp->SelectSelection(Next(mApp->idSelection, mApp->selections.size())); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F12 }, Altf12);
+
+    auto AltF = []() { ImMenu::FormulaEditorMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F }, AltF);
+
+    auto AltC = []() { ImMenu::ConvergencePlotterMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_C }, AltC);
+
+    auto AltT = []() { ImMenu::TexturePlotterMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_T }, AltT);
+
+    auto AltP = []() { ImMenu::ProfilePlotterMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_P }, AltP);
+
+    auto ControlD = []() { ImMenu::TextureScalingMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_D }, ControlD);
+
+    auto ControlR = []() { ImMenu::TakeScreenshotMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_R }, ControlR);
+
+    auto ControlDel = []() { ImMenu::FacetDeleteMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_DELETE }, ControlDel);
+
+    auto ControlN = []() { ImMenu::SwapNormalMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_N }, ControlN);
+
+    auto ControlH = []() { ImMenu::ShiftIndicesMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_H }, ControlH);
+
+    auto ControlF1 = []() { interfGeom->viewStruct = -1; };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F1 }, ControlF1);
+
+    auto ControlF11 = []() { ImMenu::ShowPreviousStructureMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F11 }, ControlF11);
+
+    auto ControlF12 = []() { ImMenu::ShowNextStructureMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F12 }, ControlF12);
+
+    auto ControlQ = []() { ImMenu::AddNewViewMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_Q }, ControlQ);
+
+    auto AltQ = []() { ImMenu::QuickPipeMenuPress(); };
+    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_Q }, AltQ);
 }
 
 //-----------------------------------------------------------------------------

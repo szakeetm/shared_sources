@@ -13,6 +13,7 @@ void ShortcutManager::UnregisterShortcut(short id)
 	for (int i = 0; i < shortcuts.size();i++) {
 		if (shortcuts.at(i)->id == id) {
 			shortcuts.erase(std::find(shortcuts.begin(), shortcuts.end(), shortcuts.at(i)));
+			i = 0;
 		}
 	}
 }
