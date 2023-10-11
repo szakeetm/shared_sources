@@ -518,7 +518,6 @@ void GeometryViewer::UpdateMatrix() {
 	}
 
 	glGetFloatv(GL_PROJECTION_MATRIX, matProj);
-
 }
 
 double GeometryViewer::ToDeg(double radians) {
@@ -1145,11 +1144,16 @@ void GeometryViewer::Paint() {
 
 	// Clipping and projection matrix
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
+
+
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(matProj);
 	UpdateLight();
 	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(matView);
+	glLoadMatrixf(matView);	GLdouble clipPlane[4] = { 1.0, 0.0, 0.0, 0.5 }; // Define your clip plane equation
+	glClipPlane(GL_CLIP_PLANE0, clipPlane);
+	glEnable(GL_CLIP_PLANE0);
 	glDisable(GL_BLEND);
 
 	// Draw geometry
@@ -1160,6 +1164,7 @@ void GeometryViewer::Paint() {
 
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
+
 	DrawLinesAndHits();
 	VolumeRenderMode cullMode;
 	if (volumeRenderMode != VolumeRenderMode::FrontAndBack && !mApp->leftHandedView) {
@@ -1193,6 +1198,10 @@ void GeometryViewer::Paint() {
 
 	DrawCoordinateAxes();
 	PaintSelectedVertices(showHiddenVertex);
+
+
+	glDisable(GL_CLIP_PLANE0);
+
 	//DrawBB();
 	// Restore old transformation/viewport
 	GetWindow()->ClipToWindow();
