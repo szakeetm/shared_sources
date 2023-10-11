@@ -397,15 +397,15 @@ static void ShowMenuSelection() {
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
 
-    if (ImGui::MenuItem("Smart Select facets...", "ALT+S")) {
+    if (ImGui::MenuItem("Smart Select facets...", "Alt+S")) {
         mApp->imWnd->smartSelect.Show();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Select All Facets", "CTRL+A")) {
+    if (ImGui::MenuItem("Select All Facets", "Ctrl+A")) {
         interfGeom->SelectAll();
         mApp->UpdateFacetParams(true);
     }
-    if (ImGui::MenuItem("Select by Facet Number...", "ALT+N")) {
+    if (ImGui::MenuItem("Select by Facet Number...", "Alt+N")) {
         mApp->imWnd->selByNum.Show();
     }
 
@@ -556,12 +556,12 @@ static void ShowMenuSelection() {
         mApp->UpdateFacetParams(true);
     }
 
-    if (ImGui::MenuItem("Invert selection", "CTRL+I")) {
+    if (ImGui::MenuItem("Invert selection", "Ctrl+I")) {
         InvertSelectionMenuPress();
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Memorize selection to")) {
-        if (ImGui::MenuItem("Add new...", "CTRL+W")) {
+        if (ImGui::MenuItem("Add new...", "Ctrl+W")) {
             NewSelectionMemoryMenuPress();
         }
         ImGui::Separator();
@@ -580,7 +580,7 @@ static void ShowMenuSelection() {
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (i <= 8) {
                 char shortcut[32];
-                sprintf(shortcut, "ALT+%llu", 1 + i);
+                sprintf(shortcut, "Alt+%llu", 1 + i);
                 if (ImGui::MenuItem(mApp->selections[i].name.c_str(), shortcut)) {
                     mApp->SelectSelection(i);
                 }
@@ -592,10 +592,10 @@ static void ShowMenuSelection() {
         }
 
         ImGui::Separator();
-        if (ImGui::MenuItem("Select previous", "ALT+F11")) {
+        if (ImGui::MenuItem("Select previous", "Alt+F11")) {
             mApp->SelectSelection(Previous(mApp->idSelection, mApp->selections.size()));
         }
-        if (ImGui::MenuItem("Select next", "ALT+F12")) {
+        if (ImGui::MenuItem("Select next", "Alt+F12")) {
             mApp->SelectSelection(Next(mApp->idSelection, mApp->selections.size()));
         }
         ImGui::EndMenu();
@@ -777,19 +777,19 @@ void MeasureForcesMenuPress() {
 #endif //MOLFLOW
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem("Formula editor", "ALT+F")) {
+    if (ImGui::MenuItem("Formula editor", "Alt+F")) {
         FormulaEditorMenuPress(); // TODO: replace with Toggle ImGui Formula Editor
     }
-    if (ImGui::MenuItem("Convergence Plotter ...", "ALT+C")) {
+    if (ImGui::MenuItem("Convergence Plotter ...", "Alt+C")) {
         ConvergencePlotterMenuPress();  // TODO: replace with Toggle ImGui Convergence Plotter
     }
     ImGui::Separator();
 
 #if defined(MOLFLOW)
-    if (ImGui::MenuItem("Texture Plotter ...", "ALT+T")) {
+    if (ImGui::MenuItem("Texture Plotter ...", "Alt+T")) {
         TexturePlotterMenuPress();
     }
-    if (ImGui::MenuItem("Profile Plotter ...", "ALT+P")) {
+    if (ImGui::MenuItem("Profile Plotter ...", "Alt+P")) {
         ProfilePlotterMenuPress();
     }
 #endif
@@ -797,7 +797,7 @@ static void ShowMenuTools() {
     if (ImGui::MenuItem("Histogram Plotter...")) {
         HistogramPlotterMenuPress();
     }
-    if (ImGui::MenuItem("Texture scaling...", "CTRL+D")) {
+    if (ImGui::MenuItem("Texture scaling...", "Ctrl+D")) {
         TextureScalingMenuPress();
     }
     if (ImGui::MenuItem("Particle logger...")) {
@@ -808,7 +808,7 @@ static void ShowMenuTools() {
         mApp->imWnd->show_global_settings = true;
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Take screenshot", "CTRL+R")) {
+    if (ImGui::MenuItem("Take screenshot", "Ctrl+R")) {
         TakeScreenshotMenuPress();
     }
 
@@ -1042,13 +1042,13 @@ void ConvertToOutgassingMapMenuPress() {
 #endif
 
 static void ShowMenuFacet() {
-    if (ImGui::MenuItem("Delete", "CTRL+DEL")) {
+    if (ImGui::MenuItem("Delete", "Ctrl+DEL")) {
         FacetDeleteMenuPress();
     }
-    if (ImGui::MenuItem("Swap normal", "CTRL+N")) {
+    if (ImGui::MenuItem("Swap normal", "Ctrl+N")) {
         SwapNormalMenuPress();
     }
-    if (ImGui::MenuItem("Shift indices", "CTRL+H")) {
+    if (ImGui::MenuItem("Shift indices", "Ctrl+H")) {
         ShiftIndicesMenuPress();
     }
     if (ImGui::MenuItem("Facet coordinates ...")) {
@@ -1308,7 +1308,7 @@ void VertexCoplanarMenuPress() {
 
 static void ShowMenuVertex() {
     if (ImGui::BeginMenu("Create Facet from Selected")) {
-        if (ImGui::MenuItem("Convex Hull", "ALT+V")) {
+        if (ImGui::MenuItem("Convex Hull", "Alt+V")) {
             ConvexHullMenuPress();
         }
         if (ImGui::MenuItem("Keep selection order")) {
@@ -1370,20 +1370,51 @@ void ShowNextStructureMenuPress() {
     interfGeom->UnselectAll();
 }
 
+void UpdateViewShortcuts() {
+    mApp->imWnd->shortcutMan.UnregisterShortcut(7);
+    std::vector<int> keys = {
+        SDL_SCANCODE_F1,
+        SDL_SCANCODE_F2,
+        SDL_SCANCODE_F3,
+        SDL_SCANCODE_F5,
+        SDL_SCANCODE_F6,
+        SDL_SCANCODE_F7,
+        SDL_SCANCODE_F8,
+        SDL_SCANCODE_F9,
+        SDL_SCANCODE_F10,
+    };
+    for (int i = 0; i < mApp->views.size() && i < keys.size(); i++) {
+        auto F = [i]() { mApp->SelectView(i); };
+        mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LALT,keys.at(i)}, F, 6);
+    }
+}
+
 void AddNewViewMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     mApp->AddView();
+    UpdateViewShortcuts();
 }
+
+void UpdateStructuresShortcuts() {
+    mApp->imWnd->shortcutMan.UnregisterShortcut(6);
+    for (int i = 0; i < interfGeom->GetNbStructure() && i+2<12; i++) {
+        auto F = [i]() { interfGeom->viewStruct = i; };
+        mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LCTRL, SDL_SCANCODE_F2+i},F,6);
+    }
+}
+
 
 static void ShowMenuView() {
     if (ImGui::BeginMenu("Structure")) {
         if (ImGui::MenuItem("New structure...")) {
             LockWrapper myLock(mApp->imguiRenderLock);
             mApp->AddStruct();
+            UpdateStructuresShortcuts();
         }
         if (ImGui::MenuItem("Delete structure...")) {
             LockWrapper myLock(mApp->imguiRenderLock);
             mApp->DeleteStruct();
+            UpdateStructuresShortcuts();
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Show All", "Ctrl+F1")) {
@@ -1398,7 +1429,6 @@ static void ShowMenuView() {
         ImGui::Separator();
         // Procedural list of memorized structures
         for (int i = 0; i < interfGeom->GetNbStructure(); i++) {
-            // TODO: procedural shortcuts, perhaps at New Structure
             if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=10 ? "Ctrl + F" + std::to_string(i + 2) : "")) {
                 interfGeom->viewStruct = i;
             }
@@ -1408,7 +1438,7 @@ static void ShowMenuView() {
     if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {
         LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->Get_m_bWindowed()) {
-            mApp->ToggleFullscreen(); // incorrect behaviour even in legacy GUI
+            mApp->ToggleFullscreen();
             mApp->PlaceComponents();
         }
         else {
@@ -1418,13 +1448,12 @@ static void ShowMenuView() {
     ImGui::Separator();
 
     if (ImGui::BeginMenu("Memorize view to")) {
-        if (ImGui::MenuItem("Add new...", "CTRL+Q")) {
+        if (ImGui::MenuItem("Add new...", "Ctrl+Q")) {
             AddNewViewMenuPress();
         }
-        std::vector<std::string> shortcuts = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10" };
         for (int i = 0; i < mApp->views.size(); i++) {
             // TODO: shortcuts at Add new view
-            if (ImGui::MenuItem(mApp->views[i].name, i < shortcuts.size() ? "Alt + " + shortcuts[i] : "")) {
+            if (ImGui::MenuItem(mApp->views[i].name)) {
                 mApp->OverWriteView(i);
             }
         }
@@ -1432,10 +1461,11 @@ static void ShowMenuView() {
     }
     ImGui::Separator();
 
-    if (ImGui::BeginMenu("Select memorized", mApp->views.size()==0)) {
+    if (ImGui::BeginMenu("Select memorized", mApp->views.size()!=0)) {
         // Procedural list of memorized views
+        std::vector<std::string> shortcuts = { "F1", "F2", "F3", "F5", "F6", "F7", "F8", "F9", "F10" };
         for (int i = 0; i < mApp->views.size(); i++) {
-            if (ImGui::MenuItem(mApp->views[i].name)) {
+            if (ImGui::MenuItem(mApp->views[i].name, i < shortcuts.size() ? "Alt+" + shortcuts[i] : "")) {
                 mApp->SelectView(i);
             }
         }
@@ -1443,7 +1473,7 @@ static void ShowMenuView() {
     }
     if (ImGui::BeginMenu("Clear memorized")) {
         if (ImGui::MenuItem("Clear All")) {
-            auto Y = []() {LockWrapper myLock(mApp->imguiRenderLock); mApp->ClearAllViews(); };
+            auto Y = []() {LockWrapper myLock(mApp->imguiRenderLock); mApp->ClearAllViews(); UpdateViewShortcuts(); };
             mApp->imWnd->popup.Open("Clear all views?", "Are you sure you want to clear(forget) all remembered views?", {
                 std::make_shared<WrappersIO::MyButtonFunc>("Ok", Y, SDL_SCANCODE_RETURN), 
                 std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
@@ -1453,6 +1483,7 @@ static void ShowMenuView() {
         for (int i = 0; i < mApp->views.size(); i++) {
             if (ImGui::MenuItem(mApp->views[i].name)) {
                 mApp->ClearView(i);
+                UpdateViewShortcuts();
             }
         }
         ImGui::EndMenu();
@@ -1565,7 +1596,7 @@ static void ShowMenuTest() {
     }
     //Quick test pipe
     ImGui::Separator();
-    if (ImGui::MenuItem("Quick Pipe", "ALT+Q")) {
+    if (ImGui::MenuItem("Quick Pipe", "Alt+Q")) {
         QuickPipeMenuPress();
     }
 
@@ -1597,14 +1628,14 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
-    if (ImGui::MenuItem("Shortcut Test", "CTRL+T")) {
+    if (ImGui::MenuItem("Shortcut Test", "Ctrl+T")) {
         WrappersIO::InfoPopup("Menu Shortcut", "Menu Shortcut");
     }
 }
 
 #ifdef MOLFLOW // TODO polyporphysm
 static void ShowMenuTime() {
-    if (ImGui::MenuItem("Time settings...", "ALT+I")) {
+    if (ImGui::MenuItem("Time settings...", "Alt+I")) { //TODO ImGui time settings + shortcut
         if (!mApp->timeSettings) mApp->timeSettings = new TimeSettings(&mApp->worker);
         mApp->timeSettings->SetVisible(true);
     }
@@ -1728,6 +1759,10 @@ void RegisterShortcuts() {
 
     auto AltQ = []() { ImMenu::QuickPipeMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_Q }, AltQ);
+
+    ImMenu::UpdateSelectionShortcuts();
+    ImMenu::UpdateViewShortcuts();
+    ImMenu::UpdateStructuresShortcuts();
 }
 
 //-----------------------------------------------------------------------------
