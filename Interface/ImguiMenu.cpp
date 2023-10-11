@@ -1397,6 +1397,7 @@ void AddNewViewMenuPress() {
 
 void UpdateStructuresShortcuts() {
     mApp->imWnd->shortcutMan.UnregisterShortcut(6);
+    if (!interfGeom) return;
     for (int i = 0; i < interfGeom->GetNbStructure() && i+2<12; i++) {
         auto F = [i]() { interfGeom->viewStruct = i; };
         mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LCTRL, SDL_SCANCODE_F2+i},F,6);
@@ -1452,7 +1453,6 @@ static void ShowMenuView() {
             AddNewViewMenuPress();
         }
         for (int i = 0; i < mApp->views.size(); i++) {
-            // TODO: shortcuts at Add new view
             if (ImGui::MenuItem(mApp->views[i].name)) {
                 mApp->OverWriteView(i);
             }

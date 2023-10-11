@@ -348,12 +348,12 @@ void ImguiWindow::renderSingle() {
                 }
             }
             if (ImGui::CollapsingHeader("Shortcuts")) {
-                ImGui::Text("Register ctrl+shit+t");
+                ImGui::Text("Register ctrl+shift+t");
                 if (ImGui::Button("Register")) {
                     auto F = []() { WrappersIO::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
                     shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL,SDL_SCANCODE_LSHIFT,SDL_SCANCODE_T }, F, 100);
                 }
-                ImGui::Text("unegister ctrl+shit+t");
+                ImGui::Text("Unegister ctrl+shift+t");
                 if (ImGui::Button("Unregister")) {
                     shortcutMan.UnregisterShortcut(100);
                 }

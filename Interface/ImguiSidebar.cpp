@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -230,6 +231,9 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
         }
 
         std::string title;
+        // remember last state to see if values need updating
+        static int lastNbFacents = -1;
+        static int lastFacetId = -1;
         if(interfGeom->GetNbSelectedFacets() > 1) {
             title = fmt::format("Selected Facet ({} selected)", interfGeom->GetNbSelectedFacets());
         }
@@ -240,15 +244,35 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
             title = fmt::format("Selected Facet (none)");
         }
         if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
             size_t selected_facet_id = interfGeom->GetNbSelectedFacets() ? interfGeom->GetSelectedFacets().front() : 0;
             auto sel = interfGeom->GetNbSelectedFacets() ? interfGeom->GetFacet(selected_facet_id) : nullptr;
+
+            bool updateValues = (lastNbFacents != interfGeom->GetNbSelectedFacets() || lastFacetId != selected_facet_id); // check if state changed
+            
+            if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
+                // declare variables
+                enum { use_og = 0, use_og_area = 1 };
                 static int des_idx = 0;
-                if(sel) des_idx = sel->sh.desorbType;
-                if (ImGui::Combo("Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                static std::string exponentInput = "";
+                static std::string outgassingInput = "1.0";
+                static std::string outgassingAreaInput = "1.0";
+                static bool modeOfOg = use_og;
+                static double og = 1.0;
+                static double og_area = 1.0;
+
+                if (updateValues && sel) { // if selection changed, recalculate all values
+                    des_idx = sel->sh.desorbType;
+                    og = sel->sh.outgassing;
+                    outgassingInput = std::to_string(og);
+                    // TODO compute outgasing / area
+                }
+
+                ImGui::Text("Desorbtion"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::Combo("##Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                    sel->sh.desorbType = des_idx;
                     switch (des_idx) {
                         case 0:
                             fmt::print("none");
@@ -267,19 +291,20 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                             break;
                     }
                 }
+                if (des_idx == 3) {
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 4);
+                    ImGui::InputText("##exponenet", &exponentInput);
+                }
 
-                static bool use_og_area = false;
-                bool use_og = !use_og_area;
-                static double og = 1.0;
-                static double og_area = 1.0;
-
-                if(sel) og = sel->sh.outgassing;
-                if (ImGui::Checkbox("Outgassing [mbar\u00b7l/s]", &use_og)) {
-                    use_og_area = !use_og;
+                if (ImGui::RadioButton("Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
+                    modeOfOg = use_og;
                 }
                 ImGui::SameLine();
                 ImGui::InputDouble("##in", &og);
-                ImGui::Checkbox(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", &use_og_area);
+                if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", modeOfOg == use_og_area)) {
+                    modeOfOg = use_og_area;
+                }
                 ImGui::SameLine();
                 ImGui::InputDouble("##ina", &og);
                 ImGui::TreePop();
@@ -294,7 +319,6 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                 ImGui::InputDoubleRightSide("Pumping speed [l/s]", &ps);
                 ImGui::TreePop();
             }
-            ImGui::PopItemWidth();
             {
                 static int sides_idx = 0;
                 if(sel) sides_idx = sel->sh.is2sided;
@@ -321,7 +345,9 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;
+                ImGui::BeginDisabled();
                 ImGui::InputDoubleRightSide("Area [cm\u00b2]", &area);
+                ImGui::EndDisabled();
 
                 static int prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;
@@ -352,7 +378,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     }
                 }
             }
-            ImGui::PopItemWidth();
+            if (sel == nullptr) ImGui::EndDisabled();
         }
 
 

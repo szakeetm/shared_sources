@@ -142,7 +142,7 @@ void ImFacetMove::ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeome
     }
     ImGui::EndChild();
     ImGui::PlaceAtRegionCenter("Move facets                        Copy facets"); //This is very ugly TODO:Find a better way
-    if (ImGui::Button("Move facets", ImVec2(width, 0))) { // C6001: using unititialized memory width - Intellisense warning
+    if (ImGui::Button("Move facets", ImVec2(width, 0))) {
         ExecuteFacetMove(mApp, interfGeom, false);
     }
     ImGui::SameLine();
