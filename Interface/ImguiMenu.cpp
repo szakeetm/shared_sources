@@ -1759,10 +1759,6 @@ void RegisterShortcuts() {
 
     auto AltQ = []() { ImMenu::QuickPipeMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_Q }, AltQ);
-
-    ImMenu::UpdateSelectionShortcuts();
-    ImMenu::UpdateViewShortcuts();
-    ImMenu::UpdateStructuresShortcuts();
 }
 
 //-----------------------------------------------------------------------------
@@ -1779,6 +1775,15 @@ void RegisterShortcuts() {
 // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of
 // the main viewport + call BeginMenuBar() into it.
 void ShowAppMainMenuBar() {
+
+    static bool firstDraw = true;
+    if (firstDraw) {
+        ImMenu::UpdateSelectionShortcuts();
+        ImMenu::UpdateViewShortcuts();
+        ImMenu::UpdateStructuresShortcuts();
+        static bool firstDraw = false;
+    }
+
     if (!interfGeom)
         interfGeom = mApp->worker.GetGeometry();
 
