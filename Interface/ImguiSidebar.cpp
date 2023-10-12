@@ -345,9 +345,9 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;
-                ImGui::BeginDisabled();
+                //ImGui::BeginDisabled();
                 ImGui::InputDoubleRightSide("Area [cm\u00b2]", &area);
-                ImGui::EndDisabled();
+                //ImGui::EndDisabled();
 
                 static int prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;

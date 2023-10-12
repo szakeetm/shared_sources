@@ -485,10 +485,10 @@ void GLApplication::Run() {
                  continue;
              }
          }
-		if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
+		//if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
             wereEvents = true;
-            wereEvents_imgui = 3;
-        }
+            wereEvents_imgui = 2;
+        //}
 
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
