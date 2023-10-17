@@ -36,6 +36,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
 #include <Helper/FormatHelper.h>
+#include <Helper/StringHelper.h>
 
 
 // Dummy data structure that we use for the Table demo.
@@ -248,7 +249,8 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
             auto sel = interfGeom->GetNbSelectedFacets() ? interfGeom->GetFacet(selected_facet_id) : nullptr;
 
             bool updateValues = (lastNbFacents != interfGeom->GetNbSelectedFacets() || lastFacetId != selected_facet_id); // check if state changed
-            
+            lastNbFacents = interfGeom->GetNbSelectedFacets();
+            lastFacetId = selected_facet_id;
             if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -264,14 +266,16 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
 
                 if (updateValues && sel) { // if selection changed, recalculate all values
                     des_idx = sel->sh.desorbType;
-                    og = sel->sh.outgassing;
+                    og = sel->sh.outgassing * 10; // from bar to mbar
+                    og_area = og / sel->sh.area;
                     outgassingInput = std::to_string(og);
+                    outgassingAreaInput = std::to_string(og_area);
                     // TODO compute outgasing / area
                 }
 
                 ImGui::Text("Desorbtion"); ImGui::SameLine();
                 ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
-                if (ImGui::Combo("##Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                if (ImGui::Combo("##Desorption", &des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
                     sel->sh.desorbType = des_idx;
                     switch (des_idx) {
                         case 0:
@@ -284,7 +288,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                             fmt::print("cos");
                             break;
                         case 3:
-                            fmt::print("cos \u207f");
+                            fmt::print(u8"cos \u207f");
                             break;
                         case 4:
                             fmt::print("rec");
@@ -297,26 +301,63 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     ImGui::InputText("##exponenet", &exponentInput);
                 }
 
-                if (ImGui::RadioButton("Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
+                if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
                     modeOfOg = use_og;
                 }
                 ImGui::SameLine();
-                ImGui::InputDouble("##in", &og);
+                if (ImGui::InputText("##in", &outgassingInput)) {
+                    modeOfOg = use_og;
+                    // if value changed
+                    if (Util::getNumber(&og, outgassingInput)) { // and conversion was a success
+                        //update the other value
+                        og_area = og / sel->sh.area;
+                        outgassingAreaInput = std::to_string(og_area);
+                        sel->sh.outgassing = og / 10;
+                    }
+                }
                 if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", modeOfOg == use_og_area)) {
                     modeOfOg = use_og_area;
                 }
                 ImGui::SameLine();
-                ImGui::InputDouble("##ina", &og);
+                if (ImGui::InputText("##ina", &outgassingAreaInput)) {
+                    modeOfOg = use_og_area;
+                    if (Util::getNumber(&og_area, outgassingAreaInput)) {
+                        og = og_area * sel->sh.area;
+                        outgassingInput = std::to_string(og);
+                        sel->sh.outgassing = og / 10;
+                    }
+                }
                 ImGui::TreePop();
             }
 #endif
 
             if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-                static double sf = 1.0;
-                static double ps = 1.0;
-                if(sel) sf = sel->sh.sticking;
-                ImGui::InputDoubleRightSide("Sticking factor", &sf);
-                ImGui::InputDoubleRightSide("Pumping speed [l/s]", &ps);
+                    static std::string sfInput = "1.0";
+                    static std::string psInput = "1.0";
+                    static double sf = 1.0;
+                    static double ps = 1.0;
+
+                if (updateValues && sel) { // if selection changed, recalculate all values
+                    sf = sel->sh.sticking; 
+                    sfInput = std::to_string(sf);
+                    // TODO relate sf to ps
+                    psInput = std::to_string(ps);
+                }
+
+                if (ImGui::InputText("Sticking factor", &sfInput)) {
+                    if (Util::getNumber(&sf, sfInput)) {
+                        sf = sel->sh.sticking;
+                        // TODO relate sf to ps
+                        sel->sh.sticking = sf;
+                    }
+                }
+                if (ImGui::InputText("Pumping speed [l/s]", &psInput)) {
+                    if (Util::getNumber(&ps, psInput)) {
+                        // TODO relate sf to ps
+                        sf = sel->sh.sticking;
+                        sel->sh.sticking = sf;
+                    }
+                }
                 ImGui::TreePop();
             }
             {
@@ -340,14 +381,12 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
 #if defined(MOLFLOW)
                 static double temp = 1.0;
                 if(sel) temp = sel->sh.temperature;
-                ImGui::InputDoubleRightSide("Temperature [\u00b0\u212a]", &temp);
+                ImGui::InputDoubleRightSide(u8"Temperature [\u00b0\u212a]", &temp);
 #endif
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;
-                //ImGui::BeginDisabled();
-                ImGui::InputDoubleRightSide("Area [cm\u00b2]", &area);
-                //ImGui::EndDisabled();
+                ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &area);
 
                 static int prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;

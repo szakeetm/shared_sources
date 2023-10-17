@@ -480,7 +480,7 @@ static void ShowMenuSelection() {
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select large facets without hits", "Min.area (cm\262)", F);
+        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F);
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);

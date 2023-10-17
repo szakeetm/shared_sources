@@ -17,7 +17,7 @@ void ImFacetMove::ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeome
     float width = 0, cursorY = 0;
     ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
     ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Facet Move", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::Begin("Move Facet", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
     
     ImGui::RadioButton("Absolute Offset", &mode, absolute_offset);
     ImGui::RadioButton("Direction and Distance", &mode, direction_and_distance);
