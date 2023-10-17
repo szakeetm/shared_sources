@@ -155,7 +155,7 @@ public:
     // Geometry Properties
     GeomProperties sh;
 
-    bool initialized = false; //set true if PrepareToRun() succeeds (parameter id match, outgassing calc, sanity check etc)
+    bool initialized = false;
     std::mutex modelMutex;
 
     //virtual void BuildPrisma(double L, double R, double angle, double s, int step) {};
