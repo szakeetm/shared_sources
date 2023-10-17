@@ -301,7 +301,7 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 #if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(worker->globalHistogramCache.timeHistogram);
-			worker->model->sp.globalHistogramParams.timeMax;
+			xMax = worker->model->sp.globalHistogramParams.timeMax;
 			xSpacing = worker->model->sp.globalHistogramParams.timeBinsize;
 			nbBins = worker->model->sp.globalHistogramParams.GetTimeHistogramSize();
 		}
@@ -310,20 +310,20 @@ std::tuple<std::vector<double>*,double,double,size_t> HistogramPlotter::GetHisto
 	else { //Facet histogram
 		if (modeId == HISTOGRAM_MODE_BOUNCES) {
 			histogramValues = &(interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram);
-			//(double)interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
+			xMax = (double)interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
 			xSpacing = (double)(interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
 			nbBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 		}
 		else if (modeId == HISTOGRAM_MODE_DISTANCE) {
 			histogramValues = &(interfGeom->GetFacet(facetId)->facetHistogramCache.distanceHistogram);
-			//interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
+			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
 			nbBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 		}
 #if defined(MOLFLOW)
 		else if (modeId == HISTOGRAM_MODE_TIME) {
 			histogramValues = &(interfGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram);
-			interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
+			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
 			nbBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
 		}
