@@ -6,9 +6,8 @@
 #include <functional>
 
 namespace WrappersIO {
-	bool DoSave();
+
 	void InfoPopup(std::string title, std::string msg);
-	void AskToSaveBeforeDoing(std::function<void()> action);
 
 	enum PopupCode : int { // most common responses and buttons
 		notDrawn = -3, // the popup is inactive

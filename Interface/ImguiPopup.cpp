@@ -5,41 +5,18 @@
 #include "ImguiExtensions.h"
 #include <functional>
 #include "ImguiWindow.h"
-#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 extern MolFlow* mApp;
 #endif
-extern char fileSaveFilters[];
+
 #if defined(SYNRAD)
 extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
 namespace WrappersIO {
-
-	bool DoSave() {
-		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
-		if (!fn.empty()) {
-			try {
-				mApp->imWnd->progress.Show();
-				LockWrapper myLock(mApp->imguiRenderLock);
-				mApp->worker.SaveGeometry(fn, mApp->imWnd->progress);
-				mApp->imWnd->progress.Hide();
-				mApp->changedSinceSave = false;
-				mApp->UpdateTitle();
-				mApp->AddRecent(fn);
-			}
-			catch (const std::exception& e) {
-				std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
-				mApp->imWnd->popup.Open("Error", errMsg, { std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk) });
-				mApp->RemoveRecent(fn.c_str());
-			}
-		}
-		if (fn == "") return false;
-		return true;
-	}
 
 	void MyPopup::Open(std::string title, std::string message, std::vector <std::shared_ptr< MyButton >> buttons)
 	{
@@ -79,6 +56,13 @@ namespace WrappersIO {
 		ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
 		ImGuiIO& io = ImGui::GetIO();
 		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+			if (returnValue == closeMe) {
+				ImGui::CloseCurrentPopup();
+				ImGui::End();
+				returnValue = notDrawn;
+				this->Close();
+				return;
+			}
 			ImGui::TextWrapped(message);
 			for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
 				if (buttons.at(i)->key == SDL_SCANCODE_RETURN && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
@@ -103,6 +87,7 @@ namespace WrappersIO {
 	}
 
 	void MyPopup::Close() {
+		this->returnValue = closeMe;
 		this->title = "";
 		this->message = "";
 		this->buttons = std::vector<std::shared_ptr< MyButton >>();
@@ -210,18 +195,5 @@ namespace WrappersIO {
 	}
 	void InfoPopup(std::string title, std::string msg) {
 		mApp->imWnd->popup.Open(title, msg, { std::make_shared<MyButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
-	}
-	void AskToSaveBeforeDoing(std::function<void()> action=0)
-	{
-		if (!mApp->changedSinceSave) { // there were no changes, do not ask, just do - Note: this will happen inline so action will not go out of scope
-			action();
-		} else {
-			auto Y = [action]() { if (DoSave()) action(); }; // note: this can happen at an arbitrary time during execution
-			mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-				std::make_shared<MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER), // save, then do action
-				std::make_shared<MyButtonFunc>("No", action), // just do the action
-				std::make_shared<MyButtonInt>("Cancel", buttonCancel, SDL_SCANCODE_ESCAPE) // do nothing
-				});
-		}
 	}
 }
