@@ -48,7 +48,8 @@ void ImSelectDialog::Show()
 }
 
 void ImSelectDialog::Preprocess() {
-	facetIds.erase(facetIds.begin(),facetIds.end());
+	facetIds.clear();
+	std::vector<size_t>().swap(facetIds);
 
 	try {
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();

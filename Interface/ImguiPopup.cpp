@@ -41,16 +41,16 @@ namespace WrappersIO {
 		return true;
 	}
 
-	void MyPopup::Open(std::string title, std::string message, std::vector <std::shared_ptr< MyButton >> buttons)
+	void MyPopup::Open(std::string title_, std::string message_, std::vector <std::shared_ptr< MyButton >> buttons_)
 	{
 		if (this->returnValue == drawnNoResponse) { // already drawing
 			return;
 		}
 		else if (!this->drawn && this->returnValue == notDrawn) { // not drawing
 			// initialzie
-			this->title = title;
-			this->message = message;
-			this->buttons = buttons;
+			this->title = title_;
+			this->message = message_;
+			this->buttons = buttons_;
 			this->drawn = true;
 			this->returnValue = drawnNoResponse;
 			return;
@@ -110,19 +110,19 @@ namespace WrappersIO {
 
 	// MyButton methods
 
-	MyButtonInt::MyButtonInt(std::string name, int retVal, int key, int key2) {
-		this->name = name;
-		this->retVal = retVal;
-		this->key = key;
-		this->key2 = key2;
+	MyButtonInt::MyButtonInt(std::string name_, int retVal_, int key_, int key2_) {
+		this->name = name_;
+		this->retVal = retVal_;
+		this->key = key_;
+		this->key2 = key2_;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
-	MyButtonFunc::MyButtonFunc(std::string name, std::function<void()> func, int key, int key2) {
-		this->name = name;
-		this->function = func;
-		this->key = key;
-		this->key2 = key2;
+	MyButtonFunc::MyButtonFunc(std::string name_, std::function<void()> func_, int key_, int key2_) {
+		this->name = name_;
+		this->function = func_;
+		this->key = key_;
+		this->key2 = key2_;
 		this->retVal = buttonFunction;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
@@ -131,12 +131,12 @@ namespace WrappersIO {
 		return this->function();
 	}
 
-	MyButtonFuncStr::MyButtonFuncStr(std::string name, std::function<void(std::string)> func, std::string arg, int key, int key2) {
-		this->name = name;
-		this->function = func;
-		this->argument = arg;
-		this->key = key;
-		this->key2 = key2;
+	MyButtonFuncStr::MyButtonFuncStr(std::string name_, std::function<void(std::string)> func_, std::string arg_, int key_, int key2_) {
+		this->name = name_;
+		this->function = func_;
+		this->argument = arg_;
+		this->key = key_;
+		this->key2 = key2_;
 		this->retVal = buttonFunction;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
@@ -145,12 +145,12 @@ namespace WrappersIO {
 		return this->function(argument);
 	}
 
-	MyButtonFuncInt::MyButtonFuncInt(std::string name, std::function<void(int)> func, int arg, int key, int key2) {
-		this->name = name;
+	MyButtonFuncInt::MyButtonFuncInt(std::string name_, std::function<void(int)> func, int arg, int key_, int key2_) {
+		this->name = name_;
 		this->function = func;
 		this->argument = arg;
-		this->key = key;
-		this->key2 = key2;
+		this->key = key_;
+		this->key2 = key2_;
 		this->retVal = buttonFunction;
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
@@ -159,7 +159,7 @@ namespace WrappersIO {
 		return this->function(argument);
 	}
 
-	void MyInput::Open(std::string title, std::string message, void (*func)(std::string), std::string deafultVal) {
+	void MyInput::Open(std::string title_, std::string message_, void (*func)(std::string), std::string deafultVal) {
 		if (this->returnValue == drawnNoResponse) { // already drawing
 			return;
 		}

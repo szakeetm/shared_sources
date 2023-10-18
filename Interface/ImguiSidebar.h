@@ -24,7 +24,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class InterfaceGeometry;
 #if defined(MOLFLOW)
 class MolFlow;
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global);
+class ImGuiSidebar {
+public:
+	void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global);
+protected:
+	double PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp);
+	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp);
+};
 #else
 class SynRad;
 void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global);

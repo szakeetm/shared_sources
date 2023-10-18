@@ -9,7 +9,6 @@ public:
 		noMinDes, noMaxDes,
 		btnSelect, btnAdd, btlRmv
 	};
-	ImSelectFacetByResult();
 	void Draw();
 	void Show();
 	void Preprocess();
@@ -20,6 +19,6 @@ protected:
 	std::string minHitsInput, maxHitsInput;
 	std::string minAbsInput, maxAbsInput;
 	std::string minDesInput, maxDesInput;
-	bool drawn;
+	bool drawn = false;
 	void (*function)();
 };

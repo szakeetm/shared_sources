@@ -220,49 +220,17 @@ void DoLoadSelected(std::string file) {
 
 void LoadMenuButtonPress() {
     WrappersIO::AskToSaveBeforeDoing([]() { DoLoadFile(); });
-    /*auto common = []() { DoLoadFile(); };
-    if (mApp->changedSinceSave) {
-        auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-        mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-            std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y),
-            std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-            std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel)
-            });
-    }
-    else {
-        common();
-    }*/
 }
 
 void QuitMenuPress() {
     auto common = []() { exit(0); };
-    if (mApp->changedSinceSave) {
-        auto Y = [common]() { if (WrappersIO::DoSave()) common(); };
-        mApp->imWnd->popup.Open("Save current geometry?", "Save current geometry before quitting?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-            });
-    }
-    else {
-        common();
-    }
+    WrappersIO::AskToSaveBeforeDoing(common);
 }
 
 static void ShowMenuFile() {
     if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
         auto common = []() { NewGeometry(); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if(WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel)
-                });
-        }
-        else {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
 
     if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
@@ -275,19 +243,10 @@ static void ShowMenuFile() {
     }
     else if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
         for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
-            auto common = [](std::string selection) { DoLoadSelected(selection); };
             if (ImGui::MenuItem(mApp->recentsList[i])) {
-                if (mApp->changedSinceSave) {
-                    auto Y = [common](std::string selection) -> void { WrappersIO::DoSave(); common(selection); };
-                    mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                        std::make_shared<WrappersIO::MyButtonFuncStr>("Yes", Y, mApp->recentsList[i]),
-                        std::make_shared<WrappersIO::MyButtonFuncStr>("No", common,mApp->recentsList[i]),
-                        std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel)
-                        });
-                }
-                else {
-                    common(mApp->recentsList[i]);
-                }
+                std::string selection = mApp->recentsList[i];
+                auto common = [selection]() { DoLoadSelected(selection); };
+                WrappersIO::AskToSaveBeforeDoing(common);
             }
         }
         ImGui::EndMenu();
@@ -1471,107 +1430,33 @@ static void ShowMenuView() {
 
 static void QuickPipeMenuPress() {
     auto common = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(5, 5); };
-    if (mApp->changedSinceSave) {
-        auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-        mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-            std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-            std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-            std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-            });
-    }
-    else
-    {
-        common();
-    }
+    WrappersIO::AskToSaveBeforeDoing(common);
 }
 
 static void ShowMenuTest() {
     if (ImGui::MenuItem("Pipe (L/R=0.0001)")) {
         auto common = []() { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(0.0001, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { WrappersIO::DoSave(); common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE) });
-        }
-        else {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     if (ImGui::MenuItem("Pipe (L/R=1)")) {
         auto common = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1.0, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if(WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     if (ImGui::MenuItem("Pipe (L/R=10)")) {
         auto common = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10.0, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else
-        {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     if (ImGui::MenuItem("Pipe (L/R=100)")) {
         auto common = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(100.0, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else
-        {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     if (ImGui::MenuItem("Pipe (L/R=1000)")) {
         auto common = []() -> void { LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(1000.0, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else
-        {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     if (ImGui::MenuItem("Pipe (L/R=10000)")) {
         auto common = []() -> void {  LockWrapper myLock(mApp->imguiRenderLock); mApp->BuildPipe(10000.0, 0); };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else
-        {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     //Quick test pipe
     ImGui::Separator();
@@ -1588,17 +1473,7 @@ static void ShowMenuTest() {
             GeometryTools::PolygonsToTriangles(mApp->worker.GetGeometry(), prg);
             mApp->worker.MarkToReload();
         };
-        if (mApp->changedSinceSave) {
-            auto Y = [common]() -> void { if (WrappersIO::DoSave()) common(); };
-            mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-                std::make_shared<WrappersIO::MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-                std::make_shared<WrappersIO::MyButtonFunc>("No", common),
-                std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
-                });
-        }
-        else {
-            common();
-        }
+        WrappersIO::AskToSaveBeforeDoing(common);
     }
     ImGui::Separator();
     if (ImGui::MenuItem("ImGui Menu")) {
