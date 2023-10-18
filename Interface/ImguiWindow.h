@@ -29,6 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Helper/GLProgress_ImGui.h"
 #include "ImguiShortcutManager.h"
 #include "ImguiSidebar.h"
+#include "ImguiFacetMove.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -52,7 +53,6 @@ public:
     bool ToggleSimSidebar();
     bool ToggleDemoWindow();
     bool ToggleGlobalSettings();
-    bool ToggleFacetMove();
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows
     bool show_app_main_menu_bar{false}; //!< Window main menu bar at the top
@@ -60,7 +60,6 @@ public:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
-    bool show_facet_move{false}; //Shows Facet-Move window
     bool show_window_license{false};
 
     void ShowWindowLicense();
@@ -70,6 +69,7 @@ public:
     ImSmartSelection smartSelect;
     ImSelectDialog selByNum;
     ImSelectTextureType selByTex;
+    ImFacetMove facetMov;
     ShortcutManager shortcutMan;
     ImGuiSidebar sideBar;
 protected:

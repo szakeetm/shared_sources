@@ -993,7 +993,7 @@ static void ShowMenuFacet() {
         FacetCoordinatesMenuPress();
     }
     if (ImGui::MenuItem("Move ...")) {
-        mApp->imWnd->show_facet_move = true;
+        mApp->imWnd->facetMov.Show();
     }
     if (ImGui::MenuItem("Scale ...")) {
         FacetScaleMenuPress();

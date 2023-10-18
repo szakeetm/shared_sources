@@ -44,6 +44,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <future>
 #include <implot/implot.h>
 #include <Helper/FormatHelper.h>
+#include "imgui_stdlib/imgui_stdlib.h"
 
 // Varius toggle functions for individual window components
 bool ImguiWindow::ToggleMainHub(){
@@ -65,11 +66,6 @@ bool ImguiWindow::ToggleDemoWindow(){
 bool ImguiWindow::ToggleGlobalSettings(){
     show_global_settings = !show_global_settings;
     return show_global_settings;
-}
-bool ImguiWindow::ToggleFacetMove()
-{
-    show_facet_move = !show_facet_move;
-    return show_facet_move;
 }
 
 void ImguiWindow::ShowWindowLicense() {
@@ -187,7 +183,6 @@ void ImguiWindow::init() {
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
-    show_facet_move = false;
     show_window_license = false;
 
     popup = WrappersIO::MyPopup();
@@ -195,11 +190,11 @@ void ImguiWindow::init() {
     progress = MyProgress();
     progress.Hide();
     smartSelect = ImSmartSelection();
-    smartSelect.Init();
     selByNum = ImSelectDialog();
-    selByNum.Init();
     selByTex = ImSelectTextureType();
     selByTex.Init();
+    facetMov = ImFacetMove();
+
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
 
@@ -301,11 +296,6 @@ void ImguiWindow::renderSingle() {
             ImPlot::ShowDemoWindow(&show_demo_window);
         }
 
-        if (show_facet_move)
-        {
-            ImFacetMove::ShowAppFacetMove(&show_facet_move, mApp, mApp->worker.GetGeometry());
-        }
-
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
             ImGui::SetNextWindowPos(ImVec2(20,20), ImGuiCond_FirstUseEver);
@@ -323,7 +313,6 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
-            ImGui::Checkbox("Facet Move", &show_facet_move);
 
             static int response;
             if (ImGui::CollapsingHeader("Popups")) {
@@ -390,6 +379,7 @@ void ImguiWindow::renderSingle() {
         smartSelect.Draw();
         selByNum.Draw();
         selByTex.Draw();
+        facetMov.Draw(mApp, mApp->worker.GetGeometry());
 
         shortcutMan.DoShortcuts();
 

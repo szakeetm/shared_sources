@@ -274,8 +274,8 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         {
             //ImGui::BeginDisabled();
 
-            static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
-
+            static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays // NOT ANYMORE, CAN UPGRAGE TO std::string
+            // TODO Display Model changed when there are changes to facets, settings etc. show values when sim started or outgassing recalculated
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
             ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText, ImGuiInputTextFlags_ReadOnly);
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);

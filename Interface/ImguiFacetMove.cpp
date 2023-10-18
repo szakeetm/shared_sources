@@ -1,23 +1,27 @@
 #include "ImguiFacetMove.h"
+#include "imgui/imgui.h"
+#include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiExtensions.h"
+#include "Geometry_shared.h"
+#include "ImguiPopup.h"
+#include "Facet_shared.h"
+#include "Helper/StringHelper.h"
 
-//internal function declarations
-namespace ImFacetMove {
-    void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
-    void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-    void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-    void FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-    bool BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-    bool BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
-}
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+#else
+#include "../../src/SynRad.h"
+#endif
 
-void ImFacetMove::ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGeom)
+void ImFacetMove::Draw(Interface* mApp, InterfaceGeometry* interfGeom)
 {
+    if (!drawn) return;
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
     float width = 0, cursorY = 0;
     ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
     ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Move Facet", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::Begin("Move Facet", &drawn,  0 | ImGuiWindowFlags_NoSavedSettings);
     
     ImGui::RadioButton("Absolute Offset", &mode, absolute_offset);
     ImGui::RadioButton("Direction and Distance", &mode, direction_and_distance);
@@ -272,4 +276,7 @@ void ImFacetMove::FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* int
     distance = std::to_string(translation.Norme());
 
     dirMessage = fmt::format("Center of facet {}", selFacets[0] + 1);
+}
+void ImFacetMove::Show() {
+    drawn = true;
 }

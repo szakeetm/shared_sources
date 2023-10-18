@@ -20,7 +20,7 @@ public:
 		addSelect,
 		rmvSelect
 	};
-	void Init();
+	void Func(int mode);
 	void Draw();
 	void Show();
 	std::vector<size_t> facetIds;
@@ -28,5 +28,4 @@ protected:
 	bool drawn = false;
 	std::string numText;
 	void Preprocess();
-	void (*function)(int);
 };

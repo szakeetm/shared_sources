@@ -20,5 +20,4 @@ protected:
 	std::string minAbsInput, maxAbsInput;
 	std::string minDesInput, maxDesInput;
 	bool drawn = false;
-	void (*function)();
 };

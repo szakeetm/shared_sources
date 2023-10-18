@@ -28,15 +28,15 @@ void ImSelectDialog::Draw()
 	ImGui::Text("You can enter a list and/or range(s), examples: 1,2,3 or 1-10 or 1-10,20-30");
 	if (ImGui::Button("  Select  ")) {
 		Preprocess();
-		function(select);
+		Func(select);
 	} ImGui::SameLine();
 	if (ImGui::Button("  Add to selection  ")) {
 		Preprocess();
-		function(addSelect);
+		Func(addSelect);
 	} ImGui::SameLine();
 	if (ImGui::Button("  Remove from selection  ")) {
 		Preprocess();
-		function(rmvSelect);
+		Func(rmvSelect);
 	}
 
 	ImGui::End();
@@ -63,17 +63,15 @@ void ImSelectDialog::Preprocess() {
 	}
 }
 
-void ImSelectDialog::Init() {
-	function = [](int mode) { // putting function definition in header required multiple includes which resulted in errors caused by circular dependencies
-		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
-		if (mode == select) {
-			interfGeom->UnselectAll();
-		}
-		for (auto facetId : mApp->imWnd->selByNum.facetIds) {
-			interfGeom->GetFacet(facetId)->selected = mode != rmvSelect;
-		}
-		interfGeom->UpdateSelection();
-		mApp->UpdateFacetParams(true);
-		mApp->UpdateFacetlistSelected();
-	};
+void ImSelectDialog::Func(int mode) {
+	InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+	if (mode == select) {
+		interfGeom->UnselectAll();
+	}
+	for (auto facetId : facetIds) {
+		interfGeom->GetFacet(facetId)->selected = mode != rmvSelect;
+	}
+	interfGeom->UpdateSelection();
+	mApp->UpdateFacetParams(true);
+	mApp->UpdateFacetlistSelected();
 }

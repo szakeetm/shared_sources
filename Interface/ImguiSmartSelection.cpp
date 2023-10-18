@@ -19,29 +19,26 @@ extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
-void ImSmartSelection::Init() {
-	func = []() {
-		if (!mApp->imWnd->smartSelect.isRunning) {
-			InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
-			if (!interfGeom->IsLoaded()) {
-				mApp->imWnd->popup.Open("Error", "No geometry", { 
-					std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, SDL_SCANCODE_RETURN) 
-					});
-				return;
-			}
-			mApp->imWnd->smartSelect.isRunning = true;
-			size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(&mApp->worker, mApp->imWnd->progress);
-			mApp->imWnd->smartSelect.isRunning = false;
-			mApp->imWnd->smartSelect.result = "Analyzed "+std::to_string(nbAnalyzed)+" facets.";
-			mApp->imWnd->smartSelect.enabledToggle = true;
-			mApp->imWnd->smartSelect.isAnalyzed = true;
-
+void ImSmartSelection::Func() {
+	if (!isRunning) {
+		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
+		if (!interfGeom->IsLoaded()) {
+			mApp->imWnd->popup.Open("Error", "No geometry", { 
+				std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, SDL_SCANCODE_RETURN) 
+				});
+			return;
 		}
-		else {
-			mApp->imWnd->smartSelect.isRunning = false;
-			mApp->worker.abortRequested = true;
-		}
-	};
+		isRunning = true;
+		size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(&mApp->worker, mApp->imWnd->progress);
+		isRunning = false;
+		result = "Analyzed "+std::to_string(nbAnalyzed)+" facets.";
+		enabledToggle = true;
+		isAnalyzed = true;
+	}
+	else {
+		isRunning = false;
+		mApp->worker.abortRequested = true;
+	}
 }
 
 void ImSmartSelection::Draw()
@@ -51,7 +48,7 @@ void ImSmartSelection::Draw()
 		ImGui::Begin("Smart Selection", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 		ImGui::PlaceAtRegionCenter(!isRunning ? "  Analyze  " : "  Stop Analyzing  ");
 		if (ImGui::Button(!isRunning ? "  Analyze  " : "  Stop Analyzing  ")) {
-			func();
+			Func();
 		}
 		ImGui::Text("Max plane diff. between neighbors (deg):"); ImGui::SameLine();
 		ImGui::SetNextItemWidth(ImGui::CalcTextSize("000000").x);

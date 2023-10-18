@@ -244,7 +244,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
 
         std::string title;
         // remember last state to see if values need updating
-        static int lastNbFacents = -1;
+        static int lastNbFacets = -1;
         static int lastFacetId = -1;
         size_t nbSelectedFacets = interfGeom->GetNbSelectedFacets();
         if(nbSelectedFacets > 1) {
@@ -260,8 +260,8 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             size_t selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
             auto sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
 
-            bool updateFacetInterfaceValues = (lastNbFacents != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
-            lastNbFacents = nbSelectedFacets;
+            bool updateFacetInterfaceValues = (lastNbFacets != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
+            lastNbFacets = nbSelectedFacets;
             lastFacetId = selected_facet_id;
             if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
@@ -275,18 +275,19 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 static bool modeOfOg = use_og;
                 static double og = 1.0;
                 static double og_area = 1.0;
-
+                /***********MISSING MIXED AND TIME-DEPENDENT STATES************/
                 if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
                     des_idx = sel->sh.desorbType;
+                    // TODO use time-depended sh.stickingParam if defined
                     og = sel->sh.outgassing * 10; // from bar to mbar
                     og_area = og / sel->sh.area;
                     outgassingInput = std::to_string(og);
                     outgassingAreaInput = std::to_string(og_area);
-                    // TODO compute outgasing / area
                 }
 
-                ImGui::Text("Desorbtion"); ImGui::SameLine();
+                ImGui::Text("Desorption"); ImGui::SameLine();
                 ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                // TODO handle mixed selection
                 if (ImGui::Combo("##Desorption", &des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
                     sel->sh.desorbType = des_idx;
                     switch (des_idx) {
@@ -310,7 +311,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 if (des_idx == 3) {
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 4);
-                    ImGui::InputText("##exponenet", &exponentInput);
+                    ImGui::InputText("##exponent", &exponentInput);
                 }
 
                 if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
@@ -325,6 +326,9 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                         og_area = og / sel->sh.area;
                         outgassingAreaInput = std::to_string(og_area);
                         sel->sh.outgassing = og / 10;
+                    }
+                    else {
+                        // TODO apply user string as time-depended parameter name
                     }
                 }
                 if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", modeOfOg == use_og_area)) {
@@ -358,7 +362,8 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
                 if (ImGui::InputText("##StickingFactor", &sfInput)) {
                     if (Util::getNumber(&sf, sfInput)) {
-                        ps = 1 * sf * sel->sh.area / 10 / 4 * sqrt(8*8.31*sel->sh.temperature/PI/(mApp->worker.model->sp.gasMass*0.001));
+                        // could work incorrectly correctly if area and temperature are changed
+                        ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature, mApp);
                         psInput = std::to_string(ps);
                         updateFacetProperties = true;
                     }
@@ -367,6 +372,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
                 if (ImGui::InputText("##PumpingSpeed", &psInput)) {
                     if (Util::getNumber(&ps, psInput)) {
+                        // could work incorrectly correctly if area and temperature are changed
                         sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature, mApp);
                         sfInput = std::to_string(sf);
                         updateFacetProperties = true;

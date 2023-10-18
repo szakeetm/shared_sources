@@ -3,7 +3,7 @@
 
 class ImSmartSelection {
 public:
-	void Init();
+	void Func();
 	void Draw();
 	void Show();
 	void Hide();
@@ -20,5 +20,4 @@ protected:
 	bool isAnalyzed = false;
 	bool drawn = false;
 	std::string result = "No neighborhood analysis yet.";
-	void (*func)();
 };
