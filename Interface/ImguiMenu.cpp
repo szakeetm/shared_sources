@@ -1667,6 +1667,7 @@ static void ShowMenuAbout() {
 }
 // static (not changing at runtime) shortcuts
 void RegisterShortcuts() {
+    if (!interfGeom) interfGeom = mApp->worker.GetGeometry();
     auto ControlO = []() { ImMenu::LoadMenuButtonPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, ControlO);
 

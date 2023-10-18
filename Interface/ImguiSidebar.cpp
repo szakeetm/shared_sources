@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
+#include "ImguiPopup.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 
 #if defined(MOLFLOW)
@@ -37,6 +38,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <imgui/imgui_internal.h>
 #include <Helper/FormatHelper.h>
 #include <Helper/StringHelper.h>
+#include "Helper/MathTools.h"
 
 
 // Dummy data structure that we use for the Table demo.
@@ -109,8 +111,17 @@ namespace {
     const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
 }
 
-// Sidebar containing 3d viewer settings, facet settings and simulation data
+
 #if defined(MOLFLOW)
+double PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp) {
+    return 1.0 * sticking * area / 10.0 / 4.0 * sqrt(8.0 * 8.31 * temperature / PI / (mApp->worker.model->sp.gasMass * 0.001));
+}
+
+double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp) {
+    return std::abs(pumpingSpeed / (area / 10.0) * 4.0 * sqrt(1.0 / 8.0 / 8.31 / (temperature) * PI * (mApp->worker.model->sp.gasMass * 0.001)));
+}
+
+// Sidebar containing 3d viewer settings, facet settings and simulation data
 void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
 #else
 void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
@@ -329,8 +340,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                 }
                 ImGui::TreePop();
             }
-#endif
-
+            bool updateFacet = false;
             if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
                     static std::string sfInput = "1.0";
                     static std::string psInput = "1.0";
@@ -340,26 +350,37 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                 if (updateValues && sel) { // if selection changed, recalculate all values
                     sf = sel->sh.sticking; 
                     sfInput = std::to_string(sf);
-                    // TODO relate sf to ps
+                    ps = PumpingSpeedFromSticking(sf,sel->sh.area,sel->sh.temperature, mApp);
                     psInput = std::to_string(ps);
+                    updateValues = false;
                 }
-
-                if (ImGui::InputText("Sticking factor", &sfInput)) {
+                ImGui::Text("Sticking Factor"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##StickingFactor", &sfInput)) {
                     if (Util::getNumber(&sf, sfInput)) {
-                        sf = sel->sh.sticking;
-                        // TODO relate sf to ps
-                        sel->sh.sticking = sf;
+                        ps = 1 * sf * sel->sh.area / 10 / 4 * sqrt(8*8.31*sel->sh.temperature/PI/(mApp->worker.model->sp.gasMass*0.001));
+                        psInput = std::to_string(ps);
+                        updateFacet = true;
                     }
                 }
-                if (ImGui::InputText("Pumping speed [l/s]", &psInput)) {
+                ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##PumpingSpeed", &psInput)) {
                     if (Util::getNumber(&ps, psInput)) {
-                        // TODO relate sf to ps
-                        sf = sel->sh.sticking;
-                        sel->sh.sticking = sf;
+                        sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature, mApp);
+                        sfInput = std::to_string(sf);
+                        updateFacet = true;
                     }
+                }
+                if (sf < 0 || sf > 1) { // if sf is out of range display warning
+                    ImGui::TextColored(ImVec4(1,0,0,1), u8"Sticking factor \u2209[0,1]");
+                }
+                else if (sel && updateFacet) { // and only assign sf to facet if it is in range
+                    sel->sh.sticking = sf;
                 }
                 ImGui::TreePop();
             }
+#endif
             {
                 static int sides_idx = 0;
                 if(sel) sides_idx = sel->sh.is2sided;
