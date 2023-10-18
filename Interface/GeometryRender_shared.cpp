@@ -1340,7 +1340,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 	}
 }
 
-void InterfaceGeometry::RenderSemiTransparent() {
+void InterfaceGeometry::RenderSemiTransparent(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 	if (mApp->antiAliasing) {
 		glEnable(GL_BLEND);
 		glEnable(GL_LINE_SMOOTH);

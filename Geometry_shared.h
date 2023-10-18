@@ -295,8 +295,8 @@ public:
 	void UnselectAllVertex();
 	std::vector<size_t> GetSelectedVertices();
 	size_t  GetNbSelectedVertex();
-	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, VolumeRenderMode volumeRenderMode, bool filter, bool showHiddenFacet, bool showMesh, bool showDir);
-	void RenderSemiTransparent();
+	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
+	void RenderSemiTransparent(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void ClearFacetTextures();
 	std::unordered_set<int> GetVertexBelongsToSelectedFacet();
 #pragma endregion

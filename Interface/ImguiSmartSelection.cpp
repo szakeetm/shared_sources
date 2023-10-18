@@ -95,7 +95,7 @@ bool ImSmartSelection::IsEnabled()
 
 double ImSmartSelection::GetMaxAngle()
 {
-	if (Util::getNumber(&this->planeDiff, this->planeDiffInput) && planeDiff>=0.0) {
+	if (Util::getNumber(&this->planeDiff, this->planeDiffInput)) {
 		return this->planeDiff / 180.0 * 3.14159;
 	}
 	mApp->imWnd->popup.Open("Smart Select Error", "Invalid angle threshold in Smart Selection dialog\nMust be a non-negative number.", {

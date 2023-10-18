@@ -1253,7 +1253,8 @@ void GeometryViewer::Paint() {
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered
 	if (mApp->highlightSelection)
-		interfGeom->RenderSemiTransparent();
+		interfGeom->RenderSemiTransparent((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHidden,
+			showMesh, showDir);
 
 	// Draw on top of everything
 	if (showFacetId && !detailsSuppressed) DrawFacetId();
