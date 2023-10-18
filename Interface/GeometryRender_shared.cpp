@@ -253,13 +253,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					if (found_local) {
 						
 						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsToggled())) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
 								double maxAngleDiff;
-								if (mApp->imWnd->smartSelect.IsToggled() && mApp->imWnd->smartSelect.IsVisible()) {
+								if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 								} else 
 									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
@@ -356,12 +356,12 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsToggled())) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
 		double maxAngleDiff;
-		if (mApp->imWnd->smartSelect.IsToggled() && mApp->imWnd->smartSelect.IsVisible()) {
+		if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 			maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 		}
 		else

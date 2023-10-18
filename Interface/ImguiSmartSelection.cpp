@@ -33,7 +33,7 @@ void ImSmartSelection::Init() {
 			size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(&mApp->worker, mApp->imWnd->progress);
 			mApp->imWnd->smartSelect.isRunning = false;
 			mApp->imWnd->smartSelect.result = "Analyzed "+std::to_string(nbAnalyzed)+" facets.";
-			mApp->imWnd->smartSelect.toggle = true;
+			mApp->imWnd->smartSelect.enabledToggle = true;
 			mApp->imWnd->smartSelect.isAnalyzed = true;
 
 		}
@@ -61,7 +61,7 @@ void ImSmartSelection::Draw()
 			ImGui::BeginDisabled();
 		}
 		
-		ImGui::Checkbox("Enable smart selection", &this->toggle);
+		ImGui::Checkbox("Enable smart selection", &this->enabledToggle);
 
 		if (!isAnalyzed) ImGui::EndDisabled();
 		ImGui::End();
@@ -88,9 +88,9 @@ bool ImSmartSelection::IsVisible()
 	return drawn;
 }
 
-bool ImSmartSelection::IsToggled()
+bool ImSmartSelection::IsEnabled()
 {
-	return this->toggle;
+	return this->enabledToggle;
 }
 
 double ImSmartSelection::GetMaxAngle()
