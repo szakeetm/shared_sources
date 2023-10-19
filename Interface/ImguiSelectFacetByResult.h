@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
+#include <ImguiWindowBase.h>
 
-class ImSelectFacetByResult {
+class ImSelectFacetByResult : public ImWindow {
 public:
 	enum states : int {
 		noMinHits, noMaxHits,
@@ -10,8 +11,6 @@ public:
 		btnSelect, btnAdd, btlRmv
 	};
 	void Draw();
-	void Show();
-	void Preprocess();
 	double minHits, maxHits;
 	double minAbs, maxAbs;
 	double minDes, maxDes;
@@ -19,5 +18,5 @@ protected:
 	std::string minHitsInput, maxHitsInput;
 	std::string minAbsInput, maxAbsInput;
 	std::string minDesInput, maxDesInput;
-	bool drawn = false;
+	void Preprocess();
 };

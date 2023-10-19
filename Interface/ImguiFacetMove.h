@@ -1,19 +1,18 @@
 #pragma once
 #include <string>
 #include "../Vector.h"
+#include "ImguiWindowBase.h"
 
 //forward declarations of classes used in the implementation
 class InterfaceGeometry;
 class Interface;
 
 //Facet Move window implemented in ImGui
-class ImFacetMove {
+class ImFacetMove : public ImWindow{
 public:
-	void Show();
-	void Draw(Interface* mApp, InterfaceGeometry* interfGeom);
+	void Draw();
+	void Init(Interface* mApp_, InterfaceGeometry* interfGeom_);
 protected:
-	bool drawn = false;
-
 	void ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeom, bool copy);
 	void FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
 	void VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry* interfGeom);
@@ -31,4 +30,6 @@ protected:
 	std::string selection;
 	//enumeratior for movement modes
 	enum movementMode { absolute_offset, direction_and_distance };
+	Interface* mApp;
+	InterfaceGeometry* interfGeom;
 };

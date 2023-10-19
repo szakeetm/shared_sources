@@ -5,7 +5,7 @@
 #include <memory>
 #include <functional>
 
-namespace WrappersIO {
+namespace ImIOWrappers {
 	bool DoSave();
 	void InfoPopup(std::string title, std::string msg);
 	void AskToSaveBeforeDoing(std::function<void()> action);
@@ -22,7 +22,7 @@ namespace WrappersIO {
 		closeMe = -100
 	};
 
-	class MyButton {
+	class ImButton {
 	public:
 		std::string name;
 		int retVal;
@@ -31,18 +31,18 @@ namespace WrappersIO {
 		virtual void DoCall() = 0;
 	};
 
-	class MyButtonFunc : public MyButton {
+	class ImButtonFunc : public ImButton {
 	public:
-		MyButtonFunc(std::string name, std::function<void()> func, int key = -1, int key2 = -1);
+		ImButtonFunc(std::string name, std::function<void()> func, int key = -1, int key2 = -1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
 		std::function<void()> function;
 	};
 
-	class MyButtonFuncStr : public MyButton {
+	class ImButtonFuncStr : public ImButton {
 	public:
-		MyButtonFuncStr(std::string name, std::function<void(std::string)> func, std::string arg, int key = -1, int key2 = -1);
+		ImButtonFuncStr(std::string name, std::function<void(std::string)> func, std::string arg, int key = -1, int key2 = -1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -50,9 +50,9 @@ namespace WrappersIO {
 		std::string argument;
 	};
 
-	class MyButtonFuncInt : public MyButton {
+	class ImButtonFuncInt : public ImButton {
 	public:
-		MyButtonFuncInt(std::string name, std::function<void(int)> func, int arg, int key = -1, int key2 = -1);
+		ImButtonFuncInt(std::string name, std::function<void(int)> func, int arg, int key = -1, int key2 = -1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -60,16 +60,16 @@ namespace WrappersIO {
 		int argument;
 	};
 
-	class MyButtonInt : public MyButton {
+	class ImButtonInt : public ImButton {
 	public:
-		MyButtonInt(std::string name, int retVal=0, int key = -1, int key2 = -1);
+		ImButtonInt(std::string name, int retVal=0, int key = -1, int key2 = -1);
 		void DoCall() {};
 	};
 
-	class MyPopup {
+	class ImPopup {
 	public:
 		void Close();
-		void Open(std::string title, std::string message, std::vector<std::shared_ptr< MyButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+		void Open(std::string title, std::string message, std::vector<std::shared_ptr< ImButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
 		void Draw(); // call this every ImGui Render
 		bool WasResponse();
 		int GetResponse(); // returns the recorded value from a button press
@@ -78,10 +78,10 @@ namespace WrappersIO {
 		std::string message = "";
 		std::string title = "";
 		bool drawn = false;
-		std::vector<std::shared_ptr< MyButton >> buttons;
+		std::vector<std::shared_ptr< ImButton >> buttons;
 	};
 
-	class MyInput : public MyPopup {
+	class ImInputPopup : public ImPopup {
 	public:
 		void Open(std::string title, std::string message, void (*func)(std::string), std::string deafultArg = "");
 		void Draw();

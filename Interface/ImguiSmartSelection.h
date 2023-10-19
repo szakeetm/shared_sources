@@ -1,15 +1,12 @@
 #pragma once
 #include <string>
+#include "ImguiWindowBase.h"
 
-class ImSmartSelection {
+class ImSmartSelection : public ImWindow{
 public:
 	void Func();
 	void Draw();
-	void Show();
-	void Hide();
-	bool IsVisible();
 	
-	void Toggle();
 	bool IsEnabled();
 	double GetMaxAngle();
 protected:
@@ -18,6 +15,5 @@ protected:
 	bool isRunning = false;
 	bool enabledToggle = false;
 	bool isAnalyzed = false;
-	bool drawn = false;
 	std::string result = "No neighborhood analysis yet.";
 };

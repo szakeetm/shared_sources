@@ -42,14 +42,8 @@ void ImSelectDialog::Draw()
 	ImGui::End();
 }
 
-void ImSelectDialog::Show()
-{
-	drawn = true;
-}
-
 void ImSelectDialog::Preprocess() {
 	facetIds.clear();
-	std::vector<size_t>().swap(facetIds);
 
 	try {
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
@@ -57,7 +51,7 @@ void ImSelectDialog::Preprocess() {
 	}
 	catch (const std::exception& e) {
 		mApp->imWnd->popup.Open("Error", e.what(), { 
-			std::make_shared<WrappersIO::MyButtonInt>("Ok",WrappersIO::buttonOk, SDL_SCANCODE_RETURN) 
+			std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
 			});
 		return;
 	}

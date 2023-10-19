@@ -24,7 +24,7 @@ void ImSmartSelection::Func() {
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 		if (!interfGeom->IsLoaded()) {
 			mApp->imWnd->popup.Open("Error", "No geometry", { 
-				std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, SDL_SCANCODE_RETURN) 
+				std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
 				});
 			return;
 		}
@@ -65,26 +65,6 @@ void ImSmartSelection::Draw()
 	}
 }
 
-void ImSmartSelection::Show()
-{
-	drawn = true;
-}
-
-void ImSmartSelection::Hide()
-{
-	drawn = false;
-}
-
-void ImSmartSelection::Toggle()
-{
-	drawn = !drawn;
-}
-
-bool ImSmartSelection::IsVisible()
-{
-	return drawn;
-}
-
 bool ImSmartSelection::IsEnabled()
 {
 	return this->enabledToggle;
@@ -92,11 +72,12 @@ bool ImSmartSelection::IsEnabled()
 
 double ImSmartSelection::GetMaxAngle()
 {
+	if (!IsVisible() || !IsEnabled()) return -1.0;
 	if (Util::getNumber(&this->planeDiff, this->planeDiffInput)) {
 		return this->planeDiff / 180.0 * 3.14159;
 	}
 	mApp->imWnd->popup.Open("Smart Select Error", "Invalid angle threshold in Smart Selection dialog\nMust be a non-negative number.", {
-		std::make_shared<WrappersIO::MyButtonInt>("Ok", WrappersIO::buttonOk, SDL_SCANCODE_RETURN)
+		std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
 		});
 	return -1.0;
 }

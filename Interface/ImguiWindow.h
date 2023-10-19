@@ -63,8 +63,8 @@ public:
     bool show_window_license{false};
 
     void ShowWindowLicense();
-    WrappersIO::MyPopup popup;
-    WrappersIO::MyInput input;
+    ImIOWrappers::ImPopup popup;
+    ImIOWrappers::ImInputPopup input;
     MyProgress progress;
     ImSmartSelection smartSelect;
     ImSelectDialog selByNum;

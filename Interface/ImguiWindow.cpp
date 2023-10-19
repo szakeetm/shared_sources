@@ -185,8 +185,8 @@ void ImguiWindow::init() {
     show_perfo = false;
     show_window_license = false;
 
-    popup = WrappersIO::MyPopup();
-    input = WrappersIO::MyInput();
+    popup = ImIOWrappers::ImPopup();
+    input = ImIOWrappers::ImInputPopup();
     progress = MyProgress();
     progress.Hide();
     smartSelect = ImSmartSelection();
@@ -194,6 +194,7 @@ void ImguiWindow::init() {
     selByTex = ImSelectTextureType();
     selByTex.Init();
     facetMov = ImFacetMove();
+    facetMov.Init(mApp, mApp->worker.GetGeometry());
 
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
@@ -319,8 +320,8 @@ void ImguiWindow::renderSingle() {
                 ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
                 if (ImGui::Button("Test Popup Wrapper")) {
                     popup.Open("Title##0", "Message", { 
-                        std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk, SDL_SCANCODE_RETURN),
-                        std::make_shared<WrappersIO::MyButtonInt>("Cancel", WrappersIO::buttonCancel, SDL_SCANCODE_ESCAPE)
+                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN),
+                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
                         }); // Open wrapped popup
                 }
                 if (popup.WasResponse()) { // if there was a response
@@ -340,7 +341,7 @@ void ImguiWindow::renderSingle() {
             if (ImGui::CollapsingHeader("Shortcuts")) {
                 ImGui::Text("Register ctrl+shift+t");
                 if (ImGui::Button("Register")) {
-                    auto F = []() { WrappersIO::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
+                    auto F = []() { ImIOWrappers::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
                     shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL,SDL_SCANCODE_LSHIFT,SDL_SCANCODE_T }, F, 100);
                 }
                 ImGui::Text("Unegister ctrl+shift+t");
@@ -379,7 +380,7 @@ void ImguiWindow::renderSingle() {
         smartSelect.Draw();
         selByNum.Draw();
         selByTex.Draw();
-        facetMov.Draw(mApp, mApp->worker.GetGeometry());
+        facetMov.Draw();
 
         shortcutMan.DoShortcuts();
 

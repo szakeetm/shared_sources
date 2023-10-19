@@ -17,7 +17,7 @@ extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
-namespace WrappersIO {
+namespace ImIOWrappers {
 
 	bool DoSave() {
 		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
@@ -33,7 +33,7 @@ namespace WrappersIO {
 			}
 			catch (const std::exception& e) {
 				std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
-				mApp->imWnd->popup.Open("Error", errMsg, { std::make_shared<WrappersIO::MyButtonInt>("OK", WrappersIO::buttonOk) });
+				mApp->imWnd->popup.Open("Error", errMsg, { std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk) });
 				mApp->RemoveRecent(fn.c_str());
 			}
 		}
@@ -41,7 +41,7 @@ namespace WrappersIO {
 		return true;
 	}
 
-	void MyPopup::Open(std::string title_, std::string message_, std::vector <std::shared_ptr< MyButton >> buttons_)
+	void ImPopup::Open(std::string title_, std::string message_, std::vector <std::shared_ptr< ImButton >> buttons_)
 	{
 		if (this->returnValue == drawnNoResponse) { // already drawing
 			return;
@@ -60,17 +60,17 @@ namespace WrappersIO {
 		}
 	}
 
-	bool MyPopup::WasResponse() {
+	bool ImPopup::WasResponse() {
 		return (returnValue > popupError);
 	}
 
-	int MyPopup::GetResponse() {
+	int ImPopup::GetResponse() {
 		int storage = returnValue;
 		returnValue = notDrawn;
 		return storage;
 	}
 
-	void MyPopup::Draw()
+	void ImPopup::Draw()
 	{
 		if (!drawn) { // return not drawn code
 			returnValue = notDrawn;
@@ -102,15 +102,15 @@ namespace WrappersIO {
 		}
 	}
 
-	void MyPopup::Close() {
+	void ImPopup::Close() {
 		this->title = "";
 		this->message = "";
-		this->buttons = std::vector<std::shared_ptr< MyButton >>();
+		this->buttons = std::vector<std::shared_ptr< ImButton >>();
 	}
 
-	// MyButton methods
+	// ImButton methods
 
-	MyButtonInt::MyButtonInt(std::string name_, int retVal_, int key_, int key2_) {
+	ImButtonInt::ImButtonInt(std::string name_, int retVal_, int key_, int key2_) {
 		this->name = name_;
 		this->retVal = retVal_;
 		this->key = key_;
@@ -118,7 +118,7 @@ namespace WrappersIO {
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
-	MyButtonFunc::MyButtonFunc(std::string name_, std::function<void()> func_, int key_, int key2_) {
+	ImButtonFunc::ImButtonFunc(std::string name_, std::function<void()> func_, int key_, int key2_) {
 		this->name = name_;
 		this->function = func_;
 		this->key = key_;
@@ -127,11 +127,11 @@ namespace WrappersIO {
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
-	void MyButtonFunc::DoCall() {
+	void ImButtonFunc::DoCall() {
 		return this->function();
 	}
 
-	MyButtonFuncStr::MyButtonFuncStr(std::string name_, std::function<void(std::string)> func_, std::string arg_, int key_, int key2_) {
+	ImButtonFuncStr::ImButtonFuncStr(std::string name_, std::function<void(std::string)> func_, std::string arg_, int key_, int key2_) {
 		this->name = name_;
 		this->function = func_;
 		this->argument = arg_;
@@ -141,11 +141,11 @@ namespace WrappersIO {
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
-	void MyButtonFuncStr::DoCall() {
+	void ImButtonFuncStr::DoCall() {
 		return this->function(argument);
 	}
 
-	MyButtonFuncInt::MyButtonFuncInt(std::string name_, std::function<void(int)> func, int arg, int key_, int key2_) {
+	ImButtonFuncInt::ImButtonFuncInt(std::string name_, std::function<void(int)> func, int arg, int key_, int key2_) {
 		this->name = name_;
 		this->function = func;
 		this->argument = arg;
@@ -155,11 +155,11 @@ namespace WrappersIO {
 		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
-	void MyButtonFuncInt::DoCall() {
+	void ImButtonFuncInt::DoCall() {
 		return this->function(argument);
 	}
 
-	void MyInput::Open(std::string title_, std::string message_, void (*func)(std::string), std::string deafultVal) {
+	void ImInputPopup::Open(std::string title_, std::string message_, void (*func)(std::string), std::string deafultVal) {
 		if (this->returnValue == drawnNoResponse) { // already drawing
 			return;
 		}
@@ -179,7 +179,7 @@ namespace WrappersIO {
 		}
 	}
 
-	void MyInput::Draw() {
+	void ImInputPopup::Draw() {
 		if (!drawn) { // return not drawn code
 			returnValue = notDrawn;
 			return;
@@ -209,7 +209,7 @@ namespace WrappersIO {
 		}
 	}
 	void InfoPopup(std::string title, std::string msg) {
-		mApp->imWnd->popup.Open(title, msg, { std::make_shared<MyButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
+		mApp->imWnd->popup.Open(title, msg, { std::make_shared<ImButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
 	}
 	void AskToSaveBeforeDoing(std::function<void()> action=0)
 	{
@@ -218,9 +218,9 @@ namespace WrappersIO {
 		} else {
 			auto Y = [action]() { if (DoSave()) action(); }; // note: this can happen at an arbitrary time during execution
 			mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-				std::make_shared<MyButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER), // save, then do action
-				std::make_shared<MyButtonFunc>("No", action), // just do the action
-				std::make_shared<MyButtonInt>("Cancel", buttonCancel, SDL_SCANCODE_ESCAPE) // do nothing
+				std::make_shared<ImButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER), // save, then do action
+				std::make_shared<ImButtonFunc>("No", action), // just do the action
+				std::make_shared<ImButtonInt>("Cancel", buttonCancel, SDL_SCANCODE_ESCAPE) // do nothing
 				});
 		}
 	}

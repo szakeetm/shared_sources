@@ -125,6 +125,7 @@ set(INTERFACE_FILES
         Interface/ImguiSelectTextureType.cpp
         Interface/ImguiSelectFacetByResult.cpp
         Interface/ImguiShortcutManager.cpp
+        Interface/ImguiWindowBase.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
-class ImSelectTextureType {
+#include "ImguiWindowBase.h"
+
+class ImSelectTextureType : public ImWindow{
 public:
 	enum modes : size_t {
 		exactly,
@@ -11,9 +13,8 @@ public:
 		rmvSelect
 	};
 	void Init();
-	void Show();
 	void Draw();
-	bool drawn = false;
+protected:
 	size_t squareTextrueCheck = 2;
 	int mode = none;
 	size_t desorbtionCheck = 2;
@@ -26,7 +27,6 @@ public:
 	double maxValue;
 	bool exactlyCheck = false;
 	bool betweenCheck = false;
-protected:
 	std::string exactlyInput = "";
 	std::string minInput = "";
 	std::string maxInput = "";

@@ -13,7 +13,12 @@
 #include "../../src/SynRad.h"
 #endif
 
-void ImFacetMove::Draw(Interface* mApp, InterfaceGeometry* interfGeom)
+void ImFacetMove::Init(Interface* mApp_, InterfaceGeometry* interfGeom_) {
+    mApp = mApp_;
+    interfGeom = interfGeom_;
+}
+
+void ImFacetMove::Draw()
 {
     if (!drawn) return;
     int txtW = ImGui::CalcTextSize(" ").x;
@@ -162,7 +167,7 @@ bool ImFacetMove::BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1)
     {
-        WrappersIO::InfoPopup("Error", "Select exactly one vertex");
+        ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
         return false;
     }
     else
@@ -177,7 +182,7 @@ bool ImFacetMove::BaseVertexSelectButtonPress(Interface* mApp, InterfaceGeometry
 bool ImFacetMove::BaseFacetSelectButtonPress(Interface* mApp, InterfaceGeometry* interfGeom) {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        WrappersIO::InfoPopup("Error", "Select exactly one facet");
+        ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
         return false;
     }
     baseLocation = interfGeom->GetFacet(selFacets[0])->sh.center;
@@ -190,28 +195,28 @@ void ImFacetMove::ExecuteFacetMove(Interface* mApp, InterfaceGeometry* interfGeo
     double X, Y, Z, D{0};
     //handle input errors
     if (interfGeom->GetNbSelectedFacets() == 0) {
-        WrappersIO::InfoPopup("Error", "No facets selected");
+        ImIOWrappers::InfoPopup("Error", "No facets selected");
         return;
     }
     if (!Util::getNumber(&X,axis_X)){
-        WrappersIO::InfoPopup("Error", "Invalid X offset/direction");
+        ImIOWrappers::InfoPopup("Error", "Invalid X offset/direction");
         return;
     }
     if (!Util::getNumber(&Y, axis_Y)) {
-        WrappersIO::InfoPopup("Error", "Invalid Y offset/direction");
+        ImIOWrappers::InfoPopup("Error", "Invalid Y offset/direction");
         return;
     }
     if (!Util::getNumber(&Z, axis_Z)) {
-        WrappersIO::InfoPopup("Error", "Invalid Z offset/direction");
+        ImIOWrappers::InfoPopup("Error", "Invalid Z offset/direction");
         return;
     }
     bool towardsDirectionMode = mode == direction_and_distance;
     if (towardsDirectionMode && !Util::getNumber(&D, distance)) {
-        WrappersIO::InfoPopup("Error", "Invalid offset direction");
+        ImIOWrappers::InfoPopup("Error", "Invalid offset direction");
         return;
     }
     if (towardsDirectionMode && X == 0.0 && Y == 0.0 && Z == 0.0) {
-        WrappersIO::InfoPopup("Error", "Direction can't be null-vector");
+        ImIOWrappers::InfoPopup("Error", "Direction can't be null-vector");
         return;
     }
     //execute
@@ -232,7 +237,7 @@ void ImFacetMove::FacetNormalButtonPress(Interface* mApp, InterfaceGeometry* int
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        WrappersIO::InfoPopup("Error", "Select exactly one facet");
+        ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
         return;
     }
     Vector3d facetNormal = interfGeom->GetFacet(selFacets[0])->sh.N;
@@ -248,7 +253,7 @@ void ImFacetMove::VertexDirectionButtonPress(Interface* mApp, InterfaceGeometry*
 {
     auto selVertices = interfGeom->GetSelectedVertices();
     if (selVertices.size() != 1) {
-        WrappersIO::InfoPopup("Error", "Select exactly one vertex");
+        ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
         return;
     }
     Vector3d translation = *(interfGeom->GetVertex(selVertices[0])) - baseLocation;
@@ -265,7 +270,7 @@ void ImFacetMove::FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* int
 {
     auto selFacets = interfGeom->GetSelectedFacets();
     if (selFacets.size() != 1) {
-        WrappersIO::InfoPopup("Error", "Select exactly one facet");
+        ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
         return;
     }
     Vector3d translation = interfGeom->GetFacet(selFacets[0])->sh.center - baseLocation;
@@ -276,7 +281,4 @@ void ImFacetMove::FacetCenterButtonPress(Interface* mApp, InterfaceGeometry* int
     distance = std::to_string(translation.Norme());
 
     dirMessage = fmt::format("Center of facet {}", selFacets[0] + 1);
-}
-void ImFacetMove::Show() {
-    drawn = true;
 }

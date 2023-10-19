@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "ImguiWindowBase.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -12,7 +13,7 @@ extern SynRad* mApp;
 #include "../src/SynRad.h"
 #endif
 
-class ImSelectDialog {
+class ImSelectDialog : public ImWindow{
 public:
 	enum selMode : int {
 		none,
@@ -22,10 +23,8 @@ public:
 	};
 	void Func(int mode);
 	void Draw();
-	void Show();
 	std::vector<size_t> facetIds;
 protected:
-	bool drawn = false;
 	std::string numText;
 	void Preprocess();
 };
