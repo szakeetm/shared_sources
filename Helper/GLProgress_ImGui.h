@@ -1,16 +1,14 @@
 #pragma once
 #include <GLApp/GLProgress_GUI.hpp>
+#include "Interface/ImguiWindowBase.h"
 
-class MyProgress : public GLProgress_Abstract {
+class ImProgress : public GLProgress_Abstract, public ImWindow {
 public:
 	void Draw();
-	void Show();
-	void Hide();
-	void Toggle();
 	void SetProgress(const double prg);
 	void SetTitle(std::string title);
 	void SetVisible(bool value);
 protected:
 	std::string title;
-	bool drawn;
+	bool isNew = true;
 };

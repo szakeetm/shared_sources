@@ -12,7 +12,8 @@ void ImWindow::Hide()
 
 void ImWindow::Toggle()
 {
-	drawn = !drawn;
+	if (drawn) Hide();
+	else Show();
 }
 
 bool ImWindow::IsVisible() {

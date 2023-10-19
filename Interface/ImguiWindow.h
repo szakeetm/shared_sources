@@ -65,7 +65,7 @@ public:
     void ShowWindowLicense();
     ImIOWrappers::ImPopup popup;
     ImIOWrappers::ImInputPopup input;
-    MyProgress progress;
+    ImProgress progress;
     ImSmartSelection smartSelect;
     ImSelectDialog selByNum;
     ImSelectTextureType selByTex;
