@@ -341,7 +341,7 @@ void ImguiWindow::renderSingle() {
             if (ImGui::CollapsingHeader("Shortcuts")) {
                 ImGui::Text("Register ctrl+shift+t");
                 if (ImGui::Button("Register")) {
-                    auto F = []() { ImIOWrappers::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
+                    std::function<void()> F = []() { ImIOWrappers::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
                     shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL,SDL_SCANCODE_LSHIFT,SDL_SCANCODE_T }, F, 100);
                 }
                 ImGui::Text("Unegister ctrl+shift+t");

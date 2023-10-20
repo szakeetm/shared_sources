@@ -314,7 +314,7 @@ void InvertSelectionMenuPress() {
 void UpdateSelectionShortcuts() {
     mApp->imWnd->shortcutMan.UnregisterShortcut(5);
     for (int i = 0; i < mApp->selections.size() && i+1<=9; i++) {
-        auto F = [i]() { mApp->SelectSelection(i); };
+        std::function<void()> F = [i]() { mApp->SelectSelection(i); };
         mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_1 + i }, F, 5);
     }
 }
@@ -1322,7 +1322,7 @@ void UpdateViewShortcuts() {
         SDL_SCANCODE_F10,
     };
     for (int i = 0; i < mApp->views.size() && i < keys.size(); i++) {
-        auto F = [i]() { mApp->SelectView(i); };
+        std::function<void()> F = [i]() { mApp->SelectView(i); };
         mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LALT,keys.at(i)}, F, 6);
     }
 }
@@ -1337,7 +1337,7 @@ void UpdateStructuresShortcuts() {
     mApp->imWnd->shortcutMan.UnregisterShortcut(6);
     if (!interfGeom) return;
     for (int i = 0; i < interfGeom->GetNbStructure() && i+2<12; i++) {
-        auto F = [i]() { interfGeom->viewStruct = i; };
+        std::function<void()> F = [i]() { interfGeom->viewStruct = i; };
         mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LCTRL, SDL_SCANCODE_F2+i},F,6);
     }
 }
@@ -1543,76 +1543,76 @@ static void ShowMenuAbout() {
 // static (not changing at runtime) shortcuts
 void RegisterShortcuts() {
     if (!interfGeom) interfGeom = mApp->worker.GetGeometry();
-    auto ControlO = []() { ImMenu::LoadMenuButtonPress(); };
+    std::function<void()> ControlO = []() { ImMenu::LoadMenuButtonPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, ControlO);
 
-    auto ControlS = []() {if (mApp->worker.GetGeometry()->IsLoaded()) ImIOWrappers::DoSave(); };
+    std::function<void()> ControlS = []() {if (mApp->worker.GetGeometry()->IsLoaded()) ImIOWrappers::DoSave(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_S }, ControlS);
     
-    auto Altf4 = []() { ImMenu::QuitMenuPress(); };
+    std::function<void()> Altf4 = []() { ImMenu::QuitMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F4 }, Altf4);
 
-    auto AltS = []() { mApp->imWnd->smartSelect.Show(); };
+    std::function<void()> AltS = []() { mApp->imWnd->smartSelect.Show(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_S }, AltS);
 
-    auto ControlA = []() { interfGeom->SelectAll(); mApp->UpdateFacetParams(true); };
+    std::function<void()> ControlA = []() { interfGeom->SelectAll(); mApp->UpdateFacetParams(true); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_A }, ControlA);
 
-    auto AltN = []() { mApp->imWnd->selByNum.Show(); };
+    std::function<void()> AltN = []() { mApp->imWnd->selByNum.Show(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_N }, AltN);
 
-    auto ControlI = []() { ImMenu::InvertSelectionMenuPress(); };
+    std::function<void()> ControlI = []() { ImMenu::InvertSelectionMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_I }, ControlI);
     
-    auto ControlW = []() { ImMenu::NewSelectionMemoryMenuPress(); };
+    std::function<void()> ControlW = []() { ImMenu::NewSelectionMemoryMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_W }, ControlW);
 
-    auto Altf11 = []() { mApp->SelectSelection(Previous(mApp->idSelection, mApp->selections.size())); };
+    std::function<void()> Altf11 = []() { mApp->SelectSelection(Previous(mApp->idSelection, mApp->selections.size())); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F11 }, Altf11);
 
-    auto Altf12 = []() { mApp->SelectSelection(Next(mApp->idSelection, mApp->selections.size())); };
+    std::function<void()> Altf12 = []() { mApp->SelectSelection(Next(mApp->idSelection, mApp->selections.size())); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F12 }, Altf12);
 
-    auto AltF = []() { ImMenu::FormulaEditorMenuPress(); };
+    std::function<void()> AltF = []() { ImMenu::FormulaEditorMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F }, AltF);
 
-    auto AltC = []() { ImMenu::ConvergencePlotterMenuPress(); };
+    std::function<void()> AltC = []() { ImMenu::ConvergencePlotterMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_C }, AltC);
 
-    auto AltT = []() { ImMenu::TexturePlotterMenuPress(); };
+    std::function<void()> AltT = []() { ImMenu::TexturePlotterMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_T }, AltT);
 
-    auto AltP = []() { ImMenu::ProfilePlotterMenuPress(); };
+    std::function<void()> AltP = []() { ImMenu::ProfilePlotterMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_P }, AltP);
 
-    auto ControlD = []() { ImMenu::TextureScalingMenuPress(); };
+    std::function<void()> ControlD = []() { ImMenu::TextureScalingMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_D }, ControlD);
 
-    auto ControlR = []() { ImMenu::TakeScreenshotMenuPress(); };
+    std::function<void()> ControlR = []() { ImMenu::TakeScreenshotMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_R }, ControlR);
 
-    auto ControlDel = []() { ImMenu::FacetDeleteMenuPress(); };
+    std::function<void()> ControlDel = []() { ImMenu::FacetDeleteMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_DELETE }, ControlDel);
 
-    auto ControlN = []() { ImMenu::SwapNormalMenuPress(); };
+    std::function<void()> ControlN = []() { ImMenu::SwapNormalMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_N }, ControlN);
 
-    auto ControlH = []() { ImMenu::ShiftIndicesMenuPress(); };
+    std::function<void()> ControlH = []() { ImMenu::ShiftIndicesMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_H }, ControlH);
 
-    auto ControlF1 = []() { interfGeom->viewStruct = -1; };
+    std::function<void()> ControlF1 = []() { interfGeom->viewStruct = -1; };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F1 }, ControlF1);
 
-    auto ControlF11 = []() { ImMenu::ShowPreviousStructureMenuPress(); };
+    std::function<void()> ControlF11 = []() { ImMenu::ShowPreviousStructureMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F11 }, ControlF11);
 
-    auto ControlF12 = []() { ImMenu::ShowNextStructureMenuPress(); };
+    std::function<void()> ControlF12 = []() { ImMenu::ShowNextStructureMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F12 }, ControlF12);
 
-    auto ControlQ = []() { ImMenu::AddNewViewMenuPress(); };
+    std::function<void()> ControlQ = []() { ImMenu::AddNewViewMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_Q }, ControlQ);
 
-    auto AltQ = []() { ImMenu::QuickPipeMenuPress(); };
+    std::function<void()> AltQ = []() { ImMenu::QuickPipeMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_Q }, AltQ);
 }
 

@@ -5,13 +5,13 @@
 
 class ShortcutManager {
 public:
-	void RegisterShortcut(std::vector<int> keys, std::function<void()> function, short id = 0);
+	void RegisterShortcut(std::vector<int> keys, std::function<void()>& function, short id = 0);
 	void UnregisterShortcut(short id);
 	void DoShortcuts();
 protected:
 	class Shortcut {
 	public:
-		Shortcut(std::vector<int> keys, std::function<void()> function, short id);
+		Shortcut(std::vector<int> keys, std::function<void()>& function, short id);
 		bool IsPressed();
 		void Execute();
 		// id allows for removing all shortcuts with a given id. Useful when recomputing shortcuts for memorized selections, views, structures etc.
@@ -20,5 +20,5 @@ protected:
 		std::vector<int> keys;
 		std::function<void()> function;
 	};
-	std::vector<std::shared_ptr<Shortcut>> shortcuts;
+	std::vector<Shortcut> shortcuts;
 };
