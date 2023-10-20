@@ -305,13 +305,13 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
+            ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
             #endif
             static bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
                 globalSet.SetVisible(globalSettings);
             }
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
-            ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
 

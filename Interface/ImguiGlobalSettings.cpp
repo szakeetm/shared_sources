@@ -114,7 +114,6 @@ void ImGlobalSettings::ProcessControlTable() {
 
 void ImGlobalSettings::Draw() {
     if (!drawn) return;
-    nbProc = (mApp->worker.GetProcNumber());
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
@@ -312,8 +311,9 @@ void ImGlobalSettings::Draw() {
     ImGui::Text("Number of CPU cores:     %zd", mApp->numCPU);
     ImGui::Text("Number of subprocesses:  ");
     ImGui::SameLine();
-    /*bool nbProcChanged = false;
-    int nbProc = mApp->worker.GetProcNumber();*/
+    if(updateNbProc)
+        nbProc = (mApp->worker.GetProcNumber());
+        updateNbProc = false;
     ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
     ImGui::InputInt("##nbProc", &nbProc, 1, 8);
 
@@ -325,8 +325,10 @@ void ImGlobalSettings::Draw() {
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Apply and restart processes"))
+    if (ImGui::Button("Apply and restart processes")) {
         RestartProc();
+        updateNbProc = true;
+    }
     {
         ImGui::PlaceAtRegionRight("Change desorption limit", true);
         if (ImGui::Button("Change desorption limit"))

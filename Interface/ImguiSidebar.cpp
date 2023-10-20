@@ -169,8 +169,15 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
         flags |= ImGuiWindowFlags_NoMove;
     }
     //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
+    static bool displayedWarning = false;
+    if (!displayedWarning) {
+        ImIOWrappers::InfoPopup("WARNING", "Sidebar is not properly implemented yet. Most features do not work!");
+        displayedWarning = true;
+    }
     if (ImGui::Begin("[BETA] Molflow Sidebar", p_open, flags)) {
 #if defined(DEBUG)
+        if (p_open && ImGui::Button("Close this window"))
+            *p_open = false;
         if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
 
             ImGui::Checkbox("Use work area instead of main area", &use_work_area);
@@ -186,8 +193,6 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
             ImGui::Unindent();
 
-            if (p_open && ImGui::Button("Close this window"))
-                *p_open = false;
         }
 #endif
         if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {

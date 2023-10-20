@@ -28,6 +28,7 @@ public:
 protected:
 	Interface* mApp;
 	int nbProc;
+	bool updateNbProc = true;
 	void ProcessControlTable();
 	void RecalculateOutgassing();
 	void RestartProc();
