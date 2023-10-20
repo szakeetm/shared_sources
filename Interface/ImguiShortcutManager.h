@@ -20,5 +20,5 @@ protected:
 		std::vector<int> keys;
 		std::function<void()> function;
 	};
-	std::vector<std::shared_ptr<Shortcut>> shortcuts;
+	std::vector<std::unique_ptr<Shortcut>> shortcuts;
 };

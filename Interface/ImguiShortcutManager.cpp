@@ -4,7 +4,7 @@
 
 void ShortcutManager::RegisterShortcut(std::vector<int> keys, std::function<void()> function, short id)
 {
-	shortcuts.push_back(std::make_shared<Shortcut>(keys, function, id));
+	shortcuts.emplace_back(std::make_unique<Shortcut>(keys, function, id));
 }
 
 void ShortcutManager::UnregisterShortcut(short id)
@@ -20,9 +20,9 @@ void ShortcutManager::UnregisterShortcut(short id)
 
 void ShortcutManager::DoShortcuts()
 {
-	for (auto shortcut : this->shortcuts) {
-		if (shortcut->IsPressed())
-			shortcut->Execute();
+	for (int i = 0; i < shortcuts.size(); i++) {
+		if (shortcuts[i]->IsPressed())
+			shortcuts[i]->Execute();
 	}
 }
 
