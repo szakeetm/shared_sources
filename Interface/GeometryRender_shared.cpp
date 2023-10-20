@@ -46,6 +46,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/VertexCoordinates.h"
 #include "Facet_shared.h"
 
+#include "ImguiWindow.h"
+
 #if defined(MOLFLOW)
 extern MolFlow* mApp;
 #endif
@@ -160,7 +162,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 	if (!isLoaded) return;
 
-	// Select a facet on a mouse click in 3D perspective view 
+	// Select a facet on a mouse click in 3D perspectivce view 
 	// (x,y) are in screen coordinates
 	// TODO: Handle clipped polygon
 
@@ -178,29 +180,29 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (coords.has_value()) {
+		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		if (c) {
 			ok[i] = true;
-			auto [x, y] = *coords;
+			auto [x, y] = *c;
 			screenXCoords[i] = x;
 			screenYCoords[i] = y;
 			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
 		}
 		else {
 			ok[i] = false;
-			//onScreen[i] = false; //redundant
+			//onScreen[i] = false;
 		}
 	}
 
 	// Check facets
-	bool found_global = false;
+	bool found = false;
 	bool clipped;
 	bool hasVertexOnScreen;
 	bool hasSelectedVertex;
+	char tmp[256];
 	int lastFound = -1;
-	//char tmp[256];
-	//int lastPaintedProgress = -1;
-	//int paintStep = (int)((double)sh.nbFacet / 10.0);
+	int lastPaintedProgress = -1;
+	int paintStep = (int)((double)sh.nbFacet / 10.0);
 	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
 	bool assigned=false;
 #pragma omp parallel
@@ -209,7 +211,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 			int lastFound_local=-1;
 #pragma omp for
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (found_global) continue; //this or an other thread have found a valid facet
+			if (found) continue; //this or an other thread have found a valid facet
 
 			/*
 			if (sh.nbFacet > 5000) {
@@ -226,12 +228,12 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 				hasVertexOnScreen = false;
 				hasSelectedVertex = false;
 				// Build array of 2D points
-				std::vector<Vector2d> facetScreenCoords(facets[i]->indices.size());
+				std::vector<Vector2d> v(facets[i]->indices.size());
 
 				for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
 					size_t idx = facets[i]->indices[j];
 					if (ok[idx]) {
-						facetScreenCoords[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
+						v[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
 						if (onScreen[idx]) hasVertexOnScreen = true;
 					}
 					else {
@@ -247,16 +249,20 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 				if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex) && (unselect || !facets[i]->selected)) {
 
-					found_local = IsInPoly((double)x, (double)y, facetScreenCoords);
+					found_local = IsInPoly((double)x, (double)y, v);
 					if (found_local) {
 						
 						if (unselect) {
-							if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
-								double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+								double maxAngleDiff;
+								if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+								} else 
+									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 								std::vector<size_t> connectedFacets;
 								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
 								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
@@ -271,10 +277,10 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 							found_local = false; //Continue looking for facets
 						}
 					} //end found
-					if (found_local) { //found a facet that wasn't in the selected history (or we're in unselect mode)
+					if (found_local) { //found a facet not yet in the selection history, valid
 #pragma omp critical
 						{
-							found_global = true; //set global found flag to true, all threads will stop
+							found = true; //set global found flag to true, all threads will stop
 						}
 					}
 				}
@@ -283,7 +289,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 #pragma omp critical
 		if (!assigned) {
 			//fmt::print("Thread{} found_local={} lastFound_local={}", omp_get_thread_num(), found_local, lastFound_local);
-			if (found_global) { //There was at least one facet found not yet in the selection history
+			if (found) { //There was at least one facet found not yet in the seletion history
 				if (found_local) {
 					lastFound = lastFound_local; //If this thread was one of those that found, assign it to global
 					assigned = true; //Don't process other threads
@@ -309,7 +315,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	mApp->SetFacetSearchPrg(false, "");
 	if (clear && !unselect) UnselectAll();
 
-	if (!found_global && foundInSelectionHistory.size()>0) { //found one that was already selected previously
+	if (!found && foundInSelectionHistory.size()>0) { //found one that was already selected previously
 		size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
 		if (!unselect) { //select
 			for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
@@ -333,7 +339,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 		
 		
 	}
-	else if (found_global) {
+	else if (found) {
 		if (!unselect) AddToSelectionHist(lastFound);
 		TreatNewSelection(lastFound, unselect);
 	}
@@ -350,11 +356,16 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if (!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
-		double maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+		double maxAngleDiff;
+		if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+			maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+		}
+		else
+			maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 		std::vector<size_t> connectedFacets;
 		mApp->SetFacetSearchPrg(true, "Smart selecting...");
 		if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(lastFound, maxAngleDiff);
@@ -887,18 +898,18 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	//---end transparent
 }
 
-void InterfaceGeometry::SetCullMode(VolumeRenderMode mode) {
+void InterfaceGeometry::SetCullMode(int mode) {
 
 	switch (mode) {
-	case VolumeRenderMode::FrontOnly:
+	case 1: // SHOW_FRONT
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
 		break;
-	case VolumeRenderMode::BackOnly:
+	case 2: // SHOW_BACK
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		break;
-	case VolumeRenderMode::FrontAndBack:
+	default: //SHOW_FRONTANDBACK
 		glDisable(GL_CULL_FACE);
 	}
 
@@ -1124,7 +1135,7 @@ void InterfaceGeometry::TriangulateForRender(const InterfaceFacet* f, std::vecto
 
 }
 
-void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, VolumeRenderMode volumeRenderMode, bool filter, bool showHiddenFacet, bool showMesh, bool showDir) {
+void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir) {
 
 	if (!isLoaded) return;
 
@@ -1135,7 +1146,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 	// Render Volume
 	if (renderVolume) {
 		glPolygonOffset(1.0f, 4.0f);
-		SetCullMode(volumeRenderMode);
+		SetCullMode(showMode);
 		GLfloat global_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
 		glEnable(GL_LIGHT0);
@@ -1215,7 +1226,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 #endif
 			if (paintRegularTexture) {
 				if (f->sh.is2sided)   glDisable(GL_CULL_FACE);
-				else                   SetCullMode(volumeRenderMode);
+				else                   SetCullMode(showMode);
 				glBindTexture(GL_TEXTURE_2D, f->glTex->textureId);
 				if (filter) {
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1307,7 +1318,7 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glCallList(nonPlanarList->listId);
 	}
 	glColor3f(1.0f, 0.0f, 0.0f);    //red
-	if (showHiddenFacet) {
+	if (showHidden) {
 		glDisable(GL_DEPTH_TEST);
 		glCallList(selectList3->listId);
 		glEnable(GL_DEPTH_TEST);

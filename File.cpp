@@ -488,6 +488,10 @@ void FileWriter::Write(const char *s) {
         throw Error("Error while writing to file");
 }
 
+void FileWriter::Write(const bool b) {
+    Write(static_cast<int>(b));
+}
+
 std::string FileUtils::GetFilename(const std::string &str) {
     /*
     size_t found = str.find_last_of("/\\");

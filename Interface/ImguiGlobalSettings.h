@@ -17,13 +17,19 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-
-#ifndef MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H
-#define MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H
+#pragma once
+#include "ImguiWindowBase.h"
 
 class Interface;
-void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc);
-void RecalculateOutgassing(Interface* mApp);
-void RestartProc(int nbProc, Interface* mApp);
-
-#endif //MOLFLOW_PROJ_IMGUIGLOBALSETTINGS_H
+class ImGlobalSettings : public ImWindow {
+public:
+	void Draw();
+	void Init(Interface* mApp_);
+protected:
+	Interface* mApp;
+	int nbProc;
+	bool updateNbProc = true;
+	void ProcessControlTable();
+	void RecalculateOutgassing();
+	void RestartProc();
+};

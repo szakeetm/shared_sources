@@ -114,3 +114,12 @@ struct GLVIEWPORT {
   int height;
 
 };
+
+class LockWrapper {
+public:
+    [[nodiscard]] LockWrapper(bool& _flag);
+    ~LockWrapper();
+    bool IsLocked();
+private:
+    bool& flag;
+};

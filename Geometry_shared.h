@@ -271,7 +271,7 @@ protected:
 	void DrawSemiTransparentPolys(const std::vector<size_t> &selectedFacets);
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
-	void SetCullMode(VolumeRenderMode mode);
+	void SetCullMode(int mode);
 	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
@@ -295,7 +295,7 @@ public:
 	void UnselectAllVertex();
 	std::vector<size_t> GetSelectedVertices();
 	size_t  GetNbSelectedVertex();
-	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, VolumeRenderMode volumeRenderMode, bool filter, bool showHiddenFacet, bool showMesh, bool showDir);
+	void Render(GLfloat *matView, bool renderVolume, bool renderTexture, int showMode, bool filter, bool showHidden, bool showMesh, bool showDir);
 	void RenderSemiTransparent();
 	void ClearFacetTextures();
 	std::unordered_set<int> GetVertexBelongsToSelectedFacet();

@@ -92,7 +92,7 @@ public:
   void ResetStatsAndHits(float appTime);
   void MarkToReload();    // Reload simulation (throws Error)
   void ReloadSim(bool sendOnly, GLProgress_Abstract& prg);
-  void RealReload(bool sendOnly=false); //throws error
+  void RealReload(bool sendOnly=false);
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
 
@@ -102,7 +102,7 @@ public:
     //void Exit(); // Free all allocated resource
   //void KillAll(bool keppDpHit=false);// Kill all sub processes
   void Update(float appTime);// Get hit counts for sub process
-  void UpdateInterfaceCaches();
+  void UpdateFacetCaches();
   //void SendLeakCache(Dataport *dpHit); // From worker cache to dpHit shared memory
   //void SendHitCache(Dataport *dpHit);  // From worker cache to dpHit shared memory
     void GetProcStatus(ProcComm &procInfoList);// Get process status

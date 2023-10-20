@@ -336,9 +336,9 @@ public:
 	double   planarityThreshold; //Planarity threshold
 
 	AppUpdater* appUpdater;
-	int      autoUpdateFormulas;
-	int      compressSavedFiles;
-	int      autoSaveSimuOnly;
+	bool     autoUpdateFormulas;
+	bool     compressSavedFiles;
+	bool      autoSaveSimuOnly;
 
 	bool     changedSinceSave; //For saving and autosaving
 	double   autoSaveFrequency; //autosave period, in minutes

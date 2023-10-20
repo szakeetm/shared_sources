@@ -120,7 +120,15 @@ set(INTERFACE_FILES
         Interface/ImguiFacetMove.cpp
         Interface/imgui_stdlib/imgui_stdlib.cpp
         Interface/ImguiPopup.cpp
+        Interface/ImguiSmartSelection.cpp
+        Interface/ImguiSelectDialog.cpp
+        Interface/ImguiSelectTextureType.cpp
+        Interface/ImguiSelectFacetByResult.cpp
+        Interface/ImguiShortcutManager.cpp
+        Interface/ImguiWindowBase.cpp
         Facet_shared.cpp
+        Helper/GLProgress_ImGui.cpp
+        Helper/GLProgress_ImGui.h
 
 
         File.cpp
@@ -212,6 +220,7 @@ set(GL_FILES
         GLApp/GLUnitDialog.cpp
         GLApp/GLWindow.cpp
         GLApp/GLWindowManager.cpp
+        GLApp/GLTypes.cpp
         GLApp/GLChart/AxisPanel.cpp
         GLApp/GLChart/GLAxis.cpp
         GLApp/GLChart/GLChart.cpp

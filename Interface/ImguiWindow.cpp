@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
+#include "../../src/versionId.h"
 #else
 #include "../../src/SynradGeometry.h"
 #endif
@@ -37,13 +38,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 #include "ImguiFacetMove.h"
-#include "ImguiPopup.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 #include <implot/implot.h>
 #include <Helper/FormatHelper.h>
+#include "imgui_stdlib/imgui_stdlib.h"
 
 // Varius toggle functions for individual window components
 bool ImguiWindow::ToggleMainHub(){
@@ -62,14 +63,38 @@ bool ImguiWindow::ToggleDemoWindow(){
     show_demo_window = !show_demo_window;
     return show_demo_window;
 }
-bool ImguiWindow::ToggleGlobalSettings(){
-    show_global_settings = !show_global_settings;
-    return show_global_settings;
-}
-bool ImguiWindow::ToggleFacetMove()
-{
-    show_facet_move = !show_facet_move;
-    return show_facet_move;
+
+void ImguiWindow::ShowWindowLicense() {
+    float txtW = ImGui::CalcTextSize(" ").x;
+    ImGui::SetNextWindowSize(ImVec2(txtW*120,0));
+    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("License", &show_window_license, ImGuiWindowFlags_AlwaysAutoResize)) {
+        std::ostringstream aboutText;
+        aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
+        aboutText << R"(
+Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
+Copyright:   CERN / E.S.R.F.   (2023)
+Website:    https://cern.ch/molflow
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+)";
+        ImGui::TextWrapped(aboutText.str());
+        ImGui::PlaceAtRegionCenter("  OK  ");
+        if (ImGui::Button("  OK  ")) {
+            show_window_license = false;
+        }
+        ImGui::End();
+    }
 }
 
 // --- Toggle functions ---
@@ -150,11 +175,28 @@ void ImguiWindow::init() {
 
     show_main_hub = false;
     show_demo_window = false;
-    show_global_settings = false;
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
-    show_facet_move = false;
+    show_window_license = false;
+
+    popup = ImIOWrappers::ImPopup();
+    input = ImIOWrappers::ImInputPopup();
+    progress = ImProgress();
+    progress.Hide();
+    smartSelect = ImSmartSelection();
+    selByNum = ImSelectDialog();
+    selByTex = ImSelectTextureType();
+    selByTex.Init();
+    facetMov = ImFacetMove();
+    facetMov.Init(mApp, mApp->worker.GetGeometry());
+    globalSet = ImGlobalSettings();
+    globalSet.Init(mApp);
+
+    shortcutMan = ShortcutManager();
+    sideBar = ImGuiSidebar();
+
+    RegisterShortcuts();
 
     start_time = ImGui::GetTime();
 }
@@ -240,7 +282,7 @@ void ImguiWindow::renderSingle() {
             ShowAppMainMenuBar();
 
         if (show_app_sidebar)
-            ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);
+            sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -252,28 +294,61 @@ void ImguiWindow::renderSingle() {
             ImPlot::ShowDemoWindow(&show_demo_window);
         }
 
-        if (show_facet_move)
-        {
-            ShowAppFacetMove(&show_facet_move, mApp, mApp->worker.GetGeometry());
-        }
-
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub); // Create a window called "Hello, world!"
+            ImGui::SetNextWindowPos(ImVec2(20,20), ImGuiCond_FirstUseEver);
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings); // Create a window called "Hello, world!"
             // and append into it.
 
-            #if defined(DEBUG)
-            // only show in debug mode
+            
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-            #endif
-            ImGui::Checkbox("Global settings", &show_global_settings);
+            ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
+            
+            static bool globalSettings = globalSet.IsVisible();
+            if (ImGui::Checkbox("Global settings", &globalSettings)) {
+                globalSet.SetVisible(globalSettings);
+            }
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
-            ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
-            ImGui::Checkbox("Facet Move", &show_facet_move);
+
+            static int response;
+            if (ImGui::CollapsingHeader("Popups")) {
+                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
+                if (ImGui::Button("Test Popup Wrapper")) {
+                    popup.Open("Title##0", "Message", { 
+                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN),
+                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
+                        }); // Open wrapped popup
+                }
+                if (popup.WasResponse()) { // if there was a response
+                    response = popup.GetResponse(); // do something
+                }
+                ImGui::Text("Popup response: "+std::to_string(response));
+                ImGui::EndChild();
+                static float prog;
+                if (ImGui::SliderFloat("Progress", &prog, 0, 1))
+                    progress.SetProgress(prog);
+                if (ImGui::Button("Toggle progress bar")) {
+                    progress.SetMessage("Message");
+                    progress.SetTitle("Title##1");
+                    progress.Toggle();
+                }
+            }
+            if (ImGui::CollapsingHeader("Shortcuts")) {
+                ImGui::Text("Register ctrl+shift+t");
+                if (ImGui::Button("Register")) {
+                    std::function<void()> F = []() { ImIOWrappers::InfoPopup("Shortcut", "I was opened by a keyboard shortcut"); };
+                    shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL,SDL_SCANCODE_LSHIFT,SDL_SCANCODE_T }, F, 100);
+                }
+                ImGui::Text("Unegister ctrl+shift+t");
+                if (ImGui::Button("Unregister")) {
+                    shortcutMan.UnregisterShortcut(100);
+                }
+            }
+            
 
             ImGui::Text("Avg %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -288,15 +363,21 @@ void ImguiWindow::renderSingle() {
             ShowPerfoPlot(&show_perfo, mApp);
         }
 
-        // 3. Show global settings
-        if (show_global_settings) {
-            ShowGlobalSettings(mApp, &show_global_settings, nbProc);
-            ImGui::End();
-        }
+        if (show_window_license)
+            ShowWindowLicense();
 
+        // reusable windows for I/O
+        popup.Draw();
+        input.Draw();
+        progress.Draw();
 
-        ImguiPopup::ShowPopup();
+        smartSelect.Draw();
+        selByNum.Draw();
+        selByTex.Draw();
+        facetMov.Draw();
+        globalSet.Draw();
 
+        shortcutMan.DoShortcuts();
 
         // Rendering
         ImGui::Render();

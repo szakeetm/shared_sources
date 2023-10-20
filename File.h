@@ -115,6 +115,7 @@ public:
   void Write(const double v, const char *sep=NULL);
   void Write(const char *s);
   void Write(const std::string& str);
+  void Write(const bool b);
   
 
 private:
