@@ -39,6 +39,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/FormatHelper.h>
 #include <Helper/StringHelper.h>
 #include "Helper/MathTools.h"
+#include "ImguiWindow.h"
 
 
 // Dummy data structure that we use for the Table demo.
@@ -122,9 +123,9 @@ double ImGuiSidebar::StickingFromPumpingSpeed(double pumpingSpeed, double area, 
 }
 
 // Sidebar containing 3d viewer settings, facet settings and simulation data
-void ImGuiSidebar::ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
+void ImGuiSidebar::ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom) {
 #else
-void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
+void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom) {
 #endif
     const float PAD = 10.0f;
     static int corner = 0;
@@ -485,7 +486,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
 
         if (ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
             if(ImGui::Button("<< Sim")){
-                *show_global = !*show_global;
+                mApp->imWnd->globalSet.Toggle();
             }
             ImGui::SameLine();
             {

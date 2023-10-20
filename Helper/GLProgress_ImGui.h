@@ -7,7 +7,7 @@ public:
 	void Draw();
 	void SetProgress(const double prg);
 	void SetTitle(std::string title);
-	void SetVisible(bool value);
+	void SetVisible(bool value); // needs to be overriden since both parent classes have such function
 protected:
 	std::string title;
 	bool isNew = true;

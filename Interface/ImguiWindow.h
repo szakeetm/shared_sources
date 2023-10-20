@@ -30,6 +30,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiShortcutManager.h"
 #include "ImguiSidebar.h"
 #include "ImguiFacetMove.h"
+#include "ImguiGlobalSettings.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -52,13 +53,11 @@ public:
     bool ToggleMainMenu();
     bool ToggleSimSidebar();
     bool ToggleDemoWindow();
-    bool ToggleGlobalSettings();
     // Window states (visible or not)
     bool show_main_hub{false}; //!< Hub managing all other windows
     bool show_app_main_menu_bar{false}; //!< Window main menu bar at the top
     bool show_app_sidebar{false}; //!< Simulation sidebar for various 3d viewer, facet and simulation settings
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
-    bool show_global_settings{false}; //!< Global Settings window
     bool show_perfo{false}; //!< Plot showing history of simulation performance
     bool show_window_license{false};
 
@@ -72,6 +71,7 @@ public:
     ImFacetMove facetMov;
     ShortcutManager shortcutMan;
     ImGuiSidebar sideBar;
+    ImGlobalSettings globalSet;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

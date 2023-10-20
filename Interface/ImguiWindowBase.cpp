@@ -19,3 +19,8 @@ void ImWindow::Toggle()
 bool ImWindow::IsVisible() {
 	return drawn;
 }
+
+void ImWindow::SetVisible(bool value)
+{
+	drawn = value;
+}

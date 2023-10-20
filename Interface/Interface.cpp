@@ -1763,8 +1763,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    if (!imWnd->show_global_settings) {
-                        imWnd->ToggleGlobalSettings();
+                    if (!imWnd->globalSet.IsVisible()) {
+                        imWnd->globalSet.Show();
                     }
                     return true;
                 }

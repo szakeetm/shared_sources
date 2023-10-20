@@ -63,10 +63,6 @@ bool ImguiWindow::ToggleDemoWindow(){
     show_demo_window = !show_demo_window;
     return show_demo_window;
 }
-bool ImguiWindow::ToggleGlobalSettings(){
-    show_global_settings = !show_global_settings;
-    return show_global_settings;
-}
 
 void ImguiWindow::ShowWindowLicense() {
     float txtW = ImGui::CalcTextSize(" ").x;
@@ -179,7 +175,6 @@ void ImguiWindow::init() {
 
     show_main_hub = false;
     show_demo_window = false;
-    show_global_settings = false;
     show_app_main_menu_bar = false;
     show_app_sidebar = false;
     show_perfo = false;
@@ -195,6 +190,8 @@ void ImguiWindow::init() {
     selByTex.Init();
     facetMov = ImFacetMove();
     facetMov.Init(mApp, mApp->worker.GetGeometry());
+    globalSet = ImGlobalSettings();
+    globalSet.Init(mApp);
 
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
@@ -285,7 +282,7 @@ void ImguiWindow::renderSingle() {
             ShowAppMainMenuBar();
 
         if (show_app_sidebar)
-            sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry(), &show_global_settings);
+            sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());
 
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
@@ -309,7 +306,10 @@ void ImguiWindow::renderSingle() {
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
             #endif
-            ImGui::Checkbox("Global settings", &show_global_settings);
+            static bool globalSettings = globalSet.IsVisible();
+            if (ImGui::Checkbox("Global settings", &globalSettings)) {
+                globalSet.SetVisible(globalSettings);
+            }
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Sidebar", &show_app_sidebar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
@@ -364,11 +364,6 @@ void ImguiWindow::renderSingle() {
             ShowPerfoPlot(&show_perfo, mApp);
         }
 
-        // 3. Show global settings
-        if (show_global_settings) {
-            ShowGlobalSettings(mApp, &show_global_settings, nbProc);
-            ImGui::End();
-        }
         if (show_window_license)
             ShowWindowLicense();
 
@@ -381,6 +376,7 @@ void ImguiWindow::renderSingle() {
         selByNum.Draw();
         selByTex.Draw();
         facetMov.Draw();
+        globalSet.Draw();
 
         shortcutMan.DoShortcuts();
 

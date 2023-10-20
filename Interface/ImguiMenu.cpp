@@ -743,7 +743,7 @@ static void ShowMenuTools() {
     }
     //if (ImGui::MenuItem("Histogram settings...", MENU_TOOLS_HISTOGRAMSETTINGS, SDLK_t, CTRL_MODIFIER)){}
     if (ImGui::MenuItem("Global Settings ...")) {
-        mApp->imWnd->show_global_settings = true;
+        mApp->imWnd->globalSet.Show();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Take screenshot", "Ctrl+R")) {

@@ -7,6 +7,7 @@ public:
 	void Hide();
 	void Toggle();
 	bool IsVisible();
+	void SetVisible(bool value);
 protected:
 	bool drawn = false;
 };
