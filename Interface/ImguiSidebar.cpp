@@ -170,10 +170,12 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
     }
     //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
     static bool displayedWarning = false;
+#ifndef DEBUG
     if (!displayedWarning) {
         ImIOWrappers::InfoPopup("WARNING", "Sidebar is not properly implemented yet. Most features do not work!");
         displayedWarning = true;
     }
+#endif
     if (ImGui::Begin("[BETA] Molflow Sidebar", p_open, flags)) {
 #if defined(DEBUG)
         if (p_open && ImGui::Button("Close this window"))

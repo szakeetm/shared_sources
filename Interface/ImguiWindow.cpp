@@ -300,13 +300,12 @@ void ImguiWindow::renderSingle() {
             ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings); // Create a window called "Hello, world!"
             // and append into it.
 
-            #if defined(DEBUG)
-            // only show in debug mode
+            
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
             ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
-            #endif
+            
             static bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
                 globalSet.SetVisible(globalSettings);
