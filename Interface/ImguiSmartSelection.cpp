@@ -65,12 +65,12 @@ void ImSmartSelection::Draw()
 	}
 }
 
-bool ImSmartSelection::IsEnabled()
+const bool ImSmartSelection::IsEnabled()
 {
 	return this->enabledToggle;
 }
 
-double ImSmartSelection::GetMaxAngle()
+const double ImSmartSelection::GetMaxAngle()
 {
 	if (!IsVisible() || !IsEnabled()) return -1.0;
 	if (Util::getNumber(&this->planeDiff, this->planeDiffInput)) {

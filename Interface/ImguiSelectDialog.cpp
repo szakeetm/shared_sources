@@ -56,12 +56,12 @@ void ImSelectDialog::Preprocess() {
 	}
 }
 
-void ImSelectDialog::Func(int mode) {
+void ImSelectDialog::Func(const int mode) {
 	InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 	if (mode == select) {
 		interfGeom->UnselectAll();
 	}
-	for (auto facetId : facetIds) {
+	for (const auto& facetId : facetIds) {
 		interfGeom->GetFacet(facetId)->selected = mode != rmvSelect;
 	}
 	interfGeom->UpdateSelection();

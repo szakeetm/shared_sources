@@ -145,7 +145,7 @@ namespace ImIOWrappers {
 		return this->function(argument);
 	}
 
-	ImButtonFuncInt::ImButtonFuncInt(std::string name_, std::function<void(int)> func, int arg, int key_, int key2_) {
+	ImButtonFuncInt::ImButtonFuncInt(std::string name_, const std::function<void(int)> func, int arg, int key_, int key2_) {
 		this->name = name_;
 		this->function = func;
 		this->argument = arg;
@@ -159,7 +159,7 @@ namespace ImIOWrappers {
 		return this->function(argument);
 	}
 
-	void ImInputPopup::Open(std::string title_, std::string message_, void (*func)(std::string), std::string deafultVal) {
+	void ImInputPopup::Open(std::string title_, std::string message_, const std::function<void(std::string)> func, std::string deafultVal) {
 		if (this->returnValue == drawnNoResponse) { // already drawing
 			return;
 		}
@@ -208,10 +208,10 @@ namespace ImIOWrappers {
 			this->Draw();
 		}
 	}
-	void InfoPopup(std::string title, std::string msg) {
+	void InfoPopup(const std::string title, const std::string msg) {
 		mApp->imWnd->popup.Open(title, msg, { std::make_shared<ImButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
 	}
-	void AskToSaveBeforeDoing(std::function<void()> action=0)
+	void AskToSaveBeforeDoing(const std::function<void()> action=0)
 	{
 		if (!mApp->changedSinceSave) { // there were no changes, do not ask, just do - Note: this will happen inline so action will not go out of scope
 			action();

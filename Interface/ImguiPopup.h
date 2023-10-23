@@ -83,10 +83,10 @@ namespace ImIOWrappers {
 
 	class ImInputPopup : public ImPopup {
 	public:
-		void Open(std::string title, std::string message, void (*func)(std::string), std::string deafultArg = "");
+		void Open(std::string title, std::string message, const std::function<void(std::string)> func, std::string deafultArg = "");
 		void Draw();
 	protected:
-		void (*function)(std::string);
+		std::function<void(std::string)> function;
 		std::string value;
 	};
 }

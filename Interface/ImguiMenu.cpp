@@ -124,7 +124,7 @@ void DoLoadFile() {
     }
 }
 
-void InsertGeometryMenuPress(bool newStr) {
+void InsertGeometryMenuPress(const bool newStr) {
     
     if (interfGeom->IsLoaded()) {
         if (mApp->worker.IsRunning())
@@ -158,13 +158,13 @@ void ExportSelectedProfilesMenuPress() {
     mApp->ExportProfiles();
 }
 
-void ExportTextures(int a, int b) {
+void ExportTextures(const int a, const int b) {
     LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportTextures(a, b);
 }
 
 #ifdef MOLFLOW //TODO replace with polimorphism
-void ShowSubmenuExportTextures(bool coord=false) {
+void ShowSubmenuExportTextures(const bool coord=false) {
     if(ImGui::MenuItem("Cell Area (cm^2)")) {
         ExportTextures(coord, 0);
     } // imgui does not support superscript

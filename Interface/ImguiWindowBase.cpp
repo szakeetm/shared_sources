@@ -16,7 +16,7 @@ void ImWindow::Toggle()
 	else Show();
 }
 
-bool ImWindow::IsVisible() {
+const bool ImWindow::IsVisible() {
 	return drawn;
 }
 

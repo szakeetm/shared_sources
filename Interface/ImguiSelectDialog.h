@@ -21,7 +21,7 @@ public:
 		addSelect,
 		rmvSelect
 	};
-	void Func(int mode);
+	void Func(const int mode);
 	void Draw();
 	std::vector<size_t> facetIds;
 protected:
