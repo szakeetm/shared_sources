@@ -163,6 +163,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	if (!isLoaded) return;
 
 	// Select a facet on a mouse click in 3D perspective view 
+	// Select a facet on a mouse click in 3D perspective view 
 	// (x,y) are in screen coordinates
 	// TODO: Handle clipped polygon
 
@@ -182,7 +183,10 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	for (int i = 0; i < sh.nbVertex; i++) {
 		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (coords.has_value()) {
+		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		if (coords.has_value()) {
 			ok[i] = true;
+			auto [x, y] = *coords;
 			auto [x, y] = *coords;
 			screenXCoords[i] = x;
 			screenYCoords[i] = y;
@@ -289,7 +293,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 #pragma omp critical
 		if (!assigned) {
 			//fmt::print("Thread{} found_local={} lastFound_local={}", omp_get_thread_num(), found_local, lastFound_local);
-			if (found_global) { //There was at least one facet found not yet in the selection history
+			if (found) { //There was at least one facet found not yet in the seletion history
 				if (found_local) {
 					lastFound = lastFound_local; //If this thread was one of those that found, assign it to global
 					assigned = true; //Don't process other threads

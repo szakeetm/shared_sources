@@ -160,16 +160,16 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	screenshotLabel = new GLLabel(("Screenshot: Draw selection rectangle to capture box. Press " + ctrlText + "+R again to capture whole scene. ESC to cancel. Saved in Molflow's Screenshots subdir.").c_str());
 	Add(screenshotLabel);
 
-	selectLabel = new GLLabel(("Selection cursorMode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex cursorMode, hold SHIFT/" + ctrlText + " to add/remove to existing selection.").c_str());
+	selectLabel = new GLLabel(("Selection mode: hold SPACE to move anchor, hold ALT to use circle, hold TAB to invert facet/vertex cursorMode, hold SHIFT/" + ctrlText + " to add/remove to existing selection.").c_str());
 	Add(selectLabel);
 
-	rotateLabel = new GLLabel(("Rotation cursorMode: hold SHIFT to slow down rotation, hold " + ctrlText + " to rotate around the third axis, and hold ALT to rotate lighting direction of volume view").c_str());
+	rotateLabel = new GLLabel(("Rotation mode: hold SHIFT to slow down rotation, hold " + ctrlText + " to rotate around the third axis, and hold ALT to rotate lighting direction of volume view").c_str());
 	Add(rotateLabel);
 
-	panLabel = new GLLabel("Panning cursorMode: hold SHIFT to slow down panning. Panning is also possible by mid-mouse button or D and left mouse button.");
+	panLabel = new GLLabel("Panning mode: hold SHIFT to slow down panning. Panning is also possible by mid-mouse button or D and left mouse button.");
 	Add(panLabel);
 
-	tabLabel = new GLLabel("TAB key down: facet/vertex selection cursorMode swapped");
+	tabLabel = new GLLabel("TAB key down: facet/vertex selection mode swapped");
 	Add(tabLabel);
 
 	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
@@ -976,6 +976,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;
 	if (view.projMode == ProjectionMode::Perspective) {
+	if (view.projMode == ProjectionMode::Perspective) {
 
 		// Autoscale dist, at least try to ;) .stub.
 		double a = 0.5 / tan((FOV_ANGLE / 360.0) * PI);
@@ -1327,7 +1328,7 @@ void GeometryViewer::PaintCompAndBorder() {
 
 void GeometryViewer::TranslateScale(double diff) {
 
-	// Translate or Scale view according to the projection cursorMode
+	// Translate or Scale view according to the projection mode
 	if (view.projMode == ProjectionMode::Perspective) {
 		view.camDist += diff * camDistInc;
 		if (view.camDist < 0.01) view.camDist = 0.01;

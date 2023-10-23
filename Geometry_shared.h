@@ -272,6 +272,7 @@ protected:
 	void RenderArrow(GLfloat *matView, float dx, float dy, float dz, float px, float py, float pz, float d);
 	void DeleteGLLists(bool deletePoly = false, bool deleteLine = false);
 	void SetCullMode(VolumeRenderMode mode);
+	void SetCullMode(VolumeRenderMode mode);
 	void TriangulateForRender(const InterfaceFacet *f, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 	void DrawEar(const InterfaceFacet *f, const GLAppPolygon& p, int ear, std::vector<double>& vertexCoords, std::vector<double>& normalCoords, std::vector<float>& textureCoords, std::vector<float>& colorValues, const GLCOLOR& currentColor, bool addTextureCoord);
 public:
