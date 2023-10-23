@@ -37,6 +37,8 @@ namespace ImGui {
 
     void PlaceAtWindowCenter(const char *str);
 
+
+    void TextCentered(std::string str);
     void PlaceAtRegionCenter(const char *str);
     void PlaceAtRegionCenter(std::string str);
 

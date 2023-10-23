@@ -73,6 +73,13 @@ namespace ImGui {
         PlaceAtRegionCenter(str.c_str());
     }
 
+    void TextCentered(std::string str) {
+        ImGui::BeginGroup();
+        ImGui::PlaceAtRegionCenter(str);
+        ImGui::Text(str);
+        ImGui::EndGroup();
+    }
+
     void PlaceAtRegionRight(const char *str, bool sameLine) {
         // float font_size = ImGui::GetFontSize() * btnText.size() / 2;
         float font_size = ImGui::CalcTextSize(str).x;

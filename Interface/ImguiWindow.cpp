@@ -192,6 +192,8 @@ void ImguiWindow::init() {
     facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
     globalSet.Init(mApp);
+    selFacetByResult = ImSelectFacetByResult();
+    selFacetByResult.Init(mApp);
 
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
@@ -376,6 +378,7 @@ void ImguiWindow::renderSingle() {
         selByTex.Draw();
         facetMov.Draw();
         globalSet.Draw();
+        selFacetByResult.Draw();
 
         shortcutMan.DoShortcuts();
 

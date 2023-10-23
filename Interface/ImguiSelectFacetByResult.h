@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <ImguiWindowBase.h>
+
+class Interface;
 
 class ImSelectFacetByResult : public ImWindow {
 public:
@@ -8,15 +11,19 @@ public:
 		noMinHits, noMaxHits,
 		noMinAbs, noMaxAbs,
 		noMinDes, noMaxDes,
-		btnSelect, btnAdd, btlRmv
+		btnSelect, btnAdd, btnRmv
 	};
 	void Draw();
+	void Init(Interface* mApp_);
 	double minHits, maxHits;
 	double minAbs, maxAbs;
 	double minDes, maxDes;
+	std::vector<states> state;
 protected:
 	std::string minHitsInput, maxHitsInput;
 	std::string minAbsInput, maxAbsInput;
 	std::string minDesInput, maxDesInput;
-	void Preprocess();
+	bool Preprocess();
+	void DoSelect();
+	Interface* mApp;
 };

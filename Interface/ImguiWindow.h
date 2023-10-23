@@ -31,6 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiSidebar.h"
 #include "ImguiFacetMove.h"
 #include "ImguiGlobalSettings.h"
+#include "ImguiSelectFacetByResult.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -72,6 +73,7 @@ public:
     ShortcutManager shortcutMan;
     ImGuiSidebar sideBar;
     ImGlobalSettings globalSet;
+    ImSelectFacetByResult selFacetByResult;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

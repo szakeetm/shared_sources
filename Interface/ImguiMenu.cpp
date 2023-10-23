@@ -29,7 +29,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-#include "SmartSelection.h"
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
 #include "SelectFacetByResult.h"
@@ -330,7 +329,6 @@ void NewSelectionMemoryMenuPress() {
 static void ShowMenuSelection() {
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
-    static SelectFacetByResult *selectFacetByResult = nullptr;
 
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
@@ -442,8 +440,7 @@ static void ShowMenuSelection() {
         mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F);
     }
     if (ImGui::MenuItem("Select by facet result...")) {
-        if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);
-        selectFacetByResult->SetVisible(true);
+        mApp->imWnd->selFacetByResult.Show();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select link facets")) {
