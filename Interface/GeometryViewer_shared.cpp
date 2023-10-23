@@ -976,7 +976,6 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;
 	if (view.projMode == ProjectionMode::Perspective) {
-	if (view.projMode == ProjectionMode::Perspective) {
 
 		// Autoscale dist, at least try to ;) .stub.
 		double a = 0.5 / tan((FOV_ANGLE / 360.0) * PI);
