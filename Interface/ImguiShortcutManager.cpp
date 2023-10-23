@@ -2,15 +2,15 @@
 #include <memory>
 #include "imgui.h"
 
-void ShortcutManager::RegisterShortcut(std::vector<int> keys_, std::function<void()> function_, short id_)
+void ShortcutManager::RegisterShortcut(std::vector<int> keys_, std::function<void()>& function_, short id_)
 {
-	shortcuts.emplace_back(std::make_unique<Shortcut>(keys_, function_, id_));
+	shortcuts.emplace_back(Shortcut(keys_, function_, id_));
 }
 
 void ShortcutManager::UnregisterShortcut(const short id_)
 {
 	for (short i = shortcuts.size()-1; i >= 0; --i) {
-		if (shortcuts[i]->id == id_) {
+		if (shortcuts[i].id == id_) {
 			shortcuts.erase(shortcuts.begin()+i);
 		}
 	}
@@ -19,12 +19,12 @@ void ShortcutManager::UnregisterShortcut(const short id_)
 void ShortcutManager::DoShortcuts()
 {
 	for (auto& shortcut : this->shortcuts) {
-		if (shortcut->IsPressed())
-			shortcut->Execute();
+		if (shortcut.IsPressed())
+			shortcut.Execute();
 	}
 }
 
-ShortcutManager::Shortcut::Shortcut(std::vector<int> keys_, std::function<void()> function_, short id_)
+ShortcutManager::Shortcut::Shortcut(std::vector<int> keys_, std::function<void()>& function_, short id_)
 {
 	this->keys = keys_;
 	this->function = function_;
