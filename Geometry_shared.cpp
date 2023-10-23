@@ -3924,7 +3924,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newS
 			CameraView v;
 			v.name = file.ReadString();
 
-			v.projMode = file.ReadInt();
+			v.projMode = static_cast<ProjectionMode>(file.ReadInt());
 			v.camAngleOx = file.ReadDouble();
 			v.camAngleOy = file.ReadDouble();
 			v.camAngleOz = 0.0; //No support for Z angle in current GEO version
@@ -3932,7 +3932,7 @@ void InterfaceGeometry::InsertGEOGeom(FileReader& file, size_t strIdx, bool newS
 			v.camOffset.x = file.ReadDouble();
 			v.camOffset.y = file.ReadDouble();
 			v.camOffset.z = file.ReadDouble();
-			v.performXY = file.ReadInt();
+			v.performXY = static_cast<CameraPlaneMode>(file.ReadInt());
 
 			v.vLeft = file.ReadDouble();
 			v.vRight = file.ReadDouble();
