@@ -91,7 +91,7 @@ struct CameraView{
 
     double cutFactor = 0.0;
 
-    bool enableClipping; // Cross section through clip plane
+    bool enableClipping = false; // Cross section through clip plane
     Plane clipPlane;
 };
 
