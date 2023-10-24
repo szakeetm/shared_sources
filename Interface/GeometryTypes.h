@@ -60,9 +60,11 @@ enum VolumeRenderMode : int {
 
 struct Plane {
     //XY by default
-    double x = 0.0;
-    double y = 0.0;
-    double z = 1.0;
+    Plane() = default;
+    Plane(double a_, double b_, double c_, double d_) : a(a_), b(b_), c(c_), d(d_) {}
+    double a = 0.0;
+    double b = 0.0;
+    double c = 1.0;
     double d = 0.0;
 };
 // Definition of a view. Note: all basis are left handed

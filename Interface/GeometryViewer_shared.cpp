@@ -1151,11 +1151,12 @@ void GeometryViewer::Paint() {
 	glLoadMatrixf(matProj);
 	UpdateLight();
 	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(matView);
 	if (view.enableClipping) {
-		glLoadMatrixf(matView);	GLdouble clipPlane[4] = {
-			view.clipPlane.x,
-			view.clipPlane.y,
-			view.clipPlane.z,
+			GLdouble clipPlane[4] = {
+			view.clipPlane.a,
+			view.clipPlane.b,
+			view.clipPlane.c,
 			view.clipPlane.d
 		};
 		glClipPlane(GL_CLIP_PLANE0, clipPlane);

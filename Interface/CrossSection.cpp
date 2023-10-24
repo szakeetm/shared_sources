@@ -48,7 +48,7 @@ extern MolFlow* mApp;
 extern SynRad* mApp;
 #endif
 
-CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId) :GLWindow() {
+CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWindow() {
 
 	int wD = 353;
 	int hD = 260;
@@ -119,32 +119,34 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId) :GLWin
 	resultLabel->SetBounds(15, 194, 58, 13);
 	Add(resultLabel);
 
-	splitButton = new GLButton(0, "Split");
-	splitButton->SetBounds(12, 210, 129, 21);
-	Add(splitButton);
+	sectionButton = new GLButton(0, "Section");
+	sectionButton->SetBounds(12, 210, 129, 21);
+	Add(sectionButton);
 
-	undoButton = new GLButton(0, "Undo");
-	undoButton->SetBounds(202, 210, 129, 21);
-	Add(undoButton);
+	invertButton = new GLButton(0, "Invert");
+	invertButton->SetBounds(12, 210, 129, 21);
+	Add(invertButton);
+
+	cameraButton = new GLButton(0, "Camera");
+	cameraButton->SetBounds(12, 210, 129, 21);
+	Add(cameraButton);
+
+	disableButton = new GLButton(0, "Disable");
+	disableButton->SetBounds(202, 210, 129, 21);
+	Add(disableButton);
 
 	getSelectedFacetButton = new GLButton(0, "<- Get selected");
 	planeDefPanel->SetCompBounds(getSelectedFacetButton, 174, 109, 90, 22);
 	planeDefPanel->Add(getSelectedFacetButton);
 
 	SetTitle("Cross section view");
-	// Center dialog
-	int wS, hS;
-	GLToolkit::GetScreenSize(&wS, &hS);
-	int xD = (wS - wD) / 2;
-	int yD = (hS - hD) / 2;
-	SetBounds(xD, yD, wD, hD);
+	SetBounds(15, 30, wD, hD);
 	RestoreDeviceObjects();
 
 	resultLabel->SetText("");
-	undoButton->SetEnabled(false);
 	interfGeom = g;
 	work = w;
-
+	viewerId = viewerId_;
 }
 
 void CrossSection::ProcessMessage(GLComponent* src, int message) {
@@ -200,11 +202,12 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			facetIdTextbox->SetText(selFacetId + 1);
 			EnableDisableControls(planeMode = PlanemodeFacet);
 		}
-		else if (src == splitButton) {
-			if (interfGeom->GetNbSelectedFacets() == 0) {
-				GLMessageBox::Display("No facets selected", "Nothing to split", GLDLG_OK, GLDLG_ICONERROR);
-				return;
-			}
+		else if (src == disableButton) {
+			auto myView = mApp->viewer[viewerId]->GetCurrentView();
+			myView.enableClipping = false;
+			mApp->viewer[viewerId]->SetCurrentView(myView);
+		}
+		else if (src == sectionButton) {
 			//Calculate the plane
 			Vector3d P0, N;
 			double nN2;
@@ -272,7 +275,25 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			}
 			if (mApp->AskToReset()) {
 				//Set plane
+				lastPlane.d = -Dot(N, P0);
+				Vector3d N_normalized = N.Normalized();
+				lastPlane.a = N_normalized.x;
+				lastPlane.b = N_normalized.y;
+				lastPlane.c = N_normalized.z;
+				auto myView = mApp->viewer[viewerId]->GetCurrentView();
+				myView.enableClipping = true;
+				myView.clipPlane = lastPlane;
+				mApp->viewer[viewerId]->SetCurrentView(myView);
 			}
+		}
+		else if (src == invertButton) {
+			lastPlane.d *= -1.0;
+			auto myView = mApp->viewer[viewerId]->GetCurrentView();
+			myView.clipPlane = lastPlane;
+			mApp->viewer[viewerId]->SetCurrentView(myView);
+		}
+		else if (src == cameraButton) {
+
 		}
 		break;
 	case MSG_TEXT_UPD:

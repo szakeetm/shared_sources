@@ -34,7 +34,7 @@ class CrossSection : public GLWindow {
 
 public:
   // Display a modal dialog and return the code of the pressed button
-	CrossSection(InterfaceGeometry* g, Worker* w, int viewerId);
+	CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
  
@@ -57,8 +57,10 @@ private:
 	GLTextField* facetIdTextbox;
 	GLToggle* facetmodeCheckbox;
 	GLLabel* resultLabel;
-	GLButton* splitButton;
-	GLButton* undoButton;
+	GLButton* sectionButton;
+	GLButton* invertButton;
+	GLButton* cameraButton;
+	GLButton* disableButton;
 	GLButton* getSelectedFacetButton;
 
 	enum PlaneMode : int {
@@ -67,7 +69,9 @@ private:
 		Planemode3Vertex
 	};
 	PlaneMode planeMode = PlanemodeEquation;
+	Plane lastPlane;
 
 	InterfaceGeometry* interfGeom;
 	Worker* work;
+	int viewerId;
 };
