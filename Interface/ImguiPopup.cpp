@@ -166,8 +166,8 @@ namespace ImIOWrappers {
 		else if (!this->drawn && this->returnValue == notDrawn) { // not drawing
 			// initialzie
 			this->value = deafultVal;
-			this->title = title;
-			this->message = message;
+			this->title = title_;
+			this->message = message_;
 			this->drawn = true;
 			this->returnValue = drawnNoResponse;
 			this->function = func;

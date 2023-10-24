@@ -592,10 +592,11 @@ static void ShowMenuSelection() {
 void FormulaEditorMenuPress() {
     
     if (!interfGeom->IsLoaded()) {
-        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", {
-            std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk)
-            });
+        ImIOWrappers::InfoPopup("No geometry", "No geometry loaded.");
+        return;
     }
+    mApp->imWnd->formulaEdit.Show();
+    /*
     else if (!mApp->formulaEditor || !mApp->formulaEditor->IsVisible()) {
         SAFE_DELETE(mApp->formulaEditor);
         mApp->formulaEditor = new FormulaEditor(&mApp->worker, mApp->appFormulas);
@@ -605,7 +606,7 @@ void FormulaEditorMenuPress() {
         mApp->formulaEditor->UpdateValues();
         // ---
         mApp->formulaEditor->SetVisible(true);
-    }
+    }*/
 }
 void ConvergencePlotterMenuPress() {
     if (!mApp->convergencePlotter)
@@ -652,6 +653,7 @@ void ParticleLoggerMenuPress() {
         
         mApp->particleLogger = new ParticleLogger(interfGeom, &mApp->worker);
     }
+    LockWrapper lockWrapper(mApp->imguiRenderLock);
     mApp->particleLogger->UpdateStatus();
     mApp->particleLogger->SetVisible(true);
 }
@@ -712,8 +714,8 @@ void MeasureForcesMenuPress() {
 #endif //MOLFLOW
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem("Formula editor", "Alt+F")) {
-        FormulaEditorMenuPress(); // TODO: replace with Toggle ImGui Formula Editor
+    if (ImGui::MenuItem(u8"\u221A Formula editor", "Alt+F")) {
+        FormulaEditorMenuPress();
     }
     if (ImGui::MenuItem("Convergence Plotter ...", "Alt+C")) {
         ConvergencePlotterMenuPress();  // TODO: replace with Toggle ImGui Convergence Plotter

@@ -4,6 +4,10 @@
 void ImWindow::Show()
 {
 	drawn = true;
+	if (txtW == 0 || txtH == 0) {
+		txtW = ImGui::CalcTextSize("0").x;
+		txtH = ImGui::GetTextLineHeightWithSpacing();
+	}
 }
 
 void ImWindow::Hide()

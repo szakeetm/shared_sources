@@ -37,7 +37,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
-#include "ImguiFacetMove.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -197,6 +196,8 @@ void ImguiWindow::init() {
 
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
+    formulaEdit = ImFormulaEditor();
+    formulaEdit.Init(mApp, mApp->appFormulas);
 
     RegisterShortcuts();
 
@@ -379,6 +380,7 @@ void ImguiWindow::renderSingle() {
         facetMov.Draw();
         globalSet.Draw();
         selFacetByResult.Draw();
+        formulaEdit.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -32,6 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiFacetMove.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiSelectFacetByResult.h"
+#include "ImguiFormulaEditor.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -74,6 +75,7 @@ public:
     ImGuiSidebar sideBar;
     ImGlobalSettings globalSet;
     ImSelectFacetByResult selFacetByResult;
+    ImFormulaEditor formulaEdit;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

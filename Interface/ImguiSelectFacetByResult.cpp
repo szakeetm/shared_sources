@@ -12,6 +12,7 @@
 #include "../../src/MolFlow.h"
 extern MolFlow* mApp;
 #endif
+// TODO Synrad stuff
 
 bool ImSelectFacetByResult::Preprocess() {
 	if (minHitsInput == "") state.push_back(noMinHits);
@@ -53,7 +54,7 @@ void ImSelectFacetByResult::Draw() {
 	ImGui::SetNextWindowPos(ImVec2(10, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("Select facets by simulation result", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize)) {
 		static const int width = 10;
-		ImGui::Text("Empty texbox = condition ignored");
+		ImGui::Text("Empty textbox = condition ignored");
 		if (ImGui::BeginTable("##SFBSR",3,ImGuiTableFlags_SizingFixedSame)) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
@@ -74,7 +75,7 @@ void ImSelectFacetByResult::Draw() {
 			ImGui::TableSetColumnIndex(2);
 			ImGui::SetNextItemWidth(txtW * width);
 			ImGui::InputText("##maxAbs", &maxAbsInput);
-
+#ifdef MOLFLOW
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 			ImGui::SetNextItemWidth(txtW * width);
@@ -84,7 +85,8 @@ void ImSelectFacetByResult::Draw() {
 			ImGui::TableSetColumnIndex(2);
 			ImGui::SetNextItemWidth(txtW * width);
 			ImGui::InputText("##maxDes", &maxDesInput);
-
+#endif
+			// TODO Synrad specific fields
 			ImGui::EndTable();
 		}
 		if (ImGui::Button("Select")) {
@@ -124,8 +126,11 @@ void ImSelectFacetByResult::DoSelect() {
 		if (!Util::inVec(noMinHits,state)) match = match && (f->facetHitCache.nbMCHit > minHits);
 		if (!Util::inVec(noMaxAbs, state)) match = match && (f->facetHitCache.nbAbsEquiv < maxAbs);
 		if (!Util::inVec(noMinAbs, state)) match = match && (f->facetHitCache.nbAbsEquiv > minAbs);
+#ifdef MOLFLOW
 		if (!Util::inVec(noMaxDes, state)) match = match && (f->facetHitCache.nbDesorbed < maxDes);
 		if (!Util::inVec(noMinDes, state)) match = match && (f->facetHitCache.nbDesorbed > minDes);
+#endif
+		// TODO Synrad specific fields
 		if (match) f->selected = (!Util::inVec(btnRmv, state));
 	}
 	interfGeom->UpdateSelection();

@@ -4,7 +4,7 @@
 #include <ImguiWindowBase.h>
 
 class Interface;
-
+// TODO Synrad stuff
 class ImSelectFacetByResult : public ImWindow {
 public:
 	enum states : int {

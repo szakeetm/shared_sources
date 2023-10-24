@@ -10,4 +10,5 @@ public:
 	void SetVisible(bool value);
 protected:
 	bool drawn = false;
+	float txtW=0, txtH=0;
 };
