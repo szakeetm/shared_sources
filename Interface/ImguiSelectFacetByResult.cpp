@@ -113,7 +113,7 @@ void ImSelectFacetByResult::Init(Interface* mApp_) {
 
 void ImSelectFacetByResult::DoSelect() {
 	if (!Preprocess()) return;
-	if (!mApp) throw std::exception("mApp not initialized");
+	if (!mApp) throw std::runtime_error("mApp not initialized");
 	InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 	if (Util::inVec(btnSelect, state)) interfGeom->UnselectAll();
 	size_t nbFacet = interfGeom->GetNbFacet();
