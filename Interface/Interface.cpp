@@ -79,6 +79,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "AddVertex.h"
 #include "FormulaEditor.h"
 #include "ParticleLogger.h"
+#include "CrossSection.h"
 
 //#include "NativeFileDialog/nfd.h"
 
@@ -774,6 +775,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     structMenu = menu->GetSubMenu("View")->GetSubMenu("Structure");
     UpdateStructMenu();
 
+    menu->GetSubMenu("View")->Add("Cross section...", MENU_VIEW_CROSSSECTION);
     menu->GetSubMenu("View")->Add("Full Screen", MENU_VIEW_FULLSCREEN);
 
     menu->GetSubMenu("View")->Add(nullptr); // Separator
@@ -790,9 +792,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     clearViewsMenu = menu->GetSubMenu("View")->GetSubMenu("Clear memorized");
     clearViewsMenu->Add("Clear All", MENU_VIEW_CLEARALL);
 
-    //menu->GetSubMenu("View")->SetIcon(MENU_VIEW_STRUCTURE_P,0,77);
     menu->GetSubMenu("View")->SetIcon(MENU_VIEW_FULLSCREEN, 18, 77);
-    //menu->GetSubMenu("View")->SetIcon(MENU_VIEW_ADD,36,77);
 
     menu->Add("Test");
     menu->GetSubMenu("Test")->Add("Pipe (L/R=0.0001)", MENU_TEST_PIPE0001);
@@ -1888,6 +1888,11 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                 // Memorize view
             else if (src->GetId() >= MENU_VIEW_MEMORIZEVIEWS && src->GetId() < MENU_VIEW_MEMORIZEVIEWS + views.size()) {
                 OverWriteView(src->GetId() - MENU_VIEW_MEMORIZEVIEWS);
+                return true;
+            }
+            else if (src->GetId() == MENU_VIEW_CROSSSECTION) {
+                if (!crossSectionWindow) crossSectionWindow = new CrossSection(interfGeom,&worker,curViewer);
+                crossSectionWindow->SetVisible(true);
                 return true;
             }
             break;

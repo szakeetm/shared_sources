@@ -23,8 +23,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
   Description: Split facet by plane dialog
 */
 
-#ifndef _SPLITFACETH_
-#define _SPLITFACETH_
+#pragma once
 
 #include "GLApp/GLWindow.h"
 
@@ -72,14 +71,17 @@ private:
   GLButton	*undoButton;
   GLButton	*getSelectedFacetButton;
 
+  enum PlaneMode : int {
+	  PlanemodeEquation,
+	  PlanemodeFacet,
+	  Planemode3Vertex
+  };
+  PlaneMode planeMode=PlanemodeEquation;
 
-  int planeMode;
   std::vector<DeletedFacet> deletedFacetList;
-  size_t nbFacet, nbCreated;
+  size_t nbFacet{ 0 }, nbCreated{ 0 };
 
   InterfaceGeometry     *interfGeom;
   Worker	   *work;
 
 };
-
-#endif /* _SplitFacetH_ */

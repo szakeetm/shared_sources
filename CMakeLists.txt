@@ -111,6 +111,7 @@ set(INTERFACE_FILES
         Interface/SmartSelection.cpp
         Interface/SplitFacet.cpp
         Interface/VertexCoordinates.cpp
+        Interface/CrossSection.cpp
         Interface/ImguiWindow.cpp
         Interface/ImguiMenu.cpp
         Interface/ImguiGlobalSettings.cpp

@@ -82,6 +82,7 @@ class TextureScaling;
 class GlobalSettings;
 class ProfilePlotter;
 class TexturePlotter;
+class CrossSection;
 
 class InterfaceGeometry;
 class ImguiWindow;
@@ -205,9 +206,10 @@ class ImguiWindow;
 #define MENU_VIEW_ADDNEW          736
 #define MENU_VIEW_CLEARALL        737
 
-#define MENU_VIEW_MEMORIZEVIEWS   740
-#define MENU_VIEW_VIEWS           760
-#define MENU_VIEW_CLEARVIEWS      780
+#define MENU_VIEW_MEMORIZEVIEWS		740
+#define MENU_VIEW_VIEWS				760
+#define MENU_VIEW_CLEARVIEWS		780
+#define MENU_VIEW_CROSSSECTION		790
 
 #define MENU_TEST_PIPE0001        801
 #define MENU_TEST_PIPE1           802
@@ -419,14 +421,6 @@ public:
 	GLMenu* clearSelectionsMenu;
 	GLMenu* clearViewsMenu;
 
-	//Shared windows (implementation might be Molflow/Synrad-specific)
-	FacetDetails* facetDetails = nullptr;
-	Viewer3DSettings* viewer3DSettings = nullptr;
-	TextureScaling* textureScaling = nullptr;
-	GlobalSettings* globalSettings = nullptr;
-	ProfilePlotter* profilePlotter = nullptr;
-	TexturePlotter* texturePlotter = nullptr;
-
 	// Views
 	void SelectView(int v);
 	void AddView(const CameraView& v);
@@ -469,7 +463,13 @@ public:
 	std::vector<SelectionGroup> selections;
 	size_t idSelection; //Allows "select next" / "select previous" commands
 
-	//Dialog
+	//Shared windows (implementation might be Molflow/Synrad-specific)
+	FacetDetails* facetDetails = nullptr;
+	Viewer3DSettings* viewer3DSettings = nullptr;
+	TextureScaling* textureScaling = nullptr;
+	GlobalSettings* globalSettings = nullptr;
+	ProfilePlotter* profilePlotter = nullptr;
+	TexturePlotter* texturePlotter = nullptr;
 	CollapseSettings* collapseSettings = nullptr;
 	HistogramSettings* histogramSettings = nullptr;
 	HistogramPlotter* histogramPlotter = nullptr;
@@ -496,6 +496,7 @@ public:
 	SmartSelection* smartSelection = nullptr;
 	FormulaEditor* formulaEditor = nullptr;
 	ConvergencePlotter* convergencePlotter = nullptr;
+	CrossSection* crossSectionWindow = nullptr;
 
 	UpdateCheckDialog* updateCheckDialog = nullptr;
 	UpdateFoundDialog* updateFoundDialog = nullptr;
