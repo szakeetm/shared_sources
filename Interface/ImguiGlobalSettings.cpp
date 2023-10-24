@@ -27,15 +27,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/AppUpdater.h"
 #include "../../src/Interface/GlobalSettings.h"
 
-#if defined(MOLFLOW)
-#include "../../src/MolFlow.h"
-extern MolFlow *mApp;
-#else
-#include "../src/SynRad.h"
-extern SynRad*mApp;
-#endif
-
-static void ProcessControlTable(Interface *mApp) {
+void ImGlobalSettings::ProcessControlTable() {
     ImGui::Text("Process control");
     static ImGuiTableFlags flags =
             ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -120,16 +112,18 @@ static void ProcessControlTable(Interface *mApp) {
 }
 
 
-void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc) {
+void ImGlobalSettings::Draw() {
+    if (!drawn) return;
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
+    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
     ImGui::Begin(
-            "Global settings", show_global_settings,
-            ImGuiWindowFlags_NoSavedSettings); // Pass a pointer to our bool
+        "Global settings", &drawn,
+        ImGuiWindowFlags_NoSavedSettings);  // Pass a pointer to our bool
     // variable (the window will have
     // a closing button that will
     // clear the bool when clicked)
@@ -220,32 +214,32 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         }
 
         simChanged |= ImGui::Checkbox(
-                "Enable low flux mode",
-                &lowFluxMode);
+            "Enable low flux mode",
+            &lowFluxMode);
         ImGui::SameLine();
         ImGui::HelpMarker(
-                "Low flux mode helps to gain more statistics on low pressure "
-                "parts of the system, at the expense\n"
-                "of higher pressure parts. If a traced particle reflects from a "
-                "high sticking factor surface, regardless of that probability,\n"
-                "a reflected test particle representing a reduced flux will "
-                "still be traced. Therefore test particles can reach low flux "
-                "areas more easily, but\n"
-                "at the same time tracing a test particle takes longer. The "
-                "cutoff ratio defines what ratio of the originally generated "
-                "flux\n"
-                "can be neglected. If, for example, it is 0.001, then, when "
-                "after subsequent reflections the test particle carries less "
-                "than 0.1%\n"
-                "of the original flux, it will be eliminated. A good advice is "
-                "that if you'd like to see pressure across N orders of "
-                "magnitude, set it to 1E-N");
+            "Low flux mode helps to gain more statistics on low pressure "
+            "parts of the system, at the expense\n"
+            "of higher pressure parts. If a traced particle reflects from a "
+            "high sticking factor surface, regardless of that probability,\n"
+            "a reflected test particle representing a reduced flux will "
+            "still be traced. Therefore test particles can reach low flux "
+            "areas more easily, but\n"
+            "at the same time tracing a test particle takes longer. The "
+            "cutoff ratio defines what ratio of the originally generated "
+            "flux\n"
+            "can be neglected. If, for example, it is 0.001, then, when "
+            "after subsequent reflections the test particle carries less "
+            "than 0.1%\n"
+            "of the original flux, it will be eliminated. A good advice is "
+            "that if you'd like to see pressure across N orders of "
+            "magnitude, set it to 1E-N");
         if (!lowFluxMode) {
             ImGui::BeginDisabled();
         }
         simChanged |= ImGui::InputDoubleRightSide(
-                "Cutoff ratio", &lowFluxCutoff,
-                "%.2e");
+            "Cutoff ratio", &lowFluxCutoff,
+            "%.2e");
         if (!lowFluxMode) {
             ImGui::EndDisabled();
         }
@@ -263,7 +257,7 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
                 mApp->worker.model->sp.halfLife = halfLife;
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
-                
+
             }
             if (wasDisabled) {
                 ImGui::EndDisabled();
@@ -271,22 +265,22 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
         }
         ImGui::NewLine();
         {
-            ImGui::BeginDisabled();
-
-            static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays
-
+            //ImGui::BeginDisabled();
+            static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays // NOT ANYMORE, CAN UPGRAGE TO std::string
+            if (mApp->worker.needsReload) sprintf(inputText, "Model changed");
+            // TODO Display Model changed when there are changes to facets, settings etc. show values when sim started or outgassing recalculated
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
-            ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText);
+            ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText, ImGuiInputTextFlags_ReadOnly);
             if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
-            ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText); // In molecules/sec
+            ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText, ImGuiInputTextFlags_ReadOnly); // In molecules/sec
             {
                 char tmpLabel[64];
                 sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
                 if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
-                ImGui::InputTextRightSide(tmpLabel, inputText);
+                ImGui::InputTextRightSide(tmpLabel, inputText, ImGuiInputTextFlags_ReadOnly);
             }
 
-            ImGui::EndDisabled();
+            //ImGui::EndDisabled();
             //***********************
 
             {
@@ -295,30 +289,31 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
             }
 
             if (ImGui::Button("Recalc. outgassing")) {
-                RecalculateOutgassing(mApp);
+                RecalculateOutgassing();
             }
         }
 
         if (appSettingsChanged) {
             if (mApp->globalSettings) {
-                    mApp->globalSettings->Update(); //backwards compatibility: sync old Global Settings window
-             }
+                mApp->globalSettings->Update(); //backwards compatibility: sync old Global Settings window
+            }
         }
 
 #else
-//SYNRAD
+        //SYNRAD
 #endif
         ImGui::PopItemWidth();
         ImGui::EndTable();
     }
 
-    ProcessControlTable(mApp);
+    ProcessControlTable();
 
     ImGui::Text("Number of CPU cores:     %zd", mApp->numCPU);
     ImGui::Text("Number of subprocesses:  ");
     ImGui::SameLine();
-    /*bool nbProcChanged = false;
-    int nbProc = mApp->worker.GetProcNumber();*/
+    if(updateNbProc)
+        nbProc = (mApp->worker.GetProcNumber());
+        updateNbProc = false;
     ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
     ImGui::InputInt("##nbProc", &nbProc, 1, 8);
 
@@ -330,13 +325,16 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Apply and restart processes"))
-        RestartProc(nbProc, mApp);
+    if (ImGui::Button("Apply and restart processes")) {
+        RestartProc();
+        updateNbProc = true;
+    }
     {
         ImGui::PlaceAtRegionRight("Change desorption limit", true);
         if (ImGui::Button("Change desorption limit"))
             ImGui::OpenPopup("Edit MAX");
     }
+    ImGui::End();
     // Always center this window when appearing
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
@@ -377,10 +375,15 @@ void ShowGlobalSettings(Interface *mApp, bool *show_global_settings, int &nbProc
     }
 }
 
+void ImGlobalSettings::Init(Interface* mApp_)
+{
+    mApp = mApp_;
+}
+
 /**
  * \brief Function to apply changes to the number of processes.
  */
-void RestartProc(int nbProc, Interface* mApp) {
+void ImGlobalSettings::RestartProc() {
     try {
         LockWrapper myLock(mApp->imguiRenderLock);
         mApp->worker.Stop_Public();
@@ -403,7 +406,7 @@ void RestartProc(int nbProc, Interface* mApp) {
     }
 }
 
-void RecalculateOutgassing(Interface* mApp) {
+void ImGlobalSettings::RecalculateOutgassing() {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {

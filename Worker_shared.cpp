@@ -511,8 +511,7 @@ void Worker::Update(float appTime) {
 	//Facet hits, facet histograms, facet angle maps
 	//No cache for profiles, textures, directions (plotted directly from shared memory hit buffer)
 
-
-	if (needsReload) RealReload();
+	if (!ReloadIfNeeded()) return;
 
 	// End of simulation reached (Stop GUI)
 	if ((simManager.allProcsFinished || simManager.hasErrorStatus) && (IsRunning() || (!IsRunning() && simuTimer.isActive)) && (appTime != 0.0f)) {
@@ -656,29 +655,25 @@ void Worker::UpdateInterfaceCaches()
 void Worker::ReloadSim(bool sendOnly, GLProgress_Abstract& prg) {
 	// Send and Load geometry
 	prg.SetMessage("Converting geometry to simulation model...");
+	
+	InterfaceGeomToSimModel();
+
+	prg.SetMessage("Initializing physics...");
 	try {
-		InterfaceGeomToSimModel();
-
-		prg.SetMessage("Initializing physics...");
-		try {
-			model->PrepareToRun();
-		}
-		catch (std::exception& err) {
-			throw Error(("Error in model->PrepareToRun():\n{}", err.what()));
-		}
-
-		prg.SetMessage("Constructing memory structure to store results...");
-		if (!sendOnly) {
-			globalState->Resize(model);
-		}
-
-		prg.SetMessage("Forwarding simulation model...");
-		simManager.ShareSimModel(model); //set shared pointer simManager::simulation.model to worker::model
-		prg.SetMessage("Forwarding global simulation state...");
-		simManager.ShareGlobalCounter(globalState, particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
+		model->PrepareToRun();
 	}
-	catch (const std::exception& e) {
-		GLMessageBox::Display(e.what(), "Error (LoadGeom)", GLDLG_OK, GLDLG_ICONERROR);
-		throw;
+	catch (std::exception& err) {
+		throw Error(("Error in model->PrepareToRun():\n{}", err.what()));
 	}
+
+	prg.SetMessage("Constructing memory structure to store results...");
+	if (!sendOnly) {
+		globalState->Resize(model);
+	}
+
+	prg.SetMessage("Forwarding simulation model...");
+	simManager.ShareSimModel(model); //set shared pointer simManager::simulation.model to worker::model
+	prg.SetMessage("Forwarding global simulation state...");
+	simManager.ShareGlobalCounter(globalState, particleLog);  //set worker::globalState and particleLog pointers to simManager::simulations[0]
+	
 }

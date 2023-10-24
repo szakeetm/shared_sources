@@ -813,7 +813,9 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
     menu->GetSubMenu("Test")->Add(nullptr);
     menu->GetSubMenu("Test")->Add("ImGui Global Settings", MENU_IMGUI_GLOB);
+#ifdef DEBUG
     menu->GetSubMenu("Test")->Add("ImGui Sidebar", MENU_IMGUI_SIDE);
+#endif
     menu->GetSubMenu("Test")->Add("ImGui Test Suite", MENU_IMGUI);
 
     geomNumber = new GLTextField(0, nullptr);
@@ -1763,11 +1765,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    if (!imWnd->show_global_settings) {
-                        imWnd->ToggleGlobalSettings();
+                    if (!imWnd->globalSet.IsVisible()) {
+                        imWnd->globalSet.Show();
                     }
                     return true;
                 }
+#ifdef DEBUG
                 case MENU_IMGUI_SIDE: {
                     if(!imWnd) {
                         imWnd = new ImguiWindow(this);
@@ -1778,6 +1781,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
                     }
                     return true;
                 }
+#endif
                 case MENU_IMGUI_MENU: {
                     if(!imWnd) {
                         imWnd = new ImguiWindow(this);

@@ -20,6 +20,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
+#include "ImguiPopup.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -35,6 +37,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
 #include <Helper/FormatHelper.h>
+#include <Helper/StringHelper.h>
+#include "Helper/MathTools.h"
+#include "ImguiWindow.h"
 
 
 // Dummy data structure that we use for the Table demo.
@@ -107,11 +112,20 @@ namespace {
     const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
 }
 
-// Sidebar containing 3d viewer settings, facet settings and simulation data
+
 #if defined(MOLFLOW)
-void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
+double ImGuiSidebar::PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp) {
+    return 1.0 * sticking * area / 10.0 / 4.0 * sqrt(8.0 * 8.31 * temperature / PI / (mApp->worker.model->sp.gasMass * 0.001));
+}
+
+double ImGuiSidebar::StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp) {
+    return std::abs(pumpingSpeed / (area / 10.0) * 4.0 * sqrt(1.0 / 8.0 / 8.31 / (temperature) * PI * (mApp->worker.model->sp.gasMass * 0.001)));
+}
+
+// Sidebar containing 3d viewer settings, facet settings and simulation data
+void ImGuiSidebar::ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom) {
 #else
-void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, bool *show_global) {
+void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom) {
 #endif
     const float PAD = 10.0f;
     static int corner = 0;
@@ -121,16 +135,20 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
     ImGuiIO &io = ImGui::GetIO();
 
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
-    static bool use_work_area = false; // experiment with work area vs normal area
+    static bool use_work_area = true; // experiment with work area vs normal area
+
+    static int width = TEXT_BASE_WIDTH * 30;
+
     ImGui::SetNextWindowPos(use_work_area ?
-                            ImVec2(viewport->Size.x - viewport->WorkSize.x * 0.25f, viewport->WorkPos.y)
+                            ImVec2(viewport->Size.x - width, viewport->WorkPos.y)
                                           : viewport->Pos);
     // Set size initially (to be able for resize) to take the full height on the right side
     ImGui::SetNextWindowSize(
-            use_work_area ? ImVec2(viewport->WorkSize.x * 0.25f, viewport->WorkSize.y) : ImVec2(0, viewport->Size.y), ImGuiCond_FirstUseEver);
+            use_work_area ? ImVec2(width, viewport->WorkSize.y) : ImVec2(width, viewport->Size.y));
 
     static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | 
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar;
     /*ImGuiWindowFlags_NoDecoration | *//*ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove *//*| ImGuiWindowFlags_NoResize *//*|
             ImGuiWindowFlags_NoSavedSettings;*/
 
@@ -150,9 +168,18 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
         ImGui::SetNextWindowViewport(viewport->ID);
         flags |= ImGuiWindowFlags_NoMove;
     }
-
+    //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
+    static bool displayedWarning = false;
+#ifndef DEBUG
+    if (!displayedWarning) {
+        ImIOWrappers::InfoPopup("WARNING", "Sidebar is not properly implemented yet. Most features do not work!");
+        displayedWarning = true;
+    }
+#endif
     if (ImGui::Begin("[BETA] Molflow Sidebar", p_open, flags)) {
 #if defined(DEBUG)
+        if (p_open && ImGui::Button("Close this window"))
+            *p_open = false;
         if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
 
             ImGui::Checkbox("Use work area instead of main area", &use_work_area);
@@ -168,8 +195,6 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
             ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
             ImGui::Unindent();
 
-            if (p_open && ImGui::Button("Close this window"))
-                *p_open = false;
         }
 #endif
         if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -205,6 +230,7 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     if(ImGui::Button("<< View")){
+                        LockWrapper myLock(mApp->imguiRenderLock);
                         if (!mApp->viewer3DSettings)
                             mApp->viewer3DSettings = new Viewer3DSettings();
                         mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
@@ -225,25 +251,53 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
         }
 
         std::string title;
-        if(interfGeom->GetNbSelectedFacets() > 1) {
-            title = fmt::format("Selected Facet ({} selected)", interfGeom->GetNbSelectedFacets());
+        // remember last state to see if values need updating
+        static int lastNbFacets = -1;
+        static int lastFacetId = -1;
+        size_t nbSelectedFacets = interfGeom->GetNbSelectedFacets();
+        if(nbSelectedFacets > 1) {
+            title = fmt::format("Selected Facet ({} selected)", nbSelectedFacets);
         }
-        else if(interfGeom->GetNbSelectedFacets() == 1){
+        else if(nbSelectedFacets == 1){
             title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front());
         }
         else {
             title = fmt::format("Selected Facet (none)");
         }
         if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.35f);
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.25f);
-            size_t selected_facet_id = interfGeom->GetNbSelectedFacets() ? interfGeom->GetSelectedFacets().front() : 0;
-            auto sel = interfGeom->GetNbSelectedFacets() ? interfGeom->GetFacet(selected_facet_id) : nullptr;
+            size_t selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
+            auto sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
+
+            bool updateFacetInterfaceValues = (lastNbFacets != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
+            lastNbFacets = nbSelectedFacets;
+            lastFacetId = selected_facet_id;
+            if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
+                // declare variables
+                enum { use_og = 0, use_og_area = 1 };
                 static int des_idx = 0;
-                if(sel) des_idx = sel->sh.desorbType;
-                if (ImGui::Combo("Desorption", &des_idx, "None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                static std::string exponentInput = "";
+                static std::string outgassingInput = "1.0";
+                static std::string outgassingAreaInput = "1.0";
+                static bool modeOfOg = use_og;
+                static double og = 1.0;
+                static double og_area = 1.0;
+                /***********MISSING MIXED AND TIME-DEPENDENT STATES************/
+                if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
+                    des_idx = sel->sh.desorbType;
+                    // TODO use time-depended sh.stickingParam if defined
+                    og = sel->sh.outgassing * 10; // from bar to mbar
+                    og_area = og / sel->sh.area;
+                    outgassingInput = std::to_string(og);
+                    outgassingAreaInput = std::to_string(og_area);
+                }
+
+                ImGui::Text("Desorption"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                // TODO handle mixed selection
+                if (ImGui::Combo("##Desorption", &des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
+                    sel->sh.desorbType = des_idx;
                     switch (des_idx) {
                         case 0:
                             fmt::print("none");
@@ -255,45 +309,97 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                             fmt::print("cos");
                             break;
                         case 3:
-                            fmt::print("cos \u207f");
+                            fmt::print(u8"cos \u207f");
                             break;
                         case 4:
                             fmt::print("rec");
                             break;
                     }
                 }
+                if (des_idx == 3) {
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 4);
+                    ImGui::InputText("##exponent", &exponentInput);
+                }
 
-                static bool use_og_area = false;
-                bool use_og = !use_og_area;
-                static double og = 1.0;
-                static double og_area = 1.0;
-
-                if(sel) og = sel->sh.outgassing;
-                if (ImGui::Checkbox("Outgassing [mbar\u00b7l/s]", &use_og)) {
-                    use_og_area = !use_og;
+                if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
+                    modeOfOg = use_og;
                 }
                 ImGui::SameLine();
-                ImGui::InputDouble("##in", &og);
-                ImGui::Checkbox(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", &use_og_area);
+                if (ImGui::InputText("##in", &outgassingInput)) {
+                    modeOfOg = use_og;
+                    // if value changed
+                    if (Util::getNumber(&og, outgassingInput)) { // and conversion was a success
+                        //update the other value
+                        og_area = og / sel->sh.area;
+                        outgassingAreaInput = std::to_string(og_area);
+                        sel->sh.outgassing = og / 10;
+                    }
+                    else {
+                        // TODO apply user string as time-depended parameter name
+                    }
+                }
+                if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", modeOfOg == use_og_area)) {
+                    modeOfOg = use_og_area;
+                }
                 ImGui::SameLine();
-                ImGui::InputDouble("##ina", &og);
+                if (ImGui::InputText("##ina", &outgassingAreaInput)) {
+                    modeOfOg = use_og_area;
+                    if (Util::getNumber(&og_area, outgassingAreaInput)) {
+                        og = og_area * sel->sh.area;
+                        outgassingInput = std::to_string(og);
+                        sel->sh.outgassing = og / 10;
+                    }
+                }
+                ImGui::TreePop();
+            }
+            bool updateFacetProperties = false;
+            if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    static std::string sfInput = "1.0";
+                    static std::string psInput = "1.0";
+                    static double sf = 1.0;
+                    static double ps = 1.0;
+
+                if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
+                    sf = sel->sh.sticking; 
+                    sfInput = std::to_string(sf);
+                    ps = PumpingSpeedFromSticking(sf,sel->sh.area,sel->sh.temperature, mApp);
+                    psInput = std::to_string(ps);
+                }
+                ImGui::Text("Sticking Factor"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##StickingFactor", &sfInput)) {
+                    if (Util::getNumber(&sf, sfInput)) {
+                        // could work incorrectly correctly if area and temperature are changed
+                        ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature, mApp);
+                        psInput = std::to_string(ps);
+                        updateFacetProperties = true;
+                    }
+                }
+                ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##PumpingSpeed", &psInput)) {
+                    if (Util::getNumber(&ps, psInput)) {
+                        // could work incorrectly correctly if area and temperature are changed
+                        sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature, mApp);
+                        sfInput = std::to_string(sf);
+                        updateFacetProperties = true;
+                    }
+                }
+                if (sf < 0 || sf > 1) { // if sf is out of range display warning
+                    ImGui::TextColored(ImVec4(1,0,0,1), u8"Sticking factor \u2209[0,1]");
+                }
+                else if (sel && updateFacetProperties) { // and only assign sf to facet if it is in range
+                    sel->sh.sticking = sf;
+                }
                 ImGui::TreePop();
             }
 #endif
-
-            if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-                static double sf = 1.0;
-                static double ps = 1.0;
-                if(sel) sf = sel->sh.sticking;
-                ImGui::InputDoubleRightSide("Sticking factor", &sf);
-                ImGui::InputDoubleRightSide("Pumping speed [l/s]", &ps);
-                ImGui::TreePop();
-            }
-            ImGui::PopItemWidth();
             {
                 static int sides_idx = 0;
-                if(sel) sides_idx = sel->sh.is2sided;
+                if(updateFacetInterfaceValues && sel) sides_idx = sel->sh.is2sided;
                 if (ImGui::Combo("Sides", &sides_idx, "1 Sided\0 2 Sided\0")) {
+                    sel->sh.is2sided = sides_idx;
                     switch (sides_idx) {
                         case 0:
                             fmt::print("1s");
@@ -305,18 +411,52 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                 }
 
                 static double opacity = 1.0;
-                if(sel) opacity = sel->sh.opacity;
-                ImGui::InputDoubleRightSide("Opacity", &opacity);
+                static std::string opacityInput = "1.0";
+                updateFacetProperties = false;
+                if (updateFacetInterfaceValues && sel) { // update if selection changed
+                    opacity = sel->sh.opacity;
+                    opacityInput = std::to_string(opacity);
+                }
+                ImGui::Text("Opacity"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##Opacity", &opacityInput)) { // if text changed
+                    if (Util::getNumber(&opacity, opacityInput)) { // try to convert it to a number
+                        updateFacetProperties = true; // if success set update flag
+                    }
+                }
+                if (opacity < 0 || opacity > 1) { // if opacity is out of range display the warining
+                    ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
+                }
+                else if (updateFacetProperties) { // set new facet opacity
+                    sel->sh.opacity = opacity;
+                }
 
 #if defined(MOLFLOW)
                 static double temp = 1.0;
-                if(sel) temp = sel->sh.temperature;
-                ImGui::InputDoubleRightSide("Temperature [\u00b0\u212a]", &temp);
+                static std::string temperatureInput = "1.0";
+                updateFacetProperties = false;
+                if (updateFacetInterfaceValues && sel) {
+                    temp = sel->sh.temperature;
+                    temperatureInput = std::to_string(temp);
+                }
+                ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
+                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                if (ImGui::InputText("##Temperature", &temperatureInput)) {
+                    if (Util::getNumber(&temp, temperatureInput)) {
+                        updateFacetProperties = true;
+                    }
+                }
+                if (temp <= 0) {
+                    ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
+                }
+                else if (updateFacetProperties) {
+                    sel->sh.temperature = temp;
+                }
 #endif
 
                 static double area = 1.0;
                 if(sel) area = sel->sh.area;
-                ImGui::InputDoubleRightSide("Area [cm\u00b2]", &area);
+                ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &area);
 
                 static int prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;
@@ -347,13 +487,13 @@ void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom, b
                     }
                 }
             }
-            ImGui::PopItemWidth();
+            if (sel == nullptr) ImGui::EndDisabled();
         }
 
 
         if (ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
             if(ImGui::Button("<< Sim")){
-                *show_global = !*show_global;
+                mApp->imWnd->globalSet.Toggle();
             }
             ImGui::SameLine();
             {

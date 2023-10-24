@@ -11,7 +11,7 @@ project(${PROJECT_NAME} CXX)
 add_library(${PROJECT_NAME} STATIC
         ${INTERFACE_FILES}
         ${GL_FILES}
-        )
+         )
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE

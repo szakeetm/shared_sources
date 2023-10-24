@@ -92,7 +92,7 @@ public:
   void ResetStatsAndHits(float appTime);
   void MarkToReload();    // Reload simulation (throws Error)
   void ReloadSim(bool sendOnly, GLProgress_Abstract& prg);
-  void RealReload(bool sendOnly=false);
+  void RealReload(bool sendOnly=false); //throws error
   //std::ostringstream SerializeForLoader();
     virtual std::ostringstream SerializeParamsForLoader();
 
