@@ -26,6 +26,7 @@ class GLTextField;
 class GLLabel;
 class GLToggle;
 class GLTitledPanel;
+class GLScrollBar;
 
 class InterfaceGeometry;
 class Worker;
@@ -37,41 +38,37 @@ public:
 	CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
- 
-	void EnableDisableControls(int mode);
 
 	GLTitledPanel* planeDefPanel;
+
 	GLLabel* label1;
-	GLToggle* eqmodeCheckbox;
+	GLLabel* label2;
+	GLLabel* label3;
+	GLLabel* label4;
+
+	GLTextField* aTextbox;
+	GLTextField* bTextbox;
+	GLTextField* cTextbox;
+	GLTextField* dTextbox;
+
 	GLButton* XZplaneButton;
 	GLButton* YZplaneButton;
 	GLButton* XYplaneButton;
-	GLTextField* dTextbox;
-	GLLabel* label4;
-	GLTextField* cTextbox;
-	GLLabel* label3;
-	GLTextField* bTextbox;
-	GLLabel* label2;
-	GLTextField* aTextbox;
-	GLToggle* vertexModeCheckbox;
-	GLTextField* facetIdTextbox;
-	GLToggle* facetmodeCheckbox;
-	GLLabel* resultLabel;
+	
+	GLButton* selectedFacetButton;
+	GLButton* selectedVertexButton;
+	GLButton* cameraButton;
+
+	GLScrollBar* dScrollBar;
+	
 	GLButton* sectionButton;
 	GLButton* invertButton;
-	GLButton* cameraButton;
 	GLButton* disableButton;
-	GLButton* getSelectedFacetButton;
-
-	enum PlaneMode : int {
-		PlanemodeEquation,
-		PlanemodeFacet,
-		Planemode3Vertex
-	};
-	PlaneMode planeMode = PlanemodeEquation;
-	Plane lastPlane;
 
 	InterfaceGeometry* interfGeom;
 	Worker* work;
 	int viewerId;
+
+	Plane GetPlane(); //throws error
+	void SetPlane(const Plane& p);
 };

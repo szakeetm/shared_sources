@@ -100,6 +100,7 @@ public:
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();
+  Plane GetCameraPlane();
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   // Flag view

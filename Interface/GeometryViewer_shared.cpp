@@ -1,3 +1,4 @@
+#include "GeometryViewer.h"
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -430,29 +431,6 @@ void GeometryViewer::UpdateMatrix() {
 	// Convert polar coordinates
 	Vector3d org = interfGeom->GetCenter();
 
-	/*
-	Vector3d X(1.0, 0.0, 0.0);
-	Vector3d Y(0.0, 1.0, 0.0);
-	Vector3d Z(0.0, 0.0, 1.0);
-
-	camDir = Z;
-	camLeft = X * handedness;
-	camUp = Y;
-
-	camDir = Rotate(camDir, org, X, -view.camAngleOx);
-	camDir = Rotate(camDir, org, Y, -view.camAngleOy);
-	camDir = Rotate(camDir, org, Z, -view.camAngleOz);
-
-	camLeft = Rotate(camLeft, org, X, -view.camAngleOx);
-	camLeft = Rotate(camLeft, org, Y, -view.camAngleOy);
-	camLeft = Rotate(camLeft, org, Z, -view.camAngleOz);
-
-	camUp = Rotate(camUp, org, X, -view.camAngleOx);
-	camUp = Rotate(camUp, org, Y, -view.camAngleOy);
-	camUp = Rotate(camUp, org, Z, -view.camAngleOz);
-	*/
-
-
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
@@ -495,14 +473,14 @@ void GeometryViewer::UpdateMatrix() {
 
 	// Projection matrix ---------------------------------------------------
 
-	double aspect = (double)width / (double)(height - DOWN_MARGIN);
+	
 	ComputeBB(/*true*/);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
 	if (view.projMode == ProjectionMode::Perspective) {
-
+		double aspect = (double)width / (double)(height - DOWN_MARGIN);
 		double _zNear = std::max(zNear, 0.1);
 		double _zFar = (_zNear < zFar) ? zFar : _zNear + 1.0;
 		GLToolkit::PerspectiveLH(FOV_ANGLE, aspect, _zNear - 0.05, _zFar + 10.0);
@@ -1063,6 +1041,24 @@ void GeometryViewer::Zoom() {
 
 	}
 
+}
+
+Plane GeometryViewer::GetCameraPlane()
+{
+	InterfaceGeometry* interfGeom = work->GetGeometry();
+	if (!interfGeom) return Plane();
+	Vector3d org = interfGeom->GetCenter();
+	auto bb = interfGeom->GetBB();
+	Vector3d camPos = org + view.camOffset;
+	Plane cutPlane = Plane(camDir.x, camDir.y, camDir.z, -Dot(camDir,camPos));
+	if (view.projMode == ProjectionMode::Perspective) {
+		//Inverted better choice
+		cutPlane.a *= -1.0;
+		cutPlane.b *= -1.0;
+		cutPlane.c *= -1.0;
+		cutPlane.d *= -1.0;
+	}
+	return cutPlane;
 }
 
 void GeometryViewer::Paint() {
