@@ -57,6 +57,14 @@ enum VolumeRenderMode : int {
     BackOnly
 };
 
+
+struct Plane {
+    //XY by default
+    double x = 0.0;
+    double y = 0.0;
+    double z = 1.0;
+    double d = 0.0;
+};
 // Definition of a view. Note: all basis are left handed
 
 struct CameraView{
@@ -82,6 +90,9 @@ struct CameraView{
     double   vBottom = 0.0;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
     double cutFactor = 0.0;
+
+    bool enableClipping; // Cross section through clip plane
+    Plane clipPlane;
 };
 
 struct UserFormula {

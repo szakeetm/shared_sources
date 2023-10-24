@@ -1151,9 +1151,17 @@ void GeometryViewer::Paint() {
 	glLoadMatrixf(matProj);
 	UpdateLight();
 	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(matView);	GLdouble clipPlane[4] = { 1.0, 0.0, 0.0, 0.5 }; // Define your clip plane equation
-	glClipPlane(GL_CLIP_PLANE0, clipPlane);
-	glEnable(GL_CLIP_PLANE0);
+	if (view.enableClipping) {
+		glLoadMatrixf(matView);	GLdouble clipPlane[4] = {
+			view.clipPlane.x,
+			view.clipPlane.y,
+			view.clipPlane.z,
+			view.clipPlane.d
+		};
+		glClipPlane(GL_CLIP_PLANE0, clipPlane);
+		glEnable(GL_CLIP_PLANE0);
+	}
+	
 	glDisable(GL_BLEND);
 
 	// Draw geometry
@@ -1198,8 +1206,9 @@ void GeometryViewer::Paint() {
 	DrawCoordinateAxes();
 	PaintSelectedVertices(showHiddenVertex);
 
-
-	glDisable(GL_CLIP_PLANE0);
+	if (view.enableClipping) {
+		glDisable(GL_CLIP_PLANE0);
+	}
 
 	//DrawBB();
 	// Restore old transformation/viewport
