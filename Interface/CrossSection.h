@@ -34,7 +34,7 @@ class CrossSection : public GLWindow {
 
 public:
   // Display a modal dialog and return the code of the pressed button
-	CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId);
+	CrossSection(InterfaceGeometry* g, Worker* w, int viewerId);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
  
