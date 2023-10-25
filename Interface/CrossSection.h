@@ -51,6 +51,7 @@ private:
 	GLLabel* DminLabel;
 	GLLabel* DmaxLabel;
 
+	GLLabel* hintLabel;
 
 	GLTextField* aTextbox;
 	GLTextField* bTextbox;

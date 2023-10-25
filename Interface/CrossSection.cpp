@@ -52,7 +52,7 @@ extern SynRad* mApp;
 CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWindow() {
 
 	int wD = 420;
-	int hD = 200;
+	int hD = 215;
 
 	interfGeom = g;
 	work = w;
@@ -173,7 +173,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	
 	//newline
 	panelPosY += 20;
-	panelPosX = 8;
+	panelPosX = 30;
 
 	elementWidth = 100;
 	elementHeight = 20;
@@ -186,18 +186,26 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	planeDefPanel->Add(DmaxLabel);
 
 	//newline
-	panelPosY += 40;
+	panelPosY += 35;
+	panelPosX = 14;
+
+	hintLabel = new GLLabel("Hint: Cross-sections can also be saved with views (View -> Save... menu)");
+	hintLabel->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
+	Add(hintLabel);
+
+	//newline
+	panelPosY += 22;
 	panelPosX = 12;
 
 	elementWidth = 150;
-	elementHeight = 20;
+	elementHeight = 19;
 	enableToggle = new GLToggle(0, "Enable cross section view");
 	enableToggle->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
 	Add(enableToggle);
 	panelPosX += elementWidth + elementSpacing;
 
-	invertButton = new GLButton(0, "Invert");
-	invertButton->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
+	invertButton = new GLButton(0, "Invert half-space");
+	invertButton->SetBounds(wD-elementWidth-elementSpacing, panelPosY, elementWidth, elementHeight);
 	Add(invertButton);
 	panelPosX += elementWidth + elementSpacing;
 

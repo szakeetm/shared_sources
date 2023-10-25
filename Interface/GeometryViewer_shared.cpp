@@ -1190,35 +1190,35 @@ void GeometryViewer::Paint() {
 	}
 	else cullMode = volumeRenderMode;
 
-	interfGeom->Render((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHiddenFacet, showMesh, showDir);
+	interfGeom->Render((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHiddenFacet, showMesh, showDir, view.enableClipping);
 
 #if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
-	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
-	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
-	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
-	if (showNormal && (!detailsSuppressed)) DrawNormal();
-	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
+
+	if (view.enableClipping) {
+		glDisable(GL_CLIP_PLANE0);
+	}
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered
 	if (mApp->highlightSelection)
 		interfGeom->RenderSemiTransparent();
 
+	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
+	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
+
+	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
+	if (showNormal && (!detailsSuppressed)) DrawNormal();
+	if (showUV && (!detailsSuppressed)) DrawUV();
 	// Draw on top of everything
 	if (showFacetId && !detailsSuppressed) DrawFacetId();
 
 	DrawCoordinateAxes();
 	PaintSelectedVertices(showHiddenVertex);
 
-	if (view.enableClipping) {
-		glDisable(GL_CLIP_PLANE0);
-	}
-
-	//DrawBB();
 	// Restore old transformation/viewport
 	GetWindow()->ClipToWindow();
 	glMatrixMode(GL_MODELVIEW);
