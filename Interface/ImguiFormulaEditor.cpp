@@ -9,7 +9,7 @@
 
 
 #ifdef MOLFLOW
-#include "../../src/Molflow.h"
+#include "../../src/MolFlow.h"
 #endif
 
 extern char formulaSyntax[];
