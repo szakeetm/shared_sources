@@ -49,7 +49,7 @@ extern SynRad* mApp;
 
 CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWindow() {
 
-	int wD = 450;
+	int wD = 425;
 	int hD = 175;
 
 	interfGeom = g;
@@ -60,14 +60,14 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	SetBounds(15, 30, wD, hD);
 
 	planeDefPanel = new GLTitledPanel("Cut plane");
-	planeDefPanel->SetBounds(10, 7, wD - 10, 115);
+	planeDefPanel->SetBounds(10, 7, wD - 17, 115);
 	Add(planeDefPanel);
 
 	int panelPosX = 8;
 	int panelPosY = 15;
 
 	int elementWidth = 60;
-	int elementSpacing = 10;
+	int elementSpacing = 5;
 	int elementHeight = 20;
 	aTextbox = new GLTextField(0, "");
 	planeDefPanel->SetCompBounds(aTextbox, panelPosX, panelPosY, elementWidth, elementHeight);
@@ -80,7 +80,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	planeDefPanel->Add(label1);
 	panelPosX += elementWidth + elementSpacing;
 
-	elementWidth = 60;
+	elementWidth = 65;
 	bTextbox = new GLTextField(0, "");
 	planeDefPanel->SetCompBounds(bTextbox, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(bTextbox);
@@ -92,7 +92,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	planeDefPanel->Add(label2);
 	panelPosX += elementWidth + elementSpacing;
 
-	elementWidth = 60;
+	elementWidth = 65;
 	cTextbox = new GLTextField(0, "");
 	planeDefPanel->SetCompBounds(cTextbox, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(cTextbox);
@@ -104,7 +104,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	planeDefPanel->Add(label3);
 	panelPosX += elementWidth + elementSpacing;
 
-	elementWidth = 60;
+	elementWidth = 65;
 	dTextbox = new GLTextField(0, "");
 	planeDefPanel->SetCompBounds(dTextbox, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(dTextbox);
@@ -119,7 +119,8 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	panelPosY += 25;
 	panelPosX = 8;
 
-	elementWidth = 100;
+	elementWidth = 120;
+	elementSpacing = 15;
 	XZplaneButton = new GLButton(0, "XZ plane");
 	planeDefPanel->SetCompBounds(XZplaneButton, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(XZplaneButton);
@@ -144,7 +145,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	planeDefPanel->Add(selectedFacetButton);
 	panelPosX += elementWidth + elementSpacing;
 
-	selectedVertexButton = new GLButton(0, "Sel. 3 vertices");
+	selectedVertexButton = new GLButton(0, "Selected 3 vertices");
 	planeDefPanel->SetCompBounds(selectedVertexButton, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(selectedVertexButton);
 	panelPosX += elementWidth + elementSpacing;
@@ -158,15 +159,17 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	panelPosY += 25;
 	panelPosX = 8;
 
+	elementHeight = 15;
 	dScrollBar = new GLScrollBar(0);
 	dScrollBar->SetOrientation(SB_HORIZONTAL);
-	planeDefPanel->SetCompBounds(dScrollBar, panelPosX, panelPosY, wD-30, elementHeight);
+	planeDefPanel->SetCompBounds(dScrollBar, panelPosX, panelPosY, wD-35, elementHeight);
 	planeDefPanel->Add(dScrollBar);
 
 	//newline
 	panelPosY += 40;
 	panelPosX = 12;
 
+	elementHeight = 20;
 	sectionButton = new GLButton(0, "Section");
 	sectionButton->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
 	Add(sectionButton);
@@ -281,10 +284,10 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 }
 
 void CrossSection::FillTextboxValues(const Plane& P) {
-	aTextbox->SetText(P.a);
-	bTextbox->SetText(P.b);
-	cTextbox->SetText(P.c);
-	dTextbox->SetText(P.d);
+	aTextbox->SetText(P.a,7);
+	bTextbox->SetText(P.b,7);
+	cTextbox->SetText(P.c,7);
+	dTextbox->SetText(P.d,7);
 }
 
 Plane CrossSection::ReadTextboxValues() {

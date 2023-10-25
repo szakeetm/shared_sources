@@ -184,14 +184,15 @@ private:
   GLLabel       *coordLab;
 
   
-  GLLabel       *capsLockLabel;
-  GLLabel       *hideLotlabel;
-  GLLabel		*screenshotLabel;
-  GLLabel		*selectLabel;
-  GLLabel		*rotateLabel;
-  GLLabel		*panLabel;
-  GLLabel		*tabLabel;
-  GLLabel		*nonPlanarLabel;
+  GLLabel*		capsLockLabel;
+  GLLabel*		hideLotlabel;
+  GLLabel*		screenshotLabel;
+  GLLabel*		selectLabel;
+  GLLabel*		rotateLabel;
+  GLLabel*		panLabel;
+  GLLabel*		tabLabel;
+  GLLabel*		nonPlanarLabel;
+  GLLabel*		crossSectionLabel;
 
   #if defined(MOLFLOW)
   GLOverlayLabel *timeLabel;

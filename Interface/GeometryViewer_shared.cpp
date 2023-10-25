@@ -177,6 +177,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
 	Add(nonPlanarLabel);
 
+	crossSectionLabel = new GLLabel("Cross-section view enabled. You can adjust or disable in View->Cross section.");
+	Add(crossSectionLabel);
+
 	UpdateLabelColors();
 
 	// Light
@@ -214,6 +217,7 @@ void GeometryViewer::UpdateLabelColors()
 	rotateLabel->SetTextColor(textColor, textColor, textColor);
 	panLabel->SetTextColor(textColor, textColor, textColor);
 	tabLabel->SetTextColor(textColor, textColor, textColor);
+	crossSectionLabel->SetTextColor(textColor, textColor, textColor);
 	nonPlanarLabel->SetTextColor(255, 0, 255);
 }
 
@@ -1275,15 +1279,19 @@ void GeometryViewer::Paint() {
 	bool displayPanLabel = dragMode == DragMode::DragPan;
 	bool displayTabLabel = GetWindow()->IsTabDown();
 	bool displayNonPlanarLabel = interfGeom->hasNonPlanar;
+	bool displayCrosssectionLabel = view.enableClipping;
+	
 	int offsetCount = 0;
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel; hideLotlabel->SetVisible(displayHideLotLabel);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel; capsLockLabel->SetVisible(displayCapsLockLabel);
-	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel; rotateLabel->SetVisible(displayRotateLabel);
-	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel; screenshotLabel->SetVisible(displayScreenshotLabel);
-	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel; selectLabel->SetVisible(displaySelectionLabel);
-	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel; panLabel->SetVisible(displayPanLabel);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel; tabLabel->SetVisible(displayTabLabel);
-	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel; nonPlanarLabel->SetVisible(displayNonPlanarLabel);
+
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayHideLotLabel) offsetCount++; hideLotlabel->SetVisible(displayHideLotLabel);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayCapsLockLabel) offsetCount++; capsLockLabel->SetVisible(displayCapsLockLabel);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayRotateLabel) offsetCount++; rotateLabel->SetVisible(displayRotateLabel);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayScreenshotLabel) offsetCount++; screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displaySelectionLabel) offsetCount++; selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayPanLabel) offsetCount++; panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayTabLabel) offsetCount++; tabLabel->SetVisible(displayTabLabel);
+	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayNonPlanarLabel) offsetCount++; nonPlanarLabel->SetVisible(displayNonPlanarLabel);
+	crossSectionLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayCrosssectionLabel) offsetCount++; crossSectionLabel->SetVisible(displayCrosssectionLabel);
 
 #if defined(MOLFLOW)
 	if (work->displayedMoment)
