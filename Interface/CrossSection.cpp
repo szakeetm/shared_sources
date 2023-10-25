@@ -308,6 +308,21 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			mApp->viewers[viewerId]->ApplyClippingPlane(std::nullopt, false);
 		}
 		break;
+	case MSG_TEXT:
+	{
+		Plane equationPlane;
+		try {
+			equationPlane = ReadTextboxValues();
+		}
+		catch (Error& err) {
+			GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			return;
+		}
+		mApp->viewers[viewerId]->ApplyClippingPlane(equationPlane, true);
+		enableToggle->SetState(1);
+		AdjustScrollbar(equationPlane);
+		break;
+	}
 	case MSG_SCROLL:
 	{
 		Plane cutPlane;
