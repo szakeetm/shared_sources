@@ -29,6 +29,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLScrollBar.h"
 
+#include "Helper/MathTools.h" //Saturate
 #include "Geometry_shared.h"
 
 #if defined(MOLFLOW)
@@ -49,8 +50,8 @@ extern SynRad* mApp;
 
 CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWindow() {
 
-	int wD = 425;
-	int hD = 175;
+	int wD = 420;
+	int hD = 200;
 
 	interfGeom = g;
 	work = w;
@@ -60,7 +61,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	SetBounds(15, 30, wD, hD);
 
 	planeDefPanel = new GLTitledPanel("Cut plane");
-	planeDefPanel->SetBounds(10, 7, wD - 17, 115);
+	planeDefPanel->SetBounds(10, 7, wD - 17, 135);
 	Add(planeDefPanel);
 
 	int panelPosX = 8;
@@ -121,6 +122,12 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 
 	elementWidth = 120;
 	elementSpacing = 15;
+	
+	XYplaneButton = new GLButton(0, "XY plane");
+	planeDefPanel->SetCompBounds(XYplaneButton, panelPosX, panelPosY, elementWidth, elementHeight);
+	planeDefPanel->Add(XYplaneButton);
+	panelPosX += elementWidth + elementSpacing;
+
 	XZplaneButton = new GLButton(0, "XZ plane");
 	planeDefPanel->SetCompBounds(XZplaneButton, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(XZplaneButton);
@@ -129,11 +136,6 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	YZplaneButton = new GLButton(0, "YZ plane");
 	planeDefPanel->SetCompBounds(YZplaneButton, panelPosX, panelPosY, elementWidth, elementHeight);
 	planeDefPanel->Add(YZplaneButton);
-	panelPosX += elementWidth + elementSpacing;
-
-	XYplaneButton = new GLButton(0, "XY plane");
-	planeDefPanel->SetCompBounds(XYplaneButton, panelPosX, panelPosY, elementWidth, elementHeight);
-	planeDefPanel->Add(XYplaneButton);
 	panelPosX += elementWidth + elementSpacing;
 
 	//newline
@@ -159,16 +161,35 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	panelPosY += 25;
 	panelPosX = 8;
 
+	elementWidth = wD - 155;
 	elementHeight = 15;
 	dScrollBar = new GLScrollBar(0);
 	dScrollBar->SetOrientation(SB_HORIZONTAL);
+	dScrollBar->SetEnabled(false); //Enabled by AdjustScrollbar()
 	planeDefPanel->SetCompBounds(dScrollBar, panelPosX, panelPosY, wD-35, elementHeight);
+	dScrollBar->SetRange(1100, 100, 1);
 	planeDefPanel->Add(dScrollBar);
+	panelPosX += elementWidth + elementSpacing;
+	
+	//newline
+	panelPosY += 20;
+	panelPosX = 8;
+
+	elementWidth = 100;
+	elementHeight = 20;
+	DminLabel = new GLLabel("D_min");
+	planeDefPanel->SetCompBounds(DminLabel, panelPosX, panelPosY, elementWidth, elementHeight);
+	planeDefPanel->Add(DminLabel);
+
+	DmaxLabel = new GLLabel("D_max");
+	planeDefPanel->SetCompBounds(DmaxLabel, wD-elementWidth-20, panelPosY, elementWidth, elementHeight);
+	planeDefPanel->Add(DmaxLabel);
 
 	//newline
 	panelPosY += 40;
 	panelPosX = 12;
 
+	elementWidth = 120;
 	elementHeight = 20;
 	sectionButton = new GLButton(0, "Section");
 	sectionButton->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
@@ -197,16 +218,19 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			Plane clipPlane = Plane(0.0, 0.0, 1.0, 0.0);
 			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
 			FillTextboxValues(clipPlane);
+			AdjustScrollbar(clipPlane);
 		}
 		else if (src == YZplaneButton) {
 			Plane clipPlane = Plane(1.0, 0.0, 0.0, 0.0);
 			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
 			FillTextboxValues(clipPlane);
+			AdjustScrollbar(clipPlane);
 		}
 		else if (src == XZplaneButton) {
 			Plane clipPlane = Plane(0.0, 1.0, 0.0, 0.0);
 			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
 			FillTextboxValues(clipPlane);
+			AdjustScrollbar(clipPlane);
 		}
 		else if (src == selectedFacetButton) {
 			auto selFacets = interfGeom->GetSelectedFacets();
@@ -219,6 +243,7 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			Plane facetPlane = Plane(N.x, N.y, N.z, -Dot(N, P0));
 			mApp->viewer[viewerId]->ApplyClippingPlane(facetPlane, true);
 			FillTextboxValues(facetPlane);
+			AdjustScrollbar(facetPlane);
 			break;
 		}
 		else if (src == selectedVertexButton) {
@@ -244,6 +269,7 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			Plane vertexPlane = Plane(N.x, N.y, N.z, -Dot(N, v0));
 			mApp->viewer[viewerId]->ApplyClippingPlane(vertexPlane, true);
 			FillTextboxValues(vertexPlane);
+			AdjustScrollbar(vertexPlane);
 			break;
 		}
 		else if (src == disableButton) {
@@ -259,6 +285,7 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 				return;
 			}
 			mApp->viewer[viewerId]->ApplyClippingPlane(equationPlane, true);
+			AdjustScrollbar(equationPlane);
 		}
 		else if (src == invertButton) {
 			Plane cutPlane;
@@ -272,15 +299,71 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			Plane invertedPlane = Plane(-cutPlane.a, -cutPlane.b, -cutPlane.c, -cutPlane.d);
 			mApp->viewer[viewerId]->ApplyClippingPlane(invertedPlane, std::nullopt);
 			FillTextboxValues(invertedPlane);
+			AdjustScrollbar(invertedPlane);
 		}
 		else if (src == cameraButton) {
 			Plane cameraPlane = mApp->viewer[viewerId]->GetCameraPlane();
 			mApp->viewer[viewerId]->ApplyClippingPlane(cameraPlane, true);
 			FillTextboxValues(cameraPlane);
+			AdjustScrollbar(cameraPlane);
 		}
 		break;
+	case MSG_SCROLL:
+	{
+		Plane cutPlane;
+		try {
+			cutPlane = ReadTextboxValues();
+		}
+		catch (Error& err) {
+			GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+			return;
+		}
+		int pos = dScrollBar->GetPosition();
+		double D_range = Dmax - Dmin;
+		double d = Dmin + static_cast<double>(pos) / 1000.0 * D_range;
+		cutPlane.d = d;
+		mApp->viewer[viewerId]->ApplyClippingPlane(cutPlane, true);
+		FillTextboxValues(cutPlane);
+		break;
+	}
 	}
 	GLWindow::ProcessMessage(src, message);
+}
+
+void CrossSection::AdjustScrollbar(const Plane& p)
+{
+	// Get min and max D values where plane still intersects bounding box
+	AxisAlignedBoundingBox BB = interfGeom->GetBB();
+	std::vector<Vector3d> bbEightCorners;
+	bbEightCorners.emplace_back(Vector3d(BB.min.x, BB.min.y, BB.min.z));
+	bbEightCorners.emplace_back(Vector3d(BB.min.x, BB.min.y, BB.max.z));
+	bbEightCorners.emplace_back(Vector3d(BB.min.x, BB.max.y, BB.min.z));
+	bbEightCorners.emplace_back(Vector3d(BB.min.x, BB.max.y, BB.max.z));
+	bbEightCorners.emplace_back(Vector3d(BB.max.x, BB.min.y, BB.min.z));
+	bbEightCorners.emplace_back(Vector3d(BB.max.x, BB.min.y, BB.max.z));
+	bbEightCorners.emplace_back(Vector3d(BB.max.x, BB.max.y, BB.min.z));
+	bbEightCorners.emplace_back(Vector3d(BB.max.x, BB.max.y, BB.max.z));
+	
+	std::vector<double> distancesFromPlane;
+	for (const auto& corner : bbEightCorners) {
+		distancesFromPlane.push_back(-(p.a * corner.x + p.b * corner.y + p.c * corner.z));
+	}
+
+	auto minElement = std::min_element(distancesFromPlane.begin(), distancesFromPlane.end());
+	auto maxElement = std::max_element(distancesFromPlane.begin(), distancesFromPlane.end());
+	this->Dmin = *minElement;
+	this->Dmax = *maxElement;
+
+	//set scrollbar min,max and pos
+	double D_range = Dmax - Dmin;
+	double offset = p.d - Dmin;
+	Saturate(offset, 0.0, D_range);
+
+	dScrollBar->SetPosition(static_cast<int>(1000.0*offset/D_range));
+	dScrollBar->SetEnabled(true);
+
+	DminLabel->SetText(fmt::format("D_min: {:.6g}", Dmin));
+	DmaxLabel->SetText(fmt::format("D_max: {:.6g}", Dmax));
 }
 
 void CrossSection::FillTextboxValues(const Plane& P) {

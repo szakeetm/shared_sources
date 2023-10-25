@@ -46,6 +46,10 @@ private:
 	GLLabel* label3;
 	GLLabel* label4;
 
+	GLLabel* DminLabel;
+	GLLabel* DmaxLabel;
+
+
 	GLTextField* aTextbox;
 	GLTextField* bTextbox;
 	GLTextField* cTextbox;
@@ -71,4 +75,7 @@ private:
 
 	Plane ReadTextboxValues(); //throws error
 	void FillTextboxValues(const Plane& p);
+	void AdjustScrollbar(const Plane& p);
+
+	double Dmin, Dmax;
 };
