@@ -30,9 +30,9 @@ void ImFormulaEditor::DrawFormulaList() {
 	static std::string newExpression, newName, changeExpression, changeName;
 	static int changeIndex = -1;
 	float columnW;
+	blue = mApp->worker.displayedMoment != 0;
 	formulasSize = appFormulas->formulas.size();
-	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame)) {
-
+	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
 		ImGui::TableSetupColumn("##ID",ImGuiTableColumnFlags_WidthFixed,txtW*4);
 		ImGui::TableSetupColumn("Expression");
 		ImGui::TableSetupColumn("Name (Optional)");
@@ -41,7 +41,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 		ImGui::TableHeadersRow();
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*2));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*4));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // Optional: No padding between cells
 		for (int i = 0; i < formulasSize; i++) {
 			ImGui::TableNextRow();
@@ -66,25 +66,16 @@ void ImFormulaEditor::DrawFormulaList() {
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeExp", &changeExpression);
 				ImGui::TableSetColumnIndex(2);
+				columnW = ImGui::GetContentRegionAvailWidth();
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeNam", &changeName);
 			}
 			ImGui::TableSetColumnIndex(3);
-			if (appFormulas->formulas[i].hasParseError) {
-				ImGui::Text(appFormulas->formulas[i].GetParseErrorMsg());
-			}
-			else if (appFormulas->formulas[i].hasEvalError) {
-				ImGui::Text(appFormulas->formulas[i].GetEvalErrorMsg());
-			}
-			else {
-				std::stringstream tmp; // ugly solution copied from legacy gui
-				tmp << appFormulas->formulaValueCache[i].value; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
-				ImGui::Text(tmp.str());
-			}
+			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), GetFormulaValue(i).c_str());
 			ImGui::TableSetColumnIndex(4);
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
-			if (selRow == i && isDiff && (ImGui::Button("Apply")	|| io->KeysDown[SDL_SCANCODE_RETURN]
-																	|| io->KeysDown[SDL_SCANCODE_RETURN2])) {
+			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[SDL_SCANCODE_RETURN]
+																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
 				changeIndex = i;
 			}
 
@@ -103,18 +94,21 @@ void ImFormulaEditor::DrawFormulaList() {
 			selRow = formulasSize;
 		}
 		ImGui::TableSetColumnIndex(2);
+		columnW = ImGui::GetContentRegionAvailWidth();
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NN", &newName)) {
 			selRow = formulasSize;
 		}
 		ImGui::TableSetColumnIndex(4);
-		if (!(newName == "" && newExpression == "") && (ImGui::Button("Add")
+		if (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
 			|| (selRow == formulasSize && (io->KeysDown[SDL_SCANCODE_RETURN]
-										|| io->KeysDown[SDL_SCANCODE_RETURN2])))) {
+										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
 			appFormulas->AddFormula(newName, newExpression);
 			formulasSize = appFormulas->formulas.size();
 			appFormulas->formulas[formulasSize-1].Parse();
-			appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+			if (mApp->autoUpdateFormulas) {
+				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+			}
 			selRow = formulasSize-1;
 			changeIndex = -1;
 			changeName = newName;
@@ -137,7 +131,9 @@ void ImFormulaEditor::DrawFormulaList() {
 				appFormulas->formulas[changeIndex].SetExpression(changeExpression);
 				appFormulas->formulas[changeIndex].Parse();
 			}
-			appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+			if (mApp->autoUpdateFormulas) {
+				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+			}
 			changeIndex = -1;
 			selRow = -1;
 
@@ -145,6 +141,7 @@ void ImFormulaEditor::DrawFormulaList() {
 		}
 
 		ImGui::EndTable();
+		ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		// child will fill the space below table, its only purpose is to be clicked in order to deselect rows
@@ -173,19 +170,69 @@ void ImFormulaEditor::Move(direction d)
 	}
 }
 
+std::string ImFormulaEditor::ExportCurrentFormulas()
+{
+	std::string out;
+	formulasSize = appFormulas->formulas.size();
+	//out.append("Expression\tName\tValue\n"); // Headers
+	for (int i = 0; i < formulasSize; i++) {
+		out.append(appFormulas->formulas[i].GetExpression()+'\t');
+		out.append(appFormulas->formulas[i].GetName()+'\t');
+		out.append(GetFormulaValue(i) + '\n');
+	}
+	return out;
+}
+
+std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
+	std::string out;
+	formulasSize = appFormulas->formulas.size();
+	return std::string();
+}
+
+std::string ImFormulaEditor::GetFormulaValue(int index)
+{
+	std::string out;
+	if (appFormulas->formulas[index].hasParseError) {
+		out = (appFormulas->formulas[index].GetParseErrorMsg());
+	}
+	else if (appFormulas->formulas[index].hasEvalError) {
+		out = (appFormulas->formulas[index].GetEvalErrorMsg());
+	}
+	else {
+		std::stringstream tmp; // ugly solution copied from legacy gui
+		tmp << appFormulas->formulaValueCache[index].value; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
+		out.append(tmp.str());
+	}
+	return out;
+}
 
 void ImFormulaEditor::Draw() {
 	if (!drawn) return;
 	formulasSize = appFormulas->formulas.size();
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 55, txtH*10), ImVec2(txtW*100,txtH*100));
+	// ImGui has no min size constraint so we set both min and max, with max absurdly high
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 55, txtH*10), ImVec2(txtW*1000,txtH*1000));
 	ImGui::SetNextWindowSize(ImVec2(txtW * 75, txtH * 20), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Formula editor", &drawn, ImGuiWindowFlags_NoSavedSettings);
-	float formulaListHeight = ImGui::GetWindowHeight() - txtH*6;
+
+	float formulaListHeight = ImGui::GetWindowHeight() - txtH*8;
 	ImGui::BeginChild("Formula list",ImVec2(0, formulaListHeight),true,0);
 	ImGui::Text("Formula list");
+	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
 
 	DrawFormulaList();
+	if (ImGui::BeginPopupContextItem("##FEFLcontext")) {
+		std::string text;
+		if (ImGui::Selectable("Copy all")) { 
+			text = ExportCurrentFormulas();
+			SDL_SetClipboardText(text.c_str()); 
+		}
+		if (ImGui::Selectable("Copy all\nat all times")) { 
+			text = ExportFormulasAtAllMoments();
+			SDL_SetClipboardText(text.c_str()); 
+		}
+		ImGui::EndPopup();
+	}
 
 	ImGui::EndChild();
 	if (ImGui::Button("Recalculate now")) {
@@ -212,6 +259,7 @@ void ImFormulaEditor::Draw() {
 	if (!moveDownEnable) ImGui::EndDisabled();
 	
 	ImGui::Checkbox("Record values for convergence", &appFormulas->recordConvergence);
+	ImGui::Checkbox("Auto Recalculate Formulas", &mApp->autoUpdateFormulas);
 	ImGui::SameLine();
 	float dummyWidthB = ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
@@ -219,7 +267,7 @@ void ImFormulaEditor::Draw() {
 	if (ImGui::Button("Open convergence plotter >>")) {
 		ImMenu::ConvergencePlotterMenuPress();
 	}
-	if (ImGui::Button("Formatting help")) {
+	if (ImGui::Button("Syntax help")) {
 		help.Show();
 	}
 	ImGui::End();
@@ -231,6 +279,7 @@ void ImFormulaEditor::Init(Interface* mApp_, std::shared_ptr<Formulas> formulas_
 	appFormulas = formulas_;
 	help = ImFormattingHelp();
 	io = &ImGui::GetIO();
+	blue = mApp->worker.displayedMoment != 0;
 }
 
 void ImFormulaEditor::ImFormattingHelp::Draw()

@@ -24,4 +24,8 @@ protected:
 	void Move(direction d);
 	ImFormattingHelp help;
 	ImGuiIO* io;
+	bool blue = false;
+	std::string ExportCurrentFormulas();
+	std::string ExportFormulasAtAllMoments();
+	std::string GetFormulaValue(int index);
 };
