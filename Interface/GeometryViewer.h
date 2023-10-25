@@ -88,6 +88,7 @@ public:
   bool IsDragging() override;
   CameraView GetCurrentView();
   void  SetCurrentView(CameraView v);
+  void ApplyClippingPlane(std::optional<Plane> plane_, std::optional<bool> enabled_);
   bool IsSelected();
   void SetSelected(bool s);
 

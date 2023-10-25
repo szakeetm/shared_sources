@@ -191,13 +191,19 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 	case MSG_BUTTON:
 
 		if (src == XYplaneButton) {
-			SetPlane(Plane(0.0, 0.0, 1.0, 0.0));
+			Plane clipPlane = Plane(0.0, 0.0, 1.0, 0.0);
+			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
+			FillTextboxValues(clipPlane);
 		}
 		else if (src == YZplaneButton) {
-			SetPlane(Plane(1.0, 0.0, 0.0, 0.0));
+			Plane clipPlane = Plane(1.0, 0.0, 0.0, 0.0);
+			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
+			FillTextboxValues(clipPlane);
 		}
 		else if (src == XZplaneButton) {
-			SetPlane(Plane(0.0, 1.0, 0.0, 0.0));
+			Plane clipPlane = Plane(0.0, 1.0, 0.0, 0.0);
+			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
+			FillTextboxValues(clipPlane);
 		}
 		else if (src == selectedFacetButton) {
 			auto selFacets = interfGeom->GetSelectedFacets();
@@ -208,11 +214,8 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			const Vector3d& P0 = *interfGeom->GetVertex(interfGeom->GetFacet(selFacets[0])->indices[0]);
 			const Vector3d& N = interfGeom->GetFacet(selFacets[0])->sh.N;
 			Plane facetPlane = Plane(N.x, N.y, N.z, -Dot(N, P0));
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.enableClipping = true;
-			myView.clipPlane = facetPlane;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
-			SetPlane(facetPlane);
+			mApp->viewer[viewerId]->ApplyClippingPlane(facetPlane, true);
+			FillTextboxValues(facetPlane);
 			break;
 		}
 		else if (src == selectedVertexButton) {
@@ -222,8 +225,11 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 				return;
 			}
 
-			Vector3d U2 = (*interfGeom->GetVertex(selVertices[0]) - *interfGeom->GetVertex(selVertices[1])).Normalized();
-			Vector3d V2 = (*interfGeom->GetVertex(selVertices[0]) - *interfGeom->GetVertex(selVertices[2])).Normalized();
+			auto v0 = *interfGeom->GetVertex(selVertices[0]);
+			auto v1 = *interfGeom->GetVertex(selVertices[1]);
+			auto v2 = *interfGeom->GetVertex(selVertices[2]);
+			Vector3d U2 = (v0 - v1).Normalized();
+			Vector3d V2 = (v0 - v2).Normalized();
 			Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
 			double nN2 = N2.Norme();
 			if (nN2 < 1e-8) {
@@ -232,70 +238,56 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			}
 			// Normalize N2
 			Vector3d N = N2.Normalized();
-			Vector3d P0 = *(interfGeom->GetVertex(selVertices[0]));
-			Plane vertexPlane = Plane(N.x, N.y, N.z, -Dot(N, P0));
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.enableClipping = true;
-			myView.clipPlane = vertexPlane;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
-			SetPlane(vertexPlane);
+			Plane vertexPlane = Plane(N.x, N.y, N.z, -Dot(N, v0));
+			mApp->viewer[viewerId]->ApplyClippingPlane(vertexPlane, true);
+			FillTextboxValues(vertexPlane);
 			break;
 		}
 		else if (src == disableButton) {
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.enableClipping = false;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
+			mApp->viewer[viewerId]->ApplyClippingPlane(std::nullopt, false);
 		}
 		else if (src == sectionButton) {
 			Plane equationPlane;
 			try {
-				equationPlane = GetPlane();
+				equationPlane = ReadTextboxValues();
 			}
 			catch (Error& err) {
 				GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.enableClipping = true;
-			myView.clipPlane = equationPlane;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
+			mApp->viewer[viewerId]->ApplyClippingPlane(equationPlane, true);
 		}
 		else if (src == invertButton) {
 			Plane cutPlane;
 			try {
-				cutPlane = GetPlane();
+				cutPlane = ReadTextboxValues();
 			}
 			catch (Error& err) {
 				GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
 				return;
 			}
 			Plane invertedPlane = Plane(-cutPlane.a, -cutPlane.b, -cutPlane.c, -cutPlane.d);
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.clipPlane = invertedPlane;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
-			SetPlane(invertedPlane);
+			mApp->viewer[viewerId]->ApplyClippingPlane(invertedPlane, std::nullopt);
+			FillTextboxValues(invertedPlane);
 		}
 		else if (src == cameraButton) {
 			Plane cameraPlane = mApp->viewer[viewerId]->GetCameraPlane();
-			auto myView = mApp->viewer[viewerId]->GetCurrentView();
-			myView.enableClipping = true;
-			myView.clipPlane = cameraPlane;
-			mApp->viewer[viewerId]->SetCurrentView(myView);
-			SetPlane(cameraPlane);
+			mApp->viewer[viewerId]->ApplyClippingPlane(cameraPlane, true);
+			FillTextboxValues(cameraPlane);
 		}
 		break;
 	}
 	GLWindow::ProcessMessage(src, message);
 }
 
-void CrossSection::SetPlane(const Plane& P) {
+void CrossSection::FillTextboxValues(const Plane& P) {
 	aTextbox->SetText(P.a);
 	bTextbox->SetText(P.b);
 	cTextbox->SetText(P.c);
 	dTextbox->SetText(P.d);
 }
 
-Plane CrossSection::GetPlane() {
+Plane CrossSection::ReadTextboxValues() {
 	Plane result;
 	if (!(aTextbox->GetNumber(&result.a))) {
 		throw Error("Invalid A coefficient");

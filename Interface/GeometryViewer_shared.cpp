@@ -1,4 +1,5 @@
 #include "GeometryViewer.h"
+#include "GeometryViewer.h"
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -551,6 +552,12 @@ void GeometryViewer::SetWorker(Worker* w) {
 	InterfaceGeometry* interfGeom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = interfGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+}
+
+void GeometryViewer::ApplyClippingPlane(std::optional<Plane> plane_, std::optional<bool> enabled_)
+{
+	if (plane_.has_value()) view.clipPlane = *plane_;
+	if (enabled_.has_value()) view.enableClipping = *enabled_;
 }
 
 void GeometryViewer::DrawIndex() {

@@ -69,6 +69,6 @@ private:
 	Worker* work;
 	int viewerId;
 
-	Plane GetPlane(); //throws error
-	void SetPlane(const Plane& p);
+	Plane ReadTextboxValues(); //throws error
+	void FillTextboxValues(const Plane& p);
 };
