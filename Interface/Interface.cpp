@@ -186,15 +186,15 @@ Interface::~Interface() {
 }
 
 void Interface::UpdateViewerFlags() {
-    viewer[curViewer]->showNormal = showNormal->GetState();
-    viewer[curViewer]->showRule = showRule->GetState();
-    viewer[curViewer]->showUV = showUV->GetState();
-    viewer[curViewer]->showLeak = showLeak->GetState();
-    viewer[curViewer]->showHit = showHit->GetState();
-    viewer[curViewer]->showLine = showLine->GetState();
-    viewer[curViewer]->showVolume = showVolume->GetState();
-    viewer[curViewer]->showTexture = showTexture->GetState();
-    viewer[curViewer]->showFacetId = showFacetId->GetState();
+    viewers[curViewer]->showNormal = showNormal->GetState();
+    viewers[curViewer]->showRule = showRule->GetState();
+    viewers[curViewer]->showUV = showUV->GetState();
+    viewers[curViewer]->showLeak = showLeak->GetState();
+    viewers[curViewer]->showHit = showHit->GetState();
+    viewers[curViewer]->showLine = showLine->GetState();
+    viewers[curViewer]->showVolume = showVolume->GetState();
+    viewers[curViewer]->showTexture = showTexture->GetState();
+    viewers[curViewer]->showFacetId = showFacetId->GetState();
 
     bool neededTexture = needsTexture;
     CheckNeedsTexture();
@@ -204,9 +204,9 @@ void Interface::UpdateViewerFlags() {
     } else if (needsTexture && !neededTexture) { //We just enabled mesh
         worker.RebuildTextures();
     }
-    viewer[curViewer]->showFilter = false;//showFilter->GetState();
-    viewer[curViewer]->showVertexId = showVertexId->GetState();
-    viewer[curViewer]->showIndex = showIndex->GetState();
+    viewers[curViewer]->showFilter = false;//showFilter->GetState();
+    viewers[curViewer]->showVertexId = showVertexId->GetState();
+    viewers[curViewer]->showIndex = showIndex->GetState();
 }
 
 void Interface::ResetSimulation(bool askConfirm) {
@@ -432,11 +432,11 @@ void Interface::AnimateViewerChange(int next) {
 
     // Reset to layout and make all visible
 
-    for (auto & view : viewer) view->SetVisible(true);
-    viewer[0]->SetBounds(3, 3, Width2, Height2);
-    viewer[1]->SetBounds(6 + Width2, 3, Width2, Height2);
-    viewer[2]->SetBounds(3, 6 + Height2, Width2, Height2);
-    viewer[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
+    for (auto & view : viewers) view->SetVisible(true);
+    viewers[0]->SetBounds(3, 3, Width2, Height2);
+    viewers[1]->SetBounds(6 + Width2, 3, Width2, Height2);
+    viewers[2]->SetBounds(3, 6 + Height2, Width2, Height2);
+    viewers[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
 
     if (modeSolo) {
 
@@ -514,10 +514,10 @@ void Interface::AnimateViewerChange(int next) {
         int y1 = lround(ys1 + t * (ye1 - ys1));
         int x2 = lround(xs2 + t * (xe2 - xs2));
         int y2 = lround(ys2 + t * (ye2 - ys2));
-        viewer[next]->SetBounds(x1, y1, x2 - x1, y2 - y1);
+        viewers[next]->SetBounds(x1, y1, x2 - x1, y2 - y1);
         wnd->Paint();
         // Overides moving component
-        viewer[next]->Paint();
+        viewers[next]->Paint();
         // Paint modeless
         int n;
         n = GLWindowManager::GetNbWindow();
@@ -532,25 +532,25 @@ void Interface::AnimateViewerChange(int next) {
 
 void Interface::UpdateViewerPanel() {
 
-    showNormal->SetState(viewer[curViewer]->showNormal);
-    showRule->SetState(viewer[curViewer]->showRule);
-    showUV->SetState(viewer[curViewer]->showUV);
-    showLeak->SetState(viewer[curViewer]->showLeak);
-    showHit->SetState(viewer[curViewer]->showHit);
-    showVolume->SetState(viewer[curViewer]->showVolume);
-    showLine->SetState(viewer[curViewer]->showLine);
-    showTexture->SetState(viewer[curViewer]->showTexture);
-    showFacetId->SetState(viewer[curViewer]->showFacetId);
-    showVertexId->SetState(viewer[curViewer]->showVertexId);
-    showIndex->SetState(viewer[curViewer]->showIndex);
+    showNormal->SetState(viewers[curViewer]->showNormal);
+    showRule->SetState(viewers[curViewer]->showRule);
+    showUV->SetState(viewers[curViewer]->showUV);
+    showLeak->SetState(viewers[curViewer]->showLeak);
+    showHit->SetState(viewers[curViewer]->showHit);
+    showVolume->SetState(viewers[curViewer]->showVolume);
+    showLine->SetState(viewers[curViewer]->showLine);
+    showTexture->SetState(viewers[curViewer]->showTexture);
+    showFacetId->SetState(viewers[curViewer]->showFacetId);
+    showVertexId->SetState(viewers[curViewer]->showVertexId);
+    showIndex->SetState(viewers[curViewer]->showIndex);
 }
 
 void Interface::SelectViewer(int s) {
 
     curViewer = s;
-    for (int i = 0; i < MAX_VIEWER; i++) viewer[i]->SetSelected(i == curViewer);
+    for (int i = 0; i < MAX_VIEWER; i++) viewers[i]->SetSelected(i == curViewer);
     UpdateViewerPanel();
-
+    if (crossSectionWindow) crossSectionWindow->SetViewer(curViewer);
 }
 
 void Interface::Place3DViewer() {
@@ -564,22 +564,22 @@ void Interface::Place3DViewer() {
     int Height2 = fHeight / 2 - 1;
 
     if (modeSolo) {
-        for (auto & view : viewer)
+        for (auto & view : viewers)
             view->SetVisible(false);
-        viewer[curViewer]->SetBounds(3, 3, fWidth, fHeight);
-        viewer[curViewer]->SetVisible(true);
+        viewers[curViewer]->SetBounds(3, 3, fWidth, fHeight);
+        viewers[curViewer]->SetVisible(true);
     } else {
-        for (auto & view : viewer)
+        for (auto & view : viewers)
             view->SetVisible(true);
-        viewer[0]->SetBounds(3, 3, Width2, Height2);
-        viewer[1]->SetBounds(6 + Width2, 3, Width2, Height2);
-        viewer[2]->SetBounds(3, 6 + Height2, Width2, Height2);
-        viewer[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
+        viewers[0]->SetBounds(3, 3, Width2, Height2);
+        viewers[1]->SetBounds(6 + Width2, 3, Width2, Height2);
+        viewers[2]->SetBounds(3, 6 + Height2, Width2, Height2);
+        viewers[3]->SetBounds(6 + Width2, 6 + Height2, Width2, Height2);
     }
 }
 
 void Interface::UpdateViewers() {
-    for (auto & view : viewer)
+    for (auto & view : viewers)
         view->UpdateMatrix();
 }
 
@@ -587,7 +587,7 @@ void Interface::SetFacetSearchPrg(bool visible, const char *text) {
     static Uint32 lastUpd = 0;
     Uint32 now = SDL_GetTicks();
     if (!visible || (now - lastUpd > 500)) {
-        for (auto & view : viewer) {
+        for (auto & view : viewers) {
             view->facetSearchState->SetVisible(visible);
             view->facetSearchState->SetText(text);
         }
@@ -601,8 +601,8 @@ void Interface::OneTimeSceneInit_shared_pre() {
     GLToolkit::SetIcon32x32("images/app_icon.png");
 
     for (int i = 0; i < MAX_VIEWER; i++) {
-        viewer[i] = new GeometryViewer(i);
-        Add(viewer[i]);
+        viewers[i] = new GeometryViewer(i);
+        Add(viewers[i]);
     }
     modeSolo = true;
     //nbSt = 0;
@@ -1199,14 +1199,14 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     std::filesystem::create_directory("Screenshots"); //Doesn't do anything if already exists
 
                     int x, y, width, height;
-                    viewer[curViewer]->GetBounds(&x, &y, &width, &height);
+                    viewers[curViewer]->GetBounds(&x, &y, &width, &height);
 
                     int leftMargin = 4; //Left bewel
                     int rightMargin = 0;
                     int topMargin = 0;
                     int bottomMargin = 28; //Toolbar
 
-                    viewer[curViewer]->RequestScreenshot(tmp_ss.str(), leftMargin, topMargin,
+                    viewers[curViewer]->RequestScreenshot(tmp_ss.str(), leftMargin, topMargin,
                                                          width - leftMargin - rightMargin,
                                                          height - topMargin - bottomMargin);
                     return true;
@@ -1596,7 +1596,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
                             return true;
                         }
-                        try { viewer[curViewer]->SelectCoplanar(coplanarityTolerance); }
+                        try { viewers[curViewer]->SelectCoplanar(coplanarityTolerance); }
                         catch (const std::exception &e) {
                             GLMessageBox::Display(e.what(), "Error selecting coplanar vertices", GLDLG_OK,
                                                   GLDLG_ICONERROR);
@@ -1912,13 +1912,13 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
             //GEOMVIEWER ------------------------------------------------------------------
         case MSG_GEOMVIEWER_MAXIMISE: {
-            if (src == viewer[0]) {
+            if (src == viewers[0]) {
                 AnimateViewerChange(0);
-            } else if (src == viewer[1]) {
+            } else if (src == viewers[1]) {
                 AnimateViewerChange(1);
-            } else if (src == viewer[2]) {
+            } else if (src == viewers[2]) {
                 AnimateViewerChange(2);
-            } else if (src == viewer[3]) {
+            } else if (src == viewers[3]) {
                 AnimateViewerChange(3);
             }
             Place3DViewer();
@@ -1993,7 +1993,7 @@ void Interface::BeforeExit()
 
 void Interface::CheckNeedsTexture() {
     needsMesh = needsTexture = needsDirection = false;
-    for (auto & view : viewer) {
+    for (auto & view : viewers) {
         needsMesh = needsMesh || (view->IsVisible() && view->showMesh);
         needsTexture = needsTexture || (view->IsVisible() && view->showTexture);
         needsDirection = needsDirection || (view->IsVisible() && view->showDir);
@@ -2003,13 +2003,13 @@ void Interface::CheckNeedsTexture() {
 //SELECTIONS
 
 void Interface::SelectView(int v) {
-    viewer[curViewer]->SetCurrentView(views[v]);
+    viewers[curViewer]->SetCurrentView(views[v]);
 }
 
 void Interface::SelectSelection(size_t v) {
     InterfaceGeometry *interfGeom = worker.GetGeometry();
-    interfGeom->SetSelection(selections[v].facetIds, viewer[0]->GetWindow()->IsShiftDown(),
-                       viewer[0]->GetWindow()->IsCtrlDown());
+    interfGeom->SetSelection(selections[v].facetIds, viewers[0]->GetWindow()->IsShiftDown(),
+                       viewers[0]->GetWindow()->IsCtrlDown());
     idSelection = v;
 }
 
@@ -2130,7 +2130,7 @@ void Interface::OverWriteView(int idOvr) {
     char *viewName = GLInputBox::GetInput(views[idOvr].name.c_str(), "View name", "Enter view name");
     if (!viewName) return;
 
-    views[idOvr] = viewer[curViewer]->GetCurrentView();
+    views[idOvr] = viewers[curViewer]->GetCurrentView();
     views[idOvr].name = viewName;
     RebuildViewMenus();
 }
@@ -2141,7 +2141,7 @@ void Interface::AddView() {
     sprintf(tmp, "View #%zd", views.size() + 1);
     char *viewName = GLInputBox::GetInput(tmp, "View name", "Enter view name");
     if (!viewName) return;
-    CameraView newView = viewer[curViewer]->GetCurrentView(); //Copy current view
+    CameraView newView = viewers[curViewer]->GetCurrentView(); //Copy current view
     newView.name = viewName; //Apply user-defined name
     AddView(newView);
     RebuildViewMenus();
@@ -2606,10 +2606,10 @@ int Interface::FrameMove() {
 
 
     // Facet parameters and hits
-    if (viewer[0]->SelectionChanged() ||
-        viewer[1]->SelectionChanged() ||
-        viewer[2]->SelectionChanged() ||
-        viewer[3]->SelectionChanged()) {
+    if (viewers[0]->SelectionChanged() ||
+        viewers[1]->SelectionChanged() ||
+        viewers[2]->SelectionChanged() ||
+        viewers[3]->SelectionChanged()) {
         UpdateFacetParams(true);
     }
     UpdateFacetHits(false);
@@ -2659,10 +2659,10 @@ int Interface::FrameMove() {
 
     /*
     // Sleep a bit to avoid unwanted CPU load
-    if (viewer[0]->IsDragging() ||
-        viewer[1]->IsDragging() ||
-        viewer[2]->IsDragging() ||
-        viewer[3]->IsDragging() || !worker.running)
+    if (viewers[0]->IsDragging() ||
+        viewers[1]->IsDragging() ||
+        viewers[2]->IsDragging() ||
+        viewers[3]->IsDragging() || !worker.running)
     {
         SDL_Delay(22); //was 22
     }

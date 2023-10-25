@@ -362,7 +362,7 @@ public:
 
 	// Components
 	GLMenuBar* menu;
-	GeometryViewer* viewer[MAX_VIEWER];
+	GeometryViewer* viewers[MAX_VIEWER];
 	GLTextField* geomNumber;
 	GLToggle* showNormal;
 	GLToggle* showRule;
@@ -515,7 +515,7 @@ public:
 	void AnimateViewerChange(int next);
 	void UpdateViewerPanel();
 
-	void SelectViewer(int s);
+	virtual void SelectViewer(int s);
 
 	void Place3DViewer();
 	void UpdateViewers();

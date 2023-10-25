@@ -199,7 +199,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
 #endif
         if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto curViewer = mApp->curViewer;
-            auto viewer = mApp->viewer[curViewer];
+            auto viewer = mApp->viewers[curViewer];
             if (ImGui::BeginTable("table_3dviewer", 3, ImGuiTableFlags_None)) {
                 /*ImGui::TableSetupColumn("col1");
                 ImGui::TableSetupColumn("col2");
@@ -236,7 +236,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                         mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
                         mApp->viewer3DSettings->Reposition();
                         auto curViewer = mApp->curViewer;
-                        auto viewer = mApp->viewer[curViewer];
+                        auto viewer = mApp->viewers[curViewer];
                         mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
                     }
                     ImGui::TableNextColumn();

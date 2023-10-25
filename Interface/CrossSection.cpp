@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "GLApp/GLLabel.h"
 #include "GLApp/GLTitledPanel.h"
 #include "GLApp/GLScrollBar.h"
+#include "GLApp/GLToggle.h"
 
 #include "Helper/MathTools.h" //Saturate
 #include "Geometry_shared.h"
@@ -57,7 +58,6 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	work = w;
 	viewerId = viewerId_;
 	
-	SetTitle(fmt::format("Cross section view (Viewer #{})", viewerId + 1));
 	SetBounds(15, 30, wD, hD);
 
 	planeDefPanel = new GLTitledPanel("Cut plane");
@@ -189,11 +189,11 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	panelPosY += 40;
 	panelPosX = 12;
 
-	elementWidth = 120;
+	elementWidth = 150;
 	elementHeight = 20;
-	sectionButton = new GLButton(0, "Section");
-	sectionButton->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
-	Add(sectionButton);
+	enableToggle = new GLToggle(0, "Enable cross section view");
+	enableToggle->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
+	Add(enableToggle);
 	panelPosX += elementWidth + elementSpacing;
 
 	invertButton = new GLButton(0, "Invert");
@@ -201,10 +201,7 @@ CrossSection::CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_) :GLWi
 	Add(invertButton);
 	panelPosX += elementWidth + elementSpacing;
 
-	disableButton = new GLButton(0, "Disable");
-	disableButton->SetBounds(panelPosX, panelPosY, elementWidth, elementHeight);
-	Add(disableButton);
-
+	Refresh(); //Fill values with current viewer settings
 	RestoreDeviceObjects();
 }
 
@@ -216,21 +213,18 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 
 		if (src == XYplaneButton) {
 			Plane clipPlane = Plane(0.0, 0.0, 1.0, 0.0);
-			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
-			FillTextboxValues(clipPlane);
-			AdjustScrollbar(clipPlane);
+			mApp->viewers[viewerId]->ApplyClippingPlane(clipPlane, true);
+			Refresh();
 		}
 		else if (src == YZplaneButton) {
 			Plane clipPlane = Plane(1.0, 0.0, 0.0, 0.0);
-			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
-			FillTextboxValues(clipPlane);
-			AdjustScrollbar(clipPlane);
+			mApp->viewers[viewerId]->ApplyClippingPlane(clipPlane, true);
+			Refresh();
 		}
 		else if (src == XZplaneButton) {
 			Plane clipPlane = Plane(0.0, 1.0, 0.0, 0.0);
-			mApp->viewer[viewerId]->ApplyClippingPlane(clipPlane, true);
-			FillTextboxValues(clipPlane);
-			AdjustScrollbar(clipPlane);
+			mApp->viewers[viewerId]->ApplyClippingPlane(clipPlane, true);
+			Refresh();
 		}
 		else if (src == selectedFacetButton) {
 			auto selFacets = interfGeom->GetSelectedFacets();
@@ -241,9 +235,8 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			const Vector3d& P0 = *interfGeom->GetVertex(interfGeom->GetFacet(selFacets[0])->indices[0]);
 			const Vector3d& N = interfGeom->GetFacet(selFacets[0])->sh.N;
 			Plane facetPlane = Plane(N.x, N.y, N.z, -Dot(N, P0));
-			mApp->viewer[viewerId]->ApplyClippingPlane(facetPlane, true);
-			FillTextboxValues(facetPlane);
-			AdjustScrollbar(facetPlane);
+			mApp->viewers[viewerId]->ApplyClippingPlane(facetPlane, true);
+			Refresh();
 			break;
 		}
 		else if (src == selectedVertexButton) {
@@ -267,25 +260,9 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 			// Normalize N2
 			Vector3d N = N2.Normalized();
 			Plane vertexPlane = Plane(N.x, N.y, N.z, -Dot(N, v0));
-			mApp->viewer[viewerId]->ApplyClippingPlane(vertexPlane, true);
-			FillTextboxValues(vertexPlane);
-			AdjustScrollbar(vertexPlane);
+			mApp->viewers[viewerId]->ApplyClippingPlane(vertexPlane, true);
+			Refresh();
 			break;
-		}
-		else if (src == disableButton) {
-			mApp->viewer[viewerId]->ApplyClippingPlane(std::nullopt, false);
-		}
-		else if (src == sectionButton) {
-			Plane equationPlane;
-			try {
-				equationPlane = ReadTextboxValues();
-			}
-			catch (Error& err) {
-				GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-				return;
-			}
-			mApp->viewer[viewerId]->ApplyClippingPlane(equationPlane, true);
-			AdjustScrollbar(equationPlane);
 		}
 		else if (src == invertButton) {
 			Plane cutPlane;
@@ -297,15 +274,30 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 				return;
 			}
 			Plane invertedPlane = Plane(-cutPlane.a, -cutPlane.b, -cutPlane.c, -cutPlane.d);
-			mApp->viewer[viewerId]->ApplyClippingPlane(invertedPlane, std::nullopt);
+			mApp->viewers[viewerId]->ApplyClippingPlane(invertedPlane, std::nullopt);
 			FillTextboxValues(invertedPlane);
 			AdjustScrollbar(invertedPlane);
 		}
 		else if (src == cameraButton) {
-			Plane cameraPlane = mApp->viewer[viewerId]->GetCameraPlane();
-			mApp->viewer[viewerId]->ApplyClippingPlane(cameraPlane, true);
-			FillTextboxValues(cameraPlane);
-			AdjustScrollbar(cameraPlane);
+			Plane cameraPlane = mApp->viewers[viewerId]->GetCameraPlane();
+			mApp->viewers[viewerId]->ApplyClippingPlane(cameraPlane, true);
+			Refresh();
+		}
+		break;
+	case MSG_TOGGLE:
+		if (enableToggle->GetState()) {
+			Plane equationPlane;
+			try {
+				equationPlane = ReadTextboxValues();
+			}
+			catch (Error& err) {
+				GLMessageBox::Display(err.what(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			mApp->viewers[viewerId]->ApplyClippingPlane(equationPlane, true);
+		}
+		else {
+			mApp->viewers[viewerId]->ApplyClippingPlane(std::nullopt, false);
 		}
 		break;
 	case MSG_SCROLL:
@@ -322,7 +314,7 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 		double D_range = Dmax - Dmin;
 		double d = Dmin + static_cast<double>(pos) / 1000.0 * D_range;
 		cutPlane.d = d;
-		mApp->viewer[viewerId]->ApplyClippingPlane(cutPlane, true);
+		mApp->viewers[viewerId]->ApplyClippingPlane(cutPlane, true);
 		FillTextboxValues(cutPlane);
 		break;
 	}
@@ -391,4 +383,18 @@ Plane CrossSection::ReadTextboxValues() {
 		throw Error("A, B, C are all zero. That's not a valid plane.");
 	}
 	return result;
+}
+
+void CrossSection::Refresh() {
+	SetTitle(fmt::format("Cross section view (Viewer #{})", viewerId + 1));
+	const CameraView& view = mApp->viewers[viewerId]->GetCurrentView();
+	enableToggle->SetState(view.enableClipping);
+	FillTextboxValues(view.clipPlane);
+	AdjustScrollbar(view.clipPlane);
+}
+
+void CrossSection::SetViewer(int viewerId_) {
+	bool viewerChanged = viewerId_ != viewerId;
+	viewerId = viewerId_;
+	if (viewerChanged) Refresh();
 }

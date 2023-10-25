@@ -27,6 +27,7 @@ class GLLabel;
 class GLToggle;
 class GLTitledPanel;
 class GLScrollBar;
+class GLToggle;
 
 class InterfaceGeometry;
 class Worker;
@@ -36,6 +37,7 @@ class CrossSection : public GLWindow {
 public:
   // Display a modal dialog and return the code of the pressed button
 	CrossSection(InterfaceGeometry* g, Worker* w, int viewerId_);
+	void SetViewer(int viewerId_);
   void ProcessMessage(GLComponent *src,int message) override;
 private:
 
@@ -65,9 +67,8 @@ private:
 
 	GLScrollBar* dScrollBar;
 	
-	GLButton* sectionButton;
+	GLToggle* enableToggle;
 	GLButton* invertButton;
-	GLButton* disableButton;
 
 	InterfaceGeometry* interfGeom;
 	Worker* work;
@@ -76,6 +77,7 @@ private:
 	Plane ReadTextboxValues(); //throws error
 	void FillTextboxValues(const Plane& p);
 	void AdjustScrollbar(const Plane& p);
+	void Refresh();
 
 	double Dmin, Dmax;
 };
