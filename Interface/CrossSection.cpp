@@ -338,7 +338,7 @@ void CrossSection::ProcessMessage(GLComponent* src, int message) {
 		double d = Dmin + static_cast<double>(pos) / 1000.0 * D_range;
 		cutPlane.d = d;
 		mApp->viewers[viewerId]->ApplyClippingPlane(cutPlane, true);
-		FillTextboxValues(cutPlane);
+		Refresh();
 		break;
 	}
 	}
