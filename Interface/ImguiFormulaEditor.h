@@ -19,7 +19,9 @@ protected:
 	public:
 		void Draw();
 	};
-
+	int formulasSize;
+	enum direction {up,down};
+	void Move(direction d);
 	ImFormattingHelp help;
 	ImGuiIO* io;
 };

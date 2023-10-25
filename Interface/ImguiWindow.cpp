@@ -309,7 +309,7 @@ void ImguiWindow::renderSingle() {
                     &show_demo_window); // Edit bools storing our window open/close state
             ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
             
-            static bool globalSettings = globalSet.IsVisible();
+            bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
                 globalSet.SetVisible(globalSettings);
             }
