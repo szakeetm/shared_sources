@@ -17,8 +17,7 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#ifndef GLOBALSETTINGS_SHARED_H
-#define GLOBALSETTINGS_SHARED_H
+#pragma once
 
 #include "GLApp/GLWindow.h"
 #include "GLApp/GLButton.h"
@@ -64,29 +63,17 @@ protected:
     GLTextField *cutoffText;
 
     int lastUpdate;
-    //float lastCPUTime[MAX_PROCESS];
-    //float lastCPULoad[MAX_PROCESS];
 
     GLToggle      *chkAntiAliasing;
     GLToggle      *chkWhiteBg;
     GLToggle		*leftHandedToggle;
-    //GLToggle      *chkNonIsothermal;
     GLToggle      *chkSimuOnly;
     GLToggle      *chkCheckForUpdates;
-    GLToggle      *chkAutoUpdateFormulas;
-    //GLToggle      *chkNewReflectionModel;
     GLToggle      *chkCompressSavedFiles;
     GLButton    *applyButton;
-    //GLButton    *cancelButton;
-    //GLButton    *newReflectmodeInfo;
-
-    /*GLTextField *outgassingText;
-    GLTextField *gasmassText;*/
     GLToggle *highlightSelectionToggle;
 
     GLToggle* highlightNonplanarToggle;
     GLToggle* useOldXMLFormat;
     GLToggle* prioToggle;
 };
-
-#endif /* GLOBALSETTINGS_SHARED_H */

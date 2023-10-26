@@ -57,8 +57,8 @@ static const int   fEdits[] = { EDIT_STRING,EDIT_STRING,0 };
 FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GLWindow() {
     columnRatios = { 0.333,0.333,0.333 };
 
-    int wD = 600;
-    int hD = 230; //Height extended runtime when formula syntax panel is expanded
+    int wD = 550;
+    int hD = 250; //Height extended runtime when formula syntax panel is expanded
 
     work = w;
     appFormulas = formulas;
@@ -84,12 +84,19 @@ FormulaEditor::FormulaEditor(Worker *w, std::shared_ptr<Formulas> formulas) : GL
     Add(recalcButton);
 
     convPlotterButton = new GLButton(0, "Open convergence plotter >>");
-    GLWindow::Add(convPlotterButton);
+    Add(convPlotterButton);
 
-    sampleConvergenceTgl = new GLToggle(0, "Record values for convergence");
-    sampleConvergenceTgl->SetState(true);
-    appFormulas->recordConvergence = sampleConvergenceTgl->GetState();
-    Add(sampleConvergenceTgl);
+	copyAllButton = new GLButton(0, "Copy table (all moments)");
+	Add(copyAllButton);
+
+    recordConvergenceToggle = new GLToggle(0, "Record convergence");
+    recordConvergenceToggle->SetState(true);
+    appFormulas->recordConvergence = recordConvergenceToggle->GetState();
+    Add(recordConvergenceToggle);
+
+	autoUpdateToggle = new GLToggle(0, "Auto-update formulas");
+	autoUpdateToggle->SetState(mApp->autoUpdateFormulas);
+	Add(autoUpdateToggle);
 
     moveUpButton = new GLButton(0, "Move Up");
     moveUpButton->SetEnabled(false);
@@ -182,11 +189,18 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			EnableDisableMoveButtons();
 			Refresh();
 		}
+		else if (src == copyAllButton) {
+			std::string clipboardText = appFormulas->ExportFormulasAtAllMoments(work);
+			SDL_SetClipboardText(clipboardText.c_str());
+		}
 		break;
     case MSG_TOGGLE:
-        if (src == sampleConvergenceTgl) {
-            appFormulas->recordConvergence = sampleConvergenceTgl->GetState();
-        }
+        if (src == recordConvergenceToggle) {
+            appFormulas->recordConvergence = recordConvergenceToggle->GetState();
+		}
+		else if (src == autoUpdateToggle) {
+			mApp->autoUpdateFormulas = autoUpdateToggle->GetState();
+		}
         break;
 	case MSG_TEXT:
 	case MSG_LIST:
@@ -276,22 +290,23 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 
 void FormulaEditor::SetBounds(int x, int y, int w, int h) {
 	int formulaHeight = (panel2->IsClosed() ? 0 : formulaSyntaxHeight);
-	panel1->SetBounds(5, 5, w - 10, h - 120 - formulaHeight);
-	formulaList->SetBounds(10, 22, w - 20, h - 145 - formulaHeight);
+	panel1->SetBounds(5, 5, w - 10, h - 150 - formulaHeight);
+	formulaList->SetBounds(10, 22, w - 20, h - 165 - formulaHeight);
 	for (size_t i=0;i<nbCol;i++)
 		formulaList->SetColumnWidth(i, (int)(columnRatios[i] * (double)(w - 45)));
-	recalcButton->SetBounds(10, h - 110 - formulaHeight, 95, 20);
-
-	moveUpButton->SetBounds(w - 150, h - 110 - formulaHeight, 65, 20);
-	moveDownButton->SetBounds(w - 80, h - 110 - formulaHeight, 65, 20);
-
-    sampleConvergenceTgl->SetBounds(10, h - 80 - formulaHeight, 200, 20);
-	convPlotterButton->SetBounds(w-210, h - 80 - formulaHeight, 200, 20);
+	recalcButton->SetBounds(10, h - 130 - formulaHeight, 150, 20);
+	autoUpdateToggle->SetBounds(10, h - 105 - formulaHeight, 100, 20);
+	moveUpButton->SetBounds(w - 150, h - 130 - formulaHeight, 65, 20);
+	moveDownButton->SetBounds(w - 80, h - 130 - formulaHeight, 65, 20);
+	
+	recordConvergenceToggle->SetBounds(w-130, h - 105 - formulaHeight, 120, 20);
+	copyAllButton->SetBounds(10,h-80 ,150 ,20 );
+	convPlotterButton->SetBounds(w-200, h - 80 - formulaHeight, 190, 20);
     
 	panel2->SetBounds(5, h - 50 - formulaHeight, w - 10, 20 + formulaHeight); //Height will be extended runtime
 	panel2->SetCompBounds(descL, 10, 15, w-30, formulaHeight);
 
-	SetMinimumSize(400, 150 + formulaHeight);
+	SetMinimumSize(500, 200 + formulaHeight);
 	GLWindow::SetBounds(x, y, w, h);
 }
 
@@ -345,6 +360,11 @@ void FormulaEditor::Refresh() {
 	RebuildList();
     appFormulas->convergenceDataChanged = true;
     UpdateValues();
+}
+
+void FormulaEditor::CopyAllMoments()
+{
+
 }
 
 void FormulaEditor::UpdateValues() {

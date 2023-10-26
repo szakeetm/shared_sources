@@ -28,6 +28,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/AppUpdater.h"
 #include "SMP.h"
 #include "ProcessControl.h"
+#include "Interface/FormulaEditor.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -191,7 +192,6 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                     }
                 }
 
-                mApp->autoUpdateFormulas = chkAutoUpdateFormulas->GetState();
                 mApp->compressSavedFiles = chkCompressSavedFiles->GetState();
                 mApp->autoSaveSimuOnly = chkSimuOnly->GetState();
 
@@ -262,7 +262,6 @@ void GlobalSettingsBase::Update_shared() {
         chkCheckForUpdates->SetState(0);
         chkCheckForUpdates->SetEnabled(false);
     }
-    chkAutoUpdateFormulas->SetState(mApp->autoUpdateFormulas);
     chkCompressSavedFiles->SetState(mApp->compressSavedFiles);
     nbProcText->SetText(fmt::format("{}", worker->GetProcNumber()));
 }

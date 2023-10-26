@@ -43,7 +43,7 @@ public:
 
   void RebuildList();
   void Refresh();
-
+  void CopyAllMoments();
   void UpdateValues();
 
   // Implementation
@@ -56,11 +56,13 @@ private:
 
   Worker	   *work;
 
-  GLToggle  *sampleConvergenceTgl;
+  GLToggle  *recordConvergenceToggle;
+  GLToggle* autoUpdateToggle;
   GLButton    *recalcButton;
     GLButton    *convPlotterButton;
     GLButton		*moveUpButton;
   GLButton		*moveDownButton;
+  GLButton* copyAllButton;
   GLLabel     *descL;
   GLList      *formulaList;
   GLTitledPanel *panel1;

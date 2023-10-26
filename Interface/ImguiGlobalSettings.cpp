@@ -165,11 +165,7 @@ void ImGlobalSettings::Draw() {
             mApp->appUpdater->SetUserUpdatePreference(updateCheckPreference);
         };
         if (!mApp->appUpdater) ImGui::EndDisabled();
-        // open/close state
-        appSettingsChanged |= ImGui::Checkbox(
-            "Auto refresh formulas",
-            reinterpret_cast<bool*>(
-                &mApp->autoUpdateFormulas)); // Edit bools storing our window
+
         // open/close state
         appSettingsChanged |= ImGui::Checkbox("Anti-Aliasing",
             &mApp->antiAliasing); // Edit bools storing our window
