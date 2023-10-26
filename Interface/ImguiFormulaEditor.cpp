@@ -29,16 +29,20 @@ void UpdateLegacyGUI() {
 void ImFormulaEditor::DrawFormulaList() {
 	static std::string newExpression, newName, changeExpression, changeName;
 	static int changeIndex = -1;
+	// check if user selected a different moment
 	lastMoment = mApp->worker.displayedMoment;
 	bool momentChanged = lastMoment != mApp->worker.displayedMoment;
 	if (momentChanged) lastMoment = mApp->worker.displayedMoment;
+	// if auto update is enabled and moment changed recalculate values
 	if (momentChanged && mApp->autoUpdateFormulas) {
 		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 	}
+
 	float columnW;
-	blue = mApp->worker.displayedMoment != 0;
-	formulasSize = appFormulas->formulas.size();
+	blue = mApp->worker.displayedMoment != 0; // control wether to color values blue or not
+	formulasSize = appFormulas->formulas.size(); // very frequently used value so it is stored
 	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+		// Headers
 		ImGui::TableSetupColumn("##ID",ImGuiTableColumnFlags_WidthFixed,txtW*4);
 		ImGui::TableSetupColumn("Expression");
 		ImGui::TableSetupColumn("Name (Optional)");
@@ -48,10 +52,14 @@ void ImFormulaEditor::DrawFormulaList() {
 		ImGui::TableHeadersRow();
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*4));  // Adjusts row height
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // Optional: No padding between cells
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
+
+		// this loop draws a row
 		for (int i = 0; i < formulasSize; i++) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
+
+			// handle selecting a row
 			if (ImGui::Selectable(std::to_string(i + 1).c_str(), selRow==i, selRow == i ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
 				if (selRow == i) selRow = -1;
 				else {
@@ -61,13 +69,13 @@ void ImFormulaEditor::DrawFormulaList() {
 				}
 			}
 			ImGui::TableSetColumnIndex(1);
-			if(selRow != i)
+			if(selRow != i) // unselected - just draw values
 			{
 				ImGui::Text(appFormulas->formulas[i].GetExpression());
 				ImGui::TableSetColumnIndex(2);
 				ImGui::Text(appFormulas->formulas[i].GetName());
 			}
-			else {
+			else { // selected - draw inputs
 				columnW = ImGui::GetContentRegionAvailWidth();
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeExp", &changeExpression);
@@ -76,28 +84,32 @@ void ImFormulaEditor::DrawFormulaList() {
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeNam", &changeName);
 			}
+			// values column
 			ImGui::TableSetColumnIndex(3);
 			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), GetFormulaValue(i).c_str());
 			ImGui::TableSetColumnIndex(4);
+			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
+			// show button only if the row is selected and there was a change
 			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[SDL_SCANCODE_RETURN]
 																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
-				changeIndex = i;
+				changeIndex = i; // set it when button or enter is pressed
 			}
 
 		}
 
-		ImGui::TableNextRow(); // empty row at the end
+		ImGui::TableNextRow(); // empty row at the end for new formulas
 		ImGui::TableSetColumnIndex(0);
 		if (ImGui::Selectable((std::to_string(formulasSize + 1)).c_str(), selRow == formulasSize)) {
 			if (selRow == formulasSize) selRow = -1;
 			else selRow = formulasSize;
 		}
+		// inputs for expression and name
 		ImGui::TableSetColumnIndex(1);
 		columnW = ImGui::GetContentRegionAvailWidth();
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NE", &newExpression)) {
-			selRow = formulasSize;
+			selRow = formulasSize; // auto select row if field changed
 		}
 		ImGui::TableSetColumnIndex(2);
 		columnW = ImGui::GetContentRegionAvailWidth();
@@ -106,21 +118,25 @@ void ImFormulaEditor::DrawFormulaList() {
 			selRow = formulasSize;
 		}
 		ImGui::TableSetColumnIndex(4);
+		// show button if either field is not empty
 		if (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
 			|| (selRow == formulasSize && (io->KeysDown[SDL_SCANCODE_RETURN]
 										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
+			// add new formula when button is pressed or row is selected and enter is pressed
 			appFormulas->AddFormula(newName, newExpression);
 			formulasSize = appFormulas->formulas.size();
 			appFormulas->formulas[formulasSize-1].Parse();
-			if (mApp->autoUpdateFormulas) {
+			if (mApp->autoUpdateFormulas) { // formula was added, if autoUpdate is true update all values
 				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 			}
-			selRow = formulasSize-1;
+			selRow = formulasSize-1; // select newly added formula
+			// reset state
 			changeIndex = -1;
 			changeName = newName;
 			changeExpression = newExpression;
 			newName = "";
 			newExpression = "";
+			// remove when ImGui becomes main UI
 			UpdateLegacyGUI();
 		}
 
@@ -160,13 +176,14 @@ void ImFormulaEditor::DrawFormulaList() {
 	}
 }
 
+// move selected formula up or down the list
 void ImFormulaEditor::Move(direction d)
 {
 	if (d == up && selRow > 0 && selRow < formulasSize) {
 		std::swap(appFormulas->formulas[selRow], appFormulas->formulas[selRow - 1]);
 		std::swap(appFormulas->convergenceData[selRow], appFormulas->convergenceData[selRow - 1]);
 		std::swap(appFormulas->formulaValueCache[selRow], appFormulas->formulaValueCache[selRow - 1]);
-		--selRow;
+		--selRow; // keep it selected
 	}
 	else if (d == down && selRow >= 0 && selRow < formulasSize - 1) {
 		std::swap(appFormulas->formulas[selRow], appFormulas->formulas[selRow + 1]);
@@ -176,6 +193,7 @@ void ImFormulaEditor::Move(direction d)
 	}
 }
 
+// converts currently visible expressions names and values to tab separated values string
 std::string ImFormulaEditor::ExportCurrentFormulas()
 {
 	std::string out;
@@ -262,6 +280,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
 
 	DrawFormulaList();
+	// context menu definition
 	if (ImGui::BeginPopupContextItem("##FEFLcontext")) {
 		std::string text;
 		if (ImGui::Selectable("Copy all")) { 
