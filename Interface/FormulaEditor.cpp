@@ -362,11 +362,6 @@ void FormulaEditor::Refresh() {
     UpdateValues();
 }
 
-void FormulaEditor::CopyAllMoments()
-{
-
-}
-
 void FormulaEditor::UpdateValues() {
 
 	// This only displays formula values already evaluated in appFormulas

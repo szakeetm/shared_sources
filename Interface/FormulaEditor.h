@@ -43,7 +43,6 @@ public:
 
   void RebuildList();
   void Refresh();
-  void CopyAllMoments();
   void UpdateValues();
 
   // Implementation

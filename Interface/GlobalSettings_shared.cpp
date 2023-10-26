@@ -28,7 +28,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Interface/AppUpdater.h"
 #include "SMP.h"
 #include "ProcessControl.h"
-#include "Interface/FormulaEditor.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
