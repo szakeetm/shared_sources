@@ -7,7 +7,7 @@ class Interface;
 // TODO Synrad stuff
 class ImSelectFacetByResult : public ImWindow {
 public:
-	enum states : int {
+	enum state : int {
 		noMinHits, noMaxHits,
 		noMinAbs, noMaxAbs,
 		noMinDes, noMaxDes,
@@ -18,7 +18,7 @@ public:
 	double minHits, maxHits;
 	double minAbs, maxAbs;
 	double minDes, maxDes;
-	std::vector<states> state;
+	std::vector<state> states;
 protected:
 	std::string minHitsInput, maxHitsInput;
 	std::string minAbsInput, maxAbsInput;

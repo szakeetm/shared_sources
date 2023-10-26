@@ -2,7 +2,7 @@
 #include <memory>
 #include "imgui.h"
 
-void ShortcutManager::RegisterShortcut(std::vector<int> keys_, std::function<void()>& function_, short id_)
+void ShortcutManager::RegisterShortcut(const std::vector<int>& keys_, const std::function<void()>& function_, short id_)
 {
 	shortcuts.emplace_back(Shortcut(keys_, function_, id_));
 }
@@ -24,7 +24,7 @@ void ShortcutManager::DoShortcuts()
 	}
 }
 
-ShortcutManager::Shortcut::Shortcut(std::vector<int> keys_, std::function<void()>& function_, short id_)
+ShortcutManager::Shortcut::Shortcut(const std::vector<int>& keys_, const std::function<void()>& function_, short id_)
 {
 	this->keys = keys_;
 	this->function = function_;

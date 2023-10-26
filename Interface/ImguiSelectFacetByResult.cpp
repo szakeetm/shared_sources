@@ -4,9 +4,9 @@
 #include "ImguiExtensions.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
-#include "../Helper/VectorHelper.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
+#include "Helper/MathTools.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -15,32 +15,32 @@ extern MolFlow* mApp;
 // TODO Synrad stuff
 
 bool ImSelectFacetByResult::Preprocess() {
-	if (minHitsInput == "") state.push_back(noMinHits);
+	if (minHitsInput == "") states.push_back(noMinHits);
 	else if (!Util::getNumber(&minHits, minHitsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Hits more than number invalid");
 		return false;
 	}
-	if (maxHitsInput == "") state.push_back(noMaxHits);
+	if (maxHitsInput == "") states.push_back(noMaxHits);
 	else if (!Util::getNumber(&maxHits, maxHitsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Hits less than number invalid");
 		return false;
 	}
-	if (minAbsInput == "") state.push_back(noMinAbs);
+	if (minAbsInput == "") states.push_back(noMinAbs);
 	else if (!Util::getNumber(&minAbs, minAbsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Abs more than number invalid");
 		return false;
 	}
-	if (maxAbsInput == "") state.push_back(noMaxAbs);
+	if (maxAbsInput == "") states.push_back(noMaxAbs);
 	else if (!Util::getNumber(&maxAbs, maxAbsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Abs less than number invalid");
 		return false;
 	}
-	if (minDesInput == "") state.push_back(noMinDes);
+	if (minDesInput == "") states.push_back(noMinDes);
 	else if (!Util::getNumber(&minDes, minDesInput)) {
 		ImIOWrappers::InfoPopup("Error", "Des more than number invalid");
 		return false;
 	}
-	if (maxDesInput == "") state.push_back(noMaxDes);
+	if (maxDesInput == "") states.push_back(noMaxDes);
 	else if (!Util::getNumber(&maxDes, maxDesInput)) {
 		ImIOWrappers::InfoPopup("Error", "Des less than number invalid");
 		return false;
@@ -90,19 +90,19 @@ void ImSelectFacetByResult::Draw() {
 			ImGui::EndTable();
 		}
 		if (ImGui::Button("Select")) {
-			state.push_back(btnSelect);
+			states.push_back(btnSelect);
 			DoSelect();
 		}
 		ImGui::SameLine();
 
 		if (ImGui::Button("Add to sel.")) {
-			state.push_back(btnAdd);
+			states.push_back(btnAdd);
 			DoSelect();
 		}
 		ImGui::SameLine();
 
 		if (ImGui::Button("Remove from sel.")) {
-			state.push_back(btnRmv);
+			states.push_back(btnRmv);
 			DoSelect();
 		}
 	}
@@ -117,24 +117,24 @@ void ImSelectFacetByResult::DoSelect() {
 	if (!Preprocess()) return;
 	if (!mApp) throw std::runtime_error("mApp not initialized");
 	InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
-	if (Util::inVec(btnSelect, state)) interfGeom->UnselectAll();
+	if (Contains(states, btnSelect)) interfGeom->UnselectAll();
 	size_t nbFacet = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < nbFacet; i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 		bool match = true;
-		if (!Util::inVec(noMaxHits,state)) match = match && (f->facetHitCache.nbMCHit < maxHits);
-		if (!Util::inVec(noMinHits,state)) match = match && (f->facetHitCache.nbMCHit > minHits);
-		if (!Util::inVec(noMaxAbs, state)) match = match && (f->facetHitCache.nbAbsEquiv < maxAbs);
-		if (!Util::inVec(noMinAbs, state)) match = match && (f->facetHitCache.nbAbsEquiv > minAbs);
+		if (!Contains(states, noMaxHits)) match = match && (f->facetHitCache.nbMCHit < maxHits);
+		if (!Contains(states, noMinHits)) match = match && (f->facetHitCache.nbMCHit > minHits);
+		if (!Contains(states, noMaxAbs)) match = match && (f->facetHitCache.nbAbsEquiv < maxAbs);
+		if (!Contains(states, noMinAbs)) match = match && (f->facetHitCache.nbAbsEquiv > minAbs);
 #ifdef MOLFLOW
-		if (!Util::inVec(noMaxDes, state)) match = match && (f->facetHitCache.nbDesorbed < maxDes);
-		if (!Util::inVec(noMinDes, state)) match = match && (f->facetHitCache.nbDesorbed > minDes);
+		if (!Contains(states, noMaxDes)) match = match && (f->facetHitCache.nbDesorbed < maxDes);
+		if (!Contains(states, noMinDes)) match = match && (f->facetHitCache.nbDesorbed > minDes);
 #endif
 		// TODO Synrad specific fields
-		if (match) f->selected = (!Util::inVec(btnRmv, state));
+		if (match) f->selected = (!Contains(states, btnRmv));
 	}
 	interfGeom->UpdateSelection();
 	mApp->UpdateFacetParams(true);
 	mApp->UpdateFacetlistSelected();
-	std::vector<states>().swap(state); // clear state
+	std::vector<state>().swap(states); // clear states
 }

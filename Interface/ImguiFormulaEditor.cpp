@@ -30,7 +30,6 @@ void ImFormulaEditor::DrawFormulaList() {
 	static std::string newExpression, newName, changeExpression, changeName;
 	static int changeIndex = -1;
 	// check if user selected a different moment
-	lastMoment = mApp->worker.displayedMoment;
 	bool momentChanged = lastMoment != mApp->worker.displayedMoment;
 	if (momentChanged) lastMoment = mApp->worker.displayedMoment;
 	// if auto update is enabled and moment changed recalculate values
@@ -198,7 +197,7 @@ std::string ImFormulaEditor::ExportCurrentFormulas()
 {
 	std::string out;
 	formulasSize = appFormulas->formulas.size();
-	//out.append("Expression\tName\tValue\n"); // Headers
+	out.append("Expression\tName\tValue\n"); // Headers
 	for (int i = 0; i < formulasSize; i++) {
 		out.append(appFormulas->formulas[i].GetExpression()+'\t');
 		out.append(appFormulas->formulas[i].GetName()+'\t');
@@ -220,7 +219,7 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 	//need to store results to only run calculation m times instead of e*m times 
 	std::vector<std::vector<std::string>> expressionMomentTable;
 	expressionMomentTable.resize(formulasSize);
-	for (int m = 1; m <= nMoments; m++) {
+	for (int m = 0; m <= nMoments; m++) {
 		/*
 		Calculation results for moments are not stored anywhere, only the 'current' value
 		of an expression is available so in order to export values at all moments, all those
@@ -237,12 +236,27 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 	mApp->worker.displayedMoment = selectedMomentSave;
 	mApp->worker.Update(0.0f);
 	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+	// headers
+	out.append("Expression\tName\tConst.flow\t");
+	for (int i = 0; i < nMoments; ++i) {
+		out.append("Moment "+std::to_string(i+1)+"\t");
+	}
+	out.erase(out.length() - 1);
+	out.append("\n\t\t\t");
+	for (int i = 0; i < nMoments; ++i) {
+		out.append(std::to_string(mApp->worker.interfaceMomentCache[i].time));
+		out.append("\t");
+	}
+	out.erase(out.length() - 1);
+	out.append("\n");
+
 	for (int e = 0; e < formulasSize; e++) {
 		out.append(appFormulas->formulas[e].GetExpression() + '\t');
 		out.append(appFormulas->formulas[e].GetName() + '\t');
 		for (int m = 0; m < expressionMomentTable[e].size(); m++) {
 			out.append(expressionMomentTable[e][m] + '\t');
 		}
+		out.erase(out.length() - 1);
 		out.append("\n");
 	}
 	return out;

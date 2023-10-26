@@ -7,8 +7,8 @@ public:
 	void Func();
 	void Draw();
 	
-	const bool IsEnabled();
-	const double GetMaxAngle();
+	bool IsEnabled();
+	double GetMaxAngle();
 protected:
 	std::string planeDiffInput = "30";
 	double planeDiff = 30;
