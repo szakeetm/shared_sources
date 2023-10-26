@@ -226,7 +226,10 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 		values need to be calculated now
 		*/
 		mApp->worker.displayedMoment = m;
-		mApp->worker.Update(0.0f);
+		{
+			LockWrapper imlock(mApp->imguiRenderLock);
+			mApp->worker.Update(0.0f);
+		}
 		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 		for (int e = 0; e < formulasSize; e++) {
 			expressionMomentTable[e].push_back(GetFormulaValue(e));
@@ -234,7 +237,10 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 	}
 	// restore moment from before starting
 	mApp->worker.displayedMoment = selectedMomentSave;
-	mApp->worker.Update(0.0f);
+	{
+		LockWrapper imlock(mApp->imguiRenderLock);
+		mApp->worker.Update(0.0f);
+	}
 	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 	// headers
 	out.append("Expression\tName\tConst.flow\t");
