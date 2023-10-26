@@ -29,6 +29,12 @@ void UpdateLegacyGUI() {
 void ImFormulaEditor::DrawFormulaList() {
 	static std::string newExpression, newName, changeExpression, changeName;
 	static int changeIndex = -1;
+	lastMoment = mApp->worker.displayedMoment;
+	bool momentChanged = lastMoment != mApp->worker.displayedMoment;
+	if (momentChanged) lastMoment = mApp->worker.displayedMoment;
+	if (momentChanged && mApp->autoUpdateFormulas) {
+		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+	}
 	float columnW;
 	blue = mApp->worker.displayedMoment != 0;
 	formulasSize = appFormulas->formulas.size();
@@ -183,10 +189,45 @@ std::string ImFormulaEditor::ExportCurrentFormulas()
 	return out;
 }
 
+// TODO: offload this to a thread and show progress bar
+// dependng on a number of formulas and moments
+// this could take a really long time
 std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
+	size_t nMoments = mApp->worker.interfaceMomentCache.size();
+	if (nMoments == 0) return ExportCurrentFormulas();
 	std::string out;
 	formulasSize = appFormulas->formulas.size();
-	return std::string();
+	size_t selectedMomentSave = mApp->worker.displayedMoment;
+	
+	//need to store results to only run calculation m times instead of e*m times 
+	std::vector<std::vector<std::string>> expressionMomentTable;
+	expressionMomentTable.resize(formulasSize);
+	for (int m = 1; m <= nMoments; m++) {
+		/*
+		Calculation results for moments are not stored anywhere, only the 'current' value
+		of an expression is available so in order to export values at all moments, all those
+		values need to be calculated now
+		*/
+		mApp->worker.displayedMoment = m;
+		mApp->worker.Update(0.0f);
+		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+		for (int e = 0; e < formulasSize; e++) {
+			expressionMomentTable[e].push_back(GetFormulaValue(e));
+		}
+	}
+	// restore moment from before starting
+	mApp->worker.displayedMoment = selectedMomentSave;
+	mApp->worker.Update(0.0f);
+	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+	for (int e = 0; e < formulasSize; e++) {
+		out.append(appFormulas->formulas[e].GetExpression() + '\t');
+		out.append(appFormulas->formulas[e].GetName() + '\t');
+		for (int m = 0; m < expressionMomentTable[e].size(); m++) {
+			out.append(expressionMomentTable[e][m] + '\t');
+		}
+		out.append("\n");
+	}
+	return out;
 }
 
 std::string ImFormulaEditor::GetFormulaValue(int index)
@@ -287,7 +328,7 @@ void ImFormulaEditor::ImFormattingHelp::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*80, txtH*10), ImVec2(txtW*100,txtH*35));
 	ImGui::SetNextWindowSize(ImVec2(txtW*80, txtH*35),ImGuiCond_FirstUseEver);
-	ImGui::Begin("Formula Editor Help", &drawn, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Formula Editor Syntax Help", &drawn, ImGuiWindowFlags_NoSavedSettings);
 	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH));
 	ImGui::TextWrapped(formulaSyntax);
 	ImGui::EndChild();
