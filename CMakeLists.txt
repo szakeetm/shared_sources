@@ -130,7 +130,6 @@ set(INTERFACE_FILES
         Interface/ImguiFormulaEditor.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
-        Helper/VectorHelper.h
         Helper/GLProgress_ImGui.h
 
 
