@@ -37,7 +37,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
-#include "ImguiFacetMove.h"
 
 #include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
@@ -192,9 +191,13 @@ void ImguiWindow::init() {
     facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
     globalSet.Init(mApp);
+    selFacetByResult = ImSelectFacetByResult();
+    selFacetByResult.Init(mApp);
 
     shortcutMan = ShortcutManager();
     sideBar = ImGuiSidebar();
+    formulaEdit = ImFormulaEditor();
+    formulaEdit.Init(mApp, mApp->appFormulas);
 
     RegisterShortcuts();
 
@@ -306,7 +309,7 @@ void ImguiWindow::renderSingle() {
                     &show_demo_window); // Edit bools storing our window open/close state
             ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
             
-            static bool globalSettings = globalSet.IsVisible();
+            bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
                 globalSet.SetVisible(globalSettings);
             }
@@ -376,6 +379,8 @@ void ImguiWindow::renderSingle() {
         selByTex.Draw();
         facetMov.Draw();
         globalSet.Draw();
+        selFacetByResult.Draw();
+        formulaEdit.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -812,6 +812,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
     menu->GetSubMenu("Test")->Add("Compare Results", MENU_CMP_RES);
 
     menu->GetSubMenu("Test")->Add(nullptr);
+    menu->GetSubMenu("Test")->Add("ImGui Menu", MENU_IMGUI_MENU);
     menu->GetSubMenu("Test")->Add("ImGui Global Settings", MENU_IMGUI_GLOB);
 #ifdef DEBUG
     menu->GetSubMenu("Test")->Add("ImGui Sidebar", MENU_IMGUI_SIDE);

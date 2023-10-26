@@ -21,6 +21,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 
 class ImguiWindow;
-namespace ImMenu {};
+namespace ImMenu {
+	void ConvergencePlotterMenuPress();
+};
 void ShowAppMainMenuBar();
 void RegisterShortcuts();

@@ -7,8 +7,8 @@
 
 namespace ImIOWrappers {
 	bool DoSave();
-	void InfoPopup(std::string title, std::string msg);
-	void AskToSaveBeforeDoing(std::function<void()> action);
+	void InfoPopup(const std::string& title, const std::string& msg);
+	void AskToSaveBeforeDoing(const std::function<void()>& action=0);
 
 	enum PopupCode : int { // most common responses and buttons
 		notDrawn = -3, // the popup is inactive
@@ -33,7 +33,7 @@ namespace ImIOWrappers {
 
 	class ImButtonFunc : public ImButton {
 	public:
-		ImButtonFunc(std::string name, std::function<void()> func, int key = -1, int key2 = -1);
+		ImButtonFunc(const std::string& name_, const std::function<void()>& func_, int key_ = -1, int key2_ = -1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -42,7 +42,7 @@ namespace ImIOWrappers {
 
 	class ImButtonFuncStr : public ImButton {
 	public:
-		ImButtonFuncStr(std::string name, std::function<void(std::string)> func, std::string arg, int key = -1, int key2 = -1);
+		ImButtonFuncStr(const std::string& name_, const std::function<void(std::string)>& func_, const std::string& arg_, int key_ = -1, int key2_ = -1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -52,7 +52,7 @@ namespace ImIOWrappers {
 
 	class ImButtonFuncInt : public ImButton {
 	public:
-		ImButtonFuncInt(std::string name, std::function<void(int)> func, int arg, int key = -1, int key2 = -1);
+		ImButtonFuncInt(const std::string& name_, const std::function<void(int)>& func, int arg, int key_=-1, int key2_=-1);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -62,14 +62,14 @@ namespace ImIOWrappers {
 
 	class ImButtonInt : public ImButton {
 	public:
-		ImButtonInt(std::string name, int retVal=0, int key = -1, int key2 = -1);
+		ImButtonInt(const std::string& name_, int retVal_=0, int key_ = -1, int key2_ = -1);
 		void DoCall() {};
 	};
 
 	class ImPopup {
 	public:
 		void Close();
-		void Open(std::string title, std::string message, std::vector<std::shared_ptr< ImButton >> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+		void Open(const std::string& title_, const std::string& message_, const std::vector<std::shared_ptr< ImButton >>& buttons_); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
 		void Draw(); // call this every ImGui Render
 		bool WasResponse();
 		int GetResponse(); // returns the recorded value from a button press
@@ -83,10 +83,10 @@ namespace ImIOWrappers {
 
 	class ImInputPopup : public ImPopup {
 	public:
-		void Open(std::string title, std::string message, void (*func)(std::string), std::string deafultArg = "");
+		void Open(const std::string& title_,const std::string& message_, const std::function<void(std::string)> func_, const std::string& deafultArg_ = "");
 		void Draw();
 	protected:
-		void (*function)(std::string);
+		std::function<void(std::string)> function;
 		std::string value;
 	};
 }

@@ -2,18 +2,16 @@
 #include <memory>
 #include "imgui.h"
 
-void ShortcutManager::RegisterShortcut(std::vector<int> keys, std::function<void()>& function, short id)
+void ShortcutManager::RegisterShortcut(const std::vector<int>& keys_, const std::function<void()>& function_, short id_)
 {
-	shortcuts.emplace_back(Shortcut(keys, function, id));
+	shortcuts.emplace_back(Shortcut(keys_, function_, id_));
 }
 
-void ShortcutManager::UnregisterShortcut(short id)
+void ShortcutManager::UnregisterShortcut(const short id_)
 {
-	if (id == 0) return;
-	//Iterating from back
-	for (int i = shortcuts.size() - 1; i >= 0; --i) {
-		if (shortcuts[i].id == id) {
-			shortcuts.erase(shortcuts.begin() + i);
+	for (short i = shortcuts.size()-1; i >= 0; --i) {
+		if (shortcuts[i].id == id_) {
+			shortcuts.erase(shortcuts.begin()+i);
 		}
 	}
 }
@@ -26,18 +24,18 @@ void ShortcutManager::DoShortcuts()
 	}
 }
 
-ShortcutManager::Shortcut::Shortcut(std::vector<int> keys, std::function<void()>& function, short id)
+ShortcutManager::Shortcut::Shortcut(const std::vector<int>& keys_, const std::function<void()>& function_, short id_)
 {
-	this->keys = keys;
-	this->function = function;
-	this->id = id;
+	this->keys = keys_;
+	this->function = function_;
+	this->id = id_;
 }
 
-bool ShortcutManager::Shortcut::IsPressed()
+const bool ShortcutManager::Shortcut::IsPressed()
 {
 	ImGuiIO& io = ImGui::GetIO();
 	bool pressed = true;
-	for (auto& key : keys) {
+	for (const auto& key : keys) {
 		pressed &= io.KeysDown[key];
 	}
 	return pressed;

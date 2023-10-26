@@ -29,7 +29,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-#include "SmartSelection.h"
 #include "SelectDialog.h"
 #include "SelectTextureType.h"
 #include "SelectFacetByResult.h"
@@ -124,7 +123,7 @@ void DoLoadFile() {
     }
 }
 
-void InsertGeometryMenuPress(bool newStr) {
+void InsertGeometryMenuPress(const bool newStr) {
     
     if (interfGeom->IsLoaded()) {
         if (mApp->worker.IsRunning())
@@ -158,13 +157,13 @@ void ExportSelectedProfilesMenuPress() {
     mApp->ExportProfiles();
 }
 
-void ExportTextures(int a, int b) {
+void ExportTextures(const int a, const int b) {
     LockWrapper myLock(mApp->imguiRenderLock);
     mApp->ExportTextures(a, b);
 }
 
 #ifdef MOLFLOW //TODO replace with polimorphism
-void ShowSubmenuExportTextures(bool coord=false) {
+void ShowSubmenuExportTextures(const bool coord=false) {
     if(ImGui::MenuItem("Cell Area (cm^2)")) {
         ExportTextures(coord, 0);
     } // imgui does not support superscript
@@ -330,7 +329,6 @@ void NewSelectionMemoryMenuPress() {
 static void ShowMenuSelection() {
     static SelectDialog *selectDialog = nullptr;
     static SelectTextureType *selectTextureType = nullptr;
-    static SelectFacetByResult *selectFacetByResult = nullptr;
 
     Worker &worker = mApp->worker;
     InterfaceGeometry *interfGeom = worker.GetGeometry();
@@ -442,8 +440,7 @@ static void ShowMenuSelection() {
         mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F);
     }
     if (ImGui::MenuItem("Select by facet result...")) {
-        if (!selectFacetByResult) selectFacetByResult = new SelectFacetByResult(&worker);
-        selectFacetByResult->SetVisible(true);
+        mApp->imWnd->selFacetByResult.Show();
     }
     ImGui::Separator();
     if (ImGui::MenuItem("Select link facets")) {
@@ -595,10 +592,11 @@ static void ShowMenuSelection() {
 void FormulaEditorMenuPress() {
     
     if (!interfGeom->IsLoaded()) {
-        mApp->imWnd->popup.Open("No geometry", "No geometry loaded.", {
-            std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk)
-            });
+        ImIOWrappers::InfoPopup("No geometry", "No geometry loaded.");
+        return;
     }
+    mApp->imWnd->formulaEdit.Show();
+    /*
     else if (!mApp->formulaEditor || !mApp->formulaEditor->IsVisible()) {
         SAFE_DELETE(mApp->formulaEditor);
         mApp->formulaEditor = new FormulaEditor(&mApp->worker, mApp->appFormulas);
@@ -608,7 +606,7 @@ void FormulaEditorMenuPress() {
         mApp->formulaEditor->UpdateValues();
         // ---
         mApp->formulaEditor->SetVisible(true);
-    }
+    }*/
 }
 void ConvergencePlotterMenuPress() {
     if (!mApp->convergencePlotter)
@@ -655,6 +653,7 @@ void ParticleLoggerMenuPress() {
         
         mApp->particleLogger = new ParticleLogger(interfGeom, &mApp->worker);
     }
+    LockWrapper lockWrapper(mApp->imguiRenderLock);
     mApp->particleLogger->UpdateStatus();
     mApp->particleLogger->SetVisible(true);
 }
@@ -715,8 +714,8 @@ void MeasureForcesMenuPress() {
 #endif //MOLFLOW
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem("Formula editor", "Alt+F")) {
-        FormulaEditorMenuPress(); // TODO: replace with Toggle ImGui Formula Editor
+    if (ImGui::MenuItem(u8"\u221A Formula editor", "Alt+F")) {
+        FormulaEditorMenuPress();
     }
     if (ImGui::MenuItem("Convergence Plotter ...", "Alt+C")) {
         ConvergencePlotterMenuPress();  // TODO: replace with Toggle ImGui Convergence Plotter
