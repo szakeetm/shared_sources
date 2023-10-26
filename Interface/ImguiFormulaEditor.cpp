@@ -85,7 +85,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			}
 			// values column
 			ImGui::TableSetColumnIndex(3);
-			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), GetFormulaValue(i).c_str());
+			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), mApp->appFormulas->GetFormulaValue(i).c_str());
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
@@ -195,94 +195,15 @@ void ImFormulaEditor::Move(direction d)
 // converts currently visible expressions names and values to tab separated values string
 std::string ImFormulaEditor::ExportCurrentFormulas()
 {
-	std::string out;
-	formulasSize = appFormulas->formulas.size();
-	out.append("Expression\tName\tValue\n"); // Headers
-	for (int i = 0; i < formulasSize; i++) {
-		out.append(appFormulas->formulas[i].GetExpression()+'\t');
-		out.append(appFormulas->formulas[i].GetName()+'\t');
-		out.append(GetFormulaValue(i) + '\n');
-	}
-	return out;
+	return mApp->appFormulas->ExportCurrentFormulas();
 }
 
 // TODO: offload this to a thread and show progress bar
 // dependng on a number of formulas and moments
 // this could take a really long time
 std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
-	size_t nMoments = mApp->worker.interfaceMomentCache.size();
-	if (nMoments == 0) return ExportCurrentFormulas();
-	std::string out;
-	formulasSize = appFormulas->formulas.size();
-	size_t selectedMomentSave = mApp->worker.displayedMoment;
-	
-	//need to store results to only run calculation m times instead of e*m times 
-	std::vector<std::vector<std::string>> expressionMomentTable;
-	expressionMomentTable.resize(formulasSize);
-	for (int m = 0; m <= nMoments; m++) {
-		/*
-		Calculation results for moments are not stored anywhere, only the 'current' value
-		of an expression is available so in order to export values at all moments, all those
-		values need to be calculated now
-		*/
-		mApp->worker.displayedMoment = m;
-		{
-			LockWrapper imlock(mApp->imguiRenderLock);
-			mApp->worker.Update(0.0f);
-		}
-		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
-		for (int e = 0; e < formulasSize; e++) {
-			expressionMomentTable[e].push_back(GetFormulaValue(e));
-		}
-	}
-	// restore moment from before starting
-	mApp->worker.displayedMoment = selectedMomentSave;
-	{
-		LockWrapper imlock(mApp->imguiRenderLock);
-		mApp->worker.Update(0.0f);
-	}
-	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
-	// headers
-	out.append("Expression\tName\tConst.flow\t");
-	for (int i = 0; i < nMoments; ++i) {
-		out.append("Moment "+std::to_string(i+1)+"\t");
-	}
-	out.erase(out.length() - 1);
-	out.append("\n\t\t\t");
-	for (int i = 0; i < nMoments; ++i) {
-		out.append(std::to_string(mApp->worker.interfaceMomentCache[i].time));
-		out.append("\t");
-	}
-	out.erase(out.length() - 1);
-	out.append("\n");
-
-	for (int e = 0; e < formulasSize; e++) {
-		out.append(appFormulas->formulas[e].GetExpression() + '\t');
-		out.append(appFormulas->formulas[e].GetName() + '\t');
-		for (int m = 0; m < expressionMomentTable[e].size(); m++) {
-			out.append(expressionMomentTable[e][m] + '\t');
-		}
-		out.erase(out.length() - 1);
-		out.append("\n");
-	}
-	return out;
-}
-
-std::string ImFormulaEditor::GetFormulaValue(int index)
-{
-	std::string out;
-	if (appFormulas->formulas[index].hasParseError) {
-		out = (appFormulas->formulas[index].GetParseErrorMsg());
-	}
-	else if (appFormulas->formulas[index].hasEvalError) {
-		out = (appFormulas->formulas[index].GetEvalErrorMsg());
-	}
-	else {
-		std::stringstream tmp; // ugly solution copied from legacy gui
-		tmp << appFormulas->formulaValueCache[index].value; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
-		out.append(tmp.str());
-	}
-	return out;
+	LockWrapper imlock(mApp->imguiRenderLock);
+	return mApp->appFormulas->ExportFormulasAtAllMoments(&mApp->worker);
 }
 
 void ImFormulaEditor::Draw() {
@@ -339,7 +260,7 @@ void ImFormulaEditor::Draw() {
 	if (!moveDownEnable) ImGui::EndDisabled();
 	
 	ImGui::Checkbox("Record values for convergence", &appFormulas->recordConvergence);
-	ImGui::Checkbox("Auto Recalculate Formulas", &mApp->autoUpdateFormulas);
+	ImGui::Checkbox("Auto-update formulas", &mApp->autoUpdateFormulas);
 	ImGui::SameLine();
 	float dummyWidthB = ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
