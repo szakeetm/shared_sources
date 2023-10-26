@@ -1,3 +1,5 @@
+#include "GeometryViewer.h"
+#include "GeometryViewer.h"
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -175,6 +177,9 @@ GeometryViewer::GeometryViewer(int id) :GLComponent(id) {
 	nonPlanarLabel = new GLLabel("Your geometry has null, non-simple or non-planar facets, causing leaks.");
 	Add(nonPlanarLabel);
 
+	crossSectionLabel = new GLLabel("Cross-section view enabled. You can adjust or disable in View->Cross section.");
+	Add(crossSectionLabel);
+
 	UpdateLabelColors();
 
 	// Light
@@ -212,6 +217,7 @@ void GeometryViewer::UpdateLabelColors()
 	rotateLabel->SetTextColor(textColor, textColor, textColor);
 	panLabel->SetTextColor(textColor, textColor, textColor);
 	tabLabel->SetTextColor(textColor, textColor, textColor);
+	crossSectionLabel->SetTextColor(textColor, textColor, textColor);
 	nonPlanarLabel->SetTextColor(255, 0, 255);
 }
 
@@ -430,29 +436,6 @@ void GeometryViewer::UpdateMatrix() {
 	// Convert polar coordinates
 	Vector3d org = interfGeom->GetCenter();
 
-	/*
-	Vector3d X(1.0, 0.0, 0.0);
-	Vector3d Y(0.0, 1.0, 0.0);
-	Vector3d Z(0.0, 0.0, 1.0);
-
-	camDir = Z;
-	camLeft = X * handedness;
-	camUp = Y;
-
-	camDir = Rotate(camDir, org, X, -view.camAngleOx);
-	camDir = Rotate(camDir, org, Y, -view.camAngleOy);
-	camDir = Rotate(camDir, org, Z, -view.camAngleOz);
-
-	camLeft = Rotate(camLeft, org, X, -view.camAngleOx);
-	camLeft = Rotate(camLeft, org, Y, -view.camAngleOy);
-	camLeft = Rotate(camLeft, org, Z, -view.camAngleOz);
-
-	camUp = Rotate(camUp, org, X, -view.camAngleOx);
-	camUp = Rotate(camUp, org, Y, -view.camAngleOy);
-	camUp = Rotate(camUp, org, Z, -view.camAngleOz);
-	*/
-
-
 	//Original direction towards Z
 	double x = -cos(view.camAngleOx) * sin(view.camAngleOy);
 	double y = sin(view.camAngleOx);
@@ -495,14 +478,14 @@ void GeometryViewer::UpdateMatrix() {
 
 	// Projection matrix ---------------------------------------------------
 
-	double aspect = (double)width / (double)(height - DOWN_MARGIN);
+	
 	ComputeBB(/*true*/);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
 	if (view.projMode == ProjectionMode::Perspective) {
-
+		double aspect = (double)width / (double)(height - DOWN_MARGIN);
 		double _zNear = std::max(zNear, 0.1);
 		double _zFar = (_zNear < zFar) ? zFar : _zNear + 1.0;
 		GLToolkit::PerspectiveLH(FOV_ANGLE, aspect, _zNear - 0.05, _zFar + 10.0);
@@ -518,7 +501,6 @@ void GeometryViewer::UpdateMatrix() {
 	}
 
 	glGetFloatv(GL_PROJECTION_MATRIX, matProj);
-
 }
 
 double GeometryViewer::ToDeg(double radians) {
@@ -574,6 +556,12 @@ void GeometryViewer::SetWorker(Worker* w) {
 	InterfaceGeometry* interfGeom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = interfGeom->GetBB();
 	vectorLength = std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y)) / 3.0;
+}
+
+void GeometryViewer::ApplyClippingPlane(std::optional<Plane> plane_, std::optional<bool> enabled_)
+{
+	if (plane_.has_value()) view.clipPlane = *plane_;
+	if (enabled_.has_value()) view.enableClipping = *enabled_;
 }
 
 void GeometryViewer::DrawIndex() {
@@ -1066,6 +1054,24 @@ void GeometryViewer::Zoom() {
 
 }
 
+Plane GeometryViewer::GetCameraPlane()
+{
+	InterfaceGeometry* interfGeom = work->GetGeometry();
+	if (!interfGeom) return Plane();
+	Vector3d org = interfGeom->GetCenter();
+	auto bb = interfGeom->GetBB();
+	Vector3d camPos = org + view.camOffset;
+	Plane cutPlane = Plane(camDir.x, camDir.y, camDir.z, -Dot(camDir,camPos));
+	if (view.projMode == ProjectionMode::Perspective) {
+		//Inverted better choice
+		cutPlane.a *= -1.0;
+		cutPlane.b *= -1.0;
+		cutPlane.c *= -1.0;
+		cutPlane.d *= -1.0;
+	}
+	return cutPlane;
+}
+
 void GeometryViewer::Paint() {
 	char tmp[256];
 
@@ -1145,11 +1151,25 @@ void GeometryViewer::Paint() {
 
 	// Clipping and projection matrix
 	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
+
+
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(matProj);
 	UpdateLight();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(matView);
+	if (view.enableClipping) {
+			GLdouble clipPlane[4] = {
+			view.clipPlane.a,
+			view.clipPlane.b,
+			view.clipPlane.c,
+			view.clipPlane.d
+		};
+		glClipPlane(GL_CLIP_PLANE0, clipPlane);
+		glEnable(GL_CLIP_PLANE0);
+	}
+	
 	glDisable(GL_BLEND);
 
 	// Draw geometry
@@ -1160,6 +1180,7 @@ void GeometryViewer::Paint() {
 
 	int bgCol = (mApp->whiteBg) ? 255 : 0;
 	SetBackgroundColor(bgCol, bgCol, bgCol);
+
 	DrawLinesAndHits();
 	VolumeRenderMode cullMode;
 	if (volumeRenderMode != VolumeRenderMode::FrontAndBack && !mApp->leftHandedView) {
@@ -1169,30 +1190,35 @@ void GeometryViewer::Paint() {
 	}
 	else cullMode = volumeRenderMode;
 
-	interfGeom->Render((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHiddenFacet, showMesh, showDir);
+	interfGeom->Render((GLfloat*)matView, showVolume, showTexture, cullMode, showFilter, showHiddenFacet, showMesh, showDir, view.enableClipping);
 
 #if defined(SYNRAD)
 	for (size_t i = 0; i < work->regions.size(); i++)
 		work->regions[i].Render((int)i, dispNumTraj, &blueMaterial, vectorLength);
 #endif
 
-	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
-	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
-	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
-	if (showNormal && (!detailsSuppressed)) DrawNormal();
-	if (showUV && (!detailsSuppressed)) DrawUV();
 	DrawLeak();
+
+	if (view.enableClipping) {
+		glDisable(GL_CLIP_PLANE0);
+	}
 
 	// Draw semi-transparent facets etc. just after everything else has been rendered
 	if (mApp->highlightSelection)
 		interfGeom->RenderSemiTransparent();
 
+	bool detailsSuppressed = hideLot != -1 && (interfGeom->GetNbSelectedFacets() > hideLot);
+	bool displayWarning = (showIndex || showVertexId || showNormal || showUV) && detailsSuppressed;
+
+	if ((showIndex || showVertexId) && (!detailsSuppressed)) DrawIndex();
+	if (showNormal && (!detailsSuppressed)) DrawNormal();
+	if (showUV && (!detailsSuppressed)) DrawUV();
 	// Draw on top of everything
 	if (showFacetId && !detailsSuppressed) DrawFacetId();
 
 	DrawCoordinateAxes();
 	PaintSelectedVertices(showHiddenVertex);
-	//DrawBB();
+
 	// Restore old transformation/viewport
 	GetWindow()->ClipToWindow();
 	glMatrixMode(GL_MODELVIEW);
@@ -1253,15 +1279,19 @@ void GeometryViewer::Paint() {
 	bool displayPanLabel = dragMode == DragMode::DragPan;
 	bool displayTabLabel = GetWindow()->IsTabDown();
 	bool displayNonPlanarLabel = interfGeom->hasNonPlanar;
+	bool displayCrosssectionLabel = view.enableClipping;
+	
 	int offsetCount = 0;
-	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayHideLotLabel; hideLotlabel->SetVisible(displayHideLotLabel);
-	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayCapsLockLabel; capsLockLabel->SetVisible(displayCapsLockLabel);
-	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayRotateLabel; rotateLabel->SetVisible(displayRotateLabel);
-	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayScreenshotLabel; screenshotLabel->SetVisible(displayScreenshotLabel);
-	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displaySelectionLabel; selectLabel->SetVisible(displaySelectionLabel);
-	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayPanLabel; panLabel->SetVisible(displayPanLabel);
-	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayTabLabel; tabLabel->SetVisible(displayTabLabel);
-	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); offsetCount += (int)displayNonPlanarLabel; nonPlanarLabel->SetVisible(displayNonPlanarLabel);
+
+	hideLotlabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayHideLotLabel) offsetCount++; hideLotlabel->SetVisible(displayHideLotLabel);
+	capsLockLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayCapsLockLabel) offsetCount++; capsLockLabel->SetVisible(displayCapsLockLabel);
+	rotateLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayRotateLabel) offsetCount++; rotateLabel->SetVisible(displayRotateLabel);
+	screenshotLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayScreenshotLabel) offsetCount++; screenshotLabel->SetVisible(displayScreenshotLabel);
+	selectLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displaySelectionLabel) offsetCount++; selectLabel->SetVisible(displaySelectionLabel);
+	panLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayPanLabel) offsetCount++; panLabel->SetVisible(displayPanLabel);
+	tabLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayTabLabel) offsetCount++; tabLabel->SetVisible(displayTabLabel);
+	nonPlanarLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayNonPlanarLabel) offsetCount++; nonPlanarLabel->SetVisible(displayNonPlanarLabel);
+	crossSectionLabel->SetBounds(posX + 10, posY + height - 47 - 20 * offsetCount, 0, 19); if (displayCrosssectionLabel) offsetCount++; crossSectionLabel->SetVisible(displayCrosssectionLabel);
 
 #if defined(MOLFLOW)
 	if (work->displayedMoment)

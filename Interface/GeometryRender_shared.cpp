@@ -1135,7 +1135,7 @@ void InterfaceGeometry::TriangulateForRender(const InterfaceFacet* f, std::vecto
 
 }
 
-void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, VolumeRenderMode volumeRenderMode, bool filter, bool showHiddenFacet, bool showMesh, bool showDir) {
+void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderTexture, VolumeRenderMode volumeRenderMode, bool filter, bool showHiddenFacet, bool showMesh, bool showDir, bool clippingEnabled) {
 
 	if (!isLoaded) return;
 
@@ -1317,6 +1317,12 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glColor3f(1.0f, 0.0f, 1.0f);    //purple
 		glCallList(nonPlanarList->listId);
 	}
+
+	//Selected facets
+	//Don't clip them in cross-section
+	if (clippingEnabled) {
+		glDisable(GL_CLIP_PLANE0);
+	}
 	glColor3f(1.0f, 0.0f, 0.0f);    //red
 	if (showHiddenFacet) {
 		glDisable(GL_DEPTH_TEST);
@@ -1330,8 +1336,9 @@ void InterfaceGeometry::Render(GLfloat* matView, bool renderVolume, bool renderT
 		glDisable(GL_LINE_SMOOTH);
 		glDisable(GL_BLEND);
 	}
-
-	//}
+	if (clippingEnabled) {
+		glEnable(GL_CLIP_PLANE0);
+	}
 
 	// Paint selected cell on mesh
 	for (int i = 0; i < sh.nbFacet; i++) {

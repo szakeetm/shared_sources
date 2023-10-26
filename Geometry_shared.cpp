@@ -728,13 +728,6 @@ size_t InterfaceGeometry::GetNbFacet() const {
 
 AxisAlignedBoundingBox InterfaceGeometry::GetBB() {
 
-	/*if (viewStruct < 0) {
-
-		return bb;
-
-	}
-	else {*/
-		// BB of selected struture //replaced with all vertices
 		AxisAlignedBoundingBox sbb;
 
 		sbb.min.x = 1e100;
@@ -743,24 +736,6 @@ AxisAlignedBoundingBox InterfaceGeometry::GetBB() {
 		sbb.max.x = -1e100;
 		sbb.max.y = -1e100;
 		sbb.max.z = -1e100;
-
-		// Axis Aligned Bounding Box
-		/*
-		for (int i = 0; i < sp.nbFacet; i++) {
-			Facet *f = facets[i];
-			if (f->sp.superIdx == viewStruct) {
-				for (int j = 0; j < f->sp.nbIndex; j++) {
-					Vector3d p = vertices3[f->indices[j]];
-					if (p.x < sbb.min.x) sbb.min.x = p.x;
-					if (p.y < sbb.min.y) sbb.min.y = p.y;
-					if (p.z < sbb.min.z) sbb.min.z = p.z;
-					if (p.x > sbb.max.x) sbb.max.x = p.x;
-					if (p.y > sbb.max.y) sbb.max.y = p.y;
-					if (p.z > sbb.max.z) sbb.max.z = p.z;
-				}
-			}
-		}
-		*/
 
 		for (auto& v : vertices3) {
 			sbb.min.x = std::min(v.x, sbb.min.x);
@@ -797,8 +772,6 @@ AxisAlignedBoundingBox InterfaceGeometry::GetBB() {
 		}
 
 		return sbb;
-	//}
-
 }
 
 Vector3d InterfaceGeometry::GetCenter() {

@@ -178,7 +178,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                     worker->GetGeometry()->UpdateSelection();
                 mApp->highlightNonplanarFacets = highlightNonplanarToggle->GetState();
                 mApp->leftHandedView = (bool)leftHandedToggle->GetState();
-                for (auto & i : mApp->viewer) {
+                for (auto & i : mApp->viewers) {
                     i->UpdateMatrix();
                     i->UpdateLabelColors();
                 }

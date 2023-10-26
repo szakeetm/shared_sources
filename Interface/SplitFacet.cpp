@@ -17,9 +17,6 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#define PLANEEQ_MODE 0
-#define FACET_MODE 1
-#define VERTEX_MODE 2
 
 #include "Facet_shared.h"
 #include "SplitFacet.h"
@@ -145,7 +142,6 @@ SplitFacet::SplitFacet(InterfaceGeometry *g,Worker *w):GLWindow() {
 	
   resultLabel->SetText("");
   undoButton->SetEnabled(false);
-  planeMode = -1;
   interfGeom = g;
   work = w;
 
@@ -171,9 +167,9 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
   switch(message) {
 	
     case MSG_TOGGLE:
-		if (src == eqmodeCheckbox) planeMode = PLANEEQ_MODE;
-		else if (src == facetmodeCheckbox) planeMode = FACET_MODE;
-		else if (src == vertexModeCheckbox) planeMode = VERTEX_MODE;
+		if (src == eqmodeCheckbox) planeMode = PlanemodeEquation;
+		else if (src == facetmodeCheckbox) planeMode = PlanemodeFacet;
+		else if (src == vertexModeCheckbox) planeMode = Planemode3Vertex;
 		EnableDisableControls(planeMode);	  
       break;
 
@@ -184,7 +180,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		bTextbox->SetText(0);
 		cTextbox->SetText(1);
 		dTextbox->SetText(0);
-		planeMode = PLANEEQ_MODE;
+		planeMode = PlanemodeEquation;
 		EnableDisableControls(planeMode);
 		}
 	else if (src == YZplaneButton) {
@@ -192,7 +188,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		bTextbox->SetText(0);
 		cTextbox->SetText(0);
 		dTextbox->SetText(0);
-		planeMode = PLANEEQ_MODE;
+		planeMode = PlanemodeEquation;
 		EnableDisableControls(planeMode);
 	}
 	else if (src == XZplaneButton) {
@@ -200,7 +196,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 		bTextbox->SetText(1);
 		cTextbox->SetText(0);
 		dTextbox->SetText(0);
-		planeMode = PLANEEQ_MODE;
+		planeMode = PlanemodeEquation;
 		EnableDisableControls(planeMode);
 	}
 	else if (src == getSelectedFacetButton) {
@@ -215,7 +211,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			}
 		}
 		facetIdTextbox->SetText(selFacetId + 1);
-		EnableDisableControls(planeMode = FACET_MODE);
+		EnableDisableControls(planeMode = PlanemodeFacet);
 	}
     else if(src==undoButton) {
 		if (nbFacet == interfGeom->GetNbFacet()) { //Assume no change since the split operation
@@ -247,7 +243,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 			double nN2;
 
 			switch (planeMode) {
-			case FACET_MODE:
+			case PlanemodeFacet:
 				if( !(facetIdTextbox->GetNumberInt(&facetNum))||facetNum<1||facetNum>interfGeom->GetNbFacet() ) {
 					GLMessageBox::Display("Invalid facet number","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
@@ -255,7 +251,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				P0=*interfGeom->GetVertex(interfGeom->GetFacet(facetNum-1)->indices[0]);
 				N=interfGeom->GetFacet(facetNum-1)->sh.N;
 				break;
-			case VERTEX_MODE:
+			case Planemode3Vertex:
 			{
 				auto selectedVertexIds = interfGeom->GetSelectedVertices();
 				if (selectedVertexIds.size() != 3) {
@@ -276,7 +272,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 				P0 = *(interfGeom->GetVertex(selectedVertexIds[0]));
 				break;
 			}
-			case PLANEEQ_MODE:
+			case PlanemodeEquation:
 				if( !(aTextbox->GetNumber(&a)) ) {
 					GLMessageBox::Display("Invalid A coefficient","Error",GLDLG_OK,GLDLG_ICONERROR);
 					return;
@@ -328,11 +324,11 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
     break;
 	case MSG_TEXT_UPD:
 		if (src == aTextbox || src == bTextbox || src == cTextbox || src == dTextbox) {
-			planeMode = PLANEEQ_MODE;
+			planeMode = PlanemodeEquation;
 			EnableDisableControls(planeMode);
 		}
 		else if (src == facetIdTextbox) {
-			planeMode = FACET_MODE;
+			planeMode = PlanemodeFacet;
 			EnableDisableControls(planeMode);
 		}
 		break;
@@ -342,14 +338,7 @@ void SplitFacet::ProcessMessage(GLComponent *src,int message) {
 }
 
 void SplitFacet::EnableDisableControls(int mode) {
-	eqmodeCheckbox->SetState(mode == PLANEEQ_MODE);
-	/*aTextbox->SetEditable(mode == PLANEEQ_MODE);
-	bTextbox->SetEditable(mode == PLANEEQ_MODE);
-	cTextbox->SetEditable(mode == PLANEEQ_MODE);
-	dTextbox->SetEditable(mode == PLANEEQ_MODE);*/
-
-	facetmodeCheckbox->SetState(mode == FACET_MODE);
-	//facetIdTextbox->SetEditable(mode == FACET_MODE);
-
-	vertexModeCheckbox->SetState(mode == VERTEX_MODE);
+	eqmodeCheckbox->SetState(mode == PlanemodeEquation);
+	facetmodeCheckbox->SetState(mode == PlanemodeFacet);
+	vertexModeCheckbox->SetState(mode == Planemode3Vertex);
 }

@@ -88,6 +88,7 @@ public:
   bool IsDragging() override;
   CameraView GetCurrentView();
   void  SetCurrentView(CameraView v);
+  void ApplyClippingPlane(std::optional<Plane> plane_, std::optional<bool> enabled_);
   bool IsSelected();
   void SetSelected(bool s);
 
@@ -100,6 +101,7 @@ public:
 
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();
+  Plane GetCameraPlane();
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   // Flag view
@@ -182,14 +184,15 @@ private:
   GLLabel       *coordLab;
 
   
-  GLLabel       *capsLockLabel;
-  GLLabel       *hideLotlabel;
-  GLLabel		*screenshotLabel;
-  GLLabel		*selectLabel;
-  GLLabel		*rotateLabel;
-  GLLabel		*panLabel;
-  GLLabel		*tabLabel;
-  GLLabel		*nonPlanarLabel;
+  GLLabel*		capsLockLabel;
+  GLLabel*		hideLotlabel;
+  GLLabel*		screenshotLabel;
+  GLLabel*		selectLabel;
+  GLLabel*		rotateLabel;
+  GLLabel*		panLabel;
+  GLLabel*		tabLabel;
+  GLLabel*		nonPlanarLabel;
+  GLLabel*		crossSectionLabel;
 
   #if defined(MOLFLOW)
   GLOverlayLabel *timeLabel;

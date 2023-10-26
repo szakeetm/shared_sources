@@ -17,7 +17,7 @@ public:
   // Component methods
   void SetText(const char *text);
   void SetText(std::string string);
-  void SetText(const double val);
+  void SetText(const double val, int precision=10);
   void SetText(const int val);
   void SetText(const size_t val);
   std::string GetText();

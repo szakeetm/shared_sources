@@ -644,7 +644,7 @@ void TextureScalingMenuPress() {
     if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {
         SAFE_DELETE(mApp->textureScaling);
         mApp->textureScaling = new TextureScaling();
-        mApp->textureScaling->Display(&mApp->worker, mApp->viewer);
+        mApp->textureScaling->Display(&mApp->worker, mApp->viewers);
     }
 }
 void ParticleLoggerMenuPress() {
@@ -686,14 +686,14 @@ void TakeScreenshotMenuPress() {
     std::filesystem::create_directory("Screenshots"); //Doesn't do anything if already exists
 
     int x, y, width, height;
-    mApp->viewer[mApp->curViewer]->GetBounds(&x, &y, &width, &height);
+    mApp->viewers[mApp->curViewer]->GetBounds(&x, &y, &width, &height);
 
     int leftMargin = 4; //Left bewel
     int rightMargin = 0;
     int topMargin = 0;
     int bottomMargin = 28; //Toolbar
 
-    mApp->viewer[mApp->curViewer]->RequestScreenshot(tmp_ss.str(), leftMargin, topMargin,
+    mApp->viewers[mApp->curViewer]->RequestScreenshot(tmp_ss.str(), leftMargin, topMargin,
         width - leftMargin - rightMargin,
         height - topMargin - bottomMargin);
 }
@@ -1225,7 +1225,7 @@ void VertexCoplanarMenuPress() {
                         std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
                         });
                 } else {
-                    try { mApp->viewer[mApp->curViewer]->SelectCoplanar(mApp->coplanarityTolerance); }
+                    try { mApp->viewers[mApp->curViewer]->SelectCoplanar(mApp->coplanarityTolerance); }
                     catch (const std::exception& e) {
                         mApp->imWnd->popup.Open("Error", "Error selecting coplanar vertices", { 
                             std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
