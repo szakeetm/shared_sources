@@ -303,11 +303,11 @@ void ImFormulaEditor::Draw() {
 	// context menu definition
 	if (ImGui::BeginPopupContextItem("##FEFLcontext")) {
 		std::string text;
-		if (ImGui::Selectable("Copy all")) { 
+		if (ImGui::Selectable("Copy table")) { 
 			text = ExportCurrentFormulas();
 			SDL_SetClipboardText(text.c_str()); 
 		}
-		if (ImGui::Selectable("Copy all\nat all times")) { 
+		if (ImGui::Selectable("Copy table (for all time moments)")) { 
 			text = ExportFormulasAtAllMoments();
 			SDL_SetClipboardText(text.c_str()); 
 		}
