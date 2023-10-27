@@ -609,7 +609,8 @@ void FormulaEditorMenuPress() {
     }*/
 }
 void ConvergencePlotterMenuPress() {
-    if (!mApp->convergencePlotter)
+    mApp->imWnd->convPlot.Show();
+    /*if (!mApp->convergencePlotter)
         mApp->convergencePlotter = new ConvergencePlotter(&mApp->worker, mApp->appFormulas);
     else {
         if (!mApp->convergencePlotter->IsVisible()) {
@@ -620,6 +621,7 @@ void ConvergencePlotterMenuPress() {
         }
     }
     mApp->convergencePlotter->Display(&mApp->worker);
+       */
 }
 #ifdef MOLFLOW //TODO replace with polimorphism
 void TexturePlotterMenuPress() {

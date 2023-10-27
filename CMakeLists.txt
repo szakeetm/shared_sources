@@ -128,6 +128,7 @@ set(INTERFACE_FILES
         Interface/ImguiShortcutManager.cpp
         Interface/ImguiWindowBase.cpp
         Interface/ImguiFormulaEditor.cpp
+        Interface/ImguiConvergencePlotter.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
