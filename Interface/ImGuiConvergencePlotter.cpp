@@ -4,6 +4,8 @@
 #include "implot/implot.h"
 #include "Buffer_shared.h"
 #include <functional>
+#include "Helper/MathTools.h"
+#include "ImguiPopup.h"
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
@@ -19,7 +21,7 @@ void ImConvergencePlotter::Draw()
 	
 	DrawConvergenceGraph();
 
-	ImGui::SetNextItemWidth(txtW*20);
+	ImGui::SetNextItemWidth(txtW*30);
 	static int selectedFormula = -1;
 	
 	int nFormulas = mApp->appFormulas->formulas.size();
@@ -47,24 +49,41 @@ void ImConvergencePlotter::Draw()
 
 	if (ImGui::Button("Add curve")) {
 		// todo add check if already added
-		drawnFormulas.push_back(selectedFormula);
+		if (Contains(drawnFormulas, selectedFormula)) {
+			ImIOWrappers::InfoPopup("Info", "Profile already plotted");
+		} else	drawnFormulas.push_back(selectedFormula);
 	} ImGui::SameLine();
-	if (ImGui::Button("Remove curve")) {} ImGui::SameLine();
-	if (ImGui::Button("Remove all")) {}
+	if (ImGui::Button("Remove curve")) {
+		if (Contains(drawnFormulas, selectedFormula)) {
+			drawnFormulas.erase(drawnFormulas.begin()+FirstIndex(drawnFormulas, selectedFormula));
+		}
+		else ImIOWrappers::InfoPopup("Error", "Profile not plotted");
+	} ImGui::SameLine();
+	if (ImGui::Button("Remove all")) drawnFormulas.clear();
 
 	ImGui::Checkbox("Colorblind mode", &colorBlind);
 	ImGui::SameLine();
 	ImGui::Text("Change linewidth:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 12);
-	ImGui::InputFloat("##lineWidth", &lineWidth, 0.5, 2);
+	if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1,"%.2f")) {
+		if (lineWidth < 0.5) lineWidth = 0.5;
+	}
 	
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (31);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 
-	if (ImGui::Button("Remove every 4th")) {} ImGui::SameLine();
-	if (ImGui::Button("Remove first 100")) {}
+	if (ImGui::Button("Remove every 4th")) {
+		for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
+			mApp->appFormulas->removeEveryNth(4, formulaId, 0);
+		}
+	} ImGui::SameLine();
+	if (ImGui::Button("Remove first 100")) {
+		for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
+			mApp->appFormulas->removeFirstN(100, formulaId);
+		}
+	}
 	
 	ImGui::SetNextItemWidth(txtW * 40);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
@@ -78,6 +97,8 @@ void ImConvergencePlotter::Draw()
 
 void ImConvergencePlotter::DrawConvergenceGraph()
 {
+	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
+	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-6*txtH))) {
 		for (int i = 0; i < drawnFormulas.size(); i++) {
 			const std::vector<FormulaHistoryDatapoint>& data = mApp->appFormulas->convergenceData[drawnFormulas[i]];
@@ -93,4 +114,6 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 		}
 		ImPlot::EndPlot();
 	}
+	ImPlot::PopStyleVar();
+	if (colorBlind) ImPlot::PopColormap();
 }
