@@ -16,4 +16,11 @@ protected:
 	float lineWidth = 2;
 	std::string expression;
 	void DrawConvergenceGraph();
+	bool PlotNewExpression();
+	bool drawManual = false;
+	void computeManual();
+	std::vector<double> manualxValues, manualyValues;
+	int startX=0, endX=1000;
+	double step = 1.0;
+	GLFormula formula;
 };
