@@ -34,6 +34,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiSelectFacetByResult.h"
 #include "ImguiFormulaEditor.h"
 #include "ImguiConvergencePlotter.h"
+#include "ImguiTexturePlotter.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -78,6 +79,7 @@ public:
     ImSelectFacetByResult selFacetByResult;
     ImFormulaEditor formulaEdit;
     ImConvergencePlotter convPlot;
+    ImTexturePlotter textPlot;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

@@ -625,8 +625,10 @@ void ConvergencePlotterMenuPress() {
 }
 #ifdef MOLFLOW //TODO replace with polimorphism
 void TexturePlotterMenuPress() {
+    mApp->imWnd->textPlot.Show();
+    /*
     if (!mApp->texturePlotter) mApp->texturePlotter = new TexturePlotter();
-    mApp->texturePlotter->Display(&mApp->worker);
+    mApp->texturePlotter->Display(&mApp->worker);*/
 }
 
 void ProfilePlotterMenuPress() {

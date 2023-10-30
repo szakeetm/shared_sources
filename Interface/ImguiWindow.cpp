@@ -200,6 +200,8 @@ void ImguiWindow::init() {
     formulaEdit.Init(mApp, mApp->appFormulas);
     convPlot = ImConvergencePlotter();
     convPlot.Init(mApp);
+    textPlot = ImTexturePlotter();
+    textPlot.Init(mApp);
 
     RegisterShortcuts();
 
@@ -384,6 +386,7 @@ void ImguiWindow::renderSingle() {
         selFacetByResult.Draw();
         formulaEdit.Draw();
         convPlot.Draw();
+        textPlot.Draw();
 
         shortcutMan.DoShortcuts();
 
