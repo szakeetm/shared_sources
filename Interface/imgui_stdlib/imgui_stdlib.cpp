@@ -99,6 +99,10 @@ bool  ImGui::MenuItem(std::string label)
 {
     return ImGui::MenuItem(label.c_str());
 }
+bool ImGui::Selectable(std::string label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+{
+    return ImGui::Selectable(label.c_str(), selected, flags, size_arg);
+}
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

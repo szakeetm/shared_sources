@@ -22,4 +22,5 @@ namespace ImGui
     IMGUI_API void  TextWrapped(std::string str);
     IMGUI_API bool  MenuItem(std::string label, std::string shortcut);
     IMGUI_API bool  MenuItem(std::string label);
+    IMGUI_API bool  Selectable(std::string label, bool selected = false, ImGuiSelectableFlags flags = 0, const ImVec2& size_arg = ImVec2(0, 0));
 }
