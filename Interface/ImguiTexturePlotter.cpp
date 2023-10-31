@@ -65,13 +65,29 @@ void ImTexturePlotter::DrawTextureTable()
 		ImGui::TableSetupScrollFreeze(1, 1);
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 4); // corner
-		for (int i = 0; i < width; ++i) ImGui::TableSetupColumn(std::to_string(i+1).c_str()); // header row (column indexes)
-		ImGui::TableHeadersRow();
+		for (int i = 0; i < width; ++i) {
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str());
+		}
+		ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+		ImGui::TableSetColumnIndex(0);
+		ImGui::Text("v\\u"); // todo unicode vector symbols
+		for (int i = 0; i < width; ++i) {
+			ImGui::TableSetColumnIndex(i + 1);
+			const char* column_name = ImGui::TableGetColumnName(i+1); // Retrieve name passed to TableSetupColumn()
+			ImGui::PushID(i+1);
+			std::string id(column_name);
+			if (ImGui::Selectable(id, false)) SelectColumn(i);
+			//ImGui::SameLine();
+			//ImGui::TableHeader(column_name);
+			ImGui::PopID();
+		}
 
 		for (int i = 0; i < height; i++) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0); // move to first column
-			ImGui::Text(std::to_string(i+1).c_str());	//label row
+			if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
+				SelectRow(i);
+			}
 			for (int j = 0; j < width; j++) {
 				ImGui::TableSetColumnIndex(j+1);
 				bool isSelected = IsCellSelected(i,j);
@@ -305,10 +321,30 @@ void ImTexturePlotter::getData()
 bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
 {
 	bool out = false;
-	if (selMode == single) {
-		for (const auto& pair : selection) {
-			if (pair.first == row && pair.second == col) return true;
-		}
+
+	for (const auto& pair : selection) {
+		if (pair.first == row && pair.second == col) return true;
 	}
 	return out;;
+}
+
+void ImTexturePlotter::SelectRow(size_t row)
+{
+	selection.clear();
+	for (size_t i = 0; i < width; i++) {
+		selection.push_back(std::pair<int, int>(row,i));
+	}
+}
+
+void ImTexturePlotter::SelectColumn(size_t col)
+{
+	selection.clear();
+	for (size_t i = 0; i < width; i++) {
+		selection.push_back(std::pair<int, int>(i, col));
+	}
+}
+
+// todo
+void ImTexturePlotter::DragSelect()
+{
 }

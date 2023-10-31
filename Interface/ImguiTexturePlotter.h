@@ -10,22 +10,27 @@ public:
 	void Draw();
 	void Init(Interface* mApp_);
 protected:
-	Interface* mApp;
-	InterfaceGeometry* interfGeom;
+	// functions
 	void DrawTextureTable();
-	std::string name = "Texture Plotter []###TexturePlotter";
+	void getData();
+	bool IsCellSelected(size_t row, size_t col);
+	void SelectRow(size_t row);
+	void SelectColumn(size_t col);
+	void DragSelect();
+	
+	// UI variables
 	float dummyWidth = 0;
 	bool autoSize = true;
+	std::string name = "Texture Plotter []###TexturePlotter";
 	int viewIdx = 5;
+	std::vector<std::pair<int,int>> selection;
+	// app + data variables
+	Interface* mApp;
+	InterfaceGeometry* interfGeom;
+	InterfaceFacet* selFacet;
 	size_t width = 0, height = 0;
 	std::vector<std::vector<std::string>> data;
-	void getData();
 	size_t selFacetId;
-	InterfaceFacet* selFacet;
 	double maxValue;
 	size_t maxX, maxY;
-	std::vector<std::pair<int,int>> selection;
-	enum selectionMode { single, rows, columns };
-	selectionMode selMode = single;
-	bool IsCellSelected(size_t row, size_t col);
 };
