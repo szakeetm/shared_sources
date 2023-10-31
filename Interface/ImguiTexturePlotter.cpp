@@ -1,8 +1,10 @@
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiTexturePlotter.h"
 #include "Geometry_shared.h"
 #include <imgui.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Helper/MathTools.h"
+#include "ImguiPopup.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -32,8 +34,13 @@ void ImTexturePlotter::Draw()
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
-	if (ImGui::Button("Save")) {} ImGui::SameLine();
-	if (ImGui::Button("FindMax")) {} ImGui::SameLine();
+	if (ImGui::Button("Save")) {
+		
+	} ImGui::SameLine();
+	if (ImGui::Button("FindMax")) {
+		selection.clear();
+		selection.push_back(std::pair<int, int>(maxY, maxX));
+	} ImGui::SameLine();
 
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
@@ -92,8 +99,19 @@ void ImTexturePlotter::DrawTextureTable()
 				ImGui::TableSetColumnIndex(j+1);
 				bool isSelected = IsCellSelected(i,j);
 				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + std::to_string(j), isSelected)) {
-					selection.clear();
-					selection.push_back(std::pair<int, int>(i, j));
+					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
+						BoxSelect(selection[0], std::pair<int, int>(i, j));
+						continue;
+					}
+					if (!io.KeysDown[SDL_SCANCODE_LCTRL]) // control to not clear selection
+					{
+						selection.clear();
+					}
+					if (isSelected) { // deselect if was selected
+						selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int,int>(i,j)), selection.end());
+						continue;
+					}
+					selection.push_back(std::pair<int, int>(i, j)); // regular select
 				}
 			}
 		}
@@ -347,4 +365,68 @@ void ImTexturePlotter::SelectColumn(size_t col)
 // todo
 void ImTexturePlotter::DragSelect()
 {
+}
+
+void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end)
+{
+	int startRow, startCol, endRow, endCol;
+	
+	startRow = start.first < end.first ? start.first : end.first;
+	startCol = start.second < end.second ? start.second : end.second;
+
+	endRow = start.first > end.first ? start.first : end.first;
+	endCol = start.second > end.second ? start.second : end.second;
+
+	for (size_t row = startRow; row <= endRow; row++) {
+		for (size_t col = startCol; col <= endCol; col++) {
+			selection.push_back(std::pair<int, int>(row, col));
+		}
+	}
+}
+
+bool ImTexturePlotter::SaveToFile()
+{
+	if (!selFacet) return false;
+
+	// find selection bounds
+	int startRow=-1, startCol=-1, endRow=-1, endCol=-1;
+	if (selection.size() == 0) {
+		startRow = 0;
+		startCol = 0;
+		endRow = height;
+		endCol = width;
+	}
+	else {
+		for (size_t y = 0; y < height; y++) {
+			for (size_t x = 0; x < width; x++) {
+				bool isSel = IsCellSelected(y, x);
+				if (isSel && startRow == -1) startRow = y;
+				if (isSel && startCol == -1) startCol = x;
+				if (isSel && x > endCol) endCol = x;
+				if (isSel && x > endRow) endRow = y;
+				if (!isSel && (x < endRow || y < endCol)) {
+					ImIOWrappers::InfoPopup("Error", "Selection is not square");
+					return false;
+				}
+			}
+		}
+	}
+	
+	std::string fileFilters = "txt";
+	std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
+	if (!fn.empty()) {
+		FILE* f = fopen(fn.c_str(), "w");
+		if (f == NULL) ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
+		return false;
+
+		std::string out;
+		for (size_t row = startRow; row < endRow; row++) {
+			for (size_t col = startCol; col < endCol; col++) {
+
+			}
+		}
+		// wrtie to file
+		fprintf(f, out.c_str());
+	}
+	return false;
 }
