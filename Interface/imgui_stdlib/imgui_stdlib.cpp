@@ -103,6 +103,10 @@ bool ImGui::Selectable(std::string label, bool selected, ImGuiSelectableFlags fl
 {
     return ImGui::Selectable(label.c_str(), selected, flags, size_arg);
 }
+IMGUI_API bool ImGui::BeginCombo(std::string label, std::string preview_value, ImGuiComboFlags flags)
+{
+    return BeginCombo(label.c_str(), preview_value.c_str(), flags);
+}
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

@@ -632,8 +632,9 @@ void TexturePlotterMenuPress() {
 }
 
 void ProfilePlotterMenuPress() {
-    if (!mApp->profilePlotter) mApp->profilePlotter = new ProfilePlotter(&mApp->worker);
-    mApp->profilePlotter->Display(&mApp->worker);
+    mApp->imWnd->profPlot.Show();
+    //if (!mApp->profilePlotter) mApp->profilePlotter = new ProfilePlotter(&mApp->worker);
+    //mApp->profilePlotter->Display(&mApp->worker);
 }
 #endif //MOLFLOW
 

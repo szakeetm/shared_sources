@@ -55,7 +55,7 @@ void ImTexturePlotter::Draw()
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
-	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingment rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
+	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingement rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
 	ImGui::Checkbox("Resizable columns", &resizableColumns); ImGui::SameLine();
 	ImGui::Checkbox("Fit to window", &fitToWindow);
 	ImGui::SameLine();
