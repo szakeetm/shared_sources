@@ -16,9 +16,9 @@ protected:
 	bool IsCellSelected(size_t row, size_t col);
 	void SelectRow(size_t row);
 	void SelectColumn(size_t col);
-	void DragSelect();
 	void BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end);
 	bool SaveToFile();
+	bool isDragging = false;
 	// UI variables
 	float dummyWidth = 0;
 	bool autoSize = true;

@@ -5,6 +5,7 @@
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Helper/MathTools.h"
 #include "ImguiPopup.h"
+#include <imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -65,10 +66,32 @@ void ImTexturePlotter::Init(Interface* mApp_)
 
 void ImTexturePlotter::DrawTextureTable()
 {
+	static ImVec2 selectionStart;
+	static ImVec2 selectionEnd;
+	static ImRect selectionRect;
+	static bool hovered;
+
 	static ImGuiIO& io = ImGui::GetIO();
 	if (width < 1 || height < 1) return;
 	if (data.size() != width) getData();
-	if (ImGui::BeginTable("##TPTable", width+1,ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+	
+	if (ImGui::BeginTable("##TPTable", width+1,	  ImGuiTableFlags_Borders
+												| ImGuiTableFlags_ScrollX
+												| ImGuiTableFlags_ScrollY)) {
+		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
+			selectionStart = ImGui::GetMousePos();
+			isDragging = true;
+			if (!io.KeysDown[SDL_SCANCODE_LCTRL]) // control to not clear selection
+			{
+				selection.clear();
+			}
+		}
+
+		if (isDragging) {
+			selectionEnd = ImGui::GetMousePos();
+			if (selectionStart.x < selectionEnd.x) selectionRect = ImRect(selectionStart, selectionEnd);
+			else selectionRect = ImRect(selectionEnd, selectionStart); // in case the selection starts further down the table than it ends
+		}
 		ImGui::TableSetupScrollFreeze(1, 1);
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 4); // corner
@@ -88,7 +111,7 @@ void ImTexturePlotter::DrawTextureTable()
 			//ImGui::TableHeader(column_name);
 			ImGui::PopID();
 		}
-
+		hovered = false;
 		for (int i = 0; i < height; i++) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0); // move to first column
@@ -98,7 +121,20 @@ void ImTexturePlotter::DrawTextureTable()
 			for (int j = 0; j < width; j++) {
 				ImGui::TableSetColumnIndex(j+1);
 				bool isSelected = IsCellSelected(i,j);
+				if (isDragging) {
+					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+					if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
+						if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
+							selection.push_back(std::pair<int, int>(i, j - 1));
+						}
+					}
+					else if (Contains(selection, std::pair<int, int>(i, j - 1))) {
+						selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int, int>(i, j-1)), selection.end());
+					}
+				}
+				if (ImGui::IsItemHovered()) hovered = true;
 				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + std::to_string(j), isSelected)) {
+					if (isDragging) continue;
 					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 						BoxSelect(selection[0], std::pair<int, int>(i, j));
 						continue;
@@ -116,6 +152,8 @@ void ImTexturePlotter::DrawTextureTable()
 			}
 		}
 		ImGui::EndTable();
+		if (!ImGui::IsMouseDown(0)) isDragging = false; // end drag
+		if(isDragging) ImGui::GetWindowDrawList()->AddRectFilled(selectionStart, selectionEnd, IM_COL32(100, 100, 255, 64));
 	}
 }
 
@@ -360,11 +398,6 @@ void ImTexturePlotter::SelectColumn(size_t col)
 	for (size_t i = 0; i < width; i++) {
 		selection.push_back(std::pair<int, int>(i, col));
 	}
-}
-
-// todo
-void ImTexturePlotter::DragSelect()
-{
 }
 
 void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end)
